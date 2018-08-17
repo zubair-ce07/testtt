@@ -7,6 +7,7 @@ files and give certain result
 import os
 import re
 import csv
+
 from constants import Constants
 
 
@@ -36,7 +37,7 @@ class FileContent:
         :return:
         """
 
-        regex = Constants.FILE_PREFIX + year + "_[a-z]{3}.txt"
+        regex = "{}{}_[a-z]{}.txt".format(Constants.FILE_PREFIX, year, "{3}")
         selected_file_names = re.findall(
             regex, ' '.join(self.file_names), re.IGNORECASE)
 
@@ -52,7 +53,7 @@ class FileContent:
         temp_humid_dict["max_humidity_year"] = "N/A"
         try:
             for name in selected_file_names:
-                with open(self.path + "/" + name, 'r') as csv_file:
+                with open("{}/{}".format(self.path, name), 'r') as csv_file:
                     reader = csv.reader(csv_file, dialect='myDialect')
                     # to skip header
                     next(csv_file)
@@ -102,7 +103,7 @@ class FileContent:
         csv.register_dialect('myDialect', delimiter=',', skipinitialspace=True)
 
         try:
-            with open(self.path + "/" + name, 'r') as csv_file:
+            with open("{}/{}".format(self.path, name), 'r') as csv_file:
                 reader = csv.reader(csv_file, dialect='myDialect')
                 # to skip header
                 next(csv_file)
@@ -142,14 +143,14 @@ class FileContent:
 
         low_temps = {}
         high_temps = {}
-        name = Constants.FILE_PREFIX + "{}_{}.txt".format(year, month)
+        name = "{}{}_{}.txt".format(Constants.FILE_PREFIX, year, month)
 
         # to skip initial whitespaces
         csv.register_dialect('myDialect', delimiter=',', skipinitialspace=True)
 
         j = 1
         try:
-            with open(self.path + "/" + name, 'r') as csv_file:
+            with open("{}/{}".format(self.path, name), 'r') as csv_file:
                 reader = csv.reader(csv_file, dialect='myDialect')
                 # to skip header
                 next(csv_file)

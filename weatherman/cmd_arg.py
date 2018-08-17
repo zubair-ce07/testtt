@@ -43,8 +43,6 @@ class CmdArg:
             self.error = "Invalid date !!!"
         elif self.option != "-e" and date_format1 is not None:
             self.error = "option date mismatch !!!"
-        else:
-            pass
 
     def __str__(self):
         return ("Option: {}\nDate: {}\nPath to files: {}\nError String: {}"

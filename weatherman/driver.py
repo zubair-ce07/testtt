@@ -7,6 +7,7 @@ the given options and date
 
 import sys
 import calendar
+
 from cmd_arg import CmdArg
 from csv_file_content import FileContent
 from constants import Constants
@@ -117,5 +118,4 @@ elif OPTION == '-d':
         else:
             print("\033[1;30;0m{:02d}C".format(DAILY_TEMPS_OF_MONTH[1][i]))
         i += 1
-else:
-    pass
+# end
