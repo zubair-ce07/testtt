@@ -7,6 +7,7 @@ app_name = 'taskmanager'
 urlpatterns = [
     path('login/', auth_view.login, {'redirect_authenticated_user' : True} , name='login'),
     path('', views.Index.as_view(), name='index'),
+    path('error/', views.generic.TemplateView.as_view(template_name='taskmanager/error.html'), name='profile_error'),
     path('<int:pk>/status/', views.change_status, name='status'),
     path('signup/', views.SignUp.as_view(), name='signup'),
     path('<int:pk>/profile/', views.EditProfile.as_view(), name='profile'),

@@ -1,0 +1,6 @@
+{% extends 'taskmanager/base.html' %}
+{% block title %} Edit Task {% endblock title %}
+{% block content %}
+    <p> You are trying to open profile for which you do not have authorization </p>
+    <p> <a href="{% url 'taskmanager:profile' user.id %}"> Visit My Profile </a> </p>
+{% endblock content %}

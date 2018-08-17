@@ -76,12 +76,17 @@ class EditProfile(generic.UpdateView):
     def get_success_url(self):
         return reverse('taskmanager:profile', args=(self.request.user.id, ))
 
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.id == self.kwargs['pk']:
+            return super(EditProfile, self).dispatch(request, *args, **kwargs)
+        else:
+            return redirect(reverse('taskmanager:profile_error'))
+
 
 @method_decorator(login_required(login_url='login'), name='dispatch')
 class AddTask(generic.CreateView):
     form_class = forms.AddTaskForm
     exclude = ['status']
-
     template_name = "taskmanager/add.html"
 
     def get_form_kwargs(self):
@@ -94,7 +99,7 @@ class AddTask(generic.CreateView):
 
     def get_form(self, form_class=forms.TaskForm):
         form = super(AddTask, self).get_form()
-        form.fields.pop('status')  # ordinary users cannot close tickets.
+        form.fields.pop('status')
         return form
 
 
