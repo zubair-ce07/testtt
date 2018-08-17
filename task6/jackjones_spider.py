@@ -27,9 +27,6 @@ class JackJonesSpider(CrawlSpider):
     headers = {'Accept': 'application/json, text/plain, */*',
                'Accept-Encoding': 'gzip, deflate, br',
                'Accept-Language': 'en-US,en;q=0.9',
-               'Cache-Control': 'no-cache',
-               'Connection': 'keep-alive',
-               'Pragma': 'no-cache',
                'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML,'
                              'like Gecko) Ubuntu Chromium/68.0.3440.84 Chrome/68.0.3440.84 Safari/537.36'
                }
@@ -127,9 +124,9 @@ class JackJonesSpider(CrawlSpider):
         product_item['skus'] = self.get_skus(raw_product)
         product_item['url'] = self.get_product_url(raw_product)
 
-        return self.get_product_stock(product_item)
+        return self.product_stock_request(product_item)
 
-    def get_product_stock(self, product_item):
+    def product_stock_request(self, product_item):
         stock_url = "https://www.jackjones.com.cn/api/goods/getStock?goodsCode={}"
 
         yield Request(stock_url.format(product_item.get('retailer_sku')),
