@@ -41,9 +41,7 @@ class FileContent:
             regex, ' '.join(self.file_names), re.IGNORECASE)
 
         # to skip initial whitespaces
-        csv.register_dialect('myDialect',
-                             delimiter=',',
-                             skipinitialspace=True)
+        csv.register_dialect('myDialect', delimiter=',', skipinitialspace=True)
 
         temp_humid_dict = {}
         temp_humid_dict["max_temp"] = -999
@@ -99,10 +97,10 @@ class FileContent:
         temp_humid_dict["min_temp_count"] = 0
         temp_humid_dict["max_humidity_count"] = 0
         name = Constants.FILE_PREFIX + "{}_{}.txt".format(year, month)
+
         # to skip initial whitespaces
-        csv.register_dialect('myDialect',
-                             delimiter=',',
-                             skipinitialspace=True)
+        csv.register_dialect('myDialect', delimiter=',', skipinitialspace=True)
+
         try:
             with open(self.path + "/" + name, 'r') as csv_file:
                 reader = csv.reader(csv_file, dialect='myDialect')
@@ -145,10 +143,10 @@ class FileContent:
         low_temps = {}
         high_temps = {}
         name = Constants.FILE_PREFIX + "{}_{}.txt".format(year, month)
+
         # to skip initial whitespaces
-        csv.register_dialect('myDialect',
-                             delimiter=',',
-                             skipinitialspace=True)
+        csv.register_dialect('myDialect', delimiter=',', skipinitialspace=True)
+
         j = 1
         try:
             with open(self.path + "/" + name, 'r') as csv_file:
