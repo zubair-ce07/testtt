@@ -12,18 +12,45 @@ from cmd_arg import CmdArg
 from csv_file_content import FileContent
 from constants import Constants
 
+
 def __main__():
     TOTAL_ARGUMENTS = len(sys.argv)
     print(TOTAL_ARGUMENTS)
+
+    if TOTAL_ARGUMENTS == 8:
+        sepecial_report = {}
+        sepecial_report["path"] = sys.argv[1]
+        sepecial_report["option1"] = sys.argv[2]
+        sepecial_report["date1"] = sys.argv[3]
+        sepecial_report["option2"] = sys.argv[4]
+        sepecial_report["date2"] = sys.argv[5]
+        sepecial_report["option3"] = sys.argv[6]
+        sepecial_report["date3"] = sys.argv[7]
+        cmd_arg = CmdArg(sepecial_report["option1"], sepecial_report["date1"])
+        if cmd_arg.error != "":
+            print(cmd_arg.error)
+            exit(1)
+        cmd_arg = CmdArg(sepecial_report["option2"], sepecial_report["date2"])
+        if cmd_arg.error != "":
+            print(cmd_arg.error)
+            exit(1)
+        cmd_arg = CmdArg(sepecial_report["option3"], sepecial_report["date3"])
+        if cmd_arg.error != "":
+            print(cmd_arg.error)
+            exit(1)
+
+
+
     if TOTAL_ARGUMENTS != 4:
         print("Invalid arguments !!!")
         exit(1)
 
-    OPTION = sys.argv[1]
-    DATE = sys.argv[2]
-    PATH = sys.argv[3]
-    CMD_ARGUMENTS = CmdArg(OPTION, DATE, PATH)
+    PATH = sys.argv[1]
+    OPTION = sys.argv[2]
+    DATE = sys.argv[3]
+    CMD_ARGUMENTS = CmdArg(OPTION, DATE)
     CMD_ARGUMENTS.validate_arguments()
+
     if CMD_ARGUMENTS.error != "":
         print(CMD_ARGUMENTS.error)
         exit(1)
@@ -120,7 +147,9 @@ def __main__():
             else:
                 print("\033[1;30;0m{:02d}C".format(DAILY_TEMPS_OF_MONTH[1][i]))
             i += 1
-# end
+
+
+
 
 if __name__ == "__main__":
     __main__()

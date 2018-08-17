@@ -15,7 +15,6 @@ class CmdArg:
     def __init__(self, option, date, path):
         self.option = option
         self.date = date
-        self.path = path
         self.error = ""
 
     def validate_arguments(self):
@@ -45,5 +44,5 @@ class CmdArg:
             self.error = "option date mismatch !!!"
 
     def __str__(self):
-        return ("Option: {}\nDate: {}\nPath to files: {}\nError String: {}"
-                .format(self.option, self.date, self.path, self.error))
+        return ("Option: {}\nDate: {}\nError String: {}"
+                .format(self.option, self.date, self.error))
