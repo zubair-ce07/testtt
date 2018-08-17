@@ -32,14 +32,21 @@ class WeatherReading:
         }
         for weather_data_entry in file_parser:
             for row in weather_data_entry:
-                mean_humidity = MathHelper.parse_int(row[' Mean Humidity'])
-                if mean_humidity:
-                    weather_file_data['mean_humidity'].append(mean_humidity)
+                if self.check_corrupted_data(row):
+                    continue
+                weather_file_data['mean_humidity'].append(
+                    MathHelper.parse_int(row[' Mean Humidity']))
                 weather_file_data['max_temp'].append(
-                    MathHelper.parse_int(row['Max TemperatureC'], default='neg-infinity'))
+                    MathHelper.parse_int(row['Max TemperatureC']))
                 weather_file_data['min_temp'].append(
-                    MathHelper.parse_int(row['Min TemperatureC'], default='pos-infinity'))
+                    MathHelper.parse_int(row['Min TemperatureC']))
                 weather_file_data['max_humidity'].append(
-                    MathHelper.parse_int(row['Max Humidity'], default='neg-infinity'))
+                    MathHelper.parse_int(row['Max Humidity']))
                 weather_file_data['day'].append(row.get('PKT', row.get('PKST')))
         return weather_file_data
+
+    @staticmethod
+    def check_corrupted_data(row):
+        if not all([row[' Mean Humidity'], row['Max TemperatureC'], row['Min TemperatureC'], row['Max Humidity']]):
+            return True
+        return False
