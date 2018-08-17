@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Sign In</title>
+    <link href="static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="http://getbootstrap.com/examples/signin/signin.css" rel="stylesheet">
+    <script src="./Signin Template for Bootstrap_files/ie-emulation-modes-warning.js"></script>
+</head>
+<body>
+<div class="container">
+    <form class="form-signin" action="" method="POST">
+        <h2 class="form-signin-heading">Please Sign In</h2>
+        {{ signinform.email(placeholder="Email",id="inputEmail", class="form-control", autofocus="") }}
+        {{ signinform.password(placeholder="Password",id="inputPassword", class="form-control", required="") }}
+        {{ signinform.submit(class="btn btn-lg btn-primary btn-block")}}
+              <div class="noacc">
+        Don't have an account! <a href="signup">Sign Up Here</a>
+      </div>
+      </form>
+
+</div>
+
+    <script src="./Signin Template for Bootstrap_files/ie10-viewport-bug-workaround.js"></script>
+</body>
+</html>
