@@ -18,7 +18,7 @@ class LeviptParseSpider(Spider):
         item = Product()
         item['retailer_sku'] = self.item_retailer_sku(response)
         item['gender'] = self.item_gender(response)
-        item['trail'] = response.meta.get('trail', [])
+        item['trail'] = response.meta['trail']
         item['category'] = self.item_category(response)
         item['brand'] = self.item_brand(response)
         item['url'] = response.url
@@ -26,74 +26,84 @@ class LeviptParseSpider(Spider):
         item['description'] = self.item_description(response)
         item['care'] = self.item_care(response)
         item['image_urls'] = self.item_image_urls(response)
+
         response.meta['item'] = item
-        return self.item_colors(response)
+        yield self.request_colors(response)
+        yield self.fetch_request_or_item(response)
 
     def parse_item_skus(self, response):
-        item = response.meta.get('item', [])
+        item = response.meta['item']
         skus = item.get('skus', [])
         common = response.meta.get('common', {})
         stocks = loads(response.text)
         item['skus'] = self.stock_to_skus(stocks, skus, common)
-        return self.yield_request_or_item(response)
+
+        return self.fetch_request_or_item(response)
 
     def parse_item_stocks(self, response):
-        item_stock_request = Request(url=f'{response.url}/stocks', callback=self.parse_item_skus)
+        item_stock_request = Request(url=f'{response.url}/stocks',
+                                     callback=self.parse_item_skus)
         item_stock_request.meta['common'] = self.item_skus_common(response)
-        item_stock_request.meta['item'] = response.meta.get('item', [])
-        item_stock_request.meta['requests'] = response.meta.get('requests', [])
-        yield item_stock_request
+        item_stock_request.meta['item'] = response.meta['item']
+        item_stock_request.meta['requests'] = response.meta['requests']
+
+        return item_stock_request
 
     @staticmethod
     def item_skus_common(response):
+        curr_css = '[itemprop="priceCurrency"]::attr(content)'
+        colour_css = '[itemprop="color"]::text'
         price_css = '[itemprop="lowPrice"]::text, [itemprop="price"]::text'
-        old_p_css = '[itemprop="highPrice"]::text'
-        colour = response.css('[itemprop="color"]::text').extract_first()
+        prev_p_css = '[itemprop="highPrice"]::text'
         common = {
-            'currency': response.css('[itemprop="priceCurrency"]::attr(content)').extract_first(),
-            'colour': colour,
+            'currency': response.css(curr_css).extract_first(default="EUR"),
+            'colour': response.css(colour_css).extract_first(),
             'price': response.css(price_css).extract_first().replace("€", ''),
-            'previous_prices': response.css(old_p_css).extract()
+            'previous_prices': response.css(prev_p_css).extract()
         }
+
         return common
 
     @staticmethod
     def stock_to_skus(stocks, skus, common):
+
         for stock in stocks:
             sku = common.copy()
-            sku['sku_id'] = stock['sku']
-            if stock['stock'] == 0:
+            sku['sku_id'] = stock.get('sku')
+            if stock.get('stock', 0) == 0:
                 sku['out_of_stock'] = True
 
-            if stock['leg_size'] and stock['leg_size'] != '0':
-                sku['size'] = f"{stock['size']}/{stock['leg_size']}"
+            if stock.get('leg_size') != '0':
+                sku['size'] = f"{stock.get('size')}/{stock.get('leg_size')}"
             else:
-                sku['size'] = stock['size']
+                sku['size'] = stock.get('size')
             skus.append(sku)
+
         return skus
 
     @staticmethod
-    def yield_request_or_item(response):
-        requests = response.meta.get('requests', [])
-        if requests:
-            request = requests.pop()
-            response.meta['requests'] = requests
-            yield request
-        else:
-            yield response.meta.get('item', [])
+    def fetch_request_or_item(response):
+        requests = response.meta['requests']
+        if not requests:
+            return response.meta['item']
 
-    def item_colors(self, response):
-        item = response.meta.get('item', [])
+        request = requests.pop()
+        response.meta['requests'] = requests
+
+        return request
+
+    def request_colors(self, response):
+        item = response.meta['item']
         requests = []
         for url in response.css('.color-list a::attr(href)').extract():
-            request = Request(response.urljoin(url), callback=self.parse_item_stocks,
-                              dont_filter=True)
+            request = response.follow(response.urljoin(url),
+                                      callback=self.parse_item_stocks,
+                                      dont_filter=True)
             requests.append(request)
             request.meta['requests'] = requests
             request.meta['item'] = item
 
         response.meta['requests'] = requests
-        return self.yield_request_or_item(response)
 
     @staticmethod
     def item_retailer_sku(response):
@@ -101,12 +111,16 @@ class LeviptParseSpider(Spider):
         return response.css(css).extract_first()
 
     def item_gender(self, response):
-        raw_gender = response.css('.size-chart-lightbox .title::text').extract_first()
+        css = '.size-chart-lightbox .title::text'
+        raw_gender = response.css(css).extract_first()
+
         if not raw_gender:
             return 'unisex-adults'
+
         for token, gender in self.gender_map:
             if token in raw_gender:
                 return gender
+
         return 'unisex-adults'
 
     @staticmethod
@@ -116,11 +130,13 @@ class LeviptParseSpider(Spider):
 
     @staticmethod
     def item_brand(response):
-        return response.css('.product-data [itemprop="brand"]::attr(content)').extract_first()
+        css = '.product-data [itemprop="brand"]::attr(content)'
+        return response.css(css).extract_first()
 
     @staticmethod
     def item_name(response):
-        return response.css('.product-data [itemprop="name"]::attr(content)').extract_first()
+        css = '.product-data [itemprop="name"]::attr(content)'
+        return response.css(css).extract_first()
 
     @staticmethod
     def item_care(response):
@@ -128,6 +144,7 @@ class LeviptParseSpider(Spider):
         care_css = '.product-description .product-materials li::text'
         title = response.css(title_css).extract_first(default=None)
         care = response.css(care_css).extract()
+
         return [f'{title}: {care}']
 
     @staticmethod
@@ -136,6 +153,7 @@ class LeviptParseSpider(Spider):
         des_css = '.product-description .product-cut-sizes li::text'
         title = response.css(title_css).extract_first(default=None)
         description = response.css(des_css).extract()
+
         return [f'{title}: {description}']
 
     @staticmethod

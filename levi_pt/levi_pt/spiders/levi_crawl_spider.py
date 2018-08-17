@@ -1,6 +1,5 @@
 from scrapy.linkextractors import LinkExtractor
-from scrapy.spiders import CrawlSpider
-from scrapy.spiders import Rule
+from scrapy.spiders import CrawlSpider, Rule
 
 from levi_pt.spiders.levi_parse_spider import LeviptParseSpider
 
@@ -11,13 +10,16 @@ class LeviptCrawlSpider(CrawlSpider):
     start_urls = [
         'https://www.levi.pt/pt'
     ]
+
     listings_css = ['nav .main-entry ', '.pages .active +a']
     item_css = ['.thumbnail .ga-track-product ']
+
     rules = (
-        Rule(LinkExtractor(restrict_css=listings_css), callback='parse', follow=True),
+        Rule(LinkExtractor(restrict_css=listings_css), callback='parse'),
         Rule(LinkExtractor(restrict_css=item_css), callback='parse_item'),
 
     )
+
     item_parser = LeviptParseSpider()
 
     def parse(self, response):
