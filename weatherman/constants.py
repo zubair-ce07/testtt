@@ -11,6 +11,10 @@ class Constants:
     # RNF = Record not founf
     RNF = "missing"
     FILE_PREFIX = "Murree_weather_"
+    IOE = "Something wrong while reading file\n" \
+          "may be file does not exist"
+    IVA = "Invalid arguments !!!"
+    O_MISS = "Option mismatch !!!"
 
     @staticmethod
     def get_rnf():

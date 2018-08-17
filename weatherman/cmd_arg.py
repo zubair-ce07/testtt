@@ -12,7 +12,7 @@ class CmdArg:
     like options and date
     """
 
-    def __init__(self, option, date, path):
+    def __init__(self, option, date):
         self.option = option
         self.date = date
         self.error = ""

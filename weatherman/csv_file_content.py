@@ -45,6 +45,7 @@ class FileContent:
         csv.register_dialect('myDialect', delimiter=',', skipinitialspace=True)
 
         temp_humid_dict = {}
+        temp_humid_dict["file_found"] = bool(len(selected_file_names))
         temp_humid_dict["max_temp"] = -999
         temp_humid_dict["min_temp"] = 999
         temp_humid_dict["max_humidity"] = 0
