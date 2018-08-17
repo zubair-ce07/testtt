@@ -15,7 +15,7 @@ class ProductParser(Spider):
     }
 
     def parse(self, response):
-        if self.if_product_exists(response):
+        if self.product_exists(response):
             return
 
         item = WefashionItem()
@@ -54,7 +54,7 @@ class ProductParser(Spider):
         color_urls = self.extract_color_urls(response)
         return [Request(url, callback=self.parse_product) for url in color_urls]
 
-    def if_product_exists(self, response):
+    def product_exists(self, response):
         product_available = self.product_reference(response)
         retailer_sku = self.extract_retailer_sku(response)
 
@@ -101,8 +101,8 @@ class ProductParser(Spider):
         return response.css(price_css).extract_first()
 
     def extract_currency(self, response):
-        currecy_css = "[itemprop='priceCurrency']::attr(content)"
-        return response.css(currecy_css).extract_first()
+        currency_css = "[itemprop='priceCurrency']::attr(content)"
+        return response.css(currency_css).extract_first()
 
     def extract_color_id(self, response):
         return self.product_reference(response).split('_')[1]
