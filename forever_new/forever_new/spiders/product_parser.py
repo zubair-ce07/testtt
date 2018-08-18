@@ -10,10 +10,17 @@ class ProductParser(Spider):
     name = "forever-new-product-parser"
     currency = "AUD"
     image_base_url = "https://www.forevernew.com.au/balance_superptype/product/media/pid/"
+    seen_skus = set()
 
     def parse(self, response):
         product = ProductItem()
-        product["retailer_sku"] = self.product_id(response)
+        retailer_sku = self.product_id(response)
+
+        if retailer_sku in self.seen_skus:
+            return
+
+        self.seen_skus.add(retailer_sku)
+        product["retailer_sku"] = retailer_sku
         product["lang"] = "en"
         product["trail"] = response.meta.get("trail", [])
         product["gender"] = "women"
