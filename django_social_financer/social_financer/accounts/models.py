@@ -21,22 +21,34 @@ class UserProfile(models.Model):
     phone_no = models.CharField(max_length=15)
     longitude = models.FloatField(null=True, blank=True)
     latitude = models.FloatField(null=True, blank=True)
+    pair = models.ForeignKey('self', null=True, related_name='pairs', on_delete=models.CASCADE, blank=True)
+    categories = models.ManyToManyField(Category)
     role_types = (
         ('DN', 'Donor'),
         ('CN', 'Consumer'),
     )
     role = models.CharField(max_length=2, choices=role_types)
-    pair = models.ForeignKey('self', null=True, related_name='pairs', on_delete=models.CASCADE, blank=True)
-    categories = models.ManyToManyField(Category)
 
     def __str__(self):
-         return self.get_full_name() if self.get_full_name() else self.get_username()
+         return self.full_name() if self.full_name() else self.username()
 
-    def get_full_name(self):
-        return "{}{}".format(self.user.first_name, self.user.last_name)
+    def full_name(self):
+        return "{} {}".format(self.user.first_name, self.user.last_name)
 
-    def get_username(self):
+    def username(self):
         return self.user.username
+
+    def is_paired(self):
+        if self.role == 'DN':
+            return False if self.pairs.count == 0 else True
+        elif self.role == 'CN':
+            return False if self.pair is None else True
+
+    def get_pair(self):
+        if self.role == 'DN':
+            return self.pairs
+        elif self.role == 'CN':
+            return self.pair
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):

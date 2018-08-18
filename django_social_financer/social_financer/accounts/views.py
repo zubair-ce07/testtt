@@ -1,18 +1,17 @@
-from django.shortcuts import render, get_object_or_404
-from django.http import HttpResponse, Http404, HttpResponseRedirect
-from django.urls import reverse_lazy, reverse
-from django.db.models import F
-from django.views import generic
-from django.contrib.auth import authenticate, login
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.models import User
 import requests
 from math import sin, cos, sqrt, atan2, radians
 
+from django.shortcuts import render, get_object_or_404, redirect
+from django.http import HttpResponse, Http404, HttpResponseRedirect
+from django.urls import reverse_lazy, reverse
+from django.views import generic
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+
+
 from .forms import SignUpForm
 from .models import UserProfile
+from . import constants
 # Create your views here.
 #
 class SignUpView(generic.FormView):
@@ -50,6 +49,7 @@ class SignUpView(generic.FormView):
         user.userprofile.role = form.cleaned_data['role']
         user.userprofile.categories.set(form.cleaned_data['categories'])
         user.userprofile.postal_code = form.cleaned_data['postal_code']
+        # Code commented intentionally. Represents Co-ordinates feature
         # long,lat = self.get_long_lat_from_address(form.cleaned_data['address'])
         # if long:
         #     user.userprofile.longitude = long
@@ -57,6 +57,7 @@ class SignUpView(generic.FormView):
         user.userprofile.save()
         pass
 
+    # Code commented intentionally. Represents Co-ordinates feature
     # def get_long_lat_from_address(self, address):
     #    """ long/lat are fetched from Google API using address
     #    """
@@ -78,6 +79,8 @@ def home_view(request):
         return home_donor(request, request.user)
     elif role == 'CN':
         return home_consumer(request, request.user)
+    elif request.user.is_staff:
+        return redirect(request.build_absolute_uri() + 'admin/')
     return HttpResponse("Home l{}l".format(role))
 
 def home_donor(request, user):
@@ -96,13 +99,13 @@ def home_donor(request, user):
             role='CN')
         consumers = consumers.exclude(id=request.user.userprofile.id)
         consumers = consumers.exclude(id__in=request.user.userprofile.pairs.values('id'))
-        map_query_url = 'https://www.google.com/maps/search/?api=1&query='
         return render(request,'accounts/donor/select_consumers.html',
-                      context={'consumers': consumers, 'map_url' : map_query_url})
+                      context={'consumers': consumers, 'map_url' : constants.map_url})
 
 def donors_pairs(request):
     return render(request,'accounts/donor/my_consumers.html',
-                  context={'pair' : request.user.userprofile.pairs.all()})
+                  context={'pair' : request.user.userprofile.pairs.all(),
+                           'map_url' : constants.map_url})
 
 def home_consumer(request, user):
     return render(request,

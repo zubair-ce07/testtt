@@ -1,5 +1,6 @@
 from django.forms import ModelForm
 from django import forms
+
 from .models import UserProfile
 
 class SignUpForm(ModelForm):
@@ -15,6 +16,3 @@ class SignUpForm(ModelForm):
 
         fields = ['first_name', 'last_name', 'email_address', 'password','cnic_no', 'address', 'city', 'country',
                   'postal_code', 'phone_no', 'role', 'categories']
-
-class SelectPairForm(forms.Form):
-    pair_id = forms.IntegerField()
