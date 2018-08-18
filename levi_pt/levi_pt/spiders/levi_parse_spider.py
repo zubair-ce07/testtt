@@ -27,7 +27,7 @@ class LeviptParseSpider(Spider):
         item = Product()
         item['retailer_sku'] = retailer_sku
         item['gender'] = self.item_gender(response)
-        item['trail'] = response.meta.get('trail')
+        item['trail'] = response.meta['trail']
         item['category'] = self.item_category(response)
         item['brand'] = self.item_brand(response)
         item['url'] = response.url
@@ -48,7 +48,7 @@ class LeviptParseSpider(Spider):
         stocks = loads(response.text)
         item['skus'] = self.stock_to_skus(stocks, skus, common)
         requests = response.meta['requests']
-        return self.request_or_item(requests, item)
+        return self.schedule_request_or_item(requests, item)
 
     def parse_item_stocks(self, response):
         item = response.meta['item']
@@ -96,7 +96,7 @@ class LeviptParseSpider(Spider):
         return skus
 
     @staticmethod
-    def request_or_item(requests, item):
+    def schedule_request_or_item(requests, item):
         if not requests:
             return item
 
