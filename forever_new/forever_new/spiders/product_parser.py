@@ -129,8 +129,8 @@ class ProductParser(Spider):
         return requests
 
     def care(self, response):
-        return list(filter(lambda care: care.strip(),
-                    response.css(".accordion-container .accordion-content:nth-child(2) li::text").extract()))
+        care_css = ".accordion-container .accordion-content:nth-child(2) li::text"
+        return [care for care in response.css(care_css).extract() if care.strip()]
 
     def description(self, response):
         return response.css(".accordion-container .accordion-content:nth-child(2) p::text").extract()
