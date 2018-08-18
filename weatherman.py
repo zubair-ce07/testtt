@@ -176,9 +176,9 @@ def main():
         parser = argparse.ArgumentParser()
         parser.add_argument('-dir', '--path', type=str)
         parser.add_argument('-e', '--year', type=str)
-        parser.add_argument('-m', '--month', type=str)
-        parser.add_argument('-c', '--monthly_chart', type=str)
-        parser.add_argument('-ce', '--monthly_chart_horizontal', type=str)
+        parser.add_argument('-m', '--month', action='append',nargs=2,metavar=('year','month'), type=str)
+        parser.add_argument('-c', '--monthly_chart', metavar=('year','month'),nargs=2, type=str, action='append')
+        parser.add_argument('-ce', '--monthly_chart_horizontal', metavar=('year','month'), action='append', nargs=2, type=str)
         args = parser.parse_args()
 
         weather_man = WeatherMan(args.path)
@@ -189,13 +189,13 @@ def main():
             weather_man.combiner(args.year)
             weather_man.print_data()
         elif args.month:
-            weather_man.combiner(args.year, args.month)
+            weather_man.combiner(args.month[0][0], args.month[0][1])
             weather_man.show_average()
         elif args.monthly_chart:
-            weather_man.combiner(args.year, args.month)
+            weather_man.combiner(args.monthly_chart[0][0], args.monthly_chart[0][1])
             weather_man.print_chart()
         elif args.monthly_chart_horizontal:
-            weather_man.combiner(args.year, args.month)
+            weather_man.combiner(args.monthly_chart_horizontal[0][0], args.monthly_chart_horizontal[0][1])
             weather_man.print_bar_chart()
     except ValueError as value_error:
         print(value_error)
