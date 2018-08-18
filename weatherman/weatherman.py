@@ -128,7 +128,7 @@ def get_output_for_a_option(file_cont, date):
           .format(monthly_temp_humidity_avg["max_temp_avg"]))
     print("Lowest Average: {:02d}C"
           .format(monthly_temp_humidity_avg["min_temp_avg"]))
-    print("Highest Average: {:02d}%"
+    print("Average Mean Humidity: {:02d}%"
           .format(monthly_temp_humidity_avg["max_humidity_avg"]))
 
 
@@ -154,17 +154,17 @@ def get_output_for_e_option(file_cont, date):
     max_humidity_date = yearly_temp_humidity["max_humidity_year"].split('-')
     print("Highest: {:02d}C on {} {}".format(
         yearly_temp_humidity["max_temp"],
-        calendar.month_abbr[int(max_temp_date[1])],
+        calendar.month_name[int(max_temp_date[1])],
         max_temp_date[2]
     ))
     print("Lowest: {:02d}C on {} {}".format(
         yearly_temp_humidity["min_temp"],
-        calendar.month_abbr[int(min_temp_date[1])],
+        calendar.month_name[int(min_temp_date[1])],
         min_temp_date[2]
     ))
-    print("Humid: {:02d}% on {} {}".format(
+    print("Humidity: {:02d}% on {} {}".format(
         yearly_temp_humidity["max_humidity"],
-        calendar.month_abbr[int(max_humidity_date[1])],
+        calendar.month_name[int(max_humidity_date[1])],
         max_humidity_date[2]
     ))
 
@@ -190,7 +190,7 @@ def get_output_for_c_option(file_cont, date):
         exit(1)
     print(month_name, date_tokens[0])
     i = 1
-    while i < len(daily_temps_of_month[0]):
+    while i <= len(daily_temps_of_month[0]):
         print("{}{:02d} ".format(Constants.END_COLR, i), end="")
         if daily_temps_of_month[0][i] == Constants.RNF:
             print("{}missing".format(Constants.RED_COLR))
@@ -228,7 +228,7 @@ def get_output_for_d_option(file_cont, date):
         exit(1)
     print(month_name, date_tokens[0])
     i = 1
-    while i < len(daily_temps_of_month[0]):
+    while i <= len(daily_temps_of_month[0]):
         high_temp_miss = (daily_temps_of_month[0][i] == Constants.RNF)
         low_temp_miss = (daily_temps_of_month[1][i] == Constants.RNF)
         print("{}{:02d} ".format(Constants.END_COLR, i), end="")
