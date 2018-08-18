@@ -32,11 +32,23 @@ def request_sending(links, no_of_requests):
     #future = asyncio.Future()
     task=[]
     results_list=[]
+    new_links=[]
 
+    if len(links)<no_of_requests:
+        for l in links:
+            task.append(asyncio.ensure_future(collect_data(l,0)))
+            results_list=(loop.run_until_complete(asyncio.gather(*task)))
+    else:
+        while links!=[]:
+            new_links=links[0:no_of_requests]
+            links=links[no_of_requests+1:len(links)-1]
+            print(new_links)
+            temp_results_list=[]
+            for l in new_links:
+                task.append(asyncio.ensure_future(collect_data(l, 0)))
+                temp_results_list = (loop.run_until_complete(asyncio.gather(*task)))
+            results_list=results_list+temp_results_list
 
-    for l in links:
-        task.append(asyncio.ensure_future(collect_data(l,0)))
-        results_list=(loop.run_until_complete(asyncio.gather(*task)))
     loop.close()
     return results_list
 
@@ -55,6 +67,8 @@ def main():
     download_delay=0
     results=[]
     links = collect_urls(url)
+    print('full:        ')
+    print(links)
     results=request_sending(links,no_of_requests)
 
     print('total number of requests made= ' +str(len(results)))
