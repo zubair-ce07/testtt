@@ -208,7 +208,7 @@ class WoolrichParseSpider(BaseParseSpider, MixinUS):
         image_urls = response.css('[data-sku]::attr(data-images)').extract_first()
         image_urls = json.loads(image_urls)
         
-        return [u['data'].replace('{:size}', '1200x1318') for u in image_urls if not "thumbnail" in u['alt']]
+        return [u['data'].replace('{:size}', '1200x1200') for u in image_urls if not "thumbnail" in u['alt']]
 
 
 class WoolrichCrawlSpider(BaseCrawlSpider):
