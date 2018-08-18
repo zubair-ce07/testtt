@@ -23,31 +23,27 @@
    {% endblock %}
    {% block content %}
    <div class="ps">
-      {% for post in posts %}
+      {% for posts_data in posts_data_list %}
       <div class="panel panel-info">
          <div class="panel-heading">
             <div>
-               <h3 class="panel-title">{{post.title}}</h3>
+               <h3 class="panel-title">{{posts_data.title}}</h3>
             </div>
             <div class="panel-body">
-               <p>{{post.description}}</p>
+               <p>{{posts_data.description}}</p>
             </div>
             <div id="icon">
-               {% for post_user in user %}
-               {% if post_user.uid == post.puid %}
-               BY: {{post_user.username}}
-               {% endif %}
-               {% if post_user.uid == post.puid and  post_user.username ==session['current_user'] %}
+               BY: {{posts_data.username}}
+               {% if posts_data.username ==session['current_user'] %}
                {% if session['user_available'] %}
-               <a class="glyphicon glyphicon-pencil" href="/update/{{ post.pid }}/{{post_user.username}}">Edit</a>&nbsp &nbsp
-               <a class="glyphicon glyphicon-trash" id="del" href="/delete/{{ post.pid }}/{{post_user.username}}"
+               <a class="glyphicon glyphicon-pencil" href="/update/{{ posts_data.pid }}/{{posts_data.username}}">Edit</a>&nbsp &nbsp
+               <a class="glyphicon glyphicon-trash" id="del" href="/delete/{{ posts_data.pid }}/{{posts_data.username}}"
                   onclick="return confirm('Are you sure?');">Delete</a>
                {% endif %}
             </div>
          </div>
       </div>
       {% endif %}
-      {% endfor %}
       {% endfor %}
    </div>
 </section>

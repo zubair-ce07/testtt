@@ -12,7 +12,7 @@ class User(db.Model):
     email = db.Column(db.String(50), unique=True, index=True)
     dateofreg = db.Column(db.DateTime, default=datetime.datetime.now)
 
-    def __init__(self,username, password, email):
+    def __init__(self, username, password, email):
         self.username = username
         self.password = password
         self.email = email
