@@ -68,18 +68,18 @@ class WoolrichParseSpider(BaseParseSpider, MixinUS):
 
     def parse_color(self, response):
         garment = response.meta.get('garment')
-        attributes_map = response.meta.get('attributes_map')
-        raw_sku = response.meta.get('raw_sku')
 
-        size_reqs = self.size_requests(response, attributes_map, raw_sku)
+        size_reqs = self.size_requests(response)
         if not size_reqs:
-            raw_sku['size'] = self.one_size
-            garment['skus'].update(self.make_sku(response, raw_sku))
+            garment['skus'].update(self.make_sku(response))
             
         garment['meta']['requests_queue'] += size_reqs
         return self.next_request_or_garment(garment)
     
-    def size_requests(self, response, attributes_map, sku_common):
+    def size_requests(self, response):
+        attributes_map = response.meta.get('attributes_map')
+        sku_common = response.meta.get('raw_sku')
+
         sku_details = json.loads(response.text)['data']
         in_stock_attributes = sku_details['in_stock_attributes']
 
@@ -104,17 +104,18 @@ class WoolrichParseSpider(BaseParseSpider, MixinUS):
 
     def parse_size(self, response):
         garment = response.meta.get('garment')
-        attributes_map = response.meta.get('attributes_map')
-        raw_sku = response.meta.get('raw_sku')
 
-        fit_requests = self.fitting_requests(response, attributes_map, raw_sku)
+        fit_requests = self.fitting_requests(response)
         if not fit_requests:
-            garment['skus'].update(self.make_sku(response, raw_sku))
+            garment['skus'].update(self.make_sku(response))
             
         garment['meta']['requests_queue'] += fit_requests
         return self.next_request_or_garment(garment)
     
-    def fitting_requests(self, response, attributes_map, sku_common):
+    def fitting_requests(self, response):
+        attributes_map = response.meta.get('attributes_map')
+        sku_common = response.meta.get('raw_sku')
+
         sku_details = json.loads(response.text)['data']
         in_stock_attributes = sku_details['in_stock_attributes']
 
@@ -139,19 +140,20 @@ class WoolrichParseSpider(BaseParseSpider, MixinUS):
     
     def parse_fitting(self, response):
         garment = response.meta.get('garment')
-        raw_sku = response.meta.get('raw_sku')
 
-        garment['skus'].update(self.make_sku(response, raw_sku))
+        garment['skus'].update(self.make_sku(response))
         return self.next_request_or_garment(garment)
     
-    def make_sku(self, response, sku):
+    def make_sku(self, response):
+        sku = response.meta.get('raw_sku')
         sku_details = json.loads(response.text)['data']
         pprice, price = self.sku_pricing(sku_details)
 
         money_strs = [price, pprice, sku['currency']]
         raw_sku = self.product_pricing_common(None, money_strs=money_strs)
         sku.update(raw_sku)
-        
+
+        sku['size'] = sku.get('size', self.one_size)
         return {sku_details['sku']: sku}
 
     def sku_pricing(self, raw_sku):
