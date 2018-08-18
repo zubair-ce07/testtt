@@ -204,6 +204,7 @@ def get_output_for_c_option(file_cont, date):
             print("{}+".format(Constants.BLUE_COLR) * int(daily_temps_of_month[1][i]), end="")
             print("{} {:02d}C".format(Constants.END_COLR, daily_temps_of_month[1][i]))
         i += 1
+    print(Constants.END_COLR, end="")
 
 
 def get_output_for_d_option(file_cont, date):
@@ -249,7 +250,7 @@ def get_output_for_d_option(file_cont, date):
         else:
             print("{}{:02d}C".format(Constants.END_COLR, daily_temps_of_month[1][i]))
         i += 1
-
+    print(Constants.END_COLR, end="")
 
 if __name__ == "__main__":
     __main__()
