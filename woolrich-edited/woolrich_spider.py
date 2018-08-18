@@ -162,10 +162,11 @@ class WoolrichParseSpider(BaseParseSpider, MixinUS):
 
     def get_product_attrs(self, response):
         product_attrs_sel = response.css('.productView-options [data-product-attribute]')
+        attr_name_r = re.compile('color|size|fit', flags=re.I)
 
         attributes_map = {}
         for attr_sel in product_attrs_sel:
-            attr_name = attr_sel.css('.form-label span::text').extract()[1].lower()
+            attr_name = attr_sel.css('.form-label span::text').re_first(attr_name_r).lower()
 
             attributes_map[attr_name] = {}
             attributes_map[attr_name]['value'] = attr_sel.css('.form-radio::attr(name)').extract_first()
