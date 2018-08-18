@@ -6,17 +6,13 @@ from urllib.parse import parse_qsl
 from scrapy.http import FormRequest
 from scrapy.spiders import Rule
 
-from .base import BaseCrawlSpider, BaseParseSpider, LinkExtractor, clean
+from .base import BaseCrawlSpider, BaseParseSpider, LinkExtractor, clean, Gender
 
 
 class Mixin:
     retailer = 'woolrich'
     allowed_domains = ['woolrich.com']
     start_urls = ['https://www.woolrich.com']
-    gender_map = [
-        ('Women', 'women'),
-        ('Men', 'men'),
-    ]
 
 
 class MixinUS(Mixin):
@@ -205,12 +201,8 @@ class WoolrichParseSpider(BaseParseSpider, MixinUS):
     	return brand if brand in raw_name else 'Woolrich'
     
     def product_gender(self, response):
-        raw_name = self.raw_name(response)
-        for token, gender in self.gender_map:
-            if token in raw_name:
-                return gender
-
-        return 'unisex-adults'
+        soup = [self.raw_name(response)] + self.product_category(response)
+        return self.gender_lookup(' '.join(soup)) or Gender.ADULTS.value        
     
     def image_urls(self, response):
         image_urls = response.css('[data-sku]::attr(data-images)').extract_first()
