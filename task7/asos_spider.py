@@ -1,12 +1,13 @@
 from json import loads
 from re import findall
+from w3lib.url import url_query_cleaner
+from six.moves.urllib.parse import urlencode
 
 from demjson import decode
 from scrapy.spiders import CrawlSpider
 from scrapy.spiders import Rule
 from scrapy.linkextractors import LinkExtractor
 from scrapy import Request
-from scrapy import FormRequest
 
 from asos.items import Product
 
@@ -16,17 +17,8 @@ class AsosSpider(CrawlSpider):
     allowed_domains = ['asos.com']
 
     start_url = 'http://www.asos.com/ru/'
-    stock_url = 'http://www.asos.com/api/product/catalogue/v2/stockprice'
-    category_url = 'http://api.asos.com/fashion/navigation/v2/tree/navigation'
-
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) '
-                      'Chrome/67.0.3396.99 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Referer': 'http://www.asos.com/',
-        'Accept-Encoding': 'gzip, deflate',
-        'Accept-Language': 'en-US,en;q=0.9',
-    }
+    stock_url = 'http://www.asos.com/api/product/catalogue/v2/stockprice?{}'
+    category_url = 'http://api.asos.com/fashion/navigation/v2/tree/navigation?{}'
 
     cookies = {}
 
@@ -40,10 +32,12 @@ class AsosSpider(CrawlSpider):
 
     custom_settings = {
         'DOWNLOAD_DELAY': 6,
+        'USER_AGENT': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko)'
+                      ' Chrome/68.0.3440.106 Safari/537.36'
     }
 
     def start_requests(self):
-        yield Request(self.start_url, headers=self.headers, callback=self.parse_navigation_attr)
+        yield Request(self.start_url, callback=self.parse_navigation_attr)
 
     def parse_navigation_attr(self, response):
         script_xpath = '//script[contains(.,"var RegionalStore")]'
@@ -51,7 +45,7 @@ class AsosSpider(CrawlSpider):
         raw_store = script_sel.re_first('\s*var\s*RegionalStore\s*=([^;]+)')
         raw_config = script_sel.re_first('\s*var\s*GlobalConfig\s*=([^;]+)')
 
-        raw_store = loads(raw_store, strict=False)
+        raw_store = loads(raw_store)
         raw_config = decode(raw_config)
 
         params = {
@@ -59,16 +53,15 @@ class AsosSpider(CrawlSpider):
             "keyStoreDataversion": raw_store.get('keyStoreDataversion'),
             "lang": raw_config.get('languageCode')
         }
-        yield FormRequest(self.category_url, headers=self.headers, cookies=self.cookies,
-                          formdata=params, callback=self.parse_category, method='GET')
+        yield Request(self.category_url.format(urlencode(params)), callback=self.parse_category)
 
     def parse_category(self, response):
         self.extract_cookie(response)
 
-        category_links = self.extract_category_links(loads(response.text, strict=False), [])
+        category_links = self.extract_category_links(loads(response.text), [])
 
         for link in category_links:
-            yield Request(link, headers=self.headers, cookies=self.cookies, callback=self.parse)
+            yield Request(link, cookies=self.cookies, callback=self.parse)
 
     def parse_product(self, response):
         raw_product = self.get_raw_product(response)
@@ -76,10 +69,10 @@ class AsosSpider(CrawlSpider):
         product_item = Product()
 
         product_item['gender'] = self.get_gender(raw_product)
-        product_item['image_urls'] = self.get_image_urls(raw_product)
-        product_item['name'] = self.get_product_name(raw_product)
         product_item['skus'] = self.get_skus(raw_product)
 
+        product_item['name'] = self.get_product_name(response)
+        product_item['image_urls'] = self.get_image_urls(response)
         product_item['retailer_sku'] = self.get_retailer_sku(response)
         product_item['description'] = self.get_description(response)
         product_item['category'] = self.get_categories(response)
@@ -97,12 +90,11 @@ class AsosSpider(CrawlSpider):
             "keyStoreDataversion": raw_stock.get('keyStoreDataversion'),
             "store": raw_stock.get('code')
         }
-        yield FormRequest(self.stock_url, headers=self.headers, cookies=self.cookies,
-                          meta={'item': product_item}, formdata=params,
-                          callback=self.parse_product_stock, method='GET')
+        yield Request(self.stock_url.format(urlencode(params)), cookies=self.cookies,
+                      meta={'item': product_item}, callback=self.parse_product_stock)
 
     def parse_product_stock(self, response):
-        raw_stock = loads(response.text, strict=False)[0].get("variants")
+        raw_stock = loads(response.text)[0].get("variants")
         product_item = response.meta.get('item')
         product_skus = product_item.get('skus').copy()
         prod_stock_map = {r_stock.get("variantId"): r_stock.get("isInStock") for r_stock in raw_stock}
@@ -120,25 +112,14 @@ class AsosSpider(CrawlSpider):
     def get_raw_product(self, response):
         xpath = '//script[contains(.,"Pages/FullProduct")]'
         raw_product = response.xpath(xpath).re_first("view\('([^']+)")
-        return loads(raw_product, strict=False)
+        return loads(raw_product)
 
     def get_gender(self, raw_product):
         return raw_product.get('gender', 'Unisex')
 
-    def get_image_urls(self, raw_product):
-        raw_images = raw_product.get('images', [])
-        product_images = [raw_image.get('url') for raw_image in raw_images]
-        return [f'http:{url}?$XXL$' for url in product_images]
-
-    def get_product_name(self, raw_product):
-        return raw_product.get('name', '')
-
     def get_skus(self, raw_product):
         raw_skus = raw_product.get('variants', [])
         raw_price = raw_product.get('price', {})
-
-        if not raw_skus:
-            return []
 
         product_skus = []
         for raw_sku in raw_skus:
@@ -158,6 +139,16 @@ class AsosSpider(CrawlSpider):
 
         return product_skus
 
+    def get_image_urls(self, response):
+        prod_images_css = '.product-gallery img::attr(src)'
+        raw_images = response.css(prod_images_css).extract()
+        product_images = [url_query_cleaner(raw_image) for raw_image in raw_images]
+        return [f'http:{url}?$XXL$' for url in product_images]
+
+    def get_product_name(self, response):
+        prod_name_css = '.product-hero h1::text'
+        return response.css(prod_name_css).extract_first()
+
     def get_care(self, response):
         care_css = '.care-info span ::text'
         return response.css(care_css).extract()
@@ -168,11 +159,11 @@ class AsosSpider(CrawlSpider):
 
     def get_retailer_sku(self, response):
         prod_sku_css = '.product-code span::text'
-        return response.css(prod_sku_css).extract_first(default='')
+        return response.css(prod_sku_css).extract_first()
 
     def get_brand(self, response):
         brand_css = '.brand-description strong::text'
-        return response.css(brand_css).extract_first(default='')
+        return response.css(brand_css).extract_first()
 
     def get_product_url(self, response):
         return response.url
