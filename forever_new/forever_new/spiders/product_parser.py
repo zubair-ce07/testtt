@@ -40,8 +40,11 @@ class ProductParser(Spider):
 
     def parse_images(self, response):
         product = response.meta["product"]
-        product["image_urls"] += response.css("img.gallery__image::attr('src')").extract()
+        product["image_urls"] += self.image_urls(response)
         return self.prepare_request(response.meta["image_requests"], product)
+
+    def image_urls(self, response):
+        return response.css("img.gallery__image::attr('src')").extract()
 
     def prepare_request(self, requests, product):
 
