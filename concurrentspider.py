@@ -2,6 +2,7 @@ import requests
 from parsel import Selector
 from urllib import parse
 import asyncio
+import argparse
 url_list=[]
 
 
@@ -33,10 +34,11 @@ def request_sending(links, no_of_requests):
     task=[]
     results_list=[]
     new_links=[]
+    global download_delay
 
     if len(links)<no_of_requests:
         for l in links:
-            task.append(asyncio.ensure_future(collect_data(l,0)))
+            task.append(asyncio.ensure_future(collect_data(l,download_delay)))
             results_list=(loop.run_until_complete(asyncio.gather(*task)))
     else:
         while links!=[]:
@@ -60,11 +62,17 @@ def results_calculation(results):
 
 
 def main():
-    url = 'https://arbisoft.com'
 
-    max_url=5
-    no_of_requests=5
-    download_delay=0
+    parser = argparse.ArgumentParser()
+    parser.add_argument('url', type=str, help='Enter the base URL you want to crawl')
+    parser.add_argument('no_of_requests', type=int, help="Enter the number of concurrent requests you want to make")
+    parser.add_argument('max_url', type=int, help="Enter the number of maximum URL's you want to visit")
+    parser.add_argument('download_delay',type=int, help="Enter the delay you want to respect during concurrent requests")
+    args = parser.parse_args()
+    url=args.url
+    max_url= args.max_url
+    no_of_requests=args.no_of_requests
+    download_delay=args.download_delay
     results=[]
     links = collect_urls(url)
     print('full:        ')
