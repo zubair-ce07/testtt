@@ -76,11 +76,6 @@ class ProductParser(Spider):
         care_css = '.product-description::text, .feature-value::text'
         return response.css(care_css).extract()[-1:]
 
-    def parse_selected_color(self, response, product):
-        product["image_urls"] += self.images(response)
-        product['requests'] += self.size_requests(response)
-        yield self.process_request(product)
-
     def color_requests(self, response):
         requests = []
         color_css = '.color .swatchanchor.selectable:not(.selected)::attr(href)'
