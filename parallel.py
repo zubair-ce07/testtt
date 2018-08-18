@@ -19,8 +19,8 @@ def collect_urls(url):
     return url_list
 
 
-async def collect_data(u,download_delay):
-    await asyncio.sleep(download_delay)
+def collect_data(u,download_delay):
+
     try:
         response_body = requests.get(u, timeout=30).text
         downloaded_bytes=len(response_body)
