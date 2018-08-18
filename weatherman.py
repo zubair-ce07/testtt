@@ -17,8 +17,8 @@ def is_valid_directory(dir_name):
     if os.path.isdir(dir_name):
         return dir_name
 
-    msg = '{} is not valid directory'.format(dir_name)
-    raise argparse.ArgumentTypeError(msg)
+    error_message = '{} is not valid directory'.format(dir_name)
+    raise argparse.ArgumentTypeError(error_message)
 
 
 def is_valid_year_and_month(year_and_month):
@@ -26,8 +26,8 @@ def is_valid_year_and_month(year_and_month):
     if match:
         return year_and_month
 
-    msg = '{} is not valid year/month'.format(year_and_month)
-    raise argparse.ArgumentTypeError(msg)
+    error_message = '{} is not valid year/month'.format(year_and_month)
+    raise argparse.ArgumentTypeError(error_message)
 
 
 def is_valid_year(year):
@@ -35,14 +35,14 @@ def is_valid_year(year):
     if match:
         return year
 
-    msg = '{} is not valid year'.format(year)
-    raise argparse.ArgumentTypeError(msg)
+    error_message = '{} is not valid year'.format(year)
+    raise argparse.ArgumentTypeError(error_message)
 
 
 def get_year_and_month(file_name):
     year = file_name[15:19]
     month = file_name[20:23]
-    return year, str(strptime(month, '%b').tm_mon)
+    return year, strptime(month, '%b').tm_mon
 
 
 class FileParser:
@@ -228,7 +228,7 @@ def main():
 
     if args.average_report:
         year, month = args.average_report.split('/')
-        month = month.lstrip('0')
+        month = int(month)
         files_name = file_parser.read_files_name(year, month)
         if files_name:
             file_parser.read_files(files_name)
@@ -242,7 +242,7 @@ def main():
 
     if args.chart_report:
         year, month = args.chart_report.split('/')
-        month = month.lstrip('0')
+        month = int(month)
         files_name = file_parser.read_files_name(year, month)
         if files_name:
             file_parser.read_files(files_name)
@@ -255,7 +255,7 @@ def main():
 
     if args.bonus:
         year, month = args.bonus.split('/')
-        month = month.lstrip('0')
+        month = int(month)
         files_name = file_parser.read_files_name(year, month)
         if files_name:
             file_parser.read_files(files_name)
