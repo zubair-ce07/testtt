@@ -60,9 +60,9 @@ class WoolrichParseSpider(BaseParseSpider, MixinUS):
             meta = {'raw_sku': raw_sku, 'attributes_map': attributes_map}
             url = self.request_url.format(product_id)
 
-            req = FormRequest(url=url, meta=meta, formdata=formdata, 
+            request = FormRequest(url=url, meta=meta, formdata=formdata, 
                             callback=self.parse_color)
-            color_reqs.append(req)
+            color_reqs += [request]
         
         return color_reqs
 
@@ -96,9 +96,9 @@ class WoolrichParseSpider(BaseParseSpider, MixinUS):
             raw_sku = sku_common.copy()
             raw_sku['size'] = size
             meta = {'raw_sku': raw_sku, 'attributes_map': attributes_map}
-            req = FormRequest(url=response.url, meta=meta,
+            request = FormRequest(url=response.url, meta=meta,
                               formdata=formdata, callback=self.parse_size)
-            size_reqs.append(req)
+            size_reqs += [request]
         
         return size_reqs
 
@@ -131,9 +131,9 @@ class WoolrichParseSpider(BaseParseSpider, MixinUS):
             raw_sku = sku_common.copy()
             raw_sku['size'] = f'{raw_sku["size"]}/{fit}'
             meta = {'raw_sku': raw_sku, 'attributes_map': attributes_map}
-            req = FormRequest(url=response.url, meta=meta,
+            request = FormRequest(url=response.url, meta=meta,
                               formdata=formdata, callback=self.parse_fitting)
-            fitting_reqs.append(req)
+            fitting_reqs += [request]
         
         return fitting_reqs
     
@@ -212,13 +212,8 @@ class WoolrichParseSpider(BaseParseSpider, MixinUS):
     def image_urls(self, response):
         image_urls = response.css('[data-sku]::attr(data-images)').extract_first()
         image_urls = json.loads(image_urls)
-        image_urls = [u['data'].replace('{:size}', '1200x1318') for u in image_urls]
         
-        return sorted(set(image_urls), key=image_urls.index)
-    
-    def get_attr_key(self, response, attr_type):
-        attr_value = int(response.css('.form-option-swatch::attr(data-swatch-id)').extract_first())
-        return f'attribute[{attr_value + attr_type}]'
+        return [u['data'].replace('{:size}', '1200x1318') for u in image_urls if not "thumbnail" in u['alt']]
 
 
 class WoolrichCrawlSpider(BaseCrawlSpider):
