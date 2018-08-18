@@ -2,9 +2,9 @@ from json import loads
 from w3lib.url import url_query_parameter
 from urllib.parse import urljoin
 from re import match
+from six.moves.urllib.parse import urlencode
 
 from scrapy.spiders import CrawlSpider
-from scrapy import FormRequest
 from scrapy import Request
 
 from jackjones.items import Product
@@ -20,16 +20,13 @@ class JackJonesSpider(CrawlSpider):
 
     category_url = "https://www.jackjones.com.cn/assets/pc/JACKJONES/nav.json"
 
-    listing_url = 'https://www.jackjones.com.cn/api/goods/goodsList'
+    listing_url = 'https://www.jackjones.com.cn/api/goods/goodsList?{}'
 
     product_url = 'https://www.jackjones.com.cn/detail/JACKJONES/{}.json'
 
-    headers = {'Accept': 'application/json, text/plain, */*',
-               'Accept-Encoding': 'gzip, deflate, br',
-               'Accept-Language': 'en-US,en;q=0.9',
-               'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML,'
-                             'like Gecko) Ubuntu Chromium/68.0.3440.84 Chrome/68.0.3440.84 Safari/537.36'
-               }
+    stock_url = "https://www.jackjones.com.cn/api/goods/getStock?goodsCode={}"
+
+    headers = {}
 
     params = {'currentpage': '1',
               'goodsHighPrice': '',
@@ -39,31 +36,22 @@ class JackJonesSpider(CrawlSpider):
               'sortType': '1'
               }
 
-    product_schema = {
-        'retailer_sku': '',
-        'image_urls': '',
-        'name': '',
-        'brand': '',
-        'description': '',
-        'category': [],
-        'care': [],
-        'skus': []
-    }
-
     allowed_domains = ['jackjones.com.cn']
 
     custom_settings = {
         'DOWNLOAD_DELAY': 4,
+        'USER_AGENT': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko)'
+                      ' Chrome/68.0.3440.106 Safari/537.36'
     }
 
     def start_requests(self):
-        yield Request(JackJonesSpider.api_key_url, callback=self.parse_api_key)
+        yield Request(self.api_key_url, callback=self.parse_api_key)
 
     def parse_api_key(self, response):
         api_token = loads(response.text).get('data', {}).get('token', "")
-        JackJonesSpider.headers['token'] = api_token
+        self.headers['token'] = api_token
 
-        yield Request(JackJonesSpider.category_url, callback=self.parse_category)
+        yield Request(self.category_url, callback=self.parse_category)
 
     def parse_category(self, response):
         raw_navs = loads(response.text)
@@ -73,41 +61,39 @@ class JackJonesSpider(CrawlSpider):
                         if match('.*\/goodsList\.html\?.*', url)}
 
         for category_id in category_ids:
-            params = JackJonesSpider.params.copy()
+            params = self.params.copy()
             params['classifyIds'] = category_id
 
-            yield FormRequest(JackJonesSpider.listing_url, headers=JackJonesSpider.headers,
-                              formdata=params, callback=self.parse_listing, method='GET')
+            yield Request(self.listing_url.format(urlencode(params)), headers=self.headers,
+                          callback=self.parse_listing)
 
     def parse_listing(self, response):
         raw_product = self.get_raw_product(response)
         product_ids = [i.get('goodsCode') for i in raw_product.get('data')]
 
         for product_id in product_ids:
-            yield Request(JackJonesSpider.product_url.format(product_id), callback=self.parse_product)
+            yield Request(self.product_url.format(product_id), callback=self.parse_product)
 
         current_page = int(raw_product.get('currentpage', '-1')) + 1
         total_pages = int(raw_product.get('totalPage', '-1')) + 1
 
         for next_page in range(current_page, total_pages):
-            params = JackJonesSpider.params.copy()
+            params = self.params.copy()
             params['classifyIds'] = url_query_parameter(response.url, 'classifyIds')
             params['currentpage'] = str(next_page)
 
-            yield FormRequest(JackJonesSpider.listing_url, headers=JackJonesSpider.headers,
-                              formdata=params, callback=self.parse_pagination, method='GET')
+            yield Request(self.listing_url.format(urlencode(params)), headers=self.headers,
+                          callback=self.parse_pagination)
 
     def parse_pagination(self, response):
         raw_product = self.get_raw_product(response)
         product_ids = [i.get('goodsCode') for i in raw_product.get('data')]
 
         for product_id in product_ids:
-            yield Request(JackJonesSpider.product_url.format(product_id), callback=self.parse_product)
+            yield Request(self.product_url.format(product_id), callback=self.parse_product)
 
     def parse_product(self, response):
         raw_product = self.get_raw_product(response)
-        if not raw_product:
-            return JackJonesSpider.product_schema
 
         product_item = Product()
 
@@ -127,9 +113,7 @@ class JackJonesSpider(CrawlSpider):
         return self.product_stock_request(product_item)
 
     def product_stock_request(self, product_item):
-        stock_url = "https://www.jackjones.com.cn/api/goods/getStock?goodsCode={}"
-
-        yield Request(stock_url.format(product_item.get('retailer_sku')),
+        yield Request(self.stock_url.format(product_item.get('retailer_sku')),
                       callback=self.parse_product_stock, meta={'item': product_item})
 
     def parse_product_stock(self, response):
@@ -170,7 +154,7 @@ class JackJonesSpider(CrawlSpider):
         return [urljoin(base_url, url) for url in image_urls]
 
     def get_gender(self, raw_product):
-        return JackJonesSpider.gender
+        return self.gender
 
     def get_brand(self, raw_product):
         return raw_product.get('data', {}).get("brand")
@@ -189,15 +173,12 @@ class JackJonesSpider(CrawlSpider):
     def get_skus(self, raw_product):
         raw_colors = raw_product.get('data', {}).get("color", [])
 
-        if not raw_colors:
-            return []
-
         product_skus = []
         for raw_color in raw_colors:
             for size_sku in raw_color.get('sizes'):
                 sku = {'price': raw_color.get('price'),
                        'previous_price': [raw_color.get('originalPrice')],
-                       'currency': JackJonesSpider.currency,
+                       'currency': self.currency,
                        'size': size_sku.get('size'),
                        'sku_id': size_sku.get('sku'),
                        'color': raw_color.get('color')}
