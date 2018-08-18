@@ -36,8 +36,8 @@ class WeatherAnalyzer:
             for line in file_data:
                 day_data = self.strip_invalid_chars(line)
                 if len(day_data) > 2:
-                    if day_data[0] != "PKT" and day_data[1] and day_data[
-                        3] and day_data[8]:
+                    if day_data[0] != "PKT" and day_data[1] and day_data[3] \
+                            and day_data[8]:
                         self.day_weather_list.append(DayWeather(
                             day_data[0], day_data[1],
                             day_data[2], day_data[3],
@@ -80,7 +80,7 @@ class WeatherAnalyzer:
         else:
             return False
 
-    def compute__month_data_average(self, month_data_list):
+    def compute_month_data_average(self, month_data_list):
         max_temp_avg = 0
         min_temp_avg = 0
         humidity_avg = 0

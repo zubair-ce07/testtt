@@ -1,15 +1,11 @@
 class DayWeather:
-    def __init__(self, pkt, max_temperature, mean_temperature
-                 , min_temperature, dew_point, mean_dew_point
-                 , min_dew_point, max_humidity, mean_humidity
-                 , min_humidity, max_sea_level_pressure
-                 , mean_sea_level_pressure
-                 , min_sea_level_pressure
-                 , max_visibility, mean_visibility
-                 , min_visibility, max_wind_speed
-                 , mean_wind_speed, max_gust_speed
-                 , precipitation, cloud_cover
-                 , events, wind_dir_degrees
+    def __init__(self, pkt, max_temperature, mean_temperature, min_temperature,
+                 dew_point, mean_dew_point, min_dew_point, max_humidity,
+                 mean_humidity, min_humidity, max_sea_level_pressure,
+                 mean_sea_level_pressure, min_sea_level_pressure,
+                 max_visibility, mean_visibility, min_visibility,
+                 max_wind_speed, mean_wind_speed, max_gust_speed,
+                 precipitation, cloud_cover, events, wind_dir_degrees
                  ):
         self.pkt = pkt
         self.max_temperature = max_temperature

@@ -8,9 +8,6 @@ class WeatherReporter:
     def __init__(self):
         self.weather_analyzer = WeatherAnalyzer()
 
-    def __read_files(self, files_path):
-        self.weather_analyzer.read_files(files_path)
-
     def generate_year_report(self, report_year, dir_path):
         self.weather_analyzer.read_files(dir_path)
         temp_max_obj, temp_min_obj, \
@@ -23,7 +20,7 @@ class WeatherReporter:
         month_data_list = self.weather_analyzer.collect_month_data(
             report_year)
         max_temp_avg, min_temp_avg, \
-            humidity_avg = self.weather_analyzer.compute__month_data_average(
+            humidity_avg = self.weather_analyzer.compute_month_data_average(
                 month_data_list)
         self.print_month_temp_report(max_temp_avg, min_temp_avg, humidity_avg)
 
