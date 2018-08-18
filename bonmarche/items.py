@@ -17,3 +17,4 @@ class ProductItem(Item):
     skus = Field()
     currency = Field()
     spider_name = Field()
+    requests = Field()
