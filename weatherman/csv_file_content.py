@@ -30,6 +30,10 @@ class FileContent:
     def __str__(self):
         return "{}".format(self.file_names)
 
+    def is_num(self, str_):
+        regex = "-?[\d]*"
+        return re.match(regex, str_)
+
     def get_yearly_data(self, year):
         """ This method compute highest, lowest temperature
         and highest humidity of the given year in a
@@ -63,15 +67,15 @@ class FileContent:
                     #tuple containing index and the complete line
                     for index_line in enumerate(reader):
                         # print('line[{}] = {}'.format(i, line))
-                        if index_line[1][1].isdigit():
+                        if self.is_num(index_line[1][1]):
                             if int(index_line[1][1]) > temp_humid_dict["max_temp"]:
                                 temp_humid_dict["max_temp"] = int(index_line[1][1])
                                 temp_humid_dict["max_temp_year"] = index_line[1][0]
-                        if index_line[1][3].isdigit():
+                        if self.is_num(index_line[1][3]):
                             if int(index_line[1][3]) < temp_humid_dict["min_temp"]:
                                 temp_humid_dict["min_temp"] = int(index_line[1][3])
                                 temp_humid_dict["min_temp_year"] = index_line[1][0]
-                        if index_line[1][7].isdigit():
+                        if self.is_num(index_line[1][7]):
                             if int(index_line[1][7]) > temp_humid_dict["max_humidity"]:
                                 temp_humid_dict["max_humidity"] = int(index_line[1][7])
                                 temp_humid_dict["max_humidity_year"] = index_line[1][0]
@@ -95,10 +99,10 @@ class FileContent:
         temp_humid_dict = {}
         temp_humid_dict["max_temp_sum"] = 0
         temp_humid_dict["min_temp_sum"] = 0
-        temp_humid_dict["max_humidity_sum"] = 0
+        temp_humid_dict["mean_humidity_sum"] = 0
         temp_humid_dict["max_temp_count"] = 0
         temp_humid_dict["min_temp_count"] = 0
-        temp_humid_dict["max_humidity_count"] = 0
+        temp_humid_dict["mean_humidity_count"] = 0
         name = Constants.FILE_PREFIX + "{}_{}.txt".format(year, month)
 
         # to skip initial whitespaces
@@ -112,15 +116,15 @@ class FileContent:
                 # enumerate(reader) will return
                 # tuple containing index and the complete line
                 for index_line in enumerate(reader):
-                    if index_line[1][1].isdigit():
+                    if self.is_num(index_line[1][1]):
                         temp_humid_dict["max_temp_sum"] += int(index_line[1][1])
                         temp_humid_dict["max_temp_count"] += 1
-                    if index_line[1][3].isdigit():
+                    if self.is_num(index_line[1][3]):
                         temp_humid_dict["min_temp_sum"] += int(index_line[1][3])
                         temp_humid_dict["min_temp_count"] += 1
-                    if index_line[1][7].isdigit():
-                        temp_humid_dict["max_humidity_sum"] += int(index_line[1][7])
-                        temp_humid_dict["max_humidity_count"] += 1
+                    if self.is_num(index_line[1][7]):
+                        temp_humid_dict["mean_humidity_sum"] += int(index_line[1][8])
+                        temp_humid_dict["mean_humidity_count"] += 1
             csv_file.close()
         except IOError:
             return None
@@ -130,8 +134,8 @@ class FileContent:
                 temp_humid_dict["max_temp_sum"] // temp_humid_dict["max_temp_count"]
             temp_humid_average["min_temp_avg"] = \
                 temp_humid_dict["min_temp_sum"] // temp_humid_dict["min_temp_count"]
-            temp_humid_average["max_humidity_avg"] = \
-                temp_humid_dict["max_humidity_sum"] // temp_humid_dict["max_humidity_count"]
+            temp_humid_average["mean_humidity_avg"] = \
+                temp_humid_dict["mean_humidity_sum"] // temp_humid_dict["mean_humidity_count"]
             return temp_humid_average
 
     def get_daily_temps_of_month(self, year, month):
@@ -160,11 +164,11 @@ class FileContent:
                 # enumerate(reader) will return
                 # tuple containing index and the complete line
                 for index_line in enumerate(reader):
-                    if index_line[1][1].isdigit():
+                    if self.is_num(index_line[1][1]):
                         high_temps[j] = int(index_line[1][1])
                     else:
                         high_temps[j] = Constants.RNF
-                    if index_line[1][3].isdigit():
+                    if self.is_num(index_line[1][3]):
                         low_temps[j] = int(index_line[1][3])
                     else:
                         low_temps[j] = Constants.RNF

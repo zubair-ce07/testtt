@@ -5,6 +5,8 @@ terminal to programme
 
 import re
 
+from constants import Constants
+
 
 class CmdArg:
     """ This class contains methods
@@ -33,15 +35,15 @@ class CmdArg:
         date_format2 = re.match(r'^\d{4}/0?[1-9]$', self.date)
         date_format3 = re.match(r'^\d{4}/1[0-2]$', self.date)
         if self.option == '-e' and date_format1 is None:
-            self.error = "option date mismatch !!!"
+            self.error = Constants.O_MISS
         elif self.option in 'acd' \
                 and date_format2 is None and date_format3 is None:
-            self.error = "option date mismatch !!!"
+            self.error = Constants.O_MISS
         elif date_format1 is None \
                 and date_format2 is None and date_format3 is None:
-            self.error = "Invalid date !!!"
+            self.error = Constants.IND
         elif self.option != "-e" and date_format1 is not None:
-            self.error = "option date mismatch !!!"
+            self.error = Constants.O_MISS
 
     def __str__(self):
         return ("Option: {}\nDate: {}\nError String: {}"

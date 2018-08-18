@@ -17,7 +17,10 @@ class Constants:
     # invalid arguments
     IVA = "Invalid arguments !!!"
     # option and date mismatch
-    O_MISS = "Option mismatch !!!"
+    O_MISS = "Please check your options and date again " \
+             "either option or date is wrong!!!"
+    # invalid date
+    IND = "Invalid Date !!!"
 
     # Color codes
     END_COLR = '\33[0m'
