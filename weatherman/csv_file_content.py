@@ -22,8 +22,7 @@ class FileContent:
         self.path = path
         self.file_names = []
         # os.walk() will return tuple containing
-        # dir_path, dir_name, filenames
-        # we are using just filenames
+        # dir_path, dir_name, filenames we are using just filenames
         for file in os.walk(path):
             self.file_names.extend(file[2])
 
@@ -76,7 +75,6 @@ class FileContent:
                     # enumerate(reader) will return
                     #tuple containing index and the complete line
                     for index_line in enumerate(reader):
-                        # print('line[{}] = {}'.format(i, line))
                         if self.is_num(index_line[1][1]):
                             if int(index_line[1][1]) > temp_humid_dict["max_temp"]:
                                 temp_humid_dict["max_temp"] = int(index_line[1][1])
@@ -123,8 +121,7 @@ class FileContent:
                 reader = csv.reader(csv_file, dialect='myDialect')
                 # to skip header
                 next(csv_file)
-                # enumerate(reader) will return
-                # tuple containing index and the complete line
+                # enumerate(reader) will return tuple containing index and the complete line
                 for index_line in enumerate(reader):
                     if self.is_num(index_line[1][1]):
                         temp_humid_dict["max_temp_sum"] += int(index_line[1][1])
