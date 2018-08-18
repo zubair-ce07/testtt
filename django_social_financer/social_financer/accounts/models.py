@@ -2,7 +2,8 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.auth.models import User
-
+from django.core.validators import MinValueValidator, MaxValueValidator
+from datetime import datetime
 
 class Category(models.Model):
     name = models.CharField(max_length=50)
@@ -58,3 +59,25 @@ def create_user_profile(sender, instance, created, **kwargs):
 @receiver(post_save, sender=User)
 def save_user_profile(sender, instance, **kwargs):
     instance.userprofile.save()
+
+
+class Feedback(models.Model):
+    given_by_user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='given_feedback')
+    given_to_user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='received_feedback')
+    star_rating = models.PositiveIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    comments = models.TextField(max_length=350, blank=True)
+    date_logged = models.DateTimeField(default=datetime.now, blank=True)
+
+
+class Report(models.Model):
+    reporting_user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='submitted_report')
+    reported_user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='received_reports')
+    category_types = (
+        ('IL', 'Inappropriate language'),
+        ('FA', 'Fake account'),
+        ('MS', 'Misuse of service'),
+        ('OT', 'Other')
+    )
+    category = models.CharField(max_length=2, choices=category_types)
+    comments = models.TextField(max_length= 500)
+    date_logged = models.DateTimeField(default=datetime.now, blank=True)

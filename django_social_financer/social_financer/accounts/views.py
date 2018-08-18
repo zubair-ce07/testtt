@@ -9,9 +9,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 
 
-from .forms import SignUpForm
+from .forms import SignUpForm, FeedbackForm, ReportForm
 from .models import UserProfile
-from . import constants
+from . import constants, helpers
 # Create your views here.
 #
 class SignUpView(generic.FormView):
@@ -72,6 +72,24 @@ class SignUpView(generic.FormView):
     #         long = location['long']
     #         return (long, lat)
 
+class FeedbackView(generic.FormView):
+    template_name = 'accounts/give_feedback.html'
+    form_class = FeedbackForm
+    context_object_name = 'form'
+    # def get_context_data(self, **kwargs):
+    #     context = super(FeedbackView, self).get_context_data(**kwargs)
+    #
+
+    def form_valid(self, form):
+        pass
+
+
+class ReportView(generic.FormView):
+    template_name = 'accounts/file_report.html'
+
+    def form_valid(self, form):
+        pass
+
 @login_required
 def home_view(request):
     role = request.user.userprofile.role
@@ -103,13 +121,21 @@ def home_donor(request, user):
                       context={'consumers': consumers, 'map_url' : constants.map_url})
 
 def donors_pairs(request):
-    return render(request,'accounts/donor/my_consumers.html',
-                  context={'pair' : request.user.userprofile.pairs.all(),
-                           'map_url' : constants.map_url})
+    if request.method == 'POST':
+        reverse_url, consumer_id = helpers.feedback_or_report(request)
+        return HttpResponseRedirect(reverse(reverse_url, kwargs={'pk' : consumer_id}))
+    elif request.method == 'GET':
+        return render(request,'accounts/donor/my_consumers.html',
+                      context={'pair' : request.user.userprofile.pairs.all(),
+                               'map_url' : constants.map_url})
 
 def home_consumer(request, user):
-    return render(request,
-                  'accounts/consumer/my_donor.html',
-                  context={'donor': request.user.userprofile.pair,
-                           'my_category': request.user.userprofile.categories,
-                           'map_url' : 'https://www.google.com/maps/search/?api=1&query='})
+    if request.method == 'POST':
+        reverse_url, consumer_id = helpers.feedback_or_report(request)
+        return HttpResponseRedirect(reverse(reverse_url, kwargs={'pk' : consumer_id}))
+    elif request.method == 'GET':
+        return render(request,
+                      'accounts/consumer/my_donor.html',
+                      context={'donor': request.user.userprofile.pair,
+                               'my_category': request.user.userprofile.categories,
+                               'map_url' : 'https://www.google.com/maps/search/?api=1&query='})

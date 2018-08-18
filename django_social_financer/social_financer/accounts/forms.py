@@ -1,7 +1,7 @@
 from django.forms import ModelForm
 from django import forms
 
-from .models import UserProfile
+from .models import UserProfile, Feedback, Report
 
 class SignUpForm(ModelForm):
     first_name = forms.CharField(max_length=30, min_length=1, label="First Name")
@@ -16,3 +16,13 @@ class SignUpForm(ModelForm):
 
         fields = ['first_name', 'last_name', 'email_address', 'password','cnic_no', 'address', 'city', 'country',
                   'postal_code', 'phone_no', 'role', 'categories']
+
+class FeedbackForm(ModelForm):
+    class Meta:
+        model = Feedback
+        exclude = ['given_by_user', 'given_to_user', 'date_logged']
+
+class ReportForm(ModelForm):
+    class Meta:
+        model = Report
+        exclude = ['reporting_user', 'reported_user', 'date_logged']
