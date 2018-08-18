@@ -31,8 +31,18 @@ class FileContent:
         return "{}".format(self.file_names)
 
     def is_num(self, str_):
+        """ This function checks either
+        string contains a number or not
+        :param str_:
+        :return:
+        """
+        if str_ == '':
+            return False
         regex = "-?[\d]*"
-        return re.match(regex, str_)
+        if re.match(regex, str_) is None:
+            return False
+        else:
+            return True
 
     def get_yearly_data(self, year):
         """ This method compute highest, lowest temperature
