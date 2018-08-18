@@ -1,4 +1,5 @@
-""" This module is for validation of
+"""
+This module is for validation of
 the command line arguments recieved from the
 terminal to programme
 """
@@ -9,7 +10,8 @@ from constants import Constants
 
 
 class CmdArg:
-    """ This class contains methods
+    """
+    This class contains methods
     to validate arguments recieved from the terminal
     like options and date
     """
@@ -21,7 +23,8 @@ class CmdArg:
 
     def validate_arguments(self):
 
-        """ This method validates the options and
+        """
+        This method validates the options and
         date format using regular expressions
         and sets error data member of class according
         to the validation

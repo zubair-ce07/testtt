@@ -1,4 +1,5 @@
-""" This is the main module of
+"""
+This is the main module of
 the program from here the program
 initiates its execution and prints
 results of temperatures according to
@@ -14,7 +15,8 @@ from constants import Constants
 
 
 def __main__():
-    """ This is the entry point of the
+    """
+    This is the entry point of the
     program. this function just calls different functions
     on the basis of some checks
     :return:
@@ -36,7 +38,8 @@ def __main__():
 
 
 def manage_arguments(arguments):
-    """ This function just manage all the
+    """
+    This function just manage all the
     validations of the input cmd arguments
     if arguments will be wrong it will
     print a message and terminate the program
@@ -91,7 +94,8 @@ def manage_arguments(arguments):
 
 
 def get_special_report(file_cont, arguments):
-    """ This function will dispaly the
+    """
+    This function will dispaly the
     special report i.e. yearly, monthly average
     and monthly highest temperature and humidity
     :param file_cont:
@@ -100,14 +104,13 @@ def get_special_report(file_cont, arguments):
     """
 
     get_output_for_c_option(file_cont, arguments["date1"])
-    print("")
     get_output_for_a_option(file_cont, arguments["date2"])
-    print("")
     get_output_for_e_option(file_cont, arguments["date3"])
 
 
 def get_output_for_a_option(file_cont, date):
-    """ This function displays the
+    """
+    This function displays the
     average of highest temperature,
     average of lowest temperature
     average of highest humidity of
@@ -128,12 +131,13 @@ def get_output_for_a_option(file_cont, date):
           .format(monthly_temp_humidity_avg["max_temp_avg"]))
     print("Lowest Average: {:02d}C"
           .format(monthly_temp_humidity_avg["min_temp_avg"]))
-    print("Average Mean Humidity: {:02d}%"
+    print("Average Mean Humidity: {:02d}%\n"
           .format(monthly_temp_humidity_avg["mean_humidity_avg"]))
 
 
 def get_output_for_e_option(file_cont, date):
-    """ This function displays the
+    """
+    This function displays the
     yearly report of highest temperatue,
     lowest temperature and highest humidity
     :param file_cont:
@@ -162,7 +166,7 @@ def get_output_for_e_option(file_cont, date):
         calendar.month_name[int(min_temp_date[1])],
         min_temp_date[2]
     ))
-    print("Humidity: {:02d}% on {} {}".format(
+    print("Humidity: {:02d}% on {} {}\n".format(
         yearly_temp_humidity["max_humidity"],
         calendar.month_name[int(max_humidity_date[1])],
         max_humidity_date[2]
@@ -170,7 +174,8 @@ def get_output_for_e_option(file_cont, date):
 
 
 def get_output_for_c_option(file_cont, date):
-    """ This method displays the bar chart
+    """
+    This method displays the bar chart
     representation of hisghest and lowest
     temperatures of the given month of the year
     on separate lines with red + for high
@@ -208,7 +213,8 @@ def get_output_for_c_option(file_cont, date):
 
 
 def get_output_for_d_option(file_cont, date):
-    """ This method displays the bar chart
+    """
+    This method displays the bar chart
     representation of hisghest and lowest
     temperatures of the given month of the year
     on single line with red + for high

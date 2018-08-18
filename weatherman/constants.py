@@ -1,10 +1,12 @@
-""" This module conatins constants
+"""
+This module conatins constants
 of the program
 """
 
 
 class Constants:
-    """ This class contains the constants
+    """
+    This class contains the constants
     like RNF and FILE_PREFIX
     """
 
@@ -29,7 +31,8 @@ class Constants:
 
     @staticmethod
     def get_rnf():
-        """ this method returns RNF string
+        """
+        this method returns RNF string
         :return:
         """
 
@@ -37,7 +40,8 @@ class Constants:
 
     @staticmethod
     def get_file_prefix():
-        """ this method returns file_prefix
+        """
+        this method returns file_prefix
         :return:
         """
 

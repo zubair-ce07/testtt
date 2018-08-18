@@ -1,4 +1,5 @@
-""" This module contains class
+"""
+This module contains class
 and all the functions which are responsible
 for collecting data from .csv temperature
 files and give certain result
@@ -12,7 +13,8 @@ from constants import Constants
 
 
 class FileContent:
-    """ This module contains class
+    """
+    This module contains class
     and all the functions which are responsible
     for collecting data from .csv temperature
     files and give certain result
@@ -30,7 +32,8 @@ class FileContent:
         return "{}".format(self.file_names)
 
     def is_num(self, str_):
-        """ This function checks either
+        """
+        This function checks either
         string contains a number or not
         :param str_:
         :return:
@@ -44,7 +47,8 @@ class FileContent:
             return True
 
     def get_yearly_data(self, year):
-        """ This method compute highest, lowest temperature
+        """
+        This method compute highest, lowest temperature
         and highest humidity of the given year in a
         dictionary
         :param year:
@@ -72,8 +76,7 @@ class FileContent:
                     reader = csv.reader(csv_file, dialect='myDialect')
                     # to skip header
                     next(csv_file)
-                    # enumerate(reader) will return
-                    #tuple containing index and the complete line
+                    #returns tuple (index ,the complete line)
                     for index_line in enumerate(reader):
                         if self.is_num(index_line[1][1]):
                             if int(index_line[1][1]) > temp_humid_dict["max_temp"]:
@@ -94,7 +97,8 @@ class FileContent:
             return temp_humid_dict
 
     def get_average_monthly_data(self, year, month):
-        """ This method calculates the average
+        """
+        This method calculates the average
         highest and lowest temperature and
         average highest humidity of the given
         month of a year and returns result in a
@@ -121,7 +125,7 @@ class FileContent:
                 reader = csv.reader(csv_file, dialect='myDialect')
                 # to skip header
                 next(csv_file)
-                # enumerate(reader) will return tuple containing index and the complete line
+                # returns tuple (index ,the complete line)
                 for index_line in enumerate(reader):
                     if self.is_num(index_line[1][1]):
                         temp_humid_dict["max_temp_sum"] += int(index_line[1][1])
@@ -146,7 +150,8 @@ class FileContent:
             return temp_humid_average
 
     def get_daily_temps_of_month(self, year, month):
-        """ This method returns the
+        """
+        This method returns the
         daily highest and lowest temperature of
         the given month of a year in a list of two
         dictionaries
