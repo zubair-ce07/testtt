@@ -1,3 +1,4 @@
+import unicodedata
 import re
 import scrapy
 from KITH.items import KithItem
@@ -11,22 +12,28 @@ class KithSpider(scrapy.Spider):
     def parse(self, response):
         href_list = response.xpath('//ul[contains(@class, "ksplash-mega-list")]/li/a/@href').extract()
         for href in href_list:
-            yield scrapy.Request(href, callback=self.parse_products)
+            yield scrapy.Request(href, callback=self.parse_page_urls)
+
+    def parse_page_urls(self, response):
+        list_urls = []
+        list_urls.append(response.url)
+        last_page_number = response.xpath('//div[contains(@class,"pagination")]/span[5]/a/text()').extract_first()
+        if last_page_number:
+            last_page_number = int(last_page_number)
+            for index in range(2, last_page_number):
+                if response.url.endswith('/'):
+                    list_urls.append(response.url[:-1] + "?page=" + str(index))
+                else:
+                    list_urls.append(response.url + "?page=" + str(index))
+        for url in list_urls:
+            yield scrapy.Request(url, callback=self.parse_products)
 
     def parse_products(self, response):
         for href in response.xpath('//a[contains(@class,"product-card-info")]/@href'):
             url = "https://kith.com{}".format(href.extract())
-            yield scrapy.Request(url, callback=self.parse_dir_contents)
+            yield scrapy.Request(url, callback=self.parse_product_item)
 
-        next_page_url = response.xpath('//span[contains(@class,"next")]/a/@href').extract_first()
-        if next_page_url:
-            next_page_url = next_page_url[:-1]
-            last_page_number = int(response.xpath('//div[contains(@class,"pagination")]/span[5]/a/text()').extract_first())
-            for page_num in range(2, last_page_number):
-                next_page = next_page_url + str(page_num)
-                yield scrapy.Request(url=next_page, callback=self.parse)
-
-    def parse_dir_contents(self, response):
+    def parse_product_item(self, response):
         item = KithItem()
         item['product_ID'], item['material'], item['description'] = self.parse_description(response)
         item['name'] = self.parse_name(response)
@@ -70,25 +77,26 @@ class KithSpider(scrapy.Spider):
 
     def parse_description(self, response):
         description_list = self.cleanse_description(response)
-        for description in description_list:
-            if description != u'\xa0':
-                sub_string_style = re.search('Style: (.+?)$', description)
+        product_id = ''
+        material = ''
+        if description_list:
+            for description in description_list:
+                sub_string_style = re.search(r'^Style: (.+?)$', description)
                 if sub_string_style:
                     description_list.remove(description)
                     product_id = sub_string_style.group(1)
-
-        for description in description_list:
-            if description != u'\xa0' or description != '':
-                sub_string_material = re.search('Material: (.+?)$', description)
+            for description in description_list:
+                sub_string_color = re.search(r'^Color: (.+?)$', description)
+                if sub_string_color:
+                    description_list.remove(description)
+            for description in description_list:
+                sub_string_material = re.search(r'^Material: (.+?)$', description)
                 if sub_string_material:
                     description_list.remove(description)
                     material = sub_string_material.group(1)
-
-        for description in description_list:
-            if description != u'\xa0':
-                sub_string_color = re.search('Color: (.+?)$', description)
-                if sub_string_color:
-                    description_list.remove(description)
-        description = description_list + response.xpath('//div[contains(@class, '
-                                                        '"product-single-details-rte rte mb0")]/ul/li/text()').extract()
+        if description_list:
+            description = description_list
+        else:
+            description = response.xpath('//div[contains(@class, '
+                                         '"product-single-details-rte rte mb0")]/ul/li/text()').extract()
         return product_id, material, description
