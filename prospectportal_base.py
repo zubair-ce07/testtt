@@ -302,13 +302,13 @@ class PPBaseCrawlSpider(BaseCrawlSpider, BaseMixinPP):
     def parse_amenities(self, response):
         ps = self.parse_spider
         ps.p_amenities += clean(response.css(self.p_amenities_css))
-        ps.p_images += clean(response.css(self.p_images_css))
+        ps.p_images += [response.urljoin(url) for url in clean(response.css(self.p_images_css))]
 
     def parse_floor_amenities(self, response):
         ps = self.parse_spider
         ps.r_amenities += clean(response.css(self.r_amenities_css))
         if self.r_photos_css:
-            ps.r_photos += clean(response.css(self.r_photos_css))
+            ps.r_photos += [response.urljoin(url) for url in clean(response.css(self.r_photos_css))]
 
     def parse_login_page(self, response):
         login_url = response.css('#returning_applicants_login::attr(action)').extract_first()
