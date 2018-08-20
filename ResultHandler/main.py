@@ -52,7 +52,7 @@ if __name__ == '__main__':
     if cmd_arguments.present:
         # task 1: Showing the present students
         present_percentage = ResultProcessor.get_present_percentage(users)
-        ResultReporter.show_present_percentage(present_percentage)
+        ResultReporter.show_percentage(present_percentage)
     if cmd_arguments.meritlist:
         # task 4: Showing the merit list
         groups = ResultProcessor.create_merit_list(users, 50)
@@ -66,7 +66,7 @@ if __name__ == '__main__':
                 cmd_arguments.threshold,
                 cmd_arguments.scale_ratio
             )
-            ResultReporter.show_scaled_percentage(
+            ResultReporter.show_percentage(
                 scaled_per,
                 cmd_arguments.threshold,
                 cmd_arguments.scale_ratio
@@ -77,7 +77,7 @@ if __name__ == '__main__':
                 users,
                 cmd_arguments.threshold
             )
-            ResultReporter.show_passed_percentage(
+            ResultReporter.show_percentage(
                 result_per,
                 cmd_arguments.threshold
             )

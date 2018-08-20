@@ -1,5 +1,6 @@
 import csv
 from result_data import ResultData
+from termcolor import colored
 
 
 class ResultReporter:
@@ -7,54 +8,17 @@ class ResultReporter:
     This class performs all the output operations on the results
     """
     @staticmethod
-    def show_present_percentage(per):
-        """
-        It shows the percentage of students who attempted the exam.
-        :param per: percentage of present students
-        :return: None
-        """
-        print(
-            "Present Students: "
-            + str(format(per, '.2f'))
-            + "%"
-        )
-
-    @staticmethod
-    def show_passed_percentage(per, threshold):
-        """
-        It shows the percentage of students who attempted the exam
-        and scored more than given threshold.
-        :param per: percentage of present students
-        :param threshold: passing criteria
-        :return: None
-        """
-        print(
-            "Passed Students (with Threshold: "
-            + str(threshold)
-            + "): "
-            + str(format(per, '.2f'))
-            + "%"
-        )
-
-    @staticmethod
-    def show_scaled_percentage(per, threshold, scale):
-        """
-        It shows the percentage of students who attempted the exam
-        and scored more than given threshold after scaling the score.
-        :param per: percentage of students who passed
-        :param threshold: passing criteria
-        :param scale: scaling value
-        :return: None
-        """
-        print(
-            "Passed Students (with Threshold: "
-            + str(threshold)
-            + " Scale: "
-            + str(scale)
-            + "): "
-            + str(format(per, '.2f'))
-            + "%"
-        )
+    def show_percentage(per, threshold=None, scale=None):
+        message = "Present Students "
+        if threshold:
+            message += "(Threshold " + colored(str(threshold), 'blue') + ") "
+        if scale:
+            message += "(Scale " + colored(str(scale), 'blue') + ") "
+        message += ": "
+        print(message
+              + colored(str(format(per, '.2f')), 'green')
+              + "%"
+              )
 
     @staticmethod
     def generate_merit_list_files(groups):
