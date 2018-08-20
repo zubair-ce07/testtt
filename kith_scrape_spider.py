@@ -76,24 +76,23 @@ class KithSpider(scrapy.Spider):
         return description_list
 
     def parse_description(self, response):
-        description_list = self.cleanse_description(response)
+        information_list = self.cleanse_description(response)
+        description_list = []
         product_id = ''
         material = ''
-        if description_list:
-            for description in description_list:
+        if information_list:
+            for description in information_list:
                 sub_string_style = re.search(r'^Style: (.+?)$', description)
-                if sub_string_style:
-                    description_list.remove(description)
-                    product_id = sub_string_style.group(1)
-            for description in description_list:
                 sub_string_color = re.search(r'^Color: (.+?)$', description)
-                if sub_string_color:
-                    description_list.remove(description)
-            for description in description_list:
                 sub_string_material = re.search(r'^Material: (.+?)$', description)
-                if sub_string_material:
-                    description_list.remove(description)
+                if sub_string_style:
+                    product_id = sub_string_style.group(1)
+                elif sub_string_color:
+                    pass
+                elif sub_string_material:
                     material = sub_string_material.group(1)
+                else:
+                    description_list.append(description)
         if description_list:
             description = description_list
         else:
