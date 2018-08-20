@@ -12,7 +12,7 @@ class WhistlesSpider(CrawlSpider):
     """
     name = 'enamora'
     allowed_domains = ['www.enamora.de']
-    start_urls = ['https://www.enamora.de/tommy-hilfiger-holiday-gift-giving-pyjama-navy-blazerscooter.html']
+    start_urls = ['https://www.enamora.de/', 'https://www.enamora.de/herren/']
 
     def parse(self, response):
         items_pages = response.css("ul.nav.row li a::attr(href)")
