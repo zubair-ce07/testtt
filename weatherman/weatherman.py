@@ -9,7 +9,7 @@ the given options and date
 import sys
 import calendar
 
-from cmd_arg import CommandArgument
+from command_arguments import CommandArgument
 from csv_file_content import FileContent
 from constants import Constants
 
@@ -64,17 +64,17 @@ def manage_arguments(arguments):
             print(Constants.OPTION_DATE_MISMATCH)
             exit(1)
 
-        cmd_arg = CommandArgument(arguments["option1"], arguments["date1"])
-        if cmd_arg.error != "":
-            print(cmd_arg.error)
+        my_arguments = CommandArgument(arguments["option1"], arguments["date1"])
+        if my_arguments.error != "":
+            print(my_arguments.error)
             exit(1)
-        cmd_arg = CommandArgument(arguments["option2"], arguments["date2"])
-        if cmd_arg.error != "":
-            print(cmd_arg.error)
+        my_arguments = CommandArgument(arguments["option2"], arguments["date2"])
+        if my_arguments.error != "":
+            print(my_arguments.error)
             exit(1)
-        cmd_arg = CommandArgument(arguments["option3"], arguments["date3"])
-        if cmd_arg.error != "":
-            print(cmd_arg.error)
+        my_arguments = CommandArgument(arguments["option3"], arguments["date3"])
+        if my_arguments.error != "":
+            print(my_arguments.error)
             exit(1)
         return
 
@@ -85,11 +85,11 @@ def manage_arguments(arguments):
         arguments["path"] = sys.argv[1]
         arguments["option"] = sys.argv[2]
         arguments["date"] = sys.argv[3]
-        cmd_arguments = CommandArgument(arguments["option"], arguments["date"])
-        cmd_arguments.validate_arguments()
+        my_argumentsuments = CommandArgument(arguments["option"], arguments["date"])
+        my_argumentsuments.validate_arguments()
 
-        if cmd_arguments.error != "":
-            print(cmd_arguments.error)
+        if my_argumentsuments.error != "":
+            print(my_argumentsuments.error)
             exit(1)
 
 
@@ -187,9 +187,9 @@ def get_output_for_c_option(file_cont, date):
 
     date_tokens = date.split("/")
     year = date_tokens[0]
-    month_abbr = calendar.month_abbr[int(date_tokens[1])]
+    month_abbreviation = calendar.month_abbr[int(date_tokens[1])]
     month_name = calendar.month_name[int(date_tokens[1])]
-    daily_temps_of_month = file_cont.get_daily_temps_of_month(year, month_abbr)
+    daily_temps_of_month = file_cont.get_daily_temps_of_month(year, month_abbreviation)
     if daily_temps_of_month is None:
         print("IO error occured")
         exit(1)
@@ -226,32 +226,32 @@ def get_output_for_d_option(file_cont, date):
 
     date_tokens = date.split("/")
     year = date_tokens[0]
-    month_abbr = calendar.month_abbr[int(date_tokens[1])]
+    month_abbreviation = calendar.month_abbr[int(date_tokens[1])]
     month_name = calendar.month_name[int(date_tokens[1])]
-    daily_temps_of_month = file_cont.get_daily_temps_of_month(year, month_abbr)
+    daily_temps_of_month = file_cont.get_daily_temps_of_month(year, month_abbreviation)
     if daily_temps_of_month is None:
         print("IO error occured")
         exit(1)
     print(month_name, date_tokens[0])
     i = 1
     while i <= len(daily_temps_of_month[0]):
-        high_temp_miss = (daily_temps_of_month[0][i] == Constants.RECORD_NOT_FOUND)
-        low_temp_miss = (daily_temps_of_month[1][i] == Constants.RECORD_NOT_FOUND)
+        high_temp_missed = (daily_temps_of_month[0][i] == Constants.RECORD_NOT_FOUND)
+        low_temp_missed = (daily_temps_of_month[1][i] == Constants.RECORD_NOT_FOUND)
         print("{}{:02d} ".format(Constants.END_COLOR, i), end="")
-        if high_temp_miss:
+        if high_temp_missed:
             print("{}missing".format(Constants.RED_COLOR), end="")
         else:
             print("{}+".format(Constants.RED_COLOR) * int(daily_temps_of_month[0][i]), end="")
-        if low_temp_miss:
+        if low_temp_missed:
             print("{}missing".format(Constants.BLUE_COLOR), end="")
         else:
             print("{}+".format(Constants.BLUE_COLOR) * int(daily_temps_of_month[1][i]), end="")
-        if high_temp_miss:
+        if high_temp_missed:
             print("{} missing-".format(Constants.RED_COLOR), end="")
         else:
             print("{} {:02d}C-"
                   .format(Constants.END_COLOR, daily_temps_of_month[0][i]), end="")
-        if low_temp_miss:
+        if low_temp_missed:
             print("{}missing".format(Constants.BLUE_COLOR))
         else:
             print("{}{:02d}C".format(Constants.END_COLOR, daily_temps_of_month[1][i]))

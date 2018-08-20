@@ -9,8 +9,9 @@ import os
 import re
 import csv
 
-from constants import Constants
 
+from constants import Constants
+from helper import is_num
 
 class FileContent:
     """
@@ -29,21 +30,7 @@ class FileContent:
 
     def __str__(self):
         return "{}".format(self.file_names)
-
-    def is_num(self, value):
-        """
-        This function checks either
-        string contains a number or not
-        :param str_:
-        :return:
-        """
-
-        regex = "-?[\d]*"
-        if value == '' or re.match(regex, value) is None:
-            return False
-        else:
-            return True
-
+    
     def get_yearly_data(self, year):
         """
         This method compute highest, lowest temperature
@@ -76,15 +63,15 @@ class FileContent:
                     next(csv_file)
                     # returns tuple (index ,the complete line)
                     for index_line in enumerate(reader):
-                        if self.is_num(index_line[1][1]):
+                        if is_num(index_line[1][1]):
                             if int(index_line[1][1]) > temp_humid_dict["max_temp"]:
                                 temp_humid_dict["max_temp"] = int(index_line[1][1])
                                 temp_humid_dict["max_temp_year"] = index_line[1][0]
-                        if self.is_num(index_line[1][3]):
+                        if is_num(index_line[1][3]):
                             if int(index_line[1][3]) < temp_humid_dict["min_temp"]:
                                 temp_humid_dict["min_temp"] = int(index_line[1][3])
                                 temp_humid_dict["min_temp_year"] = index_line[1][0]
-                        if self.is_num(index_line[1][7]):
+                        if is_num(index_line[1][7]):
                             if int(index_line[1][7]) > temp_humid_dict["max_humidity"]:
                                 temp_humid_dict["max_humidity"] = int(index_line[1][7])
                                 temp_humid_dict["max_humidity_year"] = index_line[1][0]
@@ -125,13 +112,13 @@ class FileContent:
                 next(csv_file)
                 # returns tuple (index ,the complete line)
                 for index_line in enumerate(reader):
-                    if self.is_num(index_line[1][1]):
+                    if is_num(index_line[1][1]):
                         temp_humid_dict["max_temp_sum"] += int(index_line[1][1])
                         temp_humid_dict["max_temp_count"] += 1
-                    if self.is_num(index_line[1][3]):
+                    if is_num(index_line[1][3]):
                         temp_humid_dict["min_temp_sum"] += int(index_line[1][3])
                         temp_humid_dict["min_temp_count"] += 1
-                    if self.is_num(index_line[1][7]):
+                    if is_num(index_line[1][7]):
                         temp_humid_dict["mean_humidity_sum"] += int(index_line[1][8])
                         temp_humid_dict["mean_humidity_count"] += 1
             csv_file.close()
@@ -173,11 +160,11 @@ class FileContent:
                 next(csv_file)
                 # returns tuple (index ,the complete line)
                 for index_line in enumerate(reader):
-                    if self.is_num(index_line[1][1]):
+                    if is_num(index_line[1][1]):
                         high_temps[j] = int(index_line[1][1])
                     else:
                         high_temps[j] = Constants.RECORD_NOT_FOUND
-                    if self.is_num(index_line[1][3]):
+                    if is_num(index_line[1][3]):
                         low_temps[j] = int(index_line[1][3])
                     else:
                         low_temps[j] = Constants.RECORD_NOT_FOUND
