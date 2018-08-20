@@ -55,7 +55,7 @@ if __name__ == '__main__':
         ResultReporter.show_present_percentage(present_percentage)
     if cmd_arguments.meritlist:
         # task 4: Showing the merit list
-        groups = ResultProcessor.make_merit_list(users, 50)
+        groups = ResultProcessor.create_merit_list(users, 50)
         ResultReporter.generate_merit_list_files(groups)
 
     if cmd_arguments.passed:

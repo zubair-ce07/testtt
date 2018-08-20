@@ -37,7 +37,7 @@ class ResultProcessor:
         return len(passed_students)/len(users) * 100
 
     @staticmethod
-    def make_merit_list(users, threshold):
+    def create_merit_list(users, threshold):
         """
         :param users: list of ResultData objects i.e. student records
         :param threshold: passing criteria
