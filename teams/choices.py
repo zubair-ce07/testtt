@@ -47,11 +47,11 @@ class PlayingRoleChoices:
 
 
 class FormatChoices:
-    TEST = 'TEST'
-    ODI = 'ODI'
-    T20I = 'T20I'
+    TEST = 'TESTS'
+    ODI = 'ODIS'
+    T20I = 'T20IS'
     FIRSTCLASS = 'FIRST-CLASS'
-    LISTA = 'LISTA'
+    LISTA = 'LIST A'
     T20S = 'T20S'
 
     Choices = (
