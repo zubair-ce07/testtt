@@ -8,8 +8,7 @@ import re
 
 from constants import Constants
 
-
-class CmdArg:
+class CommandArgument:
     """
     This class contains methods
     to validate arguments recieved from the terminal
@@ -38,15 +37,15 @@ class CmdArg:
         date_format2 = re.match(r'^\d{4}/0?[1-9]$', self.date)
         date_format3 = re.match(r'^\d{4}/1[0-2]$', self.date)
         if self.option == '-e' and date_format1 is None:
-            self.error = Constants.O_MISS
+            self.error = Constants.OPTION_DATE_MISMATCH
         elif self.option in 'acd' \
                 and date_format2 is None and date_format3 is None:
-            self.error = Constants.O_MISS
+            self.error = Constants.OPTION_DATE_MISMATCH
         elif date_format1 is None \
                 and date_format2 is None and date_format3 is None:
-            self.error = Constants.IND
+            self.error = Constants.INVALID_DATE
         elif self.option != "-e" and date_format1 is not None:
-            self.error = Constants.O_MISS
+            self.error = Constants.OPTION_DATE_MISMATCH
 
     def __str__(self):
         return ("Option: {}\nDate: {}\nError String: {}"

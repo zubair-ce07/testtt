@@ -23,25 +23,23 @@ class FileContent:
     def __init__(self, path):
         self.path = path
         self.file_names = []
-        # os.walk() will return tuple containing
-        # dir_path, dir_name, filenames we are using just filenames
+        # returns tuple(dir_path, dir_name, filenames )
         for file in os.walk(path):
             self.file_names.extend(file[2])
 
     def __str__(self):
         return "{}".format(self.file_names)
 
-    def is_num(self, str_):
+    def is_num(self, value):
         """
         This function checks either
         string contains a number or not
         :param str_:
         :return:
         """
-        if str_ == '':
-            return False
+
         regex = "-?[\d]*"
-        if re.match(regex, str_) is None:
+        if value == '' or re.match(regex, value) is None:
             return False
         else:
             return True
@@ -76,7 +74,7 @@ class FileContent:
                     reader = csv.reader(csv_file, dialect='myDialect')
                     # to skip header
                     next(csv_file)
-                    #returns tuple (index ,the complete line)
+                    # returns tuple (index ,the complete line)
                     for index_line in enumerate(reader):
                         if self.is_num(index_line[1][1]):
                             if int(index_line[1][1]) > temp_humid_dict["max_temp"]:
@@ -173,17 +171,16 @@ class FileContent:
                 reader = csv.reader(csv_file, dialect='myDialect')
                 # to skip header
                 next(csv_file)
-                # enumerate(reader) will return
-                # tuple containing index and the complete line
+                # returns tuple (index ,the complete line)
                 for index_line in enumerate(reader):
                     if self.is_num(index_line[1][1]):
                         high_temps[j] = int(index_line[1][1])
                     else:
-                        high_temps[j] = Constants.RNF
+                        high_temps[j] = Constants.RECORD_NOT_FOUND
                     if self.is_num(index_line[1][3]):
                         low_temps[j] = int(index_line[1][3])
                     else:
-                        low_temps[j] = Constants.RNF
+                        low_temps[j] = Constants.RECORD_NOT_FOUND
                     j += 1
             csv_file.close()
         except IOError:

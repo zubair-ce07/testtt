@@ -9,7 +9,7 @@ the given options and date
 import sys
 import calendar
 
-from cmd_arg import CmdArg
+from cmd_arg import CommandArgument
 from csv_file_content import FileContent
 from constants import Constants
 
@@ -61,31 +61,31 @@ def manage_arguments(arguments):
         if arguments["option1"] != "-c" or \
                 arguments["option2"] != "-a" or \
                 arguments["option3"] != "-e":
-            print(Constants.O_MISS)
+            print(Constants.OPTION_DATE_MISMATCH)
             exit(1)
 
-        cmd_arg = CmdArg(arguments["option1"], arguments["date1"])
+        cmd_arg = CommandArgument(arguments["option1"], arguments["date1"])
         if cmd_arg.error != "":
             print(cmd_arg.error)
             exit(1)
-        cmd_arg = CmdArg(arguments["option2"], arguments["date2"])
+        cmd_arg = CommandArgument(arguments["option2"], arguments["date2"])
         if cmd_arg.error != "":
             print(cmd_arg.error)
             exit(1)
-        cmd_arg = CmdArg(arguments["option3"], arguments["date3"])
+        cmd_arg = CommandArgument(arguments["option3"], arguments["date3"])
         if cmd_arg.error != "":
             print(cmd_arg.error)
             exit(1)
         return
 
     if arguments["total_arg"] != 4:
-        print(Constants.IVA)
+        print(Constants.INVALID_ARGUMENTS)
         exit(1)
     else:
         arguments["path"] = sys.argv[1]
         arguments["option"] = sys.argv[2]
         arguments["date"] = sys.argv[3]
-        cmd_arguments = CmdArg(arguments["option"], arguments["date"])
+        cmd_arguments = CommandArgument(arguments["option"], arguments["date"])
         cmd_arguments.validate_arguments()
 
         if cmd_arguments.error != "":
@@ -125,7 +125,7 @@ def get_output_for_a_option(file_cont, date):
     month = calendar.month_abbr[int(date_tokens[1])]
     monthly_temp_humidity_avg = file_cont.get_average_monthly_data(year, month)
     if monthly_temp_humidity_avg is None:
-        print(Constants.IOE)
+        print(Constants.IO_EXCEPTION)
         exit(1)
     print("Highest Average: {:02d}C"
           .format(monthly_temp_humidity_avg["max_temp_avg"]))
@@ -147,10 +147,10 @@ def get_output_for_e_option(file_cont, date):
 
     yearly_temp_humidity = file_cont.get_yearly_data(date)
     if yearly_temp_humidity is None:
-        print(Constants.IOE)
+        print(Constants.IO_EXCEPTION)
         exit(1)
     if not yearly_temp_humidity["file_found"]:
-        print(Constants.IOE)
+        print(Constants.IO_EXCEPTION)
         return
 
     max_temp_date = yearly_temp_humidity["max_temp_year"].split('-')
@@ -196,20 +196,20 @@ def get_output_for_c_option(file_cont, date):
     print(month_name, date_tokens[0])
     i = 1
     while i <= len(daily_temps_of_month[0]):
-        print("{}{:02d} ".format(Constants.END_COLR, i), end="")
-        if daily_temps_of_month[0][i] == Constants.RNF:
-            print("{}missing".format(Constants.RED_COLR))
+        print("{}{:02d} ".format(Constants.END_COLOR, i), end="")
+        if daily_temps_of_month[0][i] == Constants.RECORD_NOT_FOUND:
+            print("{}missing".format(Constants.RED_COLOR))
         else:
-            print("{}+".format(Constants.RED_COLR) * int(daily_temps_of_month[0][i]), end="")
-            print("{} {:02d}C".format(Constants.END_COLR, daily_temps_of_month[0][i]))
-        print("{}{:02d} ".format(Constants.END_COLR, i), end="")
-        if daily_temps_of_month[1][i] == Constants.RNF:
-            print("{}missing".format(Constants.BLUE_COLR))
+            print("{}+".format(Constants.RED_COLOR) * int(daily_temps_of_month[0][i]), end="")
+            print("{} {:02d}C".format(Constants.END_COLOR, daily_temps_of_month[0][i]))
+        print("{}{:02d} ".format(Constants.END_COLOR, i), end="")
+        if daily_temps_of_month[1][i] == Constants.RECORD_NOT_FOUND:
+            print("{}missing".format(Constants.BLUE_COLOR))
         else:
-            print("{}+".format(Constants.BLUE_COLR) * int(daily_temps_of_month[1][i]), end="")
-            print("{} {:02d}C".format(Constants.END_COLR, daily_temps_of_month[1][i]))
+            print("{}+".format(Constants.BLUE_COLOR) * int(daily_temps_of_month[1][i]), end="")
+            print("{} {:02d}C".format(Constants.END_COLOR, daily_temps_of_month[1][i]))
         i += 1
-    print(Constants.END_COLR, end="")
+    print(Constants.END_COLOR, end="")
 
 
 def get_output_for_d_option(file_cont, date):
@@ -235,28 +235,28 @@ def get_output_for_d_option(file_cont, date):
     print(month_name, date_tokens[0])
     i = 1
     while i <= len(daily_temps_of_month[0]):
-        high_temp_miss = (daily_temps_of_month[0][i] == Constants.RNF)
-        low_temp_miss = (daily_temps_of_month[1][i] == Constants.RNF)
-        print("{}{:02d} ".format(Constants.END_COLR, i), end="")
+        high_temp_miss = (daily_temps_of_month[0][i] == Constants.RECORD_NOT_FOUND)
+        low_temp_miss = (daily_temps_of_month[1][i] == Constants.RECORD_NOT_FOUND)
+        print("{}{:02d} ".format(Constants.END_COLOR, i), end="")
         if high_temp_miss:
-            print("{}missing".format(Constants.RED_COLR), end="")
+            print("{}missing".format(Constants.RED_COLOR), end="")
         else:
-            print("{}+".format(Constants.RED_COLR) * int(daily_temps_of_month[0][i]), end="")
+            print("{}+".format(Constants.RED_COLOR) * int(daily_temps_of_month[0][i]), end="")
         if low_temp_miss:
-            print("{}missing".format(Constants.BLUE_COLR), end="")
+            print("{}missing".format(Constants.BLUE_COLOR), end="")
         else:
-            print("{}+".format(Constants.BLUE_COLR) * int(daily_temps_of_month[1][i]), end="")
+            print("{}+".format(Constants.BLUE_COLOR) * int(daily_temps_of_month[1][i]), end="")
         if high_temp_miss:
-            print("{} missing-".format(Constants.RED_COLR), end="")
+            print("{} missing-".format(Constants.RED_COLOR), end="")
         else:
             print("{} {:02d}C-"
-                  .format(Constants.END_COLR, daily_temps_of_month[0][i]), end="")
+                  .format(Constants.END_COLOR, daily_temps_of_month[0][i]), end="")
         if low_temp_miss:
-            print("{}missing".format(Constants.BLUE_COLR))
+            print("{}missing".format(Constants.BLUE_COLOR))
         else:
-            print("{}{:02d}C".format(Constants.END_COLR, daily_temps_of_month[1][i]))
+            print("{}{:02d}C".format(Constants.END_COLOR, daily_temps_of_month[1][i]))
         i += 1
-    print(Constants.END_COLR, end="")
+    print(Constants.END_COLOR, end="")
 
 if __name__ == "__main__":
     __main__()

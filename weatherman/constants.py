@@ -11,23 +11,23 @@ class Constants:
     """
 
     # RNF = Record not founf
-    RNF = "missing"
+    RECORD_NOT_FOUND = "missing"
     FILE_PREFIX = "Murree_weather_"
     # IO exception
-    IOE = "Something wrong while reading file\n" \
+    IO_EXCEPTION = "Something wrong while reading file\n" \
           "may be file does not exist"
     # invalid arguments
-    IVA = "Invalid arguments !!!"
+    INVALID_ARGUMENTS = "Invalid arguments !!!"
     # option and date mismatch
-    O_MISS = "Please check your options and date again " \
+    OPTION_DATE_MISMATCH = "Please check your options and date again " \
              "either option or date is wrong!!!"
     # invalid date
-    IND = "Invalid Date !!!"
+    INVALID_DATE = "Invalid Date !!!"
 
     # Color codes
-    END_COLR = '\33[0m'
-    RED_COLR = '\33[31m'
-    BLUE_COLR = '\33[34m'
+    END_COLOR = '\33[0m'
+    RED_COLOR = '\33[31m'
+    BLUE_COLOR = '\33[34m'
 
     @staticmethod
     def get_rnf():
