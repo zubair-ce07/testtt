@@ -6,9 +6,9 @@ from scrapy.http import TextResponse
 from enamora.items import EnamoraItem
 
 
-class WhistlesSpider(CrawlSpider):
+class EnamoraSpider(CrawlSpider):
     """
-    Crawl spider to scrap `www.whistles.com`
+    Crawl spider to scrap `www.enamora.com`
     """
     name = 'enamora'
     allowed_domains = ['www.enamora.de']
