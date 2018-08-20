@@ -13,12 +13,12 @@ class WhistlesSpider(CrawlSpider):
     start_urls = ['http://www.whistles.com/']
 
     def parse(self, response):
-        for href in response.css("li[class*='meganav-link'] a::attr(href)"):
+        items_pages = response.css("li[class*='meganav-link'] a::attr(href)")
+        items_pages.extend(response.css("a[class*='page-next']::attr(href)"))
+        for href in items_pages:
             yield response.follow(href, callback=self.parse)
 
-        next_page_href = response.css("a[class*='name-link']::attr(href)")
-        next_page_href.extend(response.css("a[class*='page-next']::attr(href)"))
-        for href in next_page_href:
+        for href in response.css("a[class*='name-link']::attr(href)"):
             yield response.follow(href, callback=self.parse_item)
 
     def parse_item(self, response):
