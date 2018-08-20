@@ -9,5 +9,15 @@
     <p>Contact no: {{ donor.phone_no }}</p>
     <p>Category: {{ my_category|categories }} </p>
     <a href={{ map_url|formatted_address:donor.address }} target="_blank">View location</a>
+        <br>
+    <form action="{% url 'feedback:give_feedback' donor.id %}" method="post">
+        {% csrf_token %}
+        <input type="submit" name="feedback_request" value="Give Feedback">
+    </form>
+
+    <form action="{% url 'report:report_user' donor.id %}" method="post">
+        {% csrf_token %}
+        <input type="submit" name="report_request" value="Report">
+    </form>
 {% endif %}
 

@@ -8,3 +8,4 @@ def feedback_or_report(request):
         reverse_url = 'accounts:report_user'
     consumer_id = int(request.POST.get('consumer_id', '-1'))
     return (reverse_url, consumer_id)
+
