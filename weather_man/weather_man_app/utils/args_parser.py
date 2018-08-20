@@ -3,8 +3,8 @@
 Parser for weathe man application
 """
 import datetime
-
-# from parser.args_parser import BaseArgsParser
+import argparse
+import sys
 
 
 def validate_year(year):
@@ -38,35 +38,47 @@ def validate_year_and_month(period):
         return period
 
 
-class ParserHelper:
+class WeatherManArgsParser(argparse.ArgumentParser):
     """
-    Parser helper will provide utility in providing application specific arguments.
+    Application specific parsers will inherit from this base parser in which error handling and basic parsing is set.
     """
-    @staticmethod
-    def add_arguments(parser):
-        parser.add_argument(
+    def __init__(self, *args, **kwargs):
+        super(WeatherManArgsParser, self).__init__(*args, **kwargs)
+        self.add_arguments()
+
+    def error(self, message):
+        """
+        When an error will occur in any app's args this function will print help for that specific parser.
+        :param message: Error message
+        """
+        sys.stderr.write('Error: {}\n'.format(message))
+        self.print_help()
+        sys.exit(2)
+
+    def add_arguments(self):
+        self.add_argument(
             "file_path",
             help="Path to the directory containing weather data.",
         )
-        parser.add_argument(
+        self.add_argument(
             "-e",
             "--year",
             help="Pass year as argument about which results are required. (Like: -e 2010)",
             type=validate_year
         )
-        parser.add_argument(
+        self.add_argument(
             "-a",
             "--year_with_month",
             help="Pass year with month as argument about which results are required. (Like: -a 2010/1)",
             type=validate_year_and_month
         )
-        parser.add_argument(
+        self.add_argument(
             "-c",
             "--month_bar_chart",
             help="input year and month for chart in format of year/month (Like -c 2014/8)",
             type=validate_year_and_month
         )
-        parser.add_argument(
+        self.add_argument(
             "-m",
             "--month_bar_chart_in_one_line",
             help="input year and month for chart in format of year/month (Like -m 2014/8)",

@@ -2,7 +2,7 @@
 """
 Weather man application which perform data analytics on weather data.
 """
-from weather_man_app.utils.data_handlers import WeatherReading
+from weather_man_app.utils.data_handlers import WeatherReader
 from weather_man_app.utils.decorators import prepare_input
 from weather_man_app.utils.report_handlers import ReportsHandler
 
@@ -22,7 +22,7 @@ class WeatherMan:
         :param kwargs: key word arguments, required keys are: file_path and period (year or year/month)
         """
         self.results = ReportsHandler(report_category='years')
-        weather_data_holder = WeatherReading(
+        weather_data_holder = WeatherReader(
             file_path=kwargs.get('file_path'),
             period=kwargs.get('period')
         )
@@ -36,7 +36,7 @@ class WeatherMan:
         :param kwargs: key word arguments, required keys are: file_path and period (year or year/month)
         """
         self.results = ReportsHandler(report_category='year_with_month')
-        weather_data_holder = WeatherReading(
+        weather_data_holder = WeatherReader(
             file_path=kwargs.get('file_path'),
             period=kwargs.get('period')
         )
@@ -50,7 +50,7 @@ class WeatherMan:
         :param kwargs: key word arguments, required keys are: file_path and period (year or year/month)
         """
         self.results = ReportsHandler(report_category='month_bar_chart')
-        weather_data_holder = WeatherReading(
+        weather_data_holder = WeatherReader(
             file_path=kwargs.get('file_path'),
             period=kwargs.get('period')
         )
@@ -64,7 +64,7 @@ class WeatherMan:
         :param kwargs: key word arguments, required keys are: file_path and period (year or year/month)
         """
         self.results = ReportsHandler(report_category='month_bar_chart_in_one_line')
-        weather_data_holder = WeatherReading(
+        weather_data_holder = WeatherReader(
             file_path=kwargs.get('file_path'),
             period=kwargs.get('period')
         )

@@ -6,7 +6,6 @@ this script as well.
 from colorama import Fore, Style
 
 from weather_man_app.utils.global_content import MathHelper, ReportsHelper, DateMapper
-from configs.app_configs import AppConfig
 
 
 class ResultsCalculator:
@@ -56,7 +55,7 @@ class ReportsHandler:
     """
     def __init__(self, report_category):
         self.report_category = report_category
-        self.report = ReportsHelper.get_empty_report(AppConfig.app_name, report_category)
+        self.report = ReportsHelper.get_empty_report(report_category)
 
     def update_year_report(self, weather_info):
         """
@@ -106,7 +105,7 @@ class ReportsHandler:
         """
         Print a specific report of weather data.
         """
-        report_output = ReportsHelper.get_report_output(AppConfig.app_name, self.report_category)
+        report_output = ReportsHelper.get_report_output(self.report_category)
         for output_category, str_expression in report_output.items():
             if 'day' in self.report[output_category].keys():
                 print(str_expression.format(

@@ -7,7 +7,7 @@ from weather_man_app.utils.file_utils import FileParser
 from weather_man_app.utils.global_content import MathHelper
 
 
-class WeatherReading:
+class WeatherReader:
     """
     Data structure for holding each weather reading
     """

@@ -127,68 +127,64 @@ class ReportsHelper:
     Reports helpers are written here like empty reports and output strings (all for different cantegories)
     """
     __reports_helper_map = {
-        AppHelper.get_app_name('weather-man'):
-            {
-                'years': {
-                    'highest_temp': {
-                        'value': MathHelper.get_constant_value('neg-infinity'), 'day': None
-                    },
-                    'lowest_temp': {
-                        'value': MathHelper.get_constant_value('pos-infinity'), 'day': None
-                    },
-                    'highest_humidity': {
-                        'value': MathHelper.get_constant_value('neg-infinity'), 'day': None
-                    }
-                },
-                'year_with_month': {
-                    'average_highest_temp': {
-                        'value': 0
-                    },
-                    'average_lowest_temp': {
-                        'value': 0
-                    },
-                    'average_mean_humidity': {
-                        'value': 0
-                    }
-                },
-                'month_bar_chart': {}
+        'years': {
+            'highest_temp': {
+                'value': MathHelper.get_constant_value('neg-infinity'), 'day': None
+            },
+            'lowest_temp': {
+                'value': MathHelper.get_constant_value('pos-infinity'), 'day': None
+            },
+            'highest_humidity': {
+                'value': MathHelper.get_constant_value('neg-infinity'), 'day': None
             }
+        },
+        'year_with_month': {
+            'average_highest_temp': {
+                'value': 0
+            },
+            'average_lowest_temp': {
+                'value': 0
+            },
+            'average_mean_humidity': {
+                'value': 0
+            }
+        },
+        'month_bar_chart': {}
     }
-    __reports_output_strings = {
-        AppHelper.get_app_name('weather-man'):
-            {
-                'years': {
-                    'highest_temp': "Highest: {}C on {}",
-                    'lowest_temp': "Lowest: {}C on {}",
-                    'highest_humidity': "Humidity: {}% on {}"
-                },
-                'year_with_month': {
-                    'average_highest_temp': "Highest Average: {:.2f}C",
-                    'average_lowest_temp': "Lowest Average: {:.2f}C",
-                    'average_mean_humidity': "Average mean Humidity: {:.2f}%"
-                },
-                'month_bar_chart': {
 
-                }
+    __reports_output_strings = {
+            'years': {
+                'highest_temp': "Highest: {}C on {}",
+                'lowest_temp': "Lowest: {}C on {}",
+                'highest_humidity': "Humidity: {}% on {}"
+            },
+            'year_with_month': {
+                'average_highest_temp': "Highest Average: {:.2f}C",
+                'average_lowest_temp': "Lowest Average: {:.2f}C",
+                'average_mean_humidity': "Average mean Humidity: {:.2f}%"
+            },
+            'month_bar_chart': {
+
             }
-    }
+        }
+
     
     @classmethod
-    def get_empty_report(cls, app_name, category):
+    def get_empty_report(cls, category):
         """
         Returns empty report of a specific category for weather man
         :param app_name: application name eg weather-man
         :param category: category of report eg: year report
         :return: empty report dictionary
         """
-        return cls.__reports_helper_map.get(AppHelper.get_app_name(app_name)).get(category)
+        return cls.__reports_helper_map.get(category)
 
     @classmethod
-    def get_report_output(cls, app_name, category):
+    def get_report_output(cls, category):
         """
         Give output strings that are required to format to make informative after calling.
         :param app_name: application name eg weather-man
         :param category: category of report eg: year report
         :return: dict with keys as sub-categories of report and specific output strings in respective sub-categories.
         """
-        return cls.__reports_output_strings.get(AppHelper.get_app_name(app_name)).get(category)
+        return cls.__reports_output_strings.get(category)

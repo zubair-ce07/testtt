@@ -2,15 +2,12 @@
 """
 This is basic run application scrip, the script is generalized and can be used to word with other applications as well.
 """
-from configs.app_configs import AppConfig
-from parser.args_parser import BaseArgsParser
 from weather_man_app.weather_man import WeatherMan
-from weather_man_app.utils.args_parser import ParserHelper
+from weather_man_app.utils.args_parser import WeatherManArgsParser
 from weather_man_app.utils.global_content import ArgsParserCategoryHandler
 
 
 __author__ = "Arslan"
-app_name = "weather-man"
 
 
 class AppRunner:
@@ -44,10 +41,8 @@ def start_app():
     """
     Parse specific app's arguments and get that particular weatherman application through AppRunner.
     """
-    AppConfig.parser = BaseArgsParser()
-    ParserHelper.add_arguments(AppConfig.parser)
-    args = AppConfig.parser.parse_args()
-    AppConfig.app_name = app_name
+    parser = WeatherManArgsParser()
+    args = parser.parse_args()
     application, args_handler = WeatherMan(), ArgsParserCategoryHandler
     AppRunner(args, application, args_handler).execute_app()
 
