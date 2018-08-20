@@ -82,7 +82,6 @@ class EnamoraSpider(CrawlSpider):
         color = cls.get_color(response)
         price = cls.get_price(response)
         skus = list()
-        from pdb import set_trace; set_trace()
         sizes_request_url = response.css("ul[id='product-sizeselect'] include::attr(src)").extract_first()
 
         sizes_response = requests.get(url=sizes_request_url.replace('mi.', 'www.'))
