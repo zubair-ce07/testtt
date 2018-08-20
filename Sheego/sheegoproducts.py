@@ -5,6 +5,7 @@ import json
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 from sheego.items import Product
+from scrapy import Request
 
 
 class SheegoproductsSpider(CrawlSpider):
@@ -13,7 +14,6 @@ class SheegoproductsSpider(CrawlSpider):
     start_urls = ['http://sheego.de/']
     rules = (
             Rule(LinkExtractor(
-                allow=('(\w)*'),
                 deny=('/neu/', '/inspiration/',
                  '/damenmode-sale/', '/magazin/'),
                 restrict_css='.cj-mainnav'),
@@ -24,17 +24,17 @@ class SheegoproductsSpider(CrawlSpider):
         categories = self.get_categories(response)
         for category in categories:
             url = response.urljoin("?filterSHKategorie={}".format(category))
-            yield scrapy.Request(url=url, callback=self.parse_listing)
+            yield Request(url=url, callback=self.parse_listing)
 
     def parse_listing(self, response):
-        product_urls = self.get_products_urls(response)
-        for url in product_urls:
+        for url in self.get_products_urls(response):
             category = self.extract_category(url)
-            yield scrapy.Request(
+            yield Request(
                 url=response.urljoin(url), callback=self.parse_product,
                 meta={'category': category})
         next_page_url = self.get_next_page(response)
-        yield scrapy.Request(url=next_page_url, callback=self.parse_listing)
+        if next_page_url:
+            yield Request(url=next_page_url, callback=self.parse_listing)
 
     def parse_product(self, response):
         product = Product()
@@ -48,11 +48,14 @@ class SheegoproductsSpider(CrawlSpider):
         product['description'] = self.get_product_desc(response)
         product['care'] = self.get_prodct_care(response)
         product['skus'] = {}
-        product['avability'] = product_details['productAvailability']
+        if product_details['productAvailability'] == 'Not-Available':
+            product['out_of_stock'] = False
+        else:
+            product['out_of_stock'] = True
         variants = self.prepare_variants_urls(response)
         url_to_follow = self.get_varaint_url(variants)
         colors = self.get_product_colors(response)
-        yield scrapy.Request(
+        yield Request(
             url=url_to_follow, callback=self.get_product_viariant,
             meta={
                 "product": product, "variants": variants, "colors": colors})
@@ -124,7 +127,7 @@ class SheegoproductsSpider(CrawlSpider):
         product = response.meta['product']
         variants = response.meta['variants']
         colors = response.meta['colors']
-        if len(variants) == 0:
+        if not len(variants):
             yield product
         else:
             color_id = self.prepare_color_id(colors)
@@ -132,7 +135,7 @@ class SheegoproductsSpider(CrawlSpider):
             product['skus'].update(skus)
             product['urls'].append(response.url)
             url_to_follow = self.get_varaint_url(variants)
-            yield scrapy.Request(
+            yield Request(
                 url=url_to_follow, callback=self.get_product_viariant,
                 meta={"product": product,
                       "variants": variants, "colors": colors})
