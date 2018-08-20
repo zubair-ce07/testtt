@@ -38,6 +38,7 @@ class ProductParser(Spider):
     def parse_requests(self, item):
         if not item['requests']:
             del item['requests']
+            print(item)
             return item
 
         request = item['requests'].pop()
@@ -122,9 +123,6 @@ class ProductParser(Spider):
     def extract_sku_model(self, response):
         return response.css('::attr(data-value)').extract_first()
 
-    def out_of_stock(self, response):
-        return 'unselectable' in response.css('::attr(class)').extract_first()
-
     def extract_skus(self, response):
         color_id = self.extract_color_id(response)
         sku_info = {
@@ -137,10 +135,9 @@ class ProductParser(Spider):
         for size in response.css('.size li'):
             sku = sku_info.copy()
             sku['size'] = size.css('::attr(title)').extract_first()
-            out_of_stock = self.out_of_stock(size)
 
-            if out_of_stock:
-                sku['out_of_stock'] = out_of_stock
+            if 'unselectable' in size.css('::attr(class)').extract_first():
+                sku['out_of_stock'] = True
 
             skus[f"{color_id}_{self.extract_sku_model(size)}"] = sku
         return skus
