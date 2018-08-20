@@ -2,7 +2,7 @@
 """
 Weather man application which perform data analytics on weather data.
 """
-from weather_man_app.weathereader import WeatherReader
+from weather_man_app.weather_reader import WeatherReader
 from weather_man_app.utils.decorators import prepare_input
 from weather_man_app.utils.report_handlers import ReportsHandler
 
