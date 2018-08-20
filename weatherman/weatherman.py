@@ -23,18 +23,18 @@ def __main__():
     """
     arguments = {}
     manage_arguments(arguments)
-    file_cont = FileContent(arguments["path"])
+    file_content = FileContent(arguments["path"])
     if arguments["total_arg"] == 8:
-        get_special_report(file_cont, arguments)
+        get_special_report(file_content, arguments)
     else:
         if arguments["option"] == '-e':
-            get_output_for_e_option(file_cont, arguments["date"])
+            get_output_for_e_option(file_content, arguments["date"])
         elif arguments["option"] == "-a":
-            get_output_for_a_option(file_cont, arguments["date"])
+            get_output_for_a_option(file_content, arguments["date"])
         elif arguments["option"] == '-c':
-            get_output_for_c_option(file_cont, arguments["date"])
+            get_output_for_c_option(file_content, arguments["date"])
         elif arguments["option"] == '-d':
-            get_output_for_d_option(file_cont, arguments["date"])
+            get_output_for_d_option(file_content, arguments["date"])
 
 
 def manage_arguments(arguments):
@@ -93,29 +93,29 @@ def manage_arguments(arguments):
             exit(1)
 
 
-def get_special_report(file_cont, arguments):
+def get_special_report(file_content, arguments):
     """
     This function will dispaly the
     special report i.e. yearly, monthly average
     and monthly highest temperature and humidity
-    :param file_cont:
+    :param file_content:
     :param arguments:
     :return:
     """
 
-    get_output_for_c_option(file_cont, arguments["date1"])
-    get_output_for_a_option(file_cont, arguments["date2"])
-    get_output_for_e_option(file_cont, arguments["date3"])
+    get_output_for_c_option(file_content, arguments["date1"])
+    get_output_for_a_option(file_content, arguments["date2"])
+    get_output_for_e_option(file_content, arguments["date3"])
 
 
-def get_output_for_a_option(file_cont, date):
+def get_output_for_a_option(file_content, date):
     """
     This function displays the
     average of highest temperature,
     average of lowest temperature
     average of highest humidity of
     the given month of a year
-    :param file_cont:
+    :param file_content:
     :param date:
     :return:
     """
@@ -123,7 +123,7 @@ def get_output_for_a_option(file_cont, date):
     date_tokens = date.split("/")
     year = date_tokens[0]
     month = calendar.month_abbr[int(date_tokens[1])]
-    monthly_temp_humidity_avg = file_cont.get_average_monthly_data(year, month)
+    monthly_temp_humidity_avg = file_content.get_average_monthly_data(year, month)
     if monthly_temp_humidity_avg is None:
         print(Constants.IO_EXCEPTION)
         exit(1)
@@ -135,17 +135,17 @@ def get_output_for_a_option(file_cont, date):
           .format(monthly_temp_humidity_avg["mean_humidity_avg"]))
 
 
-def get_output_for_e_option(file_cont, date):
+def get_output_for_e_option(file_content, date):
     """
     This function displays the
     yearly report of highest temperatue,
     lowest temperature and highest humidity
-    :param file_cont:
+    :param file_content:
     :param date:
     :return:
     """
 
-    yearly_temp_humidity = file_cont.get_yearly_data(date)
+    yearly_temp_humidity = file_content.get_yearly_data(date)
     if yearly_temp_humidity is None:
         print(Constants.IO_EXCEPTION)
         exit(1)
@@ -173,14 +173,14 @@ def get_output_for_e_option(file_cont, date):
     ))
 
 
-def get_output_for_c_option(file_cont, date):
+def get_output_for_c_option(file_content, date):
     """
     This method displays the bar chart
     representation of hisghest and lowest
     temperatures of the given month of the year
     on separate lines with red + for high
     and blue + for low
-    :param file_cont:
+    :param file_content:
     :param date:
     :return:
     """
@@ -189,7 +189,7 @@ def get_output_for_c_option(file_cont, date):
     year = date_tokens[0]
     month_abbreviation = calendar.month_abbr[int(date_tokens[1])]
     month_name = calendar.month_name[int(date_tokens[1])]
-    daily_temps_of_month = file_cont.get_daily_temps_of_month(year, month_abbreviation)
+    daily_temps_of_month = file_content.get_daily_temps_of_month(year, month_abbreviation)
     if daily_temps_of_month is None:
         print("IO error occured")
         exit(1)
@@ -212,14 +212,14 @@ def get_output_for_c_option(file_cont, date):
     print(Constants.END_COLOR, end="")
 
 
-def get_output_for_d_option(file_cont, date):
+def get_output_for_d_option(file_content, date):
     """
     This method displays the bar chart
     representation of hisghest and lowest
     temperatures of the given month of the year
     on single line with red + for high
     and blue + for low
-    :param file_cont:
+    :param file_content:
     :param date:
     :return:
     """
@@ -228,7 +228,7 @@ def get_output_for_d_option(file_cont, date):
     year = date_tokens[0]
     month_abbreviation = calendar.month_abbr[int(date_tokens[1])]
     month_name = calendar.month_name[int(date_tokens[1])]
-    daily_temps_of_month = file_cont.get_daily_temps_of_month(year, month_abbreviation)
+    daily_temps_of_month = file_content.get_daily_temps_of_month(year, month_abbreviation)
     if daily_temps_of_month is None:
         print("IO error occured")
         exit(1)
