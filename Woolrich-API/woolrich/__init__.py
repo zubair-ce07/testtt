@@ -8,5 +8,5 @@ from config import Config
 app = Flask(__name__)
 app.config.from_object(Config)
 db = SQLAlchemy(app)
-ma = Marshmallow(app)
+marshmallow_app = Marshmallow(app)
 db.metadata.clear()

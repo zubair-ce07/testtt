@@ -1,7 +1,8 @@
 from flask import render_template, jsonify
 
 from woolrich.models import *
-from woolrich import app, db, ma
+from woolrich.schemas import ProductSchema
+from woolrich import app
 
 
 @app.route('/')
@@ -9,7 +10,7 @@ def home():
     return render_template('home.html')
 
 
-@app.route('/api/product/id/<product_id>')
+@app.route('/api/product/<product_id>')
 def product_by_id(product_id):
     product_schema = ProductSchema()
     product = Product.query.filter_by(_id=int(product_id)).first()

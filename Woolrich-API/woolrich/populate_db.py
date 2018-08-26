@@ -3,14 +3,13 @@ import json
 from woolrich.models import *
 from woolrich.constants import Constants
 
+
 if __name__ == '__main__':
     db.create_all()
 
-    with open('woolrich.json') as file:
-        products = json.load(file)
+    with open('woolrich.json') as input_file:
+        products = json.load(input_file)
         categories = []
-        sizes = []
-        colors = []
 
         for product in products:
 
@@ -37,23 +36,24 @@ if __name__ == '__main__':
                     db.session.commit()
 
                 category_record.products.append(product_record)
-                db.session.commit()
 
             for feature in product[Constants.FEATURES]:
                 feature_record = Feature(description=feature, product=product_record)
+                db.session.add(feature_record)
 
             for sku in product[Constants.SKUS]:
 
-                if not Constants.SIZE in sku.keys():
+                if not sku.get(Constants.SIZE):
                     sku[Constants.SIZE] = None
 
-                if not Constants.FIT in sku.keys():
+                if not sku.get(Constants.FIT):
                     sku[Constants.FIT] = None
 
-                sku_record = Sku(sku_id=sku[Constants.SKU_ID], fit=sku[Constants.FIT],
-                                 color=sku[Constants.COLOR], size=sku[Constants.SIZE],
-                                 price=sku[Constants.PRICE], product=product_record,
-                                 )
+                sku_record = Sku(
+                    sku_id=sku[Constants.SKU_ID], fit=sku[Constants.FIT],
+                    color=sku[Constants.COLOR], size=sku[Constants.SIZE],
+                    price=sku[Constants.PRICE], product=product_record,
+                 )
 
                 db.session.add(sku_record)
-                db.session.commit()
+            db.session.commit()

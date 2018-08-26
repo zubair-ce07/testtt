@@ -1,4 +1,4 @@
-class Constants(object):
+class Constants():
     PRODUCT_ID = 'product_id'
     NAME = 'name'
     URL = 'url'
