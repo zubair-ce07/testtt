@@ -25,8 +25,6 @@ if __name__ == '__main__':
 
             for category in product[Constants.CATEGORIES]:
 
-                category_record = None
-
                 if category in categories:
                     category_record = Category.query.filter(Category.name == category).first()
                 else:
