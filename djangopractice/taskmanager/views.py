@@ -1,6 +1,7 @@
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
+from django.http import HttpResponseRedirect
 from django.shortcuts import redirect
 from django.urls import reverse, reverse_lazy
 from django.utils.decorators import method_decorator
@@ -17,7 +18,7 @@ def change_status(request, pk):
     else:
         task.status = 0
     task.save()
-    return redirect(reverse('taskmanager:details', args=(pk, )))
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 
 class SignUp(generic.CreateView):
