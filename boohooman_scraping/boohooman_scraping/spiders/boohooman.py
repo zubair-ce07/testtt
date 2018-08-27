@@ -3,11 +3,11 @@
 this modeule contain a scrapy spider that scrape the whole Boohooman.com website
 """
 
+import json
+from functools import partial
 import scrapy
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
-import json
-from functools import partial
 from boohooman_scraping.items import Product, ProductSku
 
 
@@ -18,18 +18,17 @@ class BoohoomanSpider(CrawlSpider):
     name = 'boohooman'
     allowed_domains = ['www.boohooman.com']
     start_urls = ['https://www.boohooman.com']
-    # start_urls = ['https://www.boohooman.com/mens/new-in-clothing']
     images_domain = 'https://i1.adis.ws/i/boohooamplience/'
-    # le1 = LinkExtractor(restrict_css="ul.menu-vertical a", deny=('man2man\.boohooman\.com', ))
-    le1 = LinkExtractor(restrict_css="ul.menu-vertical a")
-    le2 = LinkExtractor(restrict_css="li.pagination-item-next a")
+
+    nav_link_extractor = LinkExtractor(restrict_css="ul.menu-vertical a")
+    pagination_link_extractor = LinkExtractor(restrict_css="li.pagination-item-next a")
     rules = (
-        Rule(le1, callback='parse_pages', follow=True),
-        Rule(le2, callback='parse_pages', follow=True),
+        Rule(nav_link_extractor, callback='parse_main_pages', follow=True),
+        Rule(pagination_link_extractor, callback='parse_main_pages', follow=True),
 
     )
 
-    def parse_pages(self, response):
+    def parse_main_pages(self, response):
         """
         this callback parse main page and category pages
         :param response:
@@ -37,7 +36,6 @@ class BoohoomanSpider(CrawlSpider):
         """
         for item in response.css('div.product-tile'):
             item_url = item.css('div.product-name a::attr(href)').extract_first()
-            # self.logger.info("i am going to " + item_url)
             yield scrapy.Request(url=item_url, callback=self.parse_item)
 
     def parse_item(self, response):
@@ -46,7 +44,8 @@ class BoohoomanSpider(CrawlSpider):
         :param response:
         :return:
         """
-        product_detail_json = json.loads(response.css('form.pdpForm::attr(data-product-details)').extract_first())
+        product_detail_json = json.loads(
+            response.css('form.pdpForm::attr(data-product-details)').extract_first())
 
         product = Product()
         product['name'] = product_detail_json['name']
@@ -64,7 +63,8 @@ class BoohoomanSpider(CrawlSpider):
         product['currency'] = response.css("div.product-price meta::attr(content)").extract_first()
         product['url'] = response.url
         product['merch_info'] = []
-        product['merch_info'].append(response.css('div.product-promo-msg::text').extract_first())
+        merch_info = response.css('div.product-promo-msg::text').extract_first().strip('\n')
+        product['merch_info'].append(merch_info)
 
         color_urls = response.css('ul.color span.swatchanchor::attr(data-href)').extract()
         product['skus'] = {}
@@ -74,8 +74,9 @@ class BoohoomanSpider(CrawlSpider):
             if color_url == color_urls[-1]:
                 last_color_flag = True
             color_url = color_url + "&format=json"
-            request = scrapy.Request(url=color_url, callback=partial(self.parse_item_colors, product=product,
-                                                                     last_color_flag=last_color_flag))
+            request = scrapy.Request(url=color_url,
+                                     callback=partial(self.parse_item_colors, product=product,
+                                                      last_color_flag=last_color_flag))
             yield request
 
     def parse_item_colors(self, response, product=None, last_color_flag=False):
@@ -88,16 +89,17 @@ class BoohoomanSpider(CrawlSpider):
         """
         sizes = response.css('ul.size li.selectable span::text').extract()
 
-        color = response.css('ul.color li.selected span.swatchanchor::attr(data-variation-values)').extract_first()
+        color = response.css(
+            'ul.color li.selected span.swatchanchor::attr(data-variation-values)').extract_first()
         if not color:
-            color = response.css('ul.color span.swatchanchor::attr(data-variation-values)').extract_first()
+            color = response.css(
+                'ul.color span.swatchanchor::attr(data-variation-values)').extract_first()
         color_json = json.loads(color)
 
         color = color_json['attributeValue']
-        counter = 0
 
-        for _ in range(4):
-            image_url = self.images_domain + product['retailer_sku'] + '_' + color + '_xl'
+        for counter in range(4):
+            image_url = "{}{}_{}_xl".format(self.images_domain, product['retailer_sku'] , color )
             if counter != 0:
                 image_url = image_url + "_" + str(counter)
             counter += 1
@@ -107,11 +109,13 @@ class BoohoomanSpider(CrawlSpider):
             product_sku = ProductSku()
             product_sku['color'] = color
             product_sku['currency'] = product['currency']
-            product_sku['original_price'] = response.css('span.price-standard::text').extract_first()
-            product_sku['discounted_price'] = response.css('span.price-sales::attr(content)').extract_first()
+            product_sku['original_price'] = response.css(
+                'span.price-standard::text').extract_first()
+            product_sku['discounted_price'] = response.css(
+                'span.price-sales::attr(content)').extract_first()
             size = size.strip('\n')
             product_sku['size'] = size
             product['skus'][color + '_' + size] = dict(product_sku)
 
-        if last_color_flag is True:
+        if last_color_flag:
             return product
