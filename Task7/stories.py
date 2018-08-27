@@ -29,12 +29,12 @@ class StoriesSpider(CrawlSpider):
         return [Request(url, cookies=self.cookies) for url in urls]
 
     def parse_pagination(self, response):
-        total_items = response.css("#productCount::attr(class)").extract_first()
-        products_per_page = response.css("#productPerPage::attr(class)").extract_first()
+        total_items = int(response.css("#productCount::attr(class)").extract_first())
+        products_per_page = int(response.css("#productPerPage::attr(class)").extract_first())
         base_url = response.css("#productPath::attr(class)").extract_first()
 
         pages_urls = [add_or_replace_parameter(base_url, "start", start)
-                      for start in range(0, int(total_items), int(products_per_page))]
+                      for start in range(0, total_items, products_per_page)]
 
         return [response.follow(url, callback=self.parse_items_links) for url in pages_urls]
 
@@ -63,7 +63,7 @@ class StoriesSpider(CrawlSpider):
 
         return Request(self.skus_request_t.format(self.cookies["HMCORP_currency"].lower(), variants),
                        cookies=self.cookies, callback=self.parse_skus, dont_filter=True,
-                       meta={'item': item, 'item_details': raw_product, 'color_variants': color_variants})
+                       meta={'item': item, 'raw_product': raw_product, 'color_variants': color_variants})
 
     def parse_skus(self, response):
         item = response.meta["item"]
@@ -116,10 +116,9 @@ class StoriesSpider(CrawlSpider):
         return [key for key in raw_article_ids]
 
     def extract_skus(self, response):
-        raw_product = response.meta["item_details"]
-        available_variants = response.css('item::text').extract()
-
+        raw_product = response.meta["raw_product"]
         color_variants = [raw_product[key] for key in response.meta["color_variants"]]
+        available_variants = response.css('item::text').extract()
 
         skus = []
         for color_variant in color_variants:
