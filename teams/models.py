@@ -86,7 +86,7 @@ class BowlingAverage(BasicAverageInfo):
     ten_wickets = models.IntegerField(null=True, blank=True)
 
     def __str__(self):
-        return '{player_name}\'s {average_format} batting average'.format(
+        return '{player_name}\'s {average_format} bowling average'.format(
             player_name=self.player, average_format=self.format
         )
 
