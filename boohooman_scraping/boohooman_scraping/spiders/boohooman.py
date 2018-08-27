@@ -99,10 +99,9 @@ class BoohoomanSpider(CrawlSpider):
         color = color_json['attributeValue']
 
         for counter in range(4):
-            image_url = "{}{}_{}_xl".format(self.images_domain, product['retailer_sku'] , color )
+            image_url = "{}{}_{}_xl".format(self.images_domain, product['retailer_sku'], color)
             if counter != 0:
                 image_url = image_url + "_" + str(counter)
-            counter += 1
             product['image_urls'].append(image_url)
 
         for size in sizes:
