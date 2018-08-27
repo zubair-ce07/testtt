@@ -59,7 +59,6 @@ class BoohooSpider(scrapy.Spider):
                                          li.selectable:not(.selected) \
                                          span::attr(data-href) ').extract()
         items_color_queue = queue.Queue()
-        # count_color_contrl = item_colors_list
         for item_url in item_colors_list:
             items_color_queue.put(scrapy.Request(item_url + "&format=ajax",
                                                  callback=self.parse_item_size,
@@ -125,7 +124,7 @@ class BoohooSpider(scrapy.Spider):
             yield product_item
 
     def strip_chars(self, str_to_strp):
-        if str_to_strp is None:
+        if not str_to_strp:
             return ""
         else:
             if "\u00a3" in str_to_strp:
