@@ -25,7 +25,7 @@ def products_by_quantity(quantity):
     products = Product.query.limit(int(quantity)).all()
     output_products = product_schema.dump(products).data
 
-    return jsonify({'product': output_products})
+    return jsonify({'products': output_products})
 
 
 if __name__ == '__main__':
