@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import json
-from urllib.parse import urljoin, urlsplit
 
 from scrapy.http import FormRequest, HtmlResponse
 from scrapy.linkextractors import LinkExtractor
@@ -65,7 +64,7 @@ class GapCrawler(CrawlSpider):
                                     body=str.encode(json_res['message']))
             products_urls = ajax_res.css('.categoryProductItem h5 a::attr(href)').extract()
             for url in products_urls:
-                link = url_query_cleaner(urljoin(response.url, url))
+                link = url_query_cleaner(response.urljoin(url))
                 yield FormRequest(url=link, callback=self.parser.parse_item)
 
             return self.next_page_req(ajax_res)
