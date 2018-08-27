@@ -28,8 +28,8 @@ class UllapopkenCrawler(CrawlSpider, UllapopkenParser):
         category = response.css('#paging::attr(data-category)').extract_first()
         grouping = response.css('#paging::attr(data-grouping)').extract_first()
 
-        category_request = self.get_category_request(category, grouping)
-        category_request.meta['categories'] = self.get_categories(response)
+        category_request = self.category_request(category, grouping)
+        category_request.meta['categories'] = self.categories(response)
 
         return category_request
 
@@ -38,11 +38,11 @@ class UllapopkenCrawler(CrawlSpider, UllapopkenParser):
         response_json = json.loads(response.text)
 
         items = response_json['results']
-        yield from self.get_item_requests(items, categories)
+        yield from self.item_requests(items, categories)
 
-        return self.get_pagination_requests(response_json['pagination'], response.url, categories)
+        return self.pagination_requests(response_json['pagination'], response.url, categories)
 
-    def get_pagination_requests(self, pagination, url, categories):
+    def pagination_requests(self, pagination, url, categories):
         if pagination['currentPage'] != 0:
             return
 
@@ -50,32 +50,32 @@ class UllapopkenCrawler(CrawlSpider, UllapopkenParser):
         grouping = re.findall('grouping/(.+)/filter', url)[0]
 
         for page_number in range(2, pagination['numberOfPages'] + 1):
-            category_request = self.get_category_request(category, grouping, page_number)
+            category_request = self.category_request(category, grouping, page_number)
             category_request.meta['categories'] = categories
             yield category_request
 
-    def get_item_requests(self, items, categories):
+    def item_requests(self, items, categories):
         item_requests = []
 
         for item in items:
             item_request = Request(url=self.article_url_t.format(item['code']), callback=self.parse_item)
             item_request.meta['categories'] = categories
-            item_request.meta['variants'] = self.get_variants_codes(item)
+            item_request.meta['variants'] = self.variants_codes(item)
             item_requests.append(item_request)
 
         return item_requests
 
     @staticmethod
-    def get_variants_codes(item):
+    def variants_codes(item):
         variants = item['variantsArticlenumbers']
         variants.remove(item['code'])
 
         return variants
 
-    def get_category_request(self, category, grouping, page=1):
+    def category_request(self, category, grouping, page=1):
         url = self.category_url_t.format(page, category, grouping)
         return Request(url=url, callback=self.parse_category)
 
     @staticmethod
-    def get_categories(response):
+    def categories(response):
         return response.css('.active > .nav_content a::text').extract()

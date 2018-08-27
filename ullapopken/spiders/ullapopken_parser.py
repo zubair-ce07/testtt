@@ -2,7 +2,7 @@ import json
 
 from scrapy import Request, Selector
 
-from ullapopken.items import UllapopkenItem
+from ullapopken.items import Item
 
 
 class UllapopkenParser:
@@ -19,59 +19,58 @@ class UllapopkenParser:
         raw_item = json.loads(response.text)
         item = response.meta.get('item')
 
-        item['image_urls'] += self.get_image_urls(raw_item)
-        item['skus'] += self.get_skus(raw_item)
+        item['image_urls'] += self.image_urls(raw_item)
+        item['skus'] += self.skus(raw_item)
 
-        return self.yield_color_request(response.meta.get('remaining_requests'), item)
+        return self.color_request_or_return_item(item)
 
     def parse_item(self, response):
         raw_item = json.loads(response.text)
         categories = response.meta.get('categories')
         variants = response.meta.get('variants')
-        item = UllapopkenItem()
+        item = Item()
 
         item['retailer_sku'] = raw_item['code']
         item['name'] = raw_item['name']
-        item['description'] = self.get_description(raw_item)
-        item['care'] = self.get_care(raw_item)
+        item['description'] = self.description(raw_item)
+        item['care'] = self.care(raw_item)
         item['brand'] = 'Ullapopken'
-        item['url'] = self.get_url(raw_item)
+        item['url'] = self.url(raw_item)
         item['categories'] = categories
-        item['gender'] = self.get_gender(categories)
-        item['image_urls'] = self.get_image_urls(raw_item)
-        item['skus'] = self.get_skus(raw_item)
+        item['gender'] = self.gender(categories)
+        item['image_urls'] = self.image_urls(raw_item)
+        item['skus'] = self.skus(raw_item)
+        item['requests'] = self.color_requests(variants)
 
-        color_requests = self.get_color_requests(variants)
-
-        return self.yield_color_request(color_requests, item)
+        return self.color_request_or_return_item(item)
 
     @staticmethod
-    def yield_color_request(color_requests, item):
-        if not color_requests:
+    def color_request_or_return_item(item):
+        if not item['requests']:
+            del item['requests']
             return item
 
-        color_request = color_requests.pop()
+        color_request = item['requests'].pop()
         color_request.meta['item'] = item
-        color_request.meta['remaining_requests'] = color_requests
 
         return color_request
 
-    def get_image_urls(self, raw_item):
-        picture_codes = self.get_picture_codes(raw_item)
+    def image_urls(self, raw_item):
+        picture_codes = self.picture_codes(raw_item)
         return [self.image_url_t.format(picture_code) for picture_code in picture_codes]
 
     @staticmethod
-    def get_picture_codes(raw_item):
+    def picture_codes(raw_item):
         raw_pictures = raw_item['pictureMap']
         return [raw_pictures['code']] + raw_pictures['detailCodes']
 
-    def get_skus(self, raw_item):
-        sku_common = self.get_sku_common(raw_item)
+    def skus(self, raw_item):
+        sku_common = self.sku_common(raw_item)
         skus = []
 
         for raw_sku in raw_item['skuData']:
             sku = sku_common.copy()
-            sku['size'] = self.get_size(raw_sku)
+            sku['size'] = self.size(raw_sku)
 
             if raw_sku['stockLevelStatus'] != 'AVAILABLE':
                 sku['is_out_of_stock'] = True
@@ -81,18 +80,18 @@ class UllapopkenParser:
 
         return skus
 
-    def get_sku_common(self, raw_item):
+    def sku_common(self, raw_item):
         sku_common = {'color': raw_item['colorLocalized']}
-        sku_common.update(self.get_pricing(raw_item))
+        sku_common.update(self.pricing(raw_item))
 
         return sku_common
 
     @staticmethod
-    def get_size(raw_sku):
+    def size(raw_sku):
         return f'{raw_sku["sizeCharacteristic"]["sizeTypeValue"]}/{raw_sku["displaySize"]}' \
             if raw_sku["sizeCharacteristic"] else raw_sku["displaySize"]
 
-    def get_pricing(self, raw_item):
+    def pricing(self, raw_item):
         pricing = dict()
 
         price = raw_item['reducedPrice'] or raw_item['originalPrice']
@@ -107,24 +106,24 @@ class UllapopkenParser:
     def formatted_price(price):
         return int(float(price) * 100)
 
-    def get_color_requests(self, variants):
+    def color_requests(self, variants):
         return [Request(url=self.article_url_t.format(variant), callback=self.parse_color)
                 for variant in variants]
 
     @staticmethod
-    def get_description(raw_item):
+    def description(raw_item):
         selector = Selector(text=list(raw_item['description'].values())[0])
         return selector.css('*::text').re_first('.*[\S].*').strip().split('. ')
 
     @staticmethod
-    def get_care(raw_item):
+    def care(raw_item):
         care = list(raw_item['careInstructions'].values())[0]
         return [c['description'] for c in care]
 
-    def get_gender(self, categories):
+    def gender(self, categories):
         for gender_token, gender in self.genders:
             if gender_token in categories:
                 return gender
 
-    def get_url(self, raw_item):
+    def url(self, raw_item):
         return self.product_url_t.format(raw_item['code'])
