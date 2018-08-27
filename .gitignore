@@ -58,3 +58,7 @@ target/
 
 # VSCode
 .vscode
+
+#Folders
+venv/
+weatherfiles/
