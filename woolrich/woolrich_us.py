@@ -18,7 +18,7 @@ class WoolrichSpider(CrawlSpider):
 
     custom_settings = {'DOWNLOAD_DELAY': 0.5, 'HTTPCACHE_ENABLED': True}
 
-    request_url = 'https://www.woolrich.com/remote/v1/product-attributes/{}'
+    request_api_url = 'https://www.woolrich.com/remote/v1/product-attributes/{}'
     genders = ['Men', 'Women']
 
     listing_css = ['#primary', '.pagination-item--next']
@@ -29,21 +29,21 @@ class WoolrichSpider(CrawlSpider):
 
     def parse_item(self, response):
         item = WoolrichItem()
-        item['retailer_sku'] = self._get_retailer_sku(response)
-        item['gender'] = self._get_gender(response)
-        item['category'] = self._get_category(response)
-        item['brand'] = self._get_brand(response)
+        item['retailer_sku'] = self.get_retailer_sku(response)
+        item['gender'] = self.get_gender(response)
+        item['category'] = self.get_category(response)
+        item['brand'] = self.get_brand(response)
         item['url'] = response.url
-        item['name'] = self._get_name(response)
-        item["description"] = self._get_description(response)
-        item['care'] = self._get_care(response)
-        item['image_urls'] = self._get_image_urls(response)
+        item['name'] = self.get_name(response)
+        item["description"] = self.get_description(response)
+        item['care'] = self.get_care(response)
+        item['image_urls'] = self.get_image_urls(response)
         item['skus'] = []
 
         item['meta'] = {'queued_requests': self.color_requests(response, item['retailer_sku'])}
-        return self.next_request(item)
+        return self.next_request_or_item(item)
 
-    def next_request(self, item):
+    def next_request_or_item(self, item):
         if item['meta']['queued_requests']:
             req = item['meta']['queued_requests'].pop()
             req.meta['item'] = item
@@ -65,11 +65,11 @@ class WoolrichSpider(CrawlSpider):
             
             raw_sku = {'color': color, 'currency': attributes_map.get('currency')}
             meta = {'raw_sku': raw_sku, 'attributes_map': attributes_map}
-            url = self.request_url.format(product_id)
+            url = self.request_api_url.format(product_id)
 
-            req = FormRequest(url=url, meta=meta, formdata=formdata, 
+            request = FormRequest(url=url, meta=meta, formdata=formdata, 
                             callback=self.parse_color)
-            color_reqs.append(req)
+            color_reqs.append(request)
         
         return color_reqs
 
@@ -84,11 +84,11 @@ class WoolrichSpider(CrawlSpider):
             item['skus'].append(self.make_sku(response, raw_sku))
             
         item['meta']['queued_requests'] += size_reqs
-        return self.next_request(item)
+        return self.next_request_or_item(item)
     
     def size_requests(self, response, attributes_map, sku_common):
-        sku_details = json.loads(response.text)['data']
-        in_stock_attributes = sku_details['in_stock_attributes']
+        raw_item = json.loads(response.text)['data']
+        in_stock_attributes = raw_item['in_stock_attributes']
 
         size_map = attributes_map.get('size', {})
         attr_value = size_map.get('value')
@@ -103,9 +103,9 @@ class WoolrichSpider(CrawlSpider):
             raw_sku = sku_common.copy()
             raw_sku['size'] = size
             meta = {'raw_sku': raw_sku, 'attributes_map': attributes_map}
-            req = FormRequest(url=response.url, meta=meta,
+            request = FormRequest(url=response.url, meta=meta,
                               formdata=formdata, callback=self.parse_size)
-            size_reqs.append(req)
+            size_reqs.append(request)
         
         return size_reqs
 
@@ -119,11 +119,11 @@ class WoolrichSpider(CrawlSpider):
             item['skus'].append(self.make_sku(response, raw_sku))
             
         item['meta']['queued_requests'] += fit_requests
-        return self.next_request(item)
+        return self.next_request_or_item(item)
     
     def fitting_requests(self, response, attributes_map, sku_common):
-        sku_details = json.loads(response.text)['data']
-        in_stock_attributes = sku_details['in_stock_attributes']
+        raw_item = json.loads(response.text)['data']
+        in_stock_attributes = raw_item['in_stock_attributes']
 
         fit_map = attributes_map.get('fit', {})
         attr_value = fit_map.get('value')
@@ -138,9 +138,9 @@ class WoolrichSpider(CrawlSpider):
             raw_sku = sku_common.copy()
             raw_sku['size'] = f'{raw_sku["size"]}/{fit}'
             meta = {'raw_sku': raw_sku, 'attributes_map': attributes_map}
-            req = FormRequest(url=response.url, meta=meta,
+            request = FormRequest(url=response.url, meta=meta,
                               formdata=formdata, callback=self.parse_fitting)
-            fitting_reqs.append(req)
+            fitting_reqs.append(request)
         
         return fitting_reqs
     
@@ -149,34 +149,34 @@ class WoolrichSpider(CrawlSpider):
         raw_sku = response.meta.get('raw_sku')
 
         item['skus'].append(self.make_sku(response, raw_sku))
-        return self.next_request(item)
+        return self.next_request_or_item(item)
     
     def make_sku(self, response, sku):
-        sku_details = json.loads(response.text)['data']
-        pprice, price = self.sku_pricing(sku_details)
+        raw_item = json.loads(response.text)['data']
+        prev_price, price = self.sku_pricing(raw_item)
 
-        sku['id'] = sku_details['sku']
+        sku['id'] = raw_item['sku']
         sku['price'] = price
 
-        if pprice:
-            sku['previous_price'] = pprice
+        if prev_price:
+            sku['previous_price'] = prev_price
         
         return sku
 
     def sku_pricing(self, raw_sku):
         price = self.to_cent(raw_sku['price']['without_tax']['value'])
-        pprice = raw_sku['price'].get('non_sale_price_without_tax', {}).get('value')
-        if pprice:
-            pprice = self.to_cent(pprice)
+        prev_price = raw_sku['price'].get('non_sale_price_without_tax', {}).get('value')
+        if prev_price:
+            prev_price = self.to_cent(prev_price)
 
-        return pprice, price
+        return prev_price, price
 
 
-    def _get_retailer_sku(self, response):
+    def get_retailer_sku(self, response):
         return response.css('[name="product_id"]::attr(value)').extract_first()
 
-    def _get_gender(self, response):
-        prod_name = self._get_name(response)
+    def get_gender(self, response):
+        prod_name = self.get_name(response)
 
         for gender in self.genders:
             if gender in prod_name:
@@ -184,26 +184,26 @@ class WoolrichSpider(CrawlSpider):
 
         return 'unisex-adults'   
     
-    def _get_category(self, response):
+    def get_category(self, response):
         return response.css('.breadcrumb a::text').extract()[1:]
     
-    def _get_brand(self, response):
-    	item_name = self._get_name(response)
+    def get_brand(self, response):
+    	item_name = self.get_name(response)
     	brand = 'John Rich & Bros'
     	return brand if brand in item_name else 'Woolrich'
     
-    def _get_name(self, response):
+    def get_name(self, response):
         return response.css('[itemprop="name"]::text').extract_first()
     
-    def _get_description(self, response):
+    def get_description(self, response):
         description = response.css('#details-content::text').extract()
         return [self.clean_text(d) for d in description]
 
-    def _get_care(self, response):
+    def get_care(self, response):
         care = response.css('#features-content').xpath('descendant-or-self::*/text()').extract()
         return [self.clean_text(c) for c in care if len(c.strip()) > 1]
     
-    def _get_image_urls(self, response):
+    def get_image_urls(self, response):
         raw_script = response.css('[data-sku]::attr(data-images)').extract_first()
         image_urls = json.loads(raw_script)
         
@@ -211,10 +211,11 @@ class WoolrichSpider(CrawlSpider):
 
     def get_product_attrs(self, response):
         product_attrs_sel = response.css('.productView-options [data-product-attribute]')
+        attr_name_r = re.compile('color|size|fit', flags=re.I)
 
         attributes_map = {}
         for attr_sel in product_attrs_sel:
-            attr_name = attr_sel.css('.form-label span::text').extract()[1].lower()
+            attr_name = attr_sel.css('.form-label span::text').re_first(attr_name_r).lower()
 
             attributes_map[attr_name] = {}
             attributes_map[attr_name]['value'] = attr_sel.css('.form-radio::attr(name)').extract_first()
