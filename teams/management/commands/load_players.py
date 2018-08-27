@@ -6,17 +6,23 @@ from django.core.management.base import BaseCommand
 from teams.models import Player, Team, BattingAverage, BowlingAverage
 import json
 from datetime import datetime
-from teams.choices import BattingStyleChoices, BowlingStyleChoices, PlayingRoleChoices, FormatChoices, TeamTypeChoices
+from teams.choices import BattingStyleChoices, PlayingRoleChoices, FormatChoices, TeamTypeChoices, BOWLING_STYLES
 import random
 
 
 def get_player_name(player_data):
-    return player_data.get('personal_info').get('Full name')[0]
+    try:
+        return player_data.get('personal_info').get('Full name')[0]
+    except TypeError or KeyError:
+        return None
 
 
 def get_player_dob(player_data):
-    born = ''.join(((player_data.get('personal_info').get('Born')[0]).strip()).lstrip('\n').split(',')[:2])
-    player_dob = datetime.strptime(born, '%B %d %Y').date()
+    try:
+        born = ''.join(((player_data.get('personal_info').get('Born')[0]).strip()).lstrip('\n').split(',')[:2])
+        player_dob = datetime.strptime(born, '%B %d %Y').date()
+    except ValueError or TypeError:
+        player_dob = None
     return player_dob
 
 
@@ -35,40 +41,24 @@ def get_player_batting_style(player_data):
 
 def get_player_teams_ids(player_data):
     player_teams_ids = []
-    player_teams = [name.replace(',', '') for name in player_data.get('personal_info').get('Major teams')]
-    for team in player_teams:
-        team_instance = Team.objects.filter(name=team).first()
-        if team_instance:
-            player_teams_ids.append(team_instance.id)
+    found_teams = player_data.get('personal_info').get('Major teams')
+    if found_teams:
+        player_teams = [name.replace(',', '') for name in found_teams]
+        for team in player_teams:
+            team_instance = Team.objects.filter(name=team).first()
+            if team_instance:
+                player_teams_ids.append(team_instance.id)
     return player_teams_ids
 
 
-BOWLING_STYLES = {
-                'Right-arm fast': BowlingStyleChoices.RIGHT_ARM_FAST,
-                'Right-arm fast-medium': BowlingStyleChoices.RIGHT_ARM_MEDIUM_FAST,
-                'Right-arm medium-fast': BowlingStyleChoices.RIGHT_ARM_MEDIUM_FAST,
-                'Right-arm medium': BowlingStyleChoices.RIGHT_ARM_MEDIUM_FAST,
-                'Right-arm offbreak': BowlingStyleChoices.RIGHT_ARM_OFF_BREAK,
-                'Legbreak googly': BowlingStyleChoices.RIGHT_ARM_LEG_BREAK_GOOGLY,
-                'Left-arm fast': BowlingStyleChoices.LEFT_ARM_FAST,
-                'Left-arm fast-medium': BowlingStyleChoices.LEFT_ARM_MEDIUM_FAST,
-                'Left-arm medium-fast': BowlingStyleChoices.LEFT_ARM_MEDIUM_FAST,
-                'Left-arm medium': BowlingStyleChoices.LEFT_ARM_MEDIUM_FAST,
-                'Slow left-arm chinaman': BowlingStyleChoices.LEFT_ARM_CHINAMAN,
-                'Slow left-arm orthodox': BowlingStyleChoices.LEFT_ARM_ORTHODOX,
-                'Legbreak': BowlingStyleChoices.RIGHT_ARM_LEG_BREAK_GOOGLY
-}
-
-
 def get_player_bowling_style(player_data):
+
     try:
-        if 'personal_info' in player_data and 'Bowling style' in player_data:
-            player_bowling_style = BOWLING_STYLES.get(player_data['personal_info']['Bowling style'][0])
-        else:
-            return "NOT KNOWN"
+        player_bowling_style = BOWLING_STYLES.get(player_data.get('personal_info').get('Bowling style')[0])
+        if player_bowling_style is None:
+            player_bowling_style = "NOT KNOWN"
     except TypeError or KeyError:
         return "NOT KNOWN"
-
     return player_bowling_style
 
 
@@ -108,16 +98,17 @@ def create_player_bowling_average(bowling_data, player):
 
 
 def create_player(player_data):
-
-    player_instance, is_created = Player.objects.update_or_create(
-        name=get_player_name(player_data),
-        defaults={'name': get_player_name(player_data), 'DOB': get_player_dob(player_data),
-                  'playing_role': get_player_role(player_data), 'batting_style': get_player_batting_style(player_data),
-                  'bowling_style': get_player_bowling_style(player_data)}
-    )
-
-    print(get_player_name(player_data) + " created" if is_created else get_player_name(player_data) + " updated")
-    return player_instance, is_created
+    if get_player_name(player_data) and get_player_dob(player_data):
+        player_instance, is_created = Player.objects.update_or_create(
+            name=get_player_name(player_data),
+            defaults={'name': get_player_name(player_data), 'DOB': get_player_dob(player_data),
+                      'playing_role': get_player_role(player_data), 'batting_style': get_player_batting_style(player_data),
+                      'bowling_style': get_player_bowling_style(player_data)}
+        )
+        print(get_player_name(player_data) + " created" if is_created else get_player_name(player_data) + " updated")
+        return player_instance, is_created
+    else:
+        return [None, False]
 
 
 class Command(BaseCommand):
@@ -139,7 +130,7 @@ class Command(BaseCommand):
                 player_teams_ids = get_player_teams_ids(player_data)
 
                 player_instance, is_created = create_player(player_data)
-
-                add_player_teams(player_teams_ids, player_instance)
-                create_player_batting_average(batting_data, player_instance)
-                create_player_bowling_average(batting_data, player_instance)
+                if player_instance:
+                    add_player_teams(player_teams_ids, player_instance)
+                    # create_player_batting_average(batting_data, player_instance)
+                    # create_player_bowling_average(bowling_data, player_instance)
