@@ -52,7 +52,6 @@ def get_player_teams_ids(player_data):
 
 
 def get_player_bowling_style(player_data):
-
     try:
         player_bowling_style = BOWLING_STYLES.get(player_data.get('personal_info').get('Bowling style')[0])
         if player_bowling_style is None:
@@ -67,32 +66,69 @@ def add_player_teams(team_ids, player):
         player.teams.add(i)
 
 
+def empty_value_handler(average):
+    for key in list(average.keys()):
+        if average.get(key) == '' or average.get(key) == '-' or '+' in average.get(key):
+            average[key] = None
+        if average[key] and (key in ['Balls', 'Econ', 'SR']):
+            average[key] = replace_handler(average[key])
+    return average
+
+
+def replace_handler(input_string):
+    if '*' in input_string or '+' in input_string:
+        input_string = input_string.replace('+', '')
+        input_string = input_string.replace('*', '')
+    return input_string
+
+
 def create_player_batting_average(batting_data, player):
     for bat_avg in batting_data:
+        bat_avg = empty_value_handler(bat_avg)
         batting_avg_instance, is_created = BattingAverage.objects.update_or_create(
             format=bat_avg[''].upper(), player_id=player.id,
-            defaults={'format': bat_avg[''].upper(), 'matches': int(bat_avg['Mat']), 'innings': int(bat_avg['Inns']),
-                      'runs': int(bat_avg['Runs']), 'average': float(bat_avg['Ave']), 'strike_rate': float(bat_avg['SR']),
-                      'balls': int(bat_avg['BF']), 'not_outs': int(bat_avg['NO']), 'highest_score': (bat_avg['HS']),
-                      'hundreds': int(bat_avg['100']), 'fifties': int(bat_avg['50']), 'fours': int(bat_avg['4s']),
-                      'sixes': int(bat_avg['6s']), 'catches': int(bat_avg['Ct']), 'stumps': int(bat_avg['St']),
-                      'player_id': player.id},
+            defaults={
+                'format': bat_avg[''].upper(),
+                'matches': bat_avg.get('Mat'),
+                'innings': bat_avg.get('Inns'),
+                'runs': bat_avg.get('Runs'),
+                'average': bat_avg.get('Ave'),
+                'strike_rate': bat_avg.get('SR'),
+                'balls': bat_avg.get('BF'),
+                'not_outs': bat_avg.get('NO'),
+                'highest_score': bat_avg.get('HS'),
+                'hundreds': bat_avg.get('100'),
+                'fifties': bat_avg.get('50'),
+                'fours': bat_avg.get('4s'),
+                'sixes': bat_avg.get('6s'),
+                'catches': bat_avg.get('Ct'),
+                'stumps': bat_avg.get('St'),
+                'player_id': player.id},
         )
         print(player.name + " batting average created" if is_created else player.name + " batting average updated")
 
 
 def create_player_bowling_average(bowling_data, player):
     for bowl_avg in bowling_data:
+        bowl_avg = empty_value_handler(bowl_avg)
         bowling_avg_instance, is_created = BowlingAverage.objects.update_or_create(
             format=bowl_avg[''].upper(), player_id=player.id,
-            defaults={'format': bowl_avg[''].upper(), 'matches': int(bowl_avg['Mat']), 'innings': int(bowl_avg['Inns']),
-                      'runs': int(bowl_avg['Runs']), 'average': float(bowl_avg['Ave']),
-                      'strike_rate': float(bowl_avg['SR']), 'balls': int(bowl_avg['Balls']),
-                      'wickets': int(bowl_avg['Wkts']), 'best_bowling_innings': (bowl_avg['BBI']),
-                      'best_bowling_match': (bowl_avg['BBM']), 'economy': float(bowl_avg['Econ']),
-                      'four_wickets': int(bowl_avg['4w']), 'five_wickets': int(bowl_avg['5w']),
-                      'ten_wickets': int(bowl_avg['10']),
-                      'player_id': player.id},
+            defaults={
+                'format': bowl_avg[''].upper(),
+                'matches': bowl_avg.get('Mat'),
+                'innings': bowl_avg.get('Inns'),
+                'runs': bowl_avg.get('Runs'),
+                'average': bowl_avg.get('Ave'),
+                'strike_rate': bowl_avg.get('SR'),
+                'balls': bowl_avg.get('Balls'),
+                'wickets': bowl_avg.get('Wkts'),
+                'best_bowling_innings': bowl_avg.get('BBI'),
+                'best_bowling_match': bowl_avg.get('BBM'),
+                'economy': bowl_avg.get('Econ'),
+                'four_wickets': bowl_avg.get('4w'),
+                'five_wickets': bowl_avg.get('5w'),
+                'ten_wickets': bowl_avg.get('10'),
+                'player_id': player.id},
         )
         print(player.name + " bowling average created" if is_created else player.name + " bowling average updated")
 
@@ -132,5 +168,5 @@ class Command(BaseCommand):
                 player_instance, is_created = create_player(player_data)
                 if player_instance:
                     add_player_teams(player_teams_ids, player_instance)
-                    # create_player_batting_average(batting_data, player_instance)
-                    # create_player_bowling_average(bowling_data, player_instance)
+                    create_player_batting_average(batting_data, player_instance)
+                    create_player_bowling_average(bowling_data, player_instance)
