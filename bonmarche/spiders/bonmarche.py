@@ -4,15 +4,16 @@ from scrapy.linkextractors import LinkExtractor
 from .bonmarche_product import ProductParser
 
 
-class PiazzaSpider(CrawlSpider):
+class BonmarcheSpider(CrawlSpider):
     name = "bonmarche-crawl"
     start_urls = [
         'https://www.bonmarche.co.uk/',
     ]
-    css = '.name-level-3', '.name-level-1', '.page-next'
+    listing_css = ['.name-level-3', '.name-level-1', '.page-next']
+    product_css = ['.product-name']
     rules = (
-        Rule(LinkExtractor(restrict_css=css), callback='parse'),
-        Rule(LinkExtractor(restrict_css=('.product-name',)), callback='parse_product'),
+        Rule(LinkExtractor(restrict_css=listing_css), callback='parse'),
+        Rule(LinkExtractor(restrict_css=product_css), callback='parse_product'),
     )
 
     product_parser = ProductParser()

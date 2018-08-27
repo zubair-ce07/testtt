@@ -42,14 +42,14 @@ class ProductParser(Spider):
 
         if response.css('.swatches.length'):
             product['requests'] += self.length_requests(response)
-            yield self.process_request(product)
         else:
-            product['skus'].update(self.generate_skus(response, False))
-            yield self.process_request(product)
+            product['skus'].update(self.generated_skus(response))
+
+        yield self.process_request(product)
 
     def parse_length(self, response):
         product = response.meta['product']
-        product['skus'].update(self.generate_skus(response, True))
+        product['skus'].update(self.generated_skus(response))
         yield self.process_request(product)
 
     def product_id(self, response):
@@ -80,6 +80,7 @@ class ProductParser(Spider):
         requests = []
         color_css = '.color .swatchanchor.selectable:not(.selected)::attr(href)'
         color_urls = response.css(color_css).extract()
+
         for url in color_urls:
             request = response.follow(url, callback=self.parse_colors)
             requests.append(request)
@@ -88,13 +89,13 @@ class ProductParser(Spider):
     def images(self, response):
         images_css = '.product-image-container .productthumbnail::attr(data-lgimg)'
         raw_images = response.css(images_css).extract()
-        image_urls = [url_clean(json.loads(url)["url"]) for url in raw_images]
-        return image_urls
+        return [url_clean(json.loads(url)["url"]) for url in raw_images]
 
     def size_requests(self, response):
         requests = []
         size_css = '.size .swatchanchor.selectable::attr(href)'
         size_urls = response.css(size_css).extract()
+
         for url in size_urls:
             request = response.follow(url, callback=self.parse_size)
             requests.append(request)
@@ -104,30 +105,41 @@ class ProductParser(Spider):
         requests = []
         length_css = '.length .swatchanchor.selectable::attr(href)'
         length_urls = response.css(length_css).extract()
+
         for url in length_urls:
             request = response.follow(url, callback=self.parse_length)
             requests.append(request)
         return requests
 
-    def common_sku(self, response):
+    def generated_skus(self, response):
         sku = {}
+
         size_css = '.size .swatchanchor.selected::text'
-        size = response.css(size_css).extract_first()
-        sku['size'] = size.strip()
+        size = response.css(size_css).extract_first().strip()
+        sku['size'] = size
+
         colour = response.css('.attribute .label::text').extract_first()
         colour = colour.split(":")[-1].strip()
         sku['colour'] = colour
+
         sku['currency'] = 'GBP'
         previous_prices = response.css('.price-standard::text').extract()
-
         if previous_prices:
             sku['previous_prices'] = self.filter_prices(previous_prices)
         price = response.css('.price-sales::attr(content)').extract_first()
         sku['price'] = int(100*float(price))
-        return sku
+
+        length_css = '.length .swatchanchor.selected::text'
+        length = response.css(length_css).extract_first()
+        if length:
+            size = f'{size}/{length.strip()}'
+            sku['size'] = size
+
+        return {f'{colour}_{size}': sku}
 
     def filter_prices(self, previous_prices):
         prices = []
+
         for price in previous_prices:
             price = price.replace('£', '').strip()
             if price:
@@ -135,22 +147,11 @@ class ProductParser(Spider):
                 prices.append(price)
         return prices
 
-    def generate_skus(self, response, length):
-        common = self.common_sku(response)
-        size = common['size']
-        colour = common['colour']
-
-        if length:
-            length_css = '.length .swatchanchor.selected::text'
-            length = response.css(length_css).extract_first()
-            size = f'{size}/{length.strip()}'
-            common['size'] = size
-        return {f'{colour}_{size}': common}
-
     def process_request(self, product):
         if not product['requests']:
             del product['requests']
             return product
+
         request = product['requests'].pop()
         request.meta['product'] = product
         return request
