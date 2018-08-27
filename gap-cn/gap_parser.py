@@ -43,13 +43,14 @@ class GapParser:
         item = response.meta.get('item')
         stock = json.loads(response.text)
 
-        self._check_stock_status(stock, item)
+        item['skus'] = [self._sku_status(stock, sku) for sku in item['skus']]
         return item
     
-    def _check_stock_status(self, stock, item):
-        for sku in item['skus']:
-            if not stock[sku['id']]:
-                sku.update({'out_of_stock': True})
+    def _sku_status(self, stock, sku):
+        if not stock[sku['id']]:
+            sku['out_of_stock'] = True
+
+        return sku
 
     def _get_gender(self, categories):
         for token, gender in self.gender_map:
