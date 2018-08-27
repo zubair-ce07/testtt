@@ -8,6 +8,9 @@ class WhistlesSpider(CrawlSpider):
     """
     Crawl spider to scrap `www.whistles.com`
     """
+    custom_settings = {
+        'DOWNLOAD_DELAY': 2,
+    }
     name = 'whistles'
     allowed_domains = ['www.whistles.com']
     start_urls = ['http://www.whistles.com/']
@@ -24,66 +27,65 @@ class WhistlesSpider(CrawlSpider):
     def parse_item(self, response):
         item = WhistlesItem()
         item['url'] = response.url
-        item['name'] = self.get_name(response)
-        item['brand'] = self.get_brand(response)
-        item['image_urls'] = self.get_image_urls(response)
-        item['product_sku'] = self.get_product_sku(response)
-        item['care'] = self.get_care(response)
-        item['description'] =  self.get_description(response)
-        item['skus'] = self.get_skus(response)
+        item['name'] = self.extract_name(response)
+        item['brand'] = self.extract_brand(response)
+        item['image_urls'] = self.extract_image_urls(response)
+        item['product_sku'] = self.extract_product_sku(response)
+        item['care'] = self.extract_care(response)
+        item['description'] =  self.extract_description(response)
+        item['skus'] = self.extract_skus(response)
         yield item
 
     @staticmethod
-    def get_name(response):
+    def extract_name(response):
         return response.css("h1[class*='product-name']::text").extract_first()
 
     @staticmethod
-    def get_brand(response):
+    def extract_brand(response):
         return response.css("meta[property*='product:brand']::attr(content)").extract_first()
 
     @staticmethod
-    def get_image_urls(response):
+    def extract_image_urls(response):
         return response.css("img[class*='productthumbnail']::attr(src)").extract()
 
     @staticmethod
-    def get_product_sku(response):
+    def extract_product_sku(response):
         return response.css("p:contains('Product Key:')::text").extract_first()
 
     @staticmethod
-    def get_care(response):
+    def extract_care(response):
         return [
             "material: {}".format(response.css("p:contains('Composition:')::text").extract_first()),
             "wash-care: {}".format(response.css("p:contains('Wash care:')::text").extract_first())
         ]
 
     @staticmethod
-    def get_color(response):
+    def extract_color(response):
         return response.css('p:contains("Colour:")::text').extract_first()
 
     @staticmethod
-    def get_price(response):
-        sale_price = response.css("span[title*='Sale Price']::text").extract_first(),
-        regular_price = response.css("span[title*='Regular Price']::text").extract_first()
-        if isinstance(sale_price, str):
-            return {
-                'unit': sale_price[0],
-                'price': sale_price[1:],
-                'previous_price': regular_price[1:]
-            }
+    def extract_price(response):
+        regular_price = response.css("span[title*='Sale Price']::text").extract_first()
+        previous_price = response.css("span[title*='Regular Price']::text").extract_first()
+        from pdb import set_trace; set_trace()
+        print(regular_price)
+        if not regular_price:
+            regular_price = previous_price
+            previous_price = []
         return {
-            'unit': regular_price[0],
-            'price': regular_price[1:]
+            'currency': regular_price[0],
+            'price': regular_price[1:],
+            'previous_prices': [previous_price[1:]]
         }
 
     @staticmethod
-    def get_description(response):
+    def extract_description(response):
         description = response.css("div[class*='product-tabs'] ul:first-child")
         return list(filter((lambda x: len(x)), map(str.strip, description.css("div div p::text").extract())))
 
-    @classmethod
-    def get_skus(cls, response):
-        color = cls.get_color(response)
-        price = cls.get_price(response)
+    def extract_skus(self, response):
+        color = self.extract_color(response)
+        price = self.extract_price(response)
         skus = list()
         sizes_info = response.css("li[class*='emptyswatch']")
         if not sizes_info:  # In case on one size only, eg: For `bags`
