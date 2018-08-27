@@ -6,4 +6,3 @@ SPIDER_MODULES = ['enamora.spiders']
 NEWSPIDER_MODULE = 'enamora.spiders'
 
 ROBOTSTXT_OBEY = True
-DOWNLOAD_DELAY = 0.1

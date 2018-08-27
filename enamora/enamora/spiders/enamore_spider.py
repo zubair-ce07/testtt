@@ -11,6 +11,10 @@ class EnamoraSpider(CrawlSpider):
     """
     Crawl spider to scrap `www.enamora.com`
     """
+    custom_settings = {
+        'DOWNLOAD_DELAY': 2,
+    }
+
     name = 'enamora'
     allowed_domains = ['www.enamora.de']
     start_urls = ['https://www.enamora.de/']
