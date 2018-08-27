@@ -57,8 +57,9 @@ class StoriesSpider(CrawlSpider):
         item["image_urls"] = self.extract_image_urls(current_item)
         item["care"] = self.extract_care(current_item)
         item["category"] = self.extract_categories(raw_product)
-        variants = self.extract_variants(raw_product, response)
+
         color_variants = self.extract_article_ids(response)
+        variants = self.extract_variants(raw_product, color_variants)
 
         return Request(self.skus_request_t.format(self.cookies["HMCORP_currency"].lower(), variants),
                        cookies=self.cookies, callback=self.parse_skus, dont_filter=True,
@@ -100,11 +101,11 @@ class StoriesSpider(CrawlSpider):
     def extract_categories(self, item_details):
         return item_details["mainCategorySummary"]
 
-    def extract_variants(self, raw_product, response):
+    def extract_variants(self, raw_product, color_variants):
         variant_codes= []
 
-        for key in self.extract_article_ids(response):
-            variant_codes.extend([variant["variantCode"] for variant in raw_product[key]["variants"]])
+        for color_variant in color_variants:
+            variant_codes.extend(raw_product[color_variant])
 
         return ','.join(variant_codes)
 
