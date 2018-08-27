@@ -92,8 +92,16 @@ class ProductParser(Spider):
 
     def size_requests(self, response):
         requests = []
-        size_css = '.size .swatchanchor.selectable::attr(href)'
+
+        size_css = '.size .swatchanchor.selectable:not(.selected)::attr(href)'
         size_urls = response.css(size_css).extract()
+
+        if response.css('.size .swatchanchor.selectable.selected'):
+            # product = response.meta['product']
+            if response.css('.swatches.length'):
+                requests += self.length_requests(response)
+            # else:
+            #     product['skus'].update(self.generated_skus(response))
 
         for url in size_urls:
             request = response.follow(url, callback=self.parse_size)
@@ -102,8 +110,13 @@ class ProductParser(Spider):
 
     def length_requests(self, response):
         requests = []
-        length_css = '.length .swatchanchor.selectable::attr(href)'
+
+        length_css = '.length .swatchanchor.selectable:not(.selected)::attr(href)'
         length_urls = response.css(length_css).extract()
+
+        # if response.css('.length .swatchanchor.selectable.selected'):
+        #     product = response.meta['product']
+        #     product['skus'].update(self.generated_skus(response))
 
         for url in length_urls:
             request = response.follow(url, callback=self.parse_length)

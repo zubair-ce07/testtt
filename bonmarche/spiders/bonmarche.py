@@ -7,12 +7,13 @@ from .bonmarche_product import ProductParser
 class BonmarcheSpider(CrawlSpider):
     name = "bonmarche-crawl"
     start_urls = [
-        'https://www.bonmarche.co.uk/',
+        # 'https://www.bonmarche.co.uk/',
+        'https://www.bonmarche.co.uk/womens/clothing/jeans/',
     ]
-    listing_css = ['.name-level-3', '.name-level-1', '.page-next']
+    listing_css = ['.name-level-3', '.name-level-1']
     product_css = ['.product-name']
     rules = (
-        Rule(LinkExtractor(restrict_css=listing_css), callback='parse'),
+        # Rule(LinkExtractor(restrict_css=listing_css), callback='parse'),
         Rule(LinkExtractor(restrict_css=product_css), callback='parse_product'),
     )
 
