@@ -122,21 +122,51 @@ def calculate_month_year_file(filename, rec_list, year_report,):
         return year_report
 
 
-def display_year_report(path, year):
-    """ read line from given path and then display year report"""
+def display_oneline_year_graph(month_report, cursor):
+    """ display one line graph from of single month report """
+    print(str(cursor).zfill(2), end=" ")
+    if month_report.max_temp != -1000 and month_report.min_temp != 1000:
+        for _ in range(month_report.max_temp):
+            print(CRED + "*" + CEND, end="")
+        for _ in range(month_report.min_temp):
+            print(CBLUE + "*" + CEND, end="")
+        print(" ", str(month_report.max_temp)+"C",
+              "-", str(month_report.min_temp) + "C")
+    else:
+        print("-")
+
+
+def display_year_report(path, year, graph):
+    """ read line from given path and then display year report or
+        year grap on the bases of graph flag """
     year_record_list = []
     year_report = YearReport(int(DEFAULT), DEFAULT_DATE,
                              int(1000), DEFAULT_DATE,
                              int(DEFAULT), DEFAULT_DATE)
-    for month in FILE_MONTHS:
-        file_name = path + "/Murree_weather_" + year + "_" + month + ".txt"
-        year_report = calculate_month_year_file(file_name,
-                                                year_record_list,
-                                                year_report)
+    if graph is False:
+        for month in FILE_MONTHS:
+            file_name = path + "/Murree_weather_" + year + "_" + month + ".txt"
+            year_report = calculate_month_year_file(file_name,
+                                                    year_record_list,
+                                                    year_report)
+        print("")
+        if year_report is not None:
+            year_report.display()
 
-    print("")
-    if year_report is not None:
-        year_report.display()
+    else:
+        cursor = 1
+        print("\n" + str(year), " Graph")
+        for month in FILE_MONTHS:
+            file_name = path + "/Murree_weather_" + year + "_" + month + ".txt"
+            year_report = calculate_month_year_file(file_name,
+                                                    year_record_list,
+                                                    year_report)
+            display_oneline_year_graph(year_report, cursor)
+            cursor = cursor + 1
+            year_report = YearReport(int(DEFAULT), DEFAULT_DATE,
+                                     int(1000), DEFAULT_DATE,
+                                     int(DEFAULT), DEFAULT_DATE)
+        print("")
 
 
 def month_display_graph_file(filename, rec_list):
@@ -184,7 +214,9 @@ def display_month_report(path, year_month, graph):
                 count = Count(0, 0, 0)
                 month_report = MonthReport(0, 0, 0, count)
                 avg_report = calculate_month_avg_file(file_name,
-                                                      month_record_list, month_report, month_str)
+                                                      month_record_list,
+                                                      month_report,
+                                                      month_str)
                 print("")
                 if avg_report is not None:
                     avg_report.display()

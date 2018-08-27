@@ -7,7 +7,9 @@ if len(sys.argv) > 3 and (((len(sys.argv)-2) % 2) == 0):
     for i in range(2, len(sys.argv), 2):
         try:
             if sys.argv[i] == "-e":
-                display_year_report(sys.argv[1], sys.argv[i+1])
+                display_year_report(sys.argv[1], sys.argv[i+1], False)
+            elif sys.argv[i] == "-d":
+                display_year_report(sys.argv[1], sys.argv[i+1], True)
             elif sys.argv[i] == "-a":
                 display_month_report(sys.argv[1], sys.argv[i+1], False)
             elif sys.argv[i] == "-c":
