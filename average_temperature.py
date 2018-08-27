@@ -5,7 +5,8 @@ a given month
 from calendar import month_abbr, month_name
 import glob
 import constants
-from read_csv import ReadCsv
+from csv_hanlder import WeatherCsvHandler
+from utils import weather_data
 
 
 class AverageTemperatue:
@@ -24,18 +25,19 @@ class AverageTemperatue:
         high_count = constants.ZERO
         low_count = constants.ZERO
         humid_count = constants.ZERO
-        csv_reader = ReadCsv(file_path)
-        read_csv = csv_reader.read_csv_file()
+        if not weather_data:
+            csv_handler = WeatherCsvHandler(file_path)
+            csv_handler.read_csv_and_fill_data()
 
-        for row in read_csv:
-            if row['Max TemperatureC']:
-                self.average_high += int(row['Max TemperatureC'])
+        for daily_weather in weather_data:
+            if daily_weather.max_temperature:
+                self.average_high += int(daily_weather.max_temperature)
                 high_count += 1
-            if row['Min TemperatureC']:
-                self.average_low += int(row['Min TemperatureC'])
+            if daily_weather.min_temperature:
+                self.average_low += int(daily_weather.min_temperature)
                 low_count += 1
-            if row[' Mean Humidity']:
-                self.average_humidity += int(row[' Mean Humidity'])
+            if daily_weather.mean_humidity:
+                self.average_humidity += int(daily_weather.mean_humidity)
                 humid_count += 1
 
         if high_count is not constants.ZERO:

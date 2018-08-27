@@ -5,7 +5,8 @@ from calendar import month_abbr
 import glob
 from datetime import datetime
 import constants
-from read_csv import ReadCsv
+from utils import weather_data
+from csv_hanlder import WeatherCsvHandler
 
 
 class YearlyTemperature:
@@ -18,36 +19,10 @@ class YearlyTemperature:
         self.humidity = constants.ZERO
         self.humid_day = constants.EMPTY_STRING
 
-    def find_yearly_temperature(self, file_path):
+    def find_yearly_temperature(self, date_str, dir_path):
         """
         this method find yearly tepmerature
         :param file_path:
-        :return:
-        """
-        csv_reader = ReadCsv(file_path)
-        read_csv = csv_reader.read_csv_file()
-        for row in read_csv:
-            if row['Max TemperatureC']:
-                hight_temp = int(row['Max TemperatureC'])
-                if hight_temp > self.highest:
-                    self.highest = hight_temp
-                    self.highest_temp_day = row['PKT']
-            if row['Min TemperatureC']:
-                low_temp = int(row['Min TemperatureC'])
-                if low_temp < self.lowest:
-                    self.lowest = low_temp
-                    self.lowest_temp_day = row['PKT']
-            if row['Max Humidity']:
-                humidity = int(row['Max Humidity'])
-                if humidity > self.humidity:
-                    self.humidity = humidity
-                    self.humid_day = row['PKT']
-
-    def show_yearly_temperature(self, date_str, dir_path):
-        """
-        this method show yearly temperature
-        :param date_str:
-        :param dir_path:
         :return:
         """
         date_str = date_str.split('/')
@@ -58,7 +33,35 @@ class YearlyTemperature:
 
             if file_path:
                 file_path = file_path[0]
-                self.find_yearly_temperature(file_path)
+                csv_handler = WeatherCsvHandler(file_path)
+                csv_handler.read_csv_and_fill_data()
+
+        for daily_weather in weather_data:
+            if daily_weather.max_temperature:
+                hight_temp = int(daily_weather.max_temperature)
+                if hight_temp > self.highest:
+                    self.highest = hight_temp
+                    self.highest_temp_day = daily_weather.date
+            if daily_weather.min_temperature:
+                low_temp = int(daily_weather.min_temperature)
+                if low_temp < self.lowest:
+                    self.lowest = low_temp
+                    self.lowest_temp_day = daily_weather.date
+            if daily_weather.max_humidity:
+                humidity = int(daily_weather.max_humidity)
+                if humidity > self.humidity:
+                    self.humidity = humidity
+                    self.humid_day = daily_weather.date
+
+    def show_yearly_temperature(self, date_str, dir_path):
+        """
+        this method show yearly temperature
+        :param date_str:
+        :param dir_path:
+        :return:
+        """
+        self.find_yearly_temperature(date_str, dir_path)
+
 
         if self.highest != constants.MIN_VALUE:
             print("Highest: %dC on %s" % (

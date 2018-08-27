@@ -3,8 +3,8 @@ this module displays monthly temperature of a month in a bar chart
 """
 from calendar import month_abbr, month_name
 import glob
-import utils
-from read_csv import ReadCsv
+from csv_hanlder import WeatherCsvHandler
+from utils import weather_data
 
 
 class TemperatureInChart:
@@ -16,55 +16,47 @@ class TemperatureInChart:
         self.two_line_chart = two_line_chart
         self.one_line_chart = one_line_chart
 
-    def display_two_line_chart(self, file_path):
+    def display_two_line_chart(self):
         """
-        :param file_path:
-        :return: none
         displays the daily temperture of a month
+        :return:
         """
-
-        csv_reader = ReadCsv(file_path)
-        read_csv = csv_reader.read_csv_file()
-
-        for row in read_csv:
-            day = row['PKT'].split("-")[2]
-            if row['Max TemperatureC']:
-                max_temp = int(row['Max TemperatureC'])
+        for daily_weather in weather_data:
+            day = daily_weather.date.split("-")[2]
+            if daily_weather.max_temperature:
+                max_temp = int(daily_weather.max_temperature)
                 max_temp_string = ""
-                for index in range(max_temp):
+                for _ in range(max_temp):
                     max_temp_string = max_temp_string + "+"
                 print("%s \033[0;31m%s\033[0;m %dC" % (day, max_temp_string, max_temp))
-            if row['Min TemperatureC']:
-                min_temp = int(row['Min TemperatureC'])
+            if daily_weather.min_temperature:
+                min_temp = int(daily_weather.min_temperature)
                 min_temp_string = ""
-                for index in range(min_temp):
+                for _ in range(min_temp):
                     min_temp_string = min_temp_string + "-"
                 print("%s \033[0;34m%s\033[0;m %dC" % (day, min_temp_string, min_temp))
 
-    def display_one_line_chart(self, file_path):
+    def display_one_line_chart(self):
         """
-        :param file_path:
-        :return: none
         display horizontally the temperatures of the month
+        :return:
         """
-        csv_reader = ReadCsv(file_path)
-        read_csv = csv_reader.read_csv_file()
-        for row in read_csv:
+        for daily_weather in weather_data:
             max_temp_flag = False
             min_temp_flag = False
             max_temp_string = ""
             min_temp_string = ""
             max_temp = 0
             min_temp = 0
-            day = row['PKT'].split("-")[2]
-            if row['Max TemperatureC']:
-                max_temp = int(row['Max TemperatureC'])
+            day = daily_weather.date.split("-")[2]
+            if daily_weather.max_temperature:
+                max_temp = int(daily_weather.max_temperature)
 
                 max_temp_flag = True
                 for index in range(max_temp):
                     max_temp_string = max_temp_string + "+"
-            if row['Min TemperatureC']:
-                min_temp = int(row['Min TemperatureC'])
+            if daily_weather.min_temperature:
+                min_temp = int(daily_weather.min_temperature)
 
                 min_temp_flag = True
                 for index in range(min_temp):
@@ -86,10 +78,13 @@ class TemperatureInChart:
         file_path = glob.glob(dir_path + "/*_" + year + "_" + month_abbr[month] + "*")
         if file_path:
             file_path = file_path[0]
+            if not weather_data:
+                csv_handler = WeatherCsvHandler(file_path)
+                csv_handler.read_csv_and_fill_data()
             print("%s %s" % (month_name[month], year))
             if self.two_line_chart:
-                self.display_two_line_chart(file_path)
+                self.display_two_line_chart()
             elif self.one_line_chart:
-                self.display_one_line_chart(file_path)
+                self.display_one_line_chart()
         else:
             print("No Data Found for the Specified Month")
