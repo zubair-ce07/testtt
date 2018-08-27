@@ -1,13 +1,9 @@
-import argparse
-from dateutil.parser import parse
 import os
-import sys
 from django.core.management.base import BaseCommand
 from teams.models import Player, Team, BattingAverage, BowlingAverage
 import json
 from datetime import datetime
 from teams.choices import BattingStyleChoices, PlayingRoleChoices, FormatChoices, TeamTypeChoices, BOWLING_STYLES
-import random
 
 
 def get_player_name(player_data):
