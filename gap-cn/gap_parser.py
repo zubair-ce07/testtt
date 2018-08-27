@@ -17,11 +17,9 @@ class GapParser:
                   ('幼儿', 'children'),
                   ('婴儿', 'baby')]
     care_words = ['洗', '棉', '干', '熨', '聚酯', '面料', '纤', '%']
-    currency = 'CNY'
 
     def parse_item(self, response):
         raw_item = self._extract_raw_product(response)
-        self.currency = raw_item['currency']
 
         item = GapItem()
         item['retailer_sku'] = raw_item['identifier']
@@ -33,21 +31,25 @@ class GapParser:
         item['care'] = self._get_care(response)
         item["description"] = self._get_description(response)
         item['image_urls'] = self._get_image_urls(response)
-        item['skus'] = self._get_skus(response)
+        item['skus'] = self._get_skus(response, raw_item['currency'])
 
-        return self.stock_status_request(response, item)
+        return self._stock_status_request(response, item)
 
-    def stock_status_request(self, response, item):
+    def _stock_status_request(self, response, item):
         url = f'https://www.gap.cn/catalog/product/getstock?entityId={item["retailer_sku"]}'
-        return scrapy.Request(url=url, callback=self.check_stock_status, meta={'item': item})
+        return scrapy.Request(url=url, callback=self._parse_stock_status, meta={'item': item})
 
-    def check_stock_status(self, response):
+    def _parse_stock_status(self, response):
         item = response.meta.get('item')
         stock = json.loads(response.text)
+
+        self._check_stock_status(stock, item)
+        return item
+    
+    def _check_stock_status(self, stock, item):
         for sku in item['skus']:
             if not stock[sku['id']]:
                 sku['out_of_stock'] = True
-        return item
 
     def _get_gender(self, categories):
         for token, gender in self.gender_map:
@@ -72,26 +74,28 @@ class GapParser:
     def _get_image_urls(self, response):
         return response.css('.more-views a::attr(href)').extract()
 
-    def _get_skus(self, response):
+    def _get_skus(self, response, currency):
+        skus = []
+
         colors = response.css('.onelist a::attr(title)').extract()
         color_ids = response.css('.onelist a::attr(key)').extract()
-        return [sku for color, color_id in zip(colors, color_ids) 
-                    for sku in self._get_color_skus(response, color, color_id)]
+        for color, color_id in zip(colors, color_ids):
+            css = f'.size_list_{color_id} a'
+            sizes_selectors = response.css(css)
 
-    def _get_color_skus(self, response, color, color_id):
-        css = f'.size_list_{color_id} a'
-        sizes_sel = response.css(css)
-        return [self._make_sku(color, sel) for sel in sizes_sel]
+            for sel in sizes_selectors:
+                sku = {
+                    'currency': currency,
+                    'price': self._get_price(sel),
+                    'previous_price': self._get_previous_price(sel),
+                    'color': color,
+                    'size': sel.css('::attr(data-title)').extract_first(),
+                    'id': sel.css('::attr(data-id)').extract_first()
+                }
 
-    def _make_sku(self, color, selector):
-        return {
-            'color': color,
-            'currency': self.currency,
-            'price': self._get_price(selector),
-            'previous price': self._get_previous_price(selector),
-            'size': selector.css('::attr(data-title)').extract_first(),
-            'id': selector.css('::attr(data-id)').extract_first()
-        }
+                skus += [sku]
+        
+        return skus
 
     def _get_price(self, selector):
         price = float(selector.css('::attr(data-final_price)').extract_first())
@@ -114,4 +118,4 @@ class GapParser:
         return round(price*100)
 
     def clean_text(self, text):
-        return re.sub(r'\s+', ' ', text)
+        return re.sub(r'\s+', ' ', text.strip())
