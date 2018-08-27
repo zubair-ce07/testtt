@@ -9,7 +9,7 @@ from scrapy import Request, Selector
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule, CrawlSpider
 
-from whiteStuff.items import WhiteStuffItem
+from whiteStuff.items import Item
 
 
 class WhiteStuffSpider(CrawlSpider):
@@ -18,8 +18,9 @@ class WhiteStuffSpider(CrawlSpider):
     }
     name = 'white_stuff'
     allowed_categories = '.*(mens|kids|gift).*/.+'
+    navigation_css = '.navbar__item'
     start_urls = ['https://www.whitestuff.com/global']
-    rules = (Rule(LinkExtractor(restrict_css='.navbar__item', allow=allowed_categories),
+    rules = (Rule(LinkExtractor(restrict_css=navigation_css, allow=allowed_categories),
                   callback='parse_category_parameters'),)
 
     skus_url_t = "https://www.whitestuff.com/global/action/GetProductData-FormatProduct?"
@@ -43,9 +44,8 @@ class WhiteStuffSpider(CrawlSpider):
     }
 
     def parse_category_parameters(self, response):
-        script = self.get_category_script(response)
+        script = self.category_script(response)
         parameters = js2xml.utils.vars.get_vars(js2xml.parse(script))
-        config_category_tree = parameters.get('attraqt.config.categorytree')
         config_category = parameters.get('attraqt.config.category')
 
         if not config_category:
@@ -53,36 +53,30 @@ class WhiteStuffSpider(CrawlSpider):
 
         category_parameters = self.category_parameters.copy()
         category_parameters['config_category'] = config_category
-        category_parameters['config_categorytree'] = config_category_tree
+        category_parameters['config_categorytree'] = parameters.get('attraqt.config.categorytree')
         category_parameters['pageurl'] = response.url
 
         yield Request(url=f'{self.category_url_t}{urlencode(category_parameters)}', callback=self.parse_category)
 
     def parse_category(self, response):
-        html_response = self.extract_html_from_response(response)
+        selector = self.selector_from_response(response)
+        request_parameters = self.request_parameters(response)
 
-        if not html_response:
-            return
+        yield from self.item_requests(selector, request_parameters['pageurl'])
 
-        request_parameters = self.get_request_parameters(response)
-        selector = Selector(text=html_response)
+        return self.pagination_requests(response)
 
-        yield from self.get_item_requests(selector, request_parameters['pageurl'])
-
-        return self.get_pagination_requests(response)
-
-    def get_item_requests(self, selector, page_url):
+    def item_requests(self, selector, page_url):
         css = '.product-tile__title a::attr(href)'
         return [Request(url=urljoin(page_url, url), callback=self.parse_item) for url in selector.css(css).extract()]
 
-    def get_pagination_requests(self, response):
-        request_parameters = self.get_request_parameters(response)
+    def pagination_requests(self, response):
+        request_parameters = self.request_parameters(response)
 
         if 'esp_pg' in request_parameters['pageurl']:
             return
 
-        html_response = self.extract_html_from_response(response)
-        selector = Selector(text=html_response)
+        selector = self.selector_from_response(response)
         total_pages = int(selector.css('#TotalPages::attr(value)').extract_first() or '1')
 
         if total_pages <= 1:
@@ -98,19 +92,19 @@ class WhiteStuffSpider(CrawlSpider):
             yield Request(url=f'{self.category_url_t}{urlencode(category_parameters)}', callback=self.parse_category)
 
     def parse_item(self, response):
-        item = WhiteStuffItem()
+        item = Item()
 
-        item['name'] = self.get_title(response)
-        item['retailer_sku'] = self.get_retailer_sku(response)
-        item['gender'] = self.get_gender(response)
+        item['name'] = self.title(response)
+        item['retailer_sku'] = self.retailer_sku(response)
+        item['gender'] = self.gender(response)
         item['brand'] = 'White Stuff'
-        item['categories'] = self.get_categories(response)
+        item['categories'] = self.categories(response)
         item['url'] = response.url
-        item['description'] = self.get_description(response)
-        item['care'] = self.get_care(response)
+        item['description'] = self.description(response)
+        item['care'] = self.care(response)
         skus_request = self.make_skus_request(response)
         skus_request.meta['item'] = item
-        skus_request.meta['currency'] = self.get_currency(response)
+        skus_request.meta['currency'] = self.currency(response)
 
         yield skus_request
 
@@ -118,14 +112,14 @@ class WhiteStuffSpider(CrawlSpider):
         item = response.meta['item']
         currency = response.meta['currency']
 
-        raw_skus = self.get_raw_skus(response)
-        item['image_urls'] = self.get_image_urls(raw_skus)
-        item['skus'] = self.get_skus(raw_skus, currency)
+        raw_skus = self.raw_skus(response)
+        item['image_urls'] = self.image_urls(raw_skus)
+        item['skus'] = self.skus(raw_skus, currency)
 
         return item
 
     @staticmethod
-    def get_request_parameters(response):
+    def request_parameters(response):
         query_string = urlparse(response.url).query
         parsed_query_string = parse_qs(query_string)
         request_parameters = dict()
@@ -137,15 +131,15 @@ class WhiteStuffSpider(CrawlSpider):
         return request_parameters
 
     @staticmethod
-    def get_raw_skus(response):
+    def raw_skus(response):
         return js2xml.utils.objects.getall(js2xml.parse(response.text), [dict])[0]['productVariations']
 
     @staticmethod
-    def get_category_script(response):
+    def category_script(response):
         return "".join(response.css('script::text').re('.*attraqt.config.category.*'))
 
     @staticmethod
-    def get_image_urls(raw_skus):
+    def image_urls(raw_skus):
         image_urls = set()
 
         for raw_sku in raw_skus.values():
@@ -154,7 +148,7 @@ class WhiteStuffSpider(CrawlSpider):
 
         return image_urls
 
-    def get_skus(self, raw_skus, currency):
+    def skus(self, raw_skus, currency):
         skus = []
 
         for raw_sku in raw_skus.values():
@@ -162,7 +156,7 @@ class WhiteStuffSpider(CrawlSpider):
             sku['sku_id'] = raw_sku['productUUID']
             sku['colour'] = raw_sku['colour']
             sku['size'] = raw_sku['size']
-            sku.update(self.get_pricing(raw_sku, currency))
+            sku.update(self.pricing(raw_sku, currency))
 
             if not raw_sku['inStock']:
                 sku['is_out_of_stock'] = True
@@ -171,7 +165,7 @@ class WhiteStuffSpider(CrawlSpider):
 
         return skus
 
-    def get_pricing(self, raw_sku, currency):
+    def pricing(self, raw_sku, currency):
         pricing = {'price': self.format_price(raw_sku['salePrice'])}
         pricing['currency'] = currency
 
@@ -183,16 +177,17 @@ class WhiteStuffSpider(CrawlSpider):
         return pricing
 
     def make_skus_request(self, response):
-        self.skus_parameters["ProductID"] = self.get_product_id(response)
+        self.skus_parameters["ProductID"] = self.product_id(response)
         skus_request_url = f'{self.skus_url_t}{urlencode(self.skus_parameters)}'
         return Request(url=skus_request_url, callback=self.parse_skus)
 
     @staticmethod
-    def extract_html_from_response(response):
-        return json.loads(re.findall(r"LM.buildZone\((.+)\)", response.text)[1])['html']
+    def selector_from_response(response):
+        html = json.loads(re.findall(r"LM.buildZone\((.+)\)", response.text)[1])['html']
+        return Selector(text=html)
 
     @staticmethod
-    def get_product_id(response):
+    def product_id(response):
         return response.css('.js-variation-attribute::attr(data-variation-master-sku)').extract_first()
 
     @staticmethod
@@ -200,34 +195,34 @@ class WhiteStuffSpider(CrawlSpider):
         return int(''.join(re.findall(r"(\d+)", price)))
 
     @staticmethod
-    def get_title(response):
+    def title(response):
         return response.css('.product-info__heading::text').extract_first()
 
     @staticmethod
-    def get_retailer_sku(response):
+    def retailer_sku(response):
         return response.css('[itemprop="sku"]::text').extract_first()
 
     @staticmethod
-    def get_categories(response):
+    def categories(response):
         return response.css('.breadcrumb-list__item-link::text').extract()[1:]
 
-    def get_gender(self, response):
+    def gender(self, response):
         for gender_token, gender in self.genders:
             if gender_token in response.url:
                 return gender
 
-    def get_description(self, response):
-        return [line for line in self.get_raw_description(response) if 'Care' not in line]
+    def description(self, response):
+        return [line for line in self.raw_description(response) if 'Care' not in line]
 
-    def get_care(self, response):
-        return [line for line in self.get_raw_description(response) if 'Care' in line]
+    def care(self, response):
+        return [line for line in self.raw_description(response) if 'Care' in line]
 
     @staticmethod
-    def get_raw_description(response):
+    def raw_description(response):
         types = response.css('.ish-ca-type::text').extract()
         values = response.css('.ish-ca-value::text').extract()
         return [f'{attribute} {value}' for attribute, value in zip(types, values)]
 
     @staticmethod
-    def get_currency(response):
+    def currency(response):
         return response.css('[itemprop="priceCurrency"]::attr(content)').extract_first()
