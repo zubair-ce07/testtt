@@ -58,10 +58,10 @@ class GapCrawler(CrawlSpider):
                                callback=self.parse_page_items)
 
     def parse_page_items(self, response):
-        json_res = json.loads(response.text)
-        if json_res['status'] == "success":
+        json_response = json.loads(response.text)
+        if json_response['status'] == "success":
             ajax_res = HtmlResponse(url=response.url,
-                                    body=str.encode(json_res['message']))
+                                    body=str.encode(json_response['message']))
             products_urls = ajax_res.css('.categoryProductItem h5 a::attr(href)').extract()
             for url in products_urls:
                 link = url_query_cleaner(response.urljoin(url))
