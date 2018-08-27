@@ -15,4 +15,4 @@ class SignUpForm(ModelForm):
         #           'postal_code', 'user.email', 'user.password', 'phone_no', 'role', 'categories']
 
         fields = ['first_name', 'last_name', 'email_address', 'password','cnic_no', 'address', 'city', 'country',
-                  'postal_code', 'phone_no', 'role', 'categories']
+                  'postal_code', 'phone_no', 'role', 'categories', 'display_picture']

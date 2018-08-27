@@ -11,6 +11,9 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
+def file_path_and_rename(instance, filename):
+    return 'user_{}/{}'.format(instance.user.id, filename)
+
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -29,6 +32,7 @@ class UserProfile(models.Model):
         ('CN', 'Consumer'),
     )
     role = models.CharField(max_length=2, choices=role_types)
+    display_picture = models.ImageField(upload_to=file_path_and_rename, null=True)
 
     def __str__(self):
          return self.full_name() if self.full_name() else self.username()

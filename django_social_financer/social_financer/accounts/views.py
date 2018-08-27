@@ -49,13 +49,14 @@ class SignUpView(generic.FormView):
         user.userprofile.role = form.cleaned_data['role']
         user.userprofile.categories.set(form.cleaned_data['categories'])
         user.userprofile.postal_code = form.cleaned_data['postal_code']
+        user.userprofile.display_picture = form.cleaned_data['display_picture']
         # Code commented intentionally. Represents Co-ordinates feature
         # long,lat = self.get_long_lat_from_address(form.cleaned_data['address'])
         # if long:
         #     user.userprofile.longitude = long
         #     user.userprofile.latitude = lat
         user.userprofile.save()
-        pass
+
 
     # Code commented intentionally. Represents Co-ordinates feature
     # def get_long_lat_from_address(self, address):
