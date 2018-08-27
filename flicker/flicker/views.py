@@ -58,6 +58,12 @@ def save_post_tags(tags_list, post_id ):
         db.session.commit()
 
 
+@app.route('/users', methods=['GET'])
+def show_all_users():
+    users_list = db.session.query(User).all()
+    return render_template('user_list.html', users_list = users_list)
+
+
 @app.route('/delete/<pid>/<post_owner>', methods=('GET', 'POST'))
 def delete_post(pid, post_owner):
     if session['current_user'] == post_owner:

@@ -12,7 +12,6 @@ def length_check(form, field):
 
 class AddPostForm(Form):
     tag = TextField('tag', validators=[DataRequired()])
-    description = TextAreaField('Description', validators=[DataRequired()])
 
 
 class SignUpForm(Form):

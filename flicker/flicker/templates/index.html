@@ -18,7 +18,8 @@
    {% block header %}
    <h1>{% block title %}Posts{% endblock %}</h1>
    {% if session['user_available'] %}
-   <a class="action" href="{{ url_for('add_post') }}">New</a>
+   <a class="action" href="{{ url_for('add_post') }}">New</a><br/>
+   <a class="action" href="{{ url_for('show_all_users') }}">All Users</a>
    {% endif %}
    {% endblock %}
    {% block content %}
