@@ -1,10 +1,10 @@
 """
 this module call the appropriate module according to its requirement
 """
+from utils import validate_date_str
 from yearly_temperature import YearlyTemperature
 from average_temperature import AverageTemperatue
 from temperature_in_chart import TemperatureInChart
-import utilities
 
 
 class WeatherMaster:
@@ -27,14 +27,14 @@ class WeatherMaster:
                                                        self.args.dir_path)
 
         elif self.args.monthly:
-            if utilities.validate_date_str(self.args.date_string, 1) is False:
+            if not validate_date_str(self.args.date_string, 1):
                 print("Date should be of the form 'YYYY/MM'")
                 exit(-1)
             average_temperature = AverageTemperatue()
             average_temperature.show_average_temperature(self.args.date_string,
                                                          self.args.dir_path)
         elif self.args.monthly_chart or self.args.monthly_chart_one:
-            if utilities.validate_date_str(self.args.date_string, 1) is False:
+            if not validate_date_str(self.args.date_string, 1):
                 print("Date should be of the form 'YYYY/MM'")
                 exit(-1)
             temperature_in_chart = TemperatureInChart(self.args.monthly_chart,

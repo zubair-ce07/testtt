@@ -2,8 +2,9 @@
 this module calculate and display average tempaerature of
 a given month
 """
+from calendar import month_abbr, month_name
+import glob
 import constants
-import utilities
 from read_csv import ReadCsv
 
 
@@ -27,13 +28,13 @@ class AverageTemperatue:
         read_csv = csv_reader.read_csv_file()
 
         for row in read_csv:
-            if row['Max TemperatureC'] != '':
+            if row['Max TemperatureC']:
                 self.average_high += int(row['Max TemperatureC'])
                 high_count += 1
-            if row['Min TemperatureC'] != '':
+            if row['Min TemperatureC']:
                 self.average_low += int(row['Min TemperatureC'])
                 low_count += 1
-            if row[' Mean Humidity'] != '':
+            if row[' Mean Humidity']:
                 self.average_humidity += int(row[' Mean Humidity'])
                 humid_count += 1
 
@@ -53,12 +54,12 @@ class AverageTemperatue:
         """
         (year, month) = date_str.split('/')
         month = int(month)
-        file_path = utilities.get_file_path(dir_path, year, utilities.get_month_abbr(month))
+        file_path = glob.glob(dir_path + "/*_" + year + "_" + month_abbr[month] + "*")
         if file_path:
             file_path = file_path[0]
             self.find_average_temperature(file_path)
 
-            print("%s %s" % (utilities.get_month_name(month), year))
+            print("%s %s" % (month_name[month], year))
             if self.average_high is not constants.ZERO:
                 print("Highest Average: %dC" % self.average_high)
             else:

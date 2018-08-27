@@ -19,5 +19,5 @@ class ReadCsv:
         """
         with open(self.file_path) as csvfile:
             read_csv = csv.DictReader(csvfile, delimiter=',')
-            file_data = list(read_csv)
-        return file_data
+            weather_data = list(read_csv)
+        return weather_data

@@ -1,7 +1,9 @@
 """
 this module displays monthly temperature of a month in a bar chart
 """
-import utilities
+from calendar import month_abbr, month_name
+import glob
+import utils
 from read_csv import ReadCsv
 
 
@@ -26,13 +28,13 @@ class TemperatureInChart:
 
         for row in read_csv:
             day = row['PKT'].split("-")[2]
-            if row['Max TemperatureC'] != '':
+            if row['Max TemperatureC']:
                 max_temp = int(row['Max TemperatureC'])
                 max_temp_string = ""
                 for index in range(max_temp):
                     max_temp_string = max_temp_string + "+"
                 print("%s \033[0;31m%s\033[0;m %dC" % (day, max_temp_string, max_temp))
-            if row['Min TemperatureC'] != '':
+            if row['Min TemperatureC']:
                 min_temp = int(row['Min TemperatureC'])
                 min_temp_string = ""
                 for index in range(min_temp):
@@ -55,13 +57,13 @@ class TemperatureInChart:
             max_temp = 0
             min_temp = 0
             day = row['PKT'].split("-")[2]
-            if row['Max TemperatureC'] != '':
+            if row['Max TemperatureC']:
                 max_temp = int(row['Max TemperatureC'])
 
                 max_temp_flag = True
                 for index in range(max_temp):
                     max_temp_string = max_temp_string + "+"
-            if row['Min TemperatureC'] != '':
+            if row['Min TemperatureC']:
                 min_temp = int(row['Min TemperatureC'])
 
                 min_temp_flag = True
@@ -81,10 +83,10 @@ class TemperatureInChart:
         """
         (year, month) = date_str.split('/')
         month = int(month)
-        file_path = utilities.get_file_path(dir_path, year, utilities.get_month_abbr(month))
+        file_path = glob.glob(dir_path + "/*_" + year + "_" + month_abbr[month] + "*")
         if file_path:
             file_path = file_path[0]
-            print("%s %s" % (utilities.get_month_name(month), year))
+            print("%s %s" % (month_name[month], year))
             if self.two_line_chart:
                 self.display_two_line_chart(file_path)
             elif self.one_line_chart:
