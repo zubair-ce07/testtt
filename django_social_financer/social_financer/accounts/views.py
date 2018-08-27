@@ -12,6 +12,7 @@ from django.contrib.auth.models import User
 from .forms import SignUpForm
 from .models import UserProfile
 from . import constants, helpers
+from feedback.models import Feedback
 # Create your views here.
 #
 class SignUpView(generic.FormView):
@@ -114,3 +115,21 @@ def home_consumer(request, user):
                       context={'donor': request.user.userprofile.pair,
                                'my_category': request.user.userprofile.categories,
                                'map_url' : 'https://www.google.com/maps/search/?api=1&query='})
+
+class ProfileView(generic.TemplateView):
+    template_name = 'accounts/profile.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['user'] = self.request.user
+        context['rating'] = helpers.get_user_rating(self.request.user.userprofile)
+        context['all_feedback'] = Feedback.objects.filter(given_to_user=self.request.user.userprofile)
+        return context
+
+class ViewReports(generic.TemplateView):
+    template_name = 'accounts/admin/view_reports.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['userprofile'] = UserProfile.objects.get(id=context['pk'])
+        return context

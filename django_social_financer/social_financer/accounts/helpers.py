@@ -1,3 +1,6 @@
+from feedback.models import Feedback
+from accounts.models import UserProfile
+from django.db.models import Avg
 
 def feedback_or_report(request):
     reverse_url = ''
@@ -8,4 +11,8 @@ def feedback_or_report(request):
         reverse_url = 'accounts:report_user'
     consumer_id = int(request.POST.get('consumer_id', '-1'))
     return (reverse_url, consumer_id)
+
+def get_user_rating(userprofile):
+    rating = Feedback.objects.filter(given_to_user=userprofile).aggregate(Avg('star_rating'))
+    return rating.get('star_rating__avg','Not rated yet')
 

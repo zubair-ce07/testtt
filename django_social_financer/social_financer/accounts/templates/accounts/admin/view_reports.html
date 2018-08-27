@@ -1,0 +1,29 @@
+<h3>Reports for {{ userprofile }}</h3>
+
+<h4>Reports filed against user</h4>
+<ul>
+    {% for report in userprofile.received_reports.all %}
+        <li>
+        <p>Reported by: {{ report.reporting_user }}</p>
+        <p>{{ report.get_category_display }}</p>
+        <p>{{ report.comments }}</p>
+        <p>{{ report.date_logged }}</p>
+        </li>
+        {% empty %}
+        <p>Not reported yet.</p>
+    {% endfor %}
+</ul>
+
+<h4>Reports filed by user</h4>
+<ul>
+    {% for report in userprofile.submitted_reports.all %}
+        <li>
+        <p>Report filed against: {{ report.reported_user }}</p>
+        <p>{{ report.get_category_display }}</p>
+        <p>{{ report.comments }}</p>
+        <p>{{ report.date_logged }}</p>
+        </li>
+        {% empty %}
+        <p>No reports filed yet.</p>
+    {% endfor %}
+</ul>
