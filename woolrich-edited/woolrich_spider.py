@@ -65,80 +65,55 @@ class WoolrichParseSpider(BaseParseSpider, MixinUS):
     def parse_color(self, response):
         garment = response.meta.get('garment')
 
-        size_requests = self.size_requests(response)
+        size_requests = self.variant_requests(response, 'size', self.parse_size)
         if not size_requests:
             garment['skus'].update(self.make_sku(response))
             
         garment['meta']['requests_queue'] += size_requests
         return self.next_request_or_garment(garment)
-    
-    def size_requests(self, response):
-        attributes_map = response.meta.get('attributes_map')
-        sku_common = response.meta.get('raw_sku')
-
-        raw_item = json.loads(response.text)['data']
-        in_stock_attributes = raw_item['in_stock_attributes']
-
-        size_map = attributes_map.get('size', {})
-        attribute_value = size_map.get('value')
-        size_requests = []
-        for size, size_id in size_map.get('variants', []):
-            if int(size_id) not in in_stock_attributes:
-                continue
-
-            formdata = dict(parse_qsl(response.request.body.decode()))
-            formdata[attribute_value] = size_id
-
-            raw_sku = sku_common.copy()
-            raw_sku['size'] = size
-            meta = {'raw_sku': raw_sku, 'attributes_map': attributes_map}
-            request = FormRequest(url=response.url, meta=meta,
-                              formdata=formdata, callback=self.parse_size)
-            size_requests += [request]
-        
-        return size_requests
 
     def parse_size(self, response):
         garment = response.meta.get('garment')
 
-        fit_requests = self.fitting_requests(response)
+        fit_requests = self.variant_requests(response, 'fit', self.parse_fitting)
         if not fit_requests:
             garment['skus'].update(self.make_sku(response))
             
         garment['meta']['requests_queue'] += fit_requests
         return self.next_request_or_garment(garment)
-    
-    def fitting_requests(self, response):
+
+    def parse_fitting(self, response):
+        garment = response.meta.get('garment')
+
+        garment['skus'].update(self.make_sku(response))
+        return self.next_request_or_garment(garment)
+
+    def variant_requests(self, response, variant_type, callback):
         attributes_map = response.meta.get('attributes_map')
         sku_common = response.meta.get('raw_sku')
 
         raw_item = json.loads(response.text)['data']
         in_stock_attributes = raw_item['in_stock_attributes']
 
-        fit_map = attributes_map.get('fit', {})
-        attribute_value = fit_map.get('value')
-        fit_requests = []
-        for fit, fit_id in fit_map.get('variants', []):
-            if int(fit_id) not in in_stock_attributes:
+        variant_map = attributes_map.get(variant_type, {})
+        attribute_value = variant_map.get('value')
+        requests = []
+        for variant, variant_id in variant_map.get('variants', []):
+            if int(variant_id) not in in_stock_attributes:
                 continue
 
             formdata = dict(parse_qsl(response.request.body.decode()))
-            formdata[attribute_value] = fit_id
+            formdata[attribute_value] = variant_id
 
             raw_sku = sku_common.copy()
-            raw_sku['size'] = f'{raw_sku["size"]}/{fit}'
+            raw_sku['size'] = raw_sku.get('size', []) + [variant]
+            
             meta = {'raw_sku': raw_sku, 'attributes_map': attributes_map}
             request = FormRequest(url=response.url, meta=meta,
-                              formdata=formdata, callback=self.parse_fitting)
-            fit_requests += [request]
+                              formdata=formdata, callback=callback)
+            requests += [request]
         
-        return fit_requests
-    
-    def parse_fitting(self, response):
-        garment = response.meta.get('garment')
-
-        garment['skus'].update(self.make_sku(response))
-        return self.next_request_or_garment(garment)
+        return requests
     
     def make_sku(self, response):
         sku = response.meta.get('raw_sku')
@@ -149,7 +124,7 @@ class WoolrichParseSpider(BaseParseSpider, MixinUS):
         raw_sku = self.product_pricing_common(None, money_strs=money_strs)
         sku.update(raw_sku)
 
-        sku['size'] = sku.get('size', self.one_size)
+        sku['size'] = '/'.join(sku.get('size', [self.one_size]))
         return {raw_item['sku']: sku}
 
     def sku_pricing(self, raw_sku):
