@@ -33,7 +33,7 @@ class WeathermanApplication:
 
         weather_data = self.yw.lowest_temperature_day(year)
         if len(weather_data) == 2:
-            print("Lowest : " + str(wd[0]) + "C on " + wd[1].strftime('%b %d'))
+            print("Lowest : " + str(weather_data[0]) + "C on " + weather_data[1].strftime('%b %d'))
         else:
             print(weather_data)
 
