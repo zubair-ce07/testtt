@@ -56,8 +56,9 @@ class ProductParser(Spider):
         return response.css('::attr(data-masterid)').extract_first()
 
     def product_trail(self, response):
-        trail_urls = response.meta.get('trail', [])
-        return [[url.split("/")[-2].split(".")[0], url] for url in trail_urls]
+        # trail_urls = response.meta.get('trail', [])
+        # return [[url.split("/")[-2].split(".")[0], url] for url in trail_urls]
+        return response.meta.get('trail', [])
 
     def product_category(self, response):
         category_css = '.breadcrumb-element [itemprop=name]::text'
