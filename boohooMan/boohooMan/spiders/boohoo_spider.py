@@ -12,7 +12,7 @@ class BoohooSpider(scrapy.Spider):
     ]
 
     def __init__(self):
-        self.items_set = set()
+        self.items_set = []
 
     def parse(self, response):
         for item in response.css('li.has-submenu'):
@@ -42,7 +42,7 @@ class BoohooSpider(scrapy.Spider):
 
         next_page = response.css(
             'li.pagination-item a::attr(href)').extract_first()
-        if next_page is not None:
+        if next_page:
             next_page = response.urljoin(next_page)
             yield scrapy.Request(next_page, callback=self.parse)
 
@@ -59,12 +59,13 @@ class BoohooSpider(scrapy.Spider):
                                          li.selectable:not(.selected) \
                                          span::attr(data-href) ').extract()
         items_color_queue = queue.Queue()
-        count_color_contrl = item_colors_list
+        # count_color_contrl = item_colors_list
         for item_url in item_colors_list:
             items_color_queue.put(scrapy.Request(item_url + "&format=ajax",
                                                  callback=self.parse_item_size,
                                                  meta={'item': product_item,
-                                                       'colors_items_list': count_color_contrl
+                                                       'item_colors_list':
+                                                           item_colors_list
                                                        }
                                                  ))
         while not items_color_queue.empty():
@@ -73,7 +74,7 @@ class BoohooSpider(scrapy.Spider):
     def parse_item_size(self, response):
         print(response.url)
         product_item = response.meta['item']
-        count_color_contrl = response.meta['colors_items_list']
+        item_colors_list = response.meta['item_colors_list']
         item_size_list = response.css('div.product-variations ul.size \
                                         li.selectable:not(.selected) \
                                         span::attr(data-href) ').extract()
@@ -82,17 +83,22 @@ class BoohooSpider(scrapy.Spider):
             items_size_queue.put(scrapy.Request(item_url + "&format=ajax",
                                                 callback=self.parse_item_info,
                                                 meta={'item': product_item,
-                                                      'count_color_contrl': count_color_contrl,
-                                                      'count_size_contrl': item_size_list}
+                                                      'item_colors_list':
+                                                          item_colors_list,
+                                                      'item_size_list':
+                                                          item_size_list
+                                                      }
                                                 ))
         while not items_size_queue.empty():
             yield items_size_queue.get()
 
     def parse_item_info(self, response):
         item_color = response.css(
-            'div.product-variations ul.color li.selected span::attr(title) ').extract_first()
+            'div.product-variations ul.color li.selected \
+              span::attr(title) ').extract_first()
         item_size = response.css(
-            'div.product-variations ul.size li.selected span::attr(title)').extract_first()
+            'div.product-variations ul.size li.selected \
+              span::attr(title)').extract_first()
         item_sales_price = response.css(
             'div.product-price span.price-sales::text ').extract_first()
         item_std_price = response.css(
@@ -102,8 +108,8 @@ class BoohooSpider(scrapy.Spider):
         item_color = re.sub('.*: ', '', item_color)
         item_size = re.sub('.*: ', '', item_size)
         product_item = response.meta['item']
-        count_color_contrl = response.meta['count_color_contrl']
-        count_size_contrl = response.meta['count_size_contrl']
+        item_colors_list = response.meta['item_colors_list']
+        item_size_list = response.meta['item_size_list']
         item = {
             'colour': item_color,
             'item_size': item_size,
@@ -112,10 +118,10 @@ class BoohooSpider(scrapy.Spider):
             'currency': item_currency,
         }
         product_item['sku'].update({(item_color + "_" + item_size): item})
-        count_size_contrl.pop()
-        if len(count_size_contrl) == 0:
-            count_color_contrl.pop()
-        if len(count_color_contrl) == 0:
+        item_size_list.pop()
+        if not item_size_list:
+            item_colors_list.pop()
+        if not item_colors_list:
             yield product_item
 
     def strip_chars(self, str_to_strp):
