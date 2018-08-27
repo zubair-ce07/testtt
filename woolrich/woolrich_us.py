@@ -69,24 +69,24 @@ class WoolrichSpider(CrawlSpider):
 
             request = FormRequest(url=url, meta=meta, formdata=formdata, 
                             callback=self.parse_color)
-            color_reqs.append(request)
+            color_reqs += [request]
         
         return color_reqs
 
     def parse_color(self, response):
         item = response.meta.get('item')
-        attributes_map = response.meta.get('attributes_map')
-        raw_sku = response.meta.get('raw_sku')
 
-        size_reqs = self.size_requests(response, attributes_map, raw_sku)
+        size_reqs = self.size_requests(response)
         if not size_reqs:
-            raw_sku['size'] = 'One size'
-            item['skus'].append(self.make_sku(response, raw_sku))
+            item['skus'].append(self.make_sku(response))
             
         item['meta']['queued_requests'] += size_reqs
         return self.next_request_or_item(item)
     
-    def size_requests(self, response, attributes_map, sku_common):
+    def size_requests(self, response):
+        attributes_map = response.meta.get('attributes_map')
+        sku_common = response.meta.get('raw_sku')
+
         raw_item = json.loads(response.text)['data']
         in_stock_attributes = raw_item['in_stock_attributes']
 
@@ -105,23 +105,24 @@ class WoolrichSpider(CrawlSpider):
             meta = {'raw_sku': raw_sku, 'attributes_map': attributes_map}
             request = FormRequest(url=response.url, meta=meta,
                               formdata=formdata, callback=self.parse_size)
-            size_reqs.append(request)
+            size_reqs += [request]
         
         return size_reqs
 
     def parse_size(self, response):
         item = response.meta.get('item')
-        attributes_map = response.meta.get('attributes_map')
-        raw_sku = response.meta.get('raw_sku')
 
-        fit_requests = self.fitting_requests(response, attributes_map, raw_sku)
+        fit_requests = self.fitting_requests(response)
         if not fit_requests:
-            item['skus'].append(self.make_sku(response, raw_sku))
+            item['skus'].append(self.make_sku(response))
             
         item['meta']['queued_requests'] += fit_requests
         return self.next_request_or_item(item)
     
-    def fitting_requests(self, response, attributes_map, sku_common):
+    def fitting_requests(self, response):
+        attributes_map = response.meta.get('attributes_map')
+        sku_common = response.meta.get('raw_sku')
+
         raw_item = json.loads(response.text)['data']
         in_stock_attributes = raw_item['in_stock_attributes']
 
@@ -140,18 +141,18 @@ class WoolrichSpider(CrawlSpider):
             meta = {'raw_sku': raw_sku, 'attributes_map': attributes_map}
             request = FormRequest(url=response.url, meta=meta,
                               formdata=formdata, callback=self.parse_fitting)
-            fitting_reqs.append(request)
+            fitting_reqs += [request]
         
         return fitting_reqs
     
     def parse_fitting(self, response):
         item = response.meta.get('item')
-        raw_sku = response.meta.get('raw_sku')
 
-        item['skus'].append(self.make_sku(response, raw_sku))
+        item['skus'].append(self.make_sku(response))
         return self.next_request_or_item(item)
     
-    def make_sku(self, response, sku):
+    def make_sku(self, response):
+        sku = response.meta.get('raw_sku')
         raw_item = json.loads(response.text)['data']
         prev_price, price = self.sku_pricing(raw_item)
 
@@ -161,6 +162,7 @@ class WoolrichSpider(CrawlSpider):
         if prev_price:
             sku['previous_price'] = prev_price
         
+        sku['size'] = sku.get('size', 'One Size')        
         return sku
 
     def sku_pricing(self, raw_sku):
