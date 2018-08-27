@@ -9,7 +9,6 @@ from scrapy.spiders import CrawlSpider, Rule
 from canda.items import CandaItem
 
 
-# noinspection SpellCheckingInspection
 class Canda(CrawlSpider):
     custom_settings = {
         'DOWNLOAD_DELAY': 1
@@ -41,17 +40,17 @@ class Canda(CrawlSpider):
         item = response.meta.get('item')
 
         selector = Selector(text=json.loads(response.text)['html'][0]['product-stage'])
-        item['image_urls'] += self.get_image_urls(selector)
-        item['skus'] += self.get_skus(selector, item['retailer_sku'])
+        item['image_urls'] += self.image_urls(selector)
+        item['skus'] += self.skus(selector, item['retailer_sku'])
 
         return self.color_request_or_return_item(item)
 
-    def get_skus(self, selector, retailer_sku):
-        sku_common = self.get_sku_common(selector)
-        out_of_stock_sizes = self.get_out_of_stock_sizes(selector)
+    def skus(self, selector, retailer_sku):
+        sku_common = self.sku_common(selector)
+        out_of_stock_sizes = self.out_of_stock_sizes(selector)
         skus = []
 
-        for size in self.get_all_sizes(selector):
+        for size in self.all_sizes(selector):
             sku = sku_common.copy()
             sku['size'] = size
 
@@ -63,25 +62,25 @@ class Canda(CrawlSpider):
 
         return skus
 
-    def get_sku_common(self, selector):
-        sku_common = {'color': self.get_color(selector)}
-        sku_common.update(self.get_pricing(selector))
+    def sku_common(self, selector):
+        sku_common = {'color': self.color(selector)}
+        sku_common.update(self.pricing(selector))
 
         return sku_common
 
     def parse_item(self, response):
         item = CandaItem()
-        item['brand'] = self.get_brand_name(response)
-        item['name'] = self.get_title(response)
+        item['brand'] = self.brand_name(response)
+        item['name'] = self.title(response)
         item['url'] = response.url
-        item['categories'] = self.get_categories(response)
-        item['gender'] = self.get_gender(response)
-        retailer_sku = self.get_retailer_sku(response)
+        item['categories'] = self.categories(response)
+        item['gender'] = self.gender(response)
+        retailer_sku = self.retailer_sku(response)
         item['retailer_sku'] = retailer_sku
-        item['description'] = self.get_description(response)
-        item['care'] = self.get_care(response)
-        item['image_urls'] = self.get_image_urls(response)
-        item['skus'] = self.get_skus(response, retailer_sku)
+        item['description'] = self.description(response)
+        item['care'] = self.care(response)
+        item['image_urls'] = self.image_urls(response)
+        item['skus'] = self.skus(response, retailer_sku)
         item['requests'] = self.make_color_requests(response)
 
         return self.color_request_or_return_item(item)
@@ -98,8 +97,8 @@ class Canda(CrawlSpider):
         return color_request
 
     def make_color_requests(self, response):
-        color_ids = self.get_color_ids(response)
-        product_id = self.get_product_id(response)
+        color_ids = self.color_ids(response)
+        product_id = self.product_id(response)
 
         color_requests = []
         color_formdata = {'productId': product_id}
@@ -113,10 +112,10 @@ class Canda(CrawlSpider):
         return color_requests
 
     @staticmethod
-    def get_color(response):
+    def color(response):
         return response.css('.product-stage__color::text').extract_first().split(':')[1].strip()
 
-    def get_pricing(self, response):
+    def pricing(self, response):
         pricing = dict()
 
         prices_css = '.product-stage__price span:not(.product-stage__price-saving)::text'
@@ -125,7 +124,7 @@ class Canda(CrawlSpider):
 
         pricing['price'] = prices[0]
         pricing['previous_prices'] = prices[1:]
-        pricing['currency'] = self.get_currency(response)
+        pricing['currency'] = self.currency(response)
 
         return pricing
 
@@ -133,19 +132,19 @@ class Canda(CrawlSpider):
     def formatted_price(price):
         return int(''.join(re.findall("\d+", price)))
 
-    def get_currency(self, response):
-        return self.currencies.get(self.get_currency_symbol(response))
+    def currency(self, response):
+        return self.currencies.get(self.currency_symbol(response))
 
     @staticmethod
-    def get_currency_symbol(response):
+    def currency_symbol(response):
         price = response.css('.product-stage__price span::text').extract_first()
         return re.findall(r"[^\w\d_\s,.\\]", price, re.UNICODE)[0]
 
     @staticmethod
-    def get_brand_name(response):
+    def brand_name(response):
         return response.css('.box__logolist-brand::attr(alt)').extract_first(default='C AND A')
 
-    def get_gender(self, response):
+    def gender(self, response):
         category_url = response.css('.util-link-left::attr(href)').extract_first()
 
         for gender_token, gender in self.genders:
@@ -153,42 +152,42 @@ class Canda(CrawlSpider):
                 return gender
 
     @staticmethod
-    def get_image_urls(response):
+    def image_urls(response):
         return response.css('[data-zoom-id="productImage"]::attr(href)').extract()
 
     @staticmethod
-    def get_title(response):
+    def title(response):
         return "".join([a.strip() for a in response.css('.product-stage__title::text').extract()])
 
     @staticmethod
-    def get_retailer_sku(response):
+    def retailer_sku(response):
         return re.findall('(\d+)/', response.url)[0]
 
     @staticmethod
-    def get_description(response):
+    def description(response):
         return list(filter(None, [a.strip() for a in response.css('.col-md-6 li::text').extract()]))
 
     @staticmethod
-    def get_care(response):
+    def care(response):
         return response.css('td:not(.util-text-center)::text').extract()
 
     @staticmethod
-    def get_all_sizes(response):
+    def all_sizes(response):
         return [s.strip() for s in response.css('.size-list li::text').extract()]
 
     @staticmethod
-    def get_out_of_stock_sizes(response):
+    def out_of_stock_sizes(response):
         return [s.strip() for s in response.css('.size-list .is-sold::text').extract()]
 
     @staticmethod
-    def get_categories(response):
+    def categories(response):
         raw_category = response.css('.util-link-left::text').extract_first().strip()
         return [re.sub(r"Zurück zu ", '', raw_category)]
 
     @staticmethod
-    def get_color_ids(response):
+    def color_ids(response):
         return response.css('.box--product .color-list :not(.is-active)::attr(data-color)').extract()
 
     @staticmethod
-    def get_product_id(response):
+    def product_id(response):
         return response.css('.product-stage::attr(data-productid)').extract_first()
