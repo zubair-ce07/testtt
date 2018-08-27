@@ -1,0 +1,249 @@
+[
+  {
+    "product_name": "Kleid in A-Linie mit Spitze",
+    "care": [
+      "Obermaterial: 64% VISKOSE - 32% POLYESTER - 4% ELASTAN,",
+      "Borte: 100% POLYESTER"
+    ],
+    "brand": "Orsay",
+    "currency": "EUR",
+    "description": [
+      "Produktdetails",
+      "\n- femininer A-Linien Schnitt",
+      "- leicht ausgestellter Rock",
+      "- lange Ärmel",
+      "- elastischer Ärmelsaum mit dekorativer Spitze verziert",
+      "- schmaler Rundhalsausschnitt mit zarten Spitzendetails",
+      "- Taillenblende",
+      "- aus Strukturstoff",
+      "- Unser Model ist 174 cm groß und trägt Größe 38",
+      "- Gesamtlänge (Größe 36): 92,4 cm\n"
+    ],
+    "retailer_sku": "425009",
+    "skus": {
+      "526000_38": {
+        "sale_price": "29,99 €",
+        "size_id": "38",
+        "stock": 1,
+        "full_price": "29,99 €",
+        "size_name": "38",
+        "color": "Blau"
+      },
+      "866000_38": {
+        "sale_price": "29,99 €",
+        "size_id": "38",
+        "stock": 1,
+        "full_price": "29,99 €",
+        "size_name": "38",
+        "color": "Grün"
+      },
+      "851000_36": {
+        "sale_price": "29,99 €",
+        "size_id": "36",
+        "stock": 1,
+        "full_price": "29,99 €",
+        "size_name": "36",
+        "color": "Grün"
+      },
+      "130000_32": {
+        "sale_price": "29,99 €",
+        "size_id": "32",
+        "stock": 1,
+        "full_price": "29,99 €",
+        "size_name": "32",
+        "color": "Gelb"
+      },
+      "866000_44": {
+        "sale_price": "29,99 €",
+        "size_id": "44",
+        "stock": 1,
+        "full_price": "29,99 €",
+        "size_name": "44",
+        "color": "Grün"
+      },
+      "130000_40": {
+        "sale_price": "29,99 €",
+        "size_id": "40",
+        "stock": 1,
+        "full_price": "29,99 €",
+        "size_name": "40",
+        "color": "Gelb"
+      },
+      "866000_42": {
+        "sale_price": "29,99 €",
+        "size_id": "42",
+        "stock": 1,
+        "full_price": "29,99 €",
+        "size_name": "42",
+        "color": "Grün"
+      },
+      "851000_40": {
+        "sale_price": "29,99 €",
+        "size_id": "40",
+        "stock": 1,
+        "full_price": "29,99 €",
+        "size_name": "40",
+        "color": "Grün"
+      },
+      "526000_36": {
+        "sale_price": "29,99 €",
+        "size_id": "36",
+        "stock": 1,
+        "full_price": "29,99 €",
+        "size_name": "36",
+        "color": "Blau"
+      },
+      "130000_36": {
+        "sale_price": "29,99 €",
+        "size_id": "36",
+        "stock": 1,
+        "full_price": "29,99 €",
+        "size_name": "36",
+        "color": "Gelb"
+      },
+      "866000_34": {
+        "sale_price": "29,99 €",
+        "size_id": "34",
+        "stock": 1,
+        "full_price": "29,99 €",
+        "size_name": "34",
+        "color": "Grün"
+      },
+      "866000_36": {
+        "sale_price": "29,99 €",
+        "size_id": "36",
+        "stock": 1,
+        "full_price": "29,99 €",
+        "size_name": "36",
+        "color": "Grün"
+      },
+      "130000_42": {
+        "sale_price": "29,99 €",
+        "size_id": "42",
+        "stock": 1,
+        "full_price": "29,99 €",
+        "size_name": "42",
+        "color": "Gelb"
+      },
+      "851000_38": {
+        "sale_price": "29,99 €",
+        "size_id": "38",
+        "stock": 1,
+        "full_price": "29,99 €",
+        "size_name": "38",
+        "color": "Grün"
+      },
+      "130000_34": {
+        "sale_price": "29,99 €",
+        "size_id": "34",
+        "stock": 1,
+        "full_price": "29,99 €",
+        "size_name": "34",
+        "color": "Gelb"
+      },
+      "866000_32": {
+        "sale_price": "29,99 €",
+        "size_id": "32",
+        "stock": 1,
+        "full_price": "29,99 €",
+        "size_name": "32",
+        "color": "Grün"
+      },
+      "526000_34": {
+        "sale_price": "29,99 €",
+        "size_id": "34",
+        "stock": 1,
+        "full_price": "29,99 €",
+        "size_name": "34",
+        "color": "Blau"
+      },
+      "851000_42": {
+        "sale_price": "29,99 €",
+        "size_id": "42",
+        "stock": 1,
+        "full_price": "29,99 €",
+        "size_name": "42",
+        "color": "Grün"
+      },
+      "851000_32": {
+        "sale_price": "29,99 €",
+        "size_id": "32",
+        "stock": 1,
+        "full_price": "29,99 €",
+        "size_name": "32",
+        "color": "Grün"
+      },
+      "130000_38": {
+        "sale_price": "29,99 €",
+        "size_id": "38",
+        "stock": 1,
+        "full_price": "29,99 €",
+        "size_name": "38",
+        "color": "Gelb"
+      },
+      "526000_40": {
+        "sale_price": "29,99 €",
+        "size_id": "40",
+        "stock": 1,
+        "full_price": "29,99 €",
+        "size_name": "40",
+        "color": "Blau"
+      },
+      "851000_34": {
+        "sale_price": "29,99 €",
+        "size_id": "34",
+        "stock": 1,
+        "full_price": "29,99 €",
+        "size_name": "34",
+        "color": "Grün"
+      },
+      "866000_40": {
+        "sale_price": "29,99 €",
+        "size_id": "40",
+        "stock": 1,
+        "full_price": "29,99 €",
+        "size_name": "40",
+        "color": "Grün"
+      },
+      "526000_42": {
+        "sale_price": "29,99 €",
+        "size_id": "42",
+        "stock": 1,
+        "full_price": "29,99 €",
+        "size_name": "42",
+        "color": "Blau"
+      }
+    },
+    "url": "http://www.orsay.com/de-de/kleid-in-a-linie-mit-spitze-425009866000.html",
+    "image_urls": [
+      [
+        "http://www.orsay.com/dw/image/v2/BCBM_PRD/on/demandware.static/-/Sites-orsay-master-catalog/default/dw9026f90d/425009/425009_98f.jpg?sw=100&sh=150&sm=fit",
+        "http://www.orsay.com/dw/image/v2/BCBM_PRD/on/demandware.static/-/Sites-orsay-master-catalog/default/dw44e19943/425009/425009_98b.jpg?sw=100&sh=150&sm=fit",
+        "http://www.orsay.com/dw/image/v2/BCBM_PRD/on/demandware.static/-/Sites-orsay-master-catalog/default/dw4bb54de7/425009/425009_98d.jpg?sw=100&sh=150&sm=fit",
+        "http://www.orsay.com/dw/image/v2/BCBM_PRD/on/demandware.static/-/Sites-orsay-master-catalog/default/dw3a8ddca1/425009/425009_98p.jpg?sw=100&sh=150&sm=fit",
+        "http://www.orsay.com/dw/image/v2/BCBM_PRD/on/demandware.static/-/Sites-orsay-master-catalog/default/dw4c133518/425009/425009_98s.jpg?sw=100&sh=150&sm=fit"
+      ],
+      [
+        "http://www.orsay.com/dw/image/v2/BCBM_PRD/on/demandware.static/-/Sites-orsay-master-catalog/default/dw7a52055f/425009/425009_97f.jpg?sw=100&sh=150&sm=fit",
+        "http://www.orsay.com/dw/image/v2/BCBM_PRD/on/demandware.static/-/Sites-orsay-master-catalog/default/dw70882581/425009/425009_97b.jpg?sw=100&sh=150&sm=fit",
+        "http://www.orsay.com/dw/image/v2/BCBM_PRD/on/demandware.static/-/Sites-orsay-master-catalog/default/dwfbacf93b/425009/425009_97d.jpg?sw=100&sh=150&sm=fit",
+        "http://www.orsay.com/dw/image/v2/BCBM_PRD/on/demandware.static/-/Sites-orsay-master-catalog/default/dw936df0a3/425009/425009_97p.jpg?sw=100&sh=150&sm=fit",
+        "http://www.orsay.com/dw/image/v2/BCBM_PRD/on/demandware.static/-/Sites-orsay-master-catalog/default/dw3c7c9c7c/425009/425009_97s.jpg?sw=100&sh=150&sm=fit"
+      ],
+      [
+        "http://www.orsay.com/dw/image/v2/BCBM_PRD/on/demandware.static/-/Sites-orsay-master-catalog/default/dw0d9e184a/425009/425009_95f.jpg?sw=100&sh=150&sm=fit",
+        "http://www.orsay.com/dw/image/v2/BCBM_PRD/on/demandware.static/-/Sites-orsay-master-catalog/default/dw4bc657e7/425009/425009_95b.jpg?sw=100&sh=150&sm=fit",
+        "http://www.orsay.com/dw/image/v2/BCBM_PRD/on/demandware.static/-/Sites-orsay-master-catalog/default/dwe3cc031f/425009/425009_95d.jpg?sw=100&sh=150&sm=fit",
+        "http://www.orsay.com/dw/image/v2/BCBM_PRD/on/demandware.static/-/Sites-orsay-master-catalog/default/dwdf6d0c53/425009/425009_95p.jpg?sw=100&sh=150&sm=fit",
+        "http://www.orsay.com/dw/image/v2/BCBM_PRD/on/demandware.static/-/Sites-orsay-master-catalog/default/dwb6439ab5/425009/425009_95s.jpg?sw=100&sh=150&sm=fit"
+      ],
+      [
+        "http://www.orsay.com/dw/image/v2/BCBM_PRD/on/demandware.static/-/Sites-orsay-master-catalog/default/dwa416ceef/425009/425009_96f.jpg?sw=100&sh=150&sm=fit",
+        "http://www.orsay.com/dw/image/v2/BCBM_PRD/on/demandware.static/-/Sites-orsay-master-catalog/default/dw3630cdbf/425009/425009_96b.jpg?sw=100&sh=150&sm=fit",
+        "http://www.orsay.com/dw/image/v2/BCBM_PRD/on/demandware.static/-/Sites-orsay-master-catalog/default/dwae7cf18c/425009/425009_96d.jpg?sw=100&sh=150&sm=fit",
+        "http://www.orsay.com/dw/image/v2/BCBM_PRD/on/demandware.static/-/Sites-orsay-master-catalog/default/dw0bb4d1bb/425009/425009_96p.jpg?sw=100&sh=150&sm=fit",
+        "http://www.orsay.com/dw/image/v2/BCBM_PRD/on/demandware.static/-/Sites-orsay-master-catalog/default/dw1f86279c/425009/425009_96s.jpg?sw=100&sh=150&sm=fit"
+      ]
+    ]
+  }
+]
