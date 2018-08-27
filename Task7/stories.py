@@ -1,10 +1,12 @@
+import re
+
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 from scrapy import Request
 import js2py
+from w3lib.url import add_or_replace_parameter
 
 from Task7.items import Product
-from Task7.country_map import country_map
 
 
 class StoriesSpider(CrawlSpider):
@@ -17,10 +19,10 @@ class StoriesSpider(CrawlSpider):
     rules = (Rule(LinkExtractor(allow=allowed_r, restrict_css=".categories"), callback='parse_pagination'),)
 
     skus_request_t = 'https://www.stories.com/en_{0}/getAvailability?variants={1}'
-
-    def __init__(self, country='united_states', **kwargs):
-        super().__init__(**kwargs)
-        self.cookies = country_map[country.lower()]
+    cookies = {
+        'HMCORP_locale': 'en_GB',
+        'HMCORP_currency': 'GBP'
+    }
 
     def start_requests(self):
         urls = ['https://www.stories.com']
@@ -29,25 +31,24 @@ class StoriesSpider(CrawlSpider):
     def parse_pagination(self, response):
         total_items = response.css("#productCount::attr(class)").extract_first()
         products_per_page = response.css("#productPerPage::attr(class)").extract_first()
-        page_url = response.urljoin(response.css("#productPath::attr(class)").extract_first())
+        base_url = response.css("#productPath::attr(class)").extract_first()
 
-        return [Request(f"{page_url}?start={start}", callback=self.parse_items_links)
-                for start in range(0, int(total_items), int(products_per_page))]
+        pages_urls = [add_or_replace_parameter(base_url, "start", start)
+                      for start in range(0, int(total_items), int(products_per_page))]
+
+        return [response.follow(url, callback=self.parse_items_links) for url in pages_urls]
 
     def parse_items_links(self, response):
         items_links = response.css("a::attr(href)").extract()
-        items_urls = [response.urljoin(url) for url in items_links]
-
-        return [Request(items_url, callback=self.parse_item) for items_url in items_urls]
+        return [response.follow(items_link, callback=self.parse_item) for items_link in items_links]
 
     def parse_item(self, response):
-        item_details = response.css("[class*='o-page-content '] script::text").extract_first()
-        item_details = js2py.eval_js(item_details)
-        current_item = item_details[item_details["articleCode"]]
+        raw_product = self.extract_raw_product(response)
+        current_item = raw_product[raw_product["articleCode"]]
         item = Product()
 
-        item["retailer_sku"] = self.extract_retailer_sku(item_details)
-        item["name"] = self.extract_name(item_details)
+        item["retailer_sku"] = self.extract_retailer_sku(raw_product)
+        item["name"] = self.extract_name(raw_product)
         item["url"] = self.extract_url(current_item)
         item["brand"] = self.extract_brand(current_item)
         item["price"] = self.extract_price(current_item)
@@ -55,12 +56,13 @@ class StoriesSpider(CrawlSpider):
         item["description"] = self.extract_description(current_item)
         item["image_urls"] = self.extract_image_urls(current_item)
         item["care"] = self.extract_care(current_item)
-        item["category"] = self.extract_categories(item_details)
-        variants = self.extract_variants(item_details)
+        item["category"] = self.extract_categories(raw_product)
+        variants = self.extract_variants(raw_product, response)
+        color_variants = self.extract_article_ids(response)
 
         return Request(self.skus_request_t.format(self.cookies["HMCORP_currency"].lower(), variants),
                        cookies=self.cookies, callback=self.parse_skus, dont_filter=True,
-                       meta={'item': item, 'item_details': item_details})
+                       meta={'item': item, 'item_details': raw_product, 'color_variants': color_variants})
 
     def parse_skus(self, response):
         item = response.meta["item"]
@@ -68,11 +70,14 @@ class StoriesSpider(CrawlSpider):
 
         return item
 
-    def extract_retailer_sku(self, item_detail):
-        return item_detail["articleCode"]
+    def extract_raw_product(self, response):
+        return js2py.eval_js(response.css("[class*='o-page-content '] script::text").extract_first())
 
-    def extract_name(self, item_detail):
-        return item_detail["name"]
+    def extract_retailer_sku(self, raw_product):
+        return re.findall('(\d+)', raw_product['baseProductCode'])[0]
+
+    def extract_name(self, raw_product):
+        return raw_product["name"]
 
     def extract_url(self, current_item):
         return current_item["pdpLink"]
@@ -95,20 +100,25 @@ class StoriesSpider(CrawlSpider):
     def extract_categories(self, item_details):
         return item_details["mainCategorySummary"]
 
-    def extract_variants(self, item_details):
+    def extract_variants(self, raw_product, response):
         variant_codes= []
 
-        for key in item_details:
-            if key.isdigit():
-                variant_codes.extend([variant["variantCode"] for variant in item_details[key]["variants"]])
+        for key in self.extract_article_ids(response):
+            variant_codes.extend([variant["variantCode"] for variant in raw_product[key]["variants"]])
 
         return ','.join(variant_codes)
 
+    def extract_article_ids(self, response):
+        raw_article_ids = js2py.eval_js(response.css('script::text').
+                                        re_first('var articlesIds=\{[\d\w\s\t\n,:"]+};'))
+
+        return [key for key in raw_article_ids]
+
     def extract_skus(self, response):
-        item_details = response.meta["item_details"]
+        raw_product = response.meta["item_details"]
         available_variants = response.css('item::text').extract()
 
-        color_variants = [item_details[key] for key in item_details if key.isdigit()]
+        color_variants = [raw_product[key] for key in response.meta["color_variants"]]
 
         skus = []
         for color_variant in color_variants:
