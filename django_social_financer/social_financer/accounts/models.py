@@ -5,6 +5,8 @@ from django.contrib.auth.models import User
 
 from datetime import datetime
 
+from . import constants
+
 class Category(models.Model):
     name = models.CharField(max_length=50)
 
@@ -27,11 +29,7 @@ class UserProfile(models.Model):
     latitude = models.FloatField(null=True, blank=True)
     pair = models.ForeignKey('self', null=True, related_name='pairs', on_delete=models.CASCADE, blank=True)
     categories = models.ManyToManyField(Category)
-    role_types = (
-        ('DN', 'Donor'),
-        ('CN', 'Consumer'),
-    )
-    role = models.CharField(max_length=2, choices=role_types)
+    role = models.CharField(max_length=2, choices=constants.role_types)
     display_picture = models.ImageField(upload_to=file_path_and_rename, null=True)
 
     def __str__(self):
@@ -54,6 +52,16 @@ class UserProfile(models.Model):
             return self.pairs
         elif self.role == 'CN':
             return self.pair
+
+class PairHistory(models.Model):
+    """ A model that keeps record of breaking and making of users' pairs, used in admin
+    """
+    # This is true if the pair was made and false if the pair was broken.
+    was_paired = models.BooleanField(default=True)
+    date_logged = models.DateTimeField(default=datetime.now, blank = True)
+    donor = models.ForeignKey(UserProfile, related_name='donor_pair_history', on_delete=models.CASCADE)
+    consumer = models.ForeignKey(UserProfile, related_name='consumer_pair_history', on_delete=models.CASCADE)
+    unpaired_by = models.CharField(max_length=2, choices=constants.role_types)
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):

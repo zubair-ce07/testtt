@@ -10,7 +10,7 @@ from django.contrib.auth.models import User
 
 
 from .forms import SignUpForm
-from .models import UserProfile
+from .models import UserProfile, PairHistory
 from . import constants, helpers
 from feedback.models import Feedback
 # Create your views here.
@@ -92,6 +92,8 @@ def home_donor(request, user):
         pair_user = get_object_or_404(UserProfile, pk=pair_id)
         pair_user.pair = request.user.userprofile
         pair_user.save()
+        new_pair_history = PairHistory(donor=request.user.userprofile, consumer=pair_user, was_paired=True)
+        new_pair_history.save()
         return HttpResponseRedirect(reverse('accounts:my_consumers'))
     elif request.method == 'GET': # Get indicates view must be populated
         consumers = UserProfile.objects.filter(
@@ -129,7 +131,6 @@ class ProfileView(generic.TemplateView):
 
 class ViewReports(generic.TemplateView):
     template_name = 'accounts/admin/view_reports.html'
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['userprofile'] = UserProfile.objects.get(id=context['pk'])

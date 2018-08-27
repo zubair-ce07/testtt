@@ -16,15 +16,19 @@ class FeedbackInLine(admin.StackedInline):
     list_display = ['comments']
 
 class UserAdmin(admin.ModelAdmin):
-    list_display = ['full_name', 'username', 'city', 'country', 'role', 'is_paired', 'is_activated']
+    list_display = ['full_name', 'username', 'cnic_no', 'city', 'country', 'role', 'is_paired', 'is_activated']
     list_filter = ['userprofile__role', 'userprofile__city', 'userprofile__country']
     search_fields = ['username', 'userprofile__cnic_no']
     inlines = [UserInLine]
     actions = ['view_reports', 'activate_account', 'deactivate_account']
 
+    # List display methods
     def full_name(self, obj):
         name = obj.userprofile.full_name()
         return '-' if name == " " else name
+
+    def cnic_no(self, obj):
+        return obj.userprofile.cnic_no
 
     def city(self, obj):
         city = obj.userprofile.city
@@ -47,6 +51,7 @@ class UserAdmin(admin.ModelAdmin):
     is_activated.boolean = True
     is_activated.short_description = 'Account Active'
 
+    # Admin Actions
     def view_reports(modeladmin, request, queryset):
         if queryset.count() != 1:
             modeladmin.message_user(request,
@@ -64,10 +69,24 @@ class UserAdmin(admin.ModelAdmin):
         queryset.update(is_active = False)
         modeladmin.message_user(request, 'Accounts have been de-activated.')
 
+
+class PairHistoryAdmin(admin.ModelAdmin):
+    list_display = ['donor', 'consumer', 'date_logged', 'was_pair_made']
+    # list_filter =
+    date_hierarchy = 'date_logged'
+
+    def was_pair_made(self, obj):
+        return obj.was_paired
+    was_pair_made.boolean = True
+    was_pair_made.short_description = 'Paired/Unpaired'
+
+    pass
+
 admin.site.register(models.Category)
 admin.site.unregister(Group)
 admin.site.unregister(User)
 admin.site.register(User,UserAdmin)
+admin.site.register(models.PairHistory, PairHistoryAdmin)
 
 admin.site.site_header = 'Social Financer Admin'
 admin.site.index_title = 'Admin'
