@@ -63,7 +63,9 @@ class BoohoomanSpider(CrawlSpider):
         product['currency'] = response.css("div.product-price meta::attr(content)").extract_first()
         product['url'] = response.url
         product['merch_info'] = []
-        merch_info = response.css('div.product-promo-msg::text').extract_first().strip('\n')
+        merch_info = response.css('div.product-promo-msg::text').extract_first()
+        if merch_info:
+            merch_info = merch_info.strip('\n')
         product['merch_info'].append(merch_info)
 
         color_urls = response.css('ul.color span.swatchanchor::attr(data-href)').extract()
