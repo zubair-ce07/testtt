@@ -31,11 +31,14 @@ class MarkhamSpider(CrawlSpider):
         category_id = re.findall('N-([\w+]+);', response.url)[0]
         category_request = self.category_request_t.format(category_id)
 
-        url_parameters = [urlencode({"No": page*15, "page": page}) for page in range(1, total_pages+1)]
+        requests = []
+        for page in range(1, total_pages + 1):
+            url = add_or_replace_parameter(category_request, 'page', page)
+            url = add_or_replace_parameter(url, 'No', page * 15)
 
-        pages_urls = [f'{category_request}&{url_parameter}' for url_parameter in url_parameters]
+            requests.append(Request(url, callback=self.parse_item_links))
 
-        return [Request(page_url, callback=self.parse_item_links) for page_url in pages_urls]
+        return requests
 
     def parse_item_links(self, response):
         products = json.loads(response.text)["data"]["products"]
@@ -45,26 +48,27 @@ class MarkhamSpider(CrawlSpider):
 
     def parse_item(self, response):
         item = Product()
-        item_detail = json.loads(response.css('#product-static-data::text').extract_first())
+        raw_product = self.extract_raw_product(response)
 
-        item["retailer_sku"] = self.extract_retailer_sku(item_detail)
-        item["name"] = self.extract_name(item_detail)
-        item["price"] = self.extract_price(item_detail)
-        item["brand"] = self.extract_brand(item_detail)
+        item["retailer_sku"] = self.extract_retailer_sku(raw_product)
+        item["name"] = self.extract_name(raw_product)
+        item["price"] = self.extract_price(raw_product)
+        item["brand"] = self.extract_brand(raw_product)
         item["url"] = response.url
         item["category"] = self.extract_categories(response)
         item["gender"] = "Men"
         item["description"] = self.extract_description(response)
-        item["image_urls"] = self.extract_image_urls(item_detail)
+        item["image_urls"] = self.extract_image_urls(raw_product)
         item["care"] = self.extract_care(response)
         item["skus"] = []
-        item["requests_queue"] = self.get_skus_requests(item_detail, item)
+        item["requests_queue"] = self.get_skus_requests(raw_product, item)
 
         return item["requests_queue"].pop()
 
     def get_skus_requests(self, item_detail, item):
         colors = item_detail["colors"]
         sku_request = self.skus_request_t.format(item_detail["id"])
+
         skus_requests = [add_or_replace_parameter(sku_request, "selectedColor", color["id"])
                          for color in colors]
 
@@ -76,11 +80,18 @@ class MarkhamSpider(CrawlSpider):
 
         item["skus"].extend(self.extract_sku(sku_detail))
 
+        return self.process_skus_requests(item)
+
+    def process_skus_requests(self, item):
+
         if item["requests_queue"]:
-            item["requests_queue"].pop()
+            return item["requests_queue"].pop()
 
         del item["requests_queue"]
         return item
+
+    def extract_raw_product(self, response):
+        return json.loads(response.css('textarea#product-static-data::text').extract_first())
 
     def extract_sku(self, sku_detail):
         skus = []
@@ -127,4 +138,4 @@ class MarkhamSpider(CrawlSpider):
         return [img["large"] for img in item_detail["images"]]
 
     def extract_care(self, response):
-        return response.css('#product-detail-template::text').re('<td>(.+)</td>')
+        return response.css('script#product-detail-template::text').re('<td>(.+)</td>')
