@@ -1,6 +1,6 @@
 """
 This module is for validation of
-the command line arguments recieved from the
+the command line arguments received from the
 terminal to programme
 """
 
@@ -8,10 +8,11 @@ import re
 
 from constants import Constants
 
+
 class CommandArgument:
     """
     This class contains methods
-    to validate arguments recieved from the terminal
+    to validate arguments received from the terminal
     like options and date
     """
 
@@ -21,7 +22,6 @@ class CommandArgument:
         self.error = ""
 
     def validate_arguments(self):
-
         """
         This method validates the options and
         date format using regular expressions
@@ -30,22 +30,13 @@ class CommandArgument:
         :return:
         """
 
-        if re.match('-[eacd]', self.option) is None:
-            self.error = "Invalid option !!!"
+        my_string = '{} {}'.format(self.option, self.date)
+        regex = '((-e \d{4}))|((-[acd] \d{4}\/)((1[0-2])|(0?[1-9])))'
+        match_object = re.match(regex, my_string)
+        if match_object is None or match_object.span()[1] != len(my_string):
+            self.error = "{}\n{}" \
+                .format(Constants.INVALID_ARGUMENTS, Constants.OPTION_DATE_MISMATCH)
             return
-        date_format1 = re.match(r'^\d{4}$', self.date)
-        date_format2 = re.match(r'^\d{4}/0?[1-9]$', self.date)
-        date_format3 = re.match(r'^\d{4}/1[0-2]$', self.date)
-        if self.option == '-e' and date_format1 is None:
-            self.error = Constants.OPTION_DATE_MISMATCH
-        elif self.option in 'acd' \
-                and date_format2 is None and date_format3 is None:
-            self.error = Constants.OPTION_DATE_MISMATCH
-        elif date_format1 is None \
-                and date_format2 is None and date_format3 is None:
-            self.error = Constants.INVALID_DATE
-        elif self.option != "-e" and date_format1 is not None:
-            self.error = Constants.OPTION_DATE_MISMATCH
 
     def __str__(self):
         return ("Option: {}\nDate: {}\nError String: {}"

@@ -9,9 +9,9 @@ import os
 import re
 import csv
 
-
 from constants import Constants
 from helpers import is_num
+
 
 class FileContent:
     """
@@ -30,7 +30,7 @@ class FileContent:
 
     def __str__(self):
         return "{}".format(self.file_names)
-    
+
     def get_yearly_data(self, year):
         """
         This method compute highest, lowest temperature
