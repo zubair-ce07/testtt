@@ -9,13 +9,16 @@ from scrapy.spiders import CrawlSpider, Rule
 from canda.items import CandaItem
 
 
+# noinspection SpellCheckingInspection
 class Canda(CrawlSpider):
     custom_settings = {
         'DOWNLOAD_DELAY': 1
     }
     name = 'c-and-a'
     start_urls = ['https://www.c-and-a.com/de/de/shop/']
-    rules = (Rule(LinkExtractor(restrict_css='.nav-main__list-item, .pagination__next.js-view-click',
+
+    navigation_and_pagination = '.nav-main__list-item, .pagination__next.js-view-click'
+    rules = (Rule(LinkExtractor(restrict_css=navigation_and_pagination,
                                 tags=('li', 'a'), attrs=('data-url', 'href')), follow=True),
              Rule(LinkExtractor(restrict_css='.product-tile'), callback='parse_item'))
 
@@ -41,7 +44,7 @@ class Canda(CrawlSpider):
         item['image_urls'] += self.get_image_urls(selector)
         item['skus'] += self.get_skus(selector, item['retailer_sku'])
 
-        return self.yield_color_request(response.meta.get('requests'), item)
+        return self.color_request_or_return_item(item)
 
     def get_skus(self, selector, retailer_sku):
         sku_common = self.get_sku_common(selector)
@@ -79,32 +82,32 @@ class Canda(CrawlSpider):
         item['care'] = self.get_care(response)
         item['image_urls'] = self.get_image_urls(response)
         item['skus'] = self.get_skus(response, retailer_sku)
+        item['requests'] = self.make_color_requests(response)
 
-        color_ids = self.get_color_ids(response)
-        product_id = self.get_product_id(response)
-        color_requests = self.make_color_requests(color_ids, product_id)
-
-        return self.yield_color_request(color_requests, item)
+        return self.color_request_or_return_item(item)
 
     @staticmethod
-    def yield_color_request(color_requests, item):
-        if not color_requests:
+    def color_request_or_return_item(item):
+        if not item['requests']:
+            del item['requests']
             return item
 
-        color_request = color_requests.pop()
-        color_request.meta['requests'] = color_requests
+        color_request = item['requests'].pop()
         color_request.meta['item'] = item
 
         return color_request
 
-    def make_color_requests(self, color_ids, product_id):
+    def make_color_requests(self, response):
+        color_ids = self.get_color_ids(response)
+        product_id = self.get_product_id(response)
+
         color_requests = []
-        color_data = {'productId': product_id}
+        color_formdata = {'productId': product_id}
 
         for color_id in color_ids:
-            color_data['colorId'] = color_id
+            color_formdata['colorId'] = color_id
             color_request = FormRequest(url=f'{self.color_url_t}{urlencode(self.color_parameters)}',
-                                        callback=self.parse_color, formdata=color_data)
+                                        callback=self.parse_color, formdata=color_formdata)
             color_requests.append(color_request)
 
         return color_requests
@@ -135,8 +138,8 @@ class Canda(CrawlSpider):
 
     @staticmethod
     def get_currency_symbol(response):
-        return re.findall(
-            r"[^\w\d_\s,.\\]", response.css('.product-stage__price span::text').extract_first(), re.UNICODE)[0]
+        price = response.css('.product-stage__price span::text').extract_first()
+        return re.findall(r"[^\w\d_\s,.\\]", price, re.UNICODE)[0]
 
     @staticmethod
     def get_brand_name(response):

@@ -12,3 +12,4 @@ class CandaItem(scrapy.Item):
     description = scrapy.Field()
     care = scrapy.Field()
     image_urls = scrapy.Field()
+    requests = scrapy.Field()
