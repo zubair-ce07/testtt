@@ -42,9 +42,9 @@ class MarkhamSpider(CrawlSpider):
 
     def parse_item_links(self, response):
         products = json.loads(response.text)["data"]["products"]
-        item_urls = [response.urljoin(product["pdpLinkUrl"]) for product in products]
+        item_urls = [product["pdpLinkUrl"] for product in products]
 
-        return [Request(item_url, callback=self.parse_item) for item_url in item_urls]
+        return [response.follow(item_url, callback=self.parse_item) for item_url in item_urls]
 
     def parse_item(self, response):
         item = Product()
