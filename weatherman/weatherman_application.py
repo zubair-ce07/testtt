@@ -21,7 +21,7 @@ class WeathermanApplication:
             monthly_weather.add_month_weather(daily_weather, daily_weather.day_weather[2].pkt_dt.month)
             self.yw.add_year_weather(monthly_weather, daily_weather.day_weather[2].pkt_dt.year)
             del monthly_weather
-            del monthly_weather
+            del daily_weather
 
     def do_the_e_work(self, year_month):
         year = int(year_month)
@@ -68,7 +68,7 @@ class WeathermanApplication:
 
     def do_the_dew(self, argv):
 
-        count = 1
+        count = 2
         while count < len(argv):
             option = argv[count]
             count = count + 1

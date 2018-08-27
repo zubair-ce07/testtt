@@ -21,7 +21,7 @@ class ReadWeather:
                 if weather_data[counter] == "":
                     weather_data[counter] = None
 
-                i = i+1
+                counter = counter+1
 
             weather.pkt_dt = datetime.strptime(weather_data[0], '%Y-%m-%d')
             weather.tempC.append(weather_data[1])
