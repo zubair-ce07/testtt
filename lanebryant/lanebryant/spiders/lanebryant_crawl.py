@@ -18,15 +18,13 @@ class LanebryantCrawlSpider(CrawlSpider):
         Rule(LinkExtractor(restrict_css='.mar-prd-item-image '), callback='parse_item'),
     )
 
-    # def parse(self, response):
-    #     title = response.css('.refinement-header::text').extract_first(default='').strip()
-    #     trail = response.meta.get('trail', [])
-    #     trail.append([title, response.url])
-    #     for request in super().parse(response):
-    #         request.meta['trail'] = trail.copy()
-    #         yield request
+    def parse(self, response):
+        title = response.css('.mar-plp-header-title::text').extract_first()
+        trail = response.meta.get('trail', [])
+        trail.append([title, response.url])
+        for request in super().parse(response):
+            request.meta['trail'] = trail.copy()
+            yield request
 
     def parse_item(self, response):
-        # print(f"ITEM IS: {response.css('.mar-product-title::text').extract_first()}")
-        print(self.lanebryant_parser.doit(response))
-        # print(f"processing {response.url}")
+        return self.lanebryant_parser.parse(response)
