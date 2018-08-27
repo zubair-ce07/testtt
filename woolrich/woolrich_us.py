@@ -236,4 +236,4 @@ class WoolrichSpider(CrawlSpider):
         return round(price*100)
 
     def clean_text(self, text):
-        return re.sub(r'\s+', ' ', text)
+        return re.sub(r'\s+', ' ', text.strip())
