@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 import json
 
-from scrapy.http import FormRequest, HtmlResponse
+from parsel import Selector
+from scrapy.http import FormRequest
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 from w3lib.url import url_query_cleaner
@@ -60,11 +61,10 @@ class GapCrawler(CrawlSpider):
     def parse_page_items(self, response):
         json_response = json.loads(response.text)
         if json_response['status'] == "success":
-            ajax_res = HtmlResponse(url=response.url,
-                                    body=str.encode(json_response['message']))
-            products_urls = ajax_res.css('.categoryProductItem h5 a::attr(href)').extract()
+            ajax_response = Selector(json_response['message'])
+            products_urls = ajax_response.css('.categoryProductItem h5 a::attr(href)').extract()
             for url in products_urls:
                 link = url_query_cleaner(response.urljoin(url))
                 yield FormRequest(url=link, callback=self.parser.parse_item)
 
-            return self.next_page_req(ajax_res)
+            return self.next_page_req(ajax_response)

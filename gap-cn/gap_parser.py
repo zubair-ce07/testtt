@@ -49,7 +49,7 @@ class GapParser:
     def _check_stock_status(self, stock, item):
         for sku in item['skus']:
             if not stock[sku['id']]:
-                sku['out_of_stock'] = True
+                sku.update({'out_of_stock': True})
 
     def _get_gender(self, categories):
         for token, gender in self.gender_map:
