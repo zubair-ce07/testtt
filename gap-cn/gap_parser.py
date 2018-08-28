@@ -35,16 +35,16 @@ class GapParser:
 
         return self._stock_status_request(response, item)
 
-    def _stock_status_request(self, response, item):
-        url = f'https://www.gap.cn/catalog/product/getstock?entityId={item["retailer_sku"]}'
-        return scrapy.Request(url=url, callback=self._parse_stock_status, meta={'item': item})
-
     def _parse_stock_status(self, response):
         item = response.meta.get('item')
         stock = json.loads(response.text)
 
         item['skus'] = self._update_skus_status(stock, item['skus'])
         return item
+
+    def _stock_status_request(self, response, item):
+        url = f'https://www.gap.cn/catalog/product/getstock?entityId={item["retailer_sku"]}'
+        return scrapy.Request(url=url, callback=self._parse_stock_status, meta={'item': item})
     
     def _update_skus_status(self, stock, skus):
         for sku in skus:
