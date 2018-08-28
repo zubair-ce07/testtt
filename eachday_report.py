@@ -6,8 +6,9 @@ class EachDayReport:
         self.minTemp = 0
         self.date = ''
 
-    def printReport(self,weatherDict):
-        if weatherDict["Max TemperatureC"] != '' and weatherDict["Min TemperatureC"] != '':
+    def print_eachday_report(self,weatherDict):
+        if (weatherDict["Max TemperatureC"] is not '' and 
+            weatherDict["Min TemperatureC"] is not ''):
             self.maxTemp = int(weatherDict["Max TemperatureC"])
             self.minTemp = int(weatherDict["Min TemperatureC"])
             self.date = str(weatherDict["PKT"]).split("-")[2]
@@ -22,8 +23,9 @@ class EachDayReport:
             print("\33[94m" + "+" * self.minTemp,end=" ")
             print("\33[95m" + str(self.minTemp) + "C" + "\33[0m")
 
-    def printReportBonus(self,weatherDict):
-        if weatherDict["Max TemperatureC"] != '' and weatherDict["Min TemperatureC"] != '':
+    def print_eachday_report_bonus(self,weatherDict):
+        if (weatherDict["Max TemperatureC"] is not '' and 
+            weatherDict["Min TemperatureC"] is not ''):
             self.maxTemp = int(weatherDict["Max TemperatureC"])
             self.minTemp = int(weatherDict["Min TemperatureC"])
             self.date = str(weatherDict["PKT"]).split("-")[2]

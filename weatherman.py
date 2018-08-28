@@ -1,24 +1,24 @@
 from sys import argv
 import calendar
-from yearReport import YearReport
-from monthReport import MonthReport
-from eachDayReport import EachDayReport
+from year_report import YearReport
+from month_report import MonthReport
+from eachday_report import EachDayReport
 
 if len(argv) == 4 or len(argv) == 8:
 
 
-    listOfMon = ["Jan", "Feb", "Mar", "Apr", "May",
-                 "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    listOfMon = ["Jan", "Feb", "Mar", "Apr", "May","Jun", 
+                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
     listofWeatherData = ["PKT","Max TemperatureC","Mean TemperatureC","Min TemperatureC",
                         "Dew PointC","MeanDew PointC","Min DewpointC","Max Humidity", "Mean Humidity", 
                         "Min Humidity", "Max Sea Level PressurehPa", "Mean Sea Level PressurehPa", 
                         "Min Sea Level PressurehPa", "Max VisibilityKm", "Mean VisibilityKm", "Min VisibilitykM", 
                         "Max Wind SpeedKm/h", "Mean Wind SpeedKm/h", "Max Gust SpeedKm/h","PrecipitationCm",
-                         "CloudCover", "Events","WindDirDegrees"]
+                        "CloudCover", "Events","WindDirDegrees"]
     #Task 1
     if "-e" in argv:
         fileName = argv[1] + "Murree_weather_" + argv[argv.index("-e")+1] + "_"
-        yearReport = YearReport()
+        year_report = YearReport()
         for month in listOfMon:
             fullFileName = fileName + month + ".txt"
             try:
@@ -28,15 +28,15 @@ if len(argv) == 4 or len(argv) == 8:
                         continue
                     zipList = zip(listofWeatherData,line.split(","))
                     dictOfWeather = dict(zipList)
-                    yearReport.setAccurateDate(dictOfWeather)
+                    year_report.set_accurate_date(dictOfWeather)
                     dictOfWeather.clear()
             except FileNotFoundError:
                 continue
         print("--------------Weather Report of " + argv[argv.index("-e")+1] + "-----------------")
-        yearReport.printReport()
+        year_report.print_year_report()
     #Task 2
     if "-a" in argv:
-        monthReport = MonthReport()
+        month_report = MonthReport()
         yearMonth = argv[argv.index("-a")+1].split("/")
         fileName = argv[1] + "Murree_weather_" + yearMonth[0] + "_"
         try:
@@ -51,16 +51,16 @@ if len(argv) == 4 or len(argv) == 8:
                     continue
                 zipList = zip(listofWeatherData,line.split(","))
                 dictOfWeather = dict(zipList)
-                monthReport.calSumOfData(dictOfWeather)
+                month_report.cal_sum_of_data(dictOfWeather)
                 dictOfWeather.clear()
         except FileNotFoundError:
             print("File Not Found")
-        monthReport.takeAvgOfData()
+        month_report.take_avg_of_data()
         print("--------------Weather Report of "+ calendar.month_name[int(yearMonth[1])] + " " + yearMonth[0] + "-----------------")
-        monthReport.printMonthReport()
+        month_report.print_month_report()
     # Task3
     if "-c" in argv:
-        eachDay = EachDayReport()
+        each_day_report = EachDayReport()
         yearMonth = argv[argv.index("-c")+1].split("/")
         fileName = argv[1] + "Murree_weather_" + yearMonth[0] + "_"
         try:
@@ -76,8 +76,8 @@ if len(argv) == 4 or len(argv) == 8:
                     continue
                 zipList = zip(listofWeatherData,line.split(","))
                 dictOfWeather = dict(zipList)
-                eachDay.printReport(dictOfWeather)
-                # eachDay.printReportBonus(dictOfWeather)
+                each_day_report.print_eachday_report(dictOfWeather)
+                each_day_report.print_eachday_report_bonus(dictOfWeather)
                 dictOfWeather.clear()
         except FileNotFoundError:
             print("File Not Found")
