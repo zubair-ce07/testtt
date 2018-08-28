@@ -19,20 +19,14 @@ class MonthReport:
 
     def calSumOfData(self,weatherDict):
         if weatherDict["Max TemperatureC"] != '':
-            # if self.maxAvgTemp < int(weatherDict["Max TemperatureC"]):
             self.sumMaxTemp += int(weatherDict["Max TemperatureC"])
             self.maxTempCount += 1
-            # print(self.avgMaxTemp)
         if weatherDict["Min TemperatureC"] != '':
-            # if self.minAvgTemp > int(weatherDict["Min TemperatureC"]):
             self.sumMinTemp += int(weatherDict["Min TemperatureC"])
             self.minTempCount += 1
-            # print(weatherDict["Min TemperatureC"])
         if weatherDict["Max Humidity"] != '':
-            # if self.maxAvgHumidity < int(weatherDict["Max Humidity"]):
             self.sumMeanHumidity += int(weatherDict["Mean Humidity"])
             self.meanHumidityCount += 1
-            # print(weatherDict["Mean Humidity"])
 
 
     def takeAvgOfData(self):

@@ -21,11 +21,9 @@ if len(argv) == 4 or len(argv) == 8:
         yearReport = YearReport()
         for month in listOfMon:
             fullFileName = fileName + month + ".txt"
-            # print(fullFileName)
             try:
                 fileReader = open(fullFileName).readlines()[1:]
                 for line in fileReader:
-                    # print(line)
                     if len(line.strip()) == 16:
                         continue
                     zipList = zip(listofWeatherData,line.split(","))
@@ -33,7 +31,6 @@ if len(argv) == 4 or len(argv) == 8:
                     yearReport.setAccurateDate(dictOfWeather)
                     dictOfWeather.clear()
             except FileNotFoundError:
-                # print(fullFileName)
                 continue
         print("--------------Weather Report of " + argv[argv.index("-e")+1] + "-----------------")
         yearReport.printReport()
@@ -47,7 +44,6 @@ if len(argv) == 4 or len(argv) == 8:
         except IndexError:
             print("Month argument missing!")
             exit(1)
-        # print(fullFileName)
         try:
             fileReader = open(fullFileName).readlines()[1:]
             for line in fileReader:
@@ -72,7 +68,6 @@ if len(argv) == 4 or len(argv) == 8:
         except IndexError:
             print("Month argument missing!")
             exit(1)
-        # print(fullFileName)
         print("--------------Each day weather Report of "+ calendar.month_name[int(yearMonth[1])] + " " + yearMonth[0] + "-----------------")
         try:
             fileReader = open(fullFileName).readlines()[1:]

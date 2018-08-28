@@ -12,15 +12,15 @@ class YearReport:
 
     def setAccurateDate(self,weatherDict):
         if weatherDict["Max TemperatureC"] != '':
-            if self.maxTemp < int(weatherDict["Max TemperatureC"]):
+            if self.maxTemp <= int(weatherDict["Max TemperatureC"]):
                 self.maxTempDate = weatherDict["PKT"]
                 self.maxTemp = int(weatherDict["Max TemperatureC"])
         if weatherDict["Min TemperatureC"] != '':    
-            if self.minTemp > int(weatherDict["Min TemperatureC"]):
+            if self.minTemp >= int(weatherDict["Min TemperatureC"]):
                 self.minTempDate = weatherDict["PKT"]
                 self.minTemp = int(weatherDict["Min TemperatureC"])
         if weatherDict["Max Humidity"] != '':    
-            if self.maxHumidity < int(weatherDict["Max Humidity"]):
+            if self.maxHumidity <= int(weatherDict["Max Humidity"]):
                 self.maxHumidityDate = weatherDict["PKT"]
                 self.maxHumidity = int(weatherDict["Max Humidity"])
 
@@ -32,9 +32,7 @@ class YearReport:
         print("Highest: " + str(self.maxTemp) + "C " + "on " + str(self.dateFormat(self.maxTempDate)))
         print("Lowest: " + str(self.minTemp) + "C " + "on " + str(self.dateFormat(self.minTempDate)))
         print("Humidity: " + str(self.maxHumidity) + "% " + "on " + str(self.dateFormat(self.maxHumidityDate)))
-        # print(self.maxTempDate)
-        # print(self.minTempDate)
-        # print(self.maxHumidityDate)
+        
 
     def dateFormat(self,date):
         splitDate = date.split("-")
