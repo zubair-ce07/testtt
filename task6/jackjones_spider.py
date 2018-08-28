@@ -1,8 +1,7 @@
 from json import loads
 from w3lib.url import url_query_parameter
-from urllib.parse import urljoin
 from re import match
-from six.moves.urllib.parse import urlencode
+from six.moves.urllib.parse import urlencode, urljoin
 
 from scrapy.spiders import CrawlSpider
 from scrapy import Request
@@ -55,7 +54,7 @@ class JackJonesSpider(CrawlSpider):
 
     def parse_category(self, response):
         raw_navs = loads(response.text)
-        raw_navs = raw_navs.get('data')
+        raw_navs = raw_navs['data']
         category_ids = {url_query_parameter(url, 'classifyIds')
                         for url in self.extract_category_links(raw_navs)
                         if match('.*\/goodsList\.html\?.*', url)}
@@ -68,14 +67,14 @@ class JackJonesSpider(CrawlSpider):
                           callback=self.parse_listing)
 
     def parse_listing(self, response):
-        raw_product = self.get_raw_product(response)
-        product_ids = [i.get('goodsCode') for i in raw_product.get('data')]
+        raw_listings = self.extract_raw_product(response)
+        product_ids = [i.get('goodsCode') for i in raw_listings.get('data')]
 
         for product_id in product_ids:
             yield Request(self.product_url.format(product_id), callback=self.parse_product)
 
-        current_page = int(raw_product.get('currentpage', '-1')) + 1
-        total_pages = int(raw_product.get('totalPage', '-1')) + 1
+        current_page = int(raw_listings.get('currentpage', '-1')) + 1
+        total_pages = int(raw_listings.get('totalPage', '-1')) + 1
 
         for next_page in range(current_page, total_pages):
             params = self.params.copy()
@@ -86,29 +85,27 @@ class JackJonesSpider(CrawlSpider):
                           callback=self.parse_pagination)
 
     def parse_pagination(self, response):
-        raw_product = self.get_raw_product(response)
-        product_ids = [i.get('goodsCode') for i in raw_product.get('data')]
+        raw_pagination = self.extract_raw_product(response)
+        product_ids = [i['goodsCode'] for i in raw_pagination['data']]
 
         for product_id in product_ids:
             yield Request(self.product_url.format(product_id), callback=self.parse_product)
 
     def parse_product(self, response):
-        raw_product = self.get_raw_product(response)
+        raw_product = self.extract_raw_product(response)
 
         product_item = Product()
 
-        product_item['category'] = self.get_categories(raw_product)
-        product_item['name'] = self.get_product_name(raw_product)
-        product_item['retailer_sku'] = self.get_retailer_sku(raw_product)
-
-        product_item['brand'] = self.get_brand(raw_product)
-        product_item['gender'] = self.get_gender(raw_product)
-        product_item['description'] = self.get_description(raw_product)
-
-        product_item['image_urls'] = self.get_image_urls(raw_product)
-        product_item['care'] = self.get_care(raw_product)
-        product_item['skus'] = self.get_skus(raw_product)
-        product_item['url'] = self.get_product_url(raw_product)
+        product_item['category'] = self.extract_categories(raw_product)
+        product_item['name'] = self.extract_product_name(raw_product)
+        product_item['retailer_sku'] = self.extract_retailer_sku(raw_product)
+        product_item['brand'] = self.extract_brand(raw_product)
+        product_item['gender'] = self.extract_gender(raw_product)
+        product_item['description'] = self.extract_description(raw_product)
+        product_item['image_urls'] = self.extract_image_urls(raw_product)
+        product_item['care'] = self.extract_care(raw_product)
+        product_item['skus'] = self.extract_skus(raw_product)
+        product_item['url'] = self.extract_product_url(raw_product)
 
         return self.product_stock_request(product_item)
 
@@ -117,7 +114,7 @@ class JackJonesSpider(CrawlSpider):
                       callback=self.parse_product_stock, meta={'item': product_item})
 
     def parse_product_stock(self, response):
-        raw_stock = self.get_raw_product(response).get('data')
+        raw_stock = self.extract_raw_product(response).get('data')
         product_item = response.meta.get('item')
         raw_skus = product_item.get('skus').copy()
 
@@ -132,56 +129,64 @@ class JackJonesSpider(CrawlSpider):
 
         return product_item
 
-    def get_raw_product(self, response):
+    def extract_raw_product(self, response):
         return loads(response.text)
 
-    def get_product_name(self, raw_product):
-        return raw_product.get('data', {}).get("goodsName")
+    def extract_product_name(self, raw_product):
+        return raw_product['data']["goodsName"]
 
-    def get_care(self, raw_product):
-        return [raw_product.get('data', {}).get("goodsInfo")]
+    def extract_care(self, raw_product):
+        return [raw_product['data']["goodsInfo"]]
 
-    def get_description(self, raw_product):
-        return [raw_product.get('data', {}).get("describe")]
+    def extract_description(self, raw_product):
+        return [raw_product['data']["describe"]]
 
-    def get_retailer_sku(self, raw_product):
-        return raw_product.get('data', {}).get("projectCode")
+    def extract_retailer_sku(self, raw_product):
+        return raw_product['data']["projectCode"]
 
-    def get_image_urls(self, raw_product):
+    def extract_image_urls(self, raw_product):
         base_url = 'https://www.jackjones.com.cn/'
-        product_colors = raw_product.get('data', {}).get("color", [])
+        product_colors = raw_product['data']["color"]
         image_urls = sum((color.get("picurls") for color in product_colors), [])
         return [urljoin(base_url, url) for url in image_urls]
 
-    def get_gender(self, raw_product):
+    def extract_gender(self, raw_product):
         return self.gender
 
-    def get_brand(self, raw_product):
-        return raw_product.get('data', {}).get("brand")
+    def extract_brand(self, raw_product):
+        return raw_product['data']["brand"]
 
-    def get_product_url(self, raw_product):
+    def extract_product_url(self, raw_product):
         product_url = "https://www.jackjones.com.cn/goodsDetails.html?design={}"
-        product_id = raw_product.get('data', {}).get("projectCode")
+        product_id = raw_product['data']["projectCode"]
         return product_url.format(product_id)
 
-    def get_categories(self, raw_product):
-        product_colors = raw_product.get('data', {}).get("color", [])
+    def extract_categories(self, raw_product):
+        product_colors = raw_product['data']["color"]
 
         if product_colors:
-            return list({color.get("categoryName") for color in product_colors})
+            return list({color["categoryName"] for color in product_colors})
 
-    def get_skus(self, raw_product):
-        raw_colors = raw_product.get('data', {}).get("color", [])
+    def extract_skus(self, raw_product):
+        raw_colors = raw_product['data']["color"]
 
         product_skus = []
         for raw_color in raw_colors:
+            sku = {'price': raw_color['price'],
+                   'previous_price': [raw_color['originalPrice']],
+                   'currency': self.currency,
+                   'color': raw_color['color']
+                   }
+
             for size_sku in raw_color.get('sizes'):
-                sku = {'price': raw_color.get('price'),
-                       'previous_price': [raw_color.get('originalPrice')],
-                       'currency': self.currency,
-                       'size': size_sku.get('size'),
-                       'sku_id': size_sku.get('sku'),
-                       'color': raw_color.get('color')}
+                sku = sku.copy()
+                raw_size = size_sku['size']
+
+                if not raw_size:
+                    raw_size = 'One Size'
+
+                sku['size'] = raw_size
+                sku['sku_id'] = size_sku['sku']
 
                 if raw_color.get("status") == "OutShelf":
                     sku['out_of_stock'] = True
@@ -194,12 +199,12 @@ class JackJonesSpider(CrawlSpider):
     def extract_category_links(raw_navs):
         category_links = []
         for raw_nav in raw_navs:
-            category_links.append(raw_nav.get('navigationUrl'))
+            category_links.append(raw_nav['navigationUrl'])
 
-            for raw_sub_nav in raw_nav.get('list'):
-                category_links.append(raw_sub_nav.get('navigationUrl'))
+            for raw_sub_nav in raw_nav['list']:
+                category_links.append(raw_sub_nav['navigationUrl'])
 
-                raw_third_nav = [raw_nav.get('navigationUrl') for raw_nav in raw_sub_nav.get('list')]
+                raw_third_nav = [raw_nav['navigationUrl'] for raw_nav in raw_sub_nav['list']]
                 category_links.extend(raw_third_nav)
 
         return category_links
