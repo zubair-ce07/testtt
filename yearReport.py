@@ -1,5 +1,5 @@
 from math import inf
-
+import calendar
 class YearReport:
 
     def __init__(self):
@@ -38,28 +38,4 @@ class YearReport:
 
     def dateFormat(self,date):
         splitDate = date.split("-")
-        if splitDate[1] == '01' or splitDate[1] == '1':
-            return "January " + splitDate[2]
-        elif splitDate[1] == '02' or splitDate[1] == '2':
-            return "February " + splitDate[2]
-        elif splitDate[1] == '03' or splitDate[1] == '3':
-            return "March " + splitDate[2]
-        elif splitDate[1] == '04' or splitDate[1] == '4':
-            return "April " + splitDate[2]
-        elif splitDate[1] == '05' or splitDate[1] == '5':
-            return "May " + splitDate[2]
-        elif splitDate[1] == '06' or splitDate[1] == '6':
-            return "June " + splitDate[2]
-        elif splitDate[1] == '07' or splitDate[1] == '7':
-            return "July " + splitDate[2]
-        elif splitDate[1] == '08' or splitDate[1] == '8':
-            return "August " + splitDate[2]
-        elif splitDate[1] == '09' or splitDate[1] == '9':
-            return "September " + splitDate[2]
-        elif splitDate[1] == '10':
-            return "October " + splitDate[2]
-        elif splitDate[1] == '11':
-            return "November " + splitDate[2]
-        elif splitDate[1] == '12':
-            return "December " + splitDate[2]
-        
+        return calendar.month_name[int(splitDate[1])] + " " + splitDate[2]

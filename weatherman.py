@@ -1,13 +1,11 @@
 from sys import argv
+import calendar
 from yearReport import YearReport
 from monthReport import MonthReport
 from eachDayReport import EachDayReport
 
-if len(argv) == 4:
-    # print("Task1")
-    
-    fileName = argv[1] + "Murree_weather_" + argv[3] + "_"
-    # print(fileName)
+if len(argv) == 4 or len(argv) == 8:
+
 
     listOfMon = ["Jan", "Feb", "Mar", "Apr", "May",
                  "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
@@ -19,13 +17,15 @@ if len(argv) == 4:
                          "CloudCover", "Events","WindDirDegrees"]
     #Task 1
     if "-e" in argv:
+        fileName = argv[1] + "Murree_weather_" + argv[argv.index("-e")+1] + "_"
         yearReport = YearReport()
         for month in listOfMon:
             fullFileName = fileName + month + ".txt"
+            # print(fullFileName)
             try:
                 fileReader = open(fullFileName).readlines()[1:]
                 for line in fileReader:
-                    print(line)
+                    # print(line)
                     if len(line.strip()) == 16:
                         continue
                     zipList = zip(listofWeatherData,line.split(","))
@@ -35,11 +35,12 @@ if len(argv) == 4:
             except FileNotFoundError:
                 # print(fullFileName)
                 continue
+        print("--------------Weather Report of " + argv[argv.index("-e")+1] + "-----------------")
         yearReport.printReport()
     #Task 2
-    elif "-a" in argv:
+    if "-a" in argv:
         monthReport = MonthReport()
-        yearMonth = argv[3].split("/")
+        yearMonth = argv[argv.index("-a")+1].split("/")
         fileName = argv[1] + "Murree_weather_" + yearMonth[0] + "_"
         try:
             fullFileName = fileName + listOfMon[int(yearMonth[1])-1] + ".txt"
@@ -59,11 +60,12 @@ if len(argv) == 4:
         except FileNotFoundError:
             print("File Not Found")
         monthReport.takeAvgOfData()
+        print("--------------Weather Report of "+ calendar.month_name[int(yearMonth[1])] + " " + yearMonth[0] + "-----------------")
         monthReport.printMonthReport()
     # Task3
-    elif "-c" in argv:
+    if "-c" in argv:
         eachDay = EachDayReport()
-        yearMonth = argv[3].split("/")
+        yearMonth = argv[argv.index("-c")+1].split("/")
         fileName = argv[1] + "Murree_weather_" + yearMonth[0] + "_"
         try:
             fullFileName = fileName + listOfMon[int(yearMonth[1])-1] + ".txt"
@@ -71,6 +73,7 @@ if len(argv) == 4:
             print("Month argument missing!")
             exit(1)
         # print(fullFileName)
+        print("--------------Each day weather Report of "+ calendar.month_name[int(yearMonth[1])] + " " + yearMonth[0] + "-----------------")
         try:
             fileReader = open(fullFileName).readlines()[1:]
             for line in fileReader:
