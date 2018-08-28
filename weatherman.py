@@ -1,6 +1,7 @@
 from sys import argv
 from yearReport import YearReport
 from monthReport import MonthReport
+from eachDayReport import EachDayReport
 
 if len(argv) == 4:
     # print("Task1")
@@ -61,7 +62,26 @@ if len(argv) == 4:
         monthReport.printMonthReport()
     # Task3
     elif "-c" in argv:
-        
+        eachDay = EachDayReport()
+        yearMonth = argv[3].split("/")
+        fileName = argv[1] + "Murree_weather_" + yearMonth[0] + "_"
+        try:
+            fullFileName = fileName + listOfMon[int(yearMonth[1])-1] + ".txt"
+        except IndexError:
+            print("Month argument missing!")
+            exit(1)
+        # print(fullFileName)
+        try:
+            fileReader = open(fullFileName).readlines()[1:]
+            for line in fileReader:
+                if len(line.strip()) == 16:
+                    continue
+                zipList = zip(listofWeatherData,line.split(","))
+                dictOfWeather = dict(zipList)
+                eachDay.printReport(dictOfWeather)
+                dictOfWeather.clear()
+        except FileNotFoundError:
+            print("File Not Found")
 
 else:
     print('Arguments missing')
