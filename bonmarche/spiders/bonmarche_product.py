@@ -33,6 +33,10 @@ class ProductParser(Spider):
 
     def parse_colors(self, response):
         product = response.meta["product"]
+
+        if response.css('.size .swatchanchor.selected'):
+            product['skus'].update(self.generated_skus(response))
+
         product["image_urls"] += self.images(response)
         product['requests'] += self.size_requests(response)
         yield self.next_request(product)
@@ -41,11 +45,12 @@ class ProductParser(Spider):
         product = response.meta['product']
 
         if response.css('.swatches.length'):
-            length_css = '.length .swatchanchor.selected::text'
-            length = response.css(length_css).extract_first()
+            length_selector = '.length .swatchanchor.selected::text'
+            length = response.css(length_selector).extract_first()
             if length:
                 product['skus'].update(self.generated_skus(response))
             product['requests'] += self.length_requests(response)
+
         else:
             product['skus'].update(self.generated_skus(response))
 
@@ -63,26 +68,26 @@ class ProductParser(Spider):
         return response.meta.get('trail', [])
 
     def product_category(self, response):
-        category_css = '.breadcrumb-element [itemprop=name]::text'
-        categories = response.css(category_css).extract()
+        category_selector = '.breadcrumb-element [itemprop=name]::text'
+        categories = response.css(category_selector).extract()
         return [category.strip() for category in categories if category][1:-1]
 
     def product_name(self, response):
         return response.css('.xlt-pdpName::text').extract_first()
 
     def product_description(self, response):
-        desc_css = '.product-description::text, .feature-value::text'
-        description = response.css(desc_css).extract()
+        desc_selector = '.product-description::text, .feature-value::text'
+        description = response.css(desc_selector).extract()
         return [desc.strip() for desc in description if desc][:-1]
 
     def product_care(self, response):
-        care_css = '.product-description::text, .feature-value::text'
-        return response.css(care_css).extract()[-1:]
+        care_selector = '.product-description::text, .feature-value::text'
+        return response.css(care_selector).extract()[-1:]
 
     def color_requests(self, response):
         requests = []
-        color_css = '.color .swatchanchor.selectable:not(.selected)::attr(href)'
-        color_urls = response.css(color_css).extract()
+        color_selector = '.color .swatchanchor.selectable:not(.selected)::attr(href)'
+        color_urls = response.css(color_selector).extract()
 
         for url in color_urls:
             request = response.follow(url, callback=self.parse_colors)
@@ -90,15 +95,15 @@ class ProductParser(Spider):
         return requests
 
     def images(self, response):
-        images_css = '.product-image-container .productthumbnail::attr(data-lgimg)'
-        raw_images = response.css(images_css).extract()
+        images_selector = '.product-image-container .productthumbnail::attr(data-lgimg)'
+        raw_images = response.css(images_selector).extract()
         return [url_clean(json.loads(url)["url"]) for url in raw_images]
 
     def size_requests(self, response):
         requests = []
 
-        size_css = '.size .swatchanchor.selectable:not(.selected)::attr(href)'
-        size_urls = response.css(size_css).extract()
+        size_selector = '.size .swatchanchor.selectable:not(.selected)::attr(href)'
+        size_urls = response.css(size_selector).extract()
 
         if response.css('.size .swatchanchor.selected'):
             if response.css('.swatches.length'):
@@ -112,8 +117,8 @@ class ProductParser(Spider):
     def length_requests(self, response):
         requests = []
 
-        length_css = '.length .swatchanchor.selectable:not(.selected)::attr(href)'
-        length_urls = response.css(length_css).extract()
+        length_selector = '.length .swatchanchor.selectable:not(.selected)::attr(href)'
+        length_urls = response.css(length_selector).extract()
 
         for url in length_urls:
             request = response.follow(url, callback=self.parse_length)
@@ -123,8 +128,8 @@ class ProductParser(Spider):
     def generated_skus(self, response):
         sku = {}
 
-        size_css = '.size .swatchanchor.selected::text'
-        size = response.css(size_css).extract_first()
+        size_selector = '.size .swatchanchor.selected::text'
+        size = response.css(size_selector).extract_first()
         if size:
             size = size.strip()
             sku['size'] = size
@@ -140,8 +145,8 @@ class ProductParser(Spider):
             price = response.css('.price-sales::attr(content)').extract_first()
             sku['price'] = int(100*float(price))
 
-            length_css = '.length .swatchanchor.selected::text'
-            length = response.css(length_css).extract_first()
+            length_selector = '.length .swatchanchor.selected::text'
+            length = response.css(length_selector).extract_first()
             if length:
                 size = f'{size}/{length.strip()}'
                 sku['size'] = size
