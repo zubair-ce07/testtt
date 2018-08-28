@@ -11,9 +11,7 @@ class Parser(Spider):
         "גברים": "men",
         "נשים": "women",
         "בנות": "girls",
-        "בייבי בנות": "girls",
-        "בנים": "boys",
-        'בייבי בנים': "boys"
+        "בנים": "boys"
     }
 
     def parse(self, response):
@@ -31,7 +29,7 @@ class Parser(Spider):
         product["brand"] = self.get_brand(response)
         product["url"] = response.url
         product["market"] = 'IL'
-        product["trail"] = response.meta["trail"]
+        product["trail"] = response.meta.get("trail", [])
         product["retailer"] = "terminalx"
         product["url_original"] = response.url
         product["description"] = product_data['description']
@@ -48,7 +46,6 @@ class Parser(Spider):
 
     @staticmethod
     def item_or_request(response):
-
         if not response.meta["pending_media_reqs"]:
             return response.meta["product"].copy()
 
@@ -59,32 +56,30 @@ class Parser(Spider):
 
     def get_skus(self, response, product_config):
         skus = {}
-        sku_prefix = product_config['jsonConfig']['productId']
         common_sku = self.get_common_sku(response, product_config)
         raw_skus = self.get_raw_skus(product_config)
         available_skus = product_config['jsonConfig']['index']
 
-        for raw_sku in raw_skus:
+        for color, size in raw_skus:
             sku = common_sku.copy()
-            sku['colour'] = raw_sku[0][1]['label']
-            sku['size'] = raw_sku[1][1]['label'] if raw_sku[1][1]['label'] is not "OneSize" else "One Size"
+            sku['colour'] = color[1]['label']
+            sku['size'] = size[1]['label'] if size[1]['label'] is not "OneSize" else "One Size"
 
-            availablity = self.is_available(raw_sku, available_skus)
-            if not availablity:
+            if not self.is_available(color, size, available_skus):
                 sku['out_of_stock'] = True
 
-            skus[f'{sku_prefix}_{sku["colour"]}_{sku["size"]}'] = sku
+            skus[f'{sku["colour"]}_{sku["size"]}'] = sku
 
         return skus
 
     def get_common_sku(self, response, product_config):
         common_sku = {}
-        old_price = product_config['jsonConfig']['prices']['oldPrice']['amount']
+        old_price = float(product_config['jsonConfig']['prices']['oldPrice']['amount'])
 
-        common_sku["price"] = product_config['jsonConfig']['prices']['finalPrice']['amount']
+        common_sku["price"] = float(product_config['jsonConfig']['prices']['finalPrice']['amount'])
         common_sku["currency"] = self.get_product_data(response)['offers']['priceCurrency']
 
-        if old_price is not common_sku["price"]:
+        if old_price != common_sku["price"]:
             common_sku["previous_prices"] = [old_price]
 
         return common_sku
@@ -101,7 +96,12 @@ class Parser(Spider):
 
     def get_gender(self, response):
         raw_gender = response.css('.product-sizechart-wrapper>a::attr(title)').extract_first()
-        return self.possible_genders[raw_gender.split('/').pop().strip()] if raw_gender else "unisex-adults"
+
+        for key, value in self.possible_genders:
+            if key in raw_gender:
+                return value
+
+        return "unisex-adults"
 
     @staticmethod
     def get_brand(response):
@@ -109,8 +109,8 @@ class Parser(Spider):
 
     @staticmethod
     def get_categories(response):
-        breadcrumbs = response.css('.breadcrumbs >.item:not(.product)::text').extract()
-        return [item.strip() for item in breadcrumbs if 'דף הבית' not in item]
+        breadcrumbs = response.css('.breadcrumbs .item>a::text').extract()
+        return [item.strip() for item in breadcrumbs[1:-2]]
 
     @staticmethod
     def get_care(response):
@@ -119,7 +119,7 @@ class Parser(Spider):
 
     @staticmethod
     def get_product_config(response):
-        raw_config = response.css('script[type="text/x-magento-init"]:contains("swatch-options")::text').extract_first()
+        raw_config = response.css('script:contains("swatch-options")::text').extract_first()
         return json_loads(raw_config)['[data-role=swatch-options]']['IdusClass_ProductList/js/swatch-renderer']
 
     @staticmethod
@@ -127,10 +127,9 @@ class Parser(Spider):
         return json_loads(response.css('script[type="application/ld+json"]::text').extract_first())
 
     def media_requests(self, response, product_config):
-        url = product_config['mediaCallback']
+        url = 'https://www.terminalx.com/swatches/ajax/media/'
         params = {
             'product_id': product_config['jsonConfig']['productId'],
-            'isAjax': True
         }
 
         media_reqs = []
@@ -141,12 +140,12 @@ class Parser(Spider):
         return media_reqs
 
     @staticmethod
-    def is_available(raw_sku, available_skus):
+    def is_available(color, size, available_skus):
         if not available_skus:
             return False
 
         for sku in available_skus.values():
-            if sku['93'] == raw_sku[0][0] and sku['149'] == raw_sku[1][0]:
+            if sku['93'] == color[0] and sku['149'] == size[0]:
                 return True
 
         return False
