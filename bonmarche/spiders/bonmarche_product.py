@@ -24,33 +24,37 @@ class ProductParser(Spider):
         product['description'] = self.product_description(response)
         product['care'] = self.product_care(response)
         product['image_urls'] = self.images(response)
-        product['skus'] = {}
+        product['skus'] = self.generated_skus(response)
         product['spider_name'] = self.name
         product['requests'] = self.size_requests(response)
 
         product['requests'] += self.color_requests(response)
-        yield self.process_request(product)
+        yield self.next_request(product)
 
     def parse_colors(self, response):
         product = response.meta["product"]
         product["image_urls"] += self.images(response)
         product['requests'] += self.size_requests(response)
-        yield self.process_request(product)
+        yield self.next_request(product)
 
     def parse_size(self, response):
         product = response.meta['product']
 
         if response.css('.swatches.length'):
+            length_css = '.length .swatchanchor.selected::text'
+            length = response.css(length_css).extract_first()
+            if length:
+                product['skus'].update(self.generated_skus(response))
             product['requests'] += self.length_requests(response)
         else:
             product['skus'].update(self.generated_skus(response))
 
-        yield self.process_request(product)
+        yield self.next_request(product)
 
     def parse_length(self, response):
         product = response.meta['product']
         product['skus'].update(self.generated_skus(response))
-        yield self.process_request(product)
+        yield self.next_request(product)
 
     def product_id(self, response):
         return response.css('::attr(data-masterid)').extract_first()
@@ -96,12 +100,9 @@ class ProductParser(Spider):
         size_css = '.size .swatchanchor.selectable:not(.selected)::attr(href)'
         size_urls = response.css(size_css).extract()
 
-        if response.css('.size .swatchanchor.selectable.selected'):
-            # product = response.meta['product']
+        if response.css('.size .swatchanchor.selected'):
             if response.css('.swatches.length'):
                 requests += self.length_requests(response)
-            # else:
-            #     product['skus'].update(self.generated_skus(response))
 
         for url in size_urls:
             request = response.follow(url, callback=self.parse_size)
@@ -114,10 +115,6 @@ class ProductParser(Spider):
         length_css = '.length .swatchanchor.selectable:not(.selected)::attr(href)'
         length_urls = response.css(length_css).extract()
 
-        # if response.css('.length .swatchanchor.selectable.selected'):
-        #     product = response.meta['product']
-        #     product['skus'].update(self.generated_skus(response))
-
         for url in length_urls:
             request = response.follow(url, callback=self.parse_length)
             requests.append(request)
@@ -127,27 +124,31 @@ class ProductParser(Spider):
         sku = {}
 
         size_css = '.size .swatchanchor.selected::text'
-        size = response.css(size_css).extract_first().strip()
-        sku['size'] = size
-
-        colour = response.css('.attribute .label::text').extract_first()
-        colour = colour.split(":")[-1].strip()
-        sku['colour'] = colour
-
-        sku['currency'] = 'GBP'
-        previous_prices = response.css('.price-standard::text').extract()
-        if previous_prices:
-            sku['previous_prices'] = self.filter_prices(previous_prices)
-        price = response.css('.price-sales::attr(content)').extract_first()
-        sku['price'] = int(100*float(price))
-
-        length_css = '.length .swatchanchor.selected::text'
-        length = response.css(length_css).extract_first()
-        if length:
-            size = f'{size}/{length.strip()}'
+        size = response.css(size_css).extract_first()
+        if size:
+            size = size.strip()
             sku['size'] = size
 
-        return {f'{colour}_{size}': sku}
+            colour = response.css('.attribute .label::text').extract_first()
+            colour = colour.split(":")[-1].strip()
+            sku['colour'] = colour
+
+            sku['currency'] = 'GBP'
+            previous_prices = response.css('.price-standard::text').extract()
+            if previous_prices:
+                sku['previous_prices'] = self.filter_prices(previous_prices)
+            price = response.css('.price-sales::attr(content)').extract_first()
+            sku['price'] = int(100*float(price))
+
+            length_css = '.length .swatchanchor.selected::text'
+            length = response.css(length_css).extract_first()
+            if length:
+                size = f'{size}/{length.strip()}'
+                sku['size'] = size
+
+            return {f'{colour}_{size}': sku}
+
+        return {}
 
     def filter_prices(self, previous_prices):
         prices = []
@@ -159,7 +160,7 @@ class ProductParser(Spider):
                 prices.append(price)
         return prices
 
-    def process_request(self, product):
+    def next_request(self, product):
         if not product['requests']:
             del product['requests']
             return product
