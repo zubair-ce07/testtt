@@ -7,9 +7,9 @@ from lanebryant.items import LanebryantItem
 
 
 class ProductParser(Spider):
+    name = 'lanebryant-parser'
     brand = 'LB'
     gender = 'female'
-    name = 'lanebryant-parser'
     visited = set()
 
     def parse(self, response):
@@ -68,8 +68,7 @@ class ProductParser(Spider):
         return json.loads(response.css(price_specification_css).extract_first())
 
     def extract_image_urls(self, response):
-        image_urls = self.extract_price_specification(response)
-        return image_urls['image']
+        return self.extract_price_specification(response)['image']
 
     def extract_price(self, response):
         raw_price = self.extract_price_specification(response)
@@ -95,7 +94,7 @@ class ProductParser(Spider):
             if size_id == size['id']:
                 return size['value']
 
-    def unavailable_sizes(self, raw_product):
+    def extract_unavailable_sizes(self, raw_product):
         available_sizes = raw_product['all_available_size_groups'][0]['values'][0]['values']
         in_stock = raw_product['all_available_sizes'][0]['values']
 
@@ -108,7 +107,7 @@ class ProductParser(Spider):
             return
 
         skus = {}
-        unavailable_sizes = self.unavailable_sizes(raw_product)
+        unavailable_sizes = self.extract_unavailable_sizes(raw_product)
         for color, size in itertools.product(colors, unavailable_sizes):
             skus[f"{color['id']}_{size['id']}"] = {
                 'color': color['name'],
