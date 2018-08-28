@@ -42,6 +42,32 @@ class WoolrichSpider(CrawlSpider):
 
         item['meta'] = {'queued_requests': self.color_requests(response, item['retailer_sku'])}
         return self.next_request_or_item(item)
+    
+    def parse_color(self, response):
+        item = response.meta.get('item')
+
+        size_requests = self.variant_requests(response, 'size', self.parse_size)
+        if not size_requests:
+            item['skus'].append(self.make_sku(response))
+            
+        item['meta']['queued_requests'] += size_requests
+        return self.next_request_or_item(item)
+
+    def parse_size(self, response):
+        item = response.meta.get('item')
+
+        fit_requests = self.variant_requests(response, 'fit', self.parse_fitting)
+        if not fit_requests:
+            item['skus'].append(self.make_sku(response))
+            
+        item['meta']['queued_requests'] += fit_requests
+        return self.next_request_or_item(item)
+
+    def parse_fitting(self, response):
+        item = response.meta.get('item')
+
+        item['skus'].append(self.make_sku(response))
+        return self.next_request_or_item(item)
 
     def next_request_or_item(self, item):
         if item['meta']['queued_requests']:
@@ -72,32 +98,6 @@ class WoolrichSpider(CrawlSpider):
             color_requests += [request]
         
         return color_requests
-
-    def parse_color(self, response):
-        item = response.meta.get('item')
-
-        size_requests = self.variant_requests(response, 'size', self.parse_size)
-        if not size_requests:
-            item['skus'].append(self.make_sku(response))
-            
-        item['meta']['queued_requests'] += size_requests
-        return self.next_request_or_item(item)
-
-    def parse_size(self, response):
-        item = response.meta.get('item')
-
-        fit_requests = self.variant_requests(response, 'fit', self.parse_fitting)
-        if not fit_requests:
-            item['skus'].append(self.make_sku(response))
-            
-        item['meta']['queued_requests'] += fit_requests
-        return self.next_request_or_item(item)
-
-    def parse_fitting(self, response):
-        item = response.meta.get('item')
-
-        item['skus'].append(self.make_sku(response))
-        return self.next_request_or_item(item)
     
     def variant_requests(self, response, variant_type, callback):
         attributes_map = response.meta.get('attributes_map')
