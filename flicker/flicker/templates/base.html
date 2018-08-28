@@ -1,23 +1,36 @@
 <!doctype html>
 <html>
-  <head>
-    {% block head %}
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-    <title>{% block title %}{% endblock %} - Flicker</title>
-    {% endblock %}
-  </head>
-  <body>
-    {% block menu %}
-      <nav class="navbar navbar-defualt">
-        <div class="container-fluid">
-          <div class="navbar-header">
-            <a class="navbar-brand" href="#">Flicker</a>
-          </div>
-        </div>
-    </nav>
-  {% endblock %}
-    <div id="content">{% block content %}{% endblock %}</div>
-  </body>
+   <head>
+      {% block head %}
+      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+      <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+      <title>{% block title %}{% endblock %} - Flicker</title>
+      {% endblock %}
+   </head>
+   <body>
+      {% block menu %}
+      <div class="container-fluid">
+        <nav class="navbar navbar-defualt">
+           <div class="container-fluid">
+              <div class="navbar-header">
+                 <a class="navbar-brand" href="#">Flicker</a>
+              </div>
+              <ul class="nav navbar-nav">
+                <li><a class="action" href="{{ url_for('add_post') }}">New</a></li>
+                <li><a class="action" href="{{ url_for('show_all_users') }}">All Users</a></li>
+                <li><a class="action" href="{{ url_for('user_wall') }}">Wall</a></li>
+              </ul>
+              <ul class="nav navbar-nav navbar-right">
+                {% if session['user_available'] %}
+                   <li><a href="#"><span class="glyphicon glyphicon-user"></span> {{ session['current_user'] }}</a></li>
+                   <li><a href="{{ url_for('logout') }}"><span class="glyphicon glyphicon-log-in"></span> Logout</a></li>
+                {% endif %}
+              </ul>
+           </div>
+        </nav>
+      </div>
+      {% endblock %}
+      <div id="content">{% block content %}{% endblock %}</div>
+   </body>
 </html>

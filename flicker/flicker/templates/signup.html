@@ -13,10 +13,12 @@
 
 
     </div>
-    <div class="erorr">
-       {% for message in get_flashed_messages() %}
-       <div class="flash">{{ message }}</div>
-       {% endfor %}
+    <div class="container">
+         {% for message in get_flashed_messages() %}
+         <div class="alert alert-danger">
+           <div class="flash">{{ message }}</div>
+          </div>
+         {% endfor %}
     </div>
 {% endblock %}
 
