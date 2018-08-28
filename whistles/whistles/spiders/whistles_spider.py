@@ -16,13 +16,12 @@ class WhistlesSpider(CrawlSpider):
     start_urls = ['http://www.whistles.com/']
 
     def parse(self, response):
-        items_pages = response.css("li[class*='meganav-link'] a::attr(href)")
-        items_pages.extend(response.css("a[class*='page-next']::attr(href)"))
-        for href in items_pages:
-            yield response.follow(href, callback=self.parse)
+        items_pages = response.css("li[class*='meganav-link'] a::attr(href), a[class*='page-next']::attr(href)")
+        for listing_url in items_pages:
+            yield response.follow(listing_url, callback=self.parse)
 
-        for href in response.css("a[class*='name-link']::attr(href)"):
-            yield response.follow(href, callback=self.parse_item)
+        for product_url in response.css("a[class*='name-link']::attr(href)"):
+            yield response.follow(product_url, callback=self.parse_item)
 
     def parse_item(self, response):
         item = WhistlesItem()
@@ -32,7 +31,7 @@ class WhistlesSpider(CrawlSpider):
         item['image_urls'] = self.extract_image_urls(response)
         item['product_sku'] = self.extract_product_sku(response)
         item['care'] = self.extract_care(response)
-        item['description'] =  self.extract_description(response)
+        item['description'] = self.extract_description(response)
         item['skus'] = self.extract_skus(response)
         yield item
 
@@ -55,8 +54,8 @@ class WhistlesSpider(CrawlSpider):
     @staticmethod
     def extract_care(response):
         return [
-            "material: {}".format(response.css("p:contains('Composition:')::text").extract_first()),
-            "wash-care: {}".format(response.css("p:contains('Wash care:')::text").extract_first())
+            response.css("p:contains('Composition:')::text").extract_first(),
+            response.css("p:contains('Wash care:')::text").extract_first()
         ]
 
     @staticmethod
@@ -69,12 +68,14 @@ class WhistlesSpider(CrawlSpider):
         previous_price = response.css("span[title*='Regular Price']::text").extract_first()
         if not regular_price:
             regular_price = previous_price
-            previous_price = []
-        return {
+            previous_price = None
+        price_dict = {
             'currency': regular_price[0],
             'price': regular_price[1:],
-            'previous_prices': [previous_price[1:]]
         }
+        if previous_price:
+            price_dict['previous_prices'] = [previous_price]
+        return price_dict
 
     @staticmethod
     def extract_description(response):
@@ -86,25 +87,25 @@ class WhistlesSpider(CrawlSpider):
         price = self.extract_price(response)
         skus = list()
         sizes_info = response.css("li[class*='emptyswatch']")
-        if not sizes_info:  # In case on one size only, eg: For `bags`
+        if not sizes_info:
             sku = {
                 'color': color,
-                'sku_id': "{}_regular".format(color),
-                'size': "regular"
+                'sku_id': "{}_one_size".format(color),
+                'size': "One Size"
             }
             sku.update(price)
             skus.append(sku)
             return skus
         for size_info in sizes_info:
             size = size_info.css("a span::text").extract_first()
-            # Status eg: Out Of Stock => out_of_stock
             status = size_info.css("a::attr(title)").extract_first().replace(' ', '_').lower()
             sku = {
                 'color': color,
                 'size': size,
-                status: True,
                 'sku_id': "{}_{}".format(color.replace(' ', '_'), size)
             }
+            if status == 'out_of_stock':
+                sku[status] = True,
             sku.update(price)
             skus.append(sku)
         return skus
