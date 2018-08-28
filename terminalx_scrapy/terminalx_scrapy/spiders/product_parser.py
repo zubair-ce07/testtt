@@ -17,7 +17,6 @@ class Parser(Spider):
     def parse(self, response):
         product = {}
         product_config = self.get_product_config(response)
-        product_data = self.get_product_data(response)
 
         product["retailer_sku"] = product_config['jsonConfig']['productId']
         product["name"] = self.get_name(response)
@@ -32,7 +31,7 @@ class Parser(Spider):
         product["trail"] = response.meta.get("trail", [])
         product["retailer"] = "terminalx"
         product["url_original"] = response.url
-        product["description"] = self.product_description(response)
+        product["description"] = self.get_description(response)
         product["care"] = self.get_care(response)
         product["skus"] = self.get_skus(response, product_config)
         response.meta["pending_media_reqs"] = self.media_requests(response, product_config)
@@ -77,7 +76,7 @@ class Parser(Spider):
         old_price = float(product_config['jsonConfig']['prices']['oldPrice']['amount'])
 
         common_sku["price"] = float(product_config['jsonConfig']['prices']['finalPrice']['amount'])
-        common_sku["currency"] = self.get_product_data(response)['offers']['priceCurrency']
+        common_sku["currency"] = self.get_currency(response)
 
         if old_price != common_sku["price"]:
             common_sku["previous_prices"] = [old_price]
@@ -123,8 +122,9 @@ class Parser(Spider):
         return json_loads(raw_config)['[data-role=swatch-options]']['IdusClass_ProductList/js/swatch-renderer']
 
     @staticmethod
-    def get_product_data(response):
-        return json_loads(response.css('script[type="application/ld+json"]::text').extract_first())
+    def get_currency(response):
+        if '₪' in response.css('span.price::text').extract_first():
+            return 'ILS'
 
     def media_requests(self, response, product_config):
         url = 'https://www.terminalx.com/swatches/ajax/media/'
@@ -155,5 +155,5 @@ class Parser(Spider):
         return [image['large'] for image in images.values()]
 
     @staticmethod
-    def product_description(response):
+    def get_description(response):
         return response.css('.description p ::text').extract()
