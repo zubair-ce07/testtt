@@ -8,9 +8,22 @@ from scrapy.linkextractors import LinkExtractor
 from universal.items import UniversalItem
 
 
-class EnamoraSpider(CrawlSpider):
+def clean_url(encoded_url):
+    def rot47(url):
+        decoded_url = []
+        for ch in url:
+            ordered_ch = ord(ch)
+            if ordered_ch in range(33, 127):
+                decoded_url.append(chr(33 + ((ordered_ch + 14) % 94)))
+            else:
+                decoded_url.append(ch)
+        return ''.join(decoded_url)
+    return rot47(base64.b64decode(encoded_url).decode())
+
+
+class UniversalSpider(CrawlSpider):
     """
-    Crawl spider to scrap `www.enamora.com`
+    Crawl spider to scrap `www.universal.at`
     """
     custom_settings = {
         'DOWNLOAD_DELAY': 0.1,
@@ -23,23 +36,12 @@ class EnamoraSpider(CrawlSpider):
     rules = (
         Rule(LinkExtractor(
             restrict_css='div#nav-main-list span',
-        ), callback='parse_me'),
+            process_value=clean_url,
+        )),
+        Rule(LinkExtractor(
+            restrict_css="div.productlist-product a"
+        ), callback='parse_item')
     )
-
-    def parse_me(self, response):
-        print(response.url)
-
-    def parse_urls(self, encoded_url):
-        def rot47(url):
-            decoded_url = []
-            for ch in url:
-                ordered_ch = ord(ch)
-                if ordered_ch in range(33, 127):
-                    decoded_url.append(chr(33 + ((ordered_ch + 14) % 94)))
-                else:
-                    decoded_url.append(ch)
-            return ''.join(decoded_url)
-        return rot47(base64.b64decode(encoded_url))
 
     def parse_item(self, response):
         item = UniversalItem()
@@ -82,15 +84,15 @@ class EnamoraSpider(CrawlSpider):
 
     @staticmethod
     def extract_name(response):
-        return response.url.split('/')[-1].replace('.html', '').replace('-', ' ')
+        return response.css("h1.headline::text").extract_first()
 
     @staticmethod
     def extract_brand(response):
-        return response.css("a.brand::text").extract_first()
+        return response.css("div.product-manufacturer-logo img::attr(alt)").extract_first()
 
     @staticmethod
     def extract_image_urls(response):
-        return response.css("ol.carousel-indicators li img::attr(src)").extract()
+        return response.css("img.product-gallery-image::attr(src)").extract()
 
     @staticmethod
     def extract_care(response):
@@ -117,10 +119,4 @@ class EnamoraSpider(CrawlSpider):
 
     @staticmethod
     def extract_description(response):
-        response = response.replace(
-            body=response.body.replace(b'<br />', b'\n').replace(b'<br>', b'\n')
-        )
-        headings = response.css("div[id='produkt-details'] span.control-label::text").extract()
-        descriptions = response.css("div[id='produkt-details'] span.information-value::text").extract()
-        return ["{} {}".format(headings[index], description)
-                for index, description in enumerate(descriptions)]
+        return "".join(response.css('div span.long-description *::text').extract()).strip().split('.')
