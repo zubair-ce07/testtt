@@ -82,6 +82,7 @@ if len(argv) == 4 or len(argv) == 8:
                 zipList = zip(listofWeatherData,line.split(","))
                 dictOfWeather = dict(zipList)
                 eachDay.printReport(dictOfWeather)
+                # eachDay.printReportBonus(dictOfWeather)
                 dictOfWeather.clear()
         except FileNotFoundError:
             print("File Not Found")
