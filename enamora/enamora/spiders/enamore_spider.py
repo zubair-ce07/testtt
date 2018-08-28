@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 import scrapy
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
@@ -20,17 +19,14 @@ class EnamoraSpider(CrawlSpider):
     start_urls = ['https://www.enamora.de/']
 
     rules = (
-        Rule(LinkExtractor(allow=('damen/', 'herren/'), deny=('/meine-groesse', )), callback='parse'),
+        Rule(LinkExtractor(
+            allow=('/', ),
+            deny=('/meine-groesse', )
+        )),
+        Rule(LinkExtractor(
+            allow=('.html', )
+        ), callback='parse_item'),
     )
-
-    def parse(self, response):
-        items_pages = response.css("ul.nav.row li a::attr(href)")
-        items_pages.append(response.css("a.btn.next::attr(href)").extract_first())
-        for href in items_pages:
-            yield response.follow(href, callback=self.parse, cookies={'locale': 'en'})
-
-        for href in response.css("div.product > a::attr(href)"):
-            yield response.follow(href, callback=self.parse_item)
 
     def parse_item(self, response):
         item = EnamoraItem()
