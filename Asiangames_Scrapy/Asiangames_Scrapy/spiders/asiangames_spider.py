@@ -4,77 +4,72 @@ from scrapy import Request
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 
-from Asiangames_Scrapy.items import Sport, Schedule
+from Asiangames_Scrapy.items import *
 
 
 class AsianGamesSpider(CrawlSpider):
+    """
+    AsianGamesSpider extracts all the athletes, sports and medal records from
+    the asian games official site
+    """
 
     name = 'AsianGamesSpider'
-    domain = ['https://en.asiangames2018.id/']
+    domains = ['https://en.asiangames2018.id/']
     start_urls = [
+        'https://en.asiangames2018.id/athletes/',
         'https://en.asiangames2018.id/sport/',
+        'https://en.asiangames2018.id/medals/',
     ]
     rules = (
-        Rule(LinkExtractor(restrict_css='.or-sportshub__item'), callback='parse_sport_item'),
-        Rule(LinkExtractor(restrict_css='.or-athletes__list'), callback='parse_athletes')
+        Rule(LinkExtractor(
+            restrict_css='.or-athletes__list'), callback='parse_athlete'
+        ),
+        Rule(LinkExtractor(
+            restrict_css='.or-sportshub__list', allow=r'^(https://en.asiangames2018.id/)sport/[a-zA-z]+/'),
+            callback='parse_sport_item'
+        ),
+        Rule(LinkExtractor(
+            restrict_css='.or-ses-list', allow=r'^(https://en.asiangames2018.id/)medals/[a-zA-z]+/'),
+            callback='parse_medals'
+        ),
+        Rule(LinkExtractor(restrict_css='.or-cta__btn--next'))
     )
 
     def parse_sport_item(self, response):
-        all_links = self._sport_urls(response)
-        athletes_link, schedule_link = all_links
+        schedule_link = self._complete_url(self._sport_urls(response))
 
         sport_item = Sport()
         sport_item['name'] = self._sport_name(response)
-        sport_item['athletes'] = []
         sport_item['schedules'] = []
-        sport_item['schedule_link'] = self._complete_url(schedule_link)
 
         meta = {}
         meta['sport_item'] = sport_item
 
-        url = self._complete_url(athletes_link)
         return Request(
-            url=url, callback=self.parse_athletes, meta=meta
+            url=schedule_link, callback=self.parse_schedule, meta=meta
         )
 
-    def parse_athletes(self, response):
-        sport_item = response.meta['sport_item']
-
-        for athlete_item in self._athlete_items(response):
-
-            athlete = {}
-            athlete['name'] = self._athlete_name(athlete_item)
-            athlete['id'] = self._athlete_id(athlete_item)
-            athlete['img_url'] = self._athlete_image(athlete_item)
-            athlete['country'] = self._athlete_country(athlete_item)
-            sport_item['athletes'].append(athlete)
-
-        next_page_link = self._athlete_next_page_link(response)
-
-        meta = {}
-        meta['sport_item'] = sport_item
-
-        if next_page_link:
-
-            url = self._complete_url(next_page_link)
-            return Request(
-                url=url, callback=self.parse_athletes, meta=meta
-            )
-        else:
-
-            schedule_link = sport_item['schedule_link']
-            del sport_item['schedule_link']
-            return Request(
-                url=schedule_link, callback=self.parse_schedule, meta=meta
-            )
+    def parse_athlete(self, response):
+        athlete = Athlete()
+        athlete['name'] = self._athlete_name(response)
+        athlete['id'] = self._athlete_id(response)
+        athlete['img_url'] = self._athlete_image(response)
+        athlete['country'] = self._athlete_country(response)
+        athlete['sport'] = self._athlete_sport(response)
+        athlete['height'] = self._athlete_height(response)
+        athlete['age'] = self._athlete_age(response)
+        athlete['weight'] = self._athlete_weight(response)
+        athlete['born_date'] = self._athlete_born_date(response)
+        athlete['born_city'] = self._athlete_born_city(response)
+        return athlete
 
     def parse_schedule(self, response):
         sport_item = response.meta['sport_item']
 
         for schedule_item in self._schedule_items(response):
             main_day = self._schedule_main_day(schedule_item)
-
             day_schedules = []
+
             for day_list_item in self._schedule_day_list(schedule_item):
                 schedule = Schedule()
                 schedule['time'] = self._schedule_time(day_list_item)
@@ -85,6 +80,23 @@ class AsianGamesSpider(CrawlSpider):
             sport_item['schedules'].append({main_day: day_schedules})
 
         return sport_item
+
+    def parse_medals(self, response):
+        country_medals = CountryMedals()
+        country_medals['name'] = self._medals_country_name(response)
+        country_medals['gold'], country_medals['silver'], country_medals['bronze'] = self._medals_country_count(
+            response)
+        country_medals['total_medals'] = self._medal_country_total(response)
+        country_medals['sport_medals'] = []
+
+        for medal_sport_row in self._medal_sport_rows(response):
+            sport_medals = SportMedals()
+            sport_medals['name'] = self._medals_sport_name(medal_sport_row)
+            sport_medals['gold'], sport_medals['silver'], \
+            sport_medals['bronze'], sport_medals['total_medals'] = self._medals_sports_count(medal_sport_row)
+            country_medals['sport_medals'].append(sport_medals)
+
+        return country_medals
 
     def _schedule_items(self, response):
         return response.css('.or-disc-day-wrap')
@@ -108,26 +120,69 @@ class AsianGamesSpider(CrawlSpider):
         return response.css('span.or-h-disc-name::text').extract_first().strip()
 
     def _sport_urls(self, response):
-        return response.css('.or-sidecol .or-sp-details-list:last-child a::attr(href)').extract()
+        return response.css('.or-sidecol .or-sp-details-list:last-child a::attr(href)').extract()[1]
 
     def _athlete_items(self, response):
         return response.css('.or-athletes__item')
 
     def _athlete_name(self, response):
-        return response.css('.or-card-athlete__name::attr(title)').extract_first()
+        name = response.css('.or-athlete-profile__name--name::text').extract_first()
+        surname = response.css('.or-athlete-profile__name--surname::text').extract_first()
+        if surname:
+            return '{} {}'.format(name, surname)
+        return name
 
     def _athlete_id(self, response):
-        output = response.css('.or-athletes__link::attr(href)').extract_first()
-        return findall(r'\d+', output)[0]
+        return findall(r'\d+', response.url)[1]
 
     def _athlete_image(self, response):
-        return response.css('.or-card-athlete__photo img::attr(src)').extract_first()
+        return response.css('.or-athlete-profile__pic img::attr(src)').extract_first()
+
+    def _athlete_profile_url(self, response):
+        return response.css('.or-athletes__link::attr(href)').extract_first()
 
     def _athlete_country(self, response):
-            return response.css('.or-card-athlete__country img::attr(alt)').extract_first()
+        return response.css('.or-athlete-profile__nationality--flag::attr(alt)').extract_first()
 
     def _athlete_next_page_link(self, response):
         return response.css('.or-cta__btn--next::attr(href)').extract_first()
 
     def _complete_url(self, url):
-        return self.domain[0][:-1] + url
+        # to remove the last slash(/)
+        return self.domains[0][:-1] + url
+
+    def _athlete_sport(self, response):
+        return response.css('.or-athlete-profile__discipline::text').extract_first()
+
+    def _athlete_height(self, response):
+        return response.css('.or-anagraphic__block .or-anagraphic__data')[2].css('::text').extract_first().strip()
+
+    def _athlete_age(self, response):
+        return response.css('.or-anagraphic__block .or-anagraphic__data::text').extract()[0].strip()
+
+    def _athlete_weight(self, response):
+        return response.css('.or-anagraphic__block .or-anagraphic__data')[3].css('::text').extract_first().strip()
+
+    def _athlete_born_date(self, response):
+        return response.css('.or-athlete__birth--date::text').extract_first()
+
+    def _athlete_born_city(self, response):
+        return response.css('.or-athlete__birth--city::text').extract_first()
+
+    def _medals_country_name(self, response):
+        return response.css('.or-country-header h2::text').extract_first()
+
+    def _medals_country_count(self, response):
+        return response.css('.or-medal-number::text').extract()
+
+    def _medal_sport_rows(self, response):
+        return response.css('#or-tbl-country-medal .or-table-list-groupedRow')
+
+    def _medals_sport_name(self, response):
+        return response.css('a::attr(title)').extract_first()
+
+    def _medals_sports_count(self, response):
+        return response.css('.or-md::text').extract()
+
+    def _medal_country_total(self, response):
+        return response.css('.or-value::text').extract_first()

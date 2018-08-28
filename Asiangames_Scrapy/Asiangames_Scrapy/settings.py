@@ -64,9 +64,12 @@ ROBOTSTXT_OBEY = True
 
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
-#ITEM_PIPELINES = {
-#    'Asiangames_Scrapy.pipelines.AsiangamesScrapyPipeline': 300,
-#}
+ITEM_PIPELINES = {
+   # 'Asiangames_Scrapy.pipelines.AsiangamesScrapyPipeline': 300,
+    'Asiangames_Scrapy.pipelines.AthleteItemExportPipeline': 300,
+    'Asiangames_Scrapy.pipelines.SportItemExportPipeline': 400,
+    'Asiangames_Scrapy.pipelines.MedalItemExportPipline': 500
+}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://doc.scrapy.org/en/latest/topics/autothrottle.html
