@@ -12,12 +12,17 @@ class UllapopkenCrawler(CrawlSpider, UllapopkenParser):
     custom_settings = {
         'DOWNLOAD_DELAY': 1
     }
-    name = 'ullapopken'
 
+    name = 'ullapopken'
     start_urls = ["https://www.ullapopken.de/"]
-    rules = (Rule(LinkExtractor(restrict_css='.top_level_nav', deny='.*sale.*'),
+
+    top_navigation = '.top_level_nav'
+    category_navigation = '.toplevel > .nav_content'
+    denied_top_nav = '.*sale.*'
+
+    rules = (Rule(LinkExtractor(restrict_css=top_navigation, deny=denied_top_nav),
                   follow=True),
-             Rule(LinkExtractor(restrict_css='.toplevel > .nav_content'),
+             Rule(LinkExtractor(restrict_css=category_navigation),
                   callback='parse_category_parameters'))
 
     article_url_t = 'https://www.ullapopken.de/api/res/article/{}'
@@ -41,6 +46,10 @@ class UllapopkenCrawler(CrawlSpider, UllapopkenParser):
         yield from self.item_requests(items, categories)
 
         return self.pagination_requests(response_json['pagination'], response.url, categories)
+
+    def category_request(self, category, grouping, page=1):
+        url = self.category_url_t.format(page, category, grouping)
+        return Request(url=url, callback=self.parse_category)
 
     def pagination_requests(self, pagination, url, categories):
         if pagination['currentPage'] != 0:
@@ -71,10 +80,6 @@ class UllapopkenCrawler(CrawlSpider, UllapopkenParser):
         variants.remove(item['code'])
 
         return variants
-
-    def category_request(self, category, grouping, page=1):
-        url = self.category_url_t.format(page, category, grouping)
-        return Request(url=url, callback=self.parse_category)
 
     @staticmethod
     def categories(response):

@@ -15,15 +15,6 @@ class UllapopkenParser:
     article_url_t = 'https://www.ullapopken.de/api/res/article/{}'
     image_url_t = 'https://up.scene7.com/is/image/UP/{}?fit=constrain,1&wid=1400&hei=2100'
 
-    def parse_color(self, response):
-        raw_item = json.loads(response.text)
-        item = response.meta.get('item')
-
-        item['image_urls'] += self.image_urls(raw_item)
-        item['skus'] += self.skus(raw_item)
-
-        return self.color_request_or_return_item(item)
-
     def parse_item(self, response):
         raw_item = json.loads(response.text)
         categories = response.meta.get('categories')
@@ -42,25 +33,36 @@ class UllapopkenParser:
         item['skus'] = self.skus(raw_item)
         item['requests'] = self.color_requests(variants)
 
-        return self.color_request_or_return_item(item)
+        return self.next_request_or_item(item)
 
-    @staticmethod
-    def color_request_or_return_item(item):
+    def parse_color(self, response):
+        raw_item = json.loads(response.text)
+        item = response.meta.get('item')
+
+        item['image_urls'] += self.image_urls(raw_item)
+        item['skus'] += self.skus(raw_item)
+
+        return self.next_request_or_item(item)
+
+    def color_requests(self, variants):
+        return [Request(url=self.article_url_t.format(variant), callback=self.parse_color)
+                for variant in variants]
+
+    def next_request_or_item(self, item):
         if not item['requests']:
             del item['requests']
             return item
 
-        color_request = item['requests'].pop()
-        color_request.meta['item'] = item
+        request = item['requests'].pop()
+        request.meta['item'] = item
 
-        return color_request
+        return request
 
     def image_urls(self, raw_item):
         picture_codes = self.picture_codes(raw_item)
         return [self.image_url_t.format(picture_code) for picture_code in picture_codes]
 
-    @staticmethod
-    def picture_codes(raw_item):
+    def picture_codes(self, raw_item):
         raw_pictures = raw_item['pictureMap']
         return [raw_pictures['code']] + raw_pictures['detailCodes']
 
@@ -86,8 +88,7 @@ class UllapopkenParser:
 
         return sku_common
 
-    @staticmethod
-    def size(raw_sku):
+    def size(self, raw_sku):
         return f'{raw_sku["sizeCharacteristic"]["sizeTypeValue"]}/{raw_sku["displaySize"]}' \
             if raw_sku["sizeCharacteristic"] else raw_sku["displaySize"]
 
@@ -102,21 +103,14 @@ class UllapopkenParser:
 
         return pricing
 
-    @staticmethod
-    def formatted_price(price):
+    def formatted_price(self, price):
         return int(float(price) * 100)
 
-    def color_requests(self, variants):
-        return [Request(url=self.article_url_t.format(variant), callback=self.parse_color)
-                for variant in variants]
-
-    @staticmethod
-    def description(raw_item):
+    def description(self, raw_item):
         selector = Selector(text=list(raw_item['description'].values())[0])
         return selector.css('*::text').re_first('.*[\S].*').strip().split('. ')
 
-    @staticmethod
-    def care(raw_item):
+    def care(self, raw_item):
         care = list(raw_item['careInstructions'].values())[0]
         return [c['description'] for c in care]
 
