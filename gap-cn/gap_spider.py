@@ -24,7 +24,7 @@ class GapCrawler(CrawlSpider):
     rules = (
         Rule(LinkExtractor(restrict_css=listing_css), callback='parse_category'),
         Rule(LinkExtractor(restrict_css=('.categoryProductItem'), process_value=url_query_cleaner),
-             callback=parser.parse_item),
+             callback=parser._parse_item),
     )
 
     def parse_category(self, response):
@@ -60,11 +60,15 @@ class GapCrawler(CrawlSpider):
 
     def parse_page_items(self, response):
         json_response = json.loads(response.text)
-        if json_response['status'] == "success":
-            ajax_response = Selector(json_response['message'])
-            products_urls = ajax_response.css('.categoryProductItem h5 a::attr(href)').extract()
-            for url in products_urls:
-                link = url_query_cleaner(response.urljoin(url))
-                yield FormRequest(url=link, callback=self.parser.parse_item)
 
-            return self.next_page_req(ajax_response)
+        if json_response['status'] != "success":
+            return
+
+        ajax_response = Selector(json_response['message'])
+        products_urls = ajax_response.css('.categoryProductItem h5 a::attr(href)').extract()
+
+        for url in products_urls:
+            link = url_query_cleaner(response.urljoin(url))
+            yield FormRequest(url=link, callback=self.parser._parse_item)
+
+        return self.next_page_req(ajax_response)

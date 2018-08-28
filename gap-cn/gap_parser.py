@@ -18,7 +18,7 @@ class GapParser:
                   ('婴儿', 'baby')]
     care_words = ['洗', '棉', '干', '熨', '聚酯', '面料', '纤', '%']
 
-    def parse_item(self, response):
+    def _parse_item(self, response):
         raw_item = self._extract_raw_product(response)
 
         item = GapItem()
@@ -43,14 +43,15 @@ class GapParser:
         item = response.meta.get('item')
         stock = json.loads(response.text)
 
-        item['skus'] = [self._sku_status(stock, sku) for sku in item['skus']]
+        item['skus'] = self._update_skus_status(stock, item['skus'])
         return item
     
-    def _sku_status(self, stock, sku):
-        if not stock[sku['id']]:
-            sku['out_of_stock'] = True
+    def _update_skus_status(self, stock, skus):
+        for sku in skus:
+            if not stock[sku['id']]:
+                sku['out_of_stock'] = True
 
-        return sku
+        return skus
 
     def _get_gender(self, categories):
         for token, gender in self.gender_map:
@@ -61,7 +62,7 @@ class GapParser:
     def _get_care(self, response):
         css = '.pdp-mainImg td::text, #materialFeatures td::text'
         raw_care = response.css(css).extract()
-        return [self.clean_text(care) for care in raw_care if self.is_care(care)]
+        return [self._clean_text(care) for care in raw_care if self._is_care(care)]
     
     def _get_description(self, response):
         description = response.css('#short_description').xpath(
@@ -69,8 +70,8 @@ class GapParser:
         css = '.pdp-mainImg td::text, #materialFeatures td::text'
         raw_description = response.css(css).extract()
 
-        description += [desc for desc in raw_description if not self.is_care(desc)]
-        return [self.clean_text(d) for d in description if len(d.strip()) > 1]
+        description += [desc for desc in raw_description if not self._is_care(desc)]
+        return [self._clean_text(d) for d in description if len(d.strip()) > 1]
 
     def _get_image_urls(self, response):
         return response.css('.more-views a::attr(href)').extract()
@@ -100,23 +101,23 @@ class GapParser:
 
     def _get_price(self, selector):
         price = float(selector.css('::attr(data-final_price)').extract_first())
-        return self.to_cent(price)
+        return self._to_cent(price)
     
     def _get_previous_price(self, selector):
         previous_price = float(selector.css('::attr(data-price)').extract_first())
-        return self.to_cent(previous_price)
+        return self._to_cent(previous_price)
 
     def _extract_raw_product(self, response):
         xpath = '//script[contains(., "var product = {")]/text()'
         script = response.xpath(xpath).extract_first()
-        raw_item = re.findall(r"({.*?})", self.clean_text(script))[0]
+        raw_item = re.findall(r"({.*?})", self._clean_text(script))[0]
         return demjson.decode(raw_item)
 
-    def is_care(self, care_text):
+    def _is_care(self, care_text):
         return any(word in care_text for word in self.care_words)
 
-    def to_cent(self, price):
+    def _to_cent(self, price):
         return round(price*100)
 
-    def clean_text(self, text):
+    def _clean_text(self, text):
         return re.sub(r'\s+', ' ', text.strip())
