@@ -20,11 +20,11 @@ class EnamoraSpider(CrawlSpider):
 
     rules = (
         Rule(LinkExtractor(
-            allow=('/', ),
-            deny=('/meine-groesse', )
+            allow=('/',),
+            deny=('/meine-groesse',)
         )),
         Rule(LinkExtractor(
-            allow=('.html', )
+            allow=('.html',)
         ), callback='parse_item'),
     )
 
