@@ -13,20 +13,22 @@ class Canda(CrawlSpider):
     custom_settings = {
         'DOWNLOAD_DELAY': 1
     }
+
     name = 'c-and-a'
     start_urls = ['https://www.c-and-a.com/de/de/shop/']
 
     navigation_and_pagination = '.nav-main__list-item, .pagination__next.js-view-click'
+    product_css = '.product-tile'
     rules = (Rule(LinkExtractor(restrict_css=navigation_and_pagination,
                                 tags=('li', 'a'), attrs=('data-url', 'href')), follow=True),
-             Rule(LinkExtractor(restrict_css='.product-tile'), callback='parse_item'))
+             Rule(LinkExtractor(restrict_css=product_css), callback='parse_item'))
 
-    currencies = {'€': 'EUR'}
     color_parameters = (
         ('storeId', '10154'),
         ('langId', '-3')
     )
     color_url_t = 'https://www.c-and-a.com/webapp/wcs/stores/servlet/product/change/color?'
+
     genders = [
         ('herren', 'male'),
         ('damen', 'female'),
@@ -35,6 +37,24 @@ class Canda(CrawlSpider):
         ('baby', 'kids'),
         ('kinder', 'kids')
     ]
+    currencies = {'€': 'EUR'}
+
+    def parse_item(self, response):
+        item = CandaItem()
+        item['brand'] = self.brand_name(response)
+        item['name'] = self.title(response)
+        item['url'] = response.url
+        item['categories'] = self.categories(response)
+        item['gender'] = self.gender(response)
+        retailer_sku = self.retailer_sku(response)
+        item['retailer_sku'] = retailer_sku
+        item['description'] = self.description(response)
+        item['care'] = self.care(response)
+        item['image_urls'] = self.image_urls(response)
+        item['skus'] = self.skus(response, retailer_sku)
+        item['requests'] = self.make_color_requests(response)
+
+        return self.next_request_or_item(item)
 
     def parse_color(self, response):
         item = response.meta.get('item')
@@ -43,13 +63,38 @@ class Canda(CrawlSpider):
         item['image_urls'] += self.image_urls(selector)
         item['skus'] += self.skus(selector, item['retailer_sku'])
 
-        return self.color_request_or_return_item(item)
+        return self.next_request_or_item(item)
+
+    def make_color_requests(self, response):
+        color_ids = self.color_ids(response)
+        product_id = self.product_id(response)
+
+        color_formdata = {'productId': product_id}
+
+        color_requests = []
+        for color_id in color_ids:
+            color_formdata['colorId'] = color_id
+            color_request = FormRequest(url=f'{self.color_url_t}{urlencode(self.color_parameters)}',
+                                        callback=self.parse_color, formdata=color_formdata)
+            color_requests.append(color_request)
+
+        return color_requests
+
+    def next_request_or_item(self, item):
+        if not item['requests']:
+            del item['requests']
+            return item
+
+        request = item['requests'].pop()
+        request.meta['item'] = item
+
+        return request
 
     def skus(self, selector, retailer_sku):
         sku_common = self.sku_common(selector)
         out_of_stock_sizes = self.out_of_stock_sizes(selector)
-        skus = []
 
+        skus = []
         for size in self.all_sizes(selector):
             sku = sku_common.copy()
             sku['size'] = size
@@ -68,51 +113,7 @@ class Canda(CrawlSpider):
 
         return sku_common
 
-    def parse_item(self, response):
-        item = CandaItem()
-        item['brand'] = self.brand_name(response)
-        item['name'] = self.title(response)
-        item['url'] = response.url
-        item['categories'] = self.categories(response)
-        item['gender'] = self.gender(response)
-        retailer_sku = self.retailer_sku(response)
-        item['retailer_sku'] = retailer_sku
-        item['description'] = self.description(response)
-        item['care'] = self.care(response)
-        item['image_urls'] = self.image_urls(response)
-        item['skus'] = self.skus(response, retailer_sku)
-        item['requests'] = self.make_color_requests(response)
-
-        return self.color_request_or_return_item(item)
-
-    @staticmethod
-    def color_request_or_return_item(item):
-        if not item['requests']:
-            del item['requests']
-            return item
-
-        color_request = item['requests'].pop()
-        color_request.meta['item'] = item
-
-        return color_request
-
-    def make_color_requests(self, response):
-        color_ids = self.color_ids(response)
-        product_id = self.product_id(response)
-
-        color_requests = []
-        color_formdata = {'productId': product_id}
-
-        for color_id in color_ids:
-            color_formdata['colorId'] = color_id
-            color_request = FormRequest(url=f'{self.color_url_t}{urlencode(self.color_parameters)}',
-                                        callback=self.parse_color, formdata=color_formdata)
-            color_requests.append(color_request)
-
-        return color_requests
-
-    @staticmethod
-    def color(response):
+    def color(self, response):
         return response.css('.product-stage__color::text').extract_first().split(':')[1].strip()
 
     def pricing(self, response):
@@ -128,20 +129,17 @@ class Canda(CrawlSpider):
 
         return pricing
 
-    @staticmethod
-    def formatted_price(price):
+    def formatted_price(self, price):
         return int(''.join(re.findall("\d+", price)))
 
     def currency(self, response):
         return self.currencies.get(self.currency_symbol(response))
 
-    @staticmethod
-    def currency_symbol(response):
+    def currency_symbol(self, response):
         price = response.css('.product-stage__price span::text').extract_first()
         return re.findall(r"[^\w\d_\s,.\\]", price, re.UNICODE)[0]
 
-    @staticmethod
-    def brand_name(response):
+    def brand_name(self, response):
         return response.css('.box__logolist-brand::attr(alt)').extract_first(default='C AND A')
 
     def gender(self, response):
@@ -151,43 +149,33 @@ class Canda(CrawlSpider):
             if gender_token in category_url:
                 return gender
 
-    @staticmethod
-    def image_urls(response):
+    def image_urls(self, response):
         return response.css('[data-zoom-id="productImage"]::attr(href)').extract()
 
-    @staticmethod
-    def title(response):
-        return "".join([a.strip() for a in response.css('.product-stage__title::text').extract()])
+    def title(self, response):
+        return response.css('.product-stage__title::text').re_first('.*\S.*').strip()
 
-    @staticmethod
-    def retailer_sku(response):
+    def retailer_sku(self, response):
         return re.findall('(\d+)/', response.url)[0]
 
-    @staticmethod
-    def description(response):
-        return list(filter(None, [a.strip() for a in response.css('.col-md-6 li::text').extract()]))
+    def description(self, response):
+        return [a.strip() for a in response.css('.col-md-6 li::text').re('.*\S.*')]
 
-    @staticmethod
-    def care(response):
+    def care(self, response):
         return response.css('td:not(.util-text-center)::text').extract()
 
-    @staticmethod
-    def all_sizes(response):
+    def all_sizes(self, response):
         return [s.strip() for s in response.css('.size-list li::text').extract()]
 
-    @staticmethod
-    def out_of_stock_sizes(response):
+    def out_of_stock_sizes(self, response):
         return [s.strip() for s in response.css('.size-list .is-sold::text').extract()]
 
-    @staticmethod
-    def categories(response):
+    def categories(self, response):
         raw_category = response.css('.util-link-left::text').extract_first().strip()
         return [re.sub(r"Zurück zu ", '', raw_category)]
 
-    @staticmethod
-    def color_ids(response):
+    def color_ids(self, response):
         return response.css('.box--product .color-list :not(.is-active)::attr(data-color)').extract()
 
-    @staticmethod
-    def product_id(response):
+    def product_id(self, response):
         return response.css('.product-stage::attr(data-productid)').extract_first()
