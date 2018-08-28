@@ -1,8 +1,10 @@
 from sys import argv
-from WmTask1 import WmTask1
+from yearReport import YearReport
+from monthReport import MonthReport
 
-if len(argv) == 4 and "-e" in argv:
+if len(argv) == 4:
     # print("Task1")
+    
     fileName = argv[1] + "Murree_weather_" + argv[3] + "_"
     # print(fileName)
 
@@ -14,21 +16,52 @@ if len(argv) == 4 and "-e" in argv:
                         "Min Sea Level PressurehPa", "Max VisibilityKm", "Mean VisibilityKm", "Min VisibilitykM", 
                         "Max Wind SpeedKm/h", "Mean Wind SpeedKm/h", "Max Gust SpeedKm/h","PrecipitationCm",
                          "CloudCover", "Events","WindDirDegrees"]
-    x = WmTask1()
-    for month in listOfMon:
-        fullFileName = fileName + month + ".txt"
+    #Task 1
+    if "-e" in argv:
+        yearReport = YearReport()
+        for month in listOfMon:
+            fullFileName = fileName + month + ".txt"
+            try:
+                fileReader = open(fullFileName).readlines()[1:]
+                for line in fileReader:
+                    print(line)
+                    if len(line.strip()) == 16:
+                        continue
+                    zipList = zip(listofWeatherData,line.split(","))
+                    dictOfWeather = dict(zipList)
+                    yearReport.setAccurateDate(dictOfWeather)
+                    dictOfWeather.clear()
+            except FileNotFoundError:
+                # print(fullFileName)
+                continue
+        yearReport.printReport()
+    #Task 2
+    elif "-a" in argv:
+        monthReport = MonthReport()
+        yearMonth = argv[3].split("/")
+        fileName = argv[1] + "Murree_weather_" + yearMonth[0] + "_"
         try:
-            fileReader = open(fullFileName).readlines()[2:]
+            fullFileName = fileName + listOfMon[int(yearMonth[1])-1] + ".txt"
+        except IndexError:
+            print("Month argument missing!")
+            exit(1)
+        # print(fullFileName)
+        try:
+            fileReader = open(fullFileName).readlines()[1:]
             for line in fileReader:
                 if len(line.strip()) == 16:
                     continue
                 zipList = zip(listofWeatherData,line.split(","))
                 dictOfWeather = dict(zipList)
-                x.setAccurateDate(dictOfWeather)
+                monthReport.calSumOfData(dictOfWeather)
                 dictOfWeather.clear()
         except FileNotFoundError:
-            # print(fullFileName)
-            continue
-    x.printReport()
+            print("File Not Found")
+        monthReport.takeAvgOfData()
+        monthReport.printMonthReport()
+    # Task3
+    elif "-c" in argv:
+        
+
 else:
-    print('No')
+    print('Arguments missing')

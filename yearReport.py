@@ -1,5 +1,6 @@
 from math import inf
-class WmTask1:
+
+class YearReport:
 
     def __init__(self):
         self.maxTempDate = ""
@@ -7,26 +8,21 @@ class WmTask1:
         self.minTempDate = ""
         self.minTemp = +inf
         self.maxHumidityDate = ""
-        self.maxHumidity = 0
+        self.maxHumidity = -inf
 
     def setAccurateDate(self,weatherDict):
-        if weatherDict["Max TemperatureC"] == '':
-            weatherDict["Max TemperatureC"] = 0
-        if weatherDict["Min TemperatureC"] == '':
-            weatherDict["Min TemperatureC"] = 0
-        if weatherDict["Max Humidity"] == '':
-            weatherDict["Max Humidity"] = 0
-        if self.maxTemp < int(weatherDict["Max TemperatureC"]):
-            self.maxTempDate = weatherDict["PKT"]
-            self.maxTemp = int(weatherDict["Max TemperatureC"])
-        
-        if self.minTemp > int(weatherDict["Min TemperatureC"]):
-            self.minTempDate = weatherDict["PKT"]
-            self.minTemp = int(weatherDict["Min TemperatureC"])
-        
-        if self.maxHumidity < int(weatherDict["Max Humidity"]):
-            self.maxHumidityDate = weatherDict["PKT"]
-            self.maxHumidity = int(weatherDict["Max Humidity"])
+        if weatherDict["Max TemperatureC"] != '':
+            if self.maxTemp < int(weatherDict["Max TemperatureC"]):
+                self.maxTempDate = weatherDict["PKT"]
+                self.maxTemp = int(weatherDict["Max TemperatureC"])
+        if weatherDict["Min TemperatureC"] != '':    
+            if self.minTemp > int(weatherDict["Min TemperatureC"]):
+                self.minTempDate = weatherDict["PKT"]
+                self.minTemp = int(weatherDict["Min TemperatureC"])
+        if weatherDict["Max Humidity"] != '':    
+            if self.maxHumidity < int(weatherDict["Max Humidity"]):
+                self.maxHumidityDate = weatherDict["PKT"]
+                self.maxHumidity = int(weatherDict["Max Humidity"])
 
     def printReport(self):
                             # Highest: 45C on June 23
