@@ -32,7 +32,7 @@ class Parser(Spider):
         product["trail"] = response.meta.get("trail", [])
         product["retailer"] = "terminalx"
         product["url_original"] = response.url
-        product["description"] = product_data['description']
+        product["description"] = self.product_description(response)
         product["care"] = self.get_care(response)
         product["skus"] = self.get_skus(response, product_config)
         response.meta["pending_media_reqs"] = self.media_requests(response, product_config)
@@ -153,3 +153,7 @@ class Parser(Spider):
     @staticmethod
     def image_urls(images):
         return [image['large'] for image in images.values()]
+
+    @staticmethod
+    def product_description(response):
+        return response.css('.description p ::text').extract()
