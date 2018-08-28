@@ -51,7 +51,7 @@ class WeatherManArgsParser(argparse.ArgumentParser):
         When an error will occur in any app's args this function will print help for that specific parser.
         :param message: Error message
         """
-        sys.stderr.write('Error: {}\n'.format(message))
+        sys.stderr.write(f'Error: {message}\n')
         self.print_help()
         sys.exit(2)
 

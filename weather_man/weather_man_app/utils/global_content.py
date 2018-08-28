@@ -56,8 +56,8 @@ class ArgsParserCategoryHandler:
         Yield constants which are used throughout the application and are options in args parser for weather data.
         :rtype: str
         """
-        for constant in ArgsParserCategoryHandler.__args_parser_categories:
-            yield constant
+        for category in ArgsParserCategoryHandler.__args_parser_categories:
+            yield category
 
 
 class DateMapper:

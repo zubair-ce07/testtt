@@ -12,7 +12,6 @@ class WeatherMan:
     Contains complete flow required for working of weather man.
     """
     def __init__(self):
-        self.data = None
         self.results = None
 
     @prepare_input
@@ -79,6 +78,6 @@ class WeatherMan:
          year with month like 2011/1
         :return:
         """
-        getattr(self, 'generate_{}_result'.format(category))(
+        getattr(self, f'generate_{category}_result')(
             category=category, file_path=file_path, period=year_month
         )

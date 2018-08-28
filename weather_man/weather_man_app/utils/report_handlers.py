@@ -3,6 +3,8 @@
 All implementations regarding reports handling and calculations are done here, reports are managed and printed from
 this script as well.
 """
+import statistics
+
 from colorama import Fore, Style
 
 from weather_man_app.utils.global_content import MathHelper, ReportsHelper, DateMapper
@@ -41,12 +43,9 @@ class ResultsCalculator:
         :param weather_info: New entry to check
         :param report: Empty or already written report
         """
-        report['average_highest_temp']['value'] = (sum(weather_info['max_temp']) /
-                                                   float(len(weather_info['max_temp'])))
-        report['average_lowest_temp']['value'] = (sum(weather_info['min_temp']) /
-                                                  float(len(weather_info['min_temp'])))
-        report['average_mean_humidity']['value'] = (sum(weather_info['mean_humidity']) /
-                                                    float(len(weather_info['mean_humidity'])))
+        report['average_highest_temp']['value'] = statistics.mean(weather_info['max_temp'])
+        report['average_lowest_temp']['value'] = statistics.mean(weather_info['min_temp'])
+        report['average_mean_humidity']['value'] = statistics.mean(weather_info['mean_humidity'])
 
 
 class ReportsHandler:
@@ -106,10 +105,10 @@ class ReportsHandler:
         Print a specific report of weather data.
         """
         report_output = ReportsHelper.get_report_output(self.report_category)
-        for output_category, str_expression in report_output.items():
+        for output_category, output_expresstion in report_output.items():
             if 'day' in self.report[output_category].keys():
-                print(str_expression.format(
+                print(output_expresstion.format(
                     self.report[output_category]['value'], self.report[output_category]['day'])
                 )
             else:
-                print(str_expression.format(self.report[output_category]['value']))
+                print(output_expresstion.format(self.report[output_category]['value']))
