@@ -41,27 +41,6 @@ class WoolrichParseSpider(BaseParseSpider, MixinUS):
 
         return self.next_request_or_garment(garment)
 
-    def color_requests(self, response, product_id):
-        attributes_map = self.get_product_attributes(response)
-
-        color_map = attributes_map.pop('color')
-        attribute_value = color_map.get('value')
-
-        formdata = {'action': 'add', 'product_id': product_id}
-        color_requests = []
-        for color, color_id in color_map['variants']:
-            formdata[attribute_value] = color_id
-            
-            raw_sku = {'colour': color, 'currency': attributes_map.get('currency')}
-            meta = {'raw_sku': raw_sku, 'attributes_map': attributes_map}
-            url = self.request_api_url.format(product_id)
-
-            request = FormRequest(url=url, meta=meta, formdata=formdata, 
-                            callback=self.parse_color)
-            color_requests += [request]
-        
-        return color_requests
-
     def parse_color(self, response):
         garment = response.meta.get('garment')
 
@@ -87,6 +66,27 @@ class WoolrichParseSpider(BaseParseSpider, MixinUS):
 
         garment['skus'].update(self.make_sku(response))
         return self.next_request_or_garment(garment)
+
+    def color_requests(self, response, product_id):
+        attributes_map = self.get_product_attributes(response)
+
+        color_map = attributes_map.pop('color')
+        attribute_value = color_map.get('value')
+
+        formdata = {'action': 'add', 'product_id': product_id}
+        color_requests = []
+        for color, color_id in color_map['variants']:
+            formdata[attribute_value] = color_id
+            
+            raw_sku = {'colour': color, 'currency': attributes_map.get('currency')}
+            meta = {'raw_sku': raw_sku, 'attributes_map': attributes_map}
+            url = self.request_api_url.format(product_id)
+
+            request = FormRequest(url=url, meta=meta, formdata=formdata, 
+                            callback=self.parse_color)
+            color_requests += [request]
+        
+        return color_requests
 
     def variant_requests(self, response, variant_type, callback):
         attributes_map = response.meta.get('attributes_map')
