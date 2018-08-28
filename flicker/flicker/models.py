@@ -1,4 +1,4 @@
-from flask.ext.sqlalchemy import SQLAlchemy
+from flask_sqlalchemy import SQLAlchemy
 import datetime
 from flicker import app
 
@@ -25,6 +25,13 @@ class Tag(db.Model):
     def __init__(self, tag, post_id):
         self.tag = tag
         self.post_id = post_id
+
+class Follow(db.Model):
+    FollowingUserId = db.Column(db.Integer, db.ForeignKey('user.uid'), primary_key=True)
+    FollowedUserId = db.Column(db.Integer, db.ForeignKey('user.uid'), primary_key=True)
+    def __init__(self, FollowingUserId, FollowedUserId):
+        self.FollowingUserId = FollowingUserId
+        self.FollowedUserId = FollowedUserId
 
 
 class Posts(db.Model):

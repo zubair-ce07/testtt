@@ -15,7 +15,7 @@
          {% endif %}
    </ul>
 </nav>
-<div class="container">
+<div class="container-fluid">
 <h2>User List</h2>
 <table class="table">
   <thead>
@@ -27,11 +27,13 @@
   </thead>
   <tbody>
     {% for user in users_list %}
-    <tr>
-      <td>{{ user.username }}</td>
-      <td>{{ user.email }}</td>
-      <td><a href="/user/{{ user.uid }}/{{user.username}}">Link</td>
-    </tr>
+      {% if session['current_user'] != user.username  %}
+      <tr>
+        <td>{{ user.username }}</td>
+        <td>{{ user.email }}</td>
+        <td><a href="/user/{{ user.uid }}">Link</td>
+      </tr>
+      {% endif %}
     {% endfor %}
   </tbody>
 </table>

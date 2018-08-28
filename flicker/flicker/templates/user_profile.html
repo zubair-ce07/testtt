@@ -1,0 +1,37 @@
+
+
+{% extends "base.html" %}
+{% block title %}Users{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='profile_style.css') }}">
+<nav>
+   <h1>Blog</h1>
+   <ul>
+      {% if session['user_available'] %}
+      <li><span>{{ session['current_user'] }}</span>
+      <li><a href="{{ url_for('logout') }}">Log Out</a>
+         {% else %}
+      <li><a href="{{ url_for('signup') }}">Register</a>
+      <li><a href="{{ url_for('signin') }}">Log In</a>
+         {% endif %}
+   </ul>
+</nav>
+<div class="card">
+   <!-- <img src="/w3images/team2.jpg" alt="John" style="width:100%"> -->
+   <h1>{{ user_data[0].username }}</h1>
+   <p class="title">{{ user_data[0].email }}</p>
+   <form  action="" method="POST">
+      {% if follow_status %}
+      <input type="hidden" name="follow_status_form" value="1">
+      {% else %}
+      <input type="hidden" name="follow_status_form" value="0">
+      {% endif %}
+      {% if follow_status %}
+      <p><button>Un Follow</button></p>
+      {% else %}
+      <p><button>Follow</button></p>
+      {% endif%}
+   </form>
+</div>
+{% endblock %}

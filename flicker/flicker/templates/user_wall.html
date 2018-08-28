@@ -1,3 +1,5 @@
+
+
 <!doctype html>
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 <nav>
@@ -14,29 +16,14 @@
    <h1>{% block title %}Posts{% endblock %}</h1>
    {% if session['user_available'] %}
    <a class="action" href="{{ url_for('add_post') }}">New</a><br/>
-   <a class="action" href="{{ url_for('show_all_users') }}">All Users</a><br/>
-   <a class="action" href="{{ url_for('user_wall') }}">Wall</a>
+   <a class="action" href="{{ url_for('show_all_users') }}">All Users</a><br>
+   <a class="action" href="{{ url_for('index') }}">Home</a>
    {% endif %}
    {% endblock %}
    {% block content %}
    <div class="ps">
    {% for posts_data in posts_data_list %}
-   {% if posts_data.post_privacy == 1 or posts_data.puid == session['current_user_id'] %}
-   <div class="panel panel-info">
-   <div class="panel-heading">
-   <div>
-      <h3 class="panel-title">{{posts_data.title}}</h3>
-   </div>
-   <div class="panel-body">
-      <img src="{{ url_for('static', filename = posts_data.image_url) }}"
-        class="img-thumbnail" width="300dp" height="300dp" />
-      </div
-      <div id="icon">
-         BY: {{posts_data.username}}
-      </div>
-      <hr>
-   </div>
-   {% elif posts_data.puid in followed_users_list and posts_data.post_privacy == 0 %}
+   {% if posts_data.puid == session['current_user_id'] %}
    <div class="panel panel-info">
       <div class="panel-heading">
          <div>
@@ -47,7 +34,7 @@
               class="img-thumbnail" width="300dp" height="300dp" />
             </div
             <div id="icon">
-               BY: {{posts_data.username}}
+               BY: {{ session['current_user'] }}
             </div>
             <hr>
          </div>
