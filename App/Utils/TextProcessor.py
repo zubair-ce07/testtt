@@ -12,3 +12,13 @@ class TextProcessor:
             if pos == 'NN' or pos == 'VBD':
                 extracted_words.append(word)
         return extracted_words
+
+    def dictionary_generator(self, words_list):
+        extracted_words = self.nav_extractor(words_list)
+        words_dict = {}
+        for word in extracted_words:
+            if words_dict.get(word):
+                words_dict[word] = words_dict[word] + 1
+            else:
+                words_dict[word] = 1
+        return words_dict

@@ -17,8 +17,8 @@ def main_controller():
     url = input_sys.get_input()
     if url:
         words = crawler.crawl_url(url)
-        extracted_words = text_processor.nav_extractor(words)
-        print(extracted_words)
+        words_dict = text_processor.dictionary_generator(words)
+        print(words_dict)
     else:
         output_sys.invalid_url_warning()
         main_controller()
