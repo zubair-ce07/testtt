@@ -7,7 +7,7 @@ from scrapy import Spider
 
 class Parser(Spider):
     name = "parser"
-    possible_genders = {
+    gender_map = {
         "גברים": "men",
         "נשים": "women",
         "בנות": "girls",
@@ -40,8 +40,8 @@ class Parser(Spider):
         return self.item_or_request(response)
 
     def parse_images(self, response):
-        gallery = json_loads(response.body)['gallery']
-        response.meta["product"]["image_urls"] += [image['large'] for image in gallery.values()]
+        images = json_loads(response.body)['gallery']
+        response.meta["product"]["image_urls"] += [image['large'] for image in images.values()]
         return self.item_or_request(response)
 
     @staticmethod
@@ -97,7 +97,7 @@ class Parser(Spider):
     def get_gender(self, response):
         raw_gender = response.css('.product-sizechart-wrapper>a::attr(title)').extract_first()
 
-        for key, value in self.possible_genders:
+        for key, value in self.gender_map:
             if key in raw_gender:
                 return value
 
