@@ -58,7 +58,7 @@ class UserAdmin(admin.ModelAdmin):
                                     'Can not view reports for more than one user.',
                                     level = messages.ERROR)
             return
-        return HttpResponseRedirect(reverse('accounts:view_reports',
+        return HttpResponseRedirect(reverse('report:view_reports',
                                             kwargs={'pk' : queryset.first().userprofile.id}))
 
     def activate_account(modeladmin, request, queryset):
@@ -91,4 +91,3 @@ admin.site.register(models.PairHistory, PairHistoryAdmin)
 admin.site.site_header = 'Social Financer Admin'
 admin.site.index_title = 'Admin'
 admin.site.site_title = 'Social Financer'
-

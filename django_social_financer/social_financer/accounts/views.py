@@ -1,4 +1,3 @@
-import requests
 from math import sin, cos, sqrt, atan2, radians
 
 from django.shortcuts import render, get_object_or_404, redirect
@@ -76,9 +75,9 @@ class SignUpView(generic.FormView):
 @login_required
 def home_view(request):
     role = request.user.userprofile.role
-    if role == 'DN':
+    if role == UserProfile.DONOR:
         return home_donor(request, request.user)
-    elif role == 'CN':
+    elif role == UserProfile.CONSUMER:
         return home_consumer(request, request.user)
     elif request.user.is_staff:
         return redirect(request.build_absolute_uri() + 'admin/')
@@ -99,7 +98,7 @@ def home_donor(request, user):
         consumers = UserProfile.objects.filter(
             city=user.userprofile.city.lower(),
             country=user.userprofile.country.lower(),
-            role='CN')
+            role=UserProfile.CONSUMER)
         consumers = consumers.exclude(id=request.user.userprofile.id)
         consumers = consumers.exclude(id__in=request.user.userprofile.pairs.values('id'))
         return render(request,'accounts/donor/select_consumers.html',
@@ -129,9 +128,4 @@ class ProfileView(generic.TemplateView):
         context['all_feedback'] = Feedback.objects.filter(given_to_user=self.request.user.userprofile)
         return context
 
-class ViewReports(generic.TemplateView):
-    template_name = 'accounts/admin/view_reports.html'
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['userprofile'] = UserProfile.objects.get(id=context['pk'])
-        return context
+

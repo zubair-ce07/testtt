@@ -16,3 +16,4 @@ def get_user_rating(userprofile):
     rating = Feedback.objects.filter(given_to_user=userprofile).aggregate(Avg('star_rating'))
     return rating.get('star_rating__avg','Not rated yet')
 
+# def log_pair_history()

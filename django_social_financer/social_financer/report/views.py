@@ -29,3 +29,12 @@ class ReportView(generic.FormView):
 
     def get_reverse_url(self, role):
         return 'accounts:my_consumers' if role == 'DN' else 'accounts:home'
+
+
+class ViewReports(generic.TemplateView):
+    template_name = 'report/view_reports.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['userprofile'] = UserProfile.objects.get(id=context['pk'])
+        return context
