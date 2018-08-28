@@ -67,8 +67,6 @@ class WhistlesSpider(CrawlSpider):
     def extract_price(response):
         regular_price = response.css("span[title*='Sale Price']::text").extract_first()
         previous_price = response.css("span[title*='Regular Price']::text").extract_first()
-        from pdb import set_trace; set_trace()
-        print(regular_price)
         if not regular_price:
             regular_price = previous_price
             previous_price = []
