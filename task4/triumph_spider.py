@@ -1,7 +1,6 @@
 import json
 import re
-from urllib.parse import urlparse
-from urllib.parse import urljoin
+from urllib.parse import urlparse, urljoin
 
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
@@ -31,40 +30,40 @@ class TriumphSpider(CrawlSpider):
     )
 
     custom_settings = {
-        'DOWNLOAD_DELAY': 2,
+        'DOWNLOAD_DELAY': 6,
     }
 
     def parse_product(self, response):
 
         product_item = Product()
 
-        product_item['retailer_sku'] = self.get_retailer_sku(response)
-        product_item['image_urls'] = self.get_image_urls(response)
-        product_item['description'] = self.get_description(response)
-        product_item['name'] = self.get_product_name(response)
-        product_item['gender'] = self.get_gender(response)
-        product_item['category'] = self.get_categories(response)
-        product_item['url'] = self.get_product_url(response)
-        product_item['brand'] = self.get_brand(response)
-        product_item['care'] = self.get_product_care(response)
-        product_item['skus'] = self.get_skus(response)
-        product_item['colors_request'] = self.get_colors_request(response)
+        product_item['retailer_sku'] = self.extract_retailer_sku(response)
+        product_item['image_urls'] = self.extract_image_urls(response)
+        product_item['description'] = self.extract_description(response)
+        product_item['name'] = self.extract_product_name(response)
+        product_item['gender'] = self.extract_gender(response)
+        product_item['category'] = self.extract_categories(response)
+        product_item['url'] = self.extract_product_url(response)
+        product_item['brand'] = self.extract_brand(response)
+        product_item['care'] = self.extract_product_care(response)
+        product_item['skus'] = self.extract_skus(response)
+        product_item['requests_queue'] = self.extract_colors_request(response)
 
         return self.requests_to_follow(product_item)
 
     def requests_to_follow(self, product_item):
-        next_requests = product_item.get("colors_request")
+        next_requests = product_item.get("requests_queue")
 
         if next_requests:
             request = next_requests.pop()
             request.meta['item'] = product_item
             return request
 
-        del product_item["colors_request"]
+        del product_item["requests_queue"]
 
         return product_item
 
-    def get_colors_request(self, response):
+    def extract_colors_request(self, response):
         css = '.colorswatches_inner li:not(.selected) a::attr(href)'
         color_urls = [url for url in response.css(css).extract()
                       if re.match('.*\/Product-ShowProductDetails\?.*', url)]
@@ -72,43 +71,43 @@ class TriumphSpider(CrawlSpider):
 
     def parse_colors(self, response):
         product_item = response.meta.get('item')
-        product_item['skus'] = product_item.get('skus', []) + self.get_skus(response)
+        product_item['skus'] = product_item.get('skus', []) + self.extract_skus(response)
         return self.requests_to_follow(product_item)
 
-    def get_product_name(self, response):
+    def extract_product_name(self, response):
         prod_name_css = '.product_name::text'
         return response.css(prod_name_css).extract_first()
 
-    def get_product_care(self, response):
+    def extract_product_care(self, response):
         care_css = '#product_care .care .careimage>div::attr(title)'
         return response.css(care_css).extract()
 
-    def get_description(self, response):
+    def extract_description(self, response):
         desc_css = '#product_information_features .description ::text'
         prod_desc = [raw_desc.strip() for raw_desc in response.css(desc_css).extract()]
         return list(filter(None, prod_desc))
 
-    def get_retailer_sku(self, response):
+    def extract_retailer_sku(self, response):
         prod_sku_css = '#product_information_features span.productid::text'
         return response.css(prod_sku_css).extract_first()
 
-    def get_image_urls(self, response):
+    def extract_image_urls(self, response):
         image_urls_css = '#product_images .mainimage::attr(src)'
         return response.css(image_urls_css).extract()
 
-    def get_gender(self, response):
-        if 'men' in ' '.join(self.get_categories(response)).lower():
+    def extract_gender(self, response):
+        if 'men' in ' '.join(self.extract_categories(response)).lower():
             return "Men"
         return "Women"
 
-    def get_brand(self, response):
+    def extract_brand(self, response):
         css = '.product_addtocart #form_addtocartbutton::attr(data-gtm-brand)'
         return response.css(css).extract_first()
 
-    def get_product_url(self, response):
+    def extract_product_url(self, response):
         return response.url
 
-    def get_categories(self, response):
+    def extract_categories(self, response):
         xpath = '//script[contains(.,"var dataParam")]'
         raw_product = response.xpath(xpath).re_first('\s*var\s*dataParam\s*=(.+?);')
 
@@ -118,7 +117,7 @@ class TriumphSpider(CrawlSpider):
         raw_product = json.loads(raw_product)
         return raw_product['googletagmanager']['data']['productCategory']
 
-    def get_skus(self, response):
+    def extract_skus(self, response):
         color_css = '.colorswatches_inner li.selected a::attr(title)'
         color = response.css(color_css).extract_first()
 

@@ -11,5 +11,5 @@ class Product(scrapy.Item):
     url = scrapy.Field()
     brand = scrapy.Field()
     skus = scrapy.Field()
-    care=scrapy.Field()
-    colors_request=scrapy.Field()
+    care = scrapy.Field()
+    requests_queue = scrapy.Field()
