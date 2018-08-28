@@ -93,7 +93,9 @@ class EnamoraSpider(CrawlSpider):
         previous_prices = []
         if not regular_price:
             regular_price = response.css("p.special strong::text").extract_first()
-            previous_prices = [response.css("p.old small::text").extract_first(default='').strip()[:-1]]
+            previous_prices = previous_prices.append(
+                response.css("p.old small::text").extract_first(default='').strip()[:-1]
+            )
         return {
             'currnency': regular_price.strip()[-1],
             'price': regular_price.strip()[:-1],
