@@ -4,14 +4,19 @@ import re
 
 class InputSystem:
     '''This class take care of all the required input validation & parsing'''
-    def __init__(self):
-        pass
 
     def get_input(self):
-        return input("Enter your desired url: ")
+        url = input("Enter your desired url: ")
+        return self.validate_url(url)
 
     def validate_url(self, url):
-        url_regex = re.compile("http[s]?://(?:[a-zA-Z]" +
-                               "|[0-9]|[$-_@.&+]|[!*\(\),]|" +
-                               "(?:%[0-9a-fA-F][0-9a-fA-F]))+")
-        return re.match(url_regex, url) is not None
+        regex = re.compile(
+            r'^(?:http|ftp)s?://'
+            r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|'
+            r'localhost|'
+            r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|'
+            r'\[?[A-F0-9]*:[A-F0-9:]+\]?)'
+            r'(?::\d+)?'
+            r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+        if re.match(regex, url) is not None:
+            return url
