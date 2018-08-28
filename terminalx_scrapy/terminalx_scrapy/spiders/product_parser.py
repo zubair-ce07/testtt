@@ -41,17 +41,17 @@ class Parser(Spider):
 
     def parse_images(self, response):
         images = json_loads(response.body)['gallery']
-        response.meta["product"]["image_urls"] += [image['large'] for image in images.values()]
+        response.meta["product"]["image_urls"] += self.image_urls(images)
         return self.item_or_request(response)
 
     @staticmethod
     def item_or_request(response):
         if not response.meta["pending_media_reqs"]:
-            return response.meta["product"].copy()
+            return response.meta["product"]
 
         next_color_req = response.meta["pending_media_reqs"].pop()
-        next_color_req.meta["product"] = response.meta["product"].copy()
-        next_color_req.meta["pending_media_reqs"] = response.meta["pending_media_reqs"].copy()
+        next_color_req.meta["product"] = response.meta["product"]
+        next_color_req.meta["pending_media_reqs"] = response.meta["pending_media_reqs"]
         return next_color_req
 
     def get_skus(self, response, product_config):
@@ -97,7 +97,7 @@ class Parser(Spider):
     def get_gender(self, response):
         raw_gender = response.css('.product-sizechart-wrapper>a::attr(title)').extract_first()
 
-        for key, value in self.gender_map:
+        for key, value in self.gender_map.items():
             if key in raw_gender:
                 return value
 
@@ -149,3 +149,7 @@ class Parser(Spider):
                 return True
 
         return False
+
+    @staticmethod
+    def image_urls(images):
+        return [image['large'] for image in images.values()]
