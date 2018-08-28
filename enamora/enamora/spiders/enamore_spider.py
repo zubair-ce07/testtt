@@ -20,11 +20,10 @@ class EnamoraSpider(CrawlSpider):
 
     rules = (
         Rule(LinkExtractor(
-            allow=('/',),
-            deny=('/meine-groesse',)
+            restrict_css=("ul.nav.row li a", "a.btn.next"),
         )),
         Rule(LinkExtractor(
-            allow=('.html',)
+            restrict_css=('div.product > a',)
         ), callback='parse_item'),
     )
 
@@ -53,7 +52,7 @@ class EnamoraSpider(CrawlSpider):
             sku = {
                 'color': color,
                 'size': size,
-                'sku_id': "{}_{}".format(color.replace(' ', '_'), size)
+                'sku_id': "{}_{}".format(color, size)
             }
             if size_info.css("a[disabled*='disabled']"):
                 sku['out_of_stock'] = True
@@ -69,7 +68,7 @@ class EnamoraSpider(CrawlSpider):
 
     @staticmethod
     def extract_name(response):
-        return response.url.split('/')[-1].replace('.html', '').replace('-', ' ')
+        return response.css("div.product h1 small::text").extract_first().replace('-', '')
 
     @staticmethod
     def extract_brand(response):
@@ -85,7 +84,7 @@ class EnamoraSpider(CrawlSpider):
 
     @staticmethod
     def extract_color(response):
-        return response.css("p.product-color strong::text").extract_first()
+        return response.css("p.product-color strong::text").extract_first().replace(' ', '_')
 
     @staticmethod
     def extract_price(response):
@@ -94,11 +93,11 @@ class EnamoraSpider(CrawlSpider):
         if not regular_price:
             regular_price = response.css("p.special strong::text").extract_first()
             previous_prices = previous_prices.append(
-                response.css("p.old small::text").extract_first(default='').strip()[:-1]
+                response.css("p.old small::text").extract_first(default='').strip()[:-1].replace(',', '')
             )
         return {
-            'currnency': regular_price.strip()[-1],
-            'price': regular_price.strip()[:-1],
+            'currency': regular_price.strip()[-1],
+            'price': regular_price.strip()[:-1].replace(',', ''),
             'previous_price': previous_prices
         }
 
@@ -107,7 +106,10 @@ class EnamoraSpider(CrawlSpider):
         response = response.replace(
             body=response.body.replace(b'<br />', b'\n').replace(b'<br>', b'\n')
         )
-        headings = response.css("div[id='produkt-details'] span.control-label::text").extract()
-        descriptions = response.css("div[id='produkt-details'] span.information-value::text").extract()
-        return ["{} {}".format(headings[index], description)
-                for index, description in enumerate(descriptions)]
+        description_area = response.css("div#produkt-details")
+        descriptions = list()
+        for description_entry in description_area:
+            heading = description_entry.css("span.control-label::text").extract_first()
+            description = description_entry.css("span.information-value::text").extract_first()
+            descriptions.append("{} {}".format(heading.strip(), description.strip()))
+        return descriptions
