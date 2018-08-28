@@ -1,0 +1,68 @@
+{
+  "currency": "EUR",
+  "skus": [
+    {
+      "size_identifier": "525218499100000",
+      "full_price": 69.95,
+      "size_name": "122-128",
+      "stock": 4
+    },
+    {
+      "size_identifier": "525218499200000",
+      "full_price": 69.95,
+      "size_name": "134",
+      "stock": 4
+    },
+    {
+      "size_identifier": "525218499300000",
+      "full_price": 69.95,
+      "size_name": "140-146",
+      "stock": 3
+    },
+    {
+      "size_identifier": "525218499400000",
+      "full_price": 69.95,
+      "size_name": "152-158",
+      "stock": 3
+    },
+    {
+      "size_identifier": "525218499500000",
+      "full_price": 69.95,
+      "size_name": "164",
+      "stock": 2
+    }
+  ],
+  "identifier": "5252184991000",
+  "referrer_url": "https://www.debijenkorf.nl/net-binnen/kindermode/kleding",
+  "color_name": "Lichtroze",
+  "category": [
+    "Net binnen",
+    "Kinderen",
+    "Kleding"
+  ],
+  "image_urls": [
+    "https://cdn-1.debijenkorf.nl/default/benetton-donsjack-met-waterafstotende-finish/?reference=052/521/13_0525218499100000_pro_flt_frt_01_1108_1528_3386076.jpg",
+    "https://cdn-1.debijenkorf.nl/default/benetton-donsjack-met-waterafstotende-finish/?reference=052/521/13_0525218499100000_pro_flt_frt_02_1108_1528_3386077.jpg",
+    "https://cdn-1.debijenkorf.nl/default/benetton-donsjack-met-waterafstotende-finish/?reference=052/521/13_0525218499100000_pro_flt_bck_01_1108_1528_3386074.jpg",
+    "https://cdn-1.debijenkorf.nl/default/benetton-donsjack-met-waterafstotende-finish/?reference=052/521/13_0525218499100000_pro_flt_det_01_1108_1528_3386075.jpg"
+  ],
+  "description": [
+    "Mouwlengte: Lange mouw",
+    "Binnenzak: Geen binnenzak",
+    "Functionaliteit: Waterbestendig",
+    "Buitenzak: Twee buitenzakken",
+    "Materiaal: 100% polyester - voering: 100% polyester - vulling: 50% dons / 50% veren",
+    "Voering: Volledig gevoerd",
+    "Vulling: Dons",
+    "Wasvoorschrift: Maximaal op 30\u00ba",
+    "Strijkvoorschrift: Niet strijken",
+    "Droogvoorschrift: Drogen bij een lage temperatuur",
+    "Chemisch reinigen: Chemisch reinigen niet mogelijk",
+    "Deze maat valt: Normaal"
+  ],
+  "availability": true,
+  "brand": "Benetton",
+  "url": "https://www.debijenkorf.nl/benetton-donsjack-met-waterafstotende-finish-5252182368",
+  "retailer_sku": "5252182368",
+  "product_name": "Donsjack met waterafstotende finish"
+},
