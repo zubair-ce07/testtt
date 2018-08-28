@@ -95,11 +95,13 @@ class EnamoraSpider(CrawlSpider):
             previous_prices = previous_prices.append(
                 response.css("p.old small::text").extract_first(default='').strip()[:-1].replace(',', '')
             )
-        return {
+        price_dict = {
             'currency': regular_price.strip()[-1],
             'price': regular_price.strip()[:-1].replace(',', ''),
-            'previous_price': previous_prices
         }
+        if previous_prices:
+            price_dict['previous_price'] = previous_prices
+        return previous_prices
 
     @staticmethod
     def extract_description(response):
