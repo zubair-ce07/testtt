@@ -122,7 +122,7 @@ class MathHelper:
         return cls.__helper_dict.get(default) if number is "" or number is None else int(number)
 
 
-class ReportsHelper:
+class ReportHelper:
     """
     Reports helpers are written here like empty reports and output strings (all for different cantegories)
     """

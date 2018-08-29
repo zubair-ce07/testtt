@@ -7,10 +7,10 @@ import statistics
 
 from colorama import Fore, Style
 
-from weather_man.utils.global_content import ReportsHelper, DateMapper
+from weather_man.utils.global_content import ReportHelper, DateMapper
 
 
-class ResultsCalculator:
+class ResultCalculator:
     """
     Class for computing the calculations given the readings data structure.
     """
@@ -48,27 +48,27 @@ class ResultsCalculator:
         report['average_mean_humidity']['value'] = statistics.mean(weather_info['mean_humidity'])
 
 
-class ReportsHandler:
+class ReportHandler:
     """
     Class for creating the reports given the results data structure.
     """
     def __init__(self, report_category):
         self.report_category = report_category
-        self.report = ReportsHelper.get_empty_report(report_category)
+        self.report = ReportHelper.get_empty_report(report_category)
 
     def update_year_report(self, weather_info):
         """
         Updates yearly report providing new weather data entry of a day.
         :param weather_info: Weather data entries.
         """
-        ResultsCalculator.update_year_result(weather_info, self.report)
+        ResultCalculator.update_year_result(weather_info, self.report)
 
     def update_year_with_month_report(self, weather_info):
         """
         Updates specific month of an year's report providing new weather data entry of a day.
         :param weather_info: Weather data entries.
         """
-        ResultsCalculator.update_year_with_month_report(weather_info, self.report)
+        ResultCalculator.update_year_with_month_report(weather_info, self.report)
 
     @staticmethod
     def show_month_bar_chart_report(weather_info):
@@ -104,7 +104,7 @@ class ReportsHandler:
         """
         Print a specific report of weather data.
         """
-        report_output = ReportsHelper.get_report_output(self.report_category)
+        report_output = ReportHelper.get_report_output(self.report_category)
         for output_category, output_expresstion in report_output.items():
             if 'day' in self.report[output_category].keys():
                 print(output_expresstion.format(

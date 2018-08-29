@@ -4,7 +4,7 @@ Weather man application which perform data analytics on weather data.
 """
 from weather_man.weather_reader import WeatherReader
 from weather_man.utils.decorators import prepare_input
-from weather_man.utils.report_handlers import ReportsHandler
+from weather_man.utils.report_handlers import ReportHandler
 
 
 class WeatherMan:
@@ -20,7 +20,7 @@ class WeatherMan:
         Get processed data of weather, generate and show report of an year.
         :param kwargs: key word arguments, required keys are: file_path and period (year or year/month)
         """
-        self.results = ReportsHandler(report_category='years')
+        self.results = ReportHandler(report_category='years')
         weather_data_holder = WeatherReader(
             file_path=kwargs.get('file_path'),
             period=kwargs.get('period')
@@ -34,7 +34,7 @@ class WeatherMan:
         Get processed data of weather, generate and show report of a specific month of an year.
         :param kwargs: key word arguments, required keys are: file_path and period (year or year/month)
         """
-        self.results = ReportsHandler(report_category='year_with_month')
+        self.results = ReportHandler(report_category='year_with_month')
         weather_data_holder = WeatherReader(
             file_path=kwargs.get('file_path'),
             period=kwargs.get('period')
@@ -48,7 +48,7 @@ class WeatherMan:
         Get processed data of weather, generate and show report of a month in form on bar charts.
         :param kwargs: key word arguments, required keys are: file_path and period (year or year/month)
         """
-        self.results = ReportsHandler(report_category='month_bar_chart')
+        self.results = ReportHandler(report_category='month_bar_chart')
         weather_data_holder = WeatherReader(
             file_path=kwargs.get('file_path'),
             period=kwargs.get('period')
@@ -62,7 +62,7 @@ class WeatherMan:
         each day.
         :param kwargs: key word arguments, required keys are: file_path and period (year or year/month)
         """
-        self.results = ReportsHandler(report_category='month_bar_chart_in_one_line')
+        self.results = ReportHandler(report_category='month_bar_chart_in_one_line')
         weather_data_holder = WeatherReader(
             file_path=kwargs.get('file_path'),
             period=kwargs.get('period')
