@@ -4,7 +4,6 @@ import re
 from scrapy import Request
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
-from urllib.parse import urlencode
 from w3lib.url import add_or_replace_parameter
 
 from Task6.items import Product
