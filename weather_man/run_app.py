@@ -2,7 +2,7 @@
 """
 This is basic run application scrip, the script is generalized and can be used to word with other applications as well.
 """
-from weather_man.weather_man_app import WeatherMan
+from weather_man.weatherman import WeatherMan
 from weather_man.utils.args_parser import WeatherManArgsParser
 from weather_man.utils.global_content import ArgsParserCategoryHandler
 
