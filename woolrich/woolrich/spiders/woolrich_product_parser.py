@@ -14,8 +14,8 @@ class WoolrichProductParserSpider(Spider):
     currency = "USD"
     seen_skus = set()
     gender_map = {
-        " men ": "men",
-        " women ": "women",
+        "Men": "men",
+        "Women": "women",
         "default": "unisex"
     }
 
@@ -24,7 +24,7 @@ class WoolrichProductParserSpider(Spider):
         product_id = self.product_id(response)
 
         if product_id in self.seen_skus:
-            return None
+            return
 
         self.seen_skus.add(product_id)
         product["retailer_sku"] = product_id
@@ -88,7 +88,7 @@ class WoolrichProductParserSpider(Spider):
         return response.css("strong:contains(Style)::text").extract_first().split("#: ")[1]
 
     def gender(self, response):
-        gender_soup = " ".join(self.category(response)).lower()
+        gender_soup = set(self.category(response))
 
         for gender in self.gender_map:
             if gender in gender_soup:
