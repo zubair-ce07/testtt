@@ -6,6 +6,10 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from flicker import app
 import os
 from flask_uploads import UploadSet, configure_uploads
+import random
+import string
+from sqlalchemy import desc
+
 
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(APP_ROOT, 'static/uploads')
@@ -18,13 +22,13 @@ def index():
         posts_data_list = db.session.query(Posts.pid, Posts.post_privacy,
                                            Posts.image_url, Posts.puid,
                                            User.username).filter(
-            Posts.puid == User.uid).all()
-        users_list = db.session.query(Follow.FollowingUserId,
-                                      Follow.FollowedUserId).filter(
-            Follow.FollowingUserId == session['current_user_id']).all()
+            Posts.puid == User.uid).order_by(desc(Posts.pid))
+        users_list = db.session.query(Follow.followed_username,
+                                      Follow.followed_userid).filter(
+            Follow.following_userid == session['current_user_id'])
         followed_users_list = []
         for user in users_list:
-            followed_users_list.append(user.FollowedUserId)
+            followed_users_list.append(user.followed_userid)
         return render_template('index.html', posts_data_list=posts_data_list,
                                followed_users_list=followed_users_list)
     flash('User is not Authenticated')
@@ -42,9 +46,22 @@ def user_wall():
     if session.get('user_available') and session['user_available']:
         posts_data_list = db.session.query(Posts.pid, Posts.post_privacy,
                                            Posts.image_url, Posts.puid).filter(
-            Posts.puid == session['current_user_id']).all()
+            Posts.puid == session['current_user_id']).order_by(desc(Posts.pid))
+        following_users = db.session.query(Follow).filter(
+                                Follow.following_userid == session['current_user_id']).all()
         return render_template('user_wall.html',
-                               posts_data_list=posts_data_list)
+                               posts_data_list = posts_data_list,
+                               following_users = following_users,
+                               current_user_id = session['current_user_id'],
+                               current_user = session['current_user']
+                               )
+
+def generate_id(size=7, chars=string.ascii_uppercase + string.digits):
+    return ''.join(random.choice(chars) for _ in range(size))
+
+def append_id(filename):
+    name, ext = os.path.splitext(filename)
+    return "{name}_{uid}{ext}".format(name=name, uid=generate_id(), ext=ext)
 
 
 @app.route('/add', methods=['GET', 'POST'])
@@ -55,8 +72,9 @@ def add_post():
         if request.method == 'POST':
             file = request.files['file']
             if file and allowed_file(file.filename):
+                file_name = append_id(file.filename)
                 file_path = os.path.join(app.config['UPLOAD_FOLDER'],
-                                         file.filename)
+                                         file_name)
                 file.save(file_path)
                 privacy_type = request.form['privacy']
                 post = Posts("uploads/" + file.filename,
@@ -79,49 +97,58 @@ def save_post_tags(tags_list, post_id):
         db.session.commit()
 
 
-@app.route('/users', methods=['GET'])
-def show_all_users():
-    users_list = db.session.query(User).all()
-    return render_template('user_list.html', users_list=users_list)
-
-
-@app.route('/user/<user_id>', methods=('GET', 'POST'))
-def user_profile(user_id):
+@app.route('/user/<user_id>/<username>', methods=('GET', 'POST'))
+def user_profile(user_id, username):
     if request.method == 'POST':
         follow_status_form = request.form.get('follow_status_form')
-        update_follow_status(user_id, follow_status_form)
-        follow_status = check_follow_status(user_id)
-        user_data = db.session.query(User).filter(User.uid == user_id).all()
-        return render_template('user_profile.html',
-                               follow_status=follow_status,
-                               user_data=user_data)
-    else:
-        follow_status = check_follow_status(user_id)
-        user_data = db.session.query(User).filter(User.uid == user_id).all()
-        return render_template('user_profile.html',
-                               follow_status=follow_status,
-                               user_data=user_data)
+        update_follow_status(user_id, follow_status_form, username)
+
+    follow_status = check_follow_status(user_id)
+    user_data = db.session.query(User).filter(User.uid == user_id).all()
+    posts_data_list = db.session.query(Posts.pid, Posts.post_privacy,
+                                       Posts.image_url, Posts.puid).filter(
+        Posts.puid == user_id).order_by(desc(Posts.pid))
+    following_users = db.session.query(Follow).filter(
+                            Follow.following_userid == user_id).all()
+    return render_template('user_wall.html',
+                           posts_data_list = posts_data_list,
+                           following_users = following_users,
+                           follow_status=follow_status,
+                           user_data=user_data,
+                           current_user_id = user_id,
+                           current_user = username
+                           )
 
 
-def update_follow_status(profile_user_id, follow_status):
+@app.route('/search_user', methods=('GET', 'POST'))
+def search_user():
+    if request.method == 'POST':
+        search_element = request.form.get('search_elem')
+        user_data_list = db.session.query(User).filter(User.username.like('%' + search_element + '%')).all()
+        return render_template('user_list.html',users_list = user_data_list)
+
+
+def update_follow_status(profile_user_id, follow_status ,profile_username):
     current_user_id = session['current_user_id']
+    profile_user_id = int(profile_user_id)
     if follow_status == "1":
         follow_instance = db.session.query(Follow).filter(
-            Follow.FollowingUserId == current_user_id and
-            Follow.FollowedUserId == profile_user_id).first()
+            Follow.following_userid == current_user_id and
+            Follow.followed_userid == profile_user_id).first()
         db.session.delete(follow_instance)
         db.session.commit()
     if follow_status == "0":
-        follow = Follow(current_user_id, profile_user_id)
+        follow = Follow(current_user_id, profile_user_id, session['current_user'], profile_username)
         db.session.add(follow)
         db.session.commit()
 
 
 def check_follow_status(profile_user_id):
     current_user_id = session['current_user_id']
+    profile_user_id = int(profile_user_id)
     follow_status = db.session.query(Follow).filter(
-        Follow.FollowingUserId == current_user_id and
-        Follow.FollowedUserId == profile_user_id).all()
+        Follow.following_userid == current_user_id,
+        Follow.followed_userid == profile_user_id).all()
     if follow_status:
         return True
     else:

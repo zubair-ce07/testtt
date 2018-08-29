@@ -27,11 +27,15 @@ class Tag(db.Model):
         self.post_id = post_id
 
 class Follow(db.Model):
-    FollowingUserId = db.Column(db.Integer, db.ForeignKey('user.uid'), primary_key=True)
-    FollowedUserId = db.Column(db.Integer, db.ForeignKey('user.uid'), primary_key=True)
-    def __init__(self, FollowingUserId, FollowedUserId):
-        self.FollowingUserId = FollowingUserId
-        self.FollowedUserId = FollowedUserId
+    following_userid = db.Column(db.Integer, db.ForeignKey('user.uid'), primary_key=True)
+    followed_userid = db.Column(db.Integer, db.ForeignKey('user.uid'), primary_key=True)
+    following_username = db.Column(db.String(50))
+    followed_username = db.Column(db.String(50))
+    def __init__(self, following_userid, followed_userid, following_username, followed_username):
+        self.following_userid = following_userid
+        self.followed_userid = followed_userid
+        self.following_username = following_username
+        self.followed_username = followed_username
 
 
 class Posts(db.Model):
