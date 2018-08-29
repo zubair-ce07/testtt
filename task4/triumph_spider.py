@@ -1,6 +1,4 @@
-import json
 import re
-from urllib.parse import urlparse, urljoin
 
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
@@ -16,17 +14,11 @@ class TriumphSpider(CrawlSpider):
     start_urls = ['http://uk.triumph.com/']
     allowed_domains = ['uk.triumph.com']
 
-    deny_urls = ['my-account', 'on/demandware.store\w*', 'sale', 'collections', 'new',
-                 '\w*findtheone\w*', '\w*format=ajax']
-
-    def process_product_url(url):
-        parsed_url = urlparse(url)
-        return urljoin(TriumphSpider.start_urls[0], parsed_url.path)
+    deny_urls = ['my-account', 'on/demandware.store\w*', '\w*findtheone\w*', '\w*format=ajax']
 
     rules = (
         Rule(LinkExtractor(restrict_css=listing_css, deny=deny_urls), callback='parse'),
-        Rule(LinkExtractor(restrict_css=product_css, process_value=process_product_url),
-             callback='parse_product'),
+        Rule(LinkExtractor(restrict_css=product_css), callback='parse_product'),
     )
 
     custom_settings = {
@@ -71,16 +63,14 @@ class TriumphSpider(CrawlSpider):
 
     def parse_colors(self, response):
         product_item = response.meta.get('item')
-        product_item['skus'] = product_item.get('skus', []) + self.extract_skus(response)
+        product_item['skus'] = product_item['skus'] + self.extract_skus(response)
         return self.requests_to_follow(product_item)
 
     def extract_product_name(self, response):
-        prod_name_css = '.product_name::text'
-        return response.css(prod_name_css).extract_first()
+        return response.css('.product_name::text').extract_first()
 
     def extract_product_care(self, response):
-        care_css = '#product_care .care .careimage>div::attr(title)'
-        return response.css(care_css).extract()
+        return response.css('#product_care .care .careimage>div::attr(title)').extract()
 
     def extract_description(self, response):
         desc_css = '#product_information_features .description ::text'
@@ -92,8 +82,7 @@ class TriumphSpider(CrawlSpider):
         return response.css(prod_sku_css).extract_first()
 
     def extract_image_urls(self, response):
-        image_urls_css = '#product_images .mainimage::attr(src)'
-        return response.css(image_urls_css).extract()
+        return response.css('#product_images .mainimage::attr(src)').extract()
 
     def extract_gender(self, response):
         if 'men' in ' '.join(self.extract_categories(response)).lower():
@@ -108,34 +97,27 @@ class TriumphSpider(CrawlSpider):
         return response.url
 
     def extract_categories(self, response):
-        xpath = '//script[contains(.,"var dataParam")]'
-        raw_product = response.xpath(xpath).re_first('\s*var\s*dataParam\s*=(.+?);')
-
-        if not raw_product:
-            return []
-
-        raw_product = json.loads(raw_product)
-        return raw_product['googletagmanager']['data']['productCategory']
+        return response.css('.breadcrumb [itemprop="name"]::text').extract()
 
     def extract_skus(self, response):
         color_css = '.colorswatches_inner li.selected a::attr(title)'
         color = response.css(color_css).extract_first()
 
         price_css = '.pricing .price-box div:not(.disabled) span[itemprop="price"]::text'
-        price = response.css(price_css).extract_first(default='')
+        price = response.css(price_css).extract_first()
 
         currency_css = '.pricing .price-box span[itemprop="priceCurrency"]::text'
         currency = response.css(currency_css).extract_first()
 
         prev_price_css = '.pricing .price-box> div.disabled span[itemprop="price"]::text'
-        previous_prices = response.css(prev_price_css).extract_first(default='')
+        previous_prices = response.css(prev_price_css).extract_first()
 
         size_css = '#product_variant_details .colorsizes_inner > .overlaysizes li'
         size_selectors = response.css(size_css)
 
         product_skus = []
         for sel in size_selectors:
-            size = sel.css('a::text').extract_first(default='').strip()
+            size = sel.css('a::text').extract_first().strip()
 
             if not any(size in sku.get('size') for sku in product_skus):
                 sku = {"colour": color, "price": price.strip(),
