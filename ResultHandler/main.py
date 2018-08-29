@@ -1,7 +1,7 @@
 import argparse
-from result_data_reader import ResultDataReader
-from result_processor import ResultProcessor
-from result_reporter import ResultReporter
+import result_data_reader
+import result_processor
+import result_reporter
 
 
 def parse_arguments():
@@ -46,38 +46,37 @@ if __name__ == '__main__':
             and calls the respective functions.
             """
     cmd_arguments = parse_arguments()
-    result_data_reader = ResultDataReader("data.csv")
     users = result_data_reader.read_data()
 
     if cmd_arguments.present:
         # task 1: Showing the present students
-        present_percentage = ResultProcessor.get_present_percentage(users)
-        ResultReporter.show_percentage(present_percentage)
+        present_percentage = result_processor.get_percentage(users)
+        result_reporter.show_percentage(present_percentage)
     if cmd_arguments.meritlist:
         # task 4: Showing the merit list
-        groups = ResultProcessor.create_merit_list(users, 50)
-        ResultReporter.generate_merit_list_files(groups)
+        groups = result_processor.create_merit_list(users, 50)
+        result_reporter.generate_merit_list_files(groups)
 
     if cmd_arguments.passed:
         # performing task 3, scaled result percentage
         if "threshold" in cmd_arguments and "scale_ratio" in cmd_arguments:
-            scaled_per = ResultProcessor.get_scaled_percentage(
+            scaled_per = result_processor.get_percentage(
                 users,
                 cmd_arguments.threshold,
                 cmd_arguments.scale_ratio
             )
-            ResultReporter.show_percentage(
+            result_reporter.show_percentage(
                 scaled_per,
                 cmd_arguments.threshold,
                 cmd_arguments.scale_ratio
             )
         # task 2, only passing threshold is given
         elif "threshold" in cmd_arguments:
-            result_per = ResultProcessor.get_passed_percentage(
+            result_per = result_processor.get_percentage(
                 users,
                 cmd_arguments.threshold
             )
-            ResultReporter.show_percentage(
+            result_reporter.show_percentage(
                 result_per,
                 cmd_arguments.threshold
             )

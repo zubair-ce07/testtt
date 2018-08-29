@@ -1,6 +1,6 @@
 
 
-class ResultData:
+class Student:
     roll_no = None
     name = None
     father_name = None
