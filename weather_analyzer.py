@@ -1,6 +1,7 @@
 import os
-from day_weather import DayWeather
 import re
+
+from day_weather import DayWeather
 
 
 class WeatherAnalyzer:
@@ -75,10 +76,7 @@ class WeatherAnalyzer:
 
     def check_valid_year_file(self, day_date, year):
         match = re.search(r'\d{4}', day_date)
-        if match and (year in day_date):
-            return True
-        else:
-            return False
+        return match and (year in day_date)
 
     def compute_month_data_average(self, month_data_list):
         max_temp_avg = 0
@@ -97,19 +95,16 @@ class WeatherAnalyzer:
             if day_data.max_humidity:
                 humidity_avg += int(day_data.max_humidity)
                 count_humidty += 1
-        return (max_temp_avg / count_max_temp), (
-                min_temp_avg / count_min_temp), (
-                       humidity_avg / count_humidty)
+        return (max_temp_avg / count_max_temp,
+                min_temp_avg / count_min_temp,
+                humidity_avg / count_humidty)
 
     def check_valid_year_month_file(self, day_date, year_month):
         match = re.search(r'\d{4}', day_date)
         if match:
             day_date_list = day_date.split("-")
             year_month_list = year_month.split("/")
-            if (day_date_list[0] == year_month_list[0]) and (
-                    day_date_list[1] == year_month_list[1]):
-                return True
-            else:
-                return False
+            return day_date_list[0] == year_month_list[0] and day_date_list[
+                1] == year_month_list[1]
         else:
             return False

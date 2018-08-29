@@ -1,6 +1,7 @@
 import argparse
-from weather_reporter import WeatherReporter
+
 from argument_validator import ArgumentValidator
+from weather_reporter import WeatherReporter
 
 
 def read_cmd_arg():

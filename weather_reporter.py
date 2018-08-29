@@ -1,6 +1,7 @@
-from weather_analyzer import WeatherAnalyzer
 import calendar
+
 from color_codes import ColorCode
+from weather_analyzer import WeatherAnalyzer
 
 
 class WeatherReporter:
@@ -79,7 +80,6 @@ class WeatherReporter:
 
     def draw_barchart(self, temp, temp_color_code, day_num):
         """ draw bar chart """
-        counter = 0
         barchart_month = '+' * temp
         print(ColorCode.GREY.value + (str(day_num)) +
               " " + (temp_color_code + barchart_month) +
