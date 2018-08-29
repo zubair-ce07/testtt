@@ -22,6 +22,7 @@ def main_controller():
         words_dict = text_processor.dictionary_generator(words)
         sorted_list = text_processor.word_cloud_processor(words_dict)
         output_sys.word_cloud_generator(sorted_list)
+        db.insert_row(sorted_list)
     else:
         output_sys.invalid_url_warning()
         main_controller()
