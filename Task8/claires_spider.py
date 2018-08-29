@@ -34,7 +34,7 @@ class ParseSpider(BaseParseSpider):
         size_requests = self.size_requests(response)
         garment['meta'] = {'requests_queue': size_requests}
 
-        garment['skus'] = {} if size_requests else self.one_size_sku(response, sku_id)
+        garment['skus'] = {} if size_requests else self.one_size_sku(response)
 
         return self.next_request_or_garment(garment)
 
@@ -91,11 +91,12 @@ class ParseSpider(BaseParseSpider):
 
         return skus
 
-    def one_size_sku(self, response, sku_id):
+    def one_size_sku(self, response):
         skus = {}
 
         sku = self.product_pricing_common(response)
         sku['size'] = 'One_Size'
+        sku_id = f'{self.product_id(response)}_{sku["size"]}'
 
         if self.is_out_of_stock(response):
             sku['out_of_stock'] = True
