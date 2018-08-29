@@ -10,7 +10,7 @@ class MixinUK:
     default_brand = 'claires'
     unwanted_items = ['tech', 'toys', 'stationery']
     allowed_domains = ['claires.com']
-    start_urls = ['https://www.claires.com/?lang=en_GB&srule=A-Z']
+    start_urls = ['https://www.claires.com/?lang=en_GB']
 
 
 class ParseSpider(BaseParseSpider):
