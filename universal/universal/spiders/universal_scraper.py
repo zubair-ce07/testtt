@@ -21,6 +21,10 @@ def clean_url(encoded_url):
     return rot47(base64.b64decode(encoded_url).decode())
 
 
+def clean_price(price):
+    return price.strip().replace(',', '')
+
+
 class UniversalSpider(CrawlSpider):
     """
     Crawl spider to scrap `www.universal.at`
@@ -42,15 +46,16 @@ class UniversalSpider(CrawlSpider):
             restrict_css="div.productlist-product a"
         ), callback='parse_item')
     )
+    # response.css("a.link-product::attr(href)")
 
     def parse_item(self, response):
         item = UniversalItem()
         item['url'] = response.url
         item['name'] = self.extract_name(response)
         item['brand'] = self.extract_brand(response)
-        item['image_urls'] = self.extract_image_urls(response)
         item['care'] = self.extract_care(response)
         item['description'] = self.extract_description(response)
+        item['image_urls'] = self.extract_image_urls(response)
         sizes_request = scrapy.Request(url=self.extract_sizes_url(response), callback=self.parse_sizes)
         sizes_request.meta['item'] = item
         sizes_request.meta['color'] = self.extract_color(response)
@@ -62,8 +67,8 @@ class UniversalSpider(CrawlSpider):
         color = response.meta['color']
         price = response.meta['price']
         skus = list()
-        sizes_info = response.css("li")
-        for size_info in sizes_info:
+        sizes_info = response.css("div.psv-values-box")[-1]
+        for size_info in sizes_info.css("div.psv-item::attr('data-value')").extract():
             size = size_info.css("span::text").extract_first()
             sku = {
                 'color': color,
@@ -100,22 +105,24 @@ class UniversalSpider(CrawlSpider):
 
     @staticmethod
     def extract_color(response):
-        return response.css("p.product-color strong::text").extract_first()
+        return response.css("span.psv-selected-value::text").extract_first()
 
     @staticmethod
     def extract_price(response):
-        regular_price = response.css("p.regular strong::text").extract_first()
+        regular_price = response.css("div.price::text").extract_first(default='').strip()
         previous_prices = []
         if not regular_price:
-            regular_price = response.css("p.special strong::text").extract_first()
+            regular_price = response.css("div.price.new::text").extract()[1].strip()
             previous_prices = previous_prices.append(
-                response.css("p.old small::text").extract_first(default='').strip()[:-1]
+                response.css("div.price-strike::text").extract_first(default='').strip()
             )
-        return {
-            'currnency': regular_price.strip()[-1],
-            'price': regular_price.strip()[:-1],
-            'previous_price': previous_prices
+        price_dict = {
+            'currnency': regular_price[-1],
+            'price': clean_price(regular_price.strip[:-1]),
         }
+        if previous_prices:
+            price_dict['previous_prices'] = previous_prices
+        return previous_prices
 
     @staticmethod
     def extract_description(response):
