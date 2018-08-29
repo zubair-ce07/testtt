@@ -3,8 +3,8 @@
 Data handlers to getting results from file utils and processed it into required form to provide the data to the
 application.
 """
-from weather_man_app.file_parser import FileParser
-from weather_man_app.utils.global_content import MathHelper
+from weather_man.file_parser import FileParser
+from weather_man.utils.global_content import MathHelper
 
 
 class WeatherReader:

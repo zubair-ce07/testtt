@@ -2,9 +2,9 @@
 """
 This is basic run application scrip, the script is generalized and can be used to word with other applications as well.
 """
-from weather_man_app.weather_man import WeatherMan
-from weather_man_app.utils.args_parser import WeatherManArgsParser
-from weather_man_app.utils.global_content import ArgsParserCategoryHandler
+from weather_man.weather_man_app import WeatherMan
+from weather_man.utils.args_parser import WeatherManArgsParser
+from weather_man.utils.global_content import ArgsParserCategoryHandler
 
 
 __author__ = "Arslan"

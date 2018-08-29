@@ -6,7 +6,7 @@ import csv
 import glob
 import os
 
-from weather_man_app.utils.global_content import FileGlobalHandler, DateMapper
+from weather_man.utils.global_content import FileGlobalHandler, DateMapper
 
 
 class FileParser:

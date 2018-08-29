@@ -7,7 +7,7 @@ import statistics
 
 from colorama import Fore, Style
 
-from weather_man_app.utils.global_content import MathHelper, ReportsHelper, DateMapper
+from weather_man.utils.global_content import ReportsHelper, DateMapper
 
 
 class ResultsCalculator:

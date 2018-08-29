@@ -163,9 +163,7 @@ class ReportsHelper:
                 'average_lowest_temp': "Lowest Average: {:.2f}C",
                 'average_mean_humidity': "Average mean Humidity: {:.2f}%"
             },
-            'month_bar_chart': {
-
-            }
+            'month_bar_chart': {}
         }
 
     
