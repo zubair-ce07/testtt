@@ -1,6 +1,7 @@
 """ Controller file """
 import sys
-from reports import display_year_report, display_month_report
+from year_reports import display_year_report
+from month_reports import display_month_report
 
 
 if len(sys.argv) > 3 and (((len(sys.argv)-2) % 2) == 0):
