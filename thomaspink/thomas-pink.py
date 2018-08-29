@@ -1,6 +1,8 @@
 from scrapy import Request
 from scrapy.spiders.crawl import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
+from thomaspink.items import Item
+import requests
 
 
 class ThomasPink(CrawlSpider):
@@ -9,10 +11,10 @@ class ThomasPink(CrawlSpider):
     # Crawler Name
     name = "thomaspink"
 
-    # Thomaspink Website Link
+    # Thomas-pink Website Link
     start_urls = ['https://www.thomaspink.com/']
 
-    # Rules used while extracting links from Thomaspink Website
+    # Rules used while extracting links from Thomas-pink Website
     rules = (
         Rule(
             LinkExtractor(restrict_css=["a.f-nav-list__item-link--level-3"]), callback='parse_page'
@@ -53,7 +55,6 @@ class ThomasPink(CrawlSpider):
 
         # Extracting information
         item_id = response.css('p.f-product-info__id::attr(data-js-upk)').extract_first().encode('utf-8')
-        images = response.css('img.cloudzoom::attr(src)').extract()
         colors = response.css('ul.f-product-colours__list img::attr(alt)').extract()
         sizes = response.css(
             'ul.f-product-buy-form__size-list li:not(.f-selection-block--no-stock) label::text').extract()
@@ -62,12 +63,35 @@ class ThomasPink(CrawlSpider):
         description = response.css('li[data-js-method="description"] p::text').extract_first()
         qualities = response.css('li[data-js-method="description"] ul>li::text').extract()
 
-        # returning dictionary
-        return {
-            str(item_id): {
-                'images': images, 'sizes': sizes,
-                'colors': colors, 'title': title,
-                'description': description, 'price': price,
-                'qualities': qualities
-            }
-        }
+        images = self.get_images(response)
+
+        # Returning Required fields
+        return Item({
+            'item_id': str(item_id),
+            'images': images, 'sizes': sizes,
+            'colors': colors, 'title': title,
+            'description': description, 'price': price,
+            'qualities': qualities
+        })
+
+    def show_status(self, response):
+        return response.status
+
+    def get_images(self, response):
+        main_url = response.css('img.cloudzoom::attr(src)').extract_first()
+        img = main_url
+        images = []
+
+        count = 1
+        status_code = 200
+
+        while status_code == 200:
+            images.append(img)
+            img = main_url.replace('.jpg', '_' + str(count) + '.jpg')
+            count += 1
+
+            # status_code = requests.head(img).status_code
+            status_code = Request(url=img, method="HEAD", callback=self.show_status, errback=self.show_status)
+
+        return images
+
