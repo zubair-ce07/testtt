@@ -17,5 +17,5 @@ The project includes `whistles` scraper to scrap complete whistles.com products.
     1. scrapy crawl whistles -o whistles.json
 1. To clean environment following commands can be used:
     1. deactivate
-    1. rm -rf ~/.virtualenvs/app_factory
+    1. rm -rf ~/.virtualenvs/whistles_scraper
     1. find . -name "*.pyc" -exec rm -f {} \;
