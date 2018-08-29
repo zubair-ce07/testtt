@@ -18,7 +18,8 @@ def main_controller():
     if url:
         words = crawler.crawl_url(url)
         words_dict = text_processor.dictionary_generator(words)
-        print(words_dict)
+        sorted_list = text_processor.word_cloud_processor(words_dict)
+        output_sys.word_cloud_generator(sorted_list)
     else:
         output_sys.invalid_url_warning()
         main_controller()

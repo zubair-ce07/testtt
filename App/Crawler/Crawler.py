@@ -12,4 +12,4 @@ class Crawler:
 
     def parse_response(self, response):
         sel = Selector(response.text)
-        return sel.css('::text').re('\w+')
+        return sel.xpath("//body//text()").re('\w+')

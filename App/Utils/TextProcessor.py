@@ -1,4 +1,5 @@
 import nltk
+import operator
 
 
 class TextProcessor:
@@ -9,7 +10,7 @@ class TextProcessor:
         tagged_words = nltk.pos_tag(words_list)
         extracted_words = []
         for word, pos in tagged_words:
-            if pos == 'NN' or pos == 'VBD':
+            if (pos == 'NN' or pos == 'VB') and len(word) > 2:
                 extracted_words.append(word)
         return extracted_words
 
@@ -22,3 +23,8 @@ class TextProcessor:
             else:
                 words_dict[word] = 1
         return words_dict
+
+    def word_cloud_processor(self, words_dict):
+        sorted_list = sorted(
+            words_dict.items(), key=operator.itemgetter(1), reverse=True)
+        return sorted_list
