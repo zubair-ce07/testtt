@@ -2,68 +2,66 @@
 {% block title %}Profile{% endblock %}
 {% block content %}
 <div class="container h-100 d-flex justify-content-center">
-  <div class="jumbotron my-auto" style="background-color:white">
-    <div class="row">
-      <div class="col-sm-3">
-      {% if current_user_id != session['current_user_id']%}
-           <div class="panel panel-primary">
-             <div class="panel-heading">{{ user_data[0].username }}</div>
-             <div class="panel-body">
-               <div class="list-group">
-                 <a href="#"
-                   class="list-group-item">{{ user_data[0].email }}</a>
-             </div>
-             <form  action="" method="POST">
-                {% if follow_status %}
-                  <input type="hidden" name="follow_status_form" value="1">
-                {% else %}
-                  <input type="hidden" name="follow_status_form" value="0">
-                {% endif %}
-                {% if follow_status %}
-                  <p><button class="btn btn-danger">Un Follow</button></p>
-                {% else %}
-                  <p><button class="btn btn-primary">Follow</button></p>
-                {% endif%}
-             </form>
-             </div>
-           </div>
-             {% endif %}
-        </div>
-      <div class="col-sm-5">
-        {% for posts_data in posts_data_list %}
-        <div class="well">
-        <div>
-           <h3 class="panel-title">{{posts_data.title}}</h3>
-        </div>
-        <div class="panel-body">
-           <img src="{{ url_for('static', filename = posts_data.image_url) }}"
-             class="img-thumbnail img-responsive" width="500dp" height="300dp" />
-             <div "panel-heading">
-               <br>
-                <h3> {{ current_user }} </h3>
-             </div>
-           </div>
-        </div>
-        {% endfor %}
-      </div>
-      <div class="col-sm-4">
-        <div class="container-fluid">
-          <div class="panel panel-primary">
-            <div class="panel-heading">Followed Users</div>
-            <div class="panel-body">
-              <div class="list-group">
-                {% for user in following_users %}
-                <a href="/user/{{ user.followed_userid }}/{{ user.followed_username }}"
-                  class="list-group-item">{{ user.followed_username }}</a>
-                {% endfor %}
+   <div class="jumbotron my-auto" style="background-color:white">
+      <div class="row">
+         <div class="col-sm-3">
+            {% if current_user_id != session['current_user_id']%}
+            <div class="panel panel-primary">
+               <div class="panel-heading">{{ user_data[0].username }}</div>
+               <div class="panel-body">
+                  <div class="list-group">
+                     <a href="#"
+                        class="list-group-item">{{ user_data[0].email }}</a>
+                  </div>
+                  <form  action="" method="POST">
+                     {% if follow_status %}
+                     <input type="hidden" name="follow_status_form" value="1">
+                     {% else %}
+                     <input type="hidden" name="follow_status_form" value="0">
+                     {% endif %}
+                     {% if follow_status %}
+                     <p><button class="btn btn-danger">Un Follow</button></p>
+                     {% else %}
+                     <p><button class="btn btn-primary">Follow</button></p>
+                     {% endif%}
+                  </form>
+               </div>
             </div>
+            {% endif %}
+         </div>
+         <div class="col-sm-5">
+            {% for posts_data in posts_data_list %}
+            <div class="well">
+               <div>
+                  <h3 class="panel-title">{{posts_data.title}}</h3>
+               </div>
+               <div class="panel-body">
+                  <img src="{{ url_for('static', filename = posts_data.image_url) }}"
+                     class="img-thumbnail img-responsive" width="500dp" height="300dp" />
+                  <div "panel-heading">
+                     <br>
+                     <h3> {{ current_user }} </h3>
+                  </div>
+               </div>
             </div>
-          </div>
-        </div>
-
+            {% endfor %}
+         </div>
+         <div class="col-sm-4">
+            <div class="container-fluid">
+               <div class="panel panel-primary">
+                  <div class="panel-heading">Followed Users</div>
+                  <div class="panel-body">
+                     <div class="list-group">
+                        {% for user in following_users %}
+                        <a href="/user/{{ user.followed_userid }}/{{ user.followed_username }}"
+                           class="list-group-item">{{ user.followed_username }}</a>
+                        {% endfor %}
+                     </div>
+                  </div>
+               </div>
+            </div>
+         </div>
       </div>
+   </div>
 </div>
-</div>
-</div>
-
 {% endblock %}

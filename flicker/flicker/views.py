@@ -10,7 +10,6 @@ import random
 import string
 from sqlalchemy import desc
 
-
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(APP_ROOT, 'static/uploads')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -21,7 +20,7 @@ def index():
     if session.get('user_available') and session['user_available']:
         posts_data_list = db.session.query(Posts.pid, Posts.post_privacy,
                                            Posts.image_url, Posts.puid,
-                                           User.username).filter(
+                                           User.uid, User.username).filter(
             Posts.puid == User.uid).order_by(desc(Posts.pid))
         users_list = db.session.query(Follow.followed_username,
                                       Follow.followed_userid).filter(
@@ -48,16 +47,18 @@ def user_wall():
                                            Posts.image_url, Posts.puid).filter(
             Posts.puid == session['current_user_id']).order_by(desc(Posts.pid))
         following_users = db.session.query(Follow).filter(
-                                Follow.following_userid == session['current_user_id']).all()
+            Follow.following_userid == session['current_user_id']).all()
         return render_template('user_wall.html',
-                               posts_data_list = posts_data_list,
-                               following_users = following_users,
-                               current_user_id = session['current_user_id'],
-                               current_user = session['current_user']
+                               posts_data_list=posts_data_list,
+                               following_users=following_users,
+                               current_user_id=session['current_user_id'],
+                               current_user=session['current_user']
                                )
+
 
 def generate_id(size=7, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
+
 
 def append_id(filename):
     name, ext = os.path.splitext(filename)
@@ -109,14 +110,14 @@ def user_profile(user_id, username):
                                        Posts.image_url, Posts.puid).filter(
         Posts.puid == user_id).order_by(desc(Posts.pid))
     following_users = db.session.query(Follow).filter(
-                            Follow.following_userid == user_id).all()
+        Follow.following_userid == user_id).all()
     return render_template('user_wall.html',
-                           posts_data_list = posts_data_list,
-                           following_users = following_users,
+                           posts_data_list=posts_data_list,
+                           following_users=following_users,
                            follow_status=follow_status,
                            user_data=user_data,
-                           current_user_id = user_id,
-                           current_user = username
+                           current_user_id=user_id,
+                           current_user=username
                            )
 
 
@@ -124,11 +125,12 @@ def user_profile(user_id, username):
 def search_user():
     if request.method == 'POST':
         search_element = request.form.get('search_elem')
-        user_data_list = db.session.query(User).filter(User.username.like('%' + search_element + '%')).all()
-        return render_template('user_list.html',users_list = user_data_list)
+        user_data_list = db.session.query(User).filter(
+            User.username.like('%' + search_element + '%')).all()
+        return render_template('user_list.html', users_list=user_data_list)
 
 
-def update_follow_status(profile_user_id, follow_status ,profile_username):
+def update_follow_status(profile_user_id, follow_status, profile_username):
     current_user_id = session['current_user_id']
     profile_user_id = int(profile_user_id)
     if follow_status == "1":
@@ -138,7 +140,8 @@ def update_follow_status(profile_user_id, follow_status ,profile_username):
         db.session.delete(follow_instance)
         db.session.commit()
     if follow_status == "0":
-        follow = Follow(current_user_id, profile_user_id, session['current_user'], profile_username)
+        follow = Follow(current_user_id, profile_user_id,
+                        session['current_user'], profile_username)
         db.session.add(follow)
         db.session.commit()
 

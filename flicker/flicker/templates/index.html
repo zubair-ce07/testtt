@@ -2,43 +2,42 @@
 {% block title %}Home{% endblock %}
 {% block content %}
 <div class="container h-100 d-flex justify-content-center">
-  <div class="jumbotron my-auto" style="background-color:white">
-    <div class="row">
-      <div class="col-sm-2"></div>
-      <div class="col-sm-8">
-        {% for posts_data in posts_data_list %}
-        {% if posts_data.post_privacy == 1 or posts_data.puid == session['current_user_id'] %}
-        <div class="well">
-        <div>
-           <h3 class="panel-title">{{posts_data.title}}</h3>
-        </div>
-        <div class="panel-body">
-           <img src="{{ url_for('static', filename = posts_data.image_url) }}"
-             class="img-thumbnail" width="500dp" height="300dp" />
-             <div "panel-heading">
+<div class="jumbotron my-auto" style="background-color:white">
+<div class="row">
+   <div class="col-sm-2"></div>
+   <div class="col-sm-8">
+      {% for posts_data in posts_data_list %}
+      {% if posts_data.post_privacy == 1 or posts_data.puid == posts_data.uid %}
+      <div class="well">
+         <div>
+            <h3 class="panel-title">{{posts_data.title}}</h3>
+         </div>
+         <div class="panel-body">
+            <img src="{{ url_for('static', filename = posts_data.image_url) }}"
+               class="img-thumbnail" width="500dp" height="300dp" />
+            <div "panel-heading">
                <br>
-                <h3>{{posts_data.username}} </h3>
-             </div>
-           </div>
-        </div>
-        {% elif posts_data.puid in followed_users_list and posts_data.post_privacy == 0 %}
-        <div class="well">
-        <div>
-           <h3 class="panel-title">{{posts_data.title}}</h3>
-        </div>
-        <div class="panel-body">
-           <img src="{{ url_for('static', filename = posts_data.image_url) }}"
-             class="img-thumbnail" width="500dp" height="300dp" />
-             <div "panel-heading">
+               <h3><a href="/user/{{ posts_data.uid }}/{{ posts_data.username }}">{{posts_data.username}}</a> </h3>
+            </div>
+         </div>
+      </div>
+      {% elif posts_data.puid in followed_users_list and posts_data.post_privacy == 0 %}
+      <div class="well">
+         <div>
+            <h3 class="panel-title">{{posts_data.title}}</h3>
+         </div>
+         <div class="panel-body">
+            <img src="{{ url_for('static', filename = posts_data.image_url) }}"
+               class="img-thumbnail" width="500dp" height="300dp" />
+            <div "panel-heading">
                <br>
-                <h3>{{posts_data.username}} </h3>
-             </div>
-           </div>
-        </div>
-        {% endif %}
-        {% endfor %}
+               <h3><a href="/user/{{ posts_data.uid }}/{{ posts_data.username }}">{{posts_data.username}}</a> </h3>
+            </div>
+         </div>
+      </div>
+      {% endif %}
+      {% endfor %}
       <div class="col-sm-2"></div>
-  </div>
+   </div>
 </div>
-
 {% endblock %}
