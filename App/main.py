@@ -4,6 +4,7 @@ from Utils.InputSystem import InputSystem
 from Utils.OutputSystem import OutputSystem
 from Crawler.Crawler import Crawler
 from Utils.TextProcessor import TextProcessor
+from Db.Db import AppDB
 
 
 def main_controller():
