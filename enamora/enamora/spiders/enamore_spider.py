@@ -21,7 +21,7 @@ class EnamoraSpider(CrawlSpider):
     rules = (
         Rule(LinkExtractor(
             restrict_css=("ul.nav.row li a", "a.btn.next"),
-        )),
+        ), callback='parse'),
         Rule(LinkExtractor(
             restrict_css=('div.product > a',)
         ), callback='parse_item'),
