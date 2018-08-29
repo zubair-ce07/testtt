@@ -4,8 +4,7 @@ from w3lib.url import url_query_cleaner
 from six.moves.urllib.parse import urlencode
 
 from demjson import decode
-from scrapy.spiders import CrawlSpider
-from scrapy.spiders import Rule
+from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 from scrapy import Request
 
@@ -57,28 +56,27 @@ class AsosSpider(CrawlSpider):
 
     def parse_category(self, response):
         self.extract_cookie(response)
-
         category_links = self.extract_category_links(loads(response.text), [])
 
         for link in category_links:
             yield Request(link, cookies=self.cookies, callback=self.parse)
 
     def parse_product(self, response):
-        raw_product = self.get_raw_product(response)
+        raw_product = self.extract_raw_product(response)
 
         product_item = Product()
 
-        product_item['gender'] = self.get_gender(raw_product)
-        product_item['skus'] = self.get_skus(raw_product)
+        product_item['gender'] = self.extract_gender(raw_product)
+        product_item['skus'] = self.extract_skus(raw_product)
 
-        product_item['name'] = self.get_product_name(response)
-        product_item['image_urls'] = self.get_image_urls(response)
-        product_item['retailer_sku'] = self.get_retailer_sku(response)
-        product_item['description'] = self.get_description(response)
-        product_item['category'] = self.get_categories(response)
-        product_item['url'] = self.get_product_url(response)
-        product_item['brand'] = self.get_brand(response)
-        product_item['care'] = self.get_care(response)
+        product_item['name'] = self.extract_product_name(response)
+        product_item['image_urls'] = self.extract_image_urls(response)
+        product_item['retailer_sku'] = self.extract_retailer_sku(response)
+        product_item['description'] = self.extract_description(response)
+        product_item['category'] = self.extract_categories(response)
+        product_item['url'] = self.extract_product_url(response)
+        product_item['brand'] = self.extract_brand(response)
+        product_item['care'] = self.extract_care(response)
 
         return self.product_stock_request(product_item, raw_product)
 
@@ -109,68 +107,70 @@ class AsosSpider(CrawlSpider):
 
         return product_item
 
-    def get_raw_product(self, response):
+    def extract_raw_product(self, response):
         xpath = '//script[contains(.,"Pages/FullProduct")]'
         raw_product = response.xpath(xpath).re_first("view\('([^']+)")
         return loads(raw_product)
 
-    def get_gender(self, raw_product):
-        return raw_product.get('gender', 'Unisex')
+    def extract_gender(self, raw_product):
+        prod_gender = raw_product.get('gender')
 
-    def get_skus(self, raw_product):
-        raw_skus = raw_product.get('variants', [])
-        raw_price = raw_product.get('price', {})
+        if not prod_gender:
+            prod_gender = 'Unisex'
+
+        return prod_gender
+
+    def extract_skus(self, raw_product):
+        raw_skus = raw_product['variants']
+        raw_price = raw_product['price']
 
         product_skus = []
         for raw_sku in raw_skus:
-            sku = {'size': raw_sku.get('size'),
-                   'color': raw_sku.get('colour'),
-                   'price': raw_price.get('current'),
-                   'currency': raw_price.get('currency')}
+            sku = {'color': raw_sku['colour'],
+                   'price': raw_price['current'],
+                   'currency': raw_price['currency']
+                   }
+            prod_size = raw_sku.get('size')
 
+            if not prod_size:
+                prod_size = 'One Size'
+
+            sku['size'] = prod_size
             prev_price = raw_price.get('previous')
 
             if prev_price:
                 sku['previous_price'] = [prev_price]
 
             sku['sku_id'] = raw_sku.get('variantId')
-
             product_skus.append(sku)
 
         return product_skus
 
-    def get_image_urls(self, response):
-        prod_images_css = '.product-gallery img::attr(src)'
-        raw_images = response.css(prod_images_css).extract()
+    def extract_image_urls(self, response):
+        raw_images = response.css('.product-gallery img::attr(src)').extract()
         product_images = [url_query_cleaner(raw_image) for raw_image in raw_images]
         return [f'http:{url}?$XXL$' for url in product_images]
 
-    def get_product_name(self, response):
-        prod_name_css = '.product-hero h1::text'
-        return response.css(prod_name_css).extract_first()
+    def extract_product_name(self, response):
+        return response.css('.product-hero h1::text').extract_first()
 
-    def get_care(self, response):
-        care_css = '.care-info span ::text'
-        return response.css(care_css).extract()
+    def extract_care(self, response):
+        return response.css('.care-info span ::text').extract()
 
-    def get_description(self, response):
-        desc_css = '.product-description li::text'
-        return response.css(desc_css).extract()
+    def extract_description(self, response):
+        return response.css('.product-description li::text').extract()
 
-    def get_retailer_sku(self, response):
-        prod_sku_css = '.product-code span::text'
-        return response.css(prod_sku_css).extract_first()
+    def extract_retailer_sku(self, response):
+        return response.css('.product-code span::text').extract_first()
 
-    def get_brand(self, response):
-        brand_css = '.brand-description strong::text'
-        return response.css(brand_css).extract_first()
+    def extract_brand(self, response):
+        return response.css('.brand-description strong::text').extract_first()
 
-    def get_product_url(self, response):
+    def extract_product_url(self, response):
         return response.url
 
-    def get_categories(self, response):
-        category_css = '.bread-crumb a::text'
-        return response.css(category_css).extract()
+    def extract_categories(self, response):
+        return response.css('.bread-crumb a::text').extract()
 
     def extract_category_links(self, raw_navs, category_links):
         for raw_nav in raw_navs:
