@@ -15,6 +15,7 @@ def main_controller():
     output_sys = OutputSystem()
     crawler = Crawler()
     text_processor = TextProcessor()
+    db = AppDB()
     url = input_sys.get_input()
     if url:
         words = crawler.crawl_url(url)
