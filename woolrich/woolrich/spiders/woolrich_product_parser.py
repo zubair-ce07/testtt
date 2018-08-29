@@ -171,11 +171,11 @@ class WoolrichProductParserSpider(Spider):
             skus = raw_skus.copy()
             raw_skus = []
 
-            for raw_sku in product(skus, size_s.css(form_input_css)):
-                sku = raw_sku[0].copy()
+            for raw_sku, size in product(skus, size_s.css(form_input_css)):
+                sku = raw_sku.copy()
                 form_data = sku["form-data"].copy()
-                value = raw_sku[1].css(attr_value_css).extract_first()
-                form_data[raw_sku[1].css(attr_name_css).extract_first()] = value
+                value = size.css(attr_value_css).extract_first()
+                form_data[size.css(attr_name_css).extract_first()] = value
                 sku["form-data"] = form_data
                 title = raw_size_s.css(size_title_css.format(value)).extract_first()
                 sku["size"] = "{}/{}".format(sku["size"], title) if "size" in sku else title
