@@ -1,24 +1,27 @@
 """ Controller file """
-import sys
+import argparse
 from year_reports import display_year_report
 from month_reports import display_month_report
 
 
-if len(sys.argv) > 3 and (((len(sys.argv)-2) % 2) == 0):
-    for i in range(2, len(sys.argv), 2):
-        try:
-            if sys.argv[i] == "-e":
-                display_year_report(sys.argv[1], sys.argv[i+1], False)
-            elif sys.argv[i] == "-d":
-                display_year_report(sys.argv[1], sys.argv[i+1], True)
-            elif sys.argv[i] == "-a":
-                display_month_report(sys.argv[1], sys.argv[i+1], False)
-            elif sys.argv[i] == "-c":
-                display_month_report(sys.argv[1], sys.argv[i+1], True)
-            else:
-                print("\n<< Invalid option "+sys.argv[i])
-                break
-        except IndexError:
-            print("\n<< Invalid arguments\n")
-else:
-    print("\n<< Invalid argument list\n")
+PARSER = argparse.ArgumentParser(description="Weatherman: to generate different reports")
+PARSER.add_argument("path",
+                    help="path to the dir that conatain weatherfiles.")
+PARSER.add_argument("-e", dest="year_false",
+                    help="display year report: Max temp, Min temp, Humidity")
+PARSER.add_argument("-d", dest="year_true",
+                    help="display year graph of highest and lowest temperature.")
+PARSER.add_argument("-a", dest="month_false",
+                    help="display month average report")
+PARSER.add_argument("-c", dest="month_true",
+                    help="display month graph of highest and lowest temperature.")
+
+ARGS = PARSER.parse_args()
+if ARGS.year_false:
+    display_year_report(ARGS.path, ARGS.year_false, False)
+if ARGS.year_true:
+    display_year_report(ARGS.path, ARGS.year_true, True)
+if ARGS.month_false:
+    display_month_report(ARGS.path, ARGS.month_false, False)
+if ARGS.month_true:
+    display_month_report(ARGS.path, ARGS.month_true, True)
