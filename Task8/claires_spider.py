@@ -14,7 +14,7 @@ class MixinUK:
 
 
 class ParseSpider(BaseParseSpider):
-    description_css = '.tab-content *::text'
+    raw_description_css = '.tab-content *::text'
     price_css = '.product-detail .price-sales::text'
 
     def parse(self, response):
@@ -61,7 +61,8 @@ class ParseSpider(BaseParseSpider):
         return response.meta.get('gender')
 
     def image_urls(self, response):
-        return response.css('.product-thumbnails li a::attr(href)').extract()
+        return response.css('.product-thumbnails li a::attr(href)').extract() \
+               or response.css('.product-image::attr(href)').extract()
 
     def is_out_of_stock(self, response):
         stock_availability = response.css('.availability-msg p::text').extract_first().lower()
