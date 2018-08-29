@@ -24,9 +24,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = ['0.0.0.0', 'localhost', 'demo-social-financer.herokuapp.com']
+ALLOWED_HOSTS = ['127.0.0.1', '.herokuapp.com']
 
 
 # Application definition
@@ -133,17 +133,14 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 
-STATIC_ROOT = os.path.join(PROJECT_ROOT, 'staticfiles')
-STATIC_URL = '/static/'
-STATICFILES_DIRS = (
-    os.path.join(PROJECT_ROOT, 'static'),
-)
+# STATIC_ROOT = os.path.join(PROJECT_ROOT, 'staticfiles')
+# STATIC_URL = '/static/'
+# STATICFILES_DIRS = (
+#     os.path.join(PROJECT_ROOT, 'static'),
+# )
 # STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
 
 SECRET_KEY = os.environ.get('SECRET_KEY')
 # DEBUG = config('DEBUG', default=False, cast=bool)
-DATABASES = {
-    'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL')
-    )
-}
+db_from_env = dj_database_url.config(conn_max_age=500)
+DATABASES['default'].update(db_from_env)

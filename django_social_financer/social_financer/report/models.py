@@ -6,8 +6,8 @@ from accounts.models import UserProfile
 
 # Create your models here.
 class Report(models.Model):
-    reporting_user = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, related_name='submitted_report')
-    reported_user = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, related_name='received_reports')
+    reporting_user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='submitted_report')
+    reported_user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='received_reports')
     category_types = (
         ('IL', 'Inappropriate language'),
         ('FA', 'Fake account'),
