@@ -35,7 +35,7 @@ class UniversalSpider(CrawlSpider):
     Crawl spider to scrap `www.universal.at`
     """
     custom_settings = {
-        'DOWNLOAD_DELAY': 0.1,
+        'DOWNLOAD_DELAY': 2,
     }
 
     name = 'universal'
@@ -98,11 +98,6 @@ class UniversalSpider(CrawlSpider):
             'Var_Dimension3': 'size_variant'
         }
         return skus_map.get(key)
-
-    @staticmethod
-    def extract_sizes_url(response):
-        url = response.css("ul[id='product-sizeselect'] include::attr(src)").extract_first()
-        return url.replace('mi.', 'www.')
 
     @staticmethod
     def extract_name(response):
