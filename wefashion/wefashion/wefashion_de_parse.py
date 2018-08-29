@@ -38,7 +38,6 @@ class ProductParser(Spider):
     def parse_requests(self, item):
         if not item['requests']:
             del item['requests']
-            print(item)
             return item
 
         request = item['requests'].pop()
