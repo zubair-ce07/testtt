@@ -2,6 +2,7 @@
 this module contain all classes
 """
 
+
 class Temperature(object):
     """ class to store temperature data"""
     def __init__(self, max_temp, mean_temp, min_temp):
@@ -89,7 +90,6 @@ class YearReport(object):
             print((72 + len(year_str)) * "-", "\n")
         else:
             print("<< Invalid year -  Data is not available for given year\n")
-
 
 
 class MonthAvgReport(object):

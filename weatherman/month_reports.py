@@ -39,10 +39,12 @@ def calculate_month_avg_file(filename, rec_list, month_str):
     """ calculate and return month average report """
     get_month_data_in_year_list(filename, rec_list, True)
     if rec_list is not None and len(rec_list) > 0:
-        max_temp_data = [y.temp.max_temp for y in rec_list if y.temp.max_temp is not None]
+        max_temp_data = [y.temp.max_temp for y in rec_list
+                         if y.temp.max_temp is not None]
         max_temp_avg = sum(max_temp_data) / len(max_temp_data)
 
-        min_temp_data = [y.temp.min_temp for y in rec_list if y.temp.min_temp is not None]
+        min_temp_data = [y.temp.min_temp for y in rec_list
+                         if y.temp.min_temp is not None]
         min_temp_avg = sum(min_temp_data) / len(min_temp_data)
 
         humidity_avg_data = [y.humidity.mean_humidity for y in rec_list
@@ -81,6 +83,3 @@ def display_month_report(path, year_month, graph):
 
     except ValueError:
         print("\n<< Invalid month or year [required: year/month]\n")
-
-
-

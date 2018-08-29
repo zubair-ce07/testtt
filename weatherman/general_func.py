@@ -46,6 +46,3 @@ def get_month_data_in_year_list(file_name, rec_list, print_except):
         if print_except is True:
             print("I/O error({0}: {1})".format(err.errno, err.strerror))
         print("", end="")
-
-
-
