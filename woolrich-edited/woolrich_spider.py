@@ -21,6 +21,7 @@ class MixinUS(Mixin):
 
 
 class WoolrichParseSpider(BaseParseSpider, MixinUS):
+    attr_name_r = re.compile('color|size|fit', flags=re.I)
     request_api_url = 'https://www.woolrich.com/remote/v1/product-attributes/{}'
     raw_description_css = '#features-content li::text, #details-content::text'
 
@@ -135,11 +136,10 @@ class WoolrichParseSpider(BaseParseSpider, MixinUS):
 
     def get_product_attributes(self, response):
         product_attrs_selectors = response.css('.productView-options [data-product-attribute]')
-        attr_name_r = re.compile('color|size|fit', flags=re.I)
 
         attributes_map = {}
         for selector in product_attrs_selectors:
-            attr_name = selector.css('.form-label span::text').re_first(attr_name_r).lower()
+            attr_name = selector.css('.form-label span::text').re_first(self.attr_name_r).lower()
 
             attributes_map[attr_name] = {}
             attributes_map[attr_name]['value'] = selector.css('.form-radio::attr(name)').extract_first()
