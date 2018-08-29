@@ -155,13 +155,21 @@ class AsianGamesSpider(CrawlSpider):
         return response.css('.or-athlete-profile__discipline::text').extract_first()
 
     def _athlete_height(self, response):
-        return response.css('.or-anagraphic__block .or-anagraphic__data')[2].css('::text').extract_first().strip()
+        output = response.css('.or-anagraphic__block .or-anagraphic__data')[2].css('::text').extract_first().strip()
+        matched_output = findall(r'\d+', output)
+        if matched_output:
+            return matched_output[0]
+        return None
 
     def _athlete_age(self, response):
         return response.css('.or-anagraphic__block .or-anagraphic__data::text').extract()[0].strip()
 
     def _athlete_weight(self, response):
-        return response.css('.or-anagraphic__block .or-anagraphic__data')[3].css('::text').extract_first().strip()
+        output = response.css('.or-anagraphic__block .or-anagraphic__data')[3].css('::text').extract_first().strip()
+        matched_output = findall(r'\d+', output)
+        if matched_output:
+            return matched_output[0]
+        return None
 
     def _athlete_born_date(self, response):
         return response.css('.or-athlete__birth--date::text').extract_first()
