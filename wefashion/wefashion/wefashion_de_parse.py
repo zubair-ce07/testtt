@@ -4,7 +4,7 @@ from wefashion.items import WefashionItem
 
 
 class ProductParser(Spider):
-    name = 'wefashion-de-parser'
+    name = "wefashion-de-parser"
     brand = "WE"
     visited_products = set()
     gender_map = {
@@ -38,6 +38,7 @@ class ProductParser(Spider):
     def parse_requests(self, item):
         if not item['requests']:
             del item['requests']
+            print(item)
             return item
 
         request = item['requests'].pop()
@@ -55,10 +56,9 @@ class ProductParser(Spider):
         return [response.follow(url, callback=self.parse_product) for url in color_urls]
 
     def product_exists(self, response):
-        raw_retailer_sku = self.raw_retailer_sku(response)
         retailer_sku = self.extract_retailer_sku(response)
 
-        if not raw_retailer_sku or retailer_sku in self.visited_products:
+        if retailer_sku in self.visited_products:
             return True
 
         self.visited_products.add(retailer_sku)
@@ -70,10 +70,10 @@ class ProductParser(Spider):
         return response.css(color_css)
 
     def raw_retailer_sku(self, response):
-        return response.css('.pdp-main::attr(data-product-id)').extract_first()
+        return response.css('.pdp-main::attr(data-product-id)')
 
     def extract_retailer_sku(self, response):
-        return self.raw_retailer_sku(response).split('_')[0]
+        return self.raw_retailer_sku(response).extract_first().split('_')[0]
 
     def extract_gender(self, response):
         gender_css = "meta[itemprop='name']::attr(content)"
@@ -105,7 +105,7 @@ class ProductParser(Spider):
         return response.css(currency_css).extract_first()
 
     def extract_color_id(self, response):
-        return self.raw_retailer_sku(response).split('_')[1]
+        return self.raw_retailer_sku(response).extract_first().split('_')[1]
 
     def extract_color(self, response):
         color_id = self.extract_color_id(response)
