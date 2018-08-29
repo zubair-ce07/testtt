@@ -5,7 +5,7 @@ from w3lib.url import url_query_cleaner as w3cleaner
 from .product_parser import Parser
 
 
-class HugoBossSpider(CrawlSpider):
+class HugobossSpider(CrawlSpider):
     name = "hugoboss"
     parser = Parser()
 
@@ -27,7 +27,7 @@ class HugoBossSpider(CrawlSpider):
     def parse(self, response):
         trail = response.meta.get("trail", [])
         trail.append(response.url)
-        for request in super(HugoBossSpider, self).parse(response):
+        for request in super(HugobossSpider, self).parse(response):
             request.meta["trail"] = trail.copy()
             yield request
 

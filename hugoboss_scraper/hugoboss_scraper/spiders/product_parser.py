@@ -3,13 +3,15 @@ from json import loads as json_loads
 from scrapy import Spider
 from w3lib.url import url_query_cleaner as w3cleaner
 
+from .hugoboss_item import HugobossScraperItem
+
 
 class Parser(Spider):
     name = "parser"
     scraped_ids = set()
 
     def parse(self, response):
-        product = {}
+        product = HugobossScraperItem()
         product_data = self.get_product_json(response)
 
         if self.id_exists(product_data["id"]):
@@ -79,7 +81,7 @@ class Parser(Spider):
         if discount:
             common_sku["previous_prices"] = [product_data["price"] + discount]
 
-        common_sku["price"] = product_data["price"]
+        common_sku["price"] = 100 * product_data["price"]
         common_sku["currency"] = self.get_currency(response)
         common_sku["colour"] = self.get_colour(response)
         return common_sku
