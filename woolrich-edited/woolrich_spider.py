@@ -50,6 +50,7 @@ class WoolrichParseSpider(BaseParseSpider, MixinUS):
             garment['skus'].update(self.make_sku(response))
             
         garment['meta']['requests_queue'] += size_requests
+
         return self.next_request_or_garment(garment)
 
     def parse_size(self, response):
@@ -60,12 +61,13 @@ class WoolrichParseSpider(BaseParseSpider, MixinUS):
             garment['skus'].update(self.make_sku(response))
             
         garment['meta']['requests_queue'] += fit_requests
+
         return self.next_request_or_garment(garment)
 
     def parse_fitting(self, response):
         garment = response.meta.get('garment')
-
         garment['skus'].update(self.make_sku(response))
+
         return self.next_request_or_garment(garment)
 
     def color_requests(self, response, product_id):
@@ -126,6 +128,7 @@ class WoolrichParseSpider(BaseParseSpider, MixinUS):
         sku.update(raw_sku)
 
         sku['size'] = '/'.join(sku.get('size', [self.one_size]))
+
         return {raw_item['sku']: sku}
 
     def sku_pricing(self, raw_sku):
@@ -152,6 +155,7 @@ class WoolrichParseSpider(BaseParseSpider, MixinUS):
 
         currency_css = '[itemprop="priceCurrency"]::attr(content)'
         attributes_map['currency'] = response.css(currency_css).extract_first()
+
         return attributes_map
 
     def product_id(self, response):
@@ -171,8 +175,8 @@ class WoolrichParseSpider(BaseParseSpider, MixinUS):
     
     def product_brand(self, response):
     	raw_name = self.raw_name(response)
-
     	brand = 'John Rich & Bros'
+
     	return brand if brand in raw_name else 'Woolrich'
     
     def product_gender(self, response):
