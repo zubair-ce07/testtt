@@ -18,14 +18,15 @@ class WoolrichSpider(CrawlSpider):
 
     custom_settings = {'DOWNLOAD_DELAY': 0.5, 'HTTPCACHE_ENABLED': True}
 
+    attr_name_r = re.compile('color|size|fit', flags=re.I)
     request_api_url = 'https://www.woolrich.com/remote/v1/product-attributes/{}'
     genders = ['Men', 'Women']
 
     listing_css = ['#primary', '.pagination-item--next']
     rules = (
-                Rule(LinkExtractor(restrict_css=listing_css), follow=True),
-                Rule(LinkExtractor(restrict_css=('.card-title')), callback='parse_item'),
-            )
+        Rule(LinkExtractor(restrict_css=listing_css), follow=True),
+        Rule(LinkExtractor(restrict_css=('.card-title')), callback='parse_item'),
+    )
 
     def parse_item(self, response):
         item = WoolrichItem()
@@ -187,11 +188,10 @@ class WoolrichSpider(CrawlSpider):
 
     def get_product_attributes(self, response):
         product_attrs_selectors = response.css('.productView-options [data-product-attribute]')
-        attr_name_r = re.compile('color|size|fit', flags=re.I)
 
         attributes_map = {}
         for selector in product_attrs_selectors:
-            attr_name = selector.css('.form-label span::text').re_first(attr_name_r).lower()
+            attr_name = selector.css('.form-label span::text').re_first(self.attr_name_r).lower()
 
             attributes_map[attr_name] = {}
             attributes_map[attr_name]['value'] = selector.css('.form-radio::attr(name)').extract_first()
