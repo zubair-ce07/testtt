@@ -1,12 +1,11 @@
 import re
 import json
-from urllib.parse import urlencode
 
 from scrapy import Selector, FormRequest
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 
-from canda.items import CandaItem
+from canda.items import Item
 
 
 class Canda(CrawlSpider):
@@ -19,15 +18,13 @@ class Canda(CrawlSpider):
 
     navigation_and_pagination = '.nav-main__list-item, .pagination__next.js-view-click'
     product_css = '.product-tile'
-    rules = (Rule(LinkExtractor(restrict_css=navigation_and_pagination,
-                                tags=('li', 'a'), attrs=('data-url', 'href')), follow=True),
-             Rule(LinkExtractor(restrict_css=product_css), callback='parse_item'))
-
-    color_parameters = (
-        ('storeId', '10154'),
-        ('langId', '-3')
+    rules = (
+        Rule(LinkExtractor(restrict_css=navigation_and_pagination,
+                           tags=('li', 'a'), attrs=('data-url', 'href')), follow=True),
+        Rule(LinkExtractor(restrict_css=product_css), callback='parse_item')
     )
-    color_url_t = 'https://www.c-and-a.com/webapp/wcs/stores/servlet/product/change/color?'
+
+    color_url_t = 'https://www.c-and-a.com/webapp/wcs/stores/servlet/product/change/color?storeId=10154&langId=-3'
 
     genders = [
         ('herren', 'male'),
@@ -37,22 +34,23 @@ class Canda(CrawlSpider):
         ('baby', 'kids'),
         ('kinder', 'kids')
     ]
-    currencies = {'€': 'EUR'}
+    currencies = (
+        ('€', 'EUR'),
+    )
 
     def parse_item(self, response):
-        item = CandaItem()
+        item = Item()
         item['brand'] = self.brand_name(response)
         item['name'] = self.title(response)
         item['url'] = response.url
         item['categories'] = self.categories(response)
         item['gender'] = self.gender(response)
-        retailer_sku = self.retailer_sku(response)
-        item['retailer_sku'] = retailer_sku
+        item['retailer_sku'] = self.retailer_sku(response)
         item['description'] = self.description(response)
         item['care'] = self.care(response)
         item['image_urls'] = self.image_urls(response)
-        item['skus'] = self.skus(response, retailer_sku)
-        item['requests'] = self.make_color_requests(response)
+        item['skus'] = self.skus(response)
+        item['meta'] = {'requests': self.make_color_requests(response)}
 
         return self.next_request_or_item(item)
 
@@ -61,7 +59,7 @@ class Canda(CrawlSpider):
 
         selector = Selector(text=json.loads(response.text)['html'][0]['product-stage'])
         item['image_urls'] += self.image_urls(selector)
-        item['skus'] += self.skus(selector, item['retailer_sku'])
+        item['skus'] += self.skus(selector)
 
         return self.next_request_or_item(item)
 
@@ -74,23 +72,23 @@ class Canda(CrawlSpider):
         color_requests = []
         for color_id in color_ids:
             color_formdata['colorId'] = color_id
-            color_request = FormRequest(url=f'{self.color_url_t}{urlencode(self.color_parameters)}',
+            color_request = FormRequest(url=self.color_url_t,
                                         callback=self.parse_color, formdata=color_formdata)
             color_requests.append(color_request)
 
         return color_requests
 
     def next_request_or_item(self, item):
-        if not item['requests']:
-            del item['requests']
+        if not item['meta']['requests']:
+            del item['meta']
             return item
 
-        request = item['requests'].pop()
+        request = item['meta']['requests'].pop()
         request.meta['item'] = item
 
         return request
 
-    def skus(self, selector, retailer_sku):
+    def skus(self, selector):
         sku_common = self.sku_common(selector)
         out_of_stock_sizes = self.out_of_stock_sizes(selector)
 
@@ -102,7 +100,7 @@ class Canda(CrawlSpider):
             if size in out_of_stock_sizes:
                 sku['is_out_of_stock'] = True
 
-            sku['sku_id'] = f'{retailer_sku}_{sku["color"]}_{size}'
+            sku['sku_id'] = f'{sku["color"]}_{size}'
             skus.append(sku)
 
         return skus
@@ -133,11 +131,10 @@ class Canda(CrawlSpider):
         return int(''.join(re.findall("\d+", price)))
 
     def currency(self, response):
-        return self.currencies.get(self.currency_symbol(response))
-
-    def currency_symbol(self, response):
         price = response.css('.product-stage__price span::text').extract_first()
-        return re.findall(r"[^\w\d_\s,.\\]", price, re.UNICODE)[0]
+        for symbol, currency in self.currencies:
+            if symbol in price:
+                return currency
 
     def brand_name(self, response):
         return response.css('.box__logolist-brand::attr(alt)').extract_first(default='C AND A')
@@ -172,7 +169,7 @@ class Canda(CrawlSpider):
 
     def categories(self, response):
         raw_category = response.css('.util-link-left::text').extract_first().strip()
-        return [re.sub(r"Zurück zu ", '', raw_category)]
+        return [raw_category.replace("Zurück zu ", '')]
 
     def color_ids(self, response):
         return response.css('.box--product .color-list :not(.is-active)::attr(data-color)').extract()

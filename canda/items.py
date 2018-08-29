@@ -1,7 +1,7 @@
 import scrapy
 
 
-class CandaItem(scrapy.Item):
+class Item(scrapy.Item):
     name = scrapy.Field()
     url = scrapy.Field()
     brand = scrapy.Field()
@@ -12,4 +12,4 @@ class CandaItem(scrapy.Item):
     description = scrapy.Field()
     care = scrapy.Field()
     image_urls = scrapy.Field()
-    requests = scrapy.Field()
+    meta = scrapy.Field()
