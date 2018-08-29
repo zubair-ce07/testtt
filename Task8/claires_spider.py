@@ -44,6 +44,15 @@ class ParseSpider(BaseParseSpider):
                 return True
 
         return False
+    
+    def parse_skus(self, response):
+        garment = response.meta['garment']
+        garment['skus'].update(self.skus(response))
+        return self.next_request_or_garment(garment)
+
+    def size_requests(self, response):
+        sizes = response.css('.swatches a::attr(href)').extract()
+        return [Request(size, callback=self.parse_skus) for size in sizes]
 
     def product_id(self, response):
         return response.css('#pid::attr(value)').extract_first()
@@ -67,15 +76,6 @@ class ParseSpider(BaseParseSpider):
     def is_out_of_stock(self, response):
         stock_availability = response.css('.availability-msg p::text').extract_first().lower()
         return stock_availability == 'out of stock'
-
-    def parse_skus(self, response):
-        garment = response.meta['garment']
-        garment['skus'].update(self.skus(response))
-        return self.next_request_or_garment(garment)
-
-    def size_requests(self, response):
-        sizes = response.css('.swatches a::attr(href)').extract()
-        return [Request(size, callback=self.parse_skus) for size in sizes]
 
     def skus(self, response):
         skus = {}
