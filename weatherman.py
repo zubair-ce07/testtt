@@ -18,15 +18,14 @@ from termcolor import colored
 
 
 def get_month_name(index):
+    """Takes a number to return its month"""
     months = {
         1: 'Jan', 2: 'Feb', 3: 'Mar', 4: 'Apr', 5: 'May',
         6: 'Jun', 7: 'Jul', 8: 'Aug', 9: 'Sep', 10: 'Oct',
         11: 'Nov', 12: 'Dec',
     }
-    if months.get(index):
-        return months[index]
-    else:
-        return None
+
+    return months.get(index, None)
 
 
 def applying_arguments():
@@ -41,8 +40,11 @@ def applying_arguments():
 
 
 def parser(time_span):
-    """This is the main function of this module, it takes directory and date to work on and in return
-    it gives a list of records from the directory related to the specified dates"""
+    """
+    This is the main function of this module, it takes directory and date to work on and in return
+    it gives a list of records from the directory related to the specified dates, if no data found
+    it wil return none
+    """
 
     year, month, day = separate_combined_date(time_span)
     files = get_required_files(year, month)
@@ -82,6 +84,14 @@ def collect_data_from_files(files, day=None):
         records = csv.DictReader(open(file, 'r'), dialect='space_eliminator')
 
         for index, record in enumerate(records):
+            '''
+            Each month-file contains list of day's records, when the user specifies a day along with
+            year and month, we have to skip all the records from list => except the required day
+            
+            The csv.DictReader doesn't give us a subscriptable object (means we can't use indexing with such object)
+            So we still have to iterate over the object and then extract the day which user defined through
+            commandline
+            '''
             if not day:
                 weather_records.append(record)
             elif index == day - 1:
@@ -140,6 +150,8 @@ def display_avg(time_span, data_set):
 
     # Printing the end results
     print(f"{string_to_date(time_span)}")
+
+    # .0f means that we are skipping the decimal part while showing
     print(f"Highest Temperature Average : {high_avg: .0f}C")
     print(f"Lowest Temperature Average : {low_avg: .0f}C")
     print(f"Mean Humidity Average : {humid_avg: .2f}%")
@@ -188,7 +200,7 @@ def colored_text_single(num, count, color):
     print(num, end=" ")
     for i in range(count):
         print(colored('+', color), end='')
-    print(f" {count: .0f}C")
+    print(f" {count}C")
 
 
 def colored_text_double(num, max_count, min_count, max_color, min_color):
@@ -198,7 +210,7 @@ def colored_text_double(num, max_count, min_count, max_color, min_color):
     for i in range(max_count):
         print(colored('+', max_color), end='')
 
-    print(f"{min_count: .0f}C - {max_count: .0f}C")
+    print(f"{min_count}C - {max_count}C")
 
 
 def display_range_chart(time_span, data_set):
@@ -265,6 +277,8 @@ def main():
             data_set = parser(attribute_val)
             if data_set:
                 function_specifier.get(arg)(attribute_val, data_set)
+            else:
+                print("No Data Found")
 
 
 if __name__ == "__main__":
