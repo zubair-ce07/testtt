@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-import base64
+from base64 import b64decode
+import json
 
 import scrapy
 from scrapy.spiders import CrawlSpider, Rule
@@ -9,6 +10,9 @@ from universal.items import UniversalItem
 
 
 def clean_url(encoded_url):
+    domain = 'https://www.universal.at'
+    encoded_url = encoded_url[encoded_url.index('/X') + 1:]
+
     def rot47(url):
         decoded_url = []
         for ch in url:
@@ -18,7 +22,8 @@ def clean_url(encoded_url):
             else:
                 decoded_url.append(ch)
         return ''.join(decoded_url)
-    return rot47(base64.b64decode(encoded_url).decode())
+
+    return '{}{}'.format(domain, rot47(b64decode(encoded_url).decode()))
 
 
 def clean_price(price):
@@ -33,54 +38,66 @@ class UniversalSpider(CrawlSpider):
         'DOWNLOAD_DELAY': 0.1,
     }
 
-    name = 'uni'
+    name = 'universal'
     allowed_domains = ['www.universal.at']
     start_urls = ['https://www.universal.at']
-
+    product_data_url = ('https://www.universal.at/INTERSHOP/rest/WFS/EmpirieCom-UniversalAT-Site/-;loc=de_AT;cur=EUR'
+                        '/inventories/{}/master?_=')
     rules = (
         Rule(LinkExtractor(
             restrict_css='div#nav-main-list span',
-            process_value=clean_url,
-        )),
+            process_value=clean_url, attrs=('data-src',), tags=('span',)
+        ), callback='parse'),
         Rule(LinkExtractor(
             restrict_css="div.productlist-product a"
         ), callback='parse_item')
     )
-    # response.css("a.link-product::attr(href)")
 
     def parse_item(self, response):
         item = UniversalItem()
+        retailer_sku = response.url.split('/')[-1]
         item['url'] = response.url
+        item['retailer_sku'] = retailer_sku
         item['name'] = self.extract_name(response)
         item['brand'] = self.extract_brand(response)
         item['care'] = self.extract_care(response)
         item['description'] = self.extract_description(response)
+        skus_request = self.prepare_skus_request(retailer_sku)
         item['image_urls'] = self.extract_image_urls(response)
-        sizes_request = scrapy.Request(url=self.extract_sizes_url(response), callback=self.parse_sizes)
-        sizes_request.meta['item'] = item
-        sizes_request.meta['color'] = self.extract_color(response)
-        sizes_request.meta['price'] = self.extract_price(response)
-        yield sizes_request
+        skus_request.meta['item'] = item
+        skus_request.meta['price'] = self.extract_price(response)
+        yield skus_request
 
-    def parse_sizes(self, response):
+    def prepare_skus_request(self, retailer_sku):
+        return scrapy.Request(
+            url=self.product_data_url.format(retailer_sku), callback=self.parse_skus
+        )
+
+    def parse_skus(self, response):
         item = response.meta['item']
-        color = response.meta['color']
         price = response.meta['price']
+        response = json.loads(response.text)
         skus = list()
-        sizes_info = response.css("div.psv-values-box")[-1]
-        for size_info in sizes_info.css("div.psv-item::attr('data-value')").extract():
-            size = size_info.css("span::text").extract_first()
-            sku = {
-                'color': color,
-                'size': size,
-                'sku_id': "{}_{}".format(color.replace(' ', '_'), size)
+        for sku in response['variants']:
+            sku_dict = {
+                self.map_sku_key(sku_info['id']): sku_info['value'] for sku_info in sku['axisData']
             }
-            if size_info.css("a[disabled*='disabled']"):
-                sku['out_of_stock'] = True
-            sku.update(price)
-            skus.append(sku)
+            sku_dict['sku_id'] = sku['sku']
+            sku_dict.update(price)
+            if sku['deliveryStatus'] == 'NOT_AVAILABLE':
+                sku_dict['out_of_stock'] = True
+            skus.append(sku_dict)
         item['skus'] = skus
         yield item
+
+    @staticmethod
+    def map_sku_key(key):
+        skus_map = {
+            'Var_Article': 'color',
+            'Var_Size': 'size',
+            'Var_Dimension3': 'size_variant'
+        }
+        return skus_map.get(key)
 
     @staticmethod
     def extract_sizes_url(response):
@@ -101,28 +118,25 @@ class UniversalSpider(CrawlSpider):
 
     @staticmethod
     def extract_care(response):
-        return response.css("ul[id='pflegehinweise'] img::attr(alt)").extract()
-
-    @staticmethod
-    def extract_color(response):
-        return response.css("span.psv-selected-value::text").extract_first()
+        care_details = response.css('table.tmpArticleDetailTable tr')
+        return [": ".join(care_detail.css('::text').extract()) for care_detail in care_details]
 
     @staticmethod
     def extract_price(response):
-        regular_price = response.css("div.price::text").extract_first(default='').strip()
+        regular_price = response.css("div.price::text").extract()[1].strip()
         previous_prices = []
         if not regular_price:
-            regular_price = response.css("div.price.new::text").extract()[1].strip()
+            regular_price = clean_price(response.css("div.price.new::text").extract_first().strip())
             previous_prices = previous_prices.append(
                 response.css("div.price-strike::text").extract_first(default='').strip()
             )
         price_dict = {
-            'currnency': regular_price[-1],
-            'price': clean_price(regular_price.strip[:-1]),
+            'currency': regular_price[-1],
+            'price': clean_price(regular_price[:-1]),
         }
         if previous_prices:
             price_dict['previous_prices'] = previous_prices
-        return previous_prices
+        return price_dict
 
     @staticmethod
     def extract_description(response):

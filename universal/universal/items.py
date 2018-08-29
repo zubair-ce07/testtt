@@ -4,6 +4,7 @@ import scrapy
 
 class UniversalItem(scrapy.Item):
     url = scrapy.Field()
+    retailer_sku = scrapy.Field()
     name = scrapy.Field()
     brand = scrapy.Field()
     image_urls = scrapy.Field()
