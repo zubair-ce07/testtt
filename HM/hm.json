@@ -1,0 +1,57 @@
+{
+  "color_id": "8009",
+  "image_urls": [
+    "https://lp2.hm.com/hmgoepprod?set=source%5B/63/aa/63aa262574a4d5aa8ba330bc2a6a28b4b4ed9afb.jpg%5D%2Corigin%5Bdam%5D%2Ctype%5BLookbook%5D%2Chmver%5B1%5D%2Cres%5By%5D&call=url%5Bfile%3A/product/fullscreen%5D",
+    "https://lp2.hm.com/hmgoepprod?set=source%5B/8d/5e/8d5e28eaffae8e159c88cb8e435c52335bbc1604.jpg%5D%2Corigin%5Bdam%5D%2Ctype%5BLookbook%5D%2Chmver%5B1%5D%2Cres%5By%5D&call=url%5Bfile%3A/product/fullscreen%5D",
+    "https://lp2.hm.com/hmgoepprod?set=source%5B/09/3c/093c5424a60a4551e94578fd90c15566098d9791.jpg%5D%2Corigin%5Bdam%5D%2Ctype%5BLookbook%5D%2Chmver%5B1%5D%2Cres%5By%5D&call=url%5Bfile%3A/product/fullscreen%5D",
+    "https://lp2.hm.com/hmgoepprod?set=source%5B/90/6b/906bf8dccb31b5d479a40ed586248b4306bac4ab.jpg%5D%2Corigin%5Bdam%5D%2Ctype%5BLookbook%5D%2Chmver%5B1%5D%2Cres%5By%5D&call=url%5Bfile%3A/product/fullscreen%5D",
+    "https://lp2.hm.com/hmgoepprod?set=source%5B/4f/74/4f74d04996fdd6992049fd5425397a8ebf2e196e.jpg%5D%2Corigin%5Bdam%5D%2Ctype%5BDescriptiveStillLife%5D%2Chmver%5B2%5D%2Cres%5By%5D&call=url%5Bfile%3A/product/fullscreen%5D"
+  ],
+  "url": "https://kw.hm.com/en/jersey-crop-top-3?selected=336146",
+  "retailer_sku": "0408875",
+  "referrer_url": "https://kw.hm.com/en/ladies/selected/summer-shorts",
+  "brand": "H&M Kuwait",
+  "product_name": "Jersey crop top",
+  "description": [
+    "Cropped top in ribbed jersey with a V-neck and narrow shoulder straps."
+  ],
+  "currency": "KD",
+  "category": [
+    "Ladies",
+    "SELECTED",
+    "Summer Shorts"
+  ],
+  "color_name": "Black",
+  "care": "Machine wash at 40\u00b0",
+  "skus": [
+    {
+      "size_name": "M",
+      "sale_price": "3.500",
+      "full_price": "3.500",
+      "stock": 1,
+      "size_identifier": "7845"
+    },
+    {
+      "size_name": "XS",
+      "sale_price": "3.500",
+      "full_price": "3.500",
+      "stock": 1,
+      "size_identifier": "7874"
+    },
+    {
+      "size_name": "S",
+      "sale_price": "3.500",
+      "full_price": "3.500",
+      "stock": 1,
+      "size_identifier": "7856"
+    },
+    {
+      "size_name": "L",
+      "sale_price": "3.500",
+      "full_price": "3.500",
+      "stock": 1,
+      "size_identifier": "7840"
+    }
+  ]
+}
+
