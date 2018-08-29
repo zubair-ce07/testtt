@@ -13,7 +13,10 @@ class WoolrichProductParserSpider(Spider):
     sku_base_url = "https://www.woolrich.com/remote/v1/product-attributes/"
     currency = "USD"
     seen_skus = set()
-    gender_map = ["Men", "Women"]
+    gender_map = {
+        "Men": "men",
+        "Women": "women",
+    }
 
     def parse(self, response):
         product = ProductItem()
@@ -88,7 +91,7 @@ class WoolrichProductParserSpider(Spider):
 
         for gender in self.gender_map:
             if gender in gender_soup:
-                return gender.lower()
+                return self.gender_map[gender]
 
         return "unisex"
 
