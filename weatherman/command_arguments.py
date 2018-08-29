@@ -39,5 +39,5 @@ class CommandArgument:
             return
 
     def __str__(self):
-        return ("Option: {}\nDate: {}\nError String: {}"
-                .format(self.option, self.date, self.error))
+        return ("Option: {}\nDate: {}\nError String: {}".format(self.option, self.date
+                                                                , self.error))

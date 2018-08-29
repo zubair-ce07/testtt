@@ -41,8 +41,7 @@ class FileContent:
         """
 
         regex = "{}{}_[a-z]{}.txt".format(Constants.FILE_PREFIX, year, "{3}")
-        selected_file_names = re.findall(
-            regex, ' '.join(self.file_names), re.IGNORECASE)
+        selected_file_names = re.findall(regex, ' '.join(self.file_names), re.IGNORECASE)
 
         # to skip initial whitespaces
         csv.register_dialect('myDialect', delimiter=',', skipinitialspace=True)

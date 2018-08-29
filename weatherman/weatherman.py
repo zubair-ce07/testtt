@@ -91,8 +91,7 @@ def get_output_for_a_option(file_content, date):
         return
     print("Highest Average: {:02d}C".format(monthly_temp_humidity_avg["max_temp_avg"]))
     print("Lowest Average: {:02d}C".format(monthly_temp_humidity_avg["min_temp_avg"]))
-    print("Average Mean Humidity: {:02d}%\n"
-          .format(monthly_temp_humidity_avg["mean_humidity_avg"]))
+    print("Average Mean Humidity: {:02d}%\n".format(monthly_temp_humidity_avg["mean_humidity_avg"]))
 
 
 def get_output_for_e_option(file_content, date):
