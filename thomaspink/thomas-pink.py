@@ -53,45 +53,39 @@ class ThomasPink(CrawlSpider):
     def get_item_info(self, response):
         """Takes response of web-page as argument and extracts necessary information in the form of dict"""
 
-        # Extracting information
-        item_id = response.css('p.f-product-info__id::attr(data-js-upk)').extract_first().encode('utf-8')
-        colors = response.css('ul.f-product-colours__list img::attr(alt)').extract()
-        sizes = response.css(
-            'ul.f-product-buy-form__size-list li:not(.f-selection-block--no-stock) label::text').extract()
-        title = response.css('h1[itemprop="name"]::text').extract_first()
-        price = response.css('span.f-block-price__item::text').extract_first()
-        description = response.css('li[data-js-method="description"] p::text').extract_first()
-        qualities = response.css('li[data-js-method="description"] ul>li::text').extract()
-
-        images = self.get_images(response)
-
-        # Returning Required fields
+        # Extracting information & Returning Required fields
         return Item({
-            'item_id': str(item_id),
-            'images': images, 'sizes': sizes,
-            'colors': colors, 'title': title,
-            'description': description, 'price': price,
-            'qualities': qualities
+            'item_id': self.get_item_id(response),
+            'colors': self.get_colors(response),
+            'sizes': self.get_sizes(response),
+            'title': self.get_title(response),
+            'price': self.get_price(response),
+            'description': self.get_description(response),
+            'qualities': self.get_qualities(response),
+            'images': self.get_images(response)
         })
 
-    def show_status(self, response):
-        return response.status
+    def get_item_id(self, response):
+        return response.css('p.f-product-info__id::attr(data-js-upk)').extract_first()
+
+    def get_colors(self, response):
+        return response.css('ul.f-product-colours__list img::attr(alt)').extract()
+
+    def get_sizes(self, response):
+        return response.css(
+            'ul.f-product-buy-form__size-list li:not(.f-selection-block--no-stock) label::text').extract()
+
+    def get_title(self, response):
+        return response.css('h1[itemprop="name"]::text').extract_first()
+
+    def get_price(self, response):
+        return response.css('span.f-block-price__item::text').extract_first()
+
+    def get_description(self, response):
+        return response.css('li[data-js-method="description"] p::text').extract_first()
+
+    def get_qualities(self, response):
+        return response.css('li[data-js-method="description"] ul>li::text').extract()
 
     def get_images(self, response):
-        main_url = response.css('img.cloudzoom::attr(src)').extract_first()
-        img = main_url
-        images = []
-
-        count = 1
-        status_code = 200
-
-        while status_code == 200:
-            images.append(img)
-            img = main_url.replace('.jpg', '_' + str(count) + '.jpg')
-            count += 1
-
-            # status_code = requests.head(img).status_code
-            status_code = Request(url=img, method="HEAD", callback=self.show_status, errback=self.show_status)
-
-        return images
-
+        return response.css('img.cloudzoom::attr(src)').extract_first()
