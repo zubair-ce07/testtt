@@ -7,25 +7,10 @@ from scrapy.loader.processors import MapCompose
 from scrapy.loader.processors import Join
 from scrapy.loader.processors import TakeFirst
 
+from nwh.items import DoctorItem
+from nwh.items import AddressItem
+
 BASE_URL = 'https://www.nwh.org/find-a-doctor/'
-
-
-class DoctorItem(scrapy.Item):
-    full_name = scrapy.Field()
-    specialty = scrapy.Field()
-    image_url = scrapy.Field()
-    source_url = scrapy.Field()
-    graduate_education = scrapy.Field()
-    crawled_date = scrapy.Field(serializer=str)
-    medical_school = scrapy.Field()
-    affiliation = scrapy.Field()
-    address = scrapy.Field()
-
-
-class AddressItem(scrapy.Item):
-    phone = scrapy.Field()
-    fax = scrapy.Field()
-    other = scrapy.Field()
 
 
 def strip(value):
