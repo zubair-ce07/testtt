@@ -1,7 +1,7 @@
 from json import loads
-from w3lib.url import url_query_parameter
 from re import match
-from six.moves.urllib.parse import urlencode, urljoin
+from six.moves.urllib.parse import urljoin
+from w3lib.url import url_query_parameter, add_or_replace_parameter
 
 from scrapy.spiders import CrawlSpider
 from scrapy import Request
@@ -19,7 +19,8 @@ class JackJonesSpider(CrawlSpider):
 
     category_url = "https://www.jackjones.com.cn/assets/pc/JACKJONES/nav.json"
 
-    listing_url = 'https://www.jackjones.com.cn/api/goods/goodsList?{}'
+    listing_url = 'https://www.jackjones.com.cn/api/goods/goodsList?currentpage=1&' \
+                  'goodsHighPrice=&goodsLowPrice=&goodsSelect=&sortDirection=desc&sortType=1'
 
     product_url = 'https://www.jackjones.com.cn/detail/JACKJONES/{}.json'
 
@@ -27,16 +28,7 @@ class JackJonesSpider(CrawlSpider):
 
     headers = {}
 
-    params = {'currentpage': '1',
-              'goodsHighPrice': '',
-              'goodsLowPrice': '',
-              'goodsSelect': '',
-              'sortDirection': 'desc',
-              'sortType': '1'
-              }
-
     allowed_domains = ['jackjones.com.cn']
-
     custom_settings = {
         'DOWNLOAD_DELAY': 4,
         'USER_AGENT': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko)'
@@ -53,22 +45,18 @@ class JackJonesSpider(CrawlSpider):
         yield Request(self.category_url, callback=self.parse_category)
 
     def parse_category(self, response):
-        raw_navs = loads(response.text)
-        raw_navs = raw_navs['data']
-        category_ids = {url_query_parameter(url, 'classifyIds')
-                        for url in self.extract_category_links(raw_navs)
+        raw_navs = loads(response.text)['data']
+        category_links = self.extract_category_links(raw_navs, [])
+        category_ids = {url_query_parameter(url, 'classifyIds') for url in category_links
                         if match('.*\/goodsList\.html\?.*', url)}
 
         for category_id in category_ids:
-            params = self.params.copy()
-            params['classifyIds'] = category_id
-
-            yield Request(self.listing_url.format(urlencode(params)), headers=self.headers,
-                          callback=self.parse_listing)
+            listing_url = add_or_replace_parameter(self.listing_url, 'classifyIds', category_id)
+            yield Request(listing_url, headers=self.headers, callback=self.parse_listing)
 
     def parse_listing(self, response):
         raw_listings = self.extract_raw_product(response)
-        product_ids = [i.get('goodsCode') for i in raw_listings.get('data')]
+        product_ids = [i['goodsCode'] for i in raw_listings['data']]
 
         for product_id in product_ids:
             yield Request(self.product_url.format(product_id), callback=self.parse_product)
@@ -76,13 +64,12 @@ class JackJonesSpider(CrawlSpider):
         current_page = int(raw_listings.get('currentpage', '-1')) + 1
         total_pages = int(raw_listings.get('totalPage', '-1')) + 1
 
-        for next_page in range(current_page, total_pages):
-            params = self.params.copy()
-            params['classifyIds'] = url_query_parameter(response.url, 'classifyIds')
-            params['currentpage'] = str(next_page)
+        page_id = url_query_parameter(response.url, 'classifyIds')
+        listing_url = add_or_replace_parameter(self.listing_url, 'classifyIds', page_id)
 
-            yield Request(self.listing_url.format(urlencode(params)), headers=self.headers,
-                          callback=self.parse_pagination)
+        for next_page in range(current_page, total_pages):
+            listing_url = add_or_replace_parameter(listing_url, 'currentpage', next_page)
+            yield Request(listing_url, headers=self.headers, callback=self.parse_pagination)
 
     def parse_pagination(self, response):
         raw_pagination = self.extract_raw_product(response)
@@ -117,14 +104,12 @@ class JackJonesSpider(CrawlSpider):
         raw_stock = self.extract_raw_product(response).get('data')
         product_item = response.meta.get('item')
         raw_skus = product_item.get('skus').copy()
-
         for raw_sku in raw_skus:
 
             if raw_stock.get(raw_sku.get('sku_id', '')) == 0:
                 raw_sku['out_of_stock'] = True
 
             raw_sku['sku_id'] = "{}_{}".format(raw_sku.get('color'), raw_sku.get('size'))
-
         product_item['skus'] = raw_skus
 
         return product_item
@@ -163,20 +148,15 @@ class JackJonesSpider(CrawlSpider):
 
     def extract_categories(self, raw_product):
         product_colors = raw_product['data']["color"]
-
-        if product_colors:
-            return list({color["categoryName"] for color in product_colors})
+        return list({color["categoryName"] for color in product_colors})
 
     def extract_skus(self, raw_product):
         raw_colors = raw_product['data']["color"]
 
         product_skus = []
         for raw_color in raw_colors:
-            sku = {'price': raw_color['price'],
-                   'previous_price': [raw_color['originalPrice']],
-                   'currency': self.currency,
-                   'color': raw_color['color']
-                   }
+            sku = {'price': raw_color['price'], 'currency': self.currency,
+                   'previous_price': [raw_color['originalPrice']], 'color': raw_color['color']}
 
             for size_sku in raw_color.get('sizes'):
                 sku = sku.copy()
@@ -195,16 +175,12 @@ class JackJonesSpider(CrawlSpider):
 
         return product_skus
 
-    @staticmethod
-    def extract_category_links(raw_navs):
-        category_links = []
-        for raw_nav in raw_navs:
-            category_links.append(raw_nav['navigationUrl'])
-
-            for raw_sub_nav in raw_nav['list']:
-                category_links.append(raw_sub_nav['navigationUrl'])
-
-                raw_third_nav = [raw_nav['navigationUrl'] for raw_nav in raw_sub_nav['list']]
-                category_links.extend(raw_third_nav)
+    def extract_category_links(self, raw_nav, category_links):
+        if raw_nav:
+            category_links.append(raw_nav.pop()['navigationUrl'])
+            sub_nav = raw_nav.get('list')
+            if sub_nav:
+                self.extract_category_links(sub_nav, category_links)
+            self.extract_category_links(raw_nav, category_links)
 
         return category_links
