@@ -14,13 +14,13 @@ class Constants:
     RECORD_NOT_FOUND = "missing"
     FILE_PREFIX = "Murree_weather_"
     # IO exception
-    IO_EXCEPTION = "Something wrong while reading file" \
-          "\nmay be file does not exist"
+    IO_EXCEPTION = """Something wrong while reading file
+                    \nmay be file does not exist"""
     # invalid arguments
     INVALID_ARGUMENTS = "Invalid arguments !!!"
     # option and date mismatch
-    OPTION_DATE_MISMATCH = "Please check your options and date again " \
-             "\neither option or date is wrong!!!\nor may be both"
+    OPTION_DATE_MISMATCH = """Please check your options and date again 
+                            \neither option or date is wrong!!!\nor may be both"""
     # invalid date
     INVALID_DATE = "Invalid Date !!!"
 

@@ -31,11 +31,11 @@ class CommandArgument:
         """
 
         my_string = '{} {}'.format(self.option, self.date)
-        regex = '((-e \d{4}))|((-[acd] \d{4}\/)((1[0-2])|(0?[1-9])))'
+        regex = '(-e \d{4})|((-[acd] \d{4}\/)((1[0-2])|(0?[1-9])))'
         match_object = re.match(regex, my_string)
         if match_object is None or match_object.span()[1] != len(my_string):
-            self.error = "{}\n{}" \
-                .format(Constants.INVALID_ARGUMENTS, Constants.OPTION_DATE_MISMATCH)
+            self.error = "{}\n{}".format(Constants.INVALID_ARGUMENTS,
+                                         Constants.OPTION_DATE_MISMATCH)
             return
 
     def __str__(self):
