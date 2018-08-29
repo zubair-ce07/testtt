@@ -9,7 +9,7 @@ Command Line Args:
 """
 
 import os
-from datetime import datetime
+import datetime
 
 import csv
 import argparse
@@ -25,10 +25,10 @@ def get_month_name(index):
         11: 'Nov', 12: 'Dec',
     }
 
-    return months.get(index, None)
+    return months.get(index)
 
 
-def applying_arguments():
+def applying_commandline_arguments():
     """Create Command Line Argument List"""
     parser_arg = argparse.ArgumentParser()
     parser_arg.add_argument("directory", help="you have to specify a directory for records")
@@ -77,7 +77,9 @@ def collect_data_from_files(files, day=None):
     """It takes path of directory with names of files as arguments
      and returns Structured Data in the form of list"""
 
+    # Registering dialect to skip spaces in names of dictionary
     csv.register_dialect('space_eliminator', delimiter=',', skipinitialspace=True)
+
     weather_records = []
 
     for file in files:
@@ -185,32 +187,44 @@ def display_chart(time_span, data_set):
     """Takes TimeSpan and Data Records to show Each Day's Chart regarding highest and lowest temperatures"""
 
     print(f"{string_to_date(time_span)}")
-    for num, data in enumerate(data_set):
-        for row in data:
-            # Showing Max Temp Results
-            if row.get('Max TemperatureC'):
-                colored_text_single(num + 1, int(row.get('Max TemperatureC')), 'red')
+    for num, row in enumerate(data_set):
 
-            # Showing Min Temp Results
-            if row.get('Min TemperatureC'):
-                colored_text_single(num + 1, int(row.get('Min TemperatureC')), 'blue')
+        # Showing Max Temp Results
+        if row.get('Max TemperatureC') and row.get('Min TemperatureC'):
+            params = [{
+                'day': num + 1,
+                'temp': int(row.get('Max TemperatureC')),
+                'color': 'red'
+            }, ]
+
+            colored_text(params)
+
+        # Showing Min Temp Results
+        if row.get('Min TemperatureC'):
+            params = [{
+                'day': num + 1,
+                'temp': int(row.get('Min TemperatureC')),
+                'color': 'blue'
+            }, ]
+
+            colored_text(params)
 
 
-def colored_text_single(num, count, color):
-    print(num, end=" ")
+def colored_text(params):
+    """Create chart lines"""
+    temp_value = ''
+    for param in params:
+        temp_value += "-" if temp_value else ''
+        print(param.get('day', ''), end="")
+        print_line(param.get('temp'), param.get('color'))
+        temp_value += f" {param.get('temp')}C "
+    print(temp_value)
+
+
+def print_line(count, color):
+    """This function print line with specified color taken as argument"""
     for i in range(count):
         print(colored('+', color), end='')
-    print(f" {count}C")
-
-
-def colored_text_double(num, max_count, min_count, max_color, min_color):
-    print(num, end=" ")
-    for i in range(min_count):
-        print(colored('+', min_color), end='')
-    for i in range(max_count):
-        print(colored('+', max_color), end='')
-
-    print(f"{min_count}C - {max_count}C")
 
 
 def display_range_chart(time_span, data_set):
@@ -219,23 +233,36 @@ def display_range_chart(time_span, data_set):
     # Printing the end results
     print(f"{string_to_date(time_span)}")
 
-    for num, data in enumerate(data_set):
-        for row in data:
-            if row.get('Max TemperatureC') and row.get('Min TemperatureC'):
-                colored_text_double(num + 1, int(row.get('Max TemperatureC')),
-                                    int(row.get('Min TemperatureC')), 'red', 'blue')
+    for num, row in enumerate(data_set):
+        if row.get('Max TemperatureC') and row.get('Min TemperatureC'):
+
+            params = [{
+                'day': num + 1,
+                'temp': int(row.get('Max TemperatureC')),
+                'color': 'red'
+            }, {
+                'temp': int(row.get('Min TemperatureC')),
+                'color': 'blue'
+            }]
+
+            colored_text(params)
 
 
 def string_to_date(time_span, delimeter='/'):
     """Here we parse given date in string format to get a well formatted Date pattern (String to Date)"""
 
-    year_required, month_required, day_required = separate_combined_date(time_span, delimeter)
-    if not (month_required or day_required):
-        return datetime(year_required, 1, 1, 0, 0).strftime('%Y')
-    elif not day_required:
-        return datetime(year_required, month_required, 1, 0, 0).strftime('%B %Y')
+    date = separate_combined_date(time_span, delimeter)
+
+    year, month, day = date
+
+    if day:
+        date = datetime.date(year, month, day).strftime('%d %B %Y')
+    elif month:
+        date = datetime.date(year, month, 1).strftime('%B %Y')
     else:
-        return datetime(year_required, month_required, day_required, 0, 0).strftime('%d %B %Y')
+        date = datetime.date(year, 1, 1).strftime('%Y')
+
+    return date
 
 
 def separate_combined_date(commandline_dates, delimeter='/'):
@@ -243,19 +270,13 @@ def separate_combined_date(commandline_dates, delimeter='/'):
      of date by splitting it in Year, Month and Day"""
 
     # User can give year, month and day separated by '/', so here we split them
+    default_date = [None, None, None]
     splitted_date = commandline_dates.split(delimeter)
-    try:
-        if len(splitted_date) == 3:
-            return int(splitted_date[0]), int(splitted_date[1]), int(splitted_date[2])
-        elif len(splitted_date) == 2:
-            return int(splitted_date[0]), int(splitted_date[1]), None
-        elif len(splitted_date) == 1:
-            return int(splitted_date[0]), None, None
-        else:
-            return None, None, None
 
-    except TypeError:
-        raise TypeError
+    for index, value in enumerate(splitted_date):
+        default_date[index] = int(value)
+
+    return default_date
 
 
 def main():
@@ -268,7 +289,7 @@ def main():
         'range_chart': display_range_chart,
     }
 
-    args = applying_arguments()
+    args = applying_commandline_arguments()
     os.chdir(args.directory)
 
     for arg in vars(args):
