@@ -24,34 +24,42 @@ for index in range(len(var) - 1):
 
         if action == '-e':
             result = Computer.compute_e(data, date)
-            print(
-                'Highest: ' + result['Highest'] + '\n' +
-                'Lowest: ' + result['Lowest'] + '\n' +
-                'Humidity: ' + result['Humidity'] + '\n'
-            )
+            if result:
+                print(
+                    'Highest: ' + result['Highest'] + '\n' +
+                    'Lowest: ' + result['Lowest'] + '\n' +
+                    'Humidity: ' + result['Humidity'] + '\n'
+                )
+            else:
+                print('No data Found Against given year')
         elif action == '-a':
             result = Computer.compute_a(data, date)
-            print(
-                'Highest Average: ' + result['Highest Average'] + '\n' +
-                'Lowest Average: ' + result['Lowest Average'] + '\n' +
-                'Average Mean Humidity: ' + result['Average Mean Humidity'] + '\n'
-            )
+            if result:
+                print(
+                    'Highest Average: ' + result['Highest Average'] + '\n' +
+                    'Lowest Average: ' + result['Lowest Average'] + '\n' +
+                    'Average Mean Humidity: ' + result['Average Mean Humidity'] + '\n'
+                )
+            else:
+                print('No data Found Against given Month')
         elif action == '-c':
             result = Computer.compute_c(data, date)
             year, month = date.split('/')
 
             print(calendar.month_name[int(month)] + ' ' + year)
+            if result:
+                for key, value in sorted(result.items()):
+                    sign, temp = value[0].split(' ')
+                    print(key + ' \033[1;31m' + sign + '\033[m ' + temp)
 
-            for key, value in sorted(result.items()):
-                sign, temp = value[0].split(' ')
-                print(key + ' \033[1;31m' + sign + '\033[m ' + temp)
+                    sign, temp = value[1].split(' ')
+                    print(key + ' \033[1;34m' + sign + '\033[m ' + temp)
 
-                sign, temp = value[1].split(' ')
-                print(key + ' \033[1;34m' + sign + '\033[m ' + temp)
+                print('Bonus')
 
-            print('Bonus')
-
-            for key, value in sorted(result.items()):
-                signhigh, temphigh = value[0].split(' ')
-                signlow, templow = value[1].split(' ')
-                print(key + ' \033[1;34m' + signlow + '\033[1;31m' + signhigh + '\033[m ' + templow + ' - ' + temphigh)
+                for key, value in sorted(result.items()):
+                    signhigh, temphigh = value[0].split(' ')
+                    signlow, templow = value[1].split(' ')
+                    print(key + ' \033[1;34m' + signlow + '\033[1;31m' + signhigh + '\033[m ' + templow + ' - ' + temphigh)
+            else:
+                print('No data Found Against given month')
