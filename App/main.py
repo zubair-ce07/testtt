@@ -7,16 +7,32 @@ from Utils.TextProcessor import TextProcessor
 from Db.Db import AppDB
 
 
-def main_controller():
-    """This function control whole app & also transfer data &
-        responses between multiple modules"""
+input_sys = InputSystem()
+output_sys = OutputSystem()
+crawler = Crawler()
+text_processor = TextProcessor()
+db = AppDB()
 
-    input_sys = InputSystem()
-    output_sys = OutputSystem()
-    crawler = Crawler()
-    text_processor = TextProcessor()
-    db = AppDB()
-    url = input_sys.get_input()
+
+def main_controller():
+    '''This function control whole app & also transfer data &
+        responses between multiple modules'''
+
+    while(1):
+        output_sys.display_menu()
+        m_input = input_sys.get_menu_input()
+        if m_input == "1":
+            new_crawl()
+        elif m_input == "2":
+            view_db()
+        else:
+            exit(1)
+
+
+def new_crawl():
+    '''This function crawls new url & store/update in database'''
+
+    url = input_sys.get_url_input()
     if url:
         words = crawler.crawl_url(url)
         words_dict = text_processor.dictionary_generator(words)
@@ -26,6 +42,13 @@ def main_controller():
     else:
         output_sys.invalid_url_warning()
         main_controller()
+
+
+def view_db():
+    '''This function shows all data in decrypted form from database'''
+
+    decrypted_data = db.get_all_data()
+    output_sys.data_viewer(decrypted_data)
 
 if __name__ == "__main__":
     main_controller()

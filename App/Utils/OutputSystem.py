@@ -12,3 +12,12 @@ class OutputSystem:
         print("-----------------WORD CLOUD-------------------")
         for word_n_freq in words_list[:100]:
             print(word_n_freq)
+
+    def display_menu(self):
+        print("1. Enter URL to add or update record")
+        print("2. View DB record")
+        print("3. Exit")
+
+    def data_viewer(self, data):
+        for item in data:
+            print(item)

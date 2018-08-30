@@ -5,7 +5,7 @@ import re
 class InputSystem:
     '''This class take care of all the required input validation & parsing'''
 
-    def get_input(self):
+    def get_url_input(self):
         url = input("Enter your desired url: ")
         return self.validate_url(url)
 
@@ -20,3 +20,8 @@ class InputSystem:
             r'(?:/?|[/?]\S+)$', re.IGNORECASE)
         if re.match(regex, url) is not None:
             return url
+    
+    def get_menu_input(self):
+        m_input = input("Enter your input: ")
+        return m_input
+
