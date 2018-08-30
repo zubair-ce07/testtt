@@ -11,7 +11,7 @@ class EnamoraSpider(CrawlSpider):
     Crawl spider to scrap `www.enamora.com`
     """
     custom_settings = {
-        'DOWNLOAD_DELAY': 2,
+        'DOWNLOAD_DELAY': 0.1,
     }
 
     name = 'enamora'
@@ -35,40 +35,49 @@ class EnamoraSpider(CrawlSpider):
         item['image_urls'] = self.extract_image_urls(response)
         item['care'] = self.extract_care(response)
         item['description'] = self.extract_description(response)
-        sizes_request = scrapy.Request(url=self.extract_sizes_url(response), callback=self.parse_sizes)
+        sizes_request = self.prepare_sizes_request(response)
         sizes_request.meta['item'] = item
         sizes_request.meta['color'] = self.extract_color(response)
         sizes_request.meta['price'] = self.extract_price(response)
+
         yield sizes_request
 
-    def parse_sizes(self, response):
+    def prepare_sizes_request(self, response):
+        url = response.css(
+            "ul[id='product-sizeselect'] include::attr(src)"
+        ).extract_first().replace('mi.', 'www.')
+
+        return scrapy.Request(url=url, callback=self.parse_sizes)
+
+    @staticmethod
+    def parse_sizes(response):
         item = response.meta['item']
         color = response.meta['color']
         price = response.meta['price']
         skus = list()
-        sizes_info = response.css("li")
-        for size_info in sizes_info:
-            size = size_info.css("span::text").extract_first()
+        raw_sizes = response.css("li")
+
+        for raw_size_s in raw_sizes:
+            size = raw_size_s.css("span::text").extract_first()
             sku = {
                 'color': color,
                 'size': size,
                 'sku_id': "{}_{}".format(color, size)
             }
-            if size_info.css("a[disabled*='disabled']"):
+
+            if raw_size_s.css("a[disabled*='disabled']"):
                 sku['out_of_stock'] = True
             sku.update(price)
             skus.append(sku)
         item['skus'] = skus
+
         yield item
 
     @staticmethod
-    def extract_sizes_url(response):
-        url = response.css("ul[id='product-sizeselect'] include::attr(src)").extract_first()
-        return url.replace('mi.', 'www.')
-
-    @staticmethod
     def extract_name(response):
-        return response.css("div.product h1 small::text").extract_first().replace('-', '')
+        return response.css(
+            "div.product h1 small::text"
+        ).extract_first().replace('-', '')
 
     @staticmethod
     def extract_brand(response):
@@ -84,24 +93,25 @@ class EnamoraSpider(CrawlSpider):
 
     @staticmethod
     def extract_color(response):
-        return response.css("p.product-color strong::text").extract_first().replace(' ', '_')
+        return response.css(
+            "p.product-color strong::text"
+        ).extract_first().replace(' ', '_')
 
     @staticmethod
     def extract_price(response):
+        pricing = {}
         regular_price = response.css("p.regular strong::text").extract_first()
-        previous_prices = []
+
         if not regular_price:
+            pricing['previous_prices'] = [
+                response.css("p.old small::text").extract_first().strip().replace(',', '')
+            ]
             regular_price = response.css("p.special strong::text").extract_first()
-            previous_prices = previous_prices.append(
-                response.css("p.old small::text").extract_first(default='').strip()[:-1].replace(',', '')
-            )
-        price_dict = {
-            'currency': regular_price.strip()[-1],
-            'price': regular_price.strip()[:-1].replace(',', ''),
-        }
-        if previous_prices:
-            price_dict['previous_price'] = previous_prices
-        return previous_prices
+
+        pricing['price'] = regular_price[:-1].strip().replace(',', '')
+        pricing['currency'] = regular_price.strip()[-1]
+
+        return pricing
 
     @staticmethod
     def extract_description(response):
@@ -110,8 +120,13 @@ class EnamoraSpider(CrawlSpider):
         )
         description_area = response.css("div#produkt-details")
         descriptions = list()
+
         for description_entry in description_area:
-            heading = description_entry.css("span.control-label::text").extract_first()
-            description = description_entry.css("span.information-value::text").extract_first()
-            descriptions.append("{} {}".format(heading.strip(), description.strip()))
+            descriptions.append(
+                "{} {}".format(
+                    description_entry.css("span.control-label::text").extract_first().strip(),
+                    description_entry.css("span.information-value::text").extract_first().strip()
+                )
+            )
+
         return descriptions
