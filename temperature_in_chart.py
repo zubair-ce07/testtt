@@ -25,15 +25,11 @@ class TemperatureInChart:
             day = daily_weather.date.split("-")[2]
             if daily_weather.max_temperature:
                 max_temp = int(daily_weather.max_temperature)
-                max_temp_string = ""
-                for _ in range(max_temp):
-                    max_temp_string = max_temp_string + "+"
+                max_temp_string = "+" * max_temp
                 print("%s \033[0;31m%s\033[0;m %dC" % (day, max_temp_string, max_temp))
             if daily_weather.min_temperature:
                 min_temp = int(daily_weather.min_temperature)
-                min_temp_string = ""
-                for _ in range(min_temp):
-                    min_temp_string = min_temp_string + "-"
+                min_temp_string = "-" * min_temp
                 print("%s \033[0;34m%s\033[0;m %dC" % (day, min_temp_string, min_temp))
 
     def display_one_line_chart(self):
@@ -53,14 +49,12 @@ class TemperatureInChart:
                 max_temp = int(daily_weather.max_temperature)
 
                 max_temp_flag = True
-                for index in range(max_temp):
-                    max_temp_string = max_temp_string + "+"
+                max_temp_string = "+" * max_temp
             if daily_weather.min_temperature:
                 min_temp = int(daily_weather.min_temperature)
 
                 min_temp_flag = True
-                for index in range(min_temp):
-                    min_temp_string = min_temp_string + "-"
+                min_temp_string = '-' * min_temp
             if max_temp_flag or min_temp_flag:
                 print("%s \033[0;34m%s\033[0;m\033[0;31m%s\033[0;m  %dC - %dC"
                       % (day, min_temp_string, max_temp_string,
