@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
-from base64 import b64decode
 import json
+import operator
+from functools import reduce
+from base64 import b64decode
 
 import scrapy
 from scrapy.spiders import CrawlSpider, Rule
@@ -10,6 +12,11 @@ from universal.items import UniversalItem
 
 
 def clean_url(encoded_url):
+    """
+    Decode rot47-base64 encoded url
+    :param encoded_url: rot47-base64 encoded url with domain as prefix
+    :return: Clean decoded url with domain as prefix
+    """
     domain = 'https://www.universal.at'
     encoded_url = encoded_url[encoded_url.index('/X') + 1:]
 
@@ -18,12 +25,16 @@ def clean_url(encoded_url):
         for ch in url:
             ordered_ch = ord(ch)
             if ordered_ch in range(33, 127):
-                decoded_url.append(chr(33 + ((ordered_ch + 14) % 94)))
+                decoded_url.append(
+                    chr(33 + ((ordered_ch + 14) % 94))
+                )
             else:
                 decoded_url.append(ch)
         return ''.join(decoded_url)
 
-    return '{}{}'.format(domain, rot47(b64decode(encoded_url).decode()))
+    return '{}{}'.format(
+        domain, rot47(b64decode(encoded_url).decode())
+    )
 
 
 def clean_price(price):
@@ -43,6 +54,8 @@ class UniversalSpider(CrawlSpider):
     start_urls = ['https://www.universal.at']
     product_data_url = ('https://www.universal.at/INTERSHOP/rest/WFS/EmpirieCom-UniversalAT-Site/-;loc=de_AT;cur=EUR'
                         '/inventories/{}/master?_=')
+    product_img_url = 'https://media.universal.at/i/empiriecom/{}'
+
     rules = (
         Rule(LinkExtractor(
             restrict_css='div#nav-main-list span',
@@ -53,7 +66,7 @@ class UniversalSpider(CrawlSpider):
         ), callback='parse_item')
     )
 
-    def parse_item(self, response):
+    def parse_item(self, response):   
         item = UniversalItem()
         retailer_sku = response.url.split('/')[-1]
         item['url'] = response.url
@@ -62,10 +75,12 @@ class UniversalSpider(CrawlSpider):
         item['brand'] = self.extract_brand(response)
         item['care'] = self.extract_care(response)
         item['description'] = self.extract_description(response)
+        item['category'] = self.extract_category(response)
         skus_request = self.prepare_skus_request(retailer_sku)
         item['image_urls'] = self.extract_image_urls(response)
         skus_request.meta['item'] = item
         skus_request.meta['price'] = self.extract_price(response)
+        
         yield skus_request
 
     def prepare_skus_request(self, retailer_sku):
@@ -78,16 +93,20 @@ class UniversalSpider(CrawlSpider):
         price = response.meta['price']
         response = json.loads(response.text)
         skus = list()
-        for sku in response['variants']:
-            sku_dict = {
-                self.map_sku_key(sku_info['id']): sku_info['value'] for sku_info in sku['axisData']
+
+        for sku_info in response['variants']:
+            sku = {
+                self.map_sku_key(sku_info['id']): sku_info['value']
+                for sku_info in sku_info['axisData']
             }
-            sku_dict['sku_id'] = sku['sku']
-            sku_dict.update(price)
-            if sku['deliveryStatus'] == 'NOT_AVAILABLE':
-                sku_dict['out_of_stock'] = True
-            skus.append(sku_dict)
+            sku['sku_id'] = sku_info['sku']
+            sku.update(price)
+
+            if sku_info['deliveryStatus'] == 'NOT_AVAILABLE':
+                sku['out_of_stock'] = True
+            skus.append(sku)
         item['skus'] = skus
+
         yield item
 
     @staticmethod
@@ -97,6 +116,7 @@ class UniversalSpider(CrawlSpider):
             'Var_Size': 'size',
             'Var_Dimension3': 'size_variant'
         }
+
         return skus_map.get(key)
 
     @staticmethod
@@ -107,32 +127,46 @@ class UniversalSpider(CrawlSpider):
     def extract_brand(response):
         return response.css("div.product-manufacturer-logo img::attr(alt)").extract_first()
 
-    @staticmethod
-    def extract_image_urls(response):
-        return response.css("img.product-gallery-image::attr(src)").extract()
+    def extract_image_urls(self, response):
+        images = json.loads(
+            response.css("script.data-product-detail::text").extract_first()
+        )['imageList'].values()
+
+        return [
+            self.product_img_url.format(image['image'])
+            for image in reduce(operator.add, images)
+        ]
 
     @staticmethod
     def extract_care(response):
         care_details = response.css('table.tmpArticleDetailTable tr')
-        return [": ".join(care_detail.css('::text').extract()) for care_detail in care_details]
+
+        return [
+            ": ".join(care_detail.css('::text').extract())
+            for care_detail in care_details
+        ]
 
     @staticmethod
     def extract_price(response):
-        regular_price = response.css("div.price::text").extract()[1].strip()
-        previous_prices = []
-        if not regular_price:
-            regular_price = clean_price(response.css("div.price.new::text").extract_first().strip())
-            previous_prices = previous_prices.append(
-                response.css("div.price-strike::text").extract_first(default='').strip()
-            )
-        price_dict = {
-            'currency': regular_price[-1],
-            'price': clean_price(regular_price[:-1]),
-        }
+        pricing = {}
+        price = response.css("div.price::text").extract()[-2].strip()
+        pricing['price'] = clean_price(price[:-1])
+        pricing['currency'] = price[-1]
+        previous_prices = clean_price(
+            response.css("div.price-strike::text").extract_first(default='').strip()[:-1]
+        )
+
         if previous_prices:
-            price_dict['previous_prices'] = previous_prices
-        return price_dict
+            pricing['previous_prices'] = [previous_prices]
+
+        return pricing
 
     @staticmethod
     def extract_description(response):
-        return "".join(response.css('div span.long-description *::text').extract()).strip().split('.')
+        return "".join(
+            response.css('div span.long-description *::text').extract()
+        ).strip().split('.')
+
+    @staticmethod
+    def extract_category(response):
+        return response.css("div.nav-breadcrumb span::text").extract()

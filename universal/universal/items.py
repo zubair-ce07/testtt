@@ -2,6 +2,15 @@
 import scrapy
 
 
+def clean_categories(categories):
+    return list(
+        filter(
+            lambda x: '...' not in x,
+            categories
+        )
+    )
+
+
 class UniversalItem(scrapy.Item):
     url = scrapy.Field()
     retailer_sku = scrapy.Field()
@@ -12,3 +21,4 @@ class UniversalItem(scrapy.Item):
     care = scrapy.Field()
     description = scrapy.Field()
     skus = scrapy.Field()
+    category = scrapy.Field(serializer=clean_categories)
