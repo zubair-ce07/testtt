@@ -1,7 +1,9 @@
-import scrapy
-import time
-import re
 import queue
+import re
+import time
+
+import scrapy
+
 from boohooMan.items import BoohoomanItem
 
 
@@ -64,14 +66,11 @@ class BoohooSpider(scrapy.Spider):
                                                  callback=self.parse_item_size,
                                                  meta={'item': product_item,
                                                        'item_colors_list':
-                                                           item_colors_list
-                                                       }
-                                                 ))
+                                                           item_colors_list}))
         while not items_color_queue.empty():
             yield items_color_queue.get()
 
     def parse_item_size(self, response):
-        print(response.url)
         product_item = response.meta['item']
         item_colors_list = response.meta['item_colors_list']
         item_size_list = response.css('div.product-variations ul.size \
@@ -85,9 +84,7 @@ class BoohooSpider(scrapy.Spider):
                                                       'item_colors_list':
                                                           item_colors_list,
                                                       'item_size_list':
-                                                          item_size_list
-                                                      }
-                                                ))
+                                                          item_size_list}))
         while not items_size_queue.empty():
             yield items_size_queue.get()
 
