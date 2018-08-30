@@ -4,11 +4,11 @@ import re
 
 class OutputSystem:
     '''This class take care of all the required outputs'''
-    
-    def invalid_url_warning(self):
+
+    def display_warning(self):
         print("Warning: Please enter the valid url & Try again!")
-    
-    def word_cloud_generator(self, words_list):
+
+    def display_word_cloud(self, words_list):
         print("-----------------WORD CLOUD-------------------")
         for word_n_freq in words_list[:100]:
             print(word_n_freq)
@@ -18,6 +18,9 @@ class OutputSystem:
         print("2. View DB record")
         print("3. Exit")
 
-    def data_viewer(self, data):
-        for item in data:
-            print(item)
+    def display_data(self, data, is_itr=False):
+        if is_itr:
+            for item in data:
+                print(item)
+        else:
+            print(data)

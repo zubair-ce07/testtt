@@ -1,5 +1,6 @@
 import nltk
 import operator
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 
 class TextProcessor:
@@ -28,3 +29,7 @@ class TextProcessor:
         sorted_list = sorted(
             words_dict.items(), key=operator.itemgetter(1), reverse=True)
         return sorted_list
+
+    def tfidf_genrator(self, corpus):
+        vectorizer = TfidfVectorizer()
+        return vectorizer.fit_transform(corpus)

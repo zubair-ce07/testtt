@@ -37,10 +37,12 @@ def new_crawl():
         words = crawler.crawl_url(url)
         words_dict = text_processor.dictionary_generator(words)
         sorted_list = text_processor.word_cloud_processor(words_dict)
-        output_sys.word_cloud_generator(sorted_list)
+        output_sys.display_word_cloud(sorted_list)
         db.insert_row(sorted_list)
+        tfidf_matrix = text_processor.tfidf_genrator(words_dict.keys())
+        output_sys.display_data(tfidf_matrix)
     else:
-        output_sys.invalid_url_warning()
+        output_sys.display_warning()
         main_controller()
 
 
@@ -48,7 +50,7 @@ def view_db():
     '''This function shows all data in decrypted form from database'''
 
     decrypted_data = db.get_all_data()
-    output_sys.data_viewer(decrypted_data)
+    output_sys.display_data(decrypted_data, is_itr=True)
 
 if __name__ == "__main__":
     main_controller()
