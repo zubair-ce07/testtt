@@ -132,5 +132,5 @@ class ProductParser(Spider):
             sku = sku_info.copy()
             sku['color'] = color_map[raw_sku['color']]
             sku['size'] = size_map[raw_sku['size']]
-            skus[f"{raw_sku['color']}_{raw_sku['size']}"] = sku
+            skus[raw_sku['sku_id']] = sku
         return skus
