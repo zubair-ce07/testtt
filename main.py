@@ -16,7 +16,7 @@ class Main:
 
     def main(self):
         '''
-        This methaod is main method tha handle weather report request from 
+        This methaod is main method tha handle weather report request from
         command arguments
         '''
 

@@ -2,6 +2,10 @@ import os
 
 
 class FileHandler:
+    '''
+        This class privdes methods for manipulation on file names in a
+        specific directory.
+    '''
 
     def get_txt_files_list(self, dir_path):
         """
@@ -15,10 +19,9 @@ class FileHandler:
 
         return txt_files
 
-
     def filter_list_by(self, list_of_strings, filter):
         """
-            Funtion returns list of strings that contain filter string in it. 
+            Funtion returns list of strings that contain filter string in it.
         """
 
         filtered_list = []
