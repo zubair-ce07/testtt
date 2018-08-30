@@ -1,19 +1,8 @@
 
 
 class Student:
-    roll_no = None
-    name = None
-    father_name = None
-    score = None
-
-    @staticmethod
-    def get_fields():
-        """
-        creates and returns a list of the object fields
-        :return: list containing all fields of object
-        """
-        return [
-            'roll_no',
-            'name',
-            'father_name',
-            'score']
+    def __init__(self, roll_no, name, father_name, score):
+        self.roll_no = roll_no
+        self.name = name
+        self.father_name = father_name
+        self.score = score

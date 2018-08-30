@@ -1,19 +1,18 @@
 import csv
-from result_data import Student
 from termcolor import colored
 
 
 def show_percentage(per, threshold=None, scale=None):
     message = "Present Students "
     if threshold:
-        message += "(Threshold " + colored(str(threshold), 'blue') + ") "
+        threshold_value = colored(str(threshold), 'blue')
+        message += "(Threshold {}) ".format(threshold_value)
     if scale:
-        message += "(Scale " + colored(str(scale), 'blue') + ") "
-    message += ": "
-    print(message
-          + colored(str(format(per, '.2f')), 'green')
-          + "%"
-          )
+        scale_value = colored(str(scale), 'blue')
+        message += "(Scale {}) ".format(scale_value)
+    percentage_value = colored(str(format(per, '.2f')), 'green')
+    message += ": {}%".format(percentage_value)
+    print(message)
 
 
 def generate_merit_list_files(merit_lists):
@@ -24,12 +23,12 @@ def generate_merit_list_files(merit_lists):
     :param merit_lists: dict of ResultData objects
     :return: None
     """
-    fields = Student.get_fields()
     for file_name in merit_lists:
         with open(file_name, 'w') as f:
             writer = csv.DictWriter(f, fieldnames=fields)
             writer.writeheader()
             for student in merit_lists[file_name]:
+                fields = list(vars(student).keys())
                 writer.writerow(
                     {fields[0]: student.roll_no,
                      fields[1]: student.name,

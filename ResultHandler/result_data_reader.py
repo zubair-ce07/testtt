@@ -1,11 +1,14 @@
 import csv
 from result_data import Student
 
+
 # defining constants to be used as score field,
 # if the student registered but not came in the test
+# for sorting the student list, absent students should
+# be given any value less than zero
 default_path = "data.csv"
-ABSENT = -300
-CANCELLED = -200
+ABSENT = -1
+CANCELLED = -2
 
 
 def read_data(data_path=default_path):
@@ -16,18 +19,17 @@ def read_data(data_path=default_path):
     :return: list of ResultData objects
     """
     result_data = []
-    with open(data_path, 'r') as infile:
-        students = csv.DictReader(infile)
+    states = {'Absent': ABSENT, 'CANCELLED': CANCELLED}
+    with open(data_path, 'r') as student_data_file:
+        students = csv.DictReader(student_data_file)
         for student in students:
-            result_item = Student()
-            result_item.roll_no = student['roll_no']
-            result_item.name = student['name']
-            result_item.father_name = student['father_name']
-            if student['score'] == "Absent":
-                result_item.score = ABSENT
-            elif student['score'] == "CANCELLED":
-                result_item.score = CANCELLED
-            else:
-                result_item.score = int(student['score'])
+
+            score = student['score']
+            score_val = score in list(states.keys()) and states.get(score) or int(score)
+
+            result_item = Student(student['roll_no'],
+                                  student['name'],
+                                  student['father_name'],
+                                  score_val)
             result_data.append(result_item)
     return result_data

@@ -1,53 +1,18 @@
-import argparse
+import sys
 import result_data_reader
 import result_processor
 import result_reporter
-
-
-def parse_arguments():
-    """
-    This function parses and validates the given arguments
-    """
-    result_parser = argparse.ArgumentParser("Process Result Information")
-    result_parser.add_argument("-present",
-                               "-pr",
-                               action="store_true",
-                               help="Percentage of Students who attempted")
-
-    result_parser.add_argument("-passed",
-                               "-pa",
-                               help="Students who passed",
-                               action="store_true")
-
-    result_parser.add_argument("-meritlist",
-                               "-m",
-                               help="Show the selected students",
-                               action="store_true")
-
-    result_parser.add_argument("-pc",
-                               "-passingcriteria",
-                               "--threshold",
-                               type=int,
-                               default=argparse.SUPPRESS,
-                               help="Passing Criteria")
-
-    result_parser.add_argument("-s",
-                               "-scale",
-                               "--scale_ratio",
-                               type=int,
-                               default=argparse.SUPPRESS,
-                               help="Scale the result by given ratio")
-    return result_parser.parse_args()
-
+import result_parser
 
 if __name__ == '__main__':
     """
-            This function compares the parsed input parameters
-            and calls the respective functions.
-            """
-    cmd_arguments = parse_arguments()
+    This function compares the parsed input parameters
+    and calls the respective functions.
+    """
+    cmd_arguments = result_parser.parse_arguments()
     users = result_data_reader.read_data()
-
+    if not len(sys.argv) > 1:
+        print("for Usage instructions, try main.py -h ")
     if cmd_arguments.present:
         # task 1: Showing the present students
         present_percentage = result_processor.get_percentage(users)
@@ -80,3 +45,5 @@ if __name__ == '__main__':
                 result_per,
                 cmd_arguments.threshold
             )
+        else:
+            print("Add -passing_criteria to get result")
