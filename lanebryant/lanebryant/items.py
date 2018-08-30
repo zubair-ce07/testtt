@@ -15,3 +15,4 @@ class LanebryantItem(Item):
     skus = Field()
     price = Field()
     currency = Field()
+    requests = Field()

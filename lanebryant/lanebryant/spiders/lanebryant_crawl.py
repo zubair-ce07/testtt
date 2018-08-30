@@ -5,20 +5,29 @@ from lanebryant.lanebryant_parser import ProductParser
 
 
 class LanebryantCrawlSpider(CrawlSpider):
-    name = 'lanebryant-crawl'
-    allowed_domains = ['www.lanebryant.com']
+    name = "lanebryant-crawl"
+    allowed_domains = ["www.lanebryant.com"]
     lanebryant_parser = ProductParser()
     start_urls = [
-        'http://www.lanebryant.com/'
+        "http://www.lanebryant.com/"
+    ]
+
+    listing_css = [
+        "[role='navigation']",
+        "[aria-label='Pagination Navigation']"
+    ]
+
+    product_css = [
+        ".mar-prd-item-image "
     ]
 
     rules = (
-        Rule(LinkExtractor(restrict_css="[role='navigation']")),
-        Rule(LinkExtractor(restrict_css='.mar-prd-item-image '), callback='parse_item'),
+        Rule(LinkExtractor(restrict_css=listing_css), callback='parse'),
+        Rule(LinkExtractor(restrict_css=product_css), callback="parse_item"),
     )
 
     def parse(self, response):
-        title = response.css('.mar-plp-header-title::text').extract_first()
+        title = response.css(".mar-plp-header-title::text").extract_first(default='')
         trail = response.meta.get('trail', [])
         trail.append([title, response.url])
         for request in super().parse(response):
