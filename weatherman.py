@@ -61,10 +61,8 @@ def get_required_files(required_year, required_month):
 
     month_name = get_month_name(required_month)
 
-    # if month is not defined, we have to use wildcard for regex string matching
-    if not month_name:
-        month_name = "(.*)"
-    search_pattern = f'r(.{str(required_year)})_{month_name}.txt'
+    # if month is not defined, we have to search on the basis of year only
+    search_pattern = f'r(.{str(required_year)}_{month_name})' if month_name else f'r(.{required_year})'
 
     matches = []
     for file_name in os.listdir():
@@ -82,22 +80,20 @@ def collect_data_from_files(files, day=None):
 
     weather_records = []
 
+    '''
+    Each month-file contains list of day's records, as the csv.DictReader object is not 
+    subscriptable, we have to traverse through all records to get the user specified => day.
+    '''
+
     for file in files:
         records = csv.DictReader(open(file, 'r'), dialect='space_eliminator')
 
         for index, record in enumerate(records):
-            '''
-            Each month-file contains list of day's records, when the user specifies a day along with
-            year and month, we have to skip all the records from list => except the required day
-            
-            The csv.DictReader doesn't give us a subscriptable object (means we can't use indexing with such object)
-            So we still have to iterate over the object and then extract the day which user defined through
-            commandline
-            '''
             if not day:
                 weather_records.append(record)
             elif index == day - 1:
                 weather_records.append(record)
+                break
 
     return weather_records
 
@@ -211,7 +207,7 @@ def display_chart(time_span, data_set):
 
 
 def colored_text(params):
-    """Create chart lines"""
+    """Creates chart lines"""
     temp_value = ''
     for param in params:
         temp_value += "-" if temp_value else ''
