@@ -1,11 +1,9 @@
 """ contain all functions to display reports """
 import csv
-from classes import (YearReport)
-from constants import (CRED, CBLUE, CEND, FILE_MONTHS)
+from classes import YearReport
+from constants import CRED, CBLUE, CEND, FILE_MONTHS
 from general_func import (get_month_data_in_year_list,
                           get_path_file)
-
-csv.register_dialect('dialect', delimiter=',', skipinitialspace=True)
 
 
 def display_oneline_graph_of_month(max_temp, min_temp, cursor):
@@ -33,10 +31,10 @@ def display_oneline_year_graph(year_record_list, year, path):
 
         if year_record_list is not None and len(year_record_list) > 0:
             max_temp_entry = max(([y for y in year_record_list
-                                   if y.temp.max_temp is not None]),
+                                   if y and y.temp.max_temp is not None]),
                                  key=lambda x: x.temp.max_temp)
             min_temp_entry = min(([y for y in year_record_list
-                                  if y.temp.min_temp is not None]),
+                                  if y and y.temp.min_temp is not None]),
                                  key=lambda x: x.temp.min_temp)
             display_oneline_graph_of_month(max_temp_entry.temp.max_temp,
                                            min_temp_entry.temp.min_temp,
@@ -51,13 +49,13 @@ def display_oneline_year_graph(year_record_list, year, path):
 def calculate_year_report_from_list(year_record_list):
     """ Form year report of max temp min temp and humidity"""
     max_temp_entry = max(([y for y in year_record_list
-                           if y.temp.max_temp is not None]),
+                           if y and y.temp.max_temp is not None]),
                          key=lambda x: x.temp.max_temp)
     min_temp_entry = min(([y for y in year_record_list
-                           if y.temp.min_temp is not None]),
+                           if y and  y.temp.min_temp is not None]),
                          key=lambda x: x.temp.min_temp)
     humidity_entry = max(([y for y in year_record_list
-                           if y.humidity.max_humidity is not None]),
+                           if y and y.humidity.max_humidity is not None]),
                          key=lambda x: x.humidity.max_humidity)
 
     year_report = YearReport(max_temp_entry.temp.max_temp, max_temp_entry.date,

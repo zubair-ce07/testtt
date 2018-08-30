@@ -13,8 +13,7 @@ def validate_year(year):
     if year and year.isdigit():
         if int(year) <= int(TODAY.year) and int(year) >= 1990:
             return year
-    print("Invalid option [Required year in range (1990, {0})]",
-          str(TODAY.year))
+    print(f"Invalid option [Required year in range (1990, {str(TODAY.year)})]")
     return False
 
 
