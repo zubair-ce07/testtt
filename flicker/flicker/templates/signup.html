@@ -10,14 +10,10 @@
         {{ signup_form.submit(class="btn btn-lg btn-primary btn-block")}}
         <div class="noacc">Already have an account! <a class="signup" href="{{ url_for('signin') }}">Sign In Here</a></div>
     </form>
-
-
-    </div>
-    <div class="container">
-         {% for message in get_flashed_messages() %}
-         <div class="alert alert-danger">
-           <div class="flash">{{ message }}</div>
-          </div>
-         {% endfor %}
-    </div>
+    {% for message in get_flashed_messages() %}
+    <div class="alert alert-danger">
+      <div class="flash">{{ message }}</div>
+     </div>
+    {% endfor %}
+  </div>
 {% endblock %}

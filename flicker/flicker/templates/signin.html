@@ -11,8 +11,6 @@
          Don't have an account! <a href="{{ url_for('signup') }}">Sign Up Here</a>
       </div>
    </form>
-</div>
-<div class="container">
    {% for message in get_flashed_messages() %}
    <div class="alert alert-danger">
       <div class="flash">{{ message }}</div>

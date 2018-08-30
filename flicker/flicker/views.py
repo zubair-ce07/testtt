@@ -1,14 +1,15 @@
-from flask import Flask, request, session, redirect, url_for, \
-    render_template, flash, jsonify
-from .models import User, Posts, Tag, Follow, db
-from .forms import AddPostForm, SignUpForm, SignInForm, AboutUserForm
-from werkzeug.security import check_password_hash, generate_password_hash
-from flicker import app
 import os
-from flask_uploads import UploadSet, configure_uploads
 import random
 import string
+
+from flask import request, session, redirect, url_for, \
+    render_template, flash
+from flicker import app
 from sqlalchemy import desc
+from werkzeug.security import check_password_hash, generate_password_hash
+
+from .forms import AddPostForm, SignUpForm, SignInForm
+from .models import User, Posts, Tag, Follow, db
 
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(APP_ROOT, 'static/uploads')
