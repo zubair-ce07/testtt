@@ -1,4 +1,7 @@
+from flask_login import UserMixin
+
 from asiangames import db
+from asiangames import login
 
 
 SportAthlete = db.Table(
@@ -68,3 +71,13 @@ class Schedule(db.Model):
 
     # one to many relationship with sport table
     sport_id = db.Column(db.Integer, db.ForeignKey('sport._id'))
+
+
+class User(UserMixin, db.Model):
+    _id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(64))
+
+
+@login.user_loader
+def load_user(_id):
+    return User.query.get(int(_id))

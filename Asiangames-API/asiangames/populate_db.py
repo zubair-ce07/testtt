@@ -1,4 +1,5 @@
 import json
+from re import findall
 from datetime import datetime, date, time
 
 from asiangames.models import *
@@ -64,6 +65,7 @@ if __name__ == '__main__':
     with open('json/sports.json') as sports_file:
 
         sports_data = json.load(sports_file)
+        numeric_regex = r'(\d+)'
 
         for sport_data in sports_data:
             sport_record = get_or_create(db.session, Sport, name=sport_data['name'])
@@ -71,13 +73,14 @@ if __name__ == '__main__':
             for schedule in sport_data['schedules']:
                 schedule_date = list(schedule.keys())[0]
                 sch_day, sch_date, sch_month = schedule_date.split(' ')
-                final_date = date(2018, month_to_number(sch_month[0:3]), int(sch_date[0:2]))
+                final_date = date(2018, month_to_number(sch_month[0:3]), int(findall(numeric_regex, sch_date)[0]))
 
                 for scheduled_event in schedule[schedule_date]:
-                    sch_time = time(int(scheduled_event['time'][0:2]), int(scheduled_event['time'][3:]))
-                    final_date_time = datetime.combine(final_date, sch_time)
+                    if scheduled_event['time']:
+                        sch_hours, sch_minutes = findall(numeric_regex, scheduled_event['time'])
+                        final_date = datetime.combine(final_date, time(int(sch_hours), int(sch_minutes)))
 
-                    schedule_record = Schedule(daytime=final_date_time, phase=scheduled_event['phase'],
+                    schedule_record = Schedule(daytime=final_date, phase=scheduled_event['phase'],
                                                event=scheduled_event['event'], sport=sport_record)
 
                     db.session.add(schedule_record)
