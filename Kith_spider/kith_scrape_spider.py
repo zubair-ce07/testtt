@@ -34,7 +34,7 @@ class KithSpider(scrapy.Spider):
 
     def parse_product_item(self, response):
         item = KithItem()
-        item['product_ID'], item['material'], item['description'] = self.parse_description(response)
+        item['product_id'], item['material'], item['description'] = self.parse_description(response)
         item['name'] = self.parse_name(response)
         item['color'] = self.parse_color(response)
         item['price'] = self.parse_price(response)
