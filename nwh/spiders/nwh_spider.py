@@ -1,49 +1,17 @@
 from datetime import datetime
+from urllib.parse import urljoin
 
 import scrapy
-from scrapy.loader import ItemLoader
-from scrapy.loader.processors import Compose
-from scrapy.loader.processors import MapCompose
-from scrapy.loader.processors import Join
-from scrapy.loader.processors import TakeFirst
 
-from nwh.items import DoctorItem
-from nwh.items import AddressItem
+from nwh.loaders import DoctorItemLoader
+from nwh.loaders import AddressItemLoader
+
 
 BASE_URL = 'https://www.nwh.org/find-a-doctor/'
 
 
-def strip(value):
-    return value.strip()
-
-
-map_strip = MapCompose(strip)
-clean_text = Compose(map_strip, Join(), strip)
-name_dict = MapCompose(lambda name: {'name': name})
-
-
-class DoctorItemLoader(ItemLoader):
-    default_item_class = DoctorItem
-    full_name_out = TakeFirst()
-    specialty_out = Compose(TakeFirst(), lambda str: str.split(','), map_strip)
-    image_url_out = TakeFirst()
-    source_url_out = TakeFirst()
-    crawled_date_out = TakeFirst()
-    graduate_education_out = MapCompose(
-        lambda name: {'type': 'Residency', 'name': name})
-    medical_school_out = name_dict
-    affiliation_out = name_dict
-    address = scrapy.Field()
-
-
-class AddressItemLoader(ItemLoader):
-    default_item_class = AddressItem
-    phone_out = clean_text
-    fax_out = clean_text
-
-
 class NWHSpider(scrapy.Spider):
-    name = 'nwh'
+    name = 'nwh_spider'
 
     def start_requests(self):
         formdata = {
@@ -51,7 +19,7 @@ class NWHSpider(scrapy.Spider):
             'ctl00$cphContent$ctl01$ddlResultsPerPage': '99999'
         }
 
-        url = "{}ContentPage.aspx?nd=847".format(BASE_URL)
+        url = urljoin(BASE_URL, 'ContentPage.aspx?nd=847')
         yield scrapy.FormRequest(url, callback=self.parse, formdata=formdata)
 
     def parse(self, response):
@@ -61,7 +29,7 @@ class NWHSpider(scrapy.Spider):
         self.log('{} doctors found'.format(len(ids)))
 
         for id in ids:
-            url = '{}find-a-doctor-profile?id={}'.format(BASE_URL, id)
+            url = urljoin(BASE_URL, 'find-a-doctor-profile?id={}'.format(id))
             yield scrapy.Request(url=url, callback=self.parse_doctor)
 
     def parse_doctor(self, response):
@@ -81,12 +49,19 @@ class NWHSpider(scrapy.Spider):
         loader.add_css('affiliation',
                        '.doctor-contact-location-name span:last-child::text')
 
-        for info in profile.css('.pnl-doctor-contact-location'):
+        addresses = self.parse_addresses(
+            profile.css('.pnl-doctor-contact-location'))
+        loader.add_value('address', addresses)
+
+        return loader.load_item()
+
+    def parse_addresses(self, selectors):
+        addresses = []
+        for info in selectors:
             addressloader = AddressItemLoader(selector=info)
             addressloader.add_css('phone', '.doc-phone::text')
             addressloader.add_css('fax', '.doc-fax::text')
             addressloader.add_css(
                 'other', '.doctor-contact-location-address>a:last-child::text')
-            loader.add_value('address', dict(addressloader.load_item()))
-
-        return loader.load_item()
+            addresses.append(dict(addressloader.load_item()))
+        return addresses
