@@ -40,7 +40,7 @@ class FileContent:
         :return:
         """
 
-        regex = "{}{}_[a-z]{}.txt".format(Constants.FILE_PREFIX, year, "{3}")
+        regex = "{}{}_[a-z]{{3}}.txt".format(Constants.FILE_PREFIX, year)
         selected_file_names = re.findall(regex, ' '.join(self.file_names), re.IGNORECASE)
 
         # to skip initial whitespaces
@@ -103,7 +103,6 @@ class FileContent:
 
         # to skip initial whitespaces
         csv.register_dialect('myDialect', delimiter=',', skipinitialspace=True)
-
         try:
             with open("{}/{}".format(self.path, name), 'r') as csv_file:
                 reader = csv.reader(csv_file, dialect='myDialect')

@@ -85,7 +85,7 @@ def get_output_for_a_option(file_content, date):
     """
 
     month_abbreviation, month, year = split_date(date)
-    monthly_temp_humidity_avg = file_content.get_average_monthly_data(year, month)
+    monthly_temp_humidity_avg = file_content.get_average_monthly_data(year, month_abbreviation)
     if monthly_temp_humidity_avg is None:
         print(Constants.IO_EXCEPTION)
         return
