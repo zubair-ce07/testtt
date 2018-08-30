@@ -79,7 +79,7 @@ def add_post():
                                          file_name)
                 file.save(file_path)
                 privacy_type = request.form['privacy']
-                post = Posts("uploads/" + file.filename,
+                post = Posts("uploads/" + file_name,
                              privacy_type, user.uid)
                 db.session.add(post)
                 db.session.commit()
@@ -172,9 +172,16 @@ def signup():
             print("username Invalid")
             return redirect(url_for('signup'))
         else:
+            file = request.files['file']
+            if file and allowed_file(file.filename):
+                file_name = append_id(file.filename)
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'],
+                                         file_name)
+                file.save(file_path)
             register_user = User(signup_form.username.data,
                                  generate_password_hash(
                                      signup_form.password.data),
+                                     "uploads/" + file_name,
                                  signup_form.email.data)
             db.session.add(register_user)
             db.session.commit()

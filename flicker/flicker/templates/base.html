@@ -3,6 +3,7 @@
    <head>
       {% block head %}
       <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+      <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
       <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
       <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
       <title>{% block title %}{% endblock %} - Flicker</title>
@@ -10,8 +11,7 @@
    </head>
    <body>
       {% block menu %}
-      <div class="container-fluid">
-        <nav class="navbar navbar-defualt">
+        <nav class="navbar navbar-inverse">
            <div class="container-fluid">
               <div class="navbar-header">
                  <a class="navbar-brand" href="{{ url_for('index') }}">Flicker</a>
@@ -34,7 +34,6 @@
               </ul>
            </div>
         </nav>
-      </div>
       {% endblock %}
       <div id="content">{% block content %}{% endblock %}</div>
    </body>

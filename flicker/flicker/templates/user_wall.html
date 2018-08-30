@@ -9,6 +9,13 @@
             <div class="panel panel-primary">
                <div class="panel-heading">{{ user_data[0].username }}</div>
                <div class="panel-body">
+                 {% if user_data[0].profile_image_url %}
+                 <img src="{{ url_for('static', filename = user_data[0].profile_image_url) }}"
+                   id="profile-img" class="profile-img-card"/>
+                  {% else %}
+                  <img id="profile-img" class="profile-img-card"
+                     src="//ssl.gstatic.com/accounts/ui/avatar_2x.png" />
+                  {% endif %}
                   <div class="list-group">
                      <a href="#"
                         class="list-group-item">{{ user_data[0].email }}</a>

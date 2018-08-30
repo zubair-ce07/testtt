@@ -10,12 +10,14 @@ class User(db.Model):
     uid = db.Column(db.Integer, primary_key=True, autoincrement=True)
     username = db.Column(db.String(50), unique=True, index=True)
     password = db.Column(db.String(50))
+    profile_image_url = db.Column(db.String(1000))
     email = db.Column(db.String(50), unique=True, index=True)
     dateofreg = db.Column(db.DateTime, default=datetime.datetime.now)
 
-    def __init__(self, username, password, email):
+    def __init__(self, username, password, profile_image_url, email):
         self.username = username
         self.password = password
+        self.profile_image_url = profile_image_url
         self.email = email
 
 
