@@ -11,7 +11,7 @@ class EnamoraSpider(CrawlSpider):
     Crawl spider to scrap `www.enamora.com`
     """
     custom_settings = {
-        'DOWNLOAD_DELAY': 0.1,
+        'DOWNLOAD_DELAY': 2,
     }
 
     name = 'enamora'
