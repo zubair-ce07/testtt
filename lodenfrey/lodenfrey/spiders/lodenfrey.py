@@ -9,12 +9,10 @@ class LodenfreySpider(CrawlSpider):
 
     name = "lodenfrey-crawl"
     start_urls = [
-        # 'https://www.lodenfrey.com/',
-        'https://www.lodenfrey.com/en/Women/Fashion/Evening-Wear/'
+        'https://www.lodenfrey.com/',
     ]
 
-    # listing_css = ['.js-nrnavtoggle', '.nrnavflyout-lvl2', '.level-3', '.showmorebtn']
-    listing_css = ['.js-nrnavtoggle', '.showmorebtn']
+    listing_css = ['.js-nrnavtoggle', '.nrnavflyout-lvl2', '.level-3', '.showmorebtn']
     product_css = ['.fn', '.js-nrproduct-item.title']
 
     rules = (
@@ -32,7 +30,8 @@ class LodenfreySpider(CrawlSpider):
             req.meta['trail'] = trail_
             yield req
 
-        yield self.next_page_urls(response)
+        for request in self.next_page_urls(response):
+            yield request
 
     def next_page_urls(self, response):
         trail = response.meta.get('trail', [])
@@ -45,7 +44,8 @@ class LodenfreySpider(CrawlSpider):
             next_urls = raw_urls.split(",")
             for url in next_urls:
                 next_url = main_url+url[1:-1]
-                yield Request(url=next_url, callback=self.parse, meta={'trail': trail})
+                yield Request(url=next_url, callback=self.parse,
+                              method='POST', meta={'trail': trail})
 
     def parse_product(self, response):
         return self.product_parser.parse(response)
