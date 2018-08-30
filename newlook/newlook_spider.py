@@ -161,10 +161,13 @@ class NewlookCrawlSpider(BaseCrawlSpider, Mixin):
             for color in product['colourOptions'].values():
                 yield Request(self.product_url_t.format(color['url']), self.parse_item, meta=meta.copy())
 
-        if url_query_parameter(response.url, 'page'):
-            return
+        if not url_query_parameter(response.url, 'page'):
+            self.pagination(response, raw_category)
 
-        pages = raw_category['data']['pagination']['numberOfPages']
+    def pagination(self, response, category):
+        meta = {'trail': self.add_trail(response)}
+
+        pages = category['data']['pagination']['numberOfPages']
         yield from (
             Request(add_or_replace_parameter(response.url, 'page', p),
                     self.product_requests, meta=meta.copy())
