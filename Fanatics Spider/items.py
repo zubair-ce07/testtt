@@ -2,7 +2,7 @@ import scrapy
 
 
 class FanaticsItem(scrapy.Item):
-    id = scrapy.Field()
+    product_id = scrapy.Field()
     breadcrumb = scrapy.Field()
     title = scrapy.Field()
     brand = scrapy.Field()
@@ -10,8 +10,8 @@ class FanaticsItem(scrapy.Item):
     description = scrapy.Field()
     details = scrapy.Field()
     gender = scrapy.Field()
-    url = scrapy.Field()
-    images = scrapy.Field()
+    product_url = scrapy.Field()
+    image_urls = scrapy.Field()
     skus = scrapy.Field()
     price = scrapy.Field()
     currency = scrapy.Field()
