@@ -23,7 +23,7 @@ class MixinUK(Mixin):
 
     nav_url_t = 'http://www.newlook.com/uk/json/meganav/tier-one/{}'
     product_url_t = 'http://www.newlook.com/uk{}'
-    api_url_t = 'http://www.newlook.com/uk/json/multiProduct/productDetails.json?id={}'
+    skus_url_t = 'http://www.newlook.com/uk/json/multiProduct/productDetails.json?id={}'
 
 
 class NewlookParseSpider(BaseParseSpider, Mixin):
@@ -63,7 +63,7 @@ class NewlookParseSpider(BaseParseSpider, Mixin):
         return self.next_request_or_garment(garment)
 
     def skus_request(self, product_id):
-        return [Request(self.api_url_t.format(product_id), self.parse_skus)]
+        return [Request(self.skus_url_t.format(product_id), self.parse_skus)]
 
     def product_id(self, response):
         return clean(response.css('[itemprop="sku"]::attr(content)'))[0]
@@ -141,7 +141,7 @@ class NewlookCrawlSpider(BaseCrawlSpider, Mixin):
 
         raw_listings = json.loads(response.text)
 
-        listings_links = list(self.find_key('link', raw_listings))
+        listings_links = self.find_key('link', raw_listings)
         yield from (
             Request(url_query_cleaner(response.urljoin(l['url'])) + '/data-48.json',
                     self.product_requests, meta=meta.copy())
