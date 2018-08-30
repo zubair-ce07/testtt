@@ -14,17 +14,22 @@ class QuotesSpider(scrapy.Spider):
     def parse(self, response):
         """This method crawl page and store useful information."""
         for quote in response.css('div.quote'):
+            quote_text = quote.css('span.text::text').extract_first()
+            quote_text = quote_text.replace(u'\u201c', '').replace(
+                '\"', '"').replace(u'\u201d', '').replace(u'\u2014', '-')
+            detail_url = str(quote.css('span > a::attr(href)').extract_first())
+            detail_page_url = response.urljoin(detail_url)
             data = {
-                'text': quote.css('span.text::text').extract_first(),
-                'author_name': quote.css('small.author::text').extract_first(),
+                'text': quote_text,
+                'author_name': (quote.css('small.author::text').extract_first()).replace(
+                    u'\u00e9', 'e'),
                 'tags': quote.css('a.tag::text').extract(),
-                'about': quote.css('span > a::attr(href)').extract_first(),
+                'about_url': quote.css('span > a::attr(href)').extract_first(),
             }
-            yield data
-        detail_url = response.css('span > a::attr(href)').extract()
-        for url in detail_url:
-            url = response.urljoin(url)
-            yield scrapy.Request(url=url, callback=self.parse_details)
+            request = scrapy.Request(
+                url=detail_page_url, callback=self.parse_details)
+            request.meta['data'] = data
+            yield request
 
         next_page_url = response.css('li.next > a::attr(href)').extract_first()
         if next_page_url:
@@ -33,9 +38,19 @@ class QuotesSpider(scrapy.Spider):
 
     def parse_details(self, response):
         """This method stores author detail information."""
+        data = response.meta['data']
+        text = response.css('div.author-description::text').extract_first()
+        text = text.replace('        ', '').replace('\n', '').replace(
+            u'\u00eb', 'e').replace(u'u00ed', 'i').replace(
+                '\"', '"').replace(u'\u00e9', 'e').replace(u'\u2013', '-').replace('        ', '')
         detail_data = {
-            'name': response.css('h3.author-title::text').extract_first(),
+            'name': (response.css('h3.author-title::text').extract_first()).replace(
+                u'\u00e9', 'e').replace('\n', '').replace('    ', ''),
             'birth-date': response.css('span.author-born-date::text').extract_first(),
-            'description': response.css('div.author-description::text').extract_first(),
+            'description': text,
         }
-        yield detail_data
+        data = {
+            'quote_data': data,
+            'author_detail': detail_data
+        }
+        yield data
