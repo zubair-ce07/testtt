@@ -10,7 +10,7 @@ class BonmarcheSpider(CrawlSpider):
         'https://www.bonmarche.co.uk/',
     ]
 
-    listing_css = ['.name-level-3', '.name-level-1']
+    listing_css = ['.name-level-3', '.name-level-1', '.page-next']
     product_css = ['.product-name']
 
     rules = (
