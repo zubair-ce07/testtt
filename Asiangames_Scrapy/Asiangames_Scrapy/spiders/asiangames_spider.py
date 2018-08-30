@@ -20,19 +20,28 @@ class AsianGamesSpider(CrawlSpider):
         'https://en.asiangames2018.id/sport/',
         'https://en.asiangames2018.id/medals/',
     ]
+
+    athlete_css_rule = '.or-athletes__list'
+    sport_item_css_rule = '.or-sportshub__list'
+    medals_css_rule = '.or-ses-list'
+    athlete_next_page_css_rule = '.or-cta__btn--next'
+
+    sport_item_regex = r'^(https://en.asiangames2018.id/)sport/[a-zA-z]+/'
+    medals_regex = r'^(https://en.asiangames2018.id/)medals/[a-zA-z]+/'
+
     rules = (
         Rule(LinkExtractor(
-            restrict_css='.or-athletes__list'), callback='parse_athlete'
+            restrict_css=athlete_css_rule), callback='parse_athlete'
         ),
         Rule(LinkExtractor(
-            restrict_css='.or-sportshub__list', allow=r'^(https://en.asiangames2018.id/)sport/[a-zA-z]+/'),
+            restrict_css=sport_item_css_rule, allow=sport_item_regex),
             callback='parse_sport_item'
         ),
         Rule(LinkExtractor(
-            restrict_css='.or-ses-list', allow=r'^(https://en.asiangames2018.id/)medals/[a-zA-z]+/'),
+            restrict_css=medals_css_rule, allow=medals_regex),
             callback='parse_medals'
         ),
-        Rule(LinkExtractor(restrict_css='.or-cta__btn--next'))
+        Rule(LinkExtractor(restrict_css=athlete_next_page_css_rule))
     )
 
     def parse_sport_item(self, response):
@@ -52,7 +61,7 @@ class AsianGamesSpider(CrawlSpider):
     def parse_athlete(self, response):
         athlete = Athlete()
         athlete['name'] = self._athlete_name(response)
-        athlete['id'] = self._athlete_id(response)
+        athlete['_id'] = self._athlete_id(response)
         athlete['img_url'] = self._athlete_image(response)
         athlete['country'] = self._athlete_country(response)
         athlete['sport'] = self._athlete_sport(response)
@@ -84,16 +93,21 @@ class AsianGamesSpider(CrawlSpider):
     def parse_medals(self, response):
         country_medals = CountryMedals()
         country_medals['name'] = self._medals_country_name(response)
-        country_medals['gold'], country_medals['silver'], country_medals['bronze'] = self._medals_country_count(
-            response)
+        gold, silver, bronze = self._medals_country_count(response)
+        country_medals['gold'] = gold
+        country_medals['silver'] = silver
+        country_medals['bronze'] = bronze
         country_medals['total_medals'] = self._medal_country_total(response)
         country_medals['sport_medals'] = []
 
         for medal_sport_row in self._medal_sport_rows(response):
             sport_medals = SportMedals()
             sport_medals['name'] = self._medals_sport_name(medal_sport_row)
-            sport_medals['gold'], sport_medals['silver'], \
-            sport_medals['bronze'], sport_medals['total_medals'] = self._medals_sports_count(medal_sport_row)
+            gold, silver, bronze, total = self._medals_sports_count(medal_sport_row)
+            sport_medals['gold'] = gold
+            sport_medals['silver'] = silver
+            sport_medals['bronze'] = bronze
+            sport_medals['total_medals'] = total
             country_medals['sport_medals'].append(sport_medals)
 
         return country_medals
@@ -108,7 +122,9 @@ class AsianGamesSpider(CrawlSpider):
         return response.css('.or-ses-list')
 
     def _schedule_time(self, response):
-        return response.css('td time span:last-child::text').extract_first().strip()
+        output = response.css('span[data-or-onlytime]::text').extract_first()
+        if output:
+            return output.strip()
 
     def _schedule_event(self, response):
         return response.css('td span.or-evt-phase_evt::text').extract_first()
@@ -120,17 +136,16 @@ class AsianGamesSpider(CrawlSpider):
         return response.css('span.or-h-disc-name::text').extract_first().strip()
 
     def _sport_urls(self, response):
-        return response.css('.or-sidecol .or-sp-details-list:last-child a::attr(href)').extract()[1]
+        css_rule = '.or-sidecol .or-sp-details-list:last-child a::attr(href)'
+        return response.css(css_rule).extract()[1]
 
     def _athlete_items(self, response):
         return response.css('.or-athletes__item')
 
     def _athlete_name(self, response):
         name = response.css('.or-athlete-profile__name--name::text').extract_first()
-        surname = response.css('.or-athlete-profile__name--surname::text').extract_first()
-        if surname:
-            return '{} {}'.format(name, surname)
-        return name
+        surname = response.css('.or-athlete-profile__name--surname::text').extract_first(default='')
+        return '{} {}'.format(name, surname)
 
     def _athlete_id(self, response):
         return findall(r'\d+', response.url)[1]
@@ -155,21 +170,21 @@ class AsianGamesSpider(CrawlSpider):
         return response.css('.or-athlete-profile__discipline::text').extract_first()
 
     def _athlete_height(self, response):
-        output = response.css('.or-anagraphic__block .or-anagraphic__data')[2].css('::text').extract_first().strip()
+        css_rule = '.or-anagraphic__block .or-anagraphic__data'
+        output = response.css(css_rule)[2].css('::text').extract_first().strip()
         matched_output = findall(r'\d+', output)
         if matched_output:
             return matched_output[0]
-        return None
 
     def _athlete_age(self, response):
         return response.css('.or-anagraphic__block .or-anagraphic__data::text').extract()[0].strip()
 
     def _athlete_weight(self, response):
-        output = response.css('.or-anagraphic__block .or-anagraphic__data')[3].css('::text').extract_first().strip()
+        css_rule = '.or-anagraphic__block .or-anagraphic__data'
+        output = response.css(css_rule)[3].css('::text').extract_first().strip()
         matched_output = findall(r'\d+', output)
         if matched_output:
             return matched_output[0]
-        return None
 
     def _athlete_born_date(self, response):
         return response.css('.or-athlete__birth--date::text').extract_first()

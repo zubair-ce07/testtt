@@ -14,7 +14,7 @@ class Schedule(scrapy.Item):
 
 class Athlete(scrapy.Item):
     name = scrapy.Field()
-    id = scrapy.Field()
+    _id = scrapy.Field()
     img_url = scrapy.Field()
     country = scrapy.Field()
     sport = scrapy.Field()
