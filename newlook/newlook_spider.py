@@ -162,7 +162,7 @@ class NewlookCrawlSpider(BaseCrawlSpider, Mixin):
                 yield Request(self.product_url_t.format(color['url']), self.parse_item, meta=meta.copy())
 
         if not url_query_parameter(response.url, 'page'):
-            self.pagination(response, raw_category)
+            yield from self.pagination(response, raw_category)
 
     def pagination(self, response, category):
         meta = {'trail': self.add_trail(response)}
