@@ -5,6 +5,7 @@ from Utils.OutputSystem import OutputSystem
 from Crawler.Crawler import Crawler
 from Utils.TextProcessor import TextProcessor
 from Db.Db import DataAccessLayer
+from Utils.EncryptionManager import EncryptionManager
 
 
 input_sys = InputSystem()
@@ -12,6 +13,7 @@ output_sys = OutputSystem()
 crawler = Crawler()
 text_processor = TextProcessor()
 db = DataAccessLayer()
+encryption_manager = EncryptionManager()
 
 
 def main_controller():
@@ -38,7 +40,13 @@ def new_crawl():
         words_dict = text_processor.dictionary_generator(words)
         sorted_list = text_processor.word_cloud_processor(words_dict)
         output_sys.display_word_cloud(sorted_list)
-        db.insert_row(sorted_list)
+        encyrpted_list = []
+        for word, freq in sorted_list[:100]:
+            w_id = encryption_manager.generate_salted_hash(word)
+            encrypted_word = (
+                    encryption_manager.generate_asym_encryption(word))
+            encyrpted_list.append((w_id, encrypted_word, freq))
+        db.insert_row(encyrpted_list)
         tfidf_matrix = text_processor.tfidf_genrator(words_dict.keys())
         output_sys.display_data(tfidf_matrix)
     else:
@@ -49,7 +57,11 @@ def new_crawl():
 def view_db():
     '''This function shows all data in decrypted form from database'''
 
-    decrypted_data = db.get_all_data()
+    decrypted_data = []
+    for row in db.get_all_data():
+            decrypted_word = (
+                encryption_manager.decyrpt_asym_encycryption(row[1]))
+            decrypted_data.append([decrypted_word, row[2]])
     output_sys.display_data(decrypted_data, is_itr=True)
 
 if __name__ == "__main__":
