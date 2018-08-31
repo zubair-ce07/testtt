@@ -20,19 +20,14 @@ class EncryptionManager:
 
     def generate_salted_hash(self, input_str):
         salt = uuid.uuid4().hex
-        return hashlib.sha256(
-            salt.encode() + input_str.encode()).hexdigest() + ':' + salt
+        salted_str = "{}+{}".format(input_str, salt)
+        return hashlib.sha256(salted_str.encode()).hexdigest()
 
-    def match_salted_hash(self, salted_hash, word):
-        hash_str, salt = salted_hash.split(':')
-        return hash_str == hashlib.sha256(
-            salt.encode() + word.encode()).hexdigest()
-
-    def generate_asym_encryption(self, input_str):
+    def encrypt_str(self, input_str):
         input_str = input_str.encode('utf8')
         return rsa.encrypt(input_str, self.pubkey).hex()
 
-    def decyrpt_asym_encycryption(self, encrypted_str):
+    def decrypt_str(self, encrypted_str):
         decrypted_str = rsa.decrypt(bytes.fromhex(encrypted_str), self.privkey)
         return decrypted_str.decode('utf8')
 

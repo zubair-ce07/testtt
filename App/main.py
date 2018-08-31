@@ -1,15 +1,13 @@
 '''This file is entry point for app & act as the controller for app'''
 
-from Utils.InputSystem import InputSystem
-from Utils.OutputSystem import OutputSystem
+from Utils.argparser import ArgParser
 from Crawler.Crawler import Crawler
 from Utils.TextProcessor import TextProcessor
 from Db.Db import DataAccessLayer
 from Utils.EncryptionManager import EncryptionManager
 
 
-input_sys = InputSystem()
-output_sys = OutputSystem()
+arg_parser = ArgParser()
 crawler = Crawler()
 text_processor = TextProcessor()
 db = DataAccessLayer()
@@ -20,49 +18,41 @@ def main_controller():
     '''This function control whole app & also transfer data &
         responses between multiple modules'''
 
-    while(1):
-        output_sys.display_menu()
-        m_input = input_sys.get_menu_input()
-        if m_input == "1":
-            new_crawl()
-        elif m_input == "2":
-            view_db()
-        else:
-            exit(1)
+    args = arg_parser.input_parser()
+    if args.action == "n":
+        new_crawl(args.url)
+    elif args.action == "v":
+        view_db()
 
 
-def new_crawl():
+def new_crawl(url):
     '''This function crawls new url & store/update in database'''
 
-    url = input_sys.get_url_input()
     if url:
         words = crawler.crawl_url(url)
         words_dict = text_processor.dictionary_generator(words)
         sorted_list = text_processor.word_cloud_processor(words_dict)
-        output_sys.display_word_cloud(sorted_list)
+        for item in sorted_list:
+            print(item)
         encyrpted_list = []
         for word, freq in sorted_list[:100]:
             w_id = encryption_manager.generate_salted_hash(word)
             encrypted_word = (
-                    encryption_manager.generate_asym_encryption(word))
+                    encryption_manager.encrypt_str(word))
             encyrpted_list.append((w_id, encrypted_word, freq))
         db.insert_row(encyrpted_list)
-        tfidf_matrix = text_processor.tfidf_genrator(words_dict.keys())
-        output_sys.display_data(tfidf_matrix)
     else:
-        output_sys.display_warning()
-        main_controller()
+        print("Enter URL to crawl & Try again!")
 
 
 def view_db():
     '''This function shows all data in decrypted form from database'''
 
-    decrypted_data = []
     for row in db.get_all_data():
             decrypted_word = (
-                encryption_manager.decyrpt_asym_encycryption(row[1]))
-            decrypted_data.append([decrypted_word, row[2]])
-    output_sys.display_data(decrypted_data, is_itr=True)
+                encryption_manager.decrypt_str(row[1]))
+            print((decrypted_word, row[2]))
+   
 
 if __name__ == "__main__":
     main_controller()
