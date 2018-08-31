@@ -1,5 +1,4 @@
 import json
-import itertools
 from urllib.parse import urljoin
 
 from scrapy import Spider, Request
