@@ -6,12 +6,17 @@ from scrapy.linkextractors import LinkExtractor
 from enamora.items import EnamoraItem
 
 
+
+def clean_price(price):
+    return price.strip().replace('.', '').replace(',', '')
+
+
 class EnamoraSpider(CrawlSpider):
     """
     Crawl spider to scrap `www.enamora.com`
     """
     custom_settings = {
-        'DOWNLOAD_DELAY': 2,
+        'DOWNLOAD_DELAY': 0.2,
     }
 
     name = 'enamora'
@@ -39,7 +44,7 @@ class EnamoraSpider(CrawlSpider):
         sizes_request = self.prepare_sizes_request(response)
         sizes_request.meta['item'] = item
         sizes_request.meta['color'] = self.extract_color(response)
-        sizes_request.meta['price'] = self.extract_price(response)
+        sizes_request.meta['currency'] = self.extract_currency(response)
 
         yield sizes_request
 
@@ -54,28 +59,28 @@ class EnamoraSpider(CrawlSpider):
     def parse_sizes(self, response):
         item = response.meta['item']
         color = response.meta['color']
-        price = response.meta['price']
-        raw_sizes = response.css("li")
-        item['skus'] = self.prepare_skus(color, price, raw_sizes)
+        currency = response.meta['currency']
+        raw_sizes = response.css("li a")
+        item['skus'] = self.prepare_skus(color, currency, raw_sizes)
 
         yield item
 
     @staticmethod
-    def prepare_skus(color, price, raw_sizes):
+    def prepare_skus(color, currency, raw_sizes):
         skus = list()
 
         for raw_size_s in raw_sizes:
-            size = raw_size_s.css("span::text").extract_first()
             sku = {
                 'color': color,
-                'size': size,
-                'sku_id': "{}_{}".format(color, size)
+                'size': raw_size_s.css("::attr(data-label)").extract_first(),
+                'sku_id': raw_size_s.css("::attr(data-sku)").extract_first(),
+                'price': clean_price(raw_size_s.css("::attr(data-price)").extract_first()),
+                'currency': currency
             }
-
-            if raw_size_s.css("a[disabled*='disabled']"):
+            availability_status = raw_size_s.css("::attr(data-qty)").extract_first()
+            if not int(availability_status):
                 sku['out_of_stock'] = True
 
-            sku.update(price)
             skus.append(sku)
 
         return skus
@@ -107,34 +112,21 @@ class EnamoraSpider(CrawlSpider):
         return css.extract_first().replace(' ', '_')
 
     @staticmethod
-    def extract_price(response):
-        pricing = {}
-        regular_price = response.css("p.regular strong::text").extract_first()
-
-        if not regular_price:
-            pricing['previous_prices'] = [
-                response.css("p.old small::text").extract_first().strip().replace(',', '')
-            ]
-            regular_price = response.css("p.special strong::text").extract_first()
-
-        pricing['price'] = regular_price[:-1].strip().replace(',', '')
-        pricing['currency'] = regular_price.strip()[-1]
-
-        return pricing
+    def extract_currency(response):
+        return response.css(
+            "meta[property='og:price:currency']::attr(content)"
+        ).extract_first()
 
     @staticmethod
     def extract_description(response):
-        response = response.replace(
-            body=response.body.replace(b'<br />', b'\n').replace(b'<br>', b'\n')
-        )
         description_area = response.css("div#produkt-details")
         descriptions = list()
 
         for description_entry in description_area:
             descriptions.append(
                 "{} {}".format(
-                    description_entry.css("span.control-label::text").extract_first().strip(),
-                    description_entry.css("span.information-value::text").extract_first().strip()
+                    ''.join(description_entry.css("span.control-label::text").extract()).strip(),
+                    ''.join(description_entry.css("span.information-value::text").extract()).strip()
                 )
             )
 
