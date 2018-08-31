@@ -165,7 +165,7 @@ class UniversalSpider(CrawlSpider):
     def extract_description(response):
         return "".join(
             response.css('div span.long-description *::text').extract()
-        ).strip().split('.')
+        ).strip().split('. ')
 
     @staticmethod
     def extract_category(response):
