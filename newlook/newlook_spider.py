@@ -132,7 +132,7 @@ class NewlookCrawlSpider(BaseCrawlSpider, Mixin):
         nav_css = '.main-navigation__primary-menu-link::attr(data-uid)'
         nav_ids = clean(response.css(nav_css))
 
-        return list(Request(url=self.nav_url_t.format(n_id),
+        return (Request(url=self.nav_url_t.format(n_id),
                             callback=self.listing_requests, meta=meta.copy())
                     for n_id in nav_ids)
 
@@ -141,11 +141,11 @@ class NewlookCrawlSpider(BaseCrawlSpider, Mixin):
 
         raw_listings = json.loads(response.text)
 
-        listings_links = self.get_query_key_values(query_key='link', dictionary=raw_listings)
+        listing_links = self.find_all('link', raw_listings)
         yield from (
             Request(url_query_cleaner(response.urljoin(l['url'])) + '/data-48.json',
                     self.product_requests, meta=meta.copy())
-            for l in listings_links if 'url' in l and '/c/' in l['url']
+            for l in listing_links if 'url' in l and '/c/' in l['url']
         )
 
     def product_requests(self, response):
@@ -162,29 +162,27 @@ class NewlookCrawlSpider(BaseCrawlSpider, Mixin):
             )
 
         if not url_query_parameter(response.url, 'page'):
-            yield from self.pagination(response, raw_category)
+            yield from self.pagination_requests(response, raw_category)
 
-    def pagination(self, response, category):
+    def pagination_requests(self, response, category):
         meta = {'trail': self.add_trail(response)}
 
         pages = category['data']['pagination']['numberOfPages']
-        yield from (
-            Request(add_or_replace_parameter(response.url, 'page', p),
+        for page in range(1, pages):
+            yield Request(add_or_replace_parameter(response.url, 'page', page),
                     self.product_requests, meta=meta.copy())
-            for p in range(1, pages)
-        )
 
-    def get_query_key_values(self, query_key, dictionary):
+    def find_all(self, query_key, dictionary):
         for key, value in dictionary.items():
             if key == query_key:
                 yield value
 
             elif isinstance(value, dict):
-                yield from self.get_query_key_values(query_key, value)
+                yield from self.find_all(query_key, value)
 
             elif isinstance(value, list):
                 for dict_item in value:
-                    yield from self.get_query_key_values(query_key, dict_item)
+                    yield from self.find_all(query_key, dict_item)
 
 
 class NewlookUKParseSpider(NewlookParseSpider, MixinUK):
