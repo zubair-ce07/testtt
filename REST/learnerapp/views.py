@@ -7,7 +7,8 @@ from learnerapp import permissions as custom_permissions
 class InstructorViewSet(viewsets.ModelViewSet):
     queryset = models.Instructor.objects.all()
     serializer_class = serializers.InstructorSerializer
-    permission_classes = (custom_permissions.UserOnlyUpdatePermission,)
+    permission_classes = (custom_permissions.UserOnlyUpdatePermission,
+                          custom_permissions.InstructorAddPermission)
 
     action_serializers = {
         'update': serializers.InstructorUpdateSerializer,
@@ -35,8 +36,12 @@ class StudentViewSet(viewsets.ModelViewSet):
                 return self.action_serializers[self.action]
         return super(StudentViewSet, self).get_serializer_class()
 
+    def get_queryset(self):
+        return models.Student.objects.filter(user__id=self.request.user.id)
+
 
 class CourseViewSet(viewsets.ModelViewSet):
     queryset = models.Course.objects.all()
     serializer_class = serializers.CourseSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,
+                          custom_permissions.InstructorOrReadOnly)
