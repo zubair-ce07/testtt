@@ -28,6 +28,7 @@ class EnamoraSpider(CrawlSpider):
     )
 
     def parse_item(self, response):
+
         item = EnamoraItem()
         item['url'] = response.url
         item['name'] = self.extract_name(response)
@@ -43,19 +44,25 @@ class EnamoraSpider(CrawlSpider):
         yield sizes_request
 
     def prepare_sizes_request(self, response):
-        url = response.css(
+        css = response.css(
             "ul[id='product-sizeselect'] include::attr(src)"
-        ).extract_first().replace('mi.', 'www.')
+        )
+        url = css.extract_first().replace('mi.', 'www.')
 
         return scrapy.Request(url=url, callback=self.parse_sizes)
 
-    @staticmethod
-    def parse_sizes(response):
+    def parse_sizes(self, response):
         item = response.meta['item']
         color = response.meta['color']
         price = response.meta['price']
-        skus = list()
         raw_sizes = response.css("li")
+        item['skus'] = self.prepare_skus(color, price, raw_sizes)
+
+        yield item
+
+    @staticmethod
+    def prepare_skus(color, price, raw_sizes):
+        skus = list()
 
         for raw_size_s in raw_sizes:
             size = raw_size_s.css("span::text").extract_first()
@@ -67,17 +74,18 @@ class EnamoraSpider(CrawlSpider):
 
             if raw_size_s.css("a[disabled*='disabled']"):
                 sku['out_of_stock'] = True
+
             sku.update(price)
             skus.append(sku)
-        item['skus'] = skus
 
-        yield item
+        return skus
 
     @staticmethod
     def extract_name(response):
-        return response.css(
+        css = response.css(
             "div.product h1 small::text"
-        ).extract_first().replace('-', '')
+        )
+        return css.extract_first().replace('-', '')
 
     @staticmethod
     def extract_brand(response):
@@ -93,9 +101,10 @@ class EnamoraSpider(CrawlSpider):
 
     @staticmethod
     def extract_color(response):
-        return response.css(
+        css = response.css(
             "p.product-color strong::text"
-        ).extract_first().replace(' ', '_')
+        )
+        return css.extract_first().replace(' ', '_')
 
     @staticmethod
     def extract_price(response):
