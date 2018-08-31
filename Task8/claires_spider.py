@@ -5,10 +5,8 @@ from .base import BaseParseSpider, BaseCrawlSpider, LinkExtractor, clean
 class MixinUK:
     retailer = 'claires-uk'
     market = 'UK'
-    currency = 'GBP'
-    lang = 'en'
     default_brand = 'claires'
-    unwanted_items = ['tech', 'toys', 'stationery']
+    unwanted_categories = ['tech', 'toys', 'stationery']
     allowed_domains = ['claires.com']
     start_urls = ['https://www.claires.com/?lang=en_GB']
 
@@ -34,13 +32,13 @@ class ParseSpider(BaseParseSpider):
         size_requests = self.size_requests(response)
         garment['meta'] = {'requests_queue': size_requests}
 
-        garment['skus'] = {} if size_requests else self.one_size_sku(response)
+        garment['skus'] = {} if size_requests else self.skus(response)
 
         return self.next_request_or_garment(garment)
 
     def is_unwanted_item(self, categories):
         for category in categories:
-            if any(unwanted_item in category.lower() for unwanted_item in MixinUK.unwanted_items):
+            if any(unwanted_item in category.lower() for unwanted_item in MixinUK.unwanted_categories):
                 return True
 
         return False
@@ -70,35 +68,22 @@ class ParseSpider(BaseParseSpider):
         return response.meta.get('gender')
 
     def image_urls(self, response):
-        return response.css('.product-thumbnails li a::attr(href)').extract() \
-               or response.css('.product-image::attr(href)').extract()
-
-    def is_out_of_stock(self, response):
-        stock_availability = response.css('.availability-msg p::text').extract_first().lower()
-        return stock_availability == 'out of stock'
+        css = '.product-thumbnails li a::attr(href), .product-image::attr(href)'
+        return response.css(css).extract()
 
     def skus(self, response):
         skus = {}
 
         sku = self.product_pricing_common(response)
-        sku['size'] = clean(response.css('.selected a::text').extract_first())
+
+        size = response.css('.size .selected a::text').extract_first()
+        sku['size'] = clean(size) if size else "One_Size"
+
         sku_id = f'{self.product_id(response)}_{sku["size"]}'
 
-        if self.is_out_of_stock(response):
-            sku['out_of_stock'] = True
+        stock_availability = response.css('.availability-msg p::text').extract_first()
 
-        skus[sku_id] = sku
-
-        return skus
-
-    def one_size_sku(self, response):
-        skus = {}
-
-        sku = self.product_pricing_common(response)
-        sku['size'] = 'One_Size'
-        sku_id = f'{self.product_id(response)}_{sku["size"]}'
-
-        if self.is_out_of_stock(response):
+        if stock_availability.lower() == "out of stock":
             sku['out_of_stock'] = True
 
         skus[sku_id] = sku
