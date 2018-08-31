@@ -6,6 +6,23 @@ from scrapy.linkextractors import LinkExtractor
 from enamora.items import EnamoraItem
 
 
+def clean_text(text):
+
+    def clean(text_entry):
+        return (text_entry.strip()
+                .replace('_', '')
+                .replace('-', '')
+                .replace('<br>', '')
+                .replace('<br />', '')
+                .replace('\n', ' ')
+                .raplace('\t', ' '))
+
+    if text:
+        if isinstance(text, str):
+            return clean(str)
+
+        return [clean(text_entry) for text_entry in text]
+
 
 def clean_price(price):
     return price.strip().replace('.', '').replace(',', '')
@@ -78,6 +95,7 @@ class EnamoraSpider(CrawlSpider):
                 'currency': currency
             }
             availability_status = raw_size_s.css("::attr(data-qty)").extract_first()
+
             if not int(availability_status):
                 sku['out_of_stock'] = True
 
@@ -90,7 +108,7 @@ class EnamoraSpider(CrawlSpider):
         css = response.css(
             "div.product h1 small::text"
         )
-        return css.extract_first().replace('-', '')
+        return clean_text(css.extract_first())
 
     @staticmethod
     def extract_brand(response):
