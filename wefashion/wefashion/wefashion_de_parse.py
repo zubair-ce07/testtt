@@ -134,7 +134,7 @@ class ProductParser(Spider):
             sku = sku_info.copy()
             sku['size'] = size.css('::attr(title)').extract_first()
 
-            if 'unselectable' in size.css('::attr(class)').extract_first():
+            if size.css("[class*='unselectable']"):
                 sku['out_of_stock'] = True
 
             skus[f"{color_id}_{self.extract_sku_model(size)}"] = sku
