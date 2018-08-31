@@ -3,6 +3,8 @@ import scrapy
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 from scrapy.Request import Request
+from scrapy.loader import ItemLoader
+from HarrodsProject.items import HarrodsItem
 
 
 class HarrodsSpider(CrawlSpider):
@@ -35,15 +37,20 @@ class HarrodsSpider(CrawlSpider):
         return [response.urljoin(url) for url in urls]
 
     def get_currency_control_url(self, response):
-        # find default color
-        product_code = response.css(
-            'input[name="ProductCode"]::attr(value)').extract()
-        product_template = response.css(
-            'input[name="PdpTemplateType"]::attr(value)').extract()
-        product_bcid = response.css(
-            'input[name="Bcid"]::attr(value)').extract()
-        url = '''https://www.harrods.com/en-gb/product/
-                buyingcontrols/{}?pdpTemplateType={}
-                &bcid={}&colour={}&_=1535695971886'''.format(
-
-                )
+        # TODO:Think on best way to call it: Either before products parsing
+        pass
+        # return "https://www.harrods.com/en-gb/api/products/prices/updates?"+
+        # "country=SG&currency=SGD&_=1535699285679"
+        # product_code = response.css(
+        #     'input[name="ProductCode"]::attr(value)').extract_first()
+        # product_template = response.css(
+        #     'input[name="PdpTemplateType"]::attr(value)').extract_first()
+        # product_bcid = response.css(
+        #     'input[name="Bcid"]::attr(value)').extract_first()
+        # product_color = response.css(
+        #     ".js-default-colour::attr(value)").extract_first()
+        # return "https://www.harrods.com/en-gb/product/"+
+        # "buyingcontrols/{}?pdpTemplateType={}"+
+        # "&bcid={}&colour={}&_=1535695971886".format(
+        #         product_code, product_template,
+        #         product_bcid, product_color)
