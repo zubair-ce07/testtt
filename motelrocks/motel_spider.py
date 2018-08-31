@@ -7,8 +7,8 @@ from scrapy.spiders import CrawlSpider, Rule
 
 
 class MotelRocksSpider(CrawlSpider):
-    name = 'motelrocksSpider'
-    start_urls = ['http://www.motelrocks.com/']
+    name = "motelrocksSpider"
+    start_urls = ["http://www.motelrocks.com/"]
 
     rules = (
         Rule(LinkExtractor(restrict_xpaths='//ul[@id="nav-menu"]/li'), callback='parse_pages'),
