@@ -24,7 +24,7 @@ class CpucSpider(CrawlSpider):
 
     custom_settings = {
         'DUPEFILTER_DEBUG': True,
-        'DOWNLOAD_DELAY': 5,
+        'DOWNLOAD_DELAY': 2,
         'USER_AGENT': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.117 Safari/537.36',
         'DUPEFILTER_CLASS': 'scrapy.dupefilters.BaseDupeFilter'
     }
@@ -44,7 +44,15 @@ class CpucSpider(CrawlSpider):
                                                callback=self.search_page)
 
     def search_page(self, response):
-        yield from super().parse(response)
+        counter=0
+        requests = super().parse(response)
+        for request in requests:
+            request.meta['cookiejar']=counter
+            counter+=1
+            yield request
+            # yield scrapy.Request(index.decode('utf-8'), meta={'cookiejar': index},
+            #                      callback=self.case_detail_page)
+        # requests
 
     def case_detail_page(self, response):
         proceeding = CaseProceeding()
@@ -68,10 +76,10 @@ class CpucSpider(CrawlSpider):
 
         yield scrapy.FormRequest.from_response(response, formid="wwvFlowForm",
                                                formdata=form_data,
-                                            #    cookies={},
                                                meta={
                                                    'proceeding': proceeding,
                                                    'dont_filter': True,
+                                                   'cookiejar': response.meta['cookiejar']
                                                 #    'dont_merge_cookies': True,
                                                }, 
                                                callback=self.document_list_page)
@@ -110,15 +118,16 @@ class CpucSpider(CrawlSpider):
             if document_url.find('orderadocument') == -1:
                 request = scrapy.Request(url=document_url,
                                          callback=self.document_files_page,
-                                         headers={"Cookie": self.cpuc_cookies}, priority=1)
+                                         )
                 request.meta['proceeding'] = proceeding
                 request.meta['index'] = index
                 request.meta['last_doc_flag'] = last_doc_flag
-                # yield request
+                request.meta['cookiejar']= response.meta['cookiejar']+index
+                yield request
 
             index += 1
 
-        yield proceeding
+        # yield proceeding
 
         # documents_urls = response.css("tr.even a::attr(href)").extract()
         # documents_urls = documents_urls + response.css("tr.odd a::attr(href)").extract()
