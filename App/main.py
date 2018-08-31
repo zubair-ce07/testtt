@@ -1,6 +1,6 @@
 '''This file is entry point for app & act as the controller for app'''
 
-from Utils.argparser import ArgParser
+from Utils.ArgParser import ArgParser
 from Crawler.Crawler import Crawler
 from Utils.TextProcessor import TextProcessor
 from Db.Db import DataAccessLayer
@@ -31,7 +31,7 @@ def new_crawl(url):
     if url:
         words = crawler.crawl_url(url)
         words_dict = text_processor.dictionary_generator(words)
-        sorted_list = text_processor.word_cloud_processor(words_dict)
+        sorted_list = text_processor.generate_sorted_list(words_dict)
         for item in sorted_list:
             print(item)
         encyrpted_list = []
@@ -41,6 +41,7 @@ def new_crawl(url):
                     encryption_manager.encrypt_str(word))
             encyrpted_list.append((w_id, encrypted_word, freq))
         db.insert_row(encyrpted_list)
+        # Calculate & display tfidf
     else:
         print("Enter URL to crawl & Try again!")
 
