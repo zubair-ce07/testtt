@@ -133,22 +133,23 @@ class NewlookCrawlSpider(BaseCrawlSpider, Mixin):
         nav_ids = clean(response.css(nav_css))
 
         return (Request(url=self.nav_url_t.format(n_id),
-                            callback=self.listing_requests, meta=meta.copy())
-                    for n_id in nav_ids)
-
-    def listing_requests(self, response):
+                        callback=self.parse_menu, meta=meta.copy())
+                for n_id in nav_ids)
+    
+    def parse_menu(self, response):
         meta = {'trail': self.add_trail(response)}
 
         raw_listings = json.loads(response.text)
 
-        listing_links = self.find_all('link', raw_listings)
-        yield from (
-            Request(url_query_cleaner(response.urljoin(l['url'])) + '/data-48.json',
-                    self.product_requests, meta=meta.copy())
-            for l in listing_links if 'url' in l and '/c/' in l['url']
-        )
-
-    def product_requests(self, response):
+        listing_links = self.get_query_key('link', raw_listings)
+        for link in listing_links:
+            if '/c/' not in link.get('url', ''):
+                continue
+            
+            yield Request(url_query_cleaner(response.urljoin(link['url'])) + '/data-48.json',
+                          self.parse_listing, meta=meta.copy())
+    
+    def parse_listing(self, response):
         meta = {'trail': self.add_trail(response)}
 
         raw_category = json.loads(response.text)
@@ -156,10 +157,9 @@ class NewlookCrawlSpider(BaseCrawlSpider, Mixin):
             return
 
         for product in raw_category['data']['results']:
-            yield from (
-                Request(self.product_url_t.format(color['url']), self.parse_item, meta=meta.copy())
-                for color in product['colourOptions'].values()
-            )
+            for color in product['colourOptions'].values():
+                yield Request(self.product_url_t.format(color['url']),
+                              self.parse_item, meta=meta.copy())
 
         if not url_query_parameter(response.url, 'page'):
             yield from self.pagination_requests(response, raw_category)
@@ -170,19 +170,19 @@ class NewlookCrawlSpider(BaseCrawlSpider, Mixin):
         pages = category['data']['pagination']['numberOfPages']
         for page in range(1, pages):
             yield Request(add_or_replace_parameter(response.url, 'page', page),
-                    self.product_requests, meta=meta.copy())
+                          self.parse_listing, meta=meta.copy())
 
-    def find_all(self, query_key, dictionary):
+    def get_query_key(self, query_key, dictionary):
         for key, value in dictionary.items():
             if key == query_key:
                 yield value
 
             elif isinstance(value, dict):
-                yield from self.find_all(query_key, value)
+                yield from self.get_query_key(query_key, value)
 
             elif isinstance(value, list):
                 for dict_item in value:
-                    yield from self.find_all(query_key, dict_item)
+                    yield from self.get_query_key(query_key, dict_item)
 
 
 class NewlookUKParseSpider(NewlookParseSpider, MixinUK):
