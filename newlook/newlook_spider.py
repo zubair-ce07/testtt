@@ -156,10 +156,10 @@ class NewlookCrawlSpider(BaseCrawlSpider, Mixin):
             return
 
         for product in raw_category['data']['results']:
-            yield Request(self.product_url_t.format(product['url']), self.parse_item, meta=meta.copy())
-
-            for color in product['colourOptions'].values():
-                yield Request(self.product_url_t.format(color['url']), self.parse_item, meta=meta.copy())
+            yield from (
+                Request(self.product_url_t.format(color['url']), self.parse_item, meta=meta.copy())
+                for color in product['colourOptions'].values()
+            )
 
         if not url_query_parameter(response.url, 'page'):
             yield from self.pagination(response, raw_category)
