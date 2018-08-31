@@ -15,7 +15,7 @@ class MixinUK:
 
 class ParseSpider(BaseParseSpider):
     raw_description_css = '.tab-content *::text'
-    price_css = '.product-detail .price-sales::text'
+    price_css = '.product-detail .product-price *::text'
 
     def parse(self, response):
         sku_id = self.product_id(response)
@@ -44,7 +44,7 @@ class ParseSpider(BaseParseSpider):
                 return True
 
         return False
-    
+
     def parse_skus(self, response):
         garment = response.meta['garment']
         garment['skus'].update(self.skus(response))
