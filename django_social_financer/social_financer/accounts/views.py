@@ -102,13 +102,13 @@ def home_donor(request, user):
         consumers = consumers.exclude(id=request.user.userprofile.id)
         consumers = consumers.exclude(id__in=request.user.userprofile.pairs.values('id'))
         return render(request,'accounts/donor/select_consumers.html',
-                      context={'consumers': consumers, 'map_url' : constants.map_url})
+                      context={'consumers': consumers, 'map_url' : constants.MAP_URL})
 
 def donors_pairs(request):
     if request.method == 'GET':
         return render(request,'accounts/donor/my_consumers.html',
                       context={'pair' : request.user.userprofile.pairs.all(),
-                               'map_url' : constants.map_url})
+                               'map_url' : constants.MAP_URL})
 
 def home_consumer(request, user):
     if request.method == 'GET':
@@ -116,7 +116,7 @@ def home_consumer(request, user):
                       'accounts/consumer/my_donor.html',
                       context={'donor': request.user.userprofile.pair,
                                'my_category': request.user.userprofile.categories,
-                               'map_url' : 'https://www.google.com/maps/search/?api=1&query='})
+                               'map_url' : constants.MAP_URL})
 
 class ProfileView(generic.TemplateView):
     template_name = 'accounts/profile.html'
@@ -127,5 +127,3 @@ class ProfileView(generic.TemplateView):
         context['rating'] = helpers.get_user_rating(self.request.user.userprofile)
         context['all_feedback'] = Feedback.objects.filter(given_to_user=self.request.user.userprofile)
         return context
-
-

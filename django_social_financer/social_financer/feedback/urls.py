@@ -7,5 +7,5 @@ import accounts.views
 
 app_name = 'feedback'
 urlpatterns = [
-    path('<int:pk>', views.FeedbackView.as_view(), name='give_feedback'),
+    path('<int:pk>', views.PostFeedbackView.as_view(), name='give_feedback'),
 ]

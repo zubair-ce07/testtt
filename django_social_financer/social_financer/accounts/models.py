@@ -65,8 +65,8 @@ class PairHistory(models.Model):
     # This is true if the pair was made and false if the pair was broken.
     was_paired = models.BooleanField(default=True)
     date_logged = models.DateTimeField(default=datetime.now, blank = True)
-    donor = models.ForeignKey(UserProfile, related_name='donor_pair_history', on_delete=models.CASCADE())
-    consumer = models.ForeignKey(UserProfile, related_name='consumer_pair_history', on_delete=models.CASCADE())
+    donor = models.ForeignKey(UserProfile, related_name='donor_pair_history', on_delete=models.CASCADE)
+    consumer = models.ForeignKey(UserProfile, related_name='consumer_pair_history', on_delete=models.CASCADE)
     unpaired_by = models.CharField(max_length=2, choices=UserProfile.ROLE_TYPES)
 
 @receiver(post_save, sender=User)

@@ -4,7 +4,7 @@ from datetime import datetime
 
 from accounts.models import UserProfile
 
-# Create your models here.
+
 class Feedback(models.Model):
     given_by_user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='given_feedback')
     given_to_user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='received_feedback')
