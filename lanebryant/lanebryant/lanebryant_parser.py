@@ -43,16 +43,16 @@ class ProductParser(Spider):
 
     def image_requests(self, response, retailer_sku):
         raw_product = self.extract_raw_product(response)
-        raw_colors = self.get_item_map(raw_product, "all_available_colors", "name")
+        colours_map = self.get_item_map(raw_product, "all_available_colors", "name")
 
         raw_server_url = raw_product["pdpDetail"]["product"][0]["scene7_params"]
-        server_url = f"http:{raw_server_url['server_url']}"
+        base_url = f"http:{raw_server_url['server_url']}"
         request_url = "{}lanebryantProdATG/{}_ms?req=set,json"
-        meta_info = {"base_url": server_url}
+        meta_info = {"base_url": base_url}
 
         image_requests = []
-        for color in raw_colors:
-            url = request_url.format(server_url, f"{retailer_sku}_{color}")
+        for color in colours_map:
+            url = request_url.format(base_url, f"{retailer_sku}_{color}")
             image_requests.append(Request(url, callback=self.parse_image_urls, meta=meta_info))
         return image_requests
 
@@ -94,7 +94,8 @@ class ProductParser(Spider):
 
     def extract_price(self, response):
         raw_price = self.extract_price_specification(response)
-        return raw_price["offers"]["priceSpecification"]["price"]
+        price = float(raw_price["offers"]["priceSpecification"]["price"])
+        return int(price * 100)
 
     def extract_currency(self, response):
         raw_currency = self.extract_price_specification(response)
@@ -117,14 +118,14 @@ class ProductParser(Spider):
         raw_product = self.extract_raw_product(response)
         color_map = self.get_item_map(raw_product, "all_available_colors", "name")
         size_map = self.get_item_map(raw_product, "all_available_sizes", "value")
-        sku_info = {
+        common_sku = {
             "currency": self.extract_currency(response),
             "price": self.extract_price(response)
         }
 
         skus = {}
         for raw_sku in self.extract_raw_skus(response):
-            sku = sku_info.copy()
+            sku = common_sku.copy()
             sku["color"] = color_map[raw_sku["color"]]
             sku["size"] = size_map[raw_sku["size"]]
             skus[raw_sku["sku_id"]] = sku
