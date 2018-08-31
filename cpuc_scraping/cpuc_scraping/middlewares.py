@@ -5,6 +5,7 @@
 # See documentation in:
 # https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 
+from random import sample
 from scrapy import signals
 
 
@@ -106,7 +107,20 @@ class CpucScrapingDownloaderMiddleware(object):
 class CpucProxyMiddleware(object):
     def process_request(self, request, spider):
 
-        request.meta['proxy'] = "https://45.124.144.153:8080"
+        proxy_list = [
+            "https://201.47.62.130:6666",
+            "https://45.124.144.153:8080",
+            # "https://105.27.204.134:8080",
+            # "https://89.169.121.180:8080",
+            # "https://89.102.126.21:8080",
+            "https://45.126.21.147:36127",
+            "https://181.198.5.250:8080",
+            "https://181.113.35.38:36127",
+            "https://80.52.238.30:36127"
+        ]
+        # request.meta['proxy'] = "https://45.124.144.153:8080"
         # request.meta['proxy'] = "https://105.27.204.134:8080"
-        # 182.253.188.180:8080
-        # return None
+        # request.meta['proxy'] = "https://89.102.126.21:8080"
+        # request.meta['proxy'] = "https://178.234.141.76:8080"
+        # request.meta['proxy'] = sample(proxy_list, 1)[0]
+        return None

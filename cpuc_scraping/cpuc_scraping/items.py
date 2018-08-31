@@ -12,9 +12,9 @@ class CaseProceeding(scrapy.Item):
     # define the fields for your item here like:
     number = scrapy.Field()
     filed_by = scrapy.Field(serializer=list)
-    industry = scrapy.Field()
+    industry = scrapy.Field(serializer=list)
     filing_date = scrapy.Field()
-    category = scrapy.Field()
+    category = scrapy.Field(serializer=list)
     status = scrapy.Field()
     description = scrapy.Field()
     staff_members = scrapy.Field(serializer=list)
@@ -26,9 +26,17 @@ class CaseProceeding(scrapy.Item):
 #     name = scrapy.Field()
 #     assign_date = scrapy.Field()
 
+class ProceedingDocument(scrapy.Item):
+    filing_date = scrapy.Field()
+    type = scrapy.Field()
+    filed_by = scrapy.Field()
+    description = scrapy.Field()
+    document_files = scrapy.Field(serializer=list)
 
-class Document(scrapy.Item):
+
+class ProceedingFile(scrapy.Item):
     title = scrapy.Field()
     type = scrapy.Field()
     file_url = scrapy.Field()
     date_published = scrapy.Field()
+    related_proceedings = scrapy.Field(serializer=list)

@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
+import re
+from functools import partial
 import scrapy
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
-from functools import partial
-from ..items import CaseProceeding, Document
+from ..items import CaseProceeding, ProceedingDocument, ProceedingFile
 
 
 class CpucSpider(CrawlSpider):
@@ -21,72 +22,32 @@ class CpucSpider(CrawlSpider):
         Rule(case_detail_extractor_2, callback='case_detail_page', follow=True),
     )
 
-    def parse(self, response):
-        form_data = {
-            'p_flow_id': response.css("input#pFlowId::attr(value)").extract_first(default=""),
-            'p_flow_step_id': response.css("input#pFlowStepId::attr(value)").extract_first(
-                default=""),
-            'p_instance': response.css("input#pInstance::attr(value)").extract_first(default=""),
-            'p_page_submission_id': response.css(
-                "input#pPageSubmissionId::attr(value)").extract_first(default=""),
-            'p_request': 'Go',
-            'p_arg_names': response.xpath(
-                "//input[@id='PREPARE_URL']/preceding-sibling::input/@value").extract_first(
-                default=""),
-            'p_t01': response.xpath(
-                "preceding-sibling//input[@id='PREPARE_URL']/@value").extract_first(default=""),
-            'p_arg_names': response.xpath(
-                "//input[@id='P1_PROCEEDING_NUM']/preceding-sibling::input/@value").extract_first(
-                default=""),
-            'p_t02': response.xpath(
-                "preceding-sibling//input[@id='P1_PROCEEDING_NUM']/@value").extract_first(
-                default=""),
-            'p_arg_names': response.xpath(
-                "//input[@id='P1_FILER_NAME']/preceding-sibling::input/@value").extract_first(
-                default=""),
-            'p_t03': response.xpath(
-                "preceding-sibling//input[@id='P1_FILER_NAME']/@value").extract_first(default=""),
-            'p_arg_names': response.xpath(
-                "//input[@id='P1_FILED_DATE_L']/preceding-sibling::input/@value").extract_first(
-                default=""),
-            'p_t04': '01/01/2018',
-            'p_arg_names': response.xpath(
-                "//input[@id='P1_FILED_DATE_H']/preceding-sibling::input/@value").extract_first(
-                default=""),
-            'p_t05': '08/29/2018',
-            'p_arg_names': response.xpath(
-                "//input[@id='P1_DESCRIPTION']/preceding-sibling::input/@value").extract_first(
-                default=""),
-            'p_t06': response.xpath(
-                "preceding-sibling//input[@id='P1_DESCRIPTION']/@value").extract_first(default=""),
-            'p_arg_names': response.xpath(
-                "//input[@id='P1_LAST_NAME']/preceding-sibling::input/@value").extract_first(
-                default=""),
-            'p_t07': response.xpath(
-                "preceding-sibling//input[@id='P1_LAST_NAME']/@value").extract_first(default=""),
+    cpuc_cookies = ""
 
-            'p_md5_checksum': response.xpath(
-                "//input[@name='p_md5_checksum']/@value").extract_first(default=""),
-            'p_page_checksum': response.xpath(
-                "//input[@name='p_page_checksum']/@value").extract_first(default=""),
+    def parse(self, response):
+        self.cpuc_cookies = response.headers.getlist('Set-Cookie')[0].decode("utf-8").split(';')[0]
+        form_data = {
+            'p_t04': '03/30/2018',
+            # 'p_t04': '01/01/2018',
+            # 'p_t05': '08/29/2018',
+            'p_t05': '03/30/2018',
         }
-        yield scrapy.FormRequest(url=self.search_page_url, formdata=form_data,
-                                 callback=self.search_page)
+
+        yield scrapy.FormRequest.from_response(response, formid="wwvFlowForm", formdata=form_data,
+                                               callback=self.search_page)
 
     def search_page(self, response):
         yield from super().parse(response)
-        # self.logger.info("i am search page")
-        # self.logger.info("my url is %s" % response.url)
 
     def case_detail_page(self, response):
         proceeding = CaseProceeding()
 
         proceeding['number'] = response.css('h1::text').extract_first(default="").split(" ")[0]
         proceeding['filed_by'] = response.css("span#P56_FILED_BY::text").extract()
-        proceeding['industry'] = response.css("span#P56_INDUSTRY::text").extract_first(default="")
+        proceeding['industry'] = response.css("span#P56_INDUSTRY::text").extract()
         proceeding['filing_date'] = response.css("span#P56_FILING_DATE::text").extract_first(
             default="")
-        proceeding['category'] = response.css("span#P56_CATEGORY::text").extract_first(default="")
+        proceeding['category'] = response.css("span#P56_CATEGORY::text").extract()
         proceeding['status'] = response.css("span#P56_STATUS::text").extract_first(default="")
         proceeding['description'] = response.css("span#P56_DESCRIPTION::text").extract_first(
             default="")
@@ -94,34 +55,83 @@ class CpucSpider(CrawlSpider):
         proceeding['documents'] = []
 
         form_data = {
-            'p_flow_id': response.css("input#pFlowId::attr(value)").extract_first(default=""),
-            'p_flow_step_id': response.css("input#pFlowStepId::attr(value)").extract_first(
-                default=""),
-            'p_instance': response.css("input#pInstance::attr(value)").extract_first(default=""),
-            'p_page_submission_id': response.css(
-                "input#pPageSubmissionId::attr(value)").extract_first(default=""),
             'p_request': 'T_DOCUMENTS',
-            'p_md5_checksum': "",
-            'p_page_checksum': response.css("input#pPageChecksum::attr(value)").extract_first(
-                default=""),
         }
 
-        documents_url = response.css("form#wwvFlowForm::attr(action)").extract_first(default="")
-        documents_url = response.urljoin(documents_url)
+        request = scrapy.FormRequest.from_response(response, formid="wwvFlowForm",
+                                                   formdata=form_data,
+                                                   callback=self.document_list_page)
+        request.meta['proceeding'] = proceeding
+        yield request
 
-        yield scrapy.FormRequest(url=documents_url, formdata=form_data,
-                                 callback=partial(self.document_list_page, proceeding=proceeding))
+    def document_list_page(self, response):
+        proceeding = response.meta['proceeding']
+        print("i ----------------------------------------------")
+        table_rows = response.css("tr.even")
+        table_rows = table_rows + response.css("tr.odd")
 
-    def document_list_page(self, response, proceeding=None):
-        documents_urls = response.css("tr.even a::attr(href)").extract()
-        documents_urls = documents_urls + response.css("tr.odd a::attr(href)").extract()
+        index = 0
+        last_doc_flag = False
+        table_size = len(table_rows)
 
-        for document_url in documents_urls:
-            if document_url.find('orderadocument') != -1:
-                yield scrapy.Request(url=document_url,
-                                     callback=partial(self.document_detail, proceeding=proceeding))
+        for row in table_rows:
+            proceeding_document = ProceedingDocument()
+            proceeding_document['filing_date'] = row.css(
+                "td[headers='FILING_DATE']::text").extract_first(default="")
+            proceeding_document['type'] = row.css(
+                "td[headers='DOCUMENT_TYPE'] u::text").extract_first(default="")
+            proceeding_document['filed_by'] = row.css(
+                "td[headers='FILED_BY']::text").extract_first()
+            proceeding_document['description'] = row.css(
+                "td[headers='DESCRIPTION']::text").extract_first(default="")
 
-    def document_detail(self, response, proceeding=None):
-        pass
+            proceeding_document['document_files'] = []
 
+            document_url = row.css("a::attr(href)").extract_first(default="")
 
+            proceeding['documents'].append(proceeding_document)
+
+            if (index + 1) == table_size:
+                last_doc_flag = True
+            if document_url.find('orderadocument') == -1:
+                request = scrapy.Request(url=document_url,
+                                         callback=self.document_files_page,
+                                         headers={"Cookie": self.cpuc_cookies}, priority=1)
+                request.meta['proceeding'] = proceeding
+                request.meta['index'] = index
+                request.meta['last_doc_flag'] = last_doc_flag
+                # yield request
+
+            index += 1
+
+        yield proceeding
+
+        # documents_urls = response.css("tr.even a::attr(href)").extract()
+        # documents_urls = documents_urls + response.css("tr.odd a::attr(href)").extract()
+
+    def document_files_page(self, response):
+        proceeding = response.meta['proceeding']
+        index = response.meta['index']
+        last_doc_flag = response.meta['last_doc_flag']
+
+        # response.css was not working on it :(
+        # table_rows = response.css('table#ResultTable tr')
+        table_rows = response.xpath('//table[@id="ResultTable"]//tr')
+        for row in table_rows:
+            title = row.css('td.ResultTitleTD::text').extract()
+            if not title:
+                continue
+
+            proceeding_file = ProceedingFile()
+            proceeding_file['title'] = title[0]
+            proceeding_file['type'] = row.css('td.ResultTypeTD::text').extract_first()
+            proceeding_file['file_url'] = response.urljoin(
+                row.css('td.ResultLinkTD a::attr(href)').extract_first())
+            proceeding_file['date_published'] = row.css('td.ResultDateTD::text').extract_first()
+            proceeding_file['related_proceedings'] = re.split(r'; |: ', title[1])
+            # i have popped 1st element because it contains word "Proceeding" which we do not needed
+            proceeding_file['related_proceedings'].pop(0)
+
+            proceeding['documents'][index]['document_files'].append(proceeding_file)
+        if last_doc_flag:
+            return proceeding
