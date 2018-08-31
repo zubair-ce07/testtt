@@ -13,7 +13,7 @@
                 {{ signup_form.password(placeholder="Password",id="inputPassword", class="form-control", required="") }}
                 <div class="form-group">
                    <label for="profilePic">Upload Profile Pic</label>
-                   <input type="file" class="form-control-file"  name="file">
+                   <input type="file" class="form-control-file"  name="file" required>
                </div>
                 {{ signup_form.submit(class="btn btn-lg btn-primary btn-block btn-block btn-signin")}}
             </form><!-- /form -->

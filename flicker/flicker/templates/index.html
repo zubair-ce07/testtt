@@ -11,8 +11,11 @@
     <div class="row">
        <div class="col-sm-2"></div>
        <div class="col-sm-8">
+          <div class="panel panel-primary">
+              <div class="panel-heading">User's Posts</div>
+                <div class="panel-body">
           {% for posts_data in posts_data_list %}
-          {% if posts_data.post_privacy == 1 or posts_data.puid == posts_data.uid %}
+          {% if posts_data.post_privacy == 1 or posts_data.puid == session['current_user_id'] %}
           <div class="well">
              <div>
                 <h3 class="panel-title">{{posts_data.title}}</h3>
@@ -22,11 +25,11 @@
                    class="img-thumbnail" width="500dp" height="300dp" />
                 <div "panel-heading">
                    <br>
-                   <h3><a href="/user/{{ posts_data.uid }}/{{ posts_data.username }}">{{posts_data.username}}</a> </h3>
+                   <h3><a href="/user/{{ posts_data.user.uid }}">{{posts_data.user.username}}</a> </h3>
                 </div>
              </div>
           </div>
-          {% elif posts_data.puid in followed_users_list and posts_data.post_privacy == 0 %}
+          {% elif  posts_data.puid in followed_users_list and posts_data.post_privacy == 0 %}
           <div class="well">
              <div>
                 <h3 class="panel-title">{{posts_data.title}}</h3>
@@ -36,12 +39,17 @@
                    class="img-thumbnail" width="500dp" height="300dp" />
                 <div "panel-heading">
                    <br>
-                   <h3><a href="/user/{{ posts_data.uid }}/{{ posts_data.username }}">{{posts_data.username}}</a> </h3>
+                   <h3><a href="/user/{{ posts_data.user.uid }}">{{posts_data.user.username}}</a> </h3>
                 </div>
              </div>
           </div>
           {% endif %}
+          {% else %}
+          <div class="alert alert-danger">
+              No Posts
+          </div>
           {% endfor %}
+       </div>
           <div class="col-sm-2"></div>
        </div>
     </div>

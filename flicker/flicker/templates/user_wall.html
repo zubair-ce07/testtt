@@ -5,53 +5,62 @@
    <div class="jumbotron my-auto" style="background-color:white">
       <div class="row">
          <div class="col-sm-3">
-            {% if current_user_id != session['current_user_id']%}
             <div class="panel panel-primary">
-               <div class="panel-heading">{{ user_data[0].username }}</div>
+               <div class="panel-heading">{{ posts_data_list.username }}</div>
                <div class="panel-body">
-                 {% if user_data[0].profile_image_url %}
-                 <img src="{{ url_for('static', filename = user_data[0].profile_image_url) }}"
-                   id="profile-img" class="profile-img-card"/>
+                 {% if posts_data_list.profile_image_url %}
+                 <img src="{{ url_for('static', filename = posts_data_list.profile_image_url) }}"
+                    class="profile-img-card"/>
                   {% else %}
-                  <img id="profile-img" class="profile-img-card"
+                  <img class="profile-img-card"
                      src="//ssl.gstatic.com/accounts/ui/avatar_2x.png" />
                   {% endif %}
                   <div class="list-group">
                      <a href="#"
-                        class="list-group-item">{{ user_data[0].email }}</a>
+                        class="list-group-item">{{ posts_data_list.email }}</a>
                   </div>
-                  <form  action="" method="POST">
-                     {% if follow_status %}
-                     <input type="hidden" name="follow_status_form" value="1">
-                     {% else %}
-                     <input type="hidden" name="follow_status_form" value="0">
-                     {% endif %}
-                     {% if follow_status %}
-                     <p><button class="btn btn-danger">Un Follow</button></p>
-                     {% else %}
-                     <p><button class="btn btn-primary">Follow</button></p>
-                     {% endif%}
-                  </form>
+                  {% if posts_data_list.uid != session['current_user_id']%}
+                    <form  action="" method="POST">
+                       {% if follow_status %}
+                       <input type="hidden" name="follow_status_form" value="1">
+                       {% else %}
+                       <input type="hidden" name="follow_status_form" value="0">
+                       {% endif %}
+                       {% if follow_status %}
+                       <p><button class="btn btn-danger">Un Follow</button></p>
+                       {% else %}
+                       <p><button class="btn btn-primary">Follow</button></p>
+                       {% endif%}
+                    </form>
+                  {% endif %}
                </div>
             </div>
-            {% endif %}
          </div>
          <div class="col-sm-5">
-            {% for posts_data in posts_data_list %}
-            <div class="well">
-               <div>
-                  <h3 class="panel-title">{{posts_data.title}}</h3>
-               </div>
-               <div class="panel-body">
-                  <img src="{{ url_for('static', filename = posts_data.image_url) }}"
-                     class="img-thumbnail img-responsive" width="500dp" height="300dp" />
-                  <div "panel-heading">
-                     <br>
-                     <h3> {{ current_user }} </h3>
+           <div class="panel panel-primary">
+              <div class="panel-heading">User's Posts</div>
+                <div class="panel-body">
+                  {% for posts_data in posts_data_list.posts %}
+                  <div class="well">
+                     <div>
+                        <h3 class="panel-title">{{posts_data.title}}</h3>
+                     </div>
+                     <div class="panel-body">
+                        <img src="{{ url_for('static', filename = posts_data.image_url) }}"
+                           class="img-thumbnail img-responsive" width="500dp" height="300dp" />
+                        <div "panel-heading">
+                           <br>
+                           <h3> {{ posts_data_list.username }} </h3>
+                        </div>
+                     </div>
                   </div>
-               </div>
-            </div>
-            {% endfor %}
+                  {% else %}
+                  <div class="alert alert-danger">
+                      No Posts
+                  </div>
+                  {% endfor %}
+                  </div>
+              </div>
          </div>
          <div class="col-sm-4">
             <div class="container-fluid">
@@ -60,8 +69,12 @@
                   <div class="panel-body">
                      <div class="list-group">
                         {% for user in following_users %}
-                        <a href="/user/{{ user.followed_userid }}/{{ user.followed_username }}"
-                           class="list-group-item">{{ user.followed_username }}</a>
+                        <a href="/user/{{ user.followed_user.uid }}"
+                           class="list-group-item">{{ user.followed_user.username }}</a>
+                        {% else %}
+                        <div class="alert alert-danger">
+                            No Followed Users
+                        </div>
                         {% endfor %}
                      </div>
                   </div>

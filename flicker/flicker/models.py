@@ -2,6 +2,7 @@ import datetime
 
 from flask_sqlalchemy import SQLAlchemy
 from flicker import app
+from sqlalchemy.orm import relationship
 
 db = SQLAlchemy(app)
 
@@ -12,7 +13,7 @@ class User(db.Model):
     password = db.Column(db.String(50))
     profile_image_url = db.Column(db.String(1000))
     email = db.Column(db.String(50), unique=True, index=True)
-    dateofreg = db.Column(db.DateTime, default=datetime.datetime.now)
+    date_of_reg = db.Column(db.DateTime, default=datetime.datetime.now)
 
     def __init__(self, username, password, profile_image_url, email):
         self.username = username
@@ -36,15 +37,12 @@ class Follow(db.Model):
                                  primary_key=True)
     followed_userid = db.Column(db.Integer, db.ForeignKey('user.uid'),
                                 primary_key=True)
-    following_username = db.Column(db.String(50))
-    followed_username = db.Column(db.String(50))
+    followed_user = db.relationship('User', foreign_keys=[followed_userid],
+                                    backref='follow')
 
-    def __init__(self, following_userid, followed_userid, following_username,
-                 followed_username):
+    def __init__(self, following_userid, followed_userid):
         self.following_userid = following_userid
         self.followed_userid = followed_userid
-        self.following_username = following_username
-        self.followed_username = followed_username
 
 
 class Posts(db.Model):
@@ -52,6 +50,8 @@ class Posts(db.Model):
     image_url = db.Column(db.String(1000))
     post_privacy = db.Column(db.Integer)
     puid = db.Column(db.Integer, db.ForeignKey('user.uid'))
+    user = db.relationship('User',
+                           backref=db.backref('posts', lazy=True))
 
     def __init__(self, image_url, post_privacy, puid):
         self.image_url = image_url

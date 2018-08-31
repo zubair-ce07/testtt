@@ -4,10 +4,10 @@ import string
 
 from flask import request, session, redirect, url_for, \
     render_template, flash
-from flicker import app
 from sqlalchemy import desc
 from werkzeug.security import check_password_hash, generate_password_hash
 
+from flicker import app
 from .forms import AddPostForm, SignUpForm, SignInForm
 from .models import User, Posts, Tag, Follow, db
 
@@ -18,12 +18,9 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 @app.route('/')
 def index():
-    if session.get('user_available') and session['user_available']:
-        posts_data_list = db.session.query(Posts.pid, Posts.post_privacy,
-                                           Posts.image_url, Posts.puid,
-                                           User.uid, User.username).filter(
-            Posts.puid == User.uid).order_by(desc(Posts.pid))
-        users_list = db.session.query(Follow.followed_username,
+    if session.get('user_available'):
+        posts_data_list = Posts.query.order_by(desc(Posts.pid)).all()
+        users_list = db.session.query(Follow.following_userid,
                                       Follow.followed_userid).filter(
             Follow.following_userid == session['current_user_id'])
         followed_users_list = []
@@ -43,18 +40,14 @@ def allowed_file(filename):
 
 @app.route('/wall', methods=['GET'])
 def user_wall():
-    if session.get('user_available') and session['user_available']:
-        posts_data_list = db.session.query(Posts.pid, Posts.post_privacy,
-                                           Posts.image_url, Posts.puid).filter(
-            Posts.puid == session['current_user_id']).order_by(desc(Posts.pid))
-        following_users = db.session.query(Follow).filter(
+    if session.get('user_available'):
+        posts_data_list = User.query.filter(
+            User.uid == session['current_user_id']).all()
+        following_users = Follow.query.filter(
             Follow.following_userid == session['current_user_id']).all()
         return render_template('user_wall.html',
-                               posts_data_list=posts_data_list,
-                               following_users=following_users,
-                               current_user_id=session['current_user_id'],
-                               current_user=session['current_user']
-                               )
+                               posts_data_list=posts_data_list[0],
+                               following_users=following_users)
 
 
 def generate_id(size=7, chars=string.ascii_uppercase + string.digits):
@@ -68,7 +61,7 @@ def append_id(filename):
 
 @app.route('/add', methods=['GET', 'POST'])
 def add_post():
-    if session.get('user_available') and session['user_available']:
+    if session.get('user_available'):
         blog_post = AddPostForm(request.form)
         user = User.query.filter_by(username=session['current_user']).first()
         if request.method == 'POST':
@@ -86,6 +79,9 @@ def add_post():
                 save_post_tags(blog_post.tag.data, post.pid)
                 flash('Post Created Succesfully')
                 return redirect(url_for('index'))
+            else:
+                flash('Invalid File')
+                return redirect(url_for('add_post'))
         return render_template('add.html', blog_post=blog_post)
     flash('User is not Authenticated')
     return redirect(url_for('signin'))
@@ -99,50 +95,50 @@ def save_post_tags(tags_list, post_id):
         db.session.commit()
 
 
-@app.route('/user/<user_id>/<username>', methods=('GET', 'POST'))
-def user_profile(user_id, username):
-    if request.method == 'POST':
-        follow_status_form = request.form.get('follow_status_form')
-        update_follow_status(user_id, follow_status_form, username)
+@app.route('/user/<user_id>', methods=('GET', 'POST'))
+def user_profile(user_id):
+    if session.get('user_available'):
+        if request.method == 'POST':
+            follow_status_form = request.form.get('follow_status_form')
+            update_follow_status(user_id, follow_status_form)
 
-    follow_status = check_follow_status(user_id)
-    user_data = db.session.query(User).filter(User.uid == user_id).all()
-    posts_data_list = db.session.query(Posts.pid, Posts.post_privacy,
-                                       Posts.image_url, Posts.puid).filter(
-        Posts.puid == user_id).order_by(desc(Posts.pid))
-    following_users = db.session.query(Follow).filter(
-        Follow.following_userid == user_id).all()
-    return render_template('user_wall.html',
-                           posts_data_list=posts_data_list,
-                           following_users=following_users,
-                           follow_status=follow_status,
-                           user_data=user_data,
-                           current_user_id=user_id,
-                           current_user=username
-                           )
+        follow_status = check_follow_status(user_id)
+        posts_data_list = User.query.filter(User.uid == user_id).all()
+        following_users = Follow.query.filter(
+            Follow.following_userid == user_id).all()
+        return render_template('user_wall.html',
+                               posts_data_list=posts_data_list[0],
+                               following_users=following_users,
+                               follow_status=follow_status)
+    else:
+        flash('User is not Authenticated')
+        return redirect(url_for('signin'))
 
 
 @app.route('/search_user', methods=('GET', 'POST'))
 def search_user():
-    if request.method == 'POST':
-        search_element = request.form.get('search_elem')
-        user_data_list = db.session.query(User).filter(
-            User.username.like('%' + search_element + '%')).all()
-        return render_template('user_list.html', users_list=user_data_list)
+    if session.get('user_available'):
+        if request.method == 'POST':
+            search_element = request.form.get('search_elem')
+            user_data_list = db.session.query(User).filter(
+                User.username.like('%' + search_element + '%')).all()
+            return render_template('user_list.html', users_list=user_data_list)
+    else:
+        flash('User is not Authenticated')
+        return redirect(url_for('signin'))
 
 
-def update_follow_status(profile_user_id, follow_status, profile_username):
+def update_follow_status(profile_user_id, follow_status):
     current_user_id = session['current_user_id']
     profile_user_id = int(profile_user_id)
     if follow_status == "1":
         follow_instance = db.session.query(Follow).filter(
-            Follow.following_userid == current_user_id and
+            Follow.following_userid == current_user_id,
             Follow.followed_userid == profile_user_id).first()
         db.session.delete(follow_instance)
         db.session.commit()
     if follow_status == "0":
-        follow = Follow(current_user_id, profile_user_id,
-                        session['current_user'], profile_username)
+        follow = Follow(current_user_id, profile_user_id)
         db.session.add(follow)
         db.session.commit()
 
@@ -163,11 +159,11 @@ def check_follow_status(profile_user_id):
 def signup():
     signup_form = SignUpForm(request.form)
     if request.method == 'POST':
-        if validate_username(signup_form.username.data) is False:
+        if not validate_username(signup_form.username.data):
             flash('Username Already Exists')
             print("Email Invalid")
             return redirect(url_for('signup'))
-        if validate_user_email(signup_form.email.data) is False:
+        if not validate_user_email(signup_form.email.data):
             flash('Email Already Exists')
             print("username Invalid")
             return redirect(url_for('signup'))
@@ -178,15 +174,18 @@ def signup():
                 file_path = os.path.join(app.config['UPLOAD_FOLDER'],
                                          file_name)
                 file.save(file_path)
-            register_user = User(signup_form.username.data,
-                                 generate_password_hash(
-                                     signup_form.password.data),
+                register_user = User(signup_form.username.data,
+                                     generate_password_hash(
+                                         signup_form.password.data),
                                      "uploads/" + file_name,
-                                 signup_form.email.data)
-            db.session.add(register_user)
-            db.session.commit()
-            flash('User Registered Succesfully')
-            return redirect(url_for('signin'))
+                                     signup_form.email.data)
+                db.session.add(register_user)
+                db.session.commit()
+                flash('User Registered Succesfully')
+                return redirect(url_for('signin'))
+            else:
+                flash('File Not Alllowed')
+                return redirect(url_for('signup'))
     return render_template('signup.html', signup_form=signup_form)
 
 
