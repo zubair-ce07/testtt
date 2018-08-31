@@ -141,7 +141,7 @@ class NewlookCrawlSpider(BaseCrawlSpider, Mixin):
 
         raw_listings = json.loads(response.text)
 
-        listings_links = self.find_key('link', raw_listings)
+        listings_links = self.get_query_key_values(query_key='link', dictionary=raw_listings)
         yield from (
             Request(url_query_cleaner(response.urljoin(l['url'])) + '/data-48.json',
                     self.product_requests, meta=meta.copy())
@@ -174,17 +174,17 @@ class NewlookCrawlSpider(BaseCrawlSpider, Mixin):
             for p in range(1, pages)
         )
 
-    def find_key(self, key, dictionary):
-        for k, v in dictionary.items():
-            if k == key:
-                yield v
+    def get_query_key_values(self, query_key, dictionary):
+        for key, value in dictionary.items():
+            if key == query_key:
+                yield value
 
-            elif isinstance(v, dict):
-                yield from (result for result in self.find_key(key, v))
+            elif isinstance(value, dict):
+                yield from self.get_query_key_values(query_key, value)
 
-            elif isinstance(v, list):
-                for d in v:
-                    yield from (result for result in self.find_key(key, d))
+            elif isinstance(value, list):
+                for dict_item in value:
+                    yield from self.get_query_key_values(query_key, dict_item)
 
 
 class NewlookUKParseSpider(NewlookParseSpider, MixinUK):
