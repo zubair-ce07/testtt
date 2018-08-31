@@ -1,7 +1,7 @@
 from flask_login import UserMixin
+from passlib.hash import pbkdf2_sha256 as sha256
 
 from asiangames import db
-from asiangames import login
 
 
 SportAthlete = db.Table(
@@ -26,6 +26,10 @@ class Athlete(db.Model):
 
     # many to one relationship with country table
     country_id = db.Column(db.Integer, db.ForeignKey('country._id'))
+
+    @staticmethod
+    def get_all():
+        return Athlete.query.all()
 
 
 class Sport(db.Model):
@@ -60,7 +64,7 @@ class Country(db.Model):
     country_sports = db.relationship('SportCountryMedals')
 
     # one to many relationship with athlete table
-    athletes = db.relationship('Athlete')
+    athletes = db.relationship('Athlete', backref=db.backref('country'))
 
 
 class Schedule(db.Model):
@@ -73,11 +77,32 @@ class Schedule(db.Model):
     sport_id = db.Column(db.Integer, db.ForeignKey('sport._id'))
 
 
+class Favourite(db.Model):
+    _id = db.Column(db.Integer, primary_key=True)
+    favorite_object_id = db.Column(db.Integer)
+    user_id = db.Column(db.Integer, db.ForeignKey('user._id'))
+
+
 class User(UserMixin, db.Model):
     _id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(64))
+    email = db.Column(db.String(64), unique=True, nullable=False)
+    password = db.Column(db.String(64), nullable=False)
+    access_level = db.Column(db.Integer, nullable=False, default=1)
+    favorites = db.relationship('Favourite')
 
+    def save_to_db(self):
+        db.session.add(self)
+        db.session.commit()
 
-@login.user_loader
-def load_user(_id):
-    return User.query.get(int(_id))
+    @classmethod
+    def find_by_email(cls, email):
+        return cls.query.filter_by(email=email).first()
+
+    @staticmethod
+    def generate_hash(password):
+        return sha256.hash(password)
+
+    @staticmethod
+    def verify_hash(password, hash):
+        return sha256.verify(password, hash)
+

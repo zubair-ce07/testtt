@@ -24,7 +24,7 @@ def month_to_number(month):
 if __name__ == '__main__':
     db.create_all()
 
-    with open('json/medals.json') as medals_file:
+    with open('json/medals-mini.json') as medals_file:
 
         medals_data = json.load(medals_file)
 
@@ -44,7 +44,7 @@ if __name__ == '__main__':
                 db.session.commit()
                 print('Completed {}\'s {}'.format(medal_data['name'], sport_medal['name']))
 
-    with open('json/athletes.json') as athletes_file:
+    with open('json/athletes-mini.json') as athletes_file:
 
         athletes_data = json.load(athletes_file)
 
@@ -62,7 +62,7 @@ if __name__ == '__main__':
             db.session.commit()
             print('Completed adding Athlete {}'.format(athlete_data['name']))
 
-    with open('json/sports.json') as sports_file:
+    with open('json/sports-mini.json') as sports_file:
 
         sports_data = json.load(sports_file)
         numeric_regex = r'(\d+)'

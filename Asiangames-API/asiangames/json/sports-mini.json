@@ -1,0 +1,560 @@
+[
+  {
+    "name": "Triathlon",
+    "schedules": [
+      {
+        "Friday 31st August": [
+          {
+            "time": "07:30",
+            "phase": "Final",
+            "event": "Women"
+          }
+        ]
+      },
+      {
+        "Saturday 1st September": [
+          {
+            "time": "07:30",
+            "phase": "Final",
+            "event": "Men"
+          }
+        ]
+      },
+      {
+        "Sunday 2nd September": [
+          {
+            "time": "07:30",
+            "phase": "Final",
+            "event": "Mixed"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Volleyball",
+    "schedules": [
+      {
+        "Sunday 19th August": [
+          {
+            "time": "10:00",
+            "phase": "Preliminary: Pool B - Match 1",
+            "event": "Women's Tournament"
+          },
+          {
+            "time": "12:30",
+            "phase": "Preliminary: Pool A - Match 1",
+            "event": "Women's Tournament"
+          },
+          {
+            "time": "16:30",
+            "phase": "Preliminary: Pool B - Match 2",
+            "event": "Women's Tournament"
+          },
+          {
+            "time": "16:30",
+            "phase": "Preliminary: Pool B - Match 3",
+            "event": "Women's Tournament"
+          },
+          {
+            "time": "19:00",
+            "phase": "Preliminary: Pool A - Match 2",
+            "event": "Women's Tournament"
+          }
+        ]
+      },
+      {
+        "Monday 20th August": [
+          {
+            "time": "10:00",
+            "phase": "Preliminary: Pool A - Match 1",
+            "event": "Men's Tournament"
+          },
+          {
+            "time": "10:00",
+            "phase": "Preliminary: Pool E - Match 1",
+            "event": "Men's Tournament"
+          },
+          {
+            "time": "12:30",
+            "phase": "Preliminary: Pool E - Match 2",
+            "event": "Men's Tournament"
+          },
+          {
+            "time": "12:30",
+            "phase": "Preliminary: Pool B - Match 1",
+            "event": "Men's Tournament"
+          },
+          {
+            "time": "16:30",
+            "phase": "Preliminary: Pool C - Match 1",
+            "event": "Men's Tournament"
+          },
+          {
+            "time": "16:30",
+            "phase": "Preliminary: Pool F - Match 1",
+            "event": "Men's Tournament"
+          },
+          {
+            "time": "19:00",
+            "phase": "Preliminary: Pool F - Match 2",
+            "event": "Men's Tournament"
+          },
+          {
+            "time": "19:00",
+            "phase": "Preliminary: Pool D - Match 1",
+            "event": "Men's Tournament"
+          }
+        ]
+      },
+      {
+        "Tuesday 21st August": [
+          {
+            "time": "10:00",
+            "phase": "Preliminary: Pool B - Match 4",
+            "event": "Women's Tournament"
+          },
+          {
+            "time": "12:30",
+            "phase": "Preliminary: Pool B - Match 5",
+            "event": "Women's Tournament"
+          },
+          {
+            "time": "16:30",
+            "phase": "Preliminary: Pool B - Match 6",
+            "event": "Women's Tournament"
+          },
+          {
+            "time": "16:30",
+            "phase": "Preliminary: Pool A - Match 4",
+            "event": "Women's Tournament"
+          },
+          {
+            "time": "19:00",
+            "phase": "Preliminary: Pool A - Match 3",
+            "event": "Women's Tournament"
+          }
+        ]
+      },
+      {
+        "Wednesday 22nd August": [
+          {
+            "time": "12:30",
+            "phase": "Preliminary: Pool D - Match 2",
+            "event": "Men's Tournament"
+          },
+          {
+            "time": "12:30",
+            "phase": "Preliminary: Pool C - Match 2",
+            "event": "Men's Tournament"
+          },
+          {
+            "time": "16:30",
+            "phase": "Preliminary: Pool B - Match 2",
+            "event": "Men's Tournament"
+          },
+          {
+            "time": "16:30",
+            "phase": "Preliminary: Pool E - Match 3",
+            "event": "Men's Tournament"
+          },
+          {
+            "time": "19:00",
+            "phase": "Preliminary: Pool F - Match 3",
+            "event": "Men's Tournament"
+          },
+          {
+            "time": "19:00",
+            "phase": "Preliminary: Pool A - Match 2",
+            "event": "Men's Tournament"
+          }
+        ]
+      },
+      {
+        "Thursday 23rd August": [
+          {
+            "time": "10:00",
+            "phase": "Preliminary: Pool B - Match 7",
+            "event": "Women's Tournament"
+          },
+          {
+            "time": "12:30",
+            "phase": "Preliminary: Pool B - Match 8",
+            "event": "Women's Tournament"
+          },
+          {
+            "time": "12:30",
+            "phase": "Preliminary: Pool A - Match 6",
+            "event": "Women's Tournament"
+          },
+          {
+            "time": "16:30",
+            "phase": "Preliminary: Pool B - Match 9",
+            "event": "Women's Tournament"
+          },
+          {
+            "time": "16:30",
+            "phase": "Preliminary: Pool E - Match 4",
+            "event": "Men's Tournament"
+          },
+          {
+            "time": "19:00",
+            "phase": "Preliminary: Pool F - Match 4",
+            "event": "Men's Tournament"
+          },
+          {
+            "time": "19:00",
+            "phase": "Preliminary: Pool A - Match 5",
+            "event": "Women's Tournament"
+          }
+        ]
+      },
+      {
+        "Friday 24th August": [
+          {
+            "time": "09:00",
+            "phase": "Preliminary: Pool B - Match 3",
+            "event": "Men's Tournament"
+          },
+          {
+            "time": "09:00",
+            "phase": "Preliminary: Pool C - Match 3",
+            "event": "Men's Tournament"
+          },
+          {
+            "time": "16:30",
+            "phase": "Preliminary: Pool D - Match 3",
+            "event": "Men's Tournament"
+          },
+          {
+            "time": "16:30",
+            "phase": "Preliminary: Pool A - Match 3",
+            "event": "Men's Tournament"
+          },
+          {
+            "time": "19:00",
+            "phase": "Preliminary: Pool F - Match 5",
+            "event": "Men's Tournament"
+          },
+          {
+            "time": "19:00",
+            "phase": "Preliminary: Pool E - Match 5",
+            "event": "Men's Tournament"
+          }
+        ]
+      },
+      {
+        "Saturday 25th August": [
+          {
+            "time": "10:00",
+            "phase": "Preliminary: Pool E - Match 6",
+            "event": "Men's Tournament"
+          },
+          {
+            "time": "10:00",
+            "phase": "Preliminary: Pool F - Match 6",
+            "event": "Men's Tournament"
+          },
+          {
+            "time": "12:30",
+            "phase": "Preliminary: Pool B - Match 10",
+            "event": "Women's Tournament"
+          },
+          {
+            "time": "16:30",
+            "phase": "Preliminary: Pool B - Match 11",
+            "event": "Women's Tournament"
+          },
+          {
+            "time": "16:30",
+            "phase": "Preliminary: Pool A - Match 8",
+            "event": "Women's Tournament"
+          },
+          {
+            "time": "19:00",
+            "phase": "Preliminary: Pool A - Match 7",
+            "event": "Women's Tournament"
+          },
+          {
+            "time": "19:00",
+            "phase": "Preliminary: Pool B - Match 12",
+            "event": "Women's Tournament"
+          }
+        ]
+      },
+      {
+        "Sunday 26th August": [
+          {
+            "time": "10:00",
+            "phase": "Classification for 1 - 12",
+            "event": "Men's Tournament"
+          },
+          {
+            "time": "10:00",
+            "phase": "Classification for 13 - 20",
+            "event": "Men's Tournament"
+          },
+          {
+            "time": "12:30",
+            "phase": "Classification for 13 - 20",
+            "event": "Men's Tournament"
+          },
+          {
+            "time": "12:30",
+            "phase": "Classification for 1 - 12",
+            "event": "Men's Tournament"
+          },
+          {
+            "time": "16:30",
+            "phase": "Classification for 1 - 12",
+            "event": "Men's Tournament"
+          },
+          {
+            "time": "16:30",
+            "phase": "Classification for 1 - 12",
+            "event": "Men's Tournament"
+          },
+          {
+            "time": "19:00",
+            "phase": "Classification for 1 - 12",
+            "event": "Men's Tournament"
+          },
+          {
+            "time": "19:00",
+            "phase": "Classification for 1 - 12",
+            "event": "Men's Tournament"
+          }
+        ]
+      },
+      {
+        "Monday 27th August": [
+          {
+            "time": "10:00",
+            "phase": "Preliminary: Pool A - Match 9",
+            "event": "Women's Tournament"
+          },
+          {
+            "time": "12:30",
+            "phase": "Preliminary: Pool B - Match 13",
+            "event": "Women's Tournament"
+          },
+          {
+            "time": "16:30",
+            "phase": "Preliminary: Pool A - Match 10",
+            "event": "Women's Tournament"
+          },
+          {
+            "time": "16:30",
+            "phase": "Preliminary: Pool B - Match 15",
+            "event": "Women's Tournament"
+          },
+          {
+            "time": "19:00",
+            "phase": "Preliminary: Pool B - Match 14",
+            "event": "Women's Tournament"
+          }
+        ]
+      },
+      {
+        "Tuesday 28th August": [
+          {
+            "time": "10:00",
+            "phase": "Quarterfinal for 7 - 12",
+            "event": "Men's Tournament"
+          },
+          {
+            "time": "12:30",
+            "phase": "Quarterfinal for 13 - 18",
+            "event": "Men's Tournament"
+          },
+          {
+            "time": "12:30",
+            "phase": "Quarterfinal for 7 - 12",
+            "event": "Men's Tournament"
+          },
+          {
+            "time": "16:30",
+            "phase": "Quarterfinal for 13 - 18",
+            "event": "Men's Tournament"
+          },
+          {
+            "time": "16:30",
+            "phase": "Quarterfinal for 1 - 6",
+            "event": "Men's Tournament"
+          },
+          {
+            "time": "19:00",
+            "phase": "Classification 19 - 20",
+            "event": "Men's Tournament"
+          },
+          {
+            "time": "19:00",
+            "phase": "Quarterfinal for 1 - 6",
+            "event": "Men's Tournament"
+          }
+        ]
+      },
+      {
+        "Wednesday 29th August": [
+          {
+            "time": "10:00",
+            "phase": "Quarterfinal 1",
+            "event": "Women's Tournament"
+          },
+          {
+            "time": "12:30",
+            "phase": "Quarterfinal 4",
+            "event": "Women's Tournament"
+          },
+          {
+            "time": "16:30",
+            "phase": "Semifinal for 9 - 12",
+            "event": "Women's Tournament"
+          },
+          {
+            "time": "16:30",
+            "phase": "Quarterfinal 2",
+            "event": "Women's Tournament"
+          },
+          {
+            "time": "19:00",
+            "phase": "Quarterfinal 3",
+            "event": "Women's Tournament"
+          }
+        ]
+      },
+      {
+        "Thursday 30th August": [
+          {
+            "time": "10:00",
+            "phase": "Classification 17 - 18",
+            "event": "Men's Tournament"
+          },
+          {
+            "time": "10:00",
+            "phase": "Semifinal for 7 - 10",
+            "event": "Men's Tournament"
+          },
+          {
+            "time": "12:30",
+            "phase": "Semifinal for 7 - 10",
+            "event": "Men's Tournament"
+          },
+          {
+            "time": "12:30",
+            "phase": "Classification 11 - 12",
+            "event": "Men's Tournament"
+          },
+          {
+            "time": "16:30",
+            "phase": "Semifinal for 13 - 16",
+            "event": "Men's Tournament"
+          },
+          {
+            "time": "16:30",
+            "phase": "Semifinal for 1 - 4",
+            "event": "Men's Tournament"
+          },
+          {
+            "time": "19:00",
+            "phase": "Semifinal for 1 - 4",
+            "event": "Men's Tournament"
+          },
+          {
+            "time": "19:00",
+            "phase": "Semifinal for 13 - 16",
+            "event": "Men's Tournament"
+          }
+        ]
+      },
+      {
+        "Friday 31st August": [
+          {
+            "time": "09:00",
+            "phase": "Classification 9 - 10",
+            "event": "Women's Tournament"
+          },
+          {
+            "time": "09:00",
+            "phase": "Semifinal for 5 - 8",
+            "event": "Women's Tournament"
+          },
+          {
+            "time": "14:30",
+            "phase": "Semifinal for 5 - 8",
+            "event": "Women's Tournament"
+          },
+          {
+            "time": "14:30",
+            "phase": "Classification 9 - 10",
+            "event": "Men's Tournament"
+          },
+          {
+            "time": "17:00",
+            "phase": "Classification 15 - 16",
+            "event": "Men's Tournament"
+          },
+          {
+            "time": "17:00",
+            "phase": "Semifinal 1",
+            "event": "Women's Tournament"
+          },
+          {
+            "time": "19:30",
+            "phase": "Semifinal 2",
+            "event": "Women's Tournament"
+          },
+          {
+            "time": "19:30",
+            "phase": "Classification 13 - 14",
+            "event": "Men's Tournament"
+          }
+        ]
+      },
+      {
+        "Saturday 1st September": [
+          {
+            "time": "10:00",
+            "phase": "Bronze Medal Match",
+            "event": "Men's Tournament"
+          },
+          {
+            "time": "10:00",
+            "phase": "Classification 7 - 8",
+            "event": "Women's Tournament"
+          },
+          {
+            "time": "12:30",
+            "phase": "Bronze Medal Match",
+            "event": "Women's Tournament"
+          },
+          {
+            "time": "12:30",
+            "phase": "Classification 5 - 6",
+            "event": "Women's Tournament"
+          },
+          {
+            "time": "16:30",
+            "phase": "Gold Medal Match",
+            "event": "Women's Tournament"
+          },
+          {
+            "time": "16:30",
+            "phase": "Classification 7 - 8",
+            "event": "Men's Tournament"
+          },
+          {
+            "time": "19:00",
+            "phase": "Gold Medal Match",
+            "event": "Men's Tournament"
+          },
+          {
+            "time": "19:00",
+            "phase": "Classification 5 - 6",
+            "event": "Men's Tournament"
+          }
+        ]
+      }
+    ]
+  }
+]
