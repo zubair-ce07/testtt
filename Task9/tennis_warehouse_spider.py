@@ -5,8 +5,6 @@ from .base import BaseParseSpider, BaseCrawlSpider, LinkExtractor, Gender, soupi
 class MixinUS:
     retailer = 'tennis-warehouse-us'
     market = 'US'
-    currency = 'USD'
-    lang = 'en'
     default_brand = 'tennis_warehouse'
     allowed_domains = ['tennis-warehouse.com']
     start_urls = ['https://www.tennis-warehouse.com/equipment.html']
@@ -60,7 +58,6 @@ class ParseSpider(BaseParseSpider):
 
             sku["colour"] = name[-2]
             sku["size"] = name[-1]
-            sku["currency"] = MixinUS.currency
 
             sku_id = f'{sku["colour"]}_{sku["size"]}'
             skus[sku_id] = sku
