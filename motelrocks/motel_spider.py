@@ -11,8 +11,8 @@ class MotelRocksSpider(CrawlSpider):
     start_urls = ['http://www.motelrocks.com/']
 
     rules = (
-        Rule(LinkExtractor(allow=r".*.com/categories.*"), callback='parse_pages'),
-        Rule(LinkExtractor(allow=r".*.com/products.*"), callback='parse_product_item'),
+        Rule(LinkExtractor(restrict_xpaths='//ul[@id="nav-menu"]/li'), callback='parse_pages'),
+        Rule(LinkExtractor(restrict_xpaths='//div[contains(@class, "xProductDetails")]'), callback='parse_product_item'),
     )
 
     def parse_pages(self, response):
