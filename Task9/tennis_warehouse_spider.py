@@ -25,7 +25,7 @@ class ParseSpider(BaseParseSpider):
             return
 
         self.boilerplate_normal(garment, response)
-        garment["gender"] = self.product_gender(garment["category"], response)
+        garment["gender"] = self.product_gender(garment)
         garment["image_urls"] = self.image_urls(response)
         garment["skus"] = self.skus(response)
 
@@ -46,8 +46,8 @@ class ParseSpider(BaseParseSpider):
     def product_category(self, response):
         return [trail[0] for trail in response.meta["trail"] if trail[0] != '']
 
-    def product_gender(self, category, response):
-        soup = [self.product_name(response)] + [response.url] + category
+    def product_gender(self, garment):
+        soup = [garment["name"], garment["url"]] + garment["category"]
         return self.gender_lookup(soupify(soup)) or Gender.ADULTS.value
 
     def skus(self, response):
