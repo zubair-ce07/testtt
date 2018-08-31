@@ -25,15 +25,18 @@ class ResultCalculator:
         max_temp = max(weather_info['max_temp'])
         report['highest_temp']['value'] = max_temp
         report['highest_temp']['day'] = DateMapper.get_month_full_name_and_day(
-            weather_info['day'][weather_info['max_temp'].index(max_temp)])
+            weather_info['day'][weather_info['max_temp'].index(max_temp)]
+        )
         min_temp = min(weather_info['min_temp'])
         report['lowest_temp']['value'] = min_temp
         report['lowest_temp']['day'] = DateMapper.get_month_full_name_and_day(
-            weather_info['day'][weather_info['min_temp'].index(min_temp)])
+            weather_info['day'][weather_info['min_temp'].index(min_temp)]
+        )
         min_temp = max(weather_info['max_humidity'])
         report['highest_humidity']['value'] = min_temp
         report['highest_humidity']['day'] = DateMapper.get_month_full_name_and_day(
-            weather_info['day'][weather_info['max_humidity'].index(min_temp)])
+            weather_info['day'][weather_info['max_humidity'].index(min_temp)]
+        )
 
     @staticmethod
     def update_year_with_month_report(weather_info, report):
@@ -108,7 +111,10 @@ class ReportHandler:
         for output_category, output_expresstion in report_output.items():
             if 'day' in self.report[output_category].keys():
                 print(output_expresstion.format(
-                    self.report[output_category]['value'], self.report[output_category]['day'])
-                )
+                    self.report[output_category]['value'],
+                    self.report[output_category]['day']
+                ))
             else:
-                print(output_expresstion.format(self.report[output_category]['value']))
+                print(output_expresstion.format(
+                    self.report[output_category]['value']
+                ))

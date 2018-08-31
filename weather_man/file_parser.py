@@ -25,7 +25,9 @@ class FileParser:
         month = DateMapper.get_month_name(period['month'])
         file_extention = FileGlobalHandler.get_file_constant('FILE_EXTENTION')
         year = period['year']
-        file_patterns = glob.glob(os.path.join(files_path, f'{file_prefix}_{year}_*{month}.{file_extention}'))
+        file_patterns = glob.glob(
+            os.path.join(files_path, f'{file_prefix}_{year}_*{month}.{file_extention}')
+        )
         if not file_patterns:
             raise FileNotFoundError()
         for file in file_patterns:

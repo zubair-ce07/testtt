@@ -25,7 +25,9 @@ class WeatherMan:
             file_path=kwargs.get('file_path'),
             period=kwargs.get('period')
         )
-        self.results.update_year_report(weather_data_holder.weather_readings)
+        self.results.update_year_report(
+            weather_data_holder.weather_readings
+        )
         self.results.show_report()
 
     @prepare_input
@@ -39,7 +41,9 @@ class WeatherMan:
             file_path=kwargs.get('file_path'),
             period=kwargs.get('period')
         )
-        self.results.update_year_with_month_report(weather_data_holder.weather_readings)
+        self.results.update_year_with_month_report(
+            weather_data_holder.weather_readings
+        )
         self.results.show_report()
 
     @prepare_input
@@ -53,7 +57,9 @@ class WeatherMan:
             file_path=kwargs.get('file_path'),
             period=kwargs.get('period')
         )
-        self.results.show_month_bar_chart_report(weather_data_holder.weather_readings)
+        self.results.show_month_bar_chart_report(
+            weather_data_holder.weather_readings
+        )
 
     @prepare_input
     def generate_month_bar_chart_in_one_line_result(self, **kwargs):
@@ -67,7 +73,9 @@ class WeatherMan:
             file_path=kwargs.get('file_path'),
             period=kwargs.get('period')
         )
-        self.results.show_month_bar_chart_in_one_line_report(weather_data_holder.weather_readings)
+        self.results.show_month_bar_chart_in_one_line_report(
+            weather_data_holder.weather_readings
+        )
 
     def show_result(self, file_path, category, year_month):
         """

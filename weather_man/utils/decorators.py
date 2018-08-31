@@ -16,6 +16,7 @@ def prepare_input(input_function):
         """
         kwargs['period'] = globals()['prepare_{}_args'.format(kwargs.get('category'))](kwargs.get('period'))
         return input_function(*args, **kwargs)
+
     return case_decorator
 
 

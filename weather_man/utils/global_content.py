@@ -87,7 +87,7 @@ class DateMapper:
 
     @staticmethod
     def get_date(day):
-        return  day.split('-')[-1]
+        return day.split('-')[-1]
 
 
 class MathHelper:
@@ -119,7 +119,8 @@ class MathHelper:
         :param number: Candidate to be check as a possible integer.
         :return: None or int number
         """
-        return cls.__helper_dict.get(default) if number is "" or number is None else int(number)
+        return (cls.__helper_dict.get(default)
+                if number is "" or number is None else int(number))
 
 
 class ReportHelper:
