@@ -43,6 +43,7 @@ def sku(response):
     raw_sku = loads(response.text)["data"]
     sku_price = raw_sku["price"]
     sku = {
+        "sku": raw_sku["sku"],
         "colour": response.meta["colour"],
         "size": response.meta['size'],
         "price": int(sku_price["without_tax"]["value"] * 100),
@@ -55,7 +56,7 @@ def sku(response):
     if not raw_sku["instock"]:
         sku["out_of_stock"] = True
 
-    return {raw_sku["sku"]: sku}
+    return sku
 
 
 class ProductItemLoader(ItemLoader):

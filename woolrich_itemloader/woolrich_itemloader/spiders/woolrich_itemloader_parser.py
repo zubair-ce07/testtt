@@ -1,5 +1,4 @@
 from itertools import product
-from json import loads
 
 from scrapy import Spider, FormRequest
 from scrapy.loader.processors import Identity, MapCompose
