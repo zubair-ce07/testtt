@@ -125,6 +125,7 @@ class NewlookParseSpider(BaseParseSpider, Mixin):
 
 
 class NewlookCrawlSpider(BaseCrawlSpider, Mixin):
+    listing_urls_r = re.compile('"url":"(.+?)"')
 
     def parse_start_url(self, response):
         meta = {'trail': self.add_trail(response)}
@@ -132,21 +133,19 @@ class NewlookCrawlSpider(BaseCrawlSpider, Mixin):
         nav_css = '.main-navigation__primary-menu-link::attr(data-uid)'
         nav_ids = clean(response.css(nav_css))
 
-        return (Request(url=self.nav_url_t.format(n_id),
+        for nav_id in nav_ids:
+            yield Request(url=self.nav_url_t.format(nav_id),
                         callback=self.parse_menu, meta=meta.copy())
-                for n_id in nav_ids)
     
     def parse_menu(self, response):
         meta = {'trail': self.add_trail(response)}
 
-        raw_listings = json.loads(response.text)
-
-        listing_links = self.get_query_key('link', raw_listings)
-        for link in listing_links:
-            if '/c/' not in link.get('url', ''):
+        listing_urls = self.listing_urls_r.findall(response.text)
+        for url in listing_urls:
+            if '/c/' not in url:
                 continue
             
-            yield Request(url_query_cleaner(response.urljoin(link['url'])) + '/data-48.json',
+            yield Request(url_query_cleaner(response.urljoin(url)) + '/data-48.json',
                           self.parse_listing, meta=meta.copy())
     
     def parse_listing(self, response):
@@ -171,18 +170,6 @@ class NewlookCrawlSpider(BaseCrawlSpider, Mixin):
         for page in range(1, pages):
             yield Request(add_or_replace_parameter(response.url, 'page', page),
                           self.parse_listing, meta=meta.copy())
-
-    def get_query_key(self, query_key, dictionary):
-        for key, value in dictionary.items():
-            if key == query_key:
-                yield value
-
-            elif isinstance(value, dict):
-                yield from self.get_query_key(query_key, value)
-
-            elif isinstance(value, list):
-                for dict_item in value:
-                    yield from self.get_query_key(query_key, dict_item)
 
 
 class NewlookUKParseSpider(NewlookParseSpider, MixinUK):
