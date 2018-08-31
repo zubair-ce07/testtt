@@ -1,10 +1,9 @@
 from itertools import product
 
 from scrapy import Spider, FormRequest
-from scrapy.loader.processors import Identity, MapCompose
 from w3lib.url import urljoin
 
-from ..items import ProductItemLoader, sku
+from ..items import ProductItemLoader
 
 
 class WoolrichItemloaderParserSpider(Spider):
@@ -32,8 +31,7 @@ class WoolrichItemloaderParserSpider(Spider):
     def parse_sku(self, response):
         product_item = response.meta["product_item"]
         product_loader = ProductItemLoader(response=response, item=product_item)
-        product_loader.add_value("skus", product_item.get("skus"), Identity())
-        product_loader.add_value("skus", response, MapCompose(lambda resp: sku(resp)))
+        product_loader.add_value("skus", response)
         product_item = product_loader.load_item()
         return self.prepare_request(response.meta["requests"], product_item)
 

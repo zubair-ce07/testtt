@@ -71,3 +71,16 @@ class ProductItemLoader(ItemLoader):
     care_out = Identity()
     image_urls_out = Identity()
     skus_out = Identity()
+    skus_in = MapCompose(lambda resp: sku(resp))
+
+    def load_item(self):
+        item = self.item
+        for field_name in tuple(self._values):
+            value = self.get_output_value(field_name)
+            if value is not None:
+                if field_name in item:
+                    item[field_name] += value
+                else:
+                    item[field_name] = value
+
+        return item
