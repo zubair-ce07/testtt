@@ -19,15 +19,19 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 @app.route('/')
 def index():
     if session.get('user_available'):
-        posts_data_list = Posts.query.order_by(desc(Posts.pid)).all()
+        public_posts = Posts.query.order_by(desc(Posts.pid)).filter(
+            Posts.post_privacy == "1"
+        ).all()
         users_list = db.session.query(Follow.following_userid,
                                       Follow.followed_userid).filter(
-            Follow.following_userid == session['current_user_id'])
-        followed_users_list = []
+            Follow.following_userid == session['current_user_id']).all()
         for user in users_list:
-            followed_users_list.append(user.followed_userid)
-        return render_template('index.html', posts_data_list=posts_data_list,
-                               followed_users_list=followed_users_list)
+            public_posts.append(Posts.query.order_by(desc(Posts.pid)).filter(
+                Posts.post_privacy == "0",
+                Posts.puid == user.followed_userid).all())
+        import pdb;
+        pdb.set_trace()
+        return render_template('index.html', posts_data_list=public_posts)
     flash('User is not Authenticated')
     return redirect(url_for('signin'))
 
