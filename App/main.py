@@ -4,14 +4,14 @@ from Utils.InputSystem import InputSystem
 from Utils.OutputSystem import OutputSystem
 from Crawler.Crawler import Crawler
 from Utils.TextProcessor import TextProcessor
-from Db.Db import DataAcessLayer
+from Db.Db import DataAccessLayer
 
 
 input_sys = InputSystem()
 output_sys = OutputSystem()
 crawler = Crawler()
 text_processor = TextProcessor()
-db = DataAcessLayer()
+db = DataAccessLayer()
 
 
 def main_controller():
