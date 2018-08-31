@@ -22,6 +22,13 @@ class CpucSpider(CrawlSpider):
         Rule(case_detail_extractor_2, callback='case_detail_page', follow=True),
     )
 
+    custom_settings = {
+        'DUPEFILTER_DEBUG': True,
+        'DOWNLOAD_DELAY': 5,
+        'USER_AGENT': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.117 Safari/537.36',
+        'DUPEFILTER_CLASS': 'scrapy.dupefilters.BaseDupeFilter'
+    }
+
     cpuc_cookies = ""
 
     def parse(self, response):
@@ -56,13 +63,20 @@ class CpucSpider(CrawlSpider):
 
         form_data = {
             'p_request': 'T_DOCUMENTS',
+            'p_md5_checksum': ''
         }
 
-        request = scrapy.FormRequest.from_response(response, formid="wwvFlowForm",
-                                                   formdata=form_data,
-                                                   callback=self.document_list_page)
-        request.meta['proceeding'] = proceeding
-        yield request
+        yield scrapy.FormRequest.from_response(response, formid="wwvFlowForm",
+                                               formdata=form_data,
+                                            #    cookies={},
+                                               meta={
+                                                   'proceeding': proceeding,
+                                                   'dont_filter': True,
+                                                #    'dont_merge_cookies': True,
+                                               }, 
+                                               callback=self.document_list_page)
+        # request.meta['proceeding'] = proceeding
+        # yield request
 
     def document_list_page(self, response):
         proceeding = response.meta['proceeding']
