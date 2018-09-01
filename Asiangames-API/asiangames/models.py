@@ -1,4 +1,3 @@
-from flask_login import UserMixin
 from passlib.hash import pbkdf2_sha256 as sha256
 
 from asiangames import db
@@ -83,7 +82,7 @@ class Favourite(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user._id'))
 
 
-class User(UserMixin, db.Model):
+class User(db.Model):
     _id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(64), unique=True, nullable=False)
     password = db.Column(db.String(64), nullable=False)

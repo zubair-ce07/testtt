@@ -50,7 +50,7 @@ if __name__ == '__main__':
 
         for athlete_data in athletes_data:
             sport_record = get_or_create(db.session, Sport, name=athlete_data['sport'])
-            country_id = get_or_create(db.session, Sport, name=athlete_data['sport'])._id
+            country_id = get_or_create(db.session, Country, name=athlete_data['country'])._id
 
             athlete_record = Athlete(_id=athlete_data['id'], name=athlete_data['name'], img_url=athlete_data['img_url'],
                                      height=athlete_data['height'], weight=athlete_data['weight'],

@@ -1,4 +1,4 @@
-from asiangames.models import Athlete, Sport, Country
+from asiangames.models import Athlete, Sport, Country, Schedule
 from asiangames import marshmallow_app
 
 
@@ -14,7 +14,14 @@ class CountrySchema(marshmallow_app.ModelSchema):
 
 class AthleteSchema(marshmallow_app.ModelSchema):
     sports = marshmallow_app.Nested(SportSchema, only='name', many=True)
-    country = marshmallow_app.Nested(CountrySchema, only='name', many=True)
+    country = marshmallow_app.Nested(CountrySchema, only='name')
 
     class Meta:
         model = Athlete
+
+
+class ScheduleSchema(marshmallow_app.ModelSchema):
+    sports = marshmallow_app.Nested(SportSchema, only='name', many=True)
+
+    class Meta:
+        model = Schedule
