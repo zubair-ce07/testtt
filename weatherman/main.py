@@ -1,16 +1,14 @@
 """ Controller file """
 import argparse
 from datetime import datetime
-#from year_reports import display_year_report
-from month_report import MonthReportGenerator
-from year_report import YearReportGenerator
+from report_generator import ReportGenerator
 
 
 TODAY = datetime.today()
 
 
 def validate_year(year):
-    """ function to validate year string """
+    """ function to validate year (year < current year) string """
     if year and year.isdigit():
         if int(year) <= int(TODAY.year):
             return year
@@ -48,24 +46,18 @@ def prepare_parser():
     return PARSER
 
 def controller(ARGS):
+    report_generator = ReportGenerator()
     if ARGS.e:
-        year_report = YearReportGenerator()
-        year_report.year_controller(ARGS.path, ARGS.e, False)
+        report_generator.year_controller(ARGS.path, ARGS.e, False)
     if ARGS.d:
-        year_report = YearReportGenerator()
-        year_report.year_controller(ARGS.path, ARGS.d, True)
+        report_generator.year_controller(ARGS.path, ARGS.d, True)
     if ARGS.a:
-        month_report = MonthReportGenerator()
-        month_report.month_controller(ARGS.path, ARGS.a, False)
+        report_generator.month_controller(ARGS.path, ARGS.a, False)
     if ARGS.c:
-        month_report = MonthReportGenerator()
-        month_report.month_controller(ARGS.path, ARGS.c, True)
+        report_generator.month_controller(ARGS.path, ARGS.c, True)
 
 
 if __name__ == '__main__':
     parser = prepare_parser()
     ARGS = parser.parse_args()
     controller(ARGS)
-
-
-    
