@@ -1,19 +1,24 @@
+from copy import deepcopy
+
 from flask_restful import Resource, reqparse
 from flask_jwt_extended import (create_access_token, create_refresh_token, jwt_required,
                                 jwt_refresh_token_required, get_jwt_identity)
 from flask import jsonify
 
-from asiangames.models import User, Athlete, Country, Sport
+from asiangames.models import User, Athlete, Country, Sport, Favourite
 from asiangames.decorators import required_access_level
 from asiangames.schemas import *
 
 
-user_registration_parser = reqparse.RequestParser()
-user_registration_parser.add_argument('email', help='Must enter a valid email', required=True)
-user_registration_parser.add_argument('password', help='Must enter a valid password', required=True)
+user_login_parser = reqparse.RequestParser()
+user_login_parser.add_argument('email', help='Must enter a valid email', required=True)
+user_login_parser.add_argument('password', help='Must enter a valid password', required=True)
+
+user_registration_parser = deepcopy(user_login_parser)
 user_registration_parser.add_argument('access_level', help='Must enter user level', required=True)
 
-access_levels = {
+
+ACCESS_LEVELS = {
     'USER': 1,
     'ADMIN': 2
 }
@@ -47,7 +52,7 @@ class UserRegistration(Resource):
 class UserLogin(Resource):
 
     def post(self):
-        data = user_registration_parser.parse_args()
+        data = user_login_parser.parse_args()
         current_user = User.find_by_email(email=data['email'])
 
         if current_user:
@@ -78,7 +83,7 @@ class TokenRefresh(Resource):
 class SecretResourse(Resource):
 
     @jwt_required
-    @required_access_level(access_levels['ADMIN'])
+    @required_access_level(ACCESS_LEVELS['ADMIN'])
     def get(self):
         current_user = get_jwt_identity()
         return {'hidden': 'Answer is 22', 'user_email': current_user}
@@ -154,3 +159,75 @@ class ScheduleFilterResource(Resource):
             sport_record = Sport.query.filter_by(name=value).first()
             output = schedule_schema.dump(sport_record.schedules).data
             return output
+
+
+class MedalsListResource(Resource):
+
+    def get(self):
+        medal_schema = SportCountryMedalsSchema(many=True)
+        medals = SportCountryMedals.query.order_by(SportCountryMedals.gold.desc()).all()
+        output = medal_schema.dump(medals).data
+        return jsonify(output)
+
+
+class MedalsFilterResource(Resource):
+
+    def get(self, attribute, value):
+        medal_schema = SportCountryMedalsSchema(many=True)
+
+        if attribute == 'country':
+            country_id = Country.query.filter_by(name=value).first()._id
+            medals = SportCountryMedals.query.filter_by(country_id=country_id).order_by(SportCountryMedals.gold.desc()).all()
+            output = medal_schema.dump(medals).data
+            return jsonify(output)
+
+        elif attribute == 'sport':
+            sport_id = Sport.query.filter_by(name=value).first()._id
+            medals = SportCountryMedals.query.filter_by(sport_id=sport_id).order_by(SportCountryMedals.gold.desc()).all()
+            output = medal_schema.dump(medals).data
+            return jsonify(output)
+
+
+FAVOURITES_MAP = {
+    'country': 1,
+    'sport': 2,
+    'athlete': 3
+}
+
+
+class FavouriteListResource(Resource):
+
+    @jwt_required
+    @required_access_level(ACCESS_LEVELS['USER'])
+    def get(self, attribute):
+        favourite_schema = FavourtiteSchema(many=True)
+        current_user_id = User.find_by_email(email=get_jwt_identity())._id
+
+        if attribute == 'all':
+            favourite_countries = Favourite.query.filter_by(user_id=current_user_id,
+                                                            favourite_entity_id=FAVOURITES_MAP['country']).all()
+
+            output = favourite_schema.dump(favourite_countries).data
+            return jsonify(output)
+
+
+class FavouriteResource(Resource):
+
+    @jwt_required
+    @required_access_level(ACCESS_LEVELS['USER'])
+    def post(self, attribute, value):
+        current_user_id = User.find_by_email(email=get_jwt_identity())._id
+
+        if attribute == 'country':
+            object_id = Country.query.filter_by(name=value).first()._id
+
+        elif attribute == 'sport':
+            object_id = Sport.query.filter_by(name=value).first()._id
+
+        elif attribute == 'athlete':
+            object_id = int(value)
+
+        favourite_record = Favourite(favourite_object_id=object_id, favourite_entity_id=FAVOURITES_MAP[attribute],
+                                     user_id=current_user_id)
+        favourite_record.save_to_db()
+        return {'message': '{} {} added to favourites'.format(attribute, value)}

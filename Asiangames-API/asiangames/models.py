@@ -78,8 +78,13 @@ class Schedule(db.Model):
 
 class Favourite(db.Model):
     _id = db.Column(db.Integer, primary_key=True)
-    favorite_object_id = db.Column(db.Integer)
+    favourite_object_id = db.Column(db.Integer)
+    favourite_entity_id = db.Column(db.Integer)
     user_id = db.Column(db.Integer, db.ForeignKey('user._id'))
+
+    def save_to_db(self):
+        db.session.add(self)
+        db.session.commit()
 
 
 class User(db.Model):
@@ -104,4 +109,3 @@ class User(db.Model):
     @staticmethod
     def verify_hash(password, hash):
         return sha256.verify(password, hash)
-
