@@ -9,6 +9,9 @@
 #     https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 
+
+from time import localtime, strftime
+
 BOT_NAME = 'books_scraper'
 
 SPIDER_MODULES = ['books_scraper.spiders']
@@ -64,9 +67,11 @@ ROBOTSTXT_OBEY = True
 
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
-ITEM_PIPELINES = {
-    'books_scraper.pipelines.CSVPipeline': 400,
-}
+#ITEM_PIPELINES = {
+#    'books_scraper.pipelines.CSVPipeline': 400,
+#}
+FEED_FORMAT = "csv"
+FEED_URI = 'cpcu_' + strftime("%Y_%m_%d_%H_%M_%S", localtime()) + '.csv'
 FEED_EXPORT_FIELDS = ['title','category','price','rating','description','product_information']
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://doc.scrapy.org/en/latest/topics/autothrottle.html
