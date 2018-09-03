@@ -6,6 +6,7 @@ from flask import request, session, redirect, url_for, \
     render_template, flash
 from sqlalchemy import desc
 from werkzeug.security import check_password_hash, generate_password_hash
+
 from flicker import app
 from .forms import AddPostForm, SignUpForm, SignInForm
 from .models import User, Post, Tag, Follow, Like, Comment, db
