@@ -1,0 +1,25 @@
+from scrapy import Field, Item
+
+
+class Product(Item):
+    deals = Field()
+    property_name = Field()
+    landlord_slug = Field()
+    property_description = Field()
+    property_contact_info = Field()
+    property_amenities = Field()
+    property_images = Field()
+    room_photos = Field()
+    deposit_type = Field()
+    property_url = Field()
+    room_availability = Field()
+    room_amenities = Field()
+    floor_plans = Field()
+    listing_type = Field()
+    deposit_name = Field()
+    room_name = Field()
+    room_price = Field()
+    min_duration = Field()
+    available_from = Field()
+    room_type = Field()
+    product_id =Field()
