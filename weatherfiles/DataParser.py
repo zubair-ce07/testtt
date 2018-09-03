@@ -1,6 +1,7 @@
 """class to import data from files into data structure"""
 
 import os
+import csv
 
 
 class DataParser:
@@ -15,17 +16,14 @@ class DataParser:
         for file_name in os.listdir(directory):
             if '.txt' in file_name:
                 file_path = os.path.join(directory, file_name)
-                datafile = open(file_path, 'r')
-                line = datafile.readline()
-                while line:
-                    if not data['features']:
-                        data['features'] = line.split('\n')[0]
-                        data['features'] = data['features'].split(',')
-                    elif data['features'][-1] not in line:
-                        data['values'].append(line.split('\n')[0].split(','))
-                    line = datafile.readline()
 
-                datafile.close()
+                with open(file_path) as csvfile:
+                    file_content = csv.reader(csvfile)
+                    for row in file_content:
+                        if not data['features']:
+                            data['features'] = row
+                        elif row != data['features'] and row[0] != 'PKST':
+                            data['values'].append(row)
 
         # convert string values into relative data type on number
         for d in data['values']:
