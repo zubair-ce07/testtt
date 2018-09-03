@@ -11,7 +11,7 @@ import scrapy
 class BooksScraperItem(scrapy.Item):
     title = scrapy.Field()
     category = scrapy.Field()
-    price = scrapy.Field() 
+    price = scrapy.Field()
     rating = scrapy.Field()
-    description = scrapy.Field() 
-    product_information = scrapy.Field() 
+    description = scrapy.Field()
+    product_information = scrapy.Field()

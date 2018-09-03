@@ -70,8 +70,8 @@ ROBOTSTXT_OBEY = True
 #ITEM_PIPELINES = {
 #    'books_scraper.pipelines.CSVPipeline': 400,
 #}
-FEED_FORMAT = "csv"
-FEED_URI = 'cpcu_' + strftime("%Y_%m_%d_%H_%M_%S", localtime()) + '.csv'
+FEED_FORMAT = "json"
+FEED_URI = 'book_' + strftime("%Y_%m_%d_%H_%M_%S", localtime()) + '.json'
 FEED_EXPORT_FIELDS = ['title','category','price','rating','description','product_information']
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://doc.scrapy.org/en/latest/topics/autothrottle.html
