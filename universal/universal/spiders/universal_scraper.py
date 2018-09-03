@@ -128,9 +128,10 @@ class UniversalSpider(CrawlSpider):
         return response.css("div.product-manufacturer-logo img::attr(alt)").extract_first()
 
     def extract_image_urls(self, response):
-        images = json.loads(
+        images_details = json.loads(
             response.css("script.data-product-detail::text").extract_first()
-        )['imageList'].values()
+        )
+        images = images_details['imageList'].values()
 
         return [
             self.product_img_url.format(image['image'])
@@ -139,10 +140,10 @@ class UniversalSpider(CrawlSpider):
 
     @staticmethod
     def extract_care(response):
-        care_details = response.css('table.tmpArticleDetailTable tr')
-
+        care_details_s = response.css('table.tmpArticleDetailTable tr')
+        care_details = care_details_s.css('::text').extract()
         return [
-            ": ".join(care_detail.css('::text').extract())
+            ": ".join(care_detail)
             for care_detail in care_details
         ]
 
@@ -152,9 +153,8 @@ class UniversalSpider(CrawlSpider):
         price = response.css("div.price::text").extract()[-2].strip()
         pricing['price'] = clean_price(price[:-1])
         pricing['currency'] = price[-1]
-        previous_prices = clean_price(
-            response.css("div.price-strike::text").extract_first(default='').strip()[:-1]
-        )
+        previous_prices = response.css("div.price-strike::text").extract_first(default='')
+        previous_prices = clean_price(previous_prices.strip()[:-1])
 
         if previous_prices:
             pricing['previous_prices'] = [previous_prices]
@@ -163,9 +163,8 @@ class UniversalSpider(CrawlSpider):
 
     @staticmethod
     def extract_description(response):
-        return "".join(
-            response.css('div span.long-description *::text').extract()
-        ).strip().split('. ')
+        description = response.css('div span.long-description *::text').extract()
+        return "".join(description).strip().split('. ')
 
     @staticmethod
     def extract_category(response):
