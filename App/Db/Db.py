@@ -22,5 +22,5 @@ class DataAccessLayer:
                 ))
             self.conn.commit()
 
-    def get_all_data(self):
+    def get_words_n_freqs(self):
         return self.cursor.execute('SELECT * FROM wordfreq')

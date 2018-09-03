@@ -2,14 +2,14 @@
 
 from Utils.ArgParser import ArgParser
 from Crawler.Crawler import Crawler
-from Utils.TextProcessor import TextProcessor
+from Utils.TextParser import TextParser
 from Db.Db import DataAccessLayer
 from Utils.EncryptionManager import EncryptionManager
 
 
 arg_parser = ArgParser()
 crawler = Crawler()
-text_processor = TextProcessor()
+text_parser = TextParser()
 db = DataAccessLayer()
 encryption_manager = EncryptionManager()
 
@@ -30,8 +30,8 @@ def new_crawl(url):
 
     if url:
         words = crawler.crawl_url(url)
-        words_dict = text_processor.dictionary_generator(words)
-        sorted_list = text_processor.generate_sorted_list(words_dict)
+        words_dict = text_parser.word_frequency_map(words)
+        sorted_list = text_parser.generate_sorted_list(words_dict)
         for item in sorted_list:
             print(item)
         encyrpted_list = []
@@ -41,7 +41,9 @@ def new_crawl(url):
                     encryption_manager.encrypt_str(word))
             encyrpted_list.append((w_id, encrypted_word, freq))
         db.insert_row(encyrpted_list)
-        # Calculate & display tfidf
+        bag_of_words = [item[0] for item in sorted_list]
+        tfidf = text_parser.tfidf_generator(bag_of_words)
+        print(tfidf)
     else:
         print("Enter URL to crawl & Try again!")
 
@@ -49,11 +51,11 @@ def new_crawl(url):
 def view_db():
     '''This function shows all data in decrypted form from database'''
 
-    for row in db.get_all_data():
+    for row in db.get_words_n_freqs():
             decrypted_word = (
                 encryption_manager.decrypt_str(row[1]))
             print((decrypted_word, row[2]))
-   
+
 
 if __name__ == "__main__":
     main_controller()
