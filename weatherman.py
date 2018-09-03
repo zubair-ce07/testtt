@@ -133,11 +133,13 @@ def calculate_extreme_temp(data_set, high_temp=None, low_temp=None, humidity=Non
     low_temp_date = string_to_date(low_temp_date, '-')
     humidity_date = string_to_date(humidity_date, '-')
 
-    return {
+    temp_record = {
         'high_temp': high_temp, 'low_temp': low_temp,
         'humidity': humidity, 'high_temp_date': high_temp_date,
         'low_temp_date': low_temp_date, 'humidity_date': humidity_date
     }
+
+    return temp_record
 
 
 def display_avg(time_span, data_set):
