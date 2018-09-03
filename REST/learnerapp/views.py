@@ -1,4 +1,4 @@
-from learnerapp import models, serializers
+from learnerapp import constants, models, serializers
 from rest_framework import viewsets, permissions
 
 from learnerapp import permissions as custom_permissions
@@ -7,8 +7,7 @@ from learnerapp import permissions as custom_permissions
 class InstructorViewSet(viewsets.ModelViewSet):
     queryset = models.Instructor.objects.all()
     serializer_class = serializers.InstructorSerializer
-    permission_classes = (custom_permissions.UserOnlyUpdatePermission,
-                          custom_permissions.InstructorAddPermission)
+    permission_classes = (custom_permissions.InstructorAddPermission,)
 
     action_serializers = {
         'update': serializers.InstructorUpdateSerializer,
@@ -37,6 +36,8 @@ class StudentViewSet(viewsets.ModelViewSet):
         return super(StudentViewSet, self).get_serializer_class()
 
     def get_queryset(self):
+        if self.request.user.user_type == constants.TEACHER:
+            return models.Student.objects.all()
         return models.Student.objects.filter(user__id=self.request.user.id)
 
 
