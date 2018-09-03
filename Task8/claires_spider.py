@@ -6,6 +6,7 @@ class MixinUK:
     retailer = 'claires-uk'
     market = 'UK'
     default_brand = 'claires'
+    gender = 'girls'
     unwanted_categories = ['tech', 'toys', 'stationery']
     allowed_domains = ['claires.com']
     start_urls = ['https://www.claires.com/?lang=en_GB']
@@ -25,9 +26,7 @@ class ParseSpider(BaseParseSpider):
 
         self.boilerplate_normal(garment, response)
         garment['category'] = category
-        garment['gender'] = self.product_gender(response)
         garment['image_urls'] = self.image_urls(response)
-        garment['merch_info'] = self.merch_info(response)
 
         size_requests = self.size_requests(response)
         garment['meta'] = {'requests_queue': size_requests}
@@ -60,12 +59,6 @@ class ParseSpider(BaseParseSpider):
 
     def product_category(self, response):
         return response.css('.breadcrumb a::text').extract()[1:]
-
-    def merch_info(self, response):
-        return clean(response.css('.product-detail .callout-message::text').extract()[:1])
-
-    def product_gender(self, response):
-        return response.meta.get('gender')
 
     def image_urls(self, response):
         css = '.product-thumbnails li a::attr(href), .product-image::attr(href)'
@@ -101,7 +94,7 @@ class CrawlSpider(BaseCrawlSpider, MixinUK):
     deny = ['/whats-hot', '/all']
 
     rules = (
-        Rule(LinkExtractor(restrict_css=listings_css, deny=deny), callback='parse_and_add_girls'),
+        Rule(LinkExtractor(restrict_css=listings_css, deny=deny), callback='parse'),
         Rule(LinkExtractor(restrict_css=product_css), callback='parse_item')
     )
 
