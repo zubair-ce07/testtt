@@ -5,22 +5,29 @@ import os
 
 class DataParser:
     @staticmethod
-    def parsefile(directory,data):
-
-        for file in os.listdir(directory):
-            if '.txt' in file:
-                datafile = open(directory+'/'+file, 'r')
+    def parsefile(directory, data):
+        """
+        Read data from giles in directory one by one and place it in dictionary data
+        :param directory: is path of the folder containing data files
+        :param data: empty dictionary to be filled by method
+        :return data: A dictionary with feature_names in "feature" and data in "values"
+        """
+        for file_name in os.listdir(directory):
+            if '.txt' in file_name:
+                file_path = os.path.join(directory, file_name)
+                datafile = open(file_path, 'r')
                 line = datafile.readline()
                 while line:
-                    if not data['Features']:
-                        data['Features'] = line.split('\n')[0]
-                        data['Features'] = data['Features'].split(',')
-                    elif data['Features'][-1] not in line:
+                    if not data['features']:
+                        data['features'] = line.split('\n')[0]
+                        data['features'] = data['features'].split(',')
+                    elif data['features'][-1] not in line:
                         data['values'].append(line.split('\n')[0].split(','))
                     line = datafile.readline()
 
                 datafile.close()
 
+        # convert string values into relative data type on number
         for d in data['values']:
             for i in range(len(d)):
                 try:
@@ -32,9 +39,3 @@ class DataParser:
                     d[i] = d[i]
 
         return data
-
-    # @staticmethod
-    # def setdatatype(data):
-    #
-    #
-    #     return data
