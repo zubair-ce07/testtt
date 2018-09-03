@@ -118,9 +118,6 @@ class CpucProxyMiddleware(object):
             "https://181.113.35.38:36127",
             "https://80.52.238.30:36127"
         ]
-        # request.meta['proxy'] = "https://45.124.144.153:8080"
-        # request.meta['proxy'] = "https://105.27.204.134:8080"
-        # request.meta['proxy'] = "https://89.102.126.21:8080"
-        # request.meta['proxy'] = "https://178.234.141.76:8080"
+
         # request.meta['proxy'] = sample(proxy_list, 1)[0]
         return None
