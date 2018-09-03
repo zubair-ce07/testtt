@@ -9,31 +9,93 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from flicker import app
 from .forms import AddPostForm, SignUpForm, SignInForm
-from .models import User, Posts, Tag, Follow, db
+from .models import User, Post, Tag, Follow, Like, Comment, db
 
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(APP_ROOT, 'static/uploads')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def index():
     if session.get('user_available'):
-        public_posts = Posts.query.order_by(desc(Posts.pid)).filter(
-            Posts.post_privacy == "1"
-        ).all()
-        users_list = db.session.query(Follow.following_userid,
-                                      Follow.followed_userid).filter(
-            Follow.following_userid == session['current_user_id']).all()
-        for user in users_list:
-            public_posts.append(Posts.query.order_by(desc(Posts.pid)).filter(
-                Posts.post_privacy == "0",
-                Posts.puid == user.followed_userid).all())
-        import pdb;
-        pdb.set_trace()
-        return render_template('index.html', posts_data_list=public_posts)
+        if request.method == 'POST':
+            if request.form.get("like_status"):
+                post_id = int(request.form.get("post_id"))
+                like_status = request.form.get("like_status")
+                update_post_like_status(post_id, like_status)
+            else:
+                post_id = int(request.form.get("post_id"))
+                comment_text = request.form.get("comment_text")
+                add_post_commentpost_id(post_id, comment_text)
+                flash('Successfully Commented on Post')
+        allowed_posts = collect_allowed_posts()
+        user_likes = db.session.query(Like.post_id).filter(
+            Like.user_id == session['current_user_id']).all()
+        return render_template('index.html',
+                               posts_data_list=allowed_posts,
+                               user_likes=user_likes)
     flash('User is not Authenticated')
     return redirect(url_for('signin'))
+
+
+def add_post_commentpost_id(post_id, comment_text):
+    comment = Comment(post_id, session['current_user_id'], comment_text)
+    db.session.add(comment)
+    db.session.commit()
+
+
+def update_post_like_status(post_id, like_status):
+    if like_status == "0":
+        like = Like(post_id, session['current_user_id'])
+        db.session.add(like)
+        db.session.commit()
+    else:
+        user_like = Like.query.filter(
+            Like.post_id == post_id, Like.user_id ==
+            session['current_user_id']).first()
+        db.session.delete(user_like)
+        db.session.commit()
+
+
+@app.route('/post/<post_id>', methods=['GET', 'POST'])
+def post_detial_view(post_id):
+    if session.get('user_available'):
+        if request.method == 'POST':
+            comment_id = request.form.get("comment_id")
+            delete_user_comment(comment_id)
+        post_id = int(post_id)
+        post_data = Post.query.filter(
+            Post.pid == int(post_id)
+        ).first()
+        return render_template('post_detail_view.html',
+                               post_data=post_data)
+    else:
+        flash('User is not Authenticated')
+        return redirect(url_for('signin'))
+
+
+def delete_user_comment(comment_id):
+    comment = Comment.query.filter(
+        Comment.comment_id == comment_id).first()
+    db.session.delete(comment)
+    db.session.commit()
+
+
+def collect_allowed_posts():
+    public_posts = Post.query.order_by(desc(Post.pid)).filter(
+        (Post.post_privacy == "1") | (Post.puid == session['current_user_id'])
+    ).all()
+    users_list = Follow.query.filter(
+        Follow.following_userid == session['current_user_id']).all()
+    followed_user_post = []
+    for user in users_list:
+        followed_user_post.append(Post.query.order_by(desc(Post.pid)).filter(
+            Post.post_privacy == "0",
+            Post.puid == user.followed_userid).all())
+    for post in followed_user_post:
+        public_posts.append(post[0])
+    return public_posts
 
 
 def allowed_file(filename):
@@ -52,6 +114,9 @@ def user_wall():
         return render_template('user_wall.html',
                                posts_data_list=posts_data_list[0],
                                following_users=following_users)
+    else:
+        flash('User is not Authenticated')
+        return redirect(url_for('signin'))
 
 
 def generate_id(size=7, chars=string.ascii_uppercase + string.digits):
@@ -76,8 +141,8 @@ def add_post():
                                          file_name)
                 file.save(file_path)
                 privacy_type = request.form['privacy']
-                post = Posts("uploads/" + file_name,
-                             privacy_type, user.uid)
+                post = Post("uploads/" + file_name,
+                            privacy_type, user.uid)
                 db.session.add(post)
                 db.session.commit()
                 save_post_tags(blog_post.tag.data, post.pid)

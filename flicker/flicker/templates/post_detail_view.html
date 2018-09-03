@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Post{% endblock %}
+{% block content %}
+<div class="container h-100 d-flex justify-content-center">
+  <div class="jumbotron my-auto" style="background-color:white">
+      {% for message in get_flashed_messages() %}
+      <div class="alert alert-success">
+         <div class="flash">{{ message }}</div>
+      </div>
+      {% endfor %}
+    <div class="row">
+       <div class="col-sm-2"></div>
+       <div class="col-sm-8">
+          <div class="panel panel-primary">
+              <div class="panel-heading">Post's Detail</div>
+                <div class="panel-body">
+          <div class="well">
+             <div>
+                <h3 class="panel-title">{{post_data.title}}</h3>
+             </div>
+             <div class="panel-body">
+                <a href="/post/{{ post_data.pid }}">
+                  <img src="{{ url_for('static', filename = post_data.image_url) }}"
+                   class="img-thumbnail" width="500dp" height="300dp" /></a>
+                <div "panel-heading">
+                   <br>
+                   <div>
+                        <h3><a href="/user/{{ post_data.user.uid }}">{{post_data.user.username}}</a> </h3>
+                        <button type="button" class="btn btn-primary">Likes 
+                            <span class="badge">{{ post_data.like|count }}</span>
+                        </button>
+                    <br/>
+                    <br/>
+                    {% for comment in post_data.comment%}
+                        <div class="well">
+                            <h5><a href="/user/{{ comment.user.uid }}">{{comment.user.username}}</a> </h5>
+                            {{ comment.comment_text }}<br/><br>
+                            {% if comment.user.uid == session['current_user_id'] %}
+                            <form action="" method="POST">
+                                <input type="hidden" name="comment_id" value="{{ comment.comment_id }}"/>
+                                <button type="submit" class="btn btn-xs btn-danger"
+                                        onclick="return confirm('Are you sure?');">Delete</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    {%endfor%}
+                   </div>
+                </div>
+             </div>
+          </div>
+       </div>
+          <div class="col-sm-2"></div>
+       </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

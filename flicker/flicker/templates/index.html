@@ -20,10 +20,36 @@
                 <h3 class="panel-title">{{posts_data.title}}</h3>
              </div>
              <div class="panel-body">
-                <img src="{{ url_for('static', filename = posts_data.image_url) }}"
-                   class="img-thumbnail" width="500dp" height="300dp" />
+                <a href="/post/{{ posts_data.pid }}">
+                  <img src="{{ url_for('static', filename = posts_data.image_url) }}"
+                   class="img-thumbnail" width="500dp" height="300dp" /></a>
                 <div "panel-heading">
                    <br>
+                   <div>
+                    <form  action="" method="POST">
+                     {% if (posts_data.pid,) in user_likes%}
+                        <input type="hidden" name="like_status" value="1">
+                        <button  class="btn btn-default btn-sm">
+                        <span class="glyphicon glyphicon-thumbs-up"></span> UnLike
+                        </button>
+                      {% else %}
+                        <input type="hidden" name="like_status" value="0">
+                        <button  class="btn btn-default btn-sm" name="like">
+                          <span class="glyphicon glyphicon-thumbs-up"></span> Like
+                        </button>
+                      {% endif %}
+                      <input type="hidden" name="post_id" value="{{posts_data.pid}}">
+                      <span class="badge">{{ posts_data.like|count }}</span>
+                    </form>
+                    <br/><br/>
+                    <form action="" method="POST">
+                      <div class="form-group">
+                        <input type="hidden" name="post_id" value="{{posts_data.pid}}">
+                        <input type="text" name="comment_text" placeholder="Comment" class="form-control" ><br/>
+                        <button name="comment"  type="submit" class="btn btn-primary">Comment</button>
+                      </div>
+                    </form>
+                   </div>
                    <h3><a href="/user/{{ posts_data.user.uid }}">{{posts_data.user.username}}</a> </h3>
                 </div>
              </div>
