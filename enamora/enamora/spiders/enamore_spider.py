@@ -130,9 +130,9 @@ class EnamoraSpider(CrawlSpider):
 
     @staticmethod
     def extract_currency(response):
-        return response.css(
-            "meta[property='og:price:currency']::attr(content)"
-        ).extract_first()
+        css = response.css("meta[property='og:price:currency']::attr(content)")
+
+        return css.extract_first()
 
     @staticmethod
     def extract_description(response):
