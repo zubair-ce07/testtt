@@ -17,11 +17,10 @@ def clean_text(text):
                 .replace('\n', ' ')
                 .raplace('\t', ' '))
 
-    if text:
-        if isinstance(text, str):
-            return clean(str)
+    if text and isinstance(text, str):
+        return clean(str)
 
-        return [clean(text_entry) for text_entry in text]
+    return [clean(text_entry) for text_entry in text]
 
 
 def clean_price(price):
@@ -33,7 +32,7 @@ class EnamoraSpider(CrawlSpider):
     Crawl spider to scrap `www.enamora.com`
     """
     custom_settings = {
-        'DOWNLOAD_DELAY': 0.2,
+        'DOWNLOAD_DELAY': 2,
     }
 
     name = 'enamora'
