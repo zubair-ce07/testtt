@@ -51,8 +51,8 @@ def collect_posts(search_tag):
     posts_list = []
     for tag_post in tag_posts_list:
         if (tag_post.post.post_privacy == 1 or tag_post.post.puid == session[
-                'current_user_id'] or ((tag_post.post.puid,) in users_list
-                                       and tag_post.post.post_privacy != -1)):
+            'current_user_id'] or ((tag_post.post.puid,) in users_list
+                                   and tag_post.post.post_privacy != -1)):
             posts_list.append(tag_post.post)
     user_likes = db.session.query(Like.post_id).filter(
         Like.user_id == session['current_user_id']).all()
@@ -65,13 +65,15 @@ def collect_allowed_posts():
     ).all()
     followed_users_list = Follow.query.filter(
         Follow.following_userid == session['current_user_id']).all()
-    followed_user_post = []
+    followed_user_post_list = []
     for user in followed_users_list:
-        followed_user_post.append(Post.query.order_by(desc(Post.pid)).filter(
+        post = Post.query.order_by(desc(Post.pid)).filter(
             Post.post_privacy == "0",
-            Post.puid == user.followed_userid).all())
-    for post in followed_user_post:
-        public_posts.append(post[0])
+            Post.puid == user.followed_userid).all()
+        followed_user_post_list.append(post)
+    for post_list in followed_user_post_list:
+        for post in post_list:
+            public_posts.append(post)
     user_likes = db.session.query(Like.post_id).filter(
         Like.user_id == session['current_user_id']).all()
     return public_posts, user_likes

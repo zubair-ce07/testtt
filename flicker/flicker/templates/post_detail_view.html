@@ -31,10 +31,21 @@
                                     <h3>
                                         <a href="/user/{{ post_data.user.uid }}">{{post_data.user.username}}</a>
                                     </h3>
-                                    <button type="button"
-                                            class="btn btn-primary">Likes
-                                        <span class="badge">{{ post_data.like|count }}</span>
-                                    </button>
+                                    <div class="well">
+                                      <div class="container">
+                                        <a href="#demo" class="btn btn-primary" data-toggle="collapse">Likes
+                                          <span class="badge">{{ post_data.like|count }}</span>
+                                        </a>
+                                        <br/><br/>
+                                        <div id="demo" class="collapse">
+                                          {% for like in post_data.like %}
+                                          <ul class="list-group">
+                                            <li class="list-group-item">{{ like.user.username }}</li>
+                                          </ul>
+                                          {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
                                     <br/>
                                     <br/>
                                     {% for comment in post_data.comment%}
