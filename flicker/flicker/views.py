@@ -6,7 +6,6 @@ from flask import request, session, redirect, url_for, \
     render_template, flash
 from sqlalchemy import desc
 from werkzeug.security import check_password_hash, generate_password_hash
-
 from flicker import app
 from .forms import AddPostForm, SignUpForm, SignInForm
 from .models import User, Post, Tag, Follow, Like, Comment, db
@@ -46,9 +45,14 @@ def index():
 def collect_posts(search_tag):
     tag_posts_list = Tag.query.filter(
         Tag.tag.like('%' + search_tag + '%')).all()
+    users_list = db.session.query(Follow.followed_userid).filter(
+        Follow.following_userid == session['current_user_id']).all()
     posts_list = []
     for tag_post in tag_posts_list:
-        posts_list.append(tag_post.post)
+        if (tag_post.post.post_privacy == 1 or tag_post.post.puid == session[
+                'current_user_id'] or ((tag_post.post.puid,) in users_list
+                                       and tag_post.post.post_privacy != -1)):
+            posts_list.append(tag_post.post)
     user_likes = db.session.query(Like.post_id).filter(
         Like.user_id == session['current_user_id']).all()
     return posts_list, user_likes
@@ -58,10 +62,10 @@ def collect_allowed_posts():
     public_posts = Post.query.order_by(desc(Post.pid)).filter(
         (Post.post_privacy == "1") | (Post.puid == session['current_user_id'])
     ).all()
-    users_list = Follow.query.filter(
+    followed_users_list = Follow.query.filter(
         Follow.following_userid == session['current_user_id']).all()
     followed_user_post = []
-    for user in users_list:
+    for user in followed_users_list:
         followed_user_post.append(Post.query.order_by(desc(Post.pid)).filter(
             Post.post_privacy == "0",
             Post.puid == user.followed_userid).all())
