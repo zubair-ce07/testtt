@@ -8,7 +8,7 @@
 import scrapy
 
 
-class OrlayItem(scrapy.Item):
+class OrsayItem(scrapy.Item):
     title = scrapy.Field()
     price = scrapy.Field()
     currency = scrapy.Field()
@@ -18,7 +18,6 @@ class OrlayItem(scrapy.Item):
     images = scrapy.Field()
     item_url = scrapy.Field()
     sizes = scrapy.Field()
-    out_of_stock_products = scrapy.Field()
     retail_sku = scrapy.Field()
     skus = scrapy.Field()
 
@@ -28,3 +27,4 @@ class SizeInfo(scrapy.Item):
     price = scrapy.Field()
     currency = scrapy.Field()
     size = scrapy.Field()
+    in_stock = scrapy.Field()

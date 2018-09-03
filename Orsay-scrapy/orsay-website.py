@@ -1,18 +1,18 @@
 import scrapy
 import json
-from orlay.items import SizeInfo, OrlayItem
+from orlay.items import SizeInfo, OrsayItem
 
 
-class OrlayCrawler(scrapy.Spider):
-    """This crawler crawls orslay website and extracts all the information from the website"""
-    name = 'Orlay'
+class OrsayCrawler(scrapy.Spider):
+    """This crawler crawls orsay website and extracts all the information from the website"""
+    name = 'Orsay'
     start_urls = ['http://www.orsay.com']
 
     def parse(self, response):
         """This function will get response of Orsay.com and extract all of its categories links to parse again"""
 
         # Getting links of all the categories, we need only first four of them, last category is redundant
-        categories_urls = response.css("ul.level-1 li.level-1 a.has-sub-menu::attr(href)").extract()[:4]
+        categories_urls = response.css("a.has-sub-menu::attr(href)").extract()[:4]
 
         # Making requests over categories
         for url in categories_urls:
@@ -21,20 +21,24 @@ class OrlayCrawler(scrapy.Spider):
     def parse_categories(self, response):
         """This method takes response of each category and iterate over all the products present in a category"""
 
-        total_products_count = int(
-            response.css('div.pagination-product-count.js-pagination-product-count::attr(data-count)').extract_first()
-        )
+        # Extracting number of products
+        total_products_count = self.get_product_count(response)
 
+        # Sending scrapy requests for pagination
+        return self.categories_pagination(response.url, total_products_count)
+
+    def categories_pagination(self, url, count):
+        """Paginates over each category"""
         # Each request generates 72 item records so we have to iterate over all products
-        for count in range(0, total_products_count, 72):
-            yield scrapy.Request(url=response.url + f"?start={count}&format=page-element",
+        for count in range(0, count, 72):
+            yield scrapy.Request(url=url + f"?start={count}&format=page-element",
                                  callback=self.parse_products)
 
     def parse_products(self, response):
         """It gets response of product list page and then it has to iterate over each single product"""
 
         # Extracting links of all the products
-        product_urls = response.css('ul li div.product-image>a::attr(href)').extract()
+        product_urls = response.css('div.product-image>a::attr(href)').extract()
 
         # Iterating over each product
         for product_url in product_urls:
@@ -46,7 +50,7 @@ class OrlayCrawler(scrapy.Spider):
         extracting info it also traverses onto different pages associated with the product sizes
         """
 
-        item = OrlayItem({
+        item = OrsayItem({
             'title': self.get_title(response),
             'price': self.get_price(response),
             'currency': self.get_currency(response),
@@ -56,10 +60,12 @@ class OrlayCrawler(scrapy.Spider):
             'images': self.get_images(response),
             'item_url': response.url,
             'sizes': self.get_sizes(response),
-            'out_of_stock_products': self.get_out_of_stock_products(response),
             'retail_sku': self.get_retail_sku(response),
             'skus': {},
         })
+
+        # Inputs information of out of stock products
+        self.populate_out_of_stock_products(self.get_out_of_stock_products(response), item)
 
         # Extracting available sizes and related links of products
         size_and_url = self.get_sizes_and_links_of_product(response)
@@ -71,8 +77,19 @@ class OrlayCrawler(scrapy.Spider):
         else:
             yield item
 
+    def populate_out_of_stock_products(self, unavailable_products, item):
+        """
+        This function populates information
+        about products which are not in stock
+        """
+
+        for product_name in unavailable_products:
+            item.get('skus')[product_name] = SizeInfo({'in_stock': False})
+
+
     def create_size_page_request(self, size_and_url, item):
-        """This function takes urls of iszes and item of product data to create a scrapy Request according to them"""
+        """This function takes urls of sizes and item of product
+         data to create a scrapy Request according to them"""
         size_key, size_url = size_and_url.popitem()
         request = scrapy.Request(url=size_url + '&Quantity=1&format=ajax&productlistid=undefined',
                                  callback=self.parse_sizes)
@@ -85,12 +102,15 @@ class OrlayCrawler(scrapy.Spider):
         return request
 
     def parse_sizes(self, response):
-        """This function takes response of size-info-page and stores the information in respective item object"""
-        item_data = response.meta['item_data']
-        current_size = response.meta['current_size']
-        urls_of_sizes = response.meta['sizes_to_traverse']
+        """
+        This function takes response of size-info-page and
+         stores the information in respective item object
+         """
+        item_data = response.meta.get('item_data')
+        current_size = response.meta.get('current_size')
+        urls_of_sizes = response.meta.get('sizes_to_traverse')
 
-        item_data['skus'][current_size] = self.get_size_info(response)
+        item_data.get('skus')[current_size] = self.get_size_info(response)
 
         if len(urls_of_sizes) > 0:
             yield self.create_size_page_request(urls_of_sizes, item_data)
@@ -98,7 +118,10 @@ class OrlayCrawler(scrapy.Spider):
             yield item_data
 
     def get_size_info(self, response):
-        """takes response of product sizes page and return information in the form of SizeInfo object"""
+        """
+        takes response of product sizes page and
+        return information in the form of SizeInfo object
+        """
 
         # Extracting details
         data = response.css('div.js-product-content-gtm::attr(data-product-details)').extract_first()
@@ -108,10 +131,11 @@ class OrlayCrawler(scrapy.Spider):
 
         # Creating object of information
         size_info = SizeInfo({
-            'price': data_json['grossPrice'],
-            'currency': data_json['currency_code'],
-            'colors': data_json['color'],
-            'size': data_json['size'],
+            'in_stock': True,
+            'price': data_json.get('grossPrice'),
+            'currency': data_json.get('currency_code'),
+            'colors': data_json.get('color'),
+            'size': data_json.get('size'),
         })
 
         return size_info
@@ -121,7 +145,9 @@ class OrlayCrawler(scrapy.Spider):
         return dict(zip(sizes, links))
 
     def get_sizes_and_links_of_product(self, response):
-        """It takes product page response and returns sizes and their links in the form of dict"""
+        """
+        It takes product page response and returns sizes
+         and their links in the form of dict"""
 
         sizes_of_product = [size.replace('\n', '') for size in
                             response.css('ul.swatches.size>li.selectable a::text').extract()]
@@ -135,11 +161,14 @@ class OrlayCrawler(scrapy.Spider):
 
     def get_price(self, response):
         """Extracts and returns Price of product"""
-        return response.css('div.product-price span::text').extract_first().replace('\n', '').split(' ')[0]
+
+        price_tag = response.css('div.product-price span::text').extract_first()
+        price = price_tag.replace('\n', '').split(' ')[0]
+        return price
 
     def get_currency(self, response):
         """Extracts and returns Currency of product"""
-        return response.css('div.locale-item.current span.country-currency::text').extract_first()
+        return response.css('span.country-currency::text').extract_first()
 
     def get_category(self, response):
         """Extracts and returns Category of product"""
@@ -155,11 +184,11 @@ class OrlayCrawler(scrapy.Spider):
 
     def get_images(self, response):
         """Extracts and returns Images of product"""
-        response.css('img.productthumbnail::attr(src)').extract()
+        return response.css('img.productthumbnail::attr(src)').extract()
 
     def get_sizes(self, response):
         """Extracts and returns Available Sizes of product"""
-        return [size.replace('\n', '') for size in response.css('ul.swatches.size>li.selectable a::text').extract()]
+        return [size.replace('\n', '') for size in response.css('ul.swatches.size>li a::text').extract()]
 
     def get_out_of_stock_products(self, response):
         """Extracts and returns the products which are out of stock"""
@@ -168,3 +197,7 @@ class OrlayCrawler(scrapy.Spider):
     def get_retail_sku(self, response):
         """Extracts and returns Retail-Sku of product"""
         return response.css('input.js-product-id::attr(value)').extract_first()
+
+    def get_product_count(self, response):
+        """ It returns total number of products present in a specific category"""
+        return int(response.css('div.pagination-product-count::attr(data-count)').extract_first())
