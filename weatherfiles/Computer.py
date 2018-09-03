@@ -119,11 +119,11 @@ class Analyzer:
 
         for record in data['values']:
             if year in record[0] and month == record[0].split('-')[1]:
-                key = record[0].split('-')[2]
-                if len(key) < 2:
-                    key = '0' + key
+                day = record[0].split('-')[2]
+                if len(day) < 2:
+                    day = '0' + day
 
-                results[key] = []
+                results[day] = []
 
                 if record[index_of_maxtemp] != '':
                     temp = ''
@@ -131,7 +131,7 @@ class Analyzer:
                         temp += '+'
 
                     temp += ' ' + str(record[index_of_maxtemp]) + 'C'
-                    results[key].append(temp)
+                    results[day].append(temp)
 
                 if record[index_of_mintemp] != '':
                     temp = ''
@@ -139,6 +139,6 @@ class Analyzer:
                         temp += '+'
 
                     temp += ' ' + str(record[index_of_mintemp]) + 'C'
-                    results[key].append(temp)
+                    results[day].append(temp)
 
         return results
