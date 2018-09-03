@@ -40,9 +40,8 @@ class MonthReport(object):
 
     def display(self):
         """ display month_report average in correct syntax """
-        print(28 * "-", " MONTH REPORT_" + self.month_year + " ", 28 * "-")
+        print("-----MONTH REPORT_" + self.month_year + "-----")
         print(self.to_string())
-        print((73 + len(self.month_year)) * "-", "\n")
 
 
 class YearReport(object):
@@ -78,6 +77,5 @@ class YearReport(object):
     def display(self):
         """ print year report in correct syntax """
         year_str = str(self.max_temp_date.strftime('%Y'))
-        print(28 * "-", " YEAR REPORT_" + year_str + " ", 28 * "-")
+        print("-----YEAR REPORT_" + year_str + "-----")
         print(self.to_string())
-        print((72 + len(year_str)) * "-", "\n")
