@@ -83,13 +83,10 @@ class WhistlesSpider(CrawlSpider):
 
     @staticmethod
     def extract_description(response):
-        description = response.css("div[class*='product-tabs'] ul:first-child")
-        return list(
-            filter(
-                lambda x: x,
-                map(str.strip, description.css("div div p::text").extract())
-            )
-        )
+        description_s = response.css("div[class*='product-tabs'] ul:first-child")
+        description = map(str.strip, description_s.css("div div p::text").extract())
+
+        return list(filter(lambda x: x, description))
 
     def extract_skus(self, response):
         color = self.extract_color(response)
