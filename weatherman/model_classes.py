@@ -2,6 +2,7 @@
 this module contain all classes
 """
 
+
 class DayRecord(object):
     """ class to store full day record """
     def __init__(self, date, max_temperature, mean_temperature,
@@ -28,8 +29,8 @@ class MonthReport(object):
         """ return all members in a string """
         highest_msg = f"Highest Average: {str(round(self.max_temp_avg, 2))}C"
         lowest_msg = f"Lowest Average: {str(round(self.min_temp_avg, 2))}C"
-        avg_humidity_msg = f"Average Mean Humidity: {str(round(self.mean_humidity_avg, 2))}%"
-       
+        avg_humidity_msg = f("Average Mean Humidity: " +
+                             "{str(round(self.mean_humidity_avg, 2))}%")
         ret_str = (
                     highest_msg + "\n" +
                     lowest_msg + "\n" +
@@ -58,7 +59,7 @@ class YearReport(object):
 
     def to_string(self):
         """ return all members in a string """
-       
+
         highest_temp_date = (self.max_temp_date).strftime('%B %d')
         lowest_temp_date = (self.min_temp_date).strftime('%B %d')
         humidity_date = (self.humidity_date).strftime('%B %d')
@@ -66,12 +67,12 @@ class YearReport(object):
         highest_msg = f"Highest: {str(self.max_temp)}C on {highest_temp_date}"
         lowest_msg = f"Lowest: {str(self.min_temp)}C on {lowest_temp_date}"
         humidity_msg = f"Humidity: {str(self.humidity)}% on {humidity_date}"
-        
+
         ret_str = (
                       highest_msg + "\n" +
                       lowest_msg + "\n" +
                       humidity_msg
-                  ) 
+                  )
         return ret_str
 
     def display(self):
@@ -80,4 +81,3 @@ class YearReport(object):
         print(28 * "-", " YEAR REPORT_" + year_str + " ", 28 * "-")
         print(self.to_string())
         print((72 + len(year_str)) * "-", "\n")
-

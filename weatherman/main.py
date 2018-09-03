@@ -12,7 +12,7 @@ def validate_year(year):
     if year and year.isdigit():
         if int(year) <= int(TODAY.year):
             return year
-    print(f"Invalid option [Required year < {str(TODAY.year)})]")
+    print(f"\nInvalid option [Required year < {str(TODAY.year)})]\n")
     return False
 
 
@@ -23,27 +23,30 @@ def validate_date(date):
             raise ValueError
         return date
     except ValueError:
-        print("Invalid option [Required year/month ie 2011/05]")
+        print("\nInvalid option [Required year/month ie 2011/05]\n")
         return False
 
 
 def prepare_parser():
+    detail_str = "Weatherman: to generate different reports"
     PARSER = argparse.ArgumentParser(
-                                        description=("Weatherman: to generate different reports")
+                                        description=detail_str
                                     )
     PARSER.add_argument("path",
                         help="path to the dir that conatain weatherfiles.")
     PARSER.add_argument("-e", type=validate_year,
-                        help="display year report: Max temp, Min temp, Humidity")
+                        help=("display year report: Max temp, Min " +
+                              "temp, Humidity"))
     PARSER.add_argument("-d", type=validate_year,
                         help=("display year graph of highest " +
-                          "and lowest temperature."))
+                              "and lowest temperature."))
     PARSER.add_argument("-a", type=validate_date,
                         help="display month average report")
     PARSER.add_argument("-c", type=validate_date,
                         help=("display month graph of highest " +
                               "and lowest temperature."))
     return PARSER
+
 
 def controller(ARGS):
     report_generator = ReportGenerator()

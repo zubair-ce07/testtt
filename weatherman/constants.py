@@ -1,5 +1,4 @@
 """ contain all coonstants """
-from datetime import datetime
 
 """Color codes"""
 CRED = '\033[91m'
