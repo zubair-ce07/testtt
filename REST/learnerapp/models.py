@@ -12,7 +12,7 @@ LEVEL_CHOICES = (('beginner', 'Beginner'),
 
 class CustomUser(AbstractUser):
     USER_TYPE_CHOICES = ((1, 'student'), (2, 'teacher'),)
-    user_type = models.PositiveSmallIntegerField(choices=USER_TYPE_CHOICES, default=1)
+    user_type = models.PositiveSmallIntegerField(choices=USER_TYPE_CHOICES, default=2)
 
 
 class Instructor(models.Model):
