@@ -2,9 +2,8 @@
 import scrapy
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
-from scrapy.Request import Request
-from scrapy.loader import ItemLoader
-from HarrodsProject.items import HarrodsItem
+from scrapy import Request
+from HarrodsProject.items import HarrodsItem, ProductLoader
 
 
 class HarrodsSpider(CrawlSpider):
@@ -15,42 +14,45 @@ class HarrodsSpider(CrawlSpider):
             Rule(LinkExtractor(
                 deny=('/designers/', '/style-notes'),
                 restrict_css='.nav_list'),
-                callback='parse_listing',),
+                callback='parse_listing', follow=True),
             )
+
+    def start_requests(self):
+        for i, url in enumerate(self.start_urls):
+            yield Request(url, cookies={
+                    'curr': 'SGD', 'ctry': 'SG'}, callback=self.parse)
+
+    def parse_start_url(self, response):
+        pass
 
     def parse_listing(self, response):
         for url in self.get_product_urls(response):
             yield Request(url=url, callback=self.parse_product)
-        for next_page in self.get_next_pages:
+        for next_page in self.get_next_pages(response):
             yield Request(url=url, callback=self.parse_listing)
 
     def parse_product(self, response):
-        pass
+        l = ProductLoader(item=HarrodsItem(), response=response)
+        l.add_value('url', [response.url])
+        l.add_value('brand', 'harrods')
+        l.add_css('name', 'input[name="ProductName"]::attr(value)')
+        l.add_css('price', '.price_amount::text')
+        l.add_css('currency', '.price_currency::text')
+        l.add_css('description', '''.product-info_content p::text,
+                         .product-info_content li::text''')
+        l.add_css('categories', '.breadcrumb_item span::text')
+        l.add_value('website_name', 'harrods.com')
+        l.add_css('product_type', '.breadcrumb_item span::text')
+        l.add_css('price_per_unit', '.price_amount::text')
+        l.add_css('image_urls', '.pdp_images-image::attr(src)')
+        return l.load_item()
 
     def get_product_urls(self, response):
-        return response.css(
+        urls = response.css(
             ".product-grid_list .product-card_link::attr(href)").extract()
-
-    def get_next_pages(self, response):
-        urls = response.css(".control_paging-list a::attr(href)").extract()
-        urls = list(set(urls))
         return [response.urljoin(url) for url in urls]
 
-    def get_currency_control_url(self, response):
-        # TODO:Think on best way to call it: Either before products parsing
-        pass
-        # return "https://www.harrods.com/en-gb/api/products/prices/updates?"+
-        # "country=SG&currency=SGD&_=1535699285679"
-        # product_code = response.css(
-        #     'input[name="ProductCode"]::attr(value)').extract_first()
-        # product_template = response.css(
-        #     'input[name="PdpTemplateType"]::attr(value)').extract_first()
-        # product_bcid = response.css(
-        #     'input[name="Bcid"]::attr(value)').extract_first()
-        # product_color = response.css(
-        #     ".js-default-colour::attr(value)").extract_first()
-        # return "https://www.harrods.com/en-gb/product/"+
-        # "buyingcontrols/{}?pdpTemplateType={}"+
-        # "&bcid={}&colour={}&_=1535695971886".format(
-        #         product_code, product_template,
-        #         product_bcid, product_color)
+    def get_next_pages(self, response):
+        urls = list(set(response.css(
+            ".control_paging-list a::attr(href)").extract()))
+        return [response.urljoin(url) for url in urls]
