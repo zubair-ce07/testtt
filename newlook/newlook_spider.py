@@ -134,8 +134,9 @@ class NewlookCrawlSpider(BaseCrawlSpider, Mixin):
         nav_ids = clean(response.css(nav_css))
 
         for nav_id in nav_ids:
-            yield Request(url=self.nav_url_t.format(nav_id),
-                        callback=self.parse_menu, meta=meta.copy())
+            url = self.nav_url_t.format(nav_id)
+
+            yield Request(url, self.parse_menu, meta=meta.copy())
     
     def parse_menu(self, response):
         meta = {'trail': self.add_trail(response)}
@@ -145,8 +146,10 @@ class NewlookCrawlSpider(BaseCrawlSpider, Mixin):
             if '/c/' not in url:
                 continue
             
-            yield Request(url_query_cleaner(response.urljoin(url)) + '/data-48.json',
-                          self.parse_listing, meta=meta.copy())
+            url = response.urljoin(url)
+            url = f'{url_query_cleaner(url)}/data-48.json'
+
+            yield Request(url, self.parse_listing, meta=meta.copy())
     
     def parse_listing(self, response):
         meta = {'trail': self.add_trail(response)}
@@ -157,8 +160,9 @@ class NewlookCrawlSpider(BaseCrawlSpider, Mixin):
 
         for product in raw_category['data']['results']:
             for color in product['colourOptions'].values():
-                yield Request(self.product_url_t.format(color['url']),
-                              self.parse_item, meta=meta.copy())
+                url = self.product_url_t.format(color['url'])
+
+                yield Request(url, self.parse_item, meta=meta.copy())
 
         if not url_query_parameter(response.url, 'page'):
             yield from self.pagination_requests(response, raw_category)
@@ -168,8 +172,9 @@ class NewlookCrawlSpider(BaseCrawlSpider, Mixin):
 
         pages = category['data']['pagination']['numberOfPages']
         for page in range(1, pages):
-            yield Request(add_or_replace_parameter(response.url, 'page', page),
-                          self.parse_listing, meta=meta.copy())
+            url = add_or_replace_parameter(response.url, 'page', page)
+
+            yield Request(url, self.parse_listing, meta=meta.copy())
 
 
 class NewlookUKParseSpider(NewlookParseSpider, MixinUK):
