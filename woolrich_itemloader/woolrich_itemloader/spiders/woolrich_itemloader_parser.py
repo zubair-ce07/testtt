@@ -1,37 +1,58 @@
 from itertools import product
+from json import loads
 
 from scrapy import Spider, FormRequest
 from w3lib.url import urljoin
+from scrapy.loader.processors import SelectJmes
 
-from ..items import ProductItemLoader
+from ..items import ProductItemLoader, SkuItemLoader
 
 
 class WoolrichItemloaderParserSpider(Spider):
     name = 'woolrich_itemloader_parser'
     sku_base_url = "https://www.woolrich.com/remote/v1/product-attributes/"
 
+    product_css_map = {
+        "retailer_sku":  "strong:contains(Style)::text",
+        "gender": ".breadcrumb-label::text",
+        "category": ".breadcrumb-label::text",
+        "name": ".productView-title::text",
+        "description": "#details-content::text",
+        "care": "#features-content >::text",
+        "image_urls": ".zoom ::attr(src)"
+
+    }
+
     def parse(self, response):
         product_loader = ProductItemLoader(response=response)
-        product_loader.add_css("retailer_sku", "strong:contains(Style)::text")
         product_loader.add_value("lang", "en")
         product_loader.add_value("trail", response.meta.get("trail", []))
-        product_loader.add_css("gender", ".breadcrumb-label::text")
-        product_loader.add_css("category", ".breadcrumb-label::text")
         product_loader.add_value("brand", "Woolrich")
         product_loader.add_value("url", response.url)
         product_loader.add_value("market", "US")
         product_loader.add_value("url_original", response.url)
-        product_loader.add_css("name", ".productView-title::text")
-        product_loader.add_css("description", "#details-content::text")
-        product_loader.add_css("care", "#features-content >::text")
-        product_loader.add_css("image_urls", ".zoom ::attr(src)")
+
+        for field, field_css in self.product_css_map.items():
+            product_loader.add_css(field, field_css)
+
         product_item = product_loader.load_item()
         return self.prepare_request(self.sku_requests(response), product_item)
 
     def parse_sku(self, response):
         product_item = response.meta["product_item"]
         product_loader = ProductItemLoader(response=response, item=product_item)
-        product_loader.add_value("skus", response)
+        raw_sku = loads(response.text)
+
+        sku_loader = SkuItemLoader(response=response)
+        sku_loader.add_value("colour", response.meta["colour"])
+        sku_loader.add_value("size", response.meta["size"])
+        sku_loader.add_value("sku", SelectJmes("data.sku")(raw_sku))
+        sku_loader.add_value("price", SelectJmes("data.price.without_tax.value")(raw_sku))
+        sku_loader.add_value("previous_prices", SelectJmes("data.price.rrp_without_tax.value")(raw_sku))
+        sku_loader.add_value("currency", "USD")
+        sku_loader.add_value("out_of_stock", SelectJmes("data.instock")(raw_sku))
+
+        product_loader.add_value("skus", sku_loader.load_item())
         product_item = product_loader.load_item()
         return self.prepare_request(response.meta["requests"], product_item)
 
