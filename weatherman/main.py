@@ -7,15 +7,6 @@ from report_generator import ReportGenerator
 TODAY = datetime.today()
 
 
-def validate_year(year):
-    """ function to validate year (year < current year) string """
-    if year and year.isdigit():
-        if int(year) <= int(TODAY.year):
-            return year
-    print(f"\nInvalid option [Required year < {str(TODAY.year)})]\n")
-    return False
-
-
 def validate_date(date):
     """ function to validate year/month string """
     try:
@@ -34,10 +25,10 @@ def prepare_parser():
                                     )
     parser.add_argument("path",
                         help="path to the dir that conatain weatherfiles.")
-    parser.add_argument("-e", type=validate_year,
+    parser.add_argument("-e",
                         help=("display year report: Max temp, Min " +
                               "temp, Humidity"))
-    parser.add_argument("-d", type=validate_year,
+    parser.add_argument("-d",
                         help=("display year graph of highest " +
                               "and lowest temperature."))
     parser.add_argument("-a", type=validate_date,
