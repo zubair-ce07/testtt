@@ -24,14 +24,18 @@ def index():
                 post_id = int(request.form.get("post_id"))
                 like_status = request.form.get("like_status")
                 update_post_like_status(post_id, like_status)
-            else:
+            elif request.form.get("post_id"):
                 post_id = int(request.form.get("post_id"))
                 comment_text = request.form.get("comment_text")
-                add_post_commentpost_id(post_id, comment_text)
+                add_post_comment(post_id, comment_text)
                 flash('Successfully Commented on Post')
-        allowed_posts = collect_allowed_posts()
-        user_likes = db.session.query(Like.post_id).filter(
-            Like.user_id == session['current_user_id']).all()
+            else:
+                search_tag = request.form.get("tag")
+                posts_data_list, user_likes = collect_posts(search_tag)
+                return render_template('index.html',
+                                       posts_data_list=posts_data_list,
+                                       user_likes=user_likes)
+        allowed_posts, user_likes = collect_allowed_posts()
         return render_template('index.html',
                                posts_data_list=allowed_posts,
                                user_likes=user_likes)
@@ -39,7 +43,36 @@ def index():
     return redirect(url_for('signin'))
 
 
-def add_post_commentpost_id(post_id, comment_text):
+def collect_posts(search_tag):
+    tag_posts_list = Tag.query.filter(
+        Tag.tag.like('%' + search_tag + '%')).all()
+    posts_list = []
+    for tag_post in tag_posts_list:
+        posts_list.append(tag_post.post)
+    user_likes = db.session.query(Like.post_id).filter(
+        Like.user_id == session['current_user_id']).all()
+    return posts_list, user_likes
+
+
+def collect_allowed_posts():
+    public_posts = Post.query.order_by(desc(Post.pid)).filter(
+        (Post.post_privacy == "1") | (Post.puid == session['current_user_id'])
+    ).all()
+    users_list = Follow.query.filter(
+        Follow.following_userid == session['current_user_id']).all()
+    followed_user_post = []
+    for user in users_list:
+        followed_user_post.append(Post.query.order_by(desc(Post.pid)).filter(
+            Post.post_privacy == "0",
+            Post.puid == user.followed_userid).all())
+    for post in followed_user_post:
+        public_posts.append(post[0])
+    user_likes = db.session.query(Like.post_id).filter(
+        Like.user_id == session['current_user_id']).all()
+    return public_posts, user_likes
+
+
+def add_post_comment(post_id, comment_text):
     comment = Comment(post_id, session['current_user_id'], comment_text)
     db.session.add(comment)
     db.session.commit()
@@ -82,22 +115,6 @@ def delete_user_comment(comment_id):
     db.session.commit()
 
 
-def collect_allowed_posts():
-    public_posts = Post.query.order_by(desc(Post.pid)).filter(
-        (Post.post_privacy == "1") | (Post.puid == session['current_user_id'])
-    ).all()
-    users_list = Follow.query.filter(
-        Follow.following_userid == session['current_user_id']).all()
-    followed_user_post = []
-    for user in users_list:
-        followed_user_post.append(Post.query.order_by(desc(Post.pid)).filter(
-            Post.post_privacy == "0",
-            Post.puid == user.followed_userid).all())
-    for post in followed_user_post:
-        public_posts.append(post[0])
-    return public_posts
-
-
 def allowed_file(filename):
     allowed_extensions = set(['png', 'jpg', 'jpeg', 'gif'])
     return '.' in filename and \
@@ -108,11 +125,11 @@ def allowed_file(filename):
 def user_wall():
     if session.get('user_available'):
         posts_data_list = User.query.filter(
-            User.uid == session['current_user_id']).all()
+            User.uid == session['current_user_id']).first()
         following_users = Follow.query.filter(
             Follow.following_userid == session['current_user_id']).all()
         return render_template('user_wall.html',
-                               posts_data_list=posts_data_list[0],
+                               posts_data_list=posts_data_list,
                                following_users=following_users)
     else:
         flash('User is not Authenticated')

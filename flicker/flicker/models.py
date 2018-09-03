@@ -26,6 +26,8 @@ class Tag(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     tag = db.Column(db.String(50))
     post_id = db.Column(db.Integer, db.ForeignKey('post.pid'))
+    post = db.relationship('Post',
+                           backref=db.backref('tag', lazy=True))
 
     def __init__(self, tag, post_id):
         self.tag = tag
