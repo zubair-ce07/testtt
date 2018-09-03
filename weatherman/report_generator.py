@@ -4,7 +4,7 @@ from datetime import datetime
 from file_handler import FileHandler
 from model_classes import MonthReport, YearReport
 from printer import PrintReports
-from constants import FILE_MONTHS
+from constants import MONTHS
 
 
 def get_max_temp_entry(record_list):
@@ -38,22 +38,23 @@ class ReportGenerator:
             [year, month] = year_month.split('/')
             month = int(month)
             month = month - 1
-            if month > -1 and month < 12:
-                month_str = datetime.strptime(str(month+1), '%m')
-                month_str = (month_str.strftime('%b'))
-                file_handler = FileHandler(path)
-                month_list = []
-                file_handler.get_month_list(month_str, year, month_list)
-                month_str = datetime.strptime(year_month,
-                                              "%Y/%m").strftime('%B %Y')
-                printer = PrintReports()
-                if graph is False:
-                    printer.print_month_graph(month_list, month_str)
-                else:
-                    avg_report = self.generate_month_avg_report(month_list, month_str)
-                    printer.print_report(avg_report)
+
+            month_str = datetime.strptime(str(month+1), '%m')
+            month_str = (month_str.strftime('%b'))
+            file_handler = FileHandler(path)
+            month_list = []
+            file_handler.get_month_list(month_str, year, month_list)
+            month_str = datetime.strptime(year_month,
+                                          "%Y/%m").strftime('%B %Y')
+            printer = PrintReports()
+            if graph is False:
+                printer.print_month_graph(month_list, month_str)
             else:
-                print("\n<< Invalid input: month value is not in range\n")
+                avg_report = self.generate_month_avg_report(
+                    month_list,
+                    month_str
+                )
+                printer.print_report(avg_report)
 
         except ValueError:
             print("\n<< Invalid month or year [required: year/month]\n")
@@ -98,8 +99,8 @@ class ReportGenerator:
             of year """
         cursor = 1
         d = {}
-        for month in FILE_MONTHS:
-            month = FILE_MONTHS.get(month)
+        for month in MONTHS:
+            month = MONTHS.get(month)
             month_list = []
             file_handler.get_month_list(month, year, month_list)
             entries = self.handle_year_graph(month_list)
@@ -112,8 +113,8 @@ class ReportGenerator:
         if len(month_list) > 0:
             max_temp_entry = get_max_temp_entry(month_list)
             min_temp_entry = get_min_temp_entry(month_list)
-            entries = {max_temp_entry.max_temperature,
-                       min_temp_entry.min_temperature}
+            entries = [max_temp_entry.max_temperature,
+                       min_temp_entry.min_temperature]
             return entries
         else:
             return None

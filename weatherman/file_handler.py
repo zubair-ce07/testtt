@@ -1,10 +1,11 @@
 """ Parser for file """
 import os
+import re
 from model_classes import DayRecord
 from datetime import datetime
 import csv
 
-from constants import FILE_MONTHS
+from constants import MONTHS
 
 
 class FileHandler:
@@ -30,21 +31,26 @@ class FileHandler:
         )
         return day_record
 
+    def read_file(self, file_name, rec_list):
+        with open(file_name, mode='r') as reader:
+            csv_reader = csv.DictReader(reader, delimiter=',')
+            for row in csv_reader:
+                day_record = self.get_day_record(row)
+                rec_list.append(day_record)
+
     def get_month_list(self, month, year, rec_list):
         """ get list and append month data to that list"""
         file_name = self.get_path_file(year, month)
-
         if os.path.isfile(file_name):
-            with open(file_name, mode='r') as reader:
-                csv_reader = csv.DictReader(reader, delimiter=',')
-                for row in csv_reader:
-                    day_record = self.get_day_record(row)
-                    rec_list.append(day_record)
+            self.read_file(file_name, rec_list)
 
     def get_year_list(self, year):
         """ get list and append month data to that list """
         year_record_list = []
-        for month in FILE_MONTHS:
-            month = FILE_MONTHS.get(month)
-            self.get_month_list(month, year, year_record_list)
+        year_files = os.listdir(self.path_to_files)
+        regex = re.compile(r'^Murree_weather_'+year)
+        selected_files = list(filter(regex.search, year_files))
+        for file in selected_files:
+            file = f"{self.path_to_files}/{file}"
+            self.read_file(file, year_record_list)
         return year_record_list

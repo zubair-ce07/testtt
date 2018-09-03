@@ -29,8 +29,8 @@ class MonthReport(object):
         """ return all members in a string """
         highest_msg = f"Highest Average: {str(round(self.max_temp_avg, 2))}C"
         lowest_msg = f"Lowest Average: {str(round(self.min_temp_avg, 2))}C"
-        avg_humidity_msg = f("Average Mean Humidity: " +
-                             "{str(round(self.mean_humidity_avg, 2))}%")
+        avg_humidity_msg = ("Average Mean Humidity: " +
+                            f"{str(round(self.mean_humidity_avg, 2))}%")
         ret_str = (
                     highest_msg + "\n" +
                     lowest_msg + "\n" +

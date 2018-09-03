@@ -13,22 +13,25 @@ class PrintReports:
         else:
             print("\n<< Data is not available")
 
+    def display_bar(self, range_str, sign, code):
+        for _ in range(int(range_str)):
+            print(code + sign + CEND, end="")
+
     def print_month_graph(self, month_list, month_str):
         """ print month graph """
         print("")
         print(month_str)
         for day_record in month_list:
             print((day_record.date).strftime('%d'), end=" ")
-            if day_record.max_temperature:
-                for _ in range(int(day_record.max_temperature)):
-                    print(CRED+"+"+CEND, end="")
-                print(" "+CRED+str(day_record.max_temperature)+"C"+CEND)
-
+            max_temperature = day_record.max_temperature
+            if max_temperature:
+                self.display_bar(max_temperature, "+", CRED)
+                print(" " + CRED + str(max_temperature) + "C" + CEND)
             print((day_record.date).strftime('%d'), end=" ")
             if day_record.min_temperature:
-                for _ in range(int(day_record.min_temperature)):
-                    print(CBLUE+"+"+CEND, end="")
-                print(" "+CBLUE+str(day_record.min_temperature) + "C" + CEND)
+                min_temperature = day_record.min_temperature
+                self.display_bar(min_temperature, "+", CBLUE)
+                print(" " + CBLUE + str(min_temperature) + "C" + CEND)
         print("")
 
     def print_year_graph(self, year_dict, year):
@@ -41,10 +44,8 @@ class PrintReports:
                 max_temperature = readings[0]
                 min_temperature = readings[1]
                 if max_temperature and min_temperature:
-                    for _ in range(int(max_temperature)):
-                        print(CRED + "*" + CEND, end="")
-                    for _ in range(int(min_temperature)):
-                        print(CBLUE + "*" + CEND, end="")
+                    self.display_bar(max_temperature, "*", CRED)
+                    self.display_bar(min_temperature, "*", CBLUE)
                     print(f" {max_temperature}C - {min_temperature}C")
                 else:
                     print(" - ")
