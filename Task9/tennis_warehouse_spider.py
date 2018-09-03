@@ -1,11 +1,12 @@
 from scrapy.spiders import Rule
-from .base import BaseParseSpider, BaseCrawlSpider, LinkExtractor, Gender, soupify
+from scrapy.linkextractors import LinkExtractor
+from .base import BaseParseSpider, BaseCrawlSpider, Gender, soupify, clean
 
 
 class MixinUS:
     retailer = 'tennis-warehouse-us'
     market = 'US'
-    default_brand = 'tennis_warehouse'
+    default_brand = 'Tennis Warehouse'
     allowed_domains = ['tennis-warehouse.com']
     start_urls = ['https://www.tennis-warehouse.com/equipment.html']
 
@@ -42,7 +43,7 @@ class ParseSpider(BaseParseSpider):
         return response.css('.multiview img::attr(src)').re('(.+)&')
 
     def product_category(self, response):
-        return [trail[0] for trail in response.meta["trail"] if trail[0] != '']
+        return clean([trail[0] for trail in response.meta["trail"] if trail[0] != ''])
 
     def product_gender(self, garment):
         soup = [garment["name"], garment["url"]] + garment["category"]
@@ -50,10 +51,10 @@ class ParseSpider(BaseParseSpider):
 
     def skus(self, response):
         raw_skus = response.css('.styled_subproduct_list tr')
-
         skus = {}
+
         for raw_sku in raw_skus:
-            name = raw_sku .css('.name strong::text').extract_first().split()
+            name = raw_sku.css('.name strong::text').extract_first().split()
             sku = self.product_pricing_common(response)
 
             sku["colour"] = name[-2]
@@ -82,8 +83,7 @@ class CrawlSpider(BaseCrawlSpider, MixinUS):
     product_css = ['.cat_border_table .name', '.cat_list .name']
 
     rules = (
-        Rule(LinkExtractor(restrict_xpaths=listings_xpath), callback='parse'),
-        Rule(LinkExtractor(restrict_css=listings_css), callback='parse'),
+        Rule(LinkExtractor(restrict_css=listings_css, restrict_xpaths=listings_xpath), callback='parse'),
         Rule(LinkExtractor(restrict_css=product_css), callback='parse_item'),
     )
 
