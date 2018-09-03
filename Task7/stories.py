@@ -16,9 +16,10 @@ class StoriesSpider(CrawlSpider):
 
     allowed_r = ('/clothing', '/shoes', '/bags', '/jewellery', '/accessories',
                  '/swimwear', '/lingerie', '/stationery', '/beauty')
-    rules = (Rule(LinkExtractor(allow=allowed_r, restrict_css=".categories"), callback='parse_pagination'),)
+    rules = (Rule(LinkExtractor(allow=allowed_r, restrict_css=".categories"),
+                  callback='parse_pagination'),)
 
-    skus_request_t = 'https://www.stories.com/en_{0}/getAvailability?variants={1}'
+    skus_request_t = 'https://www.stories.com/en_gbp/getAvailability?variants={}'
     cookies = {
         'HMCORP_locale': 'en_GB',
         'HMCORP_currency': 'GBP'
@@ -61,9 +62,11 @@ class StoriesSpider(CrawlSpider):
         color_variants = self.extract_article_ids(response)
         variants = self.extract_variants(raw_product, color_variants)
 
-        return Request(self.skus_request_t.format(self.cookies["HMCORP_currency"].lower(), variants),
+        return Request(self.skus_request_t.format(variants),
                        cookies=self.cookies, callback=self.parse_skus, dont_filter=True,
-                       meta={'item': item, 'raw_product': raw_product, 'color_variants': color_variants})
+                       meta={'item': item,
+                             'raw_product': raw_product,
+                             'color_variants': color_variants})
 
     def parse_skus(self, response):
         item = response.meta["item"]
@@ -72,7 +75,7 @@ class StoriesSpider(CrawlSpider):
         return item
 
     def extract_raw_product(self, response):
-        return js2py.eval_js(response.css("[class*='o-page-content '] script::text").extract_first())
+        return js2py.eval_js(response.css("[class*='o-page-content'] script::text").extract_first())
 
     def extract_retailer_sku(self, raw_product):
         return re.findall('(\d+)', raw_product['baseProductCode'])[0]
@@ -105,7 +108,8 @@ class StoriesSpider(CrawlSpider):
         variant_codes= []
 
         for color_variant in color_variants:
-            variant_codes.extend(raw_product[color_variant])
+            variants = raw_product[color_variant]['variants']
+            variant_codes.extend([variant["variantCode"] for variant in variants])
 
         return ','.join(variant_codes)
 
