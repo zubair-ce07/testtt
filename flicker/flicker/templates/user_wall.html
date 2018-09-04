@@ -6,11 +6,11 @@
         <div class="row">
             <div class="col-sm-3">
                 <div class="panel panel-primary">
-                    <div class="panel-heading">{{ posts_data_list.username }}
+                    <div class="panel-heading">{{ user_data.username }}
                     </div>
                     <div class="panel-body">
-                        {% if posts_data_list.profile_image_url %}
-                        <img src="{{ url_for('static', filename = posts_data_list.profile_image_url) }}"
+                        {% if user_data.profile_image_url %}
+                        <img src="{{ url_for('static', filename = user_data.profile_image_url) }}"
                              class="profile-img-card"/>
                         {% else %}
                         <img class="profile-img-card"
@@ -18,10 +18,10 @@
                         {% endif %}
                         <div class="list-group">
                             <a href="#"
-                               class="list-group-item">{{ posts_data_list.email
+                               class="list-group-item">{{ user_data.email
                                 }}</a>
                         </div>
-                        {% if posts_data_list.uid !=
+                        {% if user_data.uid !=
                         session['current_user_id']%}
                         <form action="" method="POST">
                             {% if follow_status %}
@@ -50,7 +50,7 @@
                 <div class="panel panel-primary">
                     <div class="panel-heading">User's Posts</div>
                     <div class="panel-body">
-                        {% for posts_data in posts_data_list.post %}
+                        {% for posts_data in user_data.post %}
                         <div class="well">
                             <div>
                                 <h3 class="panel-title">
@@ -63,7 +63,7 @@
                                 <div
                                 "panel-heading">
                                 <br>
-                                <h3> {{ posts_data_list.username }} </h3>
+                                <h3> {{ user_data.username }} </h3>
                             </div>
                         </div>
                     </div>
@@ -81,10 +81,9 @@
                     <div class="panel-heading">Followed Users</div>
                     <div class="panel-body">
                         <div class="list-group">
-                            {% for user in following_users %}
-                            <a href="/user/{{ user.followed_user.uid }}"
-                               class="list-group-item">{{
-                                user.followed_user.username }}</a>
+                            {% for user in user_data.follower %}
+                            <a href="/user/{{ user.following_user.uid }}"
+                               class="list-group-item">{{ user.following_user.username }}</a>
                             {% else %}
                             <div class="alert alert-danger">
                                 No Followed Users

@@ -36,19 +36,24 @@ class Tag(db.Model):
 
 
 class Follow(db.Model):
+    follower_userid = db.Column(db.Integer, db.ForeignKey('user.uid'),
+                                primary_key=True)
     following_userid = db.Column(db.Integer, db.ForeignKey('user.uid'),
                                  primary_key=True)
-    followed_userid = db.Column(db.Integer, db.ForeignKey('user.uid'),
-                                primary_key=True)
-    followed_user = db.relationship('User', foreign_keys=[followed_userid],
-                                    backref='follow')
+    follower_user = db.relationship('User', foreign_keys=[follower_userid],
+                                    backref='follower')
+    following_user = db.relationship('User', foreign_keys=[following_userid],
+                                     backref='follow')
 
-    def __init__(self, following_userid, followed_userid):
+    def __init__(self, follower_userid, following_userid):
+        self.follower_userid = follower_userid
         self.following_userid = following_userid
-        self.followed_userid = followed_userid
 
 
 class Post(db.Model):
+    PUBLIC = 1
+    PRIVATE = -1
+    PROTECTED = 0
     pid = db.Column(db.Integer, primary_key=True, autoincrement=True)
     image_url = db.Column(db.String(1000))
     post_privacy = db.Column(db.Integer)

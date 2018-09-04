@@ -1,15 +1,10 @@
-import os
-import random
-import string
-
-from flask import request, session, redirect, url_for, \
+from flask import request, redirect, url_for, \
     render_template, flash
-from sqlalchemy import desc
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from flicker import app
 from .forms import AddPostForm, SignUpForm, SignInForm
-from .models import User, Post, Tag, Follow, Like, Comment, db
+from .utils import *
 
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(APP_ROOT, 'static/uploads')
@@ -31,7 +26,7 @@ def index():
                 flash('Successfully Commented on Post')
             else:
                 search_tag = request.form.get("tag")
-                posts_data_list, user_likes = collect_posts(search_tag)
+                posts_data_list, user_likes = collect_tag_posts(search_tag)
                 return render_template('index.html',
                                        posts_data_list=posts_data_list,
                                        user_likes=user_likes)
@@ -43,76 +38,25 @@ def index():
     return redirect(url_for('signin'))
 
 
-def collect_posts(search_tag):
-    tag_posts_list = Tag.query.filter(
-        Tag.tag.like('%' + search_tag + '%')).all()
-    users_list = db.session.query(Follow.followed_userid).filter(
-        Follow.following_userid == session['current_user_id']).all()
-    posts_list = []
-    for tag_post in tag_posts_list:
-        if (tag_post.post.post_privacy == 1 or tag_post.post.puid == session[
-            'current_user_id'] or ((tag_post.post.puid,) in users_list
-                                   and tag_post.post.post_privacy != -1)):
-            posts_list.append(tag_post.post)
-    user_likes = db.session.query(Like.post_id).filter(
-        Like.user_id == session['current_user_id']).all()
-    return posts_list, user_likes
-
-
-def collect_allowed_posts():
-    public_posts = Post.query.order_by(desc(Post.pid)).filter(
-        (Post.post_privacy == "1") | (Post.puid == session['current_user_id'])
-    ).all()
-    followed_users_list = Follow.query.filter(
-        Follow.following_userid == session['current_user_id']).all()
-    followed_user_post_list = []
-    for user in followed_users_list:
-        post = Post.query.order_by(desc(Post.pid)).filter(
-            Post.post_privacy == "0",
-            Post.puid == user.followed_userid).all()
-        followed_user_post_list.append(post)
-    for post_list in followed_user_post_list:
-        for post in post_list:
-            public_posts.append(post)
-    user_likes = db.session.query(Like.post_id).filter(
-        Like.user_id == session['current_user_id']).all()
-    return public_posts, user_likes
-
-
-def add_post_comment(post_id, comment_text):
-    comment = Comment(post_id, session['current_user_id'], comment_text)
-    db.session.add(comment)
-    db.session.commit()
-
-
-def update_post_like_status(post_id, like_status):
-    if like_status == "0":
-        like = Like(post_id, session['current_user_id'])
-        db.session.add(like)
-        db.session.commit()
-    else:
-        user_like = Like.query.filter(
-            Like.post_id == post_id, Like.user_id ==
-            session['current_user_id']).first()
-        db.session.delete(user_like)
-        db.session.commit()
-
-
-@app.route('/delete/<pid>', methods=('GET', 'POST'))
+@app.route('/delete/<pid>', methods=['GET'])
 def delete_post(pid):
-    post = Post.query.get(pid)
-    if post.user.uid == int(session['current_user_id']):
-        db.session.delete(post)
-        db.session.commit()
-        flash('Post Deleted Succesfully')
-        return redirect(url_for('index'))
+    if session.get('user_available'):
+        post = Post.query.get(pid)
+        if post.user.uid == int(session['current_user_id']):
+            db.session.delete(post)
+            db.session.commit()
+            flash('Post Deleted Succesfully')
+            return redirect(url_for('index'))
+        else:
+            flash('You are not a valid user to Delete this Post')
+            return redirect(url_for('index'))
     else:
-        flash('You are not a valid user to Delete this Post')
-        return redirect(url_for('index'))
+        flash('User is not Authenticated')
+        return redirect(url_for('signin'))
 
 
 @app.route('/post/<post_id>', methods=['GET', 'POST'])
-def post_detial_view(post_id):
+def post_detail_view(post_id):
     if session.get('user_available'):
         if request.method == 'POST':
             comment_id = request.form.get("comment_id")
@@ -128,41 +72,15 @@ def post_detial_view(post_id):
         return redirect(url_for('signin'))
 
 
-def delete_user_comment(comment_id):
-    comment = Comment.query.filter(
-        Comment.comment_id == comment_id).first()
-    db.session.delete(comment)
-    db.session.commit()
-
-
-def allowed_file(filename):
-    allowed_extensions = set(['png', 'jpg', 'jpeg', 'gif'])
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in allowed_extensions
-
-
 @app.route('/wall', methods=['GET'])
 def user_wall():
     if session.get('user_available'):
-        posts_data_list = User.query.filter(
+        user_data = User.query.filter(
             User.uid == session['current_user_id']).first()
-        following_users = Follow.query.filter(
-            Follow.following_userid == session['current_user_id']).all()
-        return render_template('user_wall.html',
-                               posts_data_list=posts_data_list,
-                               following_users=following_users)
+        return render_template('user_wall.html', user_data=user_data)
     else:
         flash('User is not Authenticated')
         return redirect(url_for('signin'))
-
-
-def generate_id(size=7, chars=string.ascii_uppercase + string.digits):
-    return ''.join(random.choice(chars) for _ in range(size))
-
-
-def append_id(filename):
-    name, ext = os.path.splitext(filename)
-    return "{name}_{uid}{ext}".format(name=name, uid=generate_id(), ext=ext)
 
 
 @app.route('/add', methods=['GET', 'POST'])
@@ -173,7 +91,7 @@ def add_post():
         if request.method == 'POST':
             file = request.files['file']
             if file and allowed_file(file.filename):
-                file_name = append_id(file.filename)
+                file_name = append_random_string(file.filename)
                 file_path = os.path.join(app.config['UPLOAD_FOLDER'],
                                          file_name)
                 file.save(file_path)
@@ -193,14 +111,6 @@ def add_post():
     return redirect(url_for('signin'))
 
 
-def save_post_tags(tags_list, post_id):
-    tags_list = tags_list.split(" ")
-    for tag in tags_list:
-        tag_obj = Tag(tag, post_id)
-        db.session.add(tag_obj)
-        db.session.commit()
-
-
 @app.route('/user/<user_id>', methods=('GET', 'POST'))
 def user_profile(user_id):
     if session.get('user_available'):
@@ -209,12 +119,9 @@ def user_profile(user_id):
             update_follow_status(user_id, follow_status_form)
 
         follow_status = check_follow_status(user_id)
-        posts_data_list = User.query.filter(User.uid == user_id).all()
-        following_users = Follow.query.filter(
-            Follow.following_userid == user_id).all()
+        user_data = User.query.filter(User.uid == user_id).first()
         return render_template('user_wall.html',
-                               posts_data_list=posts_data_list[0],
-                               following_users=following_users,
+                               user_data=user_data,
                                follow_status=follow_status)
     else:
         flash('User is not Authenticated')
@@ -234,33 +141,6 @@ def search_user():
         return redirect(url_for('signin'))
 
 
-def update_follow_status(profile_user_id, follow_status):
-    current_user_id = session['current_user_id']
-    profile_user_id = int(profile_user_id)
-    if follow_status == "1":
-        follow_instance = db.session.query(Follow).filter(
-            Follow.following_userid == current_user_id,
-            Follow.followed_userid == profile_user_id).first()
-        db.session.delete(follow_instance)
-        db.session.commit()
-    if follow_status == "0":
-        follow = Follow(current_user_id, profile_user_id)
-        db.session.add(follow)
-        db.session.commit()
-
-
-def check_follow_status(profile_user_id):
-    current_user_id = session['current_user_id']
-    profile_user_id = int(profile_user_id)
-    follow_status = db.session.query(Follow).filter(
-        Follow.following_userid == current_user_id,
-        Follow.followed_userid == profile_user_id).all()
-    if follow_status:
-        return True
-    else:
-        return False
-
-
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     signup_form = SignUpForm(request.form)
@@ -276,7 +156,7 @@ def signup():
         else:
             file = request.files['file']
             if file and allowed_file(file.filename):
-                file_name = append_id(file.filename)
+                file_name = append_random_string(file.filename)
                 file_path = os.path.join(app.config['UPLOAD_FOLDER'],
                                          file_name)
                 file.save(file_path)
@@ -293,22 +173,6 @@ def signup():
                 flash('File Not Alllowed')
                 return redirect(url_for('signup'))
     return render_template('signup.html', signup_form=signup_form)
-
-
-def validate_user_email(user_email):
-    log_user_email = User.query.filter_by(email=user_email).first()
-    if log_user_email:
-        return False
-    else:
-        return True
-
-
-def validate_username(username):
-    log_user_username = User.query.filter_by(username=username).first()
-    if log_user_username:
-        return False
-    else:
-        return True
 
 
 @app.route('/signin', methods=['GET', 'POST'])
