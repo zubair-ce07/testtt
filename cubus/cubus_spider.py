@@ -109,7 +109,7 @@ class CubusCrawlSpider(BaseCrawlSpider, Mixin):
         'Accept-Encoding': 'gzip, deflate, br',
         'Accept-Language': 'en-US,en;q=0.9'
     }
-    raw_pagging_re = re.compile('Components.ProductListPage,\s*({.+})\),')
+    raw_paging_re = re.compile('Components.ProductListPage,\s*({.+})\),')
     pagination_url = 'https://cubus.com/sv/api/product/Post'
     listing_css = ['.site-nav__dropdown-wr']
 
@@ -120,19 +120,19 @@ class CubusCrawlSpider(BaseCrawlSpider, Mixin):
 
     def parse_pagination(self, response):
         xpath = '//script[contains(., "Components.ProductListPage")]'
-        raw_pagging = response.xpath(xpath).re_first(self.raw_pagging_re)
+        raw_paging = response.xpath(xpath).re_first(self.raw_paging_re)
 
-        if not raw_pagging:
+        if not raw_paging:
             return
 
-        raw_pagging = json.loads(raw_pagging)
+        raw_paging = json.loads(raw_paging)
         meta = {'trail': self.add_trail(response)}
 
-        total_items = raw_pagging['totalCount']
-        pages = int(total_items/raw_pagging['initData']['ItemsPerPage']) + 1
+        total_items = raw_paging['totalCount']
+        pages = int(total_items/raw_paging['initData']['ItemsPerPage']) + 1
 
         for page in range(0, pages):
-            formdata = raw_pagging['initData']
+            formdata = raw_paging['initData']
             formdata['Page'] = page
 
             yield Request(self.pagination_url, body=json.dumps(formdata), method='POST',
@@ -144,10 +144,9 @@ class CubusCrawlSpider(BaseCrawlSpider, Mixin):
 
         for product in raw_listing['Products']:
             for color in product['Siblings']:
-                url=response.urljoin(color['Url'])
+                url = response.urljoin(color['Url'])
 
                 yield Request(url, self.parse_item, meta=meta.copy())
-
 
 
 class CubusSEParseSpider(CubusParseSpider, MixinSE):
