@@ -22,18 +22,19 @@ class Analyzer:
         index_of_humidity = data['features'].index('Max Humidity')
 
         for record in data['values']:
-            if year in record[0]:
+            date_in_record = record[0]
+            if year in date_in_record:
                 if record[index_of_maxtemp] != '' and record[index_of_maxtemp] > highest:
                     highest = record[index_of_maxtemp]
-                    date_highest = record[0]
+                    date_highest = date_in_record
 
                 if record[index_of_mintemp] != '' and record[index_of_mintemp] < lowest:
                     lowest = record[index_of_mintemp]
-                    date_lowest = record[0]
+                    date_lowest = date_in_record
 
                 if record[index_of_humidity] != '' and record[index_of_humidity] > humidity:
                     humidity = record[index_of_humidity]
-                    date_humidity = record[0]
+                    date_humidity = date_in_record
         try:
 
             year, month, day = date_highest.split('-')
@@ -77,7 +78,8 @@ class Analyzer:
         index_of_humidity = data['features'].index(' Mean Humidity')
 
         for record in data['values']:
-            if year in record[0] and month == record[0].split('-')[1]:
+            date_in_record = record[0]
+            if year in date_in_record and month == date_in_record.split('-')[1]:
                 if record[index_of_humidity] != '':
                     humidity += record[index_of_humidity]
                 if record[index_of_maxtemp] != '':
@@ -87,8 +89,8 @@ class Analyzer:
 
         try:
             total_days = calendar.monthrange(int(year),
-                                            int(month),
-                                            )[1]
+                                             int(month),
+                                             )[1]
             results = {
                 'Highest Average': str(highest / total_days) + "C",
                 'Lowest Average': str(lowest / total_days) + 'C',
@@ -118,8 +120,9 @@ class Analyzer:
         month = date.split('/')[1]
 
         for record in data['values']:
-            if year in record[0] and month == record[0].split('-')[1]:
-                day = record[0].split('-')[2]
+            date_in_record=record[0]
+            if year in date_in_record and month == date_in_record.split('-')[1]:
+                day = date_in_record.split('-')[2]
                 if len(day) < 2:
                     day = '0' + day
 
