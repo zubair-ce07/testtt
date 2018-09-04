@@ -3,7 +3,7 @@ import json
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 
-from Spider.Fanatics.items import FanaticsItem
+from Fanatics.items import FanaticsItem
 
 
 class FanaticsSpider(CrawlSpider):
@@ -22,8 +22,7 @@ class FanaticsSpider(CrawlSpider):
     )
 
     def parse_product(self, response):
-        required_data = self.get_required_product_data(response)
-        product = required_data['pdp-data']['pdp']
+        product = self.get_product(response)
         item = FanaticsItem()
         item['product_id'] = product['productId']
         item['breadcrumb'] = self.get_product_breadcrumb(product)
@@ -42,12 +41,12 @@ class FanaticsSpider(CrawlSpider):
 
         yield item
 
-    def get_required_product_data(self, response):
+    def get_product(self, response):
         required_script_xpath = '//script[contains(text(), "var __platform_data__")]/text()'
         required_script = response.xpath(required_script_xpath).extract_first()
         required_script = required_script.lstrip('var __platform_data__=')
         product_data = json.loads(required_script)
-        return product_data
+        return product_data['pdp-data']['pdp']
 
     def get_product_language(self, response):
         return response.xpath('/html/@lang').extract_first()

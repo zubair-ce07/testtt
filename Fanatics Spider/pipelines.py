@@ -3,7 +3,7 @@ import logging
 
 import pymysql
 
-from Spider.Fanatics import settings
+from Fanatics import settings
 
 
 class FanaticsPipeline(object):
@@ -20,34 +20,36 @@ class FanaticsPipeline(object):
 
     def process_item(self, item, spider):
         table_name = settings.MYSQL_TABLE
+        sql_query = 'insert into {} (product_id, breadcrumb, title, brand, categories, ' \
+                    'description, details, gender, product_url, image_urls, price, ' \
+                    'currency, language, skus)' \
+                    'value (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) ' \
+                    'on duplicate key update product_id=(product_id)'
+
+        values = (
+            item['product_id'],
+            json.dumps(item['breadcrumb']),
+            item['title'],
+            item['brand'],
+            json.dumps(item['categories']),
+            item['description'],
+            json.dumps(item['details']),
+            item['gender'],
+            item['product_url'],
+            json.dumps(item['image_urls']),
+            item['price'],
+            item['currency'],
+            item['language'],
+            json.dumps(item['skus'])
+        )
+
         try:
-            self.cursor.execute(
-                "insert into {} (product_id, breadcrumb, title, brand, categories, "
-                "description, details, gender, product_url, image_urls, price, "
-                "currency, language, skus)"
-                "value(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) "
-                "on duplicate key update product_id=(product_id)".format(table_name),
-                (
-                    item['product_id'],
-                    json.dumps(item['breadcrumb']),
-                    item['title'],
-                    item['brand'],
-                    json.dumps(item['categories']),
-                    item['description'],
-                    json.dumps(item['details']),
-                    item['gender'],
-                    item['product_url'],
-                    json.dumps(item['image_urls']),
-                    item['price'],
-                    item['currency'],
-                    item['language'],
-                    json.dumps(item['skus'])
-                ))
+            self.cursor.execute(sql_query.format(table_name), values)
             self.connect.commit()
 
         except Exception as error:
             logging.error(error)
-        logging.info('Product added with id: '.format(item['product_id']))
+        logging.info('Product added with id: {}'.format(item['product_id']))
         return item
 
     def close_spider(self, spider):
