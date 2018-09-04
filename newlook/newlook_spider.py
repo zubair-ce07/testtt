@@ -102,8 +102,9 @@ class NewlookParseSpider(BaseParseSpider, Mixin):
 
     def product_pricing_common(self, raw_product):
         raw_price = raw_product['price']
-        pprice = raw_product.get('previousPrice', {}).get('value')
-        money_strs = [raw_price['value'], pprice, raw_price['currencyIso']]
+        previous_price = raw_product.get('previousPrice', {}).get('value')
+        
+        money_strs = [raw_price['value'], previous_price, raw_price['currencyIso']]
 
         return super().product_pricing_common(None, money_strs=money_strs)
 
