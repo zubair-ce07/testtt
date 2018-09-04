@@ -233,8 +233,6 @@ def main():
 			print()	
 	else:
 		print("Directory does not exist !")
-		
-
 main()
 
 
