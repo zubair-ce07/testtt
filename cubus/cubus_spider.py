@@ -13,8 +13,6 @@ class Mixin:
     allowed_domains = ['cubus.com']
     start_urls = ['https://cubus.com/']
 
-    DOWNLOAD_DELAY = 0.5
-
 
 class MixinSE(Mixin):
     retailer = Mixin.retailer + '-se'
@@ -103,6 +101,7 @@ class CubusParseSpider(BaseParseSpider, Mixin):
 
 
 class CubusCrawlSpider(BaseCrawlSpider, Mixin):
+    custom_settings = {'DOWNLOAD_DELAY': 0.5}
     headers = {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
