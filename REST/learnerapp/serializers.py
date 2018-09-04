@@ -1,15 +1,17 @@
+import datetime
+
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import IntegrityError
 from rest_framework import serializers
 
-from learnerapp import models, constants
+from learnerapp import models, constants, validators
 
 
 class UserSerializer(serializers.ModelSerializer):
     user_type = serializers.CharField(source='get_user_type_display', read_only=True)
     first_name = serializers.CharField(required=True)
     last_name = serializers.CharField(required=True)
-    email = serializers.CharField(required=True)
+    email = serializers.CharField(required=True, validators=[validators.email_validation])
 
     class Meta:
         model = models.CustomUser
@@ -91,6 +93,8 @@ class StudentUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Student
         fields = ('user', 'dob', 'university')
+        extra_kwargs = {
+            'dob': {'validators': [validators.dob_validation], }, }
 
     def update(self, instance, validated_data):
         user_data = validated_data.pop('user')
@@ -103,3 +107,13 @@ class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Course
         fields = '__all__'
+
+    def validate(self, data):
+        start_date = data['start_date']
+        end_date = data['end_date']
+        today = datetime.datetime.now().date()
+        if start_date > end_date:
+            raise serializers.ValidationError('End Date cannot be prior to Start date')
+        if start_date < today:
+            raise serializers.ValidationError('Start date cannot be prior to today ')
+        return data
