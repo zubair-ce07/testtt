@@ -11,14 +11,22 @@ class GreatfoodhallSpider(scrapy.Spider):
     start_urls = ['http://greatfoodhall.com/']
 
     def parse(self, response):
-        for url in self.get_listings_urls(response):
-            yield Request(url=url, callback=self.parse_listing)
-
+        if response.meta.get('iscookiesset', None):
+            yield Request(url=response.url, callback=self.parse_listing,
+                          meta={'cookiejar': response.meta['cookiejar']},
+                          dont_filter=True)
+        else:
+            for i, url in enumerate(self.get_listings_urls(response)):
+                yield Request(url=url, callback=self.parse,
+                              meta={'cookiejar': i, 'iscookiesset': True})
+            
     def parse_listing(self, response):
         for url in self.get_products_urls(response):
-            yield Request(url=url, callback=self.parse_product)
+            yield Request(url=url, callback=self.parse_product,
+                          meta={'cookiejar': response.meta['cookiejar']})
         for page_url in self.get_pagination_urls(response):
-            yield Request(url=page_url, callback=self.parse_listing)
+            yield Request(url=page_url, callback=self.parse_listing,
+                          meta={'cookiejar': response.meta['cookiejar']})
 
     def parse_product(self, response):
         l = ProductLoader(item=Product(), response=response)
