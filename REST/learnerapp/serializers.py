@@ -75,6 +75,7 @@ class StudentSerializer(serializers.HyperlinkedModelSerializer):
 
     def create(self, validated_data):
         user_data = validated_data.pop('user')
+        user_data['user_type'] = constants.STUDENT
         password = user_data.pop('password')
 
         try:
