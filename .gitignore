@@ -58,3 +58,8 @@ target/
 
 # VSCode
 .vscode
+
+# custom json files
+athletes.json
+sports.json
+medals.json
