@@ -17,6 +17,7 @@ class Mixin:
 class MixinSE(Mixin):
     retailer = Mixin.retailer + '-se'
     market = 'SE'
+    lang = 'sv'
     start_urls = ['https://cubus.com/sv/']
 
 
@@ -39,27 +40,29 @@ class CubusParseSpider(BaseParseSpider, Mixin):
         garment['description'] = self.product_description(raw_product)
         garment['care'] = self.product_care(raw_product)
 
-        garment['gender'] = self.product_gender(raw_product)
+        garment['gender'] = self.product_gender(response, raw_product)
         garment['image_urls'] = self.image_urls(raw_product)
         garment['merch_info'] = self.merch_info(raw_product)
         garment['skus'] = self.skus(raw_product)
 
         return garment
 
-    def product_description(self, raw_product):
+    def raw_description(self, raw_product):
         raw_description = raw_product.get('CustomSiteSpecificFields', []) or []
-        raw_description += [raw_product.get('ShortDescription', '') or '']
+        raw_description += [raw_product.get('ProductInfo', '') or '']
 
-        raw_description = sum([rd.split('. ') for rd in raw_description], [])
-
-        return [rd for rd in clean(raw_description) if not self.care_criteria(rd)]
+        return raw_description + [raw_product.get('ShortDescription', '') or '']
 
     def product_care(self, raw_product):
-        care = [c['Name'] for c in raw_product.get('ProductCare', [])]
+        care = super().product_care(raw_product)
+        care += [c['Name'] for c in raw_product.get('ProductCare', [])]
+
         return care + clean((raw_product.get('Composition', '') or '').split(','))
 
-    def product_gender(self, raw_product):
+    def product_gender(self, response, raw_product):
+        soup = [t for _, t in response.meta.get('trail', [])]
         soup = raw_product['CategoryStructure'] + [raw_product['ProductDepartment']]
+
         return self.gender_lookup(' '.join(soup)) or Gender.ADULTS.value
 
     def image_urls(self, raw_product):
