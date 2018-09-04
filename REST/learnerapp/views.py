@@ -1,5 +1,5 @@
 from learnerapp import models, serializers
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, permissions, filters
 
 from learnerapp import permissions as custom_permissions
 
@@ -8,6 +8,8 @@ class InstructorViewSet(viewsets.ModelViewSet):
     queryset = models.Instructor.objects.all()
     serializer_class = serializers.InstructorSerializer
     permission_classes = (custom_permissions.UserOnlyUpdatePermission,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ['user__username']
 
     action_serializers = {
         'update': serializers.InstructorUpdateSerializer,
@@ -24,6 +26,9 @@ class StudentViewSet(viewsets.ModelViewSet):
     queryset = models.Student.objects.all()
     serializer_class = serializers.StudentSerializer
     permission_classes = (custom_permissions.UserOnlyUpdatePermission,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ['user__username']
+
 
     action_serializers = {
         'update': serializers.StudentUpdateSerializer,
@@ -40,3 +45,6 @@ class CourseViewSet(viewsets.ModelViewSet):
     queryset = models.Course.objects.all()
     serializer_class = serializers.CourseSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ['title']
+
