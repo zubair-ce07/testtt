@@ -109,3 +109,20 @@ class User(db.Model):
     @staticmethod
     def verify_hash(password, hash):
         return sha256.verify(password, hash)
+
+
+def get_favourite_names_by_ids(current_user_id, entity_type, entity_value):
+
+    favourites = Favourite.query.filter_by(user_id=current_user_id,
+                                                    favourite_entity_id=entity_value).all()
+
+    if favourites:
+        object_names = []
+        favourite_object_ids = [x.favourite_object_id for x in favourites]
+        for favourite_object_id in favourite_object_ids:
+            object_names.append(entity_type.query.filter_by(_id=favourite_object_id).first().name)
+        return object_names
+
+
+def get_id_by_name(entity_type, name):
+    return entity_type.query.filter_by(name=name).first()._id

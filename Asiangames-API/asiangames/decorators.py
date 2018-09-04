@@ -20,4 +20,3 @@ def required_access_level(access_level):
 
         return wrapper
     return main_wrapper
-
