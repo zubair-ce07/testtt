@@ -16,5 +16,5 @@ class MotelItem(scrapy.Item):
     description = scrapy.Field()
     img_urls = scrapy.Field()
     url = scrapy.Field()
-    sku = scrapy.Field()
+    skus = scrapy.Field()
     gender = scrapy.Field()
