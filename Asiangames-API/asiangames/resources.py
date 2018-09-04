@@ -8,6 +8,7 @@ from flask import jsonify
 from asiangames.models import User, Athlete, Country, Sport, Favourite
 from asiangames.decorators import required_access_level
 from asiangames.schemas import *
+from asiangames import db
 
 
 user_login_parser = reqparse.RequestParser()
@@ -200,18 +201,26 @@ class FavouriteListResource(Resource):
     @jwt_required
     @required_access_level(ACCESS_LEVELS['USER'])
     def get(self, attribute):
-        favourite_schema = FavourtiteSchema(many=True)
         current_user_id = User.find_by_email(email=get_jwt_identity())._id
 
         if attribute == 'all':
-            favourite_countries = Favourite.query.filter_by(user_id=current_user_id,
-                                                            favourite_entity_id=FAVOURITES_MAP['country']).all()
+            output_map = {}
+            output_map['countries'] = get_favourite_names_by_ids(current_user_id, Country, FAVOURITES_MAP['country'])
+            output_map['sports'] = get_favourite_names_by_ids(current_user_id, Sport, FAVOURITES_MAP['sport'])
+            output_map['athletes'] = get_favourite_names_by_ids(current_user_id, Athlete, FAVOURITES_MAP['athlete'])
+            return jsonify(output_map)
 
-            output = favourite_schema.dump(favourite_countries).data
-            return jsonify(output)
+        elif attribute == 'countries':
+            return jsonify(get_favourite_names_by_ids(current_user_id, Country, FAVOURITES_MAP['country']))
+
+        elif attribute == 'sports':
+            return jsonify(get_favourite_names_by_ids(current_user_id, Sport, FAVOURITES_MAP['sport']))
+
+        elif attribute == 'athletes':
+            return jsonify(get_favourite_names_by_ids(current_user_id, Athlete, FAVOURITES_MAP['athlete']))
 
 
-class FavouriteResource(Resource):
+class FavouriteFilterResource(Resource):
 
     @jwt_required
     @required_access_level(ACCESS_LEVELS['USER'])
@@ -231,3 +240,38 @@ class FavouriteResource(Resource):
                                      user_id=current_user_id)
         favourite_record.save_to_db()
         return {'message': '{} {} added to favourites'.format(attribute, value)}
+
+    @jwt_required
+    @required_access_level(ACCESS_LEVELS['USER'])
+    def delete(self, attribute, value):
+        current_user_id = User.find_by_email(email=get_jwt_identity())._id
+
+        if attribute == 'country':
+            object_id = get_id_by_name(Country, value)
+            favourite_record = Favourite.query.filter_by(favourite_object_id=object_id, user_id=current_user_id,
+                                                         favourite_entity_id=FAVOURITES_MAP[attribute]).first()
+
+            if favourite_record:
+                db.session.delete(favourite_record)
+                db.session.commit()
+                return {'message': '{} {} deleted from favourites'.format(attribute, value)}
+            return {'message': 'No such favourite found'}
+
+
+
+
+def get_favourite_names_by_ids(current_user_id, entity_type, entity_value):
+
+    favourites = Favourite.query.filter_by(user_id=current_user_id,
+                                                    favourite_entity_id=entity_value).all()
+
+    if favourites:
+        object_names = []
+        favourite_object_ids = [x.favourite_object_id for x in favourites]
+        for favourite_object_id in favourite_object_ids:
+            object_names.append(entity_type.query.filter_by(_id=favourite_object_id).first().name)
+        return object_names
+
+
+def get_id_by_name(entity_type, name):
+    return entity_type.query.filter_by(name=name).first()._id

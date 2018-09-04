@@ -9,6 +9,7 @@ if __name__ == '__main__':
     auth_route = '/auth/{}'
     api.add_resource(resources.UserRegistration, auth_route.format('registration'))
     api.add_resource(resources.UserLogin, auth_route.format('login'))
+    api.add_resource(resources.TokenRefresh, auth_route.format('tokenrefresh'))
 
     # athletes
     api.add_resource(resources.AthleteResource, '/athletes/<int:id>')
@@ -25,6 +26,6 @@ if __name__ == '__main__':
 
     # favourites
     api.add_resource(resources.FavouriteListResource, '/favourite/<string:attribute>')
-    api.add_resource(resources.FavouriteResource, '/favourite/<string:attribute>/<string:value>')
+    api.add_resource(resources.FavouriteFilterResource, '/favourite/<string:attribute>/<string:value>')
 
     app.run()
