@@ -9,7 +9,7 @@ class AtiraCrawlSpider(CrawlSpider):
         'https://atira.com/'
     ]
 
-    listings_css = ['.ubermenu-item-level-2 a']
+    listings_css = ['.ubermenu-item-level-2 .ubermenu-target-with-image']
 
     rules = (
         Rule(LinkExtractor(restrict_css=listings_css), callback='parse_item'),
