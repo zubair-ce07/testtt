@@ -1,7 +1,7 @@
 """ Controller file """
 import argparse
 from datetime import datetime
-from report_generator import ReportGenerator
+import weatherman
 
 
 TODAY = datetime.today()
@@ -21,8 +21,8 @@ def validate_date(date):
 def prepare_parser():
     detail_str = "Weatherman: to generate different reports"
     parser = argparse.ArgumentParser(
-                                        description=detail_str
-                                    )
+        description=detail_str
+    )
     parser.add_argument("path",
                         help="path to the dir that conatain weatherfiles.")
     parser.add_argument("-e",
@@ -40,15 +40,22 @@ def prepare_parser():
 
 
 def controller(args):
-    report_generator = ReportGenerator()
+    """take actions on the bases of arguments """
+    file_handler = weatherman.FileHandler(args.path)
     if args.e:
-        report_generator.year_controller(args.path, args.e, False)
+        file_names = file_handler.get_file_names(args.e, None)
+        list = file_handler.get_list(file_names)
+        weatherman.display_extremes(list, True)
     if args.d:
-        report_generator.year_controller(args.path, args.d, True)
+        weatherman.generate_graph(args.d, None, file_handler)
     if args.a:
-        report_generator.month_controller(args.path, args.a, False)
+        [year, month] = args.a.split('/')
+        file_names = file_handler.get_file_names(year, month)
+        list = file_handler.get_list(file_names)
+        weatherman.display_extremes(list, False)
     if args.c:
-        report_generator.month_controller(args.path, args.c, True)
+        [year, month] = args.c.split('/')
+        weatherman.generate_graph(year, month, file_handler)
 
 
 if __name__ == '__main__':

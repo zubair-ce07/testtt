@@ -1,56 +1,33 @@
-""" Parser for file """
 import os
 import re
-from model_classes import DayRecord
 from datetime import datetime
 import csv
 
-from constants import MONTHS
-
 
 class FileHandler:
+    def get_file_names(self, year, month):
+        """ return files from dir according to month and year"""
+        selected_files = []
+        files = os.listdir(self.path_to_files)
+        if not month:
+            regex = re.compile(r'^Murree_weather_' + year)
+        else:
+            month_str = datetime.strptime(month, '%m').strftime('%b')
+            regex = re.compile(r'^Murree_weather_' +
+                               year + "_" + month_str.capitalize())
+        selected_files = list(filter(regex.search, files))
+        return selected_files
+
+    def get_list(self, filenames_list):
+        """return list of data from files in filenames_list"""
+        list = []
+        for file_name in filenames_list:
+            file_name = f"{self.path_to_files}/{file_name}"
+            with open(file_name, mode='r') as reader:
+                csv_reader = csv.DictReader(reader, delimiter=',')
+                for row in csv_reader:
+                    list.append(row)
+        return list
+
     def __init__(self, path):
         self.path_to_files = path
-
-    def get_path_file(self, year, month):
-        """Return path to the required file given the year and month"""
-        month = month.capitalize()
-        file_path = f"{self.path_to_files}/Murree_weather_{year}_{month}.txt"
-        return file_path
-
-    def get_day_record(self, row):
-        """ get single line record and return class object"""
-        day_record = DayRecord(date=datetime.strptime(
-            row.get("PKT"), '%Y-%m-%d'),
-            max_temperature=row.get("Max TemperatureC"),
-            mean_temperature=row.get("Mean TemperatureC"),
-            min_temperature=row.get("Min TemperatureC"),
-            max_humidity=row.get("Max Humidity"),
-            mean_humidity=row.get(" Mean Humidity"),
-            min_humidity=row.get(" Min Humidity")
-        )
-        return day_record
-
-    def read_file(self, file_name, rec_list):
-        with open(file_name, mode='r') as reader:
-            csv_reader = csv.DictReader(reader, delimiter=',')
-            for row in csv_reader:
-                day_record = self.get_day_record(row)
-                rec_list.append(day_record)
-
-    def get_month_list(self, month, year, rec_list):
-        """ get list and append month data to that list"""
-        file_name = self.get_path_file(year, month)
-        if os.path.isfile(file_name):
-            self.read_file(file_name, rec_list)
-
-    def get_year_list(self, year):
-        """ get list and append month data to that list """
-        year_record_list = []
-        year_files = os.listdir(self.path_to_files)
-        regex = re.compile(r'^Murree_weather_'+year)
-        selected_files = list(filter(regex.search, year_files))
-        for file in selected_files:
-            file = f"{self.path_to_files}/{file}"
-            self.read_file(file, year_record_list)
-        return year_record_list
