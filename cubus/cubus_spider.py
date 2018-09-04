@@ -61,7 +61,8 @@ class CubusParseSpider(BaseParseSpider, Mixin):
 
     def product_gender(self, response, raw_product):
         soup = [t for _, t in response.meta.get('trail', [])]
-        soup = raw_product['CategoryStructure'] + [raw_product['ProductDepartment']]
+        soup += raw_product['CategoryStructure']
+        soup += [raw_product['ProductDepartment']]
 
         return self.gender_lookup(' '.join(soup)) or Gender.ADULTS.value
 
