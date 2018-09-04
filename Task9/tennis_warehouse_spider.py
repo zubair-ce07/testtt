@@ -7,11 +7,7 @@ class MixinUS:
     retailer = 'tennis-warehouse-us'
     market = 'US'
     default_brand = 'Tennis Warehouse'
-
-    sku_color_css = 'li:contains(Colo) .styleitem::attr(data-scode)'
-    des_color_css = '[itemprop="description"] li:contains(Colo)::text'
     image_url_t = 'https://img2.tennis-warehouse.com/watermark/rs.php?path={0}-{1}-{2}.jpg'
-
     allowed_domains = ['tennis-warehouse.com']
     start_urls = ['https://www.tennis-warehouse.com/equipment.html']
 
@@ -66,13 +62,15 @@ class ParseSpider(BaseParseSpider):
 
     def skus(self, response):
         raw_skus = response.css('.styled_subproduct_list tr')
+        sku_color_css = 'li:contains(Colo) .styleitem::attr(data-scode)'
+        des_color_css = '[itemprop="description"] li:contains(Colo)::text'
         skus = {}
 
         for raw_sku in raw_skus:
             sku = self.product_pricing_common(response)
 
             size = raw_sku.css('li:contains(Size) span.styleitem::text').extract_first()
-            color = raw_sku.css(f'{MixinUS.sku_color_css},{MixinUS.des_color_css}').extract_first()
+            color = raw_sku.css(f'{sku_color_css},{des_color_css}').extract_first()
 
             sku["size"] = clean(size) if size else "One_Size"
             sku["colour"] = clean(color) if color else "Unspecified"
