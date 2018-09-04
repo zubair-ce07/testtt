@@ -8,14 +8,14 @@ class UserOnlyUpdatePermission(permissions.BasePermission):
     Custom permission to only allow owners of an object to update it.
     """
     def has_permission(self, request, view):
-        if request.user.is_authenticated():
-            if request.user.user_type == constants.STUDENT:
-                user = models.Student.objects.get(user__pk=request.user.id)
-                if request.method in ('PUT',) and user.id == int(view.kwargs['pk']):
-                    return True
-            return [False, True][request.user.user_type == constants.TEACHER or
-                                 request.method in permissions.SAFE_METHODS]
-        return False
+        if not request.user.is_authenticated():
+            return False
+        if request.user.user_type == constants.STUDENT:
+            user = models.Student.objects.get(user__pk=request.user.id)
+            if request.method in ('PUT',) and user.id == int(view.kwargs['pk']):
+                return True
+        return [False, True][request.user.user_type == constants.TEACHER or
+                             request.method in permissions.SAFE_METHODS]
 
 
 class InstructorAddPermission(permissions.BasePermission):
