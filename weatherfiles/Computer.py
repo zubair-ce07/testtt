@@ -5,6 +5,10 @@ import calendar
 
 class Analyzer:
     @staticmethod
+    def parse_date(date, delimeter):
+        return date.split(delimeter)
+
+    @staticmethod
     def yearly_report(data, year):
         """
         compute make report of highest temperature , lowest temperature and  most humid day of the year
@@ -37,17 +41,14 @@ class Analyzer:
                     date_humidity = date_in_record
         try:
 
-            year, month, day = date_highest.split('-')
+            year, month, day_high = Analyzer.parse_date(date_highest, '-')
             month_high = calendar.month_name[int(month)]
-            day_high = day
 
-            year, month, day = date_lowest.split('-')
+            year, month, day_low = Analyzer.parse_date(date_lowest, '-')
             month_low = calendar.month_name[int(month)]
-            day_low = day
 
-            year, month, day = date_humidity.split('-')
+            year, month, day_humid = Analyzer.parse_date(date_humidity, '-')
             month_humid = calendar.month_name[int(month)]
-            day_humid = day
 
             results = {
                 'Highest': "{}C on {} {}".format(highest, month_high, day_high),
@@ -68,8 +69,7 @@ class Analyzer:
         :param date: yyyy/mm  format date for the month or which report is required
         :return: a dictionary of report or empty dictionary if no data is found
         """
-        year = date.split('/')[0]
-        month = date.split('/')[1]
+        year, month = Analyzer.parse_date(date, '/')
 
         highest = lowest = humidity = 0
 
@@ -77,9 +77,12 @@ class Analyzer:
         index_of_mintemp = data['features'].index('Min TemperatureC')
         index_of_humidity = data['features'].index(' Mean Humidity')
 
+        month_exists = False
+
         for record in data['values']:
-            date_in_record = record[0]
-            if year in date_in_record and month == date_in_record.split('-')[1]:
+            record_year, record_month, record_day = record[0].split('-')
+            if year in record_year and month == record_month:
+                month_exists = True
                 if record[index_of_humidity] != '':
                     humidity += record[index_of_humidity]
                 if record[index_of_maxtemp] != '':
@@ -87,7 +90,7 @@ class Analyzer:
                 if record[index_of_mintemp] != '':
                     lowest += record[index_of_mintemp]
 
-        try:
+        if month_exists:
             total_days = calendar.monthrange(int(year),
                                              int(month),
                                              )[1]
@@ -98,8 +101,7 @@ class Analyzer:
             }
 
             return results
-
-        except UnboundLocalError:
+        else:
             return {}
 
     @staticmethod
@@ -116,30 +118,26 @@ class Analyzer:
         index_of_maxtemp = data['features'].index('Max TemperatureC')
         index_of_mintemp = data['features'].index('Min TemperatureC')
 
-        year = date.split('/')[0]
-        month = date.split('/')[1]
+        year, month = Analyzer.parse_date(date, '/')
 
         for record in data['values']:
-            date_in_record=record[0]
-            if year in date_in_record and month == date_in_record.split('-')[1]:
-                day = date_in_record.split('-')[2]
+            record_year, record_month, record_day = record[0].split('-')
+
+            if year in record_year and month == record_month:
+                day = record_day
                 if len(day) < 2:
                     day = '0' + day
 
                 results[day] = []
 
                 if record[index_of_maxtemp] != '':
-                    temp = ''
-                    for i in range(record[index_of_maxtemp]):
-                        temp += '+'
+                    temp = '+' * record[index_of_maxtemp]
 
                     temp += ' ' + str(record[index_of_maxtemp]) + 'C'
                     results[day].append(temp)
 
                 if record[index_of_mintemp] != '':
-                    temp = ''
-                    for i in range(record[index_of_mintemp]):
-                        temp += '+'
+                    temp = '+'*record[index_of_mintemp]
 
                     temp += ' ' + str(record[index_of_mintemp]) + 'C'
                     results[day].append(temp)
