@@ -13,7 +13,6 @@ class Mixin:
 class MixinDE(Mixin):
     retailer = Mixin.retailer + '-de'
     market = 'DE'
-    currency = 'EUR'
 
     start_urls = ['https://www.hunkemoller.de/']
     default_brand = 'Hunkemöller'
@@ -52,49 +51,43 @@ class HunkemollerParseSpider(BaseParseSpider):
 
     def skus(self, response):
         skus = {}
+        currency = clean(response.css('.product-info [itemprop="priceCurrency"]::attr(content)'))
+        colour = clean(response.css('.pdp-colors [class="active"] ::attr(title)'))
+        sizes = response.css('.product-info .selectmenu :not([selected]):not(span)')
 
-        raw_sku_css = '.product-info .selectmenu :not([selected]):not(span)'
-        raw_skus = response.css(f"{raw_sku_css} ::attr(data-additional)").extract()
-        sizes = clean(response.css(f"{raw_sku_css}::text"))
+        common_sku = self.product_pricing_common(response)
+        common_sku['color'] = colour[0]
+        common_sku['currency'] = currency[0]
 
-        colour = clean(response.css('.pdp-colors [class="active"] ::attr(title)'))[0]
-        previous_price, price, _ = self.product_pricing(response)
-        common_sku = {
-            'price': price,
-            'currency': self.currency,
-        }
-        if previous_price:
-            common_sku['previous_prices'] = previous_price
-        if colour:
-            common_sku['colour'] = colour
-
-        for size, raw_variant in zip(sizes, raw_skus):
+        for size_s in sizes:
             sku = common_sku.copy()
-            sku_data = json.loads(raw_variant)
+            sku_id, sku_data = json.loads(clean(size_s.css('::attr(data-additional)'))[0]).popitem()
 
-            if not next((key['is_in_stock'] for key in sku_data.values())):
+            if not sku_data['is_in_stock']:
                 sku['out_of_stock'] = True
 
+            size = clean(size_s.css('::text'))[0]
             sku['size'] = size
-            skus[next(iter(sku_data))] = sku
+
+            skus[sku_id] = sku
 
         return skus
 
 
 class HunkemollerCrawlSpider(BaseCrawlSpider):
-    listing_css = [
+    listings_css = [
         '.nav',
         '.pages',
         '.color-options'
     ]
 
-    product_css = [
+    products_css = [
         '.product-image'
     ]
 
     rules = (
-        Rule(LinkExtractor(restrict_css=listing_css), callback='parse_and_add_women'),
-        Rule(LinkExtractor(restrict_css=product_css), callback='parse_item')
+        Rule(LinkExtractor(restrict_css=listings_css), callback='parse_and_add_women'),
+        Rule(LinkExtractor(restrict_css=products_css), callback='parse_item')
     )
 
 
