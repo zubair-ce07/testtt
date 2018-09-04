@@ -19,14 +19,14 @@ class ArgParser:
         parser = argparse.ArgumentParser()
         parser.add_argument('url', help="URL to crawl",
                             type=self.validate_url, nargs='?')
-        parser.add_argument('action', choices=['n', 'v'], default='n',
-                            help="Select action:\n" +
-                            "n----- New Crawl\nv----- View Database")
+        parser.add_argument("-n", action='store_true', help="New Crawl")
+        parser.add_argument("-v", action='store_true', help="View DB")
         args = parser.parse_args()
         return args
 
     def validate_url(self, url):
+
         if re.match(self.regex, url):
             return url
-        msg = "{0} is not a valid url".format(url)
+        msg = f"{url} is not a valid url"
         raise argparse.ArgumentTypeError(msg)

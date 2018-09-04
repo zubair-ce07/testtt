@@ -14,13 +14,12 @@ class DataAccessLayer:
              (id text, word text, freq real)''')
         self.conn.commit()
 
-    def insert_row(self, encrypted_list):
-        for w_id, encrypted_word, freq in encrypted_list:
+    def insert_row(self, encrypted_words):
+
+        for w_id, encrypted_word, freq in encrypted_words:
             self.cursor.execute(
-                'INSERT INTO wordfreq VALUES ("{}","{}","{}")'.format(
-                    w_id, encrypted_word, freq
-                ))
+                f'INSERT INTO wordfreq VALUES ("{w_id}","{encrypted_word}","{freq}")')
             self.conn.commit()
 
-    def get_words_n_freqs(self):
+    def get_words_freqs(self):
         return self.cursor.execute('SELECT * FROM wordfreq')

@@ -19,9 +19,9 @@ def main_controller():
         responses between multiple modules'''
 
     args = arg_parser.input_parser()
-    if args.action == "n":
+    if args.n:
         new_crawl(args.url)
-    elif args.action == "v":
+    elif args.v:
         view_db()
 
 
@@ -30,20 +30,24 @@ def new_crawl(url):
 
     if url:
         words = crawler.crawl_url(url)
-        words_dict = text_parser.word_frequency_map(words)
-        sorted_list = text_parser.generate_sorted_list(words_dict)
-        for item in sorted_list:
+        words_formatted = text_parser.format_words(words)
+        words_sorted = text_parser.generate_sorted_list(words_formatted)
+
+        for item in words_sorted:
             print(item)
         encyrpted_list = []
-        for word, freq in sorted_list[:100]:
+
+        for word, freq in words_sorted[:100]:
             w_id = encryption_manager.generate_salted_hash(word)
             encrypted_word = (
                     encryption_manager.encrypt_str(word))
             encyrpted_list.append((w_id, encrypted_word, freq))
+
         db.insert_row(encyrpted_list)
-        bag_of_words = [item[0] for item in sorted_list]
-        tfidf = text_parser.tfidf_generator(bag_of_words)
-        print(tfidf)
+        
+        bag_of_words = [item[0] for item in words_sorted]
+        term_freq_inverse_doc_freq = text_parser.term_freq_inverse_doc_freq_generator(bag_of_words)
+        print(term_freq_inverse_doc_freq)
     else:
         print("Enter URL to crawl & Try again!")
 
@@ -51,9 +55,8 @@ def new_crawl(url):
 def view_db():
     '''This function shows all data in decrypted form from database'''
 
-    for row in db.get_words_n_freqs():
-            decrypted_word = (
-                encryption_manager.decrypt_str(row[1]))
+    for row in db.get_words_freqs():
+            decrypted_word = encryption_manager.decrypt_str(row[1])
             print((decrypted_word, row[2]))
 
 
