@@ -1,4 +1,4 @@
-from itertools import product
+from six.moves.urllib_parse import urljoin
 
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
@@ -9,6 +9,8 @@ from softsurroundings.items import Product
 
 class SoftSurroundingsSpider(CrawlSpider):
     name = 'softsurroundings'
+    seen_ids = set()
+
     allowed_domains = ['softsurroundings.com']
 
     start_urls = ['https://www.softsurroundings.com/']
@@ -16,7 +18,6 @@ class SoftSurroundingsSpider(CrawlSpider):
     listing_css = '#menuNav'
     product_css = '.product'
     pagination_css = '.thumbscroll [name="page"]::attr(value)'
-    retailer_skus = set()
 
     rules = (
         Rule(LinkExtractor(restrict_css=listing_css), callback='parse'),
@@ -29,17 +30,12 @@ class SoftSurroundingsSpider(CrawlSpider):
 
     def parse(self, response):
         yield from super().parse(response)
-        yield from self.parse_listing(response)
-
-    def parse_listing(self, response):
-        next_pages = response.css(self.pagination_css).extract()
-        for next_page in next_pages:
-            yield Request(f'{response.url}page-{next_page}/', callback=self.parse)
+        for next_page in response.css(self.pagination_css).extract():
+            yield Request(urljoin(response.url, f'page-{next_page}/'), callback=self.parse)
 
     def parse_product(self, response):
-        if self.extract_retailer_sku(response) in self.retailer_skus:
+        if not self.validate_product(response):
             return
-        self.retailer_skus.add(self.extract_retailer_sku(response))
         product = Product()
 
         product['gender'] = self.extract_gender(response)
@@ -53,69 +49,83 @@ class SoftSurroundingsSpider(CrawlSpider):
         product['care'] = self.extract_care(response)
         product['skus'] = []
         product['requests_queue'] = self.extract_skus_requests(response)
+        product['requests_queue'].extend(self.extract_category_request(response))
 
-        yield self.requests_to_follow(product)
+        return self.request_or_product(product)
 
-        yield from self.category_request(response)
+    def validate_product(self, response):
+        if self.extract_retailer_sku(response) in self.seen_ids:
+            return False
+        self.seen_ids.add(self.extract_retailer_sku(response))
+        return True
 
-    def category_request(self, response):
-        prod_category_ids = response.css('#sizecat a:not(.sel)::attr(id)').extract()
-        for prod_category_id in prod_category_ids:
-            prod_category_url = f"https://www.softsurroundings.com/p/{prod_category_id.split('_')[1]}/"
-            yield Request(prod_category_url, callback=self.parse_product)
+    def extract_skus_requests(self, response):
+        colors_map = self.extract_color_map(response)
+        sizes_map = self.extract_size_map(response)
+        requests_to_follow = []
+        for color_id, color_value in colors_map.items():
+            for size_id, size_value in sizes_map.items():
+                meta = {}
+                meta['color'] = color_value
+                meta['size'] = size_value
+                sku_request_url = urljoin(response.url, f'{color_id}{size_id}/')
+                request = Request(sku_request_url, meta=meta, callback=self.parse_skus)
+                requests_to_follow.append(request)
+        return requests_to_follow
 
-    def requests_to_follow(self, product_item):
-        next_requests = product_item.get("requests_queue")
+    def extract_category_request(self, response):
+        requests_to_follow = []
+        for prod_category_id in response.css('#sizecat a:not(.sel)::attr(id)').extract():
+            prod_category_url = urljoin('https://www.softsurroundings.com/p/',
+                                        f"{prod_category_id.split('_')[1]}/")
+            request = Request(prod_category_url, callback=self.parse_category)
+            requests_to_follow.append(request)
+        return requests_to_follow
+
+    def request_or_product(self, product):
+        next_requests = product.get("requests_queue")
 
         if next_requests:
             request = next_requests.pop()
-            request.meta['item'] = product_item
+            request.meta['item'] = product
             return request
 
-        del product_item["requests_queue"]
-
-        return product_item
-
-    def extract_skus_requests(self, response):
-        color_ids = self.extract_color_ids(response)
-        size_ids = self.extract_size_ids(response)
-        requests_to_follow = []
-        for color_id, size_id in product(color_ids, size_ids):
-            meta = {}
-            meta['color'] = self.extract_color(response, color_id)
-            meta['size'] = self.extract_size(response, size_id)
-
-            size_id = size_id.split("_")[1]
-            sku_request_url = f'{response.url}{color_id}{size_id}'
-            request = Request(sku_request_url, meta=meta, callback=self.parse_skus)
-
-            requests_to_follow.append(request)
-
-        return requests_to_follow
+        del product["requests_queue"]
+        return product
 
     def parse_skus(self, response):
-        product_item = response.meta['item']
-        product_item["skus"].append(self.extract_sku(response))
-        return self.requests_to_follow(product_item)
+        product = response.meta['item']
+        product["skus"].append(self.extract_sku(response))
+        return self.request_or_product(product)
 
-    def extract_color_ids(self, response):
+    def parse_category(self, response):
+        product = response.meta['item']
+        if self.validate_product(response):
+            raw_retailer_sku = set(self.extract_retailer_sku(response)) & set(product['retailer_sku'])
+            if raw_retailer_sku:
+                product['retailer_sku'] = ''.join(raw_retailer_sku)
+            product['requests_queue'].extend(self.extract_skus_requests(response))
+        return self.request_or_product(product)
+
+    def extract_color_map(self, response):
         raw_id = response.css('[name="uniqid"]::attr(value)').extract_first()
 
         color_id_css = f'#color .swatchlink img::attr(data-value),' \
                        f'input[name="specOne-{raw_id}"]::attr(value)'
         color_ids = response.css(color_id_css).extract()
-        return set(filter(None, color_ids))
+        return {c_id: self.extract_color(response, c_id) for c_id in color_ids if c_id}
 
-    def extract_size_ids(self, response):
+    def extract_size_map(self, response):
         size_ids = response.css('#size a.size::attr(id)').extract() or ['size_000']
-        return set(filter(None, size_ids))
+        size_ids = [s.split('_')[1] for s in size_ids]
+        return {s_id: self.extract_size(response, s_id) for s_id in size_ids}
 
     def extract_color(self, response, color_id):
         color_css = f'img[data-value="{color_id}"]::attr(alt),#color .sizetbs .basesize::text'
         return response.css(color_css).extract_first(default='')
 
     def extract_size(self, response, size_id):
-        size_css = f'a[id="{size_id}"]::text,#size .sizetbs .basesize::text'
+        size_css = f'a[id="size_{size_id}"]::text,#size .sizetbs .basesize::text'
         return response.css(size_css).extract_first(default='One Size')
 
     def extract_sku(self, response):
@@ -130,9 +140,7 @@ class SoftSurroundingsSpider(CrawlSpider):
         if raw_prev_price:
             sku['previous_price'] = [raw_prev_price[0].strip()[1:]]
 
-        prod_stock_status = response.css('#orderProcessError ::text')
-
-        if prod_stock_status:
+        if response.css('#orderProcessError ::text'):
             sku['out_of_stock'] = True
 
         return sku
