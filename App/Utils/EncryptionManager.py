@@ -20,7 +20,7 @@ class EncryptionManager:
 
     def generate_salted_hash(self, decrypted_word):
         salt = uuid.uuid4().hex
-        salted_word = "{}+{}".format(decrypted_word, salt)
+        salted_word = f"{decrypted_word}+{salt}"
         return hashlib.sha256(salted_word.encode()).hexdigest()
 
     def encrypt_str(self, decrypted_word):
