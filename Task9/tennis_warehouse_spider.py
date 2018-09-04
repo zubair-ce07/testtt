@@ -7,12 +7,13 @@ class MixinUS:
     retailer = 'tennis-warehouse-us'
     market = 'US'
     default_brand = 'Tennis Warehouse'
+    image_url_t = 'https://img2.tennis-warehouse.com/watermark/rs.php?path={0}-{1}-{2}.jpg'
     allowed_domains = ['tennis-warehouse.com']
     start_urls = ['https://www.tennis-warehouse.com/equipment.html']
 
 
 class ParseSpider(BaseParseSpider):
-    raw_description_css = '.desc_column *::text'
+    raw_description_css = 'div[itemprop="description"] *::text'
     price_css = '.product_pricing *::text'
     brand_css = 'meta[itemprop="brand"]::attr(content)'
 
@@ -25,8 +26,8 @@ class ParseSpider(BaseParseSpider):
 
         self.boilerplate_normal(garment, response)
         garment["gender"] = self.product_gender(garment)
-        garment["image_urls"] = self.image_urls(response)
         garment["skus"] = self.skus(response)
+        garment["image_urls"] = self.image_urls(response, garment)
 
         if not garment["skus"]:
             garment["out_of_stock"] = True
@@ -39,8 +40,18 @@ class ParseSpider(BaseParseSpider):
     def product_name(self, response):
         return response.css('.product_header h1::text').extract_first()
 
-    def image_urls(self, response):
-        return response.css('.multiview img::attr(src)').re('(.+)&')
+    def image_urls(self, response, garment):
+        total_images = len(response.css('.multiview a.changeview').extract())
+        product_id = garment["retailer_sku"]
+        product_colors = {sku["colour"] for sku in garment["skus"].values()}
+        image_urls = []
+
+        if len(product_colors) > 1:
+            for color in product_colors:
+                image_urls.extend([MixinUS.image_url_t.format(product_id, color, image_no)
+                                   for image_no in range(1, total_images + 1)])
+
+        return image_urls or response.css('.multiview img::attr(src)').re('(.+)&')
 
     def product_category(self, response):
         return clean([trail[0] for trail in response.meta["trail"] if trail[0] != ''])
@@ -54,13 +65,21 @@ class ParseSpider(BaseParseSpider):
         skus = {}
 
         for raw_sku in raw_skus:
-            name = raw_sku.css('.name strong::text').extract_first().split()
             sku = self.product_pricing_common(response)
+            size_css = 'li:contains(Size) span.styleitem::text'
+            color_css = 'li:contains(Color) span.styleitem::attr(data-scode)'
 
-            sku["colour"] = name[-2]
-            sku["size"] = name[-1]
+            size = raw_sku.css(size_css).extract_first()
+            color = raw_sku.css(color_css).extract_first()
 
-            sku_id = f'{sku["colour"]}_{sku["size"]}'
+            if not color:
+                color_css = 'div[itemprop="description"] li:contains(Colo)::text'
+                color = response.css(color_css).extract_first()
+
+            sku["size"] = clean(size) if size else "One_Size"
+            sku["colour"] = clean(color) if color else "Unspecified"
+
+            sku_id = f'{color}_{size}'
             skus[sku_id] = sku
 
         return skus
