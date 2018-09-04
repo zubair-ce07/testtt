@@ -21,7 +21,8 @@ class WeatherCalculations:
         temp = -273
         for file_name in file_names_list:
             with open(file_name) as current_file:
-                keys = current_file.readline().rstrip().replace(' ', '').split(',')
+                keys = current_file.readline().rstrip()\
+                    .replace(' ', '').split(',')
 
                 for line in current_file:
                     values = line.replace(' ', '').rstrip().split(',')
@@ -48,7 +49,8 @@ class WeatherCalculations:
         temp = 273
         for file_name in file_names_list:
             with open(file_name) as current_file:
-                keys = current_file.readline().rstrip().replace(' ', '').split(',')
+                keys = current_file.readline().rstrip()\
+                    .replace(' ', '').split(',')
 
                 for line in current_file:
                     values = line.replace(' ', '').rstrip().split(',')
@@ -56,7 +58,8 @@ class WeatherCalculations:
 
                     try:
                         temp = int(new_record['MinTemperatureC'])
-                        if (min_temperature is None) or (min_temperature > temp):
+                        if (min_temperature is None)\
+                                or (min_temperature > temp):
                             min_temperature = temp
                             min_temperature_recored = new_record
                     except ValueError:
@@ -75,7 +78,8 @@ class WeatherCalculations:
         temp = 0
         for file_name in file_names_list:
             with open(file_name) as current_file:
-                keys = current_file.readline().rstrip().replace(' ', '').split(',')
+                keys = current_file.readline().rstrip()\
+                    .replace(' ', '').split(',')
 
                 for line in current_file:
                     values = line.replace(' ', '').rstrip().split(',')
@@ -126,7 +130,6 @@ class WeatherCalculations:
             for line in current_file:
                 values = line.replace(' ', '').rstrip().split(',')
                 new_record = dict(list(zip(keys, values)))
-
                 try:
                     temp += int(new_record['MinTemperatureC'])
                     counter += 1

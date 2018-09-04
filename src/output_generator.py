@@ -52,11 +52,14 @@ class OutputGenerator:
             all_file_names, self.results.get_a_fiter(filter))
         if(len(filtered_file_names) > 0):
             print("Highest Average: {temp}C".format(
-                temp=int(self.results.get_average_highest_temp(filtered_file_names[0]))))
+                temp=int(self.results.get_average_highest_temp(
+                    filtered_file_names[0]))))
             print("Lowest Average: {temp}C".format(
-                temp=int(self.results.get_average_lowest_temp(filtered_file_names[0]))))
+                temp=int(self.results.get_average_lowest_temp(
+                    filtered_file_names[0]))))
             print("Average Mean Humidity: {temp}C".format(
-                temp=int(self.results.get_average_mean_humidity_temp(filtered_file_names[0]))))
+                temp=int(self.results.get_average_mean_humidity_temp(
+                    filtered_file_names[0]))))
 
     def print_c_output(self, date):
         '''
@@ -85,7 +88,7 @@ class OutputGenerator:
                 print('\033[0;34;48m+' * low_temp_record[counter+1], end=' ')
                 print('\033[3;37;48m{temp}C'.format(
                     temp=low_temp_record[counter+1]))
-            print('\033[0;37;48m{:02d}')
+            print('\033[0;37;48m')
 
     def print_c_output_bounus(self, date):
         '''
@@ -111,4 +114,4 @@ class OutputGenerator:
                 print('\033[3;37;48m{templow}C {temphigh}C'.format(
                     templow=low_temp_record[counter+1],
                     temphigh=high_temp_record[counter+1]))
-            print('\033[0;37;48m{:02d}')
+            print('\033[0;37;48m')
