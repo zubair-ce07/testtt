@@ -46,8 +46,7 @@ class FileParser:
 					(year[0] in file and len(year) == 2 and (self.months[year[1]] in file))):
 						reader = csv.DictReader(csvfile)
 						for line in reader:
-							self.data.append(dict(line))
-			print(len(self.data))				
+							self.data.append(dict(line))				
 			return self.data	
 		else:
 			print("File doesn't exist or incorrect arguments")
@@ -174,9 +173,6 @@ class ReportGenerator:
 	def report_generation_for_command_c(self):
 		readings_calculator = Calculations(self.path, self.date)
 		results = readings_calculator.calculations_for_command_c()
-
-		print(results["Highest_temp_record"])
-
 		count = 1
 		if(results is not None):
 			print(self.date_parser_year_month(self.date))
@@ -228,12 +224,10 @@ def main():
 			report.report_generation_for_command_e()
 			print()
 		if args.a:
-			print(args.echo, args.c)
 			report = ReportGenerator(args.echo, args.a)
 			report.report_generation_for_command_a()	
 			print()
 		if args.c:
-			print(args.echo, args.c)
 			report = ReportGenerator(args.echo, args.c)
 			report.report_generation_for_command_c()
 			print()	
