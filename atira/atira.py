@@ -42,6 +42,7 @@ class Atira(CrawlSpider):
     property_ts_cs_url = 'https://atira.com/terms-conditions/'
     home_url = 'https://atira.com/'
     available_date = str(datetime.date.today())
+    peel_latrobe_date = '2019-01-14'
 
     start_urls = [
         'https://atira.com/why-atira/specials/'
@@ -58,6 +59,8 @@ class Atira(CrawlSpider):
         ('south-brisbane', 'South Brisbane'),
         ('toowong', 'Toowong'),
         ('waymouth', 'Adelaide'),
+        ('peel', 'Peel'),
+        ('latrobe', 'La Trobe')
     )
 
     def parse(self, response):
@@ -73,11 +76,6 @@ class Atira(CrawlSpider):
         yield from self.make_locations_requests(response, item)
 
     def parse_location(self, response):
-        if 'peel' in response.url or 'latrobe' in response.url:
-            return self.parse_coming_soon(response)
-        return self.parse_available_locations(response)
-
-    def parse_available_locations(self, response):
         item = response.meta['item']
 
         item['property_name'] = self.extract_property_name(response)
@@ -86,13 +84,30 @@ class Atira(CrawlSpider):
         item['property_images'] = self.extract_property_images(response)
         item['property_amenities'] = self.extract_property_amenities(response)
 
-        if self.has_facilities_url(response):
+        if 'peel' in response.url or 'latrobe' in response.url:
+            return self.parse_peel_latrobe(response, item)
+
+        return self.parse_available_locations(response, item)
+
+    def parse_available_locations(self, response, item):
+        if self.has_facilities_link(response):
             yield from self.make_facilities_requests(response, item)
         else:
             yield from self.make_apartment_requests(self.extract_apartment_urls(response), item)
 
-    def parse_coming_soon(self, response):
-        yield {"Coming": "Soon"}
+    def parse_peel_latrobe(self, response, item):
+        item['property_url'] = response.url
+        item['room_photos'] = []
+        item['deposit_type'] = 'fixed'
+        item['deposit_name'] = 'deposit'
+        item['deposit_amount'] = ''
+        item['listing_type'] = 'flexible_open_end'
+        item['available_from'] = self.peel_latrobe_date
+
+        rooms_css = '#rooms .et_pb_row_7 .et_pb_column, #rooms .et_pb_row_8 .et_pb_column, ' \
+                    '#rooms .et_pb_row_9 .et_pb_column'
+        for apartment_html in response.css(rooms_css).extract():
+            yield from self.extract_apartments_peel_latrobe(apartment_html, item.copy())
 
     def parse_facilities(self, response):
         item = response.meta['item']
@@ -116,7 +131,19 @@ class Atira(CrawlSpider):
         item['deposit_amount'] = ''
         item['listing_type'] = 'flexible_open_end'
 
-        room_variants = self.extract_room_variants(response)
+        return self.yield_variants(item, self.extract_room_variants(response))
+
+    def extract_apartments_peel_latrobe(self, html, item):
+        selector = Selector(text=html)
+
+        item['room_photos'] = self.extract_room_photos(selector)
+        item['room_amenities'] = self.extract_room_amenities(selector)
+        item['room_availability'] = self.detect_availability(selector)
+        item['floor_plans'] = []
+
+        return self.yield_variants(item, self.extract_peel_latrobe_room_variants(selector))
+
+    def yield_variants(self, item, room_variants):
         for room in room_variants:
             copy_item = item.copy()
             copy_item.update(room)
@@ -150,7 +177,7 @@ class Atira(CrawlSpider):
             apartment_requests.append(request)
         return apartment_requests
 
-    def has_facilities_url(self, response):
+    def has_facilities_link(self, response):
         return response.css('.grid-seemore ::attr(href)').extract_first()
 
     def extract_apartment_urls(self, response):
@@ -159,7 +186,7 @@ class Atira(CrawlSpider):
 
     def extract_room_variants(self, response):
         if self.has_no_table(response):
-            return self.extract_no_table_room_info(response)
+            return self.extract_without_table_room_variants(response)
 
         apartment_name = response.css('.page-title ::text').extract_first()
         room_altitude = [''.join(Selector(text=html).css('::text').extract())
@@ -179,7 +206,7 @@ class Atira(CrawlSpider):
                 else:
                     name_duration_prices[apartment_name] = [row]
 
-        rooms_info = []
+        rooms_variants = []
         for apartment_name, duration_and_prices in name_duration_prices.items():
             for duration_and_price in duration_and_prices:
                 for altitude, price in zip(room_altitude, duration_and_price[1:]):
@@ -188,15 +215,37 @@ class Atira(CrawlSpider):
                         'room_name': f'{apartment_name} {altitude}',
                         'room_price': price.split(' ')[0]
                     }
-                    rooms_info.append(room_info)
-        return rooms_info
+                    rooms_variants.append(room_info)
+        return rooms_variants
 
-    def extract_no_table_room_info(self, response):
+    def extract_peel_latrobe_room_variants(self, selector):
+        apartment_name = self.extract_apartment_name(selector)
+        html = selector.css('tr').extract()
+
+        room_info_table = []
+        for row in html:
+            room_info_table.append([a.strip() for a in Selector(text=row).css('::text').extract() if a.strip()])
+
+        durations = room_info_table[0][1:]
+        altitude_and_prices = room_info_table[1:]
+
+        room_variants = []
+        for altitude_and_price in altitude_and_prices:
+            for duration, price in zip(durations, altitude_and_price[1:]):
+                room_info = {
+                    'min_duration': int(duration.split(' ')[0]) * 7,
+                    'room_name': f'{apartment_name} {altitude_and_price[0]}',
+                    'room_price': price.split(' ')[0]
+                }
+                room_variants.append(room_info)
+        return room_variants
+
+    def extract_without_table_room_variants(self, response):
         apartment_name = self.extract_apartment_name(response)
         prices = response.css('.room-type-pricebreakdown ::text').extract()
 
         regex = '(\d+).*?(\$\d+)'
-        rooms_info = []
+        rooms_variants = []
         for price in prices:
             duration, price = re.findall(regex, price)[0]
             room_info = {
@@ -204,15 +253,15 @@ class Atira(CrawlSpider):
                 "room_name": apartment_name,
                 "room_price": price,
             }
-            rooms_info.append(room_info)
+            rooms_variants.append(room_info)
 
-        return rooms_info
+        return rooms_variants
 
     def has_no_table(self, response):
         return not response.css('thead th').extract()
 
     def detect_availability(self, response):
-        button_css = '.button-max::text'
+        button_css = '.button-max::text, .et_pb_button ::text'
         if response.css(button_css).extract_first() == 'Book Now':
             return 'Available'
         return 'Fully Booked'
@@ -232,8 +281,10 @@ class Atira(CrawlSpider):
         return []
 
     def extract_room_photos(self, response):
+        photos = response.css('.et_pb_image_0 img::attr(src)').extract()
+
         reg = '\((.+)\)'
-        return sum([re.findall(reg, a) for a in response.css('.flexslider-roomtype li::attr(style)').extract()], [])
+        return sum([re.findall(reg, a) for a in response.css('.flexslider-roomtype li::attr(style)').extract()], photos)
 
     def extract_property_images(self, response):
         property_images = response.css('.et_pb_lightbox_image::attr(href)').extract()
@@ -245,7 +296,8 @@ class Atira(CrawlSpider):
         return response.css('.floorplan-thumbnail a::attr(data-featherlight)').extract()
 
     def extract_room_amenities(self, response):
-        return response.css('.home-icon-grid-inner-container p::text').extract()
+        css = '.et_pb_column li ::text, .home-icon-grid-inner-container p::text'
+        return response.css(css).extract()
 
     def extract_property_amenities(self, response):
         amenities = set([d.strip() for d in response.css('#facilities .et_pb_blurb_description ::text').extract()])
@@ -257,11 +309,14 @@ class Atira(CrawlSpider):
                 return name
 
     def extract_property_description(self, response):
-        description = list(set(response.css('.et_pb_fullwidth_header_subhead::text').extract()))
-        return response.css('[itemprop="articleBody"] ::text').extract() + description
+        new_format_css = '.et_pb_fullwidth_header_subhead::text, #hero p::text'
+        old_format_css = '[itemprop="articleBody"] ::text'
+        description = list(set(response.css(new_format_css).extract()))
+        return response.css(old_format_css).extract() + description
 
     def extract_apartment_name(self, response):
-        return response.css('.page-title ::text').extract_first()
+        css = '.page-title ::text, h4::text'
+        return response.css(css).extract_first()
 
     def extract_deals(self, response):
         return response.css('.wrap.cf.two-column-padding p:first-of-type::text').extract()
