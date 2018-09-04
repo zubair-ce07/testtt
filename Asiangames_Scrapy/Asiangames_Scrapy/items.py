@@ -33,5 +33,6 @@ class SportMedals(scrapy.Item):
     total_medals = scrapy.Field()
 
 
-class CountryMedals(SportMedals):
+class CountryMedals(scrapy.Item):
+    name = scrapy.Field()
     sport_medals = scrapy.Field()

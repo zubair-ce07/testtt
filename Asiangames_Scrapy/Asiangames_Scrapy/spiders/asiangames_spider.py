@@ -93,11 +93,6 @@ class AsianGamesSpider(CrawlSpider):
     def parse_medals(self, response):
         country_medals = CountryMedals()
         country_medals['name'] = self._medals_country_name(response)
-        gold, silver, bronze = self._medals_country_count(response)
-        country_medals['gold'] = gold
-        country_medals['silver'] = silver
-        country_medals['bronze'] = bronze
-        country_medals['total_medals'] = self._medal_country_total(response)
         country_medals['sport_medals'] = []
 
         for medal_sport_row in self._medal_sport_rows(response):
@@ -107,7 +102,6 @@ class AsianGamesSpider(CrawlSpider):
             sport_medals['gold'] = gold
             sport_medals['silver'] = silver
             sport_medals['bronze'] = bronze
-            sport_medals['total_medals'] = total
             country_medals['sport_medals'].append(sport_medals)
 
         return country_medals
@@ -195,9 +189,6 @@ class AsianGamesSpider(CrawlSpider):
     def _medals_country_name(self, response):
         return response.css('.or-country-header h2::text').extract_first()
 
-    def _medals_country_count(self, response):
-        return response.css('.or-medal-number::text').extract()
-
     def _medal_sport_rows(self, response):
         return response.css('#or-tbl-country-medal .or-table-list-groupedRow')
 
@@ -206,6 +197,3 @@ class AsianGamesSpider(CrawlSpider):
 
     def _medals_sports_count(self, response):
         return response.css('.or-md::text').extract()
-
-    def _medal_country_total(self, response):
-        return response.css('.or-value::text').extract_first()
