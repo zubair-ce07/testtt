@@ -8,7 +8,7 @@ class DataParser:
     @staticmethod
     def parsefile(directory, data):
         """
-        Read data from giles in directory one by one and place it in dictionary data
+        Read data from files in directory one by one and place it in dictionary data
         :param directory: is path of the folder containing data files
         :param data: empty dictionary to be filled by method
         :return data: A dictionary with feature_names in "feature" and data in "values"
@@ -22,17 +22,15 @@ class DataParser:
                     for row in file_content:
                         if not data['features']:
                             data['features'] = row
-                        elif row != data['features'] and row[0] != 'PKST':
+                        elif row[0] not in ['PKT', 'PKST']:
                             data['values'].append(row)
 
         # convert string values into relative data type on number
         for d in data['values']:
             for i in range(len(d)):
                 try:
-                    if '.' in d[i]:
-                        d[i] = float(d[i])
-                    else:
-                        d[i] = int(d[i])
+                    d[i] = float(d[i]) if d[i] and '.' in d[i] else int(d[i])
+
                 except ValueError:
                     d[i] = d[i]
 
