@@ -31,6 +31,12 @@
                                     <h3>
                                         <a href="/user/{{ post_data.user.uid }}">{{post_data.user.username}}</a>
                                     </h3>
+                                    <div id="icon">
+                                      {% if post_data.puid ==session['current_user_id'] %}
+                                           <a class="glyphicon glyphicon-trash btn btn-danger btn-xs" id="del" href="/delete/{{ post_data.pid }}"
+                                              onclick="return confirm('Are you sure?');">Delete</a><br/><br>
+                                      {% endif %}
+                                    </div>
                                     <div class="well">
                                       <div class="container">
                                         <a href="#demo" class="btn btn-primary" data-toggle="collapse">Likes
@@ -42,6 +48,10 @@
                                           <ul class="list-group">
                                             <li class="list-group-item">{{ like.user.username }}</li>
                                           </ul>
+                                          {% else %}
+                                        <div class="alert alert-danger">
+                                            No Likes For this Post
+                                        </div>
                                           {% endfor %}
                                         </div>
                                     </div>

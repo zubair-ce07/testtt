@@ -98,6 +98,19 @@ def update_post_like_status(post_id, like_status):
         db.session.commit()
 
 
+@app.route('/delete/<pid>', methods=('GET', 'POST'))
+def delete_post(pid):
+    post = Post.query.get(pid)
+    if post.user.uid == int(session['current_user_id']):
+        db.session.delete(post)
+        db.session.commit()
+        flash('Post Deleted Succesfully')
+        return redirect(url_for('index'))
+    else:
+        flash('You are not a valid user to Delete this Post')
+        return redirect(url_for('index'))
+
+
 @app.route('/post/<post_id>', methods=['GET', 'POST'])
 def post_detial_view(post_id):
     if session.get('user_available'):

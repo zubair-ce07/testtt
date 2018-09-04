@@ -27,7 +27,8 @@ class Tag(db.Model):
     tag = db.Column(db.String(50))
     post_id = db.Column(db.Integer, db.ForeignKey('post.pid'))
     post = db.relationship('Post',
-                           backref=db.backref('tag', lazy=True))
+                           backref=db.backref('tag', lazy=True,
+                                              cascade="all, delete-orphan"))
 
     def __init__(self, tag, post_id):
         self.tag = tag
@@ -69,7 +70,8 @@ class Comment(db.Model):
     user = db.relationship('User',
                            backref=db.backref('comment', lazy=True))
     post = db.relationship('Post',
-                           backref=db.backref('comment', lazy=True))
+                           backref=db.backref('comment', lazy=True,
+                                              cascade="all, delete-orphan"))
 
     def __init__(self, post_id, user_id, comment_text):
         self.post_id = post_id
@@ -85,7 +87,8 @@ class Like(db.Model):
     user = db.relationship('User',
                            backref=db.backref('like', lazy=True))
     post = db.relationship('Post',
-                           backref=db.backref('like', lazy=True))
+                           backref=db.backref('like', lazy=True,
+                                              cascade="all, delete-orphan"))
 
     def __init__(self, post_id, user_id):
         self.post_id = post_id
