@@ -71,7 +71,8 @@ class FanaticsSpider(CrawlSpider):
     def get_product_price(self, product):
         price = product['price']
         discount = price['discountPrice']
-        return discount['money']['value'] if discount else price['regular']['money']['value']
+        price = discount['money']['value'] if discount else price['regular']['money']['value']
+        return float(price)
 
     def get_product_currency(self, product):
         return product['price']['regular']['money']['currency']

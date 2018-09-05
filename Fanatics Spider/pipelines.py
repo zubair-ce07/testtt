@@ -27,20 +27,13 @@ class FanaticsPipeline(object):
                     'on duplicate key update product_id=(product_id)'
 
         values = (
-            item['product_id'],
-            json.dumps(item['breadcrumb']),
-            item['title'],
-            item['brand'],
-            json.dumps(item['categories']),
-            item['description'],
-            json.dumps(item['details']),
-            item['gender'],
-            item['product_url'],
-            json.dumps(item['image_urls']),
-            item['price'],
-            item['currency'],
-            item['language'],
-            json.dumps(item['skus'])
+            item['product_id'], json.dumps(item['breadcrumb']),
+            item['title'], item['brand'],
+            json.dumps(item['categories']), item['description'],
+            json.dumps(item['details']), item['gender'],
+            item['product_url'], json.dumps(item['image_urls']),
+            item['price'], item['currency'],
+            item['language'], json.dumps(item['skus'])
         )
 
         try:

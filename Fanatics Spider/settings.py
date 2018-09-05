@@ -12,12 +12,6 @@ MYSQL_PASSWORD = 'root'
 MYSQL_DB = 'FanaticsDB'
 MYSQL_TABLE = 'FanaticsItem'
 
-# CLOSESPIDER_ITEMCOUNT = 50
-
 ITEM_PIPELINES = {
     'Fanatics.pipelines.FanaticsPipeline': 300,
 }
-
-# EXTENSIONS = {
-#     'scrapy.extensions.closespider.CloseSpider': 1,
-# }
