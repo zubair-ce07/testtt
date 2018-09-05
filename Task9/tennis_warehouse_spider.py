@@ -43,13 +43,12 @@ class ParseSpider(BaseParseSpider):
     def image_urls(self, response, garment):
         total_images = len(response.css('.multiview a.changeview').extract())
         product_id = garment["retailer_sku"]
-        product_colors = {sku["colour"] for sku in garment["skus"].values()}
+        product_colors = response.meta["color_codes"]
         image_urls = []
 
-        if len(product_colors) > 1:
-            for color in product_colors:
-                image_urls.extend([MixinUS.image_url_t.format(product_id, color, image_no)
-                                   for image_no in range(1, total_images + 1)])
+        for color in product_colors:
+            image_urls.extend([MixinUS.image_url_t.format(product_id, color, image_no)
+                               for image_no in range(1, total_images + 1)])
 
         return image_urls or response.css('.multiview img::attr(src)').re('(.+)&')
 
@@ -62,23 +61,42 @@ class ParseSpider(BaseParseSpider):
 
     def skus(self, response):
         raw_skus = response.css('.styled_subproduct_list tr')
-        sku_color_css = 'li:contains(Colo) .styleitem::attr(data-scode)'
-        des_color_css = '[itemprop="description"] li:contains(Colo)::text'
         skus = {}
+        response.meta["color_codes"] = set()
 
         for raw_sku in raw_skus:
             sku = self.product_pricing_common(response)
 
             size = raw_sku.css('li:contains(Size) span.styleitem::text').extract_first()
-            color = raw_sku.css(f'{sku_color_css},{des_color_css}').extract_first()
 
+            sku["colour"] = self.extract_color(raw_sku, response)
             sku["size"] = clean(size) if size else "One_Size"
-            sku["colour"] = clean(color) if color else "Unspecified"
 
-            sku_id = f'{color}_{size}'
+            sku_id = f'{sku["colour"]}_{size}'
             skus[sku_id] = sku
 
+            code = raw_sku.css('li:contains(Colo) .styleitem::attr(data-scode)').extract_first()
+            if code:
+                response.meta["color_codes"].add(code)
+
         return skus
+
+    def extract_color(self, raw_sku, response):
+        color_code = raw_sku.css('.stocknum::text').extract_first()
+        color_code = color_code.split('-')[-1] if color_code else None
+
+        multi_color_css = '[itemprop="description"] li:contains(Colo)::text'
+        color_css = f'[itemprop="description"] li:contains(Colo) li:contains("{color_code}")::text'
+        color_css = color_css if color_code else multi_color_css
+
+        color_names = response.css(color_css).extract()
+        color = clean(color_names)[0] if clean(color_names) else None
+
+        code = raw_sku.css('li:contains(Colo) .styleitem::attr(data-scode)').extract_first()
+
+        return color or code or self.detect_colour_from_name(response)
+
+
 
 
 class CrawlSpider(BaseCrawlSpider, MixinUS):
@@ -95,7 +113,7 @@ class CrawlSpider(BaseCrawlSpider, MixinUS):
         'div[class*="_brandlist"]'
     ]
 
-    product_css = ['.cat_border_table .name', '.cat_list .name']
+    product_css = ['.cat_border_table .name', 'div.cat_list .name']
 
     rules = (
         Rule(LinkExtractor(restrict_css=listings_css, restrict_xpaths=listings_xpath), callback='parse'),
