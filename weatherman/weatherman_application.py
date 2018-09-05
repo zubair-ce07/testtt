@@ -1,85 +1,124 @@
-import glob
-from day_weather import DayWeather
-from month_weather import MonthWeather
-from year_weather import YearWeather
-from read_weather import ReadWeather
+import csv
+from datetime import datetime
 
 
 class WeathermanApplication:
 
+    MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
     def __init__(self, path):
-        folder = glob.glob(path+"/*.txt")
+        self.path = path
+        self.weather_data_list = []
+        
+    def read_year_files(self, year):
+        for i in range(12):
+            try:
+                filename = 'Murree_weather_{}_{}.txt'.format(year, self.MONTHS[i])
+                with open(self.path + filename) as csvfile:
+                    temp_list = []
+                    reader = csv.DictReader(csvfile)
+                    for day_weather in reader:
+                        temp_list.append(day_weather)
+                    self.weather_data_list.append(temp_list)
+            except Exception as e :
+                print("This Year doesnt exist or " + str(i) + " Month is not available")
+                print(e)
+        
+    def read_month_files(self, year,month):
+        try:
+            filename = 'Murree_weather_{}_{}.txt'.format(year, self.MONTHS[month-1])
+            with open(self.path + filename) as csvfile:
+                temp_list = []
+                reader = csv.DictReader(csvfile)
+                for day_weather in reader:
+                    temp_list.append(day_weather)
+                self.weather_data_list.append(temp_list)
+        except Exception as e :
+            print("This Year doesnt exist or " + str(month) + " Month is not available")
+            print(e)
 
-        read_weather = ReadWeather()
+    def find_highest_lowest_temperature_and_max_humidity(self):
+        if len(self.weather_data_list) == 0:
+            print("No data is available")
+        max_tempC = max(int(day_weather["Max TemperatureC"]) if day_weather["Max TemperatureC"] != "" else 0 for day_weather in self.weather_data_list[0])
+        max_tempC_date = datetime.now()
+        for month in self.weather_data_list:
+            for day_weather in month:
+                temp = int(day_weather["Max TemperatureC"]) if day_weather["Max TemperatureC"] != "" else None
+                if temp is not None and temp > max_tempC:
+                    max_tempC_date = datetime.strptime(day_weather["PKT"], "%Y-%m-%d").date()
+                    max_tempC = temp
+        print("Maximum Temperature:",max_tempC,"C" , max_tempC_date.strftime("%b %d"))
 
-        self.yw = YearWeather()
+        min_tempC = min(int(day_weather["Min TemperatureC"]) if day_weather["Min TemperatureC"] != "" else 0 for day_weather in self.weather_data_list[0])
+        min_tempC_date = datetime.now()
+        for month in self.weather_data_list:
+            for day_weather in month:
+                temp = int(day_weather["Min TemperatureC"]) if day_weather["Min TemperatureC"] != "" else None
+                if temp is not None and temp < min_tempC:
+                    min_tempC_date = datetime.strptime(day_weather["PKT"], "%Y-%m-%d").date()
+                    min_tempC = temp
+        print("Minimum Temperature:",min_tempC,"C" , min_tempC_date.strftime("%b %d"))
 
-        for file_path in folder:
-            daily_weather = DayWeather()
-            monthly_weather = MonthWeather()
-            read_weather.read_weather(daily_weather, file_path)
-            monthly_weather.add_month_weather(daily_weather, daily_weather.day_weather[2].pkt_dt.month)
-            self.yw.add_year_weather(monthly_weather, daily_weather.day_weather[2].pkt_dt.year)
-            del monthly_weather
-            del daily_weather
+        max_humidity = max(int(day_weather["Max Humidity"]) if day_weather["Max Humidity"] != "" else 0 for day_weather in self.weather_data_list[0])
+        max_humidity_date = datetime.now()
+        for month in self.weather_data_list:
+            for day_weather in month:
+                temp = int(day_weather["Max Humidity"]) if day_weather["Max Humidity"] != "" else None
+                if temp is not None and temp > max_humidity:
+                    max_humidity_date = datetime.strptime(day_weather["PKT"], "%Y-%m-%d").date()
+                    max_humidity = temp
+        print("Maximum Humidity:",max_humidity,"%" , max_humidity_date.strftime("%b %d"))
+        print()
+    
+    def find_average_max_temp_low_temp_and_mean_humidity(self):
+        if len(self.weather_data_list) == 0:
+            print("No data is available")
+        day_counter = 0
+        max_tempC_sum = 0
+        for day_weather in self.weather_data_list[0]:
+            if day_weather["Max TemperatureC"] != "":
+                max_tempC_sum += int(day_weather["Max TemperatureC"])
+                day_counter += 1
+        avg_max_tempC = round(max_tempC_sum/day_counter,2)
+        print("Average Highest:",avg_max_tempC,"C")
 
-    def do_the_e_work(self, year_month):
-        year = int(year_month)
-        weather_data = self.yw.highest_temperature_day(year)
-        if len(weather_data) == 2:
-            print("Highest : " + str(weather_data[0]) + "C on " + weather_data[1].strftime('%b %d'))
-        else:
-            print(weather_data)
+        day_counter = 0
+        min_tempC_sum = 0
+        for day_weather in self.weather_data_list[0]:
+            if day_weather["Min TemperatureC"] != "":
+                min_tempC_sum += int(day_weather["Min TemperatureC"])
+                day_counter += 1
+        avg_min_tempC = round(min_tempC_sum/day_counter,2)
+        print("Average Lowest:",avg_min_tempC,"C")
 
-        weather_data = self.yw.lowest_temperature_day(year)
-        if len(weather_data) == 2:
-            print("Lowest : " + str(weather_data[0]) + "C on " + weather_data[1].strftime('%b %d'))
-        else:
-            print(weather_data)
+        day_counter = 0
+        mean_humidity_sum = 0
+        for day_weather in self.weather_data_list[0]:
+            if day_weather[" Mean Humidity"] != "":
+                mean_humidity_sum += int(day_weather[" Mean Humidity"])
+                day_counter += 1
+        avg_mean_humidity = round(mean_humidity_sum/day_counter,2)
+        print("Average Mean Humdidity:",avg_mean_humidity,"%")
+        print()
 
-        weather_data = self.yw.max_humidity(year)
-        if len(weather_data) == 2:
-            print("Humidity : " + str(weather_data[0]) + "% on " + weather_data[1].strftime('%b %d'))
-        else:
-            print(weather_data)
+    def bar_chart_vertically(self):
+        if len(self.weather_data_list) == 0:
+            print("No data is available")
+        counter = 1
+        for day_weather in self.weather_data_list[0]:
+            max_temp = int(day_weather["Max TemperatureC"]) if day_weather["Max TemperatureC"] != "" else 0
+            min_temp = int(day_weather["Min TemperatureC"]) if day_weather["Min TemperatureC"] != "" else 0
+            print('\x1b[3;31m' + str(counter), abs(max_temp) * "+", max_temp, "C \x1b[0m")
+            print('\x1b[3;34m' + str(counter), abs(min_temp) * "+", min_temp, "C \x1b[0m")
+            counter += 1
 
-    def do_the_a_work(self, year_month):
-        year_month = year_month.split('/')
-        weather_data = self.yw.average_highest_temperature(int(year_month[0]), int(year_month[1]))
-        print("Highest Average : " + str(round(weather_data, 2)) + "C")
-
-        weather_data = self.yw.average_lowest_temperature(int(year_month[0]), int(year_month[1]))
-        print("Lowest Average : " + str(round(weather_data, 2)) + "C")
-
-        weather_data = self.yw.average_mean_humidity(int(year_month[0]), int(year_month[1]))
-        print("Average Mean Humidity : " + str(round(weather_data, 2)) + "%")
-
-    def do_the_c_work(self, year_month):
-        year_month = year_month.split('/')
-        self.yw.print_bar_chart(int(year_month[0]), int(year_month[1]))
-
-    def do_the_c_work2(self, year_month):
-        year_month = year_month.split('/')
-        self.yw.print_bar_chart2(int(year_month[0]), int(year_month[1]))
-
-    def testing(self, year_month):
-        year_month = year_month.split('/')
-        print(self.yw.year_weather[int(year_month[0])][int(year_month[1])].month_weather)
-
-    def do_the_dew(self, argv):
-
-        count = 2
-        while count < len(argv):
-            option = argv[count]
-            count = count + 1
-            year_month = argv[count]
-            count = count + 1
-            if option == "-e":
-                self.do_the_e_work(year_month)
-            elif option == "-a":
-                self.do_the_a_work(year_month)
-            elif option == "-c":
-                self.do_the_c_work(year_month)
-            else:
-                print("Function is not recognized.")
-            print()
+    def bar_chart_horizentally(self):
+        if len(self.weather_data_list) == 0:
+            print("No data is available")
+        counter = 1
+        for day_weather in self.weather_data_list[0]:
+            max_temp = int(day_weather["Max TemperatureC"]) if day_weather["Max TemperatureC"] != "" else 0
+            min_temp = int(day_weather["Min TemperatureC"]) if day_weather["Min TemperatureC"] != "" else 0
+            print('\x1b[3;34m' + str(counter), abs(min_temp) * "+" + '\x1b[3;31m', abs(max_temp) * "+", str(min_temp) + " - " + str(max_temp)+"C \x1b[0m")
+            counter += 1
