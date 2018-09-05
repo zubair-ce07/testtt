@@ -16,26 +16,23 @@ class OrsaySpider(scrapy.Spider):
 
     def parse(self, response):
         """This method crawl page urls."""
-        for url in response.css('div.header-in>nav>ul>li'):
-
-            for link2 in url.css(
-                    'div.js-menu-item-content>div.navigation-content-in>\
-                    ul.navigation-vertical>li.navigation-column>ul>li>a::attr(href)').extract():
-                data1 = {
-                    'url': link2,
+        for url in response.css('nav.header-navigation li.level-1'):
+            for link in url.css('li.navigation-column li.level-2>a::attr(href)').extract():
+                data = {
+                    'url': link,
                 }
                 request = scrapy.Request(
-                    url=link2, callback=self.get_unique_urls)
-                request.meta['url'] = data1
+                    url=link, callback=self.get_unique_urls)
+                request.meta['url'] = data
                 yield request
 
-            for link3 in url.css('div.js-menu-item-content>ul>li>a::attr(href)').extract():
-                data2 = {
-                    'url': link3,
+            for link in url.css('div.js-menu-item-content>ul>li>a::attr(href)').extract():
+                data = {
+                    'url': link,
                 }
             request = scrapy.Request(
                 url='', callback=self.get_unique_urls)
-            request.meta['url'] = data2
+            request.meta['url'] = data
             yield request
 
     def get_unique_urls(self, response):

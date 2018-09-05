@@ -4,8 +4,8 @@ This module hold page data.
 import scrapy
 
 
-class OnsayprojectItem(scrapy.Item):
-    """This method hold field data"""
+class OrsayprojectItem(scrapy.Item):
+    """This class hold items"""
     url = scrapy.Field()
     desc_url = scrapy.Field()
     item_description_url = scrapy.Field()

@@ -3,8 +3,7 @@ This module checks data dublications.
 """
 from scrapy.exceptions import DropItem
 
-
-class OnsayprojectPipeline(object):
+class OrsayprojectPipeline(object):
     """This class checks data dublicates"""
 
     def __init__(self):

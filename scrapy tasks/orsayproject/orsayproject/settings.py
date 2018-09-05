@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Scrapy settings for onsayproject project
+# Scrapy settings for orsayproject project
 #
 # For simplicity, this file contains only settings considered important or
 # commonly used. You can find more settings consulting the documentation:
@@ -9,14 +9,14 @@
 #     https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 
-BOT_NAME = 'onsayproject'
+BOT_NAME = 'orsayproject'
 
-SPIDER_MODULES = ['onsayproject.spiders']
-NEWSPIDER_MODULE = 'onsayproject.spiders'
+SPIDER_MODULES = ['orsayproject.spiders']
+NEWSPIDER_MODULE = 'orsayproject.spiders'
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-USER_AGENT = 'onsayproject (+http://orsay.com)'
+USER_AGENT = 'orsayproject (+http://orsay.com)'
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = True
@@ -47,13 +47,13 @@ ROBOTSTXT_OBEY = True
 # Enable or disable spider middlewares
 # See https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 #SPIDER_MIDDLEWARES = {
-#    'onsayproject.middlewares.OnsayprojectSpiderMiddleware': 543,
+#    'orsayproject.middlewares.OrsayprojectSpiderMiddleware': 543,
 #}
 
 # Enable or disable downloader middlewares
 # See https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
 #DOWNLOADER_MIDDLEWARES = {
-#    'onsayproject.middlewares.OnsayprojectDownloaderMiddleware': 543,
+#    'orsayproject.middlewares.OrsayprojectDownloaderMiddleware': 543,
 #}
 
 # Enable or disable extensions
@@ -65,7 +65,7 @@ ROBOTSTXT_OBEY = True
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-   'onsayproject.pipelines.OnsayprojectPipeline': 300,
+    'orsayproject.pipelines.OrsayprojectPipeline': 300,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
