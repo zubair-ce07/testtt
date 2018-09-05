@@ -12,43 +12,30 @@ class WeatherParser:
         file_name = 'lahore_weather_{}_{}.txt'.format(
             year, calendar.month_abbr[month])
 
-        file_path = os.path.join(directory_path, file_name)
-
-        self._file = open(file_path)
-        next(self._file)
-        self._reader = csv.DictReader(self._file)
-
-    def __enter__(self):
-        return self
+        self.file_path = os.path.join(directory_path, file_name)
 
     def __iter__(self):
-        for row in self._reader:
-            try:
-                date = parse(row.get('PKT'))
-            except ValueError:
-                continue
+        with open(self.file_path) as weather_data:
+            next(weather_data)
+            weather_reader = csv.DictReader(weather_data)
 
-            try:
-                value = Weather(
-                    date,
-                    int(row['Min TemperatureC']),
-                    int(row['Max TemperatureC']),
-                    int(row['Min TemperatureC']),
-                    int(row[' Min Humidity']),
-                    int(row['Max Humidity']),
-                    int(row[' Mean Humidity'])
-                )
-            except ValueError:
-                value = None
+            for row in weather_reader:
+                try:
+                    date = parse(row.get('PKT') or row.get('PKST'))
+                except ValueError:
+                    continue
 
-            yield value
+                try:
+                    value = Weather(
+                        date,
+                        int(row['Min TemperatureC']),
+                        int(row['Max TemperatureC']),
+                        int(row['Mean TemperatureC']),
+                        int(row[' Min Humidity']),
+                        int(row['Max Humidity']),
+                        int(row[' Mean Humidity'])
+                    )
+                except ValueError:
+                    value = None
 
-    def __exit__(self, type, value, traceback):
-        self.close()
-
-    def __del__(self):
-        self.close()
-
-    def close(self):
-        if hasattr(self, '_file') and not self._file.closed:
-            self._file.close()
+                yield value

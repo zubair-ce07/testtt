@@ -1,57 +1,37 @@
 #!/usr/bin/python3
 
 import os
-import sys
+from argparse import ArgumentParser
 
 from dateutil.parser import parse
 
-import constants
 from parser import WeatherParser
 from weather import Weather
 from weather_representor import WeatherRepresentor
 
 
 class Weatherman:
-    def __init__(self, arguments):
-        self.arguments = arguments
+    def __init__(self, command, date, file_path):
+        self.command = command
+        self.validate_date(date)
+        self.validate_path(file_path)
 
-    def validate_arguments(self):
-        if len(self.arguments) != 3:
-            self.exit_with_usage()
-
-        self.validate_command()
-        self.validate_date()
-        self.validate_path()
-
-    def exit_with_usage(self):
-        print(constants.USAGE)
-        exit()
-
-    def validate_command(self):
-        self.command = self.arguments[0]
-
-        if self.command not in constants.COMMANDS:
-            print('Invalid command {}'.format(self.arguments[0]))
-            self.exit_with_usage()
-
-    def validate_date(self):
+    def validate_date(self, date):
         try:
-            # When day is not provided it includes current day in date
-            self.date = parse(self.arguments[1])
+            # When month is not provided it includes current month in date
+            self.date = parse(date)
         except ValueError:
             print('Provided date is invalid {}'.format(self.arguments[1]))
-            self.exit_with_usage()
+            exit()
 
-    def validate_path(self):
-        self.data_path = self.arguments[2]
+    def validate_path(self, path):
+        self.data_path = path
 
         if not os.path.isdir(self.data_path):
             print('Provided directory is not valid {}'.format(self.data_path))
-            self.exit_with_usage()
+            exit()
 
     def show_weather(self):
-        self.validate_arguments()
-
         if self.command == '-e':
             self.show_summary_of_year()
         elif self.command == '-a':
@@ -69,18 +49,17 @@ class Weatherman:
 
         for month in range(1, 13):
             try:
-                with WeatherParser(
-                        self.data_path, self.date.year, month) as parser:
-                    for weather in parser:
-                        if not weather:
-                            continue
+                for weather in WeatherParser(
+                        self.data_path, self.date.year, month):
+                    if not weather:
+                        continue
 
-                        if weather.max_temperature > highest.max_temperature:
-                            highest = weather
-                        if weather.min_temperature < lowest.min_temperature:
-                            lowest = weather
-                        if weather.max_humidity > humid.max_humidity:
-                            humid = weather
+                    if weather.max_temperature > highest.max_temperature:
+                        highest = weather
+                    if weather.min_temperature < lowest.min_temperature:
+                        lowest = weather
+                    if weather.max_humidity > humid.max_humidity:
+                        humid = weather
 
             except FileNotFoundError:
                 pass
@@ -97,16 +76,15 @@ class Weatherman:
         lowest_average_temperature = 0
         average_humidity = 0
         try:
-            with WeatherParser(
-                    self.data_path, self.date.year, self.date.month) as parser:
-                for weather in parser:
-                    if not weather:
-                        continue
+            for weather in WeatherParser(
+                    self.data_path, self.date.year, self.date.month):
+                if not weather:
+                    continue
 
-                    count += 1
-                    highest_average_temperature += weather.max_temperature
-                    lowest_average_temperature += weather.min_temperature
-                    average_humidity += weather.mean_humidity
+                count += 1
+                highest_average_temperature += weather.max_temperature
+                lowest_average_temperature += weather.min_temperature
+                average_humidity += weather.mean_humidity
 
             if count == 0:
                 raise FileNotFoundError
@@ -123,16 +101,53 @@ class Weatherman:
     def show_weather_of_month(self):
         WeatherRepresentor.print_date(self.date)
         try:
-            with WeatherParser(
-                    self.data_path, self.date.year, self.date.month) as parser:
-                for weather in parser:
-                    WeatherRepresentor.print_temprature_graph(weather)
+            for weather in WeatherParser(
+                    self.data_path, self.date.year, self.date.month):
+                WeatherRepresentor.print_temprature_graph(weather)
         except FileNotFoundError:
             WeatherRepresentor.print_not_fount()
 
 
 def main():
-    weatherman = Weatherman(sys.argv[1:])
+    arg_parser = ArgumentParser(
+        description='Represent weather data in different forms.')
+
+    group = arg_parser.add_mutually_exclusive_group(required=True)
+
+    group.add_argument(
+        '-e',
+        action='store_const',
+        const='-e',
+        dest='command',
+        help="""For a given year display the highest temperature and day,
+            lowest temperature and day, most humid day and humidity."""
+    )
+    group.add_argument(
+        '-a',
+        action='store_const',
+        const='-a',
+        dest='command',
+        help="""For a given month display the average highest temperature,
+            average lowest temperature, average humidity."""
+    )
+    group.add_argument(
+        '-c',
+        action='store_const',
+        const='-c',
+        dest='command',
+        help="""For a given month draw one horizontal bar chart on the console
+            for the highest and lowest temperature on each day. Highest in
+            red and lowest in blue."""
+    )
+
+    arg_parser.add_argument(
+        'date', help='Date for which data will be displayed.')
+    arg_parser.add_argument(
+        'files_path', help='Path of directory which contains weather files.')
+
+    args = arg_parser.parse_args()
+
+    weatherman = Weatherman(args.command, args.date, args.files_path)
     weatherman.show_weather()
 
 
