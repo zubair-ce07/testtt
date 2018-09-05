@@ -97,8 +97,6 @@ class ParseSpider(BaseParseSpider):
         return color or code or self.detect_colour_from_name(response)
 
 
-
-
 class CrawlSpider(BaseCrawlSpider, MixinUS):
     listings_xpath = [
         '//div[text()="Apparel"]/following-sibling::ul[1]',
