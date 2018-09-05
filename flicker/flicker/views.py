@@ -136,6 +136,8 @@ def search_user():
             user_data_list = db.session.query(User).filter(
                 User.username.like('%' + search_element + '%')).all()
             return render_template('user_list.html', users_list=user_data_list)
+        else:
+            return render_template('user_list.html', users_list=[])
     else:
         flash('User is not Authenticated')
         return redirect(url_for('signin'))
