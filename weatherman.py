@@ -1,5 +1,4 @@
-"""
-Main module which runs the whole weatherman program, It takes Command Line Args to work with
+"""Main module which runs the whole weatherman program, It takes Command Line Args to work with
 
 Command Line Args:
 '-e' : Gives highest, lowest temperatures and highest humidity
@@ -9,129 +8,103 @@ Command Line Args:
 """
 
 import os
-import datetime
-
+import calendar
 import csv
 import argparse
 import re
+import dateutil.parser as date_utility
 from termcolor import colored
 
 
-def get_month_name(index):
-    """Takes a number to return its month"""
-    months = {
-        1: 'Jan', 2: 'Feb', 3: 'Mar', 4: 'Apr', 5: 'May',
-        6: 'Jun', 7: 'Jul', 8: 'Aug', 9: 'Sep', 10: 'Oct',
-        11: 'Nov', 12: 'Dec',
-    }
-
-    return months.get(index)
+class Weather:
+    def __init__(self, data, date):
+        self.date = date
+        self.min_temp = int(data.get('Min TemperatureC'))
+        self.max_temp = int(data.get('Max TemperatureC'))
+        self.mean_temp = int(data.get('Mean TemperatureC'))
+        self.min_humidity = int(data.get('Min Humidity'))
+        self.max_humidity = int(data.get('Max Humidity'))
+        self.mean_humidity = int(data.get('Mean Humidity'))
 
 
 def applying_commandline_arguments():
     """Create Command Line Argument List"""
     parser_arg = argparse.ArgumentParser()
-    parser_arg.add_argument("directory", help="you have to specify a directory for records")
-    parser_arg.add_argument("-e", "--extreme", help="Show extreme records of specified date")
-    parser_arg.add_argument("-a", "--average", help="Show average records of specified date")
-    parser_arg.add_argument("-c", "--chart", help="Show horizontal bar chart of specified date")
-    parser_arg.add_argument("-r", "--range_chart", help="Show temperature range chart of specified date")
+    parser_arg.add_argument("directory", help="directory for records")
+    parser_arg.add_argument("-e", "--extreme", help="Show extreme records")
+    parser_arg.add_argument("-a", "--average", help="Show average records")
+    parser_arg.add_argument("-c", "--chart", help="Show bar chart")
+    parser_arg.add_argument("-r", "--range_chart", help="Show range chart")
     return parser_arg.parse_args()
 
 
 def parser(time_span):
-    """
-    This is the main function of this module, it takes directory and date to work on and in return
-    it gives a list of records from the directory related to the specified dates, if no data found
-    it wil return none
-    """
+    """It takes time-span and returns list of records from the directory"""
 
-    year, month, day = separate_combined_date(time_span)
+    # Getting date's year and month
+    date = get_splitted_date(time_span)
+    year = date[0] if len(date) > 0 else None
+    month = date[1] if len(date) > 1 else None
+
     files = get_required_files(year, month)
-    # If records found
-    if len(files) > 0:
-        # reads all the files and get records in a list
-        return collect_data_from_files(files, day)
-    else:
-        return None
+
+    return files
 
 
 def get_required_files(required_year, required_month):
-    """This function takes directory, year and month to choose those files from it which are required"""
-
-    month_name = get_month_name(required_month)
+    """It takes year and month to choose those files from directory"""
+    try:
+        month_name = None if not required_month else calendar.month_abbr[int(required_month)]
+    except IndexError:
+        raise IndexError("Wrong Month")
 
     # if month is not defined, we have to search on the basis of year only
     search_pattern = f'r(.{str(required_year)}_{month_name})' if month_name else f'r(.{required_year})'
 
-    matches = []
+    file_records = []
     for file_name in os.listdir():
         if re.compile(search_pattern).search(file_name):
-            matches.append(file_name)
-    return matches
+            file_records += collect_data_from_files(file_name)
+    return file_records
 
 
-def collect_data_from_files(files, day=None):
-    """It takes path of directory with names of files as arguments
-     and returns Structured Data in the form of list"""
+def collect_data_from_files(file):
+    """It takes names of files as arguments, returns list of records"""
 
     # Registering dialect to skip spaces in names of dictionary
     csv.register_dialect('space_eliminator', delimiter=',', skipinitialspace=True)
 
-    weather_records = []
+    # Reading record files and returning in form of list
+    csv_records = csv.DictReader(open(file, 'r'), dialect='space_eliminator')
+    records = []
+    for csv_record in csv_records:
+        try:
+            date = string_to_date(csv_record.get('PKT') or csv_record.get('PKST'), '-')
+            value = Weather(csv_record, date)
+            records.append(value)
+        except ValueError:
+            continue
 
-    '''
-    Each month-file contains list of day's records, as the csv.DictReader object is not 
-    subscriptable, we have to traverse through all records to get the user specified => day.
-    '''
-
-    for file in files:
-        records = csv.DictReader(open(file, 'r'), dialect='space_eliminator')
-
-        for index, record in enumerate(records):
-            if not day:
-                weather_records.append(record)
-            elif index == day - 1:
-                weather_records.append(record)
-                break
-
-    return weather_records
+    return records
 
 
-# Calculation Module
-def display_extreme(time_span, data_set):
-    """Takes TimeSpan and Data Records to show extreme cases of temperature present in records"""
-
-    results = calculate_extreme_temp(data_set)
-
-    # Printing the end results
-    print(f"{string_to_date(time_span)}")
-    print(f"Highest : {results.get('high_temp')}C on {results.get('high_temp_date')}")
-    print(f"Lowest : {results.get('low_temp')}C on {results.get('low_temp_date')}")
-    print(f"Humidity : {results.get('humidity')}% on {results.get('humidity_date')}")
-
-
-def calculate_extreme_temp(data_set, high_temp=None, low_temp=None, humidity=None):
+def calculate_extreme_temp(data_set, high_temp=0, low_temp=300, humidity=0):
     """Takes list of data and returns extreme conditions and occurrence dates"""
     for row in data_set:
         # Max Temperature Check
-        if row.get('Max TemperatureC') and (not high_temp or high_temp < int(row.get('Max TemperatureC'))):
-            high_temp_date = row.get('PKT')
-            high_temp = int(row.get('Max TemperatureC'))
+        if row.max_temp and high_temp < row.max_temp:
+            high_temp_date = row.date
+            high_temp = row.max_temp
 
         # Min Temperature Check
-        if row.get('Min TemperatureC') and (not low_temp or low_temp > int(row.get('Min TemperatureC'))):
-            low_temp_date = row.get('PKT')
-            low_temp = int(row.get('Min TemperatureC'))
+        if row.min_temp and low_temp > row.min_temp:
+            low_temp_date = row.date
+            low_temp = row.min_temp
 
         # Humidity Check
-        if row.get('Max Humidity') and (not humidity or humidity < int(row.get('Max Humidity'))):
-            humidity = int(row.get('Max Humidity'))
-            humidity_date = row.get('PKT')
-
-    high_temp_date = string_to_date(high_temp_date, '-')
-    low_temp_date = string_to_date(low_temp_date, '-')
-    humidity_date = string_to_date(humidity_date, '-')
+        if row.max_humidity and humidity < row.max_humidity:
+            humidity = row.max_humidity
+            humidity_date = row.date
 
     temp_record = {
         'high_temp': high_temp, 'low_temp': low_temp,
@@ -142,149 +115,54 @@ def calculate_extreme_temp(data_set, high_temp=None, low_temp=None, humidity=Non
     return temp_record
 
 
-def display_avg(time_span, data_set):
-    """Takes TimeSpan and Data Records to show average temperature according to records"""
-
-    # Calculates Averages
-    high_avg, low_avg, humid_avg = calculate_avg_temperature(data_set)
-
-    # Printing the end results
-    print(f"{string_to_date(time_span)}")
-
-    # .0f means that we are skipping the decimal part while showing
-    print(f"Highest Temperature Average : {high_avg: .0f}C")
-    print(f"Lowest Temperature Average : {low_avg: .0f}C")
-    print(f"Mean Humidity Average : {humid_avg: .2f}%")
-
-
-def calculate_avg_temperature(data_set, high_temp_avg=0, low_temp_avg=0, humidity_avg=0,
-                              high_temp_days=0, low_temp_days=0, humidity_days=0):
+def calculate_avg_temperature(data_set, high_temp_avg=0, low_temp_avg=0, humidity_avg=0):
     """Takes List of Data and Calculates Averages"""
 
     for row in data_set:
-        if row.get('Max TemperatureC'):
-            high_temp_avg += int(row.get('Max TemperatureC'))
-            high_temp_days += 1
+        high_temp_avg += row.max_temp if row.max_temp else 0
+        low_temp_avg += row.min_temp if row.min_temp else 0
+        humidity_avg += row.mean_humidity if row.mean_humidity else 0
 
-        if row.get('Min TemperatureC'):
-            low_temp_avg += int(row.get('Min TemperatureC'))
-            low_temp_days += 1
+    results = dict()
+    results['high_avg'] = high_temp_avg // len(data_set)
+    results['low_avg'] = low_temp_avg // len(data_set)
+    results['humid_avg'] = humidity_avg // len(data_set)
 
-        if row.get('Mean Humidity'):
-            humidity_avg += int(row.get('Mean Humidity'))
-            humidity_days += 1
-
-    high_avg = high_temp_avg / high_temp_days
-    low_avg = low_temp_avg / low_temp_days
-    humid_avg = humidity_avg / humidity_days
-
-    return high_avg, low_avg, humid_avg
-
-
-def display_chart(time_span, data_set):
-    """Takes TimeSpan and Data Records to show Each Day's Chart regarding highest and lowest temperatures"""
-
-    print(f"{string_to_date(time_span)}")
-    for num, row in enumerate(data_set):
-
-        # Showing Max Temp Results
-        if row.get('Max TemperatureC') and row.get('Min TemperatureC'):
-            params = [{
-                'day': num + 1,
-                'temp': int(row.get('Max TemperatureC')),
-                'color': 'red'
-            }, ]
-
-            colored_text(params)
-
-        # Showing Min Temp Results
-        if row.get('Min TemperatureC'):
-            params = [{
-                'day': num + 1,
-                'temp': int(row.get('Min TemperatureC')),
-                'color': 'blue'
-            }, ]
-
-            colored_text(params)
-
-
-def colored_text(params):
-    """Creates chart lines"""
-    temp_value = ''
-    for param in params:
-        temp_value += "-" if temp_value else ''
-        print(param.get('day', ''), end="")
-        print_line(param.get('temp'), param.get('color'))
-        temp_value += f" {param.get('temp')}C "
-    print(temp_value)
-
-
-def print_line(count, color):
-    """This function print line with specified color taken as argument"""
-    for i in range(count):
-        print(colored('+', color), end='')
-
-
-def display_range_chart(time_span, data_set):
-    """Takes TimeSpan and Data Records to show Range of Temperature each Day"""
-
-    # Printing the end results
-    print(f"{string_to_date(time_span)}")
-
-    for num, row in enumerate(data_set):
-        if row.get('Max TemperatureC') and row.get('Min TemperatureC'):
-
-            params = [{
-                'day': num + 1,
-                'temp': int(row.get('Max TemperatureC')),
-                'color': 'red'
-            }, {
-                'temp': int(row.get('Min TemperatureC')),
-                'color': 'blue'
-            }]
-
-            colored_text(params)
+    return results
 
 
 def string_to_date(time_span, delimeter='/'):
-    """Here we parse given date in string format to get a well formatted Date pattern (String to Date)"""
+    """Converts given date to a formatted Date pattern (String to Date)"""
 
-    date = separate_combined_date(time_span, delimeter)
+    try:
+        date = date_utility.parse(time_span)
+    except ValueError:
+        raise ValueError
 
-    year, month, day = date
+    date_splitted = get_splitted_date(time_span, delimeter)
 
-    if day:
-        date = datetime.date(year, month, day).strftime('%d %B %Y')
-    elif month:
-        date = datetime.date(year, month, 1).strftime('%B %Y')
+    if len(date_splitted) == 3:
+        date = date.strftime('%d %B %Y')
+    elif len(date_splitted) == 2:
+        date = date.strftime('%B %Y')
     else:
-        date = datetime.date(year, 1, 1).strftime('%Y')
+        date = date.strftime('%Y')
 
     return date
 
 
-def separate_combined_date(commandline_dates, delimeter='/'):
-    """It takes date in YYYY/MM/DD foramt and Returns the Accurate information
-     of date by splitting it in Year, Month and Day"""
-
-    # User can give year, month and day separated by '/', so here we split them
-    default_date = [None, None, None]
-    splitted_date = commandline_dates.split(delimeter)
-
-    for index, value in enumerate(splitted_date):
-        default_date[index] = int(value)
-
-    return default_date
+def get_splitted_date(date, delimeter='/'):
+    return date.split(delimeter)
 
 
 def main():
-    """Takes system args and extract options and time to iterate the whole process over it"""
+    """Takes system args and executes the whole process over it"""
 
     function_specifier = {
-        'extreme': display_extreme,
-        'average': display_avg,
-        'chart': display_chart,
-        'range_chart': display_range_chart,
+        'extreme': WeatherReport.print_summary_extreme,
+        'average': WeatherReport.print_summary_avg,
+        'chart': WeatherReport.print_horizontal_chart,
+        'range_chart': WeatherReport.print_range_chart
     }
 
     args = applying_commandline_arguments()
@@ -294,10 +172,75 @@ def main():
         attribute_val = getattr(args, arg)
         if attribute_val and arg != "directory":
             data_set = parser(attribute_val)
-            if data_set:
+            if len(data_set) > 0:
                 function_specifier.get(arg)(attribute_val, data_set)
             else:
                 print("No Data Found")
+
+
+class WeatherReport:
+
+    def print_summary_extreme(time_span, data_set):
+        """Takes TimeSpan and Data Records to show extreme cases of temperature present in records"""
+
+        results = calculate_extreme_temp(data_set)
+        print(f"{string_to_date(time_span)}")
+        print(f"Highest : {results.get('high_temp')}C on {results.get('high_temp_date')}")
+        print(f"Lowest : {results.get('low_temp')}C on {results.get('low_temp_date')}")
+        print(f"Humidity : {results.get('humidity')}% on {results.get('humidity_date')}")
+
+    def print_summary_avg(time_span, data_set):
+        """It will print the average temperature conditions"""
+
+        results = calculate_avg_temperature(data_set)
+        print(f"{string_to_date(time_span)}")
+        print(f"Highest Temperature Average : {results['high_avg']}C")
+        print(f"Lowest Temperature Average : {results['low_avg']}C")
+        print(f"Mean Humidity Average : {results['humid_avg']}%")
+
+    def print_range_chart(time_span, data_set):
+        """Takes TimeSpan and Data Records to show Range of Temperature each Day"""
+
+        print(f"{string_to_date(time_span)}")
+        for num, row in enumerate(data_set):
+            if row.max_temp and row.min_temp:
+                params = [
+                    {'day': num + 1, 'temp': row.max_temp, 'color': 'red'},
+                    {'temp': row.min_temp, 'color': 'blue'}
+                ]
+                WeatherReport.colored_text(params)
+
+    def print_horizontal_chart(time_span, data_set):
+        """Takes TimeSpan and Data Records to show Each Day's Chart regarding highest and lowest temperatures"""
+
+        print(f"{string_to_date(time_span)}")
+        for num, row in enumerate(data_set):
+            # Showing Max Temp Bar
+            if row.max_temp:
+                params = [{'day': num + 1, 'temp': row.max_temp, 'color': 'red'}, ]
+                WeatherReport.colored_text(params)
+
+            # Showing Min Temp Bar
+            if row.min_temp:
+                params = [{'day': num + 1, 'temp': row.min_temp, 'color': 'blue'}, ]
+                WeatherReport.colored_text(params)
+
+    def colored_text(params):
+        """Creates chart lines"""
+        temp_value = ''
+        for param in params:
+            temp_value += "-" if temp_value else ''
+            print(param.get('day', ''), end="")
+            WeatherReport.print_line(param.get('temp'), param.get('color'))
+            temp_value += f" {param.get('temp')}C "
+        print(temp_value)
+
+    def print_line(count, color):
+        """This function prints line with specified color taken as argument"""
+        if count < 0:
+            color = 'green'
+        for i in range(abs(count)):
+            print(colored('+', color), end='')
 
 
 if __name__ == "__main__":
