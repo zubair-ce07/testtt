@@ -31,9 +31,12 @@ class Analyzer:
         index_of_mintemp = data['features'].index('Min TemperatureC')
         index_of_humidity = data['features'].index('Max Humidity')
 
+        year_exist=False
+
         for record in data['values']:
             date_in_record = record[0]
             if year in date_in_record:
+                year_exist=True
                 if record[index_of_maxtemp] != '' and record[index_of_maxtemp] > highest:
                     highest = record[index_of_maxtemp]
                     date_highest = date_in_record
@@ -45,26 +48,26 @@ class Analyzer:
                 if record[index_of_humidity] != '' and record[index_of_humidity] > humidity:
                     humidity = record[index_of_humidity]
                     date_humidity = date_in_record
-        try:
 
-            year, month, day_high = Analyzer.parse_date(date_highest, '-')
-            month_high = calendar.month_name[int(month)]
-
-            year, month, day_low = Analyzer.parse_date(date_lowest, '-')
-            month_low = calendar.month_name[int(month)]
-
-            year, month, day_humid = Analyzer.parse_date(date_humidity, '-')
-            month_humid = calendar.month_name[int(month)]
-
-            results = {
-                'Highest': "{}C on {} {}".format(highest, month_high, day_high),
-                'Lowest': "{}C on {} {}".format(lowest, month_low, day_low),
-                'Humidity': "{}% on {} {}".format(humidity, month_humid, day_humid),
-            }
-
-            return results
-        except UnboundLocalError:
+        if not year_exist:
             return {}
+
+        year, month, day_high = Analyzer.parse_date(date_highest, '-')
+        month_high = calendar.month_name[int(month)]
+
+        year, month, day_low = Analyzer.parse_date(date_lowest, '-')
+        month_low = calendar.month_name[int(month)]
+
+        year, month, day_humid = Analyzer.parse_date(date_humidity, '-')
+        month_humid = calendar.month_name[int(month)]
+
+        results = {
+            'Highest': "{}C on {} {}".format(highest, month_high, day_high),
+            'Lowest': "{}C on {} {}".format(lowest, month_low, day_low),
+            'Humidity': "{}% on {} {}".format(humidity, month_humid, day_humid),
+        }
+
+        return results
 
     @staticmethod
     def monthly_report(data, date):
@@ -96,19 +99,18 @@ class Analyzer:
                 if record[index_of_mintemp] != '':
                     lowest += record[index_of_mintemp]
 
-        if month_exists:
-            total_days = calendar.monthrange(int(year),
-                                             int(month),
-                                             )[1]
-            results = {
-                'Highest Average': str(highest / total_days) + "C",
-                'Lowest Average': str(lowest / total_days) + 'C',
-                'Average Mean Humidity': str(humidity / total_days) + '%',
-            }
-
-            return results
-        else:
+        if not month_exists:
             return {}
+        total_days = calendar.monthrange(int(year),
+                                         int(month),
+                                         )[1]
+        results = {
+            'Highest Average': str(highest / total_days) + "C",
+            'Lowest Average': str(lowest / total_days) + 'C',
+            'Average Mean Humidity': str(humidity / total_days) + '%',
+        }
+
+        return results
 
     @staticmethod
     def monthly_chart(data, date):
