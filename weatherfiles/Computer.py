@@ -6,6 +6,12 @@ import calendar
 class Analyzer:
     @staticmethod
     def parse_date(date, delimeter):
+        """
+        split date string according to given delimiter
+        :param date: date string
+        :param delimeter: separator
+        :return: year, month, day
+        """
         return date.split(delimeter)
 
     @staticmethod
