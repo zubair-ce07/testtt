@@ -70,7 +70,7 @@ class ParseSpider(BaseParseSpider, MixinUS):
             size = raw_sku.css('li:contains(Size) span.styleitem::text').extract_first()
 
             sku["colour"] = self.extract_color(raw_sku, response)
-            sku["size"] = clean(size) if size else "One_Size"
+            sku["size"] = clean(size) if size else self.one_size
 
             sku_id = f'{sku["colour"]}_{size}'
             skus[sku_id] = sku
