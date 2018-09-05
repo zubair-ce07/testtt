@@ -1,0 +1,15 @@
+<h3>Feedback page</h3>
+
+<form method="post">
+    {% csrf_token %}
+    <ul>
+        {% for field in form %}
+            {{ field.label}}
+            {{ field }}
+            <br>
+            <br>
+        {% endfor %}
+    </ul>
+
+    <input type="submit" value="Submit Feedback">
+</form>
