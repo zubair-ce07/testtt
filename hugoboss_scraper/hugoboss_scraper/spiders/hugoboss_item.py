@@ -1,14 +1,14 @@
 from scrapy import Item, Field
 
 
-class HugobossScraperItem(Item):
+class Garment(Item):
     retailer_sku = Field()
     name = Field()
     image_urls = Field()
     lang = Field()
     gender = Field()
     category = Field()
-    industry = Field()
+    industry = Field(default=None)
     brand = Field()
     url = Field()
     market = Field()
