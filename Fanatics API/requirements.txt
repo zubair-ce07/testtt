@@ -1,0 +1,7 @@
+mysql
+scrapy
+scrapyd
+django
+djangorestframework
+pymsql
+mysqlclient

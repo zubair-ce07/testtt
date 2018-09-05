@@ -1,5 +1,3 @@
-import json
-
 import requests
 from django.http import HttpResponse
 from django.shortcuts import render
@@ -32,7 +30,7 @@ def index(request):
     request_url = 'http://localhost:6800/listjobs.json?project=FanaticsSpider'
     response = requests.get(url=request_url)
     response = response.json()
-    job = request.session['job_id']
+    job = request.session.get('job_id')
     if is_job_running(response, job) or is_job_pending(response, job):
         return render(request, 'index.html', context={'spider_status': 'Stop Spider'})
     return render(request, 'index.html', context={'spider_status': 'Start Spider'})
@@ -42,7 +40,7 @@ def start_fanatics_spider(request):
     request_url = 'http://localhost:6800/listjobs.json?project=FanaticsSpider'
     response = requests.get(url=request_url)
     response = response.json()
-    job = request.session['job_id']
+    job = request.session.get('job_id')
     if is_job_running(response, job) or is_job_pending(response, job):
         return HttpResponse('Spider already running')
 
@@ -64,7 +62,7 @@ def stop_fanatics_spider(request):
     request_url = 'http://127.0.0.1:6800/cancel.json'
     request_payload = {
         'project': 'FanaticsSpider',
-        'job': request.session['job_id']
+        'job': request.session.get('job_id')
     }
     response = requests.post(url=request_url, data=request_payload)
     response = response.json()
