@@ -91,6 +91,7 @@ class LaGarconneParseSpider(BaseParseSpider):
         common_sku['color'] = self.detect_colour(raw_product['description'])
         for raw_sku in raw_product['variants']:
             sku = common_sku.copy()
+
             if not raw_sku['available']:
                 sku['out_of_stock'] = True
 
