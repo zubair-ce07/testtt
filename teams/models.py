@@ -20,10 +20,10 @@ class Team(SoftDeleteModelMixin):
 class Player(SoftDeleteModelMixin):
 
     name = models.CharField(max_length=100, default=' ')
-    DOB = models.DateField('Born')
-    playing_role = models.CharField(max_length=20, default=' ', choices=PlayingRoleChoices.Choices)
-    batting_style = models.CharField(max_length=20, default=' ', choices=BattingStyleChoices.Choices)
-    bowling_style = models.CharField(max_length=30, default=' ', choices=BowlingStyleChoices.Choices)
+    DOB = models.DateField('Born', null=True, blank=True)
+    playing_role = models.CharField(max_length=20, default=' ', choices=PlayingRoleChoices.Choices, null=True, blank=True)
+    batting_style = models.CharField(max_length=20, default=' ', choices=BattingStyleChoices.Choices, null=True, blank=True)
+    bowling_style = models.CharField(max_length=30, default=' ', choices=BowlingStyleChoices.Choices, null=True, blank=True)
     ranking = models.PositiveSmallIntegerField(null=True, blank=True)
     teams = models.ManyToManyField('Team', related_name='players', blank=True)
     url = models.URLField(max_length=100, default=' ', null=True, blank=True)
@@ -42,7 +42,7 @@ class Player(SoftDeleteModelMixin):
 
 class BasicAverageInfo(SoftDeleteModelMixin):
 
-    format = models.CharField(max_length=50, choices=FormatChoices.Choices)
+    format = models.CharField(max_length=50, choices=FormatChoices.Choices, null=True, blank=True)
     matches = models.IntegerField(null=True, blank=True)
     innings = models.IntegerField(null=True, blank=True)
 
@@ -60,7 +60,7 @@ class BattingAverage(BasicAverageInfo):
     player = models.ForeignKey(Player, related_name='batting_averages', on_delete=models.CASCADE)
 
     not_outs = models.IntegerField(null=True, blank=True)
-    highest_score = models.CharField(max_length=50, default=' ')    # 88*
+    highest_score = models.CharField(max_length=50, default=' ', null=True, blank=True)    # 88*
     hundreds = models.IntegerField(null=True, blank=True)
     fifties = models.IntegerField(null=True, blank=True)
     fours = models.IntegerField(null=True, blank=True)
@@ -86,7 +86,7 @@ class BowlingAverage(BasicAverageInfo):
     ten_wickets = models.IntegerField(null=True, blank=True)
 
     def __str__(self):
-        return '{player_name}\'s {average_format} batting average'.format(
+        return '{player_name}\'s {average_format} bowling average'.format(
             player_name=self.player, average_format=self.format
         )
 

@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+	<script>
+		$(document).ready(function(){
+			$("#myLoginBtn").click(function(){
+				$("#myLoginModal").modal();
+			});
+		});
+
+		$(document).ready(function(){
+			$("#mySignUpBtn").click(function(){
+				$("#mySignUpModal").modal();
+			});
+		});
+	</script>
+
+
+
+	<style>
+	.modal-header, h4, .close {
+		  background-color: #5cb85c;
+		  color:white !important;
+		  text-align: center;
+		  font-size: 30px;
+	  }
+	  .modal-footer {
+		  background-color: #f9f9f9;
+	  }
+	</style>
+
+	<title>CricViz Home</title>
+
+  </head>
+  <body>
+
+	<!-- Login Modal -->
+	  <div class="modal fade" id="myLoginModal" role="dialog">
+		<div class="modal-dialog">
+
+		  <!-- Modal content-->
+		  <div class="modal-content">
+			<div class="modal-header" style="padding:35px 50px; text-align: center;">
+			  <button type="button" class="close" data-dismiss="modal">&times;</button>
+			  <h4><span class="glyphicon glyphicon-lock"></span> Login</h4>
+			</div>
+			<div class="modal-body" style="padding:40px 50px;">
+			  <form role="form">
+				<div class="form-group">
+				  <label for="usrname"><span class="glyphicon glyphicon-user"></span> Username</label>
+				  <input type="text" class="form-control" id="usrname" placeholder="Enter email" required>
+				</div>
+				<div class="form-group">
+				  <label for="password"><span class="glyphicon glyphicon-eye-open"></span> Password</label>
+				  <input type="password" class="form-control" id="password" placeholder="Enter password" required>
+				</div>
+				<div class="checkbox">
+				  <label><input type="checkbox" value="" checked>Remember me</label>
+				</div>
+				  <button type="submit" class="btn btn-success btn-block"><span class="glyphicon glyphicon-off"></span> Login</button>
+			  </form>
+			  <p></p>
+			  <p><a href="#">Forgot Password?</a></p>
+			  <p> Not a member? <a href="#">Sign Up</a></p>
+			</div>
+			<div class="modal-footer">
+			  <button type="submit" class="btn btn-danger btn-default pull-right" data-dismiss="modal" ><span class="glyphicon glyphicon-remove"></span> Cancel</button>
+			</div>
+		  </div>
+
+		</div>
+	  </div>
+
+
+	  <!-- Sign Up Modal -->
+	  <div class="modal fade" id="mySignUpModal" role="dialog">
+		<div class="modal-dialog">
+
+		  <!-- Modal content-->
+		  <div class="modal-content">
+			<div class="modal-header" style="padding:35px 50px;">
+			  <button type="button" class="close" data-dismiss="modal">&times;</button>
+			  <h4 style="text-align: center;"><span class="glyphicon glyphicon-lock" ></span> Sign Up</h4>
+			</div>
+			<div class="modal-body" style="padding:40px 50px;">
+			  <form role="form">
+				<div class="form-group">
+				  <label for="usrname"><span class="glyphicon glyphicon-user"></span> Username</label>
+				  <input type="text" class="form-control" id="usrname" placeholder="Enter email" required>
+				</div>
+				<div class="form-group">
+				  <label for="password"><span class="glyphicon glyphicon-eye-open"></span> Password</label>
+				  <input type="password" class="form-control" id="password" placeholder="Enter password" required>
+				</div>
+				<div class="form-group">
+				  <label for="password2"><span class="glyphicon glyphicon-eye-open"></span> Confirm Password</label>
+				  <input type="password" class="form-control" id="password2" placeholder="Enter password again" required>
+				</div>
+				<div class="checkbox">
+				  <label><input type="checkbox" value="" checked>Remember me</label>
+				</div>
+				  <button type="submit" class="btn btn-success btn-block"><span class="glyphicon glyphicon-off"></span> Sign Up</button>
+			  </form>
+			</div>
+			<div class="modal-footer">
+			  <button type="submit" style="float: right;" class="btn btn-danger btn-default pull-left" data-dismiss="modal" ><span class="glyphicon glyphicon-remove"></span> Cancel</button>
+			</div>
+		  </div>
+
+		</div>
+	  </div>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+      <a class="navbar-brand" href="#">CricViz</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item active">
+            <a class="nav-link" href="home.html">Home <span class="sr-only">(current)</span></a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="livescores-home.html">Live Scores</a>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              Teams
+            </a>
+            <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+              <a class="list-group-item list-group-item-action " href="teams-home.html">Teams Home</a>
+              <div class="dropdown-divider"></div>
+              <a class="list-group-item list-group-item-action list-group-item-primary " href="Pakistan-home.html">Pakistan</a>
+              <a class="list-group-item list-group-item-action list-group-item-primary" href="#">India</a>
+              <a class="list-group-item list-group-item-action list-group-item-primary" href="#">Australia</a>
+              <a class="list-group-item list-group-item-action list-group-item-primary" href="#">England</a>
+              <a class="list-group-item list-group-item-action list-group-item-primary" href="#">South Africa</a>
+              <a class="list-group-item list-group-item-action list-group-item-primary" href="#">Srilanka</a>
+              <a class="list-group-item list-group-item-action list-group-item-primary" href="#">West Indies</a>
+              <a class="list-group-item list-group-item-action list-group-item-primary" href="#">Zimbabwe</a>
+              <a class="list-group-item list-group-item-action list-group-item-primary" href="#">Bangladesh</a>
+
+            </div>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="playersinsights-home.html">Player Insights</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="followplayers-home.html">Follow Players</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="followteams-home.html">Follow Teams</a>
+          </li>
+        </ul>
+
+        <form class="form-inline my-2 my-lg-0">
+          <input class="form-control mr-sm-2" type="search" placeholder="Search for players/teams" aria-label="Search">
+          <button class="btn btn-dark btn-outline-warning my-2 my-sm-0" type="submit">Search</button>
+        </form>
+      </div>
+      <div class="btn-group" role="group" aria-label="Basic example">
+        <button type="button" class="btn btn-info" id="myLoginBtn">Login</button>
+      </div>
+	  <div class="btn-group" role="group" aria-label="Basic example">
+		<button type="button" class="btn btn-info" id="mySignUpBtn">Sign Up</button>
+      </div>
+    </nav>
+
+
+	<div class="row">
+		<div class="card-deck">
+		  <div class="col-sm-8">
+  			<div class="card">
+<!--          <img class="card-img-top" src="images/Pakistan.jpg" width="25%" height="25%" alt="Card image cap" height="128" width="128">
+-->  		<div class="card-body">
+  				<h1 class="card-title">Pakistan Team and Players</h1><br><br>
+            <ol class="list-group list-group-flush" type="1">
+            <a class="card-title" href="#">Sarfraz Ahmad</a>
+            <a class="card-title" href="#">Imam-ul-Haq</a>
+            <a class="card-title" href="#">Fahim Ashraf</a>
+            <a class="card-title" href="#">Haris Sohail</a>
+            <a class="card-title" href="#">Hasan Ali</a>
+            <a class="card-title" href="#">Shadab Khan</a>
+            <a class="card-title" href="#">Mohammad Abbas</a>
+            <a class="card-title" href="#">Babar Azam</a>
+            <a class="card-title" href="#">Muhammad Amir</a>
+            <a class="card-title" href="#">Yasir Shah</a>
+            <a class="card-title" href="#">Usman Salahuddin</a>
+
+          </ol>
+  			  </div>
+  			</div>
+
+		  </div>
+		  <div class="col-sm-4" float-right>
+			<div class="card">
+			  <div class="card-body">
+				<h5 class="card-title">Top Headlines <large class="float-right"></h5>
+
+				  <ul class="list-group list-group-flush">
+					<a href="#" class="card-link">Sabbir Rahman axed from Bangladesh's Asia Cup Squad</a><br>
+					<a href="#" class="card-link">Murtagh, Balbirnie help Ireland draw level</a><br>
+					<a href="#" class="card-link">Kirsten replaces Vettori as RCB coach</a><br>
+					<a href="#" class="card-link">Nasir Jamshed banned for 10 years by PCB</a><br>
+				  </ul>
+
+			  </div>
+			</div>
+
+		  </div>
+		</div>
+	</div>
+
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+  </body>
+</html>
