@@ -1,4 +1,5 @@
 import json
+import re
 
 import scrapy
 from scrapy.linkextractors import LinkExtractor
@@ -7,7 +8,7 @@ from woolworths.items import WoolworthsItem
 
 
 class WoolworthSpider(CrawlSpider):
-    name = "woolworth"
+    name = "woolworths"
     start_urls = ["https://www.woolworths.co.za"]
 
     rules = (
@@ -24,11 +25,8 @@ class WoolworthSpider(CrawlSpider):
 
     def parse_products(self, response):
         sub_urls = response.xpath('//a[@class="product-card__details"]/@href').extract()
-        hrefs = []
         for url in sub_urls:
-            hrefs.append(response.urljoin(url))
-        for href in hrefs:
-            yield scrapy.Request(href, callback=self.parse_item)
+            yield scrapy.Request(response.urljoin(url), callback=self.parse_item)
 
     def parse_item(self, response):
         item = WoolworthsItem()
@@ -40,72 +38,97 @@ class WoolworthSpider(CrawlSpider):
         item['care'] = self.parse_care(response)
         item['category'] = self.parse_category(response)
         item['skus'] = self.parse_skus(response)
-        item['img_details'] = self.parse_img_details(response)
+        item['img_urls'] = self.parse_img_urls(response)
         yield item
 
-    def parse_img_details(self, response):
-        required_script_xpath = '//script[contains(text(), "window.__INITIAL_STATE__ ")]/text()'
-        data = response.xpath(required_script_xpath).extract_first()
-        data = data.lstrip('window.__INITIAL_STATE__ = ')
-        product_details = json.loads(data)
-        img_details = product_details['pdp']['productInfo']['auxiliaryMedia']
-        return img_details
+    def parse_script_data(self, response):
+        required_script_xpath = '//script[contains(text(), "productInfo")]/text()'
+        script = response.xpath(required_script_xpath).extract_first()
+        script = script.lstrip('window.__INITIAL_STATE__ = ')
+        data = json.loads(script)
+        return data
+
+    def parse_img_urls(self, response):
+        data = self.parse_script_data(response)
+        aux_media = data['pdp']['productInfo'].get("auxiliaryMedia")
+        urls = []
+        for item in aux_media.values():
+            urls.append("www.woolworths.co.za" + item['internalAuxiliaryImage'])
+        return urls
 
     def parse_brand(self, response):
-        required_script_xpath = '//script[contains(text(), "window.__INITIAL_STATE__ ")]/text()'
-        data = response.xpath(required_script_xpath).extract_first()
-        data = data.lstrip('window.__INITIAL_STATE__ = ')
-        product_details = json.loads(data)
-        try:
-            attribute_display_name = product_details['pdp']['productInfo']['productAttributes'][0]['attributeDisplayName']
-        except (IndexError, ValueError, KeyError):
-            return "Woolworths"
-        if attribute_display_name == "Brands":
-            return product_details['pdp']['productInfo']['productAttributes'][0]['attributeValue']
-        else:
-            return "Woolworths"
+        data = self.parse_script_data(response)
+        product_attributes = data['pdp']['productInfo'].get("productAttributes")
+        for attribute in product_attributes:
+            if attribute['attributeDisplayName'] == "Brands":
+                if attribute['attributeValue']:
+                    return attribute['attributeValue']
+            else:
+                return "Woolworths"
+
+    def parse_care(self, response):
+        data = self.parse_script_data(response)
+        product_attributes = data['pdp']['productInfo'].get("productAttributes")
+        for attribute in product_attributes:
+            if attribute['attributeDisplayName'] == "Care":
+                care_url = response.urljoin(attribute['imageURL'])
+                return care_url
 
     def parse_url(self, response):
         return response.url
 
     def parse_name(self, response):
-        return response.xpath('//h1[contains(@class, "font-graphic")]/text()').extract_first()
+        data = self.parse_script_data(response)
+        return data['pdp']['productInfo'].get("displayName")
 
     def parse_description(self, response):
-        return response.xpath('//div[@class="accordion__content--chrome accordion__content"]/ul[1]').extract()
+        data = self.parse_script_data(response)
+        description = data['pdp']['productInfo'].get("longDescription")
+        description_cleaned = self.clean_text(description)
+        return description_cleaned
+
+    def clean_text(self, raw_html):
+        cleaner = re.compile('<.*?>')
+        cleaned_text = re.sub(cleaner, '', raw_html)
+        cleaned_text = cleaned_text.replace("\t", "")
+        cleaned_text = cleaned_text.replace("\n", "")
+        return cleaned_text
 
     def parse_retailer_sku(self, response):
-        return response.xpath('//ul[@class="list--silent"]/li[2]/text()').extract_first()
+        data = self.parse_script_data(response)
+        return data['pdp']['productInfo'].get("productId")
 
-    def parse_care(self, response):
-        required_script_xpath = '//script[contains(text(), "window.__INITIAL_STATE__ ")]/text()'
-        data = response.xpath(required_script_xpath).extract_first()
-        data = data.lstrip('window.__INITIAL_STATE__ = ')
-        product_details = json.loads(data)
-        try:
-            care = product_details['pdp']['productInfo']['productAttributes'][1]['imageURL']
-        except (IndexError, ValueError, KeyError):
-            return "None"
-        care_url = response.urljoin(care)
-        return care_url
+    def parse_currency(self, response):
+        data = self.parse_script_data(response)
+        return data['labels']['labelsAndErrorMessages']['cart']['global-minicartpopup-currency-label']
 
     def parse_category(self, response):
-        return response.xpath('//li[@class="breadcrumb__crumb"][3]/a/text()').extract()
+        data = self.parse_script_data(response)
+        return data['pdp']['productInfo'].get("productType")
 
     def parse_skus(self, response):
-        required_script_xpath = '//script[contains(text(), "window.__INITIAL_STATE__ ")]/text()'
-        data = response.xpath(required_script_xpath).extract_first()
-        data = data.lstrip('window.__INITIAL_STATE__ = ')
-        product = json.loads(data)
-        try:
-            sku_prices = product['pdp']['productPrices'][self.parse_retailer_sku(response)]['plist3620006']['skuPrices']
-        except KeyError:
-            sku_prices = "Not mentioned"
-        try:
-            sku_details = product['pdp']['productInfo']['styleIdSizeSKUsMap']
-        except KeyError:
-            return
-        for values in sku_details.values():
-            for value in values:
-                value['price'] = sku_prices[value['id']]['SalePrice']
-        return sku_details
+        data = self.parse_script_data(response)
+        pdp = data['pdp']
+        style_id = pdp['productInfo'].get("defaultStyleId")
+        sku_prices = pdp['productPrices'][self.parse_retailer_sku(response)]['plist3620006']['skuPrices']
+        sku_details = pdp['productInfo']['styleIdSizeSKUsMap'][style_id]
+        for index in range(len(sku_details)):
+            product_code = sku_details[index]['id']
+            if index == 0:
+                skus = {
+                    product_code: {
+                        "currency": self.parse_currency(response),
+                        "colour": sku_details[index]['colour'],
+                        "size": sku_details[index]['size'],
+                        "price": sku_prices[product_code]['SalePrice']
+                    }
+                }
+            else:
+                skus[product_code] = {
+                    "currency": self.parse_currency(response),
+                    "colour": sku_details[index]['colour'],
+                    "size": sku_details[index]['size'],
+                    "price": sku_prices[product_code]['SalePrice']
+                }
+        return skus
+
