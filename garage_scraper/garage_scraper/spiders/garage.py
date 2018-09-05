@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+"""
+Extracts the details of product list
+available on garageclothing.com/ca
+"""
+
 import scrapy
 
 
@@ -15,6 +20,15 @@ class GarageSpider(scrapy.Spider):
         )
 
     def pre_parse(self, response):
+        """
+        Gets response from starts_request and
+        extracts JSESSIONID from response.url
+        to set self.JESSIONID and then
+        generates a request with a callback
+        method parse who does the actual
+        scraping
+        """
+
         self.JSESSIONID = response.url.split('=')[1]
         yield scrapy.Request(
             url='https://www.garageclothing.com/ca',
