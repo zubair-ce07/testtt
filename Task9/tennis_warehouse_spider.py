@@ -53,7 +53,7 @@ class ParseSpider(BaseParseSpider, MixinUS):
         return image_urls or response.css('.multiview img::attr(src)').re('(.+)&')
 
     def product_category(self, response):
-        return clean([trail[0] for trail in response.meta["trail"] if trail[0] != ''])
+        return clean([t for t, _ in response.meta.get("trail") if t != '' or []])
 
     def product_gender(self, garment):
         soup = [garment["name"], garment["url"]] + garment["category"]
