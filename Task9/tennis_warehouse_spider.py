@@ -12,7 +12,7 @@ class MixinUS:
     start_urls = ['https://www.tennis-warehouse.com/equipment.html']
 
 
-class ParseSpider(BaseParseSpider):
+class ParseSpider(BaseParseSpider, MixinUS):
     raw_description_css = 'div[itemprop="description"] *::text'
     price_css = '.product_pricing *::text'
     brand_css = 'meta[itemprop="brand"]::attr(content)'
@@ -47,7 +47,7 @@ class ParseSpider(BaseParseSpider):
         image_urls = []
 
         for color in product_colors:
-            image_urls.extend([MixinUS.image_url_t.format(product_id, color, image_no)
+            image_urls.extend([self.image_url_t.format(product_id, color, image_no)
                                for image_no in range(1, total_images + 1)])
 
         return image_urls or response.css('.multiview img::attr(src)').re('(.+)&')
