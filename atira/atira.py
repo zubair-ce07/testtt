@@ -145,7 +145,7 @@ class Atira(CrawlSpider):
         item['room_photos'] = self.extract_room_photos(selector)
         item['room_amenities'] = self.extract_room_amenities(selector)
         item['room_availability'] = self.detect_availability(selector)
-        item['floor_plans'] = []
+        item['floor_plans'] = self.extract_floor_plan(selector)
 
         return self.yield_variants(item, self.extract_peel_latrobe_room_variants(selector))
 
@@ -301,7 +301,10 @@ class Atira(CrawlSpider):
         return sum([self.images_regex.findall(a) for a in response.css(legacy_format_css).extract()], property_images)
 
     def extract_floor_plan(self, response):
-        css = '.floorplan-thumbnail a::attr(data-featherlight)'
+        id_css = '.wp-image-423::attr(data-izimodal-open)'
+        div_id = response.css(id_css).extract_first()
+        
+        css = f'.floorplan-thumbnail a::attr(data-featherlight), {div_id} img::attr(src)'
         return response.css(css).extract()
 
     def extract_room_amenities(self, response):
