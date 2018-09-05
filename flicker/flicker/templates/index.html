@@ -36,12 +36,17 @@
                                     {{posts_data.title}}</h3>
                             </div>
                             <div class="panel-body">
+                                <h3>
+                                    <img src="{{ url_for('static', filename = posts_data.user.profile_image_url) }}"
+                                         class="img-thumbnail" width="50dp"
+                                         height="30dp"/>
+                                    <a href="/user/{{ posts_data.user.uid }}">{{posts_data.user.username}}</a>
+                                </h3>
                                 <a href="/post/{{ posts_data.pid }}">
                                     <img src="{{ url_for('static', filename = posts_data.image_url) }}"
                                          class="img-thumbnail" width="500dp"
                                          height="300dp"/></a>
-                                <div
-                                "panel-heading">
+                                <div "panel-heading">
                                 <br>
                                 <div>
                                     <form action="" method="POST">
@@ -97,8 +102,6 @@
                                         </div>
                                     </form>
                                 </div>
-                                <h3><a href="/user/{{ posts_data.user.uid }}">{{posts_data.user.username}}</a>
-                                </h3>
                             </div>
                         </div>
                     </div>
