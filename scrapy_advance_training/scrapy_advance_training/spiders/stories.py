@@ -11,43 +11,63 @@ from scrapy_advance_training.items import ProductItem, SizeInfosItem
 class StoriesSpider(Spider):
     name = 'stories'
     allowed_domains = ['stories.com']
+
+    product_availability_url = 'https://www.stories.com/en_usd/getAvailability?variants={}'
+
     color_code_re = re.compile('[0-9]+')
 
     def start_requests(self):
-        urls = {
+        country_info = {
             'us': ('en', 'https://www.stories.com/en_usd/'),
             'gb': ('en', 'https://www.stories.com/en_gbp/'),
             'dk': ('en', 'https://www.stories.com/en_dkk/'),
         }
-        for country_code, value in urls.items():
-            language_code, url = value
+        for country_code, (language_code, country_url) in country_info.items():
             meta = {'country_code': country_code, 'language_code': language_code}
-            yield Request(url, self.parse, meta=meta)
+            yield Request(country_url, self.parse, meta=meta)
 
     def parse(self, response):
         for category in response.css('.categories a'):
             category_names = [category.css('::text').extract_first('').strip()]
             response.meta['category_names'] = category_names
-            yield Request(category.css('::attr(href)').extract_first(),
-                          self.parse_products,
-                          meta=response.meta)
+            category_url = category.css('::attr(href)').extract_first()
+            yield Request(category_url, self.parse_products, meta=response.meta)
 
     def parse_products(self, response):
+        if not response.meta.get('pagination_done'):
+            yield from self.request_sub_categories(response)
+            yield from self.request_pagination(response)
+
+        for product_url in response.css('#reloadProducts a::attr(href)').extract():
+            yield Request(response.urljoin(product_url),
+                          self.parse_detail,
+                          meta=response.meta)
+
+    def request_pagination(self, response):
+        product_path = response.css('#productPath::attr(class)').extract_first()
+        product_count = int(response.css('#productCount::attr(class)').extract_first('0'))
+        product_per_page = int(response.css('#productPerPage::attr(class)').extract_first('0'))
+        start = 0
+
+        if product_count == product_per_page:
+            return
+
+        while start <= (product_count - product_per_page):
+            start += product_per_page
+            product_path = response.urljoin('{}?start{}'.format(product_path, start))
+            response.meta['pagination_done'] = True
+            yield Request(product_path, self.parse_products, meta=response.meta)
+
+    def request_sub_categories(self, response):
         category_names = response.meta['category_names']
         for sub_category in response.css('.subcategories a'):
             cat_names = deepcopy(category_names)
             cat_names += [sub_category.css('::text').extract_first('').strip()]
             response.meta['category_names'] = cat_names
-            yield Request(sub_category.css('::attr(href)').extract_first(),
-                          self.parse_products,
-                          meta=response.meta)
+            sub_category_url = sub_category.css('::attr(href)').extract_first()
+            yield Request(sub_category_url, self.parse_products, meta=response.meta)
 
-        for product_url in response.css('#reloadProducts a::attr(href)').extract():
-            yield Request(response.urljoin(product_url),
-                          self.parse_product,
-                          meta=response.meta)
-
-    def parse_product(self, response):
+    def parse_detail(self, response):
         description_text = response.css('meta[property="og:description"]::attr(content)').extract()
         currency = response.css('meta[property="og:price:currency"]::attr(content)').extract_first()
 
@@ -109,14 +129,14 @@ class StoriesSpider(Spider):
         if index != -1:
             sizes = sizes.replace(sizes[index:], '')
             sizes = sizes[:-2]
-        sizes = sizes.replace(sizes[:sizes.find('variants')-1], '').replace('"variants":', '')
+        sizes = sizes.replace(sizes[:sizes.find('variants') - 1], '').replace('"variants":', '')
         index = sizes.find('productFrontImages')
         if index != -1:
-            sizes = sizes.replace(sizes[index-2:], '')
+            sizes = sizes.replace(sizes[index - 2:], '')
         sizes = loads(sizes)
 
         product_item['size_infos'] = list()
-        
+
         for size in sizes:
             size_item = SizeInfosItem(
                 stock=1,
