@@ -26,9 +26,10 @@ class FileHandler:
         selected_files = list(filter(regex.search, files))
         return selected_files
 
-    def get_list(self, filenames_list):
+    def get_list(self, year, month):
         """return list of data from files in filenames_list"""
         data_list = []
+        filenames_list = self.get_file_names(year, month)
         for file_name in filenames_list:
             file_name = f"{self.path_to_files}/{file_name}"
             with open(file_name, mode='r') as reader:
@@ -47,12 +48,15 @@ class ReportGenerator:
         :return:
         """
         result = calculate_extremes(record_list)
-        print(f"Highest: {result.get('max_temperature')}C on "
-              f"{result.get('max_temperature_date')}")
-        print(f"Lowest: {result.get('min_temperature')}C on "
-              f"{result.get('min_temperature_date')}")
-        print(f"Humidity: {result.get('humidity')}% on "
-              f"{result.get('humidity_date')}")
+        if result:
+            print(f"Highest: {result.get('max_temperature')}C on "
+                  f"{result.get('max_temperature_date')}")
+            print(f"Lowest: {result.get('min_temperature')}C on "
+                  f"{result.get('min_temperature_date')}")
+            print(f"Humidity: {result.get('humidity')}% on "
+                  f"{result.get('humidity_date')}")
+        else:
+            print("\n<< Data is not available")
 
     def display_averages(self, record_list):
         """
@@ -61,9 +65,12 @@ class ReportGenerator:
         :return:
         """
         result = calculate_average(record_list)
-        print(f"\nHighest Average: {result.get('max_temperature_avg')}C")
-        print(f"Lowest Average: {result.get('min_temperature_avg')}C")
-        print(f"Average Mean Humidity: {result.get('mean_humidity_avg')}%")
+        if result:
+            print(f"\nHighest Average: {result.get('max_temperature_avg')}C")
+            print(f"Lowest Average: {result.get('min_temperature_avg')}C")
+            print(f"Average Mean Humidity: {result.get('mean_humidity_avg')}%")
+        else:
+            print("\n<< Data is not available")
 
     def display_graph(self, year, month, file_handler, oneline):
         """
@@ -73,8 +80,7 @@ class ReportGenerator:
         """
         month_str = datetime.strptime(month, "%m").strftime('%B')
         print(f"\n{year} {month_str}:")
-        month_file = file_handler.get_file_names(year, month)
-        month_list = file_handler.get_list(month_file)
+        month_list = file_handler.get_list(year, month)
         for day in month_list:
             date = datetime.strptime(day.get("PKT"), '%Y-%m-%d').strftime('%d')
             max_temperature = day.get("Max TemperatureC")
@@ -129,19 +135,19 @@ class Controller:
     def parse_arguments(self):
         """take actions on the bases of arguments"""
         args = self.parser.parse_args()
+
         file_handler = FileHandler(args.path)
         generator = ReportGenerator()
+
         if args.e:
-            file_names = file_handler.get_file_names(args.e, None)
-            list = file_handler.get_list(file_names)
+            list = file_handler.get_list(args.e, None)
             generator.display_extremes(list)
         if args.d:
             [year, month] = args.d.split('/')
             generator.display_graph(year, month, file_handler, True)
         if args.a:
             [year, month] = args.a.split('/')
-            file_names = file_handler.get_file_names(year, month)
-            list = file_handler.get_list(file_names)
+            list = file_handler.get_list(year, month)
             generator.display_averages(list)
         if args.c:
             [year, month] = args.c.split('/')
@@ -180,23 +186,24 @@ def calculate_average(rec_list):
     :param rec_list: data for calculations
     :return:
     """
-    max_temp_data = [int(y.get("Max TemperatureC")) for y in rec_list
-                     if y.get("Max TemperatureC") is not None]
-    max_temp_avg = mean(max_temp_data)
+    if len(rec_list) > 0:
+        max_temp_data = [int(y.get("Max TemperatureC")) for y in rec_list
+                         if y.get("Max TemperatureC") is not None]
+        max_temp_avg = mean(max_temp_data)
 
-    min_temp_data = [int(y.get("Min TemperatureC")) for y in rec_list
-                     if y.get("Min TemperatureC") is not None]
-    min_temp_avg = mean(min_temp_data)
+        min_temp_data = [int(y.get("Min TemperatureC")) for y in rec_list
+                         if y.get("Min TemperatureC") is not None]
+        min_temp_avg = mean(min_temp_data)
 
-    humidity_data = [int(y.get(" Mean Humidity")) for y in rec_list
-                     if y.get(" Mean Humidity") is not None]
+        humidity_data = [int(y.get(" Mean Humidity")) for y in rec_list
+                         if y.get(" Mean Humidity") is not None]
 
-    result = {
-        "max_temperature_avg": str(round(max_temp_avg, 2)),
-        "min_temperature_avg": str(round(min_temp_avg, 2)),
-        "mean_humidity_avg": round(mean(humidity_data), 2),
-    }
-    return result
+        result = {
+            "max_temperature_avg": str(round(max_temp_avg, 2)),
+            "min_temperature_avg": str(round(min_temp_avg, 2)),
+            "mean_humidity_avg": round(mean(humidity_data), 2),
+        }
+        return result
 
 
 def get_required_entry(record_list, key, index):
