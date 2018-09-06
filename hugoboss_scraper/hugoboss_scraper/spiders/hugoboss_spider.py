@@ -33,8 +33,6 @@ class HugobossParseSpider(Spider):
         product["description"] = self.get_description(response)
         product["care"] = self.get_care(response)
         product["skus"] = self.get_skus(response)
-        if self.is_out_of_stock(product):
-            product["out_of_stock"] = True
         response.meta["request_queue"] = self.colour_requests(response)
         response.meta["product"] = product
         return self.item_or_request(response)
@@ -44,15 +42,17 @@ class HugobossParseSpider(Spider):
         response.meta["product"]["image_urls"] += self.get_image_urls(response)
         return self.item_or_request(response)
 
-    @staticmethod
-    def item_or_request(response):
+    def item_or_request(self, response):
+        product = response.meta["product"]
 
         if not response.meta["request_queue"]:
-            return response.meta["product"].copy()
+            if self.is_out_of_stock(product):
+                product['out_of_stock'] = True
+            return response.meta["product"]
 
         next_color_req = response.meta["request_queue"].pop()
-        next_color_req.meta["product"] = response.meta["product"].copy()
-        next_color_req.meta["request_queue"] = response.meta["request_queue"].copy()
+        next_color_req.meta["product"] = response.meta["product"]
+        next_color_req.meta["request_queue"] = response.meta["request_queue"]
         return next_color_req
 
     def get_skus(self, response):
@@ -139,7 +139,7 @@ class HugobossParseSpider(Spider):
         return False
 
     def is_out_of_stock(self, product):
-        return all(sku.get('out_of_stock', False) for sku in product['skus'].items())
+        return all(sku.get('out_of_stock', False) for sku in product['skus'].values())
 
     def cents_conversion(self, param):
         return 100 * param
