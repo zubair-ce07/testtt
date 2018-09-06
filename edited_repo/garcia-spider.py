@@ -108,8 +108,8 @@ class GraciaParseSpider(BaseParseSpider, Mixin):
         for size_s in sizes_s:
             params["filters"] = {"19": int(clean(size_s.css('::attr(data-value)'))[0])}
             meta['waist'] = clean(size_s.css('::text'))[0]
-            request = FormRequest(url=url, meta=meta, body=json.dumps(params), headers=headers,
-                                  callback=self.parse_size, dont_filter=True)
+            request = FormRequest(url=url, meta=meta, method="POST", body=json.dumps(params),
+                                  headers=headers, callback=self.parse_size, dont_filter=True)
             requests.append(request)
 
         return requests
