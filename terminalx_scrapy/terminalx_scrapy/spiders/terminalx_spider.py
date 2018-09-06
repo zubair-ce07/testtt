@@ -36,8 +36,6 @@ class TerminalXParseSpider(Spider):
         product["description"] = self.get_description(response)
         product["care"] = self.get_care(response)
         product["skus"] = self.get_skus(response, raw_product)
-        if self.is_out_of_stock(product):
-            product['out_of_stock'] = True
         response.meta["request_queue"] = self.images_requests(response, raw_product)
         response.meta["product"] = product
         return self.item_or_request(response)
@@ -46,10 +44,13 @@ class TerminalXParseSpider(Spider):
         response.meta["product"]["image_urls"] += self.image_urls(response)
         return self.item_or_request(response)
 
-    @staticmethod
-    def item_or_request(response):
+    def item_or_request(self, response):
+
         if not response.meta["request_queue"]:
-            return response.meta["product"]
+            product = response.meta["product"]
+            if self.is_out_of_stock(product):
+                product['out_of_stock'] = True
+            return product
 
         next_color_req = response.meta["request_queue"].pop()
         next_color_req.meta["product"] = response.meta["product"]
