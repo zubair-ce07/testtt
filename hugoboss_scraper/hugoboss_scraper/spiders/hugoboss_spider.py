@@ -43,12 +43,12 @@ class HugobossParseSpider(Spider):
         return self.item_or_request(response)
 
     def item_or_request(self, response):
-        product = response.meta["product"]
 
         if not response.meta["request_queue"]:
+            product = response.meta["product"]
             if self.is_out_of_stock(product):
                 product['out_of_stock'] = True
-            return response.meta["product"]
+            return product
 
         next_color_req = response.meta["request_queue"].pop()
         next_color_req.meta["product"] = response.meta["product"]
