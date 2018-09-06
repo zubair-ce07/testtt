@@ -13,7 +13,7 @@ class SoftSurroundingsSpider(CrawlSpider):
 
     allowed_domains = ['softsurroundings.com']
 
-    start_urls = ['https://www.softsurroundings.com/p/erno-laszlo-hydratherapy-memory-sleep-mask/']
+    start_urls = ['https://www.softsurroundings.com/']
 
     listing_css = '#menuNav'
     product_css = '.product'
@@ -34,9 +34,9 @@ class SoftSurroundingsSpider(CrawlSpider):
             yield Request(urljoin(response.url, f'page-{next_page}/'), callback=self.parse_product)
 
     def parse_product(self, response):
-        if self.extract_retailer_sku(response) in self.seen_ids:
+        if self.extract_retailer_sku(response)[1:] in self.seen_ids:
             return
-        self.seen_ids.add(self.extract_retailer_sku(response))
+        self.seen_ids.add(self.extract_retailer_sku(response)[1:])
         product = Product()
 
         product['gender'] = self.extract_gender(response)
@@ -76,7 +76,6 @@ class SoftSurroundingsSpider(CrawlSpider):
     def extract_category_request(self, response):
         requests_to_follow = []
         for category_id in response.css('#sizecat a:not(.sel)::attr(id)').extract():
-            self.seen_ids.add(category_id.split('_')[1])
             request = response.follow(f"/p/{category_id.split('_')[1]}/", callback=self.parse_category)
             requests_to_follow.append(request)
         return requests_to_follow
@@ -99,26 +98,34 @@ class SoftSurroundingsSpider(CrawlSpider):
 
     def extract_color_map(self, response):
         raw_id = response.css('[name="uniqid"]::attr(value)').extract_first()
-        color_id_css = f'input[name="specOne-{raw_id}"]::attr(value)'
         color_value_css = '#color .sizetbs .basesize::text'
 
         colors_map = {}
-        for sel in response.css('#color .swatchlink img.color'):
-            color_id = sel.css('::attr(data-value)').extract_first()
-            colors_map[color_id] = sel.css('::attr(alt)').extract_first()
 
-        return colors_map or {response.css(color_id_css).extract_first():
-                              response.css(color_value_css).extract_first(default='')}
+        if not response.css('#color .swatchlink img.color'):
+            color_id = response.css(f'input[name="specOne-{raw_id}"]::attr(value)').extract_first()
+            colors_map[color_id] = response.css(color_value_css).extract_first(default='')
+            return colors_map
+
+        for color_sel in response.css('#color .swatchlink img.color'):
+            color_id = color_sel.css('::attr(data-value)').extract_first()
+            colors_map[color_id] = color_sel.css('::attr(alt)').extract_first()
+
+        return colors_map
 
     def extract_size_map(self, response):
         size_value_css = '#size .sizetbs .basesize::text'
 
         sizes_map = {}
+
+        if not response.css('#size a.size'):
+            sizes_map['000'] = response.css(size_value_css).extract_first(default='One Size')
+
         for size_sel in response.css('#size a.size'):
             size_id = size_sel.css('::attr(id)').extract_first().split('_')[1]
             sizes_map[size_id] = size_sel.css('::text').extract_first()
 
-        return sizes_map or {'000': response.css(size_value_css).extract_first(default='One Size')}
+        return sizes_map
 
     def extract_sku(self, response):
         sku = {}
