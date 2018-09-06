@@ -36,6 +36,8 @@ class TerminalXParseSpider(Spider):
         product["description"] = self.get_description(response)
         product["care"] = self.get_care(response)
         product["skus"] = self.get_skus(response, raw_product)
+        if self.is_out_of_stock(product):
+            product['out_of_stock'] = True
         response.meta["request_queue"] = self.images_requests(response, raw_product)
         response.meta["product"] = product
         return self.item_or_request(response)
@@ -165,6 +167,9 @@ class TerminalXParseSpider(Spider):
 
     def cents_conversion(self, param):
         return 100 * param
+
+    def is_out_of_stock(self, product):
+        return all(sku.get('out_of_stock', False) for sku in product['skus'].items())
 
 
 class TerminalXCrawlSpider(CrawlSpider):
