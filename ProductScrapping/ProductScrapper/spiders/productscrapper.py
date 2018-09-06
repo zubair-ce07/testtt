@@ -1,13 +1,21 @@
 # -*- coding: utf-8 -*-
 import scrapy
-import w3lib.url as wurl
+import json
 from ProductScrapper.items import ProductItem
 
 
 class ProductSpider(scrapy.Spider):
     name = 'spider'
     item_counter = 0
+    base_url = "https://www.ernstings-family.de:443/wcs/"
+    pre_url = "resources/store/10151/productview/bySearchTermDetails/*?"
+    post_url = "pageNumber={}&pageSize=24&categoryId={}"
+    base_image_path = "//images.ernstings-family.com/product_detail/"
+
     start_urls = ['https://www.ernstings-family.de/']
+
+    def parse_empty(self, response):
+        pass
 
     def parse(self, response):
         categories_path = ".main-navigation-inner-wrapper li a::attr(href)"
@@ -15,76 +23,76 @@ class ProductSpider(scrapy.Spider):
         print(categories)
         # categories: maedchen, jungen, damen, wohnen, sale
         for cat in categories:
-            yield scrapy.Request(url=cat, callback=self.parse_main_page)
+            if "maedchen" in cat:
+                print(cat)
+                yield scrapy.Request(url=cat, callback=self.parse_main_page)
 
     def parse_main_page(self, response):
-        sub_categories_path = ".navigation-block-holder>ul>li>a::attr(href)"
-        sub_categories = response.css(sub_categories_path).extract()
-        #  remove duplicate sale links from other categories
+        sub_cat_path = "li[class *= 'item-level1']>a::attr(href)"
+        sub_categories = response.css(sub_cat_path).extract()
+
+        special_cat_path = "li[class *= 'special-list-item']>a::attr(href)"
+        special_categories = response.css(special_cat_path).extract()
+
+        #  remove duplicate sale links from special categories
         if "sale" not in response.url:
-            sub_categories = [cat for cat in sub_categories if "sale" not in cat]
+            special_categories = [cat for cat in special_categories if "sale" not in cat]
 
+        #  follow all level 1 and special categories
         for sub_cat in sub_categories:
-            yield scrapy.Request(url=sub_cat, callback=self.parse_filter_page)
+            if "50-92" in sub_cat:
+                print(sub_cat)
+                yield scrapy.Request(url=sub_cat, callback=self.parse_filter_page)
+        # for special_cat in special_categories:
+        # yield scrapy.Request(url=special_cat, callback=self.parse_filter_page)
 
+    '''
+    for parse_filter function
+     Check total_item_count, get total no of pages to create
+     yield that many page requests with new link
+    '''
     def parse_filter_page(self, response):
-        items_path = "a[class *='product-list-tile-holder']::attr(href)"
-        items = response.css(items_path).extract()
-        print("*" * 25)
-        print("Page: "+response.url)
-        print("Items: "+str(len(items)))
-        print("*" * 25)
-        for item in items:
-            yield scrapy.Request(url=item, callback=self.parse_item_page)
+        scripts_path = "script[type *= 'text/javascript']::text"
+        scripts = response.css(scripts_path).extract()
+        category_id = scripts[3].split('categoryId = "')[1].split('"')[0]
+        print("CategoryId: "+category_id)
 
         # if there are more than one pages,
         # traverse next pages unless finished
         total_items = response.css(".product-count-holder::text").extract_first()
+        print("Total items: " + total_items)
         if total_items:
             total_item_count = int(total_items.split(" ")[0])
             max_page = int(total_item_count/24)+1
-            curr_page_no = int(wurl.url_query_parameter(response.url,
-                                                        "pageNo",
-                                                        "1"))
-            next_page_no = curr_page_no + 1
-            if next_page_no <= max_page:
-                next_page_url = wurl.add_or_replace_parameter(response.url,
-                                                              "pageNo",
-                                                              str(curr_page_no+1))
-                yield scrapy.Request(url=next_page_url, callback=self.parse_filter_page)
-        else:
-            print("*" * 25)
-            print("No more items")
-            print("exiting: "+response.url)
+            print("Total pages: "+str(max_page))
+            curr_page = 1
+            url = self.base_url + self.pre_url + self.post_url
+            url = url.format(curr_page, int(category_id))
+            print(url)
+            yield scrapy.Request(url=url, callback=self.parse_items_from_json)
+            '''
+            for curr_page in range(1, max_page+1):
+                url = self.base_url+self.pre_url+self.post_url
+                url = url.format(curr_page, int(category_id))
+                print(url)
+                yield scrapy.Request(url=url, callback=self.parse_items_from_json)
+            '''
+
+    def parse_items_from_json(self, response):
+        # json object containing per page items
+        data = json.loads(response.body)
+        print("*" * 25)
+        print("Data")
+        # it will be parsed to obtain all fields of an Item
+        items = data['CatalogEntryView']
+        for item in items:
+            product = ProductItem()
+            product['name'] = item['name']
+            images = []
+            for val in range(0, len(item['Attachments'])):
+                image_name = item['Attachments'][val]['path']
+                images.append(self.base_image_path + image_name)
+            product['image_urls'] = images
             print("*" * 25)
 
-    def parse_item_page(self, response):
-        name_path = "h1.product-name::text"
-        label_path = "span.label-text::text"
-        price_path = "span.product-price::text"
-        colors_path = "p[class *= 'product-color']::text"
-        detail_path = "div#tab-id-1-content p::text"
-        features_path = "div#tab-id-1-content ul>li::text"
-        materials_path = "div#tab-id-2-content ul>li::text"
-        image_path = "div[class *= 'product-view']>a::attr(href)"
-
-        item = ProductItem()
-        name = response.css(name_path).extract_first()
-        item['name'] = name.split("\n")[1].split("\t")[4]
-        item['url'] = response.url
-        item['label'] = response.css(label_path).extract_first()
-        price = response.css(price_path).extract_first()
-        item['price'] = price.split("\t")[2].split("\xa0")[0]
-        colors = response.css(colors_path).extract_first()
-        item['colors'] = colors.split("\n")[1].split("\t")[8].split("/")
-        item['detail'] = response.css(detail_path).extract_first()
-        features = response.css(features_path).extract()
-        if len(features) == 1:
-            features[0] = features[0].split("\n")[1].split("\t")[4]
-        item['features'] = features
-        materials = response.css(materials_path).extract()
-        if len(materials) == 1:
-            materials[0] = materials[0].split("\n")[1].split("\t")[4]
-        item['materials'] = materials
-        item['image_urls'] = response.css(image_path).extract()
-        yield item
+        print("*" * 25)
