@@ -139,7 +139,7 @@ class HugobossParseSpider(Spider):
         return False
 
     def is_out_of_stock(self, product):
-        return all(sku["out_of_stock"] for sku in product['skus'].items())
+        return all(sku.get('out_of_stock', False) for sku in product['skus'].items())
 
     def cents_conversion(self, param):
         return 100 * param
