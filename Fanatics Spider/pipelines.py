@@ -1,3 +1,4 @@
+import datetime
 import json
 import logging
 
@@ -20,20 +21,21 @@ class FanaticsPipeline(object):
 
     def process_item(self, item, spider):
         table_name = settings.MYSQL_TABLE
-        sql_query = 'insert into {} (product_id, breadcrumb, title, brand, categories, ' \
+        sql_query = 'insert into {} (product_id, created_at, breadcrumb, title, brand, categories, ' \
                     'description, details, gender, product_url, image_urls, price, ' \
                     'currency, language, skus)' \
-                    'value (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) ' \
+                    'value (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) ' \
                     'on duplicate key update product_id=(product_id)'
 
         values = (
-            item['product_id'], json.dumps(item['breadcrumb']),
-            item['title'], item['brand'],
-            json.dumps(item['categories']), item['description'],
-            json.dumps(item['details']), item['gender'],
-            item['product_url'], json.dumps(item['image_urls']),
-            item['price'], item['currency'],
-            item['language'], json.dumps(item['skus'])
+            item['product_id'], datetime.datetime.now(),
+            json.dumps(item['breadcrumb']), item['title'],
+            item['brand'], json.dumps(item['categories']),
+            item['description'], json.dumps(item['details']),
+            item['gender'], item['product_url'],
+            json.dumps(item['image_urls']), item['price'],
+            item['currency'], item['language'],
+            json.dumps(item['skus'])
         )
 
         try:
