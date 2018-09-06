@@ -9,19 +9,19 @@ from colorama import Fore, Back, Style
 class FileParser:
     readings = [] #list of dictionary items
     months = {
-	        "1" : "Jan", 
-	        "2" : "Feb", 
+            "1" : "Jan", 
+            "2" : "Feb", 
             "3" : "Mar", 
-	        "4" : "Apr", 
+            "4" : "Apr", 
             "5" : "May", 
             "6" : "Jun", 
             "7" : "Jul", 
             "8" : "Aug", 
-            "9" : "Sep", 
-            "10" : "Oct", 
-            "11" : "Nov", 
+            "9" : "Sep",
+            "10" : "Oct",
+            "11" : "Nov",
             "12" : "Dec"
-	        }
+            }
 
     path = ""
     date = ""
@@ -53,14 +53,9 @@ class FileParser:
             return None	
 
     def validateFile(self,year, month, dir_files):
-        file_substr = year
-
         if month:
-            file_substr = file_substr+"_"+self.months[month]
-        if any(file_substr in file for file in dir_files):
-            return True
-        else:
-            return False	
+            year = year+ "_"+ self.months[month]
+        return True if any(year in file for file in dir_files) else False	
 
 			
 class Calculations:
