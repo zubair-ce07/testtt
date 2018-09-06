@@ -26,10 +26,6 @@ class Athlete(db.Model):
     # many to one relationship with country table
     country_id = db.Column(db.Integer, db.ForeignKey('country._id'))
 
-    @staticmethod
-    def get_all():
-        return Athlete.query.all()
-
 
 class Sport(db.Model):
     _id = db.Column(db.Integer, primary_key=True)

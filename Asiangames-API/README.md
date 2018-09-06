@@ -19,21 +19,21 @@ Next, run run.py and your server will be hosted publically at **http://127.0.0.1
 
 ```bash
 GET      /athletes/<int:id> #returns athlete with a particular id
-GET      /athletes/all #returns all athletes
-GET      /athletes/country/<string:_country> #returns all athletes from _country
-GET      /athletes/sport/<string:_sport> #returns all athletes that are playing _sport
-GET      /athletes/weight/<string:_weight> #returns all athletes that weight equal to _weight
-GET      /athletes/height/<string:_height> #returns all athletes that have height equal to _height
-GET      /athletes/age/<string:_age> #returns all athletes that have age equal to _age
+GET      /athletes #returns all athletes
+GET      /athletes/country/<int:country_id> #returns all athletes from country with country_id
+GET      /athletes/sport/<int:sport_id> #returns all athletes that are playing sport with sport_id
+GET      /athletes/weight/<int:weight> #returns all athletes that weight equal to weight
+GET      /athletes/height/<int:height> #returns all athletes that have height equal to height
+GET      /athletes/age/<string:age> #returns all athletes that have age equal to age
 ```
 ```bash
-GET      /schedules/all #returns all the schedules
-GET      /schedules/sport/<string:_sport> #returns all schedules of a particular _sport
+GET      /schedules #returns all the schedules
+GET      /schedules/sport/<string:sport_id> #returns all schedules of a particular sport with sport_id
 ```
 ```bash
-GET      /medals/all #returns all the medals's records
-GET      /medals/country/<string:_country> #returns all medals won by the country and sorted by gold medals
-GET      /medals/sport/<string:_sport> #returns all the medals won in _sport
+GET      /medals #returns all the medals's records
+GET      /medals/country/<int:country_id> #returns all medals won by the country with country_id and sorted by gold medals
+GET      /medals/sport/<int:sport_id> #returns all the medals won by sport with sport_id
 ```
 
 ## User Authentication and Authorization
@@ -108,8 +108,8 @@ value: Bearer <JWT_ACCESS_TOKEN>
 and now you can do these requests
 ```bash
 POST    /favourite/country/<int: country_id> #to add country_id in your favourites
-POST    /favourite/country/<int:sport_id> #to add sport_id in your favourites
-POST    /favourite/country/<int:athlete_id> #to add athlete with athlete_id in your favourites
+POST    /favourite/sport/<int:sport_id> #to add sport_id in your favourites
+POST    /favourite/athlete/<int:athlete_id> #to add athlete with athlete_id in your favourites
 GET     /favourite/all #to view all your favourites
 GET     /favourite/countries #to get all your favourite countries
 GET     /favourite/sports #to get all your favourite sports

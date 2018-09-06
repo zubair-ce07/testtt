@@ -1,3 +1,5 @@
+from flask import jsonify
+
 
 def get_favourite_names_by_ids(fav_object, current_user_id, entity_type, entity_value):
 
@@ -10,5 +12,8 @@ def get_favourite_names_by_ids(fav_object, current_user_id, entity_type, entity_
 
 
 def get_id_by_name(entity_type, name):
-
     return entity_type.query.filter_by(name=name).first()._id
+
+
+def schema_to_json(schema_object, data):
+    return jsonify(schema_object.dump(data).data)

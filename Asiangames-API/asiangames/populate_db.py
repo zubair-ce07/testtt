@@ -35,7 +35,7 @@ if __name__ == '__main__':
                     bronze=sport_medal['bronze']
                 )
 
-                sport_country_medal_record.medals = get_or_create(db.session, Sport, name=sport_medal['name'])
+                sport_country_medal_record.sport = get_or_create(db.session, Sport, name=sport_medal['name'])
                 country_record.country_sports.append(sport_country_medal_record)
                 db.session.add(country_record)
                 print('Completed {}\'s {}'.format(medal_data['name'], sport_medal['name']))

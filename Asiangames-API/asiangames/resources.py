@@ -6,9 +6,10 @@ from flask_jwt_extended import (create_access_token, create_refresh_token, jwt_r
 from flask import jsonify
 
 from asiangames.models import User, Athlete, Country, Sport, Favourite
-from asiangames.utils import get_id_by_name, get_favourite_names_by_ids
+from asiangames.utils import get_favourite_names_by_ids
 from asiangames.decorators import required_access_level
 from asiangames.schemas import *
+from asiangames.utils import schema_to_json
 
 
 user_login_parser = reqparse.RequestParser()
@@ -85,15 +86,6 @@ class TokenRefresh(Resource):
         return {'access_token': access_token}
 
 
-class SecretResourse(Resource):
-
-    @jwt_required
-    @required_access_level(ACCESS_LEVELS['ADMIN'])
-    def get(self):
-        current_user = get_jwt_identity()
-        return {'hidden': 'Answer is 22', 'user_email': current_user}
-
-
 class AthleteResource(Resource):
 
     def get(self, id):
@@ -109,9 +101,7 @@ class AthleteListResource(Resource):
     def get(self):
         athlete_schema = AthleteSchema(many=True)
         athletes = Athlete.query.all()
-        output = athlete_schema.dump(athletes).data
-
-        return jsonify(output)
+        return schema_to_json(athletes, athletes)
 
 
 class AthleteFilterResource(Resource):
@@ -120,30 +110,25 @@ class AthleteFilterResource(Resource):
         athlete_schema = AthleteSchema(many=True)
 
         if attribute == 'country':
-            country_id = Country.query.filter_by(name=value).first()._id
-            athletes = Athlete.query.filter_by(country_id=country_id).all()
-            output = athlete_schema.dump(athletes).data
-            return jsonify(output)
+            athletes = Athlete.query.filter_by(country_id=value).all()
+            return schema_to_json(athlete_schema, athletes)
 
         elif attribute == 'sport':
-            sport_record = Sport.query.filter_by(name=value).first()
-            output = athlete_schema.dump(sport_record.athletes.all()).data
-            return jsonify(output)
+            sport_record = Sport.query.filter_by(_id=value).first()
+            return schema_to_json(athlete_schema, sport_record.athletes.all())
 
         elif attribute == 'weight':
-            athletes = Athlete.query.filter_by(weight=int(value)).all()
-            output = athlete_schema.dump(athletes).data
-            return jsonify(output)
+            athletes = Athlete.query.filter_by(weight=value).all()
+            return schema_to_json(athlete_schema, athletes)
 
         elif attribute == 'height':
-            athletes = Athlete.query.filter_by(height=int(value)).all()
-            output = athlete_schema.dump(athletes).data
-            return jsonify(output)
+            athletes = Athlete.query.filter_by(height=value).all()
+            return schema_to_json(athlete_schema, athletes)
 
         elif attribute == 'age':
-            athletes = Athlete.query.filter_by(age=int(value)).all()
-            output = athlete_schema.dump(athletes).data
-            return jsonify(output)
+            athletes = Athlete.query.filter_by(age=value).all()
+            return schema_to_json(athlete_schema, athletes)
+
 
 
 class ScheduleListResource(Resource):
@@ -151,18 +136,15 @@ class ScheduleListResource(Resource):
     def get(self):
         schedule_schema = ScheduleSchema(many=True)
         schedules = Schedule.query.order_by(Schedule.daytime.desc()).all()
-        output = schedule_schema.dump(schedules).data
-        return jsonify(output)
+        return schema_to_json(schedule_schema, schedules)
 
 
 class ScheduleFilterResource(Resource):
 
     def get(self, value):
         schedule_schema = ScheduleSchema(many=True)
-
-        sport_record = Sport.query.filter_by(name=value).first()
-        output = schedule_schema.dump(sport_record.schedules).data
-        return output
+        sport_record = Sport.query.filter_by(_id=value).first()
+        return schema_to_json(schedule_schema, sport_record.schedules)
 
 
 class MedalsListResource(Resource):
@@ -170,8 +152,7 @@ class MedalsListResource(Resource):
     def get(self):
         medal_schema = SportCountryMedalsSchema(many=True)
         medals = SportCountryMedals.query.order_by(SportCountryMedals.gold.desc()).all()
-        output = medal_schema.dump(medals).data
-        return jsonify(output)
+        return schema_to_json(medal_schema, medals)
 
 
 class MedalsFilterResource(Resource):
@@ -180,16 +161,12 @@ class MedalsFilterResource(Resource):
         medal_schema = SportCountryMedalsSchema(many=True)
 
         if attribute == 'country':
-            country_id = Country.query.filter_by(name=value).first()._id
-            medals = SportCountryMedals.query.filter_by(country_id=country_id).order_by(SportCountryMedals.gold.desc()).all()
-            output = medal_schema.dump(medals).data
-            return jsonify(output)
+            medals = SportCountryMedals.query.filter_by(country_id=value).order_by(SportCountryMedals.gold.desc()).all()
+            return schema_to_json(medal_schema, medals)
 
         elif attribute == 'sport':
-            sport_id = Sport.query.filter_by(name=value).first()._id
-            medals = SportCountryMedals.query.filter_by(sport_id=sport_id).order_by(SportCountryMedals.gold.desc()).all()
-            output = medal_schema.dump(medals).data
-            return jsonify(output)
+            medals = SportCountryMedals.query.filter_by(sport_id=value).order_by(SportCountryMedals.gold.desc()).all()
+            return schema_to_json(medal_schema, medals)
 
 
 class FavouriteListResource(Resource):
