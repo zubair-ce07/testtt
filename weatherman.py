@@ -17,9 +17,9 @@ class FileParser:
             "6" : "Jun", 
             "7" : "Jul", 
             "8" : "Aug", 
-            "9" : "Sep",
-            "10" : "Oct",
-            "11" : "Nov",
+            "9" : "Sep", 
+            "10" : "Oct", 
+            "11" : "Nov", 
             "12" : "Dec"
 	        }
 
