@@ -68,7 +68,7 @@ class GraciaParseSpider(BaseParseSpider, Mixin):
         sizes_s = css_selector.css('.variant-filter-item')
         for size_s in sizes_s:
             sku = common_sku.copy()
-            sku['size'] = clean(size_s.css('::text'))[0]
+            sku['size'] = f'{waist}_{clean(size_s.css("::text"))[0]}'
 
             if size_s.css('[class*="disabled"]'):
                 sku['out_of_stock'] = True
