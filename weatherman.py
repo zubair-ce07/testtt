@@ -12,11 +12,11 @@ import calendar
 import csv
 import argparse
 import re
-import dateutil.parser as date_utility
+import datetime
 from termcolor import colored
 
 
-class Weather:
+class WeatherRecord:
     def __init__(self, data, date):
         self.date = date
         self.min_temp = int(data.get('Min TemperatureC'))
@@ -25,157 +25,6 @@ class Weather:
         self.min_humidity = int(data.get('Min Humidity'))
         self.max_humidity = int(data.get('Max Humidity'))
         self.mean_humidity = int(data.get('Mean Humidity'))
-
-
-def applying_commandline_arguments():
-    """Create Command Line Argument List"""
-    parser_arg = argparse.ArgumentParser()
-    parser_arg.add_argument("directory", help="directory for records")
-    parser_arg.add_argument("-e", "--extreme", help="Show extreme records")
-    parser_arg.add_argument("-a", "--average", help="Show average records")
-    parser_arg.add_argument("-c", "--chart", help="Show bar chart")
-    parser_arg.add_argument("-r", "--range_chart", help="Show range chart")
-    return parser_arg.parse_args()
-
-
-def parser(time_span):
-    """It takes time-span and returns list of records from the directory"""
-
-    # Getting date's year and month
-    date = get_splitted_date(time_span)
-    year = date[0] if len(date) > 0 else None
-    month = date[1] if len(date) > 1 else None
-
-    files = get_required_files(year, month)
-
-    return files
-
-
-def get_required_files(required_year, required_month):
-    """It takes year and month to choose those files from directory"""
-    try:
-        month_name = None if not required_month else calendar.month_abbr[int(required_month)]
-    except IndexError:
-        raise IndexError("Wrong Month")
-
-    # if month is not defined, we have to search on the basis of year only
-    search_pattern = f'r(.{str(required_year)}_{month_name})' if month_name else f'r(.{required_year})'
-
-    file_records = []
-    for file_name in os.listdir():
-        if re.compile(search_pattern).search(file_name):
-            file_records += collect_data_from_files(file_name)
-    return file_records
-
-
-def collect_data_from_files(file):
-    """It takes names of files as arguments, returns list of records"""
-
-    # Registering dialect to skip spaces in names of dictionary
-    csv.register_dialect('space_eliminator', delimiter=',', skipinitialspace=True)
-
-    # Reading record files and returning in form of list
-    csv_records = csv.DictReader(open(file, 'r'), dialect='space_eliminator')
-    records = []
-    for csv_record in csv_records:
-        try:
-            date = string_to_date(csv_record.get('PKT') or csv_record.get('PKST'), '-')
-            value = Weather(csv_record, date)
-            records.append(value)
-        except ValueError:
-            continue
-
-    return records
-
-
-def calculate_extreme_temp(data_set, high_temp=0, low_temp=300, humidity=0):
-    """Takes list of data and returns extreme conditions and occurrence dates"""
-    for row in data_set:
-        # Max Temperature Check
-        if row.max_temp and high_temp < row.max_temp:
-            high_temp_date = row.date
-            high_temp = row.max_temp
-
-        # Min Temperature Check
-        if row.min_temp and low_temp > row.min_temp:
-            low_temp_date = row.date
-            low_temp = row.min_temp
-
-        # Humidity Check
-        if row.max_humidity and humidity < row.max_humidity:
-            humidity = row.max_humidity
-            humidity_date = row.date
-
-    temp_record = {
-        'high_temp': high_temp, 'low_temp': low_temp,
-        'humidity': humidity, 'high_temp_date': high_temp_date,
-        'low_temp_date': low_temp_date, 'humidity_date': humidity_date
-    }
-
-    return temp_record
-
-
-def calculate_avg_temperature(data_set, high_temp_avg=0, low_temp_avg=0, humidity_avg=0):
-    """Takes List of Data and Calculates Averages"""
-
-    for row in data_set:
-        high_temp_avg += row.max_temp if row.max_temp else 0
-        low_temp_avg += row.min_temp if row.min_temp else 0
-        humidity_avg += row.mean_humidity if row.mean_humidity else 0
-
-    results = dict()
-    results['high_avg'] = high_temp_avg // len(data_set)
-    results['low_avg'] = low_temp_avg // len(data_set)
-    results['humid_avg'] = humidity_avg // len(data_set)
-
-    return results
-
-
-def string_to_date(time_span, delimeter='/'):
-    """Converts given date to a formatted Date pattern (String to Date)"""
-
-    try:
-        date = date_utility.parse(time_span)
-    except ValueError:
-        raise ValueError
-
-    date_splitted = get_splitted_date(time_span, delimeter)
-
-    if len(date_splitted) == 3:
-        date = date.strftime('%d %B %Y')
-    elif len(date_splitted) == 2:
-        date = date.strftime('%B %Y')
-    else:
-        date = date.strftime('%Y')
-
-    return date
-
-
-def get_splitted_date(date, delimeter='/'):
-    return date.split(delimeter)
-
-
-def main():
-    """Takes system args and executes the whole process over it"""
-
-    function_specifier = {
-        'extreme': WeatherReport.print_summary_extreme,
-        'average': WeatherReport.print_summary_avg,
-        'chart': WeatherReport.print_horizontal_chart,
-        'range_chart': WeatherReport.print_range_chart
-    }
-
-    args = applying_commandline_arguments()
-    os.chdir(args.directory)
-
-    for arg in vars(args):
-        attribute_val = getattr(args, arg)
-        if attribute_val and arg != "directory":
-            data_set = parser(attribute_val)
-            if len(data_set) > 0:
-                function_specifier.get(arg)(attribute_val, data_set)
-            else:
-                print("No Data Found")
 
 
 class WeatherReport:
@@ -241,6 +90,148 @@ class WeatherReport:
             color = 'green'
         for i in range(abs(count)):
             print(colored('+', color), end='')
+
+
+def applying_commandline_arguments():
+    """Create Command Line Argument List"""
+    parser_arg = argparse.ArgumentParser()
+    parser_arg.add_argument("directory", help="directory for records")
+    parser_arg.add_argument("-e", "--extreme", help="Show extreme records")
+    parser_arg.add_argument("-a", "--average", help="Show average records")
+    parser_arg.add_argument("-c", "--chart", help="Show bar chart")
+    parser_arg.add_argument("-r", "--range_chart", help="Show range chart")
+    return parser_arg.parse_args()
+
+
+def parser(time_span):
+    """It takes time-span and returns list of records from the directory"""
+
+    # Getting date's year and month
+    date = time_span.split('/')
+    year = date[0] if len(date) > 0 else None
+    month = date[1] if len(date) > 1 else None
+
+    files = get_required_files(year, month)
+
+    return files
+
+
+def get_required_files(required_year, required_month):
+    """It takes year and month to choose those files from directory"""
+    try:
+        month_name = None if not required_month else calendar.month_abbr[int(required_month)]
+    except IndexError:
+        raise IndexError("Wrong Month")
+
+    # if month is not defined, we have to search on the basis of year only
+    search_pattern = f'r(.{str(required_year)}_{month_name})' if month_name else f'r(.{required_year})'
+
+    file_records = []
+    for file_name in os.listdir():
+        if re.compile(search_pattern).search(file_name):
+            file_records += collect_data_from_files(file_name)
+    return file_records
+
+
+def collect_data_from_files(file):
+    """It takes names of files as arguments, returns list of records"""
+
+    # Registering dialect to skip spaces in names of dictionary
+    csv.register_dialect('space_eliminator', delimiter=',', skipinitialspace=True)
+
+    # Reading record files and returning in form of list
+    csv_records = csv.DictReader(open(file, 'r'), dialect='space_eliminator')
+    records = []
+    for csv_record in csv_records:
+        try:
+            date = string_to_date(csv_record.get('PKT') or csv_record.get('PKST'), '-')
+            value = WeatherRecord(csv_record, date)
+            records.append(value)
+        except ValueError:
+            continue
+
+    return records
+
+
+def calculate_extreme_temp(data_set, high_temp=0, low_temp=300, humidity=0):
+    """Takes list of data and returns extreme conditions and occurrence dates"""
+    for row in data_set:
+        # Max Temperature Check
+        if row.max_temp and high_temp < row.max_temp:
+            high_temp_date = row.date
+            high_temp = row.max_temp
+
+        # Min Temperature Check
+        if row.min_temp and low_temp > row.min_temp:
+            low_temp_date = row.date
+            low_temp = row.min_temp
+
+        # Humidity Check
+        if row.max_humidity and humidity < row.max_humidity:
+            humidity = row.max_humidity
+            humidity_date = row.date
+
+    temp_record = {
+        'high_temp': high_temp, 'low_temp': low_temp,
+        'humidity': humidity, 'high_temp_date': high_temp_date,
+        'low_temp_date': low_temp_date, 'humidity_date': humidity_date
+    }
+
+    return temp_record
+
+
+def calculate_avg_temperature(data_set, high_temp_avg=0, low_temp_avg=0, humidity_avg=0):
+    """Takes List of Data and Calculates Averages"""
+
+    for row in data_set:
+        high_temp_avg += row.max_temp if row.max_temp else 0
+        low_temp_avg += row.min_temp if row.min_temp else 0
+        humidity_avg += row.mean_humidity if row.mean_humidity else 0
+
+    results = {}
+    results['high_avg'] = high_temp_avg // len(data_set)
+    results['low_avg'] = low_temp_avg // len(data_set)
+    results['humid_avg'] = humidity_avg // len(data_set)
+
+    return results
+
+
+def string_to_date(time_span, delimeter='/'):
+    """Converts given date to a formatted Date pattern (String to Date)"""
+
+    date_given = time_span.split(delimeter)
+
+    if len(date_given) == 3:
+        date = datetime.date(int(date_given[0]), int(date_given[1]), int(date_given[2])).strftime('%d %B %Y')
+    elif len(date_given) == 2:
+        date = datetime.date(int(date_given[0]), int(date_given[1]), 1).strftime('%B %Y')
+    else:
+        date = datetime.date(int(date_given[0]), 1, 1).strftime('%Y')
+
+    return date
+
+
+def main():
+    """Takes system args and executes the whole process over it"""
+
+    function_specifier = {
+        'extreme': WeatherReport.print_summary_extreme,
+        'average': WeatherReport.print_summary_avg,
+        'chart': WeatherReport.print_horizontal_chart,
+        'range_chart': WeatherReport.print_range_chart
+    }
+
+    args = applying_commandline_arguments()
+    os.chdir(args.directory)
+
+    for arg in vars(args):
+        attribute_val = getattr(args, arg)
+        if attribute_val and arg != "directory":
+            data_set = parser(attribute_val)
+            if len(data_set) > 0:
+                function_specifier.get(arg)(attribute_val, data_set)
+            else:
+                print("No Data Found")
 
 
 if __name__ == "__main__":
