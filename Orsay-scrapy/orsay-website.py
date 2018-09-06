@@ -1,100 +1,80 @@
-import scrapy
 import json
-from orlay.items import SizeInfo, OrsayItem
+from scrapy import Request
+from scrapy.spiders.crawl import CrawlSpider, Rule
+from scrapy.linkextractors import LinkExtractor
+
+from orsay.items import SizeInfo, OrsayItem
 
 
-class OrsayCrawler(scrapy.Spider):
+class OrsayCrawler(CrawlSpider):
     """This crawler crawls orsay website and extracts all the information from the website"""
     name = 'Orsay'
+    allowed_domains = ["orsay.com"]
     start_urls = ['http://www.orsay.com']
 
-    def parse(self, response):
-        """This function will get response of Orsay.com and extract all of its categories links to parse again"""
-
-        # Getting links of all the categories, we need only first four of them, last category is redundant
-        categories_urls = response.css("a.has-sub-menu::attr(href)").extract()[:4]
-
-        # Making requests over categories
-        for url in categories_urls:
-            yield scrapy.Request(url=url, callback=self.parse_categories)
+    rules = (
+        Rule(LinkExtractor(restrict_css="nav.header-navigation>ul>li:nth-child(2) a.level-1"),
+             callback='parse_categories'),
+        Rule(LinkExtractor(restrict_css=".product-image>a"),
+             callback='parse_products')
+    )
 
     def parse_categories(self, response):
-        """This method takes response of each category and iterate over all the products present in a category"""
+        """This method takes response of each category and iterate over all the products
+         present in a category
+        """
 
-        # Extracting number of products
         total_products_count = self.get_product_count(response)
 
-        # Sending scrapy requests for pagination
-        return self.categories_pagination(response.url, total_products_count)
-
-    def categories_pagination(self, url, count):
-        """Paginates over each category"""
-        # Each request generates 72 item records so we have to iterate over all products
-        for count in range(0, count, 72):
-            yield scrapy.Request(url=url + f"?start={count}&format=page-element",
-                                 callback=self.parse_products)
+        for count in range(0, total_products_count, 72):
+            yield Request(url=f"{response.url}?start={count}&format=page-element")
 
     def parse_products(self, response):
-        """It gets response of product list page and then it has to iterate over each single product"""
-
-        # Extracting links of all the products
-        product_urls = response.css('div.product-image>a::attr(href)').extract()
-
-        # Iterating over each product
-        for product_url in product_urls:
-            yield scrapy.Request(url=self.start_urls[0] + product_url, callback=self.get_product_details)
-
-    def get_product_details(self, response):
-        """
-        This function will extract information of products, it takes response of product page and besides
-        extracting info it also traverses onto different pages associated with the product sizes
+        """This function will extract information of products,it takes response of product page
+        and besides extracting info it also traverses onto different pages associated with the
+        product sizes
         """
 
-        item = OrsayItem({
-            'title': self.get_title(response),
-            'price': self.get_price(response),
-            'currency': self.get_currency(response),
-            'categories': self.get_category(response),
-            'care': self.get_care(response),
-            'details': self.get_detail(response),
-            'images': self.get_images(response),
-            'item_url': response.url,
-            'sizes': self.get_sizes(response),
-            'retail_sku': self.get_retail_sku(response),
-            'skus': {},
-        })
+        item = OrsayItem()
+        item['brand'] = 'Orsay'
+        item['gender'] = 'Female'
+        item['name'] = self.get_title(response)
+        item['category'] = self.get_category(response)
+        item['care'] = self.get_care(response)
+        item['description'] = self.get_detail(response)
+        item['image_urls'] = self.get_images(response)
+        item['url'] = response.url
+        item['retailer_sku'] = self.get_retailer_sku(response)
+        item['skus'] = {}
 
-        # Inputs information of out of stock products
-        self.populate_out_of_stock_products(self.get_out_of_stock_products(response), item)
+        unavailable_products = self.get_out_of_stock_products(response)
 
-        # Extracting available sizes and related links of products
+        self.populate_out_of_stock_products(unavailable_products, item, response.url)
+
         size_and_url = self.get_sizes_and_links_of_product(response)
 
-        # If sizes are available, traverse over those size urls, else return item
         if len(size_and_url) > 0:
             yield self.create_size_page_request(size_and_url, item)
-
         else:
             yield item
 
-    def populate_out_of_stock_products(self, unavailable_products, item):
-        """
-        This function populates information
-        about products which are not in stock
-        """
+    def populate_out_of_stock_products(self, unavailable_products, item, url):
+        """This function populates informationabout products which are not in stock"""
 
-        for product_name in unavailable_products:
-            item.get('skus')[product_name] = SizeInfo({'in_stock': False})
-
+        for product_size in unavailable_products:
+            sku = SizeInfo()
+            sku['out_of_stock'] = True
+            sku['size'] = str(product_size)
+            item.get('skus')[item.get('retailer_sku') + '_' + str(product_size)] = sku
 
     def create_size_page_request(self, size_and_url, item):
         """This function takes urls of sizes and item of product
-         data to create a scrapy Request according to them"""
+         data to create a scrapy Request according to them
+         """
         size_key, size_url = size_and_url.popitem()
-        request = scrapy.Request(url=size_url + '&Quantity=1&format=ajax&productlistid=undefined',
+        request = Request(url=size_url + '&Quantity=1&format=ajax&productlistid=undefined',
                                  callback=self.parse_sizes)
 
-        # Appending data in request to pass onto next function
         request.meta['item_data'] = item
         request.meta['sizes_to_traverse'] = size_and_url
         request.meta['current_size'] = size_key
@@ -102,15 +82,16 @@ class OrsayCrawler(scrapy.Spider):
         return request
 
     def parse_sizes(self, response):
+        """This function takes response of size-info-page and stores the information in
+         respective item object
         """
-        This function takes response of size-info-page and
-         stores the information in respective item object
-         """
+
         item_data = response.meta.get('item_data')
         current_size = response.meta.get('current_size')
         urls_of_sizes = response.meta.get('sizes_to_traverse')
 
-        item_data.get('skus')[current_size] = self.get_size_info(response)
+        skus = item_data.get('skus')
+        skus[item_data.get('retailer_sku') + '_' + str(current_size)] = self.get_size_info(response)
 
         if len(urls_of_sizes) > 0:
             yield self.create_size_page_request(urls_of_sizes, item_data)
@@ -118,23 +99,19 @@ class OrsayCrawler(scrapy.Spider):
             yield item_data
 
     def get_size_info(self, response):
-        """
-        takes response of product sizes page and
-        return information in the form of SizeInfo object
+        """Takes response of product sizes page and return information in the form of
+        SizeInfo object
         """
 
-        # Extracting details
         data = response.css('div.js-product-content-gtm::attr(data-product-details)').extract_first()
 
-        # Converting string dict into json to parse it
         data_json = json.loads(data)
 
-        # Creating object of information
         size_info = SizeInfo({
-            'in_stock': True,
+            'out_of_stock': False,
             'price': data_json.get('grossPrice'),
             'currency': data_json.get('currency_code'),
-            'colors': data_json.get('color'),
+            'colour': data_json.get('color'),
             'size': data_json.get('size'),
         })
 
@@ -142,21 +119,24 @@ class OrsayCrawler(scrapy.Spider):
 
     def convert_lists_to_dict(self, sizes, links):
         """converts two lists into one dict"""
+
         return dict(zip(sizes, links))
 
     def get_sizes_and_links_of_product(self, response):
-        """
-        It takes product page response and returns sizes
-         and their links in the form of dict"""
+        """It takes product page response and returns sizes and their links in the form of dict"""
 
-        sizes_of_product = [size.replace('\n', '') for size in
-                            response.css('ul.swatches.size>li.selectable a::text').extract()]
+        size_tags = response.css('ul.swatches.size>li.selectable a::text').extract()
+        sizes_of_product = []
+        for size in size_tags:
+            sizes_of_product.append(size.replace('\n', ''))
+
         links_of_product = response.css('ul.swatches.size>li.selectable a::attr(href)').extract()
 
         return self.convert_lists_to_dict(sizes_of_product, links_of_product)
 
     def get_title(self, response):
         """Extracts and returns Title of product"""
+
         return response.css('h1.product-name::text').extract_first()
 
     def get_price(self, response):
@@ -168,36 +148,50 @@ class OrsayCrawler(scrapy.Spider):
 
     def get_currency(self, response):
         """Extracts and returns Currency of product"""
+
         return response.css('span.country-currency::text').extract_first()
 
     def get_category(self, response):
         """Extracts and returns Category of product"""
+
         return response.css('a.breadcrumb-element-link span::text').extract()
 
     def get_care(self, response):
         """Extracts and returns Care of product"""
+
         return response.css('div.product-info-block p::text').extract_first()
 
     def get_detail(self, response):
         """Extracts and returns Details of product"""
+
         return response.css('div.product-details>div>div::text').extract()[1:]
 
     def get_images(self, response):
         """Extracts and returns Images of product"""
-        return response.css('img.productthumbnail::attr(src)').extract()
 
-    def get_sizes(self, response):
-        """Extracts and returns Available Sizes of product"""
-        return [size.replace('\n', '') for size in response.css('ul.swatches.size>li a::text').extract()]
+        return response.css('img.productthumbnail::attr(src)').extract()
 
     def get_out_of_stock_products(self, response):
         """Extracts and returns the products which are out of stock"""
-        return [size.replace('\n', '') for size in response.css('ul.swatches.size>li.unselectable a::text').extract()]
 
-    def get_retail_sku(self, response):
+        size_tags = response.css('ul.swatches.size>li.unselectable a::text').extract()
+        product_sizes = []
+        for size in size_tags:
+            product_sizes.append(size.replace('\n', ''))
+
+        return product_sizes
+
+    def get_retailer_sku(self, response):
         """Extracts and returns Retail-Sku of product"""
-        return response.css('input.js-product-id::attr(value)').extract_first()
+
+        sku = response.css('input.js-product-id::attr(value)').extract_first()
+        if not sku:
+            sku = response.css('input.js-producrt-id::attr(value)').extract_first()
+
+        return sku if sku else ''
 
     def get_product_count(self, response):
         """ It returns total number of products present in a specific category"""
+
         return int(response.css('div.pagination-product-count::attr(data-count)').extract_first())
+

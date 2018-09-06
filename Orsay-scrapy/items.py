@@ -9,22 +9,24 @@ import scrapy
 
 
 class OrsayItem(scrapy.Item):
-    title = scrapy.Field()
+    name = scrapy.Field()
     price = scrapy.Field()
     currency = scrapy.Field()
-    categories = scrapy.Field()
+    category = scrapy.Field()
     care = scrapy.Field()
-    details = scrapy.Field()
-    images = scrapy.Field()
-    item_url = scrapy.Field()
-    sizes = scrapy.Field()
-    retail_sku = scrapy.Field()
+    description = scrapy.Field()
+    image_urls = scrapy.Field()
+    url = scrapy.Field()
+    retailer_sku = scrapy.Field()
     skus = scrapy.Field()
+    brand = scrapy.Field()
+    gender = scrapy.Field()
 
 
 class SizeInfo(scrapy.Item):
-    colors = scrapy.Field()
+    colour = scrapy.Field()
     price = scrapy.Field()
     currency = scrapy.Field()
     size = scrapy.Field()
-    in_stock = scrapy.Field()
+    out_of_stock = scrapy.Field()
+
