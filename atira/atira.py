@@ -71,9 +71,6 @@ class Atira(CrawlSpider):
 
     images_regex = re.compile('\((.+)\)')
     duration_price_regex = re.compile('(\d+).*?(\$\d+)')
-    contact_info_regex = re.compile(
-        r"subtitle\":\"([^\"]+?)\"[^}]*?\"phone\":\"([^\"]+?)\"[^}]*?email\":\"(.*?)\""
-    )
     map_regex = re.compile('UberGoogleMaps\((.+?)\);', re.S)
 
     def parse_start_url(self, response):
