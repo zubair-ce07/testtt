@@ -19,9 +19,9 @@ class TerminalXParseSpider(Spider):
 
     def parse(self, response):
         product = Garment()
-        product_config = self.get_product_config(response)
+        raw_product = self.get_raw_product(response)
 
-        product["retailer_sku"] = product_config['jsonConfig']['productId']
+        product["retailer_sku"] = raw_product['jsonConfig']['productId']
         product["name"] = self.get_name(response)
         product["image_urls"] = []
         product["lang"] = "he"
@@ -35,24 +35,23 @@ class TerminalXParseSpider(Spider):
         product["url_original"] = response.url
         product["description"] = self.get_description(response)
         product["care"] = self.get_care(response)
-        product["skus"] = self.get_skus(response, product_config)
-        response.meta["pending_media_reqs"] = self.media_requests(response, product_config)
+        product["skus"] = self.get_skus(response, raw_product)
+        response.meta["request_queue"] = self.images_requests(response, raw_product)
         response.meta["product"] = product
         return self.item_or_request(response)
 
     def parse_images(self, response):
-        images = json_loads(response.body)['gallery']
-        response.meta["product"]["image_urls"] += self.image_urls(images)
+        response.meta["product"]["image_urls"] += self.image_urls(response)
         return self.item_or_request(response)
 
     @staticmethod
     def item_or_request(response):
-        if not response.meta["pending_media_reqs"]:
+        if not response.meta["request_queue"]:
             return response.meta["product"]
 
-        next_color_req = response.meta["pending_media_reqs"].pop()
+        next_color_req = response.meta["request_queue"].pop()
         next_color_req.meta["product"] = response.meta["product"]
-        next_color_req.meta["pending_media_reqs"] = response.meta["pending_media_reqs"]
+        next_color_req.meta["request_queue"] = response.meta["request_queue"]
         return next_color_req
 
     def get_skus(self, response, product_config):
@@ -119,7 +118,7 @@ class TerminalXParseSpider(Spider):
         return [line.strip() for line in care if line.strip()]
 
     @staticmethod
-    def get_product_config(response):
+    def get_raw_product(response):
         raw_config = response.css('script:contains("swatch-options")::text').extract_first()
         return json_loads(raw_config)['[data-role=swatch-options]']['IdusClass_ProductList/js/swatch-renderer']
 
@@ -128,7 +127,7 @@ class TerminalXParseSpider(Spider):
         if '₪' in response.css('span.price::text').extract_first():
             return 'ILS'
 
-    def media_requests(self, response, product_config):
+    def images_requests(self, response, product_config):
         url = 'https://www.terminalx.com/swatches/ajax/media/'
         params = {
             'product_id': product_config['jsonConfig']['productId'],
@@ -153,7 +152,8 @@ class TerminalXParseSpider(Spider):
         return False
 
     @staticmethod
-    def image_urls(images):
+    def image_urls(response):
+        images = json_loads(response.body)['gallery']
         return [image['large'] for image in images.values()]
 
     @staticmethod
