@@ -1,7 +1,9 @@
 import re
-from datetime import datetime
 
+from scrapy.spidermiddlewares.httperror import HttpError
+from datetime import datetime
 from scrapy import Request, FormRequest
+from scrapy import signals
 
 from student.utils import clean
 from ..items import Room, RoomLoader
@@ -16,6 +18,10 @@ class BaseMixinPP:
     unit_info_url_t = '{}/Apartments/module/application_unit_info/'
     login_email = 'james.henry1786@gmail.com'
     login_password = '0b006edd3ee1862c8efcb7bf8052a278'
+    first_name = "james"
+    last_name = "henry"
+    phone_num = "333-333-3333"
+    lead_source = '50378'
 
 
 class BaseMixinPPE(BaseMixinPP):
@@ -35,6 +41,10 @@ class PPBaseParseSpider(BaseParseSpider, BaseMixinPP):
 
     unit_list_url_t = ('{}/Apartments/module/application_unit_info/action/view_unit_spaces/floorplan_'
                        'availability_filter[is_submit]/1//property_floorplan[id]/{}/?application[lease_start_date]={}')
+
+    unit_details_url_t = ('{}/Apartments/module/application_unit_info/action/view_unit_details/floorplan_'
+                          'availability_filter[is_submit]/1//property_floorplan[id]/{}/unit_space[id]/{}/'
+                          '?application[lease_start_date]={}')
 
     price_url_t = ('{}/Apartments/module/application_system/action/reload_scheduled_charges/show_rates/1'
                    '/application[id]/{}')
@@ -58,9 +68,9 @@ class PPBaseParseSpider(BaseParseSpider, BaseMixinPP):
 
     def parse(self, response):
         return_url = self.price_url_t.format(self.login_domain, response.meta['application_id'])
-        self.submit_room_price_form['application[lease_start_date]'] = self.move_in_date
+        self.submit_room_price_form['application[lease_start_date]'] = self.move_in_date()
         self.submit_room_price_form['return_url'] = return_url
-        url = self.floor_availability_t.format(self.login_domain, date=self.move_in_date)
+        url = self.floor_availability_t.format(self.login_domain, date=self.move_in_date())
         return Request(url, self.parse_floor_availability)
 
     def parse_floor_availability(self, response):
@@ -84,7 +94,7 @@ class PPBaseParseSpider(BaseParseSpider, BaseMixinPP):
                 'deposit': deposit,
                 'apartment_name': apartment_name}
 
-            url = self.unit_list_url_t.format(self.login_domain, floor_id[0], self.move_in_date)
+            url = self.unit_list_url_t.format(self.login_domain, floor_id[0], self.move_in_date())
             yield Request(url, self.parse_unit_list, meta=meta)
 
     def parse_unit_list(self, response):
@@ -92,6 +102,7 @@ class PPBaseParseSpider(BaseParseSpider, BaseMixinPP):
 
         for unit_s in response.css('.row-unit '):
             loader = RoomLoader(item=Room(), selector=unit_s, date_format='%m/%d/%Y')
+            loader.add_value('listing_type', 'flexible_open_end')
             loader.add_value('property_name', self.property_name)
             loader.add_value('property_url', self.site_domain)
             loader.add_value('floor_plans', floor_plans)
@@ -104,13 +115,26 @@ class PPBaseParseSpider(BaseParseSpider, BaseMixinPP):
             loader.add_value('property_description', self.p_desc)
             loader.add_value('property_contact_info', self.contact_info)
             loader.add_value('property_images', self.p_images)
-            loader.add_value('move_in_date', self.move_in_date)
-            loader.add_value('move_out_date', self.move_out_date)
+            loader.add_value('available_from', self.move_in_date())
             loader.add_value('deals', self.deals)
-
             loader.add_value('room_price', self.room_price(unit_s, response))
             loader.add_value('deposit_amount', self.deposit_amount(unit_s, response))
             loader.add_value('deposit_type', 'fixed')
+            item = loader.load_item()
+            meta = {
+                'item': item
+            }
+            floor_id = unit_s.css('a::attr(data-floorplan)').extract_first()
+            unit_id = unit_s.css('a::attr(data-unit)').extract_first()
+            url = self.unit_details_url_t.format(self.login_domain, floor_id, unit_id, self.move_in_date())
+            yield Request(url, self.parse_min_duration, meta=meta.copy())
+
+    def parse_min_duration(self, response):
+        item = response.meta['item']
+
+        for lease_s in response.css('li[data-term]'):
+            loader = RoomLoader(item=item, min_duration_format='months', selector=lease_s)
+            loader.add_xpath('min_duration', './@data-term')
             yield loader.load_item()
 
     def room_name(self, sel, response):
@@ -132,6 +156,9 @@ class PPBaseParseSpider(BaseParseSpider, BaseMixinPP):
         prices = re.findall('(\$\d+)', "".join(raw_prices))
         return prices[0] if prices else ''
 
+    def move_in_date(self):
+        return datetime.today().strftime('%m/%d/%Y')
+
 
 class PPBaseParseSpiderE(PPBaseParseSpider, BaseMixinPPE):
     phone_x = '//div[contains(@class, "new-contact-details") and contains(.,"Phone")]/p//text()'
@@ -143,11 +170,21 @@ class PPBaseParseSpiderE(PPBaseParseSpider, BaseMixinPPE):
     room_url_i_t = ('{}/Apartments/module/application_unit_info/action/view_floorplans_for_student/application'
                     '[lease_start_window_id]/{}/immediate_movein_date/{}/is_immediate_movein_lease_term/true')
 
-    room_price_css = '.monthly-col::text'
+    set_info_url_t = '{}/Apartments/module/application_unit_info/action/insert_floorplan_info_for_student/'
+
+    room_price_url_t = ('{}/Apartments/module/application_system/action/reload_scheduled_charges/show_rates/1/'
+                        'application\[id\]/{}')
+
+    room_rent_x = '//span[contains(@title, "Rent")]/parent::div/following-sibling::div//text()'
+
     details_css = '.room-row:not(.header)'
-    pending_requests = []
+
+    room_price_css = '.monthly-col::text'
+
+    requests_queue = []
 
     def parse(self, response):
+        app_id = response.css('footer+script').re_first('"app_id":"(\d+)",')
         for m_s in response.css('#lease_start_window_id li'):
             raw_date = clean(m_s.css('input::attr(data-move-in)'))
             if not raw_date:
@@ -163,12 +200,11 @@ class PPBaseParseSpiderE(PPBaseParseSpider, BaseMixinPPE):
 
             if current_date >= dt.date():
                 url = self.room_url_i_t.format(self.login_domain, m_value, current_date.strftime('%m-%d-%Y'))
-
-            yield Request(url, self.parse_rooms, meta={
-                'move_in_date': in_date,
-                'move_out_date': out_date,
-                'planid': m_value
-            })
+            meta = {
+                'move_in_date': in_date, 'move_out_date': out_date, 'lease_id': m_value, 'app_id': app_id
+            }
+            req = Request(url, callback=self.parse_rooms, meta=meta.copy())
+            self.requests_queue.append(req)
 
     def parse_rooms(self, response):
         loader_c = RoomLoader(item=Room(), selector=response, date_format='%m/%d/%Y')
@@ -190,13 +226,61 @@ class PPBaseParseSpiderE(PPBaseParseSpider, BaseMixinPPE):
             loader.add_value('room_photos', self.r_photos)
             loader.add_css('room_amenities', '.sub-title ::text')
             loader.add_css('floor_plans', '.layout ::attr(src)', self.clean_floor_plan)
-            self.room_types(response, r_s, loader.load_item())
-        return self.next_action()
+            loader.add_css('room_name', '.title ::text')
+            yield from self.room_types(response, r_s, loader.load_item())
 
-    def next_action(self):
-        if self.pending_requests:
-            request = self.pending_requests.pop()
-            return request
+    def room_types(self, response, room_s, common_room):
+
+        for r_s in room_s.css(self.details_css):
+            loader = RoomLoader(item=common_room.copy(), selector=r_s)
+            room_name = self.room_name(response, room_s, r_s)
+
+            if self.is_room_valid(response, room_s, r_s):
+                loader.add_value("property_slug", self.property_slug)
+                loader.replace_value('room_name', room_name)
+                loader.add_css('room_type', '.type-col ::text', self.clean_deposit_price)
+                loader.add_css('room_price', self.room_price_css, self.clean_room_price)
+                price = loader.get_output_value('room_price')
+                item = loader.load_item()
+
+                if price:
+                    yield item
+                    continue
+
+                meta = {
+                    'item': item, 'app_id': response.meta['app_id']
+                }
+                url = self.set_info_url_t.format(self.login_domain)
+                data = self.form_data(response.meta['lease_id'], r_s)
+                req = FormRequest(url=url, method='POST', meta=meta.copy(), formdata=data,
+                                  callback=self.price_request, dont_filter=True)
+
+                self.requests_queue.append(req)
+
+    def price_request(self, response):
+        url = self.room_price_url_t.format(self.login_domain, response.meta['app_id'])
+        meta = {'item': response.meta['item']}
+
+        yield Request(url=url, callback=self.parse_room_price, meta=meta.copy(), dont_filter=True)
+
+    def parse_room_price(self, response):
+        item = response.meta['item']
+        loader = RoomLoader(item=item, response=response)
+        loader.add_css('deals', 'span[title*=Discount]::text')
+        loader.add_value('deals', item.get('deals', ''))
+        loader.add_xpath('room_price', self.room_rent_x, self.clean_room_price)
+        yield loader.load_item()
+
+    def form_data(self, lease_id, room_s):
+        floor_plan_id = room_s.css('input::attr(value)').extract_first()
+        space_configuration_id = room_s.css('input::attr(space_config_val)').extract_first()
+        data = {
+            'application[space_configuration_id]': space_configuration_id,
+            'application[lease_start_window_id]': lease_id,
+            'application[property_floorplan_id]': floor_plan_id
+        }
+
+        return data
 
     def clean_floor_plan(self, floor_plans):
         return [f_p for f_p in floor_plans if "comming_soon" not in f_p]
@@ -204,72 +288,12 @@ class PPBaseParseSpiderE(PPBaseParseSpider, BaseMixinPPE):
     def is_room_valid(self, response, room_s, r_s):
         return True
 
-    def room_types(self, response, room_s, common_room):
-        loader_c = RoomLoader(item=common_room.copy(), selector=room_s)
-        loader_c.add_css('room_name', '.title ::text')
-        common_room = loader_c.load_item()
-        url = clean(response.css('#application_location ::attr(action)'))[0]
-        for r_s in room_s.css(self.details_css):
-            loader = RoomLoader(item=common_room.copy(), selector=r_s)
-            room_name = self.room_name(response, room_s, r_s)
-
-            if r_s.xpath('.//*[contains(@class, "yearly-col") and text()="-"]'):
-                continue
-
-            if self.is_room_valid(response, room_s, r_s):
-                loader.add_value("property_slug", self.property_slug)
-                loader.replace_value('room_name', room_name)
-                loader.add_css('room_price', self.room_price_css, self.clean_room_price)
-                loader.add_css('room_type', '.type-col ::text', self.clean_deposit_price)
-                form_data = {'return_url': '',
-                             'is_from_navigation_button': '0',
-                             'current_navigation_url': '',
-                             'application[space_configuration_id]': clean(
-                                 response.css('#space_configuration_id ::attr(value)'))[0],
-                             'application[desired_rent_min]': clean(room_s.css('::attr(fp_min_rent)'))[0],
-                             'application[desired_rent_max]': clean(room_s.css('::attr(fp_max_rent)'))[0],
-                             'application[lease_start_window_id]': response.meta['planid'],
-                             'application[property_floorplan_id]':
-                                 clean(room_s.css('.js-select-floorplan ::attr(value)'))[0]
-                             }
-                self.pending_requests.append(FormRequest(url=url, formdata=form_data,
-                                                         callback=self.request_room_data,
-                                                         meta={'room': loader.load_item().copy()},
-                                                         dont_filter=True))
-
-    def request_room_data(self, response):
-        return Request(url=response.url,
-                       callback=self.request_price,
-                       meta=response.meta,
-                       dont_filter=True)
-
-    def request_price(self, response):
-        articles = clean(response.xpath("//script[contains(text(),'show_scheduled_charges')]/text()"))[0]
-        url = self.find_url(articles)
-        return Request(
-            url=url,
-            callback=self.parse_price,
-            meta=response.meta,
-            dont_filter=True
-        )
-
-    def find_url(self, articles):
-        url = re.findall('show_scheduled_charges"\s*:\s*"(.*?)"', articles)[0]
-        return url.replace('\\', '')
-
-    def parse_price(self, response):
-        raw_room = response.meta['room']
-        loader = RoomLoader(item=raw_room.copy(), response=response)
-        price = clean(response.xpath('//div[@data-charge-type="monthly"]//div[@class="item-price"]//span/text()'))[0]
-        loader.add_value('room_price', price)
-        yield loader.load_item()
-        yield self.next_action()
-
     def room_name(self, response, c_sel, sel):
         return ''
 
     def clean_room_price(self, prices):
-        return prices
+        prices = ['-'.join(re.findall('\$\s*[\d,]+', p)) for p in prices]
+        return [p.replace(',', '') for p in prices]
 
     def clean_deposit_price(self, prices):
         return prices
@@ -302,13 +326,13 @@ class PPBaseCrawlSpider(BaseCrawlSpider, BaseMixinPP):
     def parse_amenities(self, response):
         ps = self.parse_spider
         ps.p_amenities += clean(response.css(self.p_amenities_css))
-        ps.p_images += [response.urljoin(url) for url in clean(response.css(self.p_images_css))]
+        ps.p_images += clean(response.css(self.p_images_css))
 
     def parse_floor_amenities(self, response):
         ps = self.parse_spider
         ps.r_amenities += clean(response.css(self.r_amenities_css))
         if self.r_photos_css:
-            ps.r_photos += [response.urljoin(url) for url in clean(response.css(self.r_photos_css))]
+            ps.r_photos += clean(response.css(self.r_photos_css))
 
     def parse_login_page(self, response):
         login_url = response.css('#returning_applicants_login::attr(action)').extract_first()
@@ -317,17 +341,50 @@ class PPBaseCrawlSpider(BaseCrawlSpider, BaseMixinPP):
             'applicant[password]': self.login_password,
             'returning_applicant': '1',
         }
-        return FormRequest(login_url, formdata=data, callback=self.parse_login)
+        return FormRequest(login_url, formdata=data, callback=self.parse_login, dont_filter=True)
 
     def parse_login(self, response):
         url = response.css('.btn.js-app-nav::attr(href)').extract_first()
-        application_id = response.css('.ad-detail.id::text').extract_first()
-        return Request(url, self.parse, meta={'application_id': application_id})
+        if url != '#':
+            return Request(url, self.parse, dont_filter=True)
+        url = self.login_url_t.format(self.login_domain)
+        return Request(url, self.parse_signup, dont_filter=True)
 
     def parse(self, response):
+        application_id_href = clean(response.css(".legal-link-list .legal-link ::attr(href)"))[0]
+        application_id = re.findall('application\[id\]=(\d+)', application_id_href)[0]
         yield Request(self.unit_info_url_t.format(self.login_domain),
                       callback=self.parse_spider.parse, dont_filter=True,
-                      meta={'application_id': response.meta['application_id']})
+                      meta={'application_id': application_id})
+
+    def parse_signup(self, response):
+        signup_url = clean(response.css("#create_applicant ::attr(action)"))[0]
+        form_data = {
+            'application[company_application_id]': clean(
+                response.css('#default_company_application_id ::attr(value)'))[0],
+            'show_terms_and_conditions': '1',
+            'applicant[customer_relationship_id]': clean(
+                response.css('#customer_relationship_id_hidden ::attr(value)'))[0],
+            'applicant[name_first]': self.first_name,
+            'applicant[name_last]': self.last_name,
+            'applicant[primary_phone_number]': self.phone_num,
+            'applicant[primary_phone_number_type_id]': '4',
+            'application[validate_secondary_phone_number]': '0',
+            'applicant[secondary_phone_number]': '',
+            'applicant[secondary_phone_number_type_id]': '2',
+            'applicant[username]': self.login_email,
+            'applicant[password]': self.login_password,
+            'applicant[password_confirm]': self.login_password,
+            'application[validate_lead_source]': clean(response.css('#validate_lead_source ::attr(value)'))[0],
+            'application[lead_source_id]': self.lead_source,
+            'application[is_lead_source_hidden]': clean(
+                response.css('#is_application_lead_source_hidden ::attr(value)'))[0],
+            'application[desired_movein_date]': clean(
+                response.xpath('//input[@name="application[desired_movein_date]"]/@value'))[0],
+            'agrees_to_terms': clean(response.css('#agrees_to_terms ::attr(value)'))[0],
+            'is_new_applicant': '1'
+        }
+        return FormRequest(url=signup_url, formdata=form_data, callback=self.parse)
 
 
 class PPBaseCrawlSpiderE(PPBaseCrawlSpider, BaseMixinPPE):
@@ -337,6 +394,18 @@ class PPBaseCrawlSpiderE(PPBaseCrawlSpider, BaseMixinPPE):
     r_amenities_css = '.unit-features-list ::text'
     r_photos_css = '.photoswipe-gallery a::attr(href)'
     deal_x = '//*[contains(@class, "field-collection-view") and contains(., "Summer Specials")]//section//text()'
+
+    @classmethod
+    def from_crawler(cls, crawler, *args, **kwargs):
+        spider = super(PPBaseCrawlSpiderE, cls).from_crawler(crawler, *args, **kwargs)
+        crawler.signals.connect(spider.request_from_queue, signal=signals.spider_idle)
+        return spider
+
+    def request_from_queue(self, spider):
+        ps = self.parse_spider
+
+        if ps.requests_queue:
+            self.crawler.engine.crawl(ps.requests_queue.pop(), self)
 
     def parse_floor_amenities(self, response):
         super().parse_floor_amenities(response)
