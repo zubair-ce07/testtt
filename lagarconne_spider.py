@@ -1,6 +1,5 @@
 import json
 
-from scrapy.http import Response
 from scrapy.spiders import Rule
 from scrapy.selector import Selector
 
@@ -75,8 +74,6 @@ class LaGarconneParseSpider(BaseParseSpider):
         return clean(response.css('.product_id::text'))[0][:6]
 
     def product_category(self, garment):
-        if isinstance(garment, Response):
-            return
         if garment['trail']:
             return clean([x[0].upper() for x in garment['trail'] if x[0]])
 
@@ -113,9 +110,7 @@ class LaGarconneParseSpider(BaseParseSpider):
         return [response.follow(u, callback=self.parse_colour) for u in clean(colour_s.css(css))]
 
     def is_homeware(self, response):
-        if 'interiors' in response.url:
-            return True
-        return False
+        return 'interiors' in response.url
 
     def product_gender(self, response):
         return response.meta.get('gender')
