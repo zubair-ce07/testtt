@@ -1,12 +1,14 @@
 import re
+import json
 import datetime
 
 import scrapy
-from scrapy.spiders import CrawlSpider
+from scrapy.spiders import CrawlSpider, Rule
+from scrapy.linkextractors import LinkExtractor
 from scrapy import Request, Selector
 
 
-class Item(scrapy.Item):
+class Property(scrapy.Item):
     deals = scrapy.Field()
     property_name = scrapy.Field()
     landlord_slug = scrapy.Field()
@@ -40,7 +42,6 @@ class Atira(CrawlSpider):
     name = 'atira'
     land_lord_slug = 'atira-student-living'
     property_ts_cs_url = 'https://atira.com/terms-conditions/'
-    home_url = 'https://atira.com/'
     available_date = str(datetime.date.today())
     peel_latrobe_date = '2019-01-14'
 
@@ -48,6 +49,11 @@ class Atira(CrawlSpider):
         'https://atira.com/why-atira/specials/'
     ]
     allowed_domains = ['atira.com']
+
+    locations_css = '.nav-menu-locations .ubermenu-target-with-image'
+    rules = (
+        Rule(LinkExtractor(restrict_css=locations_css), callback='parse_locations'),
+    )
 
     deals = []
     duration_map = {
@@ -68,22 +74,16 @@ class Atira(CrawlSpider):
     contact_info_regex = re.compile(
         r"subtitle\":\"([^\"]+?)\"[^}]*?\"phone\":\"([^\"]+?)\"[^}]*?email\":\"(.*?)\""
     )
+    map_regex = re.compile('UberGoogleMaps\((.+?)\);', re.S)
 
-    def parse(self, response):
+    def parse_start_url(self, response):
         self.deals = self.extract_deals(response)
-        yield Request(url=self.home_url, callback=self.parse_atira)
 
-    def parse_atira(self, response):
-        item = Item()
+    def parse_locations(self, response):
+        item = Property()
         item['landlord_slug'] = self.land_lord_slug
         item['property_ts_cs_url'] = self.property_ts_cs_url
         item['deals'] = self.deals
-
-        yield from self.make_locations_requests(response, item)
-
-    def parse_location(self, response):
-        item = response.meta['item']
-
         item['property_name'] = self.extract_property_name(response)
         item['property_description'] = self.extract_property_description(response)
         item['property_contact_info'] = self.extract_contact_info(response)
@@ -110,8 +110,7 @@ class Atira(CrawlSpider):
         item['listing_type'] = 'flexible_open_end'
         item['available_from'] = self.peel_latrobe_date
 
-        rooms_css = '#rooms .et_pb_row_7 .et_pb_column, #rooms .et_pb_row_8 .et_pb_column :not(.et_pb_column_empty), ' \
-                    '#rooms .et_pb_row_9 .et_pb_column'
+        rooms_css = '#rooms div:nth-child(n+3) .et_pb_column'
         for apartment_html in response.css(rooms_css).extract():
             yield from self.extract_apartments_peel_latrobe(apartment_html, item.copy())
 
@@ -137,7 +136,7 @@ class Atira(CrawlSpider):
         item['deposit_amount'] = ''
         item['listing_type'] = 'flexible_open_end'
 
-        return self.yield_variants(item, self.extract_room_variants(response))
+        return self.yield_rooms(item, self.extract_room_variants(response))
 
     def extract_apartments_peel_latrobe(self, html, item):
         selector = Selector(text=html)
@@ -147,24 +146,13 @@ class Atira(CrawlSpider):
         item['room_availability'] = self.detect_availability(selector)
         item['floor_plans'] = self.extract_floor_plan(selector)
 
-        return self.yield_variants(item, self.extract_peel_latrobe_room_variants(selector))
+        return self.yield_rooms(item, self.extract_peel_latrobe_room_variants(selector))
 
-    def yield_variants(self, item, room_variants):
+    def yield_rooms(self, item, room_variants):
         for room in room_variants:
             copy_item = item.copy()
             copy_item.update(room)
             yield copy_item
-
-    def make_locations_requests(self, response, item):
-        css = '.location-three-col a::attr(href)'
-        location_urls = response.css(css).extract()
-
-        location_requests = []
-        for url in location_urls:
-            request = Request(url=url, callback=self.parse_location)
-            request.meta['item'] = item.copy()
-            location_requests.append(request)
-        return location_requests
 
     def make_facilities_requests(self, response, item):
         apartment_urls = self.extract_apartment_urls(response)
@@ -197,46 +185,55 @@ class Atira(CrawlSpider):
         if self.has_no_table(response):
             return self.extract_without_table_room_variants(response)
 
-        apartment_name = response.css('.page-title ::text').extract_first()
-        room_altitude = [''.join(Selector(text=html).css('::text').extract())
-                         for html in response.css('thead th').extract()]
-        room_altitude = [ra.strip() for ra in room_altitude if ra.strip()]
-        duration_and_prices = [Selector(text=html).css('::text').extract()
-                               for html in response.css('.row-hover tr').extract()]
-
-        name_duration_prices = {}
-        for row in duration_and_prices:
-            if len(row) == len(room_altitude) + 2:
-                apartment_name = row[0]
-                name_duration_prices[apartment_name] = [row[1:]]
-            else:
-                if apartment_name in name_duration_prices.keys():
-                    name_duration_prices[apartment_name] += [row]
-                else:
-                    name_duration_prices[apartment_name] = [row]
+        name_duration_prices = self.extract_name_duration_prices(response)
+        room_altitudes = self.extract_room_altitudes(response)
 
         rooms_variants = []
         for apartment_name, duration_and_prices in name_duration_prices.items():
             for duration_and_price in duration_and_prices:
-                for altitude, price in zip(room_altitude, duration_and_price[1:]):
+                for altitude, price in zip(room_altitudes, duration_and_price[1:]):
                     room_info = {
                         'min_duration': self.duration_map.get(duration_and_price[0].split(' ')[0]),
                         'room_name': f'{apartment_name} {altitude}',
                         'room_price': price.split(' ')[0]
                     }
                     rooms_variants.append(room_info)
+
         return rooms_variants
+
+    def extract_room_altitudes(self, response):
+        room_altitudes = [''.join(Selector(text=html).css('::text').extract())
+                          for html in response.css('thead th').extract()]
+        return [ra.strip() for ra in room_altitudes if ra.strip()]
+
+    def extract_duration_and_prices(self, response):
+        return [Selector(text=html).css('::text').extract() for html in response.css('.row-hover tr').extract()]
+
+    def extract_name_duration_prices(self, response):
+        apartment_name = self.extract_apartment_name(response)
+        room_altitude = self.extract_room_altitudes(response)
+        duration_and_prices = self.extract_duration_and_prices(response)
+
+        name_duration_prices = {}
+        for row_variants in duration_and_prices:
+            if len(row_variants) == len(room_altitude) + 2:
+                apartment_name = row_variants[0]
+                name_duration_prices[apartment_name] = [row_variants[1:]]
+            else:
+                name_duration_prices[apartment_name] = name_duration_prices.get(apartment_name, []) + [row_variants]
+
+        return name_duration_prices
 
     def extract_peel_latrobe_room_variants(self, selector):
         apartment_name = self.extract_apartment_name(selector)
         html = selector.css('tr').extract()
 
-        room_info_table = []
+        room_variations_table = []
         for row in html:
-            room_info_table.append([a.strip() for a in Selector(text=row).css('::text').extract() if a.strip()])
+            room_variations_table.append([a.strip() for a in Selector(text=row).css('::text').extract() if a.strip()])
 
-        durations = room_info_table[0][1:]
-        altitude_and_prices = room_info_table[1:]
+        durations = room_variations_table[0][1:]
+        altitude_and_prices = room_variations_table[1:]
 
         room_variants = []
         for altitude_and_price in altitude_and_prices:
@@ -257,11 +254,11 @@ class Atira(CrawlSpider):
 
         rooms_variants = []
         for duration_and_price in duration_and_prices:
-            duration, duration_and_price = self.duration_price_regex.findall(duration_and_price)[0]
+            duration, price = self.duration_price_regex.findall(duration_and_price)[0]
             room_info = {
                 "min_duration": self.duration_map.get(duration),
                 "room_name": apartment_name,
-                "room_price": duration_and_price,
+                "room_price": price,
             }
             rooms_variants.append(room_info)
 
@@ -277,13 +274,14 @@ class Atira(CrawlSpider):
         return 'Fully Booked'
 
     def extract_contact_info(self, response):
-        reg = re.compile('.*#uber-google-map.*', re.S)
-        script = response.css('script::text').re_first(reg, default='')
+        contact_jsons = response.css('script::text').re(self.map_regex)
 
-        raw_contact_info = self.contact_info_regex.findall(script)
-        for contact_info in raw_contact_info:
-            if contact_info[0] in self.extract_property_name(response):
-                return list(contact_info[1:])
+        for contact_json in contact_jsons:
+            raw_contact_info = json.loads(contact_json)
+            info_windows = raw_contact_info['infoWindows']
+            for info_window in info_windows:
+                if info_window['subtitle'] and info_window['subtitle'] in self.extract_property_name(response):
+                    return [info_window['phone'], info_window['email']]
         return []
 
     def extract_room_photos(self, response):
@@ -302,9 +300,9 @@ class Atira(CrawlSpider):
 
     def extract_floor_plan(self, response):
         id_css = '.wp-image-423::attr(data-izimodal-open)'
-        div_id = response.css(id_css).extract_first()
+        floor_plan_div_id = response.css(id_css).extract_first()
         
-        css = f'.floorplan-thumbnail a::attr(data-featherlight), {div_id} img::attr(src)'
+        css = f'.floorplan-thumbnail a::attr(data-featherlight), {floor_plan_div_id} img::attr(src)'
         return response.css(css).extract()
 
     def extract_room_amenities(self, response):
