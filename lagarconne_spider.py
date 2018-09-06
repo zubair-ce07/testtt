@@ -2,6 +2,7 @@ import json
 
 from scrapy.http import Response
 from scrapy.spiders import Rule
+from scrapy.selector import Selector
 
 from .base import BaseParseSpider, BaseCrawlSpider, LinkExtractor, clean
 
@@ -14,22 +15,9 @@ class Mixin:
 class MixinUS(Mixin):
     retailer = Mixin.retailer + '-us'
     market = 'US'
-    lang = 'en'
 
-    start_urls_with_meta = [
-        ('https://lagarconne.com/collections/bags', {'gender': 'women'}),
-        ('https://lagarconne.com/collections/shoes', {'gender': 'women'}),
-        ('https://lagarconne.com/collections/jewelry', {'gender': 'women'}),
-        ('https://lagarconne.com/collections/clothing', {'gender': 'women'}),
-        ('https://lagarconne.com/collections/clergerie', {'gender': 'women'}),
-        ('https://lagarconne.com/collections/accessories', {'gender': 'women'}),
-        ('https://lagarconne.com/collections/new-arrivals', {'gender': 'women'}),
-        ('https://lagarconne.com/collections/back-in-stock', {'gender': 'women'}),
-        ('https://lagarconne.com/collections/la-garconne-moderne', {'gender': 'women'}),
-
-        ('https://lagarconne.com/collections/beauty', {'industry': 'beauty'}),
-        ('https://lagarconne.com/collections/interiors', {'industry': 'homeware'})
-    ]
+    start_urls = ['https://lagarconne.com']
+    one_size_label = 'one size'
 
 
 class LaGarconneParseSpider(BaseParseSpider):
@@ -37,37 +25,54 @@ class LaGarconneParseSpider(BaseParseSpider):
     raw_description_css = '.lg-desc-product p::text'
 
     def parse(self, response):
-        raw_product = self.raw_product(response)
         pid = self.product_id(response)
         garment = self.new_unique_garment(pid)
 
         if not garment:
             return
 
-        if self.out_of_stock(response, response):
-            return self.out_of_stock_garment(response, pid)
-
         self.boilerplate(garment, response)
-        garment['name'] = self.product_name(raw_product)
+        raw_product = self.raw_product(response)
         garment['care'] = self.product_care(response)
-        garment['description'] = self.product_description(response)
-        garment['category'] = self.product_category(garment)
+        garment['name'] = self.product_name(raw_product)
         garment['brand'] = self.product_brand(raw_product)
+        garment['category'] = self.product_category(garment)
         garment['image_urls'] = self.image_urls(raw_product)
-        garment['skus'] = self.skus(response, raw_product)
+        garment['description'] = self.product_description(response)
 
-        return garment
+        if self.is_homeware(response):
+            garment['industry'] = 'homeware'
+        else:
+            garment['gender'] = self.product_gender(response)
+
+        if self.out_of_stock(response, response):
+            return garment
+
+        requests = self.colour_requests(response, raw_product)
+        garment['skus'] = self.skus(response, raw_product)
+        garment['meta'] = {'requests_queue': requests}
+
+        return self.next_request_or_garment(garment)
+
+    def parse_colour(self, response):
+        garment = response.meta['garment']
+        raw_product = self.raw_product(response)
+
+        garment['skus'].update(self.skus(response, raw_product))
+        garment['image_urls'] += self.image_urls(raw_product)
+
+        return self.next_request_or_garment(garment)
 
     def raw_product(self, response):
         css = 'script:contains("productJSON")::text'
         return json.loads(response.css(css).re('{.*}')[0])
 
     def out_of_stock(self, hxs, response):
-        oos_css = '.lg-product-details:contains("SOLD OUT"), .lg-product-details:contains("Call to Order")'
-        return response.css(oos_css)
+        css = '.lg-product-details:contains("SOLD OUT"), .lg-product-details:contains("Call to Order")'
+        return response.css(css)
 
     def product_id(self, response):
-        return clean(response.css('.lg-desc-product #sku::text'))[0]
+        return clean(response.css('.product_id::text'))[0][:6]
 
     def product_category(self, garment):
         if isinstance(garment, Response):
@@ -95,19 +100,40 @@ class LaGarconneParseSpider(BaseParseSpider):
             if not raw_sku['available']:
                 sku['out_of_stock'] = True
 
-            sku['size'] = raw_sku['option1']
+            size = raw_sku['option1']
+            sku['size'] = self.one_size if size.lower() in self.one_size_label else size
+
             skus[raw_sku['sku']] = sku
 
         return skus
 
+    def colour_requests(self, response, raw_product):
+        css = '#availablecolors ::attr(href)'
+        colour_s = Selector(text=raw_product['description'])
+        return [response.follow(u, callback=self.parse_colour) for u in clean(colour_s.css(css))]
+
+    def is_homeware(self, response):
+        if 'interiors' in response.url:
+            return True
+        return False
+
+    def product_gender(self, response):
+        return response.meta.get('gender')
+
 
 class LaGarconneCrawlSpider(BaseCrawlSpider):
-    listings_css = '.pagination'
+    listings_css = [
+        '.lg-filter-list-desktop',
+        '.pagination'
+    ]
+
     products_css = '.lg-product-list-item'
 
+    deny = '/pages'
+
     rules = (
-        Rule(LinkExtractor(restrict_css=listings_css), callback='parse'),
-        Rule(LinkExtractor(restrict_css=products_css), callback='parse_item')
+        Rule(LinkExtractor(restrict_css=listings_css, deny=deny), callback='parse_and_add_women'),
+        Rule(LinkExtractor(restrict_css=products_css, deny=deny), callback='parse_item')
     )
 
 
