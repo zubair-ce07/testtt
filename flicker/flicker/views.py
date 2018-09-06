@@ -13,6 +13,9 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    """ Renders index page
+        update logged in user's Likes and Comments
+    """
     if session.get('user_available'):
         if request.method == 'POST':
             if request.form.get("like_status"):
@@ -40,6 +43,7 @@ def index():
 
 @app.route('/delete/<pid>', methods=['GET'])
 def delete_post(pid):
+    """Delete Logged in User's Post"""
     if session.get('user_available'):
         post = Post.query.get(pid)
         if post.user.uid == int(session['current_user_id']):
@@ -57,6 +61,7 @@ def delete_post(pid):
 
 @app.route('/post/<post_id>', methods=['GET', 'POST'])
 def post_detail_view(post_id):
+    """ Shows Detail view of Post """
     if session.get('user_available'):
         if request.method == 'POST':
             comment_id = request.form.get("comment_id")
@@ -74,6 +79,7 @@ def post_detail_view(post_id):
 
 @app.route('/wall', methods=['GET'])
 def user_wall():
+    """Renders User Wall"""
     if session.get('user_available'):
         user_data = User.query.filter(
             User.uid == session['current_user_id']).first()
@@ -85,6 +91,7 @@ def user_wall():
 
 @app.route('/add', methods=['GET', 'POST'])
 def add_post():
+    """ Adds new Post """
     if session.get('user_available'):
         blog_post = AddPostForm(request.form)
         user = User.query.filter_by(username=session['current_user']).first()
@@ -113,6 +120,7 @@ def add_post():
 
 @app.route('/user/<user_id>', methods=('GET', 'POST'))
 def user_profile(user_id):
+    """Renders Any User's Profile"""
     if session.get('user_available'):
         if request.method == 'POST':
             follow_status_form = request.form.get('follow_status_form')
@@ -130,6 +138,7 @@ def user_profile(user_id):
 
 @app.route('/search_user', methods=('GET', 'POST'))
 def search_user():
+    """ Search User """
     if session.get('user_available'):
         if request.method == 'POST':
             search_element = request.form.get('search_elem')
@@ -145,6 +154,7 @@ def search_user():
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
+    """ Create New User """
     signup_form = SignUpForm(request.form)
     if request.method == 'POST':
         if not validate_username(signup_form.username.data):
@@ -179,6 +189,7 @@ def signup():
 
 @app.route('/signin', methods=['GET', 'POST'])
 def signin():
+    """Signin User"""
     signin_form = SignInForm()
     if request.method == 'POST':
         signin_form_email = signin_form.email.data
@@ -202,6 +213,7 @@ def signin():
 
 @app.route('/logout')
 def logout():
+    """Logout User"""
     session.clear()
     session['user_available'] = False
     return redirect(url_for('index'))
