@@ -7,7 +7,7 @@
 
 import scrapy
 from scrapy.loader import ItemLoader
-from scrapy.loader.processors import TakeFirst
+from scrapy.loader.processors import TakeFirst, MapCompose
 
 
 class ProductItem(scrapy.Item):
@@ -43,8 +43,11 @@ def clean(self, values):
     return [value.strip() for value in values]
 
 
-class McDonaldsItemLoader(ItemLoader):
+class MenuItemLoader(ItemLoader):
     default_item_class = ProductItem
     default_output_processor = TakeFirst()
 
     title_in = clean
+    thumbnail_in = MapCompose(lambda url:
+                              "https://res.cloudinary.com/swiggy/image/upload/"
+                              "fl_lossy,f_auto,q_auto,w_165,h_165,c_fill/{}".format(url))
