@@ -2,6 +2,8 @@ import datetime
 
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import IntegrityError
+from django.db.models import Q
+from django.utils import timezone
 from rest_framework import serializers
 
 from learnerapp import models, constants, validators
@@ -75,6 +77,7 @@ class StudentSerializer(serializers.HyperlinkedModelSerializer):
 
     def create(self, validated_data):
         user_data = validated_data.pop('user')
+        user_data['user_type'] = constants.STUDENT
         password = user_data.pop('password')
 
         try:
@@ -108,6 +111,16 @@ class CourseSerializer(serializers.ModelSerializer):
         model = models.Course
         fields = '__all__'
 
+    def to_representation(self, instance):
+        instance = super(CourseSerializer, self).to_representation(instance)
+        instructor_info = []
+        for pk in instance['instructors']:
+            instructor = models.Instructor.objects.get(pk=pk)
+            instructor_info.append((instructor.user.first_name,
+                                    instructor.designation + "-" + instructor.institute))
+        instance['instructors'] = instructor_info
+        return instance
+
     def validate(self, data):
         start_date = data['start_date']
         end_date = data['end_date']
@@ -117,3 +130,57 @@ class CourseSerializer(serializers.ModelSerializer):
         if start_date < today:
             raise serializers.ValidationError('Start date cannot be prior to today ')
         return data
+
+
+class ActiveCourseRelatedField(serializers.PrimaryKeyRelatedField):
+
+    def get_queryset(self):
+        current_user = self.context['request'].user
+        if current_user.is_authenticated():
+            enrollments = models.Enrollment.objects.filter(student__user=current_user)
+            ids = [value[0] for value in list(enrollments.values_list('course__id'))]
+            return self.queryset.filter(Q(status__in=[constants.ACTIVE]),
+                                        ~Q(id__in=ids))
+
+
+class EnrollmentSerializer(serializers.ModelSerializer):
+    unenroll = serializers.HyperlinkedIdentityField(view_name='unenroll', format='html')
+
+    class Meta:
+        model = models.Enrollment
+        fields = ('unenroll', 'date_joined', 'student', 'course',)
+        extra_kwargs = {
+            'unenroll': {'read_only': True},
+            'date_joined': {'read_only': True}}
+
+    def create(self, validated_data):
+        validated_data['date_joined'] = str(timezone.now())
+        instance = models.Enrollment.objects.create(**validated_data)
+        return instance
+
+    def to_representation(self, instance):
+        instance = super(EnrollmentSerializer, self).to_representation(instance)
+        student = models.Student.objects.get(pk=instance['student'])
+        course = models.Course.objects.get(pk=instance['course'])
+        instance['student'] = student.user.first_name
+        instance['course'] = course.title
+        return instance
+
+
+class StudentEnrollment(EnrollmentSerializer):
+    course = ActiveCourseRelatedField(queryset=models.Course.objects.all())
+
+    class Meta:
+        model = models.Enrollment
+        fields = ('unenroll', 'date_joined', 'student', 'course',)
+        extra_kwargs = {
+            'student': {'read_only': True},
+            'unenroll': {'read_only': True},
+            'date_joined': {'read_only': True}}
+
+    def create(self, validated_data):
+        student = models.Student.objects.get(user=self.context['request'].user)
+        validated_data['student'] = student
+        validated_data['date_joined'] = str(timezone.now())
+        instance = models.Enrollment.objects.create(**validated_data)
+        return instance
