@@ -16,17 +16,19 @@
                     <div class="panel-body">
                         <nav class="navbar navbar-default">
                             <ul class="nav navbar-nav navbar-right">
-                                <form class="navbar-form navbar-left" action=""
-                                      method="POST">
-                                    <div class="form-group">
-                                        <input type="text" class="form-control"
-                                               name="tag"
-                                               placeholder="Search Posts by Tag">
-                                    </div>
-                                    <button type="submit"
-                                            class="btn btn-default">Search
-                                    </button>
-                                </form>
+                                <div class="container-fluid">
+                                  <form class="navbar-form navbar-left" action=""
+                                        method="POST">
+                                      <div class="form-group">
+                                          <input type="text" class="form-control"
+                                                 name="tag"
+                                                 placeholder="Search Posts by Tag">
+                                      </div>
+                                      <button type="submit"
+                                              class="btn btn-default">Search
+                                      </button>
+                                  </form>
+                                </div>
                             </ul>
                         </nav>
                         {% for posts_data in posts_data_list %}
@@ -48,6 +50,9 @@
                                          height="300dp"/></a>
                                 <div "panel-heading">
                                 <br>
+                                <h6>
+                                  {{posts_data.created_time.strftime('%H-%M')}}  | {{posts_data.created_time.strftime('%d-%m-%Y')}}
+                                </h6>
                                 <div>
                                     <form action="" method="POST">
                                         {% if (posts_data.pid,) in user_likes%}

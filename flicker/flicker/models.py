@@ -60,6 +60,7 @@ class Post(db.Model):
     puid = db.Column(db.Integer, db.ForeignKey('user.uid'))
     user = db.relationship('User',
                            backref=db.backref('post', lazy=True))
+    created_time = db.Column(db.DateTime, default=datetime.datetime.now)
 
     def __init__(self, image_url, post_privacy, puid):
         self.image_url = image_url

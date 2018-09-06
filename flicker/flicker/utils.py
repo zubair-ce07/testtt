@@ -3,28 +3,27 @@ import random
 import string
 
 from flask import session
+from sqlalchemy import and_
 from sqlalchemy import desc
+from sqlalchemy import or_
 
 from .models import User, Post, Tag, Follow, Like, Comment, db
 
 
 def collect_tag_posts(search_tag):
     """ Search Posts by Tags """
-    tag_posts_list = Tag.query.filter(
-        Tag.tag.like('%' + search_tag + '%')).all()
-    users_list = db.session.query(Follow.following_userid).filter(
+    following_users = db.session.query(Follow.following_userid).filter(
         Follow.follower_userid == session['current_user_id']).all()
-    posts_list = []
-    for tag_post in tag_posts_list:
-        if (tag_post.post.post_privacy == Post.PUBLIC or tag_post.post.puid ==
-                session['current_user_id'] or ((tag_post.post.puid,) in
-                                               users_list
-                                               and tag_post.post.post_privacy
-                                               != Post.PRIVATE)):
-            posts_list.append(tag_post.post)
+    following_users = [i[0] for i in following_users]
+    tagged_posts = Tag.query.filter(Tag.tag.like('%' + search_tag + '%'),
+                             Tag.post).with_entities(Post).filter(
+        or_(Post.puid == session['current_user_id'],
+            Post.post_privacy == Post.PUBLIC, (
+                and_(Post.puid.in_(following_users),
+                     Post.post_privacy != Post.PRIVATE)))).all()
     user_likes = db.session.query(Like.post_id).filter(
         Like.user_id == session['current_user_id']).all()
-    return posts_list, user_likes
+    return tagged_posts, user_likes
 
 
 def collect_allowed_posts():

@@ -20,6 +20,12 @@
                                     {{post_data.title}}</h3>
                             </div>
                             <div class="panel-body">
+                              <h3>
+                                  <img src="{{ url_for('static', filename = post_data.user.profile_image_url) }}"
+                                       class="img-thumbnail" width="50dp"
+                                       height="30dp"/>
+                                  <a href="/user/{{ post_data.user.uid }}">{{post_data.user.username}}</a>
+                              </h3>
                                 <a href="{{ url_for('static', filename = post_data.image_url) }}" target="_blank">
                                     <img src="{{ url_for('static', filename = post_data.image_url) }}"
                                          class="img-thumbnail" width="500dp"
@@ -28,9 +34,9 @@
                                 "panel-heading">
                                 <br>
                                 <div>
-                                    <h3>
-                                        <a href="/user/{{ post_data.user.uid }}">{{post_data.user.username}}</a>
-                                    </h3>
+                                    <h6>
+                                      {{post_data.created_time.strftime('%H-%M')}}  | {{post_data.created_time.strftime('%d-%m-%Y')}}
+                                    </h6>
                                     <div id="icon">
                                       {% if post_data.puid ==session['current_user_id'] %}
                                            <a class="glyphicon glyphicon-trash btn btn-danger btn-xs" id="del" href="/delete/{{ post_data.pid }}"
