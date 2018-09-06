@@ -1,9 +1,8 @@
 import json
 
 from scrapy.spiders import Rule
-from scrapy.selector import Selector
 
-from .base import BaseParseSpider, BaseCrawlSpider, LinkExtractor, clean
+from .base import BaseParseSpider, BaseCrawlSpider, LinkExtractor, clean, Gender
 
 
 class Mixin:
@@ -16,11 +15,12 @@ class MixinUS(Mixin):
     market = 'US'
 
     start_urls = ['https://lagarconne.com']
-    one_size_label = 'one size'
+    one_sizes = ['one size']
+    gender = Gender.WOMEN.value
 
 
 class LaGarconneParseSpider(BaseParseSpider):
-    price_css = '[itemprop="price"] .money::text'
+    price_css = '[itemprop="price"] .money::text, .lg-price-cut ::text'
     raw_description_css = '.lg-desc-product p::text'
 
     def parse(self, response):
@@ -35,22 +35,23 @@ class LaGarconneParseSpider(BaseParseSpider):
         garment['care'] = self.product_care(response)
         garment['name'] = self.product_name(raw_product)
         garment['brand'] = self.product_brand(raw_product)
-        garment['category'] = self.product_category(garment)
+        garment['category'] = self.product_category(raw_product)
         garment['image_urls'] = self.image_urls(raw_product)
         garment['description'] = self.product_description(response)
 
         if self.is_homeware(response):
             garment['industry'] = 'homeware'
-        else:
-            garment['gender'] = self.product_gender(response)
+            garment['gender'] = None
 
         if self.out_of_stock(response, response):
+            garment['out_of_stock'] = True
+            garment.update(self.product_pricing_common(response))
             return garment
 
-        requests = self.colour_requests(response, raw_product)
         garment['skus'] = self.skus(response, raw_product)
-        garment['meta'] = {'requests_queue': requests}
 
+        colour_requests = self.colour_requests(response)
+        garment['meta'] = {'requests_queue': colour_requests}
         return self.next_request_or_garment(garment)
 
     def parse_colour(self, response):
@@ -73,9 +74,8 @@ class LaGarconneParseSpider(BaseParseSpider):
     def product_id(self, response):
         return clean(response.css('.product_id::text'))[0][:6]
 
-    def product_category(self, garment):
-        if garment['trail']:
-            return clean([x[0].upper() for x in garment['trail'] if x[0]])
+    def product_category(self, raw_product):
+        return raw_product['type']
 
     def product_name(self, raw_product):
         return raw_product['title']
@@ -88,9 +88,8 @@ class LaGarconneParseSpider(BaseParseSpider):
 
     def skus(self, response, raw_product):
         skus = {}
-        previous_price = raw_product['compare_at_price']
-        common_sku = self.product_pricing_common(response, money_strs=[previous_price])
-        common_sku['color'] = self.detect_colour(raw_product['description'])
+        common_sku = self.product_pricing_common(response)
+        common_sku['colour'] = self.detect_colour(raw_product['description'])
         for raw_sku in raw_product['variants']:
             sku = common_sku.copy()
 
@@ -98,22 +97,19 @@ class LaGarconneParseSpider(BaseParseSpider):
                 sku['out_of_stock'] = True
 
             size = raw_sku['option1']
-            sku['size'] = self.one_size if size.lower() in self.one_size_label else size
+            sku['size'] = self.one_size if size.lower() in self.one_sizes else size
 
             skus[raw_sku['sku']] = sku
 
         return skus
 
-    def colour_requests(self, response, raw_product):
-        css = '#availablecolors ::attr(href)'
-        colour_s = Selector(text=raw_product['description'])
-        return [response.follow(u, callback=self.parse_colour) for u in clean(colour_s.css(css))]
+    def colour_requests(self, response):
+        css = '.lg-desc-product #availablecolors ::attr(href)'
+        return [response.follow(u, callback=self.parse_colour)
+                for u in clean(response.css(css))]
 
     def is_homeware(self, response):
         return 'interiors' in response.url
-
-    def product_gender(self, response):
-        return response.meta.get('gender')
 
 
 class LaGarconneCrawlSpider(BaseCrawlSpider):
@@ -127,7 +123,7 @@ class LaGarconneCrawlSpider(BaseCrawlSpider):
     deny = '/pages'
 
     rules = (
-        Rule(LinkExtractor(restrict_css=listings_css, deny=deny), callback='parse_and_add_women'),
+        Rule(LinkExtractor(restrict_css=listings_css, deny=deny), callback='parse'),
         Rule(LinkExtractor(restrict_css=products_css, deny=deny), callback='parse_item')
     )
 
