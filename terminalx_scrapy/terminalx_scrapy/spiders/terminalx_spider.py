@@ -9,7 +9,7 @@ from .terminalX_item import Garment
 
 
 class TerminalXParseSpider(Spider):
-    name = "parser"
+    name = "terminalx-parse"
     gender_map = {
         "גברים": "men",
         "נשים": "women",
@@ -124,7 +124,7 @@ class TerminalXParseSpider(Spider):
 
     @staticmethod
     def get_currency(response):
-        if '₪' in response.css('span.price::text').extract_first():
+        if response.css('span.price:contains("₪")'):
             return 'ILS'
 
     def images_requests(self, response, product_config):
@@ -165,7 +165,7 @@ class TerminalXParseSpider(Spider):
 
 
 class TerminalXCrawlSpider(CrawlSpider):
-    name = "terminalx"
+    name = "terminalx-crawl"
     parser = TerminalXParseSpider()
     start_urls = [
         'https://www.terminalx.com/'
@@ -181,12 +181,13 @@ class TerminalXCrawlSpider(CrawlSpider):
              )
 
     def parse(self, response):
-        trail = response.meta.get("trail", [])
-        trail.append(response.url)
-
         for request in super(TerminalXCrawlSpider, self).parse(response):
-            request.meta["trail"] = trail.copy()
+            request.meta["trail"] = self.add_trail(response)
             yield request
 
     def parse_product(self, response):
         return self.parser.parse(response)
+
+    def add_trail(self, response):
+        trail_part = [(response.meta.get('link_text', ''), response.url)]
+        return response.meta.get('trail', []) + trail_part
