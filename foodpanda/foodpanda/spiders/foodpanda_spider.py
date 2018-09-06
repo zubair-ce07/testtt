@@ -1,5 +1,9 @@
+import json
+import logging
+import csv
 import datetime
 import re
+from collections import namedtuple
 
 import scrapy
 from scrapy.loader import ItemLoader
@@ -47,32 +51,55 @@ class ProductLoader(ItemLoader):
 
 
 class FoodPandaParser(scrapy.Spider):
-    name = "foodpanda"
+    name = "foodpanda_parse"
 
-    start_urls = ['https://www.foodpanda.in/location-suggestions?cityId=462546&'
-                  'area=Jayanagar+6th+Block+(Jaya+Nagar)&area_id=464687&'
-                  'pickup=&sort=&tracking_id=a0422341806e4a8eba1b4f290d03827b']
+    start_urls = [
+        'https://www.foodpanda.in/location-suggestions?cityId=476421&'
+        'area=Hitech+City+%28Madhapur%29&area_id=478119&pickup=&sort=&'
+        'tracking_id=caa3d30548ca409894209e26dfcf533a'
+    ]
 
     custom_settings = {
-        'DOWNLOAD_DELAY': 1
+        'DOWNLOAD_DELAY': 1,
+        'COOKIES_ENABLED': False
     }
+
+    def start_requests(self):
+        for url in self.start_urls:
+            yield scrapy.Request(url, callback=self.parse)
 
     def parse(self, response):
         pages = response.xpath('//*[contains(@class, "js-pagination")]//'
                                '*[contains(@class, "infscroll-page")]/@value').extract()
+        logging.debug('PAGE COUNT')
+        logging.debug(response.meta['location'].city)
+        logging.debug(response.meta['location'].address)
+        logging.debug(response.url)
+        logging.debug(pages)
 
         for page in pages:
-            yield scrapy.Request(f'https://www.foodpanda.in/restaurants?user_search='
-                                 f'&sort=&sort=&page={page}', callback=self.parse_listing)
+            request = scrapy.Request(f'{response.url}&page={page}', callback=self.parse_listing,
+                                     priority=1)
+            request.meta['location'] = response.meta['location']
+            yield request
 
     def parse_listing(self, response):
         product_urls = response.xpath('//a[contains(@class, "vendor")][descendant-or-self::'
                                       '*[contains(.,"Domino\'s") or contains(.,"KFC") or'
                                       ' contains(.,"McDonald\'s") or contains(.,"Burger King")]]'
                                       '//@href').extract()
+
+        logging.debug('PRODUCT URLS')
+        logging.debug(response.meta['location'].city)
+        logging.debug(response.meta['location'].address)
+        logging.debug(response.url)
+        logging.debug(product_urls)
         
         for url in product_urls:
-            yield response.follow(url, callback=self.parse_product)
+            request = scrapy.Request(f'https://foodpanda.in{url}', callback=self.parse_product,
+                                     priority=2)
+            request.meta['location'] = response.meta['location']
+            yield request
 
     def parse_product(self, response):
         common_fields = {
@@ -83,7 +110,7 @@ class FoodPandaParser(scrapy.Spider):
             'store_id': re.findall(r'foodpanda\.in/restaurant/(.*)/', response.url),
             'date_of_crawl': datetime.datetime.now().strftime('%d %b %Y'),
             'min_order': response.xpath('//script[contains(text(), "minimum_order")]').re(
-                '"minimum_order_amount":(\d+)') or None,
+                r'"minimum_order_amount":(\d+)') or None,
             'locality': ', '.join(response.css(
                 '.vendor-info__address__content span::text').extract()),
             'pincode': response.css('*[itemprop="postalCode"]::text').extract_first(),
@@ -201,3 +228,93 @@ class FoodPandaParser(scrapy.Spider):
         half_stars = len(response.css('.vendor__ratings .active-star.icon-star-ratings-half'))
 
         return float(full_stars) + float(half_stars) * 0.5
+
+
+class FoodPandaCrawler(scrapy.Spider):
+    name = "foodpanda"
+    item_parser = FoodPandaParser()
+    Location = namedtuple('Location', ['city', 'address'])
+
+    start_urls = [
+        'https://www.foodpanda.in/'
+    ]
+
+    custom_settings = {
+        'DOWNLOAD_DELAY': 1,
+        'COOKIES_ENABLED': False
+    }
+
+    @staticmethod
+    def is_valid_reading(reading):
+        required_fields = ['City', 'Address Line 2']
+        return all(reading[field] for field in required_fields)
+
+    def read(self, file_name):
+        with open(file_name, 'r') as f:
+            return [self.Location(r['City'], r['Address Line 2']) for r in csv.DictReader(f) if
+                    self.is_valid_reading(r)]
+
+    def parse(self, response):
+        locations = self.read('locations.csv')
+        cities = self.get_cities(response)
+
+        for location in locations:
+            city_id = self.get_city_id(cities, location.city)
+            normalized_address = location.address.replace(' ', '+')
+
+            if not city_id:
+                logging.debug('CITY NOT FOUND')
+                logging.debug(location.city)
+                continue
+
+            request = scrapy.Request(f'https://www.foodpanda.in/location-suggestions-ajax?'
+                                     f'cityId={city_id}&area={normalized_address}&area_id=&pickup='
+                                     f'&sort=&tracking_id=', callback=self.parse_suggestion)
+            request.meta['city_id'] = city_id
+            request.meta['location'] = location
+            yield request
+
+    @staticmethod
+    def get_city_id(cities, city):
+        for key in cities.keys():
+            if city.lower() in key:
+                return cities[key]
+
+    @staticmethod
+    def get_cities(response):
+        cities = {}
+        raw_cities = response.css('#cityId option')
+
+        for raw_city in raw_cities:
+            name = raw_city.css('option::text').extract_first().lower()
+            code = raw_city.css('option::attr(value)').extract_first()
+            cities[name] = code
+
+        return cities
+
+    def parse_suggestion(self, response):
+        suggestion = json.loads(response.text)
+
+        logging.debug('Suggestion')
+        logging.debug(response.meta['location'].city)
+        logging.debug(response.meta['location'].address)
+        logging.debug(suggestion)
+
+        if not suggestion:
+            return
+
+        name = suggestion[0]['value'].replace(' ', '+')
+        area_id = suggestion[0]['fillSearchFormOnSelect']['area_id']
+        tracking_id = suggestion[0]['fillSearchFormOnSelect']['tracking_id']
+        city_id = response.meta['city_id']
+
+        request = scrapy.Request(f'https://www.foodpanda.in/restaurants?cityId={city_id}'
+                                 f'&area={name}&area_id={area_id}&pickup=&sort=&tracking_id='
+                                 f'{tracking_id}', callback=self.item_parser.parse,
+                                 dont_filter=True)
+        request.meta['location'] = response.meta['location']
+        return request
+
+    @staticmethod
+    def print_response(response):
+        logging.info(response.text)
