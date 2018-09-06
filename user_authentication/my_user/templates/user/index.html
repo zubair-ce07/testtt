@@ -1,0 +1,21 @@
+{% extends 'user/base.html' %}
+{% block title %}Register{% endblock %}
+
+
+
+
+
+{% block body %}
+    {% if request.user.is_authenticated %}
+        <h1>Welcome user "{{ request.user.first_name }} {{ request.user.last_name }}"</h1>
+        <p>Your username is: {{ request.user.username }}</p>
+        <p>Your email is: {{ request.user.email }}</p>
+        <hr />
+        <p>What do you want to do?</p>
+        <p><a href="{% url 'my_user:logout' %}">Logout</a> | <a href="{% url 'my_user:edit' request.user.id%}">Edit Profile</a></p>
+    {% else %}
+        <h1>Hello World</h1>
+        <P>Please Login or Register First</P>
+        <p><a href="{% url 'my_user:login' %}">Login</a> | <a href="{% url 'my_user:register' %}">Register</a></p>
+    {% endif %}
+{% endblock %}
