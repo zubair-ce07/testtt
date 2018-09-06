@@ -76,12 +76,12 @@ class TerminalXParseSpider(Spider):
     def get_common_sku(self, response, product_config):
         common_sku = {}
         old_price = float(product_config['jsonConfig']['prices']['oldPrice']['amount'])
-
         common_sku["price"] = float(product_config['jsonConfig']['prices']['finalPrice']['amount'])
+        common_sku["price"] = self.cents_conversion(common_sku["price"])
         common_sku["currency"] = self.get_currency(response)
 
         if old_price != common_sku["price"]:
-            common_sku["previous_prices"] = [old_price]
+            common_sku["previous_prices"] = [self.cents_conversion(old_price)]
 
         return common_sku
 
@@ -159,6 +159,9 @@ class TerminalXParseSpider(Spider):
     @staticmethod
     def get_description(response):
         return response.css('.description p ::text').extract()
+
+    def cents_conversion(self, param):
+        return 100 * param
 
 
 class TerminalXCrawlSpider(CrawlSpider):
