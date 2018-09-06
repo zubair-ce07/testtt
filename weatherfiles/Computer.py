@@ -31,12 +31,12 @@ class Analyzer:
         index_of_mintemp = data['features'].index('Min TemperatureC')
         index_of_humidity = data['features'].index('Max Humidity')
 
-        year_exist=False
+        year_exist = False
 
         for record in data['values']:
             date_in_record = record[0]
             if year in date_in_record:
-                year_exist=True
+                year_exist = True
                 if record[index_of_maxtemp] != '' and record[index_of_maxtemp] > highest:
                     highest = record[index_of_maxtemp]
                     date_highest = date_in_record
@@ -101,6 +101,7 @@ class Analyzer:
 
         if not month_exists:
             return {}
+
         total_days = calendar.monthrange(int(year),
                                          int(month),
                                          )[1]
@@ -138,16 +139,17 @@ class Analyzer:
 
                 results[day] = []
 
-                if record[index_of_maxtemp] != '':
-                    temp = '+' * record[index_of_maxtemp]
+                max_tempc = record[index_of_maxtemp]
+                min_tempc = record[index_of_mintemp]
 
-                    temp += ' ' + str(record[index_of_maxtemp]) + 'C'
+                if max_tempc != '':
+                    temp = '+' * max_tempc
+                    temp = '{} {}C'.format(temp, max_tempc)
                     results[day].append(temp)
 
-                if record[index_of_mintemp] != '':
-                    temp = '+'*record[index_of_mintemp]
-
-                    temp += ' ' + str(record[index_of_mintemp]) + 'C'
+                if min_tempc != '':
+                    temp = '+' * min_tempc
+                    temp = '{} {}C'.format(temp, min_tempc)
                     results[day].append(temp)
 
         return results
