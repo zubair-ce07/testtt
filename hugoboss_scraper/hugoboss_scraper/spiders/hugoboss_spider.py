@@ -13,18 +13,18 @@ class HugobossParseSpider(Spider):
 
     def parse(self, response):
         product = Garment()
-        product_data = self.get_product_json(response)
+        raw_product = self.get_raw_product(response)
 
-        if self.id_exists(product_data["id"]):
+        if self.id_exists(raw_product["id"]):
             return
 
-        product["retailer_sku"] = product_data["id"]
-        product["name"] = product_data["name"] or ""
+        product["retailer_sku"] = raw_product["id"]
+        product["name"] = raw_product["name"] or ""
         product["image_urls"] = self.get_image_urls(response)
         product["lang"] = "en"
-        product["gender"] = product_data["gender"]
+        product["gender"] = raw_product["gender"]
         product["category"] = self.get_categories(response)
-        product["brand"] = product_data["brand"]
+        product["brand"] = raw_product["brand"]
         product["url"] = response.url
         product["market"] = "US"
         product["trail"] = response.meta["trail"]
@@ -33,7 +33,9 @@ class HugobossParseSpider(Spider):
         product["description"] = self.get_description(response)
         product["care"] = self.get_care(response)
         product["skus"] = self.get_skus(response)
-        response.meta["pending_color_reqs"] = self.colour_requests(response)
+        if self.is_out_of_stock(product):
+            product["out_of_stock"] = True
+        response.meta["request_queue"] = self.colour_requests(response)
         response.meta["product"] = product
         return self.item_or_request(response)
 
@@ -45,17 +47,17 @@ class HugobossParseSpider(Spider):
     @staticmethod
     def item_or_request(response):
 
-        if not response.meta["pending_color_reqs"]:
+        if not response.meta["request_queue"]:
             return response.meta["product"].copy()
 
-        next_color_req = response.meta["pending_color_reqs"].pop()
+        next_color_req = response.meta["request_queue"].pop()
         next_color_req.meta["product"] = response.meta["product"].copy()
-        next_color_req.meta["pending_color_reqs"] = response.meta["pending_color_reqs"].copy()
+        next_color_req.meta["request_queue"] = response.meta["request_queue"].copy()
         return next_color_req
 
     def get_skus(self, response):
         skus = {}
-        product_data = self.get_product_json(response)
+        product_data = self.get_raw_product(response)
         sku_variant = product_data["variant"]
         sizes_s = response.css('.swatch-list__size')
         common_sku = self.get_common_sku(response, product_data)
@@ -117,7 +119,7 @@ class HugobossParseSpider(Spider):
         return material_care + response.css('.accordion__care-icon__text::text').extract()
 
     @staticmethod
-    def get_product_json(response):
+    def get_raw_product(response):
         raw_product = response.css('div[data-as-product]::attr(data-as-product)').extract_first()
         raw_product.replace('&quot;', '"')
         return json.loads(raw_product)
@@ -135,6 +137,9 @@ class HugobossParseSpider(Spider):
             return True
         self.scraped_ids.add(product_id)
         return False
+
+    def is_out_of_stock(self, product):
+        return all(sku["out_of_stock"] for sku in product['skus'].items())
 
     def cents_conversion(self, param):
         return 100 * param
@@ -169,5 +174,5 @@ class HugobossCrawlSpider(CrawlSpider):
         return self.parser.parse(response)
 
     def add_trail(self, response):
-        trail_part = [(response.meta.get('link_text', ''), response.url)]
+        trail_part = [response.url]
         return response.meta.get('trail', []) + trail_part

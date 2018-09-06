@@ -18,3 +18,5 @@ class Garment(Item):
     description = Field()
     care = Field()
     skus = Field()
+    out_of_stock = Field()
+
