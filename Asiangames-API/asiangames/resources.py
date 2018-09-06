@@ -5,7 +5,8 @@ from flask_jwt_extended import (create_access_token, create_refresh_token, jwt_r
                                 jwt_refresh_token_required, get_jwt_identity)
 from flask import jsonify
 
-from asiangames.models import User, Athlete, Country, Sport, Favourite, get_id_by_name, get_favourite_names_by_ids
+from asiangames.models import User, Athlete, Country, Sport, Favourite
+from asiangames.utils import get_id_by_name, get_favourite_names_by_ids
 from asiangames.decorators import required_access_level
 from asiangames.schemas import *
 
@@ -45,13 +46,11 @@ class UserRegistration(Resource):
         )
 
         new_user.save_to_db()
-        access_token = create_access_token(identity=data['email'])
-        refresh_token = create_refresh_token(identity=data['email'])
 
         return {
             'message': 'User with email {} was created'.format(data['email']),
-            'access_token': access_token,
-            'refresh_token': refresh_token
+            'access_token': create_access_token(identity=data['email']),
+            'refresh_token': create_refresh_token(identity=data['email'])
         }
 
 
@@ -158,13 +157,12 @@ class ScheduleListResource(Resource):
 
 class ScheduleFilterResource(Resource):
 
-    def get(self, attribute, value):
+    def get(self, value):
         schedule_schema = ScheduleSchema(many=True)
 
-        if attribute == 'sport':
-            sport_record = Sport.query.filter_by(name=value).first()
-            output = schedule_schema.dump(sport_record.schedules).data
-            return output
+        sport_record = Sport.query.filter_by(name=value).first()
+        output = schedule_schema.dump(sport_record.schedules).data
+        return output
 
 
 class MedalsListResource(Resource):
@@ -203,19 +201,19 @@ class FavouriteListResource(Resource):
 
         if attribute == 'all':
             output_map = {}
-            output_map['countries'] = get_favourite_names_by_ids(current_user_id, Country, FAVOURITES_MAP['country'])
-            output_map['sports'] = get_favourite_names_by_ids(current_user_id, Sport, FAVOURITES_MAP['sport'])
-            output_map['athletes'] = get_favourite_names_by_ids(current_user_id, Athlete, FAVOURITES_MAP['athlete'])
+            output_map['countries'] = get_favourite_names_by_ids(Favourite, current_user_id, Country, FAVOURITES_MAP['country'])
+            output_map['sports'] = get_favourite_names_by_ids(Favourite, current_user_id, Sport, FAVOURITES_MAP['sport'])
+            output_map['athletes'] = get_favourite_names_by_ids(Favourite, current_user_id, Athlete, FAVOURITES_MAP['athlete'])
             return jsonify(output_map)
 
         elif attribute == 'countries':
-            return jsonify(get_favourite_names_by_ids(current_user_id, Country, FAVOURITES_MAP['country']))
+            return jsonify(get_favourite_names_by_ids(Favourite, current_user_id, Country, FAVOURITES_MAP['country']))
 
         elif attribute == 'sports':
-            return jsonify(get_favourite_names_by_ids(current_user_id, Sport, FAVOURITES_MAP['sport']))
+            return jsonify(get_favourite_names_by_ids(Favourite, current_user_id, Sport, FAVOURITES_MAP['sport']))
 
         elif attribute == 'athletes':
-            return jsonify(get_favourite_names_by_ids(current_user_id, Athlete, FAVOURITES_MAP['athlete']))
+            return jsonify(get_favourite_names_by_ids(Favourite, current_user_id, Athlete, FAVOURITES_MAP['athlete']))
 
 
 class FavouriteFilterResource(Resource):
@@ -225,16 +223,10 @@ class FavouriteFilterResource(Resource):
     def post(self, attribute, value):
         current_user_id = User.find_by_email(email=get_jwt_identity())._id
 
-        if attribute == 'country':
-            object_id = Country.query.filter_by(name=value).first()._id
+        if attribute in FAVOURITES_MAP.keys():
+            favourite_record = Favourite(favourite_object_id=value, favourite_entity_id=FAVOURITES_MAP[attribute],
+                                         user_id=current_user_id)
+            favourite_record.save_to_db()
+            return {'message': '{} {} added to favourites'.format(attribute, value)}
 
-        elif attribute == 'sport':
-            object_id = Sport.query.filter_by(name=value).first()._id
-
-        elif attribute == 'athlete':
-            object_id = int(value)
-
-        favourite_record = Favourite(favourite_object_id=object_id, favourite_entity_id=FAVOURITES_MAP[attribute],
-                                     user_id=current_user_id)
-        favourite_record.save_to_db()
-        return {'message': '{} {} added to favourites'.format(attribute, value)}
+        return {'message': 'Invalid attribute'}

@@ -15,7 +15,7 @@ Asiangames API presentes you all the information regarding:
 
 ## Usage
 After installing all the dependencies, run populate_db.py in the asiangames directory. It will populate the SQLite database for you.
-Next, run run.py and your server will be hosted publically at **http://127.0.0.1/5000**
+Next, run run.py and your server will be hosted publically at **http://127.0.0.1:5000**
 
 ```bash
 GET      /athletes/<int:id> #returns athlete with a particular id
@@ -29,11 +29,6 @@ GET      /athletes/age/<string:_age> #returns all athletes that have age equal t
 ```bash
 GET      /schedules/all #returns all the schedules
 GET      /schedules/sport/<string:_sport> #returns all schedules of a particular _sport
-```
-```bash
-GET      /medals/all #returns all the medals's records
-GET      /medals/country/<string:_country> #returns all medals won by the country and sorted by gold medals
-GET      /medals/sport/<string:_sport> #returns all the medals won in _sport
 ```
 ```bash
 GET      /medals/all #returns all the medals's records
@@ -68,8 +63,8 @@ It wil return you something like the following
 ```bash
 {
     "message": "User with email uzair@gmail.com was registered",
-    "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE1MzYwNDI4NjQsIm5iZiI6MTUzNjA0Mjg2NCwianRpIjoiOGE3ZDc4ZjMtMmFkMC00YThhLWI1NjctMDRmYmZmZjVhZjA4IiwiZXhwIjoxNTM2MDQzNzY0LCJpZGVudGl0eSI6InV6YWlyQGdtYWlsLmNvbSIsImZyZXNoIjpmYWxzZSwidHlwZSI6ImFjY2VzcyJ9.sdPaF-gRJ6eIaM4AoDU2L0EDp07_ggdTenCQtEdlnR4",
-    "refresh_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE1MzYwNDI4NjQsIm5iZiI6MTUzNjA0Mjg2NCwianRpIjoiZjliYmYxYjctZjg3ZS00OGZhLTkxYjAtODE0MTBiYmZkNGZlIiwiZXhwIjoxNTM4NjM0ODY0LCJpZGVudGl0eSI6InV6YWlyQGdtYWlsLmNvbSIsInR5cGUiOiJyZWZyZXNoIn0.-VLbbxPlpjsCZHGfm65eomK4_bspcGFi3tTwxmi5_pM"
+    "access_token": <JWT_TOKEN>,
+    "refresh_token": <JWT_TOKEN>
 }
 ```
 The access_token will be used for all the user routes that will be shown in a while.
@@ -97,8 +92,8 @@ It wil return you something like the following
 ```bash
 {
     "message": "User with email uzair@gmail.com was registered",
-    "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE1MzYwNDI4NjQsIm5iZiI6MTUzNjA0Mjg2NCwianRpIjoiOGE3ZDc4ZjMtMmFkMC00YThhLWI1NjctMDRmYmZmZjVhZjA4IiwiZXhwIjoxNTM2MDQzNzY0LCJpZGVudGl0eSI6InV6YWlyQGdtYWlsLmNvbSIsImZyZXNoIjpmYWxzZSwidHlwZSI6ImFjY2VzcyJ9.sdPaF-gRJ6eIaM4AoDU2L0EDp07_ggdTenCQtEdlnR4",
-    "refresh_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE1MzYwNDI4NjQsIm5iZiI6MTUzNjA0Mjg2NCwianRpIjoiZjliYmYxYjctZjg3ZS00OGZhLTkxYjAtODE0MTBiYmZkNGZlIiwiZXhwIjoxNTM4NjM0ODY0LCJpZGVudGl0eSI6InV6YWlyQGdtYWlsLmNvbSIsInR5cGUiOiJyZWZyZXNoIn0.-VLbbxPlpjsCZHGfm65eomK4_bspcGFi3tTwxmi5_pM"
+    "access_token": <JWT_ACCESS_TOKEN>,
+    "refresh_token": <JWT_REFRESH_TOKEN>
 }
 ```
 
@@ -108,14 +103,14 @@ Before making any request to the following routes, you need to do the following.
 1) You need to add this header in the request:
 ```bash
 key: Authorization
-value: Bearer <your_access_token>
+value: Bearer <JWT_ACCESS_TOKEN>
 ```
 and now you can do these requests
 ```bash
-POST     /favourite/country/<string:_country> #to add _country in your favourites
-POST     /favourite/country/<string:_sport> #to add _sport in your favourites
-POST     /favourite/country/<string:_athlete_id> #to add athlete with _athlete_id in your favourites
-GET      /favourite/all #to view all your favourites
+POST    /favourite/country/<int: country_id> #to add country_id in your favourites
+POST    /favourite/country/<int:sport_id> #to add sport_id in your favourites
+POST    /favourite/country/<int:athlete_id> #to add athlete with athlete_id in your favourites
+GET     /favourite/all #to view all your favourites
 GET     /favourite/countries #to get all your favourite countries
 GET     /favourite/sports #to get all your favourite sports
 GET     /favourite/athletes #to get all your favourite athletes

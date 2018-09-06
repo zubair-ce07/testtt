@@ -21,7 +21,7 @@ class AthleteSchema(marshmallow_app.ModelSchema):
 
 
 class ScheduleSchema(marshmallow_app.ModelSchema):
-    sports = marshmallow_app.Nested(SportSchema, only='name', many=True)
+    sports = marshmallow_app.Nested(SportSchema, only='name')
 
     class Meta:
         model = Schedule

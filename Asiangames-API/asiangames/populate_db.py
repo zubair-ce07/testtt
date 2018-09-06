@@ -26,11 +26,8 @@ if __name__ == '__main__':
 
     with open('json/medals.json') as medals_file:
 
-        medals_data = json.load(medals_file)
-
-        for medal_data in medals_data:
+        for medal_data in json.load(medals_file):
             for sport_medal in medal_data['sport_medals']:
-                count = Country(name=medal_data['name'])
                 country_record = get_or_create(db.session, Country, name=medal_data['name'])
 
                 sport_country_medal_record = SportCountryMedals(
@@ -38,17 +35,15 @@ if __name__ == '__main__':
                     bronze=sport_medal['bronze']
                 )
 
-                sport_country_medal_record.sport = get_or_create(db.session, Sport, name=sport_medal['name'])
+                sport_country_medal_record.medals = get_or_create(db.session, Sport, name=sport_medal['name'])
                 country_record.country_sports.append(sport_country_medal_record)
                 db.session.add(country_record)
-                db.session.commit()
                 print('Completed {}\'s {}'.format(medal_data['name'], sport_medal['name']))
+        db.session.commit()
 
     with open('json/athletes.json') as athletes_file:
 
-        athletes_data = json.load(athletes_file)
-
-        for athlete_data in athletes_data:
+        for athlete_data in json.load(athletes_file):
             sport_record = get_or_create(db.session, Sport, name=athlete_data['sport'])
             country_id = get_or_create(db.session, Country, name=athlete_data['country'])._id
 
@@ -59,15 +54,15 @@ if __name__ == '__main__':
 
             athlete_record.sports.append(sport_record)
             db.session.add(athlete_record)
-            db.session.commit()
             print('Completed adding Athlete {}'.format(athlete_data['name']))
+        db.session.commit()
 
     with open('json/sports.json') as sports_file:
 
-        sports_data = json.load(sports_file)
         numeric_regex = r'(\d+)'
 
-        for sport_data in sports_data:
+        for sport_data in json.load(sports_file):
+
             sport_record = get_or_create(db.session, Sport, name=sport_data['name'])
 
             for schedule in sport_data['schedules']:
@@ -84,5 +79,5 @@ if __name__ == '__main__':
                                                event=scheduled_event['event'], sport=sport_record)
 
                     db.session.add(schedule_record)
-                    db.session.commit()
                     print('Completed Schedule {} for {}'.format(scheduled_event['event'], sport_record.name))
+        db.session.commit()

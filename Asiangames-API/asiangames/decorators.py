@@ -15,8 +15,7 @@ def required_access_level(access_level):
             if access_level <= current_user_access_level:
                 return func(*args, **kwargs)
 
-            else:
-                return {'message': 'You don\'t have the right access level'}
+            return {'message': 'You don\'t have the right access level'}
 
         return wrapper
     return main_wrapper
