@@ -5,9 +5,8 @@ from atira.spiders.atira_parse_spider import AtiraParseSpider
 
 class AtiraCrawlSpider(CrawlSpider):
     name = "atira"
-    start_urls = [
-        'https://atira.com/'
-    ]
+    allowed_domains =['atira.com']
+    start_urls = ['https://atira.com/']
 
     listings_css = ['.ubermenu-item-level-2 .ubermenu-target-with-image']
 
