@@ -1,10 +1,9 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.utils import timezone
 
 STATUS_CHOICES = (('active', 'Active'),
-                  ('archived', 'Archived'),
-                  ('inprogress', 'In Progress'),)
-
+                  ('archived', 'Archived'),)
 LEVEL_CHOICES = (('beginner', 'Beginner'),
                  ('intermediate', 'Intermediate'),
                  ('advance', 'Advance'))
@@ -51,12 +50,18 @@ class Course(models.Model):
     status = models.CharField(choices=STATUS_CHOICES, max_length=20)
     level = models.CharField(choices=LEVEL_CHOICES, max_length=20)
 
-    # instructors = models.ManyToManyField(Instructor)
-    # students = models.ManyToManyField(Student, through=Enrollment)
-#
-#
-# # class Enrollment(models.Model):
-#     student = models.ForeignKey(Student, on_delete=models.CASCADE)
-#     course = models.ForeignKey(Course, on_delete=models.CASCADE)
-#     date_joined = models.DateField(default=datetime.date.today())
-#     grade = models.CharField(max_length=1)
+    instructors = models.ManyToManyField(Instructor, )
+    students = models.ManyToManyField(Student, through='Enrollment')
+
+    def __str__(self):
+        return self.title
+
+
+class Enrollment(models.Model):
+    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    date_joined = models.DateTimeField(default=timezone.now)
+    grade = models.CharField(max_length=1, default='U')
+
+    def __str__(self):
+        return self.student.user.get_full_name() + " " + self.course.title

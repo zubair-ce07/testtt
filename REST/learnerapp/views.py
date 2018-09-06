@@ -1,4 +1,4 @@
-from rest_framework import viewsets, permissions, filters
+from rest_framework import filters, generics, viewsets, permissions
 
 from learnerapp import constants, models, serializers
 from learnerapp import permissions as custom_permissions
@@ -28,7 +28,6 @@ class StudentViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.SearchFilter,)
     search_fields = ['user__username']
 
-
     action_serializers = {
         'update': serializers.StudentUpdateSerializer,
     }
@@ -40,7 +39,7 @@ class StudentViewSet(viewsets.ModelViewSet):
         return super(StudentViewSet, self).get_serializer_class()
 
     def get_queryset(self):
-        if self.request.user.user_type == constants.TEACHER or 1:
+        if self.request.user.user_type == constants.TEACHER:
             return models.Student.objects.all()
         return models.Student.objects.filter(user__id=self.request.user.id)
 
@@ -52,3 +51,32 @@ class CourseViewSet(viewsets.ModelViewSet):
                           custom_permissions.InstructorOrReadOnly)
     filter_backends = (filters.SearchFilter,)
     search_fields = ['title']
+
+
+class EnrollmentView(viewsets.ViewSetMixin, generics.ListCreateAPIView):
+    serializer_class = serializers.EnrollmentSerializer
+    permission_classes = [permissions.IsAuthenticated, ]
+    action_serializers = {
+        'student': serializers.StudentEnrollment,
+    }
+
+    def get_serializer_context(self):
+        return {'request': self.request}
+
+    def get_queryset(self):
+        if self.request.user.is_authenticated():
+            if self.request.user.user_type == constants.TEACHER:
+                return models.Enrollment.objects.all()
+            return models.Enrollment.objects.filter(student__user_id=self.request.user.id)
+
+    def get_serializer_class(self):
+        if hasattr(self, 'action_serializers'):
+            user_type = self.request.user.get_user_type_display()
+            if user_type in self.action_serializers:
+                return self.action_serializers[user_type]
+        return super(EnrollmentView, self).get_serializer_class()
+
+
+class UnenrollView(generics.RetrieveDestroyAPIView):
+    queryset = models.Enrollment.objects.all()
+    serializer_class = serializers.EnrollmentSerializer
