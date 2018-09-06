@@ -1,0 +1,57 @@
+<head>
+
+    <title>Homepage</title>
+
+    <link rel="stylesheet" type="text/css" href="/static/rest_framework/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="/static/rest_framework/css/bootstrap-tweaks.css">
+    <link rel="stylesheet" type="text/css" href="/static/rest_framework/css/prettify.css">
+    <link rel="stylesheet" type="text/css" href="/static/rest_framework/css/default.css">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script>
+            $(document).ready(function() {
+                $("#mainButton").click(function() {
+                    if ($(this).html() == 'Start Spider') {
+                        $.get('start_spider', function(data) {
+                            alert(data);
+                        });
+                        $(this).html('Stop Spider');
+                    } else {
+                        $.get('stop_spider', function(data) {
+                            alert(data);
+                        });
+                        $(this).html('Start Spider');
+                    }
+                });
+            });
+    </script>
+</head>
+
+<body>
+
+<div class="wrapper">
+    <div class="navbar navbar-static-top navbar-inverse" role="navigation" aria-label="navbar">
+        <div class="container">
+            <span>
+
+                <a class='navbar-brand' href='/'>
+                    Home
+                </a>
+
+                <a class='navbar-brand' href='/fanatics_items'>
+                    Fanatics Item List
+                </a>
+
+            </span>
+        </div>
+    </div>
+
+    <div class="container">
+        <div id="content" role="main" aria-label="content">
+            <div class="wrapper" style="text-align:center;">
+                <button id="mainButton" class="btn btn-primary js-tooltip" style="position:sticky;top:50%;font-size:50px;">{{ spider_status }}</button>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
