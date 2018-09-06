@@ -170,7 +170,7 @@ class TerminalXParseSpider(Spider):
         return 100 * param
 
     def is_out_of_stock(self, product):
-        return all(sku.get('out_of_stock', False) for sku in product['skus'].items())
+        return all(sku.get('out_of_stock', False) for sku in product['skus'].values())
 
 
 class TerminalXCrawlSpider(CrawlSpider):
