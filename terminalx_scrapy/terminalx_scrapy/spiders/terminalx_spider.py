@@ -97,6 +97,9 @@ class TerminalXParseSpider(Spider):
     def get_gender(self, response):
         raw_gender = response.css('.product-sizechart-wrapper>a::attr(title)').extract_first()
 
+        if not raw_gender:
+            return "unisex-adults"
+
         for key, value in self.gender_map.items():
             if key in raw_gender:
                 return value
@@ -189,5 +192,5 @@ class TerminalXCrawlSpider(CrawlSpider):
         return self.parser.parse(response)
 
     def add_trail(self, response):
-        trail_part = [(response.meta.get('link_text', ''), response.url)]
+        trail_part = [response.url]
         return response.meta.get('trail', []) + trail_part
