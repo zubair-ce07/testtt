@@ -19,102 +19,36 @@ class AtiraParseSpider(Spider):
         response.meta['item'] = item
         return self.request_deals(response)
 
-    def parse_item(self, response):
-        item = response.meta['item']
-        item['property_description'] = self.property_description(response)
-        item['property_name'] = self.property_name(response)
-        item['landlord_slug'] = "atira-student-living"
-        item['property_contact_info'] = self.property_contact_info(response)
-        response.meta[item] = item
-        room_requests = self.room_requests(response)
-
-        if not room_requests:
-            return self.parse_room_same_page(response)
-
-        return self.room_further_details(response, room_requests, item)
-
-    def parse_further_detail(self, response):
-        item = response.meta['item']
-        item['property_amenities'] = self.property_amenities(response)
-        item['property_images'] = self.property_images(response)
-
-        for request in response.meta['room_requests']:
-            request.meta['item'] = copy.deepcopy(item)
-            yield request
-
-    def parse_room_same_page(self, response):
-        parent_item = response.meta['item']
-        parent_item['property_amenities'] = self.property_amenities(response)
-        parent_item['property_images'] = self.property_images(response)
-        parent_item['property_url'] = response.url
-
-        for res in response.css('.et_pb_column'):
-            main_item = copy.deepcopy(parent_item)
-            main_item['room_photos'] = self.property_images(res)
-            main_item['room_availability'] = self.room_availability(res)
-            main_item['room_amenities'] = self.room_amenities(res)
-            main_item['floor_plans'] = self.floor_plans(res, response.url)
-            main_item['room_name'] = self.room_name(res)
-            main_item['listing_type'] = "flexible_open_end"
-            main_item['deposit_type'] = "fixed"
-            main_item['deposit_name'] = "deposit"
-            main_item['available_from'] = datetime.today().strftime('%Y-%m-%d')
-
-            for varient in self.pricing_breakdown_same_page(res):
-                item = copy.deepcopy(main_item)
-                item['room_type'] = varient[0]
-                item['room_price'] = varient[1]
-                item['room_name'] = f"{main_item['room_name']} {varient[2]}"
-                item['min_duration'] = varient[3]
-                item['product_id'] = f"{varient[0]}_{varient[1]}_{varient[3]}"
-
-                yield item
-
-
-    def parse_room_details(self, response):
-        item = response.meta['item']
-        item['property_url'] = response.url
-        item['room_photos'] = self.property_images(response)
-        item['room_availability'] = self.room_availability(response)
-        item['room_amenities'] = self.property_amenities(response)
-        item['floor_plans'] = self.floor_plans(response)
-        item['room_name'] = self.room_name(response)
-
-        item['listing_type'] = "flexible_open_end"
-        item['deposit_type'] = "fixed"
-        item['deposit_name'] = "deposit"
-        item['available_from'] = datetime.today().strftime('%Y-%m-%d')
-
-        prices_info = self.pricing_breakdown(response)
-        return self.parse_price_variant(prices_info, item, response)
-
-    def parse_price_variant(self, prices_info, item_parent, response):
-        items = []
-        for varient in prices_info:
-            item = copy.deepcopy(item_parent)
-            room_type = varient[0] or "private-room"
-            item['room_type'] = room_type
-            item['room_price'] = varient[1]
-            item['room_name'] = f"{self.room_name(response)} {varient[2]}"
-            item['min_duration'] = varient[3]
-            item['product_id'] = f"{room_type}_{varient[1]}_{varient[3]}"
-            items.append(item)
-
-        return items
-
     def parse_deals(self, response):
         item = response.meta['item']
         css = '.content-content p::text'
         item['deals'] = [response.css(css).extract_first()]
         response.meta['item'] = item
-        return self.parse_item(response.meta['main_response'])
+
+        return self.property_details(response.meta['main_response'])
+
+    def parse_further_detail(self, response):
+        item = response.meta['item']
+        item = self.property_main_details(response, item)
+
+        for request in response.meta['room_requests']:
+            request.meta['item'] = copy.copy(item)
+            yield request
+
+    def parse_room_details(self, response):
+        item = response.meta['item']
+        item = self.room_main_details(response, item)
+        item = self.property_common_details(item)
+        room_name = self.room_name(response)
+        pricing_info = self.pricing_breakdown(response)
+        yield from self.room_variant_details(item, pricing_info, room_name)
 
     def request_deals(self, response):
         css = 'a:contains("Offer")::attr(href)'
         url = response.css(css).extract_first()
 
         if not url:
-            return self.parse_item(response)
+            return self.property_details(response)
 
         request = response.follow(url, dont_filter=True, callback=self.parse_deals)
         request.meta['main_response'] = response
@@ -122,17 +56,40 @@ class AtiraParseSpider(Spider):
 
         return request
 
+    def property_details(self, response):
+        item = response.meta['item']
+        item['property_description'] = self.property_description(response)
+        item['property_name'] = self.property_name(response)
+        item['property_contact_info'] = self.property_contact_info(response)
+        room_requests = self.room_requests(response)
+
+        if not room_requests:
+            return self.room_details(response)
+
+        return self.room_further_details(response, room_requests, item)
+
     def room_requests(self, response):
-        room_css = '.room-type-container a::attr(href)'
-        view_room_css = 'h6:contains("VIEW ROOM") ::attr(href)'
-        room_urls = response.css(room_css).extract() \
-                    or response.css(view_room_css).extract()
+        css = '.room-type-container a::attr(href), ' \
+                   'h6:contains("VIEW ROOM") ::attr(href)'
+        room_urls = response.css(css).extract()
 
         requests = []
         for url in room_urls:
             requests.append(response.follow(url, callback=self.parse_room_details))
 
         return requests
+
+    def room_details(self, response):
+        parent_item = response.meta['item']
+        parent_item = self.property_main_details(response, parent_item)
+
+        for room_sel in response.css('.et_pb_column'):
+            main_item = copy.copy(parent_item)
+            main_item = self.room_main_details(response, main_item)
+            main_item = self.property_common_details(main_item)
+            room_name = self.room_name(room_sel)
+            pricing_info = self.pricing_breakdown_same_page(room_sel)
+            yield from self.room_variant_details(main_item, pricing_info, room_name)
 
     def room_further_details(self, response, room_requests, item):
         css = '.grid-seemore::attr(href)'
@@ -149,28 +106,62 @@ class AtiraParseSpider(Spider):
 
         return request
 
-    def property_name(self, response):
-        css = '.flexslider-caption ::text'
-        css2 = 'link ::attr(title)'
-        return response.css(css).extract_first() \
-               or response.css(css2).extract_first().split('-')[0]
+    def property_main_details(self, response, item):
+        item['property_amenities'] = self.property_amenities(response)
+        item['property_images'] = self.property_images(response)
 
-    def property_description(self, response):
-        des_css_1 = '.et_pb_text_inner p::text'
-        des_css_2 = '.entry-content ::text'
-        return response.css(des_css_1).extract_first() \
-               or response.css(des_css_2).extract_first()
+        return item
 
+    @staticmethod
+    def property_common_details(item):
+        item['landlord_slug'] = "atira-student-living"
+        item['listing_type'] = "flexible_open_end"
+        item['deposit_type'] = "fixed"
+        item['deposit_name'] = "deposit"
+        item['available_from'] = datetime.today().strftime('%Y-%m-%d')
 
-    def map_info(self, response):
+        return item
+
+    def room_main_details(self, response, item):
+        item['property_url'] = response.url
+        item['room_photos'] = self.property_images(response)
+        item['room_availability'] = self.room_availability(response)
+        item['room_amenities'] = self.property_amenities(response)
+        item['floor_plans'] = self.floor_plans(response)
+
+        return item
+
+    @staticmethod
+    def room_variant_details(main_item, pricing_details, room_name):
+        for variant in pricing_details:
+            item = copy.copy(main_item)
+            item['room_type'] = variant['type']
+            item['room_price'] = variant['price']
+            item['room_name'] = f"{room_name} {variant['type']}"
+            item['min_duration'] = variant['duration']
+            item['product_id'] = f"{room_name}_{variant['type']}_{variant['duration']}"
+
+            yield item
+
+    @staticmethod
+    def property_name(response):
+        css = '.flexslider-caption ::text, link ::attr(title)'
+        return response.css(css).extract_first().split('-')[0]
+
+    @staticmethod
+    def property_description(response):
+        css = '.et_pb_text_inner p::text, .entry-content ::text'
+        return response.css(css).extract_first()
+
+    @staticmethod
+    def map_info(response):
         css = '.location-map-container ::attr(id)'
         map_id = response.css(css).extract_first()
+
         pattern = f"#{map_id}'\).UberGoogleMaps\((.*?)\);\s*$"
         info = re.findall(pattern, response.text, re.M)
         if info:
             return info[0]
-
-        return []
 
     def property_contact_info(self, response):
         map_info = self.map_info(response)
@@ -185,72 +176,71 @@ class AtiraParseSpider(Spider):
 
             return [info['phone'], info['email']]
 
-        return []
+    @staticmethod
+    def room_amenities(response):
+        css = '.et_pb_column li ::text'
+        return response.css(css).extract()
 
-    def room_amenities(self, response):
-        same_pg_css = '.et_pb_column li ::text'
-        return response.css(same_pg_css).extract()
-
-    def property_amenities(self, response):
-        amen_css_1 = '[data-key="sameHeights"] p::text'
-        amen_css_2 = '#facilities .et_pb_blurb_description ::text'
-        amenities =  response.css(amen_css_1).extract() \
-                     or response.css(amen_css_2).extract()
+    @staticmethod
+    def property_amenities(response):
+        css = '[data-key="sameHeights"] p::text, '\
+                     '#facilities .et_pb_blurb_description ::text'
+        amenities = response.css(css).extract()
         return list(set([text.strip() for text in amenities if text.strip()]))
 
-    def property_images(self, response):
+    @staticmethod
+    def property_images(response):
         pattern = re.compile(r"url\((.*?)\)")
-        gal_css = '.et_pb_lightbox_image ::attr(href)'
+        galary_css = '.et_pb_lightbox_image ::attr(href)'
         img_css = '.et_pb_image_wrap ::attr(src)'
         images =  response.xpath('//ul[@class="slides"]').re(pattern)\
-                  or response.css(gal_css).extract() \
+                  or response.css(galary_css).extract()\
                   or [response.css(img_css).extract_first()]
 
         return images
 
-    def room_availability(self, response):
-        other_pg_css = '.room-type-price:contains("Book")'
-        same_pg_css = '.et_pb_button_module_wrapper:contains("Book")'
-        if response.css(other_pg_css).extract() \
-                or response.css(same_pg_css).extract():
+    @staticmethod
+    def room_availability(response):
+        css = '.room-type-price:contains("Book"), ' \
+              '.et_pb_button_module_wrapper:contains("Book")'
+        if response.css(css):
             return "Availabale"
 
         return "Not Available"
 
-    def floor_plans(self, response, url=None):
-        css = '.floorplan-thumbnail ::attr(data-featherlight)'
-        imgs_css = 'img::attr(src)'
-
+    @staticmethod
+    def floor_plans(response, url=None):
         if not url:
+            css = '.floorplan-thumbnail ::attr(data-featherlight)'
             return response.css(css).extract()
 
         floor_plan = []
-        for fp in response.css(imgs_css).extract():
+        for fp in response.css('img::attr(src)').extract():
             if "floorplan" in fp:
                 floor_plan.append(parse.urljoin(url, fp))
 
         return floor_plan
 
+    @staticmethod
+    def room_name(response):
+        css = '.page-title ::text,'\
+              '.et_pb_column .et_pb_text_inner h4 ::text'
+        return response.css(css).extract_first()
 
-    def room_name(self, response):
-        css = '.page-title ::text'
-        same_pg_css = '.et_pb_column .et_pb_text_inner h4 ::text'
-        name =  response.css(css).extract_first() \
-               or response.css(same_pg_css).extract_first()
-
-        return name
+    @staticmethod
+    def high_view_class_name(response):
+        css = 'th:contains("High")::attr(class)'
+        return response.css(css).extract_first()
     
-    def high_view_class_name(self, response):
-        high_css = 'th:contains("High")::attr(class)'
-        return response.css(high_css).extract_first()
-    
-    def low_view_class_name(self, response):
-        low_css = 'th:contains("Low")::attr(class)'
-        return response.css(low_css).extract_first()
+    @staticmethod
+    def low_view_class_name(response):
+        css = 'th:contains("Low")::attr(class)'
+        return response.css(css).extract_first()
         
-    def semester_class_name(self, response):
-        sem_css = 'td:contains("Semester")::attr(class)'
-        return response.css(sem_css).extract_first()
+    @staticmethod
+    def semester_class_name(response):
+        css = 'td:contains("Semester")::attr(class)'
+        return response.css(css).extract_first()
 
     def refine_price(self, price):
         if not price:
@@ -261,7 +251,21 @@ class AtiraParseSpider(Spider):
                 return price.replace(notation, self.price_notation)
 
         return f"{price} {self.price_notation}"
-    
+
+    def room_price(self, view_class, table_row):
+        price_css = f'.{view_class} ::text'
+        return self.refine_price(table_row.css(price_css).extract_first())
+
+    @staticmethod
+    def pricing_details(title, price, duration, room_type):
+        element = {}
+        element['title'] = title
+        element['price'] = price
+        element['type'] = room_type
+        element['duration'] = duration
+
+        return element
+
     def pricing_breakdown(self, response):
         response = response.css('.tablepress')
         
@@ -269,77 +273,50 @@ class AtiraParseSpider(Spider):
         low_view_class = self.low_view_class_name(response)
         sem_class = self.semester_class_name(response)
 
-        body_css = 'tbody tr'
-        data = []
+        price_details = []
         title = None
-        for tr in response.css(body_css):
-            element = []
+        for table_row in response.css('tbody tr'):
             duration = "119"
+            sem_css = f'.{sem_class}:contains("2 Semester")'
 
-            p_low_css = f'.{low_view_class}:contains("N/A")'
-            if not tr.css(p_low_css).extract_first() and low_view_class:
-                if sem_class != "column-1" \
-                        and tr.css('.column-1 ::text').extract_first():
-                    title = tr.css('.column-1 ::text').extract_first()
+            if table_row.css(sem_css):
+                duration = "308"
 
-                sem_css = f'.{sem_class}:contains("2 Semester")'
-                if tr.css(sem_css).extract_first():
-                    duration = "308"
+            column1_info = table_row.css('.column-1 ::text').extract_first()
 
-                element.append(title)
-                price_css = f'.{low_view_class} ::text'
-                price = self.refine_price(tr.css(price_css).extract_first())
-                element.append(price)
-                element.append("Low View")
-                element.append(duration)
-                data.append(element)
+            if sem_class != "column-1" and column1_info:
+                title = column1_info
 
-            p_high_css = f'.{high_view_class}:contains("N/A")'
-            if not tr.css(p_high_css).extract_first() and high_view_class:
-                element = []
-                element.append(title)
-                price_css = f'.{high_view_class} ::text'
-                price = self.refine_price(tr.css(price_css).extract_first())
-                element.append(price)
-                element.append("High View")
-                element.append(duration)
-                data.append(element)
+            avail_css = f'.{low_view_class}:contains("N/A")'
+            if not table_row.css(avail_css).extract_first() and low_view_class:
+                price = self.room_price(low_view_class, table_row)
+                price_details.append(self.pricing_details(title, price,
+                                                          duration, "Low View"))
 
-        return data
+            avail_css = f'.{high_view_class}:contains("N/A")'
+            if not table_row.css(avail_css).extract_first() and high_view_class:
+                price = self.room_price(high_view_class, table_row)
+                price_details.append(self.pricing_details(title, price,
+                                                          duration, "High View"))
+
+        return price_details
 
     def pricing_breakdown_same_page(self, response):
-        data = []
+        price_details = []
         for row in response.css('tbody tr+tr'):
             room = row.css('td:nth-child(1) ::text').extract_first()
-            if not room:
-                continue
+            name = self.room_name(response)
 
-            element = []
-            element.append(self.room_name(response))
             price = self.refine_price(row.css('td:nth-child(2) ::text').extract_first())
-            element.append(price)
-            element.append(room)
-            element.append("357")
             if price:
-                data.append(element)
+                price_details.append(self.pricing_details(name, price, "357", room))
 
-            element = []
-            element.append(self.room_name(response))
-            price = self.refine_price(row.css('td:nth-child(2) ::text').extract_first())
-            element.append(price)
-            element.append(room)
-            element.append("336")
+            price = self.refine_price(row.css('td:nth-child(3) ::text').extract_first())
             if price:
-                data.append(element)
+                price_details.append(self.pricing_details(name, price, "336", room))
 
-            element = []
-            element.append(self.room_name(response))
-            price = self.refine_price(row.css('td:nth-child(2) ::text').extract_first())
-            element.append(price)
-            element.append(room)
-            element.append("168")
+            price = self.refine_price(row.css('td:nth-child(4) ::text').extract_first())
             if price:
-                data.append(element)
+                price_details.append(self.pricing_details(name, price, "168", room))
 
-        return data
-
+        return price_details
