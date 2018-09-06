@@ -1,4 +1,5 @@
 import requests
+from django_filters.rest_framework import DjangoFilterBackend
 from django.http import HttpResponse
 from django.shortcuts import render
 from fanatics_item.models import FanaticsItem
@@ -9,6 +10,8 @@ from rest_framework import generics
 class FanaticsItemList(generics.ListCreateAPIView):
     queryset = FanaticsItem.objects.all()
     serializer_class = FanaticsItemSerializer
+    filter_backends = (DjangoFilterBackend,)
+    filter_fields = ('title', 'brand', 'gender', 'price')
 
 
 class FanaticsItemDetail(generics.RetrieveUpdateDestroyAPIView):
