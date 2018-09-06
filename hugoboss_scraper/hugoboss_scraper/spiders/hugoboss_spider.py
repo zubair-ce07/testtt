@@ -79,9 +79,9 @@ class HugobossParseSpider(Spider):
 
         discount = product_data["metric3"]
         if discount:
-            common_sku["previous_prices"] = [self.cents(product_data["price"] + discount)]
+            common_sku["previous_prices"] = [self.cents_conversion(product_data["price"] + discount)]
 
-        common_sku["price"] = self.cents(product_data["price"])
+        common_sku["price"] = self.cents_conversion(product_data["price"])
         common_sku["currency"] = self.get_currency(response)
         common_sku["colour"] = self.get_colour(response)
         return common_sku
@@ -136,7 +136,7 @@ class HugobossParseSpider(Spider):
         self.scraped_ids.add(product_id)
         return False
 
-    def cents(self, param):
+    def cents_conversion(self, param):
         return 100 * param
 
 
