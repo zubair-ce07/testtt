@@ -8,45 +8,64 @@ import csv
 import argparse
 
 
+class WheatherReadings:
+    def __init__(
+            self, date, max_temperature, min_temperature,
+            max_humidity, mean_humidty
+    ):
+        self.date = date
+        self.max_temperature = max_temperature
+        self.min_temperature = min_temperature
+        self.max_humidity = max_humidity
+        self.mean_humity = mean_humidty
+
+
 class FileHandler:
     """module for all file handling"""
-    def __init__(self, path):
-        """constructor"""
-        self.path_to_files = path
 
-    def get_file_names(self, year, month):
+    def get_file_names(self, path_to_files, date):
         """ return files from dir according to month and year"""
-        files = os.listdir(self.path_to_files)
-        if not month:
-            regex = re.compile(r'^Murree_weather_' + year)
+
+        date_dict = parse_date(date)
+        files = os.listdir(path_to_files)
+        if not date_dict.get("month"):
+            regex = re.compile(r'^Murree_weather_' + date_dict.get("year"))
         else:
-            month_str = get_month_string(month)
+            month_str = get_month_string(date_dict.get("month"))
             regex = re.compile(r'^Murree_weather_' +
-                               year + "_" + month_str.capitalize())
+                               date_dict.get("year") + "_" + month_str.capitalize())
         selected_files = list(filter(regex.search, files))
         return selected_files
 
-    def get_list(self, year, month):
+    def get_list(self, path_to_files, date):
         """return list of data from files in filenames_list"""
         data_list = []
-        filenames_list = self.get_file_names(year, month)
+        filenames_list = self.get_file_names(path_to_files, date)
         for file_name in filenames_list:
-            file_name = f"{self.path_to_files}/{file_name}"
+            file_name = f"{path_to_files}/{file_name}"
             with open(file_name, mode='r') as reader:
                 csv_reader = csv.DictReader(reader, delimiter=',')
                 for row in csv_reader:
-                    data_list.append(row)
+                    record = WheatherReadings(
+                        row.get("PKT"),
+                        row.get("Max TemperatureC"),
+                        row.get("Min TemperatureC"),
+                        row.get("Max Humidity"),
+                        row.get(" Mean Humidity")
+                    )
+                    data_list.append(record)
         return data_list
 
 
 class ReportGenerator:
     """ module to display reports or graph"""
-    def display_extremes(self, record_list):
+    def display_extremes(self, path, date):
         """
         function to generate extreme report
         :param record_list: list of data
         :return:
         """
+        record_list = FileHandler().get_list(path, date)
         result = calculate_extremes(record_list)
         if result:
             print(f"Highest: {result.get('max_temperature')}C on "
@@ -58,12 +77,13 @@ class ReportGenerator:
         else:
             print("\n<< Data is not available")
 
-    def display_averages(self, record_list):
+    def display_averages(self, path, date):
         """
         function to generate average report
         :param record_list: list of data
         :return:
         """
+        record_list = FileHandler().get_list(path, date)
         result = calculate_average(record_list)
         if result:
             print(f"\nHighest Average: {result.get('max_temperature_avg')}C")
@@ -72,38 +92,27 @@ class ReportGenerator:
         else:
             print("\n<< Data is not available")
 
-    def display_graph(self, year, month, file_handler, oneline):
+    def display_graph(self, path, date, oneline):
         """
         function to display grpah of month data
         :param oneline: flag to display one-line or two-line graph
         :return:
         """
-        month_str = datetime.strptime(month, "%m").strftime('%B')
-        print(f"\n{year} {month_str}:")
-        month_list = file_handler.get_list(year, month)
+        file_handler = FileHandler()
+        date_dict = parse_date(date)
+        month_str = datetime.strptime(date_dict.get("month"),
+                                      "%m").strftime('%B')
+        print(f"\n{date_dict.get('year')} {month_str}:")
+        month_list = file_handler.get_list(path, date)
         for day in month_list:
-            date = datetime.strptime(day.get("PKT"), '%Y-%m-%d').strftime('%d')
-            max_temperature = day.get("Max TemperatureC")
-            min_temperature = day.get("Min TemperatureC")
-            if oneline:
-                print(date, end=" ")
-                if max_temperature and min_temperature:
-                    display_bar(min_temperature, "*", const.CBLUE)
-                    display_bar(max_temperature, "*", const.CRED)
-                    print(f" {min_temperature}C - {max_temperature}C")
-                else:
-                    print("-")
-            else:
-                print(date, end=" ")
-                if max_temperature:
-                    display_bar(max_temperature, "+", const.CRED)
-                    print(" " + const.CRED + str(
-                        max_temperature) + "C" + const.CEND)
-                print(date, end=" ")
-                if min_temperature:
-                    display_bar(min_temperature, "+", const.CBLUE)
-                    print(" " + const.CBLUE + str(
-                        min_temperature) + "C" + const.CEND)
+            date = datetime.strptime(day.date, '%Y-%m-%d').strftime('%d')
+            max_temperature = day.max_temperature
+            min_temperature = day.min_temperature
+            print(date, end=" ")
+            display_graph_line(
+                oneline, max_temperature,
+                min_temperature, date
+            )
 
 
 class Controller:
@@ -136,22 +145,26 @@ class Controller:
         """take actions on the bases of arguments"""
         args = self.parser.parse_args()
 
-        file_handler = FileHandler(args.path)
         generator = ReportGenerator()
-
         if args.e:
-            list = file_handler.get_list(args.e, None)
-            generator.display_extremes(list)
+            generator.display_extremes(args.path, args.e)
         if args.d:
-            [year, month] = args.d.split('/')
-            generator.display_graph(year, month, file_handler, True)
+            generator.display_graph(args.path, args.d, True)
         if args.a:
-            [year, month] = args.a.split('/')
-            list = file_handler.get_list(year, month)
-            generator.display_averages(list)
+            generator.display_averages(args.path, args.a)
         if args.c:
-            [year, month] = args.c.split('/')
-            generator.display_graph(year, month, file_handler, False)
+            generator.display_graph(args.path, args.c, False)
+
+
+def parse_date(date):
+    month_year = date.split('/')
+    date_dict = {
+        "year": month_year[0],
+        "month": None
+    }
+    if(len(month_year) == 2):
+        date_dict["month"] = month_year[1]
+    return date_dict
 
 
 def calculate_extremes(rec_list):
@@ -160,23 +173,17 @@ def calculate_extremes(rec_list):
     :return:
     """
     if len(rec_list) > 0:
-        max_temp_entry = get_required_entry(
-            rec_list, const.MAX_TEMPERATURE_KEY, const.MAX_INDEX
-        )
-        min_temp_entry = get_required_entry(
-            rec_list, const.MIN_TEMPERATURE_KEY, const.MIN_INDEX
-        )
-        humidity_entry = get_required_entry(
-            rec_list, const.MAX_HUMIDITY_KEY, const.MAX_INDEX
-        )
+        humidity_entry = get_required_entry(rec_list, 0)
+        max_temp_entry = get_required_entry(rec_list, 1)
+        min_temp_entry = get_required_entry(rec_list, 2)
 
         result = {
-            "max_temperature": max_temp_entry.get("Max TemperatureC"),
-            "min_temperature": min_temp_entry.get("Min TemperatureC"),
-            "humidity": humidity_entry.get("Max Humidity"),
-            "max_temperature_date": date_to_display_string(max_temp_entry),
-            "min_temperature_date": date_to_display_string(min_temp_entry),
-            "humidity_date": date_to_display_string(humidity_entry)
+            "max_temperature": max_temp_entry.max_temperature,
+            "min_temperature": min_temp_entry.min_temperature,
+            "humidity": humidity_entry.max_humidity,
+            "max_temperature_date": date_to_display_string(max_temp_entry.date),
+            "min_temperature_date": date_to_display_string(min_temp_entry.date),
+            "humidity_date": date_to_display_string(humidity_entry.date)
         }
         return result
 
@@ -187,16 +194,16 @@ def calculate_average(rec_list):
     :return:
     """
     if len(rec_list) > 0:
-        max_temp_data = [int(y.get("Max TemperatureC")) for y in rec_list
-                         if y.get("Max TemperatureC") is not None]
+        max_temp_data = [int(y.max_temperature) for y in rec_list
+                         if y.max_temperature is not None]
         max_temp_avg = mean(max_temp_data)
 
-        min_temp_data = [int(y.get("Min TemperatureC")) for y in rec_list
-                         if y.get("Min TemperatureC") is not None]
+        min_temp_data = [int(y.min_temperature) for y in rec_list
+                         if y.min_temperature is not None]
         min_temp_avg = mean(min_temp_data)
 
-        humidity_data = [int(y.get(" Mean Humidity")) for y in rec_list
-                         if y.get(" Mean Humidity") is not None]
+        humidity_data = [int(y.mean_humity) for y in rec_list
+                         if y.mean_humity is not None]
 
         result = {
             "max_temperature_avg": str(round(max_temp_avg, 2)),
@@ -206,18 +213,49 @@ def calculate_average(rec_list):
         return result
 
 
-def get_required_entry(record_list, key, index):
+def get_required_entry(record_list, key):
     """
     return max tempertaure entry, min temperature entry or max humidity entry
     :param record_list: data for calculation
-    :param key: choice for finding
+    :param key: 0:humidity, 1:max_temperature and 2 is for min temperature
     :param index: used to idetify either max or min entry is required
     :return:
     """
-    sorted_list = sorted(([y for y in record_list
-                           if y and y.get(key) is not None]),
-                         key=lambda x: int(x.get(key)))
-    return sorted_list[index]
+    if key == 0:
+        sorted_list = sorted(([y for y in record_list
+                               if y and y.max_humidity is not None]),
+                             key=lambda x: int(x.max_humidity))
+        return sorted_list[-1]
+    elif key == 1:
+        sorted_list = sorted(([y for y in record_list
+                               if y and y.max_temperature is not None]),
+                             key=lambda x: int(x.max_temperature))
+        return sorted_list[0]
+    elif key == 2:
+        sorted_list = sorted(([y for y in record_list
+                               if y and y.min_temperature is not None]),
+                             key=lambda x: int(x.min_temperature))
+        return sorted_list[-1]
+
+
+def display_graph_line(oneline, max_temperature, min_temperature, date):
+    if oneline:
+        if max_temperature and min_temperature:
+            display_bar(min_temperature, "*", const.CBLUE)
+            display_bar(max_temperature, "*", const.CRED)
+            print(f" {min_temperature}C - {max_temperature}C")
+        else:
+            print("-")
+    else:
+        if max_temperature:
+            display_bar(max_temperature, "+", const.CRED)
+            print(" " + const.CRED + str(
+                max_temperature) + "C" + const.CEND)
+        print(date, end=" ")
+        if min_temperature:
+            display_bar(min_temperature, "+", const.CBLUE)
+            print(" " + const.CBLUE + str(
+                min_temperature) + "C" + const.CEND)
 
 
 def display_bar(range_str, sign, code):
@@ -227,8 +265,9 @@ def display_bar(range_str, sign, code):
 
 
 def date_to_display_string(entry):
+
     """convert date to string"""
-    date = datetime.strptime(entry.get("PKT"), '%Y-%m-%d')
+    date = datetime.strptime(entry, '%Y-%m-%d')
     return (date).strftime('%B %d')
 
 
