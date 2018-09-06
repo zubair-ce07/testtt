@@ -33,21 +33,18 @@ def new_crawl(url):
         words_formatted = text_parser.format_words(words)
         words_sorted = text_parser.generate_sorted_list(words_formatted)
 
-        for item in words_sorted:
-            print(item)
         encyrpted_list = []
-
         for word, freq in words_sorted[:100]:
             w_id = encryption_manager.generate_salted_hash(word)
             encrypted_word = (
                     encryption_manager.encrypt_str(word))
             encyrpted_list.append((w_id, encrypted_word, freq))
-
-        db.insert_row(encyrpted_list)
         
         bag_of_words = [item[0] for item in words_sorted]
         term_freq_inverse_doc_freq = text_parser.term_freq_inverse_doc_freq_generator(bag_of_words)
-        print(term_freq_inverse_doc_freq)
+
+        db.insert_word_freq(encyrpted_list)
+        db.insert_term_freq_inverse_doc_freq(url, term_freq_inverse_doc_freq)
     else:
         print("Enter URL to crawl & Try again!")
 
@@ -58,6 +55,9 @@ def view_db():
     for row in db.get_words_freqs():
             decrypted_word = encryption_manager.decrypt_str(row[1])
             print((decrypted_word, row[2]))
+
+    for row in db.get_term_freq_inverse_doc_freq():
+        print(row[1])
 
 
 if __name__ == "__main__":
