@@ -36,9 +36,7 @@ class TerminalXParseSpider(Spider):
         product["description"] = self.get_description(response)
         product["care"] = self.get_care(response)
         product["skus"] = self.get_skus(response, raw_product)
-        price_info = self.get_common_sku(response, raw_product)
-        product['price'] = price_info['price']
-        product['currency'] = price_info['currency']
+        product.update(self.get_common_sku(response, raw_product))
 
         response.meta["request_queue"] = self.images_requests(response, raw_product)
         response.meta["product"] = product
