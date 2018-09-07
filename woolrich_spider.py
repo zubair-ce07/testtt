@@ -83,17 +83,20 @@ class QuotesSpider(CrawlSpider):
             if result:
                 self.item['product_price'] = self.storage
                 yield self.item
+                self.storage.clear()
         elif size_name is not 'None':
             self.storage.setdefault('color', {}).setdefault(color_name, {}).\
             setdefault('size', {})[size_name] = price
             if result:
                 self.item['product_price'] = self.storage
                 yield self.item
+                self.storage.clear()
         else:
             self.storage.setdefault('color', {}).setdefault(color_name, {})[size_name] = price
             if result:
                 self.item['product_price'] = self.storage
                 yield self.item
+                self.storage.clear()
 
 
     def parse_three_attributes_request(self, color_values, fit_values, size_values, product_id, color_key,
