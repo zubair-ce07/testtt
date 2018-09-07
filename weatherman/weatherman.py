@@ -49,7 +49,7 @@ class FileHandler:
                 csv_reader = csv.DictReader(reader, delimiter=',')
                 for row in csv_reader:
                     record = WheatherReadings(
-                        read_date(row),
+                        (row.get("PKT") or row.get("PKRT")),
                         row.get("Max TemperatureC"),
                         row.get("Min TemperatureC"),
                         row.get("Max Humidity"),
@@ -144,7 +144,6 @@ class Controller:
     def parse_arguments(self):
         """take actions on the bases of arguments"""
         args = self.parser.parse_args()
-
         generator = ReportGenerator()
         file_handler = FileHandler()
 
@@ -255,8 +254,6 @@ def display_graph_line(horizontal, max_temperature, min_temperature, date):
             print(" " + const.CBLUE + str(
                 min_temperature) + "C" + const.CEND)
 
-def read_date(row):
-    return row.get("PKT") if row.get("PKT")  else row.get("PKRT")
 
 def display_bar(range_str, sign, code):
     """helping function for graph """
