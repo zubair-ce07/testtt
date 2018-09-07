@@ -1,9 +1,8 @@
+from csv import DictReader
 from json import loads
-import re
+from collections import namedtuple
 
 from scrapy import Spider, Request
-from scrapy.loader.processors import MapCompose
-from scrapy.shell import open_in_browser
 from w3lib.url import add_or_replace_parameter, url_query_parameter
 
 from ..items import MenuItemLoader
@@ -26,32 +25,36 @@ class SwiggyInSpider(Spider):
 
     special_categories = ["Recommended", "What's New", "Sharing Packs"]
 
-    locations = [
-        {
-            "lat": "12.83957",
-            "lng": "77.659309"
-        },
-        {
-            "lat": "13.0205017",
-            "lng": "80.1842321"
-        },
-        {
-            "lat": "28.551441",
-            "lng": "77.251741"
-        }
+    Location = namedtuple('Location', ['lng', 'lat'])
+
+    test_locations = [
+        Location("77.659309", "12.83957"),
+        Location("80.1842321", "13.0205017"),
+        Location("77.251741", "28.551441")
     ]
 
     restaurents = ["KFC", "McDonald's", "Burger King", "Domino's"]
 
+    @staticmethod
+    def is_valid_reading(reading):
+        required_fields = ['Latitude', 'Longitude']
+        return all(reading[field] for field in required_fields)
+
+    def read(self, file_name):
+        with open(file_name, 'r') as f:
+            return [self.Location(r['Longitude'], r['Latitude']) for r in DictReader(f)
+                    if self.is_valid_reading(r)]
+
     def start_requests(self):
         def add_location(url, loc, restaurent):
             url = add_or_replace_parameter(url, "str", restaurent)
-            url = add_or_replace_parameter(url, "lat", loc["lat"])
-            url = add_or_replace_parameter(url, "lng", loc["lng"])
+            url = add_or_replace_parameter(url, "lat", loc.lat)
+            url = add_or_replace_parameter(url, "lng", loc.lng)
             return url
 
+        locations = self.read('locations.csv')
         request_urls = [add_location(self.search_base_url, loc, restaurent)
-                        for loc in self.locations for restaurent in self.restaurents]
+                        for loc in locations for restaurent in self.restaurents]
 
         search_requests = [Request(url=url, callback=self.parse) for url in request_urls]
         return search_requests
@@ -73,7 +76,7 @@ class SwiggyInSpider(Spider):
                                                    restaurant["slugs"]["restaurant"])
                     url = add_or_replace_parameter(url, "lng", lng)
                     url = add_or_replace_parameter(url, "lat", lat)
-                    print("Found ", restaurant_name)
+
                     yield Request(url=url, callback=self.parse_dominos, meta={"url": restaurant_url})
 
                 elif restaurant_name in self.restaurents:
@@ -81,7 +84,6 @@ class SwiggyInSpider(Spider):
                             "restaurant_name": restaurant_name,
                             "restaurant_id": restaurant["id"]}
 
-                    print("Found ", restaurant_name)
                     yield Request(url=restaurant_url, callback=self.parse_restaurant, meta=meta)
 
     def parse_restaurant(self, response):
@@ -178,12 +180,14 @@ class SwiggyInSpider(Spider):
                     else:
                         entity_item = menu_il.load_item()
                         for variant in variants["variant_groups"]:
-                            if variant["name"] == "Size":
-                                for variation in variant["variations"]:
-                                    variant_il = MenuItemLoader(item=entity_item.copy(), response=response)
-                                    variant_il = process_variant(variant_il, variation)
+                            if not variant["name"] == "Size":
+                                continue
 
-                                    yield variant_il.load_item()
+                            for variation in variant["variations"]:
+                                variant_il = MenuItemLoader(item=entity_item.copy(), response=response)
+                                variant_il = process_variant(variant_il, variation)
+
+                                yield variant_il.load_item()
 
             if category["widgets"]:
                 cat_item = cat_il.load_item()
@@ -204,12 +208,15 @@ class SwiggyInSpider(Spider):
                         else:
                             entity_item = menu_il.load_item()
                             for variant in variants["variant_groups"]:
-                                if variant["name"] == "Size":
-                                    for variation in variant["variations"]:
-                                        variant_il = MenuItemLoader(item=entity_item.copy(), response=response)
-                                        variant_il = process_variant(variant_il, variation)
 
-                                        yield variant_il.load_item()
+                                if not variant["name"] == "Size":
+                                    continue
+
+                                for variation in variant["variations"]:
+                                    variant_il = MenuItemLoader(item=entity_item.copy(), response=response)
+                                    variant_il = process_variant(variant_il, variation)
+
+                                    yield variant_il.load_item()
 
     def process_meal(self, response):
 
@@ -235,9 +242,9 @@ class SwiggyInSpider(Spider):
 
             return il
 
-        raw_meal_xpath = "//script[contains(text(), 'INITIAL_STATE')]"
-        raw_meal_re = "INITIAL_STATE__ = (.*);   window"
-        raw_meals = loads(response.xpath(raw_meal_xpath).re_first(raw_meal_re))
+        raw_meals_xpath = "//script[contains(text(), 'INITIAL_STATE')]"
+        raw_meals_re = "INITIAL_STATE__ = (.*);   window"
+        raw_meals = loads(response.xpath(raw_meals_xpath).re_first(raw_meals_re))
         meal_groups = raw_meals["meals"]["groups"]
 
         for meal_group in meal_groups:
