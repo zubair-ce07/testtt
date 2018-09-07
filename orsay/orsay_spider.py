@@ -18,17 +18,22 @@ class OrsaySpider(scrapy.Spider):
 
     def parse(self, response):
         """this function will parse the main category page and extract
-            urls of all products of that category"""
+        urls of all products of that category
+        """
         for product_div in response.css('div.product-tile'):
-
             product_detail_selector = product_div.css(
                 '::attr(data-product-details)').extract_first()
             if product_detail_selector:
                 product = self.get_product(product_detail_selector,
                                            product_div)
                 colors_url = product_div.css('ul.product-swatch-list li')
+
                 for color in colors_url:
                     color_url = color.css('a::attr(href)').extract_first()
+
+                    # if condition as there are some relative urls
+                    if "//" not in color_url:
+                        color_url = urljoin("http: // www.orsay.com", color_url)
                     yield scrapy.Request(url=color_url,
                                          callback=self.parse_color,
                                          meta={'curr_item': product})
@@ -36,7 +41,7 @@ class OrsaySpider(scrapy.Spider):
         next_items_count = response.css(
             'div.load-next-placeholder::attr(data-quantity)').extract_first()
         if next_items_count:
-            self.handle_paginition(response, next_items_count)
+            yield self.handle_paginition(response, next_items_count)
 
     def parse_color(self, response):
         """this function is a parser for size and color"""
@@ -48,7 +53,8 @@ class OrsaySpider(scrapy.Spider):
             color_value = product_variation["color"]["value"]
             color_name = product_variation["color"]["displayName"]
             product['colors'].append(color_name)
-            
+            product['images_url'].append(
+                response.css('img.primary-image::attr(src)').extract_first())
             size_li = response.css('ul.size li')
             for li in size_li:
                 sku = {}
@@ -70,17 +76,15 @@ class OrsaySpider(scrapy.Spider):
         product = {}
         product_detail_json = json.loads(product_detail_selector)
         product["name"] = product_detail_json["name"]
-        product["description"] = response.xpath(
-            "//div[@class='with-gutter']/following-sibling::text()"
-        ).extract_first()
+        product["description"] = response.css(
+            'div.product-info-title::text').extract()
         product["retailer_sku"] = product_detail_json["idListRef6"]
         product["category"] = product_detail_json["categoryName"]
         product["url"] = response.css(
             'div.product-image > a::attr(href)').extract_first()
         product["currency"] = product_detail_json["currency_code"]
         product["price"] = product_detail_json["grossPrice"]
-        product['images_url'] = response.css(
-            'img.productthumbnail::attr(src)').extract()
+        product['images_url']=[]
         product['colors'] = []
         product['skus'] = {}
         return product
@@ -96,7 +100,5 @@ class OrsaySpider(scrapy.Spider):
 
         # check for more items or further pages and create request
         if next_items_count < self.max_items:
-            self.current_items = self.current_items + self.max_display
-            next_url = f"{self.main_url}?sz={str(next_items_count)}"
-            yield scrapy.Request(url=next_url,
-                                 callback=self.parse)
+            next_url = self.main_url + "?sz=" + str(next_items_count)
+            return scrapy.Request(url=next_url, callback=self.parse)
