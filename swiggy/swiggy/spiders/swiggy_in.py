@@ -16,6 +16,8 @@ class SwiggyInSpider(Spider):
     restaurent_base_url = "https://www.swiggy.com"
     menu_base_url = "https://www.swiggy.com/dapi/menu/v4/full"
     meal_base_url = "https://www.swiggy.com/meals/"
+    thumbnail_url = "https://res.cloudinary.com/swiggy/image/upload/" \
+                    "fl_lossy,f_auto,q_auto,w_165,h_165,c_fill/{}"
 
     custom_settings = {
         "ROBOTSTXT_OBEY": False,
@@ -29,8 +31,8 @@ class SwiggyInSpider(Spider):
 
     test_locations = [
         Location("77.659309", "12.83957"),
-        Location("80.1842321", "13.0205017"),
-        Location("77.251741", "28.551441")
+        #Location("80.1842321", "13.0205017"),
+        #Location("77.251741", "28.551441")
     ]
 
     restaurents = ["KFC", "McDonald's", "Burger King", "Domino's"]
@@ -54,7 +56,7 @@ class SwiggyInSpider(Spider):
 
         locations = self.read('locations.csv')
         request_urls = [add_location(self.search_base_url, loc, restaurent)
-                        for loc in locations for restaurent in self.restaurents]
+                        for loc in self.test_locations for restaurent in self.restaurents]
 
         search_requests = [Request(url=url, callback=self.parse) for url in request_urls]
         return search_requests
@@ -114,32 +116,31 @@ class SwiggyInSpider(Spider):
 
         return self.parse_dominos_categories(il.load_item(), response)
 
+    def process_entity(self, il, menu_item):
+        il.add_value("title", menu_item["name"])
+        il.add_value("description", menu_item["description"])
+        thumbnail_url = self.thumbnail_url.format(menu_item["cloudinaryImageId"])
+        il.add_value("thumbnail", thumbnail_url)
+
+        if menu_item["isVeg"]:
+            il.add_value("veg", True)
+        else:
+            il.add_value("veg", False)
+
+        if menu_item["price"]:
+            il.add_value("price", str(menu_item["price"]))
+
+        if menu_item.get("ribbon"):
+            il.add_value("promotion", menu_item["ribbon"]["text"])
+
+        return il
+
+    def process_variant(self, il, variant):
+        il.add_value("size", variant["name"])
+        il.add_value("price", str(variant["price"]))
+        return il
+
     def parse_dominos_categories(self, item, response):
-
-        def process_entity(il, menu_item):
-            il.add_value("title", menu_item["name"])
-            il.add_value("description", menu_item["description"])
-            thumbnail_url = "https://res.cloudinary.com/swiggy/image/upload/" \
-                            "fl_lossy,f_auto,q_auto,w_165,h_165,c_fill/{}".format(menu_item["cloudinaryImageId"])
-            il.add_value("thumbnail", thumbnail_url)
-
-            if menu_item["isVeg"]:
-                il.add_value("veg", True)
-            else:
-                il.add_value("veg", False)
-
-            if menu_item["price"]:
-                il.add_value("price", str(menu_item["price"]))
-
-            if menu_item.get("ribbon"):
-                il.add_value("promotion", menu_item["ribbon"]["text"])
-
-            return il
-
-        def process_variant(il, variant):
-            il.add_value("size", variant["name"])
-            il.add_value("price", str(variant["price"]))
-            return il
 
         raw_menu = loads(response.text)["data"]
 
@@ -152,6 +153,7 @@ class SwiggyInSpider(Spider):
 
             if category["name"] == "Everyday Value Offers":
                 cat_item = cat_il.load_item()
+
                 for entitie in category["entities"]:
                     entity_il = MenuItemLoader(item=cat_item.copy(), response=response)
                     entity_il.add_value("subcategory", entitie["text"])
@@ -172,7 +174,7 @@ class SwiggyInSpider(Spider):
                 for entitie in category["entities"]:
                     menu_il = MenuItemLoader(item=cat_item.copy(), response=response)
                     menu_item = raw_items[str(entitie["id"])]
-                    menu_il = process_entity(menu_il, menu_item)
+                    menu_il = self.process_entity(menu_il, menu_item)
 
                     variants = menu_item.get("variantsV2")
                     if not variants:
@@ -185,7 +187,7 @@ class SwiggyInSpider(Spider):
 
                             for variation in variant["variations"]:
                                 variant_il = MenuItemLoader(item=entity_item.copy(), response=response)
-                                variant_il = process_variant(variant_il, variation)
+                                variant_il = self.process_variant(variant_il, variation)
 
                                 yield variant_il.load_item()
 
@@ -200,7 +202,7 @@ class SwiggyInSpider(Spider):
                     for entitie in sub_cat["entities"]:
                         menu_il = MenuItemLoader(item=sub_cat_item.copy(), response=response)
                         menu_item = raw_items[str(entitie["id"])]
-                        menu_il = process_entity(menu_il, menu_item)
+                        menu_il = self.process_entity(menu_il, menu_item)
 
                         variants = menu_item.get("variantsV2")
                         if not variants:
@@ -214,33 +216,11 @@ class SwiggyInSpider(Spider):
 
                                 for variation in variant["variations"]:
                                     variant_il = MenuItemLoader(item=entity_item.copy(), response=response)
-                                    variant_il = process_variant(variant_il, variation)
+                                    variant_il = self.process_variant(variant_il, variation)
 
                                     yield variant_il.load_item()
 
     def process_meal(self, response):
-
-        def process_entity(il, menu_item):
-            il.add_value("title", menu_item["name"])
-            il.add_value("description", menu_item["description"])
-            thumbnail_url = "https://res.cloudinary.com/swiggy/image/upload/" \
-                            "fl_lossy,f_auto,q_auto,w_165,h_165,c_fill/{}".format(menu_item["cloudinaryImageId"])
-            il.add_value("thumbnail", thumbnail_url)
-            if menu_item["isVeg"]:
-                il.add_value("veg", True)
-            else:
-                il.add_value("veg", False)
-
-            if menu_item.get("ribbon"):
-                il.add_value("promotion", menu_item["ribbon"]["text"])
-
-            return il
-
-        def process_variant(il, variant):
-            il.add_value("size", variant["name"])
-            il.add_value("price", str(variant["price"]))
-
-            return il
 
         raw_meals_xpath = "//script[contains(text(), 'INITIAL_STATE')]"
         raw_meals_re = "INITIAL_STATE__ = (.*);   window"
@@ -250,23 +230,43 @@ class SwiggyInSpider(Spider):
         for meal_group in meal_groups:
             for item in meal_group["group"]["items"]:
                 menu_il = MenuItemLoader(item=response.meta["item"].copy(), response=response)
-                menu_il = process_entity(menu_il, item)
+                menu_il = self.process_entity(menu_il, item)
 
                 variants = item.get("variantsV2")
+
                 if not variants:
                     yield menu_il.load_item()
                 else:
                     entity_item = menu_il.load_item()
                     for variant in variants["variant_groups"]:
-                        if variant["name"] == "Size":
-                            for variation in variant["variations"]:
-                                variant_il = MenuItemLoader(item=entity_item.copy(), response=response)
-                                variant_il = process_variant(variant_il, variation)
+                        if not variant["name"] == "Size":
+                            continue
+                        for variation in variant["variations"]:
+                            variant_il = MenuItemLoader(item=entity_item.copy(), response=response)
+                            variant_il = self.process_variant(variant_il, variation)
 
-                                yield variant_il.load_item()
+                            yield variant_il.load_item()
 
     def restaurant_category(self, item, response):
         categoires = response.xpath("//*[contains(@class, '_2dS-v')]")
+
+        def process_menu_item(il):
+            il.add_xpath("title", "descendant-or-self::*[@itemprop='name']/text()")
+            il.add_xpath("thumbnail", "descendant-or-self::*[@itemprop='image']/@content")
+            il.add_xpath("price", "descendant-or-self::*[@class='bQEAj']/text()")
+            il.add_xpath("description",
+                         "descendant-or-self::*[@class='_2aOqz _1d7fc' or "
+                         "@class='_2aOqz _1xb2E']/text()")
+
+            if il.get_xpath("descendant-or-self::*[contains(@class, '_3x58u') or "
+                            "contains(@class, '_1xb2E')]"):
+                il.add_value("veg", True)
+            else:
+                il.add_value("veg", False)
+
+            il.add_xpath("promotion", "descendant-or-self::*[contains(@class, '_22D_E')]/text()")
+
+            return il
 
         for category in categoires:
             il = MenuItemLoader(item=item.copy(), selector=category)
@@ -289,21 +289,7 @@ class SwiggyInSpider(Spider):
 
                     for menu_item in menu_items:
                         il_menu_item = MenuItemLoader(sub_cat_item.copy(), selector=menu_item)
-                        il_menu_item.add_xpath("title", "descendant-or-self::*[@itemprop='name']/text()")
-                        il_menu_item.add_xpath("thumbnail", "descendant-or-self::*[@itemprop='image']/@content")
-                        il_menu_item.add_xpath("price", "descendant-or-self::*[@class='bQEAj']/text()")
-                        il_menu_item.add_xpath("description",
-                                               "descendant-or-self::*[@class='_2aOqz _1d7fc' or "
-                                               "@class='_2aOqz _1xb2E']/text()")
-
-                        if il_menu_item.get_xpath("descendant-or-self::*[contains(@class, '_3x58u') or "
-                                                  "contains(@class, '_1xb2E')]"):
-                            il_menu_item.add_value("veg", True)
-                        else:
-                            il_menu_item.add_value("veg", False)
-
-                        il_menu_item.add_xpath("promotion",
-                                               "descendant-or-self::*[contains(@class, '_22D_E')]/text()")
+                        il_menu_item = process_menu_item(il_menu_item)
                         yield il_menu_item.load_item()
 
             else:
@@ -313,20 +299,5 @@ class SwiggyInSpider(Spider):
 
                 for menu_item in menu_items:
                     il_menu_item = MenuItemLoader(cat_item.copy(), selector=menu_item)
-                    il_menu_item.add_xpath("title", "descendant-or-self::*[@itemprop='name']/text()")
-                    il_menu_item.add_xpath("thumbnail", "descendant-or-self::*[@itemprop='image']/@content")
-                    il_menu_item.add_xpath("price", "descendant-or-self::*[@class='bQEAj']/text()")
-                    il_menu_item.add_xpath("description",
-                                           "descendant-or-self::*[@class='_2aOqz _1d7fc' or "
-                                           "@class='_2aOqz _1xb2E']/text()")
-
-                    if il_menu_item.get_xpath("descendant-or-self::*[contains(@class, '_3x58u') or "
-                                              "contains(@class, '_1xb2E')]"):
-                        il_menu_item.add_value("veg", True)
-                    else:
-                        il_menu_item.add_value("veg", False)
-
-                    il_menu_item.add_xpath("promotion",
-                                           "descendant-or-self::*[contains(@class, '_22D_E')]/text()")
-
+                    il_menu_item = process_menu_item(il_menu_item)
                     yield il_menu_item.load_item()
