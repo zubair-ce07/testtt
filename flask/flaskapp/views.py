@@ -206,15 +206,28 @@ def unfollow(user_id):
     db.session.commit()
     return redirect(url_for('user', user_id=user_id))
 
-# @app.route("/followings")
+@app.route("/followings")
+@login_required
+def followings():
+    users = User.query.join(followers, (followers.c.followed_id == User.id)).filter(
+        followers.c.follower_id == current_user.id)
+
+
+
+    return render_template('all_users.html', title='Followings',
+                           users=users, legend='Followings')
+
+
+# @app.route("/followers")
 # @login_required
-# def followings():
-#     users = User.query.order_by(followers.followed_id).all()
+# def followers():
+#     users = User.query.join(followers, (followers.c.follower_id == User.id)).filter(
+#         followers.c.followed_id == current_user.id)
 #
-#     posts = db.session.query(User).filter(and_(User == user.id, (or_(
-#         Post.post_type == 'public', Post.post_type == 'protected'))))
 #
-#     return render_template('all_users.html', title='Followings',
-#                            users=users, legend='Followings')
 #
+#     return render_template('all_users.html', title='Followers',
+#                            users=users, legend='Followers')
+#
+
 

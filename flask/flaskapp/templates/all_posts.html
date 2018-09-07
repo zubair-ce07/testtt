@@ -14,6 +14,7 @@
                             </div>
                             <div class="col-sm-7">
                                 <a href="{{ url_for('user', user_id=post.author.id) }}">{{ post.author.username }}</a><br>
+
                                 <small class="text-muted">{{ post.date_posted.strftime('%Y-%m-%d') }}</small>
                                 <br>
                                 <small class="text-muted">{{ post.date_posted.strftime('%H:%M:%S') }}</small>

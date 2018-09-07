@@ -8,11 +8,11 @@
                 {{ form.hidden_tag() }}
                 <div class="form-group">
                     {{ form.user.label }}
-                    {{ form.user (class="form-control") }}
+                    {{ form.user (class="form-control", placeholder="username") }}
                 </div>
                 <div class="form-group">
                     {{ form.password.label }}
-                    {{ form.password (class="form-control") }}
+                    {{ form.password (class="form-control", placeholder="password") }}
                 </div>
                 <div class="form-group form-check">
                     {{ form.remember }}
