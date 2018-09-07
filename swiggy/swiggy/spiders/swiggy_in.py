@@ -31,8 +31,8 @@ class SwiggyInSpider(Spider):
 
     test_locations = [
         Location("77.659309", "12.83957"),
-        #Location("80.1842321", "13.0205017"),
-        #Location("77.251741", "28.551441")
+        Location("80.1842321", "13.0205017"),
+        Location("77.251741", "28.551441")
     ]
 
     restaurents = ["KFC", "McDonald's", "Burger King", "Domino's"]
@@ -56,7 +56,7 @@ class SwiggyInSpider(Spider):
 
         locations = self.read('locations.csv')
         request_urls = [add_location(self.search_base_url, loc, restaurent)
-                        for loc in self.test_locations for restaurent in self.restaurents]
+                        for loc in locations for restaurent in self.restaurents]
 
         search_requests = [Request(url=url, callback=self.parse) for url in request_urls]
         return search_requests
