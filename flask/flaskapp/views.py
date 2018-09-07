@@ -1,7 +1,7 @@
 import os
 from sqlalchemy import and_, or_
 from PIL import Image
-from flask import render_template, url_for, flash, redirect, request, abort
+from flask import render_template, url_for, redirect, request, abort
 from flaskapp import app, db
 from flaskapp.forms import RegisterForm, LoginForm, UpdateProfileForm, PostForm
 from flaskapp.models import User, Post,followers
@@ -25,7 +25,6 @@ def register():
         user = User(username=form.username.data, email=form.email.data, password=form.password.data)
         db.session.add(user)
         db.session.commit()
-        flash('Your account has been created! You are now able to log in', 'success')
         return redirect(url_for('login'))
     return render_template('register.html', title='Sign Up', form=form)
 
@@ -41,8 +40,6 @@ def login():
             login_user(user, remember=form.remember.data)
             next_page = request.args.get('next')
             return redirect(next_page) if next_page else redirect(url_for('home'))
-        else:
-            flash('Wrong Username or password', 'danger')
     return render_template('login.html', title='Login', form=form)
 
 
@@ -145,7 +142,6 @@ def update_post(post_id):
         post.content = form.content.data
         post.post_type = form.post_type.data
         db.session.commit()
-        flash('Your post has been updated!', 'success')
         return redirect(url_for('home', post_id=post.id))
     form.post_image.data = post.post_image
     form.content.data = post.content
@@ -162,7 +158,6 @@ def delete_post(post_id):
         abort(403)
     db.session.delete(post)
     db.session.commit()
-    flash('Your post has been deleted!', 'success')
     return redirect(url_for('home'))
 
 
@@ -216,18 +211,5 @@ def followings():
 
     return render_template('all_users.html', title='Followings',
                            users=users, legend='Followings')
-
-
-# @app.route("/followers")
-# @login_required
-# def followers():
-#     users = User.query.join(followers, (followers.c.follower_id == User.id)).filter(
-#         followers.c.followed_id == current_user.id)
-#
-#
-#
-#     return render_template('all_users.html', title='Followers',
-#                            users=users, legend='Followers')
-#
 
 
