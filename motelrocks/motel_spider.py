@@ -93,34 +93,19 @@ class MotelRocksSpider(CrawlSpider):
     def parse_skus(self, response):
         size_codes = response.xpath('//li[contains(@class, "sizeli-unselected")]/@rel').extract()
         size_stock = response.xpath('//li[contains(@class, "sizeli-unselected")]/@instock').extract()
-        stocks = []
-        for value in size_stock:
-            if value == "1":
-                stocks.append(True)
-            else:
-                stocks.append(False)
+        stocks = [bool(in_stock) for in_stock in size_stock]
         sizes = self.parse_sizes(response)
         product_id = self.parse_retailer_sku(response)
         currency, price = self.parse_currency_price(response)
+        skus = {}
         for index in range(len(size_codes)):
             product_code = "{}_{}".format(product_id, sizes[index])
-            if index == 0:
-                skus = {
-                    product_code: {
-                        "price": price,
-                        "currency": currency,
-                        "colour": self.parse_colour(response),
-                        "size_code": size_codes[index],
-                        "in stock": stocks[index]
-                    }
-                }
-            else:
-                skus[product_code] = {
-                    "price": price,
-                    "currency": currency,
-                    "colour": self.parse_colour(response),
-                    "size_code": size_codes[index],
-                    "in stock": stocks[index]
-                }
+            skus[product_code] = {
+                "price": price,
+                "currency": currency,
+                "colour": self.parse_colour(response),
+                "size_code": size_codes[index],
+                "in stock": stocks[index]
+            }
         return skus
 
