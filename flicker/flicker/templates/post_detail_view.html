@@ -38,10 +38,13 @@
                                       {{post_data.created_time.strftime('%H-%M')}}  | {{post_data.created_time.strftime('%d-%m-%Y')}}
                                     </h6>
                                     <div id="icon">
-                                      {% if post_data.puid ==session['current_user_id'] %}
-                                           <a class="glyphicon glyphicon-trash btn btn-danger btn-xs" id="del" href="/delete/{{ post_data.pid }}"
-                                              onclick="return confirm('Are you sure?');">Delete</a><br/><br>
-                                      {% endif %}
+                                        {% if post_data.puid
+                                        ==session['current_user_id'] %}
+                                        <a class="glyphicon glyphicon-trash btn btn-danger btn-xs"
+                                           id="del"
+                                           href="/delete/{{ post_data.pid }}"
+                                           onclick="return confirm('Are you sure?');">Delete</a><br/><br>
+                                        {% endif %}
                                     </div>
                                     <div class="well">
                                       <div class="container">

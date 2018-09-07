@@ -154,7 +154,7 @@ def search_user():
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
-    """ Create New User """
+    """SignUp User """
     signup_form = SignUpForm(request.form)
     if request.method == 'POST':
         if not validate_username(signup_form.username.data):
