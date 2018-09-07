@@ -12,15 +12,16 @@ class DataAccessLayer:
     def create_tables(self):
         self.cursor.execute('''CREATE TABLE IF NOT EXISTS wordfreq
              (id text, word text, freq real)''')
-        self.cursor.execute('''CREATE TABLE IF NOT EXISTS tfidf
-             (url text, tfidf real)''')
+        self.cursor.execute('''CREATE TABLE IF NOT EXISTS term_freq_inverse_doc_freqs
+             (url text, term_freq_inverse_doc_freq real)''')
         self.conn.commit()
 
     def insert_word_freq(self, encrypted_words):
-
         for w_id, encrypted_word, freq in encrypted_words:
             self.cursor.execute(
-                f'INSERT INTO wordfreq VALUES ("{w_id}","{encrypted_word}","{freq}")')
+                                f'''INSERT INTO wordfreq VALUES(
+                                    "{w_id}", "{encrypted_word}", "{freq}")'''
+                                )
             self.conn.commit()
 
     def get_words_freqs(self):
@@ -28,7 +29,9 @@ class DataAccessLayer:
 
     def insert_term_freq_inverse_doc_freq(self, url, term_freq_inverse_doc_freq):
         self.cursor.execute(
-                f'INSERT INTO tfidf VALUES ("{url}","{term_freq_inverse_doc_freq}")')
+                            f'''INSERT INTO term_freq_inverse_doc_freqs VALUES(
+                                "{url}", "{term_freq_inverse_doc_freq}")'''
+                            )
         self.conn.commit()
 
     def get_term_freq_inverse_doc_freq(self):

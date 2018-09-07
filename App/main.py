@@ -19,6 +19,7 @@ def main_controller():
         responses between multiple modules'''
 
     args = arg_parser.input_parser()
+
     if args.n:
         new_crawl(args.url)
     elif args.v:
@@ -28,37 +29,37 @@ def main_controller():
 def new_crawl(url):
     '''This function crawls new url & store/update in database'''
 
-    if url:
-        words = crawler.crawl_url(url)
-        words_formatted = text_parser.format_words(words)
-        words_sorted = text_parser.generate_sorted_list(words_formatted)
-
-        encyrpted_list = []
-        for word, freq in words_sorted[:100]:
-            w_id = encryption_manager.generate_salted_hash(word)
-            encrypted_word = (
-                    encryption_manager.encrypt_str(word))
-            encyrpted_list.append((w_id, encrypted_word, freq))
-        
-        bag_of_words = [item[0] for item in words_sorted]
-        term_freq_inverse_doc_freq = text_parser.term_freq_inverse_doc_freq_generator(bag_of_words)
-
-        db.insert_word_freq(encyrpted_list)
-        db.insert_term_freq_inverse_doc_freq(url, term_freq_inverse_doc_freq)
-    else:
+    if not url:
         print("Enter URL to crawl & Try again!")
+        return
+
+    words = crawler.crawl_url(url)
+    words_formatted = text_parser.format_words(words)
+    words_sorted = text_parser.generate_sorted_list(words_formatted)
+    encyrpted_list = []
+
+    for word, freq in words_sorted[:100]:
+        w_id = encryption_manager.generate_salted_hash(word)
+        encrypted_word = (
+                encryption_manager.encrypt_word(word))
+        encyrpted_list.append((w_id, encrypted_word, freq))
+    
+    bag_of_words = [item[0] for item in words_sorted]
+    term_freq_inverse_doc_freq = text_parser.term_freq_inverse_doc_freq_generator(bag_of_words)
+
+    db.insert_word_freq(encyrpted_list)
+    db.insert_term_freq_inverse_doc_freq(url, term_freq_inverse_doc_freq)
 
 
 def view_db():
     '''This function shows all data in decrypted form from database'''
 
     for row in db.get_words_freqs():
-            decrypted_word = encryption_manager.decrypt_str(row[1])
-            print((decrypted_word, row[2]))
+        decrypted_word = encryption_manager.decrypt_word(row[1])
+        print((decrypted_word, row[2]))
 
     for row in db.get_term_freq_inverse_doc_freq():
         print(row[1])
-
 
 if __name__ == "__main__":
     main_controller()

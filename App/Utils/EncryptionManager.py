@@ -23,11 +23,11 @@ class EncryptionManager:
         salted_word = f"{decrypted_word}+{salt}"
         return hashlib.sha256(salted_word.encode()).hexdigest()
 
-    def encrypt_str(self, decrypted_word):
+    def encrypt_word(self, decrypted_word):
         decrypted_word = decrypted_word.encode('utf8')
         return rsa.encrypt(decrypted_word, self.pubkey).hex()
 
-    def decrypt_str(self, encrypted_word):
+    def decrypt_word(self, encrypted_word):
         decrypted_word = rsa.decrypt(bytes.fromhex(encrypted_word), self.privkey)
         return decrypted_word.decode('utf8')
 

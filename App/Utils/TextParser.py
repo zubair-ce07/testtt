@@ -26,18 +26,20 @@ class TextParser:
     def term_freq_inverse_doc_freq_generator(self, bag_of_words):
         words_formated = {key: len(list(group)) for key, group in groupby(bag_of_words)}
         bag_of_words_count = len(bag_of_words)
+        term_frequency = {}
 
-        term_frequncy = {}
         for word, count in words_formated.items():
-            term_frequncy[word] = count/float(bag_of_words_count)
+            term_frequency[word] = count/float(bag_of_words_count)
 
         inverse_doc_frequency = words_formated
         n = len(words_formated)
+    
         for word, val in inverse_doc_frequency.items():
             inverse_doc_frequency[word] = math.log10(n / float(val))
 
         term_freq_inverse_doc_freq = {}
-        for word, val in term_frequncy.items():
+
+        for word, val in term_frequency.items():
             term_freq_inverse_doc_freq[word] = val*inverse_doc_frequency[word]
 
         return term_freq_inverse_doc_freq

@@ -28,5 +28,6 @@ class ArgParser:
 
         if re.match(self.regex, url):
             return url
+            
         msg = f"{url} is not a valid url"
         raise argparse.ArgumentTypeError(msg)
