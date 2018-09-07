@@ -1,0 +1,44 @@
+{% extends "layout.html" %}
+{% block content %}
+    <div class="row">
+        <div class="col-md-3"></div>
+        <div class="col-md-5">
+            <div class="shadow-lg bg-transparent p-4 mb-4 ">
+                <div class="col-sm-12">
+                    <div class="row ">
+                        <div class="col-sm-2">
+                            <img class="rounded-circle col-sm-10"
+                                 src="{{ url_for('static', filename='profile_pics/' + post.author.image_file) }}">
+                        </div>
+                        <div class="col-sm-8">
+                            <a href="#">{{ post.author.username }}</a><br>
+                            <small class="text-muted">{{ post.date_posted.strftime('%Y-%m-%d') }}</small>
+                            <br>
+                            <small class="text-muted">{{ post.date_posted.strftime('%H:%M:%S') }}</small>
+                        </div>
+                        <div class="col-sm-2">
+                            {% if post.author == current_user %}
+                                <div>
+                                    <a class="m-1" href="{{ url_for('update_post', post_id=post.id) }}">Edit</a>
+
+                                    <a class="m-1" href="{{ url_for('delete_post', post_id=post.id) }}">Delete</a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-12 mb-3 mt-5">
+                    <p>{{ post.content }}</p>
+                </div>
+                <div class="col-md-12  mb-5">
+                    {% if post.post_image %}
+                        <center><img src="{{ url_for('static', filename='post_imgs/' + post.post_image) }}"
+                                     class="img-fluid img-thumbnail"
+                                     style="object-fit: cover; background-color: #555; width: 100%; max-width: 500px; height: auto;">
+                        </center>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}
