@@ -5,7 +5,11 @@
     display: none;
 }
 .set_fixed_width{
-    width: 50%;
+    width: 40%;
+}
+.centered
+{
+    margin-left: 50%;
 }
 .user{
     background-color: #4CAF50;
@@ -13,9 +17,6 @@
 }
 .floatr{
     float: right;
-}
-.appname{
-    float: left;
 }
 .a_tags{
     color: black;

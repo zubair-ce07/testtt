@@ -1,11 +1,14 @@
 {% extends 'taskmanager/base.html' %}
 {% block title %} Login {% endblock title %}
 {% block content %}
-    <h2> Login </h2>
-    <form method="post">
+    <h2 class="ml-2 mt-2">Login</h2>
+    <hr class="my-4">
+    <form class="ml-5" method="post">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit">Login</button>
+        <div class="btn-group btn-group-sm">
+            <button type="submit" class="btn btn-sm btn-success">Login</button>
+            <a class="btn btn-secondary btn-sm ml-3" href="{% url 'password_reset' %}">Forgot your password ?</a>
+        </div>
     </form>
-    <a href="{% url 'password_reset' %}">Forgot your password ?</a>
 {% endblock content %}

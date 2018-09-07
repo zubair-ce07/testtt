@@ -11,7 +11,7 @@ class Task(models.Model):
     description = models.TextField(blank=True)
     due_date = models.DateField('Due Date',
                                 default=datetime.now()+timedelta(days=7))
-    status = models.IntegerField()
+    status = models.BooleanField('Mark as Completed', default=False)
 
     def __str__(self):
         return "Title :" + self.title

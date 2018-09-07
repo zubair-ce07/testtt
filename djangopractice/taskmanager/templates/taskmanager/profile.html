@@ -14,8 +14,8 @@
             {% endfor %}
             </tbody>
         </table>
-        <input type="submit" value="Save" />
+        <input class="btn btn-sm btn-success" type="submit" value="Save" />
+        <a class="btn btn-secondary btn-sm ml-3" href="{% url 'password_change' %}">Change Password</a>
     </form>
-    <a href="{% url 'password_change' %}">Change Password</a>
 {% endblock content %}
 

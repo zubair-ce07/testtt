@@ -1,11 +1,12 @@
 {% extends 'taskmanager/base.html' %}
 {% block title %} Edit Task {% endblock title %}
 {% block content %}
-    <h2> Edit Task </h2>
-    <form method="post">{% csrf_token %}
+    <h2 class="ml-2 mt-2"> Edit Task </h2>
+    <hr class="my-4">
+    <form class="ml-5"  method="post">{% csrf_token %}
         <table class="set_fixed_width">
             {{ form.as_table }}
         </table>
-        <input type="submit" value="Update" />
+        <input class="btn btn-sm btn-success" type="submit" value="Update" />
     </form>
 {% endblock content %}

@@ -3,12 +3,13 @@
 <html>
 <head>
     <title>{% block title %}Task Manager>{% endblock title %}</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
     <link rel="stylesheet" href="{% static 'taskmanager/style.css' %}">
     {% block head %}{%  endblock %}
 </head>
 <body>
-<ul class="nav">
-    <li class="appname"><a href="{% url 'taskmanager:index' %}">  Task Manager </a></li>
+<ul class="nav justify-content-end">
+    <li><a href="{% url 'taskmanager:index' %}">  Task Manager </a></li>
     <li class="user">
         {% if user.is_authenticated %}
             {% if user.image %}
