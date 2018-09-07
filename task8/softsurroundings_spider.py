@@ -34,9 +34,9 @@ class SoftSurroundingsSpider(CrawlSpider):
             yield Request(urljoin(response.url, f'page-{next_page}/'), callback=self.parse_product)
 
     def parse_product(self, response):
-        if self.extract_retailer_sku(response)[1:] in self.seen_ids:
+        if self.extract_retailer_sku(response) in self.seen_ids:
             return
-        self.seen_ids.add(self.extract_retailer_sku(response)[1:])
+        self.seen_ids.add(self.extract_retailer_sku(response))
         product = Product()
 
         product['gender'] = self.extract_gender(response)
@@ -54,31 +54,10 @@ class SoftSurroundingsSpider(CrawlSpider):
 
         return self.request_or_product(product)
 
-    def extract_skus_requests(self, response):
-        colors_map = self.extract_color_map(response)
-        sizes_map = self.extract_size_map(response)
-        requests_to_follow = []
-        for color_id, color_value in colors_map.items():
-            for size_id, size_value in sizes_map.items():
-                meta = {}
-                meta['color'] = color_value
-                meta['size'] = size_value
-                sku_request_url = urljoin(response.url, f'{color_id}{size_id}/')
-                request = Request(sku_request_url, meta=meta, callback=self.parse_skus)
-                requests_to_follow.append(request)
-        return requests_to_follow
-
     def parse_skus(self, response):
         product = response.meta['item']
         product["skus"].append(self.extract_sku(response))
         return self.request_or_product(product)
-
-    def extract_category_request(self, response):
-        requests_to_follow = []
-        for category_id in response.css('#sizecat a:not(.sel)::attr(id)').extract():
-            request = response.follow(f"/p/{category_id.split('_')[1]}/", callback=self.parse_category)
-            requests_to_follow.append(request)
-        return requests_to_follow
 
     def parse_category(self, response):
         product = response.meta['item']
@@ -95,6 +74,27 @@ class SoftSurroundingsSpider(CrawlSpider):
 
         del product["requests_queue"]
         return product
+
+    def extract_skus_requests(self, response):
+        colors_map = self.extract_color_map(response)
+        sizes_map = self.extract_size_map(response)
+        requests_to_follow = []
+        for color_id, color_value in colors_map.items():
+            for size_id, size_value in sizes_map.items():
+                meta = {}
+                meta['color'] = color_value
+                meta['size'] = size_value
+                sku_request_url = urljoin(response.url, f'{color_id}{size_id}/')
+                request = Request(sku_request_url, meta=meta, callback=self.parse_skus)
+                requests_to_follow.append(request)
+        return requests_to_follow
+
+    def extract_category_request(self, response):
+        requests_to_follow = []
+        for category_id in response.css('#sizecat a:not(.sel)::attr(id)').extract():
+            request = response.follow(f"/p/{category_id.split('_')[1]}/", callback=self.parse_category)
+            requests_to_follow.append(request)
+        return requests_to_follow
 
     def extract_color_map(self, response):
         raw_id = response.css('[name="uniqid"]::attr(value)').extract_first()
@@ -163,7 +163,7 @@ class SoftSurroundingsSpider(CrawlSpider):
         return response.css('.productInfo ::text').extract()
 
     def extract_retailer_sku(self, response):
-        return response.css('.dtlHeader [itemprop="productID"]::text').extract_first()
+        return response.css('.dtlHeader [itemprop="productID"]::text').extract_first()[1:]
 
     def extract_brand(self, response):
         brand_css = '.productInfoDetails li:contains("Designed by")::text,' \
