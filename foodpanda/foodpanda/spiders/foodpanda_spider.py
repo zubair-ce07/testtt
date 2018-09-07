@@ -79,8 +79,8 @@ class FoodPandaParser(scrapy.Spider):
         logging.debug(pages)
 
         for page in pages:
-            request = scrapy.Request(f'{response.url}&page={page}', callback=self.parse_listing,
-                                     priority=1)
+            url = '{base_url}&page={page}'.format(base_url=response.url, page=page)
+            request = scrapy.Request(url, callback=self.parse_listing)
             yield request
 
     def parse_listing(self, response):
@@ -93,9 +93,9 @@ class FoodPandaParser(scrapy.Spider):
         logging.debug(response.url)
         logging.debug(product_urls)
         
-        for url in product_urls:
-            request = scrapy.Request(f'https://foodpanda.in{url}', callback=self.parse_product,
-                                     priority=2)
+        for product_url in product_urls:
+            url = 'https://foodpanda.in{restaurant_url}'.format(restaurant_url=product_url)
+            request = scrapy.Request(url, callback=self.parse_product)
             yield request
 
     def parse_product(self, response):
@@ -264,11 +264,11 @@ class FoodPandaCrawler(scrapy.Spider):
                 logging.debug(location.city)
                 continue
 
-            request = scrapy.Request(f'https://www.foodpanda.in/location-suggestions-ajax?'
-                                     f'cityId={city_id}&area={normalized_address}&area_id=&pickup='
-                                     f'&sort=&tracking_id=', callback=self.parse_suggestion)
+            url = 'https://www.foodpanda.in/location-suggestions-ajax?cityId={city_id}' \
+                  '&area={address}&area_id=&pickup=&sort=&' \
+                  'tracking_id='.format(city_id=city_id, address=normalized_address)
+            request = scrapy.Request(url, callback=self.parse_suggestion)
             request.meta['city_id'] = city_id
-            request.meta['location'] = location
             yield request
 
     @staticmethod
@@ -293,8 +293,6 @@ class FoodPandaCrawler(scrapy.Spider):
         suggestion = json.loads(response.text)
 
         logging.debug('Suggestion')
-        logging.debug(response.meta['location'].city)
-        logging.debug(response.meta['location'].address)
         logging.debug(suggestion)
 
         if not suggestion:
@@ -305,11 +303,10 @@ class FoodPandaCrawler(scrapy.Spider):
         tracking_id = suggestion[0]['fillSearchFormOnSelect']['tracking_id']
         city_id = response.meta['city_id']
 
-        request = scrapy.Request(f'https://www.foodpanda.in/restaurants?cityId={city_id}'
-                                 f'&area={name}&area_id={area_id}&pickup=&sort=&tracking_id='
-                                 f'{tracking_id}', callback=self.item_parser.parse,
-                                 dont_filter=True)
-        request.meta['location'] = response.meta['location']
+        url = 'https://www.foodpanda.in/restaurants?cityId={city_id}&area={name}&area_id=' \
+              '{area_id}&pickup=&sort=&tracking_id={tracking_id}'.format(
+                city_id=city_id, name=name, area_id=area_id, tracking_id=tracking_id)
+        request = scrapy.Request(url, callback=self.item_parser.parse)
         return request
 
     @staticmethod
