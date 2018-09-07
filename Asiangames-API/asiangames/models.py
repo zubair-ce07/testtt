@@ -31,9 +31,6 @@ class Sport(db.Model):
     _id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(128))
 
-    # many to many relationship with country table
-    sport_countries = db.relationship('SportCountryMedals')
-
     # one to many relationship with schedule table
     schedules = db.relationship('Schedule', backref=db.backref('sport'))
 
@@ -54,9 +51,6 @@ class SportCountryMedals(db.Model):
 class Country(db.Model):
     _id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64))
-
-    # many to many relationship via association table pattern
-    country_sports = db.relationship('SportCountryMedals')
 
     # one to many relationship with athlete table
     athletes = db.relationship('Athlete', backref=db.backref('country'))

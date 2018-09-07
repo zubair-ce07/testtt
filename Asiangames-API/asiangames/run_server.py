@@ -7,6 +7,7 @@ if __name__ == '__main__':
     restful_api.add_resource(resources.UserRegistration, '/auth/registration')
     restful_api.add_resource(resources.UserLogin, '/auth/login')
     restful_api.add_resource(resources.TokenRefresh, '/auth/tokenrefresh')
+    restful_api.add_resource(resources.MakeAdminSecret, '/auth/makeadmin')
 
     # athletes
     restful_api.add_resource(resources.AthleteListResource, '/athletes')

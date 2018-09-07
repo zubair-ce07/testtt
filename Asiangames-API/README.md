@@ -13,13 +13,22 @@ Asiangames API presentes you all the information regarding:
 4) [Flask-Marshmallow](https://flask-marshmallow.readthedocs.io/)
 5) [Flask-JWT-Extended](https://flask-jwt-extended.readthedocs.io/en/latest/)
 
+## Initial Setup
+Update the following values in config.py
+```bash
+SECRET_KEY = 'TACHANKA'
+JWT_SECRET_KEY = 'THATCHER'
+MASTER_PASSWORD = 'ADMIN123' #will be used in secured routes
+```
+
 ## Usage
-After installing all the dependencies, run populate_db.py in the asiangames directory. It will populate the SQLite database for you.
+After installing all the dependencies and  configuring config.py, run populate_db.py in the asiangames directory. It will populate the SQLite database for you.
 Next, run run.py and your server will be hosted publically at **http://127.0.0.1:5000**
 
+## Public Endpoints
 ```bash
-GET      /athletes/<int:id> #returns athlete with a particular id
 GET      /athletes #returns all athletes
+GET      /athletes/<int:id> #returns athlete with a particular id
 GET      /athletes/country/<int:country_id> #returns all athletes from country with country_id
 GET      /athletes/sport/<int:sport_id> #returns all athletes that are playing sport with sport_id
 GET      /athletes/weight/<int:weight> #returns all athletes that weight equal to weight
@@ -40,6 +49,7 @@ GET      /medals/sport/<int:sport_id> #returns all the medals won by sport with 
 
 By becoming a user you can add Countries, Athletes and Sports to your favourites.
 We use JSON web tokens for authentication.
+
 **User Registration**
 
 1) You need to add this header in the **POST** request:
@@ -94,6 +104,19 @@ It wil return you something like the following
     "message": "User with email uzair@gmail.com was registered",
     "access_token": <JWT_ACCESS_TOKEN>,
     "refresh_token": <JWT_REFRESH_TOKEN>
+}
+```
+
+**Providing a User Admin Privileges**
+```bash
+PUT         /auth/makeadmin
+```
+add the following in body section
+```bash
+{
+  "email": "uzair@gmail.com", #user's email
+  "master_password": [MASTER_PASSWORD in config.py]
+  
 }
 ```
 

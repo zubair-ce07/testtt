@@ -1,5 +1,3 @@
-from copy import deepcopy
-
 from flask_restful import Resource, reqparse
 from flask_jwt_extended import (create_access_token, create_refresh_token, jwt_required,
                                 jwt_refresh_token_required, get_jwt_identity)
@@ -10,20 +8,23 @@ from asiangames.utils import get_favourite_names_by_ids
 from asiangames.decorators import required_access_level
 from asiangames.schemas import *
 from asiangames.utils import schema_to_json
+from asiangames import db
+from config import Config
 
 
-user_login_parser = reqparse.RequestParser()
-user_login_parser.add_argument('email', help='Must enter a valid email', required=True)
-user_login_parser.add_argument('password', help='Must enter a valid password', required=True)
+user_login_registration_parser = reqparse.RequestParser()
+user_login_registration_parser.add_argument('email', help='Must enter a valid email', required=True)
+user_login_registration_parser.add_argument('password', help='Must enter a valid password', required=True)
 
-user_registration_parser = deepcopy(user_login_parser)
-user_registration_parser.add_argument('access_level', help='Must enter user level', required=True)
+make_admin_parser = reqparse.RequestParser()
+make_admin_parser.add_argument('email', help='Must enter a valid email', required=True)
+make_admin_parser.add_argument('master_password', help='Must enter the master password', required=True)
 
 
-ACCESS_LEVELS = {
-    'USER': 1,
-    'ADMIN': 2
-}
+class AccessLevels:
+    USER = 1
+    ADMIN = 2
+
 
 FAVOURITES_MAP = {
     'country': 1,
@@ -35,7 +36,7 @@ FAVOURITES_MAP = {
 class UserRegistration(Resource):
 
     def post(self):
-        data = user_registration_parser.parse_args()
+        data = user_login_registration_parser.parse_args()
 
         if User.find_by_email(data['email']):
             return {'message': 'User with email {} already exists'.format(data['email'])}
@@ -43,7 +44,7 @@ class UserRegistration(Resource):
         new_user = User(
             email=data['email'],
             password=User.generate_hash(data['password']),
-            access_level=data['access_level']
+            access_level= 1
         )
 
         new_user.save_to_db()
@@ -58,7 +59,7 @@ class UserRegistration(Resource):
 class UserLogin(Resource):
 
     def post(self):
-        data = user_login_parser.parse_args()
+        data = user_login_registration_parser.parse_args()
         current_user = User.find_by_email(email=data['email'])
 
         if current_user:
@@ -77,6 +78,17 @@ class UserLogin(Resource):
             return {'message': 'User with email {} does not exist'.format(data['email'])}
 
 
+class MakeAdminSecret(Resource):
+    def put(self):
+        data = make_admin_parser.parse_args()
+        if data['master_password'] == Config.MASTER_PASSWORD:
+            current_user = User.find_by_email(email=data['email'])
+            current_user.access_level = 2
+            db.session.commit()
+            return {'message': '{} has been made an admin'.format(data['email'])}
+        return {'message': 'There was an error in credentials'}
+
+
 class TokenRefresh(Resource):
 
     @jwt_refresh_token_required
@@ -91,9 +103,7 @@ class AthleteResource(Resource):
     def get(self, id):
         athlete_schema = AthleteSchema()
         athlete = Athlete.query.filter_by(_id=id).first()
-        output = athlete_schema.dump(athlete).data
-
-        return jsonify(output)
+        return schema_to_json(athlete_schema, athlete)
 
 
 class AthleteListResource(Resource):
@@ -101,7 +111,7 @@ class AthleteListResource(Resource):
     def get(self):
         athlete_schema = AthleteSchema(many=True)
         athletes = Athlete.query.all()
-        return schema_to_json(athletes, athletes)
+        return schema_to_json(athlete_schema, athletes)
 
 
 class AthleteFilterResource(Resource):
@@ -128,7 +138,6 @@ class AthleteFilterResource(Resource):
         elif attribute == 'age':
             athletes = Athlete.query.filter_by(age=value).all()
             return schema_to_json(athlete_schema, athletes)
-
 
 
 class ScheduleListResource(Resource):
@@ -172,7 +181,7 @@ class MedalsFilterResource(Resource):
 class FavouriteListResource(Resource):
 
     @jwt_required
-    @required_access_level(ACCESS_LEVELS['USER'])
+    @required_access_level(AccessLevels.USER)
     def get(self, attribute):
         current_user_id = User.find_by_email(email=get_jwt_identity())._id
 
@@ -196,7 +205,7 @@ class FavouriteListResource(Resource):
 class FavouriteFilterResource(Resource):
 
     @jwt_required
-    @required_access_level(ACCESS_LEVELS['USER'])
+    @required_access_level(AccessLevels.USER)
     def post(self, attribute, value):
         current_user_id = User.find_by_email(email=get_jwt_identity())._id
 
