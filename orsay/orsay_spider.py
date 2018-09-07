@@ -100,5 +100,5 @@ class OrsaySpider(scrapy.Spider):
 
         # check for more items or further pages and create request
         if next_items_count < self.max_items:
-            next_url = self.main_url + "?sz=" + str(next_items_count)
+            next_url = f"{self.main_url}?sz={str(next_items_count)}"
             return scrapy.Request(url=next_url, callback=self.parse)
