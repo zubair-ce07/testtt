@@ -15,8 +15,7 @@ class OrsayCrawler(CrawlSpider):
     rules = (
         Rule(LinkExtractor(restrict_css="nav.header-navigation>ul>li:nth-child(2) a.level-1"),
              callback='parse_categories'),
-        Rule(LinkExtractor(restrict_css=".product-image>a"),
-             callback='parse_products')
+        Rule(LinkExtractor(restrict_css=".product-swatch-item"), callback='parse_products')
     )
 
     def parse_categories(self, response):
@@ -37,7 +36,7 @@ class OrsayCrawler(CrawlSpider):
 
         item = OrsayItem()
         item['brand'] = 'Orsay'
-        item['gender'] = 'Female'
+        item['gender'] = 'women'
         item['name'] = self.get_title(response)
         item['category'] = self.get_category(response)
         item['care'] = self.get_care(response)
@@ -48,17 +47,38 @@ class OrsayCrawler(CrawlSpider):
         item['skus'] = {}
 
         unavailable_products = self.get_out_of_stock_products(response)
+        self.populate_out_of_stock_products(unavailable_products, item)
 
-        self.populate_out_of_stock_products(unavailable_products, item, response.url)
+        sizes_and_urls = self.get_sizes_and_links_of_product(response)
 
-        size_and_url = self.get_sizes_and_links_of_product(response)
-
-        if len(size_and_url) > 0:
-            yield self.create_size_page_request(size_and_url, item)
+        if len(sizes_and_urls) > 0:
+            current_size, size_url = sizes_and_urls.popitem()
+            request = Request(url=size_url + '&Quantity=1&format=ajax&productlistid=undefined',
+                              callback=self.parse_sizes)
+            request.meta['size_data'] = item, sizes_and_urls, current_size
+            yield request
         else:
             yield item
 
-    def populate_out_of_stock_products(self, unavailable_products, item, url):
+    def parse_sizes(self, response):
+        """This function takes response of size-info-page and stores the information in
+         respective item object
+        """
+
+        item_data, urls_of_sizes, current_size = response.meta.get('size_data')
+        skus = item_data.get('skus')
+        skus[item_data.get('retailer_sku') + '_' + str(current_size)] = self.get_size_info(response)
+
+        if len(urls_of_sizes) > 0:
+            current_size, size_url = urls_of_sizes.popitem()
+            request = Request(url=size_url + '&Quantity=1&format=ajax&productlistid=undefined',
+                              callback=self.parse_sizes)
+            request.meta['size_data'] = item_data, urls_of_sizes, current_size
+            yield request
+        else:
+            yield item_data
+
+    def populate_out_of_stock_products(self, unavailable_products, item):
         """This function populates informationabout products which are not in stock"""
 
         for product_size in unavailable_products:
@@ -66,37 +86,6 @@ class OrsayCrawler(CrawlSpider):
             sku['out_of_stock'] = True
             sku['size'] = str(product_size)
             item.get('skus')[item.get('retailer_sku') + '_' + str(product_size)] = sku
-
-    def create_size_page_request(self, size_and_url, item):
-        """This function takes urls of sizes and item of product
-         data to create a scrapy Request according to them
-         """
-        size_key, size_url = size_and_url.popitem()
-        request = Request(url=size_url + '&Quantity=1&format=ajax&productlistid=undefined',
-                                 callback=self.parse_sizes)
-
-        request.meta['item_data'] = item
-        request.meta['sizes_to_traverse'] = size_and_url
-        request.meta['current_size'] = size_key
-
-        return request
-
-    def parse_sizes(self, response):
-        """This function takes response of size-info-page and stores the information in
-         respective item object
-        """
-
-        item_data = response.meta.get('item_data')
-        current_size = response.meta.get('current_size')
-        urls_of_sizes = response.meta.get('sizes_to_traverse')
-
-        skus = item_data.get('skus')
-        skus[item_data.get('retailer_sku') + '_' + str(current_size)] = self.get_size_info(response)
-
-        if len(urls_of_sizes) > 0:
-            yield self.create_size_page_request(urls_of_sizes, item_data)
-        else:
-            yield item_data
 
     def get_size_info(self, response):
         """Takes response of product sizes page and return information in the form of
@@ -117,11 +106,6 @@ class OrsayCrawler(CrawlSpider):
 
         return size_info
 
-    def convert_lists_to_dict(self, sizes, links):
-        """converts two lists into one dict"""
-
-        return dict(zip(sizes, links))
-
     def get_sizes_and_links_of_product(self, response):
         """It takes product page response and returns sizes and their links in the form of dict"""
 
@@ -132,7 +116,7 @@ class OrsayCrawler(CrawlSpider):
 
         links_of_product = response.css('ul.swatches.size>li.selectable a::attr(href)').extract()
 
-        return self.convert_lists_to_dict(sizes_of_product, links_of_product)
+        return dict(zip(sizes_of_product, links_of_product))
 
     def get_title(self, response):
         """Extracts and returns Title of product"""
@@ -143,7 +127,10 @@ class OrsayCrawler(CrawlSpider):
         """Extracts and returns Price of product"""
 
         price_tag = response.css('div.product-price span::text').extract_first()
-        price = price_tag.replace('\n', '').split(' ')[0]
+        try:
+            price = price_tag.replace('\n', '').split(' ')[0]
+        except IndexError:
+            price = 0
         return price
 
     def get_currency(self, response):
@@ -164,7 +151,12 @@ class OrsayCrawler(CrawlSpider):
     def get_detail(self, response):
         """Extracts and returns Details of product"""
 
-        return response.css('div.product-details>div>div::text').extract()[1:]
+        try:
+            description = response.css('div.product-details>div>div::text').extract()[1:]
+        except IndexError:
+            description = ''
+
+        return description
 
     def get_images(self, response):
         """Extracts and returns Images of product"""
