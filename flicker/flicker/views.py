@@ -13,10 +13,7 @@ from .utils import collect_tag_posts, collect_allowed_posts, \
     add_post_comment, update_post_like_status, delete_user_comment, \
     allowed_file, append_random_string, save_post_tags, update_follow_status, \
     check_follow_status, validate_user_email, validate_username
-
-APP_ROOT = os.path.dirname(os.path.abspath(__file__))
-UPLOAD_FOLDER = os.path.join(APP_ROOT, 'static/uploads')
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+from .config import UPLOAD_FOLDER
 
 
 @app.route('/', methods=['GET', 'POST'])
