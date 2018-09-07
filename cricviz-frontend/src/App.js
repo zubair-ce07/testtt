@@ -50,6 +50,7 @@ class App extends Component {
 
               <ArticleList articles={this.state.articles}/>
               <HeadlinesList />
+              
           </div>
         </Router>
     );
