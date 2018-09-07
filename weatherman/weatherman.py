@@ -214,13 +214,13 @@ def calculate_average(rec_list):
 
     for record in rec_list:
         if record.max_temperature:
-            max_temp_mean_data["count"] = max_temp_mean_data.get("count") + 1
+            max_temp_mean_data["count"] += 1
             max_temp_mean_data["sum"] += int(record.max_temperature)
         if record.min_temperature:
-            min_temp_mean_data["count"] = min_temp_mean_data.get("count") + 1
+            min_temp_mean_data["count"] += 1
             min_temp_mean_data["sum"] += int(record.min_temperature)
         if record.mean_humity:
-            humidity_mean_data["count"] = humidity_mean_data.get("count") + 1
+            humidity_mean_data["count"] += 1
             humidity_mean_data["sum"] += int(record.mean_humity)
 
     max_temp_avg =  get_avg(max_temp_mean_data)
