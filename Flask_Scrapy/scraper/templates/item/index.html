@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+  <script>
+    jQuery(document).ready(function($) {
+      $(".clickable-row").click(function() {
+        window.location = $(this).data("href");
+      });
+    });
+  </script>
+
+  <h1>{% block title %}Items{% endblock %}</h1>
+  {% if not g.user %}
+    <button class="action" onclick="window.location.href = '{{ url_for('auth.login') }}';">Login to Load Data</button>
+  {% else %}
+    <button class="action" onclick="window.location.href = '{{ url_for('item.load') }}';">Load Data</button>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+  {% if not items %}
+    <h1>Please Load Data</h1>
+  {% else %}
+    <form class="search" action="{{ url_for('item.view_product_listing') }}" method="post">
+      <input type="text" placeholder="Search by ID or Brand or Name.." name="search" required>
+      <button type="submit">Search</button>
+    </form>
+    <table class="item" style="width:100%">
+      <tr class="heading">
+        <th>Identifier</th>
+        <th>Product Name</th>
+        <th>Brand</th>
+        <th>Price</th>
+        <th>JSON</th>
+        <th>Detail View</th>
+      </tr>
+      {% for item in items %}
+        <tr>
+          <td>{{ item.identifier }}</td>
+          <td>{{ item.product_name }}</td>
+          <td>{{ item.brand }}</td>
+          <td>{{ item.skus[0].full_price }}</td>
+          <td><a href="{{ url_for('item.view_json', item_id=item['identifier']) }}" method=post>View JSON</a></td>
+          <td><a href="{{ url_for('item.view_product', item_id=item['identifier']) }}" method=post>View Product</a></td>
+        </tr>
+      {% endfor %}
+    </table>
+  {% endif %}
+{% endblock %}

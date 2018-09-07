@@ -1,0 +1,94 @@
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='view_product.css') }}">
+
+<header role="banner" aria-label="Heading">
+  <div class="breadcrumb" role="navigation" aria-label="Breadcrumbs">
+    <div class="_cont">
+      <ol>
+        {% for cat in item.category[:-1] %}
+          <li>{{ cat }} > </li>
+        {% endfor %}
+        <li> {{ item.category[-1] }}</li>
+      </ol>
+    </div>
+  </div>
+</header>
+<section aria-label="Main content" role="main" class="product-detail">
+  <div>
+    <div class="shadow">
+      <div class="_cont detail-top">
+        <div class="cols">
+          <div class="left-col">
+            <div class="thumbs">
+              {% for image_url in item.image_urls %}
+                <a class="thumb-image" data-index="0">
+                  <span><img src="{{ image_url }}" alt="{{ item.product_name }}"></span>
+                </a>
+              {% endfor %}
+            </div>
+            <div class="big">
+              <img id="big-image" class="img" width="445" height="594"
+                   src="{{ item.image_urls[0] }}">
+            </div>
+          </div>
+          <div class="right-col">
+            <h1 itemprop="name">{{ item.product_name }}</h1>
+            <p>{{ item.brand }}</p>
+            <p style="font-size: 15px;">SKU: {{ item.retailer_sku }}</p>
+            <div itemprop="offers">
+              <meta itemprop="priceCurrency" content="{{ item.currency }}">
+              <meta itemprop="availability" content="{{ item.availability }}">
+              <div class="price-shipping">
+                {% if item.skus[0].sale_price %}
+                  {% if item.skus[0].sale_price != item.skus[0].full_price %}
+                    <div class="sale-price" style="text-decoration: line-through;">€ {{ item.skus[0].sale_price }}</div>
+                    <div class="full-price">€ {{ item.skus[0].full_price }}</div>
+                  {% endif %}
+                {% else %}
+                  <div class="full-price">€ {{ item.skus[0].full_price }}</div>
+                {% endif %}
+              </div>
+              <div class="swatches">
+                <div class="swatch clearfix" data-option-index="0">
+                  <div class="header">Size</div>
+                  {% for size in item.skus %}
+                    <div data-value="{{ size.size_name }}" class="swatch-element plain">
+                      <input type="radio" name="option-0" value="{{ size.size_name }}"  />
+                      <label>{{ size.size_name }}</label>
+                    </div>
+                  {% endfor %}
+                </div>
+                <div class="swatch clearfix" data-option-index="1">
+                  <div class="header">Color</div>
+                  <div data-value="{{ item.color_name }}" class="swatch-element color">
+                    <div class="tooltip">{{ item.color_name }}</div>
+                    <input quickbeam="color" id="swatch-1-blue" type="radio" name="option-1" value="{{ item.color_name }}" checked="">
+                    <label for="swatch-1-blue" style="border-color: {{ item.color_name }};">
+                      <span style="background-color: {{ item.color_name }};"></span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+              <div class="tabs">
+                <div class="tab-labels">
+                  <span data-id="1" class="active">Description</span>
+                </div>
+                <div class="tab-slides">
+                  <div id="tab-slide-1" itemprop="description"  class="slide active">
+                    <ul>
+                      {% for desc in item.description %}
+                        <li>{{ desc }}</li>
+                      {% endfor %}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

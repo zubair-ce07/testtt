@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Product Listing{% endblock %}</h1>
+  {% if not g.user %}
+    <button class="action" onclick="window.location.href = '{{ url_for('auth.login') }}';">Login to Load Data</button>
+  {% else %}
+    <button class="action" onclick="window.location.href = '{{ url_for('item.load') }}';">Load Data</button>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+  <div class="product-component">
+    <ul class="product-list" style="overflow:hidden;">
+      {% for item in items %}
+        <li class="product-item" style="display:inline-block;">
+          <div style="width:258px; height:357px;">
+            <a href="{{ url_for('item.view_product', item_id=item['identifier']) }}" method="post">
+              <img  src="{{ item.image_urls[0] }}">
+              <p style="text-align:center;">{{ item.product_name }}</p>
+              <p style="text-align:center;">{{ item.identifier }}</p>
+            </a>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+    {% if not items %}
+        <h1 style="text-align:center;">No Product Found</h1>
+    {% endif %}
+  </div>
+{% endblock %}

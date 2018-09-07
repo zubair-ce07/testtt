@@ -1,0 +1,392 @@
+header ._cont, .product-detail .price-shipping, .tabs .tab-labels, .swatches, .swatch {
+    display: contents;
+}
+header ._cont:after, .product-detail .price-shipping:after, .tabs .tab-labels:after, .swatches:after, .swatch:after {
+    clear: both;
+    content: "";
+    display: block;
+    visibility: hidden;
+    height: 0
+}
+
+html, body, div, span, h1, a, img, ol, li, label, header, section {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font: inherit;
+    font-size: 100%;
+    vertical-align: baseline
+}
+html {
+    line-height: 1
+}
+ol {
+    list-style: none
+}
+a img {
+    border: none
+}
+header, section {
+    display: block
+}
+p{
+    font-family: "montserratlight", sans-serif;
+    font-family: bold;
+    font-size: 20px;
+}
+* {
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    outline: 0 none
+}
+body {
+    background-color: #fff;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale
+}
+img {
+    max-width: 100%
+}
+a {
+    color: inherit;
+    text-decoration: inherit;
+    cursor: inherit;
+    -moz-transition: all 0.3s ease-in-out;
+    -o-transition: all 0.3s ease-in-out;
+    -webkit-transition: all 0.3s ease-in-out;
+    transition: all 0.3s ease-in-out;
+    cursor: pointer
+}
+a:active,
+a:focus {
+    outline: none
+}
+input {
+    outline: 0 none
+}
+body {
+    font-family: "montserratlight", sans-serif;
+    background-color: #fff;
+    color: #16161a;
+    font-size: 81.25%;
+    line-height: 184.61538%;
+    overflow-x: hidden;
+    position: relative
+}
+._cont {
+    margin: 0 auto;
+    width: 1110px
+}
+header {
+    font-size: 100%;
+    line-height: 130.76923%;
+    position: relative;
+    z-index: 1000
+}
+.breadcrumb {
+    margin-top: 15px
+}
+.breadcrumb li {
+    display: inline-block
+}
+.product-detail {
+    padding-top: 15px
+}
+.product-detail .shadow {
+    -moz-box-shadow: rgba(17, 17, 18, 0.04) 0 2px 4px, rgba(19, 20, 20, 0.06) 0 1px 1px;
+    -webkit-box-shadow: rgba(17, 17, 18, 0.04) 0 2px 4px, rgba(19, 20, 20, 0.06) 0 1px 1px;
+    box-shadow: rgba(17, 17, 18, 0.04) 0 2px 4px, rgba(19, 20, 20, 0.06) 0 1px 1px;
+    margin-bottom: 2px
+}
+.product-detail .cols {
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 35px 0 58px
+}
+.product-detail .cols:after {
+    content: " ";
+    display: block;
+    clear: both
+}
+.product-detail .left-col {
+    width: 48.27586%;
+    float: left;
+    margin-right: 3.44828%;
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto
+}
+.product-detail .left-col:after {
+    content: " ";
+    display: block;
+    clear: both
+}
+.product-detail .left-col .thumbs {
+    width: 15.25424%;
+    float: left;
+    margin-right: 1.69492%
+}
+.product-detail .left-col .thumbs a {
+    -moz-transition: all 0.3s ease-in-out;
+    -o-transition: all 0.3s ease-in-out;
+    -webkit-transition: all 0.3s ease-in-out;
+    transition: all 0.3s ease-in-out;
+    -moz-border-radius: 1px;
+    -webkit-border-radius: 1px;
+    border-radius: 1px;
+    border: 1px solid #e2e2e3;
+    display: block;
+    margin-bottom: 8px;
+    position: relative;
+    width: 100%
+}
+.product-detail .left-col .thumbs a:hover {
+    border-color: #b5b6bd
+}
+.product-detail .left-col .thumbs img {
+    display: block;
+    width: 100%
+}
+.product-detail .left-col .big {
+    width: 83.05085%;
+    float: right;
+    margin-right: 0
+}
+.product-detail .right-col {
+    width: 48.27586%;
+    float: right;
+    margin-right: 0
+}
+.product-detail h1 {
+    font-size: 200%;
+    line-height: 141.66667%;
+}
+.product-detail a {
+    font-size: 100%;
+    line-height: 123.07692%;
+    color: #b5b6bd;
+    text-decoration: underline
+}
+.product-detail a:hover {
+    color: #086fcf
+}
+.product-detail .price-shipping {
+    border-bottom: 1px solid #edeff2;
+    padding-bottom: 14px
+}
+.price-shipping{
+    font-size: 369.23077%;
+    line-height: 108.33333%;
+    font-family: "montserratbold", sans-serif;
+    color: #086fcf;
+    float: left;
+    letter-spacing: -2px
+}
+.tabs {
+    margin: 30px 0
+}
+.tabs .tab-labels {
+    position: relative;
+    top: 1px;
+    z-index: 100
+}
+.tabs .tab-labels span {
+    font-family: "montserratbold", sans-serif;
+    font-size: 100%;
+    line-height: 123.07692%;
+    -moz-border-radius: 1px;
+    -webkit-border-radius: 1px;
+    border-radius: 1px;
+    border: 1px solid #fff;
+    border-bottom: 0 none;
+    color: #086fcf;
+    cursor: pointer;
+    display: block;
+    float: left;
+    padding: 7px 15px 9px;
+    text-transform: uppercase
+}
+.tabs .tab-labels span.active {
+    background-color: #fff;
+    border-color: #edeff2;
+    color: #16161a
+}
+.tabs .tab-slides {
+    font-size: 100%;
+    line-height: 184.61538%;
+    border-top: 1px solid #edeff2;
+    padding-top: 10px;
+    position: relative
+}
+.tabs .tab-slides>div {
+    display: none
+}
+.tabs .tab-slides>div.active {
+    display: block
+}
+.swatches {
+    margin: 17px 0 80px
+}
+.swatch {
+    float: left;
+    margin-right: 40px
+}
+.swatch:nth-last-child(2) {
+    margin-right: 0
+}
+.swatch .header {
+    font-family: "montserratbold", sans-serif;
+    text-transform: uppercase
+}
+.swatch input {
+    display: none
+}
+.swatch .swatch-element {
+    float: left;
+    margin: 5px 8px 0 0;
+    position: relative
+}
+.swatch .color label {
+    -moz-transition: all 0.3s ease-in-out;
+    -o-transition: all 0.3s ease-in-out;
+    -webkit-transition: all 0.3s ease-in-out;
+    transition: all 0.3s ease-in-out;
+    -moz-border-radius: 50%;
+    -webkit-border-radius: 50%;
+    border-radius: 50%;
+    border: 1px solid;
+    cursor: pointer;
+    display: block;
+    height: 42px;
+    padding: 7px 0 0 7px;
+    width: 42px
+}
+.swatch .color label span {
+    -moz-border-radius: 50%;
+    -webkit-border-radius: 50%;
+    border-radius: 50%;
+    display: block;
+    height: 26px;
+    position: relative;
+    width: 26px
+}
+.swatch .color label span:after {
+    -moz-transition: all 0.3s ease-in-out;
+    -o-transition: all 0.3s ease-in-out;
+    -webkit-transition: all 0.3s ease-in-out;
+    transition: all 0.3s ease-in-out;
+    background: transparent url('data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+Cjxzdmcgd2lkdGg9IjEycHgiIGhlaWdodD0iOXB4IiB2aWV3Qm94PSIwIDAgMTIgOSIgdmVyc2lvbj0iMS4xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB4bWxuczpza2V0Y2g9Imh0dHA6Ly93d3cuYm9oZW1pYW5jb2RpbmcuY29tL3NrZXRjaC9ucyI+CiAgICA8ZyBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMSIgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIj4KICAgICAgICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtMTIzMS4wMDAwMDAsIC0xMzAyLjAwMDAwMCkiIGZpbGw9IiNGRkZGRkYiPgogICAgICAgICAgICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtMy4wMDAwMDAsIDEyNDYuMDAwMDAwKSI+CiAgICAgICAgICAgICAgICA8cGF0aCBkPSJNMTIzNS45MzgzNyw1OC40NTA1ODYxIEwxMjM0LjUyMTE2LDU5LjM5NTUzMDcgTDEyMzcuNTQ4NDgsNjMuOTM2NzE1OCBMMTI0NS45MjIyNSw1OC4zNTM5MTk4IEwxMjQ0Ljk3NzczLDU2LjkzNjcxNTggTDEyMzguMDIxMTYsNjEuNTc0NTY3MSBMMTIzNS45MzgzNyw1OC40NTA1ODYxIEwxMjM1LjkzODM3LDU4LjQ1MDU4NjEgWiIgaWQ9ImZhamZrYSIgc2tldGNoOnR5cGU9Ik1TU2hhcGVHcm91cCIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTI0MC4yMjE3MDYsIDYwLjQzNjcxNikgcm90YXRlKC0xMC4wMDAwMDApIHRyYW5zbGF0ZSgtMTI0MC4yMjE3MDYsIC02MC40MzY3MTYpIj48L3BhdGg+CiAgICAgICAgICAgIDwvZz4KICAgICAgICA8L2c+CiAgICA8L2c+Cjwvc3ZnPg==') no-repeat center center;
+    bottom: 0;
+    content: "";
+    display: block;
+    height: 100%;
+    left: 0;
+    opacity: 0;
+    position: absolute;
+    top: 0;
+    width: 100%
+}
+.swatch .plain label {
+    -moz-transition: all 0.3s ease-in-out;
+    -o-transition: all 0.3s ease-in-out;
+    -webkit-transition: all 0.3s ease-in-out;
+    transition: all 0.3s ease-in-out;
+    -moz-border-radius: 50%;
+    -webkit-border-radius: 50%;
+    border-radius: 50%;
+    font-family: "montserratbold", sans-serif;
+    border: 1px solid #086fcf;
+    color: #086fcf;
+    cursor: pointer;
+    display: block;
+    height: 42px;
+    padding-top: 8px;
+    text-align: center;
+    width: 42px
+}
+.swatch .color input:checked+label span:after {
+    opacity: 1
+}
+.swatch input:not(:checked)+label {
+    border-color: #edeff2 !important
+}
+.swatch input:not(:checked)+label:hover {
+    border-color: #b5b6bd !important
+}
+.swatch .plain input:not(:checked)+label {
+    color: #16161a !important
+}
+.swatch .tooltip {
+    -moz-border-radius: 2px;
+    -webkit-border-radius: 2px;
+    border-radius: 2px;
+    text-align: center;
+    background-color: rgba(22, 22, 26, 0.93);
+    color: #fff;
+    bottom: 100%;
+    padding: 10px;
+    display: block;
+    position: absolute;
+    width: 100px;
+    left: -23px;
+    margin-bottom: 15px;
+    filter: alpha(opacity=0);
+    -khtml-opacity: 0;
+    -moz-opacity: 0;
+    opacity: 0;
+    visibility: hidden;
+    -webkit-transform: translateY(10px);
+    -moz-transform: translateY(10px);
+    -ms-transform: translateY(10px);
+    -o-transform: translateY(10px);
+    transform: translateY(10px);
+    -webkit-transition: all .25s ease-out;
+    -moz-transition: all .25s ease-out;
+    -ms-transition: all .25s ease-out;
+    -o-transition: all .25s ease-out;
+    transition: all .25s ease-out;
+    -webkit-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+    -moz-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+    -ms-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+    -o-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+    box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+    z-index: 10000;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box
+}
+.swatch .tooltip:before {
+    bottom: -20px;
+    content: " ";
+    display: block;
+    height: 20px;
+    left: 0;
+    position: absolute;
+    width: 100%
+}
+.swatch .tooltip:after {
+    border-left: solid transparent 10px;
+    border-right: solid transparent 10px;
+    border-top: solid rgba(22, 22, 26, 0.93) 10px;
+    bottom: -10px;
+    content: " ";
+    height: 0;
+    left: 50%;
+    margin-left: -13px;
+    position: absolute;
+    width: 0
+}
+.swatch .swatch-element:hover .tooltip {
+    filter: alpha(opacity=100);
+    -khtml-opacity: 1;
+    -moz-opacity: 1;
+    opacity: 1;
+    visibility: visible;
+    -webkit-transform: translateY(0px);
+    -moz-transform: translateY(0px);
+    -ms-transform: translateY(0px);
+    -o-transform: translateY(0px);
+    transform: translateY(0px)
+}
