@@ -83,9 +83,8 @@ class GraciaParseSpider(BaseParseSpider, Mixin):
         sizes_s = response.css('.variant-filter-item')
 
         if not sizes_s:
-            sku = common_sku.copy()
-            sku['size'] = self.one_size
-            skus[sku['size']] = sku
+            common_sku['size'] = self.one_size
+            skus[common_sku['size']] = common_sku
 
         for size_s in sizes_s:
             sku = common_sku.copy()
