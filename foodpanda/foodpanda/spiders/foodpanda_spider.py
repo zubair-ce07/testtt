@@ -54,7 +54,7 @@ class FoodPandaParser(scrapy.Spider):
     name = "foodpanda_parse"
 
     start_urls = [
-        'https://www.foodpanda.in/location-suggestions?cityId=476421&'
+        'https://www.foodpanda.in/restaurants?cityId=476421&'
         'area=Hitech+City+%28Madhapur%29&area_id=478119&pickup=&sort=&'
         'tracking_id=caa3d30548ca409894209e26dfcf533a'
     ]
@@ -72,15 +72,12 @@ class FoodPandaParser(scrapy.Spider):
         pages = response.xpath('//*[contains(@class, "js-pagination")]//'
                                '*[contains(@class, "infscroll-page")]/@value').extract()
         logging.debug('PAGE COUNT')
-        logging.debug(response.meta['location'].city)
-        logging.debug(response.meta['location'].address)
         logging.debug(response.url)
         logging.debug(pages)
 
         for page in pages:
             request = scrapy.Request(f'{response.url}&page={page}', callback=self.parse_listing,
                                      priority=1)
-            request.meta['location'] = response.meta['location']
             yield request
 
     def parse_listing(self, response):
@@ -90,15 +87,12 @@ class FoodPandaParser(scrapy.Spider):
                                       '//@href').extract()
 
         logging.debug('PRODUCT URLS')
-        logging.debug(response.meta['location'].city)
-        logging.debug(response.meta['location'].address)
         logging.debug(response.url)
         logging.debug(product_urls)
         
         for url in product_urls:
             request = scrapy.Request(f'https://foodpanda.in{url}', callback=self.parse_product,
                                      priority=2)
-            request.meta['location'] = response.meta['location']
             yield request
 
     def parse_product(self, response):
@@ -162,7 +156,7 @@ class FoodPandaParser(scrapy.Spider):
                             '.menu-item__title::attr(title)').extract_first())
                         item.add_value('description', raw_item.css(
                             '.menu-item__description::text').extract_first())
-                        item.add_value('price', raw_item.css(
+                        item.add_value('price', raw_size.css(
                             '[class^="menu-item__variation__price"]::text').extract_first().strip())
                         item.add_value('category', category_title)
                         item.add_value('subcategory', category_title)
