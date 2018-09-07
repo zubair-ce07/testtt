@@ -47,9 +47,11 @@ def delete_post(pid):
     if session.get('user_available'):
         post = Post.query.get(pid)
         if post.user.uid == int(session['current_user_id']):
+            os.remove(
+                os.path.join(UPLOAD_FOLDER, (post.image_url).split('/')[-1]))
             db.session.delete(post)
             db.session.commit()
-            flash('Post Deleted Succesfully')
+            flash('Post Deleted Successfully')
             return redirect(url_for('index'))
         else:
             flash('You are not a valid user to Delete this Post')

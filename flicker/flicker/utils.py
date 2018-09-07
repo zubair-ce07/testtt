@@ -16,7 +16,7 @@ def collect_tag_posts(search_tag):
         Follow.follower_userid == session['current_user_id']).all()
     following_users = [i[0] for i in following_users]
     tagged_posts = Tag.query.filter(Tag.tag.like('%' + search_tag + '%'),
-                             Tag.post).with_entities(Post).filter(
+                                    Tag.post).with_entities(Post).filter(
         or_(Post.puid == session['current_user_id'],
             Post.post_privacy == Post.PUBLIC, (
                 and_(Post.puid.in_(following_users),

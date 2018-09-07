@@ -2,7 +2,7 @@ This project was Create with [Flask](http://flask.pocoo.org/).
 
 # Flicker App
 
-A simple Flask Flicker app that allows the Users performs the following tasks:
+A simple Flask Flicker app that allows Users performs the following tasks:
 
 * `Sign Up` Users
 * `Sign In` User
@@ -12,6 +12,7 @@ A simple Flask Flicker app that allows the Users performs the following tasks:
 * `UnFollow` User Can Un follow the following Users
 * `Following Users` User can see his/her and other User's Following Users
 * `Home` Where Logged in User Can See Following User's Photo, Public Photo and Logged In User's Photos
+* `Wall` User can see his/her uploaded photos and following users on his/her Wall
 * `Profile` User Can See Profile of other User's
 * `Search Users ` User Can Search Users by Username
 * `Search Posts` User can Search Posts by tags
