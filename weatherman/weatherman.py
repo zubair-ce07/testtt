@@ -113,7 +113,7 @@ class ReportGenerator:
                 horizontal, max_temperature,
                 min_temperature, date
             )
-            
+
 
 class Controller:
     """ main controller class that manage all flow """
