@@ -61,22 +61,20 @@ class NavBar extends Component {
 
             </Nav>
             <Nav pullRight>
-              <NavItem className="form-inline my-2 my-lg-0">
+
                 <FormGroup>
                   <FormControl type="text" placeholder="Search for players/teams" />
                 </FormGroup>{' '}
                 <Button className="btn btn-dark btn-outline-warning my-2 my-sm-0" bsStyle="primary" type="submit" >Search</Button>
-              </NavItem>
-              <NavItem eventKey={1} href="#">
-                <NavLink to="/teams-home">
-                  Login
-                </NavLink>
-              </NavItem>
-              <NavItem eventKey={2} href="#">
-                <NavLink to="/teams-home">
-                  Sign Up
-                </NavLink>
-              </NavItem>
+
+                <div className="btn-group" role="group" aria-label="Basic example">
+                  <button type="button" className="btn btn-info" id="myLoginBtn">Login</button>
+                </div>
+
+                <div className="btn-group" role="group" aria-label="Basic example">
+                  <button type="button" className="btn btn-info" id="mySignUpBtn">Sign Up</button>
+                </div>
+
             </Nav>
           </Navbar.Collapse>
 
@@ -95,7 +93,7 @@ class NavBar extends Component {
 
 const Home = () => (
   <div>
-    <h2>Home</h2>
+    <h2 >Home</h2>
     <h2>Home</h2>
     <h2>Home</h2>
     <h2>Home</h2>
