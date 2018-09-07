@@ -1,0 +1,93 @@
+{% extends 'profile/base.html' %}
+{% block title %} user details {% endblock %}
+{% block body %}
+
+    <div class="container-fluid songs-container">
+
+        <div class="row">
+
+            <!-- Left user Info -->
+            <div class="col-sm-4 col-md-3">
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <a href="{% url 'users:index' %}">
+                            {% if profile.profile_photo %}
+                                <img src="{{ profile.profile_photo.url }}" class="img-responsive">
+                            {% else %}
+                                <h3><a href="{% url 'users:edit_profile' profile.id %}">Add Profile Image</a></h3>
+                            {% endif %}
+                        </a>
+                        <h1>{{ user.username }} <br>
+                            <small>{{ user.email}}</small>
+                        </h1>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Song Info -->
+            <div class="col-sm-8 col-md-9">
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <h3>Basic Info</h3>
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Full Name</th>
+                                <th>Email</th>
+                                <th>Edit Basic Info</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>{{ user.username }}</td>
+                                    <td>{{ user.first_name }} {{ user.last_name }}</td>
+                                    <td>{{ user.email }}</td>
+                                    <td>
+                                        <a href="{% url 'users:edit_basic_info' user.id %}">
+                                            <button type="submit" class="btn btn-success btn-xs">
+                                                <span class="glyphicon glyphicon-edit"></span>&nbsp; Update
+                                            </button>
+                                        </a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <h3>Profile Info</h3>
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th>Address</th>
+                                <th>Age</th>
+                                <th>Gender</th>
+                                <th>Edit Profile</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>{{ profile.address }}</td>
+                                    <td>{{ profile.age }}</td>
+                                    <td>{{ profile.gender }}</td>
+                                    <td>
+                                        <a href="{% url 'users:edit_profile' profile.id %}">
+                                            <button type="submit" class="btn btn-success btn-xs">
+                                                <span class="glyphicon glyphicon-edit"></span>&nbsp; Update
+                                            </button>
+                                        </a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+{% endblock %}

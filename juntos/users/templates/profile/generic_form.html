@@ -1,0 +1,41 @@
+{% extends 'profile/base.html' %}
+{% block title %}Add a New Album{% endblock %}
+{% block albums_active %}active{% endblock %}
+
+{% block body %}
+    <div class="container-fluid">
+
+        <div class="row">
+
+            <div class="col-sm-12 col-md-7">
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <h3>Edit info</h3>
+                        <form class="form-horizontal" role="form" action="" method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            {% include 'profile/form_template.html' %}
+                            {% if form.error %}
+                            <div class="form-group" >
+                                <div class="col-sm-offset-2 col-sm-4" style="background: red; color: white">
+                                    <span >{{ form.non_field_errors }}</span>
+                                </div>
+                            </div>
+                            {% endif %}
+                            <div class="form-group">
+                                <div class="col-sm-offset-2 col-sm-1">
+                                    <button type="submit" class="btn btn-success">Submit</button>
+                                </div>
+                                <div class="col-sm-1">
+                                    <a href="{% url 'users:index' %}">
+                                        <button type="submit" class="btn btn-danger">Cancel</button>
+                                    </a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+{% endblock %}
