@@ -19,3 +19,5 @@ class Garment(Item):
     care = Field()
     skus = Field()
     out_of_stock = Field()
+    currency = Field()
+    price = Field()

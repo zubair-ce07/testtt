@@ -36,6 +36,10 @@ class TerminalXParseSpider(Spider):
         product["description"] = self.get_description(response)
         product["care"] = self.get_care(response)
         product["skus"] = self.get_skus(response, raw_product)
+        price_info = self.get_common_sku(response, raw_product)
+        product['price'] = price_info['price']
+        product['currency'] = price_info['currency']
+
         response.meta["request_queue"] = self.images_requests(response, raw_product)
         response.meta["product"] = product
         return self.item_or_request(response)
@@ -75,11 +79,10 @@ class TerminalXParseSpider(Spider):
 
         return skus
 
-    def get_common_sku(self, response, product_config):
+    def get_common_sku(self, response, raw_product):
         common_sku = {}
-        old_price = float(product_config['jsonConfig']['prices']['oldPrice']['amount'])
-        common_sku["price"] = float(product_config['jsonConfig']['prices']['finalPrice']['amount'])
-        common_sku["price"] = self.cents_conversion(common_sku["price"])
+        old_price = self.cents_conversion(raw_product['jsonConfig']['prices']['oldPrice']['amount'])
+        common_sku["price"] = self.cents_conversion(raw_product['jsonConfig']['prices']['finalPrice']['amount'])
         common_sku["currency"] = self.get_currency(response)
 
         if old_price != common_sku["price"]:
@@ -167,7 +170,7 @@ class TerminalXParseSpider(Spider):
         return response.css('.description p ::text').extract()
 
     def cents_conversion(self, param):
-        return 100 * param
+        return 100 * float(param)
 
     def is_out_of_stock(self, product):
         return all(sku.get('out_of_stock', False) for sku in product['skus'].values())
