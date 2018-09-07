@@ -30,15 +30,16 @@ class WoolworthSpider(CrawlSpider):
 
     def parse_item(self, response):
         item = WoolworthsItem()
-        item['brand'] = self.parse_brand(response)
+        data = self.parse_script_data(response)
+        item['brand'] = self.parse_brand(data)
         item['url'] = self.parse_url(response)
-        item['name'] = self.parse_name(response)
-        item['description'] = self.parse_description(response)
-        item['retailer_sku'] = self.parse_retailer_sku(response)
-        item['care'] = self.parse_care(response)
-        item['category'] = self.parse_category(response)
-        item['skus'] = self.parse_skus(response)
-        item['img_urls'] = self.parse_img_urls(response)
+        item['name'] = self.parse_name(data)
+        item['description'] = self.parse_description(data)
+        item['retailer_sku'] = self.parse_retailer_sku(data)
+        item['care'] = self.parse_care(response, data)
+        item['category'] = self.parse_category(data)
+        item['skus'] = self.parse_skus(response, data)
+        item['img_urls'] = self.parse_img_urls(data)
         yield item
 
     def parse_script_data(self, response):
@@ -48,26 +49,24 @@ class WoolworthSpider(CrawlSpider):
         data = json.loads(script)
         return data
 
-    def parse_img_urls(self, response):
-        data = self.parse_script_data(response)
+    def parse_img_urls(self, data):
         aux_media = data['pdp']['productInfo'].get("auxiliaryMedia")
         urls = []
         for item in aux_media.values():
             urls.append("www.woolworths.co.za" + item['internalAuxiliaryImage'])
         return urls
 
-    def parse_brand(self, response):
-        data = self.parse_script_data(response)
+    def parse_brand(self, data):
         product_attributes = data['pdp']['productInfo'].get("productAttributes")
         for attribute in product_attributes:
             if attribute['attributeDisplayName'] == "Brands":
                 if attribute['attributeValue']:
                     return attribute['attributeValue']
-            else:
-                return "Woolworths"
+                else:
+                    return "Woolworths"
+        return "Woolworths"
 
-    def parse_care(self, response):
-        data = self.parse_script_data(response)
+    def parse_care(self, response, data):
         product_attributes = data['pdp']['productInfo'].get("productAttributes")
         for attribute in product_attributes:
             if attribute['attributeDisplayName'] == "Care":
@@ -77,12 +76,10 @@ class WoolworthSpider(CrawlSpider):
     def parse_url(self, response):
         return response.url
 
-    def parse_name(self, response):
-        data = self.parse_script_data(response)
+    def parse_name(self, data):
         return data['pdp']['productInfo'].get("displayName")
 
-    def parse_description(self, response):
-        data = self.parse_script_data(response)
+    def parse_description(self, data):
         description = data['pdp']['productInfo'].get("longDescription")
         description_cleaned = self.clean_text(description)
         return description_cleaned
@@ -94,41 +91,28 @@ class WoolworthSpider(CrawlSpider):
         cleaned_text = cleaned_text.replace("\n", "")
         return cleaned_text
 
-    def parse_retailer_sku(self, response):
-        data = self.parse_script_data(response)
+    def parse_retailer_sku(self, data):
         return data['pdp']['productInfo'].get("productId")
 
-    def parse_currency(self, response):
-        data = self.parse_script_data(response)
+    def parse_currency(self, data):
         return data['labels']['labelsAndErrorMessages']['cart']['global-minicartpopup-currency-label']
 
-    def parse_category(self, response):
-        data = self.parse_script_data(response)
+    def parse_category(self, data):
         return data['pdp']['productInfo'].get("productType")
 
-    def parse_skus(self, response):
-        data = self.parse_script_data(response)
+    def parse_skus(self, response, data):
         pdp = data['pdp']
         style_id = pdp['productInfo'].get("defaultStyleId")
-        sku_prices = pdp['productPrices'][self.parse_retailer_sku(response)]['plist3620006']['skuPrices']
+        sku_prices = pdp['productPrices'][self.parse_retailer_sku(data)]['plist3620006']['skuPrices']
         sku_details = pdp['productInfo']['styleIdSizeSKUsMap'][style_id]
-        for index in range(len(sku_details)):
-            product_code = sku_details[index]['id']
-            if index == 0:
-                skus = {
-                    product_code: {
-                        "currency": self.parse_currency(response),
-                        "colour": sku_details[index]['colour'],
-                        "size": sku_details[index]['size'],
-                        "price": sku_prices[product_code]['SalePrice']
-                    }
-                }
-            else:
-                skus[product_code] = {
-                    "currency": self.parse_currency(response),
-                    "colour": sku_details[index]['colour'],
-                    "size": sku_details[index]['size'],
-                    "price": sku_prices[product_code]['SalePrice']
-                }
+        skus = {}
+        for sku in sku_details:
+            product_code = sku['id']
+            skus[product_code] = {
+                "currency": self.parse_currency(data),
+                "colour": sku['colour'],
+                "size": sku['size'],
+                "price": sku_prices[product_code]['SalePrice']
+            }
         return skus
 

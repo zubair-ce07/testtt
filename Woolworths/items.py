@@ -18,4 +18,3 @@ class WoolworthsItem(scrapy.Item):
     category = scrapy.Field()
     skus = scrapy.Field()
     img_details = scrapy.Field()
-    pass
