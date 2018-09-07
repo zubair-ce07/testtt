@@ -1,11 +1,18 @@
 """ Contains views for rendering web pages """
+import os
+
 from flask import request, redirect, url_for, \
     render_template, flash
+from flask import session
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from flicker import app
 from .forms import AddPostForm, SignUpForm, SignInForm
-from .utils import *
+from .models import User, Post, db
+from .utils import collect_tag_posts, collect_allowed_posts,\
+    add_post_comment,update_post_like_status, delete_user_comment,\
+    allowed_file, append_random_string, save_post_tags, update_follow_status,\
+    check_follow_status, validate_user_email, validate_username
 
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(APP_ROOT, 'static/uploads')
