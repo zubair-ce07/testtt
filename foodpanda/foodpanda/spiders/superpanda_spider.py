@@ -1,13 +1,12 @@
-import json
-import logging
 import csv
 import datetime
+import json
 import re
 from collections import namedtuple
 
 import scrapy
 from scrapy.loader import ItemLoader
-from scrapy.loader.processors import TakeFirst, Identity
+from scrapy.loader.processors import TakeFirst
 
 
 class Item(scrapy.Item):
@@ -46,12 +45,23 @@ class ProductLoader(ItemLoader):
     def strip(value):
         return value[0].strip()
 
-    categories_out = Identity()
+    @staticmethod
+    def fetch_promotion(value):
+        if value:
+            return True
+
+        return False
+
+    promotion_in = fetch_promotion
+
     description_out = strip
+    price_out = strip
+    size_out = strip
+    sku_out = strip
 
 
 class FoodPandaParser(scrapy.Spider):
-    name = "foodpanda_parse"
+    name = "superpanda_parse"
 
     start_urls = [
         'https://www.foodpanda.in/restaurants?cityId=476421&area=Hitech+City+%28Madhapur%29'
@@ -74,13 +84,10 @@ class FoodPandaParser(scrapy.Spider):
     def parse(self, response):
         pages = response.xpath('//*[contains(@class, "js-pagination")]//'
                                '*[contains(@class, "infscroll-page")]/@value').extract()
-        logging.debug('PAGE COUNT')
-        logging.debug(response.url)
-        logging.debug(pages)
 
         for page in pages:
-            request = scrapy.Request(f'{response.url}&page={page}', callback=self.parse_listing,
-                                     priority=1)
+            url = '{base_url}&page={page}'.format(base_url=response.url, page=page)
+            request = scrapy.Request(url, callback=self.parse_listing)
             yield request
 
     def parse_listing(self, response):
@@ -89,29 +96,24 @@ class FoodPandaParser(scrapy.Spider):
                                       ' contains(.,"McDonald\'s") or contains(.,"Burger King")]]'
                                       '//@href').extract()
 
-        logging.debug('PRODUCT URLS')
-        logging.debug(response.url)
-        logging.debug(product_urls)
-        
-        for url in product_urls:
-            request = scrapy.Request(f'https://foodpanda.in{url}', callback=self.parse_product,
-                                     priority=2)
+        for product_url in product_urls:
+            url = 'https://foodpanda.in{restaurant_url}'.format(restaurant_url=product_url)
+            request = scrapy.Request(url, callback=self.parse_product)
             yield request
 
     def parse_product(self, response):
         common_fields = {
-            'restaurant': response.css('.vendor__title [itemprop="name"]::text').extract_first(),
-            'url': response.url, 'source': 'foodpanda.in',
+            'restaurant': self.fetch_restaurant_name(response),
+            'url': response.url,
+            'source': 'foodpanda.in',
             'average_rating': self.fetch_average_rating(response),
             'num_of_ratings': self.fetch_num_of_ratings(response),
-            'store_id': re.findall(r'foodpanda\.in/restaurant/(.*)/', response.url),
-            'date_of_crawl': datetime.datetime.now().strftime('%d %b %Y'),
-            'min_order': response.xpath('//script[contains(text(), "minimum_order")]').re(
-                r'"minimum_order_amount":(\d+)') or None,
-            'locality': ', '.join(response.css(
-                '.vendor-info__address__content span::text').extract()),
-            'pincode': response.css('*[itemprop="postalCode"]::text').extract_first(),
-            'city': response.css('*[itemprop="addressRegion"]::text').extract_first()
+            'store_id': self.fetch_store_id(response),
+            'date_of_crawl': self.fetch_date_of_crawl(),
+            'min_order': self.fetch_min_order(response),
+            'locality': self.fetch_locality(response),
+            'pincode': self.fetch_pincode(response),
+            'city': self.fetch_city(response)
         }
 
         items = self.fetch_items(common_fields, response)
@@ -124,68 +126,99 @@ class FoodPandaParser(scrapy.Spider):
         raw_categories = response.css('.menu__category')
 
         for raw_category in raw_categories:
-            category_title = raw_category.css('.menu__category__title::text')\
-                             .extract_first().strip()
+            category_title = self.fetch_category_title(raw_category)
             special_category = self.check_special_category(category_title)
 
             if special_category and "Domino's" in common_fields['restaurant']:
                 raw_sub_categories = raw_category.css('.menu__category > [class^="menu-item"]')
-
                 for raw_sub_category in raw_sub_categories:
-                    item = ProductLoader(item=Item(), response=response)
-                    item.add_value('category', category_title)
-                    item.add_value('special_category', 'Y' if special_category else 'N')
-                    item.add_value('subcategory', raw_sub_category.css(
-                        '.menu-item__title::attr(title)').extract_first())
-                    item.add_value('subcategory_description', raw_sub_category.css(
-                        '.menu-item__title::attr(title)').extract_first())
-                    item.add_value('thumbnail', raw_sub_category.css(
-                        '.menu-item__image img::attr(data-src)').re(r'(https://.+)\?'))
-
+                    item = self.generate_special_category(raw_sub_category, category_title)
                     for field in common_fields.keys():
                         item.add_value(field, common_fields[field])
 
                     items.append(item)
             else:
                 raw_items = raw_category.css('.menu__category > [class^="menu-item"]')
-
                 for raw_item in raw_items:
                     raw_sizes = raw_item.css('.menu-item__variation')
 
                     for raw_size in raw_sizes:
-                        item = ProductLoader(item=Item(), response=response)
-
-                        item.add_value('title', raw_item.css(
-                            '.menu-item__title::attr(title)').extract_first())
-                        item.add_value('description', raw_item.css(
-                            '.menu-item__description::text').extract_first())
-                        item.add_value('price', raw_size.css(
-                            '[class^="menu-item__variation__price"]::text').extract_first().strip())
-                        item.add_value('category', category_title)
-                        item.add_value('subcategory', category_title)
-                        item.add_value('special_category', 'Y' if special_category else 'N')
-                        item.add_value('thumbnail', raw_item.css(
-                            '.menu-item__image img::attr(data-src)').re(r'(https://.+)\?'))
-                        item.add_value('sku', raw_size.css(
-                            '.menu-item__variation::attr(data-clicked_product_id)')
-                                       .extract_first().strip())
-                        item.add_value('size', self.fetch_size(raw_size.css(
-                            '.menu-item__variation__title::text').extract_first().strip()))
-                        veg_title = raw_item.css('.menu-item__dish-characteristics '
-                                                 'span::attr(data-title)').extract_first() or ''
-                        item.add_value('veg', self.fetch_veg(
-                            [item.get_output_value('category'), item.get_output_value('title'),
-                             veg_title]
-                        ))
-                        item.add_value(
-                            'promotion', True if raw_item.css('.popular-dish') else False)
-
+                        item = self.generate_item(raw_item, raw_size, category_title)
+                        item.add_value('veg', self.fetch_veg(item, raw_item))
                         for field in common_fields.keys():
                             item.add_value(field, common_fields[field])
 
                         items.append(item)
-
         return items
+
+    @staticmethod
+    def fetch_category_title(raw_category):
+        return raw_category.css('.menu__category__title::text').extract_first().strip()
+
+    def generate_special_category(self, raw_sub_category, category_title):
+        item = ProductLoader(item=Item(), selector=raw_sub_category)
+        item.add_value('category', category_title)
+        item.add_value('special_category',
+                       'Y' if self.check_special_category(category_title) else 'N')
+        item.add_css('subcategory', '.menu-item__title::attr(title)')
+        item.add_css('subcategory_description', '.menu-item__title::attr(title)')
+        item.add_css('thumbnail', '.menu-item__image img::attr(data-src)', re=r'(https://.+)\?')
+
+        return item
+
+    def generate_item(self, raw_item, raw_size, category_title):
+        item = ProductLoader(item=Item(), selector=raw_item)
+
+        item.add_value('category', category_title)
+        item.add_value('subcategory', category_title)
+        item.add_value('special_category',
+                       'Y' if self.check_special_category(category_title) else 'N')
+        item.add_css('title', '.menu-item__title::attr(title)')
+        item.add_css('description', '.menu-item__description::text')
+        item.add_value('price', self.fetch_price(raw_size))
+        item.add_css('thumbnail', '.menu-item__image img::attr(data-src)', re=r'(https://.+)\?')
+        item.add_value('sku', self.fetch_sku_id(raw_size))
+        item.add_value('size', self.fetch_size(raw_size))
+        item.add_css('promotion', '.popular-dish')
+
+        return item
+
+    @staticmethod
+    def fetch_price(raw_size):
+        return raw_size.css('[class^="menu-item__variation__price"]::text').extract_first()
+
+    @staticmethod
+    def fetch_sku_id(raw_size):
+        return raw_size.css('.menu-item__variation::attr(data-clicked_product_id)').extract_first()
+
+    @staticmethod
+    def fetch_city(response):
+        return response.css('*[itemprop="addressRegion"]::text').extract_first()
+
+    @staticmethod
+    def fetch_pincode(response):
+        return response.css('*[itemprop="postalCode"]::text').extract_first()
+
+    @staticmethod
+    def fetch_locality(response):
+        return ', '.join(response.css('.vendor-info__address__content span::text').extract())
+
+    @staticmethod
+    def fetch_min_order(response):
+        return response.xpath('//script[contains(text(), "minimum_order")]')\
+                   .re(r'"minimum_order_amount":(\d+)') or None
+
+    @staticmethod
+    def fetch_date_of_crawl():
+        return datetime.datetime.now().strftime('%d %b %Y')
+
+    @staticmethod
+    def fetch_store_id(response):
+        return re.findall(r'foodpanda\.in/restaurant/(.*)/', response.url)
+
+    @staticmethod
+    def fetch_restaurant_name(response):
+        return response.css('.vendor__title [itemprop="name"]::text').extract_first()
 
     @staticmethod
     def check_special_category(category_title):
@@ -193,7 +226,8 @@ class FoodPandaParser(scrapy.Spider):
         return any(offer in category_title for offer in offers)
 
     @staticmethod
-    def fetch_size(size_title):
+    def fetch_size(raw_size):
+        size_title = raw_size.css('.menu-item__variation__title::text').extract_first()
         size_map = ['Medium', 'Small', 'Regular', 'Large']
 
         if not size_title:
@@ -206,7 +240,11 @@ class FoodPandaParser(scrapy.Spider):
         return size_title
 
     @staticmethod
-    def fetch_veg(titles):
+    def fetch_veg(item, raw_item):
+        veg_label = raw_item.css('.menu-item__dish-characteristics span::attr(data-title)')\
+                        .extract_first() or ''
+
+        titles = [item.get_output_value('category'), item.get_output_value('title'), veg_label]
         non_veg_re = re.compile(r'((non[ \-]veg)|(chicken))', flags=re.I)
 
         if any(non_veg_re.findall(title) for title in titles):
@@ -228,7 +266,7 @@ class FoodPandaParser(scrapy.Spider):
 
 
 class FoodPandaCrawler(scrapy.Spider):
-    name = "foodpanda"
+    name = "superpanda"
     item_parser = FoodPandaParser()
     Location = namedtuple('Location', ['city', 'address'])
 
@@ -253,22 +291,19 @@ class FoodPandaCrawler(scrapy.Spider):
 
     def parse(self, response):
         locations = self.read('locations.csv')
-        cities = self.get_cities(response)
+        cities = self.fetch_cities(response)
 
         for location in locations:
             city_id = self.get_city_id(cities, location.city)
-            normalized_address = location.address.replace(' ', '+')
-
             if not city_id:
-                logging.debug('CITY NOT FOUND')
-                logging.debug(location.city)
                 continue
 
-            request = scrapy.Request(f'https://www.foodpanda.in/location-suggestions-ajax?'
-                                     f'cityId={city_id}&area={normalized_address}&area_id=&pickup='
-                                     f'&sort=&tracking_id=', callback=self.parse_suggestion)
+            normalized_address = location.address.replace(' ', '+')
+            url = 'https://www.foodpanda.in/location-suggestions-ajax?cityId={city_id}' \
+                  '&area={address}&area_id=&pickup=&sort=&' \
+                  'tracking_id='.format(city_id=city_id, address=normalized_address)
+            request = scrapy.Request(url, callback=self.parse_suggestion)
             request.meta['city_id'] = city_id
-            request.meta['location'] = location
             yield request
 
     @staticmethod
@@ -278,7 +313,7 @@ class FoodPandaCrawler(scrapy.Spider):
                 return cities[key]
 
     @staticmethod
-    def get_cities(response):
+    def fetch_cities(response):
         cities = {}
         raw_cities = response.css('#cityId option')
 
@@ -292,11 +327,6 @@ class FoodPandaCrawler(scrapy.Spider):
     def parse_suggestion(self, response):
         suggestion = json.loads(response.text)
 
-        logging.debug('Suggestion')
-        logging.debug(response.meta['location'].city)
-        logging.debug(response.meta['location'].address)
-        logging.debug(suggestion)
-
         if not suggestion:
             return
 
@@ -305,13 +335,8 @@ class FoodPandaCrawler(scrapy.Spider):
         tracking_id = suggestion[0]['fillSearchFormOnSelect']['tracking_id']
         city_id = response.meta['city_id']
 
-        request = scrapy.Request(f'https://www.foodpanda.in/restaurants?cityId={city_id}'
-                                 f'&area={name}&area_id={area_id}&pickup=&sort=&tracking_id='
-                                 f'{tracking_id}', callback=self.item_parser.parse,
-                                 dont_filter=True)
-        request.meta['location'] = response.meta['location']
+        url = 'https://www.foodpanda.in/restaurants?cityId={city_id}&area={name}&area_id=' \
+              '{area_id}&pickup=&sort=&tracking_id={tracking_id}'.format(
+                city_id=city_id, name=name, area_id=area_id, tracking_id=tracking_id)
+        request = scrapy.Request(url, callback=self.item_parser.parse)
         return request
-
-    @staticmethod
-    def print_response(response):
-        logging.info(response.text)
