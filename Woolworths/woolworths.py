@@ -12,8 +12,7 @@ class WoolworthSpider(CrawlSpider):
     start_urls = ["https://www.woolworths.co.za"]
 
     rules = (
-        Rule(LinkExtractor(allow=[r".*/cat/Women[^?]+", r".*/cat/Men[^?]+", r".*/cat/Kids[^?]+", r".*/cat/Baby[^?]+"])
-             , callback='parse_pages'),
+        Rule(LinkExtractor(allow=[r".*/cat/Women[^?]+", r".*/cat/Men[^?]+", r".*/cat/Kids[^?]+", r".*/cat/Baby[^?]+"]), callback='parse_pages'),
     )
 
     def parse_pages(self, response):
@@ -60,18 +59,17 @@ class WoolworthSpider(CrawlSpider):
         product_attributes = data['pdp']['productInfo'].get("productAttributes")
         for attribute in product_attributes:
             if attribute['attributeDisplayName'] == "Brands":
-                if attribute['attributeValue']:
                     return attribute['attributeValue']
-                else:
-                    return "Woolworths"
         return "Woolworths"
 
     def parse_care(self, response, data):
         product_attributes = data['pdp']['productInfo'].get("productAttributes")
+        care = []
         for attribute in product_attributes:
             if attribute['attributeDisplayName'] == "Care":
                 care_url = response.urljoin(attribute['imageURL'])
                 return care_url
+        return care
 
     def parse_url(self, response):
         return response.url
