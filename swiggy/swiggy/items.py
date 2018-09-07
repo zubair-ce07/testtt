@@ -48,6 +48,3 @@ class MenuItemLoader(ItemLoader):
     default_output_processor = TakeFirst()
 
     title_in = clean
-    thumbnail_in = MapCompose(lambda url:
-                              "https://res.cloudinary.com/swiggy/image/upload/"
-                              "fl_lossy,f_auto,q_auto,w_165,h_165,c_fill/{}".format(url))

@@ -1,6 +1,8 @@
 from json import loads
+import re
 
 from scrapy import Spider, Request
+from scrapy.loader.processors import MapCompose
 from scrapy.shell import open_in_browser
 from w3lib.url import add_or_replace_parameter, url_query_parameter
 
@@ -28,6 +30,14 @@ class SwiggyInSpider(Spider):
         {
             "lat": "12.83957",
             "lng": "77.659309"
+        },
+        {
+            "lat": "13.0205017",
+            "lng": "80.1842321"
+        },
+        {
+            "lat": "28.551441",
+            "lng": "77.251741"
         }
     ]
 
@@ -53,8 +63,8 @@ class SwiggyInSpider(Spider):
 
         for restaurant in restaurants:
             if restaurant_name in restaurant["name"]:
-                url = "{}/{}/{}".format(self.restaurent_base_url, restaurant["slugs"]["city"]
-                                        , restaurant["slugs"]["restaurant"])
+                restaurant_url = "{}/{}/{}".format(self.restaurent_base_url, restaurant["slugs"]["city"],
+                                                   restaurant["slugs"]["restaurant"])
 
                 if restaurant_name == "Domino's":
                     lng = url_query_parameter(response.url, "lng")
@@ -64,7 +74,7 @@ class SwiggyInSpider(Spider):
                     url = add_or_replace_parameter(url, "lng", lng)
                     url = add_or_replace_parameter(url, "lat", lat)
                     print("Found ", restaurant_name)
-                    yield Request(url=url, callback=self.parse_dominos)
+                    yield Request(url=url, callback=self.parse_dominos, meta={"url": restaurant_url})
 
                 elif restaurant_name in self.restaurents:
                     meta = {"city": restaurant["city"], "locality": restaurant["locality"],
@@ -72,7 +82,7 @@ class SwiggyInSpider(Spider):
                             "restaurant_id": restaurant["id"]}
 
                     print("Found ", restaurant_name)
-                    yield Request(url=url, callback=self.parse_restaurant, meta=meta)
+                    yield Request(url=restaurant_url, callback=self.parse_restaurant, meta=meta)
 
     def parse_restaurant(self, response):
         il = MenuItemLoader(response=response)
@@ -96,6 +106,7 @@ class SwiggyInSpider(Spider):
         il.add_value("city", raw_menu["city"])
         il.add_value("locality", raw_menu["locality"])
         il.add_value("source", "swiggy")
+        il.add_value("url", response.meta["url"])
         il.add_value("restaurant", raw_menu["name"])
         il.add_value("store_id", raw_menu["id"])
 
@@ -106,7 +117,9 @@ class SwiggyInSpider(Spider):
         def process_entity(il, menu_item):
             il.add_value("title", menu_item["name"])
             il.add_value("description", menu_item["description"])
-            il.add_value("thumbnail", menu_item["cloudinaryImageId"])
+            thumbnail_url = "https://res.cloudinary.com/swiggy/image/upload/" \
+                            "fl_lossy,f_auto,q_auto,w_165,h_165,c_fill/{}".format(menu_item["cloudinaryImageId"])
+            il.add_value("thumbnail", thumbnail_url)
 
             if menu_item["isVeg"]:
                 il.add_value("veg", True)
@@ -114,7 +127,7 @@ class SwiggyInSpider(Spider):
                 il.add_value("veg", False)
 
             if menu_item["price"]:
-                il.add_value("price", menu_item["price"])
+                il.add_value("price", str(menu_item["price"]))
 
             if menu_item.get("ribbon"):
                 il.add_value("promotion", menu_item["ribbon"]["text"])
@@ -123,7 +136,7 @@ class SwiggyInSpider(Spider):
 
         def process_variant(il, variant):
             il.add_value("size", variant["name"])
-            il.add_value("price", variant["price"])
+            il.add_value("price", str(variant["price"]))
             return il
 
         raw_menu = loads(response.text)["data"]
@@ -203,15 +216,13 @@ class SwiggyInSpider(Spider):
         def process_entity(il, menu_item):
             il.add_value("title", menu_item["name"])
             il.add_value("description", menu_item["description"])
-            il.add_value("thumbnail", menu_item["cloudinaryImageId"])
-
+            thumbnail_url = "https://res.cloudinary.com/swiggy/image/upload/" \
+                            "fl_lossy,f_auto,q_auto,w_165,h_165,c_fill/{}".format(menu_item["cloudinaryImageId"])
+            il.add_value("thumbnail", thumbnail_url)
             if menu_item["isVeg"]:
                 il.add_value("veg", True)
             else:
                 il.add_value("veg", False)
-
-            if menu_item["price"]:
-                il.add_value("price", menu_item["price"])
 
             if menu_item.get("ribbon"):
                 il.add_value("promotion", menu_item["ribbon"]["text"])
@@ -220,7 +231,8 @@ class SwiggyInSpider(Spider):
 
         def process_variant(il, variant):
             il.add_value("size", variant["name"])
-            il.add_value("price", variant["price"])
+            il.add_value("price", str(variant["price"]))
+
             return il
 
         raw_meal_xpath = "//script[contains(text(), 'INITIAL_STATE')]"
