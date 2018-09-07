@@ -33,14 +33,7 @@ class NavBar extends Component {
             </NavItem>
             <NavItem eventKey={4} href="#">
               <NavLink to="/follow-players" >
-              <Router>
-        <Route exact path="/" component={Home} />
-        <Route path="/live-scores" component={LiveScores} />
-        <Route path="/player-insights" component={PlayerInsights} />
-        <Route path="/follow-players" component={FollowPlayers} />
-        <Route path="/follow-teams" component={FollowTeams} />
-        <Route path="/teams-home" component={TeamsHome} />
-      </Router>  Follow Players
+                Follow Players
               </NavLink>
             </NavItem>
             <NavItem eventKey={5} href="#">

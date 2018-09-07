@@ -1,10 +1,11 @@
 import React, { Component } from 'react';
 
 import './App.css';
-import NavBar from './components/nav_bar';
-import ArticleListItem from './components/article_list_item';
-import ArticleList from './components/article_list';
-import HeadlinesList from './components/headlines_list';
+import NavBar from './home/components/navBar';
+import ArticleListItem from './home/components/articleListItem';
+import ArticleList from './home/components/articleList';
+import HeadlinesList from './home/components/headlinesList';
+import { BrowserRouter as Router, Route, Link, NavLink } from "react-router-dom";
 
 const ARTICLES = [
   {
@@ -36,13 +37,63 @@ class App extends Component {
 
   render() {
     return (
-        <div>
-          <NavBar />
-          <ArticleList articles={this.state.articles}/>
-          <HeadlinesList />
-        </div>
+        <Router>
+          <div>
+            <NavBar />
+
+              <Route exact path="/" component={Home} />
+              <Route path="/live-scores" component={LiveScores} />
+              <Route path="/player-insights" component={PlayerInsights} />
+              <Route path="/follow-players" component={FollowPlayers} />
+              <Route path="/follow-teams" component={FollowTeams} />
+              <Route path="/teams-home" component={TeamsHome} />
+
+              <ArticleList articles={this.state.articles}/>
+              <HeadlinesList />
+          </div>
+        </Router>
     );
   }
 }
+
+const Home = () => (
+  <div>
+    <h2 >Home</h2>
+    <h2>Home</h2>
+    <h2>Home</h2>
+    <h2>Home</h2>
+  </div>
+);
+
+const LiveScores = () => (
+  <div>
+    <h2>Live Scores</h2>
+  </div>
+);
+
+const PlayerInsights = () => (
+  <div>
+    <h2>Player Insights</h2>
+
+  </div>
+);
+
+const FollowPlayers = () => (
+  <div>
+    <h2>Follow Players</h2>
+  </div>
+);
+
+const FollowTeams = () => (
+  <div>
+    <h2>Follow Teams</h2>
+  </div>
+);
+
+const TeamsHome = () => (
+  <div>
+    <h2>Teams Home</h2>
+  </div>
+);
 
 export default App;
