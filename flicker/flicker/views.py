@@ -1,3 +1,4 @@
+""" Contains views for rendering web pages """
 from flask import request, redirect, url_for, \
     render_template, flash
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -48,17 +49,16 @@ def delete_post(pid):
         post = Post.query.get(pid)
         if post.user.uid == int(session['current_user_id']):
             os.remove(
-                os.path.join(UPLOAD_FOLDER, (post.image_url).split('/')[-1]))
+                os.path.join(UPLOAD_FOLDER, post.image_url.split('/')[-1]))
             db.session.delete(post)
             db.session.commit()
             flash('Post Deleted Successfully')
             return redirect(url_for('index'))
-        else:
-            flash('You are not a valid user to Delete this Post')
-            return redirect(url_for('index'))
-    else:
-        flash('User is not Authenticated')
-        return redirect(url_for('signin'))
+        flash('You are not a valid user to Delete this Post')
+        return redirect(url_for('index'))
+
+    flash('User is not Authenticated')
+    return redirect(url_for('signin'))
 
 
 @app.route('/post/<post_id>', methods=['GET', 'POST'])
@@ -86,9 +86,8 @@ def user_wall():
         user_data = User.query.filter(
             User.uid == session['current_user_id']).first()
         return render_template('user_wall.html', user_data=user_data)
-    else:
-        flash('User is not Authenticated')
-        return redirect(url_for('signin'))
+    flash('User is not Authenticated')
+    return redirect(url_for('signin'))
 
 
 @app.route('/add', methods=['GET', 'POST'])
@@ -110,11 +109,10 @@ def add_post():
                 db.session.add(post)
                 db.session.commit()
                 save_post_tags(blog_post.tag.data, post.pid)
-                flash('Post Created Succesfully')
+                flash('Post Created Successfully')
                 return redirect(url_for('index'))
-            else:
-                flash('Invalid File')
-                return redirect(url_for('add_post'))
+            flash('Invalid File')
+            return redirect(url_for('add_post'))
         return render_template('add.html', blog_post=blog_post)
     flash('User is not Authenticated')
     return redirect(url_for('signin'))
@@ -133,9 +131,8 @@ def user_profile(user_id):
         return render_template('user_wall.html',
                                user_data=user_data,
                                follow_status=follow_status)
-    else:
-        flash('User is not Authenticated')
-        return redirect(url_for('signin'))
+    flash('User is not Authenticated')
+    return redirect(url_for('signin'))
 
 
 @app.route('/search_user', methods=('GET', 'POST'))
@@ -145,13 +142,12 @@ def search_user():
         if request.method == 'POST':
             search_element = request.form.get('search_elem')
             user_data_list = db.session.query(User).filter(
-                User.username.like('%' + search_element + '%')).all()
+                User.username.like('%' + search_element + '%')).filter(
+                User.uid != int(session['current_user_id'])).all()
             return render_template('user_list.html', users_list=user_data_list)
-        else:
-            return render_template('user_list.html', users_list=[])
-    else:
-        flash('User is not Authenticated')
-        return redirect(url_for('signin'))
+        return render_template('user_list.html', users_list=[])
+    flash('User is not Authenticated')
+    return redirect(url_for('signin'))
 
 
 @app.route('/signup', methods=['GET', 'POST'])
@@ -161,11 +157,9 @@ def signup():
     if request.method == 'POST':
         if not validate_username(signup_form.username.data):
             flash('Username Already Exists')
-            print("Email Invalid")
             return redirect(url_for('signup'))
         if not validate_user_email(signup_form.email.data):
             flash('Email Already Exists')
-            print("username Invalid")
             return redirect(url_for('signup'))
         else:
             file = request.files['file']
@@ -181,17 +175,16 @@ def signup():
                                      signup_form.email.data)
                 db.session.add(register_user)
                 db.session.commit()
-                flash('User Registered Succesfully')
+                flash('User Registered Successfully')
                 return redirect(url_for('signin'))
-            else:
-                flash('File Not Alllowed')
-                return redirect(url_for('signup'))
+            flash('File Not Allowed')
+            return redirect(url_for('signup'))
     return render_template('signup.html', signup_form=signup_form)
 
 
 @app.route('/signin', methods=['GET', 'POST'])
 def signin():
-    """Signin User"""
+    """SignIn User"""
     signin_form = SignInForm()
     if request.method == 'POST':
         signin_form_email = signin_form.email.data
@@ -204,12 +197,10 @@ def signin():
                 session['current_user_id'] = log_user.uid
                 session['user_available'] = True
                 return redirect(url_for('index'))
-            else:
-                flash('Incorrect Password Entered')
-                return render_template('signin.html', signin_form=signin_form)
-        else:
-            flash('Email Not Registered')
+            flash('Incorrect Password Entered')
             return render_template('signin.html', signin_form=signin_form)
+        flash('Email Not Registered')
+        return render_template('signin.html', signin_form=signin_form)
     return render_template('signin.html', signin_form=signin_form)
 
 

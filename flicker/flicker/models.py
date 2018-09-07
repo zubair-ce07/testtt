@@ -36,6 +36,8 @@ class Tag(db.Model):
 
 
 class Follow(db.Model):
+    Follow = 1
+    Un_Follow = 0
     follower_userid = db.Column(db.Integer, db.ForeignKey('user.uid'),
                                 primary_key=True)
     following_userid = db.Column(db.Integer, db.ForeignKey('user.uid'),
@@ -86,6 +88,7 @@ class Comment(db.Model):
 
 
 class Like(db.Model):
+    UN_LIKE = 0
     post_id = db.Column(db.Integer, db.ForeignKey('post.pid'),
                         primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.uid'),
