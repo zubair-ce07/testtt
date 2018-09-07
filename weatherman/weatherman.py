@@ -278,7 +278,8 @@ def get_month(month):
 def validate_date(date):
     """ function to validate year/month string """
     try:
-        if date != datetime.strptime(date, "%Y/%m").strftime('%Y/%m'):
+        var = re.match("^\d{4}/(([2-9]$)|(0[1-9]$)|(1($|[0-2])))", date)
+        if not var:
             raise ValueError
         return date
     except ValueError:
