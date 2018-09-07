@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}Profile{% endblock %}
+{% block content %}
+<div class="container h-100 d-flex justify-content-center">
+    <div class="jumbotron my-auto" style="background-color:white">
+        <div class="row">
+            <div class="col-sm-3">
+                <div class="panel panel-primary">
+                    <div class="panel-heading">{{ user_data.username }}
+                    </div>
+                    <div class="panel-body">
+                        {% if user_data.profile_image_url %}
+                        <img src="{{ url_for('static', filename = user_data.profile_image_url) }}"
+                             class="profile-img-card"/>
+                        {% else %}
+                        <img class="profile-img-card"
+                             src="//ssl.gstatic.com/accounts/ui/avatar_2x.png"/>
+                        {% endif %}
+                        <div class="list-group">
+                            <a href="#"
+                               class="list-group-item">Email: {{user_data.email
+                                }}</a>
+                        </div>
+                        <div class="list-group">
+                            <a href="#"
+                               class="list-group-item">Join Date: {{
+                                user_data.date_of_reg.strftime('%d-%m-%Y')
+                                }}</a>
+                        </div>
+                        {% if user_data.uid !=
+                        session['current_user_id']%}
+                        <form action="" method="POST">
+                            {% if follow_status %}
+                            <input type="hidden" name="follow_status_form"
+                                   value="1">
+                            {% else %}
+                            <input type="hidden" name="follow_status_form"
+                                   value="0">
+                            {% endif %}
+                            {% if follow_status %}
+                            <p>
+                                <button class="btn btn-danger">Un Follow
+                                </button>
+                            </p>
+                            {% else %}
+                            <p>
+                                <button class="btn btn-primary">Follow</button>
+                            </p>
+                            {% endif%}
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-5">
+                <div class="panel panel-primary">
+                    <div class="panel-heading">User's Posts</div>
+                    <div class="panel-body">
+                        {% for posts_data in user_data.post %}
+                        <div class="well">
+                            <div>
+                                <h3 class="panel-title">
+                                    {{posts_data.title}}</h3>
+                            </div>
+                            <div class="panel-body">
+                                <h3>
+                                    <img src="{{ url_for('static', filename = posts_data.user.profile_image_url) }}"
+                                         class="img-thumbnail" width="50dp"
+                                         height="30dp"/>
+                                    <a href="/user/{{ posts_data.user.uid }}">{{posts_data.user.username}}</a>
+                                </h3>
+                                <img src="{{ url_for('static', filename = posts_data.image_url) }}"
+                                     class="img-thumbnail img-responsive"
+                                     width="500dp" height="300dp"/>
+                                <h6>
+                                    {{posts_data.created_time.strftime('%H-%M')}}
+                                    |
+                                    {{posts_data.created_time.strftime('%d-%m-%Y')}}
+                                </h6>
+                                {% if posts_data.puid
+                                ==session['current_user_id'] %}
+                                <a class="glyphicon glyphicon-trash btn btn-danger btn-xs"
+                                   id="del" href="/delete/{{ posts_data.pid }}"
+                                   onclick="return confirm('Are you sure?');">Delete</a><br/><br>
+                                {% endif %}
+                                <div>
+                                <br>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-danger">
+                        No Posts
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-4">
+            <div class="container-fluid">
+                <div class="panel panel-primary">
+                    <div class="panel-heading">Followed Users</div>
+                    <div class="panel-body">
+                        <div class="list-group">
+                            {% for user in user_data.follower %}
+                            <a href="/user/{{ user.following_user.uid }}"
+                               class="list-group-item">{{
+                                user.following_user.username }}</a>
+                            {% else %}
+                            <div class="alert alert-danger">
+                                No Followed Users
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}
