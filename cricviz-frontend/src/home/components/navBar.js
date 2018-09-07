@@ -1,87 +1,131 @@
 import React, { Component } from 'react';
-import { Navbar, Nav, NavItem, NavDropdown, MenuItem, FormGroup, FormControl, Button } from 'react-bootstrap';
+import { OverlayTrigger, Popover, Navbar, Nav, NavItem, NavDropdown, MenuItem, FormGroup, FormControl, Button } from 'react-bootstrap';
 import { BrowserRouter as Router, Route, Link, NavLink } from "react-router-dom";
+
+
+const popoverLogin = (
+  <Popover id="popover-trigger-click-root-close" title="Login Here">
+    <form>
+      <label>
+        UserName:
+        <input type="text" name="username" />
+      </label>
+      <label>
+        Password:
+        <input type="password" name="password" />
+      </label>
+      <input type="submit" value="Login" />
+    </form>
+  </Popover>
+);
+
+const popoverSignUp = (
+  <Popover id="popover-trigger-click-root-close" title="SignUp Here">
+    <form>
+      <label>
+        UserName:
+        <input type="text" name="username" />
+      </label>
+      <label>
+        Password:
+        <input type="password" name="password1" />
+      </label>
+      <label>
+        Repeat Password:
+        <input type="password" name="password2" />
+      </label>
+      <input type="submit" value="SignUp" />
+    </form>
+  </Popover>
+);
 
 class NavBar extends Component {
 
   render() {
     return (
       <div>
-      <Navbar className="navbar navbar-expand-lg bg-primary" bsStyle="primary" collapseOnSelect>
-        <Navbar.Header>
-          <Navbar.Brand>
-            <a href="#brand">CricViz</a>
-          </Navbar.Brand>
-          <Navbar.Toggle />
-        </Navbar.Header>
-        <Navbar.Collapse>
-          <Nav pullLeft>
-            <NavItem>
-              <NavLink to="/" >
-                <Button className="btn btn-dark btn-outline-warning my-2 my-sm-0">Home</Button>
-              </NavLink>
-            </NavItem>
-            <NavItem>
-              <NavLink to="/live-scores" >
-                Live Scores
-              </NavLink>
-            </NavItem>
-            <NavItem eventKey={3} href="#">
-              <NavLink to="/player-insights" >
-                Player Insights
-              </NavLink>
-            </NavItem>
-            <NavItem eventKey={4} href="#">
-              <NavLink to="/follow-players" >
-                Follow Players
-              </NavLink>
-            </NavItem>
-            <NavItem eventKey={5} href="#">
-              <NavLink to="/follow-teams" >
-                Follow Teams
-              </NavLink>
-            </NavItem>
-            <NavDropdown eventKey={6} title="Teams" id="basic-nav-dropdown">
-              <MenuItem eventKey={6.1}>
-                <NavLink to="/teams-home">
-                  Teams Home
+        <Navbar className="navbar navbar-expand-lg bg-primary" bsStyle="primary" collapseOnSelect>
+          <Navbar.Header>
+            <Navbar.Brand>
+              <a href="#brand">CricViz</a>
+            </Navbar.Brand>
+            <Navbar.Toggle />
+          </Navbar.Header>
+          <Navbar.Collapse>
+            <Nav pullLeft>
+              <NavItem>
+                <NavLink to="/" >
+                  <Button className="btn btn-dark btn-outline-warning my-2 my-sm-0">Home</Button>
                 </NavLink>
-              </MenuItem>
-              <MenuItem divider />
-              <MenuItem eventKey={6.2}>Pakistan</MenuItem>
-              <MenuItem eventKey={6.3}>India</MenuItem>
-              <MenuItem eventKey={6.4}>Australia</MenuItem>
-              <MenuItem eventKey={6.5}>England</MenuItem>
-              <MenuItem eventKey={6.6}>South Africa</MenuItem>
-              <MenuItem eventKey={6.7}>Srilanka</MenuItem>
-              <MenuItem eventKey={6.8}>West Indies</MenuItem>
-              <MenuItem eventKey={6.9}>Zimbabwe</MenuItem>
-              <MenuItem eventKey={6.10}>Ireland</MenuItem>
-            </NavDropdown>
+              </NavItem>
+              <NavItem>
+                <NavLink to="/live-scores" >
+                  Live Scores
+                </NavLink>
+              </NavItem>
+              <NavItem eventKey={3} href="#">
+                <NavLink to="/playepopoverClickRootCloser-insights" >
+                  Player Insights
+                </NavLink>
+              </NavItem>
+              <NavItem eventKey={4} href="#">
+                <NavLink to="/follow-players" >
+                  Follow Players
+                </NavLink>
+              </NavItem>
+              <NavItem eventKey={5} href="#">
+                <NavLink to="/follow-teams" >
+                  Follow Teams
+                </NavLink>
+              </NavItem>
+              <NavDropdown eventKey={6} title="Teams" id="basic-nav-dropdown">
+                <MenuItem eventKey={6.1}>
+                  <NavLink to="/teams-home">
+                    Teams Home
+                  </NavLink>
+                </MenuItem>
+                <MenuItem divider />
+                <MenuItem eventKey={6.2}>Pakistan</MenuItem>
+                <MenuItem eventKey={6.3}>India</MenuItem>
+                <MenuItem eventKey={6.4}>Australia</MenuItem>
+                <MenuItem eventKey={6.5}>England</MenuItem>
+                <MenuItem eventKey={6.6}>South Africa</MenuItem>
+                <MenuItem eventKey={6.7}>Srilanka</MenuItem>
+                <MenuItem eventKey={6.8}>West Indies</MenuItem>
+                <MenuItem eventKey={6.9}>Zimbabwe</MenuItem>
+                <MenuItem eventKey={6.10}>Ireland</MenuItem>
+              </NavDropdown>
 
-          </Nav>
-          <Nav pullRight>
+            </Nav>
+            <Nav pullRight>
 
-              <FormGroup>
-                <FormControl type="text" placeholder="Search for players/teams" />
-              </FormGroup>{' '}
-              <Button className="btn btn-dark btn-outline-warning my-2 my-sm-0" bsStyle="primary" type="submit" >Search</Button>
+                <FormGroup>
+                  <FormControl type="text" placeholder="Search for players/teams" />
+                </FormGroup>{' '}
+                <Button className="btn btn-dark btn-outline-warning my-2 my-sm-0" bsStyle="primary" type="submit" >Search</Button>
 
+                <OverlayTrigger
+                  trigger="click"
+                  rootClose
+                  placement="bottom"
+                  overlay={popoverLogin}
+                >
+                    <button type="button" className="btn btn-info" id="myLoginBtn">Login</button>
+                </OverlayTrigger>
 
-              <div className="btn-group" role="group" aria-label="Basic example">
-                <button type="button" className="btn btn-info" id="myLoginBtn">Login</button>
-              </div>
+                <OverlayTrigger
+                  trigger="click"
+                  rootClose
+                  placement="bottom"
+                  overlay={popoverSignUp}
+                >
+                  <button type="button" className="btn btn-info" id="mySignUpBtn">Sign Up</button>
+                </OverlayTrigger>
 
-              <div className="btn-group" role="group" aria-label="Basic example">
-                <button type="button" className="btn btn-info" id="mySignUpBtn">Sign Up</button>
-              </div>
+            </Nav>
+          </Navbar.Collapse>
 
-          </Nav>
-        </Navbar.Collapse>
-
-
-      </Navbar>
-
+        </Navbar>
       </div>
     );
   }
