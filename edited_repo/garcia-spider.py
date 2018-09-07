@@ -91,7 +91,7 @@ class GraciaParseSpider(BaseParseSpider, Mixin):
             sku = common_sku.copy()
             sku['size'] = clean(size_s.css('::text'))[0]
 
-            if size_s.css('[class*="disabled"]'):
+            if size_s.css('.disabled'):
                 sku['out_of_stock'] = True
 
             skus[sku['size']] = sku
