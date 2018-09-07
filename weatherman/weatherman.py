@@ -173,11 +173,11 @@ def calculate_extremes(rec_list):
     :param rec_list: data for calculation
     :return:
     """
-    max_temp_entry = WheatherReadings(None,0,0,0,0)
-    min_temp_entry =  WheatherReadings(None,0,0,0,0)
-    max_humidity_entry =  WheatherReadings(None,0,0,0,0)
+    max_temp_entry = rec_list[0]
+    min_temp_entry =  rec_list[0]
+    max_humidity_entry =  rec_list[0]
 
-    for record in rec_list:
+    for record in rec_list[1:]:
         if (record.max_temperature and
                 (int(record.max_temperature)  >
                  int(max_temp_entry.max_temperature))):
@@ -272,13 +272,12 @@ def get_month(month):
     return datetime.strptime(month, '%m').strftime('%b')
 
 
-def validate_date(date):
+def validate_date(date_text):
     """ function to validate year/month string """
     try:
-        var = re.match("^\d{4}/(([2-9]$)|(0[1-9]$)|(1($|[0-2])))", date)
-        if not var:
+        if not datetime.strptime(date_text, '%Y/%m'):
             raise ValueError
-        return date
+        return date_text
     except ValueError:
         print("\nInvalid option [Required year/month ie 2011/05]\n")
         return False
@@ -286,6 +285,7 @@ def validate_date(date):
 
 def get_avg(data):
     return float(data.get("sum")) / data.get("count")
+
 
 if __name__ == '__main__':
     controller = Controller()
