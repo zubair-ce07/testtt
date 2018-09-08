@@ -6,24 +6,29 @@ from ProductScrapper.items import ProductItem
 
 class ProductSpider(scrapy.Spider):
     name = 'spider'
-    item_counter = 0
-    base_url = "https://www.ernstings-family.de:443/wcs/"
-    pre_url = "resources/store/10151/productview/bySearchTermDetails/*?"
-    post_url = "pageNumber={}&pageSize=24&categoryId={}"
-    base_image_path = "//images.ernstings-family.com/product_detail/"
 
     start_urls = ['https://www.ernstings-family.de/']
 
-    def parse_empty(self, response):
-        pass
-
     def parse(self, response):
+        """
+        This callback scraps the categories links and yields
+        callbacks to them.
+        :param response: the response object from start_ul
+        :return: Yields callbacks for all categories
+        """
         categories_path = ".main-navigation-inner-wrapper li a::attr(href)"
         categories = response.css(categories_path).extract()
         for cat in categories:
             yield scrapy.Request(url=cat, callback=self.parse_main_page)
 
     def parse_main_page(self, response):
+        """
+        This callback scraps the sub-categories from each
+        category page and yields callback for all of them.
+        :param response: response object received from hitting
+        category link
+        :return: yields callbacks for all sub-categories
+        """
         sub_cat_path = "li[class *= 'item-level1']>a::attr(href)"
         sub_categories = response.css(sub_cat_path).extract()
 
@@ -32,38 +37,51 @@ class ProductSpider(scrapy.Spider):
 
         #  remove duplicate sale links from special categories
         if "sale" not in response.url:
-            special_categories = [cat for cat in special_categories if "sale" not in cat]
+            special_categories = [cat for cat in special_categories
+                                  if "sale" not in cat]
 
-        #  follow all level 1 and special categories
-        for sub_cat in sub_categories:
-            yield scrapy.Request(url=sub_cat, callback=self.parse_filter_page)
-        for special_cat in special_categories:
-            yield scrapy.Request(url=special_cat, callback=self.parse_filter_page)
+        for cat in sub_categories:
+            yield scrapy.Request(url=cat, callback=self.parse_filter_page)
+        for cat in special_categories:
+            yield scrapy.Request(url=cat, callback=self.parse_filter_page)
 
-    '''
-    for parse_filter function
-     Check total_item_count, get total no of pages to create
-     yield that many page requests with new link
-    '''
     def parse_filter_page(self, response):
+        """
+        Check total_item_count, get total no of pages to parse
+        and follows that many yield requests.
+        :param response: response object received from
+        hitting sub-category link
+        :return: Yields callback requests for all pages of
+         current sub-category
+        """
+        base_url = "https://www.ernstings-family.de:443/wcs/"
+        pre_url = "resources/store/10151/productview/bySearchTermDetails/*?"
+        post_url = "pageNumber={}&pageSize=24&categoryId={}"
         scripts_path = "script[type *= 'text/javascript']::text"
+        product_count_path = ".product-count-holder::text"
         scripts = response.css(scripts_path).extract()
         category_id = scripts[3].split('categoryId = "')[1].split('"')[0]
-        print("CategoryId: "+category_id)
 
         # if there are more than one pages,
         # traverse next pages unless finished
-        total_items = response.css(".product-count-holder::text").extract_first()
+        total_items = response.css(product_count_path).extract_first()
         if total_items:
             total_item_count = int(total_items.split(" ")[0])
-            max_page = int(total_item_count/24)+1
-            for curr_page in range(1, max_page+1):
-                url = self.base_url+self.pre_url+self.post_url
-                url = url.format(curr_page, int(category_id))
-                yield scrapy.Request(url=url, callback=self.parse_items_from_json)
+            max_page = int(total_item_count / 24) + 1
+            for curr_page in range(1, max_page + 1):
+                full_url = base_url + pre_url + post_url
+                next_page_url = full_url.format(curr_page, int(category_id))
+                yield scrapy.Request(url=next_page_url,
+                                     callback=self.parse_items_from_json)
 
     def parse_items_from_json(self, response):
-        self.item_counter += 1
+        """
+        parse json object received in callback to retrieve
+        products per page.
+        :param response: response object containing products per page
+        :return: Yields product Items
+        """
+        base_image_path = "//images.ernstings-family.com/product_detail/"
         # json object containing per page items
         data = json.loads(response.body)
         # it will be parsed to obtain all fields of an Item
@@ -83,24 +101,31 @@ class ProductSpider(scrapy.Spider):
             images = []
             for val in range(0, len(item['Attachments'])):
                 image_name = item['Attachments'][val]['path']
-                images.append(self.base_image_path + image_name)
+                images.append(base_image_path + image_name)
             product['image_urls'] = images
 
             sku_count = item['numberOfSKUs']
             skus = []
             for var in range(0, int(sku_count)):
-                sku_id = item['SKUs'][var]['SKUUniqueID']
-                sku_size = item['SKUs'][var]['Attributes'][0]['Values'][0]['values']
-                sku_price = item['SKUs'][var]['Price'][0]['SKUPriceValue']
-                skus.append({'id': sku_id, 'size': sku_size, 'price': sku_price})
+                current_sku = item['SKUs'][var]
+                sku_id = current_sku['SKUUniqueID']
+                sku_size = current_sku['Attributes'][0]['Values'][0]['values']
+                sku_price = current_sku['Price'][0]['SKUPriceValue']
+                skus.append({'id': sku_id,
+                             'size': sku_size,
+                             'price': sku_price})
             product['skus'] = skus
 
             attributes = item['Attributes']
             for attribute in attributes:
                 if attribute['identifier'] == 'details':
                     description = attribute['Values'][0]['values']
-                    detail = description.split("</p>")[0].split("<p>")[1] + "\n"
-                    points = description.split("</p>")[1].split("<li>")
+                    detail = description.split("</p>")[0].split("<p>")[1]
+                    detail += "\n"
+                    points_string = description.split("</ul>")[0]
+                    points_string = points_string.split("<p>")[1]
+                    points_string = points_string.split("</p>")[1]
+                    points = points_string.split("<li>")
                     for point in points[1:]:
                         detail += point.replace("</li>\n", "")
                     product['detail'] = detail
