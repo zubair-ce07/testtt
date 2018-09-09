@@ -1,12 +1,9 @@
 {% extends 'profile/base.html' %}
-{% block title %}Add a New Album{% endblock %}
-{% block albums_active %}active{% endblock %}
+{% block title %}Edit{% endblock %}
 
 {% block body %}
     <div class="container-fluid">
-
         <div class="row">
-
             <div class="col-sm-12 col-md-7">
                 <div class="panel panel-default">
                     <div class="panel-body">
@@ -14,12 +11,16 @@
                         <form class="form-horizontal" role="form" action="" method="post" enctype="multipart/form-data">
                             {% csrf_token %}
                             {% include 'profile/form_template.html' %}
-                            {% if form.error %}
-                            <div class="form-group" >
-                                <div class="col-sm-offset-2 col-sm-4" style="background: red; color: white">
-                                    <span >{{ form.non_field_errors }}</span>
+                            {% if form.non_field_errors %}
+                                <div class="form-group" >
+                                    <div class="col-sm-offset-2 col-sm-3" style="background: red; color: white">
+                                    <ul>
+                                        {% for error in form.non_field_errors %}
+                                            <li>{{ error }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                    </div>
                                 </div>
-                            </div>
                             {% endif %}
                             <div class="form-group">
                                 <div class="col-sm-offset-2 col-sm-1">
@@ -27,7 +28,7 @@
                                 </div>
                                 <div class="col-sm-1">
                                     <a href="{% url 'users:index' %}">
-                                        <button type="submit" class="btn btn-danger">Cancel</button>
+                                        <button type="button" class="btn btn-danger">Cancel</button>
                                     </a>
                                 </div>
                             </div>
@@ -35,7 +36,6 @@
                     </div>
                 </div>
             </div>
-
         </div>
     </div>
 {% endblock %}

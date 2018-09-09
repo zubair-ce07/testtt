@@ -4,6 +4,9 @@ from validate_email import validate_email
 
 
 class UserForm(forms.ModelForm):
+    """
+    User form
+    """
     password = forms.CharField(widget=forms.PasswordInput)
 
     class Meta:
@@ -11,25 +14,37 @@ class UserForm(forms.ModelForm):
         fields = ['username', 'first_name', 'last_name', 'email', 'password']
 
     def clean_email(self):
+        """
+        Validate email
+        :return: Email or ValidationError
+        """
         email = self.cleaned_data.get('email')
 
         if not validate_email(email):
             raise forms.ValidationError('Enter a valid email')
 
         if User.objects.filter(email=email):
-            raise forms.ValidationError(u'Email already exists')
+            raise forms.ValidationError('Email already exists')
 
         return email
 
     def clean_first_name(self):
+        """
+        Validate first name
+        :return: first name or ValidationError
+        """
         first_name = self.cleaned_data["first_name"].strip()
 
         if not first_name:
             raise forms.ValidationError("First name is required.")
 
-        return self.cleaned_data["first_name"].strip()
+        return first_name
 
     def clean_last_name(self):
+        """
+        Validate last name
+        :return: last name or ValidationError
+        """
         last_name = self.cleaned_data["last_name"].strip()
 
         if not last_name:

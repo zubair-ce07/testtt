@@ -1,30 +1,27 @@
 {% extends 'profile/base.html' %}
 {% block title %} user details {% endblock %}
+
 {% block body %}
-
     <div class="container-fluid songs-container">
-
         <div class="row">
-
             <!-- Left user Info -->
             <div class="col-sm-4 col-md-3">
                 <div class="panel panel-default">
                     <div class="panel-body">
-                        <a href="{% url 'users:index' %}">
-                            {% if profile.profile_photo %}
+                        {% if profile.profile_photo %}
+                            <a href="{{ profile.profile_photo.url }}">
                                 <img src="{{ profile.profile_photo.url }}" class="img-responsive">
-                            {% else %}
-                                <h3><a href="{% url 'users:edit_profile' profile.id %}">Add Profile Image</a></h3>
-                            {% endif %}
-                        </a>
+                            </a>
+                        {% else %}
+                            <h3><a href="{% url 'users:edit_profile' %}">Add Profile Image</a></h3>
+                        {% endif %}
                         <h1>{{ user.username }} <br>
                             <small>{{ user.email}}</small>
                         </h1>
                     </div>
                 </div>
             </div>
-
-            <!-- Right Song Info -->
+            <!-- Right Info Info -->
             <div class="col-sm-8 col-md-9">
                 <div class="panel panel-default">
                     <div class="panel-body">
@@ -44,7 +41,7 @@
                                     <td>{{ user.first_name }} {{ user.last_name }}</td>
                                     <td>{{ user.email }}</td>
                                     <td>
-                                        <a href="{% url 'users:edit_basic_info' user.id %}">
+                                        <a href="{% url 'users:edit_basic_info' %}">
                                             <button type="submit" class="btn btn-success btn-xs">
                                                 <span class="glyphicon glyphicon-edit"></span>&nbsp; Update
                                             </button>
@@ -73,7 +70,7 @@
                                     <td>{{ profile.age }}</td>
                                     <td>{{ profile.gender }}</td>
                                     <td>
-                                        <a href="{% url 'users:edit_profile' profile.id %}">
+                                        <a href="{% url 'users:edit_profile' %}">
                                             <button type="submit" class="btn btn-success btn-xs">
                                                 <span class="glyphicon glyphicon-edit"></span>&nbsp; Update
                                             </button>
@@ -84,10 +81,7 @@
                         </table>
                     </div>
                 </div>
-
             </div>
-
         </div>
-
     </div>
 {% endblock %}
