@@ -15,6 +15,7 @@ class MixinUK(Mixin):
     retailer = Mixin.retailer + '-uk'
     market = 'UK'
     start_urls = ['https://www.lindex.com/uk/']
+    one_sizes = ['0']
 
 
 class LindexParseSpider(BaseParseSpider):
@@ -54,7 +55,7 @@ class LindexParseSpider(BaseParseSpider):
     def skus(self, response):
         skus = {}
         colour = response.css('#ProductPage .colors li')
-        sizes = response.css('.sizeSelector option:not([selected])')
+        sizes = response.css('.sizeSelector option:not([value="-1"])')
         common_skus = self.product_pricing_common(response)
 
         for colour_s, size_s in product(colour, sizes):
@@ -70,7 +71,8 @@ class LindexParseSpider(BaseParseSpider):
                 split_on_t = '-'
 
             sku['colour'] = clean(colour_s.css('::attr(title)'))[0]
-            sku['size'] = size.split(split_on_t)[0]
+            size = size.split(split_on_t)[0]
+            sku['size'] = self.one_size if size.lower() in self.one_sizes else size
 
             skus[f"{colour_id}_{size_id}"] = sku
 
