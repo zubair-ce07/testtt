@@ -14,11 +14,7 @@ const ArticleList = (props) => {
       <div>
         <ul className="col-md-8 list-group">
           {AllArticles}
-        </ul>
-
-        <article className="col-sm-4">
-          <h3 className="text-left">Top Headlines</h3>
-        </article>
+        </ul>    
       </div>
     );
 }
