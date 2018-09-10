@@ -1,10 +1,8 @@
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import HttpResponseRedirect
 from django.urls import reverse_lazy, reverse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, update_session_auth_hash
-from django.utils.decorators import method_decorator
 from django.views import generic
 from django.views.generic import View
 from django.views.generic.edit import UpdateView
@@ -21,10 +19,6 @@ class IndexDetailView(generic.DetailView):
     model = User
     template_name = 'profile/index.html'
     context_object_name = 'user'
-
-    @method_decorator(login_required)
-    def dispatch(self, request, *args, **kwargs):
-        return super(IndexDetailView, self).dispatch(request, *args, **kwargs)
 
     def get_object(self, queryset=None):
         if self.request.user.is_authenticated:
@@ -79,10 +73,6 @@ class ProfileUpdate(UpdateView):
     fields = ['address', 'age', 'profile_photo', 'gender']
     template_name = 'profile/generic_form.html'
 
-    @method_decorator(login_required)
-    def dispatch(self, request, *args, **kwargs):
-        return super(ProfileUpdate, self).dispatch(request, *args, **kwargs)
-
     def get_object(self, queryset=None):
         if self.request.user.is_authenticated:
             return Profile.objects.get(user__pk=self.request.user.pk)
@@ -100,10 +90,6 @@ class UserUpdate(UpdateView):
     form_class = UserForm
     success_url = reverse_lazy('users:index')
     template_name = 'profile/generic_form.html'
-
-    @method_decorator(login_required)
-    def dispatch(self, request, *args, **kwargs):
-        return super(UserUpdate, self).dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
         email = validate_email(form.cleaned_data['email'].strip())
