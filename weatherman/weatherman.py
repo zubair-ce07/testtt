@@ -281,6 +281,7 @@ def validate_date(date_text):
 def get_avg(data):
     return float(data.get("sum")) / data.get("count")
 
+
 def convert_to_int(data):
     return int(data) if data else data
 
