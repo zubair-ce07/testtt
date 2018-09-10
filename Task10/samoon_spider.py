@@ -2,69 +2,58 @@ import json
 
 from scrapy.spiders import Rule
 from scrapy.linkextractors import LinkExtractor
-from .base import BaseParseSpider, BaseCrawlSpider, clean
+from .base import BaseParseSpider, BaseCrawlSpider, clean, soupify
 
 
 class Mixin:
     retailer = 'samoon'
-    allowed_domains = ['www.samoon.com', 'www.house-of-gerryweber.com']
+    allowed_domains = ['www.samoon.com']
     gender = 'women'
     merch_map = [
         ('Online Exclusive', 'ONLINE EXCLUSIVE'),
     ]
-    unwanted_description = ['Product details', 'Care instructions', 'Material']
+    deny_care = ['Care instructions', 'Material']
 
 
 class MixinUK(Mixin):
     retailer = Mixin.retailer+"-uk"
     market = 'UK'
     start_urls = ["https://www.samoon.com/en-gb/"]
-    lang = 'en'
-    retailer_currency = 'GBP'
 
 
 class MixinDE(Mixin):
     retailer = Mixin.retailer+"-de"
     market = 'DE'
     start_urls = ["https://www.samoon.com/de-de"]
-    lang = 'de'
-    retailer_currency = 'EUR'
 
 
 class MixinNL(Mixin):
     retailer = Mixin.retailer+"-nl"
     market = 'NL'
     start_urls = ["https://www.samoon.com/nl-nl"]
-    lang = 'nl'
-    retailer_currency = 'EUR'
 
 
 class MixinPL(Mixin):
     retailer = Mixin.retailer+"-pl"
     market = 'PL'
     start_urls = ["https://www.samoon.com/pl-pl"]
-    lang = 'pl'
-    retailer_currency = 'PLN'
-
 
 class MixinFR(Mixin):
     retailer = Mixin.retailer+"-fr"
     market = 'FR'
     start_urls = ["https://www.samoon.com/fr-fr"]
-    lang = 'fr'
-    retailer_currency = 'EUR'
 
 
 class MixinSE(Mixin):
     retailer = Mixin.retailer+"-se"
     market = 'SE'
     start_urls = ["https://www.samoon.com/en-se"]
-    lang = 'en'
-    retailer_currency = 'SEK'
 
 
 class SamoonParseSpider(BaseParseSpider, Mixin):
     price_css = 'div.pricing span.price *::text'
+    description_css = 'div.productdescription-information-box *::text'
+    care_css = 'section.pdp-material-description *::text'
 
     def parse(self, response):
         sku_id = self.product_id(response)
@@ -110,12 +99,12 @@ class SamoonParseSpider(BaseParseSpider, Mixin):
         return self.next_request_or_garment(garment)
 
     def color_requests(self, response):
-        requests = response.css('a.swatch-color__link::attr(href)').extract()
+        requests = clean(response.css('a.swatch-color__link::attr(href)'))
         return [response.follow(url, callback=self.parse_color, dont_filter=True)
                 for url in requests]
 
     def size_requests(self, response):
-        requests = response.css('a.swatch-size__link::attr(href)').extract()
+        requests = clean(response.css('a.swatch-size__link::attr(href)'))
         return [response.follow(url, callback=self.parse_size, dont_filter=True)
                 for url in requests]
 
@@ -124,10 +113,11 @@ class SamoonParseSpider(BaseParseSpider, Mixin):
         sku = self.product_pricing_common(response)
 
         css = '.variation-selection::attr(data-attributes)'
-        raw_sku = json.loads(response.css(css).extract_first())
+        raw_sku = json.loads(clean(response.css(css))[0])
 
         sku["colour"] = raw_sku["color"]["displayValue"]
-        sku["size"] = raw_sku["size"]["displayValue"] if raw_sku.get("size") else self.one_size
+        size = raw_sku.get("size")
+        sku["size"] = size["displayValue"] if size else self.one_size
 
         sku_id = f'{sku["colour"]}_{sku["size"]}'
         skus[sku_id] = sku
@@ -138,31 +128,24 @@ class SamoonParseSpider(BaseParseSpider, Mixin):
         return clean(response.css('.pdp-addtocart #pid::attr(value)'))[0]
 
     def product_name(self, response):
-        return clean(response.css('.product-details-container .product-name::text'))[0]
+        css = '.product-details-container .product-name::text'
+        return clean(response.css(css))[0]
 
     def product_category(self, response):
         return clean(response.css('.breadcrumb *::text'))[1:]
 
     def image_urls(self, response):
         selector = response.css('.gallery-thumbs-wrapper')
-        srcs = selector.css('img::attr(src), img::attr(data-src)').extract()
-        return [response.urljoin(src).replace("small", "large") for src in srcs]
+        urls = clean(selector.css('img::attr(src), img::attr(data-src)'))
+
+        return [response.urljoin(src).replace("small", "large") for src in urls]
 
     def merch_info(self, response):
-        merch_info = clean(response.css('.product-flag::text'))+self.product_description(response)
-        return [merch for merch_vale, merch in self.merch_map if merch_vale in merch_info]
+        soup = clean(response.css('.product-flag::text'))
+        soup += self.product_description(response)
+        soup = soupify(soup).lower()
 
-    def raw_description(self, response):
-        css = 'div.productdescription-information-box *::text'
-        return [x for x in clean(response.css(css)) if x not in self.unwanted_description]
-
-    def product_description(self, response):
-        return [x for x in self.raw_description(response) if not self.care_criteria(x)]
-
-    def product_care(self, response):
-        css = 'section.pdp-material-description *::text'
-        care = clean(response.css(css))
-        return [x for x in care if self.care_criteria(x)]
+        return [mi for m, mi in self.merch_map if m in soup]
 
 
 class SamoonCrawlSpider(BaseCrawlSpider, Mixin):
