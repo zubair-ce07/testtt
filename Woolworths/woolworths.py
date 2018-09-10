@@ -64,7 +64,7 @@ class WoolworthSpider(CrawlSpider):
 
     def parse_care(self, response, data):
         product_attributes = data['pdp']['productInfo'].get("productAttributes")
-        care = []
+        care = ""
         for attribute in product_attributes:
             if attribute['attributeDisplayName'] == "Care":
                 care_url = response.urljoin(attribute['imageURL'])
