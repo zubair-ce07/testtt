@@ -1,0 +1,17 @@
+{% extends 'user/form_template.html' %}
+{% block title %}Edit Profile{% endblock %}
+
+{% block heading %}
+    <h3>Edit Your Profile</h3>
+{% endblock %}
+
+{% block custom_fields %}
+
+    <div class="form-group">
+        <label class="control-label col-sm-3" for="update_password">Update Password</label>
+        <div class="col-sm-9">
+            <a href="{% url 'my_user:change_password' %}">Change Password</a>
+        </div>
+    </div>
+{% endblock %}
+
