@@ -16,20 +16,6 @@ class WeatherRecord:
         self._min_dewpoint_c = 0
         self._max_humidity = 0
         self._mean_humidity = 0
-        self._min_humidity = 0
-        self._max_sea_level_prsr = 0
-        self._mean_sea_level_prsr = 0
-        self._min_sea_level_prsr = 0
-        self._max_visibilty_km = 0
-        self._mean_visibility_km = 0
-        self._min_visibility_km = 0
-        self._max_wind_speed = 0
-        self._mean_wind_speed = 0
-        self._max_gust_speed = 0
-        self._precipitation = 9
-        self._cloudcover = 0
-        self._Events = ""
-        self._wind_degrees = 0
         self._file_weather_record = ""
 
 
@@ -41,34 +27,20 @@ class FileParser:
     def parse_file(self):
         for file in os.listdir(self._path):
             if ("Murree_weather_" in file):
-                with open(self._path+ '/'+ file) as csvfile:
+                with open(os.path.join(self._path, file)) as csvfile:
                     csv_reader = csv.DictReader(csvfile)
                     for reading in csv_reader:
                         record = WeatherRecord() #store single reading 
                         record._PKT = datetime.strptime(reading["PKT"],'%Y-%m-%d')
-                        record._max_temp_c = float(reading["Max TemperatureC"]) if reading["Max TemperatureC"] else 0
-                        record._mean_temp_c = float(reading["Mean TemperatureC"]) if reading["Mean TemperatureC"] else 0
-                        record._min_temp_c = float(reading["Min TemperatureC"]) if reading["Min TemperatureC"] else 0
-                        record._dew_point_c = float(reading["Dew PointC"]) if reading["Dew PointC"] else 0
-                        record._mean_dewpoint_c = float(reading["MeanDew PointC"]) if reading["MeanDew PointC"] else 0
-                        record._min_dewpoint_c = float(reading["Min DewpointC"]) if reading["Min DewpointC"] else 0
-                        record._max_humidity = float(reading["Max Humidity"]) if reading["Max Humidity"] else 0
-                        record._mean_humidity = float(reading[" Mean Humidity"]) if reading[" Mean Humidity"] else 0
-                        record._min_humidity = float(reading[" Min Humidity"]) if reading[" Min Humidity"] else 0
-                        record._max_sea_level_prsr = float(reading[" Max Sea Level PressurehPa"]) if reading[" Max Sea Level PressurehPa"] else 0
-                        record._mean_sea_level_prsr = float(reading[" Mean Sea Level PressurehPa"]) if reading[" Mean Sea Level PressurehPa"] else 0
-                        record._min_sea_level_prsr = float(reading[" Min Sea Level PressurehPa"]) if reading[" Min Sea Level PressurehPa"] else 0
-                        record._max_visibilty_km = float(reading[" Max VisibilityKm"]) if reading[" Max VisibilityKm"] else 0
-                        record._mean_visibility_km = float(reading[" Mean VisibilityKm"]) if reading[" Mean VisibilityKm"] else 0
-                        record._min_visibility_km = float(reading[" Min VisibilitykM"]) if reading[" Min VisibilitykM"] else 0
-                        record._max_wind_speed = float(reading[" Max Wind SpeedKm/h"]) if reading[" Max Wind SpeedKm/h"] else 0
-                        record._mean_wind_speed = float(reading[" Mean Wind SpeedKm/h"]) if reading[" Mean Wind SpeedKm/h"] else 0
-                        record._max_gust_speed = float(reading[" Max Gust SpeedKm/h"]) if reading[" Max Gust SpeedKm/h"] else 0
-                        record._precipitation = float(reading["Precipitationmm"]) if reading ["Precipitationmm"] else 0
-                        record._cloudcover = float(reading[" CloudCover"]) if reading[" CloudCover"] else 0
-                        record._cloudcover = str(reading[" Events"])
-                        record._wind_degrees = int(reading["WindDirDegrees"]) if reading["WindDirDegrees"] else 0
-                        record._file_weather_record = str(file)
+                        record._max_temp_c = float(reading["Max TemperatureC"]) if reading["Max TemperatureC"] else 0.0
+                        record._mean_temp_c = float(reading["Mean TemperatureC"]) if reading["Mean TemperatureC"] else 0.0
+                        record._min_temp_c = float(reading["Min TemperatureC"]) if reading["Min TemperatureC"] else 0.0
+                        record._dew_point_c = float(reading["Dew PointC"]) if reading["Dew PointC"] else 0.0
+                        record._mean_dewpoint_c = float(reading["MeanDew PointC"]) if reading["MeanDew PointC"] else 0.0
+                        record._min_dewpoint_c = float(reading["Min DewpointC"]) if reading["Min DewpointC"] else 0.0
+                        record._max_humidity = float(reading["Max Humidity"]) if reading["Max Humidity"] else 0.0
+                        record._mean_humidity = float(reading[" Mean Humidity"]) if reading[" Mean Humidity"] else 0.0
+                        record._file_weather_record = file
                         self._readings.append(record)
 
         if (self._readings):
@@ -88,7 +60,7 @@ class FileParser:
 class Calculations:
     def __init__(self, _weather_records):
         self._weather_records = _weather_records
-        self._calculation_results = {} #dictionary to hold the calculation results
+        self._calculation_results = {} 
         self._max_temps = [record._max_temp_c for record in self._weather_records]
         self._min_temps = [record._min_temp_c for record in self._weather_records]
         self._avg_mean_humidity = [record._mean_humidity for record in self._weather_records]
@@ -126,17 +98,17 @@ class Calculations:
 
 
 class ReportGenerator:
-    def	report_for_hghst_lwst_temp_hmidity(self, weather_records):
+    def report_for_hghst_lwst_temp_hmidity(self, weather_records):
         readings_calculator = Calculations(weather_records)
         results = readings_calculator.calculate_hghst_lwst_temp_hmidity()
 
-        print("Highest: "+ str(results["Highest_temp"])+ "C on ", end='')
+        print("Highest: " + str(results["Highest_temp"]) + "C on ", end='')
         print(','.join(str(x) for x in self.convert_date(results["Highest_temp_day(s)"])))
 
-        print("Lowest: "+ str(results["Lowest_temp"])+ "C on ", end='')
+        print("Lowest: " + str(results["Lowest_temp"]) + "C on ", end='')
         print(','.join(str(x) for x in self.convert_date(results["Lowest_temp_day(s)"])))
 
-        print("Humidity: "+ str(results["Max_humidity"])+ r"% on ", end='')
+        print("Humidity: " + str(results["Max_humidity"]) + r"% on ", end='')
         print(','.join(str(x) for x in self.convert_date(results["Max_humidity_day(s)"])))
 
     def convert_date(self, dates):
@@ -148,9 +120,9 @@ class ReportGenerator:
     def report_for_avg_temp_humidity(self, weather_records):
         readings_calculator = Calculations(weather_records)
         results = readings_calculator.calculate_avg_temp_humidity()
-        print("Highest Average: "+ str(results["Avg_highest_temp"])+ "C")
-        print("Lowest Average: "+ str(results["Avg_lowest_temp"])+ "C")
-        print("Average Mean Humidity: "+ str(results["Avg_mean_humidity"])+ r"%")	
+        print("Highest Average: " + str(results["Avg_highest_temp"]) + "C")
+        print("Lowest Average: " + str(results["Avg_lowest_temp"]) + "C")
+        print("Average Mean Humidity: " + str(results["Avg_mean_humidity"]) + r"%")	
 
     def report_for_hghst_lwst_temp_day(self, weather_records, date):
         readings_calculator = Calculations(weather_records)
@@ -158,59 +130,55 @@ class ReportGenerator:
         count = 1
         print(date)
         for record_high, record_low in zip(results["Highest_temp_record"], results["Lowest_temp_record"]): 
-            print(count, end= '')
-            for i in range(int(record_high)):
-                print("+", end='')
-            print()
-            print(count, end= '')		
-            for i in range(int(record_low)):
-                print("+", end='') 
-            print()		
+            print(count, '+' * int(record_high))
+            print(count, '+' * int(record_low))
             count = count + 1
 
+
+def validate_command_e(command_e):
+    try:
+        datetime.strptime(command_e, "%Y").strftime("%Y")
+        return command_e
+    except ValueError:	
+        print("Invalid year entered")
+
+def validate_command_a_and_c(command_a_c):
+	try:
+		datetime.strptime(command_a_c, "%Y/%m").strftime("%Y_%b")
+		return command_a_c
+	except ValueError:	
+		print("Invalid date entered")	
+
+def validate_directory_path(dir_path):
+	if os.path.isdir(dir_path) == False:		
+		print("Directory does not exist !")
+	return dir_path	
 
 def main():	
     parser = argparse.ArgumentParser()
     parser.add_argument("path", help ="Path to directory", type=str)
-    parser.add_argument("-e", help="Prompt an year for highest and lowest temperature, humidity")
-    parser.add_argument("-a", help="Prompt a month for average temperature, humidity")
-    parser.add_argument("-c", help="Prompt a month to display bar charts for highest and lowest temperature")
+    parser.add_argument("-e", help="Prompt an year for highest and lowest temperature, humidity", type=validate_command_e)
+    parser.add_argument("-a", help="Prompt a month for average temperature, humidity", type=validate_command_a_and_c)
+    parser.add_argument("-c", help="Prompt a month to display bar charts for highest and lowest temperature", type=validate_command_a_and_c)
     args = parser.parse_args()
 
     report = ReportGenerator()
-    if os.path.isdir(args.path):
-		
-        file_parser = FileParser(args.path)
-        parsed_readings = file_parser.parse_file()
-
-        if args.e:
-            try:
-                year = datetime.strptime(args.e, "%Y").strftime("%Y")
-                if parsed_readings is not None:
-                    filtered_readings = file_parser.filter_weather_records(year)
-                    for reading in filtered_readings:
-                        print(reading._min_temp_c)
-                    report.report_for_hghst_lwst_temp_hmidity(filtered_readings)
-            except ValueError:
-                print("Invalid year entered to dispplay highest and lowest temperature, humidity")
-        if args.a:
-            try:
-                year_month = datetime.strptime(args.a, "%Y/%m").strftime("%Y_%b")
-                if parsed_readings is not None:
-                    filtered_readings = file_parser.filter_weather_records(year_month)
-                    report.report_for_avg_temp_humidity(filtered_readings)
-            except ValueError:
-                print("Invalid date entered to display average temperature, humidity")
-        if args.c:
-            try:
-                year_month = datetime.strptime(args.c, "%Y/%m").strftime("%Y_%b")
-                if parsed_readings is not None:
-                    filtered_readings = file_parser.filter_weather_records(year_month)
-                    date_to_display = datetime.strptime(args.c, "%Y/%m").strftime("%B %Y")
-                    report.report_for_hghst_lwst_temp_day(filtered_readings, date_to_display)
-            except ValueError:
-                print("Invalid date entered to display bar charts for highest and lowest temperatures")					
-    else:
-        print("Directory does not exist !")
-
+    file_parser = FileParser(args.path)
+    parsed_readings = file_parser.parse_file()
+    if args.e:
+        year = datetime.strptime(args.e, "%Y").strftime("%Y")
+        if parsed_readings is not None:
+            filtered_readings = file_parser.filter_weather_records(year)
+            report.report_for_hghst_lwst_temp_hmidity(filtered_readings)
+    if args.a:
+        year_month = datetime.strptime(args.a, "%Y/%m").strftime("%Y_%b")
+        if parsed_readings is not None:
+            filtered_readings = file_parser.filter_weather_records(year_month)
+            report.report_for_avg_temp_humidity(filtered_readings)   
+    if args.c:
+        year_month = datetime.strptime(args.c, "%Y/%m").strftime("%Y_%b")
+        if parsed_readings is not None:
+            filtered_readings = file_parser.filter_weather_records(year_month)
+            date_to_display = datetime.strptime(args.c, "%Y/%m").strftime("%B %Y")
+            report.report_for_hghst_lwst_temp_day(filtered_readings, date_to_display)
 main()
