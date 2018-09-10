@@ -30,9 +30,9 @@ class LindexParseSpider(BaseParseSpider):
             return
 
         self.boilerplate_normal(garment, response)
-        garment['skus'] = self.skus(response)
         garment['gender'] = self.product_gender(garment)
         garment['image_urls'] = self.image_urls(response)
+        garment['skus'] = self.skus(response)
         return garment
 
     def product_id(self, response):
