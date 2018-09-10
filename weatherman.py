@@ -143,16 +143,16 @@ def validate_command_e(command_e):
         print("Invalid year entered")
 
 def validate_command_a_and_c(command_a_c):
-	try:
-		datetime.strptime(command_a_c, "%Y/%m").strftime("%Y_%b")
-		return command_a_c
-	except ValueError:	
-		print("Invalid date entered")	
+    try:
+        datetime.strptime(command_a_c, "%Y/%m").strftime("%Y_%b")
+        return command_a_c
+    except ValueError:	
+        print("Invalid date entered")	
 
 def validate_directory_path(dir_path):
-	if os.path.isdir(dir_path) == False:		
-		print("Directory does not exist !")
-	return dir_path	
+    if os.path.isdir(dir_path) == False:		
+        print("Directory does not exist !")
+    return dir_path	
 
 def main():	
     parser = argparse.ArgumentParser()
