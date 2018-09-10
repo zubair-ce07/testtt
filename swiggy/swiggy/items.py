@@ -39,6 +39,17 @@ class ProductItem(scrapy.Item):
     min_order = scrapy.Field()
 
 
+class BannerItem(scrapy.Item):
+    pincode = scrapy.Field()
+    url = scrapy.Field()
+    city = scrapy.Field()
+    crawl_time = scrapy.Field()
+    rank = scrapy.Field()
+    thumbnail = scrapy.Field()
+    redirect_url = scrapy.Field()
+    restaurant_field = scrapy.Field()
+
+
 def clean(self, values):
     return [value.strip() for value in values]
 
@@ -48,3 +59,9 @@ class MenuItemLoader(ItemLoader):
     default_output_processor = TakeFirst()
 
     title_in = clean
+
+
+class BannerItemLoader(ItemLoader):
+    default_item_class = BannerItem
+    default_output_processor = TakeFirst()
+
