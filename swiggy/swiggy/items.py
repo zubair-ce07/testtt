@@ -64,4 +64,3 @@ class MenuItemLoader(ItemLoader):
 class BannerItemLoader(ItemLoader):
     default_item_class = BannerItem
     default_output_processor = TakeFirst()
-

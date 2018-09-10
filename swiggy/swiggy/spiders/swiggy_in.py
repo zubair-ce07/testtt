@@ -54,7 +54,7 @@ class SwiggyInSpider(Spider):
             url = add_or_replace_parameter(url, "lng", loc.lng)
             return url
 
-        locations = self.test_locations#self.read('locations.csv')
+        locations = self.read('locations.csv')
         requests = []
         for location in locations:
             for restaurent in self.restaurents:
