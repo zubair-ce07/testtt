@@ -48,33 +48,33 @@ class ParseSpider(BaseParseSpider):
         return self.next_request_or_garment(garment)
 
     def size_requests(self, response):
-        sizes = response.css('.swatches a::attr(href)').extract()
+        sizes = clean(response.css('.swatches a::attr(href)'))
         return [Request(size, callback=self.parse_skus) for size in sizes]
 
     def product_id(self, response):
-        return response.css('#pid::attr(value)').extract_first()
+        return clean(response.css('#pid::attr(value)'))[0]
 
     def product_name(self, response):
-        return response.css('.product-detail h1::text').extract_first()
+        return clean(response.css('.product-detail h1::text'))[0]
 
     def product_category(self, response):
-        return response.css('.breadcrumb a::text').extract()[1:]
+        return clean(response.css('.breadcrumb a::text'))[1:]
 
     def image_urls(self, response):
         css = '.product-thumbnails li a::attr(href), .product-image::attr(href)'
-        return response.css(css).extract()
+        return clean(response.css(css))
 
     def skus(self, response):
         skus = {}
 
         sku = self.product_pricing_common(response)
 
-        size = response.css('.size .selected a::text').extract_first()
+        size = clean(response.css('.size .selected a::text'))[0]
         sku['size'] = clean(size) if size else "One_Size"
 
         sku_id = f'{self.product_id(response)}_{sku["size"]}'
 
-        stock_availability = response.css('.availability-msg p::text').extract_first()
+        stock_availability = clean(response.css('.availability-msg p::text'))[0]
 
         if stock_availability.lower() == "out of stock":
             sku['out_of_stock'] = True
