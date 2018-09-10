@@ -102,11 +102,11 @@ class OrsaySpider(CrawlSpider):
             item['skus']["{}_{}".format(color, size)] = sku
         if color_hrefs:
             href = color_hrefs.pop()
-            yield scrapy.Request(href, callback=self.parse_sku_response, meta={"item": item, "hrefs": color_hrefs})
+            yield scrapy.Request(href, callback=self.parse_remaining_colors_sku, meta={"item": item, "hrefs": color_hrefs})
         else:
             yield item
 
-    def parse_sku_response(self, response):
+    def parse_remaining_colors_sku(self, response):
         item = response.meta['item']
         color_hrefs = response.meta['hrefs']
         color = self.parse_color(response)
@@ -123,6 +123,7 @@ class OrsaySpider(CrawlSpider):
             item['skus']["{}_{}".format(color, size)] = sku
         if color_hrefs:
             href = color_hrefs.pop()
-            yield scrapy.Request(href, callback=self.parse_sku_response, meta={"item": item, "hrefs": color_hrefs})
+            yield scrapy.Request(href, callback=self.parse_remaining_colors_sku, meta={"item": item, "hrefs": color_hrefs})
         else:
             yield item
+

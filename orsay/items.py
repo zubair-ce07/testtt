@@ -11,3 +11,4 @@ class OrsayItem(scrapy.Item):
     category = scrapy.Field()
     skus = scrapy.Field()
     img_urls = scrapy.Field()
+
