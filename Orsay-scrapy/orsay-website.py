@@ -13,7 +13,8 @@ class OrsayCrawler(CrawlSpider):
     start_urls = ['http://www.orsay.com']
 
     rules = (
-        Rule(LinkExtractor(allow=r".*/produkte/"), callback='parse_categories'),
+        Rule(LinkExtractor(allow=(r".*/produkte/", r".*/neuheiten/", r".*/sale/", r".*/trends/")),
+             callback='parse_categories'),
         Rule(LinkExtractor(restrict_css=".product-swatch-item"), callback='parse_products')
     )
 
@@ -46,25 +47,56 @@ class OrsayCrawler(CrawlSpider):
         item['retailer_sku'] = data_json.get('idListRef6')
         item['skus'] = {}
 
-        price = data_json.get('grossPrice')
-        color = data_json.get('color')
-        currency = data_json.get('currency_code')
+        # initial values for response
+        response.meta['lis'] = 1
+        response.meta['item'] = item
+        for thing in self.iterate_over_sizes(response):
+            yield thing
 
-        for li in response.css('ul.swatches li'):
-            size = str(li.css("a::text").extract_first()).replace('\n', '')
-            if size:
-                size_info = SizeInfo()
-                size_info['out_of_stock'] = True
-                class_selectable=li.css('.selectable').extract()
-                if len(class_selectable) > 0:
-                    size_info['out_of_stock'] = False
+    def iterate_over_sizes(self, response):
+        """A recursive function to parse sizes of product"""
+        lis = response.meta.get('lis')
+        item = response.meta.get('item')
 
-                size_info['price'] = price
-                size_info['colour'] = color
-                size_info['currency'] = currency
-                size_info['size'] = size
-                item['skus'][data_json.get('idListRef6') + '_' + size] = size_info
-        yield item
+        # will be true for the first time
+        if type(lis) == type(1):
+            lis = response.css('ul.swatches.size>li')
+
+        # will start storing data in second iteration
+        elif len(lis) > 0:
+            size_info = self.get_size_info(response)
+            item['skus'][item.get('retailer_sku') + '_' + size_info.get('size')] = size_info
+
+        if len(lis) > 0:
+            next_size = lis[0]
+            del lis[0]
+
+            if len(next_size.css('.selectable').extract()) > 0:
+                yield Request(url=next_size.css(
+                    '::attr(href)').extract_first() + '&Quantity=1&format=ajax&productlistid=undefined',
+                              callback=self.iterate_over_sizes, meta={'lis': lis, 'item': item, 'out_of_stock': False})
+            else:
+                response.meta['lis'] = lis
+                response.meta['item'] = item
+                response.meta['out_of_stock'] = True
+                for thing in self.iterate_over_sizes(response):
+                    yield thing
+        else:
+            yield item
+
+    def get_size_info(self, response):
+        """This function takes a response object and finds and return product info"""
+        data = response.css('::attr(data-product-details)').extract_first()
+        data_json = json.loads(data)
+        current_size = data_json.get('size')
+        size_info = SizeInfo()
+        size_info['out_of_stock'] = response.meta.get('out_of_stock')
+        size_info['price'] = data_json.get('grossPrice')
+        size_info['colour'] = data_json.get('color')
+        size_info['currency'] = data_json.get('currency_code')
+        size_info['size'] = current_size
+
+        return size_info
 
     def get_care(self, response):
         """Extracts and returns Care of product"""
