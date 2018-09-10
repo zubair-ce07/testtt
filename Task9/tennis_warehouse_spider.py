@@ -75,14 +75,14 @@ class ParseSpider(BaseParseSpider, MixinUS):
             sku_id = f'{sku["colour"]}_{size}'
             skus[sku_id] = sku
 
-            code = clean(raw_sku.css('li:contains(Colo) .styleitem::attr(data-scode)'))[0]
+            code = raw_sku.css('li:contains(Colo) .styleitem::attr(data-scode)').extract_first()
             if code:
                 response.meta["color_codes"].add(code)
 
         return skus
 
     def extract_color(self, raw_sku, response):
-        color_code = clean(raw_sku.css('.stocknum::text'))[0]
+        color_code = raw_sku.css('.stocknum::text').extract_first()
         color_code = color_code.split('-')[-1] if color_code else None
 
         multi_color_css = '[itemprop="description"] li:contains(Colo)::text'
