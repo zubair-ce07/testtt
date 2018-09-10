@@ -13,11 +13,11 @@ class WheatherReadings:
             self, date, max_temperature, min_temperature,
             max_humidity, mean_humidty
     ):
-        self.date = date
-        self.max_temperature = max_temperature
-        self.min_temperature = min_temperature
-        self.max_humidity = max_humidity
-        self.mean_humity = mean_humidty
+        self.date = datetime.strptime(date, '%Y-%m-%d')
+        self.max_temperature = convert_to_int(max_temperature)
+        self.min_temperature = convert_to_int(min_temperature)
+        self.max_humidity = convert_to_int(max_humidity)
+        self.mean_humity =  convert_to_int(mean_humidty)
 
 
 class FileHandler:
@@ -100,12 +100,13 @@ class ReportGenerator:
         :return:
         """
         date_dict = parse_date(date)
-        month_str = datetime.strptime(date_dict.get("month"),
-                                      "%m").strftime('%B')
+        month = date_dict.get("month")
+        month_str = datetime.strptime(month,"%m")
+        month_str = month_str.strftime('%B')
         print(f"\n{date_dict.get('year')} {month_str}:")
 
         for day in month_list:
-            date = datetime.strptime(day.date, '%Y-%m-%d').strftime('%d')
+            date = day.date.strftime('%d')
             max_temperature = day.max_temperature
             min_temperature = day.min_temperature
             print(date, end=" ")
@@ -179,25 +180,22 @@ def calculate_extremes(rec_list):
 
     for record in rec_list[1:]:
         if (record.max_temperature and
-                (int(record.max_temperature)  >
-                 int(max_temp_entry.max_temperature))):
+                (record.max_temperature  > max_temp_entry.max_temperature)):
             max_temp_entry = record
         if (record.min_temperature and
-                (int(record.min_temperature) <
-                 int(min_temp_entry.min_temperature))):
+                (record.min_temperature < min_temp_entry.min_temperature)):
             min_temp_entry = record
         if (record.max_humidity and
-                (int(record.max_humidity) >
-                 int(max_humidity_entry.max_humidity))):
+                (record.max_humidity > max_humidity_entry.max_humidity)):
             max_humidity_entry= record
 
     result = {
         "max_temperature": max_temp_entry.max_temperature,
         "min_temperature": min_temp_entry.min_temperature,
         "humidity": max_humidity_entry.max_humidity,
-        "max_temperature_date": change_date_formt(max_temp_entry.date),
-        "min_temperature_date": change_date_formt(min_temp_entry.date),
-        "humidity_date": change_date_formt(max_humidity_entry.date)
+        "max_temperature_date": max_temp_entry.date.strftime('%B %d'),
+        "min_temperature_date": min_temp_entry.date.strftime('%B %d'),
+        "humidity_date": max_humidity_entry.date.strftime('%B %d')
     }
     return result
 
@@ -215,13 +213,13 @@ def calculate_average(rec_list):
     for record in rec_list:
         if record.max_temperature:
             max_temp_mean_data["count"] += 1
-            max_temp_mean_data["sum"] += int(record.max_temperature)
+            max_temp_mean_data["sum"] += record.max_temperature
         if record.min_temperature:
             min_temp_mean_data["count"] += 1
-            min_temp_mean_data["sum"] += int(record.min_temperature)
+            min_temp_mean_data["sum"] += record.min_temperature
         if record.mean_humity:
             humidity_mean_data["count"] += 1
-            humidity_mean_data["sum"] += int(record.mean_humity)
+            humidity_mean_data["sum"] += record.mean_humity
 
     max_temp_avg =  get_avg(max_temp_mean_data)
     min_temp_avg = get_avg(min_temp_mean_data)
@@ -248,23 +246,21 @@ def display_graph_line(horizontal, max_temperature, min_temperature, date):
             display_bar(max_temperature, "+", const.CRED)
             print(" " + const.CRED + str(
                 max_temperature) + "C" + const.CEND)
+        else:
+            print("-")
         print(date, end=" ")
         if min_temperature:
             display_bar(min_temperature, "+", const.CBLUE)
             print(" " + const.CBLUE + str(
                 min_temperature) + "C" + const.CEND)
+        else:
+            print("-")
 
 
 def display_bar(range_str, sign, code):
     """helping function for graph """
-    for _ in range(int(range_str)):
+    for _ in range(range_str):
         print(code + sign + const.CEND, end="")
-
-
-def change_date_formt(entry):
-    """change date string format"""
-    date = datetime.strptime(entry, '%Y-%m-%d')
-    return (date).strftime('%B %d')
 
 
 def get_month(month):
@@ -275,9 +271,8 @@ def get_month(month):
 def validate_date(date_text):
     """ function to validate year/month string """
     try:
-        if not datetime.strptime(date_text, '%Y/%m'):
-            raise ValueError
-        return date_text
+       datetime.strptime(date_text, '%Y/%m')
+       return date_text
     except ValueError:
         print("\nInvalid option [Required year/month ie 2011/05]\n")
         return False
@@ -286,7 +281,11 @@ def validate_date(date_text):
 def get_avg(data):
     return float(data.get("sum")) / data.get("count")
 
+def convert_to_int(data):
+    return int(data) if data else data
+
 
 if __name__ == '__main__':
     controller = Controller()
     controller.parse_arguments()
+
