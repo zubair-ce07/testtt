@@ -114,7 +114,7 @@ class ReportGenerator:
     def convert_date(self, dates):
         formatted_dates = []
         for date in dates:
-            formatted_dates.append(date.strftime("%B")+ " "+ date.strftime("%d")	)
+            formatted_dates.append(date.strftime("%B")+ " "+ date.strftime("%d"))
         return formatted_dates
 
     def report_for_avg_temp_humidity(self, weather_records):
@@ -135,14 +135,14 @@ class ReportGenerator:
             count = count + 1
 
 
-def validate_command_e(command_e):
+def validate_year_for_temp_and_humidity(command_e):
     try:
         datetime.strptime(command_e, "%Y").strftime("%Y")
         return command_e
     except ValueError:	
         print("Invalid year entered")
 
-def validate_command_a_and_c(command_a_c):
+def validate_date_for_avg_temp_hmdty_and_charts(command_a_c):
     try:
         datetime.strptime(command_a_c, "%Y/%m").strftime("%Y_%b")
         return command_a_c
@@ -150,16 +150,16 @@ def validate_command_a_and_c(command_a_c):
         print("Invalid date entered")	
 
 def validate_directory_path(dir_path):
-    if os.path.isdir(dir_path) == False:		
+    if not os.path.isdir(dir_path):		
         print("Directory does not exist !")
     return dir_path	
 
 def main():	
     parser = argparse.ArgumentParser()
     parser.add_argument("path", help ="Path to directory", type=str)
-    parser.add_argument("-e", help="Prompt an year for highest and lowest temperature, humidity", type=validate_command_e)
-    parser.add_argument("-a", help="Prompt a month for average temperature, humidity", type=validate_command_a_and_c)
-    parser.add_argument("-c", help="Prompt a month to display bar charts for highest and lowest temperature", type=validate_command_a_and_c)
+    parser.add_argument("-e", help="Prompt an year for highest and lowest temperature, humidity", type=validate_year_for_temp_and_humidity)
+    parser.add_argument("-a", help="Prompt a date for average temperature, humidity", type=validate_date_for_avg_temp_hmdty_and_charts)
+    parser.add_argument("-c", help="Prompt a date to display bar charts for highest and lowest temperature", type=validate_date_for_avg_temp_hmdty_and_charts)
     args = parser.parse_args()
 
     report = ReportGenerator()
