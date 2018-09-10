@@ -1,8 +1,8 @@
-import calendar
 import argparse
 
-from DataParser import DataParser
-from Computer import Analyzer
+from DataReader import DataReader
+from Analyzer import Analyzer
+from DisplayReports import DisplayReports
 
 
 def get_cmdline_arguments():
@@ -48,66 +48,6 @@ def get_cmdline_arguments():
     return cmd_Arguments
 
 
-def print_year_report(result):
-    """
-    Print yearly report for the results  provided
-    :param result: a dictionary of results after computations
-    """
-    print(
-        'Highest: ' + result['Highest'] + '\n' +
-        'Lowest: ' + result['Lowest'] + '\n' +
-        'Humidity: ' + result['Humidity'] + '\n'
-    )
-
-
-def print_monthly_report(result):
-    """
-    this method prints the monthly report in highest , lowest and mean humidity average from result
-    :param result: is a dictionary containing results after computations
-    :param date: is yyyy/mm format date for which results are given
-    :return:
-    """
-    print(
-        'Highest Average: ' + result['Highest Average'] + '\n' +
-        'Lowest Average: ' + result['Lowest Average'] + '\n' +
-        'Average Mean Humidity: ' + result['Average Mean Humidity'] + '\n'
-    )
-
-
-def print_monthly_charts(result, date):
-    """
-    This method prints the bar chart for each key in result dictionary
-    :param result: is dictionary containing high and low temperature of each day of month
-    :param date: the yyyy/mm format date for which results are given
-    :return:
-    """
-    year, month = Analyzer.parse_date(date, delimeter='/')
-
-    print(calendar.month_name[int(month)] + ' ' + year)
-
-    for key, value in sorted(result.items()):
-        if value:
-            sign, temp = value[0].split(' ')
-            print(key + ' \033[1;31m' + sign + '\033[m ' + temp)
-
-            sign, temp = value[1].split(' ')
-            print(key + ' \033[1;34m' + sign + '\033[m ' + temp)
-        else:
-            print('{} No Data!'.format(key))
-
-    print('Bonus:')
-
-    for key, value in sorted(result.items()):
-        if value:
-            sign_for_high, temp_high = value[0].split(' ')
-            sign_for_low, temp_low = value[1].split(' ')
-            output_string = '{} \033[1;34m{}\033[1;31m{}\033[m {} - {}'
-
-            print(output_string.format(key, sign_for_low, sign_for_high, temp_low, temp_high))
-        else:
-            print('{} No Data!'.format(key))
-
-
 def main():
     """
     main method for program weatherman handles all the functionality of program
@@ -115,18 +55,14 @@ def main():
     :param
     :return:
     """
-    data = {
-        'features': [],
-        'values': []
-    }
 
     # Get Command line arguments
     cmdArg = get_cmdline_arguments()
 
     # Collecting data
-    data = DataParser.parsefile(cmdArg.path, data)
+    data = DataReader.parsefile(cmdArg.path)
 
-    if not data['values']:
+    if not data:
         print('No file found on given path!')
         return 0
 
@@ -134,7 +70,7 @@ def main():
         result = Analyzer.yearly_report(data, year)
 
         if result:
-            print_year_report(result)
+            DisplayReports.print_year_report(result)
         else:
             print('No data Found Against ' + year)
 
@@ -143,7 +79,7 @@ def main():
         result = Analyzer.monthly_report(data, date)
 
         if result:
-            print_monthly_report(result)
+            DisplayReports.print_monthly_report(result)
         else:
             print('No data Found Against ' + date)
 
@@ -152,7 +88,7 @@ def main():
         result = Analyzer.monthly_chart(data, date)
 
         if result:
-            print_monthly_charts(result, date)
+            DisplayReports.print_monthly_charts(result, date)
         else:
             print('No data Found Against ' + date)
 
