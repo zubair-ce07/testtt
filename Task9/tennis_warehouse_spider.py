@@ -35,10 +35,10 @@ class ParseSpider(BaseParseSpider, MixinUS):
         return garment
 
     def product_id(self, response):
-        return response.css('.wishlist_poplink::attr(data-code)').extract_first()
+        return clean(response.css('.wishlist_poplink::attr(data-code)'))[0]
 
     def product_name(self, response):
-        return response.css('.product_header h1::text').extract_first()
+        return clean(response.css('.product_header h1::text'))[0]
 
     def image_urls(self, response, garment):
         total_images = len(response.css('.multiview a.changeview').extract())
@@ -67,7 +67,7 @@ class ParseSpider(BaseParseSpider, MixinUS):
         for raw_sku in raw_skus:
             sku = self.product_pricing_common(response)
 
-            size = raw_sku.css('li:contains(Size) span.styleitem::text').extract_first()
+            size = clean(raw_sku.css('li:contains(Size) span.styleitem::text'))[0]
 
             sku["colour"] = self.extract_color(raw_sku, response)
             sku["size"] = clean(size) if size else self.one_size
@@ -75,14 +75,14 @@ class ParseSpider(BaseParseSpider, MixinUS):
             sku_id = f'{sku["colour"]}_{size}'
             skus[sku_id] = sku
 
-            code = raw_sku.css('li:contains(Colo) .styleitem::attr(data-scode)').extract_first()
+            code = clean(raw_sku.css('li:contains(Colo) .styleitem::attr(data-scode)'))[0]
             if code:
                 response.meta["color_codes"].add(code)
 
         return skus
 
     def extract_color(self, raw_sku, response):
-        color_code = raw_sku.css('.stocknum::text').extract_first()
+        color_code = clean(raw_sku.css('.stocknum::text'))[0]
         color_code = color_code.split('-')[-1] if color_code else None
 
         multi_color_css = '[itemprop="description"] li:contains(Colo)::text'
