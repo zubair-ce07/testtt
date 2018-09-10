@@ -36,6 +36,7 @@ class Item(scrapy.Item):
     average_rating = scrapy.Field()
     num_of_ratings = scrapy.Field()
     min_order = scrapy.Field()
+    search_pincode = scrapy.Field()
 
 
 class ProductLoader(ItemLoader):
@@ -88,6 +89,7 @@ class FoodPandaParser(scrapy.Spider):
         for page in pages:
             url = '{base_url}&page={page}'.format(base_url=response.url, page=page)
             request = scrapy.Request(url, callback=self.parse_listing)
+            request.meta['location'] = response.meta['location']
             yield request
 
     def parse_listing(self, response):
@@ -99,6 +101,7 @@ class FoodPandaParser(scrapy.Spider):
         for product_url in product_urls:
             url = 'https://foodpanda.in{restaurant_url}'.format(restaurant_url=product_url)
             request = scrapy.Request(url, callback=self.parse_product)
+            request.meta['location'] = response.meta['location']
             yield request
 
     def parse_product(self, response):
@@ -113,7 +116,8 @@ class FoodPandaParser(scrapy.Spider):
             'min_order': self.fetch_min_order(response),
             'locality': self.fetch_locality(response),
             'pincode': self.fetch_pincode(response),
-            'city': self.fetch_city(response)
+            'city': self.fetch_city(response),
+            'search_pincode': response.meta['location'].pincode
         }
 
         items = self.fetch_items(common_fields, response)
@@ -268,7 +272,7 @@ class FoodPandaParser(scrapy.Spider):
 class FoodPandaCrawler(scrapy.Spider):
     name = "superpanda"
     item_parser = FoodPandaParser()
-    Location = namedtuple('Location', ['city', 'address'])
+    Location = namedtuple('Location', ['city', 'address', 'pincode'])
 
     start_urls = [
         'https://www.foodpanda.in/'
@@ -281,13 +285,13 @@ class FoodPandaCrawler(scrapy.Spider):
 
     @staticmethod
     def is_valid_reading(reading):
-        required_fields = ['City', 'Address Line 2']
+        required_fields = ['City', 'Addr3', 'Postal Code']
         return all(reading[field] for field in required_fields)
 
     def read(self, file_name):
         with open(file_name, 'r') as f:
-            return [self.Location(r['City'], r['Address Line 2']) for r in csv.DictReader(f) if
-                    self.is_valid_reading(r)]
+            return [self.Location(r['City'], r['Addr3'], r['Postal Code']) for r in
+                    csv.DictReader(f) if self.is_valid_reading(r)]
 
     def parse(self, response):
         locations = self.read('locations.csv')
@@ -304,6 +308,7 @@ class FoodPandaCrawler(scrapy.Spider):
                   'tracking_id='.format(city_id=city_id, address=normalized_address)
             request = scrapy.Request(url, callback=self.parse_suggestion)
             request.meta['city_id'] = city_id
+            request.meta['location'] = location
             yield request
 
     @staticmethod
@@ -339,4 +344,5 @@ class FoodPandaCrawler(scrapy.Spider):
               '{area_id}&pickup=&sort=&tracking_id={tracking_id}'.format(
                 city_id=city_id, name=name, area_id=area_id, tracking_id=tracking_id)
         request = scrapy.Request(url, callback=self.item_parser.parse)
+        request.meta['location'] = response.meta['location']
         return request
