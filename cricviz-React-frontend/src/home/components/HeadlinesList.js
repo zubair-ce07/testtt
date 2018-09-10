@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import { Row, Col, Grid, Thumbnail, Button, ListGroup, ListGroupItem } from 'react-bootstrap';
+import {Row, Col, Grid, Thumbnail, Button, ListGroup, ListGroupItem} from 'react-bootstrap';
 
 class HeadlinesList extends Component {
   render(){

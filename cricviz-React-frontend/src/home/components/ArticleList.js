@@ -1,6 +1,5 @@
 import React, {Component} from 'react';
-import { Row, Col, Grid, Thumbnail, Button, ListGroup, ListGroupItem } from 'react-bootstrap';
-import ArticleListItem from './articleListItem';
+import ArticleListItem from './ArticleListItem';
 
 const ArticleList = (props) => {
   const AllArticles = props.articles.map((article) => {
@@ -20,8 +19,6 @@ const ArticleList = (props) => {
         <article className="col-sm-4">
           <h3 className="text-left">Top Headlines</h3>
         </article>
-
-
       </div>
     );
 }

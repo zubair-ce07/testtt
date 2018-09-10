@@ -1,41 +1,18 @@
 import React, { Component } from 'react';
 import { OverlayTrigger, Popover, Navbar, Nav, NavItem, NavDropdown, MenuItem, FormGroup, FormControl, Button } from 'react-bootstrap';
 import { BrowserRouter as Router, Route, Link, NavLink } from "react-router-dom";
-
+import LoginForm from './LoginForm';
+import SignUpForm from './SignupForm';
 
 const popoverLogin = (
-  <Popover id="popover-trigger-click-root-close" title="Login Here">
-    <form>
-      <label>
-        UserName:
-        <input type="text" name="username" />
-      </label>
-      <label>
-        Password:
-        <input type="password" name="password" />
-      </label>
-      <input type="submit" value="Login" />
-    </form>
+  <Popover id="popover-login" title="Login Here">
+    <LoginForm />
   </Popover>
 );
 
 const popoverSignUp = (
-  <Popover id="popover-trigger-click-root-close" title="SignUp Here">
-    <form>
-      <label>
-        UserName:
-        <input type="text" name="username" />
-      </label>
-      <label>
-        Password:
-        <input type="password" name="password1" />
-      </label>
-      <label>
-        Repeat Password:
-        <input type="password" name="password2" />
-      </label>
-      <input type="submit" value="SignUp" />
-    </form>
+  <Popover id="popover-signup" title="SignUp Here">
+    <SignUpForm />
   </Popover>
 );
 
@@ -64,7 +41,7 @@ class NavBar extends Component {
                 </NavLink>
               </NavItem>
               <NavItem eventKey={3} href="#">
-                <NavLink to="/playepopoverClickRootCloser-insights" >
+                <NavLink to="/player-insights" >
                   Player Insights
                 </NavLink>
               </NavItem>
@@ -104,21 +81,11 @@ class NavBar extends Component {
                 </FormGroup>{' '}
                 <Button className="btn btn-dark btn-outline-warning my-2 my-sm-0" bsStyle="primary" type="submit" >Search</Button>
 
-                <OverlayTrigger
-                  trigger="click"
-                  rootClose
-                  placement="bottom"
-                  overlay={popoverLogin}
-                >
+                <OverlayTrigger trigger="click" rootClose placement="bottom" overlay={popoverLogin} >
                     <button type="button" className="btn btn-info" id="myLoginBtn">Login</button>
                 </OverlayTrigger>
 
-                <OverlayTrigger
-                  trigger="click"
-                  rootClose
-                  placement="bottom"
-                  overlay={popoverSignUp}
-                >
+                <OverlayTrigger trigger="click" rootClose placement="bottom" overlay={popoverSignUp} >
                   <button type="button" className="btn btn-info" id="mySignUpBtn">Sign Up</button>
                 </OverlayTrigger>
 
@@ -131,46 +98,5 @@ class NavBar extends Component {
   }
 
 }
-
-const Home = () => (
-  <div>
-    <h2 >Home</h2>
-    <h2>Home</h2>
-    <h2>Home</h2>
-    <h2>Home</h2>
-  </div>
-);
-
-const LiveScores = () => (
-  <div>
-    <h2>Live Scores</h2>
-  </div>
-);
-
-const PlayerInsights = () => (
-  <div>
-    <h2>Player Insights</h2>
-
-  </div>
-);
-
-const FollowPlayers = () => (
-  <div>
-    <h2>Follow Players</h2>
-  </div>
-);
-
-const FollowTeams = () => (
-  <div>
-    <h2>Follow Teams</h2>
-  </div>
-);
-
-const TeamsHome = () => (
-  <div>
-    <h2>Teams Home</h2>
-  </div>
-);
-
 
 export default NavBar;
