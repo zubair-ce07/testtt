@@ -1,11 +1,10 @@
-from csv import DictReader
 from json import loads
-from collections import namedtuple
 
 from scrapy import Spider, Request
 from w3lib.url import add_or_replace_parameter, url_query_parameter
 
 from ..items import MenuItemLoader
+from swiggy.spiders.location_reader import read, test_locations
 
 
 class SwiggyInSpider(Spider):
@@ -28,25 +27,7 @@ class SwiggyInSpider(Spider):
 
     special_categories = ["Recommended", "What's New", "Sharing Packs"]
 
-    Location = namedtuple('Location', ['lng', 'lat', 'postal_code', 'city'])
-
-    test_locations = [
-        Location("77.659309", "12.83957", "560100", 'Bangalore'),
-        Location("80.1842321", "13.0205017", "600125", 'Chennai'),
-        Location("77.251741", "28.551441", "110019", 'New Delhi')
-    ]
-
     restaurents = ["KFC", "McDonald's", "Burger King", "Domino's"]
-
-    @staticmethod
-    def is_valid_reading(reading):
-        required_fields = ['Latitude', 'Longitude', 'Postal Code', 'City']
-        return all(reading[field] for field in required_fields)
-
-    def read(self, file_name):
-        with open(file_name, 'r') as f:
-            return [self.Location(r['Longitude'], r['Latitude'], r['Postal Code'], r['City']) for r in DictReader(f)
-                    if self.is_valid_reading(r)]
 
     def start_requests(self):
         def add_location(url, loc):
@@ -54,7 +35,7 @@ class SwiggyInSpider(Spider):
             url = add_or_replace_parameter(url, "lng", loc.lng)
             return url
 
-        locations = self.read('locations.csv')
+        locations = read("locations.csv")
         requests = []
         for location in locations:
             for restaurent in self.restaurents:
