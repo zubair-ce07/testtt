@@ -75,7 +75,7 @@ class OrsayCrawler(CrawlSpider):
         """Extracts and returns Details of product"""
 
         try:
-            description = response.css('div.product-details>div>div::text').extract()[1:]
+            description = response.css('.with-gutter::text').extract()
         except IndexError:
             description = ''
 
@@ -84,7 +84,7 @@ class OrsayCrawler(CrawlSpider):
     def get_images(self, response):
         """Extracts and returns Images of product"""
 
-        return response.css('img.productthumbnail::attr(src)').extract()
+        return response.css('.productthumbnail::attr(src)').extract()
 
     def get_product_count(self, response):
         """ It returns total number of products present in a specific category"""
