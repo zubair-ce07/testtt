@@ -57,6 +57,9 @@ class UserForm(forms.ModelForm):
 
 
 class ProfileForm(forms.ModelForm):
+    """
+    Profile form
+    """
     class Meta:
         model = Profile
         fields = ('address', 'age', 'profile_photo', 'gender')

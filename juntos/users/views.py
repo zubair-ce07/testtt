@@ -17,22 +17,11 @@ class IndexDetailView(generic.DetailView):
     """
     Index detailed view to show user information
     """
-    model = User
     template_name = 'profile/index.html'
     context_object_name = 'user'
 
     def get_object(self, queryset=None):
-        if self.request.user.is_authenticated:
-            return get_object_or_404(User, pk=self.request.user.pk)
-        return reverse('users:login')
-
-    def get_context_data(self, **kwargs):
-        """
-        Add `profile` to context data as well.
-        """
-        context = super(IndexDetailView, self).get_context_data(**kwargs)
-        context['profile'] = Profile.objects.get(user=self.request.user)
-        return context
+        return self.request.user
 
 
 class UserFormView(View):
@@ -59,7 +48,7 @@ class UserFormView(View):
             user.save()
 
             user = authenticate(username=username, password=password)
-            if user is not None and user.is_active:
+            if user and user.is_active:
                 login(request, user)
                 return redirect('users:index')
 
@@ -70,24 +59,18 @@ class ProfileUpdate(UpdateView):
     """
     Profile Update View
     """
-    model = Profile
     fields = ['address', 'age', 'profile_photo', 'gender']
     template_name = 'profile/generic_form.html'
+    success_url = reverse_lazy('users:index')
 
     def get_object(self, queryset=None):
-        if self.request.user.is_authenticated:
-            return Profile.objects.get(user__pk=self.request.user.pk)
-        return reverse('users:login')
-
-    def get_success_url(self):
-        return reverse_lazy('users:index')
+        return self.request.user.profile
 
 
 class UserUpdate(UpdateView):
     """
     User update view
     """
-    model = User
     form_class = UserForm
     success_url = reverse_lazy('users:index')
     template_name = 'profile/generic_form.html'
@@ -104,9 +87,7 @@ class UserUpdate(UpdateView):
         return HttpResponseRedirect(self.get_success_url())
 
     def get_object(self, queryset=None):
-        if self.request.user.is_authenticated:
-            return self.request.user
-        return reverse('users:login')
+        return self.request.user
 
 
 @login_required
