@@ -1,4 +1,6 @@
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.db import transaction
 from django.http import HttpResponseRedirect
 from django.urls import reverse_lazy, reverse
 from django.shortcuts import render, redirect, get_object_or_404
@@ -6,9 +8,8 @@ from django.contrib.auth import authenticate, login, update_session_auth_hash
 from django.views import generic
 from django.views.generic import View
 from django.views.generic.edit import UpdateView
-from validate_email import validate_email
 
-from .forms import UserForm
+from .forms import UserForm, ProfileForm
 from .models import Profile
 
 
@@ -92,19 +93,6 @@ class UserUpdate(UpdateView):
     template_name = 'profile/generic_form.html'
 
     def form_valid(self, form):
-        email = validate_email(form.cleaned_data['email'].strip())
-
-        if not email:
-            form.add_error("email", "Email is invalid")
-
-        already_registered = User.objects.filter(email=email).exclude(pk=self.request.user.pk)
-
-        if already_registered:
-            form.add_error("email", "Email already exists")
-
-        if form.errors:
-            return self.render_to_response(self.get_context_data(form=form))
-
         password = form.cleaned_data['password'].strip()
 
         if password:
@@ -119,3 +107,31 @@ class UserUpdate(UpdateView):
         if self.request.user.is_authenticated:
             return self.request.user
         return reverse('users:login')
+
+
+@login_required
+@transaction.atomic
+def update_profile(request):
+    """
+    To provide two forms to the user at a time, and let the user edit both at the same time.
+    """
+    if request.method == 'POST':
+        user_form = UserForm(request.POST, instance=request.user)
+        profile_form = ProfileForm(request.POST, instance=request.user.profile)
+        if user_form.is_valid() and profile_form.is_valid():
+            password = user_form.cleaned_data['password'].strip()
+
+            if password:
+                request.user.set_password(password)
+                update_session_auth_hash(request, request.user)
+
+            user_form.save()
+            profile_form.save()
+            return redirect('users:index')
+    else:
+        user_form = UserForm(instance=request.user)
+        profile_form = ProfileForm(instance=request.user.profile)
+    return render(request, 'profile/update_user_all_info.html', context={
+        'user_form': user_form,
+        'profile_form': profile_form
+    })

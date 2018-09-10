@@ -1,2 +1,4 @@
+ddt==1.2.0
 Django==2.1.1
+Pillow==5.2.0
 validate-email==1.3

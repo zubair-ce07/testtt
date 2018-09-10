@@ -13,4 +13,5 @@ urlpatterns = [
     path('register/', views.UserFormView.as_view(), name='register'),
     path('update/profile/', login_required(views.ProfileUpdate.as_view()), name='edit_profile'),
     path('update/user/', login_required(views.UserUpdate.as_view()), name='edit_basic_info'),
+    path('update/user/complete', views.update_profile, name='edit_all_info'),
 ]

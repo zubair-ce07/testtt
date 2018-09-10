@@ -2,6 +2,8 @@ from django.contrib.auth.models import User
 from django import forms
 from validate_email import validate_email
 
+from users.models import Profile
+
 
 class UserForm(forms.ModelForm):
     """
@@ -23,7 +25,8 @@ class UserForm(forms.ModelForm):
         if not validate_email(email):
             raise forms.ValidationError('Enter a valid email')
 
-        if User.objects.filter(email=email):
+        already_exists = User.objects.filter(email=email).exclude(pk=self.instance.pk)
+        if already_exists:
             raise forms.ValidationError('Email already exists')
 
         return email
@@ -51,3 +54,9 @@ class UserForm(forms.ModelForm):
             raise forms.ValidationError("Last name is required.")
 
         return last_name
+
+
+class ProfileForm(forms.ModelForm):
+    class Meta:
+        model = Profile
+        fields = ('address', 'age', 'profile_photo', 'gender')
