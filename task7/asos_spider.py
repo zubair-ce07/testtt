@@ -30,7 +30,7 @@ class AsosSpider(CrawlSpider):
     )
 
     custom_settings = {
-        'DOWNLOAD_DELAY': 6,
+        'DOWNLOAD_DELAY': 2,
         'USER_AGENT': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko)'
                       ' Chrome/68.0.3440.106 Safari/537.36'
     }
@@ -81,67 +81,59 @@ class AsosSpider(CrawlSpider):
         return self.product_stock_request(product_item, raw_product)
 
     def product_stock_request(self, product_item, raw_product):
-        raw_stock = raw_product.get('store', {})
-        params = {
-            "productIds": str(raw_product.get('id')),
-            "currency": raw_stock.get('currency'),
-            "keyStoreDataversion": raw_stock.get('keyStoreDataversion'),
-            "store": raw_stock.get('code')
-        }
+        raw_stock = raw_product['store']
+
+        params = {}
+        params["productIds"] = str(raw_product.get('id')),
+        params["currency"] = raw_stock.get('currency'),
+        params["keyStoreDataversion"] = raw_stock.get('keyStoreDataversion'),
+        params["store"] = raw_stock.get('code')
+
         yield Request(self.stock_url.format(urlencode(params)), cookies=self.cookies,
                       meta={'item': product_item}, callback=self.parse_product_stock)
 
     def parse_product_stock(self, response):
         raw_stock = loads(response.text)[0].get("variants")
-        product_item = response.meta.get('item')
-        product_skus = product_item.get('skus').copy()
+        product_item = response.meta['item']
+        product_skus = product_item['skus'].copy()
         prod_stock_map = {r_stock.get("variantId"): r_stock.get("isInStock") for r_stock in raw_stock}
 
         for sku in product_skus:
             if prod_stock_map.get(sku.get('sku_id', '')) == "false":
                 sku['out_of_stock'] = True
 
-            sku['sku_id'] = f'{sku.get("color")}_{sku.get("size")}'
-
+            sku['sku_id'] = f'{sku["color"]}_{sku["size"]}'
         product_item['skus'] = product_skus
-
         return product_item
 
     def extract_raw_product(self, response):
         xpath = '//script[contains(.,"Pages/FullProduct")]'
-        raw_product = response.xpath(xpath).re_first("view\('([^']+)")
-        return loads(raw_product)
+        return loads(response.xpath(xpath).re_first("view\('([^']+)"))
 
     def extract_gender(self, raw_product):
-        prod_gender = raw_product.get('gender')
-
-        if not prod_gender:
-            prod_gender = 'Unisex'
-
-        return prod_gender
+        return raw_product.get('gender') if raw_product.get('gender') else 'Unisex-adults'
 
     def extract_skus(self, raw_product):
-        raw_skus = raw_product['variants']
         raw_price = raw_product['price']
+        common = dict()
+        common['price'] = raw_price['current']
+        common['currency']= raw_price['currency']
+        prev_price = raw_price.get('previous')
+
+        if prev_price:
+            common['previous_price'] = [prev_price]
 
         product_skus = []
-        for raw_sku in raw_skus:
-            sku = {'color': raw_sku['colour'],
-                   'price': raw_price['current'],
-                   'currency': raw_price['currency']
-                   }
+        for raw_sku in raw_product['variants']:
+            sku = common.copy()
+            sku['color'] = raw_sku['colour']
             prod_size = raw_sku.get('size')
 
             if not prod_size:
                 prod_size = 'One Size'
 
             sku['size'] = prod_size
-            prev_price = raw_price.get('previous')
-
-            if prev_price:
-                sku['previous_price'] = [prev_price]
-
-            sku['sku_id'] = raw_sku.get('variantId')
+            sku['sku_id'] = raw_sku['variantId']
             product_skus.append(sku)
 
         return product_skus
