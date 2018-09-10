@@ -51,11 +51,11 @@ class ThomasPinkSpider(scrapy.Spider):
             next_url = response.urljoin(next_url)
             yield scrapy.Request(
                 url=next_url, callback=self.item_info_url)
-        else:
-            pass
 
     def item_detail(self, response):
         """This method crawl item detail information."""
+        description = response.css('ul.f-tabs-content>li>div>p::text').extract()
+        concatinate_description = ''.join(description)
         item_data = {
             'item_detail_url': response.url,
             'title':  response.css('.f-product-info__heading>h1::text').extract_first(),
@@ -63,7 +63,7 @@ class ThomasPinkSpider(scrapy.Spider):
                 '.f-product-info__meta>p>span::text').extract_first(),
             'item_id': response.css(
                 '.f-product-info__meta>.f-product-info__id::attr(data-js-upk)').extract_first(),
-            'description': response.css('ul.f-tabs-content>li>div>p::text').extract_first(),
+            'description': concatinate_description,
             'delivery_details': response.css('ul.f-tabs-content>li>p>strong::text').extract(),
         }
         yield item_data
