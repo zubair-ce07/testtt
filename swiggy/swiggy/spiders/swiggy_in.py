@@ -18,6 +18,7 @@ class SwiggyInSpider(Spider):
     meal_base_url = "https://www.swiggy.com/meals/"
     thumbnail_url = "https://res.cloudinary.com/swiggy/image/upload/" \
                     "fl_lossy,f_auto,q_auto,w_165,h_165,c_fill/{}"
+    banner_base_url = "https://www.swiggy.com/dapi/restaurants/list/v5"
 
     custom_settings = {
         "ROBOTSTXT_OBEY": False,
@@ -27,39 +28,41 @@ class SwiggyInSpider(Spider):
 
     special_categories = ["Recommended", "What's New", "Sharing Packs"]
 
-    Location = namedtuple('Location', ['lng', 'lat'])
+    Location = namedtuple('Location', ['lng', 'lat', 'postal_code', 'city'])
 
     test_locations = [
-        Location("77.659309", "12.83957"),
-        Location("80.1842321", "13.0205017"),
-        Location("77.251741", "28.551441")
+        Location("77.659309", "12.83957", "560100", 'Bangalore'),
+        Location("80.1842321", "13.0205017", "600125", 'Chennai'),
+        Location("77.251741", "28.551441", "110019", 'New Delhi')
     ]
 
     restaurents = ["KFC", "McDonald's", "Burger King", "Domino's"]
 
     @staticmethod
     def is_valid_reading(reading):
-        required_fields = ['Latitude', 'Longitude']
+        required_fields = ['Latitude', 'Longitude', 'Postal Code', 'City']
         return all(reading[field] for field in required_fields)
 
     def read(self, file_name):
         with open(file_name, 'r') as f:
-            return [self.Location(r['Longitude'], r['Latitude']) for r in DictReader(f)
+            return [self.Location(r['Longitude'], r['Latitude'], r['Postal Code'], r['City']) for r in DictReader(f)
                     if self.is_valid_reading(r)]
 
     def start_requests(self):
-        def add_location(url, loc, restaurent):
-            url = add_or_replace_parameter(url, "str", restaurent)
+        def add_location(url, loc):
             url = add_or_replace_parameter(url, "lat", loc.lat)
             url = add_or_replace_parameter(url, "lng", loc.lng)
             return url
 
-        locations = self.read('locations.csv')
-        request_urls = [add_location(self.search_base_url, loc, restaurent)
-                        for loc in locations for restaurent in self.restaurents]
+        locations = self.test_locations#self.read('locations.csv')
+        requests = []
+        for location in locations:
+            for restaurent in self.restaurents:
+                url = add_location(self.search_base_url, location)
+                url = add_or_replace_parameter(url, "str", restaurent)
+                requests.append(Request(url=url, callback=self.parse, meta={"postal_code": location.postal_code}))
 
-        search_requests = [Request(url=url, callback=self.parse) for url in request_urls]
-        return search_requests
+        return requests
 
     def parse(self, response):
         restaurant_name = url_query_parameter(response.url, "str")
@@ -79,12 +82,18 @@ class SwiggyInSpider(Spider):
                     url = add_or_replace_parameter(url, "lng", lng)
                     url = add_or_replace_parameter(url, "lat", lat)
 
-                    yield Request(url=url, callback=self.parse_dominos, meta={"url": restaurant_url})
+                    meta = {"url": restaurant_url,
+                            "postal_code": response.meta["postal_code"]
+                            }
+
+                    yield Request(url=url, callback=self.parse_dominos, meta=meta)
 
                 elif restaurant_name in self.restaurents:
                     meta = {"city": restaurant["city"], "locality": restaurant["locality"],
                             "restaurant_name": restaurant_name,
-                            "restaurant_id": restaurant["id"]}
+                            "restaurant_id": restaurant["id"],
+                            "postal_code": response.meta["postal_code"]
+                            }
 
                     yield Request(url=restaurant_url, callback=self.parse_restaurant, meta=meta)
 
@@ -99,6 +108,7 @@ class SwiggyInSpider(Spider):
         il.add_value("restaurant", response.meta["restaurant_name"])
         il.add_value("store_id", response.meta["restaurant_id"])
         il.add_value("url", response.url)
+        il.add_value("pincode", response.meta["postal_code"])
 
         return self.restaurant_category(il.load_item(), response)
 
@@ -113,6 +123,7 @@ class SwiggyInSpider(Spider):
         il.add_value("url", response.meta["url"])
         il.add_value("restaurant", raw_menu["name"])
         il.add_value("store_id", raw_menu["id"])
+        il.add_value("pincode", response.meta["postal_code"])
 
         return self.parse_dominos_categories(il.load_item(), response)
 
