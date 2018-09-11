@@ -235,12 +235,12 @@ class MaxMaraCrawlSpider(BaseCrawlSpider, Mixin):
     pagination_url_t = 'resultsViaAjax?q=&sort=topRated&numberOfPage=0&categoryCode=&' \
                        'numberOfClothes=16&numberOfClothesPE=16&scrollTop='
 
-    listing_xpaths = '//div[contains(@class,"cat")]'
+    listing_xpath = '//div[contains(@class,"cat")]'
     products_css = '.productMainLink'
     deny_urls = ['collection', 'runway', 'icon']
 
     rules = (
-        Rule(LinkExtractor(restrict_xpaths=listing_xpaths, deny=deny_urls),
+        Rule(LinkExtractor(restrict_xpaths=listing_xpath, deny=deny_urls),
              callback='parse_and_add_women'),
         Rule(LinkExtractor(restrict_css=products_css, process_value=lambda url: f'{url}/json'),
              callback='parse_item')
@@ -251,23 +251,21 @@ class MaxMaraCrawlSpider(BaseCrawlSpider, Mixin):
 
         if response.css('.pagination'):
             request = Request(self.pagination_url(response), callback=self.parse_listing)
-            yield self.add_trail_and_meta(request, response)
+
+            yield self.add_meta(request, response)
 
     def parse_listing(self, response):
-        raw_product = json.loads(response.text)
-
-        for next_page in range(1, raw_product['totalPage'] + 1):
+        for next_page in range(1, json.loads(response.text)['totalPage'] + 1):
             pagination_url = add_or_replace_parameter(response.url, 'numberOfPage', next_page)
             request = Request(pagination_url, callback=self.parse_pagination)
 
-            yield self.add_trail_and_meta(request, response)
+            yield self.add_meta(request, response)
 
     def parse_pagination(self, response):
-        raw_product = json.loads(response.text)
-
-        for raw_product in raw_product['searchPageData']['results'][0]['productList']:
+        raw_products = json.loads(response.text)['searchPageData']['results'][0]['productList']
+        for raw_product in raw_products:
             request = response.follow(f"{raw_product['url']}/json", callback=self.parse_item)
-            yield self.add_trail_and_meta(request, response)
+            yield self.add_meta(request, response)
 
     def pagination_url(self, response):
         q = clean(response.css('#variables::attr(data-query-on-ready)'))[0]
@@ -278,7 +276,7 @@ class MaxMaraCrawlSpider(BaseCrawlSpider, Mixin):
 
         return urljoin(response.url + '/', pagination_url)
 
-    def add_trail_and_meta(self, request, response):
+    def add_meta(self, request, response):
         request.meta['trail'] = self.add_trail(response)
         for meta in ('gender', 'category', 'industry', 'outlet', 'brand'):
             request.meta[meta] = request.meta.get(meta) or response.meta.get(meta)
