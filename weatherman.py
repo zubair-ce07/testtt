@@ -49,33 +49,32 @@ class FileParser:
             print("No weather files exist in this directory or wrong file name entered")
 
     def filter_weather_records(self, year):
-        filtered_readings = []
-        [filtered_readings.append(reading) for reading in self._readings if year in reading._file_weather_record]
-        return filtered_readings	
+        return [reading for reading in self._readings if year in reading._file_weather_record]
+         
 
 class Calculations:
     def __init__(self, _weather_records):
         self._weather_records = _weather_records
-        self._calculation_results = {} 
-        self._max_temps = [record._max_temp_c for record in self._weather_records]
-        self._min_temps = [record._min_temp_c for record in self._weather_records]
-        self._avg_mean_humidity = [record._mean_humidity for record in self._weather_records]
+        self._calculation_results = {}
 
     def calculate_hghst_lwst_temp_hmidity(self):
-        self._calculation_results["Highest_temp_day"] = max(self._weather_records, key=lambda x:x._max_temp_c)
-        self._calculation_results["Lowest_temp_day"] = min(self._weather_records, key=lambda x:x._min_temp_c)
-        self._calculation_results["Max_humidity_day"] = max(self._weather_records, key=lambda x:x._max_humidity)
+        self._calculation_results["Highest_temp_day"] = max(self._weather_records, key=lambda wr:wr._max_temp_c)
+        self._calculation_results["Lowest_temp_day"] = min(self._weather_records, key=lambda wr:wr._min_temp_c)
+        self._calculation_results["Max_humidity_day"] = max(self._weather_records, key=lambda wr:wr._max_humidity)
         return self._calculation_results
 
     def calculate_avg_temp_humidity(self):
-        self._calculation_results["Avg_highest_temp"] = int(sum(self._max_temps) / len(self._max_temps))
-        self._calculation_results["Avg_lowest_temp"] = int(sum(self._min_temps) / len(self._min_temps))
-        self._calculation_results["Avg_mean_humidity"] = int(sum(self._avg_mean_humidity) / len(self._avg_mean_humidity))
+        max_temp = [record._max_temp_c for record in self._weather_records]
+        min_temp = [record._min_temp_c for record in self._weather_records]
+        avg_mean_humidity = [record._mean_humidity for record in self._weather_records]
+        self._calculation_results["Avg_highest_temp"] = int(sum(max_temp) / len(max_temp))
+        self._calculation_results["Avg_lowest_temp"] = int(sum(min_temp) / len(min_temp))
+        self._calculation_results["Avg_mean_humidity"] = int(sum(avg_mean_humidity) / len(avg_mean_humidity))
         return self._calculation_results											   
 
     def calculate_hghst_lwst_temp_day(self):
-        self._calculation_results["Highest_temp_record"] = self._max_temps
-        self._calculation_results["Lowest_temp_record"] = self._min_temps
+        self._calculation_results["Highest_temp_record"] = max([record._max_temp_c for record in self._weather_records])
+        self._calculation_results["Lowest_temp_record"] = min([record._min_temp_c for record in self._weather_records])
         return self._calculation_results
 
 
@@ -83,12 +82,12 @@ class ReportGenerator:
     def report_for_hghst_lwst_temp_hmidity(self, weather_records):
         readings_calculator = Calculations(weather_records)
         results = readings_calculator.calculate_hghst_lwst_temp_hmidity()
-        print("Highest: " + str(results["Highest_temp_day"]._max_temp_c) + "C on ", self.convert_date(results["Highest_temp_day"]._PKT))
-        print("Lowest: " + str(results["Lowest_temp_day"]._min_temp_c) + "C on ", self.convert_date(results["Lowest_temp_day"]._PKT))
-        print("Humidity: " + str(results["Max_humidity_day"]._max_humidity) + r"% on ", self.convert_date(results["Max_humidity_day"]._PKT))
+        print("Highest: " + str(results["Highest_temp_day"]._max_temp_c) + "C on", self.convert_date(results["Highest_temp_day"]._PKT))
+        print("Lowest: " + str(results["Lowest_temp_day"]._min_temp_c) + "C on", self.convert_date(results["Lowest_temp_day"]._PKT))
+        print("Humidity: " + str(results["Max_humidity_day"]._max_humidity) + r"% on", self.convert_date(results["Max_humidity_day"]._PKT))
 
     def convert_date(self, date):
-        return date.strftime("%B") + " " + date.strftime("%d")
+        return date.strftime("%B %d")
 
     def report_for_avg_temp_humidity(self, weather_records):
         readings_calculator = Calculations(weather_records)
