@@ -19,7 +19,7 @@ class MixinUK(Mixin):
 
 
 class LindexParseSpider(BaseParseSpider):
-    price_css = '.info .amount::text'
+    price_css = '.info .amount::text, .info .original_price::text'
     care_css = '.more_info ::text'
     description_css = '.description ::text'
 
