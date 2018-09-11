@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+{% block title %}Insert Recipes Record{% endblock %}
+{% block body %}
+  <h2>Submit Recipes Data</h2>
+  <form action="" method=post>
+    {% if error %}
+      <p class=error><strong>Error:</strong> {{ error }}
+    {% endif %}
+    <p>Name:
+      <input type=text name=name value="{{ name }}" class=datainput required>
+    </p>
+    <p>Difficulty Level:
+        <select name="difficulty" class=datainput required>
+            <option value="easy">Easy</option>
+            <option value="medium">Medium</option>
+            <option value="hard">Hard</option>
+        </select>
+    </p>
+    <p>Ingredients:
+        <textarea name="ingredients" placeholder="Enter Your Ingredients" 
+          cols="50" rows="5" required>{{ ingredients }}</textarea>
+    </p>
+    <p>Description:
+        <textarea name="description" placeholder="Enter Description of How to Cook" 
+          cols="50" rows="5" required>{{ description }}</textarea>
+    </p>
+      <input type=submit value="Add Record" bg-color="#00FF00">
+  </form>
+{% endblock %}
