@@ -13,18 +13,21 @@ MAX_DISPLAY = 72
 
 
 class OrsaySpider(CrawlSpider):
+    """ This crawler will extract all products of website """
+    
     name = "orsay"
     start_urls = ['http://www.orsay.com/de-de/produkte']
     allowed_domains = ['www.orsay.com']
     
     sub_categories_extractor = LinkExtractor(
         restrict_css="ul.refinement-category-list a")
-
     rules = (
         Rule(sub_categories_extractor, callback='parse_categories', follow=True),
     )
 
     def parse_categories(self, response):
+        """this funbction will parse sub categories and their further pages"""
+        
         max_items = self.get_max_items(response)
         # check for more items or further pages and create request
         for items_count in range(MAX_DISPLAY, max_items, MAX_DISPLAY):
@@ -32,8 +35,8 @@ class OrsaySpider(CrawlSpider):
    
     def parse_products(self, response):
         """
-        this function will parse the main category page and extract
-        urls of all products of that category
+        this function will parse sub category page and extract
+        main information of all products
         """
         for product_div in response.css('div.product-tile'):
             product_detail_json = self.get_product_detail_json(product_div)
@@ -52,6 +55,7 @@ class OrsaySpider(CrawlSpider):
 
     def parse_color(self, response):
         """this function is a parser for size and color"""
+        
         product = response.meta['curr_item']
         product["urls"].append(response.url)
         product['images_url'].append(self.get_images_url(response))
@@ -62,6 +66,7 @@ class OrsaySpider(CrawlSpider):
 
     def get_product(self, product_detail_selector, response):
         """this function will form a product dict from data"""
+        
         product = {}
         product_detail_json = json.loads(product_detail_selector)
         product["name"] = product_detail_json["name"]
