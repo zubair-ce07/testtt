@@ -23,6 +23,7 @@ class MixinAT(Mixin):
 
     paging_url_t = 'https://www.hermes.com/apps/cde/personalize/grid/{}'
     stock_url = 'https://www.hermes.com/apps/ecom/stock'
+    cookie_url_t = 'https://www.hermes.com/apps/cde/personalize/product-push/{}'
 
 
 class HermesParseSpider(BaseParseSpider, Mixin):
@@ -54,10 +55,16 @@ class HermesParseSpider(BaseParseSpider, Mixin):
         garment['image_urls'] = self.image_urls(raw_product)
         garment['skus'] = self.skus(raw_product)
 
-        garment['meta'] = {'requests_queue': self.stock_request(garment)}
+        garment['meta'] = {'requests_queue': self.cookie_request(garment)}
 
         return self.next_request_or_garment(garment)
-    
+
+    def parse_cookie(self, response):
+        garment = response.meta['garment']
+        garment['meta']['requests_queue'] = self.stock_request(garment)
+
+        return self.next_request_or_garment(garment)
+
     def parse_stock(self, response):
         garment = response.meta.get('garment')
         stock = json.loads(response.text)
@@ -73,17 +80,24 @@ class HermesParseSpider(BaseParseSpider, Mixin):
 
         return skus
 
-    def stock_request(self, garment):
-        formdata = {
-            "skus": list(garment['skus'].keys()),
-            "locale":"at_de",
-            "container_id":"null"
-        }
-        headers = {'content-type': 'application/json'}
-        cookies = {"ECOM_SESS": "315ec9f785993778ab5f5ee8fb81e18f"}
+    def cookie_request(self, garment):
+        formdata = json.dumps({"locale": "at_de"})
+        headers = {"Content-Type": "application/json", 'Cookie': 'has_js=1'}
+        url = self.cookie_url_t.format(garment['retailer_sku'])
 
-        return [Request(self.stock_url, self.parse_stock, body=json.dumps(formdata),
-                        method='POST', cookies=cookies, headers=headers)]
+        return [Request(url, self.parse_cookie, body=formdata, method='POST',
+                        headers=headers, dont_filter=True)]
+
+    def stock_request(self, garment):
+        formdata = json.dumps({
+            "skus": list(garment['skus'].keys()),
+            "locale": "at_de",
+            "container_id": "null"
+        })
+        headers = {'content-type': 'application/json'}
+
+        return [Request(self.stock_url, self.parse_stock, body=formdata,
+                        method='POST', headers=headers, dont_filter=True)]
 
     def product_id(self, raw_product):
         return raw_product[0]['nid']
