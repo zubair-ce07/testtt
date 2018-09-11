@@ -30,7 +30,7 @@ class FileParser:
                 with open(os.path.join(self._path, file)) as csvfile:
                     csv_reader = csv.DictReader(csvfile)
                     for reading in csv_reader:
-                        record = WeatherRecord() #store single reading 
+                        record = WeatherRecord()
                         record._PKT = datetime.strptime(reading["PKT"],'%Y-%m-%d')
                         record._max_temp_c = float(reading["Max TemperatureC"]) if reading["Max TemperatureC"] else 0.0
                         record._mean_temp_c = float(reading["Mean TemperatureC"]) if reading["Mean TemperatureC"] else 0.0
@@ -43,19 +43,15 @@ class FileParser:
                         record._file_weather_record = file
                         self._readings.append(record)
 
-        if (self._readings):
+        if self._readings:
             return self._readings
         else:
             print("No weather files exist in this directory or wrong file name entered")
-            return None
 
     def filter_weather_records(self, year):
         filtered_readings = []
-        for reading in self._readings:
-            if year in reading._file_weather_record:
-                filtered_readings.append(reading)
-        return filtered_readings		
-
+        [filtered_readings.append(reading) for reading in self._readings if year in reading._file_weather_record]
+        return filtered_readings	
 
 class Calculations:
     def __init__(self, _weather_records):
@@ -66,33 +62,19 @@ class Calculations:
         self._avg_mean_humidity = [record._mean_humidity for record in self._weather_records]
 
     def calculate_hghst_lwst_temp_hmidity(self):
-        #Highest temperature and day
-        self._calculation_results["Highest_temp"] = max(self._max_temps)
-        self._calculation_results["Highest_temp_day(s)"] = [record._PKT for record in self._weather_records if
-                                                            record._max_temp_c == self._calculation_results["Highest_temp"]]
-        #Lowest temperature and day
-        self._calculation_results["Lowest_temp"] = min(self._min_temps)
-        self._calculation_results["Lowest_temp_day(s)"] = [record._PKT for record in self._weather_records if
-                                                           record._min_temp_c == self._calculation_results["Lowest_temp"]]
-        #Most humidity and day
-        self._calculation_results["Max_humidity"] = max(record._max_humidity for record in self._weather_records)
-        self._calculation_results["Max_humidity_day(s)"] = [record._PKT for record in self._weather_records if 
-                                                            record._max_humidity == self._calculation_results["Max_humidity"]]
+        self._calculation_results["Highest_temp_day"] = max(self._weather_records, key=lambda x:x._max_temp_c)
+        self._calculation_results["Lowest_temp_day"] = min(self._weather_records, key=lambda x:x._min_temp_c)
+        self._calculation_results["Max_humidity_day"] = max(self._weather_records, key=lambda x:x._max_humidity)
         return self._calculation_results
 
     def calculate_avg_temp_humidity(self):
-        #Average highest temperature
         self._calculation_results["Avg_highest_temp"] = int(sum(self._max_temps) / len(self._max_temps))
-        #Average lowest temperature
         self._calculation_results["Avg_lowest_temp"] = int(sum(self._min_temps) / len(self._min_temps))
-        #Average Mean Humidity
         self._calculation_results["Avg_mean_humidity"] = int(sum(self._avg_mean_humidity) / len(self._avg_mean_humidity))
         return self._calculation_results											   
 
     def calculate_hghst_lwst_temp_day(self):
-        #List of Highest Temperature on each day
         self._calculation_results["Highest_temp_record"] = self._max_temps
-        #List of Lowest Temperatures on each day
         self._calculation_results["Lowest_temp_record"] = self._min_temps
         return self._calculation_results
 
@@ -101,21 +83,12 @@ class ReportGenerator:
     def report_for_hghst_lwst_temp_hmidity(self, weather_records):
         readings_calculator = Calculations(weather_records)
         results = readings_calculator.calculate_hghst_lwst_temp_hmidity()
+        print("Highest: " + str(results["Highest_temp_day"]._max_temp_c) + "C on ", self.convert_date(results["Highest_temp_day"]._PKT))
+        print("Lowest: " + str(results["Lowest_temp_day"]._min_temp_c) + "C on ", self.convert_date(results["Lowest_temp_day"]._PKT))
+        print("Humidity: " + str(results["Max_humidity_day"]._max_humidity) + r"% on ", self.convert_date(results["Max_humidity_day"]._PKT))
 
-        print("Highest: " + str(results["Highest_temp"]) + "C on ", end='')
-        print(','.join(str(x) for x in self.convert_date(results["Highest_temp_day(s)"])))
-
-        print("Lowest: " + str(results["Lowest_temp"]) + "C on ", end='')
-        print(','.join(str(x) for x in self.convert_date(results["Lowest_temp_day(s)"])))
-
-        print("Humidity: " + str(results["Max_humidity"]) + r"% on ", end='')
-        print(','.join(str(x) for x in self.convert_date(results["Max_humidity_day(s)"])))
-
-    def convert_date(self, dates):
-        formatted_dates = []
-        for date in dates:
-            formatted_dates.append(date.strftime("%B")+ " "+ date.strftime("%d"))
-        return formatted_dates
+    def convert_date(self, date):
+        return date.strftime("%B") + " " + date.strftime("%d")
 
     def report_for_avg_temp_humidity(self, weather_records):
         readings_calculator = Calculations(weather_records)
@@ -168,7 +141,7 @@ def main():
     if args.e:
         year = datetime.strptime(args.e, "%Y").strftime("%Y")
         if parsed_readings is not None:
-            filtered_readings = file_parser.filter_weather_records(year)
+            filtered_readings = file_parser.filter_weather_records(year) 
             report.report_for_hghst_lwst_temp_hmidity(filtered_readings)
     if args.a:
         year_month = datetime.strptime(args.a, "%Y/%m").strftime("%Y_%b")
