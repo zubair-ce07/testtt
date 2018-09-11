@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block head_title %} Add Restaurant || {{ block.super }} MuyPicky.com {% endblock head_title %}
+{% block content %}
+{% include 'snippets/nav.html' %}
+<h1>Welcome {{ request.session.my_session }}</h1>
+{% endblock content %}
