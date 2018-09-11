@@ -3,6 +3,7 @@ import { OverlayTrigger, Popover, Navbar, Nav, NavItem, NavDropdown, MenuItem, F
 import { BrowserRouter as Router, Route, Link, NavLink } from "react-router-dom";
 import LoginForm from './LoginForm';
 import SignUpForm from './SignupForm';
+import SearchBar from '../containers/SearchBar';
 
 const popoverLogin = (
   <Popover id="popover-login" title="Login Here">
@@ -21,7 +22,7 @@ class NavBar extends Component {
   render() {
     return (
       <div>
-        <Navbar className="navbar navbar-expand-lg bg-primary" bsStyle="primary" collapseOnSelect>
+        <Navbar className="navbar navbar-expand-lg bg-primary" bsStyle="default" collapseOnSelect>
           <Navbar.Header>
             <Navbar.Brand>
               <a href="#brand">CricViz</a>
@@ -76,11 +77,6 @@ class NavBar extends Component {
             </Nav>
             <Nav pullRight>
 
-                <FormGroup>
-                  <FormControl type="text" placeholder="Search for players/teams" />
-                </FormGroup>{' '}
-                <Button className="btn btn-dark btn-outline-warning my-2 my-sm-0" bsStyle="primary" type="submit" >Search</Button>
-
                 <OverlayTrigger trigger="click" rootClose placement="bottom" overlay={popoverLogin} >
                     <button type="button" className="btn btn-info" id="myLoginBtn">Login</button>
                 </OverlayTrigger>
@@ -88,6 +84,8 @@ class NavBar extends Component {
                 <OverlayTrigger trigger="click" rootClose placement="bottom" overlay={popoverSignUp} >
                   <button type="button" className="btn btn-info" id="mySignUpBtn">Sign Up</button>
                 </OverlayTrigger>
+
+                <SearchBar />
 
             </Nav>
           </Navbar.Collapse>

@@ -8,6 +8,7 @@ import PlayerInsights from './players/components/PlayerInsights';
 import FollowPlayers from './players/components/FollowPlayers';
 import FollowTeams from './teams/components/FollowTeams';
 import TeamsHome from './teams/components/TeamsHome';
+import SearchBar from './home/containers/SearchBar';
 
 class App extends Component {
   render() {
