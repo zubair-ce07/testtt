@@ -26,15 +26,10 @@ class OrsaySpider(CrawlSpider):
 
     def parse_categories(self, response):
         max_items = self.get_max_items(response)
-        last_items = 0
         # check for more items or further pages and create request
         for items_count in range(MAX_DISPLAY, max_items, MAX_DISPLAY):
-            last_items = items_count
             yield self.get_next_page_request(response, items_count)
-        if max_items % MAX_DISPLAY:
-            last_items +=  MAX_DISPLAY
-            yield self.get_next_page_request(response, last_items)
-
+   
     def parse_products(self, response):
         """
         this function will parse the main category page and extract
