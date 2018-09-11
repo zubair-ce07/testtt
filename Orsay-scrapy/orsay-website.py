@@ -48,18 +48,17 @@ class OrsayCrawler(CrawlSpider):
         item['skus'] = {}
 
         # initial values for response
-        response.meta['lis'] = 1
         response.meta['item'] = item
-        for thing in self.iterate_over_sizes(response):
-            yield thing
+        for func in self.iterate_over_sizes(response):
+            yield func
 
     def iterate_over_sizes(self, response):
         """A recursive function to parse sizes of product"""
-        lis = response.meta.get('lis')
+        lis = response.meta.get('lis', 1)
         item = response.meta.get('item')
 
         # will be true for the first time
-        if type(lis) == type(1):
+        if isinstance(lis, int):
             lis = response.css('ul.swatches.size>li')
 
         # will start storing data in second iteration
@@ -79,8 +78,8 @@ class OrsayCrawler(CrawlSpider):
                 response.meta['lis'] = lis
                 response.meta['item'] = item
                 response.meta['out_of_stock'] = True
-                for thing in self.iterate_over_sizes(response):
-                    yield thing
+                for func in self.iterate_over_sizes(response):
+                    yield func
         else:
             yield item
 
