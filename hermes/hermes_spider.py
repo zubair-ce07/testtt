@@ -27,7 +27,7 @@ class MixinAT(Mixin):
 
 class HermesParseSpider(BaseParseSpider, Mixin):
     care_css = '.field-name-field-care-instructions-text ::text'
-    raw_product_r = re.compile('Drupal.settings,(.*)\);')
+    raw_product_re = re.compile('Drupal.settings,(.*)\);')
 
     def parse(self, response):
         raw_product = self.raw_product(response)['hermes_products']['data']['products']
@@ -106,8 +106,8 @@ class HermesParseSpider(BaseParseSpider, Mixin):
         return category.split(',')
     
     def product_brand(self, response):
-        css = '[type="application/ld+json"]::text'
-        raw_brand = json.loads(clean(response.css(css)[0]))['brand']
+        xpath = '//script[contains(., "seller")]/text()'
+        raw_brand = json.loads(clean(response.xpath(xpath)[0]))['brand']
         
         return raw_brand['name']
     
@@ -141,12 +141,12 @@ class HermesParseSpider(BaseParseSpider, Mixin):
 
     def raw_product(self, response):
         xpath = '//script[contains(., "basePath")]'
-        return json.loads(response.xpath(xpath).re_first(self.raw_product_r))
+        return json.loads(response.xpath(xpath).re_first(self.raw_product_re))
 
 
 class HermesCrawlSpider(BaseCrawlSpider, Mixin):
     custom_settings = {'DOWNLOAD_DELAY': 0.5}
-    raw_listing_r = re.compile('Drupal.settings,(.*)\);')
+    raw_listing_re = re.compile('Drupal.settings,(.*)\);')
 
     listing_css = ['#tray-nav-shop']
     rules = (
@@ -156,7 +156,7 @@ class HermesCrawlSpider(BaseCrawlSpider, Mixin):
 
     def parse_listing(self, response):
         xpath = '//script[contains(., "basePath")]'
-        raw_listing = response.xpath(xpath).re_first(self.raw_listing_r)
+        raw_listing = response.xpath(xpath).re_first(self.raw_listing_re)
         raw_listing = json.loads(raw_listing)
 
         meta = {'trail': self.add_trail(response)}
@@ -197,7 +197,7 @@ class HermesCrawlSpider(BaseCrawlSpider, Mixin):
         headers = response.request.headers
 
         for product in raw_products['items']:
-            url = f'{self.start_urls[0]}{product["url"][1:]}/'
+            url = response.urljoin("/at/de" + product["url"] + '/')
 
             yield reset_cookies(Request(url, self.parse_item, meta=meta, headers=headers))
 
