@@ -80,8 +80,8 @@ class HermesParseSpider(BaseParseSpider, Mixin):
         headers = {'content-type': 'application/json'}
         cookies = {"ECOM_SESS": "315ec9f785993778ab5f5ee8fb81e18f"}
 
-        return [Request(self.stock_url, body=formdata, method='POST', cookies=cookies,
-                        headers=headers, callback=self.parse_stock)]
+        return [Request(self.stock_url, self.parse_stock, body=formdata,
+                        method='POST', cookies=cookies, headers=headers)]
 
     def product_id(self, raw_product):
         return raw_product[0]['nid']
@@ -120,10 +120,9 @@ class HermesParseSpider(BaseParseSpider, Mixin):
         image_urls = [f"http:{img['uri']}-1535-1535.jpg" for p in raw_product for img in p['images']]
         return sorted(set(image_urls), key=image_urls.index)
 
-    def skus(self, raw_product):
+    def skus(self, raw_products):
         skus = {}
-
-        for raw_sku in raw_product:
+        for raw_sku in raw_products:
             money_strs = [raw_sku['price']]
             sku = self.product_pricing_common(None, money_strs=money_strs)
 
@@ -136,21 +135,18 @@ class HermesParseSpider(BaseParseSpider, Mixin):
 
             skus[raw_sku['sku']] = sku
 
-        return skus          
-        
+        return skus
+
     def raw_product(self, response):
         xpath = '//script[contains(., "basePath")]'
         return json.loads(response.xpath(xpath).re_first(self.raw_product_r))
 
 
 class HermesCrawlSpider(BaseCrawlSpider, Mixin):
-    custom_settings = {
-        'DOWNLOAD_DELAY': 0.5,
-        'COOKIES_ENABLED': False
-        }
+    custom_settings = {'DOWNLOAD_DELAY': 0.5}
     raw_listing_r = re.compile('Drupal.settings,(.*)\);')
-    listing_css = ['#tray-nav-shop']
 
+    listing_css = ['#tray-nav-shop']
     rules = (
         Rule(LinkExtractor(restrict_css=listing_css),
              callback='parse_listing'),
@@ -162,45 +158,46 @@ class HermesCrawlSpider(BaseCrawlSpider, Mixin):
         raw_listing = json.loads(raw_listing)
 
         meta = {'trail': self.add_trail(response)}
-        headers = {"Content-Type": "application/json" }
-        form_data = {
+        headers = {"Content-Type": "application/json", 'Cookie': 'has_js=1'}
+        form_data = json.dumps({
             "offset": 0,
             "limit": 36,
             "locale": raw_listing['hermes_locale'],
             "url_locale": raw_listing['hermes_url_locale'],
             "parents": raw_listing['hermes_category']['parents'],
             "sort": "relevance"
-        }
+        })
         url = self.paging_url_t.format(raw_listing['hermes_category']['data'])
 
-        yield Request(url, self.parse_paging, body=json.dumps(form_data),
-                      method='POST', headers=headers, meta=meta)
-    
+        yield Request(url, self.parse_paging, body=form_data, meta=meta,
+                      method='POST', headers=headers)
+
     def parse_paging(self, response):
-        raw_page = json.loads(response.text)
-        
+        page = json.loads(response.text)
+
+        meta = {'trail': response.meta.get('trail')}
         headers = response.request.headers
         form_data = json.loads(response.request.body.decode())
-        meta = {'trail': response.meta.get('trail')}
 
-        total_products = raw_page['total']
+        total_products = page['total']
         for page_offset in range(36, total_products, 36):
             form_data['offset'] = page_offset
 
             yield Request(response.url, self.parse_products, body=json.dumps(form_data),
-                          method='POST', headers=headers, meta=meta.copy(), dont_filter=True)
-        
-        yield from self.parse_products(response)
-    
-    def parse_products(self, response):
-        meta = {'trail': response.meta.get('trail')}
+                          method='POST', headers=headers, meta=meta, dont_filter=True)
 
+        yield from self.parse_products(response)
+
+    def parse_products(self, response):
         raw_products = json.loads(response.text)['products']
+
+        meta = {'trail': response.meta.get('trail')}
+        headers = response.request.headers
 
         for product in raw_products['items']:
             url = f'{self.start_urls[0]}{product["url"][1:]}/'
-            
-            yield Request(url, callback=self.parse_item, meta=meta)
+
+            yield reset_cookies(Request(url, self.parse_item, meta=meta, headers=headers))
 
 
 class HermesATParseSpider(HermesParseSpider, MixinAT):
