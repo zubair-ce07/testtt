@@ -9,6 +9,10 @@ class Mixin:
     retailer = 'lagarconne'
     allowed_domains = ['lagarconne.com']
 
+    MERCH_INFO = [
+        'exclusive'
+    ]
+
 
 class MixinUS(Mixin):
     retailer = Mixin.retailer + '-us'
@@ -21,7 +25,7 @@ class MixinUS(Mixin):
 
 class LaGarconneParseSpider(BaseParseSpider):
     price_css = '[itemprop="price"] .money::text, .lg-price-cut ::text'
-    raw_description_css = '.lg-desc-product p::text'
+    raw_description_css = '.lg-desc-product ::text'
 
     def parse(self, response):
         pid = self.product_id(response)
@@ -35,9 +39,10 @@ class LaGarconneParseSpider(BaseParseSpider):
         garment['care'] = self.product_care(response)
         garment['name'] = self.product_name(raw_product)
         garment['brand'] = self.product_brand(raw_product)
-        garment['category'] = self.product_category(raw_product)
         garment['image_urls'] = self.image_urls(raw_product)
+        garment['category'] = self.product_category(raw_product)
         garment['description'] = self.product_description(response)
+        garment['merch_info'] = self.merch_info(garment)
 
         if self.is_homeware(response):
             garment['industry'] = 'homeware'
@@ -49,33 +54,21 @@ class LaGarconneParseSpider(BaseParseSpider):
             return garment
 
         garment['skus'] = self.skus(response, raw_product)
-
-        colour_requests = self.colour_requests(response)
-        garment['meta'] = {'requests_queue': colour_requests}
-        return self.next_request_or_garment(garment)
-
-    def parse_colour(self, response):
-        garment = response.meta['garment']
-        raw_product = self.raw_product(response)
-
-        garment['skus'].update(self.skus(response, raw_product))
-        garment['image_urls'] += self.image_urls(raw_product)
-
-        return self.next_request_or_garment(garment)
+        return garment
 
     def raw_product(self, response):
         css = 'script:contains("productJSON")::text'
         return json.loads(response.css(css).re('{.*}')[0])
 
+    def product_id(self, response):
+        return clean(response.css('.product_id::text'))[0]
+
     def out_of_stock(self, hxs, response):
         css = '.lg-product-details:contains("SOLD OUT"), .lg-product-details:contains("Call to Order")'
         return response.css(css)
 
-    def product_id(self, response):
-        return clean(response.css('.product_id::text'))[0][:6]
-
     def product_category(self, raw_product):
-        return raw_product['type']
+        return [raw_product['type']]
 
     def product_name(self, raw_product):
         return raw_product['title']
@@ -89,7 +82,6 @@ class LaGarconneParseSpider(BaseParseSpider):
     def skus(self, response, raw_product):
         skus = {}
         common_sku = self.product_pricing_common(response)
-        common_sku['colour'] = self.detect_colour(raw_product['description'])
         for raw_sku in raw_product['variants']:
             sku = common_sku.copy()
 
@@ -99,14 +91,16 @@ class LaGarconneParseSpider(BaseParseSpider):
             size = raw_sku['option1']
             sku['size'] = self.one_size if size.lower() in self.one_sizes else size
 
+            if raw_sku['option2']:
+                sku['colour'] = raw_sku['option2']
+
             skus[raw_sku['sku']] = sku
 
         return skus
 
-    def colour_requests(self, response):
-        css = '.lg-desc-product #availablecolors ::attr(href)'
-        return [response.follow(u, callback=self.parse_colour)
-                for u in clean(response.css(css))]
+    def merch_info(self, garment):
+        info = garment['description'] + garment['care']
+        return [i for m in self.MERCH_INFO for i in info if m in i.lower()]
 
     def is_homeware(self, response):
         return 'interiors' in response.url
@@ -118,7 +112,7 @@ class LaGarconneCrawlSpider(BaseCrawlSpider):
         '.pagination'
     ]
 
-    products_css = '.lg-product-list-item'
+    products_css = '.lg-product-list-item-title'
 
     deny = '/pages'
 
