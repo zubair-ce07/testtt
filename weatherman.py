@@ -73,8 +73,8 @@ class Calculations:
         return self._calculation_results											   
 
     def calculate_hghst_lwst_temp_day(self):
-        self._calculation_results["Highest_temp_record"] = max([record._max_temp_c for record in self._weather_records])
-        self._calculation_results["Lowest_temp_record"] = min([record._min_temp_c for record in self._weather_records])
+        self._calculation_results["Highest_temp_record"] = [record._max_temp_c for record in self._weather_records]
+        self._calculation_results["Lowest_temp_record"] = [record._min_temp_c for record in self._weather_records]
         return self._calculation_results
 
 
@@ -107,17 +107,15 @@ class ReportGenerator:
             count = count + 1
 
 
-def validate_year_for_temp_and_humidity(command_e):
+def validate_year_for_temp_and_humidity(year):
     try:
-        datetime.strptime(command_e, "%Y").strftime("%Y")
-        return command_e
+        return datetime.strptime(year, "%Y").strftime("%Y")
     except ValueError:	
         print("Invalid year entered")
 
-def validate_date_for_avg_temp_hmdty_and_charts(command_a_c):
+def validate_date_for_avg_temp_hmdty_and_charts(date):
     try:
-        datetime.strptime(command_a_c, "%Y/%m").strftime("%Y_%b")
-        return command_a_c
+        return datetime.strptime(date, "%Y/%m").strftime("%Y_%b")
     except ValueError:	
         print("Invalid date entered")	
 
@@ -138,19 +136,16 @@ def main():
     file_parser = FileParser(args.path)
     parsed_readings = file_parser.parse_file()
     if args.e:
-        year = datetime.strptime(args.e, "%Y").strftime("%Y")
         if parsed_readings is not None:
-            filtered_readings = file_parser.filter_weather_records(year) 
+            filtered_readings = file_parser.filter_weather_records(args.e) 
             report.report_for_hghst_lwst_temp_hmidity(filtered_readings)
     if args.a:
-        year_month = datetime.strptime(args.a, "%Y/%m").strftime("%Y_%b")
         if parsed_readings is not None:
-            filtered_readings = file_parser.filter_weather_records(year_month)
+            filtered_readings = file_parser.filter_weather_records(args.a)
             report.report_for_avg_temp_humidity(filtered_readings)   
     if args.c:
-        year_month = datetime.strptime(args.c, "%Y/%m").strftime("%Y_%b")
         if parsed_readings is not None:
-            filtered_readings = file_parser.filter_weather_records(year_month)
-            date_to_display = datetime.strptime(args.c, "%Y/%m").strftime("%B %Y")
+            filtered_readings = file_parser.filter_weather_records(args.c)
+            date_to_display = datetime.strptime(args.c, "%Y_%b").strftime("%B %Y")
             report.report_for_hghst_lwst_temp_day(filtered_readings, date_to_display)
 main()
