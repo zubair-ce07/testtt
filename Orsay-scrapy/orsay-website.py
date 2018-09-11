@@ -15,7 +15,7 @@ class OrsayCrawler(CrawlSpider):
     rules = (
         Rule(LinkExtractor(allow=(r".*/produkte/", r".*/neuheiten/", r".*/sale/", r".*/trends/")),
              callback='parse_categories'),
-        Rule(LinkExtractor(restrict_css=".product-swatch-item"), callback='parse_products')
+        Rule(LinkExtractor(restrict_css=".product-image>a"), callback='parse_products')
     )
 
     def parse_categories(self, response):
@@ -47,37 +47,59 @@ class OrsayCrawler(CrawlSpider):
         item['retailer_sku'] = data_json.get('idListRef6')
         item['skus'] = {}
 
+        colors = response.css('.swatches.color a::attr(href)').extract()
+
+        if len(colors) > 0:
+            del colors[0]
+
         # initial values for response
-        response.meta['item'] = item
-        for func in self.iterate_over_sizes(response):
+        response.meta.update({'item': item, 'colors': colors, 'li': []})
+        for func in self.iterate_over_colors(response):
             yield func
 
-    def iterate_over_sizes(self, response):
+    def iterate_over_colors(self, response):
+        colors = response.meta.get('colors')
+        li = response.meta.get('li')
+        item = response.meta.get('item')
+        if len(colors) >= 0:
+            li += response.css('ul.swatches.size>li')
+        if len(colors) > 0:
+            color_url = colors[0]
+            del colors[0]
+            yield Request(url=color_url, callback=self.iterate_over_colors,
+                          meta={'li': li, 'item': item, 'colors': colors})
+        else:
+            response.meta.update({'li': li, 'item': item})
+            for func in self.iterate_over_sizes(response, True):
+                yield func
+
+    def iterate_over_sizes(self, response, first_iter=False):
         """A recursive function to parse sizes of product"""
-        lis = response.meta.get('lis', 1)
+        lis = response.meta.get('li', [])
         item = response.meta.get('item')
 
-        # will be true for the first time
-        if isinstance(lis, int):
-            lis = response.css('ul.swatches.size>li')
-
-        # will start storing data in second iteration
-        elif len(lis) > 0:
+        if len(lis) >= 0 and not first_iter:
             size_info = self.get_size_info(response)
-            item['skus'][item.get('retailer_sku') + '_' + size_info.get('size')] = size_info
+            size = size_info.get('info')
+            sku = size_info.get('sku')
+            item['skus'][str(sku) + '_' + size.get('size')] = size
 
         if len(lis) > 0:
             next_size = lis[0]
             del lis[0]
 
+            try:
+                size_name = next_size.css('::text').extract()[1].replace('\n', '')
+            except IndexError:
+                size_name = ''
+
             if len(next_size.css('.selectable').extract()) > 0:
                 yield Request(url=next_size.css(
                     '::attr(href)').extract_first() + '&Quantity=1&format=ajax&productlistid=undefined',
-                              callback=self.iterate_over_sizes, meta={'lis': lis, 'item': item, 'out_of_stock': False})
+                              callback=self.iterate_over_sizes,
+                              meta={'li': lis, 'item': item, 'out_of_stock': False, 'size': size_name})
             else:
-                response.meta['lis'] = lis
-                response.meta['item'] = item
-                response.meta['out_of_stock'] = True
+                response.meta.update({'li': lis, 'item': item, 'out_of_stock': True, 'size': size_name})
                 for func in self.iterate_over_sizes(response):
                     yield func
         else:
@@ -87,7 +109,7 @@ class OrsayCrawler(CrawlSpider):
         """This function takes a response object and finds and return product info"""
         data = response.css('::attr(data-product-details)').extract_first()
         data_json = json.loads(data)
-        current_size = data_json.get('size')
+        current_size = response.meta.get('size', '')
         size_info = SizeInfo()
         size_info['out_of_stock'] = response.meta.get('out_of_stock')
         size_info['price'] = data_json.get('grossPrice')
@@ -95,7 +117,12 @@ class OrsayCrawler(CrawlSpider):
         size_info['currency'] = data_json.get('currency_code')
         size_info['size'] = current_size
 
-        return size_info
+        sku = data_json.get('idListRef12')
+
+        size_response = {}
+        size_response['info'] = size_info
+        size_response['sku'] = sku
+        return size_response
 
     def get_care(self, response):
         """Extracts and returns Care of product"""
