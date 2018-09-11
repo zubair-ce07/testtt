@@ -35,9 +35,7 @@ class UniversalSpider(CrawlSpider):
     )
 
     custom_settings = {
-        'DOWNLOAD_DELAY': 6,
-        'USER_AGENT': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko)'
-                      ' Chrome/68.0.3440.106 Safari/537.36'
+        'DOWNLOAD_DELAY': 2,
     }
 
     def parse_product(self, response):
@@ -65,8 +63,7 @@ class UniversalSpider(CrawlSpider):
                       callback=self.parse_stock)
 
     def extract_raw_product(self, response):
-        raw_product = response.css('[type="text/x-json-product"]::text').extract_first()
-        return loads(raw_product)
+        return loads(response.css('[type="text/x-json-product"]::text').extract_first())
 
     def parse_stock(self, response):
         raw_stock = loads(response.text)["variants"]
@@ -109,7 +106,7 @@ class UniversalSpider(CrawlSpider):
         for raw_gender in self.gender_map.keys():
             if raw_gender in ' '.join(prod_categories).lower():
                 return self.gender_map[raw_gender]
-        return 'Unisex'
+        return 'Unisex-adults'
 
     def extract_image_urls(self, response):
         raw_images = response.css('.product-main-gallery-item img::attr(data-lazy)').extract()
@@ -128,7 +125,7 @@ class UniversalSpider(CrawlSpider):
         return prod_care
 
     def extract_description(self, raw_product):
-        return [remove_tags(raw_product["longDescription"])]
+        return [remove_tags(raw_product.get("longDescription", raw_product['tags']['T0']))]
 
     def extract_retailer_sku(self, raw_product):
         return raw_product['sku']
@@ -141,6 +138,5 @@ class UniversalSpider(CrawlSpider):
 
     def extract_categories(self, response):
         category_css = '[type="application/ld+json"]:contains(BreadcrumbList)::text'
-        raw_category = response.css(category_css).extract_first()
-        raw_category = loads(raw_category)
+        raw_category = loads(response.css(category_css).extract_first())
         return [c['item']['name'] for c in raw_category['itemListElement']]
