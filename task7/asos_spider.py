@@ -127,12 +127,7 @@ class AsosSpider(CrawlSpider):
         for raw_sku in raw_product['variants']:
             sku = common.copy()
             sku['color'] = raw_sku['colour']
-            prod_size = raw_sku.get('size')
-
-            if not prod_size:
-                prod_size = 'One Size'
-
-            sku['size'] = prod_size
+            sku['size'] = raw_sku.get('size') if raw_sku.get('size') else 'One Size'
             sku['sku_id'] = raw_sku['variantId']
             product_skus.append(sku)
 
