@@ -76,7 +76,8 @@ class OrsayCrawler(CrawlSpider):
 
         if len(color_urls) > 0:
             color_url = color_urls.pop(0)
-            yield Request(url=color_url, meta=meta_data, callback=self.iterate_over_colors)
+            yield Request(url=color_url, meta=meta_data, dont_filter=True,
+                          callback=self.iterate_over_colors)
         else:
             response.meta.update(meta_data)
             for func in self.iterate_over_sizes(response, True):
