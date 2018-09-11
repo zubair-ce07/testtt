@@ -11,7 +11,7 @@ class UserChangePasswordForm(forms.Form):
     new_password = forms.CharField(required=True)
 
 
-class UserEditProfileForm(forms.Field):
+class UserEditProfileForm(forms.Form):
     first_name = forms.CharField(required=True)
     last_name = forms.CharField(required=True)
     city = forms.CharField(required=False)

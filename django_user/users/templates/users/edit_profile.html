@@ -1,15 +1,21 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 {% block head_title %} Edit Profile || {{ block.super }} Users {% endblock head_title %}
 {% block content %}
 {% include 'snippets/nav.html' %}
 <h1>Edit Profile</h1>
 <form method='POST'> {% csrf_token %}
-    <input type='text' value="{{first_name}}" name='first_name' placeholder='first_name'><br>
-    <input type='text' value="{{last_name}}" name='last_name' placeholder='last_name'><br>
-    <input type='text' value="{{city}}" name='city' placeholder='city'><br>
-    <input type='text' value="{{country}}" name='country' placeholder='country'><br>
-    <input type='text' value="{{qualification}}" name='qualification' placeholder='qualification'><br>
-    <input type='Date' value="{{date_of_birth}}" name='date_of_birth' placeholder='date_of_birth'><br>
+    <label>First Name</label><br>
+    <input type='text' value='{{first_name}}' name='first_name' placeholder='first_name'><br>
+    <label>Last Name</label><br>
+    <input type='text' value='{{last_name}}' name='last_name' placeholder='last_name'><br>
+    <label>City</label><br>
+    <input type='text' value='{{city}}' name='city' placeholder='city'><br>
+    <label>Country</label><br>
+    <input type='text' value='{{country}}' name='country' placeholder='country'><br>
+    <label>Qualification</label><br>
+    <input type='text' value='{{qualification}}' name='qualification' placeholder='qualification'><br>
+    <label>Date of Birth</label><br>
+    <input type='Date' value='{{date_of_birth}}' name='date_of_birth' placeholder='date_of_birth'><br>
     <button type='submit'>Save</button>
 </form>
 {% endblock content %}

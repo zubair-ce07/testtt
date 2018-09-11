@@ -99,18 +99,12 @@ def user_edit_profileview(request):
         username=request.session['my_session']
     )
     if obj:
-        context['first_name'] = obj[0].first_name
-        context['last_name'] = obj[0].last_name
-        context['city'] = obj[0].city
-        context['country'] = obj[0].country
-        context['qualification'] = obj[0].qualification
-        context['date_of_birth'] = obj[0].date_of_birth
+        context = populate_object_data_in_context(context, obj)
     template_name = 'users/edit_profile.html'
     return render(request, template_name, context)
 
 
 def save_object_data(obj, form):
-    obj[0].password = form.cleaned_data.get('new_password')
     obj[0].first_name = form.cleaned_data.get('first_name')
     obj[0].last_name = form.cleaned_data.get('last_name')
     obj[0].city = form.cleaned_data.get('city')
