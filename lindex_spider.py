@@ -33,6 +33,12 @@ class LindexParseSpider(BaseParseSpider):
         self.boilerplate_normal(garment, response)
         garment['gender'] = self.product_gender(garment)
         garment['image_urls'] = self.image_urls(response)
+
+        if self.out_of_stock(response, response):
+            garment['out_of_stock'] = True
+            garment.update(self.product_pricing_common(response))
+            return garment
+
         garment['skus'] = self.skus(response)
         return garment
 
@@ -78,6 +84,10 @@ class LindexParseSpider(BaseParseSpider):
 
         return skus
 
+    def out_of_stock(self, hxs, response):
+        css = '#ProductPage .soldout[style*=none]'
+        return not response.css(css)
+
     def image_urls(self, response):
         return clean(response.css('.pagination ::attr(src)'))
 
@@ -86,12 +96,14 @@ class PaginationLE:
     def extract_links(self, response):
         if not response.css('#productGrid'):
             return []
-        base_url = response.urljoin('#!/page/only')
+
+        request_url_t = response.urljoin('/SiteV3/Category/GetProductGridPage?pageIndex={0}&nodeId={1}')
+        page_id = clean(response.css('body::attr(data-page-id)'))[0]
         total_count = int(clean(response.css('#productGrid ::attr(data-page-count)'))[0])
 
         return [
-            Link(base_url.replace('page', 'page' + str(idx)))
-            for idx in range(1, total_count + 1)
+            Link(request_url_t.format(idx, page_id))
+            for idx in range(total_count)
         ]
 
 
@@ -101,7 +113,7 @@ class LindexCrawlSpider(BaseCrawlSpider):
     ]
 
     products_css = [
-        '.info .productCardLink'
+        '.gridPage .info'
     ]
 
     rules = (
