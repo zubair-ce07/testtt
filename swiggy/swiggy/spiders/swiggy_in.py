@@ -1,3 +1,4 @@
+import re
 from json import loads
 
 from scrapy import Spider, Request
@@ -35,13 +36,14 @@ class SwiggyInSpider(Spider):
             url = add_or_replace_parameter(url, "lng", loc.lng)
             return url
 
-        locations = read("locations.csv")
+        locations = test_locations
         requests = []
         for location in locations:
             for restaurent in self.restaurents:
                 url = add_location(self.search_base_url, location)
                 url = add_or_replace_parameter(url, "str", restaurent)
-                requests.append(Request(url=url, callback=self.parse, meta={"postal_code": location.postal_code}))
+                requests.append(Request(url=url, callback=self.parse, meta={"postal_code": location.postal_code,
+                                                                            "locality": location.locality}))
 
         return requests
 
@@ -64,13 +66,14 @@ class SwiggyInSpider(Spider):
                     url = add_or_replace_parameter(url, "lat", lat)
 
                     meta = {"url": restaurant_url,
-                            "postal_code": response.meta["postal_code"]
+                            "postal_code": response.meta["postal_code"],
+                            "locality": response.meta["locality"]
                             }
 
                     yield Request(url=url, callback=self.parse_dominos, meta=meta)
 
                 elif restaurant_name in self.restaurents:
-                    meta = {"city": restaurant["city"], "locality": restaurant["locality"],
+                    meta = {"city": restaurant["city"], "locality": response.meta["locality"],
                             "restaurant_name": restaurant_name,
                             "restaurant_id": restaurant["id"],
                             "postal_code": response.meta["postal_code"]
@@ -99,7 +102,7 @@ class SwiggyInSpider(Spider):
         il.add_value("average_rating", raw_menu["avgRatingString"])
         il.add_value("num_of_ratings", raw_menu["totalRatingsString"])
         il.add_value("city", raw_menu["city"])
-        il.add_value("locality", raw_menu["locality"])
+        il.add_value("locality", response.meta["locality"])
         il.add_value("source", "swiggy")
         il.add_value("url", response.meta["url"])
         il.add_value("restaurant", raw_menu["name"])
@@ -120,7 +123,7 @@ class SwiggyInSpider(Spider):
             il.add_value("veg", False)
 
         if menu_item["price"]:
-            il.add_value("price", str(menu_item["price"]))
+            il.add_value("price", str(menu_item["price"] / 100))
 
         if menu_item.get("ribbon"):
             il.add_value("promotion", menu_item["ribbon"]["text"])
@@ -129,7 +132,7 @@ class SwiggyInSpider(Spider):
 
     def process_variant(self, il, variant):
         il.add_value("size", variant["name"])
-        il.add_value("price", str(variant["price"]))
+        il.add_value("price", str(variant["price"] / 100))
         return il
 
     def parse_dominos_categories(self, item, response):
@@ -242,8 +245,27 @@ class SwiggyInSpider(Spider):
     def restaurant_category(self, item, response):
         categoires = response.xpath("//*[contains(@class, '_2dS-v')]")
 
+        def get_size(title):
+            size_map = {
+                "(R)": "Regular",
+                "(M)": "Medium",
+                "(S)": "Small",
+                "(L)": "Large"
+            }
+            title = title[0].replace(" ", "")
+
+            for size in size_map:
+                if size in title:
+                    return size_map[size]
+
         def process_menu_item(il):
-            il.add_xpath("title", "descendant-or-self::*[@itemprop='name']/text()")
+            item_title = il.get_xpath("descendant-or-self::*[@itemprop='name']/text()")
+            il.add_value("title", item_title)
+            item_size = get_size(item_title)
+
+            if item_size:
+                il.add_value("size", item_size)
+
             il.add_xpath("thumbnail", "descendant-or-self::*[@itemprop='image']/@content")
             il.add_xpath("price", "descendant-or-self::*[@class='bQEAj']/text()")
             il.add_xpath("description",
