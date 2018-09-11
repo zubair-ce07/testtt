@@ -9,13 +9,13 @@ import thunk from 'redux-thunk';
 import rootReducer from './home/reducers/index';
 import reducers from './home/reducers';
 import { Provider } from 'react-redux'
+import { composeWithDevTools } from 'redux-devtools-extension';
 
-
-const createStoreWithMiddleware = applyMiddleware(thunk)(createStore);
-const store = createStore(rootReducer);
+// const createStoreWithMiddleware = applyMiddleware(thunk)(createStore);
+const store = createStore(rootReducer, composeWithDevTools(applyMiddleware(thunk)));
 
 ReactDOM.render(
-  <Provider store={createStoreWithMiddleware(reducers)}>
+  <Provider store={store}>
     <App />
   </Provider>,
    document.getElementById('root'));
