@@ -1,9 +1,7 @@
 from datetime import datetime
 
 import scrapy
-from NWH.items import NwhItem
-from scrapy.loader import ItemLoader
-from scrapy.loader.processors import TakeFirst
+from NWH.items import NwhLoader
 
 
 class NwhSpider(scrapy.Spider):
@@ -20,8 +18,7 @@ class NwhSpider(scrapy.Spider):
             yield scrapy.Request("https://www.nwh.org/find-a-doctor/find-a-doctor-profile?id={}".format(doctor_id), callback=self.parse_item)
 
     def parse_item(self, response):
-        loader = ItemLoader(item=NwhItem(), response=response)
-        loader.default_output_processor = TakeFirst()
+        loader = NwhLoader(response=response)
         loader.add_value("crawled_date", str(datetime.now()))
         loader.add_value('source_url', response.url)
         loader.add_xpath("full_name", '//h1[@class="header-doctor-name"]/text()')

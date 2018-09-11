@@ -1,7 +1,8 @@
 from urllib.parse import urljoin
 
 import scrapy
-from scrapy.loader.processors import MapCompose, Join
+from scrapy.loader import ItemLoader
+from scrapy.loader.processors import MapCompose, Join, TakeFirst
 
 
 def filter_speciality(value):
@@ -16,12 +17,14 @@ class NwhItem(scrapy.Item):
     medical_school = scrapy.Field()
     graduate_education = scrapy.Field()
     full_name = scrapy.Field()
-    image_url = scrapy.Field(
-        input_processor=MapCompose(lambda url: urljoin('https://www.nwh.org', url))
-    )
-    address = scrapy.Field(
-        output_processor=Join()
-    )
-    speciality = scrapy.Field(
-        input_processor=MapCompose(filter_speciality)
-    )
+    image_url = scrapy.Field()
+    address = scrapy.Field()
+    speciality = scrapy.Field()
+
+
+class NwhLoader(ItemLoader):
+    default_output_processor = TakeFirst()
+    default_item_class = NwhItem
+    image_url_in = MapCompose(lambda url: urljoin('https://www.nwh.org', url))
+    address_out = Join()
+    speciality_in = MapCompose(filter_speciality)
