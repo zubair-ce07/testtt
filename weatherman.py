@@ -135,16 +135,14 @@ def main():
     report = ReportGenerator()
     file_parser = FileParser(args.path)
     parsed_readings = file_parser.parse_file()
-    if args.e:
-        if parsed_readings is not None:
+    if parsed_readings is not None:
+        if args.e:
             filtered_readings = file_parser.filter_weather_records(args.e) 
             report.report_for_hghst_lwst_temp_hmidity(filtered_readings)
-    if args.a:
-        if parsed_readings is not None:
+        if args.a:
             filtered_readings = file_parser.filter_weather_records(args.a)
             report.report_for_avg_temp_humidity(filtered_readings)   
-    if args.c:
-        if parsed_readings is not None:
+        if args.c:
             filtered_readings = file_parser.filter_weather_records(args.c)
             date_to_display = datetime.strptime(args.c, "%Y_%b").strftime("%B %Y")
             report.report_for_hghst_lwst_temp_day(filtered_readings, date_to_display)
