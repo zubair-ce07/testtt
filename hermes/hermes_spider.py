@@ -74,13 +74,15 @@ class HermesParseSpider(BaseParseSpider, Mixin):
         return skus
 
     def stock_request(self, garment):
-        skus = '","'.join(garment['skus'].keys())
-
-        formdata = f'{{"skus":["{skus}"],"locale":"at_de","container_id":null}}'
+        formdata = {
+            "skus": list(garment['skus'].keys()),
+            "locale":"at_de",
+            "container_id":"null"
+        }
         headers = {'content-type': 'application/json'}
         cookies = {"ECOM_SESS": "315ec9f785993778ab5f5ee8fb81e18f"}
 
-        return [Request(self.stock_url, self.parse_stock, body=formdata,
+        return [Request(self.stock_url, self.parse_stock, body=json.dumps(formdata),
                         method='POST', cookies=cookies, headers=headers)]
 
     def product_id(self, raw_product):
