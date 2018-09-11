@@ -19,11 +19,14 @@ class SwiggyInSpider(Spider):
     thumbnail_url = "https://res.cloudinary.com/swiggy/image/upload/" \
                     "fl_lossy,f_auto,q_auto,w_165,h_165,c_fill/{}"
     banner_base_url = "https://www.swiggy.com/dapi/restaurants/list/v5"
+    autocomplete_base_url = "https://www.swiggy.com/dapi/misc/places-autocomplete"
+    geocode_base_url = "https://www.swiggy.com/dapi/misc/reverse-geocode"
 
     custom_settings = {
         "ROBOTSTXT_OBEY": False,
         "USER_AGENT": "Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 "
-                      "(KHTML, like Gecko) Chrome/27.0.1453.93 Safari/537.36"
+                      "(KHTML, like Gecko) Chrome/27.0.1453.93 Safari/537.36",
+        "DOWNLOAD_DELAY": 2
     }
 
     special_categories = ["Recommended", "What's New", "Sharing Packs"]
@@ -31,21 +34,31 @@ class SwiggyInSpider(Spider):
     restaurents = ["KFC", "McDonald's", "Burger King", "Domino's"]
 
     def start_requests(self):
-        def add_location(url, loc):
-            url = add_or_replace_parameter(url, "lat", loc.lat)
-            url = add_or_replace_parameter(url, "lng", loc.lng)
-            return url
-
         locations = test_locations
+
         requests = []
-        for location in locations:
-            for restaurent in self.restaurents:
-                url = add_location(self.search_base_url, location)
-                url = add_or_replace_parameter(url, "str", restaurent)
-                requests.append(Request(url=url, callback=self.parse, meta={"postal_code": location.postal_code,
-                                                                            "locality": location.locality}))
+        for loc in locations:
+            url = add_or_replace_parameter(self.autocomplete_base_url, "input", loc.postal_code.replace(" ", ""))
+            requests.append(Request(url=url, callback=self.place_search,
+                                    meta={"postal_code": loc.postal_code, "locality": loc.locality}))
 
         return requests
+
+    def place_search(self, response):
+        search_results = loads(response.text)["data"]
+        for location in search_results:
+            url = add_or_replace_parameter(self.geocode_base_url, "place_id", location["place_id"])
+            yield Request(url=url, callback=self.geocode_search, meta=response.meta)
+
+    def geocode_search(self, response):
+        geocodes = loads(response.text)["data"]
+        for geocode in geocodes:
+            location = geocode["geometry"]["location"]
+            for restaurant in self.restaurents:
+                url = add_or_replace_parameter(self.search_base_url, "str", restaurant)
+                url = add_or_replace_parameter(url, "lat", location["lat"])
+                url = add_or_replace_parameter(url, "lng", location["lng"])
+                yield Request(url=url, callback=self.parse, meta=response.meta)
 
     def parse(self, response):
         restaurant_name = url_query_parameter(response.url, "str")
