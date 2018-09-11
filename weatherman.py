@@ -110,23 +110,23 @@ class ReportGenerator:
 def validate_year_for_temp_and_humidity(year):
     try:
         return datetime.strptime(year, "%Y").strftime("%Y")
-    except ValueError:	
-        print("Invalid year entered")
+    except:	
+        raise argparse.ArgumentTypeError("Invalid year entered")
 
 def validate_date_for_avg_temp_hmdty_and_charts(date):
     try:
         return datetime.strptime(date, "%Y/%m").strftime("%Y_%b")
-    except ValueError:	
-        print("Invalid date entered")	
+    except:	
+        raise argparse.ArgumentTypeError("Invalid date entered")	
 
 def validate_directory_path(dir_path):
     if not os.path.isdir(dir_path):		
-        print("Directory does not exist !")
+        raise argparse.ArgumentTypeError("Invalid directory path")
     return dir_path	
 
 def main():	
     parser = argparse.ArgumentParser()
-    parser.add_argument("path", help ="Path to directory", type=str)
+    parser.add_argument("path", help ="Path to directory", type=validate_directory_path)
     parser.add_argument("-e", help="Prompt an year for highest and lowest temperature, humidity", type=validate_year_for_temp_and_humidity)
     parser.add_argument("-a", help="Prompt a date for average temperature, humidity", type=validate_date_for_avg_temp_hmdty_and_charts)
     parser.add_argument("-c", help="Prompt a date to display bar charts for highest and lowest temperature", type=validate_date_for_avg_temp_hmdty_and_charts)
@@ -135,7 +135,7 @@ def main():
     report = ReportGenerator()
     file_parser = FileParser(args.path)
     parsed_readings = file_parser.parse_file()
-    if parsed_readings is not None:
+    if parsed_readings:
         if args.e:
             filtered_readings = file_parser.filter_weather_records(args.e) 
             report.report_for_hghst_lwst_temp_hmidity(filtered_readings)
