@@ -123,7 +123,7 @@ class OrsaySpider(CrawlSpider):
             'div.load-more-progress::attr(data-max)').extract_first())
 
     def get_next_page_request(self, response, count):
-        next_url = response.url + "?sz=" + str(count)
+        next_url = f"{response.url}?sz={str(count)}"
         return scrapy.Request(url=next_url, callback=self.parse_products)
 
     def is_in_stock(self, li_response):
