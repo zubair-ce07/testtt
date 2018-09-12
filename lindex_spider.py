@@ -1,7 +1,6 @@
 from itertools import product
 
-from scrapy.link import Link
-from scrapy.spiders import Rule
+from scrapy.spiders import Request
 
 from .base import BaseParseSpider, BaseCrawlSpider, LinkExtractor, clean
 
@@ -44,13 +43,15 @@ class LindexParseSpider(BaseParseSpider):
         return garment
 
     def product_id(self, response):
-        return clean(response.css('#ProductPage ::attr(data-product-identifier)'))[0]
+        css = '#ProductPage ::attr(data-product-identifier)'
+        return clean(response.css(css))[0]
 
     def product_name(self, response):
         return clean(response.css('.name::text'))[0]
 
     def product_brand(self, response):
-        brand = clean(response.css('[id*="productContainer"]::attr(data-product-brand)'))
+        css = '[id*="productContainer"]::attr(data-product-brand)'
+        brand = clean(response.css(css))
         if brand:
             return brand[0]
         return 'Lindex'
@@ -96,21 +97,6 @@ class LindexParseSpider(BaseParseSpider):
         return clean(response.css('.pagination ::attr(src)'))
 
 
-class PaginationLE:
-    def extract_links(self, response):
-        if not response.css('#productGrid'):
-            return []
-
-        request_url_t = response.urljoin('/SiteV3/Category/GetProductGridPage?pageIndex={0}&nodeId={1}')
-        page_id = clean(response.css('body::attr(data-page-id)'))[0]
-        total_count = int(clean(response.css('#productGrid ::attr(data-page-count)'))[0])
-
-        return [
-            Link(request_url_t.format(idx, page_id))
-            for idx in range(1, total_count)
-        ]
-
-
 class LindexCrawlSpider(BaseCrawlSpider):
     listings_css = [
         '.mainMenu'
@@ -120,11 +106,31 @@ class LindexCrawlSpider(BaseCrawlSpider):
         '.gridPage .info'
     ]
 
-    rules = (
-        Rule(LinkExtractor(restrict_css=listings_css), callback='parse'),
-        Rule(PaginationLE(), 'parse'),
-        Rule(LinkExtractor(restrict_css=products_css), callback='parse_item')
-    )
+    def parse(self, response):
+        links = LinkExtractor(restrict_css=self.listings_css).extract_links(response)
+        for i, link in enumerate(links):
+            yield Request(link.url,
+                          meta={'cookiejar': i},
+                          callback=self.parse_pages)
+
+    def parse_pages(self, response):
+        server_url_t = '/SiteV3/Category/GetProductGridPage?pageIndex={0}&nodeId={1}'
+        request_url_t = response.urljoin(server_url_t)
+
+        page_id = clean(response.css('body::attr(data-page-id)'))[0]
+        total_count = int(clean(response.css('#productGrid ::attr(data-page-count)'))[0])
+
+        for idx in range(total_count):
+            yield Request(request_url_t.format(idx, page_id),
+                          meta={'cookiejar': response.meta['cookiejar']},
+                          callback=self.parse_products)
+
+    def parse_products(self, response):
+        links = LinkExtractor(restrict_css=self.products_css).extract_links(response)
+        for link in links:
+            yield Request(link.url,
+                          meta={'trail': self.add_trail(response)},
+                          callback=self.parse_item)
 
 
 class LindexParseSpiderUK(LindexParseSpider, MixinUK):
