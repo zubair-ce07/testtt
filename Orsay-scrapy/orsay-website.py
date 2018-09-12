@@ -24,7 +24,6 @@ class OrsayCrawler(CrawlSpider):
         """
 
         total_products_count = self.get_product_count(response)
-
         for count in range(0, total_products_count, 72):
             yield Request(url=f"{response.url}?start={count}&format=page-element")
 
@@ -63,12 +62,18 @@ class OrsayCrawler(CrawlSpider):
         color_urls = response.meta.get('color_urls')
         size_links = response.meta.get('size_links', [])
         item = response.meta.get('item')
-
         item['image_urls'] += self.get_images(response)
+
         product_color = self.get_size_color(response)
         product_sku = self.get_size_sku(response)
         for size_tag in response.css('ul.swatches.size>li'):
-            size_links.append((size_tag, product_color, product_sku))
+            size_tag_info = {}
+            size_tag_info['product_color'] = product_color
+            size_tag_info['product_sku'] = product_sku
+            size_tag_info['size_tag'] = size_tag
+            size_tag_info['size_name'] = self.get_size_name(size_tag)
+            size_tag_info['size_available'] = self.is_size_available(size_tag)
+            size_links.append(size_tag_info)
 
         meta_data = {}
         meta_data['size_links'] = size_links
@@ -77,8 +82,7 @@ class OrsayCrawler(CrawlSpider):
         if color_urls:
             color_url = color_urls.pop(0)
             meta_data['color_urls'] = color_urls
-            yield Request(url=color_url, meta=meta_data,
-                          callback=self.iterate_over_colors)
+            yield Request(url=color_url, meta=meta_data, callback=self.iterate_over_colors)
         else:
             response.meta.update(meta_data)
             for func in self.iterate_over_sizes(response, True):
@@ -90,61 +94,49 @@ class OrsayCrawler(CrawlSpider):
         item = response.meta.get('item')
 
         if not first_iter:
-            size_info = self.get_size_info(response)
-            size = size_info.get('info')
-            size_sku = size_info.get('size_sku')
-            sku_id = f"{size_sku}_{size.get('size')}"
-            item['skus'][sku_id] = size
+            item = self.get_size_info_appended(response)
 
         if size_links:
             next_size = size_links.pop(0)
-            next_size_url = next_size[0] if next_size[0] else ''
-            next_size_color = next_size[1] if next_size[1] else ''
-            next_size_sku = next_size[2] if next_size[2] else ''
-
-            size_name = self.get_size_name(next_size_url)
-
             meta_data = {}
             meta_data['size_links'] = size_links
             meta_data['item'] = item
-            meta_data['out_of_stock'] = False
-            meta_data['size_name'] = size_name
-            meta_data['color'] = next_size_color
-            meta_data['size_sku'] = next_size_sku
+            meta_data['size_data'] = next_size
 
-            if self.is_available(next_size_url):
-                size_url = next_size_url.css('::attr(href)').extract_first()
+            if next_size.get('size_available'):
+                size_url = next_size.get('size_tag').css('::attr(href)').extract_first()
                 next_url = f"{size_url}&Quantity=1&format=ajax&productlistid=undefined"
 
                 yield Request(url=next_url, meta=meta_data, dont_filter=True,
                               callback=self.iterate_over_sizes)
             else:
-                meta_data['out_of_stock'] = True
                 response.meta.update(meta_data)
                 for func in self.iterate_over_sizes(response):
                     yield func
         else:
             yield item
 
-    def get_size_info(self, response):
-        """This function takes a response object and finds and return product info"""
+    def get_size_info_appended(self, response):
+        """This function takes a response object and finds and return product item"""
         data = response.css('::attr(data-product-details)').extract_first()
         data_json = json.loads(data)
 
+        size_data = response.meta.get('size_data')
+        item = response.meta.get('item')
+
         size_info = SizeInfo()
-        size_info['out_of_stock'] = response.meta.get('out_of_stock')
-        size_info['colour'] = response.meta.get('color')
-        size_info['size'] = response.meta.get('size_name', '')
+        size_info['out_of_stock'] = not size_data.get('size_available')
+        size_info['colour'] = size_data.get('product_color')
+        size_info['size'] = size_data.get('size_name')
         size_info['price'] = data_json.get('grossPrice')
         size_info['currency'] = data_json.get('currency_code')
 
-        size_response = {}
-        size_response['info'] = size_info
-        size_response['size_sku'] = response.meta.get('size_sku')
+        sku_id = f"{size_data.get('product_sku')}_{size_info.get('size')}"
+        item['skus'][sku_id] = size_info
 
-        return size_response
+        return item
 
-    def is_available(self, size_tag):
+    def is_size_available(self, size_tag):
         """Returns true if the size is available"""
         if size_tag.css('.selectable').extract():
             flag = True
@@ -156,7 +148,6 @@ class OrsayCrawler(CrawlSpider):
     def get_size_sku(self, response):
         """Extracts and returns Sku of product"""
         return response.css('isapplepay::attr(sku)').extract_first()
-
 
     def get_size_color(self, response):
         """Extracts and returns color of product"""
@@ -173,18 +164,15 @@ class OrsayCrawler(CrawlSpider):
 
     def get_care(self, response):
         """Extracts and returns Care of product"""
-
         return response.css('div.product-info-block p::text').extract_first()
 
     def get_detail(self, response):
         """Extracts and returns Details of product"""
-
         description = response.css('.with-gutter::text').extract()
         return description
 
     def get_images(self, response):
         """Extracts and returns Images of product"""
-
         return response.css('.productthumbnail::attr(src)').extract()
 
     def get_product_count(self, response):
@@ -193,6 +181,5 @@ class OrsayCrawler(CrawlSpider):
             count = int(response.css('::attr(data-count)').extract_first())
         except TypeError:
             count = 0
-
         return count
 
