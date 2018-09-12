@@ -3,18 +3,18 @@ from django import forms
 
 class UserSignInForm(forms.Form):
     username = forms.CharField(required=True)
-    password = forms.CharField(required=True)
+    password = forms.CharField(widget=forms.PasswordInput)
 
 
 class UserSignUpForm(forms.Form):
     username = forms.CharField(required=True)
-    password = forms.CharField(required=True)
+    password = forms.CharField(widget=forms.PasswordInput)
     date_of_birth = forms.DateField(required=True)
 
 
 class UserChangePasswordForm(forms.Form):
-    old_password = forms.CharField(required=True)
-    new_password = forms.CharField(required=True)
+    old_password = forms.CharField(widget=forms.PasswordInput)
+    new_password = forms.CharField(widget=forms.PasswordInput)
 
 
 class UserEditProfileForm(forms.Form):

@@ -21,5 +21,4 @@ urlpatterns = [
     path('', include('users.urls')),
     path('users/', include('users.urls')),
     path('admin/', admin.site.urls),
-    url(r'^.*', include('users.urls')),
 ]
