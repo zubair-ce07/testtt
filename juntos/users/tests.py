@@ -1,4 +1,4 @@
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.test import TestCase
 from django.urls import reverse
 from ddt import ddt, data, unpack
@@ -22,6 +22,8 @@ class UserFormViewTest(TestCase):
         user.set_password('12345')
         user.save()
 
+        Group.objects.create(name='Admin')
+
     def test_registration_get(self):
         """
         Test Registration get view.
@@ -40,7 +42,8 @@ class UserFormViewTest(TestCase):
             'password': 'youcanthackit',
             'email': 'admin@gmail.com',
             'first_name': 'mad',
-            'last_name': 'math'
+            'last_name': 'math',
+            'role': '1'
         }
         response = self.client.post(reverse('users:register'), data=data)
         self.assertEqual(response.status_code, 302)
@@ -299,6 +302,8 @@ class UserUpdateTest(TestCase):
         user.set_password('12345')
         user.save()
 
+        Group.objects.create(name='Admin')
+
     def test_get_without_login(self):
         """
         A `get` to the `edit_basic_info` view without `logged in` user does not
@@ -348,6 +353,7 @@ class UserUpdateTest(TestCase):
             'first_name': 'math',
             'last_name': 'fan',
             'username': 'test',
+            'role': '1',
             'password': '12345'
         }
         self.client.login(username='test', password='12345')

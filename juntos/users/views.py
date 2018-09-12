@@ -76,7 +76,9 @@ class UserUpdate(UpdateView):
     template_name = 'profile/generic_form.html'
 
     def form_valid(self, form):
-        password = form.cleaned_data['password'].strip()
+        """This method is over ridden just because we need to call `update_session_auth_hash`
+        otherwise `set_password` can be done in form's `save` method."""
+        password = form.cleaned_data.pop('password')
 
         if password:
             self.request.user.set_password(password)
