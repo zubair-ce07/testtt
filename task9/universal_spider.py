@@ -1,12 +1,42 @@
 from json import loads
 from w3lib.html import remove_tags
 from w3lib.url import url_query_cleaner
+from base64 import b64decode
 
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
+from scrapy.link import Link
 from scrapy import Request
 
-from universal.items import Product
+from ..items import Product
+
+
+class ListingLE:
+    deny_urls = ['/lifestyle/', '/baumarkt/', '/technik/']
+
+    def rot47(self, to_rot):
+        rotated = []
+        for i in range(len(to_rot)):
+            asci_code = ord(to_rot[i])
+            if 33 <= asci_code <= 126:
+                rotated.append(chr(33 + ((asci_code + 14) % 94)))
+            else:
+                rotated.append(to_rot[i])
+        return ''.join(rotated)
+
+    def extract_links(self, response):
+        if not response.css('.nav-main'):
+            return []
+
+        listing_links = [Link(response.urljoin(url))
+                         for url in response.css('.nav-main a::attr(href)').extract()]
+
+        for url in response.css('.nav-main ::attr(data-src)').extract():
+            url = self.rot47(b64decode(url).decode('utf-8'))
+            listing_links.append(Link(response.urljoin(url)))
+
+        return [l for l in listing_links
+                if not any(d in l.url for d in self.deny_urls)]
 
 
 class UniversalSpider(CrawlSpider):
@@ -24,14 +54,14 @@ class UniversalSpider(CrawlSpider):
         'kinder': 'Kids',
     }
     care_words = ['reinigung', 'Maschinenwäsche', '%']
-    deny_urls = ['/lifestyle/', '/baumarkt/', '.*\/technik\/?.*', '.*\/sale\/?.*']
 
-    listing_css = '.nav-main,.ls-image-link,.branch,.paging-holder .pp'
+    pagination_css = '#.paging-holder .pp'
     product_css = '.link-product'
 
     rules = (
-        Rule(LinkExtractor(restrict_css=listing_css, deny=deny_urls), callback='parse'),
+        Rule(ListingLE(), callback='parse'),
         Rule(LinkExtractor(restrict_css=product_css), callback='parse_product'),
+        Rule(LinkExtractor(restrict_css=pagination_css), callback='parse'),
     )
 
     custom_settings = {
