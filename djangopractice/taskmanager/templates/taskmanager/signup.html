@@ -1,12 +1,18 @@
 {% extends 'taskmanager/base.html' %}
+{% load static from staticfiles %}
 {% block title %}Sign Up{% endblock %}
+{% block javascript %}
+    <script src="{% static 'taskmanager/js/signup.js' %}"></script>
+{% endblock %}
 {% block content %}
-    <h2>Sign up</h2>
-    <form method="post">
+    <h2 class="ml-2 mt-2"> Sign up</h2>
+    <hr class="my-4">
+    <form class="ml-5" method="post" data-validate-username-url="{% url 'taskmanager:validate_username' %}">
         {% csrf_token %}
         <table class="set_fixed_width">
+            <div id="errors"></div>
             {{ form.as_table }}
         </table>
-        <button type="submit">Sign up</button>
+        <button class="btn btn-sm btn-success" type="submit">Sign up</button>
     </form>
 {% endblock %}

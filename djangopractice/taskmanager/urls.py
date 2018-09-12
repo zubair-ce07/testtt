@@ -1,5 +1,6 @@
-from django.urls import path
+from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.contrib.auth import views as auth_view
+from django.urls import path
 
 from taskmanager import views
 
@@ -16,3 +17,9 @@ urlpatterns = [
     path('<int:pk>/deletetask/', views.DeleteTask.as_view(), name='delete'),
     path('addtask/', views.AddTask.as_view(), name='add'),
 ]
+
+urlpatterns += [
+    path('taskmanager/validate_username/', views.validate_username, name='validate_username'),
+]
+
+urlpatterns += staticfiles_urlpatterns()

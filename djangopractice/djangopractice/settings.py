@@ -101,6 +101,7 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
+STATIFILES_DIR = ( os.path.join(BASE_DIR, 'taskmanager/static/'), )
 STATIC_URL = '/static/'
 LOGIN_REDIRECT_URL = '/taskmanager'
 LOGIN_SUCCESS_URL = '/taskmanager'

@@ -1,7 +1,7 @@
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse, reverse_lazy
 from django.utils.decorators import method_decorator
@@ -19,6 +19,15 @@ def change_status(request, pk):
         task.status = 0
     task.save()
     return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+
+def validate_username(request):
+    username = request.GET.get('username', None)
+    username_exists = models.CustomUser.objects.filter(username__iexact=username).exists()
+    data = {}
+    if username_exists:
+        data['error_message'] = 'A user with this username already exists.'
+    return JsonResponse(data)
 
 
 class SignUp(generic.CreateView):
