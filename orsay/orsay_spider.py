@@ -29,7 +29,7 @@ class OrsaySpider(CrawlSpider):
 
         max_items = self.get_max_items(response)
         for items_count in range(MAX_DISPLAY, max_items, MAX_DISPLAY):
-            next_url = response.url + "?sz=" + str(items_count)
+            next_url = f"{response.url}?sz={str(items_count)}"
             yield scrapy.Request(url=next_url, callback=self.parse)
 
     def parse_product(self, response):
