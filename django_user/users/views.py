@@ -1,25 +1,43 @@
 from django.shortcuts import render
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
+from django.urls import reverse
 
-from .forms import UserSignUpInForm, UserChangePasswordForm, UserEditProfileForm
+from .forms import (
+    UserSignUpForm,
+    UserChangePasswordForm,
+    UserEditProfileForm,
+    UserSignInForm
+)
 from .models import User
 
 
 def user_signupview(request):
     try:
         if request.session["my_session"]:
-            template_name = 'users/signin.html'
-            context = {}
-            return render(request, template_name, context)
+            #template_name = 'users/signin.html'
+            #context = {}
+            #return render(request, template_name, context)
+            user_signoutview(request)
     except:
         if request.method == 'POST':
-            form = UserSignUpInForm(request.POST)
+            form = UserSignUpForm(request.POST)
             if form.is_valid():
-                obj = User.objects.create(
-                    username=form.cleaned_data.get('username'),
-                    password=form.cleaned_data.get('password'),
-                )
-            return HttpResponseRedirect('/users/')
+                username = form.cleaned_data.get('username')
+                if check_user_presence(username):
+                    context = {
+                        'message': 'Username ({}) has already exist.'.format(username)
+                    }
+                else:
+                    obj = User.objects.create(
+                        username=form.cleaned_data.get('username'),
+                        password=form.cleaned_data.get('password'),
+                        date_of_birth=form.cleaned_data.get('date_of_birth')
+                    )
+                    context = {
+                        'message': "You have signed up successfullty."
+                    }
+                template_name = 'users/signup.html'
+                return render(request, template_name, context)
     template_name = 'users/signup.html'
     context = {}
     return render(request, template_name, context)
@@ -27,7 +45,7 @@ def user_signupview(request):
 
 def user_signinview(request):
     if request.method == 'POST':
-        form = UserSignUpInForm(request.POST)
+        form = UserSignInForm(request.POST)
         if form.is_valid():
             obj = User.objects.filter(
                 username=form.cleaned_data.get('username'),
@@ -104,6 +122,10 @@ def user_edit_profileview(request):
     return render(request, template_name, context)
 
 
+def error_view(request):
+    return HttpResponse('Page Not Found')
+
+
 def save_object_data(obj, form):
     obj[0].first_name = form.cleaned_data.get('first_name')
     obj[0].last_name = form.cleaned_data.get('last_name')
@@ -123,3 +145,10 @@ def populate_object_data_in_context(context, obj):
     context['qualification'] = obj[0].qualification
     context['date_of_birth'] = obj[0].date_of_birth
     return context
+
+
+def check_user_presence(username):
+    if User.objects.filter(username=username):
+        return True
+    return False
+

@@ -1,9 +1,15 @@
 from django import forms
 
 
-class UserSignUpInForm(forms.Form):
+class UserSignInForm(forms.Form):
     username = forms.CharField(required=True)
     password = forms.CharField(required=True)
+
+
+class UserSignUpForm(forms.Form):
+    username = forms.CharField(required=True)
+    password = forms.CharField(required=True)
+    date_of_birth = forms.DateField(required=True)
 
 
 class UserChangePasswordForm(forms.Form):
