@@ -3,6 +3,7 @@ from w3lib.html import remove_tags
 from w3lib.url import url_query_cleaner
 from base64 import b64decode
 
+
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 from scrapy.link import Link
@@ -27,9 +28,7 @@ class ListingLE:
     def extract_links(self, response):
         if not response.css('.nav-main'):
             return []
-
-        listing_links = [Link(response.urljoin(url))
-                         for url in response.css('.nav-main a::attr(href)').extract()]
+        listing_links=[]
 
         for url in response.css('.nav-main ::attr(data-src)').extract():
             url = self.rot47(b64decode(url).decode('utf-8'))
@@ -41,6 +40,7 @@ class ListingLE:
 
 class UniversalSpider(CrawlSpider):
     name = 'universal'
+
     allowed_domains = ['universal.at']
 
     start_urls = ['https://www.universal.at/']
@@ -54,14 +54,15 @@ class UniversalSpider(CrawlSpider):
         'kinder': 'Kids',
     }
     care_words = ['reinigung', 'Maschinenwäsche', '%']
+    deny_urls = ['/lifestyle/', '/baumarkt/', '/technik/']
 
-    pagination_css = '#.paging-holder .pp'
+    pagination_css = '.nav-main,.paging-holder .pp'
     product_css = '.link-product'
 
     rules = (
         Rule(ListingLE(), callback='parse'),
         Rule(LinkExtractor(restrict_css=product_css), callback='parse_product'),
-        Rule(LinkExtractor(restrict_css=pagination_css), callback='parse'),
+        Rule(LinkExtractor(restrict_css=pagination_css, deny=deny_urls), callback='parse'),
     )
 
     custom_settings = {
