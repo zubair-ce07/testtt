@@ -67,3 +67,4 @@ weatherfiles/*
 
 *.json
 
+django_user/db.sqlite3

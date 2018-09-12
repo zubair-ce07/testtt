@@ -1,6 +1,6 @@
 from django.shortcuts import render, render_to_response
 from django.http import HttpResponseRedirect, HttpResponse
-from django.template import RequestContext
+from django.urls import reverse
 
 from .forms import (
     UserSignUpForm,
@@ -45,7 +45,7 @@ def user_signup_view(request):
 
 def user_signin_view(request):
     if 'my_session' in request.session:
-        return HttpResponseRedirect('/users/home/')
+        return HttpResponseRedirect(reverse('home'))
 
     if request.method == 'POST':
         form = UserSignInForm(request.POST)
@@ -58,7 +58,7 @@ def user_signin_view(request):
             )
             if obj:
                 request.session["my_session"] = obj[0].username
-                return HttpResponseRedirect('/users/home/')
+                return HttpResponseRedirect(reverse('home'))
             if check_user_presence(username):
                 context = {
                     'message': 'You have entered wrong password.'
@@ -81,7 +81,7 @@ def user_signin_view(request):
 
 def user_signout_view(request):
     request.session.pop('my_session', None)
-    return HttpResponseRedirect('/users/signin')
+    return HttpResponseRedirect(reverse('signin'))
 
 
 def user_home_view(request):
@@ -115,7 +115,7 @@ def user_change_password_view(request):
 
 def user_edit_profile_view(request):
     if 'my_session' not in request.session:
-        return HttpResponseRedirect('/users/signin/')
+        return HttpResponseRedirect(reverse('signin'))
 
     if request.method == 'POST':
         form = UserEditProfileForm(request.POST)
@@ -125,7 +125,7 @@ def user_edit_profile_view(request):
             )
             if obj:
                 save_object_data(obj, form)
-                return HttpResponseRedirect('/users/home/')
+                return HttpResponseRedirect(reverse('home'))
         return HttpResponseRedirect('/users/')
 
     context = {}
