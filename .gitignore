@@ -62,3 +62,8 @@ target/
 #Djnago DB
 db.sqlite3
 
+#weather files
+weatherfiles/*
+
+*.json
+
