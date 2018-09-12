@@ -9,7 +9,7 @@ from users.views import (
     user_edit_profile_view,
     user_home_view,
 )
-
+app_name = 'users'
 urlpatterns = [
     path('', user_home_view, name='home'),
     path('home/', user_home_view, name='home'),

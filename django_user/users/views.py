@@ -45,7 +45,7 @@ def user_signup_view(request):
 
 def user_signin_view(request):
     if 'my_session' in request.session:
-        return HttpResponseRedirect(reverse('home'))
+        return HttpResponseRedirect(reverse('users:home'))
 
     if request.method == 'POST':
         form = UserSignInForm(request.POST)
@@ -58,7 +58,7 @@ def user_signin_view(request):
             )
             if obj:
                 request.session["my_session"] = obj[0].username
-                return HttpResponseRedirect(reverse('home'))
+                return HttpResponseRedirect(reverse('users:home'))
             if check_user_presence(username):
                 context = {
                     'message': 'You have entered wrong password.'
@@ -81,12 +81,12 @@ def user_signin_view(request):
 
 def user_signout_view(request):
     request.session.pop('my_session', None)
-    return HttpResponseRedirect(reverse('signin'))
+    return HttpResponseRedirect(reverse('users:signin'))
 
 
 def user_home_view(request):
     if 'my_session' not in request.session:
-        return HttpResponseRedirect('/users/signin')
+        return HttpResponseRedirect(reverse('users:signin'))
     context = {}
     template_name = 'users/home.html'
     return render(request, template_name, context)
@@ -94,7 +94,7 @@ def user_home_view(request):
 
 def user_change_password_view(request):
     if 'my_session' not in request.session:
-        return HttpResponseRedirect('/users/signin/')
+        return HttpResponseRedirect(reverse('users:signin'))
     if request.method == 'POST':
         form = UserChangePasswordForm(request.POST)
         if form.is_valid():
@@ -105,8 +105,8 @@ def user_change_password_view(request):
             if obj:
                 obj[0].password = form.cleaned_data.get('new_password')
                 obj[0].save()
-                return HttpResponseRedirect('/users/home/')
-        return HttpResponseRedirect('/users/')
+                return HttpResponseRedirect(reverse('users:signin'))
+        return HttpResponseRedirect(reverse('users:home'))
 
     template_name = 'users/change_password.html'
     context = {}
@@ -115,7 +115,7 @@ def user_change_password_view(request):
 
 def user_edit_profile_view(request):
     if 'my_session' not in request.session:
-        return HttpResponseRedirect(reverse('signin'))
+        return HttpResponseRedirect(reverse('users:signin'))
 
     if request.method == 'POST':
         form = UserEditProfileForm(request.POST)
@@ -125,8 +125,8 @@ def user_edit_profile_view(request):
             )
             if obj:
                 save_object_data(obj, form)
-                return HttpResponseRedirect(reverse('home'))
-        return HttpResponseRedirect('/users/')
+                return HttpResponseRedirect(reverse('users:home'))
+        return HttpResponseRedirect(reverse('users:home'))
 
     context = {}
     obj = User.objects.filter(
