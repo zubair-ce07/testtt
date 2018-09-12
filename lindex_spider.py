@@ -14,6 +14,7 @@ class Mixin:
 class MixinUK(Mixin):
     retailer = Mixin.retailer + '-uk'
     market = 'UK'
+
     start_urls = ['https://www.lindex.com/uk/']
     one_sizes = ['0']
 
@@ -43,13 +44,16 @@ class LindexParseSpider(BaseParseSpider):
         return garment
 
     def product_id(self, response):
-        return clean(response.css('.product_id ::text'))[1]
+        return clean(response.css('#ProductPage ::attr(data-product-identifier)'))[0]
 
     def product_name(self, response):
         return clean(response.css('.name::text'))[0]
 
     def product_brand(self, response):
-        return clean(response.css('#ProductPage ::attr(data-product-brand)'))[0]
+        brand = clean(response.css('[id*="productContainer"]::attr(data-product-brand)'))
+        if brand:
+            return brand[0]
+        return 'Lindex'
 
     def product_category(self, response):
         return clean(response.css('#breadcrumbs ::text').re('[a-z A-Z]+'))
@@ -103,7 +107,7 @@ class PaginationLE:
 
         return [
             Link(request_url_t.format(idx, page_id))
-            for idx in range(total_count)
+            for idx in range(1, total_count)
         ]
 
 
