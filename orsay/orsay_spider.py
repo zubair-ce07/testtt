@@ -1,14 +1,15 @@
 """
 this modeule will scrape orsay.com website
 """
-from __future__ import absolute_import
-from urllib.parse import urljoin
-from scrapy.linkextractors import LinkExtractor
-from scrapy.spiders import CrawlSpider, Rule
 import scrapy
 import json
+from __future__ import absolute_import
+from scrapy.linkextractors import LinkExtractor
+from scrapy.spiders import CrawlSpider, Rule
+
 
 MAX_DISPLAY = 72
+
 
 class OrsaySpider(CrawlSpider):
     """ This crawler will extract all products of website """
@@ -18,7 +19,8 @@ class OrsaySpider(CrawlSpider):
     allowed_domains = ['www.orsay.com']
 
     rules = (
-        Rule(LinkExtractor(allow=[r"/produkte/$", r"/neuheiten/$", r"/sale/$", r"/trends/$"]),
+        Rule(LinkExtractor(allow=[r"/produkte/$", r"/neuheiten/$",
+                                  r"/sale/$", r"/trends/$"]),
              callback='handle_pagination'),
         Rule(LinkExtractor(restrict_css=".product-image"),
              callback='handle_product_variations')
@@ -29,7 +31,7 @@ class OrsaySpider(CrawlSpider):
 
         max_items = self.get_max_items(response)
         for items_count in range(MAX_DISPLAY, max_items, MAX_DISPLAY):
-            next_url = f"{response.url}?sz={str(items_count)}"
+            next_url = response.url + "?sz=" + str(items_count)
             yield scrapy.Request(url=next_url, callback=self.parse)
 
     def handle_product_variations(self, response):
@@ -38,20 +40,20 @@ class OrsaySpider(CrawlSpider):
         product = response.meta.get('curr_item')
         if not product:
             product = self.get_product(response)
-            colors_url = self.get_colors_url(response)
+            colors_url = self.get_unselected_colors_url(response)
             response.meta["colors_url"] = colors_url
             response.meta['curr_item'] = product
-        else:
-            json_data = self.get_product_variation_json(response)
-            if json_data:
-                self.get_sku(json_data, response, product)
+
+        json_data = self.get_product_variation_json(response)
+        if json_data:
+            self.get_sku(json_data, response, product)
         colors_url = response.meta.get('colors_url')
         if colors_url:
             color = colors_url.pop(0)
             yield scrapy.Request(url=color,
                                  callback=self.handle_product_variations,
                                  meta={'curr_item': product,
-                                       'colors_url':colors_url},
+                                       'colors_url': colors_url},
                                  dont_filter=True)
         else:
             yield product
@@ -110,8 +112,8 @@ class OrsaySpider(CrawlSpider):
     def get_size(self, li_response):
         return (li_response.css(' a::text').extract_first()).strip('\n')
 
-    def get_colors_url(self, response):
-        return response.css('.color a::attr(href)').extract()
+    def get_unselected_colors_url(self, response):
+        return response.css('.color li:not(.selected) a::attr(href)').extract()
 
     def get_max_items(self, response):
         return int(response.css(
