@@ -1,10 +1,11 @@
 import json
 from six.moves.urllib_parse import urljoin
-from w3lib.url import add_or_replace_parameter
+from w3lib.url import add_or_replace_parameter, url_query_cleaner
 
 from scrapy.linkextractors import LinkExtractor
 from scrapy.http import Request
 from scrapy.spiders import Rule
+from scrapy.link import Link
 
 from .base import BaseParseSpider, BaseCrawlSpider, clean
 
@@ -20,117 +21,78 @@ class Mixin:
 class MixinIT(Mixin):
     retailer = Mixin.retailer + '-it'
     market = 'IT'
-    retailer_currency = 'EUR'
-    Lang = 'it'
-
     start_urls = ['https://it.maxmara.com']
 
 
 class MixinUK(Mixin):
     retailer = Mixin.retailer + '-uk'
     market = 'UK'
-    retailer_currency = 'GBP'
-    Lang = 'en'
-
     start_urls = ['https://gb.maxmara.com']
 
 
 class MixinUS(Mixin):
     retailer = Mixin.retailer + '-us'
     market = 'US'
-    retailer_currency = 'USD'
-    Lang = 'en'
-
     start_urls = ['https://us.maxmara.com']
 
 
 class MixinCA(Mixin):
     retailer = Mixin.retailer + '-ca'
     market = 'CA'
-    retailer_currency = 'CAD'
-    Lang = 'en'
-
     start_urls = ['https://ca.maxmara.com']
 
 
 class MixinJP(Mixin):
     retailer = Mixin.retailer + '-jp'
     market = 'JP'
-    retailer_currency = 'JPY'
-    Lang = 'ja'
-
     start_urls = ['https://jp.maxmara.com']
 
 
 class MixinDE(Mixin):
     retailer = Mixin.retailer + '-de'
     market = 'DE'
-    retailer_currency = 'EUR'
-    Lang = 'de'
-
     start_urls = ['https://de.maxmara.com']
 
 
 class MixinFR(Mixin):
     retailer = Mixin.retailer + '-fr'
     market = 'FR'
-    retailer_currency = 'EUR'
-    Lang = 'fr'
-
     start_urls = ['https://fr.maxmara.com']
 
 
 class MixinES(Mixin):
     retailer = Mixin.retailer + '-es'
     market = 'ES'
-    retailer_currency = 'EUR'
-    Lang = 'es'
-
     start_urls = ['https://es.maxmara.com']
 
 
 class MixinSE(Mixin):
     retailer = Mixin.retailer + '-se'
     market = 'SE'
-    retailer_currency = 'SEK'
-    Lang = 'en'
-
     start_urls = ['https://se.maxmara.com']
 
 
 class MixinPL(Mixin):
     retailer = Mixin.retailer + '-pl'
     market = 'PL'
-    retailer_currency = 'PLN'
-    Lang = 'en'
-
     start_urls = ['https://pl.maxmara.com']
 
 
 class MixinDK(Mixin):
     retailer = Mixin.retailer + '-dk'
     market = 'DK'
-    retailer_currency = 'DKK'
-    Lang = 'en'
-
     start_urls = ['https://dk.maxmara.com']
 
 
 class MixinKR(Mixin):
     retailer = Mixin.retailer + '-kr'
     market = 'KR'
-    retailer_currency = 'KRW'
-    Lang = 'ko'
-
     start_urls = ['https://kr.maxmara.com']
 
 
 class MixinEU(Mixin):
     retailer = Mixin.retailer + '-eu'
     market = 'EU'
-    retailer_currency = 'EUR'
-    Lang = 'en'
-
     start_urls = ['https://eu.maxmara.com']
 
 
@@ -176,13 +138,10 @@ class MaxMaraParseSpider(BaseParseSpider, Mixin):
         return clean([raw_product['care'], raw_product['composition']])
 
     def image_urls(self, raw_product):
-        prod_images_urls = []
-        for raw_images in raw_product['images']:
+        def check_image_validity(raw_image):
+            return raw_image['imageType'] == 'GALLERY' and raw_image['format'] == 'product'
 
-            if raw_images['imageType'] == 'GALLERY' and raw_images['format'] == 'product':
-                prod_images_urls.append(raw_images['url'])
-
-        return prod_images_urls
+        return [i['url'] for i in raw_product['images'] if check_image_validity(i)]
 
     def product_category(self, raw_product):
         return clean([raw_category['name'] for raw_category in raw_product['categories']])
@@ -190,8 +149,8 @@ class MaxMaraParseSpider(BaseParseSpider, Mixin):
     def skus(self, raw_product):
         skus = {}
 
-        price = raw_product['price']
-        money_strs = [price['value'], price['saleValue'], price['currencyIso']]
+        pricing = raw_product['price']
+        money_strs = [pricing['value'], pricing['saleValue'], pricing['currencyIso']]
         common = self.product_pricing_common(None, money_strs=money_strs)
 
         common['colour'] = raw_product['colour']
@@ -215,14 +174,14 @@ class MaxMaraParseSpider(BaseParseSpider, Mixin):
                 for raw_stock in raw_product['variantOptions']}
 
     def colors_request(self, response, raw_product):
-        requests_to_follow = []
+        requests = []
         for raw_color in raw_product['baseOptions'][0]['options']:
 
             if raw_color['code'] != raw_product['code']:
                 request = response.follow(f"{raw_color['url']}/json", self.parse_skus)
-                requests_to_follow.append(request)
+                requests.append(request)
 
-        return requests_to_follow
+        return requests
 
     def parse_skus(self, response):
         garment = response.meta['garment']
@@ -230,29 +189,37 @@ class MaxMaraParseSpider(BaseParseSpider, Mixin):
         garment['image_urls'] += self.image_urls(json.loads(response.text))
         return self.next_request_or_garment(garment)
 
-
-class MaxMaraCrawlSpider(BaseCrawlSpider, Mixin):
+class PaginationLE:
     pagination_url_t = 'resultsViaAjax?q=&sort=topRated&numberOfPage=0&categoryCode=&' \
                        'numberOfClothes=16&numberOfClothesPE=16&scrollTop='
+
+    def extract_links(self, response):
+        if not response.css('.pagination'):
+            return []
+        q = clean(response.css('#variables::attr(data-query-on-ready)'))[0]
+        pagination_url = add_or_replace_parameter(self.pagination_url_t, 'q', q)
+
+        category_code = clean(response.css('#category-div::attr(data-category)'))[0]
+        pagination_url = add_or_replace_parameter(pagination_url, 'categoryCode', category_code)
+
+        return [
+            Link(urljoin(response.url + '/', pagination_url))
+        ]
+
+
+class MaxMaraCrawlSpider(BaseCrawlSpider, Mixin):
 
     listing_xpath = '//div[contains(@class,"cat")]'
     products_css = '.productMainLink'
     deny_urls = ['collection', 'runway', 'icon']
 
     rules = (
+        Rule(PaginationLE(), callback='parse_listing'),
         Rule(LinkExtractor(restrict_xpaths=listing_xpath, deny=deny_urls),
              callback='parse_and_add_women'),
-        Rule(LinkExtractor(restrict_css=products_css, process_value=lambda url: f'{url}/json'),
-             callback='parse_item')
+        Rule(LinkExtractor(restrict_css=products_css,
+                           process_value=lambda url: f'{url_query_cleaner(url)}/json'), callback='parse_item')
     )
-
-    def parse(self, response):
-        yield from super().parse(response)
-
-        if response.css('.pagination'):
-            request = Request(self.pagination_url(response), callback=self.parse_listing)
-
-            yield self.add_meta(request, response)
 
     def parse_listing(self, response):
         for next_page in range(1, json.loads(response.text)['totalPage'] + 1):
@@ -266,15 +233,6 @@ class MaxMaraCrawlSpider(BaseCrawlSpider, Mixin):
         for raw_product in raw_products:
             request = response.follow(f"{raw_product['url']}/json", callback=self.parse_item)
             yield self.add_meta(request, response)
-
-    def pagination_url(self, response):
-        q = clean(response.css('#variables::attr(data-query-on-ready)'))[0]
-        pagination_url = add_or_replace_parameter(self.pagination_url_t, 'q', q)
-
-        category_code = clean(response.css('#category-div::attr(data-category)'))[0]
-        pagination_url = add_or_replace_parameter(pagination_url, 'categoryCode', category_code)
-
-        return urljoin(response.url + '/', pagination_url)
 
     def add_meta(self, request, response):
         request.meta['trail'] = self.add_trail(response)
