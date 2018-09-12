@@ -94,7 +94,7 @@ class OrsayCrawler(CrawlSpider):
         item = response.meta.get('item')
 
         if not first_iter:
-            item = self.get_size_info_appended(response)
+            item = self.append_sizes_info(response)
 
         if size_links:
             next_size = size_links.pop(0)
@@ -116,7 +116,7 @@ class OrsayCrawler(CrawlSpider):
         else:
             yield item
 
-    def get_size_info_appended(self, response):
+    def append_sizes_info(self, response):
         """This function takes a response object and finds and return product item"""
         data = response.css('::attr(data-product-details)').extract_first()
         data_json = json.loads(data)
@@ -138,12 +138,7 @@ class OrsayCrawler(CrawlSpider):
 
     def is_size_available(self, size_tag):
         """Returns true if the size is available"""
-        if size_tag.css('.selectable').extract():
-            flag = True
-        else:
-            flag = False
-
-        return flag
+        return True if size_tag.css('.selectable').extract() else False
 
     def get_size_sku(self, response):
         """Extracts and returns Sku of product"""
