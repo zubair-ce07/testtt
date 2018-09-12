@@ -14,28 +14,23 @@ class OrsaySpider(CrawlSpider):
     """ This crawler will extract all products of website """
 
     name = "orsay"
-    start_urls = ['http://www.orsay.com/de-de/produkte/']
+    start_urls = ['http://www.orsay.com/de-de/']
     allowed_domains = ['www.orsay.com']
 
     rules = (
-        Rule(LinkExtractor(restrict_css="ul.refinement-category-list a"),
-             callback='parse_pages',
-            follow=True),
-        Rule(LinkExtractor(restrict_css=".product-image>a"), callback='parse_product')
+        Rule(LinkExtractor(allow=[r"/produkte/$", r"/neuheiten/$", r"/sale/$", r"/trends/$"]),
+             callback='handle_pagination'),
+        Rule(LinkExtractor(restrict_css=".product-image"),
+             callback='handle_product_variations')
     )
 
-    def parse_pages(self, response):
+    def handle_pagination(self, response):
         """It is dealing with pagination"""
 
         max_items = self.get_max_items(response)
         for items_count in range(MAX_DISPLAY, max_items, MAX_DISPLAY):
             next_url = f"{response.url}?sz={str(items_count)}"
             yield scrapy.Request(url=next_url, callback=self.parse)
-
-    def parse_product(self, response):
-        """It is a parser for product"""
-        for function in self.handle_product_variations(response):
-            yield function
 
     def handle_product_variations(self, response):
         """This function will attach all sku to the product"""
@@ -99,7 +94,7 @@ class OrsaySpider(CrawlSpider):
 
     def get_description(self, response):
         description = response.css('.with-gutter::text').extract()
-        return ' '.join(description) if description else ""
+        return (' '.join(description)).strip('\n') if description else ""
 
     def get_images_url(self, response):
         return response.css('.productthumbnail::attr(src)').extract()
@@ -109,7 +104,8 @@ class OrsaySpider(CrawlSpider):
             '::attr(data-attributes)').extract_first()
 
     def get_price(self, response):
-        return response.css('span.price-sales::text').extract_first().strip('\n')
+        return response.css(
+            'span.price-sales::text').extract_first().strip('\n')
 
     def get_size(self, li_response):
         return (li_response.css(' a::text').extract_first()).strip('\n')
