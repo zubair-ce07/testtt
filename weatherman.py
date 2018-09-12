@@ -48,8 +48,14 @@ class FileParser:
         else:
             print("No weather files exist in this directory or wrong file name entered")
 
-    def filter_weather_records(self, year):
-        return [reading for reading in self._readings if year in reading._file_weather_record]
+    def filter_weather_records(self, year_e, year_a, date_c):
+        year_e = year_e if year_e else ""
+        year_a = year_e if year_a else ""
+        date_c = date_c if year_e else ""
+
+        return [reading for reading in self._readings if year_e in reading._file_weather_record],\
+               [reading for reading in self._readings if year_a in reading._file_weather_record],\
+               [reading for reading in self._readings if date_c in reading._file_weather_record]
          
 
 class Calculations:
@@ -85,6 +91,7 @@ class ReportGenerator:
         print("Highest: " + str(results["Highest_temp_day"]._max_temp_c) + "C on", self.convert_date(results["Highest_temp_day"]._PKT))
         print("Lowest: " + str(results["Lowest_temp_day"]._min_temp_c) + "C on", self.convert_date(results["Lowest_temp_day"]._PKT))
         print("Humidity: " + str(results["Max_humidity_day"]._max_humidity) + r"% on", self.convert_date(results["Max_humidity_day"]._PKT))
+        print()
 
     def convert_date(self, date):
         return date.strftime("%B %d")
@@ -95,6 +102,7 @@ class ReportGenerator:
         print("Highest Average: " + str(results["Avg_highest_temp"]) + "C")
         print("Lowest Average: " + str(results["Avg_lowest_temp"]) + "C")
         print("Average Mean Humidity: " + str(results["Avg_mean_humidity"]) + r"%")	
+        print()
 
     def report_for_hghst_lwst_temp_day(self, weather_records, date):
         readings_calculator = Calculations(weather_records)
@@ -105,7 +113,7 @@ class ReportGenerator:
             print(count, '+' * int(record_high))
             print(count, '+' * int(record_low))
             count = count + 1
-
+        print()
 
 def validate_year_for_temp_and_humidity(year):
     try:
@@ -136,14 +144,12 @@ def main():
     file_parser = FileParser(args.path)
     parsed_readings = file_parser.parse_file()
     if parsed_readings:
-        if args.e:
-            filtered_readings = file_parser.filter_weather_records(args.e) 
-            report.report_for_hghst_lwst_temp_hmidity(filtered_readings)
-        if args.a:
-            filtered_readings = file_parser.filter_weather_records(args.a)
-            report.report_for_avg_temp_humidity(filtered_readings)   
-        if args.c:
-            filtered_readings = file_parser.filter_weather_records(args.c)
+        readings_year_e, readings_year_a, readings_date_c = file_parser.filter_weather_records(args.e, args.a, args.c) 
+        if args.e and readings_year_e:
+            report.report_for_hghst_lwst_temp_hmidity(readings_year_e)
+        if args.a and readings_year_a:
+            report.report_for_avg_temp_humidity(readings_year_a)   
+        if args.c and readings_date_c:
             date_to_display = datetime.strptime(args.c, "%Y_%b").strftime("%B %Y")
-            report.report_for_hghst_lwst_temp_day(filtered_readings, date_to_display)
+            report.report_for_hghst_lwst_temp_day(readings_date_c, date_to_display)
 main()
