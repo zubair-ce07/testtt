@@ -50,13 +50,11 @@ class OrsayCrawler(CrawlSpider):
 
         color_urls = response.css('.swatches.color a::attr(href)').extract()
 
-        if len(color_urls) > 0:
-            color_urls.pop(0)
-
-        # initial values for response
+        # Initial values for response
         meta_data = {}
         meta_data['item'] = item
-        meta_data['color_urls'] = color_urls
+        if len(color_urls) > 1:
+            meta_data['color_urls'] = color_urls[1:]
         response.meta.update(meta_data)
 
         for func in self.iterate_over_colors(response):
@@ -72,10 +70,10 @@ class OrsayCrawler(CrawlSpider):
         meta_data = {}
         meta_data['size_links'] = size_links
         meta_data['item'] = item
-        meta_data['color_urls'] = color_urls
 
-        if len(color_urls) > 0:
+        if color_urls:
             color_url = color_urls.pop(0)
+            meta_data['color_urls'] = color_urls
             yield Request(url=color_url, meta=meta_data, dont_filter=True,
                           callback=self.iterate_over_colors)
         else:
@@ -95,7 +93,7 @@ class OrsayCrawler(CrawlSpider):
             sku_id = f"{size_sku}_{size.get('size')}"
             item['skus'][sku_id] = size
 
-        if len(size_links) > 0:
+        if size_links:
             next_size = size_links.pop(0)
 
             size_name = self.get_size_name(next_size)
@@ -106,8 +104,7 @@ class OrsayCrawler(CrawlSpider):
             meta_data['out_of_stock'] = False
             meta_data['size'] = size_name
 
-            size_selectable = next_size.css('.selectable').extract()
-            if size_selectable:
+            if self.is_available(next_size):
                 size_url = next_size.css('::attr(href)').extract_first()
                 next_url = f"{size_url}&Quantity=1&format=ajax&productlistid=undefined"
 
@@ -140,6 +137,15 @@ class OrsayCrawler(CrawlSpider):
         size_response['size_sku'] = size_sku
 
         return size_response
+
+    def is_available(self, size_tag):
+        """Returns true if the size is available"""
+        if size_tag.css('.selectable').extract():
+            flag = True
+        else:
+            flag = False
+
+        return flag
 
     def get_size_color(self, response):
         """Extracts and returns color of product"""
