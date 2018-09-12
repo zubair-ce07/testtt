@@ -11,11 +11,11 @@ from users.views import (
 )
 
 urlpatterns = [
-    path('', user_signup_view, name='signup'),
+    path('', user_home_view, name='home'),
+    path('home/', user_home_view, name='home'),
     path('signup/', user_signup_view, name='signup'),
     path('signin/', user_signin_view, name='signin'),
     path('signout/', user_signout_view, name='signout'),
     path('change_password/', user_change_password_view, name='change_password'),
     path('edit_profile/', user_edit_profile_view, name='edit_profile'),
-    path('home/', user_home_view, name='home'),
 ]
