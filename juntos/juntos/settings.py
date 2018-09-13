@@ -36,6 +36,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'users.middlewares.LoginRequiredMiddleware',
+    'users.middlewares.RoleMiddleware'
 ]
 
 ROOT_URLCONF = 'juntos.urls'
@@ -122,6 +124,11 @@ USE_TZ = True
 
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
+
+LOGIN_EXEMPT_URLS = (
+    r'^media/',
+    r'^register/',
+)
 
 LOGOUT_REDIRECT_URL = '/login/'
 

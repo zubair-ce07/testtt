@@ -32,7 +32,7 @@
                 <li>
                     <a href="{% url 'users:index' %}">
                         <span class="glyphicon glyphicon-headphones"
-                              aria-hidden="true"></span>&nbsp;Welcome {{ user.get_username }}
+                              aria-hidden="true"></span>&nbsp;Welcome {{ user.get_username }} - {{ request.role }}
                     </a>
                 </li>
                 <li>

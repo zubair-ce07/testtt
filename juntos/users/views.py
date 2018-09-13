@@ -1,16 +1,13 @@
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
 from django.db import transaction
 from django.http import HttpResponseRedirect
 from django.urls import reverse_lazy, reverse
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, update_session_auth_hash
 from django.views import generic
 from django.views.generic import View
 from django.views.generic.edit import UpdateView
 
 from .forms import UserForm, ProfileForm
-from .models import Profile
 
 
 class IndexDetailView(generic.DetailView):
@@ -92,7 +89,6 @@ class UserUpdate(UpdateView):
         return self.request.user
 
 
-@login_required
 @transaction.atomic
 def update_profile(request):
     """
@@ -100,7 +96,7 @@ def update_profile(request):
     """
     if request.method == 'POST':
         user_form = UserForm(request.POST, instance=request.user)
-        profile_form = ProfileForm(request.POST, instance=request.user.profile)
+        profile_form = ProfileForm(request.POST, request.FILES, instance=request.user.profile)
         if user_form.is_valid() and profile_form.is_valid():
             password = user_form.cleaned_data['password'].strip()
 
