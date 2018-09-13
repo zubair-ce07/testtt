@@ -43,8 +43,7 @@ class LindexParseSpider(BaseParseSpider):
         return garment
 
     def product_id(self, response):
-        css = '#ProductPage ::attr(data-product-identifier)'
-        return clean(response.css(css))[0]
+        return clean(response.css('.product_id ::text'))[1]
 
     def product_name(self, response):
         return clean(response.css('.name::text'))[0]
