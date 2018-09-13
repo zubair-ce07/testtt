@@ -14,12 +14,12 @@ urlpatterns = [
     path('<int:pk>/profile/', views.EditProfile.as_view(), name='profile'),
     path('<int:pk>/details', views.TaskDetails.as_view(), name='details'),
     path('<int:pk>/edit/', views.EditTask.as_view(), name='edit'),
-    path('<int:pk>/deletetask/', views.DeleteTask.as_view(), name='delete'),
     path('addtask/', views.AddTask.as_view(), name='add'),
 ]
 
 urlpatterns += [
-    path('taskmanager/validate_username/', views.validate_username, name='validate_username'),
+    path('taskmanager/validate_signup/', views.validate_username, name='validate_username'),
+    path('<int:pk>/deletetask', views.delete_task, name='delete_task')
 ]
 
 urlpatterns += staticfiles_urlpatterns()

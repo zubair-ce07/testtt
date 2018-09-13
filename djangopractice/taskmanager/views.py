@@ -2,7 +2,8 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import HttpResponseRedirect, JsonResponse
-from django.shortcuts import redirect
+from django.shortcuts import get_object_or_404, redirect
+from django.template.loader import render_to_string
 from django.urls import reverse, reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views import generic
@@ -27,6 +28,24 @@ def validate_username(request):
     data = {}
     if username_exists:
         data['error_message'] = 'A user with this username already exists.'
+    return JsonResponse(data)
+
+
+def delete_task(request, pk):
+    task = get_object_or_404(models.Task, pk=pk)
+    data = dict()
+    if request.method == 'POST':
+        task.delete()
+        tasks = models.Task.objects.all()
+        data['form_is_valid'] = True
+        data['html_task_list'] = render_to_string('taskmanager/task_table.html', {
+            'tasks': tasks
+        })
+    else:
+        context = {'task': task}
+        data['html_form'] = render_to_string('taskmanager/task_delete_modal.html',
+                                             context,
+                                             request=request,)
     return JsonResponse(data)
 
 
@@ -111,9 +130,3 @@ class AddTask(generic.CreateView):
         form = super(AddTask, self).get_form()
         form.fields.pop('status')
         return form
-
-
-@method_decorator(login_required(login_url='login'), name='dispatch')
-class DeleteTask(generic.DeleteView):
-    model = models.Task
-    success_url = reverse_lazy('taskmanager:index')
