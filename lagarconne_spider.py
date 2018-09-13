@@ -25,7 +25,7 @@ class MixinUS(Mixin):
 
 class LaGarconneParseSpider(BaseParseSpider):
     price_css = '[itemprop="price"] .money::text, .lg-price-cut ::text'
-    raw_description_css = '.lg-desc-product p::text'
+    raw_description_css = '.lg-desc-product > p ::text'
 
     def parse(self, response):
         pid = self.product_id(response)
