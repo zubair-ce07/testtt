@@ -4,6 +4,8 @@ This Class read data from csv files into dictionary
 import os
 import csv
 
+from Analyzer import Analyzer
+
 
 class DataReader:
     @staticmethod
@@ -21,13 +23,15 @@ class DataReader:
                     data.extend(list(csv.DictReader(csvfile)))
 
         for record in data:
-            for key, value in record.items():
+            for attribute_names, value in record.items():
                 try:
-                    record[key] = float(record[key]) if record[key] and '.' in record[key] else int(record[key])
+                    record[attribute_names] = float(value)
                 except ValueError:
-                    record[key] = record[key]
-            if 'PKT' not in record:
-                record['PKT'] = record['PKST']
-                del record['PKST']
+                    pass
+
+            if 'PKST' in record:
+                record['PKT'] = Analyzer.parse_date(record['PKST'], '-')
+            else:
+                record['PKT'] = Analyzer.parse_date(record['PKT'], '-')
 
         return data

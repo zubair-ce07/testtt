@@ -67,24 +67,22 @@ def main():
         return 0
 
     for year in cmdArg.e:
-        result = Analyzer.yearly_report(data, year)
+        result = Analyzer.yearly_report(data, int(year))
 
         if result:
-            DisplayReports.print_year_report(result)
+            DisplayReports.print_yearly_high_low_humidity_report(result)
         else:
             print('No data Found Against ' + year)
 
     for date in cmdArg.a:
-        date = date.replace('/0', '/')
         result = Analyzer.monthly_report(data, date)
 
         if result:
-            DisplayReports.print_monthly_report(result)
+            DisplayReports.print_monthly_report(result,date)
         else:
             print('No data Found Against ' + date)
 
     for date in cmdArg.c:
-        date = date.replace('/0', '/')
         result = Analyzer.monthly_chart(data, date)
 
         if result:
