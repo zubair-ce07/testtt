@@ -59,167 +59,169 @@ def create_and_login(obj):
     obj.client.login(username=DEFAULT_USERNAME, password=DEFAULT_PASSWORD)
 
 
-# class CustomUserIndexTests(TestCase):
-#
-#     def test_un_registered_user(self):
-#         response = self.client.get(reverse('my_user:index'))
-#         check_response(response, self, ['Please Login or Register First'])
-#
-#     def test_registered_user(self):
-#         create_and_login(self)
-#         response = self.client.get(reverse('my_user:index'))
-#         check_response(response, self, ['Welcome user'])
-#
-#
-# class CustomUserRegisterTest(TestCase):
-#     # def test_registered_user(self):
-#     #     create_user()
-#     #     self.client.login(username='temporary', password='temporary')
-#     #     response = self.client.get(reverse('my_user:index'))
-#     #     self.assertEqual(response.status_code, 200)
-#     #     # self.assertContains(response, 'Please Login or Register First')
-#     #     self.assertContains(response, 'Welcome user')
-#
-#     def test_correct_register(self):
-#         request_data = create_request_data(user_name=DEFAULT_USERNAME, passwd=DEFAULT_PASSWORD,
-#                                            email=DEFAULT_EMAIL)
-#         response = self.client.post(reverse('my_user:register'), request_data, follow=True)
-#         check_response(response, self, ['Welcome user'])
-#
-#     def test_register_without_username(self):
-#         request_data = create_request_data(passwd=DEFAULT_PASSWORD, email=DEFAULT_EMAIL)
-#         response = self.client.post(reverse('my_user:register'), request_data, follow=True)
-#         check_response(response, self, ['please enter a username'])
-#
-#     def test_register_without_password(self):
-#         request_data = create_request_data(user_name=DEFAULT_USERNAME, email=DEFAULT_EMAIL)
-#         response = self.client.post(reverse('my_user:register'), request_data, follow=True)
-#         check_response(response, self, ['please enter your password'])
-#
-#     def test_register_without_any_field(self):
-#         request_data = create_request_data()
-#         response = self.client.post(reverse('my_user:register'), request_data, follow=True)
-#         check_response(response, self, ['please enter a username', 'please enter your password'])
-#
-#     def test_unique_username(self):
-#         create_user()
-#         request_data = create_request_data(user_name=DEFAULT_USERNAME, passwd=DEFAULT_PASSWORD,
-#                                            email=DEFAULT_EMAIL)
-#         response = self.client.post(reverse('my_user:register'), request_data, follow=True)
-#         check_response(response, self, ['A user with that username already exists'])
-#
-#     def test_very_large_username(self):
-#         request_data = create_request_data(user_name='hello' * 31, passwd=DEFAULT_PASSWORD,
-#                                            email=DEFAULT_EMAIL)
-#         response = self.client.post(reverse('my_user:register'), request_data, follow=True)
-#         check_response(response, self, ['username should be of maximum length of 150'])
-#
-#
-# class CustomUserLoginTest(TestCase):
-#
-#     def test_correct_login(self):
-#         create_user()
-#         request_data = create_request_data(user_name=DEFAULT_USERNAME, passwd=DEFAULT_PASSWORD)
-#         response = self.client.post(reverse('my_user:login'), request_data, follow=True)
-#         check_response(response, self, ['Welcome user'])
-#
-#     def test_login_without_username(self):
-#         request_data = create_request_data(passwd=DEFAULT_PASSWORD, email=DEFAULT_EMAIL)
-#         response = self.client.post(reverse('my_user:login'), request_data, follow=True)
-#         check_response(response, self, ['please enter your username'])
-#
-#     def test_login_without_password(self):
-#         request_data = create_request_data(user_name=DEFAULT_USERNAME, email=DEFAULT_EMAIL)
-#         response = self.client.post(reverse('my_user:login'), request_data, follow=True)
-#         check_response(response, self, ['please enter your password'])
-#
-#     def test_login_without_any_field(self):
-#         request_data = create_request_data()
-#         response = self.client.post(reverse('my_user:login'), request_data, follow=True)
-#         check_response(response, self, ['please enter your username', 'please enter your password'])
-#
-#
-# class CustomUserEditTest(TestCase):
-#     def test_unauthenticated_access(self):
-#         response = self.client.get(reverse('my_user:edit'), follow=True)
-#         check_response(response, self, ['Login'])
-#
-#     def test_authenticated_access(self):
-#         create_and_login(self)
-#         response = self.client.get(reverse('my_user:edit'))
-#         check_response(response, self, ['Edit Your Profile'])
-#
-#     def test_complete_edit_form(self):
-#         create_and_login(self)
-#         request_data = create_request_data(user_name="new_name", email="new@email.com",
-#                                            first_name="test", last_name="user")
-#         response = self.client.post(reverse('my_user:edit'), request_data, follow=True)
-#
-#         checkers = [
-#             'Welcome user "test user"',
-#             'Your username is: new_name',
-#             'Your email is: new@email.com'
-#         ]
-#         check_response(response, self, checkers)
-#
-#     def test_edit_form_without_firstname(self):
-#         create_and_login(self)
-#         request_data = create_request_data(user_name="new_name", email="new@email.com",
-#                                            last_name="user")
-#         response = self.client.post(reverse('my_user:edit'), request_data, follow=True)
-#
-#         checkers = [
-#             'Welcome user " user"',
-#             'Your username is: new_name',
-#             'Your email is: new@email.com'
-#         ]
-#         check_response(response, self, checkers)
-#
-#     def test_edit_form_without_laststname(self):
-#         create_and_login(self)
-#         request_data = create_request_data(user_name="new_name", email="new@email.com",
-#                                            first_name="new")
-#         response = self.client.post(reverse('my_user:edit'), request_data, follow=True)
-#
-#         checkers = [
-#             'Welcome user "new "',
-#             'Your username is: new_name',
-#             'Your email is: new@email.com'
-#         ]
-#         check_response(response, self, checkers)
-#
-#     def test_edit_form_without_email(self):
-#         create_and_login(self)
-#         request_data = create_request_data(user_name="new_name", first_name="test",
-#                                            last_name="user")
-#         response = self.client.post(reverse('my_user:edit'), request_data, follow=True)
-#
-#         checkers = [
-#             'Welcome user "test user"',
-#             'Your username is: new_name',
-#             'Your email is:'
-#         ]
-#         check_response(response, self, checkers)
-#
-#     def test_edit_form_without_username(self):
-#         create_and_login(self)
-#         request_data = create_request_data(email="new@email.com",
-#                                            first_name="test", last_name="user")
-#         response = self.client.post(reverse('my_user:edit'), request_data, follow=True)
-#         check_response(response, self, ['please enter a username'])
-#
-#     def test_very_large_username(self):
-#         create_and_login(self)
-#         request_data = create_request_data(user_name='hello' * 31)
-#         response = self.client.post(reverse('my_user:edit'), request_data, follow=True)
-#         check_response(response, self, ['username should be of maximum length of 150'])
-#
-#     def test_very_large_firstname_and_lastname(self):
-#         create_and_login(self)
-#         request_data = create_request_data(first_name='hello' * 9, last_name='world' * 9)
-#         response = self.client.post(reverse('my_user:edit'), request_data, follow=True)
-#         check_response(response, self, ['firstname should be of maximum length of 40',
-#                                         'lastname should be of maximum length of 40'])
+class CustomUserIndexTests(TestCase):
+
+    def test_un_registered_user(self):
+        response = self.client.get(reverse('my_user:index'))
+        check_response(response, self, ['Please Login or Register First'])
+
+    def test_registered_user(self):
+        create_and_login(self)
+        response = self.client.get(reverse('my_user:index'))
+        check_response(response, self, ['Welcome user'])
+
+
+class CustomUserRegisterTest(TestCase):
+    def test_logged_in_user(self):
+        create_and_login(self)
+        response = self.client.get(reverse('my_user:register'), follow=True)
+        check_response(response, self, ['Welcome user'])
+
+    def test_correct_register(self):
+        request_data = create_request_data(user_name=DEFAULT_USERNAME, passwd=DEFAULT_PASSWORD,
+                                           email=DEFAULT_EMAIL)
+        response = self.client.post(reverse('my_user:register'), request_data, follow=True)
+        check_response(response, self, ['Welcome user'])
+
+    def test_register_without_username(self):
+        request_data = create_request_data(passwd=DEFAULT_PASSWORD, email=DEFAULT_EMAIL)
+        response = self.client.post(reverse('my_user:register'), request_data, follow=True)
+        check_response(response, self, ['please enter a username'])
+
+    def test_register_without_password(self):
+        request_data = create_request_data(user_name=DEFAULT_USERNAME, email=DEFAULT_EMAIL)
+        response = self.client.post(reverse('my_user:register'), request_data, follow=True)
+        check_response(response, self, ['please enter your password'])
+
+    def test_register_without_any_field(self):
+        request_data = create_request_data()
+        response = self.client.post(reverse('my_user:register'), request_data, follow=True)
+        check_response(response, self, ['please enter a username', 'please enter your password'])
+
+    def test_unique_username(self):
+        create_user()
+        request_data = create_request_data(user_name=DEFAULT_USERNAME, passwd=DEFAULT_PASSWORD,
+                                           email=DEFAULT_EMAIL)
+        response = self.client.post(reverse('my_user:register'), request_data, follow=True)
+        check_response(response, self, ['A user with that username already exists'])
+
+    def test_very_large_username(self):
+        request_data = create_request_data(user_name='hello' * 31, passwd=DEFAULT_PASSWORD,
+                                           email=DEFAULT_EMAIL)
+        response = self.client.post(reverse('my_user:register'), request_data, follow=True)
+        check_response(response, self, ['username should be of maximum length of 150'])
+
+
+class CustomUserLoginTest(TestCase):
+
+    def test_logged_in_user(self):
+        create_and_login(self)
+        response = self.client.get(reverse('my_user:login'), follow=True)
+        check_response(response, self, ['Welcome user'])
+
+    def test_correct_login(self):
+        create_user()
+        request_data = create_request_data(user_name=DEFAULT_USERNAME, passwd=DEFAULT_PASSWORD)
+        response = self.client.post(reverse('my_user:login'), request_data, follow=True)
+        check_response(response, self, ['Welcome user'])
+
+    def test_login_without_username(self):
+        request_data = create_request_data(passwd=DEFAULT_PASSWORD, email=DEFAULT_EMAIL)
+        response = self.client.post(reverse('my_user:login'), request_data, follow=True)
+        check_response(response, self, ['please enter your username'])
+
+    def test_login_without_password(self):
+        request_data = create_request_data(user_name=DEFAULT_USERNAME, email=DEFAULT_EMAIL)
+        response = self.client.post(reverse('my_user:login'), request_data, follow=True)
+        check_response(response, self, ['please enter your password'])
+
+    def test_login_without_any_field(self):
+        request_data = create_request_data()
+        response = self.client.post(reverse('my_user:login'), request_data, follow=True)
+        check_response(response, self, ['please enter your username', 'please enter your password'])
+
+
+class CustomUserEditTest(TestCase):
+    def test_unauthenticated_access(self):
+        response = self.client.get(reverse('my_user:edit'), follow=True)
+        check_response(response, self, ['Login'])
+
+    def test_authenticated_access(self):
+        create_and_login(self)
+        response = self.client.get(reverse('my_user:edit'))
+        check_response(response, self, ['Edit Your Profile'])
+
+    def test_complete_edit_form(self):
+        create_and_login(self)
+        request_data = create_request_data(user_name="new_name", email="new@email.com",
+                                           first_name="test", last_name="user")
+        response = self.client.post(reverse('my_user:edit'), request_data, follow=True)
+
+        checkers = [
+            'Welcome user "test user"',
+            'Your username is: new_name',
+            'Your email is: new@email.com'
+        ]
+        check_response(response, self, checkers)
+
+    def test_edit_form_without_firstname(self):
+        create_and_login(self)
+        request_data = create_request_data(user_name="new_name", email="new@email.com",
+                                           last_name="user")
+        response = self.client.post(reverse('my_user:edit'), request_data, follow=True)
+
+        checkers = [
+            'Welcome user " user"',
+            'Your username is: new_name',
+            'Your email is: new@email.com'
+        ]
+        check_response(response, self, checkers)
+
+    def test_edit_form_without_laststname(self):
+        create_and_login(self)
+        request_data = create_request_data(user_name="new_name", email="new@email.com",
+                                           first_name="new")
+        response = self.client.post(reverse('my_user:edit'), request_data, follow=True)
+
+        checkers = [
+            'Welcome user "new "',
+            'Your username is: new_name',
+            'Your email is: new@email.com'
+        ]
+        check_response(response, self, checkers)
+
+    def test_edit_form_without_email(self):
+        create_and_login(self)
+        request_data = create_request_data(user_name="new_name", first_name="test",
+                                           last_name="user")
+        response = self.client.post(reverse('my_user:edit'), request_data, follow=True)
+
+        checkers = [
+            'Welcome user "test user"',
+            'Your username is: new_name',
+            'Your email is:'
+        ]
+        check_response(response, self, checkers)
+
+    def test_edit_form_without_username(self):
+        create_and_login(self)
+        request_data = create_request_data(email="new@email.com",
+                                           first_name="test", last_name="user")
+        response = self.client.post(reverse('my_user:edit'), request_data, follow=True)
+        check_response(response, self, ['please enter a username'])
+
+    def test_very_large_username(self):
+        create_and_login(self)
+        request_data = create_request_data(user_name='hello' * 31)
+        response = self.client.post(reverse('my_user:edit'), request_data, follow=True)
+        check_response(response, self, ['username should be of maximum length of 150'])
+
+    def test_very_large_firstname_and_lastname(self):
+        create_and_login(self)
+        request_data = create_request_data(first_name='hello' * 9, last_name='world' * 9)
+        response = self.client.post(reverse('my_user:edit'), request_data, follow=True)
+        check_response(response, self, ['firstname should be of maximum length of 40',
+                                        'lastname should be of maximum length of 40'])
 
 
 class CustomUSerCHangePasswordTest(TestCase):
@@ -235,7 +237,6 @@ class CustomUSerCHangePasswordTest(TestCase):
     # def test_correct_password_change(self):
     #     create_and_login(self)
     #     request_data = create_password_request(DEFAULT_PASSWORD, 'password', 'password')
-    #     print(request_data)
-    #     response = self.client.post(reverse('my_user:change_password'), request_data=request_data)
-    #     # check_response(response, self, ['Please Login or Register First'])
-    #     print(response.content)
+    #     response = self.client.post(reverse('my_user:change_password'), request_data=request_data,
+    #                                 follow=True)
+    #     check_response(response, self, ['Please Login or Register First'])
