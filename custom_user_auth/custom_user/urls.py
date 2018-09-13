@@ -1,13 +1,14 @@
 from django.urls import path, reverse
 from . import views
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
+from .decorators import anonymous_required
 
 app_name = 'my_user'
 
 urlpatterns = [
     path('', views.IndexView.as_view(), name='index'),
-    path('login/', views.UserLoginFormView.as_view(), name='login'),
-    path('register/', views.UserFormView.as_view(), name='register'),
+    path('login/', anonymous_required(views.UserLoginFormView.as_view()), name='login'),
+    path('register/', anonymous_required(views.UserFormView.as_view()), name='register'),
     path('logout/', views.logout_view, name='logout'),
     path('edit-profile/', login_required(views.UserEditFormView.as_view(), login_url='/login'),
          name='edit'),

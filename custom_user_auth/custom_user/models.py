@@ -33,26 +33,37 @@ class MyUser(AbstractBaseUser):
         max_length=150,
         unique=True,
         error_messages={
-            'unique': ("A user with that username already exists."),
+            'unique': "A user with that username already exists.",
+            'required': "Username is required",
+            'max_length': "username should be of maximum length of 150.",
         },
     )
 
     first_name = models.CharField(
         max_length=40,
         verbose_name="first name",
-        blank=True
+        blank=True,
+        error_messages={
+            'max_length': "first name should be of maximum length of 40.",
+        },
     )
 
     last_name = models.CharField(
         max_length=40,
         verbose_name="last name",
-        blank=True
+        blank=True,
+        error_messages={
+            'max_length': "last name should be of maximum length of 40.",
+        },
     )
 
     email = models.EmailField(
         verbose_name='email address',
         max_length=255,
-        blank = True
+        blank=True,
+        error_messages={
+            'max_length': "email should be of maximum length of 255.",
+        },
     )
 
     is_active = models.BooleanField(default=True)

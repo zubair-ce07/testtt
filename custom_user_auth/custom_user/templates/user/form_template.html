@@ -13,7 +13,7 @@
                     {% if error_message %}
                         <p><strong style="color:red">{{ error_message }}</strong></p>
                     {% endif %}
-                    <form class="form-horizontal" role="form" action="" method="post" >
+                    <form class="form-horizontal" role="form" action="" method="post" novalidate>
                         {% csrf_token %}
 
                         {% for field in form %}
