@@ -50,6 +50,8 @@ class LindexParseSpider(BaseParseSpider, Mixin):
 
     def skus(self, raw_skus):
         skus = {}
+        if raw_skus['d']['Price'] == "£0":
+            return skus
         common_sku = self.common_sku(raw_skus)
         raw_sizes = [size['Text'] for size in raw_skus['d']['SizeInfo'][1:]]
 
@@ -95,7 +97,7 @@ class LindexParseSpider(BaseParseSpider, Mixin):
         return requests
 
     def product_retailer_sku(self, response):
-        return clean(response.css('.product_placeholder::attr(data-product-identifier)'))[0]
+        return clean(response.css('.product_id::text'))[0]
 
     def product_name(self, response):
         return clean(response.css('.name::text'))[0]
