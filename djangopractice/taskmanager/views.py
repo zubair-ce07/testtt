@@ -31,21 +31,10 @@ def validate_username(request):
     return JsonResponse(data)
 
 
-def delete_task(request, pk):
-    task = get_object_or_404(models.Task, pk=pk)
-    data = dict()
-    if request.method == 'POST':
-        task.delete()
-        tasks = models.Task.objects.all()
-        data['form_is_valid'] = True
-        data['html_task_list'] = render_to_string('taskmanager/task_table.html', {
-            'tasks': tasks
-        })
-    else:
-        context = {'task': task}
-        data['html_form'] = render_to_string('taskmanager/task_delete_modal.html',
-                                             context,
-                                             request=request,)
+def delete_task(request):
+    task = get_object_or_404(models.Task, pk=request.POST['pk'])
+    deletion_confirmation = task.delete()
+    data = {'valid': deletion_confirmation}
     return JsonResponse(data)
 
 

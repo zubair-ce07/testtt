@@ -15,7 +15,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['0.0.0.0',
                  '127.0.0.1',
-                 'taskmanager-arbisoft.herokuapp.com',
+                 'taskmanager-v2.herokuapp.com',
                  ]
 
 # Application definition

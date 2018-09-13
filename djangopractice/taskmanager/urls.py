@@ -19,7 +19,7 @@ urlpatterns = [
 
 urlpatterns += [
     path('taskmanager/validate_signup/', views.validate_username, name='validate_username'),
-    path('<int:pk>/deletetask', views.delete_task, name='delete_task')
+    path('deletetask', views.delete_task, name='delete_task')
 ]
 
 urlpatterns += staticfiles_urlpatterns()
