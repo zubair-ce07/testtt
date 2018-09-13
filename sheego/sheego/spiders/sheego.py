@@ -43,9 +43,18 @@ class SheegoSpider(scrapy.Spider):
     def item_detail(self, response):
         """This method crawl item detail information."""
         size = []
-        pattern = "^[A-Z\d/\s]+$"
+        pattern = r"^[A-Z\d/\s]+$"
         title = response.css('span.p-details__name::text').extract_first()
         item_size = response.css('div.c-sizespots>div::text').extract()
+        actual_price = response.css(
+            'div.cj-p-details__variants>div>section>span::text').extract_first()
+        sale_price = response.css(
+            'div.cj-p-details__variants>div>section>span.at-lastprice::text').extract_first()
+        if sale_price:
+            # checking whethe item have any sale price or not.
+            sale_price = sale_price.strip()
+        else:
+            sale_price = 0
         for data in item_size:
             modified_data = re.match(pattern, data, flags=re.MULTILINE)
             if modified_data:
@@ -57,8 +66,8 @@ class SheegoSpider(scrapy.Spider):
             'category': response.css(
                 'div.cj-p-details__variants>div>h1>span::text').extract_first().strip(),
             'product_title': title.strip(),
-            'price': response.css(
-                'div.cj-p-details__variants>div>section>span::text').extract_first().strip(),
+            'actual_price': actual_price.strip(),
+            'sale_price': sale_price,
             'sizes': size,
             'description': response.css('div.l-mb-5>.l-list--nospace>li::text').extract(),
         }

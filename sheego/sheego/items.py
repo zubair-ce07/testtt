@@ -9,6 +9,7 @@ class SheegoItem(scrapy.Item):
     item_detail_url = scrapy.Field()
     category = scrapy.Field()
     product_title = scrapy.Field()
-    price = scrapy.Field()
+    actual_price = scrapy.Field()
+    sale_price = scrapy.Field()
     sizes = scrapy.Field()
     description = scrapy.Field()
