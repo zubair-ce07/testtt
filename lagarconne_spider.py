@@ -10,7 +10,7 @@ class Mixin:
     allowed_domains = ['lagarconne.com']
 
     MERCH_INFO = [
-        'exclusive'
+        'La Garçonne Exclusive'
     ]
 
 
@@ -25,7 +25,7 @@ class MixinUS(Mixin):
 
 class LaGarconneParseSpider(BaseParseSpider):
     price_css = '[itemprop="price"] .money::text, .lg-price-cut ::text'
-    raw_description_css = '.lg-desc-product ::text'
+    raw_description_css = '.lg-desc-product p::text'
 
     def parse(self, response):
         pid = self.product_id(response)
@@ -100,7 +100,7 @@ class LaGarconneParseSpider(BaseParseSpider):
 
     def merch_info(self, garment):
         info = garment['description'] + garment['care']
-        return [i for m in self.MERCH_INFO for i in info if m in i.lower()]
+        return [m for m in self.MERCH_INFO for i in info if m in i]
 
     def is_homeware(self, response):
         return 'interiors' in response.url
