@@ -14,12 +14,10 @@ from asos.items import Product
 class AsosSpider(CrawlSpider):
     name = 'asos'
     allowed_domains = ['asos.com']
+    start_urls = ['http://www.asos.com/ru/']
 
-    start_url = 'http://www.asos.com/ru/'
-    stock_url = 'http://www.asos.com/api/product/catalogue/v2/stockprice?{}'
-    category_url = 'http://api.asos.com/fashion/navigation/v2/tree/navigation?{}'
-
-    cookies = {}
+    stock_url_t = 'http://www.asos.com/api/product/catalogue/v2/stockprice?{}'
+    listing_url_t = 'http://api.asos.com/fashion/navigation/v2/tree/navigation?{}'
 
     product_css = 'article'
     pagination_css = '[data-auto-id="loadMoreProducts"]'
@@ -35,31 +33,22 @@ class AsosSpider(CrawlSpider):
                       ' Chrome/68.0.3440.106 Safari/537.36'
     }
 
-    def start_requests(self):
-        yield Request(self.start_url, callback=self.parse_navigation_attr)
+    def parse_start_url(self, response):
+        script_sel = response.xpath('//script[contains(.,"var RegionalStore")]')
 
-    def parse_navigation_attr(self, response):
-        script_xpath = '//script[contains(.,"var RegionalStore")]'
-        script_sel = response.xpath(script_xpath)
-        raw_store = script_sel.re_first('\s*var\s*RegionalStore\s*=([^;]+)')
-        raw_config = script_sel.re_first('\s*var\s*GlobalConfig\s*=([^;]+)')
-
-        raw_store = loads(raw_store)
-        raw_config = decode(raw_config)
+        raw_store = loads(script_sel.re_first('\s*var\s*RegionalStore\s*=([^;]+)'))
+        raw_config = decode(script_sel.re_first('\s*var\s*GlobalConfig\s*=([^;]+)'))
 
         params = {
             "country": raw_config.get('countryCode'),
             "keyStoreDataversion": raw_store.get('keyStoreDataversion'),
             "lang": raw_config.get('languageCode')
         }
-        yield Request(self.category_url.format(urlencode(params)), callback=self.parse_category)
+        yield Request(self.listing_url_t.format(urlencode(params)), callback=self.parse_menu)
 
-    def parse_category(self, response):
-        self.extract_cookie(response)
-        category_links = self.extract_category_links(loads(response.text), [])
-
-        for link in category_links:
-            yield Request(link, cookies=self.cookies, callback=self.parse)
+    def parse_menu(self, response):
+        for url in self.extract_listing_urls(loads(response.text), []):
+            yield Request(url, cookies=self.extract_cookie(response), callback=self.parse)
 
     def parse_product(self, response):
         raw_product = self.extract_raw_product(response)
@@ -78,9 +67,16 @@ class AsosSpider(CrawlSpider):
         product_item['brand'] = self.extract_brand(response)
         product_item['care'] = self.extract_care(response)
 
-        return self.product_stock_request(product_item, raw_product)
+        return self.stock_request(product_item, raw_product)
 
-    def product_stock_request(self, product_item, raw_product):
+    def parse_stock(self, response):
+        raw_stock = loads(response.text)[0].get("variants")
+        product_item = response.meta['item']
+        product_skus = product_item['skus'].copy()
+        product_item['skus'] = self.update_skus_status(product_skus, raw_stock)
+        return product_item
+
+    def stock_request(self, product_item, raw_product):
         raw_stock = raw_product['store']
 
         params = {}
@@ -89,29 +85,27 @@ class AsosSpider(CrawlSpider):
         params["keyStoreDataversion"] = raw_stock.get('keyStoreDataversion'),
         params["store"] = raw_stock.get('code')
 
-        yield Request(self.stock_url.format(urlencode(params)), cookies=self.cookies,
-                      meta={'item': product_item}, callback=self.parse_product_stock)
+        yield Request(self.stock_url_t.format(urlencode(params)), meta={'item': product_item},
+                      callback=self.parse_stock)
 
-    def parse_product_stock(self, response):
-        raw_stock = loads(response.text)[0].get("variants")
-        product_item = response.meta['item']
-        product_skus = product_item['skus'].copy()
+    def update_skus_status(self, skus, raw_stock):
         prod_stock_map = {r_stock.get("variantId"): r_stock.get("isInStock") for r_stock in raw_stock}
 
-        for sku in product_skus:
-            if prod_stock_map.get(sku.get('sku_id', '')) == "false":
+        for sku in skus:
+
+            if prod_stock_map[sku['sku_id']] == "false":
                 sku['out_of_stock'] = True
 
             sku['sku_id'] = f'{sku["color"]}_{sku["size"]}'
-        product_item['skus'] = product_skus
-        return product_item
+
+        return skus
 
     def extract_raw_product(self, response):
         xpath = '//script[contains(.,"Pages/FullProduct")]'
         return loads(response.xpath(xpath).re_first("view\('([^']+)"))
 
     def extract_gender(self, raw_product):
-        return raw_product.get('gender') if raw_product.get('gender') else 'Unisex-adults'
+        return raw_product.get('gender') or 'Unisex'
 
     def extract_skus(self, raw_product):
         raw_price = raw_product['price']
@@ -127,7 +121,7 @@ class AsosSpider(CrawlSpider):
         for raw_sku in raw_product['variants']:
             sku = common.copy()
             sku['color'] = raw_sku['colour']
-            sku['size'] = raw_sku.get('size') if raw_sku.get('size') else 'One Size'
+            sku['size'] = raw_sku.get('size') or 'One Size'
             sku['sku_id'] = raw_sku['variantId']
             product_skus.append(sku)
 
@@ -136,6 +130,7 @@ class AsosSpider(CrawlSpider):
     def extract_image_urls(self, response):
         raw_images = response.css('.product-gallery img::attr(src)').extract()
         product_images = [url_query_cleaner(raw_image) for raw_image in raw_images]
+
         return [f'http:{url}?$XXL$' for url in product_images]
 
     def extract_product_name(self, response):
@@ -159,7 +154,7 @@ class AsosSpider(CrawlSpider):
     def extract_categories(self, response):
         return response.css('.bread-crumb a::text').extract()
 
-    def extract_category_links(self, raw_navs, category_links):
+    def extract_listing_urls(self, raw_navs, category_links):
         for raw_nav in raw_navs:
             link = raw_nav.get('link')
             if link:
@@ -167,10 +162,10 @@ class AsosSpider(CrawlSpider):
                     category_links.append(link.get('webUrl'))
             sub_nav = raw_nav.get('children')
             if sub_nav:
-                self.extract_category_links(sub_nav, category_links)
+                self.extract_listing_urls(sub_nav, category_links)
         return category_links
 
     def extract_cookie(self, response):
         raw_cookie = response.request.headers.get(b'Cookie')
         if raw_cookie:
-            self.cookies['geocountry'] = findall('geocountry=([^;]+)', raw_cookie.decode('utf-8'))[0]
+            return {'geocountry': findall('geocountry=([^;]+)', raw_cookie.decode('utf-8'))[0]}
