@@ -30,14 +30,14 @@ class DisplayReports:
         print('Humidity: {}% on {} {}\n'.format(humidity, month_max_humid, day_max_humid))
 
     @staticmethod
-    def print_monthly_report(result, date):
+    def print_monthly_average_high_low_humid_report(result, date):
         """
         this method prints the monthly report in highest , lowest and mean humidity average from result
         :param result: is a dictionary containing results after computations
         :param date: is yyyy/mm format date for which results are given
         :return:
         """
-        print(date)
+        print(str(date.year)+'/'+str(date.month))
 
         print('Highest Average: {0:.2f}C'.format(result['Highest Average']))
         print('Lowest Average: {0:.2f}C'.format(result['Lowest Average']))
@@ -51,9 +51,7 @@ class DisplayReports:
         :param date: the yyyy/mm format date for which results are given
         :return:
         """
-        year, month = date.split('/')
-
-        print(calendar.month_name[int(month)] + ' ' + year)
+        print(calendar.month_name[date.month] + ' ' + str(date.year))
 
         color_red = '\033[1;31m'
         color_blue = '\033[1;34m'

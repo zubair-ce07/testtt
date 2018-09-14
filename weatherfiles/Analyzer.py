@@ -15,22 +15,17 @@ class Analyzer:
         :return: year, month, day
         """
         if date.count(delimeter) > 1:
-            return datetime.strptime(date, '%Y' + delimeter + '%m' + delimeter + '%d')
-        return datetime.strptime(date, '%Y' + delimeter + '%m')
+            return datetime.strptime(date, '%Y' + delimeter + '%m' + delimeter + '%d').date()
+        return datetime.strptime(date, '%Y' + delimeter + '%m').date()
 
     @staticmethod
-    def yearly_report(data, year):
+    def yearly_report(years_records):
         """
         compute make report of highest temperature , lowest temperature and  most humid day of the year
         :param data: list of dictionaries
         :param year: year for which report is required
         :return: dictionary containing final report of the year or an empty dictionary if data is not found
         """
-
-        years_records = [record for record in data if record['PKT'].year == year]
-
-        if not years_records:
-            return {}
 
         highest_temp_record = max(
             years_records,
@@ -60,7 +55,7 @@ class Analyzer:
         return results
 
     @staticmethod
-    def monthly_report(data, date):
+    def monthly_report(month_records, date):
         """
         Method for generating monthly report for average highest temperature, average lowest temperature
         and average mean humidity
@@ -68,17 +63,6 @@ class Analyzer:
         :param date: yyyy/mm  format date for the month or which report is required
         :return: a dictionary of report or empty dictionary if no data is found
         """
-        date = Analyzer.parse_date(date, '/')
-
-        month_records = [
-            record
-            for record in data
-            if record['PKT'].year == date.year and record['PKT'].month == date.month
-        ]
-
-        if not month_records:
-            return {}
-
         sum_max_tempc = sum(record['Max TemperatureC'] for record in month_records if record['Max TemperatureC'] != '')
         sum_min_tempc = sum(record['Min TemperatureC'] for record in month_records if record['Min TemperatureC'] != '')
         sum_humidity = sum(record[' Mean Humidity'] for record in month_records if record[' Mean Humidity'] != '')
@@ -95,7 +79,7 @@ class Analyzer:
         return results
 
     @staticmethod
-    def monthly_chart(data, date):
+    def monthly_chart(month_records):
         """
         Method to generate data report of highest and lowest temperature each day for
         chart to Display for a given month
@@ -104,14 +88,6 @@ class Analyzer:
         :return: a dictionary containing values for highest and lowest temperature against each day of month
         """
         results = {}
-
-        date = Analyzer.parse_date(date, '/')
-
-        month_records = [
-            record
-            for record in data
-            if record['PKT'].year == date.year and record['PKT'].month == date.month
-        ]
 
         for record in month_records:
             day = str(record['PKT'].day)

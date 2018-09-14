@@ -67,28 +67,45 @@ def main():
         return 0
 
     for year in cmdArg.e:
-        result = Analyzer.yearly_report(data, int(year))
 
-        if result:
-            DisplayReports.print_yearly_high_low_humidity_report(result)
-        else:
+        years_records = [record for record in data if record['PKT'].year == int(year)]
+
+        if not years_records:
             print('No data Found Against ' + year)
+            continue
+
+        result = Analyzer.yearly_report(years_records)
+        DisplayReports.print_yearly_high_low_humidity_report(result)
 
     for date in cmdArg.a:
-        result = Analyzer.monthly_report(data, date)
+        date = Analyzer.parse_date(date, '/')
 
-        if result:
-            DisplayReports.print_monthly_report(result,date)
-        else:
-            print('No data Found Against ' + date)
+        month_records = [
+            record
+            for record in data
+            if record['PKT'].year == date.year and record['PKT'].month == date.month
+        ]
+
+        if not month_records:
+            print('No data Found Against {}/{}'.format(date.year, date.month))
+            continue
+
+        result = Analyzer.monthly_report(month_records, date)
+        DisplayReports.print_monthly_average_high_low_humid_report(result, date)
 
     for date in cmdArg.c:
-        result = Analyzer.monthly_chart(data, date)
+        date = Analyzer.parse_date(date, '/')
 
-        if result:
-            DisplayReports.print_monthly_charts(result, date)
-        else:
-            print('No data Found Against ' + date)
+        month_records = [
+            record
+            for record in data
+            if record['PKT'].year == date.year and record['PKT'].month == date.month
+        ]
+        if not month_records:
+            print('No data Found Against {}/{}'.format(date.year, date.month))
+
+        result = Analyzer.monthly_chart(month_records)
+        DisplayReports.print_monthly_charts(result, date)
 
 
 if __name__ == "__main__":
