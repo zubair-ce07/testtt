@@ -12,17 +12,10 @@ class WalmartSpider(CrawlSpider):
 
     rules = (
         Rule(LinkExtractor(allow=r".*com/browse/clothing/.*"), callback='parse_canonical'),
-
     )
 
     def parse_canonical(self, response):
-        # xpath not working on //script[contains(text(), "canonical")]/text()'
-        required_script_xpath = '//script[contains(text(), "window.__WML_REDUX_INITIAL_STATE__")]/text()'
-        script = response.xpath(required_script_xpath).extract_first()
-        script = script.lstrip('var _setReduxState = function() {window.__WML_REDUX_INITIAL_STATE__ =')
-        script = script[:-3]
-        script = "{" + script
-        data = json.loads(script)
+        data = self.parse_script(response)
         canonical_next = data['preso']['pageMetadata'].get('canonicalNext')
         if canonical_next:
             yield scrapy.Request(canonical_next, callback=self.parse_pages)
@@ -30,12 +23,7 @@ class WalmartSpider(CrawlSpider):
             yield scrapy.Request(response.url, callback=self.parse_products)
 
     def parse_pages(self, response):
-        required_script_xpath = '//script[contains(text(), "window.__WML_REDUX_INITIAL_STATE__")]/text()'
-        script = response.xpath(required_script_xpath).extract_first()
-        script = script.lstrip('var _setReduxState = function() {window.__WML_REDUX_INITIAL_STATE__ =')
-        script = script[:-3]
-        script = "{" + script
-        data = json.loads(script)
+        data = self.parse_script(response)
         canonical = data['preso']['pageMetadata'].get('canonical')
         canonical = canonical[:-1]
         pages = data['preso']['pagination']['pages']
@@ -50,7 +38,6 @@ class WalmartSpider(CrawlSpider):
             yield scrapy.Request("https://www.walmart.com"+link, callback=self.parse_item)
 
     def parse_script(self, response):
-        # xpath not working on //script[contains(text(), "sku")]/text()'
         required_script_xpath = '//script[contains(text(), "window.__WML_REDUX_INITIAL_STATE__")]/text()'
         script = response.xpath(required_script_xpath).extract_first()
         script = script.lstrip('var _setReduxState = function() {window.__WML_REDUX_INITIAL_STATE__ =')
