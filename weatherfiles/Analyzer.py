@@ -36,13 +36,13 @@ class Analyzer:
             years_records,
             key=lambda record: record['Max TemperatureC']
             if record['Max TemperatureC'] != ''
-            else -200
+            else float('-inf')
         )
         lowest_temp_record = min(
             years_records,
             key=lambda record: record['Min TemperatureC']
             if record['Min TemperatureC'] != ''
-            else 200
+            else float('inf')
         )
         humidity_record = max(
             years_records,
