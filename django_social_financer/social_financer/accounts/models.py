@@ -1,11 +1,16 @@
+from datetime import timedelta
+import jwt
+
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.auth.models import User
+from rest_framework.authtoken.models import Token
 
 from datetime import datetime
 
 from . import constants
+from social_financer import settings
 
 class Category(models.Model):
     name = models.CharField(max_length=50)
@@ -59,6 +64,24 @@ class UserProfile(models.Model):
         elif self.role == UserProfile.CONSUMER:
             return self.pair
 
+    @property
+    def token(self):
+        return self._generate_jwt_token()
+
+    def _generate_jwt_token(self):
+        """
+        Generates a JSON Web Token that stores this user's ID and has an expiry
+        date set to 60 days into the future.
+        """
+        dt = datetime.now() + timedelta(days=60)
+
+        token = jwt.encode({
+            'id': self.pk,
+            'exp': int(dt.strftime('%s'))
+        }, settings.SECRET_KEY, algorithm='HS256')
+
+        return token.decode('utf-8')
+
 class PairHistory(models.Model):
     """ A model that keeps record of breaking and making of users' pairs, used in admin
     """
@@ -73,6 +96,7 @@ class PairHistory(models.Model):
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
         UserProfile.objects.create(user=instance)
+        Token.objects.create(user=instance)
 
 @receiver(post_save, sender=User)
 def save_user_profile(sender, instance, **kwargs):

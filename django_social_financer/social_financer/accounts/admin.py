@@ -72,7 +72,6 @@ class UserAdmin(admin.ModelAdmin):
 
 class PairHistoryAdmin(admin.ModelAdmin):
     list_display = ['donor', 'consumer', 'date_logged', 'was_pair_made']
-    # list_filter =
     date_hierarchy = 'date_logged'
 
     def was_pair_made(self, obj):
@@ -80,7 +79,6 @@ class PairHistoryAdmin(admin.ModelAdmin):
     was_pair_made.boolean = True
     was_pair_made.short_description = 'Paired/Unpaired'
 
-    pass
 
 admin.site.register(models.Category)
 admin.site.unregister(Group)

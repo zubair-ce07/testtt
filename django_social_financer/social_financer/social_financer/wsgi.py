@@ -17,4 +17,4 @@ from . import settings
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'social_financer.settings')
 
 application = get_wsgi_application()
-application = WhiteNoise(application, root=settings.STATIC_ROOT)
+prod_application = WhiteNoise(application, root=settings.STATIC_ROOT)
