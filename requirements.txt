@@ -1,0 +1,2 @@
+import re
+scrapy 1.5.1
