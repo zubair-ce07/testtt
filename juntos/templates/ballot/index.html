@@ -1,0 +1,58 @@
+{% extends 'common/base.html' %}
+{% block ballot_active %} active {% endblock %}
+
+{% block body %}
+    <div class="container-fluid ">
+        <div class="row">
+            <div class="col-sm-12 col-md-9">
+                <div class="panel panel-default">
+                    <div class="panel-heading"><h4>List of All Ballots</h4></div>
+                    <div class="panel-body" style="max-height: 550px;overflow-y: scroll;">
+                        <div class="table-responsive-sm">
+                            {% if questions %}
+                                <table class="table table-bordered">
+                                    <thead class="thead-light">
+                                    <tr>
+                                        <th>Ballot</th>
+                                        <th class="text-center">Ending on</th>
+                                        <th class="text-center">Action(s)</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for question in questions %}
+                                        <tr>
+                                            <th scope="row">
+                                                {{question.title}}
+                                            </th>
+                                            <th class="text-center" style="color: #daa111">
+                                                {{question.end_date}}
+                                            </th>
+                                            <td class="text-center">
+                                            <a class="btn btn-warning" href="{%  url 'ballot:ballot_vote' question.id %}">Vote</a>
+                                            {% if request.role == 'Admin' %}
+                                                <a class="btn btn-primary" href="{%  url 'ballot:ballot_details' question.id %}">Details</a>
+                                                <a class="btn btn-info" href="{%  url 'ballot:ballot_edit' question.id %}">Edit</a>
+                                                <form action="{%  url 'ballot:ballot_delete' question.id %}"
+                                                      style="display: inline" method="post">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-danger">Delete</button>
+                                                </form>
+                                            {% endif %}
+                                            </td>
+
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            {% else %}
+                                <p>There is no ballot available.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% include 'common/recent_ballots.html' %}
+        </div>
+    </div>
+    {% include 'common/footer.html' %}
+{% endblock %}

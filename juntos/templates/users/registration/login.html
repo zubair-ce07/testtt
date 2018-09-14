@@ -1,34 +1,32 @@
-{% extends 'profile/base.html' %}
-{% block title %}Edit{% endblock %}
+{% extends 'common/base.html' %}
+{% block title %}Login{% endblock %}
 
 {% block body %}
     <div class="container-fluid">
         <div class="row">
-            <div class="col-sm-12 col-md-7">
+            <div class="col-sm-12 col-md-4 col-md-offset-4">
                 <div class="panel panel-default">
+                    <div class="panel-heading"><h4>Login</h4></div>
                     <div class="panel-body">
-                        <h3>Edit info</h3>
                         <form class="form-horizontal" role="form" action="" method="post" enctype="multipart/form-data">
                             {% csrf_token %}
-                            {% include 'profile/form_template.html' %}
+                            {% include 'users/profile/form_template.html' %}
                             {% if form.non_field_errors %}
-                                <div class="form-group" >
-                                    <div class="col-sm-offset-2 col-sm-3" style="background: red; color: white">
+                                <div class="form-group col-sm-6" >
                                     <ul>
                                         {% for error in form.non_field_errors %}
                                             <li>{{ error }}</li>
                                         {% endfor %}
                                     </ul>
-                                    </div>
                                 </div>
                             {% endif %}
                             <div class="form-group">
-                                <div class="col-sm-offset-2 col-sm-1">
+                                <div class="col-sm-offset-2 col-sm-10">
                                     <button type="submit" class="btn btn-success">Submit</button>
-                                </div>
-                                <div class="col-sm-1">
-                                    <a href="{% url 'users:index' %}">
-                                        <button type="button" class="btn btn-danger">Cancel</button>
+                                    <a href="{% url 'users:register' %}">
+                                        <button type="button" class="btn btn-info">
+                                            Register
+                                        </button>
                                     </a>
                                 </div>
                             </div>

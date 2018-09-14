@@ -21,7 +21,7 @@ class LoginRequiredMiddleware(object):
         self.get_response = get_response
 
     def __call__(self, request):
-        if not request.user.is_authenticated:
+        if not request.user.is_authenticated or not request.user.is_active:
             path = request.path_info.lstrip('/')
             if not any(m.match(path) for m in EXEMPT_URLS):
                 return HttpResponseRedirect(settings.LOGIN_URL)
@@ -41,7 +41,7 @@ class RoleMiddleware:
         response = self.get_response(request)
         return response
 
-    def process_view(self, request, view_func, *view_args, **view_kargs):
+    def process_view(self, request, view_func, *view_args, **view_kwargs):
         """Include `role` of a user in request, if user is authenticated"""
         if request.user.is_authenticated:
             request.role = None

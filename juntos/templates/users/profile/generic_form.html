@@ -1,33 +1,32 @@
-{% extends 'profile/base.html' %}
+{% extends 'common/base.html' %}
 {% block title %}Edit{% endblock %}
 
 {% block body %}
     <div class="container-fluid">
         <div class="row">
-            <div class="col-sm-12 col-md-7">
+            <div class="col-sm-12 col-md-6 col-md-offset-3">
                 <div class="panel panel-default">
+                    <div class="panel-heading"><h4>Edit info</h4></div>
                     <div class="panel-body">
-                        <h3>Edit info</h3>
                         <form class="form-horizontal" role="form" action="" method="post" enctype="multipart/form-data">
                             {% csrf_token %}
+                            {% include 'users/profile/form_template.html' %}
                             {% if form.non_field_errors %}
                                 <div class="form-group" >
-                                    <div class="col-sm-offset-2 col-sm-3" style="background: red; color: white">
-                                        <ul>
-                                            {% for error in form.non_field_errors %}
-                                                <li>{{ error }}</li>
-                                            {% endfor %}
-                                        </ul>
+                                    <div class="col-sm-offset-2 col-sm-6" style="background: red; color: white">
+                                    <ul>
+                                        {% for error in form.non_field_errors %}
+                                            <li>{{ error }}</li>
+                                        {% endfor %}
+                                    </ul>
                                     </div>
                                 </div>
                             {% endif %}
-                            {{ user_form.as_p }}
-                            {{ profile_form.as_p }}
                             <div class="form-group">
                                 <div class="col-sm-offset-2 col-sm-1">
                                     <button type="submit" class="btn btn-success">Submit</button>
                                 </div>
-                                <div class="col-sm-1">
+                                <div class="col-sm-1" style="margin-left: 10px;">
                                     <a href="{% url 'users:index' %}">
                                         <button type="button" class="btn btn-danger">Cancel</button>
                                     </a>

@@ -1,0 +1,29 @@
+{% extends 'common/base.html' %}
+{% block ballot_active %} active {% endblock %}
+
+{% block body %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-8 col-md-9 col-sm-offset-1">
+                <div class="panel panel-default">
+                    <div class="panel-heading"><h4>List of {{ title }}</h4></div>
+                    <div class="panel-body">
+                        <form method="POST">
+                            {% csrf_token %}
+                            <table class="table table-bordered table-light">
+                                {{ballot_form.as_table}}
+                                {% for form in choice_forms %}
+                                    {{form.as_table}}
+                                {% endfor %}
+                            </table>
+                            <br>
+                            <button type="submit" class="btn btn-warning float-right">Add Ballot</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% include 'common/footer.html' %}
+{% endblock %}

@@ -14,7 +14,7 @@ class IndexDetailView(generic.DetailView):
     """
     Index detailed view to show user information
     """
-    template_name = 'profile/index.html'
+    template_name = 'users/profile/index.html'
     context_object_name = 'user'
 
     def get_object(self, queryset=None):
@@ -26,7 +26,7 @@ class UserFormView(View):
     User View to handle signup.
     """
     form_class = UserForm
-    template_name = 'registration/registration_form.html'
+    template_name = 'users/registration/registration_form.html'
 
     def get(self, request):
         if self.request.user.is_authenticated:
@@ -57,7 +57,7 @@ class ProfileUpdate(UpdateView):
     Profile Update View
     """
     fields = ['address', 'age', 'profile_photo', 'gender']
-    template_name = 'profile/generic_form.html'
+    template_name = 'users/profile/generic_form.html'
     success_url = reverse_lazy('users:index')
 
     def get_object(self, queryset=None):
@@ -70,7 +70,7 @@ class UserUpdate(UpdateView):
     """
     form_class = UserForm
     success_url = reverse_lazy('users:index')
-    template_name = 'profile/generic_form.html'
+    template_name = 'users/profile/generic_form.html'
 
     def form_valid(self, form):
         """This method is over ridden just because we need to call `update_session_auth_hash`
@@ -110,7 +110,7 @@ def update_profile(request):
     else:
         user_form = UserForm(instance=request.user)
         profile_form = ProfileForm(instance=request.user.profile)
-    return render(request, 'profile/update_user_all_info.html', context={
+    return render(request, 'users/profile/update_user_all_info.html', context={
         'user_form': user_form,
         'profile_form': profile_form
     })

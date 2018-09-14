@@ -1,0 +1,91 @@
+{% extends 'common/base.html' %}
+{% block ballot_active %} active {% endblock %}
+
+{% block body %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-8 col-md-9 col-sm-offset-1">
+                <div class="panel panel-default">
+                    <div class="panel-heading"><h4>Edit {{ title | capfirst }}</h4></div>
+                    <div class="panel-body">
+                        <form method="POST" action="">
+                            {% csrf_token %}
+                            <table class="table table-bordered table-light">
+                                {{ballot_form.as_table}}
+                                {% for form in choice_forms %}
+                                    {{form.as_table}}
+                                {% endfor %}
+                            </table>
+                            <br>
+                            <button type="submit" class="btn btn-warning float-right">Update Ballot</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <!-- Footer -->
+    <footer class="page-footer font-small teal pt-4">
+
+        <!-- Footer Text -->
+        <div class="container-fluid text-center text-md-left">
+
+            <!-- Grid row -->
+            <div class="row">
+
+                <!-- Grid column -->
+                <div class="col-md-4 mt-md-0 mt-3">
+
+                    <!-- Content -->
+                    <h5 class="text-uppercase font-weight-bold" style="color: #f0ad4e">
+                        Easy
+                        <span class="glyphicon glyphicon-ice-lolly" aria-hidden="true"></span>&nbsp;
+                    </h5>
+                    <p>Juntos gets you the results you need to make the important decisions. </p>
+
+                </div>
+                <!-- Grid column -->
+
+                <!-- Grid column -->
+                <div class="col-md-4 mb-md-0 mb-3">
+
+                    <!-- Content -->
+                    <h5 class="text-uppercase font-weight-bold" style="color: #f0ad4e">
+                        Secure
+                        <span class="glyphicon glyphicon-lock" aria-hidden="true"></span>&nbsp;
+                    </h5>
+                    <p>We ensure your data is secure, backed up, and there when you need it.</p>
+
+                </div>
+
+                <!-- Grid column -->
+                <div class="col-md-4 mb-md-0 mb-3">
+
+                    <!-- Content -->
+                    <h5 class="text-uppercase font-weight-bold" style="color: #f0ad4e">
+                        Better Voting
+                        <span class="glyphicon glyphicon-check"  aria-hidden="true"></span>&nbsp;
+                    </h5>
+                    <p>Our holistic approach means a more enjoyable voting experience.</p>
+
+                </div>
+                <!-- Grid column -->
+
+            </div>
+            <!-- Grid row -->
+
+        </div>
+        <!-- Footer Text -->
+
+        <!-- Copyright -->
+        <div class="footer-copyright text-center py-3" style="background:#000;">© 2018 Copyright:
+            <a href="#"> www.juntos.org</a>
+        </div>
+        <!-- Copyright -->
+
+    </footer>
+    <!-- Footer -->
+    <!-- Footer -->
+{% endblock body %}

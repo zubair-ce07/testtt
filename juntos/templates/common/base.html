@@ -8,12 +8,13 @@
     <link href='http://fonts.googleapis.com/css?family=Oleo+Script' rel='stylesheet' type='text/css'>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}"/>
+    <link rel="icon" href="{% static 'images/j.png' %}">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 </head>
 <body>
 
-<nav class="navbar navbar-inverse">
+<nav class="navbar navbar-custom">
     <div class="container-fluid">
         <div class="navbar-header">
             <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#topNavBar">
@@ -21,18 +22,28 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="{% url 'users:index' %}">Juntos</a>
+            <a class="navbar-brand" style="color: #ffffff" href="{% url 'users:index' %}"><strong>Juntos</strong></a>
         </div>
         <ul class="nav navbar-nav">
+            {% if user.is_authenticated %}
+            <li class="nav-item {% block index_active %}{% endblock %}">
+                <a class="nav-link" href="{% url 'users:index' %}">Home</a>
+            </li>
+            <li class="nav-item {% block ballot_active %}{% endblock %}">
+                <a class="nav-link" href="{% url 'ballot:ballot_list' %}">Ballot
+                    <span class="badge badge-primary badge-pill" style="background: #f0ad4e">{{ question_count }}</span>
+                </a>
+            </li>
+            {% endif %}
         </ul>
 
         <ul class="nav navbar-nav navbar-right">
 
             {% if user.is_authenticated %}
-                <li>
+                <li class="nav-hover">
                     <a href="{% url 'users:index' %}">
-                        <span class="glyphicon glyphicon-headphones"
-                              aria-hidden="true"></span>&nbsp;Welcome {{ user.get_username }} - {{ request.role }}
+                        <span class="glyphicon glyphicon-user" style="color: #f0ad4e" aria-hidden="true"></span>&nbsp;
+                        Welcome {{ user.get_username | capfirst }}
                     </a>
                 </li>
                 <li>
@@ -53,6 +64,5 @@
 
 {% block body %}
 {% endblock %}
-
 </body>
 </html>
