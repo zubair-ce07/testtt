@@ -6,7 +6,7 @@ from scrapy import Request, FormRequest
 from scrapy.spiders import Rule
 from scrapy.linkextractors import LinkExtractor
 
-from .base import BaseParseSpider, BaseCrawlSpider, clean
+from .base import BaseParseSpider, BaseCrawlSpider, clean, Gender, soupify
 
 
 class Mixin:
@@ -91,7 +91,7 @@ class ParseSpider(BaseParseSpider, Mixin):
         color_css = '.js-color-value ::text'
         color = clean(response.css(color_css))
         if color:
-            sku['color'] = clean(color[0].strip('–'))
+            sku['colour'] = clean(color[0].strip('–'))
 
         variant_css = '.js-variant-value ::text'
         variant = clean(response.css(variant_css))
@@ -145,17 +145,18 @@ class ParseSpider(BaseParseSpider, Mixin):
         return brand[0] if brand else 'Schwab'
 
     def product_gender(self, response):
-        return self.gender_lookup(''.join(self.product_category(response)), greedy=True, use_default_gender_map=True)
+        soup = self.product_category(response) + self.product_description(response) + [self.product_name(response)]
+        return self.gender_lookup(soupify(soup).lower(), greedy=True, use_default_gender_map=True) or Gender.ADULTS.value
 
     def is_homeware(self, response):
-        soup = ''.join(self.product_category(response)).lower()
+        soup = soupify(self.product_category(response)).lower()
         return any(hw in soup for hw in self.homeware_tokens)
 
     def make_variant_requests(self, response):
-        color_ids_css = '.colorspots__item::attr(data-varselid), .js-varselid-COLOR::attr(value)'
-        color_ids = clean(response.css(color_ids_css)) or ['']
-        color_parameter_name = clean(response.css('.js-varselid-COLOR ::attr(name)'))
-        color_parameter_name = color_parameter_name[0] if color_parameter_name else ''
+        colour_ids_css = '.colorspots__item::attr(data-varselid), .js-varselid-COLOR::attr(value)'
+        colour_ids = clean(response.css(colour_ids_css)) or ['']
+        colour_parameter_name = clean(response.css('.js-varselid-COLOR ::attr(name)'))
+        colour_parameter_name = colour_parameter_name[0] if colour_parameter_name else ''
 
         variant_ids_css = '.variant [size="1"] ::attr(value), .variant .js-varselid::attr(value)'
         variant_ids = clean(response.css(variant_ids_css)) or ['']
@@ -172,9 +173,9 @@ class ParseSpider(BaseParseSpider, Mixin):
         anid = clean(response.css(anid_css))[0]
 
         variant_requests = []
-        for color_id, variant_id, size_id in itertools.product(color_ids, variant_ids, size_ids):
+        for colour_id, variant_id, size_id in itertools.product(colour_ids, variant_ids, size_ids):
             variation_parameters = {
-                color_parameter_name: color_id,
+                colour_parameter_name: colour_id,
                 variant_parameter_name: variant_id,
                 size_parameter_name:  size_id
             }
