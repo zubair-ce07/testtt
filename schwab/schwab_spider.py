@@ -47,17 +47,14 @@ class ParseSpider(BaseParseSpider, Mixin):
 
     def parse(self, response):
         sku_id = self.product_id(response)
+
         garment = self.new_unique_garment(sku_id)
         if not garment:
             return
 
-        self.boilerplate(garment, response)
+        self.boilerplate_normal(garment, response)
+
         garment['image_urls'] = self.image_urls(response)
-        garment['name'] = self.product_name(response)
-        garment['category'] = self.product_category(response)
-        garment['brand'] = self.product_brand(response)
-        garment['description'] = self.product_description(response)
-        garment['care'] = self.product_care(response)
         garment['skus'] = {}
 
         if self.is_homeware(response):
@@ -130,7 +127,7 @@ class ParseSpider(BaseParseSpider, Mixin):
         return clean(response.css('.details__title ::text'))[0]
 
     def product_category(self, response):
-        return clean(clean(response.css('.breadcrumb [itemprop="name"]::text'))[1:])
+        return clean(clean(response.css('.breadcrumb [itemprop="name"]::text'))[1:-1])
 
     def product_raw_description(self, response):
         css = '.details__variation__hightlights ::text, .details__desc__more__content ::text'
@@ -206,11 +203,11 @@ class CrawlSpider(Mixin, BaseCrawlSpider):
         'DOWNLOAD_DELAY': 1
     }
 
-    listing_css = '.next'
-    product_css = '.c-product'
+    listings_css = '.next'
+    products_css = '.c-product'
     rules = (
-        Rule(LinkExtractor(restrict_css=listing_css), callback='parse'),
-        Rule(LinkExtractor(restrict_css=product_css), callback='parse_item')
+        Rule(LinkExtractor(restrict_css=listings_css), callback='parse'),
+        Rule(LinkExtractor(restrict_css=products_css), callback='parse_item')
     )
 
     categories_urls_r = re.compile(r'url\":\"(.*?)\",', re.S)
