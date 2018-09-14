@@ -89,16 +89,16 @@ class WalmartSpider(CrawlSpider):
         for product in products:
             variants = products[product].get('variants')
             if variants:
-                size = products[product]['variants'].get('size')
+                size = variants.get('size')
                 if size:
                     size_cleaned = size.replace('size-', '')
                 else:
-                    size = products[product]['variants'].get('clothing_size')
+                    size = variants.get('clothing_size')
                     if size:
                         size_cleaned = size.replace('clothing_size-', '')
                     else:
                         size_cleaned = "generic"
-                color = products[product]['variants'].get('actual_color')
+                color = variants.get('actual_color')
                 if color:
                     color_cleaned = color.replace('actual_color-', '')
                 else:
