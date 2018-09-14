@@ -4,6 +4,9 @@ This class will do all the computations and generate reports against given data
 import calendar
 from datetime import datetime
 
+from dateutil.parser import parse
+
+
 
 class Analyzer:
     @staticmethod
@@ -14,16 +17,18 @@ class Analyzer:
         :param delimeter: separator
         :return: year, month, day
         """
-        if date.count(delimeter) > 1:
-            return datetime.strptime(date, '%Y' + delimeter + '%m' + delimeter + '%d').date()
-        return datetime.strptime(date, '%Y' + delimeter + '%m').date()
+
+        complete_date_format = '%Y{delim}%m{delim}%d'
+        month_date_format = '%Y{delim}%m'
+
+        date_format = complete_date_format if date.count(delimeter) > 1 else month_date_format
+        return datetime.strptime(date, date_format.format(delim=delimeter))
 
     @staticmethod
     def yearly_report(years_records):
         """
         compute make report of highest temperature , lowest temperature and  most humid day of the year
-        :param data: list of dictionaries
-        :param year: year for which report is required
+        :param years_records: list of dictionaries containing records of that year
         :return: dictionary containing final report of the year or an empty dictionary if data is not found
         """
 
@@ -59,7 +64,7 @@ class Analyzer:
         """
         Method for generating monthly report for average highest temperature, average lowest temperature
         and average mean humidity
-        :param data: dictionary containing the required data to process on with keys features , values
+        :param month_records: list of dictionaries
         :param date: yyyy/mm  format date for the month or which report is required
         :return: a dictionary of report or empty dictionary if no data is found
         """
@@ -83,17 +88,14 @@ class Analyzer:
         """
         Method to generate data report of highest and lowest temperature each day for
         chart to Display for a given month
-        :param data: dictionary containing the required data to process on with keys features , values
-        :param date:  yyyy/mm  format date for the month or which report is required
+        :param month_records: list of dictionaries with records of that month
         :return: a dictionary containing values for highest and lowest temperature against each day of month
         """
         results = {}
 
         for record in month_records:
-            day = str(record['PKT'].day)
-            if len(day) < 2:
-                day = '0' + day
 
+            day = parse(str(record['PKT'].day)).strftime('%d')
             max_tempc = int(record['Max TemperatureC'] if record['Max TemperatureC'] != '' else 0)
             min_tempc = int(record['Min TemperatureC'] if record['Min TemperatureC'] != '' else 0)
 
