@@ -130,12 +130,6 @@ class BikBokCrawlSpider(BaseCrawlSpider, Mixin):
              callback='parse_pagination'),
     )
 
-    def __init__(self, api_request, form_data, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.api_request = api_request
-        self.form_data = form_data
-
     def parse_pagination(self, response):
         catalog_node = response.css('script').re_first('"CatalogNode":"?([\w\d]+)')
         page_id = response.css('script').re_first('"ProductSearchPageId":"?([\d]+)')
@@ -169,6 +163,3 @@ class DEBikBokParseSpider(BikBokParseSpider, MixinNO):
 class DEBikBokCrawlSpider(BikBokCrawlSpider, MixinNO):
     name = MixinNO.retailer + '-crawl'
     parse_spider = DEBikBokParseSpider()
-
-    def __init__(self):
-        super().__init__(MixinNO.api_request, MixinNO.form_data)
