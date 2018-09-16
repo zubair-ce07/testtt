@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Employee Details</title>
+</head>
+<body>
+<center>
+    <p>
+        Logged In User : {{user.username}}
+    </p>
+</center>
+<p>Employee Name :
+    {{employee.username}}
+</p>
+
+{% if employee.feedbacks.count %}
+<p>Employee comments</p>
+<center>
+    <table>
+        <tr>
+            <th>Date</th>
+            <th>From</th>
+            <th>To</th>
+            <th>Comments</th>
+            <th>Team Work</th>
+            <th>Leadership</th>
+        </tr>
+
+        {% for feedback in employee.feedbacks.all%}
+        {% if feedback.from_user == user %}
+        <tr>
+            <td>{{feedback.publishing_date}}</td>
+            <td>{{feedback.from_user.username}}</td>
+            <td>{{feedback.to_user.username}}</td>
+            {% for competency in feedback.competency_set.all%}
+            <td>{{competency.comment}}</td>
+            <td>{{competency.team_work}}</td>
+            <td>{{competency.leadership}}</td>
+
+            {% endfor %}
+        </tr>
+        {%endif%}
+        {% endfor %}
+
+    </table>
+</center>
+{% endif %}
+
+
+<center>
+    <h3>You can give feedback here</h3>
+    <form method="POST" action="{% url 'appraisal:send_feedback' employee.id %}">
+        {% csrf_token%}
+        {{form.as_p}}
+        <input type="submit" value="Submit">
+    </form>
+</center>
+
+
+</body>
+</html>
