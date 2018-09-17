@@ -28,9 +28,9 @@ class UserFormViewTest(TestCase):
         """
         Test Registration get view.
         """
-        response = self.client.get(reverse('users:register'))
+        response = self.client.get(reverse('user:register'))
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.request['PATH_INFO'],  reverse('users:register'))
+        self.assertEqual(response.request['PATH_INFO'],  reverse('user:register'))
 
     def test_registration_post_valid_info(self):
         """
@@ -45,11 +45,11 @@ class UserFormViewTest(TestCase):
             'last_name': 'math',
             'role': '1'
         }
-        response = self.client.post(reverse('users:register'), data=data)
+        response = self.client.post(reverse('user:register'), data=data)
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.context, None)
         self.assertEqual(response.url, '/')
-        self.assertRedirects(response, reverse('users:index'))
+        self.assertRedirects(response, reverse('user:index'))
 
     @data(
         {
@@ -116,7 +116,7 @@ class UserFormViewTest(TestCase):
         creates a new user and returns error.
         """
 
-        response = self.client.post(reverse('users:register'), data={
+        response = self.client.post(reverse('user:register'), data={
             'username': username,
             'password': password,
             'email': email,
@@ -124,7 +124,7 @@ class UserFormViewTest(TestCase):
             'last_name': last_name
         })
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.request['PATH_INFO'], reverse('users:register'))
+        self.assertEqual(response.request['PATH_INFO'], reverse('user:register'))
         self.failIf(response.context['form'].is_valid())
         self.assertFormError(response, 'form', field=error['field'], errors=error['desc'])
 
@@ -149,9 +149,9 @@ class IndexDetailViewTest(TestCase):
         A `get` to the `index` view without `logged in` user does not
         takes to `index` rather redirects to `login`.
         """
-        response = self.client.get(reverse('users:index'))
+        response = self.client.get(reverse('user:index'))
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, f"{reverse('users:login')}?next=/")
+        self.assertRedirects(response, reverse('user:login'))
         self.assertEqual(response.context, None)
 
     def test_with_login(self):
@@ -160,11 +160,11 @@ class IndexDetailViewTest(TestCase):
         takes to `index`.
         """
         self.client.login(username='test', password='12345')
-        response = self.client.get(reverse('users:index'))
+        response = self.client.get(reverse('user:index'))
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.request['PATH_INFO'], reverse('users:index'))
-        self.assertTemplateUsed(response, 'profile/index.html')
-        self.assertContains(response, 'Welcome test')
+        self.assertEqual(response.request['PATH_INFO'], reverse('user:index'))
+        self.assertTemplateUsed(response, 'user/profile/index.html')
+        self.assertContains(response, 'Welcome Test')
 
     def test_login_with_already_login(self):
         """
@@ -172,9 +172,9 @@ class IndexDetailViewTest(TestCase):
         takes to `login` rather redirects to `index`.
         """
         self.client.login(username='test', password='12345')
-        response = self.client.get(reverse('users:login'))
+        response = self.client.get(reverse('user:login'))
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, reverse('users:index'))
+        self.assertRedirects(response, reverse('user:index'))
 
     def test_register_with_already_login(self):
         """
@@ -182,9 +182,9 @@ class IndexDetailViewTest(TestCase):
         takes to `register` rather redirects to `index`.
         """
         self.client.login(username='test', password='12345')
-        response = self.client.get(reverse('users:register'))
+        response = self.client.get(reverse('user:register'))
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, reverse('users:index'))
+        self.assertRedirects(response, reverse('user:index'))
 
 
 class ProfileUpdateTest(TestCase):
@@ -207,9 +207,9 @@ class ProfileUpdateTest(TestCase):
         A `get` to the `edit_profile` view without `logged in` user does not
         takes to `edit_profile` rather redirects to `login`.
         """
-        response = self.client.get(reverse('users:edit_profile'))
+        response = self.client.get(reverse('user:edit_profile'))
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, f"{reverse('users:login')}?next={reverse('users:edit_profile')}")
+        self.assertRedirects(response, reverse('user:login'))
         self.assertEqual(response.context, None)
 
     def test_get_with_login(self):
@@ -218,10 +218,10 @@ class ProfileUpdateTest(TestCase):
         takes to `edit_profile`.
         """
         self.client.login(username='test', password='12345')
-        response = self.client.get(reverse('users:edit_profile'))
+        response = self.client.get(reverse('user:edit_profile'))
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.request['PATH_INFO'], reverse('users:edit_profile'))
-        self.assertTemplateUsed(response, 'profile/generic_form.html')
+        self.assertEqual(response.request['PATH_INFO'], reverse('user:edit_profile'))
+        self.assertTemplateUsed(response, 'user/profile/generic_form.html')
         self.assertIn('profile', response.context)  # Testing Model for which form is generated by Generic View.
 
     def test_post_without_login(self):
@@ -235,9 +235,9 @@ class ProfileUpdateTest(TestCase):
             'profile_photo': '',
             'gender': 'M'
         }
-        response = self.client.post(reverse('users:edit_profile'), data=data)
+        response = self.client.post(reverse('user:edit_profile'), data=data)
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, f"{reverse('users:login')}?next={reverse('users:edit_profile')}")
+        self.assertRedirects(response, reverse('user:login'))
         self.assertEqual(response.context, None)
 
     def test_post_with_login_valid_info(self):
@@ -252,9 +252,9 @@ class ProfileUpdateTest(TestCase):
             'gender': 'M'
         }
         self.client.login(username='test', password='12345')
-        response = self.client.post(reverse('users:edit_profile'), data=data)
+        response = self.client.post(reverse('user:edit_profile'), data=data)
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, reverse('users:index'))
+        self.assertRedirects(response, reverse('user:index'))
 
         profile = Profile.objects.get(pk=1)
         self.assertEqual(profile.address, 'Mars')
@@ -274,9 +274,9 @@ class ProfileUpdateTest(TestCase):
             'gender': 'M'
         }
         self.client.login(username='test', password='12345')
-        response = self.client.post(reverse('users:edit_profile'), data=data)
+        response = self.client.post(reverse('user:edit_profile'), data=data)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.request['PATH_INFO'], reverse('users:edit_profile'))
+        self.assertEqual(response.request['PATH_INFO'], reverse('user:edit_profile'))
         self.assertFormError(response, 'form', field=None, errors='Age must be positive')
 
 
@@ -287,7 +287,7 @@ class UserUpdateTest(TestCase):
     """
     def setUp(self):
         """
-        Setting up two users to test duplicate email Validation.
+        Setting up two user to test duplicate email Validation.
         """
         user = User.objects.create(
             username='test', email='test@gmail.com',
@@ -309,9 +309,9 @@ class UserUpdateTest(TestCase):
         A `get` to the `edit_basic_info` view without `logged in` user does not
         takes to `edit_basic_info` rather redirects to `login`.
         """
-        response = self.client.get(reverse('users:edit_basic_info'))
+        response = self.client.get(reverse('user:edit_basic_info'))
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, f"{reverse('users:login')}?next={reverse('users:edit_basic_info')}")
+        self.assertRedirects(response, reverse('user:login'))
         self.assertEqual(response.context, None)
 
     def test_get_with_login(self):
@@ -320,10 +320,10 @@ class UserUpdateTest(TestCase):
         takes to `edit_basic_info`.
         """
         self.client.login(username='test', password='12345')
-        response = self.client.get(reverse('users:edit_basic_info'))
+        response = self.client.get(reverse('user:edit_basic_info'))
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.request['PATH_INFO'], reverse('users:edit_basic_info'))
-        self.assertTemplateUsed(response, 'profile/generic_form.html')
+        self.assertEqual(response.request['PATH_INFO'], reverse('user:edit_basic_info'))
+        self.assertTemplateUsed(response, 'user/profile/generic_form.html')
         self.assertIn('user', response.context)  # Testing Model for which form is generated by Generic View.
 
     def test_post_without_login(self):
@@ -338,9 +338,9 @@ class UserUpdateTest(TestCase):
             'username': 'test',
             'password': '12345'
         }
-        response = self.client.post(reverse('users:edit_basic_info'), data=data)
+        response = self.client.post(reverse('user:edit_basic_info'), data=data)
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, f"{reverse('users:login')}?next={reverse('users:edit_basic_info')}")
+        self.assertRedirects(response, reverse('user:login'))
         self.assertEqual(response.context, None)
 
     def test_post_with_login_valid_info(self):
@@ -357,7 +357,7 @@ class UserUpdateTest(TestCase):
             'password': '12345'
         }
         self.client.login(username='test', password='12345')
-        response = self.client.post(reverse('users:edit_basic_info'), data=data)
+        response = self.client.post(reverse('user:edit_basic_info'), data=data)
         self.assertEqual(response.status_code, 302)
 
         user = User.objects.get(pk=1)
@@ -406,7 +406,7 @@ class UserUpdateTest(TestCase):
         takes to `index` and returns error.
         """
         self.client.login(username='test', password='12345')
-        response = self.client.post(reverse('users:edit_basic_info'), data={
+        response = self.client.post(reverse('user:edit_basic_info'), data={
             'username': username,
             'password': password,
             'email': email,
@@ -414,5 +414,5 @@ class UserUpdateTest(TestCase):
             'last_name': last_name
         })
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.request['PATH_INFO'], reverse('users:edit_basic_info'))
+        self.assertEqual(response.request['PATH_INFO'], reverse('user:edit_basic_info'))
         self.assertFormError(response, 'form', field=error['field'], errors=error['desc'])

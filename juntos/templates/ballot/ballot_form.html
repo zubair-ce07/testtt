@@ -6,24 +6,38 @@
         <div class="row">
             <div class="col-sm-8 col-md-9 col-sm-offset-1">
                 <div class="panel panel-default">
-                    <div class="panel-heading"><h4>List of {{ title }}</h4></div>
+                    <div class="panel-heading"><h4>
+                        {% if new_ballot %}
+                            Add new
+                        {% else %}
+                            Edit
+                        {% endif %}
+                        Ballot
+                    </h4></div>
                     <div class="panel-body">
                         <form method="POST">
                             {% csrf_token %}
                             <table class="table table-bordered table-light">
                                 {{ballot_form.as_table}}
+                                {{ choice_forms.management_form }}
                                 {% for form in choice_forms %}
                                     {{form.as_table}}
                                 {% endfor %}
                             </table>
                             <br>
-                            <button type="submit" class="btn btn-warning float-right">Add Ballot</button>
+                            <button type="submit" class="btn btn-warning float-right">
+                                {% if new_ballot %}
+                                    Add
+                                {% else %}
+                                    Upate
+                                {% endif %}
+                                Ballot
+                            </button>
                         </form>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
     {% include 'common/footer.html' %}
 {% endblock %}

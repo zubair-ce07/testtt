@@ -9,7 +9,7 @@
                     <div class="panel-heading"><h4>List of All Ballots</h4></div>
                     <div class="panel-body" style="max-height: 550px;overflow-y: scroll;">
                         <div class="table-responsive-sm">
-                            {% if questions %}
+                            {% if ballots %}
                                 <table class="table table-bordered">
                                     <thead class="thead-light">
                                     <tr>
@@ -19,20 +19,20 @@
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    {% for question in questions %}
+                                    {% for ballot in ballots %}
                                         <tr>
                                             <th scope="row">
-                                                {{question.title}}
+                                                {{ballot.title}}
                                             </th>
                                             <th class="text-center" style="color: #daa111">
-                                                {{question.end_date}}
+                                                {{ballot.ending_date}}
                                             </th>
                                             <td class="text-center">
-                                            <a class="btn btn-warning" href="{%  url 'ballot:ballot_vote' question.id %}">Vote</a>
+                                            <a class="btn btn-warning" href="{%  url 'ballot:ballot_vote' ballot.id %}">Vote</a>
                                             {% if request.role == 'Admin' %}
-                                                <a class="btn btn-primary" href="{%  url 'ballot:ballot_details' question.id %}">Details</a>
-                                                <a class="btn btn-info" href="{%  url 'ballot:ballot_edit' question.id %}">Edit</a>
-                                                <form action="{%  url 'ballot:ballot_delete' question.id %}"
+                                                <a class="btn btn-primary" href="{%  url 'ballot:ballot_details' ballot.id %}">Details</a>
+                                                <a class="btn btn-info" href="{%  url 'ballot:ballot_edit' ballot.id %}">Edit</a>
+                                                <form action="{%  url 'ballot:ballot_delete' ballot.id %}"
                                                       style="display: inline" method="post">
                                                     {% csrf_token %}
                                                     <button type="submit" class="btn btn-danger">Delete</button>

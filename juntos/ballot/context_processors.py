@@ -1,6 +1,6 @@
-from .models import Question
+from .models import Ballot
 
 
-def question_count(request):
-    count = Question.objects.count()
-    return {"question_count": count}
+def ballot_count(request):
+    count = Ballot.objects.get_active_ballots().count()
+    return {"ballot_count": count}

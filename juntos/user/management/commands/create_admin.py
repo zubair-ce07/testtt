@@ -1,7 +1,6 @@
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.core.management.base import BaseCommand
 from django.db.utils import IntegrityError
-
 
 
 class Command(BaseCommand):
@@ -12,7 +11,7 @@ class Command(BaseCommand):
         pass
 
     def handle(self, *args, **options):
-
+        group, created = Group.objects.get_or_create(name='Admin')
         try:
             user = User.objects.create_superuser(
                 username='admin',
@@ -21,6 +20,7 @@ class Command(BaseCommand):
                 last_name='Admin',
                 password='1234'
             )
+            user.groups.set([group])
             user.is_superuser = True
             user.save()
         except IntegrityError:

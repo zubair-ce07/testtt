@@ -3,13 +3,13 @@ from django.contrib.auth import views as auth_views
 
 from . import views
 
-app_name = 'users'
+app_name = 'user'
 
 urlpatterns = [
     path('', views.IndexDetailView.as_view(), name='index'),
     path('login/', auth_views.LoginView.as_view(
         redirect_authenticated_user=True,
-        template_name='users/registration/login.html'
+        template_name='user/registration/login.html'
     ), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('register/', views.UserFormView.as_view(), name='register'),

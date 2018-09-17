@@ -7,10 +7,10 @@
             <div class="col-sm-12 col-md-8 col-md-offset-2 col-sm-offset-0">
                 <div class="panel panel-default">
                     <div class="panel-heading">
-                        <h4>{{ question.title | capfirst }}</h4>
+                        <h4>{{ ballot.title | capfirst }}</h4>
                     </div>
                     <div class="panel-body">
-                        {% for choice in question.choices %}
+                        {% for choice in ballot.choices %}
                             <div class="list-group-item">
                                 <span class="badge badge-pill badge-primary float-right" style="background: #f0ad4e">
                                     {{choice.votes}} - votes
@@ -18,10 +18,10 @@
                                 {{choice.text}}
                             </div>
                         {% empty %}
-                        <div class="list-group-item">There is no choice available for this question.</div>
+                        <div class="list-group-item">There is no choice available for this Ballot.</div>
                         {% endfor %}
                         <br>
-                        <div class="col-md-12"><b>Created by: </b> {{question.created_by.username | capfirst}}</div>
+                        <div class="col-md-12"><b>Created by: </b> {{ballot.created_by.username | capfirst}}</div>
                     </div>
                     <div class="panel-footer">
                         <a href="{% url 'ballot:ballot_list' %}">
@@ -33,67 +33,5 @@
             </div>
         </div>
 
-    <!-- Footer -->
-    <!-- Footer -->
-    <footer class="page-footer font-small teal pt-4">
-
-        <!-- Footer Text -->
-        <div class="container-fluid text-center text-md-left">
-
-            <!-- Grid row -->
-            <div class="row">
-
-                <!-- Grid column -->
-                <div class="col-md-4 mt-md-0 mt-3">
-
-                    <!-- Content -->
-                    <h5 class="text-uppercase font-weight-bold" style="color: #f0ad4e">
-                        Easy
-                        <span class="glyphicon glyphicon-ice-lolly" aria-hidden="true"></span>&nbsp;
-                    </h5>
-                    <p>Juntos gets you the results you need to make the important decisions. </p>
-
-                </div>
-                <!-- Grid column -->
-
-                <!-- Grid column -->
-                <div class="col-md-4 mb-md-0 mb-3">
-
-                    <!-- Content -->
-                    <h5 class="text-uppercase font-weight-bold" style="color: #f0ad4e">
-                        Secure
-                        <span class="glyphicon glyphicon-lock" aria-hidden="true"></span>&nbsp;
-                    </h5>
-                    <p>We ensure your data is secure, backed up, and there when you need it.</p>
-
-                </div>
-
-                <!-- Grid column -->
-                <div class="col-md-4 mb-md-0 mb-3">
-
-                    <!-- Content -->
-                    <h5 class="text-uppercase font-weight-bold" style="color: #f0ad4e">
-                        Better Voting
-                        <span class="glyphicon glyphicon-check"  aria-hidden="true"></span>&nbsp;
-                    </h5>
-                    <p>Our holistic approach means a more enjoyable voting experience.</p>
-
-                </div>
-                <!-- Grid column -->
-
-            </div>
-            <!-- Grid row -->
-
-        </div>
-        <!-- Footer Text -->
-
-        <!-- Copyright -->
-        <div class="footer-copyright text-center py-3" style="background:#000;">© 2018 Copyright:
-            <a href="#"> www.juntos.org</a>
-        </div>
-        <!-- Copyright -->
-
-    </footer>
-    <!-- Footer -->
-    <!-- Footer -->
+    {% include 'common/footer.html' %}
 {% endblock body %}

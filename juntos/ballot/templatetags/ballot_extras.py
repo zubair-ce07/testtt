@@ -1,15 +1,8 @@
 from django import template
 
-from ballot.models import Question
+from ballot.models import Ballot
 
 register = template.Library()
-
-
-@register.filter(name='uppers')
-def upper1(value):
-    """Converts a string into all uppercase"""
-    return value.upper()[0:2]
-
 
 
 def addcss(field, css):
@@ -20,10 +13,7 @@ register.filter('addcss', addcss)
 
 
 @register.simple_tag
-def recent_ballots(n=5, **kwargs):
+def recent_ballots(n=5):
     """Return recent n ballots"""
-    name = kwargs.get("name")
-    questions = Question.objects.all().order_by('-created_at')
-    if name:
-        questions = questions.filter(name=name)
-    return questions[0:n]
+    ballots = Ballot.objects.get_active_ballots()
+    return ballots[0:n]

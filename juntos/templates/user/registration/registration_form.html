@@ -1,0 +1,30 @@
+{% extends 'common/base.html' %}
+{% block title %}Register{% endblock %}
+
+{% block body %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-12 col-md-6 col-md-offset-3">
+                <div class="panel panel-default">
+                    <div class="panel-heading"><h4>Register</h4></div>
+                    <div class="panel-body">
+                        <form class="form-horizontal" role="form" action="" method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            {% include 'user/profile/form_template.html' %}
+                            <div class="form-group">
+                                <div class="col-sm-offset-2 col-sm-10">
+                                    <button type="submit" class="btn btn-success">Submit</button>
+                                    <a href="{% url 'user:login' %}">
+                                        <button type="button" class="btn btn-info">
+                                            Login
+                                        </button>
+                                    </a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

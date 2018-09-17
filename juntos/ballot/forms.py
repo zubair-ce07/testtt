@@ -1,13 +1,13 @@
 from django import forms
-from .models import Question, Choice, Tag
+from .models import Ballot, Tag
 
 
-class AskForm(forms.ModelForm):
-    title = forms.CharField(max_length=255, label='Question')
-    tags = forms.ModelMultipleChoiceField(queryset=Tag.objects.all())
+class BallotForm(forms.ModelForm):
+    title = forms.CharField(max_length=255, label='Ballot Title')
+    tags = forms.ModelMultipleChoiceField(queryset=Tag.objects.all(), help_text='Press ctrl and select more than one.')
 
     class Meta:
-        model = Question
+        model = Ballot
         fields = ['title']
         help_texts = {'tags': "Unique identifier for the student",}
 
@@ -24,18 +24,9 @@ class AskForm(forms.ModelForm):
 
         forms.ModelForm.__init__(self, *args, **kwargs)
 
-    # Overriding save allows us to process the value of 'tags' field
     def save(self, commit=True):
-        question = super().save()
-        question.tags.set(self.cleaned_data['tags'])
-        question.save()
-        return question
-
-
-class ChoiceForm(forms.ModelForm):
-    text = forms.CharField(
-        max_length=255, label="Choice")
-
-    class Meta:
-        model = Choice
-        exclude = ('question',)
+        """Overriding save allows us to process the value of 'tags' field"""
+        ballot = super().save()
+        ballot.tags.set(self.cleaned_data['tags'])
+        ballot.save()
+        return ballot

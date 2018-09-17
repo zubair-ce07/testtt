@@ -14,7 +14,7 @@ class IndexDetailView(generic.DetailView):
     """
     Index detailed view to show user information
     """
-    template_name = 'users/profile/index.html'
+    template_name = 'user/profile/index.html'
     context_object_name = 'user'
 
     def get_object(self, queryset=None):
@@ -26,11 +26,11 @@ class UserFormView(View):
     User View to handle signup.
     """
     form_class = UserForm
-    template_name = 'users/registration/registration_form.html'
+    template_name = 'user/registration/registration_form.html'
 
     def get(self, request):
         if self.request.user.is_authenticated:
-            return HttpResponseRedirect(reverse('users:index'))
+            return HttpResponseRedirect(reverse('user:index'))
         form = self.form_class(None)
         return render(request, self.template_name, {'form': form})
 
@@ -47,7 +47,7 @@ class UserFormView(View):
             user = authenticate(username=username, password=password)
             if user and user.is_active:
                 login(request, user)
-                return redirect('users:index')
+                return redirect('user:index')
 
         return render(request, self.template_name, {'form': form})
 
@@ -57,8 +57,8 @@ class ProfileUpdate(UpdateView):
     Profile Update View
     """
     fields = ['address', 'age', 'profile_photo', 'gender']
-    template_name = 'users/profile/generic_form.html'
-    success_url = reverse_lazy('users:index')
+    template_name = 'user/profile/generic_form.html'
+    success_url = reverse_lazy('user:index')
 
     def get_object(self, queryset=None):
         return self.request.user.profile
@@ -69,8 +69,8 @@ class UserUpdate(UpdateView):
     User update view
     """
     form_class = UserForm
-    success_url = reverse_lazy('users:index')
-    template_name = 'users/profile/generic_form.html'
+    success_url = reverse_lazy('user:index')
+    template_name = 'user/profile/generic_form.html'
 
     def form_valid(self, form):
         """This method is over ridden just because we need to call `update_session_auth_hash`
@@ -106,11 +106,11 @@ def update_profile(request):
 
             user_form.save()
             profile_form.save()
-            return redirect('users:index')
+            return redirect('user:index')
     else:
         user_form = UserForm(instance=request.user)
         profile_form = ProfileForm(instance=request.user.profile)
-    return render(request, 'users/profile/update_user_all_info.html', context={
+    return render(request, 'user/profile/update_user_all_info.html', context={
         'user_form': user_form,
         'profile_form': profile_form
     })

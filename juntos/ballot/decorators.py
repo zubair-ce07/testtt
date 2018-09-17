@@ -2,22 +2,11 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 
 
-def admin_hr_required(view_func):
-    def wrap(request, *args, **kwargs):
-        allowed_roles = ["Admin", "HR"]
-        if request.role in allowed_roles:
-            return view_func(request, *args, **kwargs)
-        else:
-            return HttpResponseRedirect(reverse('employee_list'))
-
-    return wrap
-
-
 def admin_only(view_func):
-    def wrap(request, *args, **kwargs):
-        if request.role == "Admin":
-            return view_func(request, *args, **kwargs)
+    def wrap(instance, *args, **kwargs):
+        if instance.request.role == "Admin":
+            return view_func(instance, *args, **kwargs)
         else:
-            return HttpResponseRedirect(reverse('employee_list'))
+            return HttpResponseRedirect(reverse('ballot:ballot_list'))
 
     return wrap

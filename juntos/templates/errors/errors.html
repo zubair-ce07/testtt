@@ -20,14 +20,14 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="{% url 'users:index' %}">Juntos</a>
+            <a class="navbar-brand" href="{% url 'user:index' %}">Juntos</a>
         </div>
         <ul class="nav navbar-nav">
         </ul>
 
         <ul class="nav navbar-nav navbar-right">
             <li>
-                <a href="{% url 'users:login' %}">
+                <a href="{% url 'user:login' %}">
                     <span class="glyphicon glyphicon-user" aria-hidden="true"></span>&nbsp; Login
                 </a>
             </li>
@@ -41,7 +41,7 @@
             <div class="panel panel-default">
                 <div class="panel-body">
                     <h3>Sorry! Error {{ error }} occurs</h3>
-                    <pre>{{ request.method }}: {{ request.path }}</pre>
+                    <div class="form-error">{{ request.method }}: {{ request.path }}</div>
                 </div>
             </div>
         </div>

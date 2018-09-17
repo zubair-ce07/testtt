@@ -1,4 +1,4 @@
-User management application (Juntos) Developing & Testing
+Balloting application (Juntos) Developing & Testing
 ----------------------------------------------------------
 
 Major Requirements:
@@ -21,6 +21,12 @@ Run migrations and collect static assets:
     python manage.py migrate
     python manage.py collectstatic
 
+Create sample Ballots in site through fixtures.
+
+.. code-block:: bash
+
+    python manage.py loaddata fixtures/ballot_samply.json
+
 Create a superuser to access Django Administration Console (i.e. /admin):
 
 .. code-block:: bash
@@ -38,6 +44,6 @@ To run tests
 
 .. code-block:: bash
 
-    python manage.py test users
+    python manage.py test user
 
 Now, you will be able to visit Juntos @ http://localhost:8000 and Django Admin @ http://localhost:8000/admin/

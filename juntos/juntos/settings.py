@@ -25,7 +25,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'users.apps.UsersConfig',
+    'user.apps.UserConfig',
     'ballot.apps.BallotConfig',
 ]
 
@@ -37,8 +37,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'users.middlewares.LoginRequiredMiddleware',
-    'users.middlewares.RoleMiddleware',
+    'user.middlewares.LoginRequiredMiddleware',
+    'user.middlewares.RoleMiddleware',
 ]
 
 ROOT_URLCONF = 'juntos.urls'
@@ -48,7 +48,7 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
             os.path.join(BASE_DIR, 'templates'),
-            os.path.join(BASE_DIR, 'users/templates'),
+            os.path.join(BASE_DIR, 'user/templates'),
         ]
         ,
         'APP_DIRS': True,
@@ -58,7 +58,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'ballot.context_processors.question_count'
+                'ballot.context_processors.ballot_count'
             ],
         },
     },
@@ -70,10 +70,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'assets')
 STATIC_URL = '/assets/'
 STATICFILES_DIRS = (
     os.path.join(
-        BASE_DIR, 'static',
-    ),
-    os.path.join(
-        BASE_DIR, 'users/static',
+        BASE_DIR, 'juntos/static',
     ),
 )
 

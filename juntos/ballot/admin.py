@@ -1,5 +1,7 @@
 from django.contrib import admin
-from .models import Question, Choice, Answer, Tag
+from django.contrib.auth.models import User
+
+from .models import Ballot, Choice, Vote, Tag
 
 
 class ChoiceInline(admin.StackedInline):
@@ -7,19 +9,25 @@ class ChoiceInline(admin.StackedInline):
     extra = 3
 
 
-class QuestionAdmin(admin.ModelAdmin):
+class BallotAdmin(admin.ModelAdmin):
     fieldsets = [
         (None,               {'fields': ['title']}),
-        ('Valid period', {'fields': ['start_date', 'end_date']}),
+        ('Period:', {'fields': ['active_period', 'is_active']}),
         ('Tags', {'fields': ['tags']}),
+        ('Added by', {'fields': ['created_by']})
     ]
     inlines = [ChoiceInline]
-    list_display = ('title', 'start_date', 'created_by')
-    list_filter = ['start_date']
+    list_display = ('title', 'is_active', 'created_by', 'ending_date')
+    list_filter = ['created_at', 'is_active', 'created_by']
     search_fields = ['title']
 
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "created_by":
+            kwargs["queryset"] = User.objects.filter(groups__name='Admin')
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
-admin.site.register(Question, QuestionAdmin)
+
+admin.site.register(Ballot, BallotAdmin)
 admin.site.register(Choice)
-admin.site.register(Answer)
+admin.site.register(Vote)
 admin.site.register(Tag)
