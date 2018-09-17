@@ -1,25 +1,27 @@
-from django.shortcuts import get_object_or_404, redirect
-from django.urls import reverse
-from django.http import  Http404
-from  rest_framework.views import APIView
-from rest_framework import permissions
-from rest_framework.response import Response
-from rest_framework import generics
+from django.views import generic
+from django.shortcuts import get_object_or_404
+from django.urls import reverse_lazy, reverse
 
-from .serializers import FeedbackModelSerializer
+from .forms import FeedbackForm
+from .models import Feedback
 from accounts.models import UserProfile
-from accounts import permissions as local_permissions
 
-class PostFeedbackView(APIView):
-    serializer_class = FeedbackModelSerializer
-    permission_classes = (permissions.IsAuthenticated, local_permissions.isPair)
 
-    def post(self, request, pk, format='json',):
-        pair_user = get_object_or_404(UserProfile, pk=pk)
-        self.check_object_permissions(request, pair_user)
-        serializer = FeedbackModelSerializer(instance=pair_user,
-                                             data=request.data,
-                                             context={'by_user' : request.user.id})
-        if serializer.is_valid():
-            feedback = serializer.save()
-            return redirect(reverse('accounts:home')) if feedback else Http404
+class PostFeedbackView(generic.FormView):
+    template_name = 'feedback/give_feedback.html'
+    form_class = FeedbackForm
+    context_object_name = 'form'
+
+    def form_valid(self, form):
+        pair_user = get_object_or_404(UserProfile, pk=self.kwargs['pk'])
+        new_feedback = Feedback()
+        new_feedback.given_to_user = pair_user
+        new_feedback.given_by_user = self.request.user.userprofile
+        new_feedback.star_rating = form.cleaned_data.get('star_rating', 0)
+        new_feedback.comments = form.cleaned_data.get('comments', '')
+        new_feedback.save()
+        return super(PostFeedbackView, self).form_valid(form)
+
+    def get_success_url(self):
+        pair_user = get_object_or_404(UserProfile, pk=self.kwargs['pk'])
+        return reverse('accounts:home')

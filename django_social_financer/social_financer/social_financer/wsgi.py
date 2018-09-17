@@ -12,9 +12,9 @@ import os
 from django.core.wsgi import get_wsgi_application
 from whitenoise import WhiteNoise
 
-from . import settings
+from .settings import prod
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'social_financer.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'social_financer.settings.dev')
 
 application = get_wsgi_application()
-prod_application = WhiteNoise(application, root=settings.STATIC_ROOT)
+prod_application = WhiteNoise(application, root=prod.STATIC_ROOT)

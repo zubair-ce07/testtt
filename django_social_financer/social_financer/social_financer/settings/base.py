@@ -1,3 +1,4 @@
+__author__ = 'abdul'
 """
 Django settings for social_financer project.
 
@@ -14,7 +15,7 @@ import os
 import datetime
 
 from django.urls import reverse_lazy
-import dj_database_url
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -26,9 +27,6 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
 
 # Application definition
 CORS_ORIGIN_ALLOW_ALL=True
@@ -46,6 +44,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'rest_framework.authtoken',
+    'api.apps.ApiConfig',
 ]
 
 
@@ -105,9 +104,6 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'social_financer.wsgi.application'
-
-
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 
@@ -162,11 +158,11 @@ LOGIN_REDIRECT_URL = reverse_lazy('accounts:home')
 LOGOUT_REDIRECT_URL = LOGIN_REDIRECT_URL
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = os.path.join(BASE_DIR, '../../media')
 
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 
-STATIC_ROOT = os.path.join(PROJECT_ROOT, 'static')
+STATIC_ROOT = os.path.join(PROJECT_ROOT, '../static')
 STATIC_URL = '/static/'
 
 SECRET_KEY = os.environ.get('SECRET_KEY')

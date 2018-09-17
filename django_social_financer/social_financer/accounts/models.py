@@ -10,7 +10,8 @@ from rest_framework.authtoken.models import Token
 from datetime import datetime
 
 from . import constants
-from social_financer import settings
+from social_financer.settings import dev
+
 
 class Category(models.Model):
     name = models.CharField(max_length=50)
@@ -64,23 +65,6 @@ class UserProfile(models.Model):
         elif self.role == UserProfile.CONSUMER:
             return self.pair
 
-    @property
-    def token(self):
-        return self._generate_jwt_token()
-
-    def _generate_jwt_token(self):
-        """
-        Generates a JSON Web Token that stores this user's ID and has an expiry
-        date set to 60 days into the future.
-        """
-        dt = datetime.now() + timedelta(days=60)
-
-        token = jwt.encode({
-            'id': self.pk,
-            'exp': int(dt.strftime('%s'))
-        }, settings.SECRET_KEY, algorithm='HS256')
-
-        return token.decode('utf-8')
 
 class PairHistory(models.Model):
     """ A model that keeps record of breaking and making of users' pairs, used in admin

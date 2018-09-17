@@ -1,11 +1,53 @@
 __author__ = 'abdul'
+from django.contrib.auth import authenticate
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.core import serializers as django_serializers
+from rest_framework.authtoken.models import Token
 
-from .models import UserProfile
-from .helpers import get_user_rating
+from accounts.models import UserProfile, Category
+from accounts.helpers import get_user_rating
 from feedback.models import Feedback
+from report.models import Report
+
+
+class LoginSerializer(serializers.Serializer):
+    username = serializers.CharField(max_length=255)
+    password = serializers.CharField(max_length=128, write_only=True)
+    token = serializers.CharField(max_length=255, read_only=True)
+    id = serializers.IntegerField(read_only=True)
+    role = serializers.CharField(read_only=True)
+
+    def validate(self, data):
+        username = data.get('username', None)
+        password = data.get('password', None)
+
+        user = authenticate(username=username, password=password)
+
+        if user is None:
+            raise serializers.ValidationError(
+                'A user with this email and password was not found.'
+            )
+
+        if not user.is_active:
+            raise serializers.ValidationError(
+                'This user has been deactivated.'
+            )
+
+        try:
+            token = Token.objects.get(user__id=user.id)
+        except Token.DoesNotExist:
+           token = Token.objects.create(user=user)
+
+        role = 'AD' if user.is_staff else user.userprofile.role
+
+        body = {
+            'username': user.username,
+            'token': token,
+            'role' : role,
+            'id' : user.id
+        }
+        return body
 
 
 class SignUpSerializer(serializers.ModelSerializer):
@@ -61,16 +103,15 @@ class ProfileViewSerializer(serializers.Serializer):
 
 
 class UserProfileModelSerializer(serializers.ModelSerializer):
+    first_name = serializers.SerializerMethodField(read_only=True)
+    last_name = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = UserProfile
-        fields = '__all__'
+        exclude = ()
 
+    def get_first_name(self, obj):
+        return obj.user.first_name
 
-class UserDetailSerializer(serializers.Serializer):
-
-    def to_representation(self, user):
-        return {
-            'user' : django_serializers.serialize('json', [user]),
-            'userprofile' : django_serializers.serialize('json', [user.userprofile])
-        }
+    def get_last_name(self, obj):
+        return obj.user.last_name

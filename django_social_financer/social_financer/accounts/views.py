@@ -1,96 +1,106 @@
-from django.shortcuts import get_object_or_404, redirect
-from django.http import HttpResponse, HttpResponseRedirect, Http404
+from django.shortcuts import render, get_object_or_404, redirect
+from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.urls import reverse_lazy, reverse
+from django.views import generic
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from rest_framework import generics, permissions
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.decorators import permission_classes, api_view
 
+from .forms import SignUpForm
 from .models import UserProfile, PairHistory
-from . import constants, helpers, serializers, permissions as local_permissions
+from . import constants, helpers
+from feedback.models import Feedback
 
 
-class SignUpView(APIView):
-    serializer_class = serializers.SignUpSerializer
-    permission_classes = [
-        permissions.AllowAny
-    ]
+class SignUpView(generic.FormView):
+    template_name = 'registration/signup.html'
+    form_class = SignUpForm
+    context_object_name = 'form'
+    success_url = reverse_lazy('accounts:home')
 
-    def post(self, request, format='json'):
-        serializer = serializers.SignUpSerializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            user = serializer.save()
-            return HttpResponseRedirect(reverse_lazy('accounts:home')) if user else Http404
+    def form_valid(self, form):
+        """ The Sign up form was validated
+        """
+        self.save_user(form)
+        return super().form_valid(form)
 
-@api_view(['GET'])
-@login_required()
+    def save_user(self, form):
+        """ The  user object is created and saved
+        """
+        new_user = User.objects.create_user(username=form.cleaned_data['email_address'],
+                                            first_name = form.cleaned_data['first_name'],
+                                            last_name = form.cleaned_data['last_name'],
+                                            password= form.cleaned_data['password'],
+                                            email=form.cleaned_data['email_address'])
+        new_user.save()
+        self.save_user_profile(new_user, form)
+
+    def save_user_profile(self, user, form):
+        """ The userprofile object that has one-one link with user us created and saved
+        """
+        user.userprofile.cnic_no = form.cleaned_data['cnic_no']
+        user.userprofile.phone_no = form.cleaned_data['phone_no']
+        user.userprofile.address = form.cleaned_data['address']
+        user.userprofile.city = form.cleaned_data['city'].lower()
+        user.userprofile.country = form.cleaned_data['country'].lower()
+        user.userprofile.role = form.cleaned_data['role']
+        user.userprofile.categories.set(form.cleaned_data['categories'])
+        user.userprofile.postal_code = form.cleaned_data['postal_code']
+        user.userprofile.display_picture = form.cleaned_data['display_picture']
+        user.userprofile.save()
+
+@login_required
 def home_view(request):
     role = request.user.userprofile.role
     if role == UserProfile.DONOR:
-        return redirect(reverse('accounts:consumers_list'))
+        return home_donor(request, request.user)
     elif role == UserProfile.CONSUMER:
-        return redirect(reverse('accounts:home_consumer'))
+        return home_consumer(request, request.user)
     elif request.user.is_staff:
         return redirect(request.build_absolute_uri() + 'admin/')
     return HttpResponse("Home l{}l".format(role))
 
-
-class UnpairedConsumersList(generics.ListAPIView):
-    serializer_class = serializers.UserProfileModelSerializer
-    permission_classes = (permissions.IsAuthenticated, local_permissions.isDonor)
-
-    def get_queryset(self):
-        consumers = UserProfile.objects.filter(
-            city=self.request.user.userprofile.city.lower(),
-            country=self.request.user.userprofile.country.lower(),
-            role=UserProfile.CONSUMER)
-        consumers = consumers.exclude(id=self.request.user.userprofile.id)
-        return consumers.exclude(id__in=self.request.user.userprofile.pairs.values('id'))
-
-
-class ConsumerDetail(APIView):
-    serializer_class = serializers.UserDetailSerializer
-    permission_classes = (permissions.IsAuthenticated, local_permissions.isDonor)
-
-    def get(self, request, *args, **kwargs):
-        serializer = serializers.UserDetailSerializer(instance=User.objects.get(id=kwargs['pk']))
-        return Response(serializer.data)
-
-    def post(self, request, *args, **kwargs):
-        pair_id = int(kwargs.get('pair_id', -1))
+def home_donor(request, user):
+    """ Select consumers View
+    """
+    if request.method == 'POST': # Post indicates pair has been selected
+        pair_id = int(request.POST.get("pair_id",-1))
         pair_user = get_object_or_404(UserProfile, pk=pair_id)
         pair_user.pair = request.user.userprofile
         pair_user.save()
-        new_pair_history = PairHistory(donor=request.user.userprofile,
-                                       consumer=pair_user,
-                                       was_paired=True)
+        new_pair_history = PairHistory(donor=request.user.userprofile, consumer=pair_user, was_paired=True)
         new_pair_history.save()
-        redirect(reverse('accounts:my_consumers'))
+        return HttpResponseRedirect(reverse('accounts:my_consumers'))
+    elif request.method == 'GET': # Get indicates view must be populated
+        consumers = UserProfile.objects.filter(
+            city=user.userprofile.city.lower(),
+            country=user.userprofile.country.lower(),
+            role=UserProfile.CONSUMER)
+        consumers = consumers.exclude(id=request.user.userprofile.id)
+        consumers = consumers.exclude(id__in=request.user.userprofile.pairs.values('id'))
+        return render(request,'accounts/donor/select_consumers.html',
+                      context={'consumers': consumers, 'map_url' : constants.MAP_URL})
+
+def donors_pairs(request):
+    if request.method == 'GET':
+        return render(request,'accounts/donor/my_consumers.html',
+                      context={'pair' : request.user.userprofile.pairs.all(),
+                               'map_url' : constants.MAP_URL})
+
+def home_consumer(request, user):
+    if request.method == 'GET':
+        return render(request,
+                      'accounts/consumer/my_donor.html',
+                      context={'donor': request.user.userprofile.pair,
+                               'my_category': request.user.userprofile.categories,
+                               'map_url' : constants.MAP_URL})
 
 
-class PairedConsumersList(generics.ListAPIView):
-    serializer_class = serializers.UserProfileModelSerializer
-    permission_classes = (permissions.IsAuthenticated, local_permissions.isDonor)
+class ProfileView(generic.TemplateView):
+    template_name = 'accounts/profile.html'
 
-    def get_queryset(self):
-        return self.request.user.userprofile.pairs.all()
-
-
-class HomeConsumer(APIView):
-    serializer_class = serializers.UserDetailSerializer
-    permission_classes = (permissions.IsAuthenticated, local_permissions.isConsumer)
-
-    def get(self, request, *args, **kwargs):
-        serializer = serializers.UserDetailSerializer(instance=request.user.userprofile.pair.user)
-        return Response(serializer.data)
-
-
-class ProfileView(APIView):
-    serializer_class = serializers.ProfileViewSerializer
-    permission_classes = (permissions.IsAuthenticated,)
-
-    def get(self, request):
-        serializer = serializers.ProfileViewSerializer(instance=self.request.user)
-        return Response(serializer.data)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['user'] = self.request.user
+        context['rating'] = helpers.get_user_rating(self.request.user.userprofile)
+        context['all_feedback'] = Feedback.objects.filter(given_to_user=self.request.user.userprofile)
+        return context

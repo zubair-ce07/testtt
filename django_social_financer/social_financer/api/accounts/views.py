@@ -8,10 +8,9 @@ from django.contrib.auth.decorators import login_required
 from rest_framework.decorators import permission_classes, api_view
 
 from . import serializers
-from .renderers import UserJSONRenderer
-from accounts.models import UserProfile, PairHistory, Category
+from api.renderers import UserJSONRenderer
+from accounts.models import UserProfile, PairHistory
 from accounts import constants, helpers, permissions as local_permissions
-from feedback.models import Feedback
 
 
 class LoginAPIView(APIView):
@@ -26,8 +25,6 @@ class LoginAPIView(APIView):
         serializer.is_valid(raise_exception=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-# Account Views
 
 
 class SignUpView(APIView):
@@ -110,71 +107,3 @@ class ProfileView(generics.ListAPIView):
     def get_queryset(self):
         print(self.request.query_params.get('id',-1))
         return UserProfile.objects.filter(pk=self.request.user.id)
-
-
-class FeedbackView(generics.ListAPIView):
-    serializer_class = serializers.FeedbackModelSerializer
-    permission_classes = (permissions.IsAuthenticated)
-
-    def get_queryset(self):
-        return Feedback.objects.filter(given_to_user=self.request.query_params.get('id', -1))
-
-#Feedback views
-
-
-class PostFeedbackView(APIView):
-    serializer_class = serializers.FeedbackModelSerializer
-    permission_classes = (permissions.IsAuthenticated, local_permissions.isPair)
-
-    def post(self, request, pk, format='json',):
-        pair_user = get_object_or_404(UserProfile, pk=pk)
-        self.check_object_permissions(request, pair_user)
-        serializer = serializers.FeedbackModelSerializer(instance=pair_user,
-                                             data=request.data,
-                                             context={'by_user' : request.user.id})
-        if serializer.is_valid():
-            feedback = serializer.save()
-            return redirect(reverse('accounts:home')) if feedback else Http404
-
-
-class GetFeedbackView(generics.ListAPIView):
-    serializer_class = serializers.FeedbackModelSerializer
-    permission_classes = (permissions.IsAuthenticated,)
-
-    def get_queryset(self):
-        return Feedback.objects.filter(given_to_user=self.request.query_params.get('id', -1))
-
-# Report Views
-
-
-class PostReportView(APIView):
-    serializer_class = serializers.ReportModelSerializer
-    permission_classes = (permissions.IsAuthenticated, local_permissions.isPair)
-
-    def post(self, request, format='json'):
-        pair_user = get_object_or_404(UserProfile, pk=self.kwargs['pk'])
-        serializer = serializers.ReportModelSerializer(instance=pair_user,
-                                           data=request.data,
-                                           context={'by_user': self.request.user.id})
-        if serializer.is_valid():
-            report = serializer.save()
-            return redirect(pair_user.role) if report else Http404
-
-    def get_reverse_url(self, role):
-        return 'accounts:my_consumers' if role == 'DN' else 'accounts:home'
-
-
-class ViewReports(APIView):
-    serializer_class = serializers.ViewReportsSerializer
-    permission_classes = (permissions.IsAuthenticated, local_permissions.isAdmin)
-    def get(self, request, pk):
-        serializer = serializers.ViewReportsSerializer(instance=request.user.userprofile)
-        return Response(serializer.data)
-
-# Category
-
-
-class GetCategories(generics.ListAPIView):
-    serializer_class = serializers.GetCategoriesSerializer
-    queryset = Category.objects.all()
-    permission_classes = (permissions.AllowAny,)
