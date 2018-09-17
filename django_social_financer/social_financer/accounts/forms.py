@@ -11,8 +11,5 @@ class SignUpForm(ModelForm):
     class Meta:
         model = UserProfile
         exclude = ['pairId']
-        # fields = ['user.first_name', 'user.last_name', 'cnic_no', 'address', 'country', 'city',
-        #           'postal_code', 'user.email', 'user.password', 'phone_no', 'role', 'categories']
-
         fields = ['first_name', 'last_name', 'email_address', 'password','cnic_no', 'address', 'city', 'country',
                   'postal_code', 'phone_no', 'role', 'categories', 'display_picture']

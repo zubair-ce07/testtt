@@ -1,5 +1,3 @@
-from math import sin, cos, sqrt, atan2, radians
-
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.urls import reverse_lazy, reverse
@@ -7,13 +5,12 @@ from django.views import generic
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 
-
 from .forms import SignUpForm
 from .models import UserProfile, PairHistory
 from . import constants, helpers
 from feedback.models import Feedback
-# Create your views here.
-#
+
+
 class SignUpView(generic.FormView):
     template_name = 'registration/signup.html'
     form_class = SignUpForm
@@ -49,28 +46,7 @@ class SignUpView(generic.FormView):
         user.userprofile.categories.set(form.cleaned_data['categories'])
         user.userprofile.postal_code = form.cleaned_data['postal_code']
         user.userprofile.display_picture = form.cleaned_data['display_picture']
-        # Code commented intentionally. Represents Co-ordinates feature
-        # long,lat = self.get_long_lat_from_address(form.cleaned_data['address'])
-        # if long:
-        #     user.userprofile.longitude = long
-        #     user.userprofile.latitude = lat
         user.userprofile.save()
-
-
-    # Code commented intentionally. Represents Co-ordinates feature
-    # def get_long_lat_from_address(self, address):
-    #    """ long/lat are fetched from Google API using address
-    #    """
-    #     url = 'https://maps.googleapis.com/maps/api/geocode/json?address=' + '+'.join(address.split())
-    #     try:
-    #         response = requests(url)
-    #         location = response['results'][0]['geometry']['location']
-    #     except:
-    #         return (None, None)
-    #     else:
-    #         lat = location['lat']
-    #         long = location['long']
-    #         return (long, lat)
 
 @login_required
 def home_view(request):
@@ -117,6 +93,7 @@ def home_consumer(request, user):
                       context={'donor': request.user.userprofile.pair,
                                'my_category': request.user.userprofile.categories,
                                'map_url' : constants.MAP_URL})
+
 
 class ProfileView(generic.TemplateView):
     template_name = 'accounts/profile.html'

@@ -7,7 +7,7 @@ from .forms import ReportForm
 from .models import Report
 from accounts.models import UserProfile
 
-# Create your views here.
+
 class ReportView(generic.FormView):
     template_name = 'report/file_report.html'
     form_class = ReportForm
@@ -28,7 +28,7 @@ class ReportView(generic.FormView):
         return reverse(self.get_reverse_url(pair_user.role))
 
     def get_reverse_url(self, role):
-        return 'accounts:my_consumers' if role == 'DN' else 'accounts:home'
+        return 'accounts:my_consumers' if role == UserProfile.DONOR else 'accounts:home'
 
 
 class ViewReports(generic.TemplateView):

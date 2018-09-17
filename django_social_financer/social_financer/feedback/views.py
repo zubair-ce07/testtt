@@ -1,8 +1,6 @@
-from django.shortcuts import render
 from django.views import generic
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy, reverse
-from django.http import HttpResponse, Http404, HttpResponseRedirect
 
 from .forms import FeedbackForm
 from .models import Feedback
@@ -26,8 +24,4 @@ class PostFeedbackView(generic.FormView):
 
     def get_success_url(self):
         pair_user = get_object_or_404(UserProfile, pk=self.kwargs['pk'])
-        # return reverse(self.get_reverse_url(pair_user.role))
         return reverse('accounts:home')
-
-    # def get_reverse_url(self, role):
-    #     return 'accounts:my_consumers' if role == 'DN' else 'accounts:home'
