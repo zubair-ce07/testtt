@@ -83,7 +83,6 @@ class LindexParseSpider(BaseParseSpider):
             sku['colour'] = clean(colour_s.css('::attr(title)'))[0]
             size = size.split(split_on_t)[0]
             sku['size'] = self.one_size if size.lower() in self.one_sizes else size
-
             skus[f"{colour_id}_{size_id}"] = sku
 
         return skus
