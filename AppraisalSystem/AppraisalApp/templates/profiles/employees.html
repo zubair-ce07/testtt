@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Employees</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+</head>
+<body>
+<center>
+    <p>
+        Logged In User : {{user.username}}
+    </p>
+</center>
+
+{% if employees %}
+<h3>Employees working under you are Follows</h3>
+<h6>Click on any of them to check feedbacks sent to them (if any)</h6>
+<ul>
+    {% for employee in employees %}
+    <li>
+        <a href="{% url 'appraisal:employee_detail' employee.id %}">{{employee.username}}</a>
+        <!--Feedbacks by you : {{ employee.given_feedbacks.count}}-->
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<h1>No Employee Is Working Under You</h1>
+<h2>Take a Chill Pill</h2>
+{% endif %}
+
+</body>
+</html>
