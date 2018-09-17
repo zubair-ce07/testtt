@@ -70,7 +70,8 @@ def user_signin_view(request):
 
 
 def user_signout_view(request):
-    request.session.pop('my_session', None)
+    if 'my_session' in request.session:
+        del request.session['my_session']
     return HttpResponseRedirect(reverse('users:signin'))
 
 
@@ -95,8 +96,9 @@ def user_change_password_view(request):
             password = form.cleaned_data.get('old_password')
             try:
                 obj = User.objects.get(username=username, password=password)
-                obj.update(password=form.cleaned_data.get('new_password'))
-                user_signin_view(request)
+                obj.password=form.cleaned_data.get('new_password')
+                obj.save()
+                return user_signout_view(request)
             except User.DoesNotExist:
                 context['message'] = 'You entered wrong password'
         context['message'] = 'Form Validation Failed'
@@ -107,51 +109,55 @@ def user_edit_profile_view(request):
     if 'my_session' not in request.session:
         return HttpResponseRedirect(reverse('users:signin'))
 
+    context = {}
+    template_name = 'users/edit_profile.html'
+    username = request.session['my_session']
     if request.method == 'POST':
         form = UserEditProfileForm(request.POST)
         if form.is_valid():
-            obj = User.objects.filter(
-                username=request.session['my_session']
-            )
-            if obj:
+            try:
+                obj = User.objects.get(username=username)
                 save_object_data(obj, form)
                 return HttpResponseRedirect(reverse('users:home'))
-        return HttpResponseRedirect(reverse('users:home'))
+            except User.DoesNotExist:
+                return user_signout_view()
+        context['message'] = 'Form Validation Failed!!!'
+        return render(request, template_name, context)
 
-    context = {}
-    obj = User.objects.filter(
-        username=request.session['my_session']
-    )
-    if obj:
+    try:
+        obj = User.objects.get(username=username)
         context = populate_object_data_in_context(context, obj)
-    template_name = 'users/edit_profile.html'
-    return render(request, template_name, context)
+        return render(request, template_name, context)
+    except:
+        return user_signout_view()
 
 
 def save_object_data(obj, form):
-    obj[0].first_name = form.cleaned_data.get('first_name')
-    obj[0].last_name = form.cleaned_data.get('last_name')
-    obj[0].city = form.cleaned_data.get('city')
-    obj[0].country = form.cleaned_data.get('country')
-    obj[0].qualification = form.cleaned_data.get('qualification')
-    obj[0].date_of_birth = form.cleaned_data.get('date_of_birth')
-    obj[0].save()
+    obj.first_name = form.cleaned_data.get('first_name')
+    obj.last_name = form.cleaned_data.get('last_name')
+    obj.city = form.cleaned_data.get('city')
+    obj.country = form.cleaned_data.get('country')
+    obj.qualification = form.cleaned_data.get('qualification')
+    obj.date_of_birth = form.cleaned_data.get('date_of_birth')
+    obj.save()
 
 
 def populate_object_data_in_context(context, obj):
-    context['password'] = obj[0].password if obj[0].password else ''
-    context['first_name'] = obj[0].first_name if obj[0].first_name else ''
-    context['last_name'] = obj[0].last_name if obj[0].last_name else ''
-    context['city'] = obj[0].city if obj[0].city else ''
-    context['country'] = obj[0].country if obj[0].country else ''
-    context['qualification'] = obj[0].qualification if obj[0].qualification else ''
-    my_date = obj[0].date_of_birth
+    context['password'] = obj.password if obj.password else ''
+    context['first_name'] = obj.first_name if obj.first_name else ''
+    context['last_name'] = obj.last_name if obj.last_name else ''
+    context['city'] = obj.city if obj.city else ''
+    context['country'] = obj.country if obj.country else ''
+    context['qualification'] = obj.qualification if obj.qualification else ''
+    my_date = obj.date_of_birth
     date_of_birth = '{}-{:02}-{:02}'.format(my_date.year, my_date.month, my_date.day)
     context['date_of_birth'] = date_of_birth
     return context
 
 
 def check_user_presence(username):
-    if User.objects.filter(username=username):
-        return True
-    return False
+    try:
+        user = User.objects.get(username=username)
+        return user
+    except:
+        return None
