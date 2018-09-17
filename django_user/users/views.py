@@ -1,4 +1,4 @@
-from django.shortcuts import render, render_to_response
+from django.shortcuts import render
 from django.http import HttpResponseRedirect, HttpResponse
 from django.urls import reverse
 
@@ -47,35 +47,25 @@ def user_signin_view(request):
     if 'my_session' in request.session:
         return HttpResponseRedirect(reverse('users:home'))
 
+    template_name = 'users/signin.html'
+    context = {}
     if request.method == 'POST':
         form = UserSignInForm(request.POST)
         if form.is_valid():
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password')
-            obj = User.objects.filter(
-                username=username,
-                password=form.cleaned_data.get('password'),
-            )
-            if obj:
-                request.session["my_session"] = obj[0].username
+            try:
+                obj = User.objects.get(username=username, password=password)
+                request.session["my_session"] = obj.username
                 return HttpResponseRedirect(reverse('users:home'))
-            if check_user_presence(username):
-                context = {
-                    'message': 'You have entered wrong password.'
-                }
-            else:
-                context = {
-                    'message': 'Username not found.'
-                }
+            except User.DoesNotExist:
+                if check_user_presence(username):
+                    context['message'] = 'You have entered wrong password.'
+                else:
+                    context['message'] = 'Username not found.'
         else:
-            context = {
-                'message': 'Sign in failed. Please check all the fields'
-            }
-        template_name = 'users/signin.html'
+            context['message'] = 'Sign in failed. Please check all the fields'
         return render(request, template_name, context)
-
-    template_name = 'users/signin.html'
-    context = {}
     return render(request, template_name, context)
 
 
@@ -95,21 +85,21 @@ def user_home_view(request):
 def user_change_password_view(request):
     if 'my_session' not in request.session:
         return HttpResponseRedirect(reverse('users:signin'))
+
+    context = {}
+    template_name = 'users/change_password.html'
     if request.method == 'POST':
         form = UserChangePasswordForm(request.POST)
         if form.is_valid():
-            obj = User.objects.filter(
-                username=request.session['my_session'],
-                password=form.cleaned_data.get('old_password'),
-            )
-            if obj:
-                obj[0].password = form.cleaned_data.get('new_password')
-                obj[0].save()
-                return HttpResponseRedirect(reverse('users:signin'))
-        return HttpResponseRedirect(reverse('users:home'))
-
-    template_name = 'users/change_password.html'
-    context = {}
+            username = request.session['my_session']
+            password = form.cleaned_data.get('old_password')
+            try:
+                obj = User.objects.get(username=username, password=password)
+                obj.update(password=form.cleaned_data.get('new_password'))
+                user_signin_view(request)
+            except User.DoesNotExist:
+                context['message'] = 'You entered wrong password'
+        context['message'] = 'Form Validation Failed'
     return render(request, template_name, context)
 
 
