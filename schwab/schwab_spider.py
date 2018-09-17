@@ -41,6 +41,7 @@ class ParseSpider(BaseParseSpider, Mixin):
     sizes_url_t = 'https://www.schwab.de/request/itemservice.php?fnc=getItemInfos'
     variants_url_t = 'https://www.schwab.de/index.php?cl=oxwarticledetails&' \
                      'anid={anid}&varselid[2]={varselid2}&varselid[1]={varselid1}&varselid[0]={varselid0}'
+    start_urls = ['https://www.schwab.de/polarino-outdoorschuh-polarino-broad-peak-_621909453.html?color=navy-orange']
 
     product_id_r = re.compile('_(\d+)\.')
     items_r = re.compile(r'articlesString.*?\'(.*?)\\', re.S)
@@ -85,7 +86,7 @@ class ParseSpider(BaseParseSpider, Mixin):
         return self.next_request_or_garment(garment)
 
     def skus(self, response, size_availability):
-        price_css = '.pricing__norm--wrong ::text, .pricing__norm--new ::text'
+        price_css = '.js-wrong-price ::text, .pricing__norm--new ::text'
         sku = self.product_pricing_common(response, price_css=price_css)
 
         colour_css = '.js-color-value ::text'
@@ -146,8 +147,7 @@ class ParseSpider(BaseParseSpider, Mixin):
 
     def product_gender(self, response):
         soup = self.product_category(response) + self.product_description(response) + [self.product_name(response)]
-        return self.gender_lookup(soupify(soup).lower(),
-                                  greedy=True, use_default_gender_map=True) or Gender.ADULTS.value
+        return self.gender_lookup(soupify(soup).lower(), use_default_gender_map=True) or Gender.ADULTS.value
 
     def is_homeware(self, response):
         soup = soupify(self.product_category(response)).lower()
