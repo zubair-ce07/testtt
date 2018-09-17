@@ -41,7 +41,6 @@ class ParseSpider(BaseParseSpider, Mixin):
     sizes_url_t = 'https://www.schwab.de/request/itemservice.php?fnc=getItemInfos'
     variants_url_t = 'https://www.schwab.de/index.php?cl=oxwarticledetails&' \
                      'anid={anid}&varselid[2]={varselid2}&varselid[1]={varselid1}&varselid[0]={varselid0}'
-    start_urls = ['https://www.schwab.de/polarino-outdoorschuh-polarino-broad-peak-_621909453.html?color=navy-orange']
 
     product_id_r = re.compile('_(\d+)\.')
     items_r = re.compile(r'articlesString.*?\'(.*?)\\', re.S)
