@@ -6,7 +6,13 @@
 {% endblock %}
 
 {% block panel_footer %}
-    Already have an account? <a href="{% url 'my_user:login' %}">Click here</a> to log in.
+    Already have an account?
+    {% if is_rest %}
+        <a href="{% url 'my_user:rest_login' %}">Click here</a>
+    {% else %}
+        <a href="{% url 'my_user:login' %}">Click here</a>
+    {% endif %}
+     to log in.
 {% endblock %}
 
 

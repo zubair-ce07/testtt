@@ -3,7 +3,13 @@ from django.contrib.auth import authenticate, login, logout
 from django.views.generic import View
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm, AuthenticationForm, \
     PasswordChangeForm
+from rest_framework.renderers import TemplateHTMLRenderer
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
 from .forms import UserEditForm
+from .serializer import UserRegisterSerializer, UserLoginSerializer, UserEditSerializer, \
+    UserEditPasswordSerializer
 
 
 class IndexView(View):
@@ -115,3 +121,105 @@ class UserEditPassword(View):
             return redirect('my_user:index')
 
         return render(request, self.template_name, {'form': form})
+
+# ##################################################################################################
+# Below are the same views with REST framework
+class RestIndexView(APIView):
+    template_name = 'user/index.html'
+    renderer_classes = (TemplateHTMLRenderer,)
+
+    def get(self, request):
+        return Response({'is_rest':True})
+
+
+class RestUserFormView(APIView):
+    renderer_classes = (TemplateHTMLRenderer,)
+    template_name = 'user/registration_form.html'
+
+    def get(self, request):
+        serializer = UserRegisterSerializer(None)
+        return Response({'serializer': serializer, 'is_rest':True})
+
+    def post(self, request):
+        serializer = UserRegisterSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response({'serializer': serializer, 'is_rest':True})
+
+        serializer.save()
+        username = request.data['username']
+        password = request.data['password1']
+        user = authenticate(username=username, password=password)
+
+        if user is not None:
+            if user.is_active:
+                login(request, user)
+        return redirect('my_user:rest_index')
+
+
+class RestUserLoginFormView(APIView):
+    # form_class = AuthenticationForm
+    template_name = 'user/login_form.html'
+    renderer_classes = (TemplateHTMLRenderer,)
+
+    def get(self, request):
+        serializer = UserLoginSerializer(None)
+        return Response({'serializer': serializer, 'is_rest':True})
+
+    def post(self, request):
+        serializer = UserLoginSerializer(data=request.data)
+        if not serializer.is_valid():
+            error = "Please enter a valid username or password"
+            return Response({'serializer': serializer, 'error_message': error, 'is_rest':True})
+        username = request.data['username']
+        password = request.data['password']
+        user = authenticate(username=username, password=password)
+
+        if user is not None:
+            if user.is_active:
+                login(request, user)
+                return redirect('my_user:rest_index')
+            else:
+                error = "Your account is inactive. Kindly contact the admin"
+                return Response({'serializer': serializer, 'error_message': error, 'is_rest':True})
+        else:
+            error = "Please enter a valid username or password"
+            return Response({'serializer': serializer, 'error_message': error, 'is_rest':True})
+
+
+def rest_logout_view(request):
+    logout(request)
+    return redirect('my_user:rest_index')
+
+
+class RestUserEditFormView(APIView):
+    renderer_classes = (TemplateHTMLRenderer,)
+    template_name = 'user/edit_form.html'
+
+    def get(self, request):
+        serializer = UserEditSerializer(request.user)
+        return Response({'serializer': serializer, 'is_rest':True})
+
+    def post(self, request):
+        serializer = UserEditSerializer(request.user, data=request.data)
+        if not serializer.is_valid():
+            return Response({'serializer': serializer, 'is_rest':True})
+
+        serializer.save()
+        return redirect('my_user:rest_index')
+
+
+class RestUserEditPassword(APIView):
+    renderer_classes = (TemplateHTMLRenderer,)
+    template_name = 'user/change_password.html'
+
+    def get(self, request):
+        serializer = UserEditPasswordSerializer(None)
+        return Response({'serializer': serializer, 'is_rest':True})
+
+    def post(self, request):
+        serializer = UserEditPasswordSerializer(request.user, data=request.data)
+        if not serializer.is_valid():
+            return Response({'serializer': serializer, 'is_rest':True})
+
+        serializer.save()
+        return redirect('my_user:rest_index')

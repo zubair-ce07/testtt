@@ -10,7 +10,11 @@
     <div class="form-group">
         <label class="control-label col-sm-3" for="update_password">Update Password</label>
         <div class="col-sm-9">
-            <a href="{% url 'my_user:change_password' %}">Change Password</a>
+            {% if is_rest%}
+                <a href="{% url 'my_user:rest_change_password' %}">Change Password</a>
+            {% else %}
+                <a href="{% url 'my_user:change_password' %}">Change Password</a>
+            {% endif %}
         </div>
     </div>
 
