@@ -38,7 +38,7 @@ class Mixin:
 class ParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
 
-    sizes_url_t = 'https://www.schwab.de/request/itemservice.php?fnc=getItemInfos'
+    availability_url_t = 'https://www.schwab.de/request/itemservice.php?fnc=getItemInfos'
     variants_url_t = 'https://www.schwab.de/index.php?cl=oxwarticledetails&' \
                      'anid={anid}&varselid[2]={varselid2}&varselid[1]={varselid1}&varselid[0]={varselid0}'
 
@@ -155,17 +155,20 @@ class ParseSpider(BaseParseSpider, Mixin):
     def make_variant_requests(self, response):
         colour_ids_css = '.colorspots__item::attr(data-varselid), .js-varselid-COLOR::attr(value)'
         colour_ids = clean(response.css(colour_ids_css)) or ['']
+        colour_ids = list(set(colour_ids))
         colour_parameter_name = clean(response.css('.js-varselid-COLOR ::attr(name)'))
         colour_parameter_name = colour_parameter_name[0] if colour_parameter_name else ''
 
         variant_ids_css = '.variant [size="1"] ::attr(value), .variant .js-varselid::attr(value)'
         variant_ids = clean(response.css(variant_ids_css)) or ['']
+        variant_ids = list(set(variant_ids))
         variant_parameter_name = clean(response.css('.variant .js-varselid ::attr(name)'))
         variant_parameter_name = variant_parameter_name[0] if variant_parameter_name else ''
 
         sizes_ids_css = '.c-size-box ::attr(data-selection-id), .size [size="1"] ::attr(value),' \
                         ' .size .js-varselid::attr(value)'
         size_ids = clean(response.css(sizes_ids_css)) or ['']
+        size_ids = list(set(size_ids))
         size_parameter_name = clean(response.css('.size .js-varselid ::attr(name)'))
         size_parameter_name = size_parameter_name[0] if size_parameter_name else ''
 
@@ -194,7 +197,7 @@ class ParseSpider(BaseParseSpider, Mixin):
         payload = {
             'items': payload_items
         }
-        return [FormRequest(url=self.sizes_url_t, formdata=payload, callback=self.parse_size_availability)]
+        return [FormRequest(url=self.availability_url_t, formdata=payload, callback=self.parse_size_availability)]
 
 
 class CrawlSpider(Mixin, BaseCrawlSpider):
