@@ -9,6 +9,13 @@ class ChoiceInline(admin.StackedInline):
     extra = 3
 
 
+def make_inavtive(modeladmin, request, queryset):
+    queryset.update(is_active=False)
+
+
+make_inavtive.short_description = "Mark selected ballots inactive."
+
+
 class BallotAdmin(admin.ModelAdmin):
     fieldsets = [
         (None,               {'fields': ['title']}),
@@ -20,6 +27,7 @@ class BallotAdmin(admin.ModelAdmin):
     list_display = ('title', 'is_active', 'created_by', 'ending_date')
     list_filter = ['created_at', 'is_active', 'created_by']
     search_fields = ['title']
+    actions = [make_inavtive]
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "created_by":

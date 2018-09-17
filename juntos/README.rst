@@ -21,17 +21,19 @@ Run migrations and collect static assets:
     python manage.py migrate
     python manage.py collectstatic
 
-Create sample Ballots in site through fixtures.
-
-.. code-block:: bash
-
-    python manage.py loaddata fixtures/ballot_samply.json
 
 Create a superuser to access Django Administration Console (i.e. /admin):
 
 .. code-block:: bash
 
     python manage.py create_admin # This will also print superuser credentials.
+
+
+Create sample Ballots in site through fixtures.
+
+.. code-block:: bash
+
+    python manage.py loaddata fixtures/ballot_samply.json
 
 
 Finally, run development server as follow:
