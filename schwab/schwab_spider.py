@@ -88,10 +88,10 @@ class ParseSpider(BaseParseSpider, Mixin):
         price_css = '.pricing__norm--wrong ::text, .pricing__norm--new ::text'
         sku = self.product_pricing_common(response, price_css=price_css)
 
-        color_css = '.js-color-value ::text'
-        color = clean(response.css(color_css))
-        if color:
-            sku['colour'] = clean(color[0].strip('–'))
+        colour_css = '.js-color-value ::text'
+        colour = clean(response.css(colour_css))
+        if colour:
+            sku['colour'] = clean(colour[0].strip('–'))
 
         variant_css = '.js-variant-value ::text'
         variant = clean(response.css(variant_css))
@@ -114,7 +114,7 @@ class ParseSpider(BaseParseSpider, Mixin):
                 size_availability[article_number].get(size_lookup_key, []):
             sku['out_of_stock'] = True
 
-        sku_id = f'{sku["color"]}_{sku["size"]}' if sku.get('color') else sku['size']
+        sku_id = f'{sku["colour"]}_{sku["size"]}' if sku.get('colour') else sku['size']
         return{sku_id: sku}
 
     def image_urls(self, response):
@@ -146,7 +146,8 @@ class ParseSpider(BaseParseSpider, Mixin):
 
     def product_gender(self, response):
         soup = self.product_category(response) + self.product_description(response) + [self.product_name(response)]
-        return self.gender_lookup(soupify(soup).lower(), greedy=True, use_default_gender_map=True) or Gender.ADULTS.value
+        return self.gender_lookup(soupify(soup).lower(),
+                                  greedy=True, use_default_gender_map=True) or Gender.ADULTS.value
 
     def is_homeware(self, response):
         soup = soupify(self.product_category(response)).lower()
