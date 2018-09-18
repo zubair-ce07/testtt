@@ -8,7 +8,6 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 
 class WoolworthsSpider(CrawlSpider):
-    raw_data = {}
     name = 'woolworths'
     allowed_domains = ['woolworths.co.za']
     start_urls = ['https://www.woolworths.co.za/']
@@ -21,17 +20,17 @@ class WoolworthsSpider(CrawlSpider):
     )
     def parse_product(self, response):
         product = {}
-        self.raw_data = self.retrieve_data(response)
-        product['name'] = response.css('.font-graphic.heading--400::text').extract_first()
+        raw_data = self.retrieve_data(response)
+        product['name'] = raw_data.get('pdp').get('productInfo').get('displayName')
         product['description'] = response.css('.accordion__content--chrome p::text').extract_first()
-        product['currency'] = self.raw_data['currency']
+        product['currency'] = raw_data['currency']
         product['composition'] = response.css(
-            '.accordion__content--chrome li::text').extract_first().strip()
+            '.accordion__content--chrome li::text').extract_first()
         product['bread-crumb'] = response.css('.breadcrumb__crumb a::attr(title)').extract()
         product['product_url'] = response.url
-        product['brand'] = self.raw_data['pdp']['productInfo']['brandLogo']
-        product['image_url'] = self.capture_image_urls()
-        product['skus'] = self.skus_formation()
+        product['brand'] = raw_data.get('pdp').get('productInfo').get('brandLogo')
+        product['image_urls'] = self.capture_image_urls(raw_data)
+        product['skus'] = self.skus_formation(raw_data)
         return product
 
 
@@ -51,16 +50,16 @@ class WoolworthsSpider(CrawlSpider):
         return pure_json
 
 
-    def skus_formation(self):
+    def skus_formation(self, raw_data):
         dict_list = []
         sku = {}
         sku_ids = []
-        active_sku_ids = self.raw_data['pdp']['productInfo']['activeSkuIds']
-        product_id = self.raw_data['pdp']['productInfo']['productId']
-        price_dict = self.raw_data['pdp']['productPrices'][product_id]['plist3620006']['skuPrices']
-        for item in self.raw_data['pdp']['productInfo']['colourSKUs']:
+        active_sku_ids = raw_data['pdp']['productInfo']['activeSkuIds']
+        product_id = raw_data['pdp']['productInfo']['productId']
+        price_dict = raw_data['pdp']['productPrices'][product_id]['plist3620006']['skuPrices']
+        for item in raw_data['pdp']['productInfo']['colourSKUs']:
             sku_ids.append(item['styleId'])
-        color_size_dict = self.raw_data['pdp']['productInfo']['styleIdSizeSKUsMap']
+        color_size_dict = raw_data['pdp']['productInfo']['styleIdSizeSKUsMap']
         for _id in sku_ids:
             color_size_list = color_size_dict[_id]
             for entity, active_sku_id, in zip(color_size_list, active_sku_ids):
@@ -75,9 +74,9 @@ class WoolworthsSpider(CrawlSpider):
         return sku
 
 
-    def capture_image_urls(self):
+    def capture_image_urls(self, raw_data):
         url_list = []
-        for item in self.raw_data['pdp']['productInfo']['colourSKUs']:
+        for item in raw_data['pdp']['productInfo']['colourSKUs']:
             url_list.append(item['internalSwatchImage'])
         return url_list
 
