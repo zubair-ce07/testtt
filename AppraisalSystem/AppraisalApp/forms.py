@@ -32,15 +32,10 @@ class CompetencyForm(forms.Form):
         fields = ('comment', 'team_work', 'leadership')
 
 
-class EditProfile(forms.Form):
+class EditProfileForm(forms.Form):
     first_name = forms.CharField(max_length=30, required=True)
     last_name = forms.CharField(max_length=30, required=True)
-    '''
-    old_password = forms.CharField(widget=forms.PasswordInput())
-    new_password = forms.CharField(widget=forms.PasswordInput())
-    confirm_password = forms.CharField(widget=forms.PasswordInput())
-    '''
-    address = forms.CharField(max_length=30, required=False)
+    address = forms.CharField(max_length=1000, required=False)
 
     class Meta:
         model = Employee
