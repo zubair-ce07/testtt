@@ -8,7 +8,6 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 
 class PuketSpider(CrawlSpider):
-    raw_data = {}
     name = 'puket'
     allowed_domains = ['puket.com.br']
     start_urls = ['http://www.puket.com.br/']
@@ -18,7 +17,7 @@ class PuketSpider(CrawlSpider):
     )
     def parse_product(self, response):
         product = {}
-        self.raw_data = self.retrieve_data(response)
+        raw_data = self.retrieve_data(response)
         product['name'] = response.css('.nameProduct::text').extract_first()
         product['price'] = response.css('.val::attr(content)').extract_first()
         product['currency'] = response.css(
@@ -26,13 +25,13 @@ class PuketSpider(CrawlSpider):
         product['composition'] = response.css(
             'p.product-attribute-body::text').extract_first().strip()
         product['description'] = response.css('div.descProduct::text').extract_first().strip()
-        product['image_url'] = response.css('.thumb-img::attr(src)').extract()
+        product['image_urls'] = response.css('.thumb-img::attr(src)').extract()
         product['bread-crumb'] = response.css('.product-breadcrumb a::text').extract()
-        product['product_url'] = self.raw_data['product_url']
-        product['gender'] = self.raw_data['udasProd']['google_gender']
-        product['brand'] = self.raw_data['udasProd']['marca']
-        product['category'] = self.raw_data['udasProd']['categoria']
-        product['skus'] = self.skus_formation()
+        product['product_url'] = raw_data['product_url']
+        product['gender'] = raw_data['udasProd']['google_gender']
+        product['brand'] = raw_data['udasProd']['marca']
+        product['category'] = raw_data['udasProd']['categoria']
+        product['skus'] = self.skus_formation(raw_data)
         return product
 
 
@@ -49,9 +48,9 @@ class PuketSpider(CrawlSpider):
         return pure_json
 
 
-    def skus_formation(self):
+    def skus_formation(self, raw_data):
         sku = {}
-        for item in self.raw_data['skus']:
+        for item in raw_data['skus']:
             sku_id = item['sku']
             sku[sku_id] = {
                 'Price': item['bestPrice'],
