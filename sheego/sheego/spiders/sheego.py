@@ -3,6 +3,8 @@ This module crawl pages and get data.
 """
 import re
 import scrapy
+from scrapy.loader import ItemLoader
+from ..items import Product
 
 
 class SheegoSpider(scrapy.Spider):
@@ -11,64 +13,56 @@ class SheegoSpider(scrapy.Spider):
 
     def start_requests(self):
         """This method request for crawl orsay pages"""
-        start_urls = 'https://www.sheego.de/'
-        yield scrapy.Request(url=start_urls, callback=self.parse)
+        start_url = 'https://www.sheego.de/'
+        yield scrapy.Request(url=start_url, callback=self.parse)
 
     def parse(self, response):
         """This method crawl page urls."""
-        for link in response.css('.cj-mainnav__contents'):
-            level1_link = link.css(
-                '.cj-mainnav__contents>div>a::attr(href)').extract()
-            for link in level1_link:
-                yield scrapy.Request(
-                    url=link, callback=self.item_info_url)
+        level1_link = response.css(
+            '.cj-mainnav__entry>a::attr(href)').extract()
+        for url in level1_link:
+            yield scrapy.Request(
+                url=url, callback=self.parse_item_url)
 
-    def item_info_url(self, response):
+    def parse_item_url(self, response):
         """This method crawl item detail url."""
         item_url = response.css(
-            'div.product__wrapper--bottom>a::attr(href)').extract()
+            '.product__wrapper--bottom>a::attr(href)').extract()
         for url in item_url:
             if url != '#':
                 item_url = response.urljoin(url)
                 yield scrapy.Request(
-                    url=item_url, callback=self.item_detail)
+                    url=item_url, callback=self.parse_item_detail)
         next_page = response.css(
-            'div.pl__head__paging--right>div>span.paging__btn--next>a::attr(href)').extract_first()
+            '.paging__btn--next>a::attr(href)').extract_first()
         if next_page:
             # checking if their is next page
             next_page_url = response.urljoin(next_page)
             yield scrapy.Request(
-                url=next_page_url, callback=self.item_info_url)
+                url=next_page_url, callback=self.parse_item_url)
 
-    def item_detail(self, response):
+    def parse_item_detail(self, response):
         """This method crawl item detail information."""
-        size = []
-        pattern = r"^[A-Z\d/\s]+$"
-        title = response.css('span.p-details__name::text').extract_first()
-        item_size = response.css('div.c-sizespots>div::text').extract()
-        actual_price = response.css(
-            'div.cj-p-details__variants>div>section>span::text').extract_first()
-        sale_price = response.css(
-            'div.cj-p-details__variants>div>section>span.at-lastprice::text').extract_first()
-        if sale_price:
-            # checking whethe item have any sale price or not.
-            sale_price = sale_price.strip()
-        else:
-            sale_price = 0
-        for data in item_size:
-            modified_data = re.match(pattern, data, flags=re.MULTILINE)
+        available_size = []
+        pattern = r'^[A-Z\d/\s]+$'
+        title = response.css('.p-details__name::text').extract_first()
+        item_size = response.css('.sizespots__item::text').extract()
+        category = response.css(
+            '.l-bold.l-text-1::text').extract_first().strip()
+        for size in item_size:
+            modified_data = re.match(pattern, size, flags=re.MULTILINE)
             if modified_data:
-                size.append(modified_data.group().strip())
+                available_size.append(modified_data.group().strip())
             else:
-                size.append(data)
-        item_data = {
-            'item_detail_url': response.url,
-            'category': response.css(
-                'div.cj-p-details__variants>div>h1>span::text').extract_first().strip(),
-            'product_title': title.strip(),
-            'actual_price': actual_price.strip(),
-            'sale_price': sale_price,
-            'sizes': size,
-            'description': response.css('div.l-mb-5>.l-list--nospace>li::text').extract(),
-        }
-        yield item_data
+                available_size.append(size)
+        loader = ItemLoader(item=Product(), response=response)
+        loader.add_value('item_detail_url', response.url)
+        loader.add_value('category', category)
+        loader.add_value('product_title', title.strip())
+        loader.add_css(
+            'full_price', '.p-details__price>span::text')
+        loader.add_css(
+            'sale_price', '.at-lastprice::text')
+        loader.add_value('sizes', available_size)
+        loader.add_css('description', '.l-mb-5>.l-list--nospace>li::text')
+        return loader.load_item()

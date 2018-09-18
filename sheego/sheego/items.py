@@ -2,14 +2,50 @@
 This module holds crawled data items.
 """
 import scrapy
+from scrapy.loader.processors import Join, MapCompose, TakeFirst
+from w3lib.html import remove_tags
 
+# class Product(scrapy.Item):
+#     """This class holds item data fields."""
+#     item_detail_url = scrapy.Field()
+#     category = scrapy.Field()
+#     product_title = scrapy.Field()
+#     actual_price = scrapy.Field()
+#     sale_price = scrapy.Field()
+#     sizes = scrapy.Field()
+#     description = scrapy.Field()
 
-class SheegoItem(scrapy.Item):
+class Product(scrapy.Item):
     """This class holds item data fields."""
-    item_detail_url = scrapy.Field()
-    category = scrapy.Field()
-    product_title = scrapy.Field()
-    actual_price = scrapy.Field()
-    sale_price = scrapy.Field()
-    sizes = scrapy.Field()
-    description = scrapy.Field()
+    item_detail_url = scrapy.Field(
+        input_processor=MapCompose(remove_tags),
+        output_processor=Join(),
+    )
+    category = scrapy.Field(
+        input_processor=MapCompose(remove_tags),
+        output_processor=Join(),
+    )
+    product_title = scrapy.Field(
+        input_processor=MapCompose(remove_tags),
+        output_processor=Join(),
+    )
+    category = scrapy.Field(
+        input_processor=MapCompose(remove_tags),
+        output_processor=TakeFirst(),
+    )
+    full_price = scrapy.Field(
+        input_processor=MapCompose(remove_tags),
+        output_processor=TakeFirst(),
+    )
+    sale_price = scrapy.Field(
+        input_processor=MapCompose(remove_tags),
+        output_processor=TakeFirst(),
+    )
+    sizes = scrapy.Field(
+        input_processor=MapCompose(remove_tags),
+        output_processor=Join(),
+    )
+    description = scrapy.Field(
+        input_processor=MapCompose(remove_tags),
+        output_processor=Join(),
+    )

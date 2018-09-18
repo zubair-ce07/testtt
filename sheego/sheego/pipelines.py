@@ -1,12 +1,11 @@
 """
-This module checks data dublications.
+This module checks data duplications.
 """
 from scrapy.exceptions import DropItem
 
 
 class SheegoPipeline(object):
-    """This class checks data dublicates"""
-
+    """This class checks data duplicates"""
     def __init__(self):
         self.url_seen = set()
 
