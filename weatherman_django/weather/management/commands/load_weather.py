@@ -16,10 +16,14 @@ class Command(BaseCommand):
         dir_path = options['dir_path']
         files_path = glob.glob(dir_path + "/*weather*[.txt|.csv]")
 
+        if not files_path:
+            self.stdout.write("No Weather files found so no data is added\n")
+            return
         for file_path in files_path:
             city_name = file_path.split('/')[-1].split('_')[0]
             city, status = City.objects.get_or_create(name=city_name)
             read_csv_and_save_data(file_path, city)
+
         self.stdout.write("Added the new data to DB and does not changed the old data\n")
 
 
