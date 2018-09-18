@@ -1,5 +1,6 @@
 from math import inf
 
+
 class MonthReport:
 
     def __init__(self):
@@ -15,9 +16,7 @@ class MonthReport:
         self.avgMeanHumidity = 0
         self.meanHumidityCount = 0
 
-
-
-    def cal_sum_of_data(self,weatherDict):
+    def cal_sum_of_data(self, weatherDict):
         if weatherDict["Max TemperatureC"] is not '':
             self.sumMaxTemp += int(weatherDict["Max TemperatureC"])
             self.maxTempCount += 1
@@ -27,7 +26,6 @@ class MonthReport:
         if weatherDict["Max Humidity"] is not '':
             self.sumMeanHumidity += int(weatherDict["Mean Humidity"])
             self.meanHumidityCount += 1
-
 
     def take_avg_of_data(self):
         self.avgMaxTemp = self.sumMaxTemp // self.maxTempCount
