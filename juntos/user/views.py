@@ -29,12 +29,14 @@ class UserFormView(View):
     template_name = 'user/registration/registration_form.html'
 
     def get(self, request):
+        """Get method for user form view which provides access to user to register"""
         if self.request.user.is_authenticated:
             return HttpResponseRedirect(reverse('user:index'))
         form = self.form_class(None)
         return render(request, self.template_name, {'form': form})
 
     def post(self, request):
+        """Post method to user registration, validates form and login user."""
         form = self.form_class(request.POST)
 
         if form.is_valid():
@@ -61,6 +63,7 @@ class ProfileUpdate(UpdateView):
     success_url = reverse_lazy('user:index')
 
     def get_object(self, queryset=None):
+        """Provides object during profile object update"""
         return self.request.user.profile
 
 
@@ -86,6 +89,7 @@ class UserUpdate(UpdateView):
         return HttpResponseRedirect(self.get_success_url())
 
     def get_object(self, queryset=None):
+        """Provide user object to update view"""
         return self.request.user
 
 

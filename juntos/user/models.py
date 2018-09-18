@@ -23,6 +23,7 @@ class Profile(models.Model):
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, null=True, blank=True)
 
     def clean(self):
+        """Clean data to be added in model"""
         if self.age and self.age < 0:
             raise ValidationError(_('Age must be positive'))
 

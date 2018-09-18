@@ -4,13 +4,16 @@ from django.db.utils import IntegrityError
 
 
 class Command(BaseCommand):
-
+    """
+    Add admin user into the db
+    """
     help = "Create Admin Accounts."
 
     def add_arguments(self, parser):
         pass
 
     def handle(self, *args, **options):
+        """Handles command"""
         group, created = Group.objects.get_or_create(name='Admin')
         try:
             user = User.objects.create_superuser(

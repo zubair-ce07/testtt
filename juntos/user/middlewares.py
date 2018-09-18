@@ -21,6 +21,7 @@ class LoginRequiredMiddleware(object):
         self.get_response = get_response
 
     def __call__(self, request):
+        """Call method for middleware"""
         if not request.user.is_authenticated or not request.user.is_active:
             path = request.path_info.lstrip('/')
             if not any(m.match(path) for m in EXEMPT_URLS):
@@ -29,7 +30,7 @@ class LoginRequiredMiddleware(object):
 
 
 class RoleMiddleware:
-
+    """Add role of a user in request if user is authenticated."""
     def __init__(self, get_response):
         self.get_response = get_response
 

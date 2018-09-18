@@ -12,23 +12,34 @@ from .forms import BallotForm
 
 
 class BallotView(View):
+    """
+    Ballot view manages both get and post for adding/editing balloting.
+    """
 
     ChoiceFormFactory = modelformset_factory(Choice, fields=('text',), min_num=3, extra=0)
 
     @admin_only
     def get(self, request, id=None):
+        """
+        Get method during showing new ballot form/edit ballot form
+        :param request: Request
+        :param id: pk for ballot during editing
+        :return: Render ballot_form.html with form context
+        """
         new_ballot = False
+        template = 'ballot/ballot_form.html'
 
         if id:
+            # If editing existing Ballot
             ballot = get_object_or_404(Ballot, id=id)
             ballot_form = BallotForm(instance=ballot)
             choices = ballot.choice_set.all()
             choice_forms = self.ChoiceFormFactory(queryset=choices)
-            template = 'ballot/ballot_form.html'
+
         else:
+            # If new ballot is to be added.
             ballot_form = BallotForm(instance=None)
             choice_forms = self.ChoiceFormFactory(queryset=Choice.objects.none())
-            template = 'ballot/ballot_form.html'
             new_ballot = True
 
         context = {
@@ -41,6 +52,12 @@ class BallotView(View):
 
     @admin_only
     def post(self, request, id=None):
+        """
+        Saving ballot form
+        :param request: Request
+        :param id: If editing a ballot
+        :return: Rendering to ballot listing or back to form view in case of errors.
+        """
         ballot = None
         if id:  # Means already existing Ballot is being edited.
             ballot = get_object_or_404(Ballot, id=id)
@@ -62,6 +79,9 @@ class BallotView(View):
 
 
 class BallotDeleteView(DeleteView):
+    """
+    Ballot delete view.
+    """
     model = Ballot
     success_url = reverse_lazy('ballot:ballot_list')
 
@@ -75,9 +95,11 @@ class BallotListView(generic.ListView):
     context_object_name = 'ballots'
 
     def get_queryset(self):
-        return (Ballot.objects
-                .filter(is_active=True)
-                .order_by('-created_at'))
+        """
+        Provide all active ballots
+        :return: Active ballots
+        """
+        return Ballot.objects.get_active_ballots()
 
 
 class BallotDetailView(generic.DetailView):
@@ -90,15 +112,20 @@ class BallotDetailView(generic.DetailView):
 
 
 def vote_ballot(request, id=None):
+    """
+    Vote ballot view manages both get and post requests, and ensure that user don't vote more than once.
+    :param request: Request
+    :param id: Id of ballot
+    :return: Render to ballot_details in vote successfully else to ballot.html with ballot.
+    """
     context = {}
     ballot = get_object_or_404(Ballot, id=id)
     context["ballot"] = ballot
-
-    if request.user.vote_set.filter(choice__ballot_id=ballot.id):
+    already_voted = request.user.vote_set.filter(choice__ballot_id=ballot.id)
+    if already_voted:
         context["error"] = "You've already voted for this ballot."
-        return render(request, 'ballot/ballot.html', context)
 
-    if request.method == "POST":
+    if request.method == "POST" and not already_voted:
         Vote.objects.create(user=request.user, choice_id=request.POST['choice'])
         return HttpResponseRedirect(reverse('ballot:ballot_details', args=[ballot.id]))
     else:

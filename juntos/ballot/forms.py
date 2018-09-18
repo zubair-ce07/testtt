@@ -3,6 +3,9 @@ from .models import Ballot, Tag
 
 
 class BallotForm(forms.ModelForm):
+    """
+    Ballot model form
+    """
     title = forms.CharField(max_length=255, label='Ballot Title')
     tags = forms.ModelMultipleChoiceField(queryset=Tag.objects.all(), help_text='Press ctrl and select more than one.')
 
