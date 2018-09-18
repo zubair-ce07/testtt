@@ -1,5 +1,7 @@
 import os
 
+from celery.schedules import crontab
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -25,6 +27,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_celery_results',
     'user.apps.UserConfig',
     'ballot.apps.BallotConfig',
 ]
@@ -80,7 +83,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'juntos',
-        'USER': 'postgres',
+        'USER': 'arslan',
         'PASSWORD': 'postgres',
         'HOST': 'localhost',
         'PORT': '5432',
@@ -105,6 +108,19 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+# Celery application definition
+CELERY_BROKER_URL = 'redis://localhost:6379'
+CELERY_RESULT_BACKEND = 'django-db'  # output to django_celery_results_taskresult table.
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_BEAT_SCHEDULE = {
+    'update_ballots_status': {
+        'task': 'ballot.tasks.update_ballots_status',
+        'schedule': crontab(minute=1),
+    },
+}
 
 
 # Internationalization

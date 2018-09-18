@@ -5,11 +5,11 @@ Major Requirements:
  - Python3.7
  - Django2.1.1
 
-First, create a virtual environment and install requirements:
+First, create a virtual environment and install requirements (Make sure you've installed python3.5):
 
 .. code-block:: bash
 
-    virtualenv ~/.virtualenvs/juntos
+    virtualenv -p python3.5 ~/.virtualenvs/juntos
     source ~/.virtualenvs/juntos/bin/activate
     cd juntos
     pip install -r requirements.txt
@@ -30,6 +30,16 @@ Run migrations and collect static assets:
 
     python manage.py migrate
     python manage.py collectstatic
+
+
+Make sure you install and run `Redis` as it is used in the project with `Celery` and start celery worker for info/logs:
+
+.. code-block:: bash
+
+    sudo apt-get install redis-server
+    redis-server
+    celery -A juntos worker -l info
+    celery -A juntos beat -l info
 
 
 Create a superuser to access Django Administration Console (i.e. /admin):
@@ -59,3 +69,12 @@ To run tests
     python manage.py test user
 
 Now, you will be able to visit Juntos @ http://localhost:8000 and Django Admin @ http://localhost:8000/admin/
+
+
+To clean environment following commands can be used:
+
+.. code-block:: bash
+
+    deactivate
+    rm -rf ~/.virtualenvs/bmi_app
+    find . -name "*.pyc" -exec rm -f {} ;

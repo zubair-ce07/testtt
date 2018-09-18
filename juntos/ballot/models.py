@@ -56,8 +56,17 @@ class Ballot(models.Model):
         """
         return self.choice_set.all()
 
+    @property
+    def should_remain_active(self) -> bool:
+        """
+        Returns if a ballot deadline has come/passed recently
+        :return: False if it should not be active else True
+        """
+        return timezone.now() < self.ending_date
+
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        self.ending_date = timezone.now() + datetime.timedelta(days=self.active_period)
+        if not self.pk:
+            self.ending_date = timezone.now() + datetime.timedelta(days=self.active_period)
         super().save(force_insert, force_update, using, update_fields)
 
 
@@ -94,4 +103,4 @@ class Vote(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f'{self.user.first_name}-{self.choice.text}'
+        return '{0}-{1}'.format(self.user.first_name, self.choice.text)
