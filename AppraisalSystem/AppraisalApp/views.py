@@ -1,15 +1,21 @@
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.contrib.auth import login, authenticate, logout
-from django.shortcuts import render, redirect, HttpResponse
+from django.shortcuts import render, redirect, HttpResponse, Http404, get_object_or_404
 from .forms import SignUpForm, LoginForm, CompetencyForm, EditProfile
 from django.core.exceptions import ObjectDoesNotExist
 from django.views import generic
 from .models import Employee, Feedback, Competency
+from django.urls import reverse
 
 
-def login_user(request):
-    if request.method == 'POST':
+class LoginView(generic.View):
+    def get(self, request):
+        form = LoginForm()
+        context = {'form': form}
+        return render(request, 'registration/login.html', context)
+
+    def post(self, request):
         form = LoginForm(request.POST)
         if form.is_valid():
             username = form.cleaned_data.get('username')
@@ -18,13 +24,34 @@ def login_user(request):
             if user:
                 login(request, user)
                 return redirect('appraisal:home')
-    else:
-        form = LoginForm()
-    return render(request, 'registration/login.html', {'form': form})
+
+        self.get(request)
 
 
-def signup_user(request):
-    if request.method == 'POST':
+class SignUp(generic.CreateView):
+    template_name = 'registration/signup.html'
+    form_class = SignUpForm
+
+    def form_valid(self, form):
+        form.save()
+        username = form.cleaned_data.get('username')
+        raw_password = form.cleaned_data.get('password1')
+        user = authenticate(username=username, password=raw_password)
+        if user:
+            login(self.request, user)
+        return super(SignUp, self).form_valid(form)
+
+    def get_success_url(self):
+        return reverse('appraisal:home')
+
+
+class SignUpView(generic.View):
+    def get(self, request):
+        form = SignUpForm()
+        context = {'form': form}
+        return render(request, 'registration/signup.html', context)
+
+    def post(self, request):
         form = SignUpForm(request.POST)
         if form.is_valid():
             form.save()
@@ -33,14 +60,11 @@ def signup_user(request):
             user = authenticate(username=username, password=raw_password)
             login(request, user)
             return redirect('appraisal:home')
-    else:
-        form = SignUpForm()
-    return render(request, 'registration/signup.html', {'form': form})
 
 
-@login_required
-def home(request):
-    return render(request, 'profiles/home.html', {'user': request.user})
+@method_decorator(login_required, name='dispatch')
+class Home(generic.TemplateView):
+    template_name = 'profiles/home.html'
 
 
 @method_decorator(login_required, name='dispatch')
@@ -51,49 +75,51 @@ class EmployeeView(generic.ListView):
     def get_queryset(self):
         """Return the last five published questions."""
         user = self.request.user
-
         # If CEO
         if user.employee_type == 1:
             employees = Employee.objects.exclude(pk=user.id)
-
         else:
             employees = Employee.objects.filter(reports_to=user)
 
         return employees
 
 
-@login_required
-def employee_detail(request, uid):
-    try:
-        employee = Employee.objects.get(pk=uid)
-    except ObjectDoesNotExist:
-        return HttpResponse("Employee not found")
+@method_decorator(login_required, name='dispatch')
+class EmployeeDetailView(generic.DetailView):
+    model = Employee
+    template_name = 'profiles/employee_details.html'
+    context_object_name = 'employee'
 
-    if employee.reports_to != request.user and request.user.employee_type != 1:
-        return HttpResponse("Employee is not under your command")
+    def get_object(self):
+        employee = self.model.objects.get(pk=self.kwargs['pk'])
+        if employee.reports_to != self.request.user and self.request.user.employee_type != 1:
+            raise Http404()
+        return employee
 
-    form = CompetencyForm()
-    context = {}
-    context['employee'] = employee
-    context['form'] = form
-    return render(request, 'profiles/employee_details.html', context)
-
-
-@login_required
-def user_logout(request):
-    logout(request)
-    form = LoginForm()
-    return render(request, 'registration/login.html', {'form': form})
+    def get_context_data(self, **kwargs):
+        context = super(EmployeeDetailView, self).get_context_data(**kwargs)
+        form = CompetencyForm()
+        context['form'] = form
+        return context
 
 
-@login_required
-def send_feedback(request, uid):
-    if request.method == "POST":
+@method_decorator(login_required, name='dispatch')
+class LogOutView(generic.RedirectView):
+    url = '/appraisal/login'
+
+    def get_redirect_url(self, *args, **kwargs):
+        logout(self.request)
+        return self.url
+
+
+@method_decorator(login_required, name='dispatch')
+class SendFeedbackView(generic.View):
+    def post(self, request, emp_id):
         form = CompetencyForm(request.POST)
         if form.is_valid():
             feedback = Feedback()
             feedback.from_user = request.user
-            feedback.to_user = Employee.objects.get(pk=uid)
+            feedback.to_user = Employee.objects.get(pk=emp_id)
             feedback.save()
 
             competency = Competency()
@@ -102,8 +128,11 @@ def send_feedback(request, uid):
             competency.team_work = form.cleaned_data.get('team_work')
             competency.leadership = form.cleaned_data.get('leadership')
             competency.save()
+        return redirect('appraisal:employee_detail', pk=emp_id)
 
-    return redirect('appraisal:employee_detail', uid=uid)
+
+class EditFeedbackView(generic.UpdateView):
+    success_url = ''
 
 
 @login_required
@@ -135,19 +164,38 @@ def edit_feedback(request, feedback_id):
     return render(request, 'profiles/edit_feedback.html', {'form': form, 'feedback_id': feedback_id})
 
 
-@login_required
-def delete_feedback(request, feedback_id):
-    try:
-        feedback = Feedback.objects.get(pk=feedback_id)
-        if feedback.from_user == request.user:
-            employee_id = feedback.to_user.id
-            feedback.delete()
-            return redirect('appraisal:employee_detail', uid=employee_id)
-        else:
-            return HttpResponse("Permission Denied")
+@method_decorator(login_required, name='dispatch')
+class DeleteFeedbackView(generic.DeleteView):
+    model = Feedback
+    emp_id = 0
+    template_name = 'profiles/delete_feedback.html'
 
-    except ObjectDoesNotExist:
-        return HttpResponse("Feedback not found")
+    def get_object(self, queryset=None):
+        try:
+            feedback = Feedback.objects.get(pk=self.kwargs['pk'])
+            if feedback.from_user == self.request.user:
+                self.emp_id = feedback.to_user.id
+                return feedback
+            else:
+                return None
+        except ObjectDoesNotExist:
+            raise ObjectDoesNotExist
+
+    def get_success_url(self):
+        return reverse('appraisal:employee_detail', args=(self.emp_id,))
+
+
+class ProfileUpdateView(generic.UpdateView):
+    form_class = EditProfile
+    template_name = 'profiles/edit_profile.html'
+    model = Employee
+
+    def get_object(self):
+        id_ = self.request.user.pk
+        return get_object_or_404(Employee, pk=id_)
+
+    def get_success_url(self):
+        return reverse('appraisal:home')
 
 
 @login_required

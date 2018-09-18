@@ -4,15 +4,15 @@ from . import views
 app_name = 'appraisal'
 
 urlpatterns = [
-    path('signup/', views.signup_user, name='signup'),
-    path('home/', views.home, name='home'),
-    path('login/', views.login_user, name='login'),
-    path('logout/', views.user_logout, name='logout'),
-    path('edit_profile/', views.edit_profile, name='edit_profile'),
+    path('signup/', views.SignUp.as_view(), name='signup'),
+    path('home/', views.Home.as_view(), name='home'),
+    path('login/', views.LoginView.as_view(), name='login'),
+    path('logout/', views.LogOutView.as_view(), name='logout'),
+    path('edit_profile/', views.ProfileUpdateView.as_view(), name='edit_profile'),
     path('employees/', views.EmployeeView.as_view(), name='employees'),
-    path('employee_detail/<int:uid>', views.employee_detail, name='employee_detail'),
-    path('send_feedback/<int:uid>', views.send_feedback, name='send_feedback'),
+    path('employee_detail/<int:pk>', views.EmployeeDetailView.as_view(), name='employee_detail'),
+    path('send_feedback/<int:emp_id>', views.SendFeedbackView.as_view(), name='send_feedback'),
     path('edit_feedback/<int:feedback_id>', views.edit_feedback, name='edit_feedback'),
-    path('delete_feedback/<int:feedback_id>', views.delete_feedback, name='delete_feedback'),
+    path('<int:pk>/delete_feedback', views.DeleteFeedbackView.as_view(), name='delete_feedback'),
 
 ]

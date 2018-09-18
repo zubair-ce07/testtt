@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Redirection</title>
+</head>
+<body>
+
+<form action="delete_feedback" method="POST">{% csrf_token %}
+<p>Do you want to delete the feedback?</p>
+    <input type="submit" value="Yes"/>
+</form>
+
+</body>
+</html>
