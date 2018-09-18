@@ -66,7 +66,7 @@ class GenericParser(BaseParseSpider):
 
     @staticmethod
     def product_id(response):
-        return clean(response.css(".find-in-store ::attr(pid)"))[0]
+        return clean(response.css("#pid ::attr(value)"))[0]
 
     @staticmethod
     def product_name(response):
@@ -138,7 +138,7 @@ class GenericParser(BaseParseSpider):
         images = []
         json_data = re.findall('scene7JSONResponse\((.*)\,"colorSet"\);', response.text)[0]
         image_urls = json.loads(json_data)
-        for image in image_urls['set']['item']['set']['item']:
+        for image in image_urls['set']['item'][0]['set']['item']:
             images.append(urljoin(self.image_api_url, image.get('i', {}).get('n')))
         return images
 
