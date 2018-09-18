@@ -2,40 +2,40 @@ import json
 
 import scrapy
 from WALMART.items import WalmartLoader
-from scrapy.linkextractors import LinkExtractor
-from scrapy.spiders import Rule, CrawlSpider
+from scrapy.spiders import CrawlSpider
 
 
 class WalmartSpider(CrawlSpider):
     name = "walmart"
-    start_urls = ["https://www.walmart.com/cp/clothing/5438?povid=5438+%7C+2018-06-27+%7C+GlobalFlyout_ShopAllFashion"]
+    start_urls = ["https://www.walmart.com"]
 
-    rules = (
-        Rule(LinkExtractor(allow=r".*com/browse/clothing/.*"), callback='parse_canonical'),
-    )
-
-    def parse_canonical(self, response):
+    def parse(self, response):
         data = self.parse_script(response)
-        canonical_next = data['preso']['pageMetadata'].get('canonicalNext')
-        if canonical_next:
-            yield scrapy.Request(canonical_next, callback=self.parse_pages)
-        else:
-            yield scrapy.Request(response.url, callback=self.parse_products)
+        clothing_link = data['header']['quimbyData']['global_header_ny']['headerZone1']['configs']['departments'][6][
+            'departments'][0]['department']['clickThrough']['value']
+        clothing_link = response.urljoin(clothing_link)
+        yield scrapy.Request(clothing_link, callback=self.parse_category_links)
 
-    def parse_pages(self, response):
-        data = self.parse_script(response)
-        canonical = data['preso']['pageMetadata'].get('canonical')
-        canonical = canonical[:-1]
-        pages = data['preso']['pagination']['pages']
-        last_page = pages.pop()
-        last_page_number = last_page['page']
-        for index in range(1, int(last_page_number)):
-            yield scrapy.Request(canonical+str(last_page_number), callback=self.parse_products)
+    def parse_category_links(self, response):
+        required_script_xpath = '//script[contains(text(), "window.__WML_REDUX_INITIAL_STATE__")]/text()'
+        script = response.xpath(required_script_xpath).extract_first()
+        script = script.lstrip('var _setReduxState = function() {window.__WML_REDUX_INITIAL_STATE__ =')
+        script = script[:-1]
+        script = "{" + script
+        data = json.loads(script)
+        for index in range(6, 9):
+            yield scrapy.Request(data['header']['quimbyData']['global_header_ny']['headerZone1']['configs'][
+                                     'departments'][1]['departments'][index]['department']['clickThrough']['value'],
+                                 callback=self.parse_products)
 
     def parse_products(self, response):
         product_links = response.xpath('//a[contains(@class, "product-title-link")]/@href').extract()
         for link in product_links:
             yield scrapy.Request("https://www.walmart.com"+link, callback=self.parse_item)
+        data = self.parse_script(response)
+        canonical_next = data['preso']['pageMetadata'].get('canonicalNext')
+        if canonical_next:
+            yield scrapy.Request(canonical_next, callback=self.parse_pages)
 
     def parse_script(self, response):
         required_script_xpath = '//script[contains(text(), "window.__WML_REDUX_INITIAL_STATE__")]/text()'
@@ -81,32 +81,44 @@ class WalmartSpider(CrawlSpider):
                 image_urls.append(value)
         return image_urls
 
+    def get_size(self, variants):
+        size = variants.get('size')
+        if size:
+            size_cleaned = size.replace('size-', '')
+        else:
+            size = variants.get('clothing_size')
+            if size:
+                size_cleaned = size.replace('clothing_size-', '')
+            else:
+                size_cleaned = "generic"
+        return size_cleaned
+
+    def get_color(self, variants):
+        color = variants.get('actual_color')
+        if color:
+            color_cleaned = color.replace('actual_color-', '')
+        else:
+            color_cleaned = "multi-color"
+        return color_cleaned
+
+    def get_variants(self, products, product):
+        variants = products[product].get('variants')
+        if variants:
+            size_cleaned = self.get_size(variants)
+            color_cleaned = self.get_color(variants)
+            return size_cleaned, color_cleaned
+        else:
+            size_cleaned = "generic"
+            color_cleaned = "generic"
+            return size_cleaned, color_cleaned
+
     def parse_skus(self, response, data):
         products = data['product']['products']
         price = response.xpath('//span[@class="price-characteristic"]/@content').extract_first()
         currency = response.xpath('//span[@class="price-currency"]/text()').extract_first()
         skus = {}
         for product in products:
-            variants = products[product].get('variants')
-            if variants:
-                size = variants.get('size')
-                if size:
-                    size_cleaned = size.replace('size-', '')
-                else:
-                    size = variants.get('clothing_size')
-                    if size:
-                        size_cleaned = size.replace('clothing_size-', '')
-                    else:
-                        size_cleaned = "generic"
-                color = variants.get('actual_color')
-                if color:
-                    color_cleaned = color.replace('actual_color-', '')
-                else:
-                    color_cleaned = "multi-color"
-            else:
-                size_cleaned = "generic"
-                color_cleaned = "generic"
-
+            size_cleaned, color_cleaned = self.get_variants(products, product)
             offer = products[product]['offers'][0]
             color_size = "{}_{}".format(color_cleaned, size_cleaned)
             skus[color_size] = {
@@ -138,3 +150,4 @@ class WalmartSpider(CrawlSpider):
         loader.add_value("image_urls", image_urls)
         loader.add_value("skus", skus)
         return loader.load_item()
+
