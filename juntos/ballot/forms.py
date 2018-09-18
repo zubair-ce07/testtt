@@ -11,7 +11,7 @@ class BallotForm(forms.ModelForm):
 
     class Meta:
         model = Ballot
-        fields = ['title']
+        fields = ['title', 'active_period']
         help_texts = {'tags': "Unique identifier for the student",}
 
     def __init__(self, *args, **kwargs):

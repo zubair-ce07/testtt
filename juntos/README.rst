@@ -14,6 +14,16 @@ First, create a virtual environment and install requirements:
     cd juntos
     pip install -r requirements.txt
 
+Setup Postgres (Make sure you've installed postgres and it is working on your machine/server):
+
+.. code-block:: bash
+
+    psql
+    CREATE USER <user-name> with PASSWORD '<password>';
+    ALTER USER <user-name> with SUPERUSER;
+
+Now put the user-name and pasword to `settings.py` file in `DATABASES` configurations.
+
 Run migrations and collect static assets:
 
 .. code-block:: bash
