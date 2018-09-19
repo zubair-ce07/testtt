@@ -12,6 +12,14 @@ from .models import User
 
 
 def user_signup_view(request):
+    """ 
+    Returns signout view if user alreay logged in.
+    Returns signup view if user sends a GET request
+    otherwise gets data from the form, validates it
+    returns error in case of any error. If validation
+    succeeds, creates the user
+
+    """
     if 'my_session' in request.session:
         user_signout_view(request)
 
@@ -25,7 +33,7 @@ def user_signup_view(request):
                     'message': 'Username ({}) has already exist.'.format(username)
                 }
             else:
-                obj = User.objects.create(
+                user = User.objects.create(
                     username=form.cleaned_data.get('username'),
                     password=form.cleaned_data.get('password'),
                     date_of_birth=form.cleaned_data.get('date_of_birth')
@@ -44,6 +52,14 @@ def user_signup_view(request):
 
 
 def user_signin_view(request):
+    """
+    Redirects to home view if user is already logged in.
+    Returns signin view in case of GET request.
+    In case of POST request, gets the data from the 
+    form validates it, if validation succeeds, stores
+    session and returns home view. Returns error message 
+    in case of any failure
+    """
     if 'my_session' in request.session:
         return HttpResponseRedirect(reverse('users:home'))
 
@@ -55,8 +71,8 @@ def user_signin_view(request):
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password')
             try:
-                obj = User.objects.get(username=username, password=password)
-                request.session["my_session"] = obj.username
+                user = User.objects.get(username=username, password=password)
+                request.session["my_session"] = user.username
                 return HttpResponseRedirect(reverse('users:home'))
             except User.DoesNotExist:
                 if check_user_presence(username):
@@ -70,12 +86,19 @@ def user_signin_view(request):
 
 
 def user_signout_view(request):
+    """
+    Deletes session if it exists and redirects to signin view
+    """
     if 'my_session' in request.session:
         del request.session['my_session']
     return HttpResponseRedirect(reverse('users:signin'))
 
 
 def user_home_view(request):
+    """
+    Redirects to signin view if session doesnot exist otherwise
+    returns home view
+    """
     if 'my_session' not in request.session:
         return HttpResponseRedirect(reverse('users:signin'))
     context = {}
@@ -84,6 +107,13 @@ def user_home_view(request):
 
 
 def user_change_password_view(request):
+    """
+    Redirects to signin view if session doesnot exists.
+    Returns change password view in case of GET request.
+    In case of POST request gets data from form
+    validates it using form and changes the password if
+    everything goes fine otherwise returns error message    
+    """
     if 'my_session' not in request.session:
         return HttpResponseRedirect(reverse('users:signin'))
 
@@ -95,9 +125,9 @@ def user_change_password_view(request):
             username = request.session['my_session']
             password = form.cleaned_data.get('old_password')
             try:
-                obj = User.objects.get(username=username, password=password)
-                obj.password=form.cleaned_data.get('new_password')
-                obj.save()
+                user = User.objects.get(username=username, password=password)
+                user.password = form.cleaned_data.get('new_password')
+                user.save()
                 return user_signout_view(request)
             except User.DoesNotExist:
                 context['message'] = 'You entered wrong password'
@@ -106,6 +136,14 @@ def user_change_password_view(request):
 
 
 def user_edit_profile_view(request):
+    """
+    Redirects to signin view if session doesnot exists.
+    Returns edit password view with user's current data
+    in case of GET request.In case of POST request gets
+    data from form validates it using UserEditProfileForm
+    and edits the profile and redirects to home view if 
+    everything goes fine otherwise returns error message    
+    """
     if 'my_session' not in request.session:
         return HttpResponseRedirect(reverse('users:signin'))
 
@@ -116,8 +154,8 @@ def user_edit_profile_view(request):
         form = UserEditProfileForm(request.POST)
         if form.is_valid():
             try:
-                obj = User.objects.get(username=username)
-                save_object_data(obj, form)
+                user = User.objects.get(username=username)
+                save_object_data(user, form)
                 return HttpResponseRedirect(reverse('users:home'))
             except User.DoesNotExist:
                 return user_signout_view()
@@ -125,37 +163,49 @@ def user_edit_profile_view(request):
         return render(request, template_name, context)
 
     try:
-        obj = User.objects.get(username=username)
-        context = populate_object_data_in_context(context, obj)
+        user = User.objects.get(username=username)
+        context = populate_object_data_in_context(context, user)
         return render(request, template_name, context)
     except:
         return user_signout_view()
 
 
-def save_object_data(obj, form):
-    obj.first_name = form.cleaned_data.get('first_name')
-    obj.last_name = form.cleaned_data.get('last_name')
-    obj.city = form.cleaned_data.get('city')
-    obj.country = form.cleaned_data.get('country')
-    obj.qualification = form.cleaned_data.get('qualification')
-    obj.date_of_birth = form.cleaned_data.get('date_of_birth')
-    obj.save()
+def save_object_data(user, form):
+    """
+    Gets data from the form and saves it in the
+    user's objects instance
+    """
+    user.first_name = form.cleaned_data.get('first_name')
+    user.last_name = form.cleaned_data.get('last_name')
+    user.city = form.cleaned_data.get('city')
+    user.country = form.cleaned_data.get('country')
+    user.qualification = form.cleaned_data.get('qualification')
+    user.date_of_birth = form.cleaned_data.get('date_of_birth')
+    user.save()
 
 
-def populate_object_data_in_context(context, obj):
-    context['password'] = obj.password if obj.password else ''
-    context['first_name'] = obj.first_name if obj.first_name else ''
-    context['last_name'] = obj.last_name if obj.last_name else ''
-    context['city'] = obj.city if obj.city else ''
-    context['country'] = obj.country if obj.country else ''
-    context['qualification'] = obj.qualification if obj.qualification else ''
-    my_date = obj.date_of_birth
-    date_of_birth = '{}-{:02}-{:02}'.format(my_date.year, my_date.month, my_date.day)
+def populate_object_data_in_context(context, user):
+    """
+    Gets user data from user's object and saves it in context dictionary
+    """
+    context['password'] = user.password if user.password else ''
+    context['first_name'] = user.first_name if user.first_name else ''
+    context['last_name'] = user.last_name if user.last_name else ''
+    context['city'] = user.city if user.city else ''
+    context['country'] = user.country if user.country else ''
+    context['qualification'] = user.qualification if user.qualification else ''
+    my_date = user.date_of_birth
+    date_of_birth = '{}-{:02}-{:02}'.format(
+        my_date.year, my_date.month, my_date.day)
     context['date_of_birth'] = date_of_birth
     return context
 
 
 def check_user_presence(username):
+    """
+    Checks either user with the given username exists or not.
+    Returns user if it exists otherwise None
+    """
     try:
         user = User.objects.get(username=username)
         return user

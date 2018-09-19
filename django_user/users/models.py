@@ -2,6 +2,7 @@ from django.db import models
 
 
 class User(models.Model):
+    """ Conatins attributes of User model """
     username = models.CharField(max_length=120, unique=True, blank=False, null=False)
     password = models.CharField(max_length=120)
     first_name = models.CharField(max_length=120, blank=True, null=True)
