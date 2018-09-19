@@ -6,11 +6,6 @@ from scrapy.loader.processors import Join, MapCompose, TakeFirst
 from w3lib.html import remove_tags
 
 
-class ProductInformation(scrapy.Item):
-    """This class holds item information fields."""
-    information = scrapy.Field()
-
-
 class Product(scrapy.Item):
     """This class holds item main data fields."""
     item_detail_link = scrapy.Field(
@@ -29,3 +24,4 @@ class Product(scrapy.Item):
         input_processor=MapCompose(remove_tags),
         output_processor=Join()
     )
+    information = scrapy.Field()

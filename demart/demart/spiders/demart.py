@@ -1,14 +1,14 @@
 """
-This module crawl pages and get data.
+This module crawls pages and gets data.
 """
 import re
 import scrapy
 from scrapy.loader import ItemLoader
-from ..items import Product, ProductInformation
+from ..items import Product
 
 
 class DeMart(scrapy.Spider):
-    """This class crawl Sheego pages"""
+    """This class crawls Sheego pages"""
     name = 'demart'
 
     def start_requests(self):
@@ -17,7 +17,7 @@ class DeMart(scrapy.Spider):
         yield scrapy.Request(url=start_url, callback=self.parse)
 
     def parse(self, response):
-        """This method crawl page urls."""
+        """This method crawls page urls."""
         category_url = response.css('li>a::attr(href)').extract()
         for link in category_url:
             url = response.urljoin(link)
@@ -25,7 +25,7 @@ class DeMart(scrapy.Spider):
                 url=url, callback=self.parse_item_url)
 
     def parse_item_url(self, response):
-        """This method crawl item detail url."""
+        """This method crawls item detail url."""
         item_url = response.css('.right>a::attr(href)').extract()
         for link in item_url:
             url = response.urljoin(link)
@@ -33,19 +33,17 @@ class DeMart(scrapy.Spider):
                 url=url, callback=self.parse_item_detail)
 
     def parse_item_detail(self, response):
-        """This method crawl item details."""
-        pattern_information = r'[a-zA-z]*'
+        """This method crawls item details."""
+        pattern_information = r'[A-z]*'
         information = []
         description = response.css('.trunc>p::text').extract()
         if len(description) == 1:
             description = response.css('.trunc>div::text').extract()
-        concatinate_description = ''.join(description)
-        description = concatinate_description.strip()
+        description = ''.join(description).strip()
         title = response.css('.product::text').extract_first()
         info = response.css('div.info>div>p::text').extract()
         data_found = response.css('div.info>div>p>strong::text').extract()
         series = response.css('p>a::text').extract_first()
-        item_information = ProductInformation()
         for index, source_data in enumerate(info):
             # storing data in list that is fetched.
             key = data_found[index].strip()
@@ -54,7 +52,6 @@ class DeMart(scrapy.Spider):
                 key.group(): source_data.strip(),
             }
             information.append(data)
-        item_information['information'] = information
         if series:
             series = series.strip()
         else:
@@ -64,4 +61,5 @@ class DeMart(scrapy.Spider):
         loader.add_value('title', title.strip())
         loader.add_value('series', series)
         loader.add_value('description', description)
-        return loader.load_item(), item_information
+        loader.add_value('information', information)
+        return loader.load_item()
