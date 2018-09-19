@@ -56,7 +56,6 @@ def read_csv_and_save_data(file_path, city):
                     min_value = None
                     if row['Min TemperatureC']:
                         min_value = float(row['Min TemperatureC'])
-                        # print(min_value)
                     weather.temperature = WeatherCharacteristics(max_value=max_value,
                                                                  mean_value=mean_value,
                                                                  min_value=min_value)
@@ -130,14 +129,14 @@ def read_csv_and_save_data(file_path, city):
                     mean_value = None
                     if row[' Mean Wind SpeedKm/h']:
                         mean_value = float(row[' Mean Wind SpeedKm/h'])
-                    gust_speed = None
-                    if row[' Max Gust SpeedKm/h']:
-                        gust_speed = float(row[' Max Gust SpeedKm/h'])
+
                     weather.wind = WeatherCharacteristics(max_value=max_value,
-                                                          mean_value=mean_value,
-                                                          max_gust_speed=gust_speed)
+                                                          mean_value=mean_value)
                     weather.wind.save()
 
+                    weather.max_gust_speed = None
+                    if row[' Max Gust SpeedKm/h']:
+                        weather.max_gust_speed = int(row[' Max Gust SpeedKm/h'])
                     weather.precipitation = None
                     if row['Precipitationmm']:
                         weather.precipitation = float(row['Precipitationmm'])

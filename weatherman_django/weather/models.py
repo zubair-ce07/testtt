@@ -6,7 +6,6 @@ class WeatherCharacteristics(models.Model):
     max_value = models.FloatField(null=True)
     mean_value = models.FloatField(null=True)
     min_value = models.FloatField(null=True)
-    max_gust_speed = models.IntegerField(null=True)
 
 
 class City(models.Model):
@@ -29,8 +28,10 @@ class Weather(models.Model):
                                       related_name='+')
     wind = models.OneToOneField(WeatherCharacteristics, on_delete=models.CASCADE,
                                 related_name='+')
+    max_gust_speed = models.IntegerField(null=True)
     precipitation = models.FloatField(null=True)
     cloud_cover = models.IntegerField(null=True)
     events = models.CharField(max_length=150, null=True)
     wind_dir_degrees = models.IntegerField(null=True)
     city = models.ForeignKey(City, on_delete=models.CASCADE)
+

@@ -21,6 +21,7 @@ To get a year's weather, the URL is:
 
 _<BASE_URL>/weather/yearly/\<year>/_
 
+
 To get a month's average weather, the URL is:
 
 _<BASE_URL>/weather/average-monthly/\<year>/\<month>/_
