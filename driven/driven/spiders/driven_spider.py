@@ -66,9 +66,9 @@ class DrivenSpider(scrapy.Spider):
 
     def parse(self, response):
         raw_form = response.xpath('//script[contains(text(), "currentSearch")]').extract_first()
-        page_size = int(re.findall(r'pageSize = (\d+);', raw_form)[0])
-        total_results = int(re.findall(r'totalResults = (\d+);', raw_form)[0])
-        category_id = int(re.findall(r'categoryId = (\d+);', raw_form)[0])
+        page_size = int(re.findall(r'pageSize\s*=\s*(\d+);', raw_form)[0])
+        total_results = int(re.findall(r'totalResults\s*=\s*(\d+);', raw_form)[0])
+        category_id = int(re.findall(r'categoryId\s*=\s*(\d+);', raw_form)[0])
 
         form_data = {
             "pageSize": page_size,
