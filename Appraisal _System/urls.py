@@ -2,32 +2,25 @@ from django.contrib.auth.decorators import login_required
 from django.urls import path
 from django.views.generic import RedirectView
 
-from system.views import loginUser, signupUser, logoutUser, index, \
-    ManagerIndexView, EmployeeIndexView, change_password, \
-    AppraisalDeleteView, AppraisalUpdateView, AppraisalCreateView
+from system.views import loginUser, signupUser, logoutUser, \
+    change_password, AppraisalDeleteView, AppraisalView, \
+    EmployeeListView, AppraisalListView, index
 
 urlpatterns = [
     path('', index, name='home'),
-    path('login/', loginUser, name='login'),
-    path('signup/', signupUser, name='signup'),
-    path('logout/', login_required(logoutUser), name='logout'),
+    path('login', loginUser, name='login'),
+    path('signup', signupUser, name='signup'),
+    path('logout', login_required(logoutUser), name='logout'),
+    path('password', change_password, name='change_password'),
 
+    path('admin', RedirectView.as_view(url='/admin'), name='admin_home'),
+    path('employees', EmployeeListView.as_view(), name='view_employees'),
 
-    path('admin/', RedirectView.as_view(url='/admin'), name='admin_home'),
-
-
-    path('manager/', ManagerIndexView.as_view(), name='manager_home'),
-    path('manager/employee/<int:pk>', EmployeeIndexView.as_view(),
-         name='view_employee'),
-
-    path('manager/appraisal/add', AppraisalCreateView.as_view(), name='add_appraisal'),
-    path('manager/apparaisal/delete/<int:pk>', AppraisalDeleteView.as_view(),
+    path('appraisal/view/<int:pk>', AppraisalListView.as_view(),
+         name='view_appraisals'),
+    path('appraisal/add', AppraisalView.as_view(), name='add_appraisal'),
+    path('apparaisal/delete/<int:id>', AppraisalDeleteView.as_view(),
          name='delete_appraisal'),
-    path('manager/apparaisal/update/<int:pk>', AppraisalUpdateView.as_view(),
+    path('apparaisal/update/<int:id>', AppraisalView.as_view(),
          name='update_appraisal'),
-
-
-    path('employee/', EmployeeIndexView.as_view(), name='employee_home'),
-    path('profile/password', change_password, name='change_password')
-
 ]
