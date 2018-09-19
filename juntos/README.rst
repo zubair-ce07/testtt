@@ -2,7 +2,7 @@ Balloting application (Juntos) Developing & Testing
 ----------------------------------------------------------
 
 Major Requirements:
- - Python3.7
+ - Python3.5
  - Django2.1.1
 
 First, create a virtual environment and install requirements (Make sure you've installed python3.5):

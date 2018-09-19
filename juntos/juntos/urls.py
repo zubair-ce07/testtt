@@ -9,7 +9,7 @@ urlpatterns = [
     path('', include('user.urls', namespace='user')),
     path('ballot/', include('ballot.urls', namespace='ballot')),
 ]
-handler404 = 'juntos.views.handler404'
+handler404 = 'juntos.views.handler404'  # Works only when DEBUG = False
 
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
