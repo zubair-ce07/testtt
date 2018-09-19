@@ -58,3 +58,6 @@ target/
 
 # VSCode
 .vscode
+
+# data files
+ResultHandler/data.csv
