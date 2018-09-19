@@ -80,12 +80,8 @@ class GenericParser(BaseParseSpider):
         return self.gender_lookup(' '.join(category)) or Gender.ADULTS.value
 
     def request_colors(self, response):
-        requests = []
         color_urls = clean(response.css('.swatches.color li span::attr(data-href)'))
-        for url in color_urls:
-            url = add_or_replace_parameter(url, 'format', 'ajax')
-            requests.append(Request(url=url, callback=self.parse_color))
-        return requests
+        return [Request(add_or_replace_parameter(url, 'format', 'ajax'), self.parse_color) for url in color_urls]
 
     def parse_color(self, response):
         garment = response.meta['garment']
@@ -93,13 +89,9 @@ class GenericParser(BaseParseSpider):
         return self.next_request_or_garment(garment)
 
     def request_size(self, response):
-        requests = []
         size_sel = response.css('.swatches.option')
         size_urls = clean(size_sel[0].css('.swatchanchor ::attr(data-href)'))
-        for url in size_urls:
-            url = add_or_replace_parameter(url, 'format', 'ajax')
-            requests.append(Request(url=url, callback=self.parse_size))
-        return requests
+        return [Request(add_or_replace_parameter(url, 'format', 'ajax'), self.parse_size) for url in size_urls]
 
     def parse_size(self, response):
         garment = response.meta['garment']
@@ -110,14 +102,10 @@ class GenericParser(BaseParseSpider):
         return self.next_request_or_garment(garment)
 
     def request_fiting(self, response):
-        requests = []
         fiting_sel = response.css('.swatches.option')
         if len(fiting_sel) > 1:
             fiting_urls = clean(fiting_sel[1].css('.swatchanchor ::attr(data-href)'))
-            for url in fiting_urls:
-                url = add_or_replace_parameter(url, 'format', 'ajax')
-                requests.append(Request(url=url, callback=self.parse_fiting))
-            return requests
+            return [Request(add_or_replace_parameter(url, 'format', 'ajax'), self.parse_fiting) for url in fiting_urls]
         return []
 
     def parse_fiting(self, response):
@@ -127,7 +115,7 @@ class GenericParser(BaseParseSpider):
 
     def request_images(self, response):
         url = clean(response.xpath("//input[@name='scene7url']/@value"))[0]
-        return [Request(url=url, callback=self.parse_images)]
+        return [Request(url, self.parse_images)]
 
     def parse_images(self, response):
         garment = response.meta['garment']
