@@ -5,15 +5,6 @@ import scrapy
 from scrapy.loader.processors import Join, MapCompose, TakeFirst
 from w3lib.html import remove_tags
 
-# class Product(scrapy.Item):
-#     """This class holds item data fields."""
-#     item_detail_url = scrapy.Field()
-#     category = scrapy.Field()
-#     product_title = scrapy.Field()
-#     actual_price = scrapy.Field()
-#     sale_price = scrapy.Field()
-#     sizes = scrapy.Field()
-#     description = scrapy.Field()
 
 class Product(scrapy.Item):
     """This class holds item data fields."""

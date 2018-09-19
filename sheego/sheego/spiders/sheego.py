@@ -1,5 +1,5 @@
 """
-This module crawl pages and get data.
+This module crawls pages and gets data.
 """
 import re
 import scrapy
@@ -8,7 +8,7 @@ from ..items import Product
 
 
 class SheegoSpider(scrapy.Spider):
-    """This class crawl Sheego pages"""
+    """This class crawls Sheego pages"""
     name = 'sheego'
 
     def start_requests(self):
@@ -17,7 +17,7 @@ class SheegoSpider(scrapy.Spider):
         yield scrapy.Request(url=start_url, callback=self.parse)
 
     def parse(self, response):
-        """This method crawl page urls."""
+        """This method crawls page urls."""
         level1_link = response.css(
             '.cj-mainnav__entry>a::attr(href)').extract()
         for url in level1_link:
@@ -25,7 +25,7 @@ class SheegoSpider(scrapy.Spider):
                 url=url, callback=self.parse_item_url)
 
     def parse_item_url(self, response):
-        """This method crawl item detail url."""
+        """This method crawls item detail url."""
         item_url = response.css(
             '.product__wrapper--bottom>a::attr(href)').extract()
         for url in item_url:
@@ -36,7 +36,7 @@ class SheegoSpider(scrapy.Spider):
         next_page = response.css(
             '.paging__btn--next>a::attr(href)').extract_first()
         if next_page:
-            # checking if their is next page
+            # checking if there is next page
             next_page_url = response.urljoin(next_page)
             yield scrapy.Request(
                 url=next_page_url, callback=self.parse_item_url)
@@ -47,6 +47,7 @@ class SheegoSpider(scrapy.Spider):
         pattern = r'^[A-Z\d/\s]+$'
         title = response.css('.p-details__name::text').extract_first()
         item_size = response.css('.sizespots__item::text').extract()
+        full_price = response.css('.p-details__price>span::text').extract_first()
         category = response.css(
             '.l-bold.l-text-1::text').extract_first().strip()
         for size in item_size:
@@ -59,8 +60,8 @@ class SheegoSpider(scrapy.Spider):
         loader.add_value('item_detail_url', response.url)
         loader.add_value('category', category)
         loader.add_value('product_title', title.strip())
-        loader.add_css(
-            'full_price', '.p-details__price>span::text')
+        loader.add_value(
+            'full_price', full_price)
         loader.add_css(
             'sale_price', '.at-lastprice::text')
         loader.add_value('sizes', available_size)
