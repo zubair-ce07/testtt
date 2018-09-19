@@ -117,7 +117,7 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_BEAT_SCHEDULE = {
     'update_ballots_status': {
-        'task': 'ballot.tasks.update_ballots_status',
+        'task': 'update_ballots_status',
         'schedule': crontab(minute=1),
     },
 }
