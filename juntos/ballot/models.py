@@ -57,6 +57,15 @@ class Ballot(models.Model):
         return self.choice_set.all()
 
     @property
+    def votes_casted(self):
+        """
+        Provides choice sets of Ballot
+        :return: choice set.
+        """
+        total_casted_votes = sum(choice.votes for choice in self.choices)
+        return total_casted_votes
+
+    @property
     def should_remain_active(self) -> bool:
         """
         Returns if a ballot deadline has come/passed recently
