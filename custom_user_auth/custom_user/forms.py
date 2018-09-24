@@ -49,10 +49,10 @@ class UserEditForm(forms.ModelForm):
                 'max_length': strings.USERNAME_MAX_LENGTH
             },
             'first_name': {
-                'max_length': strings.FIRSTNAME_REQUIRED
+                'max_length': strings.FIRSTNAME_MAX_LENGTH
             },
             'last_name': {
-                'max_length': strings.LASTNAME_REQUIRED
+                'max_length': strings.LASTNAME_MAX_LENGTH
             },
         }
 

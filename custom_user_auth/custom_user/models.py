@@ -4,7 +4,7 @@ this module contains all the modles of this django app
 from datetime import datetime
 from django.db import models
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser, Permission, Group
-
+from . import strings
 
 class MyUserManager(BaseUserManager):
     """
@@ -54,9 +54,9 @@ class MyUser(AbstractBaseUser):
         max_length=150,
         unique=True,
         error_messages={
-            'unique': "A user with that username already exists.",
-            'required': "Username is required",
-            'max_length': "username should be of maximum length of 150.",
+            'unique': strings.USERNAME_UNIQUE,
+            'required': strings.USERNAME_REQUIRED,
+            'max_length': strings.USERNAME_MAX_LENGTH,
         },
     )
 
@@ -65,7 +65,7 @@ class MyUser(AbstractBaseUser):
         verbose_name="first name",
         blank=True,
         error_messages={
-            'max_length': "first name should be of maximum length of 40.",
+            'max_length': strings.FIRSTNAME_MAX_LENGTH,
         },
     )
 
@@ -74,7 +74,7 @@ class MyUser(AbstractBaseUser):
         verbose_name="last name",
         blank=True,
         error_messages={
-            'max_length': "last name should be of maximum length of 40.",
+            'max_length': strings.LASTNAME_MAX_LENGTH,
         },
     )
 
@@ -83,7 +83,7 @@ class MyUser(AbstractBaseUser):
         max_length=255,
         blank=True,
         error_messages={
-            'max_length': "email should be of maximum length of 255.",
+            'max_length': strings.EMAIL_MAX_LENGTH,
         },
     )
 
