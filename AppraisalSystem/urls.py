@@ -15,11 +15,16 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from rest_framework import routers
+from AppraisalApp.Api import views
+
+router = routers.DefaultRouter()
+router.register(r'employees', views.EmployeeViewSet)
+router.register(r'feedbacks', views.FeedbackViewSet)
+
 
 urlpatterns = [
     path('appraisal/', include('AppraisalApp.urls', namespace='appraisal')),
-    path('api/', include('AppraisalApp.Api.urls', namespace='api')),
-    path('api-auth/', include('rest_framework.urls')),
     path('admin/', admin.site.urls),
-    # path('authenticate/', include('django.contrib.auth.urls')),
+    path('', include(router.urls)),
 ]
