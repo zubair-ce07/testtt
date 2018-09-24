@@ -1,14 +1,11 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout, authenticate
-from django.views.generic import View
+from django.views.generic import View, TemplateView
 from .forms import UserRegisterForm, UserLoginForm, UserEditForm, UserChangePasswordForm
 
 
-class IndexView(View):
+class IndexView(TemplateView):
     template_name = 'user/index.html'
-
-    def get(self, request):
-        return render(request, self.template_name)
 
 
 class UserFormView(View):
@@ -69,8 +66,6 @@ class UserLoginFormView(View):
                 return render(request, self.template_name, {'form': form, 'error_message': error})
         else:
             return render(request, self.template_name, {'form': form})
-
-        return render(request, self.template_name, {'form': form})
 
 
 def logout_view(request):

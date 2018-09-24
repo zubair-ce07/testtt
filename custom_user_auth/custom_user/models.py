@@ -1,10 +1,22 @@
+"""
+this module contains all the modles of this django app
+"""
+from datetime import datetime
 from django.db import models
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser, Permission, Group
-from datetime import datetime
 
 
 class MyUserManager(BaseUserManager):
+    """
+    a user manager for custom user
+    """
     def create_user(self, username, password):
+        """
+        a method that create a user with provided username and password
+        :param username:
+        :param password:
+        :return:
+        """
         if not username:
             raise ValueError('Users must have a username')
         user = self.model(
@@ -16,6 +28,12 @@ class MyUserManager(BaseUserManager):
         return user
 
     def create_superuser(self, username, password):
+        """
+        a method that create a super user with provided username and password
+        :param username:
+        :param password:
+        :return:
+        """
         if not username:
             raise ValueError('Users must have a username')
         user = self.model(
@@ -23,12 +41,15 @@ class MyUserManager(BaseUserManager):
         )
 
         user.set_password(password)
-        user.is_admin = True
+        user.is_superuser = True
         user.save(using=self._db)
         return user
 
 
 class MyUser(AbstractBaseUser):
+    """
+    a custom user codel class
+    """
     username = models.CharField(
         max_length=150,
         unique=True,
@@ -66,12 +87,13 @@ class MyUser(AbstractBaseUser):
         },
     )
 
-    is_active = models.BooleanField(default=True)
-    is_admin = models.BooleanField(default=False)
+    is_active = models.BooleanField(verbose_name='active', default=True)
+    is_superuser = models.BooleanField(verbose_name='superuser status', default=False)
+    is_staff = models.BooleanField(verbose_name='staff status', default=True)
 
     date_joined = models.DateTimeField(default=str(datetime.now()))
-    permissions = models.ManyToManyField(Permission)
-    groups = models.ManyToManyField(Group)
+    permissions = models.ManyToManyField(Permission, blank=True)
+    groups = models.ManyToManyField(Group, blank=True)
 
     objects = MyUserManager()
 
@@ -84,20 +106,16 @@ class MyUser(AbstractBaseUser):
         return self.email
 
     def has_perm(self, perm, obj=None):
-        "Does the user have a specific permission?"
-        # Simplest possible answer: Yes, always
+        """Does the user have a specific permission?
+        # Simplest possible answer: Yes, always"""
         return True
 
     def has_module_perms(self, app_label):
-        "Does the user have permissions to view the app `app_label`?"
-        # Simplest possible answer: Yes, always
+        """Does the user have permissions to view the app `app_label`?
+        # Simplest possible answer: Yes, always"""
         return True
 
-    @property
-    def is_staff(self):
-        "Is the user a member of staff?"
-        # Simplest possible answer: All admins are staff
-        return self.is_admin
+
 
     def get_full_name(self):
         """
@@ -109,3 +127,9 @@ class MyUser(AbstractBaseUser):
     def get_short_name(self):
         """Return the short name for the user."""
         return self.first_name
+
+    class Meta:
+        """
+        Meta class of custom user
+        """
+        verbose_name = "user"
