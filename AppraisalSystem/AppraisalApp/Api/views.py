@@ -1,6 +1,6 @@
 from rest_framework import generics
 from AppraisalApp import models
-from .serializers import EmployeeSerializer, CompetencySerializer, FeedbackSerializer
+from .serializers import EmployeeSerializer, CompetencySerializer, FeedbackSerializer, CompetencyFeedbackSerializer
 
 
 class EmployeeRUDView(generics.RetrieveUpdateDestroyAPIView):
@@ -22,7 +22,7 @@ class EmployeeListView(generics.ListCreateAPIView):
 
 
 class CompetencyListView(generics.ListAPIView):
-    serializer_class = CompetencySerializer
+    serializer_class = CompetencyFeedbackSerializer
 
     def get_queryset(self):
         return models.Competency.objects.all()
@@ -30,7 +30,7 @@ class CompetencyListView(generics.ListAPIView):
 
 class CompetencyRetrieveView(generics.RetrieveAPIView):
     lookup_field = 'pk'
-    serializer_class = CompetencySerializer
+    serializer_class = CompetencyFeedbackSerializer
     queryset = models.Competency.objects.all()
 
 

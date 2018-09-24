@@ -17,8 +17,8 @@ class FeedbackSerializer(ModelSerializer):
         fields = '__all__'
 
     def create(self, validated_data):
-        from_user= validated_data.get('from_user')
-        to_user= validated_data.get('to_user')
+        from_user = validated_data.get('from_user')
+        to_user = validated_data.get('to_user')
         if to_user.reports_to == from_user:
             return super().create(validated_data)
         else:
@@ -42,3 +42,11 @@ class CompetencySerializer(ModelSerializer):
     def check_value(self, value):
         value_checked = value if 1 >= value <= 10 else ValidationError("Value out of range")
         return value_checked
+
+
+class CompetencyFeedbackSerializer(ModelSerializer):
+    feedback = FeedbackSerializer(read_only=True)
+
+    class Meta:
+        model = Competency
+        fields = '__all__'
