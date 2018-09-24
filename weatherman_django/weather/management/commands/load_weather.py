@@ -1,22 +1,45 @@
+"""
+this module contains a django command that read data from  files from a directory and save it into
+ Database
+"""
 import glob
 import csv
-
-from django.core.management.base import BaseCommand, CommandError
+import logging
+from django.core.management.base import BaseCommand
 
 from weather.models import Weather, City, WeatherCharacteristics
 
+logger = logging.getLogger("weather_logger")
+
 
 class Command(BaseCommand):
-    help = 'Read the data from csv files and save it into database'
+    """
+    this is a custom django command to store weather data from files to DB
+    """
+    help = 'Read the weather data from csv files present at the directory that you specify' \
+           ' and save that data into database'
 
     def add_arguments(self, parser):
+        """
+        this method defines the command line arguments required for this command
+        :param parser:
+        :return:
+        """
         parser.add_argument("dir_path", help="Path of Weather Data Directory", type=str)
 
     def handle(self, *args, **options):
+        """
+        when command is called, this method will handle it and work accordingly
+        :param args:
+        :param options:
+        :return:
+        """
         dir_path = options['dir_path']
         files_path = glob.glob(dir_path + "/*weather*[.txt|.csv]")
 
         if not files_path:
+            # it should be printed on console as it tells whether the data directory was correct
+            # or not
             self.stdout.write("No Weather files found so no data is added\n")
             return
         for file_path in files_path:
@@ -24,10 +47,17 @@ class Command(BaseCommand):
             city, status = City.objects.get_or_create(name=city_name)
             read_csv_and_save_data(file_path, city)
 
+        # it should be printed on console as it tells whether the data is synced or not
         self.stdout.write("Added the new data to DB and does not changed the old data\n")
 
 
 def read_csv_and_save_data(file_path, city):
+    """
+    this function read weather data from CSV file given in file_path and save that data in DB
+    :param file_path:
+    :param city:
+    :return:
+    """
     with open(file_path) as csvfile:
         weather_data_csv = csv.DictReader(csvfile, delimiter=',')
         for row in weather_data_csv:
@@ -40,9 +70,9 @@ def read_csv_and_save_data(file_path, city):
                 return
             try:
                 weather = Weather.objects.get(date=weather_date, city=city)
-                print("already present")
+                logger.info("already present")
             except:
-                print("adding new")
+                logger.info("adding new")
                 weather = Weather()
                 weather.date = weather_date
                 try:
@@ -160,5 +190,5 @@ def read_csv_and_save_data(file_path, city):
                     weather.wind = weather.wind
                     weather.save()
                 except:
-                    print(
+                    logger.error(
                         "some error occured so data of date: %s could not be saved" % weather_date)

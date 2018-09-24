@@ -1,3 +1,6 @@
+"""
+this module contains the urls of this django app
+"""
 from django.urls import path
 from . import views
 
