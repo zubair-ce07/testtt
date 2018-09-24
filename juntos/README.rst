@@ -21,6 +21,7 @@ Setup Postgres (Make sure you've installed postgres and it is working on your ma
     psql
     CREATE USER <user-name> with PASSWORD '<password>';
     ALTER USER <user-name> with SUPERUSER;
+    CREATE DATABASE juntos;
 
 Now put the user-name and pasword to `settings.py` file in `DATABASES` configurations.
 
