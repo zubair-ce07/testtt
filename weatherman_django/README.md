@@ -8,7 +8,7 @@ This is a Django App of Weatherman
 To Load weather data from files to Database, do the following:
 
 In Django project **Root** directory run command:
-_$ python manage.py load_weather <weather_files_directory>_
+_$ python manage.py store_weather_data <weather_files_directory>_
 
 **Note** that weather files must be of CSV format and name should follow this convention:
 
