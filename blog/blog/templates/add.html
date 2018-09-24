@@ -1,0 +1,32 @@
+<!doctype html>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<nav>
+   <h1>Blog</h1>
+   <ul>
+      {% if session['user_available'] %}
+      <li><span>{{ session['current_user'] }}</span>
+      <li><a href="{{ url_for('logout') }}">Log Out</a>
+         {% else %}
+      <li><a href="{{ url_for('signup') }}">Register</a>
+      <li><a href="{{ url_for('signin') }}">Log In</a>
+         {% endif %}
+   </ul>
+</nav>
+{% block content %}
+<form action="" method="POST">
+   <table align="center">
+      <tr>
+         <td>{{ blog_post.title(class="form-control",placeholder="Title") }}</td>
+      </tr>
+      <tr>
+         <td>{{ blog_post.description(class="form-control",rows="3",cols = 100,placeholder="Description") }}</td>
+      </tr>
+      <tr>
+         <td align="center"><input class="submitbt" type="submit" value="Post" /></td>
+      </tr>
+   </table>
+</form>
+{% endblock %}
+</div>
+</body>
+</html>

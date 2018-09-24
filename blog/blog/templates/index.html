@@ -1,0 +1,55 @@
+
+
+<!doctype html>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<nav>
+   <h1>Blog</h1>
+   <ul>
+      {% if session['user_available'] %}
+      <li><span>{{ session['current_user'] }}</span>
+      <li><a href="{{ url_for('logout') }}">Log Out</a>
+         {% else %}
+      <li><a href="{{ url_for('signup') }}">Register</a>
+      <li><a href="{{ url_for('signin') }}">Log In</a>
+         {% endif %}
+   </ul>
+</nav>
+<section class="content">
+   {% block header %}
+   <h1>{% block title %}Posts{% endblock %}</h1>
+   {% if session['user_available'] %}
+   <a class="action" href="{{ url_for('add_post') }}">New</a>
+   {% endif %}
+   {% endblock %}
+   {% block content %}
+   <div class="ps">
+      {% for posts_data in posts_data_list %}
+      <div class="panel panel-info">
+         <div class="panel-heading">
+            <div>
+               <h3 class="panel-title">{{posts_data.title}}</h3>
+            </div>
+            <div class="panel-body">
+               <p>{{posts_data.description}}</p>
+            </div>
+            <div id="icon">
+               BY: {{posts_data.username}}
+               {% if posts_data.username ==session['current_user'] %}
+               {% if session['user_available'] %}
+               <a class="glyphicon glyphicon-pencil" href="/update/{{ posts_data.pid }}/{{posts_data.username}}">Edit</a>&nbsp &nbsp
+               <a class="glyphicon glyphicon-trash" id="del" href="/delete/{{ posts_data.pid }}/{{posts_data.username}}"
+                  onclick="return confirm('Are you sure?');">Delete</a>
+               {% endif %}
+            </div>
+         </div>
+      </div>
+      {% endif %}
+      {% endfor %}
+   </div>
+</section>
+{% endblock %}
+<div class="erorr">
+   {% for message in get_flashed_messages() %}
+   <div class="flash">{{ message }}</div>
+   {% endfor %}
+</div>

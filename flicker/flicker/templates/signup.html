@@ -1,0 +1,37 @@
+{% extends "base_auth.html" %}
+{% block title %}SingUp{% endblock %}
+{% block content %}
+<div class="container">
+    <div class="card card-container">
+        <div class="well heading-auth"><h3>SignUp</h3></div>
+        <img id="profile-img" class="profile-img-card"
+             src="//ssl.gstatic.com/accounts/ui/avatar_2x.png"/>
+        <p id="profile-name" class="profile-name-card"></p>
+        <form class="form-signin" method="POST" enctype="multipart/form-data">
+            <span id="reauth-email" class="reauth-email"></span>
+            {{ signup_form.username(id="inputEmail", class="form-control",
+            autofocus="",placeholder="User Name")}}
+            {{ signup_form.email(placeholder="Email",id="inputEmail",
+            class="form-control", autofocus="") }}
+            {{ signup_form.password(placeholder="Password",id="inputPassword",
+            class="form-control", required="") }}
+            <div class="form-group">
+                <label for="profilePic">Upload Profile Pic</label>
+                <input type="file" class="form-control-file" name="file"
+                       required>
+            </div>
+            {{ signup_form.submit(class="btn btn-lg btn-primary btn-block
+            btn-block btn-signin")}}
+        </form><!-- /form -->
+        <div class="noacc">Already have an account! <a class="signup"
+                                                       href="{{ url_for('signin') }}">Sign
+            In Here</a></div>
+        {% for message in get_flashed_messages() %}
+        <div class="alert alert-danger">
+            <div class="flash">{{ message }}</div>
+        </div>
+        {% endfor %}
+    </div><!-- /card-container -->
+
+</div><!-- /container -->
+{% endblock %}

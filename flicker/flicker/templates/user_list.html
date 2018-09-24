@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Users{% endblock %}
+{% block content %}
+<div class="container">
+    {% if users_list %}
+    <div class="container">
+        <h2>User List</h2>
+        <div class="row">
+            {% for user in users_list %}
+            {% if session['current_user'] != user.username %}
+            <div class="col-md-4">
+                <div class="thumbnail">
+                    <a href="{{ url_for('static', filename = user.profile_image_url) }}"
+                       target="_blank">
+                        <img src="{{ url_for('static', filename = user.profile_image_url) }}"
+                             alt="Lights" style="width:100%">
+                        <div class="username">
+                            <h3>
+                                <a href="/user/{{ user.uid }}">{{ user.username
+                                    }}</a>
+                            </h3>
+                        </div>
+                        <div class="email">
+                            <p>{{ user.email }}</p>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="alert alert-danger">
+                No User Found
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-danger">
+        No User Found
+    </div>
+    {%endif%}
+</div>
+{% endblock %}
