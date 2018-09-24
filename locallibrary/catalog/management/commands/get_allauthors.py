@@ -25,7 +25,7 @@ class Command(BaseCommand):
         if not authors:
             self.stdout.write(self.style.SUCCESS('No author avaialbe'))
         for author in authors:
-            print(
-                'First Name: {}\nLast Name: {}\nDate of Birth: {}'.format(author.first_name,
+            self.stdout.write(self.style.SUCCESS(
+                'First Name: {} Last Name: {} Date of Birth: {}'.format(author.first_name,
                                                                           author.last_name, author.date_of_birth)
-            )
+            ))
