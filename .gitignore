@@ -58,3 +58,7 @@ target/
 
 # VSCode
 .vscode
+
+*/db.sqlite3
+django_user/
+
