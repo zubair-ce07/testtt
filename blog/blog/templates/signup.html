@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Sign Up</title>
+    <link href="static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="http://getbootstrap.com/examples/signin/signin.css" rel="stylesheet">
+    <script src="./Signin Template for Bootstrap_files/ie-emulation-modes-warning.js"></script>
+</head>
+<body>
+<div class="container">
+    <form class="form-signin" action="" method="POST">
+        <h2 class="form-signin-heading">Please Sign Up</h2>
+        {{ signup_form.username(id="inputEmail", class="form-control", autofocus="",placeholder="User Name")}}
+        {{ signup_form.email(placeholder="Email",id="inputEmail", class="form-control", autofocus="") }}
+        {{ signup_form.password(placeholder="Password",id="inputPassword", class="form-control", required="") }}
+        {{ signup_form.submit(class="btn btn-lg btn-primary btn-block")}}
+        <div class="noacc">Already have an account! <a class="signup" href="{{ url_for('signin') }}">Sign In Here</a></div>
+    </form>
+
+
+    </div>
+    <div class="erorr">
+       {% for message in get_flashed_messages() %}
+       <div class="flash">{{ message }}</div>
+       {% endfor %}
+    </div>
+
+    <script src="./Signin Template for Bootstrap_files/ie10-viewport-bug-workaround.js"></script>
+</body>
+</html>
