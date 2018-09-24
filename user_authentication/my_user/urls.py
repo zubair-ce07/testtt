@@ -1,6 +1,9 @@
-from django.urls import path, reverse
-from . import views
+"""
+this module contains all the urls of this app
+"""
+from django.urls import path
 from django.contrib.auth.decorators import login_required
+from . import views
 
 app_name = 'my_user'
 
