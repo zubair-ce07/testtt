@@ -11,31 +11,29 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            'username', 'first_name', 'last_name',
+            'pk', 'username', 'first_name', 'last_name',
             'email', 'password', 'title', 'department',
             'user_level', 'report_to'
         ]
+    read_only_fields = ['pk']
 
     def validate(self, object):
         user = None
         request = self.context.get("request")
-        if request and hasattr(request, "user"):
-            user = request.user
-            if user.user_level=="admin":
-                object['password'] = make_password(object['password'])
-                return object
-            else:
-                raise serializers.ValidationError(
-                    "You do not have permission for this operation")
+        user = request.user
+        if user.user_level == "admin":
+            object['password'] = make_password(object['password'])
+            return object
         else:
-            raise serializers.ValidationError("You are not logged in")
-
+            raise serializers.ValidationError(
+                {'Permission-Denied': 'You do not have '
+                               'permission for this operation'})
 
 class AppraisalSerializer(serializers.ModelSerializer):
     class Meta:
         model = Appraisal
-        fields = ('pk','description', 'comment', 'to_user')
-        read_only_fields=['pk']
+        fields = ('pk', 'description', 'comment', 'to_user')
+        read_only_fields = ['pk']
 
 
 class CompetenceSerializer(serializers.ModelSerializer):
@@ -43,12 +41,14 @@ class CompetenceSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Competence
-        fields = ('appraisal', 'decision_making', 'confidence', 'problem_solving')
+        fields = (
+            'appraisal', 'decision_making', 'confidence', 'problem_solving'
+        )
 
     def create(self, validated_data):
         user = self.context.get("request").user
         appraisal_data = self.validated_data.get('appraisal')
-        app = Appraisal.objects.create(from_user=user,**appraisal_data)
+        app = Appraisal.objects.create(from_user=user, **appraisal_data)
         return Competence.objects.create(
             appraisal=app,
             decision_making=validated_data['decision_making'],
@@ -75,11 +75,16 @@ class CompetenceSerializer(serializers.ModelSerializer):
 
     def validate(self, object):
         request = self.context.get("request")
-        if request and hasattr(request, "user"):
-            user = request.user
+        user = request.user
+
+        to_user = object.get("appraisal").get("to_user")
+        if to_user.report_to == user:
             if user.user_level == "employee":
                 raise serializers.ValidationError(
-                    "You do not have permission for this operation")
+                    {'Permission-Denied': 'You do not have '
+                                   'permission for this operation'})
             return object
         else:
-            raise serializers.ValidationError("You are not logged in")
+            raise serializers.ValidationError(
+                {'Permission-Denied': 'You are not allowed to give '
+                               'appraisal to this employee'})
