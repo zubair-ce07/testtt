@@ -35,5 +35,3 @@ class GreatfoodhallLoader(ItemLoader):
     default_item_class = GreatfoodhallItem
     categories_in = MapCompose(remove_tags, filter_categories)
     image_url_in = MapCompose(filter_image_url)
-
-

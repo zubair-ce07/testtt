@@ -6,8 +6,8 @@ from scrapy.spiders import CrawlSpider
 
 
 class GreatfoodhallSpider(CrawlSpider):
-    name = 'greatfoodhall'
-    start_urls = ['http://www.greatfoodhall.com/']
+    name = "greatfoodhall"
+    start_urls = ["http://www.greatfoodhall.com/"]
 
     def parse(self, response):
         category_links = response.xpath('//div[@class="item"]/a/@href').extract()
