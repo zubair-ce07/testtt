@@ -1,7 +1,10 @@
-from django.urls import path, reverse
-from . import views
-from django.contrib.auth.decorators import login_required, user_passes_test
+"""
+this module contains the urls of this django app
+"""
+from django.urls import path
+from django.contrib.auth.decorators import login_required
 from .decorators import anonymous_required
+from . import views
 
 app_name = 'my_user'
 
