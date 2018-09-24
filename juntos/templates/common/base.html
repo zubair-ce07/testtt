@@ -43,7 +43,7 @@
                 <li class="nav-hover">
                     <a href="{% url 'user:index' %}">
                         <span class="glyphicon glyphicon-user" style="color: #f0ad4e" aria-hidden="true"></span>&nbsp;
-                        Welcome {{ user.get_username | capfirst }}
+                        Welcome {{ user.first_name | capfirst }}
                     </a>
                 </li>
                 <li>

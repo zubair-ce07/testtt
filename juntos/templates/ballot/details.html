@@ -21,7 +21,7 @@
                         <div class="list-group-item">There is no choice available for this Ballot.</div>
                         {% endfor %}
                         <br>
-                        <div class="col-md-12"><b>Created by: </b> {{ballot.created_by.username | capfirst}}</div>
+                        <div class="col-md-12"><b>Created by: </b> {{ballot.created_by.first_name | capfirst}}</div>
                     </div>
                     <div class="panel-footer">
                         <a href="{% url 'ballot:ballot_list' %}">

@@ -8,7 +8,7 @@
             <!-- Left user Info -->
             <div class="col-sm-3 col-md-3">
                 <div class="panel panel-default">
-                    <div class="panel-heading"><h4>Welcome {{ user.username | capfirst }}</h4></div>
+                    <div class="panel-heading"><h4>Welcome {{ user.first_name | capfirst }}</h4></div>
                     <div class="panel-body">
                         {% if user.profile.profile_photo %}
                             <a href="{{ user.profile.profile_photo.url }}">
@@ -17,7 +17,7 @@
                         {% else %}
                             <h3><a href="{% url 'user:edit_profile' %}">Add Profile Image</a></h3>
                         {% endif %}
-                        <h1>{{ user.username | capfirst }} <br>
+                        <h1>{{ user.first_name | capfirst }} <br>
                             <small>{{ user.email}}</small>
                         </h1>
                         <a href="{% url 'user:edit_all_info' %}">
