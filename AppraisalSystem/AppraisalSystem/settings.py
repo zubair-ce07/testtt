@@ -29,6 +29,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'rest_framework',
     'AppraisalApp.apps.AppraisalappConfig',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -116,3 +117,12 @@ STATIC_URL = '/static/'
 LOGIN_URL='/appraisal/login'
 #LOGIN_REDIRECT_URL = '/appraisal/profile'
 AUTH_USER_MODEL = 'AppraisalApp.Employee'
+
+
+REST_FRAMEWORK = {
+    # Use Django's standard `django.contrib.auth` permissions,
+    # or allow read-only access for unauthenticated users.
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
+    ]
+}

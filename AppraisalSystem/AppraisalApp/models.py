@@ -8,8 +8,8 @@ USER_TYPES = [("CEO", "CEO"), ("Manager", "Manager"), ("Worker", "Worker"), ]
 
 
 class Employee(AbstractUser):
-    employee_type = models.IntegerField(choices=USER_TYPES, blank=True, default="Worker")
-    reports_to = models.ForeignKey('self', on_delete=models.CASCADE, null=True)
+    employee_type = models.CharField(max_length=10, choices=USER_TYPES, blank=True, default="Worker")
+    reports_to = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True)
     address = models.CharField(max_length=100, blank=True)
 
     class Meta:

@@ -24,7 +24,8 @@ class LoginView(generic.View):
                 login(request, user)
                 return redirect('appraisal:home')
 
-        self.get(request)
+        context = {'form': form}
+        return render(request, 'registration/login.html', context)
 
 
 class SignUpView(generic.View):
@@ -42,6 +43,9 @@ class SignUpView(generic.View):
             user = authenticate(username=username, password=raw_password)
             login(request, user)
             return redirect('appraisal:home')
+        else:
+            context = {'form': form}
+            return render(request, 'registration/signup.html', context)
 
 
 @method_decorator(login_required, name='dispatch')
