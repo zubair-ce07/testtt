@@ -31,6 +31,13 @@ class UserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("You are not logged in")
 
 
+class AppraisalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Appraisal
+        fields = ('pk','description', 'comment', 'to_user')
+        read_only_fields=['pk']
+
+
 class CompetenceSerializer(serializers.ModelSerializer):
     appraisal = AppraisalSerializer()
 
