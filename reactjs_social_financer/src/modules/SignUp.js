@@ -44,7 +44,6 @@ const styles = theme => ({
   submit: {
     marginTop: theme.spacing.unit * 3,
   },
-
   form_control: {
     minWidth: '45%',
     marginLeft: theme.spacing.unit,
@@ -111,6 +110,10 @@ class SignUp extends React.Component {
         ...newPartialInput,
       }
     }))
+  }
+
+  componentDidMount() {
+    document.title = 'Sign Up'
   }
 
   render() {

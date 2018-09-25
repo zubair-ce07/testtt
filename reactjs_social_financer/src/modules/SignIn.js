@@ -42,6 +42,7 @@ const styles = theme => ({
     marginTop: theme.spacing.unit,
   },
   submit: {
+    // backgroundColor: theme.palette.primary,
     marginTop: theme.spacing.unit * 3,
   },
   caption: {
@@ -89,6 +90,10 @@ class SignIn extends React.Component {
   });
 };
 
+componentDidMount() {
+  document.title = 'Sign In'
+}
+
   handleInputChange = (newPartialInput) => {
     this.setState(state => ({
       ...state,
@@ -116,6 +121,7 @@ class SignIn extends React.Component {
       if (this.state.role === 'AD') {
         const redirectUrl = Constants.baseUrl + 'admin/'
         var win = window.open(redirectUrl, '_blank');
+        win.focus();
       }
     }
 
@@ -163,7 +169,6 @@ class SignIn extends React.Component {
             <Link to="/signup">
             <Button
               fullWidth
-              color="primary"
               >
               Sign up
             </Button>

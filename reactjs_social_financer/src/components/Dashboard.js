@@ -12,6 +12,10 @@ import Divider from '@material-ui/core/Divider';
 import IconButton from '@material-ui/core/IconButton';
 import MenuIcon from '@material-ui/icons/Menu';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
+import EditIcon from '@material-ui/icons/Edit';
+import Button from '@material-ui/core/Button';
+import { Link } from "react-router-dom";
+
 import { mainListDonorItems, mainListConsumerItems, secondaryListItems } from '../components/listItems';
 import SimpleTable from '../components/SimpleTable'
 import { Redirect } from "react-router-dom";
@@ -84,12 +88,21 @@ const styles = theme => ({
     height: '100vh',
     overflow: 'auto',
   },
+  barbutton: {
+    backgroundColor: theme.palette.primary,
+    margin: theme.spacing.unit,
+    color: theme.palette.secondary,
+    fontWeight: 'bold',
+    '&:hover': {
+      backgroundColor: theme.palette.common.white,
+      color: theme.palette.primary,
+    },
+  }
 });
 
 class Dashboard extends React.Component {
   state = {
     open: true,
-    users: [],
     authorized: false,
   };
 
@@ -101,12 +114,37 @@ class Dashboard extends React.Component {
     this.setState({ open: false });
   };
 
+  handleSignOut = () => {
+    localStorage.removeItem('userId');
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('userRole');
+  }
+
   getMainListItems = () => {
     const role = localStorage.getItem('userRole');
     if (role === 'DN') {
       return mainListDonorItems
     }
     return mainListConsumerItems
+  }
+
+  handleEditClick = () => {
+    this.setState({
+      isEditProfileDialogOpen: true,
+    })
+  }
+
+  getEditBadge = () => {
+    if (this.props.editBadge) {
+      return (
+        <div>
+          <IconButton color='inherit' onClick={this.props.onEditClick}>
+            <EditIcon />
+          </IconButton>
+        </div>
+      );
+    }
+    return <div></div>
   }
 
   componentWillMount() {
@@ -124,11 +162,9 @@ class Dashboard extends React.Component {
       return <Redirect to='/' />
     }
 
-    var content = this.props.content;
-    if (content === undefined) {
-      content = <div><SimpleTable getUrl={this.props.getUrl}/> </div>
-    }
+    var content = this.props.content || <div></div>;
     var mainListItems = this.getMainListItems();
+    var editBadge = this.getEditBadge();
 
     return (
       <React.Fragment>
@@ -153,6 +189,15 @@ class Dashboard extends React.Component {
               <Typography variant="title" color="inherit" noWrap className={classes.title}>
                 Dashboard
               </Typography>
+              {editBadge}
+              <Link to='/'>
+                <Button variant="contained"
+                  color="error"
+                  className={classes.barbutton}
+                  onClick={this.handleSignOut}>
+                    Sign out
+                </Button>
+              </Link>
             </Toolbar>
           </AppBar>
           <Drawer
@@ -170,7 +215,7 @@ class Dashboard extends React.Component {
             <Divider />
             <List>{mainListItems}</List>
             <Divider />
-            <List>{secondaryListItems}</List>
+            {/* <List>{secondaryListItems}</List> */}
           </Drawer>
           <main className={classes.content}>
             <div className={classes.appBarSpacer} />

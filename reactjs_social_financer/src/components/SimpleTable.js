@@ -26,7 +26,7 @@ class SimpleTable extends React.Component {
     users: [],
   };
 
-  componentDidMount() {
+  fetchData = () => {
     let token = 'Token ' + localStorage.getItem('accessToken')
     Axios.get(this.props.getUrl, {
       headers: {
@@ -42,6 +42,16 @@ class SimpleTable extends React.Component {
     .catch((error) => {
       console.log(error);
     });
+  }
+
+  componentDidMount() {
+    this.fetchData()
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.reRender !== this.props.reRender) {
+      this.fetchData()
+    }
   }
 
   render() {
@@ -69,17 +79,42 @@ class SimpleTable extends React.Component {
                   <TableCell >{n.categories.join(', ')}</TableCell>
                   <TableCell >{n.address}</TableCell>
                   <TableCell ><a href={Constants.mapUrl + n.address.split(' ').join('+')}>View on maps</a></TableCell>
-                  <TableCell >
-                    <a href={n.address}>
+                  {this.props.shouldPairButtonShow ?
+                    (
+                      <TableCell>
                       <Button
                         color='primary'
                         variant='raised'
                         capitalized='false'
+                        onClick={() => this.props.handlePairClick(n.id)}
                         >
                           Pair
                         </Button>
-                    </a>
-                  </TableCell>
+                      </TableCell>
+                    )
+                    :
+                    (
+                      <TableCell>
+                    <Button
+                      color='primary'
+                      variant='raised'
+                      capitalized='false'
+                      onClick={() => this.props.handleFeedbackClick(n.id)}
+                      >
+                        Feedback
+                      </Button>
+                      <a>     </a>
+                      <Button
+                        color='primary'
+                        variant='raised'
+                        capitalized='false'
+                        onClick={() => this.props.handleReportClick(n.id)}
+                        >
+                          Report
+                        </Button>
+                        </TableCell>
+                    )}
+                  {/* {this.props.actionButton} */}
                 </TableRow>
               );
             })}

@@ -10,8 +10,7 @@ import CssBaseline from '@material-ui/core/CssBaseline';
 import Grid from '@material-ui/core/Grid';
 import Typography from '@material-ui/core/Typography';
 import CardMedia from '@material-ui/core/CardMedia';
-import FeedbackDialog from './FeedbackDialog'
-import ReportDialog from './ReportDialog'
+
 
 const styles = theme => ({
   '@global': {
@@ -51,50 +50,37 @@ class MiniProfile extends React.Component {
     feedbackDialogOpen: false
   }
 
-  handleFeedbackClick = () => {
-    this.setState({
-      feedbackDialogOpen: true
-    })
-  }
-
-  handleReportClick = () => {
-    this.setState({
-      reportDialogOpen: true
-    })
-  }
-
-  handleCancelFeedback = () => {
-    this.setState({
-      feedbackDialogOpen: false
-    })
-  }
-
-  handleCancelReport = () => {
-    this.setState({
-      reportDialogOpen: false
-    })
-  }
-
-  handle
+  // handleFeedbackClick = () => {
+  //   this.setState({
+  //     feedbackDialogOpen: true
+  //   })
+  // }
+  //
+  // handleReportClick = () => {
+  //   this.setState({
+  //     reportDialogOpen: true
+  //   })
+  // }
+  //
+  // handleCancelFeedback = () => {
+  //   this.setState({
+  //     feedbackDialogOpen: false
+  //   })
+  // }
+  //
+  // handleCancelReport = () => {
+  //   this.setState({
+  //     reportDialogOpen: false
+  //   })
+  // }
 
   render() {
     const { classes } = this.props;
     const { user } = this.props;
 
-    var cardActions = <div></div>
-    if (this.props.isMyProfile === undefined) {
-      cardActions = (
-        <CardActions className={classes.cardActions}>
-          <Button fullWidth variant='outlined' color="primary" onClick={this.handleFeedbackClick}>
-            Post Feedback
-          </Button>
-          <Button fullWidth variant='outlined' color="primary" onClick={this.handleReportClick}>
-            Report
-          </Button>
-        </CardActions>
-      );
-    }
+    var cardActions = this.props.cardActions || <div></div>
 
+    let default_picture = "http://chittagongit.com//images/profile-picture-icon/profile-picture-icon-29.jpg"
     var card = <div></div>;
     if (user !== undefined) {
       card = (
@@ -103,7 +89,7 @@ class MiniProfile extends React.Component {
             component="img"
             className={classes.media}
             height="280"
-            image="http://chittagongit.com//images/profile-picture-icon/profile-picture-icon-29.jpg"
+            image= {user && user.display_picture || default_picture}
             title="My Donor"
           />
           <CardHeader
@@ -133,7 +119,7 @@ class MiniProfile extends React.Component {
         </Card>
       );
     }
-    
+
     return (
     <React.Fragment>
       <CssBaseline />
@@ -143,8 +129,7 @@ class MiniProfile extends React.Component {
               {card}
             </Grid>
       </main>
-      <FeedbackDialog open={this.state.feedbackDialogOpen} handleClose={this.handleCancelFeedback} userId={user.id}/>
-      <ReportDialog open={this.state.reportDialogOpen} handleClose={this.handleCancelReport} userId={user.id}/>
+      {this.props.dialogs || <div></div>}
     </React.Fragment>
 );
   }

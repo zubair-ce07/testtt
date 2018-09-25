@@ -62,17 +62,12 @@ export const mainListConsumerItems = (
   </div>
 );
 
-function handleSignOut() {
-  localStorage.removeItem('userId');
-  localStorage.removeItem('accessToken');
-  localStorage.removeItem('userRole');
-}
 
 export const secondaryListItems = (
   <div>
     <Link to="/">
     <ListSubheader inset>Options</ListSubheader>
-    <ListItem button onClick={handleSignOut}>
+    <ListItem button>
       <ListItemIcon>
         <AssignmentIcon />
       </ListItemIcon>

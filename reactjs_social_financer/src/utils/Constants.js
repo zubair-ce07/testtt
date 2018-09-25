@@ -6,7 +6,7 @@ class Constants {
     this.loginPOST = this.url + 'accounts/login/';
     this.signupPOST = this.url + 'accounts/signup/';
     this.unpairedConsumersGET = this.url + 'accounts/consumers_list/';
-    this.userDetailGETPOST = this.url + 'accounts/consumers_list/';
+    this.pairUserPOST = this.url + 'accounts/consumers_list/';
     this.pairedConsumerGET = this.url + 'accounts/my_consumers/';
     this.myDonorGET = this.url + 'accounts/my_donor/';
     this.myProfileGET = this.url + 'accounts/profile/';
