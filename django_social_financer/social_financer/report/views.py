@@ -1,35 +1,40 @@
-from django.shortcuts import get_object_or_404
-from django.http import Http404
-from django.shortcuts import redirect
-from  rest_framework.views import APIView
-from rest_framework import generics, permissions
-from rest_framework.response import Response
+from django.shortcuts import render, get_object_or_404
+from django.views import generic
+from django.urls import reverse_lazy, reverse
+from django.http import HttpResponse, Http404, HttpResponseRedirect
 
-from .serializers import ReportModelSerializer, ViewReportsSerializer
+from .forms import ReportForm
+from .models import Report
 from accounts.models import UserProfile
-from accounts import permissions as local_permissions
 
 
-class PostReportView(APIView):
-    serializer_class = ReportModelSerializer
-    permission_classes = (permissions.IsAuthenticated, local_permissions.isPair)
+class ReportView(generic.FormView):
+    template_name = 'report/file_report.html'
+    form_class = ReportForm
+    context_object_name = 'form'
 
-    def post(self, request, format='json'):
+    def form_valid(self, form):
+        new_Report = Report()
         pair_user = get_object_or_404(UserProfile, pk=self.kwargs['pk'])
-        serializer = ReportModelSerializer(instance=pair_user,
-                                           data=request.data,
-                                           context={'by_user': self.request.user.id})
-        if serializer.is_valid():
-            report = serializer.save()
-            return redirect(pair_user.role) if report else Http404
+        new_Report.reported_user = pair_user
+        new_Report.reporting_user = self.request.user.userprofile
+        new_Report.category = form.cleaned_data['category']
+        new_Report.comments = form.cleaned_data['comments']
+        new_Report.save()
+        return super(ReportView, self).form_valid(form)
+
+    def get_success_url(self):
+        pair_user = get_object_or_404(UserProfile, pk=self.kwargs['pk'])
+        return reverse(self.get_reverse_url(pair_user.role))
 
     def get_reverse_url(self, role):
-        return 'accounts:my_consumers' if role == 'DN' else 'accounts:home'
+        return 'accounts:my_consumers' if role == UserProfile.DONOR else 'accounts:home'
 
 
-class ViewReports(APIView):
-    serializer_class = ViewReportsSerializer
-    permission_classes = (permissions.IsAuthenticated, local_permissions.isAdmin)
-    def get(self, request, pk):
-        serializer = ViewReportsSerializer(instance=request.user.userprofile)
-        return Response(serializer.data)
+class ViewReports(generic.TemplateView):
+    template_name = 'report/view_reports.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['userprofile'] = UserProfile.objects.get(id=context['pk'])
+        return context

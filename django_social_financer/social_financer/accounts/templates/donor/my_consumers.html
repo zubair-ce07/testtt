@@ -1,0 +1,31 @@
+{% load accounts_extras %}
+
+<h3>My Consumers</h3>
+
+<ul>
+    {% for consumer in pair %}
+    <li>
+    <h4>{{ forloop.counter }}</h4>
+    <p>Username: {{ consumer.user.username }}</p>
+    <p>Name: {{ consumer.user.first_name }} {{ consumer.user.last_name }}</p>
+    <p>Address: {{ consumer.address }}</p>
+    <p>Contact no: {{ consumer.phone_no }}</p>
+    <p>Category: {{ consumer.categories|categories }} </p>
+    <a href={{ map_url|formatted_address:consumer.address }} target="_blank">View location</a>
+        <br>
+    <form action="{% url 'feedback:give_feedback' consumer.id %}" method="post">
+        {% csrf_token %}
+        <input type="submit" name="feedback_request" value="Give Feedback">
+    </form>
+
+    <form action="{% url 'report:report_user' consumer.id %}" method="post">
+        {% csrf_token %}
+        <input type="submit" name="report_request" value="Report">
+    </form>
+
+    <br>
+    </li>
+        {% empty%}
+        <p>You have not selected a consumer yet. Please select one by going to the home page of the website.</p>
+    {% endfor %}
+</ul>

@@ -1,0 +1,11 @@
+<h3>Profile</h3>
+
+<h4>Details of {{ user.username }}</h4>
+
+<p>Rating Score: {{ rating }}</p>
+<ul>
+    {% for feedback in all_feedback%}
+    <li> {{ forloop.counter }} {{ feedback.comments }}</li>
+    {% empty %} <p>No feedback given yet</p>
+    {% endfor %}
+</ul>

@@ -1,0 +1,26 @@
+{% load accounts_extras %}
+
+<h2>Select Consumers</h2>
+
+<ul>
+    {% for consumer in consumers %}
+    <li>
+    <h4>{{ forloop.counter }}</h4>
+    <p>Username: {{ consumer.user.username }}</p>
+    <p>Name: {{ consumer.user.first_name }} {{ consumer.user.last_name }}</p>
+    <p>Address: {{ consumer.address }}</p>
+    <p>Category: {{ consumer.categories|categories }} </p>
+    <a href={{ map_url|formatted_address:consumer.address }} target="_blank">View location</a>
+    <br><br>
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="pair_id" value="{{consumer.id}}">
+        <input type="submit" value="Pair">
+    </form>
+
+    <br>
+    </li>
+    {% empty %}
+        <p>Sorry, there are no available consumers currently registered in your city</p>
+    {% endfor %}
+</ul>
