@@ -46,8 +46,12 @@ class SheegoSpider(scrapy.Spider):
         available_size = []
         pattern = r'^[A-Z\d/\s]+$'
         title = response.css('.p-details__name::text').extract_first()
-        item_size = response.css('.sizespots__item::text').extract()
-        full_price = response.css('.p-details__price>span::text').extract_first()
+        item_size = response.css('.c-sizespots>.at-dv-size-button::text').extract()
+        full_price = response.css(
+            'section.p-details__price>span.product__price__wrong::text').extract_first()
+        sale_price = response.css('.at-lastprice::text').extract_first()
+        if not full_price:
+            full_price = sale_price
         category = response.css(
             '.l-bold.l-text-1::text').extract_first().strip()
         for size in item_size:
@@ -62,8 +66,8 @@ class SheegoSpider(scrapy.Spider):
         loader.add_value('product_title', title.strip())
         loader.add_value(
             'full_price', full_price)
-        loader.add_css(
-            'sale_price', '.at-lastprice::text')
+        loader.add_value(
+            'sale_price', sale_price)
         loader.add_value('sizes', available_size)
         loader.add_css('description', '.l-mb-5>.l-list--nospace>li::text')
         return loader.load_item()
