@@ -34,7 +34,6 @@ class DeMart(scrapy.Spider):
 
     def parse_item_detail(self, response):
         """This method crawls item details."""
-        pattern_information = r'[A-z]*'
         information = []
         description = response.css('.trunc>p::text').extract()
         if len(description) == 1:
@@ -47,9 +46,9 @@ class DeMart(scrapy.Spider):
         for index, source_data in enumerate(info):
             # storing data in list that is fetched.
             key = data_found[index].strip()
-            key = re.match(pattern_information, key)
+            key = re.split(':', key)[0]
             data = {
-                key.group(): source_data.strip(),
+                key: source_data.strip(),
             }
             information.append(data)
         if series:
