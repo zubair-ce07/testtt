@@ -7,7 +7,7 @@ from scrapy.spiders import Rule
 from scrapy.http import FormRequest
 from scrapy.linkextractors import LinkExtractor
 
-from .base import BaseCrawlSpider, BaseParseSpider, clean, soupify
+from .base import BaseCrawlSpider, BaseParseSpider, clean, soupify, Gender
 
 
 class Mixin:
@@ -22,7 +22,7 @@ class Mixin:
 class PetitBateauParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
 
-    description_css = '[itemprop="description"] ::text'
+    raw_description_css = '[itemprop="description"] ::text'
     care_css = '.maintenance-guide .tooltip ::text'
 
     variant_url = 'https://www.petit-bateau.co.uk/WebServices/CatalogService.asmx/GetVariant'
@@ -64,7 +64,7 @@ class PetitBateauParseSpider(BaseParseSpider, Mixin):
 
     def product_gender(self, garment):
         gender_soup = soupify([garment['name']] + garment['description']).lower()
-        return self.gender_lookup(gender_soup)
+        return self.gender_lookup(gender_soup) or Gender.KIDS.value
 
     def colour_requests(self, response):
         colour_requests = []
@@ -179,31 +179,28 @@ class PetitBateauCrawlSpider(BaseCrawlSpider, Mixin):
         refining_id = clean(response.css('.slider ::attr(data-refiningid)'))
 
         if category and refining_id:
-            yield self.request_listing(category[0], refining_id[0])
+            yield self.pagination_request(response, category[0], refining_id[0])
 
-    def parse_listings(self, response):
-        listing_requests = response.meta['listing_requests']
+    def parse_pagination(self, response):
         listing = json.loads(response.text)['d']
-
         meta = response.meta.copy()
         meta['trail'] = self.add_trail(response)
 
         for item in listing['Items']:
             url = urljoin(self.start_urls[0], item['Url'])
             request = Request(url=url, callback=self.parse_item, meta=meta.copy())
-            listing_requests.append(request)
+            yield request
 
         next_refining_id = listing['Pager']['NextPage']
 
         if next_refining_id:
             category = listing['Infos']['Id']
-            return self.request_listing(category, next_refining_id, listing_requests)
+            yield self.pagination_request(response, category, next_refining_id)
 
-        return listing_requests
-
-    def request_listing(self, category, refining_id, listing_requests = []):
+    def pagination_request(self, response, category, refining_id):
         request_body = self.request_body_t.format(refining_id, category)
-        request = FormRequest(url=self.listing_url, callback=self.parse_listings,
-                              method="POST", headers=self.headers, body=request_body)
-        request.meta['listing_requests'] = listing_requests
-        return request
+        meta = response.meta.copy()
+        meta['trail'] = self.add_trail(response)
+
+        return FormRequest(url=self.listing_url, callback=self.parse_pagination, meta=meta.copy(),
+                           method="POST", headers=self.headers, body=request_body)
