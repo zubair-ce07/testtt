@@ -24,7 +24,7 @@ class Mixin:
     image_req_url_t = 'https://s7d2.scene7.com/is/image/LOS/{}_{}_IS?req=set,json'
 
 
-class ParseSpiderLoftOutlet(BaseParseSpider, Mixin):
+class ParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
 
     def parse(self, response):
@@ -128,7 +128,7 @@ class ParseSpiderLoftOutlet(BaseParseSpider, Mixin):
         return Gender.WOMEN.value
 
 
-class CrawlSpiderLoftOutlet(BaseCrawlSpider, Mixin):
+class CrawlSpider(BaseCrawlSpider, Mixin):
     name = Mixin.retailer + '-crawl'
     parse_spider = ParseSpiderLoftOutlet()
 
