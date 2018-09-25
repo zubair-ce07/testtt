@@ -1,0 +1,15 @@
+Expires: Thu, 19 Nov 1981 08:52:00 GMT
+X-Pass-Why: 
+X-Cacheable: CacheAlways: forever
+Server: nginx
+Cache-Control: max-age=14400, must-revalidate
+X-Cache: HIT: 5
+X-Robots-Tag: noindex, follow
+Date: Mon, 24 Sep 2018 13:33:57 GMT
+Wpe-Backend: apache
+X-Cache-Group: 
+X-Type: varnish-forever
+Accept-Ranges: bytes
+Content-Type: text/plain; charset=utf-8
+Pragma: no-cache
+Link: <https://www.movenourishbelieve.com/wp-json/>; rel="https://api.w.org/"
