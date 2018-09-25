@@ -7,6 +7,22 @@ from django.contrib.auth.hashers import make_password
 User = get_user_model()
 
 
+class SignUpSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            'username', 'first_name', 'last_name',
+            'email', 'password', 'title', 'department'
+        ]
+
+    def validate(self, object):
+        object['password'] = make_password(object['password'])
+        return object
+
+    def create(self, validated_data):
+        return User.objects.create(user_level="employee", **validated_data)
+
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -29,55 +45,25 @@ class UserSerializer(serializers.ModelSerializer):
                 {'Permission-Denied': 'You do not have '
                                'permission for this operation'})
 
-class AppraisalSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Appraisal
-        fields = ('pk', 'description', 'comment', 'to_user')
-        read_only_fields = ['pk']
-
 
 class CompetenceSerializer(serializers.ModelSerializer):
-    appraisal = AppraisalSerializer()
-
     class Meta:
         model = Competence
-        fields = (
-            'appraisal', 'decision_making', 'confidence', 'problem_solving'
-        )
+        fields = '__all__'
+        read_only_fields = ['pk', 'appraisal']
 
-    def create(self, validated_data):
-        user = self.context.get("request").user
-        appraisal_data = self.validated_data.get('appraisal')
-        app = Appraisal.objects.create(from_user=user, **appraisal_data)
-        return Competence.objects.create(
-            appraisal=app,
-            decision_making=validated_data['decision_making'],
-            confidence=validated_data['confidence'],
-            problem_solving=validated_data['problem_solving']
-        )
 
-    def update(self, instance, validated_data):
-        appraisal_data = validated_data.pop('appraisal')
-        instance.decision_making = validated_data.get(
-            'decision_making', instance.decision_making)
-        instance.confidence = validated_data.get(
-            'confidence', instance.confidence)
-        instance.problem_solving = validated_data.get(
-            'problem_solving', instance.problem_solving)
-        instance.appraisal.to_user = appraisal_data.get(
-            'to_user', instance.appraisal.to_user)
-        instance.appraisal.description = appraisal_data.get(
-            'description', instance.appraisal.description)
-        instance.appraisal.comment = appraisal_data.get(
-            'comment', instance.appraisal.comment)
-        instance.save()
-        return instance
+class AppraisalSerializer(serializers.ModelSerializer):
+    competence_set = CompetenceSerializer(many=True)
+    class Meta:
+        model = Appraisal
+        fields = ('pk', 'description', 'comment', 'to_user', 'competence_set')
+        read_only_fields = ['pk']
 
     def validate(self, object):
-        request = self.context.get("request")
-        user = request.user
+        user = self.context.get("request").user
 
-        to_user = object.get("appraisal").get("to_user")
+        to_user = object.get("to_user")
         if to_user.report_to == user:
             if user.user_level == "employee":
                 raise serializers.ValidationError(
@@ -88,3 +74,32 @@ class CompetenceSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {'Permission-Denied': 'You are not allowed to give '
                                'appraisal to this employee'})
+
+    def create(self, validated_data):
+        user = self.context.get("request").user
+        competencies_data = validated_data.pop("competence_set")[0]
+        app = Appraisal.objects.create(from_user=user, **validated_data)
+        app.competence_set.create(**competencies_data)
+        return app
+
+    def update(self, instance, validated_data):
+        instance.to_user = validated_data.get(
+            'to_user', instance.to_user)
+        instance.description = validated_data.get(
+            'description', instance.description)
+        instance.comment = validated_data.get(
+            'comment', instance.comment)
+
+        new_competencies = validated_data.pop('competence_set')[0]
+        old_competencies = instance.competence_set.all()[0]
+
+        old_competencies.confidence = new_competencies.get(
+            'confidence', old_competencies.confidence)
+        old_competencies.decision_making = new_competencies.get(
+            'decision_making', old_competencies.decision_making)
+        old_competencies.problem_solving = new_competencies.get(
+            'problem_solving', old_competencies.problem_solving)
+
+        old_competencies.save()
+        instance.save()
+        return instance
