@@ -2,7 +2,10 @@ import argparse
 import csv
 from datetime import datetime
 import os
+import pathlib
 from statistics import mean
+import sys
+
 
 
 class Weatherman:
@@ -30,14 +33,17 @@ class Weatherman:
             input_files.append(filenames)
         return input_files
 
-    def file_reads(self, input_files):
+    def read_file(self, input_files):
         read_files = []
         self.input_files = input_files
-        for input_file in self.input_files:
-            read_file = csv.DictReader(open(input_file))
-            read_files_ls = list(read_file)
-            read_files.append(read_files_ls)
-        return read_files
+        if self.input_files == []:
+            sys.exit("No such file exists against entered record")
+        else:
+            for input_file in self.input_files:
+                read_file = csv.DictReader(open(input_file))
+                read_files_ls = list(read_file)
+                read_files.append(read_files_ls)
+            return read_files
 
     def extreme_conditions(self, read_files):
         self.read_files = read_files
@@ -173,16 +179,18 @@ path = args.path
 if args.e:
     year = args.e
     w1 = Weatherman(year, 8, path)
+    #w1.file_present()
     w1_files = w1.filter_year_files()
-    rows = w1.file_reads(w1_files)
+    rows = w1.read_file(w1_files)
     w1.extreme_conditions(rows)
 if args.a:
     ym = datetime.strptime(args.a, '%Y/%m')
     year = ym.strftime("%Y")
     month = ym.strftime("%b")
     w2 = Weatherman(year, month, path)
+    #w2.file_present()
     w2_files = w2.filter_month_files()
-    rows = w2.file_reads(w2_files)
+    rows = w2.read_file(w2_files)
     w2.average_conditions(rows)
 if args.c:
     ym = datetime.strptime(args.c, '%Y/%m')
@@ -191,7 +199,7 @@ if args.c:
     print(ym.strftime("%B"), year)
     w3 = Weatherman(year, month, path)
     w3_files = w3.filter_month_files()
-    rows = w3.file_reads(w3_files)
+    rows = w3.read_file(w3_files)
     w3.everyday_weather(rows)
 if args.b:
     ym = datetime.strptime(args.b, '%Y/%m')
@@ -200,5 +208,5 @@ if args.b:
     print("\033[0m", ym.strftime("%B"), year)
     w4 = Weatherman(year, month, path)
     w4_files = w4.filter_month_files()
-    rows = w4.file_reads(w4_files)
+    rows = w4.read_file(w4_files)
     w4.days_weather(rows)
