@@ -2,18 +2,14 @@ import argparse
 import csv
 from datetime import datetime
 import os
-import pathlib
 from statistics import mean
-import sys
-
 
 
 class Weatherman:
-
-    def __init__(self, years, months, paths):
+    def __init__(self, years, months, path):
         self.year = years
         self.month = months
-        self.path = paths
+        self.path = path
         self.input_files = []
         self.read_files = []
 
@@ -36,14 +32,11 @@ class Weatherman:
     def read_file(self, input_files):
         read_files = []
         self.input_files = input_files
-        if self.input_files == []:
-            sys.exit("No such file exists against entered record")
-        else:
-            for input_file in self.input_files:
-                read_file = csv.DictReader(open(input_file))
-                read_files_ls = list(read_file)
-                read_files.append(read_files_ls)
-            return read_files
+        for input_file in self.input_files:
+            read_file = csv.DictReader(open(input_file))
+            read_files_ls = list(read_file)
+            read_files.append(read_files_ls)
+        return read_files
 
     def extreme_conditions(self, read_files):
         self.read_files = read_files
@@ -62,7 +55,6 @@ class Weatherman:
                     if max_temp is None or max_temp < hi_temp:
                         max_temp = hi_temp
                         hottest_day = datetime.strptime(row["PKT"], '%Y-%m-%d').strftime("%B,%d")
-
                 if row["Min TemperatureC"] == '':
                     pass
                 else:
@@ -70,7 +62,6 @@ class Weatherman:
                     if min_temp is None or min_temp > lo_temp:
                         min_temp = lo_temp
                         coolest_day = datetime.strptime(row["PKT"], '%Y-%m-%d').strftime("%B,%d")
-
                 if row["Max Humidity"] == '':
                     pass
                 else:
@@ -99,7 +90,6 @@ class Weatherman:
                     hi_temp.append(x)
             hi_temp = list(map(int, hi_temp))
             mean_hi_temp = mean(hi_temp)
-
             for row in entry:
                 if row["Min TemperatureC"] == '':
                     pass
@@ -108,7 +98,6 @@ class Weatherman:
                     lo_temp.append(x)
             lo_temp = list(map(int, lo_temp))
             mean_lo_temp = mean(lo_temp)
-
             for row in entry:
                 if row[" Mean Humidity"] == '':
                     pass
@@ -166,8 +155,7 @@ class Weatherman:
                     for i in range(0, hi_temp):
                         print("\033[91m +", end='')
                     print('\033[35m', lo_temp, "C", "-", hi_temp, "C")
-
-
+                    
 parser = argparse.ArgumentParser()
 parser.add_argument("path", help="Path to Directory", type = str)
 parser.add_argument("-e", help="For a year, displays highest,lowest temperatures,highest humidity and respective days")
@@ -179,7 +167,6 @@ path = args.path
 if args.e:
     year = args.e
     w1 = Weatherman(year, 8, path)
-    #w1.file_present()
     w1_files = w1.filter_year_files()
     rows = w1.read_file(w1_files)
     w1.extreme_conditions(rows)
@@ -188,7 +175,6 @@ if args.a:
     year = ym.strftime("%Y")
     month = ym.strftime("%b")
     w2 = Weatherman(year, month, path)
-    #w2.file_present()
     w2_files = w2.filter_month_files()
     rows = w2.read_file(w2_files)
     w2.average_conditions(rows)
