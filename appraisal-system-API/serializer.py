@@ -2,9 +2,11 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from system.models import Appraisal, Competence
 from django.contrib.auth.hashers import make_password
+from django.shortcuts import get_object_or_404
 
 
 User = get_user_model()
+
 
 class SignUpSerializer(serializers.ModelSerializer):
     class Meta:
@@ -48,8 +50,7 @@ class UserSerializer(serializers.ModelSerializer):
 class CompetenceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Competence
-        fields = ('pk','decision_making','confidence','problem_solving')
-        read_only_fields = ['appraisal']
+        fields = ('decision_making','confidence','problem_solving')
 
 
 class AppraisalSerializer(serializers.ModelSerializer):
@@ -61,7 +62,6 @@ class AppraisalSerializer(serializers.ModelSerializer):
 
     def validate(self, object):
         user = self.context.get("request").user
-
         to_user = object.get("to_user")
         if to_user.report_to == user:
             if user.user_level == "employee":
@@ -83,25 +83,26 @@ class AppraisalSerializer(serializers.ModelSerializer):
         return app
 
     def update(self, instance, validated_data):
+        competencies_data = validated_data.pop('competence_set')
+        competencies = (instance.competence_set).all()
+        competencies = list(competencies)
+
         instance.to_user = validated_data.get(
             'to_user', instance.to_user)
         instance.description = validated_data.get(
             'description', instance.description)
         instance.comment = validated_data.get(
             'comment', instance.comment)
-
-        competencies_data = validated_data.pop('competence_set')
+        instance.save()
 
         for new_competencies in competencies_data:
-            old_competencies = get_object_or_404(Competence, new_competencies.pk)
+            old_competencies = competencies.pop(0)
             old_competencies.confidence = new_competencies.get(
                 'confidence', old_competencies.confidence)
             old_competencies.decision_making = new_competencies.get(
                 'decision_making', old_competencies.decision_making)
             old_competencies.problem_solving = new_competencies.get(
                 'problem_solving', old_competencies.problem_solving)
-
             old_competencies.save()
-        instance.save()
         return instance
 
