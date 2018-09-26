@@ -6,24 +6,25 @@ from datetime import datetime, timedelta
 import w3lib.url
 from scrapy import Spider, Request, Selector
 
-from ..items import Item
+from ..items import Flight
 
 
 class JetSmartParser(Spider):
     name = 'jetsmart-parse'
 
-    solo_flight_tax = '7.592'
-    return_flight_tax = '15.184'
-    pos = 'PK'
-    site_source = 'JA'
-    source = 'Jet Smart'
-    carrier = 'JA'
-    is_tax_inc_outin = '0'
+    ONEWAY_FLIGHT_TAX = '7.592'
+    TWOWAY_FLIGHT_TAX = '15.184'
+    POS = 'PK'
+    SITE_SOURCE = 'JA'
+    SOURCE = 'Jet Smart'
+    CARRIER = 'JA'
+    IS_TAX_INC_OUTIN = '0'
 
     price_re = re.compile('(\d+\.\d+)')
     minutes_re = re.compile('(\d+)m')
     hours_re = re.compile('(\d+)h')
     time_re = re.compile('(\d+:\d+)')
+    time_format = '%Y-%m-%d %H:%M'
 
     default_inbound = [
         {
@@ -40,109 +41,107 @@ class JetSmartParser(Spider):
         if self.flight_unavailable(response):
             return
 
-        item = Item()
+        flight_common = Flight()
 
-        item['POS'] = self.pos
-        item['site_source'] = self.site_source
-        item['source'] = self.source
-        item['carrier'] = self.carrier
-        item['is_tax_inc_outin'] = self.is_tax_inc_outin
-        item['outbound_travel_stopover'] = ''
-        item['inbound_travel_stopover'] = ''
-        item['outbound_fare_basis'] = ''
-        item['inbound_fare_basis'] = ''
-        item['outbound_booking_class'] = ''
-        item['inbound_booking_class'] = ''
-        item['currency'] = self.currency(response)
-        item['oneway_indicator'] = self.oneway_indicator(response)
-        item['observation_time'] = self.observation_time(response)
-        item['observation_date'] = self.observation_date(response)
-        item['origin'] = self.origin(response)
-        item['destination'] = self.destination(response)
-        item['OD'] = self.origin_destination(response)
+        flight_common['POS'] = self.POS
+        flight_common['site_source'] = self.SITE_SOURCE
+        flight_common['source'] = self.SOURCE
+        flight_common['carrier'] = self.CARRIER
+        flight_common['is_tax_inc_outin'] = self.IS_TAX_INC_OUTIN
+        flight_common['outbound_travel_stopover'] = ''
+        flight_common['inbound_travel_stopover'] = ''
+        flight_common['outbound_fare_basis'] = ''
+        flight_common['inbound_fare_basis'] = ''
+        flight_common['outbound_booking_class'] = ''
+        flight_common['inbound_booking_class'] = ''
+        flight_common['currency'] = self.currency(response)
+        flight_common['oneway_indicator'] = self.oneway_indicator(response)
+        flight_common['observation_time'] = self.observation_time(response)
+        flight_common['observation_date'] = self.observation_date(response)
+        flight_common['origin'] = self.origin(response)
+        flight_common['destination'] = self.destination(response)
+        flight_common['OD'] = self.origin_destination(response)
 
-        outbound_options = self.outbound_options(response)
+        outbound_flights = self.outbound_flights(response)
 
-        if item['oneway_indicator'] == '1':
-            item['tax'] = self.solo_flight_tax
-            inbound_options = self.default_inbound
+        if self.is_oneway_flight(response):
+            flight_common['tax'] = self.ONEWAY_FLIGHT_TAX
+            inbound_flights = self.default_inbound
         else:
-            item['tax'] = self.return_flight_tax
-            inbound_options = self.inbound_options(response)
+            flight_common['tax'] = self.TWOWAY_FLIGHT_TAX
+            inbound_flights = self.inbound_flights(response)
 
-        return self.flight_options(item, outbound_options, inbound_options)
+        return self.available_trips(flight_common, outbound_flights, inbound_flights)
 
-    def flight_options(self, item, outbound_options, inbound_options):
-        for outbound_option, inbound_option in itertools.product(outbound_options, inbound_options):
-            item_copy = item.copy()
+    def available_trips(self, flight_common, outbound_flights, inbound_flights):
+        for outbound_flight, inbound_flight in itertools.product(outbound_flights, inbound_flights):
+            flight = flight_common.copy()
 
-            outbound_price = outbound_option['price']
-            item_copy['price_outbound'] = outbound_price
-            item_copy['outbound_bundle'] = outbound_option['bundle']
-            item_copy['outbound_arrival_date'] = outbound_option['arrival_date']
-            item_copy['outbound_departure_date'] = outbound_option['departure_date']
-            item_copy['outbound_travel_duration'] = outbound_option['travel_duration']
-            item_copy['outbound_flight_number'] = outbound_option['flight_number']
+            outbound_price = outbound_flight['price']
+            flight['price_outbound'] = outbound_price
+            flight['outbound_bundle'] = outbound_flight['bundle']
+            flight['outbound_arrival_date'] = outbound_flight['arrival_date']
+            flight['outbound_departure_date'] = outbound_flight['departure_date']
+            flight['outbound_travel_duration'] = outbound_flight['travel_duration']
+            flight['outbound_flight_number'] = outbound_flight['flight_number']
 
-            inbound_price = inbound_option['price']
-            item_copy['price_inbound'] = inbound_price
-            item_copy['inbound_bundle'] = inbound_option['bundle']
-            item_copy['inbound_arrival_date'] = inbound_option['arrival_date']
-            item_copy['inbound_departure_date'] = inbound_option['departure_date']
-            item_copy['inbound_travel_duration'] = inbound_option['travel_duration']
-            item_copy['inbound_flight_number'] = inbound_option['flight_number']
+            inbound_price = inbound_flight['price']
+            flight['price_inbound'] = inbound_price
+            flight['inbound_bundle'] = inbound_flight['bundle']
+            flight['inbound_arrival_date'] = inbound_flight['arrival_date']
+            flight['inbound_departure_date'] = inbound_flight['departure_date']
+            flight['inbound_travel_duration'] = inbound_flight['travel_duration']
+            flight['inbound_flight_number'] = inbound_flight['flight_number']
 
             exl_tax_price = self.excluding_tax_price(outbound_price, inbound_price)
-            item_copy['price_exc'] = exl_tax_price
-            item_copy['price_inc'] = self.including_tax_price(exl_tax_price, item['tax'])
+            flight['price_exc'] = exl_tax_price
+            flight['price_inc'] = self.including_tax_price(exl_tax_price, flight_common['tax'])
 
-            yield item_copy
+            yield flight
 
-    def outbound_options(self, response):
+    def outbound_flights(self, response):
         departure_date = self.outbound_departure_date(response)
 
-        outbound_option_common = {
+        outbound_flight = {
             'bundle': self.outbound_bundle(response)
         }
 
-        outbound_options = []
-        outbound_raw_options = self.outbound_raw_options(response)
-        for outbound_raw_option in outbound_raw_options:
-            outbound_option = outbound_option_common.copy()
-            outbound_option.update(self.flight_option(outbound_raw_option, departure_date))
-            outbound_options.append(outbound_option)
-        return outbound_options
+        outbound_flights = []
+        outbound_raw_flights = self.outbound_raw_flights(response)
+        for outbound_raw_flight in outbound_raw_flights:
+            outbound_flight.update(self.flight_details(outbound_raw_flight, departure_date))
+            outbound_flights.append(outbound_flight)
+        return outbound_flights
 
-    def inbound_options(self, response):
+    def inbound_flights(self, response):
         departure_date = self.inbound_departure_date(response)
 
-        inbound_option_common = {
+        inbound_flight = {
             'bundle': self.inbound_bundle(response)
         }
 
-        inbound_options = []
-        inbound_raw_options = self.inbound_raw_options(response)
-        for inbound_raw_option in inbound_raw_options:
-            inbound_option = inbound_option_common.copy()
-            inbound_option.update(self.flight_option(inbound_raw_option, departure_date))
-            inbound_options.append(inbound_option)
-        return inbound_options
+        inbound_flights = []
+        inbound_raw_flights = self.inbound_raw_flights(response)
+        for inbound_raw_flight in inbound_raw_flights:
+            inbound_flight.update(self.flight_details(inbound_raw_flight, departure_date))
+            inbound_flights.append(inbound_flight)
+        return inbound_flights
 
-    def flight_option(self, raw_option, departure_date):
+    def flight_details(self, raw_option, departure_date):
         selector = Selector(text=raw_option)
 
         departure_date = self.departure_date_utc(departure_date, self.raw_departure_time(selector))
         travel_duration = self.travel_duration(selector)
         arrival_date = self.arrival_date_utc(departure_date, *self.duration_hours_minutes(travel_duration))
 
-        option_details = {
+        flight_details = {
             'departure_date': departure_date,
             'travel_duration': travel_duration,
             'arrival_date': arrival_date,
             'flight_number': self.flight_number(selector),
             'price': self.price(selector)
         }
-        return option_details
+        return flight_details
 
     def excluding_tax_price(self, outbound_price, inbound_price):
         inbound_price = float(inbound_price) if inbound_price else 0
@@ -153,13 +152,13 @@ class JetSmartParser(Spider):
         return "{0:.3f}".format(float(exl_tax_price) + float(tax))
 
     def departure_date_utc(self, departure_date, departure_time):
-        parsed_date = datetime.strptime(f'{departure_date} {departure_time}', '%Y-%m-%d %H:%M')
+        parsed_date = datetime.strptime(f'{departure_date} {departure_time}', self.time_format)
         utc_adjusted_date = parsed_date - timedelta(hours=3)
-        return utc_adjusted_date.strftime('%Y-%m-%d %H:%M')
+        return utc_adjusted_date.strftime(self.time_format)
 
     def arrival_date_utc(self, departure_date_utc, hours, minutes):
-        parsed_date = datetime.strptime(departure_date_utc, '%Y-%m-%d %H:%M')
-        return (parsed_date + timedelta(hours=hours, minutes=minutes)).strftime('%Y-%m-%d %H:%M')
+        parsed_date = datetime.strptime(departure_date_utc, self.time_format)
+        return (parsed_date + timedelta(hours=hours, minutes=minutes)).strftime(self.time_format)
 
     def duration_hours_minutes(self, travel_duration):
         minutes = self.minutes_re.findall(travel_duration)
@@ -172,7 +171,7 @@ class JetSmartParser(Spider):
 
     def raw_departure_time(self, selector):
         departure_time_css = 'td:first-of-type ::text'
-        raw_time = ''.join(selector.css(departure_time_css).extract()).strip()
+        raw_time = ''.join(selector.css(departure_time_css).extract())
         return self.time_re.findall(raw_time)[0]
 
     def travel_duration(self, selector):
@@ -188,13 +187,13 @@ class JetSmartParser(Spider):
         price = ''.join(selector.css(price_css).extract())
         return self.price_re.findall(price)[0]
 
-    def outbound_raw_options(self, response):
-        options_rows_css = 'table:first-of-type tbody tr'
-        return response.css(options_rows_css).extract()
+    def outbound_raw_flights(self, response):
+        flight_rows_css = 'table:first-of-type tbody tr'
+        return response.css(flight_rows_css).extract()
 
-    def inbound_raw_options(self, response):
-        options_rows_css = 'table:nth-of-type(2) tbody tr'
-        return response.css(options_rows_css).extract()
+    def inbound_raw_flights(self, response):
+        flight_rows_css = 'table:nth-of-type(2) tbody tr'
+        return response.css(flight_rows_css).extract()
 
     def outbound_bundle(self, response):
         outbound_bundle_css = 'table:nth-of-type(1) th:last-of-type ::text'
@@ -243,21 +242,28 @@ class JetSmartParser(Spider):
         unavailability_css = '.avail-info-no-flights'
         return response.css(unavailability_css)
 
+    def is_oneway_flight(self, response):
+        if self.oneway_indicator(response) == '1':
+            return True
+        return False
+
 class JetSmartCrawler(Spider):
     custom_settings = {
-        'DUPEFILTER_CLASS': 'scrapy.dupefilters.BaseDupeFilter'
-    #    'DOWNLOAD_DELAY': 1
+        'DUPEFILTER_CLASS': 'scrapy.dupefilters.BaseDupeFilter',
+        'DOWNLOAD_DELAY': 1
     }
 
     name = 'jetsmart-crawl'
     start_urls = ['https://jetsmart.com/cl/es']
     allowed_domains = ['jetsmart.com']
 
-    calendar_url_t = 'https://jetsmart.com/api/TimeTable?fromStation={}&toStation={}'
+    route_url_t = 'https://jetsmart.com/api/TimeTable?fromStation={}&toStation={}'
     one_way_t = 'https://booking.jetsmart.com/Flight/InternalSelect?o1={}&d1={}&dd1={}' \
                 '&ADT=1&r=false&s=true&mon=true&cur=CLP'
     two_way_t = 'https://booking.jetsmart.com/Flight/InternalSelect?o1={}&d1={}&dd1={}&' \
                 'ADT=1&r=true&s=true&mon=true&cur=CLP&dd2={}'
+    ymd_date = '%Y-%m-%d'
+    dmy_date = '%d-%m-%Y'
 
     flight_routes = [
         ('ANF', 'SCL'),
@@ -274,18 +280,18 @@ class JetSmartCrawler(Spider):
     item_parser = JetSmartParser()
 
     def parse(self, response):
-        yield from self.flight_requests()
+        yield from self.route_requests()
 
-    def parse_flights(self, response):
+    def parse_route(self, response):
         selectable_days = json.loads(response.text)['calendarSelectableDays']
         dates_to_crawl = self.dates_to_crawl()
 
-        outbound_days = [date for date in dates_to_crawl if date.strftime('%d-%m-%Y') not in
+        outbound_days = [date for date in dates_to_crawl if date.strftime(self.dmy_date) not in
                                 selectable_days['firstJourneyScheduleInformation']['disabledDates']]
-        inbound_days = [date for date in dates_to_crawl if date.strftime('%d-%m-%Y') not in
+        inbound_days = [date for date in dates_to_crawl if date.strftime(self.dmy_date) not in
                                 selectable_days['secondJourneyScheduleInformation']['disabledDates']]
-        origin = w3lib.url.url_query_parameter(response.url, 'fromStation')
-        destination = w3lib.url.url_query_parameter(response.url, 'toStation')
+        origin = selectable_days['origin']
+        destination = selectable_days['destination']
 
         one_way_requests = self.one_way_requests(outbound_days, origin, destination)
         two_way_requests = self.two_way_requests(outbound_days, inbound_days, origin, destination)
@@ -295,14 +301,14 @@ class JetSmartCrawler(Spider):
     def parse_item(self, response):
         return self.item_parser.parse(response)
 
-    def flight_requests(self):
-        return [Request(url=self.calendar_url_t.format(*flight_route), callback=self.parse_flights)
+    def route_requests(self):
+        return [Request(url=self.route_url_t.format(*flight_route), callback=self.parse_route)
                 for flight_route in self.flight_routes]
 
-    def one_way_requests(self, flight_days, origin, destination):
+    def one_way_requests(self, outbound_days, origin, destination):
         requests = []
-        for day in flight_days:
-            url = self.one_way_t.format(origin, destination, day.strftime('%Y-%m-%d'))
+        for day in outbound_days:
+            url = self.one_way_t.format(origin, destination, day.strftime(self.ymd_date))
             requests.append(Request(url=url, callback=self.parse_item, meta={'url': url, 'cookiejar': self.cookie_jar}))
             self.cookie_jar += 1
         return requests
@@ -310,18 +316,16 @@ class JetSmartCrawler(Spider):
     def two_way_requests(self, outgoing_days, incoming_days, origin, destination):
         requests = []
         for outgoing_day, incoming_day in itertools.product(outgoing_days, incoming_days):
-            url = self.two_way_t.format(
-                origin, destination, outgoing_day.strftime('%Y-%m-%d'), incoming_day.strftime('%Y-%m-%d')
-            )
-
             if incoming_day <= outgoing_day:
                 continue
 
+            url = self.two_way_t.format(
+                origin, destination, outgoing_day.strftime(self.ymd_date), incoming_day.strftime(self.ymd_date)
+            )
             requests.append(Request(url=url, callback=self.parse_item, meta={'url': url, 'cookiejar': self.cookie_jar}))
             self.cookie_jar += 1
-
         return requests
 
     def dates_to_crawl(self):
         date = datetime.utcnow()
-        return [(date + timedelta(days=n)) for n in range(1, 31)]
+        return [(date + timedelta(days=d)) for d in range(31)]
