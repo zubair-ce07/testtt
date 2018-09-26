@@ -67,7 +67,8 @@ class HollisterParseSpider(BaseParseSpider):
 
     def parse_color(self, response):
         garment = response.meta['garment']
-        garment['meta']['requests_queue'] += self.request_images(response) + self.request_size(response)
+        requests_queue = self.request_images(response) + self.request_size(response)
+        garment['meta']['requests_queue'] += requests_queue
         return self.next_request_or_garment(garment)
 
     def parse_size(self, response):
@@ -106,18 +107,28 @@ class HollisterParseSpider(BaseParseSpider):
         return self.gender_lookup(' '.join(garment['category'])) or Gender.ADULTS.value
 
     def request_colors(self, response):
+        requests = []
         color_urls = clean(response.css('.swatches.color li span::attr(data-href)'))
-        return [response.follow(add_or_replace_parameter(url, 'format', 'ajax'), self.parse_color) for url in
-                color_urls]
+        for url in color_urls:
+            url = add_or_replace_parameter(url, 'format', 'ajax')
+            requests.append(response.follow(url, self.parse_color))
+        return requests
 
     def request_size(self, response):
+        requests = []
         size_urls = clean(response.css('.product__sizes .attribute:first-child span ::attr(data-href)'))
-        return [response.follow(add_or_replace_parameter(url, 'format', 'ajax'), self.parse_size) for url in size_urls]
+        for url in size_urls:
+            url = add_or_replace_parameter(url, 'format', 'ajax')
+            requests.append(response.follow(url, self.parse_size))
+        return requests
 
     def request_fiting(self, response):
+        requests = []
         fiting_urls = clean(response.css('.product__sizes .attribute:nth-child(2) span ::attr(data-href)'))
-        return [response.follow(add_or_replace_parameter(url, 'format', 'ajax'), self.parse_fiting) for url in
-                fiting_urls]
+        for url in fiting_urls:
+            url = add_or_replace_parameter(url, 'format', 'ajax')
+            requests.append(response.follow(url, self.parse_fiting))
+        return requests
 
     def request_images(self, response):
         url = clean(response.xpath("//input[@name='scene7url']/@value"))[0]
@@ -129,8 +140,8 @@ class HollisterParseSpider(BaseParseSpider):
         images = json.loads(images)
         for image in images['set']['item'][0]['set']['item']:
 
-            if image.get('i') is not None:
-                image_urls.append(urljoin(self.image_api_url, image.get('i').get('n')))
+            if image.get('i'):
+                image_urls.append(urljoin(self.image_api_url, image['i'].get('n')))
 
         return image_urls
 
@@ -140,13 +151,13 @@ class HollisterParseSpider(BaseParseSpider):
         sku['colour'] = colour = clean(response.xpath(colour_xpath))[0]
 
         size_css = '.product__sizes .attribute:contains(Size) .selected ::attr(title)'
-        size_fit = clean(response.css(size_css)) or [self.one_size][0]
+        size_fit = clean(response.css(size_css)) or [self.one_size]
         sku['size'] = size = size_fit[0]
 
         fit_css = '.product__sizes .attribute:contains(Fit) .selected ::attr(title)'
         sku['length'] = clean(response.css(fit_css)) or [''][0]
 
-        sku_id = f'{colour}_{size}' if colour else f'{size}'
+        sku_id = f'{colour}_{size}'
         return {sku_id: sku}
 
 
@@ -156,7 +167,7 @@ class HollisterCrawlSpider(BaseCrawlSpider):
         '.Category .refinement-link',
         'infinite-scroll-placeholder'
     ]
-    product_css = '.thumb-link'
+    product_css = ['.thumb-link']
 
     rules = (
         Rule(LinkExtractor(restrict_css=listing_css, tags=['a', 'div'], attrs=['href', 'data-grid-url'])
