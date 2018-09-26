@@ -127,8 +127,8 @@ class JetSmartParser(Spider):
             inbound_flights.append(inbound_flight)
         return inbound_flights
 
-    def flight_details(self, raw_option, departure_date):
-        selector = Selector(text=raw_option)
+    def flight_details(self, raw_flight, departure_date):
+        selector = Selector(text=raw_flight)
 
         departure_date = self.departure_date_utc(departure_date, self.raw_departure_time(selector))
         travel_duration = self.travel_duration(selector)
