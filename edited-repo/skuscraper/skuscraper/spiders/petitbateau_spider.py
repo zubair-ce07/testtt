@@ -64,7 +64,7 @@ class PetitBateauParseSpider(BaseParseSpider, Mixin):
 
     def product_gender(self, garment):
         gender_soup = soupify([garment['name']] + garment['description']).lower()
-        return self.gender_lookup(gender_soup) or Gender.KIDS.value
+        return self.gender_lookup(gender_soup) or Gender.ADULTS.value
 
     def colour_requests(self, response):
         colour_requests = []
@@ -188,8 +188,7 @@ class PetitBateauCrawlSpider(BaseCrawlSpider, Mixin):
 
         for item in listing['Items']:
             url = urljoin(self.start_urls[0], item['Url'])
-            request = Request(url=url, callback=self.parse_item, meta=meta.copy())
-            yield request
+            yield Request(url=url, callback=self.parse_item, meta=meta.copy())
 
         next_refining_id = listing['Pager']['NextPage']
 
