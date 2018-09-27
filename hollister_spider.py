@@ -18,7 +18,7 @@ class MixinJP(Mixin):
     retailer = Mixin.retailer + '-jp'
     market = 'JP'
     start_urls = [
-        'http://www.hollisterco.jp/en_JP/guys-hollister-sale?icmp=ICT:BTS18:M:HP:B:P:POFF:SS:SeptWk4']
+        'http://www.hollisterco.jp/en_JP/home']
     allowed_domains = ['hollisterco.jp', 'anf.scene7.com']
 
 
@@ -26,7 +26,7 @@ class MixinCN(Mixin):
     retailer = Mixin.retailer + '-cn'
     market = 'CN'
     start_urls = [
-        'https://www.hollisterco.cn/en_CN/guys-tops-hoodies-and-sweatshirts?icmp=ICT:BTS18:M:HP:H:K:x:HDSWT:SeptWk2']
+        'https://www.hollisterco.cn/en_CN/home']
     allowed_domains = ['hollisterco.cn', 'anf.scene7.com']
 
 
@@ -34,7 +34,7 @@ class MixinHK(Mixin):
     retailer = Mixin.retailer + '-hk'
     market = 'HK'
     start_urls = [
-        'http://www.hollisterco.com.hk/en_HK/guys-tops-hoodies-and-sweatshirts?icmp=ICT:BTS18:M:HP:H:K:x:HDSWT:SeptWk2']
+        'http://www.hollisterco.com.hk/en_HK/home']
     allowed_domains = ['hollisterco.com.hk', 'anf.scene7.com']
 
 
@@ -42,7 +42,7 @@ class MixinTW(Mixin):
     retailer = Mixin.retailer + '-tw'
     market = 'TW'
     start_urls = [
-        'http://www.hollisterco.com.tw/en_TW/guys-tops-hoodies-and-sweatshirts?icmp=ICT:BTS18:M:HP:H:K:x:HDSWT:SeptWk2']
+        'http://www.hollisterco.com.tw/en_TW/home']
     allowed_domains = ['hollisterco.com.tw', 'anf.scene7.com']
 
 
@@ -141,7 +141,7 @@ class HollisterParseSpider(BaseParseSpider):
         for image in images['set']['item'][0]['set']['item']:
 
             if image.get('i'):
-                image_urls.append(urljoin(self.image_api_url, image['i'].get('n')))
+                image_urls.append(urljoin(self.image_api_url, image['i']['n']))
 
         return image_urls
 
