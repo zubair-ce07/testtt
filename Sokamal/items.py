@@ -9,24 +9,22 @@ from w3lib.html import remove_tags
 
 def filter_image_urls(value):
     """Filters image_urls received as string"""
+    img_urls = []
     if value and len(value) > 1:
         img_url = json.loads(value)
-        img_urls = []
         for url in img_url.values():
             img_urls.append("https://fishry-image.azureedge.net/product/" + url['Image'])
-        return img_urls
-    return ""
+    return img_urls
 
 
 def filter_category(value):
     """Filters category received as string"""
+    categories = []
     if value:
         category = json.loads(value)
-        categories = []
         for category in category.values():
             categories.append(category['name'])
-        return categories
-    return ""
+    return categories
 
 
 def filter_url(value):
@@ -36,9 +34,9 @@ def filter_url(value):
 
 def filter_skus(value):
     """Filters sku received as string"""
+    skus = {}
     if value:
         sku_data = json.loads(value)
-        skus = {}
         for sku in sku_data:
             inventory_quantity = sku['inventoryQuantity']
             barcode = sku['barcode']
@@ -51,8 +49,7 @@ def filter_skus(value):
                 "currency": "Rs",
                 "inventory_quantity": inventory_quantity
             }
-        return skus
-    return ""
+    return skus
 
 
 def filter_color_size(value):
@@ -63,7 +60,7 @@ def filter_color_size(value):
         color = size_color.pop()
         size = size_color.pop()
         return size, color
-    return size_color.pop(), color
+    return size_color[0], color
 
 
 class SokamalItem(scrapy.Item):

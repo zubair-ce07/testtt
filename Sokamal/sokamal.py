@@ -15,8 +15,7 @@ class SokamalSpider(scrapy.Spider):
         url = "https://fishry-api-live.azurewebsites.net/collection_request"
         yield FormRequest(url=url, callback=self.parse_item, method='POST', dont_filter=True,
                           headers={"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"},
-                          formdata={"storeID"
-                                    : "480EFD74-078D-4CF2-AC68-270940ED408F", "take": "5000"})
+                          formdata={"storeID": "480EFD74-078D-4CF2-AC68-270940ED408F", "take": "5000"})
 
     @staticmethod
     def parse_item(response):
