@@ -2,7 +2,6 @@ from django.contrib.auth import authenticate
 from rest_framework.generics import ListCreateAPIView
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.status import (
     HTTP_400_BAD_REQUEST,
     HTTP_404_NOT_FOUND,
@@ -28,7 +27,11 @@ class AuthenticateUser(APIView):
             return Response({'error': 'Invalid Credentials'},
                             status=HTTP_404_NOT_FOUND)
         token, _ = Token.objects.get_or_create(user=user)
-        return Response({'token': token.key}, status=HTTP_200_OK)
+        response = {
+            'token': token.key,
+            'user': UserSerializer(user).data,
+        }
+        return Response(response, status=HTTP_200_OK)
 
 
 class RegisterUser(ListCreateAPIView):

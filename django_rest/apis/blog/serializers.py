@@ -22,7 +22,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class BlogSerializer(serializers.ModelSerializer):
-    writer = serializers.ReadOnlyField(source='writer.username')
+    writer = serializers.ReadOnlyField(source='writer.id')
     tags = TagSerializer(many=True)
     comments = CommentSerializer(many=True, read_only=True)
 
