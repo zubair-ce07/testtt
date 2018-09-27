@@ -14,7 +14,7 @@ def filter_image_urls(value):
         img_urls = []
         for url in img_url.values():
             img_urls.append("https://fishry-image.azureedge.net/product/" + url['Image'])
-            return img_urls
+        return img_urls
     return ""
 
 
@@ -89,4 +89,3 @@ class SokamalLoader(ItemLoader):
     category_in = MapCompose(filter_category)
     url_in = MapCompose(filter_url)
     skus_in = MapCompose(filter_skus)
-
