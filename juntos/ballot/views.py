@@ -122,11 +122,11 @@ def vote_ballot(request, id=None):
     ballot = get_object_or_404(Ballot, id=id)
     context["ballot"] = ballot
     already_voted = request.user.vote_set.filter(choice__ballot_id=ballot.id)
-    if already_voted:
-        context["error"] = "You've already voted for this ballot."
 
     if request.method == "POST" and not already_voted:
         Vote.objects.create(user=request.user, choice_id=request.POST['choice'])
         return HttpResponseRedirect(reverse('ballot:ballot_details', args=[ballot.id]))
     else:
+        if already_voted:
+            context["error"] = "You've already voted for this ballot."
         return render(request, 'ballot/ballot.html', context)

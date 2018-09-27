@@ -23,7 +23,7 @@ Setup Postgres (Make sure you've installed postgres and it is working on your ma
     ALTER USER <user-name> with SUPERUSER;
     CREATE DATABASE juntos;
 
-Now put the user-name and pasword to `settings.py` file in `DATABASES` configurations.
+Now put the user-name and pasword and other configs to `config/config.properties` file in `DATABASES` configurations.
 
 Run migrations and collect static assets:
 

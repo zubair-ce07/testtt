@@ -11,6 +11,8 @@ class Tag(models.Model):
     Tag model
     """
     name = models.CharField(max_length=50)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.name
@@ -109,7 +111,6 @@ class Vote(models.Model):
     choice = models.ForeignKey(Choice, on_delete=models.CASCADE)
 
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return '{0}-{1}'.format(self.user.first_name, self.choice.text)

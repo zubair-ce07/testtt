@@ -1,22 +1,17 @@
 import os
 
+import environ
 from celery.schedules import crontab
 
-# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+env = environ.Env()
+root = environ.Path(__file__) - 2
+environ.Env.read_env(root('config/config.properties'))
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'i31p4a-%xn@_w_ftv&-cwv2lv9=msv5yrd$6hk46%8-0u)83er'
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = ['*']
-
+ALLOWED_HOSTS = [env('ALLOWED_HOSTS')]
+SECRET_KEY = env('SECRET_KEY')
+DEBUG = env.bool('DEBUG', default=False)
 
 # Application definition
 
@@ -81,12 +76,12 @@ STATICFILES_DIRS = (
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'juntos',
-        'USER': 'arslan',
-        'PASSWORD': 'postgres',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'ENGINE': env('DB_ENGINE'),
+        'NAME': env('DB_NAME'),
+        'USER': env('DB_USER'),
+        'PASSWORD': env('DB_PASSWORD'),
+        'HOST': env('DB_HOST'),
+        'PORT': env('DB_PORT'),
     }
 }
 
@@ -110,7 +105,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # Celery application definition
-CELERY_BROKER_URL = 'redis://localhost:6379'
+CELERY_BROKER_URL = env('CELERY_BROKER_URL')
 CELERY_RESULT_BACKEND = 'django-db'  # output to django_celery_results_taskresult table.
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_RESULT_SERIALIZER = 'json'
@@ -124,7 +119,6 @@ CELERY_BEAT_SCHEDULE = {
 
 
 # Internationalization
-# https://docs.djangoproject.com/en/2.1/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
 
@@ -138,7 +132,6 @@ USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/2.1/howto/static-files/
 
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
