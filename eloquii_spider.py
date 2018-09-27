@@ -1,25 +1,24 @@
 import json
-
 import re
+from w3lib.url import add_or_replace_parameter
+
 from scrapy import Request
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
-from w3lib.url import add_or_replace_parameter
 
 from .base import BaseParseSpider, BaseCrawlSpider, clean
 
 
 class Mixin:
-    retailer = 'eloquii'
+    retailer = 'eloquii-us'
     market = 'US'
 
     start_urls = ['https://www.eloquii.com/']
     allowed_domains = ['eloquii.com']
     api_url = 'https://www.eloquii.com/on/demandware.store/Sites-eloquii-Site/default/Product-GetVariants?'
 
-    lang = 'en'
     currency = 'USD'
-    gender = 'Women'
+    gender = 'women'
 
 
 class EloquiiParser(BaseParseSpider, Mixin):
@@ -39,6 +38,16 @@ class EloquiiParser(BaseParseSpider, Mixin):
         garment['meta'] = {'requests_queue': self.request_variants(product_id)}
         return self.next_request_or_garment(garment)
 
+    def parse_variants(self, response):
+        garment = response.meta['garment']
+        variants = json.loads(response.text)
+        return self.process_skus_data(variants['variations']['variants'], garment)
+
+    def request_variants(self, product_id):
+        url = add_or_replace_parameter(self.api_url, 'pid', product_id)
+        url = add_or_replace_parameter(url, 'format', 'ajax')
+        return [Request(url, self.parse_variants)]
+
     @staticmethod
     def product_id(response):
         return clean(response.css('.yotpo.yotpo-pictures-widget::attr(data-product-id)'))[0]
@@ -54,38 +63,33 @@ class EloquiiParser(BaseParseSpider, Mixin):
     def image_urls(self, response):
         image_urls = []
         images = clean(response.xpath('//script[contains(text(),"app.execUjs")]/text()'))[0]
-        images = re.findall('"Color", ("vals".*), {"id" : "size"', images)[0]
-        images = json.loads("{" + images)
-        for val in images.get('vals'):
-            for images in val.get('images').get('large'):
-                image_urls.append(response.urljoin(images.get('url')))
+        image_sets = re.findall('("xlarge"\s*:\s*\[.*?\])', images)
+        for image_set in image_sets:
+            images = json.loads("{" + image_set + "}")
+            for image in images['xlarge']:
+                image_urls.append(response.urljoin(image['url']))
         return image_urls
 
-    def request_variants(self, product_id):
-        url = add_or_replace_parameter(self.api_url, 'pid', product_id)
-        url = add_or_replace_parameter(url, 'format', 'ajax')
-        return [Request(url, self.parse_variants)]
+    def process_skus_data(self, variants, garment):
+        for variant in variants:
 
-    def parse_variants(self, response):
-        garment = response.meta['garment']
-        variants = json.loads(response.text)
-        for variant in variants.get('variations').get('variants'):
             if type(variant) is not dict:
                 for fit in variant:
                     garment['skus'].update(self.skus(fit))
             else:
                 garment['skus'].update(self.skus(variant))
+
         return self.next_request_or_garment(garment)
 
     def skus(self, variant):
-        sku = {}
-        sku['colour'] = variant.get('attributes').get('colorCode')
-        sku['size'] = self.one_size if variant.get('size') == 'NS' else variant.get('size')
-        sku['length'] = variant.get('sizeType')
-        sku['price'] = variant.get('pricing').get('sale')
-        sku['previous_prices'] = variant.get('pricing').get('standard')
-        sku['currency'] = self.currency
-        sku['out_of_stock'] = not variant.get('inStock')
+        money_strs = [variant['pricing']['sale'], variant['pricing']['standard'], self.currency]
+        sku = self.product_pricing_common(None, money_strs=money_strs)
+        sku['colour'] = variant['attributes']['colorCode']
+
+        size = self.one_size if variant['size'] == 'NS' else variant['size']
+        sku['size'] = f"{size}_{variant['sizeType']}"
+
+        sku['out_of_stock'] = not variant['inStock']
         sku_id = f"{sku['colour']}_{sku['size']}"
         return {sku_id: sku}
 
@@ -94,13 +98,13 @@ class EloquiiCrawler(BaseCrawlSpider, Mixin):
     name = Mixin.retailer + '-crawl'
     parse_spider = EloquiiParser()
     listing_css = [
-        '.d-flex.justify-content-center li a',
+        '.sub-nav-style a',
         '.justify-content-center.mt-5 div:nth-child(3) a'
     ]
-    product_css = '.product-images a:first-child'
+    product_css = ['.product-images a:first-child']
 
     rules = (
-        Rule(LinkExtractor(restrict_css=listing_css)
+        Rule(LinkExtractor(restrict_css=listing_css), callback='parse'
              ),
         Rule(
             LinkExtractor(restrict_css=product_css), callback='parse_item'
