@@ -18,11 +18,17 @@ class MixinUS(Mixin):
     market = 'US'
     start_urls = ['https://us.loropiana.com/en/']
 
+    image_url_t = "https://us.loropiana.com/en/api/pdp/get-images?articleCode={}&colorCode={}"
+    variant_url_t = "https://us.loropiana.com/en/api/pdp/product-variants?articleCode={}&colorCode={}"
+
 
 class MixinUK(Mixin):
     retailer = Mixin.retailer + '-uk'
     market = 'UK'
     start_urls = ['https://uk.loropiana.com/en/']
+
+    image_url_t = "https://uk.loropiana.com/en/api/pdp/get-images?articleCode={}&colorCode={}"
+    variant_url_t = "https://uk.loropiana.com/en/api/pdp/product-variants?articleCode={}&colorCode={}"
 
 
 class MixinIT(Mixin):
@@ -30,11 +36,10 @@ class MixinIT(Mixin):
     market = 'IT'
     start_urls = ['https://it.loropiana.com/it/']
 
+    image_url_t = "https://it.loropiana.com/it/api/pdp/get-images?articleCode={}&colorCode={}"
+    variant_url_t = "https://it.loropiana.com/it/api/pdp/product-variants?articleCode={}&colorCode={}"
 
 class LoroPianaParseSpider(BaseParseSpider):
-    image_url_t = "https://us.loropiana.com/en/api/pdp/get-images?articleCode={}&colorCode={}"
-    variant_url_t = "https://us.loropiana.com/en/api/pdp/product-variants?articleCode={}&colorCode={}"
-
     price_css = '.t-product-cta-price ::text'
     raw_description_css = '.desktop-details .t-product-copy ::text'
     description_css = '.product-info .t-caption ::text'
@@ -89,13 +94,17 @@ class LoroPianaParseSpider(BaseParseSpider):
 
             for variant in variants['sizes']:
                 sku = garment['meta']['pricing_common'].copy()
-                sku['size'] = variant['code']
+
+                size = sku['size'] = variant['code']
+                if size == 'NR':
+                    sku['size'] = self.one_size
+
                 sku['colour'] = colour
 
                 if variant['stock']['stockLevelStatus']['code'] == 'outOfStock':
                     sku['out_of_stock'] = True
 
-                skus[variant['variantCode']] = sku
+                skus[variant['variantCode'].replace('NR', self.one_size)] = sku
 
         return skus
 
