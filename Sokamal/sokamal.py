@@ -13,11 +13,11 @@ class SokamalSpider(scrapy.Spider):
 
     def parse(self, response):
         url = "https://fishry-api-live.azurewebsites.net/collection_request"
-        data_headers = {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
+        data_headers = {"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
         yield FormRequest(url=url, callback=self.parse_item, method='POST', dont_filter=True,
                           headers=data_headers,
-                          formdata={'storeID'
-                                    : '480EFD74-078D-4CF2-AC68-270940ED408F', 'take': '5000', })
+                          formdata={"storeID"
+                                    : "480EFD74-078D-4CF2-AC68-270940ED408F", "take": "5000"})
 
     @staticmethod
     def parse_item(response):
@@ -30,7 +30,7 @@ class SokamalSpider(scrapy.Spider):
             loader.add_value("brand", "Sokamal")
             loader.add_value("description", product['productDescription'])
             loader.add_value("retailer_sku", product['productSKU'])
-            loader.add_value("category", product.get('productCollections', ""))
+            loader.add_value("category", product.get('productCollections'))
             loader.add_value("image_urls", product.get('productImage'))
             loader.add_value("skus", product['productVarients'])
             loader.add_value("barcode", product['productBarcode'])
