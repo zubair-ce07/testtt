@@ -12,7 +12,7 @@ class User(AbstractUser):
 
 
 class Contact(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='Contacts')
     name = models.CharField(max_length=30, blank=False, null=False)
     email = models.EmailField(blank=True, null=True)
     phone_number = models.IntegerField(blank=True, null=True)
@@ -22,13 +22,13 @@ class Contact(models.Model):
 
 
 class Todo(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='Todos')
     title = models.CharField(max_length=30, blank=False, null=False)
     status = models.CharField(choices=STATUS_CHOICES, max_length=20, blank=False, null=False, default='NOT_STARTED')
 
 
 class Item(models.Model):
-    todo = models.ForeignKey(Todo, on_delete=models.CASCADE)
+    todo = models.ForeignKey(Todo, on_delete=models.CASCADE, related_name='Items')
     text = models.TextField(max_length=300, blank=False, null=False)
     status = models.CharField(choices=STATUS_CHOICES, max_length=20, blank=False, null=False, default='NOT_STARTED')
     due_date = models.DateField(blank=False, null=False)
