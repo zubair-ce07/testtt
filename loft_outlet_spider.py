@@ -1,4 +1,3 @@
-import re
 import json
 
 from scrapy.linkextractors import LinkExtractor
@@ -82,7 +81,7 @@ class LoftOutletParseSpider(BaseParseSpider, Mixin):
 
     def parse_images(self, response):
         garment = response.meta['garment']
-        raw_images = re.search('"item":(.*)}}', response.text).group(1)
+        raw_images = clean(response.css('*').re_first('"item":(.*)}}'))
         images = json.loads(raw_images)
 
         if not isinstance(images, list):
@@ -97,14 +96,13 @@ class LoftOutletParseSpider(BaseParseSpider, Mixin):
 
     def raw_product(self, response):
         product_css = 'script:contains(__NEXT_DATA__)::text'
-        raw_product = clean(response.css(product_css).re('"products":(\[{.+}\]),"ship'))[0]
+        raw_product = clean(response.css(product_css).re_first('"products":(\[{.+}\]),"ship'))
         return json.loads(raw_product)
 
     def raw_description(self, raw_product):
         raw_product = raw_product[0]
         raw_description = raw_product['fabricationContent'].split(',') + [raw_product['garmentCare']]
         raw_description += [v for k, v in raw_product.items() if 'bulletPoint' in k]
-
         return clean(raw_description)
 
     def product_name(self, raw_product):
@@ -119,12 +117,9 @@ class LoftOutletParseSpider(BaseParseSpider, Mixin):
     def clean_money(self, money_strs):
         return [ms for ms in money_strs if 'free' not in ms.lower()]
 
-    def currency(self, response):
-        currency_css = 'script:contains(__NEXT_DATA__)::text'
-        return clean(response.css(currency_css).re('"currency":"(.+?)"'))[0]
-
     def pricing(self, response, raw_sku):
-        currency = self.currency(response)
+        currency_css = 'script:contains(__NEXT_DATA__)::text'
+        currency = clean(response.css(currency_css).re_first('"currency":"(.+?)"'))
         money_strs = [currency, raw_sku['listPrice'], raw_sku.get('salePrice')] + raw_sku['promoMessages']
         return self.product_pricing_common(None, money_strs=money_strs, post_process=self.clean_money)
 
@@ -143,9 +138,9 @@ class PaginationLE(LinkExtractor):
 
         current_page = int(url_query_parameter(response.url, 'goToPage', 1))
         pagination_css = 'script:contains(__NEXT_DATA__)::text'
-        total_pages = clean(response.css(pagination_css).re('paginationCount":(\d+),'))[0]
+        total_pages = clean(response.css(pagination_css).re_first('paginationCount":(\d+),'))
 
-        if current_page < int(total_pages):
+        if current_page <= int(total_pages) + 1:
             return [Link(add_or_replace_parameter(response.url, 'goToPage', current_page+1))]
 
         return []
