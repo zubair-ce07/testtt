@@ -10,10 +10,9 @@ from .base import BaseParseSpider, BaseCrawlSpider, clean, Gender
 class Mixin:
     retailer = 'icebreaker'
     allowed_domains = ['icebreaker.com']
-    default_brand = "ICEBREAKER"
-    cookie_value = ""
+    default_brand = 'ICEBREAKER'
 
-    def process_request(self, request):
+    def set_cookie(self, request):
         request.headers['Cookie'] = self.cookie_value
         request.meta['dont_merge_cookies'] = True
         return request
@@ -22,6 +21,7 @@ class Mixin:
 class MixinUK(Mixin):
     retailer = Mixin.retailer + '-uk'
     market = 'UK'
+    cookie_value = 'IBPreferred=UK|UK|en|GBP'
     allowed_domains = ['uk.icebreaker.com']
     start_urls = [
         'https://uk.icebreaker.com/',
@@ -31,6 +31,7 @@ class MixinUK(Mixin):
 class MixinUS(Mixin):
     retailer = Mixin.retailer + '-us'
     market = 'US'
+    cookie_value = 'IBPreferred=US|US|en|USD'
     start_urls = [
         'https://us.icebreaker.com/',
     ]
@@ -39,16 +40,17 @@ class MixinUS(Mixin):
 class MixinDE(Mixin):
     retailer = Mixin.retailer + '-de'
     market = 'DE'
+    cookie_value = 'IBPreferred=DE|EU|de|EUR'
     allowed_domains = ['eu.icebreaker.com']
     start_urls = [
         'https://eu.icebreaker.com/de/',
     ]
-    cookie_value = 'IBPreferred=DE|EU|de|EUR'
 
 
 class MixinCA(Mixin):
     retailer = Mixin.retailer + '-ca'
     market = 'CA'
+    cookie_value = 'IBPreferred=CA|CA|en|CAD'
     allowed_domains = ['ca.icebreaker.com']
     start_urls = [
         'https://ca.icebreaker.com/',
@@ -58,7 +60,7 @@ class MixinCA(Mixin):
 class MixinDK(Mixin):
     retailer = Mixin.retailer + '-dk'
     market = 'DK'
-    cookie_value = "IBPreferred=DK|EU|en|DKK"
+    cookie_value = 'IBPreferred=DK|EU|en|DKK'
     allowed_domains = ['eu.icebreaker.com']
     start_urls = [
         'https://eu.icebreaker.com/en/',
@@ -68,7 +70,7 @@ class MixinDK(Mixin):
 class MixinFR(Mixin):
     retailer = Mixin.retailer + '-fr'
     market = 'FR'
-    cookie_value = "IBPreferred=FR|EU|fr_FR|EUR"
+    cookie_value = 'IBPreferred=FR|EU|fr_FR|EUR'
     allowed_domains = ['eu.icebreaker.com']
     start_urls = [
         'https://eu.icebreaker.com/fr_FR/',
@@ -78,6 +80,7 @@ class MixinFR(Mixin):
 class MixinNZ(Mixin):
     retailer = Mixin.retailer + '-nz'
     market = 'NZ'
+    cookie_value = 'IBPreferred=NZ|NZ|en|NZD'
     allowed_domains = ['nz.icebreaker.com']
     start_urls = [
         'https://nz.icebreaker.com/',
@@ -104,15 +107,6 @@ class MixinSE(Mixin):
     ]
 
 
-class MixinEU(Mixin):
-    retailer = Mixin.retailer + '-eu'
-    market = 'EU'
-    allowed_domains = ['eu.icebreaker.com']
-    start_urls = [
-        'https://eu.icebreaker.com/en/',
-    ]
-
-
 class IcebreakerParseSpider(BaseParseSpider):
     price_css = '.product-price ::text'
 
@@ -122,26 +116,26 @@ class IcebreakerParseSpider(BaseParseSpider):
 
         if not garment:
             return
-        
+
         self.boilerplate_normal(garment, response)
-        garment["gender"] = self.product_gender(raw_product, response)
-        garment["skus"] = {}
+        garment['gender'] = self.product_gender(raw_product, response)
+        garment['skus'] = {}
         garment['image_urls'] = self.product_images(response)
-        garment['meta'] = {'requests_queue': self.color_requests(response)}
+        garment['meta'] = {'requests_queue': self.colour_requests(response)}
 
         return self.next_request_or_garment(garment)
 
-    def color_requests(self, response):
+    def colour_requests(self, response):
         color_urls = clean(response.css('ul.color a::attr(href)'))
-        return [self.process_request(Request(url=url, callback=self.parse_colors)) for url in color_urls]
+        return [self.set_cookie(Request(url=url, callback=self.parse_colours)) for url in color_urls]
 
-    def parse_colors(self, response):
-        garment = response.meta["garment"]
+    def parse_colours(self, response):
+        garment = response.meta['garment']
         garment['image_urls'] += self.product_images(response)
         size = clean(response.css('.size .selected a::attr(title)'))
 
         if size:
-            garment["skus"].update(self.skus(response))
+            garment['skus'].update(self.skus(response))
 
         else:
             garment['meta']['requests_queue'] += self.size_requests(response)
@@ -150,12 +144,13 @@ class IcebreakerParseSpider(BaseParseSpider):
 
     def size_requests(self, response):
         sizes = clean(response.css('.size .swatchanchor ::attr(href)'))
-        return [self.process_request(Request(url=size_url, dont_filter=True, callback=self.parse_sizes))
-                for size_url in sizes]
+
+        return [self.set_cookie(Request(url=size_url, dont_filter=True,
+                                        callback=self.parse_sizes)) for size_url in sizes]
 
     def parse_sizes(self, response):
-        garment = response.meta["garment"]
-        garment["skus"].update(self.skus(response))
+        garment = response.meta['garment']
+        garment['skus'].update(self.skus(response))
 
         return self.next_request_or_garment(garment)
 
@@ -164,13 +159,13 @@ class IcebreakerParseSpider(BaseParseSpider):
         sku['colour'] = clean(response.css('.color .selected a::attr(title)'))[0]
         size = clean(response.css('.size .selected a::attr(title)'))
         sku['size'] = size[0] if size else self.one_size
-        availability_xpath = '//*[@class="availability-msg"]/*[contains(.,"out of stock")]/text()'
-        is_sold_out = clean(response.xpath(availability_xpath))
+        availability_css = '.availability-msg :contains("out of stock")::text'
+        is_sold_out = clean(response.css(availability_css))
 
         if is_sold_out:
             sku['out_of_stock'] = True
 
-        return {f'{sku["colour"]}_{sku["size"]}': sku}
+        return {f"{sku['colour']}_{sku['size']}": sku}
 
     def product_id(self, raw_product):
         return raw_product['id']
@@ -184,25 +179,25 @@ class IcebreakerParseSpider(BaseParseSpider):
         return json.loads(json_text)
 
     def product_name(self, response):
-        return self.raw_product(response)["name"]
+        return self.raw_product(response)['name']
 
     def product_category(self, response):
         return clean(response.css('.breadcrumb a::text'))
 
     def product_gender(self, raw_product, response):
-        raw_gender = raw_product["gender"]
+        raw_gender = raw_product['gender']
         categories = self.product_category(response)
         soup = f"{' '.join(categories)} {raw_gender}"
 
         return self.gender_lookup(soup) or Gender.ADULTS.value
 
     def raw_description(self, response, **kwargs):
-        raw_desc_css = ".description ::text"
+        desc_css = '.description ::text'
         key_css = '.catlabel::text'
         value_css = '.bullet-info::text'
-        raw_description = clean(response.css(raw_desc_css))
+        raw_description = clean(response.css(desc_css))
 
-        raw_description += [f"{clean(d_sel.css(key_css))[0]}{clean(d_sel.css(value_css))[0]}"
+        raw_description += [f'{clean(d_sel.css(key_css))[0]}{clean(d_sel.css(value_css))[0]}'
                             for d_sel in response.css('.attr') if d_sel.css(value_css)]
 
         return raw_description
@@ -210,16 +205,15 @@ class IcebreakerParseSpider(BaseParseSpider):
 
 class IcebreakerCrawlSpider(BaseCrawlSpider):
     listings_css = [
-        ".nav-item .sub-nav-column-container",
-        ".infinite-scroll-placeholder"
+        '.nav-item .sub-nav-column-container',
+        '.infinite-scroll-placeholder'
     ]
-                
     product_css = '.product-image'
 
     rules = (
-        Rule(LinkExtractor(restrict_css=listings_css, attrs=["href", "data-grid-url"]),
-             process_request='process_request', callback='parse'),
-        Rule(LinkExtractor(restrict_css=product_css), process_request='process_request', callback='parse_item')
+        Rule(LinkExtractor(restrict_css=listings_css, attrs=['href', 'data-grid-url']),
+             process_request='set_cookie', callback='parse'),
+        Rule(LinkExtractor(restrict_css=product_css), process_request='set_cookie', callback='parse_item')
     )
 
 
@@ -302,13 +296,3 @@ class IceBreakerParseSpiderSE(IcebreakerParseSpider, MixinSE):
 class IceBreakerCrawlSpiderSE(IcebreakerCrawlSpider, MixinSE):
     name = MixinSE.retailer + '-crawl'
     parse_spider = IceBreakerParseSpiderSE()
-
-
-class IceBreakerParseSpiderEU(IcebreakerParseSpider, MixinEU):
-    name = MixinEU.retailer + '-parse'
-
-
-class IceBreakerCrawlSpiderEU(IcebreakerCrawlSpider, MixinEU):
-    name = MixinEU.retailer + '-crawl'
-    parse_spider = IceBreakerParseSpiderEU()
-                
