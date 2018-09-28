@@ -34,13 +34,56 @@ class MixinES(Mixin):
     start_urls = ['https://www.elganso.com/es/?___store=es&changecountry=true&pais=ES']
 
 
+class MixinCL(Mixin):
+    retailer = Mixin.retailer + '-cl'
+    market = 'CL'
+    lang = 'fr'
+    retailer_currency = 'EUR'
+    start_urls = ['https://www.elganso.com/es/?___store=es&changecountry=true&pais=CL']
+
+
+class MixinPT(Mixin):
+    retailer = Mixin.retailer + '-pt'
+    market = 'PT'
+    lang = 'fr'
+    start_urls = ['https://www.elganso.com/fr/?___store=fr&changecountry=true&pais=PT']
+
+
+class MixinNL(Mixin):
+    retailer = Mixin.retailer + '-nl'
+    market = 'NL'
+    lang = 'de'
+    start_urls = ['https://www.elganso.com/intl_de/?___store=intl_de&changecountry=true&pais=NL']
+
+
+class MixinIT(Mixin):
+    retailer = Mixin.retailer + '-it'
+    market = 'IT'
+    lang = 'es'
+    start_urls = ['https://www.elganso.com/intl_es/?___store=intl_es&changecountry=true&pais=IT']
+
+
+class MixinBE(Mixin):
+    retailer = Mixin.retailer + '-be'
+    market = 'BE'
+    lang = 'de'
+    start_urls = ['https://www.elganso.com/intl_de/?___store=intl_de&changecountry=true&pais=BE']
+
+
 class ElgansoParseSpider(BaseParseSpider):
-    one_sizes = [
-        'os',
-        'one size'
+    merch_infos = [
+        'limited edition',
+        'limited collection'
     ]
 
-    price_css = '.price-box ::text'
+    one_sizes = [
+        'one size',
+        'talla única',
+        'une taille',
+        'universalgröße'
+    ]
+
+    price_css = '.price-box :not(.price-label)::text'
     description_css = '.short-description .std:first-child ::text'
     care_css = '.short-description .std:nth-child(n+2)  ::text'
 
@@ -52,42 +95,46 @@ class ElgansoParseSpider(BaseParseSpider):
             return
 
         if self.out_of_stock(response):
-            return self.out_of_stock_item(response, response, product_id)
+            garment.update(self.product_pricing_common(response))
 
         self.boilerplate_normal(garment, response)
 
+        garment['url'] = garment['url_original']
         garment['image_urls'] = self.image_urls(response)
         garment['gender'] = self.product_gender(response)
         garment['category'] = self.product_category(response)
         garment['skus'] = self.skus(response)
+        garment['merch_info'] = self.merch_info(response)
 
         return garment
 
-    @staticmethod
-    def product_id(response):
+    def product_id(self, response):
         return response.css('.desc ::text').re_first(r'Ref.\s*(.*)')
 
     def out_of_stock(self, response):
-        return "SOLD OUT" in ''.join(clean(response.css('.productoagotado ::text'))).upper()
+        return response.css('.out-of-stock-2 ::text')
 
     def product_gender(self, response):
         soup = [response.url] + self.product_category(response)
+        soup += [link for _, link in response.meta.get('trail') or []]
         return self.gender_lookup(soupify(soup)) or Gender.ADULTS.value
 
     def product_category(self, response):
         return clean(response.css('.prod-breadcrumb ::text'))
 
-    @staticmethod
-    def image_urls(response):
+    def image_urls(self, response):
         return clean(response.css('#carousel-product img::attr(src)'))
 
-    @staticmethod
-    def product_name(response):
+    def product_name(self, response):
         return clean(response.css('.data-product .tit ::text'))[0]
 
     def skus(self, response):
         skus = {}
         common_sku = self.product_pricing_common(response)
+
+        colour = self.detect_colour_from_name(response)
+        if colour:
+            common_sku['colour'] = colour
 
         for size_s in response.css('#size-list li'):
             sku = common_sku.copy()
@@ -100,6 +147,10 @@ class ElgansoParseSpider(BaseParseSpider):
             skus[size] = sku
 
         return skus
+
+    def merch_info(self, response):
+        soup = soupify([self.product_name(response)] + self.product_description(response)).lower()
+        return [merch for merch in self.merch_infos if merch.lower() in soup]
 
 
 class ElgansoCrawlSpider(BaseCrawlSpider):
@@ -151,3 +202,48 @@ class ElgansoESParseSpider(MixinES, ElgansoParseSpider):
 class ElgansoESCrawlSpider(MixinES, ElgansoCrawlSpider):
     name = MixinES.retailer + '-crawl'
     parse_spider = ElgansoESParseSpider()
+
+
+class ElgansoCLParseSpider(MixinCL, ElgansoParseSpider):
+    name = MixinCL.retailer + '-parse'
+
+
+class ElgansoCLCrawlSpider(MixinCL, ElgansoCrawlSpider):
+    name = MixinCL.retailer + '-crawl'
+    parse_spider = ElgansoCLParseSpider()
+
+
+class ElgansoPTParseSpider(MixinPT, ElgansoParseSpider):
+    name = MixinPT.retailer + '-parse'
+
+
+class ElgansoPTCrawlSpider(MixinPT, ElgansoCrawlSpider):
+    name = MixinPT.retailer + '-crawl'
+    parse_spider = ElgansoPTParseSpider()
+
+
+class ElgansoNLParseSpider(MixinNL, ElgansoParseSpider):
+    name = MixinNL.retailer + '-parse'
+
+
+class ElgansoNLCrawlSpider(MixinNL, ElgansoCrawlSpider):
+    name = MixinNL.retailer + '-crawl'
+    parse_spider = ElgansoNLParseSpider()
+
+
+class ElgansoITParseSpider(MixinIT, ElgansoParseSpider):
+    name = MixinIT.retailer + '-parse'
+
+
+class ElgansoITCrawlSpider(MixinIT, ElgansoCrawlSpider):
+    name = MixinIT.retailer + '-crawl'
+    parse_spider = ElgansoITParseSpider()
+
+
+class ElgansoBEParseSpider(MixinBE, ElgansoParseSpider):
+    name = MixinBE.retailer + '-parse'
+
+
+class ElgansoBECrawlSpider(MixinBE, ElgansoCrawlSpider):
+    name = MixinBE.retailer + '-crawl'
+    parse_spider = ElgansoBEParseSpider()
