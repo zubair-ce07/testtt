@@ -1,8 +1,8 @@
 import json
 
 from scrapy import Request
-from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
+from scrapy.linkextractors import LinkExtractor
 
 from .base import BaseParseSpider, BaseCrawlSpider, clean, Gender, soupify
 
@@ -80,7 +80,7 @@ class LoroPianaParseSpider(BaseParseSpider):
         colour = variant['description']
 
         for sizes in variant['sizes']:
-            sku = response.meta['pricing_common'].copy()
+            sku = response.meta['pricing_common']
             sku['colour'] = colour
 
             size = sizes['code']
@@ -125,7 +125,7 @@ class LoroPianaParseSpider(BaseParseSpider):
 
         for colour_code in self.detect_colour_codes(response):
             url = self.image_url_t.format(self.market.lower(), product_id, colour_code)
-            colour_requests.append(Request(url=url, callback=self.parse_image_urls))
+            colour_requests.append(Request(url, callback=self.parse_image_urls))
 
         return colour_requests
 
