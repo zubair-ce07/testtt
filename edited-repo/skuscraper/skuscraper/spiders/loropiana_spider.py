@@ -12,14 +12,14 @@ class Mixin:
     default_brand = 'Loro Piana'
     allowed_domains = ['loropiana.com']
 
+    image_url_t = "https://{}.loropiana.com/en/api/pdp/get-images?articleCode={}&colorCode={}"
+    variant_url_t = "https://{}.loropiana.com/en/api/pdp/product-variants?articleCode={}&colorCode={}"
+
 
 class MixinUS(Mixin):
     retailer = Mixin.retailer + '-us'
     market = 'US'
     start_urls = ['https://us.loropiana.com/en/']
-
-    image_url_t = "https://us.loropiana.com/en/api/pdp/get-images?articleCode={}&colorCode={}"
-    variant_url_t = "https://us.loropiana.com/en/api/pdp/product-variants?articleCode={}&colorCode={}"
 
 
 class MixinUK(Mixin):
@@ -27,19 +27,18 @@ class MixinUK(Mixin):
     market = 'UK'
     start_urls = ['https://uk.loropiana.com/en/']
 
-    image_url_t = "https://uk.loropiana.com/en/api/pdp/get-images?articleCode={}&colorCode={}"
-    variant_url_t = "https://uk.loropiana.com/en/api/pdp/product-variants?articleCode={}&colorCode={}"
-
 
 class MixinIT(Mixin):
     retailer = Mixin.retailer + '-it'
     market = 'IT'
     start_urls = ['https://it.loropiana.com/it/']
 
-    image_url_t = "https://it.loropiana.com/it/api/pdp/get-images?articleCode={}&colorCode={}"
-    variant_url_t = "https://it.loropiana.com/it/api/pdp/product-variants?articleCode={}&colorCode={}"
 
 class LoroPianaParseSpider(BaseParseSpider):
+    one_sizes = [
+        'NR'
+    ]
+
     price_css = '.t-product-cta-price ::text'
     raw_description_css = '.desktop-details .t-product-copy ::text'
     description_css = '.product-info .t-caption ::text'
@@ -56,26 +55,16 @@ class LoroPianaParseSpider(BaseParseSpider):
 
         garment['skus'] = {}
         garment['image_urls'] = []
-
         garment['gender'] = self.product_gender(response)
-        garment['category'] = self.product_category(response)
 
-        garment['meta'] = {'pricing_common': self.product_pricing_common(response=response)}
-        garment['meta']['requests_queue'] = self.request_image_urls(response)
-        garment['meta']['requests_queue'] += self.request_variants(response)
+        requests_queue = self.request_variants(response) + self.request_image_urls(response)
+        garment['meta'] = {'requests_queue': requests_queue}
 
         return self.next_request_or_garment(garment)
 
     def parse_image_urls(self, response):
         garment = response.meta['garment']
-
-        for raw_image in json.loads(response.text):
-            for image in raw_image['formats']:
-
-                if image['format'] != 'ZOOM':
-                    continue
-
-                garment['image_urls'].append(image['url'])
+        self.image_urls(response, garment)
 
         return self.next_request_or_garment(garment)
 
@@ -87,26 +76,29 @@ class LoroPianaParseSpider(BaseParseSpider):
 
     def skus(self, response):
         skus = {}
-        garment = response.meta['garment']
+        variant = json.loads(response.text)[0]
+        colour = variant['description']
 
-        for variants in json.loads(response.text):
-            colour = variants['description']
+        for sizes in variant['sizes']:
+            sku = response.meta['pricing_common'].copy()
+            sku['colour'] = colour
 
-            for variant in variants['sizes']:
-                sku = garment['meta']['pricing_common'].copy()
+            size = sizes['code']
+            sku['size'] = self.one_size if size.lower() in self.one_sizes else size
 
-                size = sku['size'] = variant['code']
-                if size == 'NR':
-                    sku['size'] = self.one_size
+            if sizes['stock']['stockLevelStatus']['code'] == 'outOfStock':
+                sku['out_of_stock'] = True
 
-                sku['colour'] = colour
-
-                if variant['stock']['stockLevelStatus']['code'] == 'outOfStock':
-                    sku['out_of_stock'] = True
-
-                skus[variant['variantCode'].replace('NR', self.one_size)] = sku
+            skus[f"{colour}_{size}"] = sku
 
         return skus
+
+    def image_urls(self, response, garment):
+        for raw_image in json.loads(response.text):
+            for image in raw_image['formats']:
+
+                if image['format'] == 'ZOOM':
+                    garment['image_urls'].append(image['url'])
 
     def product_id(self, response):
         return clean(response.css('::attr("data-base-product-code")'))[0]
@@ -132,18 +124,19 @@ class LoroPianaParseSpider(BaseParseSpider):
         colour_requests = []
 
         for colour_code in self.detect_colour_codes(response):
-            url = self.image_url_t.format(product_id, colour_code)
+            url = self.image_url_t.format(self.market.lower(), product_id, colour_code)
             colour_requests.append(Request(url=url, callback=self.parse_image_urls))
 
         return colour_requests
 
     def request_variants(self, response):
         product_id = self.product_id(response)
+        meta = {'pricing_common': self.product_pricing_common(response=response)}
         variant_requests = []
 
         for colour_code in self.detect_colour_codes(response):
-            url = self.variant_url_t.format(product_id, colour_code)
-            variant_requests.append(Request(url=url, callback=self.parse_skus))
+            url = self.variant_url_t.format(self.market.lower(), product_id, colour_code)
+            variant_requests.append(Request(url, meta=meta, callback=self.parse_skus))
 
         return variant_requests
 
