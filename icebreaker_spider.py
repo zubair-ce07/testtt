@@ -12,8 +12,8 @@ class Mixin:
     allowed_domains = ['icebreaker.com']
     default_brand = 'ICEBREAKER'
 
-    def set_cookie(self, request):
-        request.headers['Cookie'] = self.cookie_value
+    def set_locale(self, request):
+        request.headers['Cookie'] = self.cookies
         request.meta['dont_merge_cookies'] = True
         return request
 
@@ -21,7 +21,7 @@ class Mixin:
 class MixinUK(Mixin):
     retailer = Mixin.retailer + '-uk'
     market = 'UK'
-    cookie_value = 'IBPreferred=UK|UK|en|GBP'
+    cookies = 'IBPreferred=UK|UK|en|GBP'
     allowed_domains = ['uk.icebreaker.com']
     start_urls = [
         'https://uk.icebreaker.com/',
@@ -31,7 +31,7 @@ class MixinUK(Mixin):
 class MixinUS(Mixin):
     retailer = Mixin.retailer + '-us'
     market = 'US'
-    cookie_value = 'IBPreferred=US|US|en|USD'
+    cookies = 'IBPreferred=US|US|en|USD'
     start_urls = [
         'https://us.icebreaker.com/',
     ]
@@ -40,7 +40,7 @@ class MixinUS(Mixin):
 class MixinDE(Mixin):
     retailer = Mixin.retailer + '-de'
     market = 'DE'
-    cookie_value = 'IBPreferred=DE|EU|de|EUR'
+    cookies = 'IBPreferred=DE|EU|de|EUR'
     allowed_domains = ['eu.icebreaker.com']
     start_urls = [
         'https://eu.icebreaker.com/de/',
@@ -50,7 +50,7 @@ class MixinDE(Mixin):
 class MixinCA(Mixin):
     retailer = Mixin.retailer + '-ca'
     market = 'CA'
-    cookie_value = 'IBPreferred=CA|CA|en|CAD'
+    cookies = 'IBPreferred=CA|CA|en|CAD'
     allowed_domains = ['ca.icebreaker.com']
     start_urls = [
         'https://ca.icebreaker.com/',
@@ -60,7 +60,7 @@ class MixinCA(Mixin):
 class MixinDK(Mixin):
     retailer = Mixin.retailer + '-dk'
     market = 'DK'
-    cookie_value = 'IBPreferred=DK|EU|en|DKK'
+    cookies = 'IBPreferred=DK|EU|en|DKK'
     allowed_domains = ['eu.icebreaker.com']
     start_urls = [
         'https://eu.icebreaker.com/en/',
@@ -70,7 +70,7 @@ class MixinDK(Mixin):
 class MixinFR(Mixin):
     retailer = Mixin.retailer + '-fr'
     market = 'FR'
-    cookie_value = 'IBPreferred=FR|EU|fr_FR|EUR'
+    cookies = 'IBPreferred=FR|EU|fr_FR|EUR'
     allowed_domains = ['eu.icebreaker.com']
     start_urls = [
         'https://eu.icebreaker.com/fr_FR/',
@@ -80,7 +80,7 @@ class MixinFR(Mixin):
 class MixinNZ(Mixin):
     retailer = Mixin.retailer + '-nz'
     market = 'NZ'
-    cookie_value = 'IBPreferred=NZ|NZ|en|NZD'
+    cookies = 'IBPreferred=NZ|NZ|en|NZD'
     allowed_domains = ['nz.icebreaker.com']
     start_urls = [
         'https://nz.icebreaker.com/',
@@ -90,7 +90,7 @@ class MixinNZ(Mixin):
 class MixinPL(Mixin):
     retailer = Mixin.retailer + '-pl'
     market = 'PL'
-    cookie_value = 'IBPreferred=PL|EU|en|PLN'
+    cookies = 'IBPreferred=PL|EU|en|PLN'
     allowed_domains = ['eu.icebreaker.com']
     start_urls = [
         'https://eu.icebreaker.com/en/',
@@ -100,7 +100,7 @@ class MixinPL(Mixin):
 class MixinSE(Mixin):
     retailer = Mixin.retailer + '-se'
     market = 'SE'
-    cookie_value = 'IBPreferred=SE|EU|en|SEK'
+    cookies = 'IBPreferred=SE|EU|en|SEK'
     allowed_domains = ['eu.icebreaker.com']
     start_urls = [
         'https://eu.icebreaker.com/en/',
@@ -127,7 +127,7 @@ class IcebreakerParseSpider(BaseParseSpider):
 
     def colour_requests(self, response):
         color_urls = clean(response.css('ul.color a::attr(href)'))
-        return [self.set_cookie(Request(url=url, callback=self.parse_colours)) for url in color_urls]
+        return [self.set_locale(Request(url=url, callback=self.parse_colours)) for url in color_urls]
 
     def parse_colours(self, response):
         garment = response.meta['garment']
@@ -145,7 +145,7 @@ class IcebreakerParseSpider(BaseParseSpider):
     def size_requests(self, response):
         sizes = clean(response.css('.size .swatchanchor ::attr(href)'))
 
-        return [self.set_cookie(Request(url=size_url, dont_filter=True,
+        return [self.set_locale(Request(url=size_url, dont_filter=True,
                                         callback=self.parse_sizes)) for size_url in sizes]
 
     def parse_sizes(self, response):
@@ -212,8 +212,8 @@ class IcebreakerCrawlSpider(BaseCrawlSpider):
 
     rules = (
         Rule(LinkExtractor(restrict_css=listings_css, attrs=['href', 'data-grid-url']),
-             process_request='set_cookie', callback='parse'),
-        Rule(LinkExtractor(restrict_css=product_css), process_request='set_cookie', callback='parse_item')
+             process_request='set_locale', callback='parse'),
+        Rule(LinkExtractor(restrict_css=product_css), process_request='set_locale', callback='parse_item')
     )
 
 
