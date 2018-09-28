@@ -1,5 +1,6 @@
 from rest_framework.serializers import ModelSerializer, HiddenField, CurrentUserDefault
 from ContactTodoManagement.models import User, Todo, Contact, Item
+from django.shortcuts import get_object_or_404
 
 
 class UserSerializer(ModelSerializer):
@@ -23,7 +24,6 @@ class ItemSerializer(ModelSerializer):
     class Meta:
         model = Item
         fields = ['pk', 'todo', 'text', 'status', 'due_date']
-        read_only_fields = ['pk']
 
 
 class TodoSerializer(ModelSerializer):
@@ -48,8 +48,27 @@ class TodoSerializer(ModelSerializer):
 
         return todo
 
+    def update(self, instance, validated_data):
+        instance.title = validated_data.get('title', instance.title)
+        instance.status = validated_data.get('status', instance.status)
+        instance.save()
+
+        kwargs_data = self._kwargs.get('data')
+        items_received = kwargs_data.get('Items')
+
+        if items_received:
+            for item_received in items_received:
+                item_id_received = item_received.get('pk')
+                item = get_object_or_404(Item, id=item_id_received)
+                if item:
+                    item.status = item_received.get('status', item.status)
+                    item.text = item_received.get('text', item.text)
+                    item.due_date = item_received.get('due_date', item.due_date)
+                    item.save()
+
+        return instance
+
     class Meta:
         model = Todo
         fields = ['pk', 'user', 'title', 'status', 'Items']
         read_only_fields = ['pk', 'user']
-
