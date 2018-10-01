@@ -1,5 +1,4 @@
 from django.urls import path, include
-from rest_framework import routers
 from ContactTodoManagement.Api.views import UserViewset, ContactViewset, TodoViewset, ItemViewset
 from rest_framework.authtoken import views
 app_name = 'api'
@@ -22,8 +21,8 @@ urlpatterns = [
     path('create_todo/', TodoViewset.as_view({'post': 'create'})),
     path('update_todo/<int:pk>', TodoViewset.as_view({'put': 'update'})),
 
-    path('get_items/', TodoViewset.as_view({'get': 'list'})),
-    path('get_item/<int:pk>', TodoViewset.as_view({'get': 'retrieve'})),
-    path('create_item/', TodoViewset.as_view({'post': 'create'})),
-    path('update_item/<int:pk>', TodoViewset.as_view({'put': 'update'})),
+    path('get_items/', ItemViewset.as_view({'get': 'list'})),
+    path('get_item/<int:pk>', ItemViewset.as_view({'get': 'retrieve'})),
+    path('create_item/', ItemViewset.as_view({'post': 'create'})),
+    path('update_item/<int:pk>', ItemViewset.as_view({'put': 'update'})),
 ]
