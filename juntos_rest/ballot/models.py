@@ -11,7 +11,7 @@ class Tag(models.Model):
     """
     name = models.CharField(max_length=48)
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    modified_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = 'tbl_tag'
@@ -40,7 +40,7 @@ class Ballot(models.Model):
     created_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    updated_at = models.DateTimeField(auto_now=True)
+    modified_at = models.DateTimeField(auto_now=True)
     ending_date = models.DateTimeField(null=True, blank=True)
     active_period = models.IntegerField(
         help_text="Number of days a Ballot should remain active", default=3,
@@ -96,7 +96,7 @@ class Choice(models.Model):
     ballot = models.ForeignKey(Ballot, on_delete=models.CASCADE)
     text = models.CharField(max_length=64)
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    modified_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = 'tbl_choice'
