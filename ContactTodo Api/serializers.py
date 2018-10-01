@@ -10,6 +10,13 @@ class UserSerializer(ModelSerializer):
         read_only_fields = ['pk']
         extra_kwargs = {'password': {'write_only': True}}
 
+    def create(self, validated_data):
+        user = User(**validated_data)
+        password = validated_data.get('password', '')
+        user.set_password(password)
+        user.save()
+        return user
+
 
 class ContactSerializer(ModelSerializer):
     user = HiddenField(default=CurrentUserDefault())
@@ -24,48 +31,47 @@ class ItemSerializer(ModelSerializer):
     class Meta:
         model = Item
         fields = ['pk', 'todo', 'text', 'status', 'due_date']
+        read_only_fields = ['pk']
+
+
+class TodoItemSerializer(ModelSerializer):
+    class Meta:
+        model = Item
+        fields = ['pk', 'text', 'status', 'due_date']
+        read_only_fields = ['pk']
 
 
 class TodoSerializer(ModelSerializer):
-    Items = ItemSerializer(many=True)
+    Items = TodoItemSerializer(many=True)
     user = HiddenField(default=CurrentUserDefault())
 
     def create(self, validated_data):
-        Items = validated_data.pop('Items')
-        todo = Todo()
-        todo.title = validated_data.get('title')
-        todo.status = validated_data.get('status')
-        todo.user = validated_data.get('user')
-        todo.save()
 
-        for item in Items:
-            todo_item = Item()
-            todo_item.todo = todo
-            todo_item.text = item.get('text')
-            todo_item.status = item.get('status')
-            todo_item.due_date = item.get('due_date')
-            todo_item.save()
+        items_received = validated_data.pop('Items')
+        items = []
+        todo = Todo.objects.create(**validated_data)
+        for item in items_received:
+            item['todo'] = todo
+            items.append(Item(**item))
+        Item.objects.bulk_create(items)
 
         return todo
 
     def update(self, instance, validated_data):
-        instance.title = validated_data.get('title', instance.title)
-        instance.status = validated_data.get('status', instance.status)
-        instance.save()
 
-        kwargs_data = self._kwargs.get('data')
-        items_received = kwargs_data.get('Items')
+        instance.update_todo(validated_data)
 
-        if items_received:
-            for item_received in items_received:
-                item_id_received = item_received.get('pk')
-                item = get_object_or_404(Item, id=item_id_received)
+        kwargs = self._kwargs.get('data')
+        items = kwargs.get('Items') if kwargs else None
+
+        if items:
+            for item_received in items:
+                item_id = item_received.get('pk')
+                item = get_object_or_404(Item, id=item_id)
                 if item:
-                    item.status = item_received.get('status', item.status)
-                    item.text = item_received.get('text', item.text)
-                    item.due_date = item_received.get('due_date', item.due_date)
-                    item.save()
-
+                    item.update_item(item_received)
+                else:
+                    raise item
         return instance
 
     class Meta:
