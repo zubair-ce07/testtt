@@ -19,6 +19,11 @@ class Profile(models.Model):
     age = models.IntegerField(null=True, blank=True)
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, null=True, blank=True)
 
+    class Meta:
+        db_table = 'tbl_profile'
+        verbose_name = 'Profile'
+        verbose_name_plural = 'Profiles'
+
     def __str__(self):
         return self.user.username
 

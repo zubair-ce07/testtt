@@ -13,6 +13,11 @@ class Tag(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        db_table = 'tbl_tag'
+        verbose_name = 'Tag'
+        verbose_name_plural = 'Tags'
+
     def __str__(self):
         return self.name
 
@@ -44,6 +49,11 @@ class Ballot(models.Model):
     tags = models.ManyToManyField(Tag)
     is_active = models.BooleanField(default=True)
     objects = BallotManager()
+
+    class Meta:
+        db_table = 'tbl_ballot'
+        verbose_name = 'Ballot'
+        verbose_name_plural = 'Ballots'
 
     def __str__(self):
         return self.title
@@ -88,6 +98,11 @@ class Choice(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        db_table = 'tbl_choice'
+        verbose_name = 'Choice'
+        verbose_name_plural = 'Choices'
+
     def __str__(self):
         return self.text
 
@@ -109,6 +124,9 @@ class Vote(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        db_table = 'tbl_vote'
+        verbose_name = 'Vote'
+        verbose_name_plural = 'Votes'
         unique_together = ('user', 'choice')
 
     def __str__(self):

@@ -8,7 +8,7 @@ Major Requirements:
 API docs can be found at: docs_
 --------------------------------
 
-.. _docs:  <https://web.postman.co/collections/4713976-d83e0e60-5b09-4858-b0be-0d27dc5ed1e4?workspace=6178d999-89c4-4bb9-9513-6f3329943877>;
+.. _docs:  <https://documenter.getpostman.com/view/4713976/RWaRPRP6>
 
 
 First, create a virtual environment and install requirements (Make sure you've installed python3.5):
@@ -36,7 +36,6 @@ Run migrations and collect static assets:
 .. code-block:: bash
 
     python manage.py migrate
-    python manage.py collectstatic
 
 
 Make sure you install and run `Redis` as it is used in the project with `Celery` and start celery worker for info/logs:
@@ -60,7 +59,7 @@ Create sample Ballots in site through fixtures.
 
 .. code-block:: bash
 
-    python manage.py loaddata fixtures/ballot_samply.json
+    python manage.py loaddata fixtures/ballot_fixtures.json
 
 To run celery task for making ballots inactive through management command
 
@@ -75,11 +74,6 @@ Finally, run development server as follow:
 
     python manage.py runserver 0.0.0.0:8000
 
-To run tests
-
-.. code-block:: bash
-
-    python manage.py test user
 
 Now, you will be able to visit Juntos @ http://localhost:8000 and Django Admin @ http://localhost:8000/admin/
 
