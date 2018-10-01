@@ -4,13 +4,13 @@ import base64
 import re
 from scrapy.http import Request, FormRequest
 
-from .base import BaseParseSpider, BaseCrawlSpider, clean
+from .base import BaseParseSpider, BaseCrawlSpider, clean, Gender
 from ..utils.encodings import rot47
 
 
-class UniversalMixin:
+class Mixin:
     retailer = 'universal-at'
-    brand = "UNIVERSAL"
+    brand = 'UNIVERSAL'
     market = 'AT'
 
     allowed_domains = ['www.universal.at']
@@ -21,8 +21,8 @@ class UniversalMixin:
 
     products_url_t = 'https://www.universal.at/suche/mba/magellan'
     p_details_url_t = 'https://www.universal.at/p/'
-    image_url_t = 'https://media.universal.at/i/empiriecom/{}'
-    
+    images_url_t = 'https://media.universal.at/i/empiriecom/{}'
+
     availability_url_t = '{}INTERSHOP/rest/WFS/EmpirieCom-UniversalAT-Site/-;loc=de_AT;' \
                          'cur=EUR/inventories/{}/master?'
 
@@ -41,13 +41,13 @@ class CommonParseSpider(BaseParseSpider):
         self.boilerplate_normal(garment, response)
         garment['image_urls'] = self.image_urls(raw_product)
         garment['skus'] = self.skus(raw_product)
-        garment["gender"] = self.product_gender(response)
+        garment['gender'] = self.product_gender(response)
         garment['meta'] = {'requests_queue': self.availability_request(pid)}
 
         return self.next_request_or_garment(garment)
 
     def product_id(self, raw_product):
-        return raw_product["sku"]
+        return raw_product['sku']
 
     def availability_request(self, product_id):
         url = self.availability_url_t.format(self.start_urls[0], product_id)
@@ -77,15 +77,15 @@ class CommonParseSpider(BaseParseSpider):
             else:
                 previous_price = []
             money_strs = [price, previous_price, currency]
-            sku = skus[variation["sku"]] = self.product_pricing_common(None, money_strs=money_strs)
+            sku = skus[variation['sku']] = self.product_pricing_common(None, money_strs=money_strs)
             colour = variation['variationValues'].get('Var_Article')
 
             if colour:
                 sku['colour'] = colour
             size = variation['variationValues'].get('Var_Size', self.one_size)
             size = self.one_size if size in self.one_sizes else size
-            sku["size"] = size
-            dimension = variation['variationValues'].get("Var_Dimension3")
+            sku['size'] = size
+            dimension = variation['variationValues'].get('Var_Dimension3')
 
             if dimension:
                 sku['size'] = f'{size}/{dimension}'
@@ -108,7 +108,7 @@ class CommonParseSpider(BaseParseSpider):
 
     def product_category(self, response):
         raw_categories = clean(response.css('.nav-bc-path ::text'))
-        return [category for category in raw_categories if category != "..."]
+        return [category for category in raw_categories if category != '...']
 
     def raw_description(self, response, **kwargs):
         css_1 = '.sellingpoints-wrapper .rendered-data ::text'
@@ -124,10 +124,10 @@ class CommonParseSpider(BaseParseSpider):
     def product_gender(self, response):
         navigation_cat = clean(response.css('.active.customdelay > a::text'))
         tokens = self.product_category(response) + [self.raw_name(response)] + navigation_cat
-        return self.gender_lookup(' '.join(tokens)) or "unisex-adults"
+        return self.gender_lookup(' '.join(tokens)) or Gender.ADULTS.value
 
     def image_urls(self, raw_product):
-        return [self.image_url_t.format(image['image']) for image in raw_product["imageList"]["i0"]]
+        return [self.images_url_t.format(image['image']) for image in raw_product['imageList']['i0']]
 
 
 class CommonCrawlSpider(BaseCrawlSpider):
@@ -147,19 +147,20 @@ class CommonCrawlSpider(BaseCrawlSpider):
             yield Request(sub_cat_url, meta=meta, callback=self.parse_sub_categories)
 
     def parse_sub_categories(self, response):
-        form_data_xpath = '//script[contains(text(),"LocaleID")]/text()'
-        form_data_text = clean(response.xpath(form_data_xpath))[0]
+        form_data_css = 'script:contains("LocaleID")::text'
+        form_data_text = clean(response.css(form_data_css))[0]
         meta = {'trail': self.add_trail(response)}
+
         form_data = {
-            "category": re.findall('category.:"(.*?)"', form_data_text)[0],
-            "channel": "web",
-            "clientId": "UniversalAt",
-            "count": 72,
-            "locale": re.findall('LocaleID.:"(.*?)"', form_data_text)[0],
-            "minAvailCode": 2,
-            "sessionId": re.findall('sid.\s?:"(.*?)"', form_data_text)[0],
-            "start": 0,
-            "version": 42,
+            'category': re.findall('category.:"(.*?)"', form_data_text)[0],
+            'channel': 'web',
+            'clientId': 'UniversalAt',
+            'count': 72,
+            'locale': re.findall('LocaleID.:"(.*?)"', form_data_text)[0],
+            'minAvailCode': 2,
+            'sessionId': re.findall('sid.\s?:"(.*?)"', form_data_text)[0],
+            'start': 0,
+            'version': 42,
         }
         body = json.dumps(form_data)
 
@@ -170,26 +171,26 @@ class CommonCrawlSpider(BaseCrawlSpider):
         meta = {'trail': self.add_trail(response)}
         raw_body = json.loads(response.request.body)
         total_count_text = json.loads(response.text)
-        products_text = total_count_text["searchresult"]["result"]["styles"]
+        products_text = total_count_text['searchresult']['result']['styles']
 
         for text in products_text:
             product_url = f"{self.p_details_url_t}{text.get('masterSku', '')}"
 
             yield Request(url=product_url, meta=meta, callback=self.parse_item)
-        total_count = total_count_text["searchresult"]["result"]["count"]
+        total_count = total_count_text['searchresult']['result']['count']
 
         for start_value in range(72, total_count + 1, 72):
-            raw_body["start"] = start_value
+            raw_body['start'] = start_value
             body = json.dumps(raw_body)
 
             yield FormRequest(url=self.products_url_t, method='POST', meta=meta,
                               body=body, callback=self.parse_pagination)
 
 
-class UniversalParseSpider(CommonParseSpider, UniversalMixin):
-    name = UniversalMixin.retailer + '-parse'
+class UniversalParseSpider(CommonParseSpider, Mixin):
+    name = Mixin.retailer + '-parse'
 
 
-class UniversalCrawlSpider(CommonCrawlSpider, UniversalMixin):
-    name = UniversalMixin.retailer + '-crawl'
+class UniversalCrawlSpider(CommonCrawlSpider, Mixin):
+    name = Mixin.retailer + '-crawl'
     parse_spider = UniversalParseSpider()
