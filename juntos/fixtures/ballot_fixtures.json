@@ -109,7 +109,7 @@
     "fields": {
       "name": "Pakistan",
       "created_at": "2018-10-01T06:31:12.583Z",
-      "updated_at": "2018-10-01T06:31:12.583Z"
+      "modified_at": "2018-10-01T06:31:12.583Z"
     }
   },
   {
@@ -118,7 +118,7 @@
     "fields": {
       "name": "India",
       "created_at": "2018-10-01T06:31:17.803Z",
-      "updated_at": "2018-10-01T06:31:17.803Z"
+      "modified_at": "2018-10-01T06:31:17.803Z"
     }
   },
   {
@@ -127,7 +127,7 @@
     "fields": {
       "name": "Bangladesh",
       "created_at": "2018-10-01T06:31:26.240Z",
-      "updated_at": "2018-10-01T06:31:26.240Z"
+      "modified_at": "2018-10-01T06:31:26.240Z"
     }
   },
   {
@@ -137,7 +137,7 @@
       "ballot": 1,
       "text": "IK",
       "created_at": "2018-10-01T06:32:04.249Z",
-      "updated_at": "2018-10-01T06:32:04.249Z"
+      "modified_at": "2018-10-01T06:32:04.249Z"
     }
   },
   {
@@ -147,7 +147,7 @@
       "ballot": 1,
       "text": "NM",
       "created_at": "2018-10-01T06:32:04.254Z",
-      "updated_at": "2018-10-01T06:32:04.254Z"
+      "modified_at": "2018-10-01T06:32:04.254Z"
     }
   },
   {
@@ -157,7 +157,7 @@
       "ballot": 1,
       "text": "AS",
       "created_at": "2018-10-01T06:32:04.257Z",
-      "updated_at": "2018-10-01T06:32:04.258Z"
+      "modified_at": "2018-10-01T06:32:04.258Z"
     }
   },
   {
@@ -167,7 +167,7 @@
       "ballot": 2,
       "text": "Asia",
       "created_at": "2018-10-01T06:32:28.975Z",
-      "updated_at": "2018-10-01T06:32:28.975Z"
+      "modified_at": "2018-10-01T06:32:28.975Z"
     }
   },
   {
@@ -177,7 +177,7 @@
       "ballot": 2,
       "text": "Africa",
       "created_at": "2018-10-01T06:32:28.980Z",
-      "updated_at": "2018-10-01T06:32:28.980Z"
+      "modified_at": "2018-10-01T06:32:28.980Z"
     }
   },
   {
@@ -187,7 +187,7 @@
       "ballot": 2,
       "text": "Europe",
       "created_at": "2018-10-01T06:32:28.982Z",
-      "updated_at": "2018-10-01T06:32:28.982Z"
+      "modified_at": "2018-10-01T06:32:28.982Z"
     }
   },
   {
@@ -668,7 +668,7 @@
       "title": "Who is the prime minister of Pakistan?",
       "created_by": 1,
       "created_at": "2018-10-01T06:32:04.219Z",
-      "updated_at": "2018-10-01T06:32:04.244Z",
+      "modified_at": "2018-10-01T06:32:04.244Z",
       "ending_date": "2018-10-04T06:32:04.218Z",
       "active_period": 3,
       "is_active": true,
@@ -684,7 +684,7 @@
       "title": "Where is Bangladesh located?",
       "created_by": 1,
       "created_at": "2018-10-01T06:32:28.950Z",
-      "updated_at": "2018-10-01T06:32:28.972Z",
+      "modified_at": "2018-10-01T06:32:28.972Z",
       "ending_date": "2018-10-04T06:32:28.950Z",
       "active_period": 3,
       "is_active": true,
