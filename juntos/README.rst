@@ -54,7 +54,7 @@ Create sample Ballots in site through fixtures.
 
 .. code-block:: bash
 
-    python manage.py loaddata fixtures/ballot_samply.json
+    python manage.py loaddata fixtures/ballot_fixtures.json
 
 To run celery task for making ballots inactive through management command
 

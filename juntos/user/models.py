@@ -27,6 +27,11 @@ class Profile(models.Model):
         if self.age and self.age < 0:
             raise ValidationError(_('Age must be positive'))
 
+    class Meta:
+        db_table = 'tbl_profile'
+        verbose_name = 'Profile'
+        verbose_name_plural = 'Profiles'
+
     def __str__(self):
         return self.user.username
 
