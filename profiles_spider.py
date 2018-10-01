@@ -53,6 +53,7 @@ class ProfileSpider(scrapy.Spider):
             })
             yield scrapy.FormRequest(url=u"https://www.nwh.org/find-a-doctor/ContentPage.aspx?nd=847",
                                      formdata=doc_params, method='POST', callback=self.parse_profile)
+            
     def parse_profile(self, response):
         for inf in response.css('div.light'):
             item = {
