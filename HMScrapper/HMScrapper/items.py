@@ -1,17 +1,21 @@
 # -*- coding: utf-8 -*-
-
-# Define here the models for your scraped items
-#
-# See documentation in:
-# https://doc.scrapy.org/en/latest/topics/items.html
+"""
+Items for using in the HMScrapper
+"""
 from scrapy import Item, Field
 
 
-class HmscrapperItem(Item):
+class HmScrapperItem(Item):
+    """
+    Item object to scrape by HMSpider
+    """
     name = Field()
     price = Field()
     concept = Field()
+    discount = Field()
     care_info = Field()
     item_code = Field()
+    old_price = Field()
+    color_skus = Field()
     description = Field()
     composition = Field()
