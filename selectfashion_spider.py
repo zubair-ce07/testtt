@@ -1,7 +1,7 @@
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
 
-from .base import BaseParseSpider, BaseCrawlSpider, clean
+from .base import BaseParseSpider, BaseCrawlSpider, clean, soupify, Gender
 
 
 class Mixin:
@@ -10,7 +10,7 @@ class Mixin:
 
     start_urls = ['https://www.selectfashion.co.uk/']
     allowed_domains = ['selectfashion.co.uk']
-    gender = 'women'
+    gender = Gender.WOMEN.value
 
 
 class SelectFashionParser(Mixin, BaseParseSpider):
@@ -28,16 +28,16 @@ class SelectFashionParser(Mixin, BaseParseSpider):
 
         self.boilerplate_normal(garment, response)
         garment['image_urls'] = self.image_urls(response)
-        garment['gender'] = self.gender_lookup(self.gender)
+        garment['gender'] = self.gender
         garment['merch_info'] = self.merch_info(response)
         garment['skus'] = self.skus(response)
-        return self.next_request_or_garment(garment)
+        return garment
 
     def image_urls(self, response):
         image_urls = []
-        images = clean(response.css('.imageThumb img::attr(src)'))
-        for image_url in images:
-            image_url.replace('resizeandpad:200:300', '')
+        images_css = '.imageThumb img::attr(src)'
+        for image_url in clean(response.css(images_css)):
+            image_url = image_url.replace('resizeandpad:200:300', '')
             image_urls.append(response.urljoin(image_url))
         return image_urls
 
@@ -58,34 +58,27 @@ class SelectFashionParser(Mixin, BaseParseSpider):
 
     def skus(self, response):
         skus = {}
+        common_sku = self.product_pricing_common(response)
 
-        sku = self.product_pricing_common(response)
-        sku['colour'] = colour = self.colour_detect(response)
+        css = '.details-description p::text'
+        detail_description = soupify(clean(response.css(css))[0].split('_'))
+        raw_description = soupify(self.raw_description(response))
+        colour = self.detect_colour(detail_description) or self.detect_colour(raw_description)
+        common_sku['colour'] = colour
 
         for size_sel in response.css('.s-size a'):
-            sku_size = sku.copy()
+            sku = common_sku.copy()
 
             size = clean(size_sel.css('::text'))[0]
-            sku_size['size'] = self.one_size if size == 'One' else size
+            sku['size'] = self.one_size if size == 'One' else size
 
-            out_of_stock = clean(size_sel.css('::attr(class)'))[0]
-            sku_size['out_of_stock'] = False if out_of_stock == "available" else True
+            if size_sel.css('.notavailable'):
+                sku['out_of_stock'] = True
 
-            sku_id = f"{colour}_{sku_size['size']}"
-            skus.update({sku_id: sku_size})
+            sku_id = f"{colour}_{sku['size']}"
+            skus.update({sku_id: sku})
 
         return skus
-
-    def colour_detect(self, response):
-        detail_description = clean(response.css('.details-description p::text'))[0]
-        colour = detail_description.split('_')[1]
-        colour = self.detect_colour(colour)
-
-        if colour is '':
-            colour = clean(response.css(self.raw_description_css))[0]
-            colour = self.detect_colour(colour)
-
-        return colour
 
 
 class SelectFashionCrawler(Mixin, BaseCrawlSpider):
@@ -95,7 +88,6 @@ class SelectFashionCrawler(Mixin, BaseCrawlSpider):
     listing_css = [
         '.dropdown-menu-link',
         '.paging_next a'
-
     ]
     product_css = ['.ac_gtm_product_click']
 
