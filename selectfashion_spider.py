@@ -28,7 +28,6 @@ class SelectFashionParser(Mixin, BaseParseSpider):
 
         self.boilerplate_normal(garment, response)
         garment['image_urls'] = self.image_urls(response)
-        garment['gender'] = self.gender
         garment['merch_info'] = self.merch_info(response)
         garment['skus'] = self.skus(response)
         return garment
@@ -76,7 +75,7 @@ class SelectFashionParser(Mixin, BaseParseSpider):
                 sku['out_of_stock'] = True
 
             sku_id = f"{colour}_{sku['size']}"
-            skus.update({sku_id: sku})
+            skus[sku_id] = sku
 
         return skus
 
