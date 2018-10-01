@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('custom_user', '0005_auto_20180924_0651'),
     ]
@@ -18,16 +17,24 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='myuser',
             name='first_name',
-            field=models.CharField(blank=True, error_messages={'max_length': 'firstname should be of maximum length of 40'}, max_length=40, verbose_name='first name'),
+            field=models.CharField(blank=True, error_messages={
+                'max_length': 'firstname should be of maximum length of 40'}, max_length=40,
+                                   verbose_name='first name'),
         ),
         migrations.AlterField(
             model_name='myuser',
             name='last_name',
-            field=models.CharField(blank=True, error_messages={'max_length': 'lastname should be of maximum length of 40'}, max_length=40, verbose_name='last name'),
+            field=models.CharField(blank=True, error_messages={
+                'max_length': 'lastname should be of maximum length of 40'}, max_length=40,
+                                   verbose_name='last name'),
         ),
         migrations.AlterField(
             model_name='myuser',
             name='username',
-            field=models.CharField(error_messages={'max_length': 'username should be of maximum length of 150', 'required': 'please enter a username', 'unique': 'A user with that username already exists.'}, max_length=150, unique=True),
+            field=models.CharField(
+                error_messages={'max_length': 'username should be of maximum length of 150',
+                                'required': 'please enter a username',
+                                'unique': 'A user with that username already exists.'},
+                max_length=150, unique=True),
         ),
     ]
