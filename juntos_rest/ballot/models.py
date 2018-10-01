@@ -9,7 +9,7 @@ class Tag(models.Model):
     """
     Tag model
     """
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=48)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -94,7 +94,7 @@ class Choice(models.Model):
     Choice model
     """
     ballot = models.ForeignKey(Ballot, on_delete=models.CASCADE)
-    text = models.CharField(max_length=200)
+    text = models.CharField(max_length=64)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

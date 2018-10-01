@@ -15,7 +15,7 @@ class Profile(models.Model):
         ('F', 'Female'),
     )
     user = models.OneToOneField(User, on_delete=models.CASCADE, default=1)
-    address = models.CharField(max_length=100, null=True, blank=True)
+    address = models.CharField(max_length=1024, null=True, blank=True)
     age = models.IntegerField(null=True, blank=True)
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, null=True, blank=True)
 
