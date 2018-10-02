@@ -35,13 +35,14 @@ class BrainyQuotesSpider(scrapy.Spider):
             'vid': vid,
             'id': _id,
         })
-        for quotes in response.css('div.m-brick'):
+        quotes = response.css('div.m-brick')
+        for quote in quotes:
             yield {
-                    'Quote': quotes.css('a.b-qt::text').extract_first(),
-                    'Author': quotes.css('div.clearfix a.oncl_a::text').extract_first(),
-                    'Tags': quotes.css('div.kw-box a.oncl_list_kc::text').extract(),
-                    'Shareable links': quotes.css('div.sh-box a.fa-stack::attr(href)').extract(),
-                    'img_url': response.urljoin(quotes.css('img.zoomc::attr(data-img-url)').extract_first()),
+                    'Quote': quote.css('a.b-qt::text').extract_first(),
+                    'Author': quote.css('div.clearfix a.oncl_a::text').extract_first(),
+                    'Tags': quote.css('div.kw-box a.oncl_list_kc::text').extract(),
+                    'Shareable links': quote.css('div.sh-box a.fa-stack::attr(href)').extract(),
+                    'img_url': response.urljoin(quote.css('img.zoomc::attr(data-img-url)').extract_first()),
             }
         for page_no in range(2, int(last_page)):
             request_params['pg'] = page_no
@@ -52,11 +53,12 @@ class BrainyQuotesSpider(scrapy.Spider):
         json_response = json.loads(response.body_as_unicode())
         data_store = json_response['content'].encode('ascii', 'ignore')
         data = scrapy.Selector(text=data_store)
-        for quotes in data.css('div.m-brick'):
+        quotes = data.css('div.m-brick')
+        for quote in quotes:
             yield {
-                    'Quote': quotes.css('a.b-qt::text').extract_first(),
-                    'Author': quotes.css('div.clearfix a.oncl_a::text').extract_first(),
-                    'Tags': quotes.css('div.kw-box a.oncl_list_kc::text').extract(),
-                    'Shareable links': quotes.css('div.sh-box a.fa-stack::attr(href)').extract(),
-                    'img_url': response.urljoin(quotes.css('img.zoomc::attr(data-img-url)').extract_first()),
+                    'Quote': quote.css('a.b-qt::text').extract_first(),
+                    'Author': quote.css('div.clearfix a.oncl_a::text').extract_first(),
+                    'Tags': quote.css('div.kw-box a.oncl_list_kc::text').extract(),
+                    'Shareable links': quote.css('div.sh-box a.fa-stack::attr(href)').extract(),
+                    'img_url': response.urljoin(quote.css('img.zoomc::attr(data-img-url)').extract_first()),
             }
