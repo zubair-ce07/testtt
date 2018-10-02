@@ -10,6 +10,7 @@ class PokemonSpider(scrapy.Spider):
     name = 'pokemon'
     allowed_domains = ['db.pokemongohub.net']
     start_urls = ["https://db.pokemongohub.net"]
+    handle_httpstatus_list = [404]
 
     def parse(self, response):
         data_headers = {
@@ -31,7 +32,8 @@ class PokemonSpider(scrapy.Spider):
 
     def parse_images(self, response):
         pokemon_item = response.meta['pokemon_item']
-        pokemon_item['image_urls'] = self.get_image_urls(response)
+        if response.status != 404:
+            pokemon_item['image_urls'] = self.get_image_urls(response)
 
         base_url = "https://db.pokemongohub.net/api/moves/with-pokemon/"
         p_id = self.get_pokemon_id(pokemon_item)
@@ -40,7 +42,8 @@ class PokemonSpider(scrapy.Spider):
 
     def parse_moves(self, response):
         pokemon_item = response.meta['pokemon_item']
-        pokemon_item['moves'] = json.loads(response.text)
+        if response.status != 404:
+            pokemon_item['moves'] = json.loads(response.text)
 
         base_url = "https://db.pokemongohub.net/api/pokemon/counters/"
         p_id = self.get_pokemon_id(pokemon_item)
@@ -49,7 +52,8 @@ class PokemonSpider(scrapy.Spider):
 
     def parse_counters(self, response):
         pokemon_item = response.meta['pokemon_item']
-        pokemon_item['counters'] = json.loads(response.text)
+        if response.status != 404:
+            pokemon_item['counters'] = json.loads(response.text)
 
         yield pokemon_item
 
@@ -58,8 +62,10 @@ class PokemonSpider(scrapy.Spider):
 
     def get_image_urls(self, response):
         images_raw = json.loads(response.text)
-        base_url = "https://db.pokemongohub.net/images/ingame/normal/"
-        return ["{}{}".format(base_url, img['sprite'])for img in images_raw[0]['sprites']]
+        if images_raw:
+            base_url = "https://db.pokemongohub.net/images/ingame/normal/"
+            return ["{}{}".format(base_url, img['sprite'])for img in images_raw[0]['sprites']]
+        return None
 
     def get_pokemon_id(self, pokemon_item):
         return pokemon_item['pokemon']['id']
