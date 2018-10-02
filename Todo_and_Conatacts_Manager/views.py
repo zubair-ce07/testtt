@@ -30,21 +30,6 @@ class SignupAPI(APIView):
         return Response(self.data, status=self.status)
 
 
-# class Todo_List(APIView):
-#     serializer_class = SignupSerializer
-#
-#     def get(self, request, format=None, pk=None):
-#         queryset = Todo.objects.for_user(request.user)
-#         serializer = TodoSerializer(queryset, many=True)
-#         return Response(serializer.data)
-#
-# def todos_list(request):
-#     queryset = Todo.objects.for_user(request.user)
-#     serializer = TodoSerializer(queryset, many=True)
-#     return JsonResponse(data)
-
-
-
 class ContactViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticated,)
     serializer_class = ContactSerializer
@@ -70,25 +55,22 @@ class ItemViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticated,)
     serializer_class = ItemSerializer
 
-
     def create(self, request):
         todo_pk = request.query_params.get("todo_pk")
         if not todo_pk:
             todo_pk = request.data.get("todo_pk")
         else:
             raise serializers.ValidationError("Missing todo_pk")
-        serializer =  self.get_serializer(data=request.data,
-                                              context={"todo_pk": todo_pk})
+        serializer = self.get_serializer(data=request.data,
+                                         context={"todo_pk": todo_pk})
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-
 
     def retrieve(self, request, pk=None):
         item = get_object_or_404(Item, pk=pk)
         serializer = ItemSerializer(item)
         return Response(serializer.data)
-
 
     def get_queryset(self):
         todo_pk = self.request.query_params.get("todo_pk")

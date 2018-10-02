@@ -58,7 +58,6 @@ class Contact(models.Model):
         unique_together = ('name', 'phone_number',)
 
 
-
 @receiver(post_save, sender=User)
 def notification(sender, instance, **kwargs):
-    print("Newly user was added  or updated successfully.")
+    print("New user was added  or updated successfully.")
