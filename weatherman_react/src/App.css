@@ -30,3 +30,8 @@
 html, body{
     height: 100%
 }
+
+.link-style{
+    text-decoration: none;
+    color: inherit;
+}

@@ -12,7 +12,7 @@ import {withStyles} from '@material-ui/core/styles';
 import MenuIcon from '@material-ui/icons/Menu';
 import SearchIcon from '@material-ui/icons/Search';
 import MoreIcon from '@material-ui/icons/MoreVert';
-
+import { Link } from 'react-router-dom'
 
 const drawerWidth = 240;
 
@@ -96,9 +96,6 @@ class Header extends React.Component {
         mobileMoreAnchorEl: null,
     };
 
-    handleProfileMenuOpen = event => {
-        this.setState({anchorEl: event.currentTarget});
-    };
 
     handleMenuClose = () => {
         this.setState({anchorEl: null});
@@ -153,10 +150,12 @@ class Header extends React.Component {
                                     aria-label="Open drawer">
                             <MenuIcon/>
                         </IconButton>
+
                         <Typography className={classes.title} variant="title" color="inherit"
                                     noWrap>
-                            Weatherman
+                            <Link className="link-style" to={"/"}>Weatherman</Link>
                         </Typography>
+
                         <div className={classes.search}>
                             <div className={classes.searchIcon}>
                                 <SearchIcon/>

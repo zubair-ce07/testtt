@@ -9,13 +9,12 @@ import ListItemText from '@material-ui/core/ListItemText';
 import Collapse from '@material-ui/core/Collapse';
 import KeyboardArrowRight from '@material-ui/icons/KeyboardArrowRight';
 import LocationCity from '@material-ui/icons/LocationCity';
-import DateRange from '@material-ui/icons/DateRange';
 import ExpandLess from '@material-ui/icons/ExpandLess';
 import ExpandMore from '@material-ui/icons/ExpandMore';
-import CalendarToday from '@material-ui/icons/CalendarToday';
 import Divider from '@material-ui/core/Divider';
 import * as constatnts from '../../constants'
 import axios from "axios";
+import { Link } from 'react-router-dom'
 
 
 const styles = theme => ({
@@ -57,18 +56,6 @@ class Sidebar extends React.Component {
         this.setState(state => ({cityOpen: !state.cityOpen}));
     };
 
-    handleYearClick = () => {
-        this.setState(state => ({yearOpen: !state.yearOpen}));
-    };
-
-    handleCityItemClick = (cityId, cityName) =>{
-        this.props.setCity(cityId, cityName)
-    };
-
-    handleYearItemClick = (year) =>{
-
-        console.log(year)
-    };
     render() {
         const {classes} = this.props;
         return (
@@ -93,49 +80,21 @@ class Sidebar extends React.Component {
                         <List component="div" disablePadding>
                             {this.state.cities.map((city) =>
 
-
-                                <ListItem key={city.id} button className={classes.nested} onClick={this.handleCityItemClick.bind(this, city.id, city.name)}>
+                                <Link className="link-style" key={city.id} to={'/city/'+city.id+'/'+city.name}>
+                                <ListItem  className={classes.nested}>
                                     <ListItemIcon>
                                         <KeyboardArrowRight/>
                                     </ListItemIcon>
                                     <ListItemText inset primary={city.name}/>
                                 </ListItem>
+                                </Link>
                             )}
                         </List>
                     </Collapse>
                     }
                 </List>
                 <Divider/>
-                {/*<Divider/>*/}
 
-                {/*<List*/}
-                    {/*component="nav"*/}
-                    {/*subheader={<ListSubheader component="div">Filter Weather By*/}
-                        {/*Year</ListSubheader>}*/}
-                {/*>*/}
-                    {/*<Divider/>*/}
-                    {/*<ListItem button onClick={this.handleYearClick}>*/}
-                        {/*<ListItemIcon>*/}
-                            {/*<DateRange/>*/}
-                        {/*</ListItemIcon>*/}
-                        {/*<ListItemText inset primary="Years"/>*/}
-                        {/*{this.state.yearOpen ? <ExpandLess/> : <ExpandMore/>}*/}
-                    {/*</ListItem>*/}
-                    {/*{this.states.year &&*/}
-                    {/*<Collapse in={this.state.yearOpen} timeout="auto" unmountOnExit>*/}
-                        {/*<List component="div" disablePadding>*/}
-                            {/*{this.state.years.map((year, index) =>*/}
-                                {/*<ListItem key={index} button className={classes.nested} onClick={this.handleYearItemClick.bind(this, year.year)}>*/}
-                                    {/*<ListItemIcon>*/}
-                                        {/*<CalendarToday/>*/}
-                                    {/*</ListItemIcon>*/}
-                                    {/*<ListItemText inset primary={year.year}/>*/}
-                                {/*</ListItem>*/}
-                            {/*)}*/}
-                        {/*</List>*/}
-                    {/*</Collapse>*/}
-                    {/*}*/}
-                {/*</List>*/}
 
 
             </div>
