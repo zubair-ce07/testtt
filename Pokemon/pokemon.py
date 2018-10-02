@@ -16,6 +16,7 @@ class PokemonSpider(scrapy.Spider):
         data_headers = {
             "accept": "application/json, text/plain, */*"
         }
+        
         for i in range(1, 764):
             yield Request(url=response.urljoin("api/pokemon/{}".format(i)),
                           headers=data_headers, callback=self.parse_pokemon)
@@ -32,16 +33,18 @@ class PokemonSpider(scrapy.Spider):
 
     def parse_images(self, response):
         pokemon_item = response.meta['pokemon_item']
+        p_id = self.get_pokemon_id(pokemon_item)
+
         if response.status != 404:
-            pokemon_item['image_urls'] = self.get_image_urls(response)
+            pokemon_item['image_urls'] = self.get_image_urls(response, p_id)
 
         base_url = "https://db.pokemongohub.net/api/moves/with-pokemon/"
-        p_id = self.get_pokemon_id(pokemon_item)
         yield Request(url="{}{}".format(base_url, p_id), callback=self.parse_moves,
                       meta={"pokemon_item": pokemon_item})
 
     def parse_moves(self, response):
         pokemon_item = response.meta['pokemon_item']
+
         if response.status != 404:
             pokemon_item['moves'] = json.loads(response.text)
 
@@ -52,6 +55,7 @@ class PokemonSpider(scrapy.Spider):
 
     def parse_counters(self, response):
         pokemon_item = response.meta['pokemon_item']
+
         if response.status != 404:
             pokemon_item['counters'] = json.loads(response.text)
 
@@ -60,12 +64,16 @@ class PokemonSpider(scrapy.Spider):
     def get_cps(self, pokemon_item):
         return pokemon_item['pokemon']['CPs']['perLevel']
 
-    def get_image_urls(self, response):
+    def get_image_urls(self, response, p_id):
         images_raw = json.loads(response.text)
+        imgs = []
+
         if images_raw:
             base_url = "https://db.pokemongohub.net/images/ingame/normal/"
-            return ["{}{}".format(base_url, img['sprite'])for img in images_raw[0]['sprites']]
-        return None
+            imgs = ["{}{}".format(base_url, img['sprite'])for img in images_raw[0]['sprites']]
+
+        imgs.append("https://db.pokemongohub.net/images/official/full/{:03}.png".format(p_id))
+        return imgs
 
     def get_pokemon_id(self, pokemon_item):
         return pokemon_item['pokemon']['id']
