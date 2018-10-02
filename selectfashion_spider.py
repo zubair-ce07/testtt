@@ -10,7 +10,9 @@ class Mixin:
 
     start_urls = ['https://www.selectfashion.co.uk/']
     allowed_domains = ['selectfashion.co.uk']
+
     gender = Gender.WOMEN.value
+    default_brand = "Select Fashion"
 
 
 class SelectFashionParser(Mixin, BaseParseSpider):
@@ -60,10 +62,10 @@ class SelectFashionParser(Mixin, BaseParseSpider):
         common_sku = self.product_pricing_common(response)
 
         css = '.details-description p::text'
-        detail_description = soupify(clean(response.css(css))[0].split('_'))
-        raw_description = soupify(self.raw_description(response))
-        colour = self.detect_colour(detail_description) or self.detect_colour(raw_description)
-        common_sku['colour'] = colour
+        soup = clean(response.css(css)) + self.raw_description(response)
+        colour = self.detect_colour(soupify(soup))
+        if colour:
+            common_sku['colour'] = colour
 
         for size_sel in response.css('.s-size a'):
             sku = common_sku.copy()
@@ -74,7 +76,7 @@ class SelectFashionParser(Mixin, BaseParseSpider):
             if size_sel.css('.notavailable'):
                 sku['out_of_stock'] = True
 
-            sku_id = f"{colour}_{sku['size']}"
+            sku_id = f"{colour}_{sku['size']}" if colour else sku['size']
             skus[sku_id] = sku
 
         return skus
