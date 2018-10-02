@@ -39,6 +39,7 @@ export default class Detail extends React.Component {
     }
 
     componentDidMount() {
+        document.title="Weather Detail of "+this.state.cityName+" - Weatherman";
         var cityId = this.state.cityId;
         var self = this;
 
@@ -59,6 +60,7 @@ export default class Detail extends React.Component {
         var cityId = this.props.match.params.cityId;
         var self = this;
         if (cityId !== prevState.cityId) {
+            document.title="Weather Detail of "+this.props.match.params.cityName+" - Weatherman";
             selectedYear = "";
             this.setState({
                 cityId: cityId,

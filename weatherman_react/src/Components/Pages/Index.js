@@ -4,6 +4,9 @@ import {Paper} from "@material-ui/core/"
 
 
 export default class Index extends React.Component {
+    componentDidMount(){
+        document.title="Weatherman"
+    }
     render() {
         return (
             <div>
