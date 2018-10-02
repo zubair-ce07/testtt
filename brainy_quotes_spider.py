@@ -11,11 +11,10 @@ class BrainyQuotesSpider(scrapy.Spider):
     ]
     request_url = 'https://www.brainyquote.com/api/inf'
 
-
     def parse(self, response):
         topics = response.css('div.bqLn')
-        for topic in topics:
-            topic_url = response.urljoin(topic.css('a.topicIndexChicklet::attr(href)').extract_first())
+        for each_topic in topics:
+            topic_url = response.urljoin(each_topic.css('a.topicIndexChicklet::attr(href)').extract_first())
             yield scrapy.Request(topic_url, callback=self.parse_topics)
 
     def parse_topics(self, response):
@@ -36,7 +35,15 @@ class BrainyQuotesSpider(scrapy.Spider):
             'vid': vid,
             'id': _id,
         })
-        for page_no in range(1, int(last_page)):
+        for quotes in response.css('div.m-brick'):
+            yield {
+                    'Quote': quotes.css('a.b-qt::text').extract_first(),
+                    'Author': quotes.css('div.clearfix a.oncl_a::text').extract_first(),
+                    'Tags': quotes.css('div.kw-box a.oncl_list_kc::text').extract(),
+                    'Shareable links': quotes.css('div.sh-box a.fa-stack::attr(href)').extract(),
+                    'img_url': response.urljoin(quotes.css('img.zoomc::attr(data-img-url)').extract_first()),
+            }
+        for page_no in range(2, int(last_page)):
             request_params['pg'] = page_no
             yield scrapy.Request(self.request_url, callback=self.parse_scrolled_pages, method='POST', body=json.dumps(request_params),
                                  headers={'Content-Type': 'application/json'})
