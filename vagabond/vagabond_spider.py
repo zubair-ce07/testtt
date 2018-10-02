@@ -43,8 +43,6 @@ class VagabondParseSpider(BaseParseSpider):
     description_css = '#tab1 :not(a)::text'
     price_css = '.productPrice ::text'
 
-    category_re = re.compile('com/\w\w/(.+)/$')
-
     def parse(self, response):
         product_id = self.product_id(response)
 
@@ -72,9 +70,10 @@ class VagabondParseSpider(BaseParseSpider):
         sku_common['colour'] = colour
 
         skus = {}
-        for size in self.product_sizes(response):
+        sizes_css = css = '.sel__box__options::text'
+        for size in clean(response.css(sizes_css)) or [self.one_size]:
             sku = sku_common.copy()
-            sku['size'] = size.split()[0]
+            sku['size'] = clean(size.split('-')[0])
 
             if 'Soon in stock' in size or 'Sold out' in size:
                 sku['out_of_stock'] = True
@@ -96,12 +95,7 @@ class VagabondParseSpider(BaseParseSpider):
         return ' '.join(clean(response.css(css)))
 
     def product_category(self, response):
-        trail = response.meta['trail'][1:]
-        return sum([self.category_re.findall(url)[0].split('/') for title, url in trail], [])
-
-    def product_sizes(self, response):
-        css = '.sel__box__options::text'
-        return clean(response.css(css)) or [self.one_size]
+        return clean([t for t, _ in response.meta.get('trail') or [] if t])
 
     def out_of_stock(self, response):
         return response.css('#addToCart.disabled')
