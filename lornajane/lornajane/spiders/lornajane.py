@@ -7,7 +7,7 @@ from scrapy.loader import ItemLoader
 from ..items import Product
 
 
-class SheegoSpider(scrapy.Spider):
+class LornajaneSpider(scrapy.Spider):
     """This class crawls Sheego pages"""
     name = 'lornajane'
 
@@ -36,8 +36,8 @@ class SheegoSpider(scrapy.Spider):
     def parse_item_detail(self, response):
         """This method crawls item detail information."""
         title = response.css('.pro-heading-sec>h1::text').extract_first()
-        full_price = response.css('div.price>span::text').extract()[1]
-        sale_price = response.css('div.price::text').extract()[1]
+        full_price = response.css('div.pro-heading-sec>.price>span::text').extract()[1]
+        sale_price = response.css('div.pro-heading-sec>.price::text').extract()[1]
         product_code = response.css('.mobile_toggle>p::text').extract_first()
         description = response.css('.mobile_toggle>p::text').extract()[1]
         description = ''.join(description).strip()
