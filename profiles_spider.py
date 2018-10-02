@@ -1,8 +1,8 @@
 import scrapy
 
 
-class ProfileSpider(scrapy.Spider):
-    name = 'ProfileSpider'
+class NwhSpider(scrapy.Spider):
+    name = 'NwhSpider'
     base_url = 'https://www.nwh.org/find-a-doctor/find-a-doctor-home'
     start_urls = [base_url]
     allowed_domains = ['www.nwh.org']
@@ -21,14 +21,6 @@ class ProfileSpider(scrapy.Spider):
             'ctl00$cphContent$ctl01$ddlResultsPerPage': '99999',
             'ctl00$header$searchRdoBtn': '0',
             'ctl00$header$hdnHoverLocationId': '1',
-            'ctl00$header$rptLocation$ctl00$hdnLocationId': '1',
-            'ctl00$header$rptLocation$ctl01$hdnLocationId': '2',
-            'ctl00$header$rptLocation$ctl02$hdnLocationId': '3',
-            'ctl00$header$rptLocation$ctl03$hdnLocationId': '4',
-            'ctl00$header$rptLocation$ctl04$hdnLocationId': '5',
-            'ctl00$header$rptLocation$ctl05$hdnLocationId': '6',
-            'ctl00$header$rptLocation$ctl06$hdnLocationId': '7',
-            'ctl00$header$rptLocation$ctl07$hdnLocationId': '8',
             'ctl00$cphContent$ctl01$ddlPhysicianRefferalRequired': '-1',
             'ctl00$cphContent$ctl01$ddlAcceptNewPatients': '-1',
             'ctl00$cphContent$ctl01$ddlConcierge': '-1',
