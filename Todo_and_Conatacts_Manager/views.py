@@ -55,6 +55,10 @@ class ItemViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticated,)
     serializer_class = ItemSerializer
 
+    """
+    todo_pk can be in query string parameters or 
+    it need to be in request body
+    """
     def create(self, request):
         todo_pk = request.query_params.get("todo_pk")
         if not todo_pk:
