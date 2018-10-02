@@ -1,0 +1,68 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %} Juntos {% endblock %}</title>
+    <link href='http://fonts.googleapis.com/css?family=Oleo+Script' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="{% static '/css/style.css' %}"/>
+    <link rel="icon" href="{% static 'images/j.png' %}">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+</head>
+<body>
+
+<nav class="navbar navbar-custom">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#topNavBar">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" style="color: #ffffff" href="{% url 'user:index' %}"><strong>Juntos</strong></a>
+        </div>
+        <ul class="nav navbar-nav">
+            {% if user.is_authenticated %}
+            <li class="nav-item {% block index_active %}{% endblock %}">
+                <a class="nav-link" href="{% url 'user:index' %}">Home</a>
+            </li>
+            <li class="nav-item {% block ballot_active %}{% endblock %}">
+                <a class="nav-link" href="{% url 'ballot:ballot_list' %}">Ballot
+                    <span class="badge badge-primary badge-pill" style="background: #f0ad4e">{{ ballot_count }}</span>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+
+        <ul class="nav navbar-nav navbar-right">
+
+            {% if user.is_authenticated %}
+                <li class="nav-hover">
+                    <a href="{% url 'user:index' %}">
+                        <span class="glyphicon glyphicon-user" style="color: #f0ad4e" aria-hidden="true"></span>&nbsp;
+                        Welcome {{ user.first_name | capfirst }}
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'user:logout' %}">
+                        <span class="glyphicon glyphicon-off" aria-hidden="true"></span>&nbsp; Logout
+                    </a>
+                </li>
+            {% else %}
+                <li>
+                    <a href="{% url 'user:login' %}">
+                        <span class="glyphicon glyphicon-user" aria-hidden="true"></span>&nbsp; Login
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </div>
+</nav>
+
+{% block body %}
+{% endblock %}
+</body>
+</html>

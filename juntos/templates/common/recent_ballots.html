@@ -1,0 +1,31 @@
+<div class="col-sm-10 col-sm-offset-1 col-md-3 col-md-offset-0">
+    {% load ballot_extras %}
+    {% recent_ballots 2 as Ballots %}
+    <div class="panel panel-default">
+        <div class="panel-heading" style="color: #ebaa4d">
+            <h2>Recent Ballots
+            {% if request.role == 'Admin' %}
+                <a href="{% url 'ballot:ballot_add' %}">
+                    <button type="submit" class="btn btn-warning float-right" style="float: right">Add Ballot</button>
+                </a>
+                {% endif %}
+            </h2>
+        </div>
+        <div class="panel-body">
+            {% if Ballots %}
+                <div class="list-group">
+                    {% for Ballot in Ballots %}
+                        <a class="list-group-item" style="border-color: #f0ad4e; color: black"
+                           href="{% url 'ballot:ballot_details' Ballot.id %}">
+                            {{Ballot.title | capfirst}}
+                        </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p>There is no ballot added recently.</p>
+            {% endif %}
+            <br>
+        </div>
+        <br>
+    </div>
+</div>

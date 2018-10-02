@@ -1,0 +1,57 @@
+{% extends 'common/base.html' %}
+{% block title %}Edit{% endblock %}
+
+{% block body %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-12 col-md-6 col-md-offset-3">
+                <div class="panel panel-default">
+                    <div class="panel-heading"><h4>Edit info</h4></div>
+                    <div class="panel-body">
+                        <form class="form-horizontal" role="form" action="" method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            {% load ballot_extras %}
+                            {% for field in user_form %}
+                                <div class="form-group">
+                                    <div class="col-sm-offset-2 col-sm-10">
+                                        <span class="text-danger small">{{ field.errors }}</span>
+                                    </div>
+                                    <label class="control-label col-sm-2" for="song_title">{{ field.label_tag }}</label>
+                                    <div class="col-sm-10">{{ field|addcss:'form-control' }}</div>
+                                </div>
+                            {% endfor %}
+                            {% for field in profile_form %}
+                                <div class="form-group">
+                                    <div class="col-sm-offset-2 col-sm-10">
+                                        <span class="text-danger small">{{ field.errors }}</span>
+                                    </div>
+                                    <label class="control-label col-sm-2" for="song_title">{{ field.label_tag }}</label>
+                                    <div class="col-sm-10">{{ field|addcss:'form-control' }}</div>
+                                </div>
+                            {% endfor %}
+                            {% if profile_form.non_field_errors %}
+                                <div class="form-group" >
+                                    <div class="col-sm-offset-2 col-sm-6">
+                                        {% for error in profile_form.non_field_errors %}
+                                            <div class="form-error">{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% endif %}
+                            <div class="form-group">
+                                <div class="col-sm-offset-2 col-sm-1">
+                                    <button type="submit" class="btn btn-success">Submit</button>
+                                </div>
+                                <div class="col-sm-1" style="margin-left: 10px;">
+                                    <a href="{% url 'user:index' %}">
+                                        <button type="button" class="btn btn-danger">Cancel</button>
+                                    </a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

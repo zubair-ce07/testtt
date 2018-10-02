@@ -1,0 +1,159 @@
+{% extends 'common/base.html' %}
+{% block title %} Home {% endblock %}
+{% block index_active %} active {% endblock %}
+
+{% block body %}
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Left user Info -->
+            <div class="col-sm-3 col-md-3">
+                <div class="panel panel-default">
+                    <div class="panel-heading"><h4>Welcome {{ user.first_name | capfirst }}</h4></div>
+                    <div class="panel-body">
+                        {% if user.profile.profile_photo %}
+                            <a href="{{ user.profile.profile_photo.url }}">
+                                <img src="{{ user.profile.profile_photo.url }}" class="img-responsive">
+                            </a>
+                        {% else %}
+                            <h3><a href="{% url 'user:edit_profile' %}">Add Profile Image</a></h3>
+                        {% endif %}
+                        <h1>{{ user.first_name | capfirst }} <br>
+                            <small>{{ user.email}}</small>
+                        </h1>
+                        <a href="{% url 'user:edit_all_info' %}">
+                            <button type="submit" class="btn btn-large btn-success btn-xs">
+                                <span class="glyphicon glyphicon-edit"></span>&nbsp; Update Complete Profile
+                            </button>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <!-- Right Info Info -->
+            <div class="col-sm-9 col-md-6">
+                <div class="panel panel-default">
+                    <div class="panel-heading"><h4>Basic info</h4></div>
+                    <div class="panel-body">
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Full Name</th>
+                                <th>Email</th>
+                                <th>Edit Basic Info</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>{{ user.username }}</td>
+                                    <td>{{ user.first_name }} {{ user.last_name }}</td>
+                                    <td>{{ user.email }}</td>
+                                    <td>
+                                        <a href="{% url 'user:edit_basic_info' %}">
+                                            <button type="submit" class="btn btn-success btn-xs">
+                                                <span class="glyphicon glyphicon-edit"></span>&nbsp; Update
+                                            </button>
+                                        </a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="panel panel-default">
+                    <div class="panel-heading"><h4>Profile info</h4></div>
+                    <div class="panel-body">
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th>Address</th>
+                                <th>Age</th>
+                                <th>Gender</th>
+                                <th>Edit Profile</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>{{ user.profile.address }}</td>
+                                    <td>{{ user.profile.age }}</td>
+                                    <td>{{ user.profile.gender }}</td>
+                                    <td>
+                                        <a href="{% url 'user:edit_profile' %}">
+                                            <button type="submit" class="btn btn-success btn-xs">
+                                                <span class="glyphicon glyphicon-edit"></span>&nbsp; Update
+                                            </button>
+                                        </a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% include 'common/recent_ballots.html' %}
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <!-- Footer -->
+    <footer class="page-footer font-small teal pt-4">
+
+        <!-- Footer Text -->
+        <div class="container-fluid text-center text-md-left">
+
+            <!-- Grid row -->
+            <div class="row">
+
+                <!-- Grid column -->
+                <div class="col-md-4 mt-md-0 mt-3">
+
+                    <!-- Content -->
+                    <h5 class="text-uppercase font-weight-bold" style="color: #f0ad4e">
+                        Easy
+                        <span class="glyphicon glyphicon-ice-lolly" aria-hidden="true"></span>&nbsp;
+                    </h5>
+                    <p>Juntos gets you the results you need to make the important decisions. </p>
+
+                </div>
+                <!-- Grid column -->
+
+                <!-- Grid column -->
+                <div class="col-md-4 mb-md-0 mb-3">
+
+                    <!-- Content -->
+                    <h5 class="text-uppercase font-weight-bold" style="color: #f0ad4e">
+                        Secure
+                        <span class="glyphicon glyphicon-lock" aria-hidden="true"></span>&nbsp;
+                    </h5>
+                    <p>We ensure your data is secure, backed up, and there when you need it.</p>
+
+                </div>
+
+                <!-- Grid column -->
+                <div class="col-md-4 mb-md-0 mb-3">
+
+                    <!-- Content -->
+                    <h5 class="text-uppercase font-weight-bold" style="color: #f0ad4e">
+                        Better Voting
+                        <span class="glyphicon glyphicon-check"  aria-hidden="true"></span>&nbsp;
+                    </h5>
+                    <p>Our holistic approach means a more enjoyable voting experience.</p>
+
+                </div>
+                <!-- Grid column -->
+
+            </div>
+            <!-- Grid row -->
+
+        </div>
+        <!-- Footer Text -->
+
+        <!-- Copyright -->
+        <div class="footer-copyright text-center py-3" style="background:#000;">© 2018 Copyright:
+            <a href="#"> www.juntos.org</a>
+        </div>
+        <!-- Copyright -->
+
+    </footer>
+    <!-- Footer -->
+    <!-- Footer -->
+{% endblock %}

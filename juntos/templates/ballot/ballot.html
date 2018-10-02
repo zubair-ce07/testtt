@@ -1,0 +1,37 @@
+{% extends 'common/base.html' %}
+{% block ballot_active %} active {% endblock %}
+
+{% block body %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-8 col-md-9">
+                <div class="panel panel-default">
+                    <div class="panel-heading"><h4>{{ ballot.title | capfirst }}</h4></div>
+                    <div class="panel-body">
+                        {% if error %}
+                            <div class="form-error">{{ error }}</div>
+                        {% endif %}
+                        <form method="POST" action="{% url 'ballot:ballot_vote' ballot.id %}">
+                            {% csrf_token %}
+                            {% for choice in ballot.choices %}
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" name="choice" value="{{choice.id}}">
+                                        {{choice.text}}
+                                    </label>
+                                </div>
+                            {% empty %}
+                                <p>There is no chice available for this Ballot.</p>
+                            {% endfor %}
+                            <button class="btn btn-success" type="submit" value="Vote" {% if error %}disabled{% endif %}>
+                                Vote
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% include 'common/recent_ballots.html' %}
+        </div>
+    </div>
+    {% include 'common/footer.html' %}
+{% endblock body %}

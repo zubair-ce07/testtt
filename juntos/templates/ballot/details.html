@@ -1,0 +1,37 @@
+{% extends 'common/base.html' %}
+{% block ballot_active %} active {% endblock %}
+
+{% block body %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-12 col-md-8 col-md-offset-2 col-sm-offset-0">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h4>{{ ballot.title | capfirst }}</h4>
+                    </div>
+                    <div class="panel-body">
+                        {% for choice in ballot.choices %}
+                            <div class="list-group-item">
+                                <span class="badge badge-pill badge-primary float-right" style="background: #f0ad4e">
+                                    {{choice.votes}} - votes
+                                </span>
+                                {{choice.text}}
+                            </div>
+                        {% empty %}
+                        <div class="list-group-item">There is no choice available for this Ballot.</div>
+                        {% endfor %}
+                        <br>
+                        <div class="col-md-12"><b>Created by: </b> {{ballot.created_by.first_name | capfirst}}</div>
+                    </div>
+                    <div class="panel-footer">
+                        <a href="{% url 'ballot:ballot_list' %}">
+                            <button class="btn btn-warning">Go back</button>
+                        </a>
+                    </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    {% include 'common/footer.html' %}
+{% endblock body %}

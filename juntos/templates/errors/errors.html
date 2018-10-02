@@ -1,0 +1,17 @@
+{% extends 'common/base.html' %}
+
+{% block body %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-12 col-md-8 col-md-offset-2">
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <h3>Sorry! Error {{ error }} occurs</h3>
+                        <div class="form-error">{{ request.method }}: {{ request.path }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% include 'common/footer.html' %}
+{% endblock %}
