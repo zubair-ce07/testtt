@@ -1,49 +1,58 @@
+"""This file contains the YearReport class
+to calculate the Year stats"""
 from math import inf
 import calendar
 
 
 class YearReport:
+    """This is the class to calculate the YEAR Stats
+    given as CLA and print it"""
 
     def __init__(self):
-        self.maxTempDate = ""
-        self.maxTemp = -inf
-        self.minTempDate = ""
-        self.minTemp = +inf
-        self.maxHumidityDate = ""
-        self.maxHumidity = -inf
+        self.max_temp_date = ""
+        self.max_temp = -inf
+        self.min_temp_date = ""
+        self.min_temp = +inf
+        self.max_humidity_date = ""
+        self.max_humidity = -inf
 
-    def set_accurate_date(self, weatherDict):
-        if weatherDict["Max TemperatureC"] is not '':
-            if self.maxTemp <= int(weatherDict["Max TemperatureC"]):
-                self.maxTempDate = weatherDict["PKT"]
-                self.maxTemp = int(weatherDict["Max TemperatureC"])
-        if weatherDict["Min TemperatureC"] is not '':
-            if self.minTemp >= int(weatherDict["Min TemperatureC"]):
-                self.minTempDate = weatherDict["PKT"]
-                self.minTemp = int(weatherDict["Min TemperatureC"])
-        if weatherDict["Max Humidity"] is not '':
-            if self.maxHumidity <= int(weatherDict["Max Humidity"]):
-                self.maxHumidityDate = weatherDict["PKT"]
-                self.maxHumidity = int(weatherDict["Max Humidity"])
+    def set_accurate_date(self, waether_data_dict):
+        """This method calculates the yearly stats
+        and set to appropriate variable"""
+
+        if waether_data_dict["Max TemperatureC"]:
+            if self.max_temp <= int(waether_data_dict["Max TemperatureC"]):
+                self.max_temp_date = waether_data_dict["PKT"]
+                self.max_temp = int(waether_data_dict["Max TemperatureC"])
+        if waether_data_dict["Min TemperatureC"]:
+            if self.min_temp >= int(waether_data_dict["Min TemperatureC"]):
+                self.min_temp_date = waether_data_dict["PKT"]
+                self.min_temp = int(waether_data_dict["Min TemperatureC"])
+        if waether_data_dict["Max Humidity"]:
+            if self.max_humidity <= int(waether_data_dict["Max Humidity"]):
+                self.max_humidity_date = waether_data_dict["PKT"]
+                self.max_humidity = int(waether_data_dict["Max Humidity"])
 
     def print_year_report(self):
-                            # Highest: 45C on June 23
-                            # Lowest: 01C on December 22
-                            # Humidity: 95% on August 14
+        """This method print the YEAR Report
+        as required"""
 
         print(
-            "Highest: " + str(self.maxTemp) + "C " +
-            "on " + str(self.date_format(self.maxTempDate))
+            "Highest: " + str(self.max_temp) + "C " +
+            "on " + str(self.date_format(self.max_temp_date))
             )
         print(
-            "Lowest: " + str(self.minTemp) + "C " +
-            "on " + str(self.date_format(self.minTempDate))
+            "Lowest: " + str(self.min_temp) + "C " +
+            "on " + str(self.date_format(self.min_temp_date))
             )
         print(
-            "Humidity: " + str(self.maxHumidity) + "% " +
-            "on " + str(self.date_format(self.maxHumidityDate))
-                )
+            "Humidity: " + str(self.max_humidity) + "% " +
+            "on " + str(self.date_format(self.max_humidity_date))
+            )
 
     def date_format(self, date):
-        splitDate = date.split("-")
-        return calendar.month_name[int(splitDate[1])] + " " + splitDate[2]
+        """This method return the date format
+        as required"""
+
+        split_date = date.split("-")
+        return calendar.month_name[int(split_date[1])] + " " + split_date[2]

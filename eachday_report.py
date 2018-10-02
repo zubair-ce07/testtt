@@ -1,39 +1,48 @@
+"""This file contains the EachDayReport that calculates the
+the each day stats and print the each day report"""
+
 
 class EachDayReport:
 
     def __init__(self):
-        self.maxTemp = 0
-        self.minTemp = 0
+        self.max_temp = 0
+        self.min_temp = 0
         self.date = ''
 
-    def print_eachday_report(self, weatherDict):
-        if (weatherDict["Max TemperatureC"] is not ''and
-                weatherDict["Min TemperatureC"] is not ''):
-            self.maxTemp = int(weatherDict["Max TemperatureC"])
-            self.minTemp = int(weatherDict["Min TemperatureC"])
-            self.date = str(weatherDict["PKT"]).split("-")[2]
+    def print_eachday_report(self, weather_dict):
+        """This method calculates the each day report
+        and print as required"""
+
+        if (weather_dict["Max TemperatureC"] and
+                weather_dict["Min TemperatureC"]):
+            self.max_temp = int(weather_dict["Max TemperatureC"])
+            self.min_temp = int(weather_dict["Min TemperatureC"])
+            self.date = str(weather_dict["PKT"]).split("-")[2]
             if len(self.date) == 1:
                 self.date = "0" + self.date
 
             print("\33[95m" + self.date, end=" ")
-            print("\33[31m" + "+" * self.maxTemp, end=" ")
-            print("\33[95m" + str(self.maxTemp) + "C")
+            print("\33[31m" + "+" * self.max_temp, end=" ")
+            print("\33[95m" + str(self.max_temp) + "C")
 
             print("\33[95m" + self.date, end=" ")
-            print("\33[94m" + "+" * self.minTemp, end=" ")
-            print("\33[95m" + str(self.minTemp) + "C" + "\33[0m")
+            print("\33[94m" + "+" * self.min_temp, end=" ")
+            print("\33[95m" + str(self.min_temp) + "C" + "\33[0m")
 
-    def print_eachday_report_bonus(self, weatherDict):
-        if (weatherDict["Max TemperatureC"] is not '' and
-                weatherDict["Min TemperatureC"] is not ''):
-            self.maxTemp = int(weatherDict["Max TemperatureC"])
-            self.minTemp = int(weatherDict["Min TemperatureC"])
-            self.date = str(weatherDict["PKT"]).split("-")[2]
+    def print_eachday_report_bonus(self, weather_dict):
+        """This method calculates the each day report
+        and print as required. it is the bonus taks"""
+
+        if (weather_dict["Max TemperatureC"] and
+                weather_dict["Min TemperatureC"]):
+            self.max_temp = int(weather_dict["Max TemperatureC"])
+            self.min_temp = int(weather_dict["Min TemperatureC"])
+            self.date = str(weather_dict["PKT"]).split("-")[2]
             if len(self.date) == 1:
                 self.date = "0" + self.date
 
             print("\33[95m" + self.date, end=" ")
-            print("\33[94m" + "+" * self.minTemp, end="")
-            print("\33[31m" + "+" * self.maxTemp, end=" ")
-            print("\33[95m" + str(self.minTemp) + "C", end=" - ")
-            print("\33[95m" + str(self.maxTemp) + "C" + "\33[0m")
+            print("\33[94m" + "+" * self.min_temp, end="")
+            print("\33[31m" + "+" * self.max_temp, end=" ")
+            print("\33[95m" + str(self.min_temp) + "C", end=" - ")
+            print("\33[95m" + str(self.max_temp) + "C" + "\33[0m")
