@@ -4,6 +4,7 @@ This module scrapes products data from HappySize website
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 
+
 class HappySizeSpider(CrawlSpider):
     name = 'happysize'
     allowed_domains = ['happy-size.de']
@@ -14,6 +15,7 @@ class HappySizeSpider(CrawlSpider):
         Rule(LinkExtractor(restrict_css=['.linkContainer'])),
         Rule(LinkExtractor(restrict_css=['.productBoxImage']), callback='parse_product')
     )
+
     def parse_product(self, response):
         product = {}
         product['name'] = response.css('.productName::text').extract_first()
@@ -21,8 +23,8 @@ class HappySizeSpider(CrawlSpider):
             '.longDescriptionText span[itemprop="description"]::text').extract_first()
         product['currency'] = response.css(
             'meta[itemprop="priceCurrency"]::attr(content)').extract_first()
-        product['composition'] = self.composition(response)
-        product['care'] = self.care(response)
+        product['composition'] = self.get_composition(response)
+        product['care'] = self.get_care(response)
         product['bread-crumb'] = response.css('.breadcrumbsEntry span::text').extract()
         product['product_url'] = response.url
         product['brand'] = response.css('.brandName::text').extract_first().strip()
@@ -30,16 +32,14 @@ class HappySizeSpider(CrawlSpider):
         product['skus'] = self.skus_formation(response)
         return product
 
-
-    def care(self, response):
+    def get_care(self, response):
         care_list = response.css(
             '.productAttributeFlexTable div .flex_Attribute.attribute__Value::text').extract()
         if care_list:
             return care_list[-1]
         return None
 
-
-    def composition(self, response):
+    def get_composition(self, response):
         composition_list = []
         raw_composition_list = response.css('.sellingPoints span::text').extract()
         if raw_composition_list:
@@ -47,7 +47,6 @@ class HappySizeSpider(CrawlSpider):
                 composition_list.append(composition.strip())
             return composition_list
         return None
-
 
     def skus_formation(self, response):
         sku_list = []
