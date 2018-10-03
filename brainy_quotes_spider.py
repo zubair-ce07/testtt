@@ -1,5 +1,4 @@
 import json
-from copy import deepcopy
 
 import scrapy
 
@@ -18,23 +17,17 @@ class BrainyQuotesSpider(scrapy.Spider):
             yield scrapy.Request(topic_url, callback=self.parse_topics)
 
     def parse_topics(self, response):
-        request_params = {
-            'ab': 'a',
-            'fdd': 'd',
-            'langc': 'en',
-            'm': 0,
-            'typ': 'topic',
-        }
+        typ = response.xpath('//script[@type="text/javascript"]').re_first('GA_PG_TYPE="(.+)";')
         v = response.xpath("//meta[@property='ver']/@content").extract_first()
         vid = response.xpath('//script[@type="text/javascript"]').re_first("VID='(.*?)';")
         _id = response.xpath('//script[@type="text/javascript"]').re_first('PG_DM_ID="(.+)";')
         last_page = response.xpath('//script[@type="text/javascript"]').re_first('LPAGE =(.+);')
-        request_params = deepcopy(request_params)
-        request_params.update({
+        request_params = {
             'v': v,
             'vid': vid,
             'id': _id,
-        })
+            'typ': typ,
+        }
         quotes = response.css('div.m-brick')
         for quote in quotes:
             yield {
