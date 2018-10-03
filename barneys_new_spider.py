@@ -112,6 +112,7 @@ class BarneysParseSpider(BaseParseSpider):
 
     def parse(self, response):
         pid = self.product_id(response)
+        sizes = self.is_size_available(response)
         garment = self.new_unique_garment(pid)
 
         if not garment:
@@ -124,28 +125,25 @@ class BarneysParseSpider(BaseParseSpider):
             garment['gender'] = None
             garment['industry'] = 'homeware'
 
-        garment['skus'] = self.parse_skus(response)
-        garment['image_urls'] = self.image_urls(response)
         garment['merch_info'] = self.merch_info(response)
-        garment['meta'] = {'requests_queue': self.colour_requests(response)}
+        garment['skus'] = {}
+        garment['image_urls'] = self.image_urls(response)
+        colour_requests = self.colour_requests(response)
+
+        if not colour_requests and not sizes:
+            garment['skus'].update(self.one_size_sku(response))
+
+        elif sizes:
+            garment['skus'].update(self.skus(response))
+
+        else:
+            garment['meta'] = {'requests_queue': colour_requests}
 
         return self.next_request_or_garment(garment)
 
-    def parse_skus(self, response):
-        colour = clean(response.css('.atg_store_colorPicker'))
-        size = clean(response.css(self.size_css))
-
-        if not colour and not size:
-            return self.one_size_skus(response)
-
-        elif size:
-            return self.skus(response)
-
-        return {}
-
     def colour_requests(self, response):
         colour_requests = []
-        colour_ids = clean(response.css('.atg_store_colorPicker .hidden-xs ::attr(data-productid)'))
+        colour_ids = clean(response.css('.atg_store_colorPicker span.hidden-xs ::attr(data-productid)'))
 
         for c_id in colour_ids:
             form_data = {
@@ -160,70 +158,61 @@ class BarneysParseSpider(BaseParseSpider):
 
     def parse_colours(self, response):
         garment = response.meta['garment']
-        size = clean(response.css(self.size_css))
         garment['image_urls'] += self.image_urls(response)
-
-        if not size:
-            garment['skus'].update(self.colour_skus(response))
-
-        else:
-            garment['skus'].update(self.skus(response))
+        garment['skus'].update(self.skus(response))
 
         return self.next_request_or_garment(garment)
-
-    def one_size_skus(self, response):
-        one_size_skus = {}
-        sku = self.product_pricing_common(response)
-
-        if self.is_stock_unavailable(response):
-            sku['out_of_stock'] = True
-        colour = response.css('[data-fpcolor]::attr(data-fpcolor)').extract()[0]
-
-        if colour != 'NO COLOR':
-            sku['colour'] = colour
-
-        sku['size'] = self.one_size
-        sku_id = response.css('[data-fpskuid]::attr(data-fpskuid)').extract()[0]
-        one_size_skus[sku_id] = sku
-
-        return one_size_skus
-
-    def colour_skus(self, response):
-        colour_skus = {}
-        common_sku = self.product_pricing_common(response)
-        colours = response.css('.atg_store_colorPicker .hidden-xs a')
-
-        for colour_sel in colours:
-            sku = common_sku.copy()
-            sku_id = clean(colour_sel.css('::attr(data-productid)'))[0]
-            sku['colour'] = clean(colour_sel.css('::attr(title)'))[0]
-            size = clean(colour_sel.css('::attr(data-sku-sizes)'))[0]
-            sku['size'] = size if size not in self.one_sizes else self.one_size
-
-            if self.is_stock_unavailable(response):
-                sku['out_of_stock'] = True
-
-            colour_skus[sku_id] = sku
-        return colour_skus
 
     def skus(self, response):
         skus = {}
         common_sku = self.product_pricing_common(response)
 
-        for sku_sel in response.css('.sizePicker'):
-            sku_id = clean(sku_sel.css('::attr(data-skuid)'))[0]
+        for size_sel in response.css(self.size_css):
+            sku_id = clean(size_sel.css('::attr(data-skuid)'))[0]
             sku = common_sku.copy()
-            colour = clean(sku_sel.css('::attr(data-vendorcolor)'))[0]
+            colour = clean(size_sel.css('::attr(data-vendorcolor)'))[0]
 
             sku['colour'] = colour
-            size = clean(sku_sel.css('::text'))[0]
+            size = clean(size_sel.css('::text'))[0]
             sku['size'] = size if size not in self.one_sizes else self.one_size
-            is_sold_out = clean(sku_sel.css('::attr(data-availabilitystatus)'))[0]
+            is_sold_out = clean(size_sel.css('::attr(data-availabilitystatus)'))[0]
 
             if is_sold_out != '1000':
                 sku['out_of_stock'] = True
 
             skus[sku_id] = sku
+
+        colour_sel_css = '[class="colorSwatch swatchTooltip color-active"]'
+        if response.css(colour_sel_css):
+
+            colour_sel = response.css(colour_sel_css)
+            sku_id = clean(colour_sel.css('::attr(data-productid)'))[0]
+            common_sku['colour'] = clean(colour_sel.css('::attr(title)'))[0]
+            size = clean(colour_sel.css('::attr(data-sku-sizes)'))[0]
+            common_sku['size'] = size if size not in self.one_sizes else self.one_size
+
+            if self.is_stock_unavailable(response):
+                common_sku['out_of_stock'] = True
+
+            skus[sku_id] = common_sku
+
+        return skus
+
+    def one_size_sku(self, response):
+        skus = {}
+        common_sku = self.product_pricing_common(response)
+        colour = clean(response.css('[data-fpcolor]::attr(data-fpcolor)'))[0]
+
+        if colour != 'NO COLOR':
+            common_sku['colour'] = colour
+
+        common_sku['size'] = self.one_size
+        sku_id = clean(response.css('[data-fpskuid]::attr(data-fpskuid)'))[0]
+
+        if self.is_stock_unavailable(response):
+            common_sku['out_of_stock'] = True
+        skus[sku_id] = common_sku
+
         return skus
 
     def product_id(self, response):
@@ -249,12 +238,15 @@ class BarneysParseSpider(BaseParseSpider):
         merch_info_css = '#atg_behavior_addItemToCart::attr(value), .final-sale ::text'
         merch_info = clean(response.css(merch_info_css))
         soup = ' '.join(merch_info).lower()
-        
+
         return [m for m in self.MERCH_INFO if m in soup]
 
     def is_stock_unavailable(self, response):
         stock_msg = clean(response.css('#atg_behavior_addItemToCart::attr(value)'))[0]
         return stock_msg != 'add to bag'
+
+    def is_size_available(self, response):
+        return response.css(self.size_css)
 
 
 class BarneysCrawlSpider(BaseCrawlSpider):
