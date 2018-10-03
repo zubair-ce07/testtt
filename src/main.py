@@ -27,7 +27,6 @@ class Main:
             while(current_index+1 < len(sys.argv)):
                 if(sys.argv[current_index] == '-e'):
                     try:
-                        year = int(sys.argv[current_index+1])
                         self.output.print_e_output(sys.argv[current_index+1])
                         print()
 

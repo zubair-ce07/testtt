@@ -3,6 +3,7 @@ import datetime
 import calendar
 import calculations
 import filehandler
+from constants import COLOR_BLUE, COLOR_RED, COLOR_PURPLE, COLOR_NORM
 
 
 class OutputGenerator:
@@ -24,22 +25,23 @@ class OutputGenerator:
 
         result = self.results.get_highest_temparature_recored(
             filtered_file_names)
-        datee = datetime.datetime.strptime(result['PKT'], "%Y-%m-%d")
+        datee = datetime.datetime.strptime(result.get('PKT'), "%Y-%m-%d")
         print('Highest: {temp}C on {month} {day}'.format(
-            temp=result['MaxTemperatureC'],
+            temp=result['Max TemperatureC'],
             month=calendar.month_name[datee.month], day=datee.day))
 
         result = self.results.get_lowest_temparature_recored(
             filtered_file_names)
-        datee = datetime.datetime.strptime(result['PKT'], "%Y-%m-%d")
+        datee = datetime.datetime.strptime(result.get('PKT'), "%Y-%m-%d")
         print('Lowest: {temp}C on {month} {day}'.format(
-            temp=result['MinTemperatureC'],
+            temp=result['Min TemperatureC'],
             month=calendar.month_name[datee.month], day=datee.day))
 
         result = self.results.get_highest_humidity_recored(filtered_file_names)
-        datee = datetime.datetime.strptime(result['PKT'], "%Y-%m-%d")
+        datee = datetime.datetime.strptime(result.get('PKT'), "%Y-%m-%d")
         print('Humidity: {temp}% on {month} {day}'.format(
-            temp=result['MaxHumidity'], month=calendar.month_name[datee.month],
+            temp=result['Max Humidity'],
+            month=calendar.month_name[datee.month],
             day=datee.day))
 
     def print_a_output(self, filter):
@@ -79,16 +81,16 @@ class OutputGenerator:
             print(calendar.month_name[date.month], date.year)
 
             for counter in range(len(high_temp_record)):
-                print('\033[3;37;48m{:02d}'.format(counter+1), end=' ')
-                print('\033[0;31;48m+' * high_temp_record[counter+1], end=' ')
-                print('\033[3;37;48m{temp}C'.format(
+                print(COLOR_PURPLE + '{:02d}'.format(counter+1), end=' ')
+                print(COLOR_RED + '+' * high_temp_record[counter+1], end=' ')
+                print(COLOR_PURPLE + '{temp}C'.format(
                     temp=high_temp_record[counter+1]))
 
-                print('\033[3;37;48m{:02d}'.format(counter+1), end=' ')
-                print('\033[0;34;48m+' * low_temp_record[counter+1], end=' ')
-                print('\033[3;37;48m{temp}C'.format(
+                print(COLOR_PURPLE + '{:02d}'.format(counter+1), end=' ')
+                print(COLOR_BLUE + '+' * low_temp_record[counter+1], end=' ')
+                print(COLOR_PURPLE + '{temp}C'.format(
                     temp=low_temp_record[counter+1]))
-            print('\033[0;37;48m')
+            print(COLOR_NORM)
 
     def print_c_output_bounus(self, date):
         '''
@@ -108,10 +110,10 @@ class OutputGenerator:
             print(calendar.month_name[date.month], date.year)
 
             for counter in range(len(high_temp_record)):
-                print('\033[3;37;48m{:02d}'.format(counter+1), end=' ')
-                print('\033[0;34;48m+' * low_temp_record[counter+1], end='')
-                print('\033[0;31;48m+' * high_temp_record[counter+1], end=' ')
-                print('\033[3;37;48m{templow}C {temphigh}C'.format(
+                print('\033[3;37;48m' + '{:02d}'.format(counter+1), end=' ')
+                print(COLOR_BLUE + '+' * low_temp_record[counter+1], end='')
+                print(COLOR_RED + '+' * high_temp_record[counter+1], end=' ')
+                print(COLOR_NORM + '{templow}C {temphigh}C'.format(
                     templow=low_temp_record[counter+1],
                     temphigh=high_temp_record[counter+1]))
-            print('\033[0;37;48m')
+            print(COLOR_NORM)

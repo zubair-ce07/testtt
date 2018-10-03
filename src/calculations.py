@@ -3,6 +3,7 @@
 import calendar
 import datetime
 import filehandler as files
+import csv
 
 
 class WeatherCalculations:
@@ -12,7 +13,7 @@ class WeatherCalculations:
 
     def get_highest_temparature_recored(self, file_names_list):
         '''
-        This method takes list of paths and return the recordof a day
+        This method takes list of paths and return the record of a day
         that have highest temperature.
         '''
 
@@ -21,18 +22,13 @@ class WeatherCalculations:
         temp = -273
         for file_name in file_names_list:
             with open(file_name) as current_file:
-                keys = current_file.readline().rstrip()\
-                    .replace(' ', '').split(',')
-
-                for line in current_file:
-                    values = line.replace(' ', '').rstrip().split(',')
-                    new_record = dict(list(zip(keys, values)))
-
+                reader = csv.DictReader(current_file)
+                for row in reader:
                     try:
-                        temp = int(new_record['MaxTemperatureC'])
+                        temp = int(row.get('Max TemperatureC'))
                         if temp > max_temperature:
                             max_temperature = temp
-                            max_temperature_recored = new_record
+                            max_temperature_recored = row
                     except ValueError:
                         # print(ValueError)
                         pass
@@ -49,19 +45,14 @@ class WeatherCalculations:
         temp = 273
         for file_name in file_names_list:
             with open(file_name) as current_file:
-                keys = current_file.readline().rstrip()\
-                    .replace(' ', '').split(',')
-
-                for line in current_file:
-                    values = line.replace(' ', '').rstrip().split(',')
-                    new_record = dict(list(zip(keys, values)))
-
+                reader = csv.DictReader(current_file)
+                for row in reader:
                     try:
-                        temp = int(new_record['MinTemperatureC'])
+                        temp = int(row.get('Min TemperatureC'))
                         if (min_temperature is None)\
                                 or (min_temperature > temp):
                             min_temperature = temp
-                            min_temperature_recored = new_record
+                            min_temperature_recored = row
                     except ValueError:
                         # print(ValueError)
                         pass
@@ -78,18 +69,13 @@ class WeatherCalculations:
         temp = 0
         for file_name in file_names_list:
             with open(file_name) as current_file:
-                keys = current_file.readline().rstrip()\
-                    .replace(' ', '').split(',')
-
-                for line in current_file:
-                    values = line.replace(' ', '').rstrip().split(',')
-                    new_record = dict(list(zip(keys, values)))
-
+                reader = csv.DictReader(current_file)
+                for row in reader:
                     try:
-                        temp = int(new_record['MaxHumidity'])
+                        temp = int(row.get('Max Humidity'))
                         if temp > max_humidity:
                             max_humidity = temp
-                            max_humidity_recored = new_record
+                            max_humidity_recored = row
                     except ValueError:
                         # print(ValueError)
                         pass
@@ -104,13 +90,10 @@ class WeatherCalculations:
         temp = 0
         counter = 0
         with open(file_name) as current_file:
-            keys = current_file.readline().rstrip().replace(' ', '').split(',')
-            for line in current_file:
-                values = line.replace(' ', '').rstrip().split(',')
-                new_record = dict(list(zip(keys, values)))
-
+            reader = csv.DictReader(current_file)
+            for row in reader:
                 try:
-                    temp += int(new_record['MaxTemperatureC'])
+                    temp += int(row.get('Max TemperatureC'))
                     counter += 1
                 except ValueError:
                     # print(ValueError)
@@ -126,12 +109,10 @@ class WeatherCalculations:
         temp = 0
         counter = 0
         with open(file_name) as current_file:
-            keys = current_file.readline().rstrip().replace(' ', '').split(',')
-            for line in current_file:
-                values = line.replace(' ', '').rstrip().split(',')
-                new_record = dict(list(zip(keys, values)))
+            reader = csv.DictReader(current_file)
+            for row in reader:
                 try:
-                    temp += int(new_record['MinTemperatureC'])
+                    temp += int(row.get('Min TemperatureC'))
                     counter += 1
                 except ValueError:
                     # print(ValueError)
@@ -147,13 +128,10 @@ class WeatherCalculations:
         temp = 0
         counter = 0
         with open(file_name) as current_file:
-            keys = current_file.readline().rstrip().replace(' ', '').split(',')
-            for line in current_file:
-                values = line.replace(' ', '').rstrip().split(',')
-                new_record = dict(list(zip(keys, values)))
-
+            reader = csv.DictReader(current_file)
+            for row in reader:
                 try:
-                    temp += int(new_record['MeanHumidity'])
+                    temp += int(row.get(' Mean Humidity'))
                     counter += 1
                 except ValueError:
                     # print(ValueError)
@@ -178,14 +156,12 @@ class WeatherCalculations:
         high_temp_list = []
         date_list = []
         with open(file_name) as current_file:
-            keys = current_file.readline().rstrip().replace(' ', '').split(',')
-            for line in current_file:
-                values = line.replace(' ', '').rstrip().split(',')
-                new_record = dict(list(zip(keys, values)))
-
+            reader = csv.DictReader(current_file)
+            for row in reader:
                 try:
-                    high_temp_list.append(int(new_record['MaxTemperatureC']))
-                    date_list.append(self.get_day(new_record['PKT']))
+                    high_temp_list.append(
+                        int(row.get('Max TemperatureC')))
+                    date_list.append(self.get_day(row.get('PKT')))
                 except ValueError:
                     # print(ValueError)
                     pass
@@ -201,14 +177,12 @@ class WeatherCalculations:
         low_temp_list = []
         date_list = []
         with open(file_name) as current_file:
-            keys = current_file.readline().rstrip().replace(' ', '').split(',')
-            for line in current_file:
-                values = line.replace(' ', '').rstrip().split(',')
-                new_record = dict(list(zip(keys, values)))
-
+            reader = csv.DictReader(current_file)
+            for row in reader:
                 try:
-                    low_temp_list.append(int(new_record['MinTemperatureC']))
-                    date_list.append(self.get_day(new_record['PKT']))
+                    low_temp_list.append(
+                        int(row.get('Min TemperatureC')))
+                    date_list.append(self.get_day(row.get('PKT')))
                 except ValueError:
                     # print(ValueError)
                     pass
