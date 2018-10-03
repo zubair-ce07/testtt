@@ -139,13 +139,12 @@ class BarneysParseSpider(BaseParseSpider):
             return self.one_size_skus(response)
 
         elif size:
-            return self.skus(response, self.currency(response))
+            return self.skus(response)
 
         return {}
 
     def colour_requests(self, response):
         colour_requests = []
-        currency = self.currency(response)
         colour_ids = clean(response.css('.atg_store_colorPicker .hidden-xs ::attr(data-productid)'))
 
         for c_id in colour_ids:
@@ -155,14 +154,12 @@ class BarneysParseSpider(BaseParseSpider):
                 'isAjax': 'true',
             }
             colour_requests.append(FormRequest(url=self.colour_utl_t, dont_filter=True, method='POST',
-                                               meta={'currency': currency}, formdata=form_data,
-                                               callback=self.parse_colours))
+                                               formdata=form_data, callback=self.parse_colours))
 
         return colour_requests
 
     def parse_colours(self, response):
         garment = response.meta['garment']
-        currency = response.meta['currency']
         size = clean(response.css(self.size_css))
         garment['image_urls'] += self.image_urls(response)
 
@@ -170,7 +167,7 @@ class BarneysParseSpider(BaseParseSpider):
             garment['skus'].update(self.colour_skus(response))
 
         else:
-            garment['skus'].update(self.skus(response, currency))
+            garment['skus'].update(self.skus(response))
 
         return self.next_request_or_garment(garment)
 
@@ -180,7 +177,6 @@ class BarneysParseSpider(BaseParseSpider):
 
         if self.is_stock_unavailable(response):
             sku['out_of_stock'] = True
-
         colour = response.css('[data-fpcolor]::attr(data-fpcolor)').extract()[0]
 
         if colour != 'NO COLOR':
@@ -194,10 +190,11 @@ class BarneysParseSpider(BaseParseSpider):
 
     def colour_skus(self, response):
         colour_skus = {}
-        sku = self.product_pricing_common(response)
+        common_sku = self.product_pricing_common(response)
         colours = response.css('.atg_store_colorPicker .hidden-xs a')
 
         for colour_sel in colours:
+            sku = common_sku.copy()
             sku_id = clean(colour_sel.css('::attr(data-productid)'))[0]
             sku['colour'] = clean(colour_sel.css('::attr(title)'))[0]
             size = clean(colour_sel.css('::attr(data-sku-sizes)'))[0]
@@ -209,14 +206,13 @@ class BarneysParseSpider(BaseParseSpider):
             colour_skus[sku_id] = sku
         return colour_skus
 
-    def skus(self, response, currency):
+    def skus(self, response):
         skus = {}
+        common_sku = self.product_pricing_common(response)
 
         for sku_sel in response.css('.sizePicker'):
             sku_id = clean(sku_sel.css('::attr(data-skuid)'))[0]
-            price = clean(sku_sel.css('::attr(data-list-price)'))[0]
-            p_price = clean(sku_sel.css('::attr(data-sale-price)'))
-            sku = self.product_pricing_common(None, money_strs=[price, p_price, currency])
+            sku = common_sku.copy()
             colour = clean(sku_sel.css('::attr(data-vendorcolor)'))[0]
 
             sku['colour'] = colour
@@ -249,13 +245,11 @@ class BarneysParseSpider(BaseParseSpider):
     def is_homeware(self, response):
         return 'Home' in ' '.join(self.product_category(response))
 
-    def currency(self, response):
-        return clean(response.css(self.price_css))[0].split(' ')[0]
-
     def merch_info(self, response):
         merch_info_css = '#atg_behavior_addItemToCart::attr(value), .final-sale ::text'
         merch_info = clean(response.css(merch_info_css))
         soup = ' '.join(merch_info).lower()
+        
         return [m for m in self.MERCH_INFO if m in soup]
 
     def is_stock_unavailable(self, response):
