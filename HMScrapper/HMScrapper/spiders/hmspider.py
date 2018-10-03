@@ -7,55 +7,46 @@ the scrapped data.
 import json
 import scrapy
 from lxml import html
-from urllib.parse import urljoin
 from HMScrapper.utilities import get, get_first
 from HMScrapper.items import HmScrapperItem
+from scrapy.linkextractor import LinkExtractor
+from scrapy.spiders import Rule, CrawlSpider
 
 
-class HmSpider(scrapy.Spider):
+class HmSpider(CrawlSpider):
     """
     Spider class to scrape categories and follow callbacks to
     GET and POST requests to scrape all the items.
     """
     name = 'hmspider'
-    allowed_domains = ['kw.hm.com/en']
+    allowed_domains = ['kw.hm.com']
     start_urls = ['https://kw.hm.com/en/']
-
-    def parse(self, response):
-        """
-        Callback function for initial start_requests function.
-        :param response: response received by hitting the start_urls
-        :return: yields requests for all categories
-        """
-        cat_path = "li[class *= 'menu--two__list-item']>div>a::attr(href)"
-        categories = response.css(cat_path).extract()
-        for category in categories:
-            category_url = urljoin(response.url, category)
-            yield scrapy.Request(url=category_url,
-                                 callback=self.parse_category,
-                                 dont_filter=True)
-
-    def parse_category(self, response):
-        """
-        Callback function for each category request yielded by parse().
-        :param response: response received by requesting a category
-        :return: Yields parse_item requests for all items of a
-        category.
-        """
-        items_path = "div[class *= 'field__item']>a::attr(href)"
-        items = response.css(items_path).extract()
-        for item in items:
-            item_url = urljoin(response.url, item)
-            yield scrapy.Request(url=item_url,
-                                 callback=self.parse_item,
-                                 dont_filter=True)
-        next_page_path = "li.pager__item>a::attr(href)"
-        next_page = response.css(next_page_path).extract_first()
-        if next_page:
-            next_page_url = urljoin(response.url, next_page)
-            yield scrapy.Request(url=next_page_url,
-                                 callback=self.parse_category,
-                                 dont_filter=True)
+    rules = [
+        Rule(
+            LinkExtractor(
+                restrict_css="div[class *= 'field__item']",
+                canonicalize=True,
+                unique=True,
+            ),
+            callback="parse_item",
+        ),
+        Rule(
+            LinkExtractor(
+                restrict_css="li.pager__item",
+                canonicalize=True,
+                unique=True,
+            ),
+            follow=True,
+        ),
+        Rule(
+            LinkExtractor(
+                restrict_css="li[class *= 'menu--two__list-item']>div",
+                canonicalize=True,
+                unique=True,
+            ),
+            follow=True,
+        ),
+    ]
 
     def parse_item(self, response):
         """
@@ -77,21 +68,21 @@ class HmSpider(scrapy.Spider):
             'div.composition-value>ul>li::text'
         )
 
-        item = HmScrapperItem()
+        hm_item = HmScrapperItem()
         discount = get_first(response, discount_path)
         if discount:
             discount = discount.split(" ")[1].split("%")[0]
 
-        item['color_skus'] = []
-        item['discount'] = discount
-        item['name'] = get_first(response, name_path)
-        item['composition'] = get(response, comp_path)
-        item['price'] = get_first(response, price_path)
-        item['concept'] = get_first(response, concept_path)
-        item['old_price'] = get_first(response, old_price_path)
-        item['care_info'] = get_first(response, care_info_path)
-        item['description'] = get_first(response, description_path)
-        item['item_code'] = get(response, item_code_path)[1].replace("\n", "")
+        hm_item['color_skus'] = []
+        hm_item['discount'] = discount
+        hm_item['name'] = get_first(response, name_path)
+        hm_item['composition'] = get(response, comp_path)
+        hm_item['price'] = get_first(response, price_path)
+        hm_item['concept'] = get_first(response, concept_path)
+        hm_item['old_price'] = get_first(response, old_price_path)
+        hm_item['care_info'] = get_first(response, care_info_path)
+        hm_item['description'] = get_first(response, description_path)
+        hm_item['item_code'] = get(response, item_code_path)[1].replace("\n", "")
 
         # get list of all colors for this item
         color_code_path = (
@@ -106,7 +97,7 @@ class HmSpider(scrapy.Spider):
         form_build_id_path = "button[class  *= 'cart']+input::attr(value)"
         color_codes = get(response, color_code_path)
         if not color_codes:
-            yield item
+            yield hm_item
         else:
             # get data for post requests
             sku_id = get_first(response, sku_id_path)
@@ -114,7 +105,7 @@ class HmSpider(scrapy.Spider):
             form_build_id = get_first(response, form_build_id_path)
             request_url = ('https://kw.hm.com/en/select-configurable-option'
                            '/{}?_wrapper_format=drupal_ajax').format(sku_id)
-            data = {
+            form_data = {
                 'configurables[article_castor_id]': color_codes[0],
                 'sku_id': sku_id,
                 'form_build_id': form_build_id,
@@ -126,9 +117,9 @@ class HmSpider(scrapy.Spider):
                 'accept': 'application/json, text/javascript, */*; q=0.01',
             }
             request_meta = {
-                'item': item,
+                'item': hm_item,
                 'header': headers,
-                'data': data,
+                'data': form_data,
                 'color_codes': color_codes[1:],
             }
             yield scrapy.FormRequest(url=request_url,
@@ -136,7 +127,7 @@ class HmSpider(scrapy.Spider):
                                      callback=self.parse_color,
                                      headers=headers,
                                      meta=request_meta,
-                                     formdata=data,
+                                     formdata=form_data,
                                      dont_filter=True)
 
     def parse_color(self, response):
@@ -147,7 +138,7 @@ class HmSpider(scrapy.Spider):
         and size information of the item.
         """
         # get meta data from response
-        item = response.meta['item']
+        hm_item = response.meta['item']
         header = response.meta['header']
         form_data = response.meta['data']
         color_codes = response.meta['color_codes']
@@ -173,14 +164,14 @@ class HmSpider(scrapy.Spider):
                     'sizes': sizes,
                 }
                 # append the color_sku to item
-                item['color_skus'].append(color_sku)
+                hm_item['color_skus'].append(color_sku)
         # if more colors are left
         if color_codes:
             # update color code for next request
             form_data['configurables[article_castor_id]'] = color_codes[0]
             # create meta for next request
             meta = {
-                'item': item,
+                'item': hm_item,
                 'header': header,
                 'data': form_data,
                 'color_codes': color_codes[1:],
@@ -194,4 +185,4 @@ class HmSpider(scrapy.Spider):
                                      formdata=form_data,
                                      dont_filter=True)
         else:
-            yield item
+            yield hm_item
