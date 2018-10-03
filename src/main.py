@@ -19,7 +19,6 @@ class Main:
         This methaod is main method tha handle weather report request from
         command arguments
         '''
-
         if len(sys.argv) >= 3:
             self.output.dir_path = sys.argv[1]
 

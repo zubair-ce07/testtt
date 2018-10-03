@@ -16,7 +16,6 @@ class WeatherCalculations:
         This method takes list of paths and return the record of a day
         that have highest temperature.
         '''
-
         max_temperature_recored = dict()
         max_temperature = -273
         temp = -273
@@ -39,7 +38,6 @@ class WeatherCalculations:
         This method takes list of paths and return the record of a day
         that have lowest temperature.
         '''
-
         min_temperature_recored = dict()
         min_temperature = None
         temp = 273
@@ -63,7 +61,6 @@ class WeatherCalculations:
         This method takes list of paths and return the record of a day
         that have highest humidity.
         '''
-
         max_humidity_recored = dict()
         max_humidity = 0
         temp = 0
@@ -86,7 +83,6 @@ class WeatherCalculations:
         This method take a a file path and return the average
         of maximum temprature of the day.
         '''
-
         temp = 0
         counter = 0
         with open(file_name) as current_file:
@@ -105,7 +101,6 @@ class WeatherCalculations:
         This method take a a file path and return the average
         of minimum temprature of the day.
         '''
-
         temp = 0
         counter = 0
         with open(file_name) as current_file:
@@ -124,7 +119,6 @@ class WeatherCalculations:
         This method takea a file path and return the average
         of mean humidity of the day.
         '''
-
         temp = 0
         counter = 0
         with open(file_name) as current_file:
@@ -152,7 +146,6 @@ class WeatherCalculations:
         This method take a a file path and return the weather
         of the day having highest temperature  of the day.
         '''
-
         high_temp_list = []
         date_list = []
         with open(file_name) as current_file:
@@ -173,7 +166,6 @@ class WeatherCalculations:
         This method take a a file path and return lowest temprature
         record of the day.
         '''
-
         low_temp_list = []
         date_list = []
         with open(file_name) as current_file:
@@ -194,7 +186,6 @@ class WeatherCalculations:
         This method take a date in formate 'yyyy/mm' and converts it into
         the another formate i.e 'yyyy_mm'
         '''
-
         filter = ''
         date = datetime.datetime.strptime(date, "%Y/%m")
         filter = str(date.year)+'_'+calendar.month_name[date.month][:3]

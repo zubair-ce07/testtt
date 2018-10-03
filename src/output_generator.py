@@ -18,7 +18,6 @@ class OutputGenerator:
         '''
             This method prints weather report for -e argument
         '''
-
         all_file_names = self.files.get_txt_files_list(self.dir_path)
         filtered_file_names = self.files.filter_list_by(
             all_file_names, filter)
@@ -48,7 +47,6 @@ class OutputGenerator:
         '''
             This method prints weather report for -a argument
         '''
-
         all_file_names = self.files.get_txt_files_list(self.dir_path)
         filtered_file_names = self.files.filter_list_by(
             all_file_names, self.results.get_a_fiter(filter))
@@ -67,7 +65,6 @@ class OutputGenerator:
         '''
             This method prints weather report for -c argument
         '''
-
         all_file_names = self.files.get_txt_files_list(self.dir_path)
         filtered_file_names = self.files.filter_list_by(
             all_file_names, self.results.get_a_fiter(date))
@@ -96,7 +93,6 @@ class OutputGenerator:
         '''
             This method prints weather report for -c argument
         '''
-
         all_file_names = self.files.get_txt_files_list(self.dir_path)
         filtered_file_names = self.files.filter_list_by(
             all_file_names, self.results.get_a_fiter(date))
