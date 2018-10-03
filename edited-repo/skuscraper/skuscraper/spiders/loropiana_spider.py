@@ -64,7 +64,7 @@ class LoroPianaParseSpider(BaseParseSpider):
 
     def parse_image_urls(self, response):
         garment = response.meta['garment']
-        self.image_urls(response, garment)
+        garment['image_urls'] += self.image_urls(response)
 
         return self.next_request_or_garment(garment)
 
@@ -78,11 +78,10 @@ class LoroPianaParseSpider(BaseParseSpider):
         skus = {}
         variant = json.loads(response.text)[0]
         colour = variant['description']
+        sku = response.meta['pricing_common']
+        sku['colour'] = colour
 
         for sizes in variant['sizes']:
-            sku = response.meta['pricing_common']
-            sku['colour'] = colour
-
             size = sizes['code']
             sku['size'] = self.one_size if size.lower() in self.one_sizes else size
 
@@ -93,12 +92,15 @@ class LoroPianaParseSpider(BaseParseSpider):
 
         return skus
 
-    def image_urls(self, response, garment):
+    def image_urls(self, response):
+        image_urls = []
         for raw_image in json.loads(response.text):
             for image in raw_image['formats']:
 
                 if image['format'] == 'ZOOM':
-                    garment['image_urls'].append(image['url'])
+                    image_urls.append(image['url'])
+
+        return image_urls
 
     def product_id(self, response):
         return clean(response.css('::attr("data-base-product-code")'))[0]
