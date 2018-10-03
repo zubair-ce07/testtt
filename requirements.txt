@@ -1,2 +1,3 @@
+import re
 scrapy 1.5.1
 import re
