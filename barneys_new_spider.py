@@ -6,7 +6,7 @@ from .base import BaseParseSpider, BaseCrawlSpider, clean, Gender
 
 
 class Mixin:
-    retailer = 'barneys-us'
+    retailer = 'barneys'
     default_brand = 'BARNEYS'
     allowed_domains = ['www.barneys.com']
     start_urls = ['http://www.barneys.com/global/ajaxGlobalNav.jsp']
