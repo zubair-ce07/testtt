@@ -1,30 +1,13 @@
-# -*- coding: utf-8 -*-
-#############################################################################
-#                                                                           #
-# This File is Created By : Fahad Shawal                                    #
-# File Version : 1.0                                                        #
-# Logic Followed : From url "http://www.orsay.com/de-de/produkte/" the      #
-#                  parse() method will fetch the anchor links of all the    #
-#                  sub category pages and pass each link to the method      #
-#                  parse_page_product() where link of each product will     #
-#                  be fetch and again each link will be passed to the       #
-#                  parse_product_details() to extract the product info.     #
-#                                                                           #
-#                  If there are more products then are not shown on product #
-#                  category page then a new link will be generated          #
-#                  as link +  ?sz=[some-value] to get other remaining       #
-#                  products.                                                #
-#                                                                           #
-#############################################################################
-
 import scrapy
 import logging
-from .dataGetter import dataGetterClass as dgc
+import w3lib.url
 
+from .productclass import Product
+from .dataGetter import DataGetterClass
 
-class OrsayspiderSpider(scrapy.Spider):
+class OrsaySpider(scrapy.Spider):
 
-    dgc_class = dgc()
+    data_getter_class = DataGetterClass()
     name = 'orsayspider'
     allowed_domains = ['orsay.com']
     start_urls = ['http://www.orsay.com/de-de/produkte/']
@@ -39,7 +22,9 @@ class OrsayspiderSpider(scrapy.Spider):
                         ).extract()
 
         for link in main_page_links:
-            yield scrapy.Request(response.urljoin(link), callback=self.parse_product_page, dont_filter=True)
+            yield scrapy.Request(response.urljoin(link), 
+                                callback=self.parse_product_page, 
+                                dont_filter=True)
         
     
     def parse_product_page(self, response):
@@ -48,70 +33,72 @@ class OrsayspiderSpider(scrapy.Spider):
         ).extract()
 
         for link in product_page_links:
-            yield response.follow(link, callback=self.parse_product_details, dont_filter=True)
+            yield response.follow(url=link, 
+                                callback=self.parse_product_details, 
+                                dont_filter=True)
             
         load_more = response.xpath(
             '//div[contains(@class, "load-next-placeholder")]'
             ).extract_first()
 
         if load_more:
-            next_items = dgc.get_next_count(self.dgc_class, response)
-            temp = str(response.request.url).split(sep='?sz=')
-            link = temp[0] + '?sz='+ str(next_items)
+            temp = int(w3lib.url.url_query_parameter(response.url, "sz"))
+            
+            if temp:
+                link = w3lib.url.add_or_replace_parameter(
+                                            response, 'sz', (temp+72))
+            else:
+                link = response.url + '?sz=72'
+                
             yield scrapy.Request(link, callback=self.parse_product_page)
 
     def parse_product_details(self, response):
-        item = {
-            'brand' : 'orsay',
-            'care' : dgc.get_care(self.dgc_class, response),
-            'category' : dgc.get_category(self.dgc_class, response),
-            'discription' : dgc.get_discription(self.dgc_class, response),
-            'image-urls' : dgc.get_image_urls(self.dgc_class, response),
-            'retailer-skus'  : dgc.get_retailer_skus( self.dgc_class, response),
-            'name' : dgc.get_name(self.dgc_class, response),
-            'skus' : {
-                dgc.get_prod_id(self.dgc_class, response) : {
-                'color' : dgc.get_selected_color(self.dgc_class, response),
-                'price' : dgc.get_price(self.dgc_class, response),
-                'currency' : dgc.get_currency(self.dgc_class, response),
-                'size' : dgc.get_size(self.dgc_class, response)
+        product = Product(
+            brand = 'orsay',
+            care = self.data_getter_class.product_care(response),
+            category = self.data_getter_class.product_category(response),
+            discription = self.data_getter_class.product_discription(response),
+            image_urls = self.data_getter_class.product_image_urls(response),
+            retailer_skus = self.data_getter_class.sku_id(
+                                                        response),
+            name = self.data_getter_class.product_name(response),
+            skus = {
+                self.data_getter_class.sku_id(response) : {
+                'color' :self.data_getter_class.product_selected_color(response),
+                'price' : self.data_getter_class.product_price(response),
+                'currency' : self.data_getter_class.product_currency(response),
+                'size' : self.data_getter_class.product_size(response)
                 }
             },
-            'url' : dgc.get_url(self.dgc_class, response)
-        }
+            url = response.url
+        )
         color_list_link = response.xpath(
-                            '//ul[contains(@class, "swatches color")]//a/@href'
+                            '//ul[contains(@class, "swatches color")]/'\
+                            'li[not(contains(@class, "selected"))]//a/@href'
                         ).extract()
         
-        if response.url in color_list_link:
-            color_list_link.remove(response.url)
+        return self.next_color_link(color_list_link, product)
+
+    def product_skus(self, response):
+        item = response.meta['item']
+        color_list_link = response.meta['link']
+        item_details = {
+            'color' : self.data_getter_class.product_selected_color(response),
+            'price' : self.data_getter_class.product_price(response),
+            'currency' : self.data_getter_class.product_currency(response),
+            'size' : self.data_getter_class.product_size(response)
+            }
+        item['skus'][self.data_getter_class.sku_id(response)] = item_details
+        item['image_urls'] += self.data_getter_class.product_image_urls(response)
         
-        if len(color_list_link) > 1:
-            link = color_list_link.pop()         
-            req = response.follow(link, callback=self.get_skues)
+        return self.next_color_link(color_list_link, item)
+
+    def next_color_link(self, color_list_link, item):    
+        if color_list_link:
+            link = color_list_link.pop()
+            req = scrapy.Request(url=link, callback=self.product_skus)
             req.meta['item'] = item
             req.meta['link'] = color_list_link
-            yield req
-        else:
-            yield item
-
-    def get_skues(self, response):
-        item = response.meta['item']
-        link = response.meta['link']
-        item_details = {
-            'color' : dgc.get_selected_color(self.dgc_class, response),
-            'price' : dgc.get_price(self.dgc_class, response),
-            'currency' : dgc.get_currency(self.dgc_class, response),
-            'size' : dgc.get_size(self.dgc_class, response)
-            }
-        item['skus'][dgc.get_prod_id(self.dgc_class, response)] = item_details
-        item['image-urls'] += dgc.get_image_urls(self.dgc_class, response)
-        
-        if link:
-            url = link.pop()
-            req = scrapy.Request(url, callback=self.get_skues)
-            req.meta['item'] = item
-            req.meta['link'] = link
             yield req
         else:
             yield item

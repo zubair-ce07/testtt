@@ -1,26 +1,7 @@
-# -*- coding: utf-8 -*-
-
-#############################################################################
-#                                                                           #
-# This File is Created By : Fahad Shawal                                    #
-# File Version : 2.0                                                        #
-# Logic Followed : From url "http://www.orsay.com/de-de/produkte/" the      #
-#                  parse() method will fetch the anchor links of all the    #
-#                  products shown on this page. After that it will look     #
-#                  for load more button if available then add 72 to the     #
-#                  to the previous link and follow the page to get more     #
-#                  product page.                                            #
-#                                                                           #
-#                  All the links will be stores in global list "urls_list"  #
-#                  from where the show_list method will pop single url      #
-#                  and extract the info from the page.                      #
-#                                                                           #
-#############################################################################
-
 import scrapy
 import logging
-from .dataGetter import dataGetterClass as dgc
-from scrapy.linkextractors import LinkExtractor
+
+from .dataGetter import DataGetterClass as dgc
 
 
 class Orsayspider2Spider(scrapy.Spider):
