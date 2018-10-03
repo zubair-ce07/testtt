@@ -6,6 +6,7 @@ import re
 
 import scrapy
 
+
 class SoKamalSpider(scrapy.Spider):
     """
     Main class of module
@@ -28,8 +29,7 @@ class SoKamalSpider(scrapy.Spider):
         {
             "id": "CC10E2AF-2576-4E2E-AB9B-50A63B4F314C",
             "collectionUrl": "eid-festive-18-stitched"
-        }
-    ]
+        }]
     start_urls = ['https://sokamal.com/collections/fall-18-unstitched?'
                   'varient_fabric=cotton&page=1',
                   'https://sokamal.com/collections/fall-18-unstitched?'
@@ -43,8 +43,7 @@ class SoKamalSpider(scrapy.Spider):
                   'https://sokamal.com/collections/eid-festive-18-unstitched?'
                   'page=1&varient_fabric=gip-silk',
                   'https://sokamal.com/collections/eid-festive-18-stitched?'
-                  'varient_fabric=lawn&page=1'
-                 ]
+                  'varient_fabric=lawn&page=1']
     form_data = {
         'cache_id': '',
         'collection_id[]': '',
@@ -73,6 +72,7 @@ class SoKamalSpider(scrapy.Spider):
         'vendor': '',
         'vendor_inclusion': ''
     }
+
     def parse(self, response):
         """
         this method extracts necessary data to form a request for products
@@ -99,7 +99,6 @@ class SoKamalSpider(scrapy.Spider):
                 formdata=self.form_data,
                 callback=self.parse_product)
 
-
     def get_collection_id(self, response):
         """
         This method returns a collection id used in request parameter
@@ -112,7 +111,6 @@ class SoKamalSpider(scrapy.Spider):
             if item['collectionUrl'] == collection_url:
                 return item['id']
         return None
-
 
     def parse_product(self, response):
         """
@@ -132,8 +130,8 @@ class SoKamalSpider(scrapy.Spider):
                 product['pieces'] = self.get_pieces(item)
                 product['publish_date'] = item.get('productPublishDate')
                 product['qualtity_left'] = item.get('inventoryQuantity')
-                product['skus'] = self.skus(item)
-                product['bread-crumb'] = self.bread_crumb(item)
+                product['skus'] = self.skus_formation(item)
+                product['bread-crumb'] = self.get_bread_crumb(item)
                 product['product_url'] = item.get('productUrl')
                 product['image_urls'] = self.capture_image_urls(item)
                 yield product
@@ -149,7 +147,6 @@ class SoKamalSpider(scrapy.Spider):
         new_json_data = json.loads(product_varients)
         return new_json_data
 
-
     def get_febric(self, json_data):
         """
         returns febric detail
@@ -158,7 +155,6 @@ class SoKamalSpider(scrapy.Spider):
         """
         febric = self.retrieve_json_data(json_data)[0].get('name')[0]
         return febric
-
 
     def get_pieces(self, json_data):
         """
@@ -169,8 +165,7 @@ class SoKamalSpider(scrapy.Spider):
         pieces = self.retrieve_json_data(json_data)[0].get('name')[1]
         return pieces
 
-
-    def skus(self, json_data):
+    def skus_formation(self, json_data):
         """
         This method forms skus
         :param json_data:
@@ -188,7 +183,7 @@ class SoKamalSpider(scrapy.Spider):
         return sku_list
 
     @staticmethod
-    def bread_crumb(json_data):
+    def get_bread_crumb(json_data):
         """
         retuens bread crumbs detail
         :param json_data:
