@@ -10,24 +10,16 @@ class Weatherman:
         self.path = path
         self.year = year
         self.month = month
-        self.input_files = []
-        self.read_files = []
 
     def filter_year_files(self):
-        year_files = filter(lambda x: x.startswith('Murree_weather_' + str(self.year)),
-                            os.listdir(self.path))
-        input_files = []
-        for filenames in year_files:
-            input_files.append(filenames)
-        return input_files
+        all_files = os.listdir(self.path)
+        year_files = filter(lambda x: str(self.year) in x, all_files)
+        return year_files
 
     def filter_month_files(self):
-        month_files = filter(lambda x: x.startswith('Murree_weather_' + str(self.year) + "_" + str(self.month)),
+        month_files = filter(lambda x: x.endswith(str(self.year) + "_" + str(self.month) + ".txt"),
                              os.listdir(self.path))
-        input_files = []
-        for filenames in month_files:
-            input_files.append(filenames)
-        return input_files
+        return month_files
 
     def read_file(self, input_files):
         read_files = []
@@ -158,7 +150,8 @@ args = parser.parse_args()
 path = args.path
 if args.e:
     year = args.e
-    weatherman1 = Weatherman(path, year)
+    month = None
+    weatherman1 = Weatherman(path, year, month)
     year_files = weatherman1.filter_year_files()
     yearly_data = weatherman1.read_file(year_files)
     weatherman1.extreme_conditions(yearly_data)
@@ -166,23 +159,23 @@ if args.a:
     ym = datetime.strptime(args.a, '%Y/%m')
     year = ym.strftime("%Y")
     month = ym.strftime("%b")
-    weatherman2 = Weatherman(path, year, month)
-    month_files = weatherman2.filter_month_files()
-    monthly_data = weatherman2.read_file(month_files)
-    weatherman2.average_conditions(monthly_data)
+    weatherman1 = Weatherman(path, year, month)
+    month_files = weatherman1.filter_month_files()
+    monthly_data = weatherman1.read_file(month_files)
+    weatherman1.average_conditions(monthly_data)
 if args.c:
     ym = datetime.strptime(args.c, '%Y/%m')
     year = ym.strftime("%Y")
     month = ym.strftime("%b")
-    weatherman2 = Weatherman(path, year, month)
-    month_files = weatherman2.filter_month_files()
-    monthly_data = weatherman2.read_file(month_files)
-    weatherman2.everyday_weather(monthly_data)
+    weatherman1 = Weatherman(path, year, month)
+    month_files = weatherman1.filter_month_files()
+    monthly_data = weatherman1.read_file(month_files)
+    weatherman1.everyday_weather(monthly_data)
 if args.b:
     ym = datetime.strptime(args.b, '%Y/%m')
     year = ym.strftime("%Y")
     month = ym.strftime("%b")
-    weatherman2 = Weatherman(path, year, month)
-    month_files = weatherman2.filter_month_files()
-    monthly_data = weatherman2.read_file(month_files)
-    weatherman2.days_weather(monthly_data)
+    weatherman1 = Weatherman(path, year, month)
+    month_files = weatherman1.filter_month_files()
+    monthly_data = weatherman1.read_file(month_files)
+    weatherman1.days_weather(monthly_data)
