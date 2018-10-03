@@ -8,11 +8,11 @@ from ..items import Product
 
 
 class LornajaneSpider(scrapy.Spider):
-    """This class crawls Sheego pages"""
+    """This class crawls lornajane pages"""
     name = 'lornajane'
 
     def start_requests(self):
-        """This method request for crawl orsay pages"""
+        """This method request for crawl lornajane pages"""
         start_url = 'https://www.lornajane.sg/'
         yield scrapy.Request(url=start_url, callback=self.parse)
 
@@ -29,15 +29,17 @@ class LornajaneSpider(scrapy.Spider):
         """This method crawls item detail url."""
         item_url = response.css('.product-name-price>a::attr(href)').extract()
         for url in item_url:
-            item_url = response.urljoin(url)
+            item_detail_url = response.urljoin(url)
             yield scrapy.Request(
-                url=item_url, callback=self.parse_item_detail)
+                url=item_detail_url, callback=self.parse_item_detail)
 
     def parse_item_detail(self, response):
         """This method crawls item detail information."""
         title = response.css('.pro-heading-sec>h1::text').extract_first()
-        full_price = response.css('div.pro-heading-sec>.price>span::text').extract()[1]
-        sale_price = response.css('div.pro-heading-sec>.price::text').extract()[1]
+        full_price = response.css(
+            'div.pro-heading-sec>.price>span::text').extract()[1]
+        sale_price = response.css(
+            'div.pro-heading-sec>.price::text').extract()[1]
         product_code = response.css('.mobile_toggle>p::text').extract_first()
         description = response.css('.mobile_toggle>p::text').extract()[1]
         description = ''.join(description).strip()
