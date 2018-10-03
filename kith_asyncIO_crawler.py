@@ -2,13 +2,12 @@ import asyncio
 import json
 import re
 
-import lxml
 import lxml.html
 import requests
 from bs4 import BeautifulSoup
 
 
-ITEMS = []
+KITH_ITEMS = []
 
 
 def soup_url(html):
@@ -18,21 +17,21 @@ def soup_url(html):
 
 def fetch_url(url):
     proxy = {"http": "http://116.12.51.238:8080"}
-    r = requests.get(url, proxies=proxy)
-    return r.text
+    response = requests.get(url, proxies=proxy)
+    return response.text
 
 
 async def parse_categories(html):
     soup = soup_url(html)
     category_links = []
-    for a in soup.find_all('a', attrs={'href': re.compile("https://kith.com/collections/.*")}):
-        category_links.append(a['href'])
+    for anchor_tag in soup.find_all('a', attrs={'href': re.compile("https://kith.com/collections/.*")}):
+        category_links.append(anchor_tag['href'])
     unique_links = list(set(category_links))
     for link in unique_links:
         asyncio.sleep(3)
         await parse_page_urls(link)
     with open('output_kith.json', 'w') as output:
-        json.dump(ITEMS, output)
+        json.dump(KITH_ITEMS, output)
 
 
 async def parse_page_urls(url):
@@ -50,8 +49,8 @@ async def parse_page_urls(url):
 def get_pages_number_link(soup):
     page_numbers_links = []
     numbers = []
-    for a in soup.find_all('a', attrs={'href': re.compile("collections.*page.*")}):
-        page_numbers_links.append(a['href'])
+    for anchor_tag in soup.find_all('a', attrs={'href': re.compile("collections.*page.*")}):
+        page_numbers_links.append(anchor_tag['href'])
     page_numbers = []
     for page in page_numbers_links:
         page_numbers.append(re.search('(?<=page=)\d+', page))
@@ -60,21 +59,20 @@ def get_pages_number_link(soup):
     if page_numbers:
         pagination_link = page_numbers_links[0]
         pagination_link = pagination_link[:-1]
-        pagination_link = "https://kith.com" + pagination_link
+        pagination_link = "https://kith.com{}".format(pagination_link)
         return max(numbers), pagination_link
-    return 1, None
+    return 1, ""
 
 
 def extract_item_urls(url):
     html = fetch_url(url)
     soup = soup_url(html)
     product_urls = []
-    for a in soup.find_all('a', attrs={'href': re.compile(".*/products/.*")}):
-        product_urls.append("https://kith.com" + a['href'])
+    for anchor_tag in soup.find_all('a', attrs={'href': re.compile(".*/products/.*")}):
+        product_urls.append("https://kith.com" + anchor_tag['href'])
     unique_urls = list(set(product_urls))
     for url in unique_urls:
-        print(extract_item(url))
-        ITEMS.append(extract_item(url))
+        KITH_ITEMS.append(extract_item(url))
 
 
 def extract_item(url):
@@ -134,25 +132,22 @@ def parse_description(doc):
     description_list = []
     product_id = ""
     material = ""
-    if info_list:
-        for description in info_list:
-            description = description.strip()
-            sub_string_style = re.search(r'^Style: (.+?)$', description)
-            sub_string_color = re.search(r'^Color: (.+?)$', description)
-            sub_string_material = re.search(r'^Material: (.+?)$', description)
-            if sub_string_style:
-                product_id = sub_string_style.group(1)
-            elif sub_string_color:
-                pass
-            elif sub_string_material:
-                material = sub_string_material.group(1)
-            else:
-                description_list.append(description)
-    if description_list:
-        description = description_list
-    else:
-        description = doc.xpath('//div[contains(@class, "product-single-details-rte rte mb0")]/ul/li/text()')
-    return product_id, material, description
+    for description in info_list:
+        description = description.strip()
+        sub_string_style = re.search(r'^Style: (.+?)$', description)
+        sub_string_color = re.search(r'^Color: (.+?)$', description)
+        sub_string_material = re.search(r'^Material: (.+?)$', description)
+        if sub_string_style:
+            product_id = sub_string_style.group(1)
+        elif sub_string_color:
+            pass
+        elif sub_string_material:
+            material = sub_string_material.group(1)
+        else:
+            description_list.append(description)
+    if not description_list:
+        description_list = doc.xpath('//div[contains(@class, "product-single-details-rte rte mb0")]/ul/li/text()')
+    return product_id, material, description_list
 
 
 def main():
@@ -160,4 +155,5 @@ def main():
     loop.run_until_complete(parse_categories(fetch_url("https://kith.com/")))
 
 
-main()
+if __name__ == "__main__":
+    main()
