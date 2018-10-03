@@ -64,7 +64,7 @@ def filter_color_size(value):
 
 
 class SokamalItem(scrapy.Item):
-    """Class for items for Sokamal's products"""
+    """SoKamal Item Class"""
     brand = scrapy.Field()
     url = scrapy.Field()
     name = scrapy.Field()
@@ -78,7 +78,7 @@ class SokamalItem(scrapy.Item):
 
 
 class SokamalLoader(ItemLoader):
-    """Class for ItemLoader for Sokamal's products"""
+    """SoKamal ItemLoader Class"""
     default_output_processor = TakeFirst()
     default_item_class = SokamalItem
     description_in = MapCompose(remove_tags)

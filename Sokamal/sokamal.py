@@ -1,4 +1,4 @@
-"""This script parses the site Sokamal's products"""
+"""SoKamal Spider"""
 import json
 
 import scrapy
@@ -7,7 +7,8 @@ from SOKAMAL.items import SokamalLoader
 
 
 class SokamalSpider(scrapy.Spider):
-    """Class Spider with two functions"""
+    """This class basically scrapes the site sokamal.com using specific formdata parameters and ItemLoaders while it
+     stores the scraped data in a json file"""
     name = "sokamal"
     start_urls = ["http://sokamal.com/"]
 
@@ -19,7 +20,8 @@ class SokamalSpider(scrapy.Spider):
 
     @staticmethod
     def parse_item(response):
-        """Takes the script and parses data"""
+        """Parses response to create product items with the following fields: url, name, brand, description, skus,
+        retailer_sku, category, image_urls, barcode"""
         data = json.loads(response.text)
         for product in data:
             loader = SokamalLoader()
