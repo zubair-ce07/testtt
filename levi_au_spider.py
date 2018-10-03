@@ -11,6 +11,7 @@ from .base import BaseParseSpider, BaseCrawlSpider, clean, Gender
 
 class Mixin:
     retailer = 'levi'
+    default_brand = "LEVI'S"
 
 
 class MixinAU(Mixin):
@@ -103,9 +104,6 @@ class ParseSpider(BaseParseSpider):
 
     def product_name(self, response):
         return (' '.join(clean(response.css('h1.product-name::text, h2.product-name ::text')))).strip()
-
-    def product_brand(self, response):
-        return 'Levi'
 
     def image_urls(self, response):
         image_urls = clean(response.css('.product-thumbnails .productthumbnail::attr(data-lgimg)'))
