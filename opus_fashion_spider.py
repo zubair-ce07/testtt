@@ -7,7 +7,7 @@ from .base import BaseParseSpider, BaseCrawlSpider, clean, Gender
 
 
 class Mixin:
-    retailer = 'opus-fashion'
+    retailer = 'opusfashion'
     gender = Gender.WOMEN.value
 
 
@@ -21,7 +21,7 @@ class MixinDE(Mixin):
     session_url = 'https://ident.casual-fashion.com'
 
 
-class OpusFashionParseSpider(BaseParseSpider, Mixin):
+class OpusFashionParseSpider(BaseParseSpider):
     price_css = '.c-product-detail .c-product-detail__price :not(.c-price__tax) ::text'
     description_css = '[itemprop=description] ::text,.c-tabs__pane--description .o-list ::text'
     care_css = '.c-tabs__pane--material-care .o-list ::text'
@@ -40,10 +40,6 @@ class OpusFashionParseSpider(BaseParseSpider, Mixin):
         garment['meta'] = {'requests_queue': self.colour_requests(response)}
 
         return self.next_request_or_garment(garment)
-
-    def colour_requests(self, response):
-        colour_urls = clean(response.css('.c-variant:not(.is-active)::attr(href)'))
-        return [Request(response.urljoin(url), callback=self.parse_colour) for url in colour_urls]
 
     def parse_colour(self, response):
         garment = response.meta['garment']
@@ -88,8 +84,12 @@ class OpusFashionParseSpider(BaseParseSpider, Mixin):
 
         return skus
 
+    def colour_requests(self, response):
+        colour_urls = clean(response.css('.c-variant:not(.is-active)::attr(href)'))
+        return [response.follow(url, callback=self.parse_colour) for url in colour_urls]
 
-class OpusFashionCrawlSpider(BaseCrawlSpider, Mixin):
+
+class OpusFashionCrawlSpider(BaseCrawlSpider):
     custom_settings = {
         'METAREFRESH_ENABLED': False,
     }
@@ -106,8 +106,8 @@ class OpusFashionCrawlSpider(BaseCrawlSpider, Mixin):
         return [Request(url=self.session_url, callback=self.parse_session_id)]
 
     def parse_session_id(self, response):
-        id = response.text
-        url = add_or_replace_parameter(self.start_urls[0], 'idto', id)
+        session_id = response.text
+        url = add_or_replace_parameter(self.start_urls[0], 'idto', session_id)
         meta = {'trail': self.add_trail(response)}
         return [Request(url, meta=meta.copy(), callback=self.parse)]
 
