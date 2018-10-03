@@ -1,13 +1,13 @@
 import json
 
-from scrapy.http import Request
 from scrapy.link import Link
 from scrapy.spiders import Rule
-from w3lib.url import add_or_replace_parameter, url_query_parameter
+from w3lib.url import add_or_replace_parameter
 from scrapy.linkextractors import LinkExtractor
 
 from .base import clean
 from .base import BaseParseSpider, BaseCrawlSpider
+from skuscraper.parsers.genders import Gender
 
 
 class Mixin:
@@ -73,47 +73,31 @@ class LoroPianaParseSpider(BaseParseSpider, Mixin):
         self.boilerplate_normal(garment, response)
 
         if not garment['industry']:
-            garment['gender'] = self.gender_lookup(' '.join(garment['category']))
+            garment['gender'] = self.gender_lookup(' '.join(garment['category'])) or Gender.ADULTS.value
 
         garment['image_urls'] = []
         garment['skus'] = {}
         garment['meta'] = {
-            'requests_queue': self.sku_requests(response, pid) + self.image_requests(response, pid),
+            'requests_queue': self.colour_requests(response, pid) + self.image_requests(response, pid),
         }
 
         return self.next_request_or_garment(garment)
 
-    def parse_skus(self, response):
+    def parse_colours(self, response):
         garment = response.meta['garment']
-        sku_data = json.loads(response.text)[0]
-
-        money_strs = [response.meta['price']]
-        common_sku = self.product_pricing_common(None, money_strs=money_strs)
-        common_sku['colour'] = sku_data['description']
-
-        for sku_size in sku_data['sizes']:
-            sku = common_sku.copy()
-
-            sku['size'] = self.one_size if sku_size['code'] in self.one_sizes else sku_size['code']
-            sku['out_of_stock'] = sku_size['stock']['stockLevel'] == 0
-            sku_id = sku_size['variantCode']
-
-            garment['skus'][sku_id] = sku
-
+        garment['skus'].update(self.skus(response))
         return self.next_request_or_garment(garment)
 
     def parse_images(self, response):
         garment = response.meta['garment']
-        raw_images = json.loads(response.text)
-        garment['image_urls'] += [im['url'] for formats in raw_images for im in formats['formats']
-                                  if im['format'] == 'ZOOM']
+        garment['image_urls'] += self.image_urls(response)
         return self.next_request_or_garment(garment)
 
     def product_id(self, response):
         return clean(response.css('.product-info .t-product-copy::text').re_first('(.*)\s/'))
 
     def product_name(self, response):
-        return clean(response.css('.product-info h1::text').extract_first()).title()
+        return clean(response.css('.product-info h1::text').extract_first() or '').title()
 
     def product_price(self, response):
         return clean(response.css('.t-product-cta-price::text'))[0]
@@ -128,16 +112,40 @@ class LoroPianaParseSpider(BaseParseSpider, Mixin):
     def care_criteria(self, text):
         return any(care_kw in text.lower() for care_kw in self.care_keywords)
 
-    def sku_requests(self, response, pid):
+    def skus(self, response):
+        skus = {}
+
+        sku_data = json.loads(response.text)[0]
+        money_strs = [response.meta['price']]
+        common_sku = self.product_pricing_common(None, money_strs=money_strs)
+        common_sku['colour'] = sku_data['description']
+
+        for sku_size in sku_data['sizes']:
+            sku = common_sku.copy()
+
+            sku['size'] = self.one_size if sku_size['code'] in self.one_sizes else sku_size['code']
+            if sku_size['stock']['stockLevel'] == 0:
+                sku['out_of_stock'] = True
+            sku_id = sku_size['variantCode']
+
+            skus[sku_id] = sku
+
+        return skus
+
+    def image_urls(self, response):
+        raw_images = json.loads(response.text)
+        return [im['url'] for formats in raw_images for im in formats['formats'] if im['format'] == 'ZOOM']
+
+    def colour_requests(self, response, pid):
         colours = self.product_colours(response)
         meta = {'price': self.product_price(response)}
-        return [Request(url=response.urljoin(self.skus_url_t.format(pid, c['code'])),
-                        callback=self.parse_skus, meta=meta.copy()) for c in colours]
+        return [response.follow(self.skus_url_t.format(pid, c['code']), callback=self.parse_colours,
+                                meta=meta.copy()) for c in colours]
 
     def image_requests(self, response, pid):
         colours = self.product_colours(response)
-        return [Request(url=response.urljoin(self.images_url_t.format(pid, c['code'])),
-                        callback=self.parse_images) for c in colours]
+        return [response.follow(self.images_url_t.format(pid, c['code']), callback=self.parse_images)
+                for c in colours]
 
 
 class PaginationLE(LinkExtractor):
@@ -182,9 +190,9 @@ class ProductsLE(LinkExtractor):
 
 
 class LoroPianaCrawlSpider(BaseCrawlSpider, Mixin):
-    products_css = ['.product-result', '.collection-section']
-    homeware_listings_css = '#submenu-HomeNavNode'
     listings_css = '.safari_only'
+    homeware_listings_css = '#submenu-HomeNavNode'
+    products_css = ['.product-result', '.collection-section']
 
     rules = (
         Rule(LinkExtractor(restrict_css=listings_css), callback='parse'),
@@ -220,3 +228,4 @@ class LoroPianaITParseSpider(LoroPianaParseSpider, MixinIT):
 class LoroPianaITCrawlSpider(LoroPianaCrawlSpider, MixinIT):
     name = MixinIT.retailer + '-crawl'
     parse_spider = LoroPianaITParseSpider()
+
