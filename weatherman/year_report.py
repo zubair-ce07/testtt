@@ -55,4 +55,7 @@ class YearReport:
         as required"""
 
         split_date = date.split("-")
-        return calendar.month_name[int(split_date[1])] + " " + split_date[2]
+        try:
+            return calendar.month_name[int(split_date[1])] + " " + split_date[2]
+        except IndexError:
+            return None
