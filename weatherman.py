@@ -29,34 +29,39 @@ class Weatherman:
             read_files.append(read_files_ls)
         return read_files
 
-    def record(self, read_files):
-        for entry in read_files:
+    def monthly_record(self, read_files):
+        for file in read_files:
             hi_temperature = []
             lo_temperature = []
             mean_humidity = []
-            for row in entry:
+            day =[]
+            for row in file:
                 if row['Max TemperatureC'] != '':
                     x = str(row['Max TemperatureC'])
                     hi_temperature.append(x)
             self.hi_temperature = list(map(int, hi_temperature))
-            for row in entry:
+            for row in file:
                 if row['Min TemperatureC'] != '':
                     x = str(row['Min TemperatureC'])
                     lo_temperature.append(x)
             self.lo_temperature = list(map(int, lo_temperature))
-            for row in entry:
+            for row in file:
                 if row[' Mean Humidity'] != '':
                     x = str(row[' Mean Humidity'])
                     mean_humidity.append(x)
             self.mean_humidity = list(map(int, mean_humidity))
-
+            for row in file:
+                if row['PKT'] != '':
+                    x = datetime.strptime(row['PKT'], '%Y-%m-%d').strftime('%d')
+                    day.append(x)
+            self.day = list(day)
 
     def extreme_conditions(self, read_files):
         max_temperature = None
         min_temperature = None
         max_humidity = None
-        for entry in read_files:
-            for row in entry:
+        for file in read_files:
+            for row in file:
                 if row['Max TemperatureC'] != '':
                     hi_temperature = int(row['Max TemperatureC'])
                     if max_temperature is None or max_temperature < hi_temperature:
@@ -84,44 +89,21 @@ class Weatherman:
         print('{0}{1}{2}'.format('Lowest Average: ', int(mean_lo_temperature), 'C'))
         print('{0}{1}{2}'.format('Average Mean Humidity: ', int(avg_mean_humidity), '%'))
 
-    def everyday_weather(self, read_files):
+    def everyday_weather(self):
         print(ym.strftime('%B'), year)
-        for entry in read_files:
-            for row in entry:
-                if row['Max TemperatureC'] != '':
-                    hi_temperature = int(row['Max TemperatureC'])
-                    day = row['PKT']
-                    date_formatted = datetime.strptime(day, '%Y-%m-%d').strftime('%d')
-                    print('\033[35m', date_formatted, end='')
-                    for i in range(0, hi_temperature):
-                        print('\033[91m +', end='')
-                    print('{0}{1}{2}'.format('\033[35m', hi_temperature, "C"))
-                if row['Min TemperatureC'] != '':
-                    lo_temperature = int(row['Min TemperatureC'])
-                    day = row['PKT']
-                    date_formatted = datetime.strptime(day, '%Y-%m-%d').strftime('%d')
-                    print('\033[35m', date_formatted, end='')
-                    for i in range(0, lo_temperature):
-                        print('\033[34m -', end='')
-                    print('{0}{1}{2}'.format('\033[35m', lo_temperature, 'C'))
+        for i in range(0, len(self.hi_temperature)):
+            print('{0}{1}{2}'.format('\033[35m', self.day[i], '\033[91m +'*(self.hi_temperature)[i]), end='')
+            print('{0}{1}{2}'.format('\033[35m', self.hi_temperature[i], 'C'))
+            print('{0}{1}{2}'.format('\033[35m', self.day[i], '\033[34m +' * (self.lo_temperature)[i]), end='')
+            print('{0}{1}{2}'.format('\033[35m', self.lo_temperature[i], 'C'))
 
-    def days_weather(self, read_files):
+    def days_weather(self):
         print('\033[0m', ym.strftime('%B'), year)
-        for entry in read_files:
-            for row in entry:
-                if row['Min TemperatureC'] != '':
-                    lo_temperature = int(row['Min TemperatureC'])
-                    day = row['PKT']
-                    obj = datetime.strptime(day, '%Y-%m-%d').strftime('%d')
-                    print('\033[35m', obj, end='')
-                    for i in range(0, lo_temperature):
-                        print('\033[34m +', end='')
-                if row['Max TemperatureC'] != '':
-                    hi_temperature = int(row['Max TemperatureC'])
-                    for i in range(0, hi_temperature):
-                        print('\033[91m +', end='')
-                    print('{0}{1}{2}{3}{4}{5}'.format('\033[35m', lo_temperature, 'C', '-', hi_temperature, 'C'))
-
+        for i in range(0, len(self.hi_temperature)):
+            print('\033[35m', self.day[i], end='')
+            print('\033[34m +' * self.lo_temperature[i], end='')
+            print('\033[91m +' * self.hi_temperature[i], end='')
+            print('{0}{1}{2}{3}{4}'.format('\033[35m', self.lo_temperature[i], 'C-', self.hi_temperature[i], 'C'))
 
 parser = argparse.ArgumentParser()
 parser.add_argument('path', help='Path to Directory', type=str)
@@ -145,7 +127,7 @@ if args.a:
     weatherman1 = Weatherman(path, year, month)
     month_files = weatherman1.filter_month_files()
     monthly_data = weatherman1.read_file(month_files)
-    records = weatherman1.record(monthly_data)
+    records = weatherman1.monthly_record(monthly_data)
     weatherman1.average_conditions()
 if args.c:
     ym = datetime.strptime(args.c, '%Y/%m')
@@ -154,7 +136,8 @@ if args.c:
     weatherman1 = Weatherman(path, year, month)
     month_files = weatherman1.filter_month_files()
     monthly_data = weatherman1.read_file(month_files)
-    weatherman1.everyday_weather(monthly_data)
+    records = weatherman1.monthly_record(monthly_data)
+    weatherman1.everyday_weather()
 if args.b:
     ym = datetime.strptime(args.b, '%Y/%m')
     year = ym.strftime('%Y')
@@ -162,4 +145,5 @@ if args.b:
     weatherman1 = Weatherman(path, year, month)
     month_files = weatherman1.filter_month_files()
     monthly_data = weatherman1.read_file(month_files)
-    weatherman1.days_weather(monthly_data)
+    records = weatherman1.monthly_record(monthly_data)
+    weatherman1.days_weather()
