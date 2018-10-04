@@ -265,7 +265,7 @@ class BarneysCrawlSpider(BaseCrawlSpider):
     def start_requests(self):
         return [Request(url, cookies={'usr_currency': self.cookies}) for url in self.start_urls]
 
-    listing_css = [
+    listings_css = [
         '.topnav-level-2',
         '#atg_store_pagination',
         '.pagination-link'
