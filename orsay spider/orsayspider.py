@@ -1,30 +1,36 @@
 import scrapy
 import logging
 import w3lib.url
+from scrapy.spiders import CrawlSpider, Rule
+from scrapy.linkextractors import LinkExtractor 
 
 from .productclass import Product
 from .dataGetter import DataGetterClass
 
-class OrsaySpider(scrapy.Spider):
+class OrsaySpider(CrawlSpider):
 
     data_getter_class = DataGetterClass()
     name = 'orsayspider'
     allowed_domains = ['orsay.com']
     start_urls = ['http://www.orsay.com/de-de/produkte/']
 
-    def parse(self, response):
-        """
-        links List to follow from main page to next 
-        products page
-        """
-        main_page_links = response.xpath(
-            '//a[contains(@class, "navigation-link level-3")]/@href'
-                        ).extract()
+    rules = (
+        Rule(LinkExtractor(allow=('/de-de/produkte/[A-Za-z]', )), callback='parse_product_page'),
+    )
 
-        for link in main_page_links:
-            yield scrapy.Request(response.urljoin(link), 
-                                callback=self.parse_product_page, 
-                                dont_filter=True)
+    # def parse(self, response):
+    #     """
+    #     links List to follow from main page to next 
+    #     products page
+    #     """
+    #     main_page_links = response.xpath(
+    #         '//a[contains(@class, "navigation-link level-3")]/@href'
+    #                     ).extract()
+
+    #     for link in main_page_links:
+    #         yield scrapy.Request(response.urljoin(link), 
+    #                             callback=self.parse_product_page, 
+    #                             dont_filter=True)
         
     
     def parse_product_page(self, response):
@@ -42,11 +48,10 @@ class OrsaySpider(scrapy.Spider):
             ).extract_first()
 
         if load_more:
-            temp = int(w3lib.url.url_query_parameter(response.url, "sz"))
-            
+            temp = w3lib.url.url_query_parameter(response.url, "sz")
             if temp:
                 link = w3lib.url.add_or_replace_parameter(
-                                            response, 'sz', (temp+72))
+                                            response, 'sz', (int(temp)+72))
             else:
                 link = response.url + '?sz=72'
                 
@@ -59,16 +64,10 @@ class OrsaySpider(scrapy.Spider):
             category = self.data_getter_class.product_category(response),
             discription = self.data_getter_class.product_discription(response),
             image_urls = self.data_getter_class.product_image_urls(response),
-            retailer_skus = self.data_getter_class.sku_id(
-                                                        response),
+            retailer_skus = self.data_getter_class.sku_id(response),
             name = self.data_getter_class.product_name(response),
             skus = {
-                self.data_getter_class.sku_id(response) : {
-                'color' :self.data_getter_class.product_selected_color(response),
-                'price' : self.data_getter_class.product_price(response),
-                'currency' : self.data_getter_class.product_currency(response),
-                'size' : self.data_getter_class.product_size(response)
-                }
+                self.data_getter_class.sku_id(response) : self.get_sku(response)
             },
             url = response.url
         )
@@ -82,12 +81,7 @@ class OrsaySpider(scrapy.Spider):
     def product_skus(self, response):
         item = response.meta['item']
         color_list_link = response.meta['link']
-        item_details = {
-            'color' : self.data_getter_class.product_selected_color(response),
-            'price' : self.data_getter_class.product_price(response),
-            'currency' : self.data_getter_class.product_currency(response),
-            'size' : self.data_getter_class.product_size(response)
-            }
+        item_details = self.get_sku(response)
         item['skus'][self.data_getter_class.sku_id(response)] = item_details
         item['image_urls'] += self.data_getter_class.product_image_urls(response)
         
@@ -102,3 +96,11 @@ class OrsaySpider(scrapy.Spider):
             yield req
         else:
             yield item
+
+    def get_sku(self, response):
+        return {
+            'color' :self.data_getter_class.product_selected_color(response),
+            'price' : self.data_getter_class.product_price(response),
+            'currency' : self.data_getter_class.product_currency(response),
+            'size' : self.data_getter_class.product_size(response)
+        }
