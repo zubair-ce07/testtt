@@ -8,14 +8,23 @@ from .base import BaseParseSpider, BaseCrawlSpider, clean, Gender
 class Mixin:
     retailer = 'barneys'
     default_brand = 'BARNEYS'
-    allowed_domains = ['www.barneys.com']
-    start_urls = ['http://www.barneys.com/global/ajaxGlobalNav.jsp']
+    allowed_domains = ['www.barneys.com', 'www.barneyswarehouse.com']
+    start_urls = [
+        'http://www.barneys.com/global/ajaxGlobalNav.jsp',
+        'https://www.barneyswarehouse.com/global/ajaxGlobalNav.jsp'
+    ]
     colour_utl_t = 'https://www.barneys.com/browse/ajaxProductDetailDisplay.jsp'
     one_sizes = ['1 SZ']
     merch_map = [
-        ('pre-order', 'PRE ORDER'),
+        ('pre-order', 'Pre Order'),
         ('final sale', 'Final Sale'),
     ]
+
+
+class MixinUS(Mixin):
+    retailer = Mixin.retailer + '-us'
+    market = 'US'
+    cookies = 'US-USD'
 
 
 class MixinCA(Mixin):
@@ -126,6 +135,9 @@ class BarneysParseSpider(BaseParseSpider):
         if self.is_homeware(response):
             garment['gender'] = None
             garment['industry'] = 'homeware'
+
+        if self.is_outlet(response):
+            garment['outlet'] = True
 
         garment['merch_info'] = self.merch_info(response)
         garment['skus'] = {}
@@ -244,11 +256,14 @@ class BarneysParseSpider(BaseParseSpider):
         stock_msg = clean(response.css(css))[0]
         return stock_msg != 'add to bag'
 
+    def is_outlet(self, response):
+        return 'barneyswarehouse.com' in response.url
+
 
 class BarneysCrawlSpider(BaseCrawlSpider):
 
     def start_requests(self):
-        return [Request(url=self.start_urls[0], cookies={'usr_currency': self.cookies})]
+        return [Request(url, cookies={'usr_currency': self.cookies}) for url in self.start_urls]
 
     listing_css = [
         '.topnav-level-2',
@@ -262,6 +277,15 @@ class BarneysCrawlSpider(BaseCrawlSpider):
 
     rules = (Rule(LinkExtractor(restrict_css=listing_css, deny=deny_r), callback='parse'),
              Rule(LinkExtractor(restrict_css=products_css, deny=deny_r), callback='parse_item'))
+
+
+class BarneysParseSpiderUS(BarneysParseSpider, MixinUS):
+    name = MixinUS.retailer + '-parse'
+
+
+class BarneysCrawlSpiderUS(BarneysCrawlSpider, MixinUS):
+    name = MixinUS.retailer + '-crawl'
+    parse_spider = BarneysParseSpiderUS()
 
 
 class BarneysParseSpiderCA(BarneysParseSpider, MixinCA):
