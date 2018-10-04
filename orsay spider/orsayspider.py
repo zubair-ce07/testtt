@@ -17,21 +17,6 @@ class OrsaySpider(CrawlSpider):
     rules = (
         Rule(LinkExtractor(allow=('/de-de/produkte/[A-Za-z]', )), callback='parse_product_page'),
     )
-
-    # def parse(self, response):
-    #     """
-    #     links List to follow from main page to next 
-    #     products page
-    #     """
-    #     main_page_links = response.xpath(
-    #         '//a[contains(@class, "navigation-link level-3")]/@href'
-    #                     ).extract()
-
-    #     for link in main_page_links:
-    #         yield scrapy.Request(response.urljoin(link), 
-    #                             callback=self.parse_product_page, 
-    #                             dont_filter=True)
-        
     
     def parse_product_page(self, response):
         product_page_links = response.xpath(
