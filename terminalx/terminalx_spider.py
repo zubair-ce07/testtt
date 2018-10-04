@@ -1,4 +1,3 @@
-import itertools
 import json
 
 from scrapy import FormRequest
@@ -21,11 +20,13 @@ class TerminalxParseSpiderIL(MixinIL, BaseParseSpider):
 
     price_css = '.product-info-main .price::text'
     description_css = '#brandinfo ::text, [name="description"]::attr(content)'
+    care_x = '//div[@id="technical"]/descendant::text()[not(ancestor::p/@dir="rtl")]'
+    brand_css = '.product-item-brand ::text'
 
     images_url_t = 'https://www.terminalx.com/swatches/ajax/media/'
 
     def parse(self, response):
-        product_id = self.product_id(response)
+        product_id = self.magento_product_id(response)
 
         garment = self.new_unique_garment(product_id)
         if not garment:
@@ -46,30 +47,20 @@ class TerminalxParseSpiderIL(MixinIL, BaseParseSpider):
         return self.next_request_or_garment(garment)
 
     def images_requests(self, response):
-        colour_ids = self.colour_ids(response)
         payload = {
-            'product_id': self.product_id(response)
+            'product_id': self.magento_product_id(response)
         }
 
         requests = []
-        for colour_id in colour_ids:
+        for colour_id in self.colour_ids(response):
             payload['attributes[color]'] = colour_id
             requests.append(FormRequest(url=self.images_url_t, formdata=payload,
                                         callback=self.parse_images, dont_filter=True))
         return requests
 
     def colour_ids(self, response):
-        swatch_json = self.swatch_json(response)
-        return swatch_json['jsonSwatchConfig']['93'].keys()
-
-    def product_id(self, response):
-        css = '.product-info-main ::attr(data-product-id)'
-        return clean(response.css(css))[0]
-
-    def product_brand(self, response):
-        brand_css = '.product-item-brand ::text'
-        brand = clean(response.css(brand_css))
-        return brand[0] if brand else self.default_brand
+        magento_product = self.magento_product_data(response)
+        return magento_product['jsonSwatchConfig']['93'].keys()
 
     def product_name(self, response):
         name_css = '.attribute_name ::text'
@@ -84,40 +75,26 @@ class TerminalxParseSpiderIL(MixinIL, BaseParseSpider):
         css = '.breadcrumbs ::text'
         return clean(clean(response.css(css)))[1:-1]
 
-    def product_care(self, response):
-        care_headings = clean(response.css('#technical .title::text'))
-        care_details = clean(response.css('#technical:not(.title)::text'))
-
-        care = clean(response.css('#technical p::text'))
-        [care.append(f'{heading} {detail}') for heading, detail in zip(care_headings, care_details)]
-
-        return care
-
-    def swatch_json(self, response):
+    def magento_product_data(self, response):
         css = 'script:contains("[data-role=swatch-options]") ::text'
-        swatch_json = json.loads(clean(response.css(css))[0])
-        return swatch_json['[data-role=swatch-options]']['IdusClass_ProductList/js/swatch-renderer']
+        raw_skus = json.loads(clean(response.css(css))[0])
+        return raw_skus['[data-role=swatch-options]']['IdusClass_ProductList/js/swatch-renderer']
 
     def image_urls(self, response):
         images_json = json.loads(response.text)
         return [image['large'] for _, image in images_json['gallery'].items()]
 
     def skus(self, response):
-        attributes = self.swatch_json(response)['jsonConfig']['attributes']
-        colours = attributes['93']['options']
-        sizes = attributes['149']['options']
-
+        magento_product_data = self.magento_product_data(response)['jsonConfig']
+        raw_skus = self.magento_product_map(magento_product_data)
         sku_common = self.product_pricing_common(response)
 
         skus = {}
-        for colour, size in itertools.product(colours, sizes):
+        for colour, size in raw_skus.values():
             sku = sku_common.copy()
 
             sku['colour'] = colour['label']
             sku['size'] = size['label']
-
-            if not any(s in colour['products'] for s in size['products']):
-                sku['out_of_stock'] = True
 
             skus[f'{sku["colour"]}_{sku["size"]}'] = sku
 
@@ -128,8 +105,8 @@ class TerminalxCrawlSpiderIL(MixinIL, BaseCrawlSpider):
     name = MixinIL.retailer + '-crawl'
     parse_spider = TerminalxParseSpiderIL()
 
-    listings_css = '.level-top, .pages'
-    product_css = '.product-item-photo'
+    listings_css = ['.level-top', '.pages']
+    product_css = ['.product-item-photo']
 
     rules = (
         Rule(LinkExtractor(restrict_css=listings_css), callback='parse'),
