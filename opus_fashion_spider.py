@@ -56,7 +56,7 @@ class OpusFashionParseSpider(BaseParseSpider):
         return clean(response.css('[itemprop=name] :not([class]) ::text'))[0]
 
     def product_brand(self, response):
-        return clean(response.css('#vue-app>input[checked]::attr(value)'))[0].title()
+        return clean(response.css('#vue-app > input[checked]::attr(value)'))[0].title()
 
     def image_urls(self, response):
         return clean(response.css('sim-product-zoom-image::attr(zoom-src-img)'))
@@ -64,29 +64,33 @@ class OpusFashionParseSpider(BaseParseSpider):
     def skus(self, response):
         skus = {}
         common_sku = self.product_pricing_common(response)
-        common_sku['colour'] = colour = clean(response.css('.c-product-detail__color span ::text'))[0]
+        colour_css = '.c-product-detail__color span ::text'
+        common_sku['colour'] = colour = clean(response.css(colour_css))[0]
+        sizes = response.css('.c-product-detail__info option')[1:]
 
-        sizes = response.css('.c-product-detail__info option:not(:first-child)')
-        for size in sizes:
+        for size_s in sizes:
             sku = common_sku.copy()
+            sku['size'] = clean(size_s.css('::attr(data-size)'))[0]
 
-            sku['size'] = clean(size.css('::attr(data-size)'))[0]
-
-            if size.css('::attr(disabled)'):
+            if size_s.css('::attr(disabled)'):
                 sku['out_of_stock'] = True
 
-            sku_id = clean(size.css('::attr(value)'))[0]
+            sku_id = clean(size_s.css('::attr(value)'))[0]
             skus[sku_id] = sku
 
         if not sizes:
             common_sku['size'] = self.one_size
+
+            if response.css('.c-product-detail .c-note--out-of-stock'):
+                common_sku['out_of_stock'] = True
+
             skus[f"{colour}_{self.one_size}"] = common_sku
 
         return skus
 
     def colour_requests(self, response):
         colour_urls = clean(response.css('.c-variant:not(.is-active)::attr(href)'))
-        return [response.follow(url, callback=self.parse_colour) for url in colour_urls]
+        return [response.follow(url, dont_filter=True, callback=self.parse_colour) for url in colour_urls]
 
 
 class OpusFashionCrawlSpider(BaseCrawlSpider):
@@ -94,11 +98,16 @@ class OpusFashionCrawlSpider(BaseCrawlSpider):
         'METAREFRESH_ENABLED': False,
     }
 
-    listings_css = '.c-nav-mobile--opus>.c-nav-list--mobile sim-navigation-list'
+    listings_css = [
+        '.c-nav-mobile--opus > .c-nav-list--mobile sim-navigation-list',
+        '.c-pagination__nav--next',
+        '.c-look-list__item'
+    ]
     products_css = '.c-product-box'
 
     rules = (
-        Rule(LinkExtractor(restrict_css=listings_css, tags=['sim-navigation-list-item-title']), callback='parse'),
+        Rule(LinkExtractor(restrict_css=listings_css, tags=['a', 'sim-navigation-list-item-title']),
+             callback='parse',),
         Rule(LinkExtractor(restrict_css=products_css), callback='parse_item'),
     )
 
