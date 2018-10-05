@@ -1,50 +1,35 @@
 #!/usr/bin/python3
-import sys
-import datetime
-import calendar
-import calculations as results
-import filehandler
+import argparse
+from data_holder import WeatherData
 import output_generator
 
 
-class Main:
-    '''
-    This is the main class that recieves report request
-    '''
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("dir_path", type=str)
+    parser.add_argument("-e", type=str, nargs='*')
+    parser.add_argument("-a", type=str, nargs='*')
+    parser.add_argument("-c", type=str, nargs="*")
+    args = parser.parse_args()
 
-    output = output_generator.OutputGenerator()
+    weather_data = WeatherData()
+    all_data = weather_data.all_weather_record(args.dir_path)
 
-    def main(self):
-        '''
-        This methaod is main method tha handle weather report request from
-        command arguments
-        '''
-        if len(sys.argv) >= 3:
-            self.output.dir_path = sys.argv[1]
+    output_writer = output_generator.OutputGenerator()
 
-            current_index = 2
-            while(current_index+1 < len(sys.argv)):
-                if(sys.argv[current_index] == '-e'):
-                    try:
-                        self.output.print_e_output(sys.argv[current_index+1])
-                        print()
-
-                    except ValueError:
-                        print("Invalid Arguments")
-                elif sys.argv[current_index] == '-a':
-                    date = sys.argv[current_index+1]
-                    self.output.print_a_output(date)
-                    print()
-                elif sys.argv[current_index] == '-c':
-                    date = sys.argv[current_index+1]
-                    self.output.print_c_output_bounus(date)
-                else:
-                    print("Invalid Argument.")
-
-                current_index += 2
-        else:
-            print('Please enter valid arguments')
+    if args.e:
+        for month in args.e:
+            output_writer.print_extreme_record(
+                weather_data.year_record(all_data, month))
+    if args.a:
+        for month in args.a:
+            output_writer.print_average_record(
+                weather_data.month_record(all_data, month))
+    if args.c:
+        for month in args.c:
+            output_writer.print_temp_chart_bounus(
+                weather_data.month_record(all_data, month))
 
 
-repo = Main()
-repo.main()
+if __name__ == '__main__':
+    main()

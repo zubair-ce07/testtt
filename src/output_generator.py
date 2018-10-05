@@ -1,115 +1,85 @@
-import sys
 import datetime
 import calendar
 import calculations
-import filehandler
-from constants import COLOR_BLUE, COLOR_RED, COLOR_PURPLE, COLOR_NORM
 
 
 class OutputGenerator:
     '''
         This class provides methods to display reports on console
     '''
+    COLOR_BLUE = '\033[1;34;48m'
+    COLOR_RED = '\033[1;31;48m'
+    COLOR_PURPLE = '\033[3;37;48m'
+    COLOR_WHITE = '\033[0m'
     dir_path = ''
     results = calculations.WeatherCalculations()
-    files = filehandler.FileHandler()
 
-    def print_e_output(self, filter):
+    def print_extreme_record(self, year_data):
         '''
             This method prints weather report for -e argument
         '''
-        all_file_names = self.files.get_txt_files_list(self.dir_path)
-        filtered_file_names = self.files.filter_list_by(
-            all_file_names, filter)
+        result = self.results.highest_temparature_record(year_data)
+        print(
+            f"Highest: {result.max_temp}C on " +
+            f"{calendar.month_name[result.date.month]} {result.date.day}")
 
-        result = self.results.get_highest_temparature_recored(
-            filtered_file_names)
-        datee = datetime.datetime.strptime(result.get('PKT'), "%Y-%m-%d")
-        print('Highest: {temp}C on {month} {day}'.format(
-            temp=result['Max TemperatureC'],
-            month=calendar.month_name[datee.month], day=datee.day))
+        result = self.results.lowest_temparature_recored(year_data)
+        print(
+            f"Lowest: {result.max_temp}C on " +
+            f"{calendar.month_name[result.date.month]} {result.date.day}")
 
-        result = self.results.get_lowest_temparature_recored(
-            filtered_file_names)
-        datee = datetime.datetime.strptime(result.get('PKT'), "%Y-%m-%d")
-        print('Lowest: {temp}C on {month} {day}'.format(
-            temp=result['Min TemperatureC'],
-            month=calendar.month_name[datee.month], day=datee.day))
+        result = self.results.highest_humidity_recored(year_data)
+        print(
+            f"Humidity: {result.mean_humidity}% on " +
+            f"{calendar.month_name[result.date.month]} {result.date.day}\n")
 
-        result = self.results.get_highest_humidity_recored(filtered_file_names)
-        datee = datetime.datetime.strptime(result.get('PKT'), "%Y-%m-%d")
-        print('Humidity: {temp}% on {month} {day}'.format(
-            temp=result['Max Humidity'],
-            month=calendar.month_name[datee.month],
-            day=datee.day))
-
-    def print_a_output(self, filter):
+    def print_average_record(self, month_data):
         '''
             This method prints weather report for -a argument
         '''
-        all_file_names = self.files.get_txt_files_list(self.dir_path)
-        filtered_file_names = self.files.filter_list_by(
-            all_file_names, self.results.get_a_fiter(filter))
-        if(len(filtered_file_names) > 0):
-            print("Highest Average: {temp}C".format(
-                temp=int(self.results.get_average_highest_temp(
-                    filtered_file_names[0]))))
-            print("Lowest Average: {temp}C".format(
-                temp=int(self.results.get_average_lowest_temp(
-                    filtered_file_names[0]))))
-            print("Average Mean Humidity: {temp}C".format(
-                temp=int(self.results.get_average_mean_humidity_temp(
-                    filtered_file_names[0]))))
+        if(month_data):
+            high_temp = self.results.average_max_temp(month_data)
+            low_temp = self.results.average_min_temp(month_data)
+            average_mean = self.results.average_mean_humidity(month_data)
+            print(f"Highest Average: {high_temp}C")
+            print(f"Lowest Average: {low_temp}C")
+            print(f"Average Mean Humidity: {average_mean}C\n")
 
-    def print_c_output(self, date):
+    def print_temp_chart(self, month_data):
         '''
             This method prints weather report for -c argument
         '''
-        all_file_names = self.files.get_txt_files_list(self.dir_path)
-        filtered_file_names = self.files.filter_list_by(
-            all_file_names, self.results.get_a_fiter(date))
-        if(len(filtered_file_names) > 0):
-            low_temp_record = self.results.get_low_temp_record(
-                all_file_names[0])
-            high_temp_record = self.results.get_high_temp_record(
-                all_file_names[0])
+        if(month_data):
+            heading = None
+            for day in month_data:
+                if not heading:
+                    heading = calendar.month_name[day.date.month] + \
+                        ' ' + str(day.date.year)
+                    print(heading)
+                print(f"{self.COLOR_PURPLE}{day.date.day:02d}", end=' ')
+                print(f"{self.COLOR_RED}+" * day.max_temp, end=' ')
+                print(f"{self.COLOR_PURPLE}{day.max_temp}C")
 
-            date = datetime.datetime.strptime(date, "%Y/%m")
-            print(calendar.month_name[date.month], date.year)
+                print(f"{self.COLOR_PURPLE}{day.date.day:02d}", end=' ')
+                print(f"{self.COLOR_BLUE}+" * day.min_temp, end=' ')
+                print(f"{self.COLOR_PURPLE}{day.min_temp}C")
+            print(self.COLOR_WHITE)
 
-            for counter in range(len(high_temp_record)):
-                print(COLOR_PURPLE + '{:02d}'.format(counter+1), end=' ')
-                print(COLOR_RED + '+' * high_temp_record[counter+1], end=' ')
-                print(COLOR_PURPLE + '{temp}C'.format(
-                    temp=high_temp_record[counter+1]))
-
-                print(COLOR_PURPLE + '{:02d}'.format(counter+1), end=' ')
-                print(COLOR_BLUE + '+' * low_temp_record[counter+1], end=' ')
-                print(COLOR_PURPLE + '{temp}C'.format(
-                    temp=low_temp_record[counter+1]))
-            print(COLOR_NORM)
-
-    def print_c_output_bounus(self, date):
+    def print_temp_chart_bounus(self, month_data):
         '''
             This method prints weather report for -c argument
         '''
-        all_file_names = self.files.get_txt_files_list(self.dir_path)
-        filtered_file_names = self.files.filter_list_by(
-            all_file_names, self.results.get_a_fiter(date))
-        if(len(filtered_file_names) > 0):
-            low_temp_record = self.results.get_low_temp_record(
-                all_file_names[0])
-            high_temp_record = self.results.get_high_temp_record(
-                all_file_names[0])
+        if(month_data):
+            heading = None
+            for day in month_data:
+                if not heading:
+                    heading = calendar.month_name[day.date.month] + \
+                        ' ' + str(day.date.year)
+                    print(heading)
+                print(f"{self.COLOR_PURPLE}{day.date.day:02d}", end=' ')
 
-            date = datetime.datetime.strptime(date, "%Y/%m")
-            print(calendar.month_name[date.month], date.year)
-
-            for counter in range(len(high_temp_record)):
-                print('\033[3;37;48m' + '{:02d}'.format(counter+1), end=' ')
-                print(COLOR_BLUE + '+' * low_temp_record[counter+1], end='')
-                print(COLOR_RED + '+' * high_temp_record[counter+1], end=' ')
-                print(COLOR_NORM + '{templow}C {temphigh}C'.format(
-                    templow=low_temp_record[counter+1],
-                    temphigh=high_temp_record[counter+1]))
-            print(COLOR_NORM)
+                print(f"{self.COLOR_BLUE}+" * day.min_temp, end='')
+                print(f"{self.COLOR_RED}+" * day.max_temp, end=' ')
+                print(f"{self.COLOR_PURPLE}{day.min_temp}C", end=' ')
+                print(f"{self.COLOR_PURPLE}{day.max_temp}C")
+            print(self.COLOR_WHITE)

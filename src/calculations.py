@@ -1,8 +1,5 @@
 #!/usr/bin/python3
-
-import calendar
 import datetime
-import filehandler as files
 import csv
 
 
@@ -11,183 +8,51 @@ class WeatherCalculations:
     This class perform calculation to create weather report
     '''
 
-    def get_highest_temparature_recored(self, file_names_list):
+    def highest_temparature_record(self, year_data):
         '''
-        This method takes list of paths and return the record of a day
-        that have highest temperature.
+        This method takes list of WeatherData and return data having max_temp.
         '''
-        max_temperature_recored = dict()
-        max_temperature = -273
-        temp = -273
-        for file_name in file_names_list:
-            with open(file_name) as current_file:
-                reader = csv.DictReader(current_file)
-                for row in reader:
-                    try:
-                        temp = int(row.get('Max TemperatureC'))
-                        if temp > max_temperature:
-                            max_temperature = temp
-                            max_temperature_recored = row
-                    except ValueError:
-                        # print(ValueError)
-                        pass
-        return max_temperature_recored
+        max_temp_record = sorted(
+            year_data, key=lambda day: day.max_temp, reverse=True)[0]
+        return max_temp_record
 
-    def get_lowest_temparature_recored(self, file_names_list):
+    def lowest_temparature_recored(self, year_data):
         '''
-        This method takes list of paths and return the record of a day
-        that have lowest temperature.
+        This method takes list of WeatherData and return data having min_temp.
         '''
-        min_temperature_recored = dict()
-        min_temperature = None
-        temp = 273
-        for file_name in file_names_list:
-            with open(file_name) as current_file:
-                reader = csv.DictReader(current_file)
-                for row in reader:
-                    try:
-                        temp = int(row.get('Min TemperatureC'))
-                        if (min_temperature is None)\
-                                or (min_temperature > temp):
-                            min_temperature = temp
-                            min_temperature_recored = row
-                    except ValueError:
-                        # print(ValueError)
-                        pass
-        return min_temperature_recored
+        min_temp_record = sorted(
+            year_data, key=lambda day: day.max_temp, reverse=False)[0]
+        return min_temp_record
 
-    def get_highest_humidity_recored(self, file_names_list):
+    def highest_humidity_recored(self, year_data):
         '''
-        This method takes list of paths and return the record of a day
-        that have highest humidity.
+        This method takes list of WeatherData and return data having maximum
+        mean_humidity.
         '''
-        max_humidity_recored = dict()
-        max_humidity = 0
-        temp = 0
-        for file_name in file_names_list:
-            with open(file_name) as current_file:
-                reader = csv.DictReader(current_file)
-                for row in reader:
-                    try:
-                        temp = int(row.get('Max Humidity'))
-                        if temp > max_humidity:
-                            max_humidity = temp
-                            max_humidity_recored = row
-                    except ValueError:
-                        # print(ValueError)
-                        pass
-        return max_humidity_recored
+        max_humid_record = sorted(
+            year_data, key=lambda day: day.mean_humidity, reverse=True)[0]
+        return max_humid_record
 
-    def get_average_highest_temp(self, file_name):
+    def average_max_temp(self, month_data):
         '''
-        This method take a a file path and return the average
-        of maximum temprature of the day.
+        This method take list of WeatherData and return mean of max_temp.
         '''
-        temp = 0
-        counter = 0
-        with open(file_name) as current_file:
-            reader = csv.DictReader(current_file)
-            for row in reader:
-                try:
-                    temp += int(row.get('Max TemperatureC'))
-                    counter += 1
-                except ValueError:
-                    # print(ValueError)
-                    pass
-        return temp/counter
+        max_temp_list = [day.max_temp for day in month_data]
+        mean = sum(max_temp_list) / len(max_temp_list)
+        return int(round(mean, 0))
 
-    def get_average_lowest_temp(self, file_name):
+    def average_min_temp(self, month_data):
         '''
-        This method take a a file path and return the average
-        of minimum temprature of the day.
+        This method take list of WeatherData and return mean of min_temp.
         '''
-        temp = 0
-        counter = 0
-        with open(file_name) as current_file:
-            reader = csv.DictReader(current_file)
-            for row in reader:
-                try:
-                    temp += int(row.get('Min TemperatureC'))
-                    counter += 1
-                except ValueError:
-                    # print(ValueError)
-                    pass
-        return temp/counter
+        min_temp_list = [day.min_temp for day in month_data]
+        mean = sum(min_temp_list) / len(min_temp_list)
+        return int(round(mean, 0))
 
-    def get_average_mean_humidity_temp(self, file_name):
+    def average_mean_humidity(self, month_data):
         '''
-        This method takea a file path and return the average
-        of mean humidity of the day.
+        This method take list of WeatherData and return mean of mean_humidity.
         '''
-        temp = 0
-        counter = 0
-        with open(file_name) as current_file:
-            reader = csv.DictReader(current_file)
-            for row in reader:
-                try:
-                    temp += int(row.get(' Mean Humidity'))
-                    counter += 1
-                except ValueError:
-                    # print(ValueError)
-                    pass
-        return temp/counter
-
-    def get_day(self, date):
-        '''
-        This method takes date in str type i.e 'yyyy-mm-dd' ad return
-        day in int an type
-        '''
-
-        datee = datetime.datetime.strptime(date, "%Y-%m-%d").date()
-        return datee.day
-
-    def get_high_temp_record(self, file_name):
-        '''
-        This method take a a file path and return the weather
-        of the day having highest temperature  of the day.
-        '''
-        high_temp_list = []
-        date_list = []
-        with open(file_name) as current_file:
-            reader = csv.DictReader(current_file)
-            for row in reader:
-                try:
-                    high_temp_list.append(
-                        int(row.get('Max TemperatureC')))
-                    date_list.append(self.get_day(row.get('PKT')))
-                except ValueError:
-                    # print(ValueError)
-                    pass
-
-        return dict(list(zip(date_list, high_temp_list)))
-
-    def get_low_temp_record(self, file_name):
-        '''
-        This method take a a file path and return lowest temprature
-        record of the day.
-        '''
-        low_temp_list = []
-        date_list = []
-        with open(file_name) as current_file:
-            reader = csv.DictReader(current_file)
-            for row in reader:
-                try:
-                    low_temp_list.append(
-                        int(row.get('Min TemperatureC')))
-                    date_list.append(self.get_day(row.get('PKT')))
-                except ValueError:
-                    # print(ValueError)
-                    pass
-
-        return dict(list(zip(date_list, low_temp_list)))
-
-    def get_a_fiter(self, date):
-        '''
-        This method take a date in formate 'yyyy/mm' and converts it into
-        the another formate i.e 'yyyy_mm'
-        '''
-        filter = ''
-        date = datetime.datetime.strptime(date, "%Y/%m")
-        filter = str(date.year)+'_'+calendar.month_name[date.month][:3]
-        # print(filter)
-        return filter
+        mean_humdity_list = [day.mean_humidity for day in month_data]
+        mean = sum(mean_humdity_list) / len(mean_humdity_list)
+        return int(round(mean, 0))
