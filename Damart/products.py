@@ -18,7 +18,6 @@ class ProductsSpider(CrawlSpider):
                 allow=(r'/C-.*')),
                 callback='parse_list'),
             )
-
     selectors = {
         "products_url": ".photo-data a::attr(href)",
         "name": ".name::text",
@@ -36,13 +35,11 @@ class ProductsSpider(CrawlSpider):
         """Gets all the products list"""
         urls = self.get_product_urls(response)
         next_page = self.get_next_page(response)
-
         if next_page:
             yield scrapy.Request(
                 url=next_page,
                 callback=self.parse_list
             )
-
         for url in urls:
             yield scrapy.Request(
                 url=url,
@@ -52,7 +49,6 @@ class ProductsSpider(CrawlSpider):
 
     def parse_product(self, response):
         """Getting all the product details and storind it in the item"""
-
         product_details = {
             '_id': self.get_id(response),
             'brand': "Damart",
@@ -69,7 +65,6 @@ class ProductsSpider(CrawlSpider):
 
         color_names = self.get_color_names(response)
         color_urls = self.get_color_urls(response)
-
         if color_urls:
             yield scrapy.Request(
                 url=color_urls.pop(0),
@@ -90,7 +85,6 @@ class ProductsSpider(CrawlSpider):
         color_name = (response.meta["color_names"]).pop(0)
         details = self.get_sizes_and_stock_availability(response)
         price = self.get_price(response)
-
         skus = {}
 
         for i, size in enumerate(details["sizes"]):
@@ -115,7 +109,6 @@ class ProductsSpider(CrawlSpider):
                 skus[
                     "{}_{}".format(color_name, size)
                     ]["in_stock"] = details["in_stock"][i]
-
         return skus
 
     def get_sizes_and_stock_availability(self, response):
@@ -131,7 +124,6 @@ class ProductsSpider(CrawlSpider):
         if len(component) > 1:
             length = component[1]["ddData"]
             info["length"] = length
-
         for details in ddData:
             info["sizes"].append(details["text"])
             if "description" in details.keys():
@@ -163,7 +155,6 @@ class ProductsSpider(CrawlSpider):
             color_names = response.meta["color_names"]
             color_urls = response.meta["color_urls"]
             item = response.meta["item"]
-
             skus = self.get_skus(response)
             item['skus'].update(skus)
 
@@ -183,25 +174,17 @@ class ProductsSpider(CrawlSpider):
                 yield item
 
     # Getters using CSS Selectors #
-
     def get_next_page(self, response):
         return response.urljoin(
-            response.css(
-                self.selectors["next_page"]
-            ).extract_first()
+            response.css(self.selectors["next_page"]).extract_first()
         )
 
     def get_product_urls(self, response):
-        urls = response.css(
-            self.selectors["products_url"]
-        ).extract()
-
+        urls = response.css(self.selectors["products_url"]).extract()
         return [response.urljoin(url) for url in urls]
 
     def get_name(self, response):
-        return response.css(
-            self.selectors["name"]
-        ).extract_first()
+        return response.css(self.selectors["name"]).extract_first()
 
     def get_id(self, response):
         return re.findall(r"P-(\d*)", response.url)[0]
@@ -213,48 +196,33 @@ class ProductsSpider(CrawlSpider):
         return [des.strip() for des in description]
 
     def get_care(self, response):
-        product_care = response.css(
-            self.selectors["care"]
-        ).extract()
-
+        product_care = response.css(self.selectors["care"]).extract()
         return [care.strip() for care in product_care if not care == " "]
 
     def get_category(self, response):
-        return response.css(
-            self.selectors["category"]
-        ).extract_first()
+        return response.css(self.selectors["category"]).extract_first()
 
     def get_images(self, response):
-        images = response.css(
-            self.selectors["images"]
-        ).extract()
+        images = response.css(self.selectors["images"]).extract()
         return [response.urljoin(image) for image in images]
 
     def get_color_names(self, response):
-        return response.css(
-            self.selectors["color_names"]
-        ).extract()
+        return response.css(self.selectors["color_names"]).extract()
 
     def get_color_urls(self, response):
-        color_urls = response.css(
-            self.selectors["color_urls"]
-        ).extract()
+        color_urls = response.css(self.selectors["color_urls"]).extract()
         return [response.urljoin(url) for url in color_urls]
 
     def errback_httpbin(self, failure):
         """Error back function for detecting the request errors"""
-
         # log all failures
         self.logger.error(repr(failure))
-
         if failure.check(HttpError):
             response = failure.value.response
             self.logger.error('HttpError on %s', response.url)
-
         elif failure.check(DNSLookupError):
             request = failure.request
             self.logger.error('DNSLookupError on %s', request.url)
-
         elif failure.check(TimeoutError, TCPTimedOutError):
             request = failure.request
             self.logger.error('TimeoutError on %s', request.url)
