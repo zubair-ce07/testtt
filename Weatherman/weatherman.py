@@ -1,14 +1,14 @@
 import argparse
 import os
 import sys
-from FileParsing import FileParsing
-from ResultCalculations import ResultCalculations
-from GenerateReports import GenerateReports
+
+from file_parser import FileParser
+from report_generator import ReportGenerator
+from result_calculations import ResultCalculations
 
 
 def check_arg_count(arguments):
     """Checks the number of command line arguments"""
-
     if arguments.e or arguments.a or arguments.c or arguments.b:
         return False
     else:
@@ -17,7 +17,6 @@ def check_arg_count(arguments):
 
 def is_actual_dir(dirname):
     """Checks if a path is an actual directory"""
-
     if not os.path.isdir(dirname):
         msg = "{0} is not a directory".format(dirname)
         raise argparse.ArgumentTypeError(msg)
@@ -27,7 +26,6 @@ def is_actual_dir(dirname):
 
 def parse_arguments():
     """Parse the command line arguments and returns the object"""
-
     parser = argparse.ArgumentParser()
     parser.add_argument(
         'path',
@@ -48,10 +46,30 @@ def parse_arguments():
         return parser.parse_args()
 
 
-def parse_file(arguments):
-    """Parsing the file (FileParsing class) w.r.t the given arguments"""
+def validate_arguments(argument, file_object, path_to_dir):
+    """Validating the command line arguments"""
+    if "/" in argument:
+            year_and_month = argument.split("/")     # Split year & month
+            year_and_month[1] = year_and_month[1].replace("0", "")
+    else:
+        print("Incorrect argument: ", argument)
+        sys.exit()
 
-    file_object = FileParsing()     # File object
+    file_object.parse_file_monthly(
+        path_to_dir, year_and_month[0], year_and_month[1])
+    file_details = file_object.read_file()
+    if not file_details:
+        print(
+            "Directory does not contain any file with such argument -> ",
+            argument)
+        sys.exit()
+    else:
+        return file_details
+
+
+def parse_file(arguments):
+    """Parsing the file (FileParser class) w.r.t the given arguments"""
+    file_object = FileParser()     # File object
     results = ResultCalculations()  # results object
     path_to_dir = arguments.path
 
@@ -62,96 +80,58 @@ def parse_file(arguments):
             sys.exit()
         else:
             file_object.parse_file_yearly(path_to_dir, arguments.e)
-            data = file_object.read_file()
-            if not data:
+            file_details = file_object.read_file()
+            if not file_details:
                 print(
-                    "Directory does not contain any file with such argument -> ",
+                    "Directory does not contain any file with \
+                    such argument -> ",
                     arguments.e)
             else:
-                results.set_data(data)
-                yearly_data = {
+                results.details = file_details
+                yearly_details = {
                     "Max Temperature": results.calculate_highest_temp(),
                     "Min Temperature": results.calculate_lowest_temp(),
                     "Max Humidity": results.calculate_highest_humidity()
-                    }
-                report_generator = GenerateReports()        # Report object
-                report_generator.generate_report_for_yearly_data(yearly_data)
-                data.clear()
+                }
+                report_generator = ReportGenerator()        # Report object
+                report_generator.generate_report_for_yearly_details(
+                    yearly_details)
+                file_details.clear()
 
     # Condition for -a argument
     if arguments.a:
-        if "/" in arguments.a:
-            year_and_month = arguments.a.split("/")     # Split year & month
-            year_and_month[1] = year_and_month[1].replace("0", "")
-        else:
-            print("Incorrect argument: ", arguments.a)
-            sys.exit()
-
-        file_object.parse_file_monthly(
-            path_to_dir, year_and_month[0], year_and_month[1])
-        data = file_object.read_file()
-        if not data:
-            print(
-                "Directory does not contain any file with such argument -> ",
-                arguments.a)
-        else:
-            results.set_data(data)
-            monthly_data = results.calculate_average()
-            report_generator = GenerateReports()
-            report_generator.generate_report_for_monthly_data(monthly_data)
-            data.clear()
+        file_details = validate_arguments(
+            arguments.a, file_object, path_to_dir
+            )
+        results.details = file_details
+        monthly_details = results.calculate_average()
+        report_generator = ReportGenerator()
+        report_generator.generate_report_for_monthly_details(monthly_details)
+        file_details.clear()
 
     # Condition for -c argument
     if arguments.c:
-        if "/" in arguments.c:
-            year_and_month = arguments.c.split("/")     # Split year & month
-            year_and_month[1] = year_and_month[1].replace("0", "")
-        else:
-            print("Incorrect argument: ", arguments.c)
-            sys.exit()
-
-        file_object.parse_file_monthly(
-            path_to_dir, year_and_month[0], year_and_month[1])
-        data = file_object.read_file()
-        if not data:
-            print(
-                "Directory does not contain any file with such argument -> ",
-                arguments.c)
-        else:
-            pass
-            results.set_data(data)
-            monthly_data = results.get_max_and_min_temperature()
-            report_generator = GenerateReports()
-            report_generator.generate_graph(monthly_data)
-            data.clear()
+        file_details = validate_arguments(
+            arguments.c, file_object, path_to_dir
+            )
+        results.details = file_details
+        monthly_details = results.get_max_and_min_temperature()
+        report_generator = ReportGenerator()
+        report_generator.generate_graph(monthly_details)
+        file_details.clear()
 
     # Condition for -b argument (Bonus)
     if arguments.b:
-        if "/" in arguments.b:
-            year_and_month = arguments.b.split("/")      # Split year & month
-            year_and_month[1] = year_and_month[1].replace("0", "")
-        else:
-            print("Incorrect argument: ", arguments.b)
-            sys.exit()
-             
-        file_object.parse_file_monthly(
-            path_to_dir, year_and_month[0], year_and_month[1])
-        data = file_object.read_file()
-        if not data:
-            print(
-                "Directory does not contain any file with such argument -> ",
-                arguments.b)
-        else:
-            results.set_data(data)
-            monthly_data = results.get_max_and_min_temperature()
-            report_generator = GenerateReports()
-            report_generator.generate_horizontal_graph(monthly_data)
-            data.clear()
-
+        file_details = validate_arguments(
+            arguments.b, file_object, path_to_dir
+            )
+        results.details = file_details
+        monthly_details = results.get_max_and_min_temperature()
+        report_generator = ReportGenerator()
+        report_generator.generate_horizontal_graph(monthly_details)
+        file_details.clear()
 
 if __name__ == "__main__":
-    """
-    Main - assembling the code and running the program.
-    """
+    """Main - assembling the code and running the program"""
     arg = parse_arguments()
     parse_file(arg)
