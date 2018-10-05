@@ -15,13 +15,11 @@ class ProductsSpider(CrawlSpider):
     name = 'products'
     allowed_domains = ['www.lornajane.sg']
     start_urls = ['http://www.lornajane.sg/']
-
     rules = (
         Rule(LinkExtractor(
             allow=('https://www.lornajane.sg/c-Shop-All')),
             callback='get_products_list'),
         )
-
     selectors = {
         "products": ".name::attr(href)",
         "total_products": ".count-text::text",
@@ -40,7 +38,6 @@ class ProductsSpider(CrawlSpider):
         "currency": ".currency::text",
         "price": ".price::text"
     }
-
     xpaths = {
         "size": "//a[@class=' product-detail-swatch-btn']/text()",
         "color": "//a[@class='product-detail-swatch-btn selected']/@title",
@@ -49,7 +46,6 @@ class ProductsSpider(CrawlSpider):
 
     def get_products_list(self, response):
         """Gets all the products list"""
-
         if "page" in response.meta:
             page = response.meta["page"]
         else:
@@ -80,10 +76,7 @@ class ProductsSpider(CrawlSpider):
         new_response = response.replace(
             body=parser.unescape(json_data['products'])
             )
-
-        urls = new_response.css(
-            self.selectors["products"]
-        ).extract()
+        urls = new_response.css(self.selectors["products"]).extract()
         urls = [response.urljoin(url) for url in urls]
 
         for url in urls:
@@ -125,22 +118,17 @@ class ProductsSpider(CrawlSpider):
     def more_colors(self, response):
         """Checks if the product has more than one color and
         returns the urls"""
-        urls = response.xpath(
-            self.xpaths["more_colors"]
-        ).extract()
-
+        urls = response.xpath(self.xpaths["more_colors"]).extract()
         return [response.urljoin(url) for url in urls]
 
     def get_skus(self, response):
         """Develops skus sturcture and returns it"""
         sizes = self.get_sizes(response)
         image_urls = self.get_image_urls(response)
-
         skus = {}
 
         if not sizes:
             sizes.append("One_Sz")
-
         for size in sizes:
             skus["{}_{}".format(self.get_color(response), size)] = {
                 "color": self.get_color(response),
@@ -148,7 +136,6 @@ class ProductsSpider(CrawlSpider):
                 "price": self.get_price(response),
                 "size": size
             }
-
         if self.has_more_colors(response):
             return self.get_color_variations(response, skus, image_urls)
         else:
@@ -179,37 +166,29 @@ class ProductsSpider(CrawlSpider):
                     callback=self.get_skus,
                     errback=self.errback_httpbin,
                     meta={'colors': colors,
-                          'item':  item})
+                          'item':  item}
+            )
 
     # Getters using xpaths and css selectors #
-
     def get_total_products(self, response):
         total_products = response.css(
             self.selectors["total_products"]
-        ).extract()
+            ).extract()
         return re.findall(r'\d+', total_products[0])[0]
 
     def get_name(self, response):
-        return response.css(
-            self.selectors["name"]
-        ).extract_first()
+        return response.css(self.selectors["name"]).extract_first()
 
     def get_id(self, response):
-        _id = response.css(
-            self.selectors["id"]
-        ).extract_first()
+        _id = response.css(self.selectors["id"]).extract_first()
         return re.findall(r'\d+', _id)[0]
 
     def get_category(self, response):
-        breadcrum = response.css(
-            self.selectors["category"]
-            ).extract()
+        breadcrum = response.css(self.selectors["category"]).extract()
         return breadcrum[-1]
 
     def get_care(self, response):
-        care = response.css(
-                self.selectors["care"]
-                ).extract()
+        care = response.css(self.selectors["care"]).extract()
         if len(care) > 2:
             return care[1].replace("/", ",")
         else:
@@ -235,12 +214,8 @@ class ProductsSpider(CrawlSpider):
             ).extract())
 
     def get_image_urls(self, response):
-        images = response.css(
-            self.selectors["images"]
-        ).extract()
-        main_image = response.css(
-            self.selectors["main_image"]
-        ).extract_first()
+        images = response.css(self.selectors["images"]).extract()
+        main_image = response.css(self.selectors["main_image"]).extract_first()
         main_image_url = re.findall(r'(\/medias.+\))', main_image)
         if main_image_url:
             main_image_url = main_image_url[0].replace(")", "")
@@ -248,28 +223,18 @@ class ProductsSpider(CrawlSpider):
         return {response.urljoin(image) for image in images}
 
     def get_sizes(self, response):
-        return response.xpath(
-            self.xpaths["size"]
-        ).extract()
+        return response.xpath(self.xpaths["size"]).extract()
 
     def get_color(self, response):
-        return response.xpath(
-            self.xpaths["color"]
-        ).extract_first()
+        return response.xpath(self.xpaths["color"]).extract_first()
 
     def get_currency(self, response):
-        currency = set(
-            response.css(
-                self.selectors["currency"]
-            ).extract()
-        )
+        currency = set(response.css(self.selectors["currency"]).extract())
         if currency:
             return currency.pop()
 
     def get_price(self, response):
-        price = response.css(
-            self.selectors["price"]
-        ).extract()
+        price = response.css(self.selectors["price"]).extract()
         if price:
             return price[1]
 
