@@ -1,451 +1,208 @@
-""" Importing files for the program """
-import sys
 import re
+import sys
+import csv
+import glob
+import datetime
+import argparse
 
-
-class Days:
-	
-	""" This class is used to store a single day like 1,2,3
-		and its Attributes as a Dictionary Object 
-		like { 'attrib_name1' : 'value1', 'attribe_name2', 'value2' ...}"""
-	def __init__( self, days, attributes):
-		
-		self.days = days
-		self.attributes = attributes
-
-class Month:
-    
-	""" This Class will be used to store the month name
-		and a disctionary object of Days class
-		like { '1' : Days_class_object, '2' : Days_class_object ...}""" 
-	def __init__( self, month, days):
-
-		self.month = month
-		self.days = days
-
-class Year:
-    
-	""" This Class will be used to store year like 2014
-		and dictionary objects of Month Class
-		like { 'Jan' : Month_Class_object, 'Feb' : Month_class_object ...}"""
-	def __inti__( self, year, months):
-
-		self.year = 0
-		self.months = {}
-
-class FileReading:
-	
-	""" This class condtains method for readin files and DATA Members to store 
-		header of the file that will be further used in storing the data
-		in the dictionary"""
-	def __init__( self):
-
-		self.header_list = []
-		self.years = []    
-    
-	def setHeaderList( self, comma_sep_list):
-		
-		self.header_list = comma_sep_list.split(',')
-
-	def get_month_list( self, month):
-
-		month_list = [
-				"Jan", "Feb", "Mar",
-				"Apr", "May", "Jun",
-				"Jul", "Aug", "Sep", 
-				"Oct", "Nov", "Dec"
-				]
-
-		if(month == "all"):
-			
-			return month_list
-
-		else:
-
-			return [month_list[int(month) - 1]]
-
-	def reading_data( self, file_name, path):
-		
-		if (len(file_name) > 4):
-		
-			year, month = file_name.split('/')
-		
-		else:
-		
-			year = file_name
-			month = "all"
-		
-		month_list = self.get_month_list(month)
-		
-		months_dict = {}
-
-		for month in month_list:
-			
-			readed_month = self.read_files_data(path + 
-								"/" +
-								"Murree_weather_" +
-								year +
-								"_" +
-								month +
-								".txt")
-			
-			temp = Month(
-				month = month, 
-				days = readed_month
-				)
-			
-			months_dict.update(
-						{month : temp}
-					)
-
-		return months_dict
-
-	def read_files_data(
-				self, 
-				path):
-
-        # open & read all the file and strip into line by line
-		lines = [
-			line.rstrip('\n') for line in open(path)
-			]
-        
-		month_dict = {}
-		
-        #setting the header of the Data structure
-		self.setHeaderList(lines[0])
-	
-		for days in range(1, len(lines)):
-			list_of_data = lines[days].split(',')
-			
-			list_of_attributes = list_of_data[
-										0:len(list_of_data)
-										]
-            
-            # Making Dictionary from the attributes and tha values
-			day_dict = {} 
-			
-			for i in range(0,len(list_of_attributes)):
-				if list_of_attributes[i] == "":
-					list_of_attributes[i] = "-9999"		# For Missing Values
-				
-				day_dict.update(
-						{self.header_list[i]:list_of_attributes[i]}
-					)
-            
-			month_dict.update(
-					{days : Days(days = days, attributes =  day_dict)}
-				)
-
-		return month_dict
 
 class Reporting:
-	
-	""" This class is solely responsiable for report calculation
-		and show it on console"""
-	def __init__( self):
-		
-		self.highest = 0
-		self.lowest = 9999
+    
+    def __init__(self, operation, complete_data):
+        if operation == 'a':
+            self.a_type_report(complete_data)
+        elif operation == 'c':
+            self.c_type_report(complete_data)
+        elif operation == 'e':
+            self.e_type_report(complete_data)
 
-	""" Method of -a action """
-	def calculate_and_show_avg_report ( self, months):
-		
-		humid_val_sum = 0
-		temp_high_avg = 0
-		temp_low_avg = 0
-		numbers_of_days = 0
+    def a_type_report(self, complete_data):
 
-		months_key_list = list(
-							months.keys()
-						)
-		
-		for month_key in months_key_list:
-			
-			days_key_list = list(months[month_key].days)
+        year_key = list(complete_data.keys())[0]
+        days_key = list(complete_data[year_key].keys())
+        
+        high_temp = 0
+        days_count = 0
+        for days in days_key:
+            try:
+                file_value = int(complete_data[year_key][days]['Max TemperatureC'])
+                high_temp += file_value
+                days_count += 1
+                    
+            except:
+                pass
+        print("Highest Average : " , round(high_temp/days_count, 2), "C")
 
-			for day_key in days_key_list:
-				
-				if months[month_key].days[day_key].attributes[' Mean Humidity'] != "-1":
-					humid_val_sum += int(months[month_key].days[day_key].attributes[' Mean Humidity'])
-					temp_high_avg += int(months[month_key].days[day_key].attributes['Max TemperatureC'])
-					temp_low_avg += int(months[month_key].days[day_key].attributes['Min TemperatureC'])
-					numbers_of_days += 1
-				
-		print ( "Highest Average: ", round(temp_high_avg/numbers_of_days, 2), 
-				"C"),
-		
-		print ( "Lowest Average: ", round(temp_low_avg/numbers_of_days, 2), 
-				"C"),
-		
-		print ( "Average Mean Humidity:", round(humid_val_sum/numbers_of_days, 2), 
-				"% ")
+        low_temp = 0
+        days_count = 0
+        for days in days_key:
+            try:
+                file_value = int(complete_data[year_key][days]['Min TemperatureC'])
+                low_temp += file_value
+                days_count += 1
+                
+            except:
+                pass
+        print("Lowest Average : " , round(low_temp/days_count, 2), "C")
 
-	""" Method of -c action """
-	def calculate_and_show_chart_report( self, months):
-		
-		high_temp_val = 0
-		low_temp_val = 0
+        mean_humid = 0
+        days_count = 0
+        for days in days_key:
+            try:
+                file_value = int(complete_data[year_key][days][' Mean Humidity'])
+                mean_humid += file_value
+                days_count += 1
+                
+            except:
+                pass
+        print("Average Mean Humidity: " , str(int(mean_humid/days_count))+ "%")
 
-		months_key_list = list(
-							months.keys()
-						)
-		
-		for month_key in months_key_list:
-			
-			days_key_list = list( 
-								months[month_key].days
-							)
+    def c_type_report(self, complete_data):
+        year_key = list(complete_data.keys())[0]
+        days_key = list(complete_data[year_key].keys())
+        
+        for days in days_key:
+            try:
+                file_value = int(complete_data[year_key][days]['Max TemperatureC'])
+                print(days, end='')
+                for value in range(file_value):
+                    print ('\033[1;31m+\033[1;m', end = '')
+                print(file_value,"C")  
+            except:
+                continue
+            
+            try:
+                file_value = int(complete_data[year_key][days]['Min TemperatureC'])
+                print(days, end='')
+                for value in range(file_value):
+                    print ('\033[1;34m+\033[1;m', end = '')
+                print(file_value,"C")  
+            except:
+                continue
 
-			#print(numbers_of_days)
-			for day_key in days_key_list:
+    def e_type_report(self, complete_data):
+        [value, month, day] = self.find_max_temp(complete_data)
+        print("Highest:", value, "C on", month, day)
+        [value, month, day] = self.find_min_temp(complete_data)
+        print("Lowest:", value, "C on", month, day)
+        [value, month, day] = self.find_max_humid(complete_data)
+        print("Humidity:", value, "% on", month, day)
 
-				if months[month_key].days[day_key].attributes['Max TemperatureC'] != "-1":
+    def find_max_temp(self, complete_data):
+        year_keys = list(complete_data.keys())
+        
+        max_temp_value = 0
+        for year_key in year_keys:
+            day_keys = list(complete_data[year_key].keys())
+            
+            for day_key in day_keys:
+                try:
+                    file_value = int(complete_data[year_key][day_key]['Max TemperatureC'])
+                    if max_temp_value < file_value:
+                        max_temp_value = file_value
+                        high_month_key = year_key
+                        high_day_key = day_key
+                except:
+                    continue    
 
-					high_temp_val = int(months[month_key].days[day_key].attributes['Max TemperatureC'])
-					
-					low_temp_val = int(months[month_key].days[day_key].attributes['Min TemperatureC'])
+        return [max_temp_value, high_month_key[5:], high_day_key]
 
-					print(day_key, " ", end = '')
-					
-					for i in range(high_temp_val):
-						
-						print (
-							'\033[1;31m+\033[1;m', end = ''
-							)
-					
-					print (
-						" ", high_temp_val,
-						"C\n", sep = ""
-						)
+    def find_min_temp(self, complete_data):
+        year_keys = list(complete_data.keys())
+        
+        min_temp_value = 0
+        for year_key in year_keys:
+            day_keys = list(complete_data[year_key].keys())
+            
+            for day_key in day_keys:
+                try:
+                    file_value = int(complete_data[year_key][day_key]['Min TemperatureC'])
+                    if min_temp_value >= file_value:
+                        min_temp_value = file_value
+                        low_month_key = year_key
+                        low_day_key = day_key
+                except:
+                    continue
 
-					print (
-						day_key, " ", end = ''
-						)
-					
-					for i in range(low_temp_val):
-						
-						print (
-							'\033[1;34m+\033[1;m', end = ''
-							)
-					
-					print (
-						" ", low_temp_val,
-						'C\n', sep = ""
-						)
-	
-	""" Method of -c action One Line Chart Report"""
-	def show_Single_line_report( self, months):
-		
-		high_temp_val = 0
-		low_temp_val = 0
+        return [min_temp_value, low_month_key[5:], low_day_key]
 
-		months_key_list = list(
-							months.keys()
-						)
-		
-		for month_key in months_key_list:
-			
-			days_key_list = list( 
-							months[month_key].days
-						)
+    def find_max_humid(self, complete_data):
+        year_keys = list(complete_data.keys())
+        
+        max_temp_value = 0
+        for year_key in year_keys:
+            day_keys = list(complete_data[year_key].keys())
+            
+            for day_key in day_keys:
+                try:
+                    file_value = int(complete_data[year_key][day_key]['Max Humidity'])
+                    if max_temp_value < file_value:
+                        max_temp_value = file_value
+                        high_month_key = year_key
+                        high_day_key = day_key
+                except:
+                    continue    
 
-			#print(numbers_of_days)
-			for day_key in days_key_list:
-
-				if months[month_key].days[day_key].attributes['Max TemperatureC'] != "-1":
-
-					high_temp_val = int(months[month_key].days[day_key].attributes['Max TemperatureC'])
-					
-					low_temp_val = int(months[month_key].days[day_key].attributes['Min TemperatureC'])
-
-					print(day_key, " ", end = '')
-					
-					for i in range(low_temp_val):
-						
-						print (
-							'\033[1;34m+\033[1;m', end = ''
-							)
-					
-					for i in range(high_temp_val):
-						
-						print (
-							'\033[1;31m+\033[1;m', end = '')
-					
-					print (
-						" ", low_temp_val, "C"
-						" - ", high_temp_val,
-						'C\n', sep = ""
-						)
-
-	""" Class for -e Calculation """	
-	def calculate_and_show_report( self, months):
-
-		humid_highest_day = ""
-		humid_highest_month = ""
-		humid_highest_val = 0
-
-		months_key_list = list( months.keys())
-		
-		for month_key in months_key_list:
-
-			
-			days_key_list = list( months[month_key].days)
-
-			for day_key in days_key_list:
-
-				if int( months[month_key].days[day_key].attributes['Max TemperatureC']) > self.highest:
-
-					self.highest = int(months[month_key].days[day_key].attributes['Max TemperatureC'])
-					highest_day = months[month_key].days[day_key].days
-					highest_month = months[month_key].month
-				
-				if (int( months[month_key].days[day_key].attributes['Min TemperatureC']) < self.lowest and 
-						months[month_key].days[day_key].attributes['Min TemperatureC'] != "-9999"):
-
-					self.lowest = int(months[month_key].days[day_key].attributes['Min TemperatureC'])
-					lowest_day = months[month_key].days[day_key].days
-					lowest_month = months[month_key].month
-				
-				if int( months[month_key].days[day_key].attributes['Max Humidity']) > humid_highest_val:
-
-					humid_highest_day = months[month_key].days[day_key].days
-					humid_highest_month = months[month_key].month
-					humid_highest_val = int(months[month_key].days[day_key].attributes['Max Humidity'])
-				
-		print(
-			"Highest: ", self.highest,
-			"C on ",highest_month, 
-			" ", highest_day, 
-			sep = ""
-			)
-		
-		print(
-			"Lowest Value : ", self.lowest, 
-			"C on ", lowest_month, 
-			" ", lowest_day, 
-			sep = ""
-			)
-		
-		print(
-			"Humidity:", humid_highest_val, 
-			"% ", "on ", humid_highest_month, 
-			" ", humid_highest_day, 
-			sep = ""
-			)
-		
-	
-class FileAndAction:
-
-	""" This Class is for storing file name and its action """
-	def __init__( self, action = None, file_name = None):
-
-		self.action = action
-		self.file_name = file_name
-	
-
-""" Defineing the main Function logic here """
-def main():
-
-	# Empty List for the FILE AND REPORT Class objects
-	list_of_file_and_actions = []
-	path_to_files = ""
-	
-	if ( len( sys.argv) > 1):
-		
-		# Extracting the path of the file
-		path_to_files = sys.argv[1]
-		
-		""" Extracting the number of files provided
-			by the user for reporting"""
-		file_count = ( len(sys.argv) - 2)/2
-
-		""" Making a seperate List of Actions
-			and File names"""
-		file_action_and_name = sys.argv[2:]
-
-		for index in range( int( file_count)):
-
-			# Checking the input is valid and correct
-			if ( re.match(
-						'-[ace]', 							# RE for checking Action
-						file_action_and_name[index*2]) and 
-					re.match(
-						'20[0-10-9]', 						# RE for Checking the Year Formate
-						file_action_and_name[index*2+1]
-						)
-					):
-
-				""" stroing file name and action into FileAndAction Class object
-					into Temperory Object """
-				temp_object_for_filereport = FileAndAction ( 
-													action = file_action_and_name[index*2], 
-													file_name = file_action_and_name[(index*2)+1]
-												)
-
-				# Appending the Temporaobjy object into the List
-				list_of_file_and_actions.append (
-								temp_object_for_filereport
-							)
-			else:
-				
-				print("Invalid Input Aurguments")
-	else:
-		print("No File Name Passed!")
-
-	"""	 Checking if files are given then to perform the actions
-		 accordingly"""
-	if( len( list_of_file_and_actions) > 0):
-		
-		for index in list_of_file_and_actions:
-			
-			temp_file_reading = FileReading()	
-			
-			Months = FileReading.reading_data (
-						temp_file_reading,
-						index.file_name, 
-						path_to_files
-					)
-			
-			# Making Temperory object for send as self argument
-			temp_reporting = Reporting()
-
-			if index.action == "-a":
-				
-				# Calling Function for '-a ' Action
-				print (
-					"\n"
-				)
-				Reporting.calculate_and_show_avg_report (
-							temp_reporting, 
-							Months
-						)
-			
-			elif index.action == "-c":
-				# Calling Function for '-c ' Action
-				print (
-					"\n"
-				)
-				Reporting.calculate_and_show_chart_report (
-							temp_reporting, 
-							Months
-						)
-				Reporting.show_Single_line_report (
-							temp_reporting, 
-							Months
-						)
-			
-			else:
-				# Calling Function for '-e ' Action
-				print (
-					"\n"
-				)
-				Reporting.calculate_and_show_report (
-							temp_reporting, 
-							Months
-						)
+        return [max_temp_value, high_month_key[5:], high_day_key]
 
 
-""" Calling the "main" Method from here """
-if __name__ == "__main__":
+def argument_handler():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('path')
+    parser.add_argument('-a', required=False)
+    parser.add_argument('-e', required=False)
+    parser.add_argument('-c', required=False)
+    args = parser.parse_args()
 
+    if args.a:
+        reading_file(args.path, 'a', args.a)
+    if args.e:
+        reading_file(args.path, 'e', args.e)
+    if args.c:
+        reading_file(args.path, 'c', args.c)
+
+
+def file_to_read_list(operation, file_name, file_path):
+    if operation == 'a' or operation == 'c':
+        file_name,month = file_name.split('/')
+        pattren = "*"+ file_name +"_"\
+                +datetime.date(int(file_name), int(month), 1).strftime('%b')\
+                + "*.txt"
+    elif operation == 'e':
+        pattren = "*"+ file_name + "*.txt"
+    
+    return glob.glob(file_path + pattren)
+
+
+def reading_file(file_path, operation, file_name):
+    
+    file_to_read = file_to_read_list(operation, file_name, file_path)
+    complete_data = {}
+    for file in file_to_read:
+        with open(file, newline='') as csvfile:
+            file_data = list(csv.reader(csvfile))
+            file_headers = file_data[0]
+            file_data = file_data[1:-1]
+            
+            days_data = {}
+            days_count = 1
+            for day in file_data:
+                index = 0
+                row = {}
+                for col_name in file_headers:
+                    row.update({col_name : day[index]})
+                    index += 1
+                days_data.update({days_count:row})
+                days_count += 1
+                row = {}
+        complete_data.update({file[-12:-4]:days_data})
+
+    Reporting(operation, complete_data)
+    
+
+def main():  
+    argument_handler()
+
+
+if __name__ == '__main__':
     main()
