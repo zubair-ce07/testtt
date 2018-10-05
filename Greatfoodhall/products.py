@@ -67,7 +67,6 @@ class ProductsSpider(scrapy.Spider):
         """Getting the product urls for each page and
         specific category and request for parsing"""
         product_urls = self.get_product_urls(response)
-
         for url in product_urls:
             yield scrapy.Request(
                 url=url,
@@ -119,30 +118,22 @@ class ProductsSpider(scrapy.Spider):
     # Getters using CSS Selectors #
 
     def get_category_urls(self, response):
-        category_urls = response.css(
-            self.selectors["category_urls"]
-        ).extract()
+        category_urls = response.css(self.selectors["category_urls"]).extract()
         return [response.urljoin(url) for url in category_urls]
 
     def get_product_urls(self, response):
-        return response.css(
-            self.selectors["product_urls"]
-        ).extract()
+        return response.css(self.selectors["product_urls"]).extract()
 
     def errback_httpbin(self, failure):
         """Error back function for detecting the request errors"""
-
         # log all failures
         self.logger.error(repr(failure))
-
         if failure.check(HttpError):
             response = failure.value.response
             self.logger.error('HttpError on %s', response.url)
-
         elif failure.check(DNSLookupError):
             request = failure.request
             self.logger.error('DNSLookupError on %s', request.url)
-
         elif failure.check(TimeoutError, TCPTimedOutError):
             request = failure.request
             self.logger.error('TimeoutError on %s', request.url)
