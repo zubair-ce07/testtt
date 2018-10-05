@@ -5,8 +5,8 @@ class ReportGenerator:
     total requests
     """
 
-    def __init__(self, data, urls, requests):
-        self.data = data
+    def __init__(self, details, urls, requests):
+        self.details = details
         self.total_urls = urls
         self.total_requests = requests
         self.calculations = {"Total Bytes": 0,
@@ -16,7 +16,7 @@ class ReportGenerator:
 
     def calculate(self):
         """Calculating total bytes and average size"""
-        for i in self.data:
+        for i in self.details:
             self.calculations["Total Bytes"] = (self.calculations[
                 "Total Bytes"] + len(i.result().content))
         self.calculations["Average Size"] = self.calculations[
