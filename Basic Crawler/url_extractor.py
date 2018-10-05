@@ -26,14 +26,14 @@ class UrlExtractor:
         """Function for checking the type of crawling and executing it"""
         loop = asyncio.get_event_loop()
         if self.crawler_type in ['c', 'C']:
-            data = loop.run_until_complete(self.run_concurrent())
+            details = loop.run_until_complete(self.run_concurrent())
         elif self.crawler_type in ['p', 'P']:
-            data = loop.run_until_complete(self.parallel_crawler(self.urls))
+            details = loop.run_until_complete(self.parallel_crawler(self.urls))
         else:
             print("Invalid crawler type: ", self.crawler_type)
             sys.exit()
         loop.close()
-        return data
+        return details
 
     def download_page(self, url):
         """Geting the response by requesting any particular url"""
