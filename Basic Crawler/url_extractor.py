@@ -16,7 +16,7 @@ class UrlExtractor:
 
     def __init__(self, url, total_urls, r_delay, total_requests, crawler_type):
         self.web_text = self.download_page(url).text
-        self.urls = self.get_urls(total_urls, self.web_text)
+        self.urls = self.extract_urls(total_urls, self.web_text)
         self.total_urls = total_urls
         self.delay = r_delay
         self.requests = total_requests
@@ -40,22 +40,13 @@ class UrlExtractor:
         try:
             response = requests.get(url)
             print("Downloded: ", url)
-        except requests.exceptions.RequestException as err:
-            print("Ops: Something Else", err)
-            sys.exit()
-        except requests.exceptions.HTTPError as errh:
-            print("Http Error:", errh)
-            sys.exit()
-        except requests.exceptions.ConnectionError as errc:
-            print("Error Connecting:", errc)
-            sys.exit()
         except requests.exceptions.Timeout as errt:
             print("Timeout Error:", errt)
             sys.exit()
 
         return response
 
-    def get_urls(self, url_count, web_text):
+    def extract_urls(self, url_count, web_text):
         """
         Function uses parsel library (Selectors) for getting
         urls form the web text
