@@ -1,6 +1,6 @@
 import json
 import re
-
+import w3lib.url
 import scrapy
 from orsay.items import OrsayItem
 from scrapy.linkextractors import LinkExtractor
@@ -52,13 +52,10 @@ class ProductsSpider(CrawlSpider):
     def has_next_page(self, response):
         """Finds if the page has more items and returns the link"""
         if response.css("#primary > div.load-more-wrapper > button"):
-            url = response.url
-            if not self.has_digits(response.url):
-                url = response.urljoin("?sz=72")
+            count = w3lib.url.url_query_parameter(response.url, "sz", "72")
             total_products = self.find_total_products(response)
-            shown_products = int(re.findall(r'\d+', url)[0])
-            if (shown_products < total_products):
-                return url.replace(str(shown_products), str(shown_products+72))
+            if (int(count) < total_products):
+                return response.urljoin("?sz={}".format(int(count)+72))
         else:
             return False
 
