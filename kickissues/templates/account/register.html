@@ -1,0 +1,24 @@
+{% extends "base_layout.html" %}
+{% block content %}
+    <div style="margin: 5% auto;">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="row">
+                    <div class="col-md-4">
+                    </div>
+                    <div class="col-md-4">
+                        <form action="{% url 'account:register' %}" method="post" enctype="multipart/form-data" class="form-control">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                {{form.as_p}}
+                            </div>
+                            <input type="submit" value="Signup" class='form-control btn btn-lg btn-danger'>
+                        </form>
+                    </div>
+                    <div class="col-md-4">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}

@@ -1,0 +1,44 @@
+{% extends "base_layout.html" %}
+{% block content %}
+    {% csrf_token %}
+    <div class="container" style="margin: 20% auto;">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="row">
+                            <div class="col-md-4">
+                            </div>
+                            <div class="col-md-4">
+                                <a href="{% url 'account:register' type='customer' %}" class="btn btn-block btn-lg btn-outline-success">Customer</a>
+                                <div class="btn-lg">
+                                    <div class="_1BN1N Kzi1t _2DJZN">
+                                        <div class="_1HjH7">
+                                            <div class="_3qe6h">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="row">
+                            <div class="col-md-4">
+                            </div>
+                            <div class="col-md-4">
+                                <a href="{% url 'account:register' type='manager' %}" class="btn btn-block btn-lg btn-outline-danger">Manager</a>
+                            </div>
+                            <div class="col-md-4">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}
