@@ -3,30 +3,12 @@ import re
 
 import scrapy
 from greatfoodhall.items import GreatfoodhallItem, GreatfoodhallLoader
-from scrapy.spidermiddlewares.httperror import HttpError
-from twisted.internet.error import (DNSLookupError, TCPTimedOutError,
-                                    TimeoutError)
 
 
 class ProductsSpider(scrapy.Spider):
     name = 'products'
     allowed_domains = ['www.greatfoodhall.com']
     start_urls = ['http://www.greatfoodhall.com/eshop/LoginPage.do']
-
-    selectors = {
-        "category_urls": ".item a::attr(href)",
-        "product_urls": ".productTmb a::attr(href)",
-        "name": ".description::text",
-        "image": ".productPhoto img::attr(src)",
-        "flag_image": ".flag::attr(src)",
-        "price": ".itemOrgPrice2::text",
-        "nutrition_info_values": "#nutrition table tr td[align=right]::text",
-        "nutrition_info_fields": "#nutrition table tr td[align=left]::text",
-        "quantity": ".ml::text",
-        "categories": ".breadCrumbArea ul::text",
-        "product_type": "h1.pL6::text",
-        "availability": ".btnAddToCart img"
-    }
 
     def parse(self, response):
         """Requests the main page url for each category
@@ -37,7 +19,6 @@ class ProductsSpider(scrapy.Spider):
             yield scrapy.Request(
                 url="http://www.greatfoodhall.com/eshop/LoginPage.do",
                 callback=self.parse_category,
-                errback=self.errback_httpbin,
                 meta={
                     "cookiejar": cookie_identfier,
                     "category_link": url},
@@ -49,7 +30,6 @@ class ProductsSpider(scrapy.Spider):
         yield scrapy.Request(
             url=response.meta["category_link"],
             callback=self.parse_list,
-            errback=self.errback_httpbin,
             meta={
                 "cookiejar": response.meta["cookiejar"],
                 "current_page": 1,
@@ -71,7 +51,6 @@ class ProductsSpider(scrapy.Spider):
             yield scrapy.Request(
                 url=url,
                 callback=self.parse_product,
-                errback=self.errback_httpbin,
                 meta={'cookiejar': response.meta["cookiejar"]},
             )
 
@@ -86,7 +65,6 @@ class ProductsSpider(scrapy.Spider):
                     "ShowProductPage.do?curPage_1={}".format(
                         response.meta["current_page"] + 1)),
                 callback=self.parse_list,
-                errback=self.errback_httpbin,
                 meta={
                     'cookiejar': response.meta["cookiejar"],
                     'total_pages': total_pages,
@@ -98,42 +76,28 @@ class ProductsSpider(scrapy.Spider):
         """Item Loader implementation for products"""
         l = GreatfoodhallLoader(item=GreatfoodhallItem(), response=response)
         l.add_value("_id", re.findall(r"sp=(.*)", response.url)[0])
-        l.add_css("name", self.selectors["name"])
-        l.add_css("price", self.selectors["price"])
+        l.add_css("name", ".description::text")
+        l.add_css("price", ".itemOrgPrice2::text")
         l.add_value('currency', 'Hong Kong dollar (HK$)')
         l.add_css(
-            "nutrition_info_values", self.selectors["nutrition_info_values"])
+            "nutrition_info_values",
+            "#nutrition table tr td[align=right]::text")
         l.add_css(
-            "nutrition_info_fields", self.selectors["nutrition_info_fields"])
-        l.add_css("quantity", self.selectors["quantity"])
-        l.add_css("categories", self.selectors["categories"])
-        l.add_css("product_type", self.selectors["product_type"])
-        l.add_css("image_url", self.selectors["image"])
-        l.add_css("flag_image", self.selectors["flag_image"])
-        l.add_css("availability", self.selectors["availability"])
+            "nutrition_info_fields",
+            "#nutrition table tr td[align=left]::text")
+        l.add_css("quantity", ".ml::text")
+        l.add_css("categories", ".breadCrumbArea ul::text")
+        l.add_css("product_type", "h1.pL6::text")
+        l.add_css("image_url", ".productPhoto img::attr(src)")
+        l.add_css("flag_image", ".flag::attr(src)")
+        l.add_css("availability", ".btnAddToCart img")
         l.add_value('website', 'http://www.greatfoodhall.com')
         l.add_value("url", response.url)
         return l.load_item()
 
-    # Getters using CSS Selectors #
-
     def get_category_urls(self, response):
-        category_urls = response.css(self.selectors["category_urls"]).extract()
+        category_urls = response.css(".item a::attr(href)").extract()
         return [response.urljoin(url) for url in category_urls]
 
     def get_product_urls(self, response):
-        return response.css(self.selectors["product_urls"]).extract()
-
-    def errback_httpbin(self, failure):
-        """Error back function for detecting the request errors"""
-        # log all failures
-        self.logger.error(repr(failure))
-        if failure.check(HttpError):
-            response = failure.value.response
-            self.logger.error('HttpError on %s', response.url)
-        elif failure.check(DNSLookupError):
-            request = failure.request
-            self.logger.error('DNSLookupError on %s', request.url)
-        elif failure.check(TimeoutError, TCPTimedOutError):
-            request = failure.request
-            self.logger.error('TimeoutError on %s', request.url)
+        return response.css(".productTmb a::attr(href)").extract()
