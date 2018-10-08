@@ -4,10 +4,7 @@ import re
 import scrapy
 from orsay.items import OrsayItem
 from scrapy.linkextractors import LinkExtractor
-from scrapy.spidermiddlewares.httperror import HttpError
 from scrapy.spiders import CrawlSpider, Rule
-from twisted.internet.error import (DNSLookupError, TCPTimedOutError,
-                                    TimeoutError)
 
 
 class ProductsSpider(CrawlSpider):
@@ -17,137 +14,103 @@ class ProductsSpider(CrawlSpider):
     start_urls = [
         'http://www.orsay.com/de-de/',
     ]
-    extra_links = [
-        'http://www.orsay.com/de-de/help/faq.html',
-        'http://www.orsay.com/de-de/help/privacy-policy.html',
-        'http://www.orsay.com/de-de/help/terms-and-conditions.html',
-        'http://www.orsay.com/de-de/help/contact.html',
-        'http://www.orsay.com/de-de/help/club-term-conditions.html',
-        'http://www.orsay.com/de-de/help/imprimint.html']
+
     rules = (
         Rule(LinkExtractor(
-            allow=(r'http://www.orsay.com/de-de/produkte/.*')),
-            callback='get_product_list'),
+            allow=(r'/produkte/')),
+            callback='parse_product_list'),
         Rule(LinkExtractor(
-            allow=(r'http://www.orsay.com/de-de/.*[.]html\Z'),
-            deny=extra_links),
-            callback='get_product',
-            follow=True)
+            allow=(r'/.*[.]html$'),
+            deny=('/help/')),
+            callback='parse_product')
     )
-    # List of css selectors used in the crawler
-    selectors = {
-        "products": ".grid-tile .product-image a::attr(href)",
-        "next_page": "#primary > div.load-more-wrapper > button",
-        "details": ".js-product-content-gtm::attr(data-product-details)",
-        "care": "div.js-material-container p::text",
-        "images": ".productthumbnail::attr(src)",
-        "description": ".product-details div::text",
-        "size": ".swatches li.selectable a::text",
-        "availability": ".in-stock-msg::text",
-        "total_products": ".load-more-progress-label::text",
-        "more_colors": ".color .selectable a::attr(href)"
-    }
 
     def extract_product_urls(self, response):
         """Extracts all the products url for a particular category"""
-        products = response.css(self.selectors["products"]).extract()
-        products = [response.urljoin(url) for url in products]
-        return products
+        products = response.css(
+            ".grid-tile .product-image a::attr(href)"
+            ).extract()
+        return [response.urljoin(url) for url in products]
 
-    def get_product_list(self, response):
+    def parse_product_list(self, response):
         """Gets all the products list"""
         product_urls = self.extract_product_urls(response)
-        next_page = self.get_next_page(response)
+        next_page = self.has_next_page(response)
         if next_page:
             yield scrapy.Request(
                 url=next_page,
-                errback=self.errback_httpbin,
-                callback=self.get_product_list
+                callback=self.parse_product_list
             )
         # Sending request for getting products detail
         for product in product_urls:
             yield scrapy.Request(
                 url=product,
-                callback=self.get_product,
-                errback=self.errback_httpbin,
+                callback=self.parse_product,
                 dont_filter=True
             )
 
-    def get_next_page(self, response):
+    def has_next_page(self, response):
         """Finds if the page has more items and returns the link"""
-        check = response.css(self.selectors["next_page"])
-        if check:
-            new_url = response.url
+        if response.css("#primary > div.load-more-wrapper > button"):
+            url = response.url
             if not self.has_digits(response.url):
-                new_url = response.urljoin("?sz=72")
-            total_products = self.get_total_products(response)
-            shown_products = re.findall(r'\d+', new_url)[0]
-
-            if (int(shown_products) < int(total_products)):
-                return new_url.replace(
-                    shown_products, str(int(shown_products) + 72))
-            else:
-                return None
+                url = response.urljoin("?sz=72")
+            total_products = self.find_total_products(response)
+            shown_products = int(re.findall(r'\d+', url)[0])
+            if (shown_products < total_products):
+                return url.replace(str(shown_products), str(shown_products+72))
         else:
             return False
 
     def has_digits(self, url):
         """Finds the digits in the url and returns it"""
-        if any(char.isdigit() for char in url):
-            return True
-        else:
-            return False
+        return any(char.isdigit() for char in url)
 
-    def get_product(self, response):
+    def parse_product(self, response):
         """Getting all the product details and storind it in the item"""
-        details = self.get_details(response)
+        details = self.parse_product_details(response)
         product_details = {
             '_id': details["productId"],
             'brand': "Orsay",
-            'care': self.get_care(response),
+            'care': self.find_care_text(response),
             'category': details["categoryName"],
-            'description': self.get_description(response),
+            'description': self.find_description(response),
             'gender': "Women",
-            'image_urls': self.get_image_urls(response),
+            'image_urls': self.extract_image_urls(response),
             'name': details["name"],
             'retailer_sku': details["idListRef6"],
-            'skus': self.get_skus(response),
+            'skus': self.develop_skus(response),
             'url': {response.url}
         }
         item = OrsayItem(product_details)  # Initializing Item
 
-        colors = self.more_colors(response)
+        colors = self.find_more_colors(response)
         if len(colors) > 1:
             color_url = colors.pop(0)
             yield scrapy.Request(
                     url=color_url,
-                    callback=self.get_skus,
-                    errback=self.errback_httpbin,
+                    callback=self.develop_skus,
                     meta={'colors': colors,
                           'item':  item})
         else:
             yield item
 
-    def clean_care_text(self, details):
+    def clean_care_text(self, care_text):
         """Remove the irrelevant data from the care text"""
-        return [
-            care.replace("-", ",")
-            for care in
-            [care.replace(",", "") for care in details]
-        ]
+        return [c.replace("-", ",") for c in care_text]
 
     def clean_description(self, details):
         """Remove the irrelevant data from the description"""
-        details = [txt.strip() for txt in details]
-        details = list(filter(lambda txt: txt != '', details))
+        details = [re.sub('\s+', ' ', d).strip() for d in details if d]
+        details = [d for d in details if d]
         details.pop(0)
         return details
 
-    def get_skus(self, response):
+    def develop_skus(self, response):
         """Develops skus sturcture and returns it"""
-        details = self.get_details(response)
-        sizes = self.get_size(response)
-        image_urls = self.get_image_urls(response)
+        details = self.parse_product_details(response)
+        sizes = self.find_sizes(response)
+        image_urls = self.extract_image_urls(response)
         skus = {}
 
         if not sizes:
@@ -160,7 +123,7 @@ class ProductsSpider(CrawlSpider):
                 "size": size
             }
         if self.has_more_colors(response):
-            return self.get_color_variations(response, skus, image_urls)
+            return self.find_color_variations(response, skus, image_urls)
         else:
             return skus
 
@@ -171,13 +134,11 @@ class ProductsSpider(CrawlSpider):
         else:
             return False
 
-    def get_color_variations(self, response, skus, image_urls):
+    def find_color_variations(self, response, skus, image_urls):
         """Updates the skus according to the provided colors in meta"""
         item = response.meta['item']
         item['skus'].update(skus)
-        # Appending new color url
-        item['url'].add(response.url)
-        # Appending new color images
+        item['url'].add(response.url)  # Appending new color url
         item['image_urls'] = item['image_urls'] | image_urls
         if len(response.meta['colors']) == 0:
             yield item
@@ -186,61 +147,43 @@ class ProductsSpider(CrawlSpider):
             color_url = colors.pop(0)
             yield scrapy.Request(
                     url=color_url,
-                    callback=self.get_skus,
-                    errback=self.errback_httpbin,
+                    callback=self.develop_skus,
                     meta={'colors': colors,
                           'item':  item})
 
-    # Getters using css selectors #
-    def get_details(self, response):
+    def parse_product_details(self, response):
         return json.loads(
-            response.css(self.selectors["details"]).extract_first()
+            response.css(
+                ".js-product-content-gtm::attr(data-product-details)"
+                ).extract_first()
         )
 
-    def get_description(self, response):
-        description = response.css(self.selectors["description"]).extract()
+    def find_description(self, response):
+        description = response.css(".product-details div::text").extract()
         return self.clean_description(description)
 
-    def get_care(self, response):
+    def find_care_text(self, response):
         return self.clean_care_text(
-            response.css(self.selectors["care"]).extract()
+            response.css("div.js-material-container p::text").extract()
         )
 
-    def get_image_urls(self, response):
-        images = response.css(self.selectors["images"]).extract()
+    def extract_image_urls(self, response):
+        images = response.css(".productthumbnail::attr(src)").extract()
         return {re.sub(r'[?].*fit$', "", image) for image in images}
 
-    def get_size(self, response):
-        sizes = set(response.css(self.selectors["size"]).extract())
+    def find_sizes(self, response):
+        sizes = set(response.css(".swatches li.selectable a::text").extract())
         sizes = [re.sub('\s+', ' ', size).strip() for size in sizes if size]
         return [size for size in sizes if size]
 
-    def get_availability(self, response):
-        return response.css(self.selectors["availability"]).extract()
+    def find_availability(self, response):
+        return response.css(".in-stock-msg::text").extract()
 
-    def get_total_products(self, response):
-        total_products = response.css(
-            self.selectors["total_products"]
-        ).extract()
-        for text in total_products:
-            if self.has_digits(text):
-                text = text.replace(".", "")
-                return re.findall(r'\d+', text)[0]
+    def find_total_products(self, response):
+        count = response.css(
+            ".pagination-product-count b::text").extract_first()
+        count = count.replace(".", "")
+        return int(count)
 
-    def more_colors(self, response):
-        colors = response.css(self.selectors["more_colors"]).extract()
-        return colors
-
-    def errback_httpbin(self, failure):
-        """Error back function for detecting the request errors"""
-        # log all failures
-        self.logger.error(repr(failure))
-        if failure.check(HttpError):
-            response = failure.value.response
-            self.logger.error('HttpError on %s', response.url)
-        elif failure.check(DNSLookupError):
-            request = failure.request
-            self.logger.error('DNSLookupError on %s', request.url)
-        elif failure.check(TimeoutError, TCPTimedOutError):
-            request = failure.request
-            self.logger.error('TimeoutError on %s', request.url)
+    def find_more_colors(self, response):
+        return response.css(".color .selectable a::attr(href)").extract()
