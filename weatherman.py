@@ -8,78 +8,76 @@ import argparse
 
 class Reporting:
     
-    def __init__(self, operation, complete_data):
-        if operation == 'a':
-            self.a_type_report(complete_data)
-        elif operation == 'c':
-            self.c_type_report(complete_data)
-        elif operation == 'e':
-            self.e_type_report(complete_data)
+    def __init__(self):
+        pass
+    
+    def a_type_high_temp(self, days, years, complete_data):
+        high_temp = 0
+        days_count = 0
+        for day in days:
+            file_value = int('0'+complete_data[years][day]['Max TemperatureC'])
+            if file_value != 0:
+                high_temp += file_value
+                days_count += 1
+        
+        avg_high_val = high_temp/days_count
+        return avg_high_val
+    
+    def a_type_low_temp(self, days, years, complete_data):
+        low_temp = 0
+        days_count = 0
+        for day in days:
+            file_value = int('0'+complete_data[years][day]['Min TemperatureC'])
+            if file_value != 0:
+                low_temp += file_value
+                days_count += 1
+        
+        avg_low_val = low_temp/days_count
+        return avg_low_val
+        
+    def a_type_humidity(self, days, years, complete_data):
+        mean_humid = 0
+        days_count = 0
+        for day in days:
+            file_value = int('0'+complete_data[years][day][' Mean Humidity'])
+            if file_value != 0:
+                mean_humid += file_value
+                days_count += 1
+        mean_himidity = mean_humid/days_count
+        return mean_himidity
 
     def a_type_report(self, complete_data):
 
-        year_key = list(complete_data.keys())[0]
-        days_key = list(complete_data[year_key].keys())
+        years = list(complete_data.keys())[0]
+        days = list(complete_data[years].keys())
         
-        high_temp = 0
-        days_count = 0
-        for days in days_key:
-            try:
-                file_value = int(complete_data[year_key][days]['Max TemperatureC'])
-                high_temp += file_value
-                days_count += 1
-                    
-            except:
-                pass
-        print("Highest Average : " , round(high_temp/days_count, 2), "C")
+        high_temp = self.a_type_high_temp(days, years,complete_data)
+        low_temp = self.a_type_low_temp(days, years,complete_data)
+        mean_humidity = self.a_type_humidity(days, years,complete_data)
 
-        low_temp = 0
-        days_count = 0
-        for days in days_key:
-            try:
-                file_value = int(complete_data[year_key][days]['Min TemperatureC'])
-                low_temp += file_value
-                days_count += 1
-                
-            except:
-                pass
-        print("Lowest Average : " , round(low_temp/days_count, 2), "C")
-
-        mean_humid = 0
-        days_count = 0
-        for days in days_key:
-            try:
-                file_value = int(complete_data[year_key][days][' Mean Humidity'])
-                mean_humid += file_value
-                days_count += 1
-                
-            except:
-                pass
-        print("Average Mean Humidity: " , str(int(mean_humid/days_count))+ "%")
-
+        print("Highest Average : " , round(high_temp, 2), "C")
+        print("Lowest Average : " , round(low_temp, 2), "C")
+        print("Average Mean Humidity: " , str(int(mean_humidity))+ "%")
+        
     def c_type_report(self, complete_data):
         year_key = list(complete_data.keys())[0]
         days_key = list(complete_data[year_key].keys())
         
         for days in days_key:
-            try:
-                file_value = int(complete_data[year_key][days]['Max TemperatureC'])
-                print(days, end='')
-                for value in range(file_value):
-                    print ('\033[1;31m+\033[1;m', end = '')
-                print(file_value,"C")  
-            except:
-                continue
+            value_to_convert = '0'+complete_data[year_key][days]['Max TemperatureC']
+            file_value = int(value_to_convert)
+            print(days, end='')
+            for value in range(file_value):
+                print ('\033[1;31m+\033[1;m', end = '')
+            print(' ',file_value,"C")  
             
-            try:
-                file_value = int(complete_data[year_key][days]['Min TemperatureC'])
-                print(days, end='')
-                for value in range(file_value):
-                    print ('\033[1;34m+\033[1;m', end = '')
-                print(file_value,"C")  
-            except:
-                continue
-
+            value_to_convert = '0'+complete_data[year_key][days]['Min TemperatureC']
+            file_value = int(value_to_convert)
+            print(days, end='')
+            for value in range(file_value):
+                print ('\033[1;34m+\033[1;m', end = '')
+            print(' ',file_value,"C")  
+            
     def e_type_report(self, complete_data):
         [value, month, day] = self.find_max_temp(complete_data)
         print("Highest:", value, "C on", month, day)
@@ -154,31 +152,28 @@ def argument_handler():
     parser.add_argument('-c', required=False)
     args = parser.parse_args()
 
+    report = Reporting()
     if args.a:
-        reading_file(args.path, 'a', args.a)
-    if args.e:
-        reading_file(args.path, 'e', args.e)
+        file_names = files_to_read('a', args.a, args.path)
+        complete_data = reading_file(file_names)
+        report.a_type_report(complete_data)
+    
     if args.c:
-        reading_file(args.path, 'c', args.c)
-
-
-def file_to_read_list(operation, file_name, file_path):
-    if operation == 'a' or operation == 'c':
-        file_name,month = file_name.split('/')
-        pattren = "*"+ file_name +"_"\
-                +datetime.date(int(file_name), int(month), 1).strftime('%b')\
-                + "*.txt"
-    elif operation == 'e':
-        pattren = "*"+ file_name + "*.txt"
+        file_names = files_to_read('c', args.c, args.path)
+        complete_data = reading_file(file_names)
+        report.c_type_report(complete_data)
     
-    return glob.glob(file_path + pattren)
-
-
-def reading_file(file_path, operation, file_name):
+    if args.e:
+        file_names = files_to_read('e', args.e, args.path)
+        complete_data = reading_file(file_names)
+        report.e_type_report(complete_data)
     
-    file_to_read = file_to_read_list(operation, file_name, file_path)
+
+
+def reading_file(file_names):
+    
     complete_data = {}
-    for file in file_to_read:
+    for file in file_names:
         with open(file, newline='') as csvfile:
             file_data = list(csv.reader(csvfile))
             file_headers = file_data[0]
@@ -196,9 +191,21 @@ def reading_file(file_path, operation, file_name):
                 days_count += 1
                 row = {}
         complete_data.update({file[-12:-4]:days_data})
-
-    Reporting(operation, complete_data)
     
+    return complete_data
+
+
+def files_to_read(operation, file_name, file_path):
+    if operation == 'a' or operation == 'c':
+        file_name,month = file_name.split('/')
+        pattren = "*"+ file_name +"_"\
+                +datetime.date(int(file_name), int(month), 1).strftime('%b')\
+                + "*.txt"
+    elif operation == 'e':
+        pattren = "*"+ file_name + "*.txt"
+    
+    return glob.glob(file_path + pattren)
+
 
 def main():  
     argument_handler()
