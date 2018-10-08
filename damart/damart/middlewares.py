@@ -106,10 +106,10 @@ class ProxyMiddleware(object):
     # overwrite process request
     def process_request(self, request, spider):
         # Set the location of the proxy
-        request.meta['proxy'] = "http://202.131.235.134:46480"
+        request.meta['proxy'] = "http://x.botproxy.net:8080"
 
-        # Use the following lines if your proxy requires authentication
-        # proxy_user_pass = "USERNAME:PASSWORD"
+        # # Use the following lines if your proxy requires authentication
+        # auth_creds = "USERNAME:PASSWORD"
         # # setup basic authentication for the proxy
-        # encoded_user_pass = base64.encodestring(proxy_user_pass)
-        # request.headers['Proxy-Authorization'] = 'Basic ' + encoded_user_pass
+        # access_token = base64.encodestring(auth_creds)
+        # request.headers['Proxy-Authorization'] = 'Basic ' + access_token

@@ -1,35 +1,27 @@
 """
 This module crawls pages and gets data.
 """
-import scrapy
 from scrapy.loader import ItemLoader
+from scrapy.spiders import CrawlSpider, Rule
+from scrapy.linkextractors import LinkExtractor
 from ..items import Product
 
 
-class SheegoSpider(scrapy.Spider):
-    """This class crawls Sheego pages"""
+class Damart(CrawlSpider):
+    """This class crawls damart pages"""
     name = 'damart'
-
-    def start_requests(self):
-        """This method request for crawl orsay pages"""
-        start_url = 'https://www.damart.co.uk/'
-        yield scrapy.Request(url=start_url, callback=self.parse)
-
-    def parse(self, response):
-        """This method crawls page urls."""
-        category_link = response.css('ul>li>a::attr(href)').extract()
-        for url in category_link:
-            category_url = response.urljoin(url)
-            yield scrapy.Request(
-                url=category_url, callback=self.parse_item_url)
-
-    def parse_item_url(self, response):
-        """This method crawls item detail url."""
-        item_url = response.css('.photo-data>a::attr(href)').extract()
-        for url in item_url:
-            item_url = response.urljoin(url)
-            yield scrapy.Request(
-                url=item_url, callback=self.parse_item_detail)
+    allowed_domains = ['damart.co.uk']
+    start_urls = ['https://www.damart.co.uk']
+    rules = [
+        Rule(LinkExtractor(
+            allow=(r'https://www.damart.co.uk/C-*'),
+        ),
+             follow=True),
+        Rule(LinkExtractor(
+            allow=(r'https://www.damart.co.uk/F-*')),
+             callback='parse_item_detail',
+             follow=False),
+    ]
 
     def parse_item_detail(self, response):
         """This method crawls item detail information."""
@@ -44,7 +36,7 @@ class SheegoSpider(scrapy.Spider):
         full_price = response.css(
             '.no_promo::text').extract_first()
         if not full_price:
-        # if item is on sale
+            # if item is on sale
             full_price = response.css(
                 '.old-price>span::text').extract_first()
             sale_price = response.css(

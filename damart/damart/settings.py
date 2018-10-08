@@ -16,7 +16,9 @@ NEWSPIDER_MODULE = 'damart.spiders'
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-#USER_AGENT = 'damart (+http://www.yourdomain.com)'
+USER_AGENT = 'Mozilla/5.0 (Windows; Linux; Android 4.2.1; \
+            en-us; Nexus 5 Build/JOP40D) AppleWebKit/535.19 \
+            (KHTML, like Gecko; googleweblight) Chrome/38.0.1025.166 Mobile Safari/535.19'
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = True
@@ -54,7 +56,8 @@ ROBOTSTXT_OBEY = True
 # See https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
     'damart.middlewares.DamartDownloaderMiddleware': 543,
-    'damart.middlewares.ProxyMiddleware': 100,
+    # 'scrapy.contrib.downloadermiddleware.httpproxy.HttpProxyMiddleware': 110,
+    # 'damart.middlewares.ProxyMiddleware': 100,
 
 }
 
