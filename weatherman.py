@@ -25,8 +25,7 @@ class Weatherman:
         read_files = []
         for input_file in input_files:
             read_file = csv.DictReader(open(input_file))
-            read_files_ls = list(read_file)
-            read_files.append(read_files_ls)
+            read_files.append(read_file)
         return read_files
 
     def monthly_record(self, read_files):
@@ -39,21 +38,18 @@ class Weatherman:
                 if row['Max TemperatureC'] != '':
                     x = str(row['Max TemperatureC'])
                     hi_temperature.append(x)
-            self.hi_temperature = list(map(int, hi_temperature))
-            for row in file:
                 if row['Min TemperatureC'] != '':
                     x = str(row['Min TemperatureC'])
                     lo_temperature.append(x)
-            self.lo_temperature = list(map(int, lo_temperature))
-            for row in file:
                 if row[' Mean Humidity'] != '':
                     x = str(row[' Mean Humidity'])
                     mean_humidity.append(x)
-            self.mean_humidity = list(map(int, mean_humidity))
-            for row in file:
                 if row['PKT'] != '':
                     x = datetime.strptime(row['PKT'], '%Y-%m-%d').strftime('%d')
                     day.append(x)
+            self.hi_temperature = list(map(int, hi_temperature))
+            self.lo_temperature = list(map(int, lo_temperature))
+            self.mean_humidity = list(map(int, mean_humidity))
             self.day = list(day)
 
     def extreme_conditions(self, read_files):
