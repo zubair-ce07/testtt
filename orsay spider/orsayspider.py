@@ -1,15 +1,14 @@
 import scrapy
-import logging
 import w3lib.url
+
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor 
 
-from .productclass import Product
-from .dataGetter import DataGetterClass
+from .ProductParser import ProductParser
 
 class OrsaySpider(CrawlSpider):
 
-    data_getter_class = DataGetterClass()
+    product_parser = ProductParser()
     name = 'orsayspider'
     allowed_domains = ['orsay.com']
     start_urls = ['http://www.orsay.com/de-de/produkte/']
@@ -21,24 +20,23 @@ class OrsaySpider(CrawlSpider):
     
     def parse_product_page(self, response):
         
-        xpath = '//a[contains(@class, "thumb-link")]/@href'
-        product_page_links = response.xpath(xpath).extract()
+        css = 'a[class*=thumb-link]::attr(href)'
+        product_page_links = response.css(css).extract()
 
         for link in product_page_links:
             yield response.follow(url=response.urljoin(link), 
-                                callback=self.data_getter_class.parse_product_details, 
-                                dont_filter=True)
+                            callback=self.product_parser.parse_product_details)
         
-        xpath = '//div[contains(@class, "load-next-placeholder")]'
-        load_more = response.xpath(xpath).extract_first()
+        css = 'div[class*=load-next-placeholder]'
+        load_more = response.css(css).extract_first()
 
         if load_more:
             parameter = w3lib.url.url_query_parameter(response.url, "sz")
             if parameter:
-                link = w3lib.url.add_or_replace_parameter(response.url, 
-                                                        'sz', 
-                                                        str(int(parameter)+72))
+                link = w3lib.url.add_or_replace_parameter(response.url, 'sz', 
+                                                    str(int(parameter)+72))
             else:
                 link = response.url + '?sz=72'
                 
-        yield scrapy.Request(response.urljoin( link), callback=self.parse_product_page)
+        yield scrapy.Request(url=response.urljoin( link), 
+                            callback=self.parse_product_page)
