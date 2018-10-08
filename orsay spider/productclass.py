@@ -1,5 +1,6 @@
 import scrapy
 
+
 class Product(scrapy.Item):
 
     brand = scrapy.Field()
@@ -11,4 +12,4 @@ class Product(scrapy.Item):
     name = scrapy.Field()
     skus = scrapy.Field()
     url = scrapy.Field()
-    color_requests = scrapy.Field()
+    more_requests = scrapy.Field()

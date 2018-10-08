@@ -6,6 +6,7 @@ from scrapy.linkextractors import LinkExtractor
 
 from .ProductParser import ProductParser
 
+
 class OrsaySpider(CrawlSpider):
 
     product_parser = ProductParser()
@@ -20,14 +21,14 @@ class OrsaySpider(CrawlSpider):
     
     def parse_product_page(self, response):
         
-        css = 'a[class*=thumb-link]::attr(href)'
+        css = 'a.thumb-link::attr(href)'
         product_page_links = response.css(css).extract()
 
         for link in product_page_links:
             yield response.follow(url=response.urljoin(link), 
                             callback=self.product_parser.parse_product_details)
         
-        css = 'div[class*=load-next-placeholder]'
+        css = 'div.load-next-placeholder'
         load_more = response.css(css).extract_first()
 
         if load_more:
