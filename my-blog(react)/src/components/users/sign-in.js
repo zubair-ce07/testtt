@@ -1,42 +1,37 @@
 import React, { Component } from 'react';
-// import { Link } from 'react-router-dom';
 
 import {
   Button, Form, FormGroup, Label, Input, Row, Col, FormFeedback
 } from 'reactstrap';
 
-import UserService from './service';
+import container from './container';
 
 class SignIn extends Component {
   constructor(props) {
     super(props);
 
-    this.state = {
-      invalid: false
-    };
-
-    this.service = new UserService();
     this.signIn = this.signIn.bind(this);
+  }
+
+  componentDidMount() {
+    const { history, user } = this.props;
+
+    if (user.id) {
+      history.push('/');
+    }
   }
 
   async signIn(event) {
     event.preventDefault();
     const form = event.target;
-    const credentials = {
-      username: form.username.value,
-      password: form.password.value
-    };
+    const username = form.username.value;
+    const password = form.password.value;
 
-    const response = await this.service.login(credentials);
-    if (response.success) {
-      this.props.history.push('/blogs');
-    } else {
-      this.setState({ invalid: true });
-    }
+    this.props.signIn(username, password);
   }
 
   render() {
-    const { invalid } = this.state;
+    const invalid = this.props.user.errors.password;
     return (
       <Row>
         <Col sm="12" md={{ size: 4, offset: 4 }}>
@@ -76,4 +71,4 @@ class SignIn extends Component {
   }
 }
 
-export default SignIn;
+export default container(SignIn);

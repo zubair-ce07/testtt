@@ -4,11 +4,11 @@ from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
 from rest_framework.status import (
     HTTP_400_BAD_REQUEST,
-    HTTP_404_NOT_FOUND,
-    HTTP_200_OK
+    HTTP_404_NOT_FOUND
 )
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
 
 from .serializers import UserSerializer
 
@@ -31,9 +31,23 @@ class AuthenticateUser(APIView):
             'token': token.key,
             'user': UserSerializer(user).data,
         }
-        return Response(response, status=HTTP_200_OK)
+        return Response(response)
 
 
 class RegisterUser(ListCreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+
+class GetUpdateUserAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        return Response(UserSerializer(request.user).data)
+
+    def patch(self, request):
+        serializer = UserSerializer(
+            request.user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)

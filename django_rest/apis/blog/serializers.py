@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from rest_framework_recursive.fields import RecursiveField
+
 from .models import Blog, Tag, Comment
 
 
@@ -9,16 +11,16 @@ class TagSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Tag
-        fields = ('id', 'title')
+        fields = '__all__'
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    writer = serializers.ReadOnlyField(source='writer.username')
-    # blog = serializers.ReadOnlyField(source='blog.title')
+    writer = serializers.ReadOnlyField(source='writer.get_full_name')
+    comments = RecursiveField(many=True, read_only=True)
 
     class Meta:
         model = Comment
-        fields = ('id', 'body', 'writer', 'blog')
+        fields = '__all__'
 
 
 class BlogSerializer(serializers.ModelSerializer):

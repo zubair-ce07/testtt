@@ -1,5 +1,7 @@
+import { NotificationManager } from 'react-notifications';
+
 class BaseService {
-  static BASE_URL = 'http://localhost:8000/api/';
+  static BASE_URL = 'http://172.16.10.213:8000/api/';
   ACTION = './unknown';
 
   constructor() {
@@ -8,56 +10,85 @@ class BaseService {
     }
   }
 
-  async fetch(url, method, data) {
-    let response = { success: false, code: null };
+  async fetch(url, method, data, authRequired = true) {
+    const response = { success: false, code: null, data: {} };
+    const headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    };
+
+    if (authRequired) {
+      const authToken = localStorage.getItem('auth-token');
+
+      if (!authToken) {
+        response.code = 401;
+        NotificationManager.error('You are not signed in');
+        response.message = 'You are not signed in';
+        return response;
+      }
+      headers.Authorization = `Token ${authToken}`;
+    }
+
+    const options = {
+      method: method || 'GET',
+      mode: 'cors',
+      headers
+    };
+
+    if (
+      data &&
+      options.method !== 'GET' &&
+      options.method !== 'HEAD' &&
+      options.method !== 'DELETE'
+    ) {
+      options.body = JSON.stringify(data);
+    }
+
     try {
-      const rawResponse = await fetch(url, {
-        method: method || 'GET',
-        body: JSON.stringify(data),
-        mode: 'cors',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
-      });
+      const rawResponse = await fetch(url, options);
 
       if (rawResponse.ok) {
         response.success = true;
       }
 
       response.code = rawResponse.status;
-      response.data = await rawResponse.json();
+      try {
+        response.data = await rawResponse.json();
+      } catch (error) {
+        console.log('response is not valid json');
+      }
     } catch (error) {
-      response.message = 'A network error occured!';
+      NotificationManager.error('A network error occurred!');
+      response.message = 'A network error occurred!';
     }
 
     return response;
   }
 
-  get(params) {
+  get(params, authRequired) {
     const url = new URL(this.ACTION, BaseService.BASE_URL);
     url.search = new URLSearchParams(params);
-    return this.fetch(url);
+    return this.fetch(url, 'GET', null, authRequired);
   }
 
-  getById(id) {
-    const url = new URL(`${this.ACTION}/${id}`, BaseService.BASE_URL);
-    return this.fetch(url);
+  getById(id, authRequired) {
+    const url = new URL(`${this.ACTION}${id}`, BaseService.BASE_URL);
+    return this.fetch(url, 'GET', null, authRequired);
   }
 
-  add(object) {
+  add(object, authRequired) {
     const url = new URL(this.ACTION, BaseService.BASE_URL);
-    return this.fetch(url, 'POST', object);
+    return this.fetch(url, 'POST', object, authRequired);
   }
 
-  update(id, object) {
-    const url = new URL(`${this.ACTION}/${id}`, BaseService.BASE_URL);
-    return this.fetch(url, 'PATCH', object);
+  update(id, object, authRequired) {
+    const url = new URL(`${this.ACTION}${id}`, BaseService.BASE_URL);
+    return this.fetch(url, 'PATCH', object, authRequired);
   }
 
-  delete(id) {
-    const url = new URL(`${this.ACTION}/${id}`, BaseService.BASE_URL);
-    return this.fetch(url, 'DELETE');
+  delete(id, authRequired) {
+    const url = new URL(`${this.ACTION}${id}`, BaseService.BASE_URL);
+    return this.fetch(url, 'DELETE', null, authRequired);
   }
 }
 

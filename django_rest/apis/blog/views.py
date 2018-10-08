@@ -1,6 +1,6 @@
 from rest_framework.generics import (
     ListCreateAPIView, RetrieveUpdateDestroyAPIView)
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 from .models import Blog, Tag, Comment
 from .serializers import BlogSerializer, TagSerializer, CommentSerializer
@@ -10,7 +10,7 @@ from .permissions import IsWriterOrReadOnly
 class TagMixin(object):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticatedOrReadOnly,)
 
 
 class TagList(TagMixin, ListCreateAPIView):
@@ -24,7 +24,7 @@ class TagDetail(TagMixin, RetrieveUpdateDestroyAPIView):
 class BlogMixin(object):
     queryset = Blog.objects.all()
     serializer_class = BlogSerializer
-    permission_classes = (IsAuthenticated, IsWriterOrReadOnly)
+    permission_classes = (IsWriterOrReadOnly,)
 
 
 class BlogList(BlogMixin, ListCreateAPIView):
@@ -39,7 +39,7 @@ class BlogDetail(BlogMixin, RetrieveUpdateDestroyAPIView):
 class CommentMixin(object):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    permission_classes = (IsAuthenticated, IsWriterOrReadOnly)
+    permission_classes = (IsWriterOrReadOnly,)
 
 
 class CommentList(CommentMixin, ListCreateAPIView):

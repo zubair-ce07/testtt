@@ -1,81 +1,47 @@
 import React, { Component } from 'react';
-// import { Link } from 'react-router-dom';
 
-import {
-  Button, Form, FormGroup, Label, Input, Row, Col, FormFeedback
-} from 'reactstrap';
-import { NotificationManager } from 'react-notifications';
+import { Button, Form, Row, Col } from 'reactstrap';
 
-import UserService from './service';
-
-const InputField = ({ title, name, type, value, errors, onChange, validator }) => (
-  <FormGroup row>
-    <Label for={name} sm={4}>{title}</Label>
-    <Col sm={8}>
-      <Input
-        type={type}
-        onChange={onChange}
-        value={value}
-        name={name}
-        id={name}
-        placeholder={title}
-        onBlur={validator}
-        invalid={Boolean(errors && errors.length)}
-        required
-      />
-      {
-        errors && errors.map((error, index) =>
-          <FormFeedback key={index}>{error}</FormFeedback>
-        )
-      }
-    </Col>
-  </FormGroup>
-);
+import InputField from './input-field';
+import container from './container';
 
 class SignUp extends Component {
   constructor(props) {
     super(props);
 
-    this.state = {
-      first_name: '',
-      last_name: '',
-      username: '',
-      password: '',
-      confirm_password: '',
-      email: '',
-      errors: {},
-    };
-
-    this.service = new UserService();
     this.updateValue = this.updateValue.bind(this);
-    this.signUp = this.signUp.bind(this);
+    this.submit = this.submit.bind(this);
     this.matchPassword = this.matchPassword.bind(this);
+
+    if (props.user.id) {
+      this.title = 'Profile';
+      this.buttonText = 'Update';
+      this.updating = true;
+    } else {
+      this.title = this.buttonText = 'Sign Up';
+    }
+  }
+
+  componentDidMount() {
+    const { history, match } = this.props;
+
+    if (this.updating && match.path.includes('signup')) {
+      history.push('/');
+    }
   }
 
   updateValue(event) {
-    const { name, value } = event.target;
-    this.setState({ [name]: value });
+    const { name, value, required } = event.target;
+    this.props.updateField(name, value, required);
   }
 
-  async signUp(event) {
+  submit(event) {
     event.preventDefault();
-    const response = await this.service.register(this.state);
-    if (response.success) {
-      NotificationManager.success('Registered successfully');
-      this.props.history.push('/users/signin');
-    } else {
-      this.setState({ errors: response.data });
-    }
+    this.props.saveUser();
   }
 
   matchPassword() {
-    const { errors, password, confirm_password } = this.state;
-    errors.confirm_password = [];
-    if (confirm_password && password !== confirm_password) {
-      errors.confirm_password
-        .push('Password and confirm password are not same');
-    }
-    this.setState({ errors });
+    this.props.matchPassword();
   }
 
   render() {
@@ -87,13 +53,13 @@ class SignUp extends Component {
       confirm_password,
       email,
       errors,
-    } = this.state;
+    } = this.props.user;
 
     return (
       <Row>
         <Col sm="12" md={{ size: 6, offset: 3 }}>
-          <Form onSubmit={this.signUp}>
-            <h2>Sign Up</h2>
+          <Form onSubmit={this.submit}>
+            <h2>{this.title}</h2>
             <InputField
               title='First Name'
               name='first_name'
@@ -117,24 +83,29 @@ class SignUp extends Component {
               value={username}
               errors={errors['username']}
               onChange={this.updateValue}
+              readOnly={this.updating}
             />
             <InputField
               title='Password'
               name='password'
               type='password'
+              placeholder={this.updating ? '(Unchanged)' : 'Password'}
               value={password}
               validator={this.matchPassword}
               errors={errors['password']}
               onChange={this.updateValue}
+              required={!this.updating}
             />
             <InputField
               title='Confirm Password'
               name='confirm_password'
               type='password'
+              placeholder={this.updating ? '(Unchanged)' : 'Confirm Password'}
               value={confirm_password}
               validator={this.matchPassword}
               errors={errors['confirm_password']}
               onChange={this.updateValue}
+              required={!this.updating || Boolean(password)}
             />
             <InputField
               title='Email'
@@ -147,7 +118,7 @@ class SignUp extends Component {
             <br />
             <Row>
               <Col sm="12" md={{ size: 8, offset: 2 }}>
-                <Button block>Sign Up</Button>
+                <Button block>{this.buttonText}</Button>
               </Col>
             </Row>
             <br />
@@ -158,4 +129,4 @@ class SignUp extends Component {
   }
 }
 
-export default SignUp;
+export default container(SignUp);

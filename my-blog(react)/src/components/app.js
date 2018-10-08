@@ -7,11 +7,13 @@ import { NotificationContainer } from 'react-notifications';
 import NavBar from './nav-bar';
 import Users from './users';
 import Blogs from './blogs';
+import NotFound from './not-found';
 
 // import sampleContainer from '../redux/containers/simple.container';
 
 import 'bootstrap/dist/css/bootstrap.css';
 import 'react-notifications/lib/notifications.css';
+import './app.css';
 
 class App extends Component {
   render() {
@@ -20,12 +22,15 @@ class App extends Component {
         <NavBar />
         <main>
           <Container>
-            <br /><br />
+            <br /><br /><br /><br />
             <Switch>
               <Redirect exact from='/' to='/blogs' />
               <Route path='/blogs' component={Blogs} />
               <Route path='/users' component={Users} />
+              <Route path='/404' component={NotFound} />
+              <Redirect to='/404' />
             </Switch>
+            <br /><br />
           </Container>
         </main>
         <NotificationContainer />
