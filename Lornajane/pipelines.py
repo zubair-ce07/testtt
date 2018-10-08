@@ -18,6 +18,5 @@ class LornajanePipeline(object):
         if item['_id'] in self.ids:
             print("Duplicate Found: ", item["_id"])
             raise DropItem("Duplicate item found: %s" % item)
-        else:
-            self.ids.add(item['_id'])
-            return item
+        self.ids.add(item['_id'])
+        return item
