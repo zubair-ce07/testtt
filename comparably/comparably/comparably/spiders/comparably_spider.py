@@ -144,29 +144,82 @@ class PTOItem(Item):
     questions_by_years = Field()
 
 
+class EmployeeItem(Item):
+    company_name = Field()
+    header_name = Field()
+    overall_culture_score_by_gender = Field()
+    overall_culture_score_by_ethnicity = Field()
+    overall_culture_score_by_department = Field()
+    overall_culture_score_by_tenure = Field()
+    overall_culture_score_by_years = Field()
+    company_employees_sentiment_questions = Field()
+
+
+class InnovationItem(Item):
+    company_name = Field()
+    header_name = Field()
+    questions = Field()
+
+
+class ReputationItem(Item):
+    company_name = Field()
+    header_name = Field()
+    customer_reputation = Field()
+    employer_reputation = Field()
+    recommend_working_at_company = Field()
+    good_company_reputation_questions = Field()
+
+
+class KPIandOKRItem(Item):
+    company_name = Field()
+    header_name = Field()
+    questions = Field()
+
+
+class GrowthItem(Item):
+    company_name = Field()
+    header_name = Field()
+    growth_at_company_questions = Field()
+    measuring_growth_questions = Field()
+    employee_outlook_grade = Field()
+    employee_outlook_questions = Field()
+
+
+class EmployeeEngagementItem(Item):
+    company_name = Field()
+    header_name = Field()
+    company_employee_engagement_questions = Field()
+    company_values_questions = Field()
+
+
+class OverviewItem(Item):
+    company_name = Field()
+    header_name = Field()
+    employee_participants = Field()
+    total_ratings = Field()
+    ceo_name = Field()
+    company_culture_score = Field()
+    awards = Field()
+    ceo_score = Field()
+    gender_score = Field()
+    diversity_score = Field()
+    top_badges = Field()
+    positive_reviews = Field()
+    constructive_feedback = Field()
+    enps = Field()
+    overall_culture_score_by_department = Field()
+    score_by_gender = Field()
+    ceo_score_by_department = Field()
+    ceo_score_by_tenure = Field()
+    ceo_score_by_ethnicity = Field()
+    leadership_score_questions = Field()
+    compensation_score_questions = Field()
+    team_score_questions = Field()
+    environment_score_questions = Field()
+    outlook_score_questions = Field()
+
+
 class ComparablySpiderSpider(scrapy.Spider):
-
-    def parse_pto(self, response):
-        pto_item = PTOItem()
-        pto_item["company_name"] = response.meta["company"]
-        pto_item["header_name"] = response.meta["header_name"]
-        pto_item["questions_by_tenure"] = {
-            "question_text": "How much paid vacation and sick days can you take a year?",
-            "graph": self.process_layered_horizontal_graph(
-                response.xpath('/*[@class="cppPTO-demo-nav-title"][text()="Tenure"]/..'))
-        }
-        pto_item["questions_by_age"] = {
-            "question_text": "How much paid vacation and sick days can you take a year?",
-            "graph": self.process_layered_horizontal_graph(
-                response.xpath('/*[@class="cppPTO-demo-nav-title"][text()="Age"]/..'))
-        }
-        pto_item["questions_by_years"] = {
-            "question_text": "How much paid vacation and sick days can you take a year?",
-            "graph": self.process_layered_horizontal_graph(
-                response.xpath('/*[@class="cppPTO-demo-nav-title"][text()="Years of Experience"]/..'))
-        }
-
-        yield pto_item
 
     name = 'comparably_spider'
 
@@ -205,8 +258,6 @@ class ComparablySpiderSpider(scrapy.Spider):
         headers = ["Culture", "Leadership", "Reviews", "Interviews", "Work/Life", "Careers", "Office Vibe",
                    "Awards", "Mission", "Employer Brand", "Employee Onboarding", "PTO", "Employees",
                    "Innovation", "Reputation", "KPIs & OKRs", "Growth", "Employee Engagement"]
-        test_header = ["PTO"]
-
         parser_map = {
             "Employee Onboarding": self.parse_onboarding,
             "Culture": self.parse_culture,
@@ -219,7 +270,13 @@ class ComparablySpiderSpider(scrapy.Spider):
             "Reviews": self.parse_reviews,
             "Office Vibe": self.parse_office_vibe,
             "Mission": self.parse_mission,
-            "PTO": self.parse_pto
+            "PTO": self.parse_pto,
+            "Employees": self.parse_employee,
+            "Innovation": self.parse_innovation,
+            "Reputation": self.parse_reputation,
+            "KPIs & OKRs": self.parse_kpiokr,
+            "Growth": self.parse_growth,
+            "Employee Engagement": self.parse_employee_engagement
         }
 
         all_headers = response.xpath("//*[@class='cppNav-list']//a")
@@ -227,11 +284,11 @@ class ComparablySpiderSpider(scrapy.Spider):
         links = {}
 
         for header in all_headers:
-            if header.xpath("text()").extract_first() in test_header:
+            if header.xpath("text()").extract_first() in headers:
                 links[header.xpath("text()").extract_first()] = header.xpath("@href").extract_first()
 
-        #response.meta["header_name"] = "Overview"
-        #yield from self.parse_raw_html(response)
+        response.meta["header_name"] = "Overview"
+        yield from self.parse_overview(response)
 
         for header_name, link in links.items():
             response.meta["header_name"] = header_name
@@ -268,6 +325,182 @@ class ComparablySpiderSpider(scrapy.Spider):
 
         yield leadership_item
 
+    def parse_employee_engagement(self, response):
+        employee_engagement_item = EmployeeEngagementItem()
+        employee_engagement_item["company_name"] = response.meta["company"]
+        employee_engagement_item["header_name"] = response.meta["header_name"]
+
+        questions_map = {
+            "How frequently does your company participate in community outreach?":
+                "//*[@data-question-id='202'][@class='result user-answered answered']/div[1]"
+        }
+        employee_engagement_item["company_employee_engagement_questions"] = [
+            self.process_question(response.xpath(q_xpath), question) for question, q_xpath in questions_map.items()]
+
+        questions_map = {
+            "Which of the following set of Company Values is most meaningful to you?":
+                "//*[@data-question-id='138'][@class='result user-answered answered']/div[1]",
+            "Are you proud to be a part of your company?":
+                "//*[@data-question-id='139']/div[1]"
+        }
+        employee_engagement_item["company_values_questions"] = [
+            self.process_question(response.xpath(q_xpath), question) for question, q_xpath in questions_map.items()]
+
+        yield employee_engagement_item
+
+    def parse_growth(self, response):
+        growth_item = GrowthItem()
+        growth_item["company_name"] = response.meta["company"]
+        growth_item["header_name"] = response.meta["header_name"]
+
+        questions_map = {
+            "Do you approve of the job your executive team is doing at your company?":
+                "//*[@data-question-id='104']/div[1]",
+            "How would you rate your company's growth rate?":
+                "//*[@data-question-id='197']/div[1]"
+        }
+        growth_item["growth_at_company_questions"] = [
+            self.process_question(response.xpath(q_xpath), question) for question, q_xpath in questions_map.items()]
+
+        questions_map = {
+            "How would you rate the effectiveness of your CEO to drive business results?":
+                "//*[@data-question-id='152'][@class='result user-answered answered']/div[1]",
+            "How much has your company's revenue grown in the last year?":
+                "//*[@data-question-id='145'][@class='result user-answered answered']/div[1]"
+        }
+        growth_item["measuring_growth_questions"] = [
+            self.process_question(response.xpath(q_xpath), question) for question, q_xpath in questions_map.items()]
+
+        growth_item["employee_outlook_grade"] = self.process_letter_grade(
+            response.xpath("//*[contains(text(), 'Employee Outlook at')]/..//div[contains(@class, 'letterGrade')]"))
+
+        questions_map = {
+            "How do your customers perceive your company?":
+                "//*[@data-question-id='69'][@class='result user-answered answered']/div[1]",
+            "How confident are you about the future success of your company?":
+                "//*[@data-question-id='68']/div[1]"
+        }
+        growth_item["employee_outlook_questions"] = [
+            self.process_question(response.xpath(q_xpath), question) for question, q_xpath in questions_map.items()]
+
+        yield growth_item
+
+    def parse_kpiokr(self, response):
+        kpiokr_item = KPIandOKRItem()
+        kpiokr_item["company_name"] = response.meta["company"]
+        kpiokr_item["header_name"] = response.meta["header_name"]
+
+        questions_map = {
+            "Are the KPIs/OKRs for your department clear?":
+                "//*[@data-question-id='200']/div[1]",
+            "Are you typically recognized for the impact and accomplishments you make for your current company?":
+                "//*[@data-question-id='153']/div[1]",
+            "How often do you receive valuable feedback from your Manager?":
+                "//*[@data-question-id='76'][@class='result user-answered answered']/div[1]",
+        }
+        kpiokr_item["questions"] = [
+            self.process_question(response.xpath(q_xpath), question) for question, q_xpath in questions_map.items()]
+
+        yield kpiokr_item
+
+    def parse_reputation(self, response):
+        reputation_item = ReputationItem()
+        reputation_item["company_name"] = response.meta["company"]
+        reputation_item["header_name"] = response.meta["header_name"]
+        common_xpath_rep = "//*[text()='{}']/../p/text()"
+        reputation_item["customer_reputation"] = response.xpath(common_xpath_rep.format('Customer Reputation'))\
+            .extract_first()
+        reputation_item["employer_reputation"] = response.xpath(common_xpath_rep.format('Employer Reputation'))\
+            .extract_first()
+        common_xpath_recommendation = "//*[contains(text(),'Do employees recommend')]/" \
+                                      "following::div//div[text()='{}']/../div[@class='percent']/text()"
+        reputation_item["recommend_working_at_company"] = {
+            "yes": response.xpath(common_xpath_recommendation.format("Yes")).extract_first(),
+            "neutral": response.xpath(common_xpath_recommendation.format("Neutral")).extract_first(),
+            "no": response.xpath(common_xpath_recommendation.format("No")).extract_first(),
+        }
+
+        questions_map = {
+            "Is your current company transparent about the financial status and well being of your company?":
+                "//*[@data-question-id='188']/div[1]",
+            "Does your current employer focus on improving your company culture?":
+                "//*[@data-question-id='149']/div[1]",
+            "Are you typically recognized for the impact and accomplishments you make for your current company?":
+                "//*[@data-question-id='153']/div[1]"
+        }
+        reputation_item["good_company_reputation_questions"] = [
+            self.process_question(response.xpath(q_xpath), question) for question, q_xpath in questions_map.items()]
+
+        yield reputation_item
+
+    def parse_innovation(self, response):
+        innovation_item = EmployeeItem()
+        innovation_item["company_name"] = response.meta["company"]
+        innovation_item["header_name"] = response.meta["header_name"]
+
+        questions_map = {
+            "How innovative is your company?":
+                "//*[@data-question-id='198'][@class='result user-answered answered']/div[1]",
+            "How often do you receive valuable feedback from your Manager?":
+                "//*[@data-question-id='76'][@class='result user-answered answered']/div[1]"
+        }
+        innovation_item["company_employees_sentiment_questions"] = [
+            self.process_question(response.xpath(q_xpath), question) for question, q_xpath in questions_map.items()]
+
+        yield innovation_item
+
+    def parse_employee(self, response):
+        employee_item = EmployeeItem()
+        employee_item["company_name"] = response.meta["company"]
+        employee_item["header_name"] = response.meta["header_name"]
+
+        common_xpath = ('//*[@class="cppExtras-demographic-title"][text()='
+                        '"{}"]/following::*[@class="cppExtras-demographic-content"][1]')
+
+        employee_item["overall_culture_score_by_ethnicity"] = self.process_graded_horizontal_graph(
+            response.xpath(common_xpath.format("Ethnicity")))
+        employee_item["overall_culture_score_by_gender"] = self.process_graded_horizontal_graph(
+            response.xpath(common_xpath.format("Gender")))
+        employee_item["overall_culture_score_by_department"] = self.process_graded_horizontal_graph(
+            response.xpath(common_xpath.format("Department")))
+        employee_item["overall_culture_score_by_tenure"] = self.process_graded_horizontal_graph(
+            response.xpath(common_xpath.format("Tenure")))
+        employee_item["overall_culture_score_by_years"] = self.process_graded_horizontal_graph(
+            response.xpath(common_xpath.format("Years of Experience")))
+
+        questions_map = {
+            "Are you typically excited about going to work each day?":
+                "//*[@data-question-id='70']/div[1]",
+            "What percent of your potential do you think you are using?":
+                "//*[@data-question-id='25'][@class='result user-answered answered']/div[1]"
+        }
+        employee_item["company_employees_sentiment_questions"] = [
+            self.process_question(response.xpath(q_xpath), question) for question, q_xpath in questions_map.items()]
+
+        yield employee_item
+
+    def parse_pto(self, response):
+        pto_item = PTOItem()
+        pto_item["company_name"] = response.meta["company"]
+        pto_item["header_name"] = response.meta["header_name"]
+        pto_item["questions_by_tenure"] = {
+            "question_text": "How much paid vacation and sick days can you take a year?",
+            "graph": self.process_layered_horizontal_graph(
+                response.xpath('//*[@class="cppPTO-demo-nav-title"][text()="Tenure"]/..'))
+        }
+        pto_item["questions_by_age"] = {
+            "question_text": "How much paid vacation and sick days can you take a year?",
+            "graph": self.process_layered_horizontal_graph(
+                response.xpath('//*[@class="cppPTO-demo-nav-title"][text()="Age"]/..'))
+        }
+        pto_item["questions_by_years"] = {
+            "question_text": "How much paid vacation and sick days can you take a year?",
+            "graph": self.process_layered_horizontal_graph(
+                response.xpath('//*[@class="cppPTO-demo-nav-title"][text()="Years of Experience"]/..'))
+        }
+
+        yield pto_item
+
     def parse_mission(self, response):
         mission_item = MissionItem()
         mission_item["company_name"] = response.meta["company"]
@@ -301,6 +534,94 @@ class ComparablySpiderSpider(scrapy.Spider):
             self.process_question(response.xpath(q_xpath), question) for question, q_xpath in questions_map.items()]
 
         yield mission_item
+
+    def parse_overview(self, response):
+        overview_item = OverviewItem()
+        overview_item["company_name"] = response.meta["company"]
+        overview_item["header_name"] = response.meta["header_name"]
+        overview_item["employee_participants"] = response.css('.js-participantsCount::text').extract_first()
+        overview_item["total_ratings"] = response.css('.js-ratingsCount::text').extract_first()
+        overview_item["ceo_name"] = (' '.join(response.css('.ceoName span::text').extract())).strip()
+        overview_item["company_culture_score"] = response.css('.cppOverview-summary .letterGrade::text').extract_first()
+        overview_item["awards"] = self.process_awards(response.css('.cppOverview-awards'))
+        overview_item["ceo_score"] = '{}/100'.format(response.css('.ceoScore .grade-text::text').extract_first())
+        overview_item["gender_score"] = self.process_sparkline(response.css('.cppOverview-gender'))
+        overview_item["diversity_score"] = self.process_sparkline(response.css('.cppOverview-diversity'))
+        overview_item["top_badges"] = self.process_top_badges(response.css('.cppOverview-summary-rankings'))
+        overview_item["positive_reviews"] = self.process_reviews(
+            response.css('.cppReviewsPositiveNegative-colPositive'))
+        overview_item["constructive_feedback"] = self.process_reviews(
+            response.css('.cppReviewsPositiveNegative-colNegative'))
+        overview_item["enps"] = self.process_enps(response.css('.cppOverview-enps'))
+        overview_item["overall_culture_score_by_department"] = self.process_vertical_graph(
+            response.css('.cppOverview-ratingsByDepartment'))
+
+        overview_item["score_by_gender"] = self.process_overview_graph(
+            response.css(".ceo .gender .overview-graphs"))
+
+        overview_item["ceo_score_by_department"] = self.process_overview_graph(
+            response.css(".ceo .departments .overview-graphs"))
+
+        overview_item["ceo_score_by_tenure"] = self.process_overview_graph(
+            response.css(".ceo .tenure .overview-graphs"))
+
+        overview_item["ceo_score_by_ethnicity"] = self.process_overview_graph(
+            response.css(".ceo .ethnicity .overview-graphs"))
+
+        questions_map = {
+            "Executive rating?":
+                "//*[@data-question-id='62']/div[1]",
+            "CEO rating?":
+                "//*[@data-question-id='71']/div[1]",
+            "Manager rating?":
+                "//*[@data-question-id='72']/div[1]",
+        }
+        overview_item["leadership_score_questions"] = [
+            self.process_question(response.xpath(q_xpath), question) for question, q_xpath in questions_map.items()]
+
+        questions_map = {
+            "Paid fairly?":
+                "//*[@data-question-id='16']/div[1]",
+            "Satisfied with benefits?":
+                "//*[@data-question-id='63']/div[1]",
+        }
+        overview_item["compensation_score_questions"] = [
+            self.process_question(response.xpath(q_xpath), question) for question, q_xpath in questions_map.items()]
+
+        questions_map = {
+            "Meeting effective?":
+                "//*[@data-question-id='52']/div[1]",
+            "Coworker interaction?":
+                "//*[@data-question-id='64']/div[1]",
+            "Quality of coworkers?":
+                "//*[@data-question-id='65']/div[1]",
+        }
+        overview_item["team_score_questions"] = [
+            self.process_question(response.xpath(q_xpath), question) for question, q_xpath in questions_map.items()]
+
+        questions_map = {
+            "Work hours per day?":
+                "//*[@data-question-id='55'][@class='result user-answered answered']/div[1]",
+            "Pace at work?":
+                "//*[@data-question-id='66'][@class='result user-answered answered']/div[1]",
+            "Positive/Negative":
+                "//*[@data-question-id='67'][@class='result user-answered answered']/div[1]",
+        }
+        overview_item["environment_score_questions"] = [
+            self.process_question(response.xpath(q_xpath), question) for question, q_xpath in questions_map.items()]
+
+        questions_map = {
+            "Future outlook?":
+                "//*[@data-question-id='68']/div[1]",
+            "Customer perception?":
+                "//*[@data-question-id='69'][@class='result user-answered answered']/div[1]",
+            "Excited going to work?":
+                "//*[@data-question-id='70']/div[1]",
+        }
+        overview_item["outlook_score_questions"] = [
+            self.process_question(response.xpath(q_xpath), question) for question, q_xpath in questions_map.items()]
+
+        yield overview_item
 
     def parse_office_vibe(self, response):
         office_vibe_item = OfficeVibeItem()
@@ -724,6 +1045,43 @@ class ComparablySpiderSpider(scrapy.Spider):
             graph[text] = self.process_horizontal_graph(raw_graph.css(id))
 
         return graph
+
+    def process_graded_horizontal_graph(self, raw_graph):
+        graph = {}
+        for row in raw_graph.css('.cppExtras-demographic-content > .offset'):
+            graph[row.css('.grade-label::text').extract_first()] = {
+                'grade': row.css('.grade-text::text').extract_first(),
+                'percentage': ''.join(row.css(
+                    '.horizontal-bar-legend-percent::text, .horizontal-bar-legend-percent span::text').extract())
+            }
+
+        return graph
+
+    def process_vertical_graph(self, raw_vertical_graph):
+        graph = {}
+        for bar in raw_vertical_graph.css('.verticalBar'):
+            graph[bar.css('.verticalBar-label::text').extract_first()] = bar.css('.capScore::text').extract_first()
+
+        return graph
+
+    def process_enps(self, raw_enps):
+        return {
+            'score': raw_enps.css('.numberGrade-score::text').extract_first(),
+            'callout': raw_enps.css('.cmToolTip-container::text').extract_first()
+        }
+
+    def process_top_badges(self, raw_badges):
+        badges = []
+        for badge in raw_badges.css('p'):
+            badges.append(''.join(badge.css('p::text, p *::text').extract()))
+
+        return badges
+
+    def process_sparkline(self, raw_sparkline):
+        return {
+            'score': ''.join(raw_sparkline.css('.numberGrade span::text').extract()),
+            'award': raw_sparkline.css('.award .hide-me::text').extract_first()
+        }
 
     def read_company_names(self):
         names = []
