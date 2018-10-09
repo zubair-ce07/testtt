@@ -2,8 +2,9 @@ import re
 import sys
 import csv
 import glob
-import datetime
 import argparse
+
+from datetime import datetime
 
 
 class Reporting:
@@ -11,137 +12,85 @@ class Reporting:
     def __init__(self):
         pass
     
-    def a_type_high_temp(self, days, years, complete_data):
-        high_temp = 0
-        days_count = 0
-        for day in days:
-            file_value = int('0'+complete_data[years][day]['Max TemperatureC'])
-            if file_value != 0:
-                high_temp += file_value
-                days_count += 1
+    def a_type_high_temp(self,high_temp, head):
         
-        avg_high_val = high_temp/days_count
-        return avg_high_val
+        print("Highest Average : " , 
+            high_temp[head.index('Max TemperatureC')], "C")
+        
+    def a_type_low_temp(self,low_temp, head):
+        print("Lowest Average : " , 
+                low_temp[head.index('Min TemperatureC')], "C")
     
-    def a_type_low_temp(self, days, years, complete_data):
-        low_temp = 0
-        days_count = 0
-        for day in days:
-            file_value = int('0'+complete_data[years][day]['Min TemperatureC'])
-            if file_value != 0:
-                low_temp += file_value
-                days_count += 1
-        
-        avg_low_val = low_temp/days_count
-        return avg_low_val
-        
-    def a_type_humidity(self, days, years, complete_data):
-        mean_humid = 0
-        days_count = 0
-        for day in days:
-            file_value = int('0'+complete_data[years][day][' Mean Humidity'])
-            if file_value != 0:
-                mean_humid += file_value
-                days_count += 1
-        mean_himidity = mean_humid/days_count
-        return mean_himidity
+    def a_type_high_humid(self, mean_humidity, head):
+        print("Average Mean Humidity: " , 
+                mean_humidity[head.index(' Mean Humidity')]+ "%")
 
     def a_type_report(self, complete_data):
-
-        years = list(complete_data.keys())[0]
-        days = list(complete_data[years].keys())
+        head = complete_data['header']
         
-        high_temp = self.a_type_high_temp(days, years,complete_data)
-        low_temp = self.a_type_low_temp(days, years,complete_data)
-        mean_humidity = self.a_type_humidity(days, years,complete_data)
-
-        print("Highest Average : " , round(high_temp, 2), "C")
-        print("Lowest Average : " , round(low_temp, 2), "C")
-        print("Average Mean Humidity: " , str(int(mean_humidity))+ "%")
+        high_temp = self.extract_needed_row(
+            complete_data, 'Mean TemperatureC', True)
+        low_temp = self.extract_needed_row(
+            complete_data, 'Mean TemperatureC', False)
+        mean_humidity = self.extract_needed_row(
+            complete_data, ' Mean Humidity', True)
+        
+        self.a_type_high_temp(mean_humidity, head)
+        self.a_type_low_temp(low_temp, head)
+        self.a_type_high_humid(high_temp, head)
+        
         
     def c_type_report(self, complete_data):
-        year_key = list(complete_data.keys())[0]
-        days_key = list(complete_data[year_key].keys())
+        head = complete_data['header']
+        data = complete_data['data']
+        max_index = head.index('Max TemperatureC')
+        min_index = head.index('Min TemperatureC')
+        day_index = head.index('PKT')
         
-        for days in days_key:
-            value_to_convert = '0'+complete_data[year_key][days]['Max TemperatureC']
-            file_value = int(value_to_convert)
-            print(days, end='')
+        for row in data:    
+            to_convert = '0' + row[max_index]
+            file_value = int(to_convert)
+            print(row[day_index], end='')
             for value in range(file_value):
                 print ('\033[1;31m+\033[1;m', end = '')
             print(' ',file_value,"C")  
             
-            value_to_convert = '0'+complete_data[year_key][days]['Min TemperatureC']
-            file_value = int(value_to_convert)
-            print(days, end='')
+            to_convert = '0' + row[min_index]
+            file_value = int(to_convert)
+            print(row[day_index], end='')
             for value in range(file_value):
                 print ('\033[1;34m+\033[1;m', end = '')
             print(' ',file_value,"C")  
             
     def e_type_report(self, complete_data):
-        [value, month, day] = self.find_max_temp(complete_data)
-        print("Highest:", value, "C on", month, day)
-        [value, month, day] = self.find_min_temp(complete_data)
-        print("Lowest:", value, "C on", month, day)
-        [value, month, day] = self.find_max_humid(complete_data)
-        print("Humidity:", value, "% on", month, day)
-
-    def find_max_temp(self, complete_data):
-        year_keys = list(complete_data.keys())
+        head = complete_data['header']
         
-        max_temp_value = 0
-        for year_key in year_keys:
-            day_keys = list(complete_data[year_key].keys())
-            
-            for day_key in day_keys:
-                try:
-                    file_value = int(complete_data[year_key][day_key]['Max TemperatureC'])
-                    if max_temp_value < file_value:
-                        max_temp_value = file_value
-                        high_month_key = year_key
-                        high_day_key = day_key
-                except:
-                    continue    
-
-        return [max_temp_value, high_month_key[5:], high_day_key]
-
-    def find_min_temp(self, complete_data):
-        year_keys = list(complete_data.keys())
+        high_temp = self.extract_needed_row(complete_data, 'Max TemperatureC', True)
+        temperature = high_temp[head.index('Max TemperatureC')]
+        date_to_parse = high_temp[head.index('PKT')]
+        date = datetime.strptime(date_to_parse, "%Y-%m-%d")
+        print("Highest : " , temperature, "C",  date.strftime("%B") ,  date.day)
         
-        min_temp_value = 0
-        for year_key in year_keys:
-            day_keys = list(complete_data[year_key].keys())
-            
-            for day_key in day_keys:
-                try:
-                    file_value = int(complete_data[year_key][day_key]['Min TemperatureC'])
-                    if min_temp_value >= file_value:
-                        min_temp_value = file_value
-                        low_month_key = year_key
-                        low_day_key = day_key
-                except:
-                    continue
-
-        return [min_temp_value, low_month_key[5:], low_day_key]
-
-    def find_max_humid(self, complete_data):
-        year_keys = list(complete_data.keys())
+        low_temp = self.extract_needed_row(complete_data, 'Min TemperatureC', False)
+        temperature = low_temp[head.index('Min TemperatureC')]
+        date_to_parse = low_temp[head.index('PKT')]
+        date = datetime.strptime(date_to_parse, "%Y-%m-%d")
+        print("Lowest : " , temperature, "C",  date.strftime("%B") ,  date.day)
         
-        max_temp_value = 0
-        for year_key in year_keys:
-            day_keys = list(complete_data[year_key].keys())
-            
-            for day_key in day_keys:
-                try:
-                    file_value = int(complete_data[year_key][day_key]['Max Humidity'])
-                    if max_temp_value < file_value:
-                        max_temp_value = file_value
-                        high_month_key = year_key
-                        high_day_key = day_key
-                except:
-                    continue    
+        mean_humidity = self.extract_needed_row(complete_data, ' Mean Humidity', True)
+        temperature = mean_humidity[head.index(' Mean Humidity')]
+        date_to_parse = mean_humidity[head.index('PKT')]
+        date = datetime.strptime(date_to_parse, "%Y-%m-%d")
+        print("Average Mean Humidity: " , temperature, "C",  date.strftime("%B") ,  date.day)
 
-        return [max_temp_value, high_month_key[5:], high_day_key]
+    def extract_needed_row(self, complete_data, col_name, reverse_flag):
+        head = complete_data['header']
+        data = complete_data['data']
+        temp_index = head.index(col_name)
+        data.sort(key=lambda x: x[temp_index], reverse=reverse_flag)
+        if not reverse_flag:
+            data = [row for row in data if row[temp_index] != '']
+        return data[0]
 
 
 def argument_handler():
@@ -169,41 +118,27 @@ def argument_handler():
         report.e_type_report(complete_data)
     
 
-
 def reading_file(file_names):
-    
-    complete_data = {}
+    data = []
     for file in file_names:
-        with open(file, newline='') as csvfile:
-            file_data = list(csv.reader(csvfile))
-            file_headers = file_data[0]
-            file_data = file_data[1:-1]
-            
-            days_data = {}
-            days_count = 1
-            for day in file_data:
-                index = 0
-                row = {}
-                for col_name in file_headers:
-                    row.update({col_name : day[index]})
-                    index += 1
-                days_data.update({days_count:row})
-                days_count += 1
-                row = {}
-        complete_data.update({file[-12:-4]:days_data})
+         with open(file, newline='') as csvfile:
+            file_data = csv.reader(csvfile)
+            header = next(file_data)
+            for row in file_data:
+                data.append(row) 
     
+    complete_data = {'header': header, 'data':data}
     return complete_data
 
 
 def files_to_read(operation, file_name, file_path):
     if operation == 'a' or operation == 'c':
-        file_name,month = file_name.split('/')
-        pattren = "*"+ file_name +"_"\
-                +datetime.date(int(file_name), int(month), 1).strftime('%b')\
+        file_name += '/1'
+        pattren = "*" + file_name.split('/')[0] + "_"\
+                + datetime.strptime(file_name, "%Y/%m/%d").strftime('%b')\
                 + "*.txt"
     elif operation == 'e':
         pattren = "*"+ file_name + "*.txt"
-    
     return glob.glob(file_path + pattren)
 
 
