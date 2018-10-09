@@ -12,9 +12,10 @@ import LocationCity from '@material-ui/icons/LocationCity';
 import ExpandLess from '@material-ui/icons/ExpandLess';
 import ExpandMore from '@material-ui/icons/ExpandMore';
 import Divider from '@material-ui/core/Divider';
-import * as constatnts from '../../constants'
-import axios from "axios";
+import {connect} from 'react-redux';
 import { Link } from 'react-router-dom'
+
+import store from '../../store'
 
 
 const styles = theme => ({
@@ -27,29 +28,19 @@ const styles = theme => ({
     },
 });
 
+const action = type => store.dispatch({type})
+
 class Sidebar extends React.Component {
     constructor() {
         super();
         this.state = {
-            cities: null,
-            // years: null,
             cityOpen: true,
             yearOpen: false,
         }
     }
 
     componentDidMount() {
-        var self = this
-        axios.get(constatnts.BASE_URL + 'weather/cities/')
-            .then(function (response) {
-                self.setState({cities: response.data})
-            })
-            .catch(function (error) {
-                // handle error
-                console.log(error);
-            })
-
-
+        action('FETCH_CITIES')
     }
 
     handleCityMenuClick = () => {
@@ -75,10 +66,10 @@ class Sidebar extends React.Component {
                         {this.state.cityOpen ? <ExpandLess/> : <ExpandMore/>}
                     </ListItem>
 
-                    {this.state.cities &&
+                    {this.props.cities &&
                     <Collapse in={this.state.cityOpen} timeout="auto" unmountOnExit>
                         <List component="div" disablePadding>
-                            {this.state.cities.map((city) =>
+                            {this.props.cities.map((city) =>
 
                                 <Link className="link-style" key={city.id} to={'/city/'+city.id+'/'+city.name}>
                                 <ListItem  className={classes.nested}>
@@ -106,4 +97,13 @@ Sidebar.propTypes = {
     classes: PropTypes.object.isRequired,
 };
 
-export default withStyles(styles)(Sidebar);
+
+function mapStateToProps(state) {
+    return {
+        cities: state.cities
+    };
+}
+
+
+
+export default connect(mapStateToProps)(withStyles(styles)(Sidebar));
