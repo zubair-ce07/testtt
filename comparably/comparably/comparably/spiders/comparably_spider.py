@@ -232,8 +232,8 @@ class ComparablySpiderSpider(scrapy.Spider):
     }
 
     def start_requests(self):
-        #company_names = self.read_company_names()
-        company_names = ["Microsoft", "Netflix"]
+        company_names = self.read_company_names()
+        # company_names = ["Select Rehabilitation"]
 
         for company_name in company_names:
             url = "https://www.comparably.com/search"
@@ -663,7 +663,10 @@ class ComparablySpiderSpider(scrapy.Spider):
 
         if not response.css('.pager_next.disabled'):
             link = response.css('.pager_next::attr(href)').extract_first()
-            yield scrapy.Request(link, callback=self.parse_reviews, meta={"item": review_item})
+            if link:
+                yield scrapy.Request(link, callback=self.parse_reviews, meta={"item": review_item})
+            else:
+                yield review_item
         else:
             yield review_item
 
