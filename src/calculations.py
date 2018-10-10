@@ -34,24 +34,27 @@ class WeatherCalculations:
         '''
         This method take list of WeatherData and return mean of max_temp.
         '''
-        max_temp_list = [day.max_temp for day in data]
-        return sum(max_temp_list) // len(max_temp_list)
+        max_temp_values = [day.max_temp for day in data]
+        return sum(max_temp_values) // len(max_temp_values)
 
     def average_min_temp(self, data):
         '''
         This method take list of WeatherData and return mean of min_temp.
         '''
-        min_temp_list = [day.min_temp for day in data]
-        return sum(min_temp_list) // len(min_temp_list)
+        min_temp_values = [day.min_temp for day in data]
+        return sum(min_temp_values) // len(min_temp_values)
 
     def average_mean_humidity(self, data):
         '''
         This method take list of WeatherData and return mean of mean_humidity.
         '''
-        mean_humdity_list = [day.mean_humidity for day in data]
-        return sum(mean_humdity_list) // len(mean_humdity_list)
+        mean_humdity_values = [day.mean_humidity for day in data]
+        return sum(mean_humdity_values) // len(mean_humdity_values)
 
     def all_weather_record(self, dir_path):
+        '''
+        This method directory path and return read all txt files.
+        '''
         files_path = glob(f'{dir_path}*.txt')
         records = []
         for file_path in files_path:
@@ -68,11 +71,11 @@ class WeatherCalculations:
             return False
         return True
 
-    def month_record(self, data_list, req_date):
-        return [day for day in data_list if day.date.year == req_date.year and day.date.month == req_date.month]
+    def month_records(self, data, req_date):
+        return [day for day in data if day.date.year == req_date.year and day.date.month == req_date.month]
 
-    def year_record(self, data_list, req_date):
-        return [day for day in data_list if day.date.year == req_date.year]
+    def year_records(self, data, req_date):
+        return [day for day in data if day.date.year == req_date.year]
 
     def extreme_record(self, data):
         return self.highest_temp_record(data), self.lowest_temp_record(data), self.highest_humidity_record(data)
