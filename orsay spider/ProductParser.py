@@ -1,6 +1,9 @@
 import json
 import scrapy
 
+from scrapy.spiders import CrawlSpider, Rule
+from scrapy.linkextractors import LinkExtractor
+
 from .productclass import Product
 
 
@@ -18,11 +21,11 @@ class ProductParser():
         product['name'] = self.product_name(response)
         product['skus'] = {self.sku_id(response) : self.product_sku(response)}
         product['url'] = response.url
-        product['more_requests'] = self.product_colors_links(response)
+        product['request_queue'] = self.product_colors_links(response)
 
         return self.next_request(product)
 
-    def product_skus(self, response):
+    def parse_request(self, response):
         item = response.meta['item']
         item_details = self.product_sku(response)
         item_skus = item['skus']
@@ -33,14 +36,14 @@ class ProductParser():
         return self.next_request(item)
 
     def next_request(self, item):
-        color_list_link = item['more_requests']    
+        color_list_link = item['request_queue']    
         if color_list_link:
             link = color_list_link.pop()
-            req = scrapy.Request(url=link, callback=self.product_skus)
+            req = scrapy.Request(url=link, callback=self.parse_request)
             req.meta['item'] = item
             yield req
         else:
-            item.pop('more_requests')
+            item.pop('request_queue')
             yield item
 
     def product_sku(self, response):
@@ -54,11 +57,11 @@ class ProductParser():
         return sku
 
     def product_care(self, response):
-        css = '.product-material > p::text'
+        css = '.product-material p::text'
         return response.css(css).extract()
         
     def product_category(self, response):
-        css = '.breadcrumb > a:nth-last-child(2) > span::text'
+        css = '.breadcrumb a:nth-last-child(2) span::text'
         return response.css(css).extract_first()
 
     def product_discription (self, response):
@@ -75,7 +78,7 @@ class ProductParser():
 
     def product_color (self, response):
         colors = []
-        css = '.swatches color > a::attr(title)'
+        css = '.swatches color a::attr(title)'
         
         for item in response.css().extract(css):
             colors.append(item.split('-')[-1])
@@ -90,12 +93,12 @@ class ProductParser():
         return response.css(css).extract_first()
 
     def product_price (self, response):
-        css = '.product-price > span::text'
+        css = '.product-price span::text'
         price = response.css(css).extract_first()
         return price.strip()
 
     def product_size (self, response):
-        css = '.size > li.selected > a::text'
+        css = '.size li.selected a::text'
         size = response.css(css).extract_first()
         
         if size:
@@ -121,11 +124,11 @@ class ProductParser():
         return data['idListRef6']
 
     def shown_count(self, response):
-        css = '.load-more-progress-label > span::text'
+        css = '.load-more-progress-label span::text'
         count = response.css(css).extract_first()
         return int (count)
 
     def next_count(self, response):
-        css = '.load-next-placeholder::attr(data-quantity)'
+        css = 'x.load-next-placeholder::attr(data-quantity)'
         count = response.css(css).extract_first()
         return int(count)

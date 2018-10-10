@@ -1,6 +1,3 @@
-import scrapy
-import w3lib.url
-
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor 
 
@@ -15,29 +12,13 @@ class OrsaySpider(CrawlSpider):
     start_urls = ['http://www.orsay.com/de-de/produkte/']
 
     rules = (
-        Rule(LinkExtractor(allow=('/de-de/produkte/.*/$', )), 
-        callback='parse_product_page'),
-    )
-    
-    def parse_product_page(self, response):
+        Rule(
+            LinkExtractor(restrict_css=('.level-3')),
+                callback='parse'),
         
-        css = 'a.thumb-link::attr(href)'
-        product_page_links = response.css(css).extract()
-
-        for link in product_page_links:
-            yield response.follow(url=response.urljoin(link), 
-                            callback=self.product_parser.parse_product_details)
-        
-        css = 'div.load-next-placeholder'
-        load_more = response.css(css).extract_first()
-
-        if load_more:
-            parameter = w3lib.url.url_query_parameter(response.url, "sz")
-            if parameter:
-                link = w3lib.url.add_or_replace_parameter(response.url, 'sz', 
-                                                    str(int(parameter)+72))
-            else:
-                link = response.url + '?sz=72'
-                
-        yield scrapy.Request(url=response.urljoin( link), 
-                            callback=self.parse_product_page)
+        Rule(
+            LinkExtractor(restrict_css=('.thumb-link')), 
+            callback='caller_parse_product_details'),
+        )
+    def caller_parse_product_details(self, response):
+        return self.product_parser.parse_product_details(response)
