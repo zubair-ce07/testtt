@@ -2,7 +2,7 @@
 from csv_file_data_holder import CsvFileDataHolder
 
 
-class YearsDataHolder:
+class WeatherReadings:
     def __init__(self):
         self.year_holder = dict()
 
