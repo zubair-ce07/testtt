@@ -30,25 +30,25 @@ class Weatherman:
 
     def monthly_record(self, required_data):
         for data in required_data:
-            hi_temperature = []
-            lo_temperature = []
+            high_temperature = []
+            low_temperature = []
             mean_humidity = []
             day =[]
             for row in data:
                 if row['Max TemperatureC'] != '':
                     x = str(row['Max TemperatureC'])
-                    hi_temperature.append(x)
+                    high_temperature.append(x)
                 if row['Min TemperatureC'] != '':
                     x = str(row['Min TemperatureC'])
-                    lo_temperature.append(x)
+                    low_temperature.append(x)
                 if row[' Mean Humidity'] != '':
                     x = str(row[' Mean Humidity'])
                     mean_humidity.append(x)
                 if row['PKT'] != '':
                     x = datetime.strptime(row['PKT'], '%Y-%m-%d').strftime('%d')
                     day.append(x)
-            self.high_temperature = list(map(int, hi_temperature))
-            self.low_temperature = list(map(int, lo_temperature))
+            self.high_temperature = list(map(int, high_temperature))
+            self.low_temperature = list(map(int, low_temperature))
             self.mean_humidity = list(map(int, mean_humidity))
             self.day = list(day)
 
