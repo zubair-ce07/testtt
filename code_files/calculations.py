@@ -3,11 +3,11 @@ from csv_file_data_holder import CsvFileDataHolder
 from constants import MONTHS_NAME
 
 
-def calculate_yearly_record(years_holder, current_year):
+def calculate_yearly_record(weather_readings, current_year):
     highest_temp_struct, lowest_temp_struct = [], []
     most_humid_struct, result = [], []
     year_max_temp, year_min_temp, year_highest_humidity = -273, 200, 0
-    month_list = years_holder.get_months_list_by_year(current_year)
+    month_list = weather_readings.get_months_list_by_year(current_year)
     for month in month_list:
         if month is not None:
             max_temp_list = month.get_int_converted_attribute_values(
@@ -41,8 +41,8 @@ def calculate_yearly_record(years_holder, current_year):
     return result
 
 
-def calculate_month_record(years, current_year, month_number):
-    month_list = years.get_months_list_by_year(current_year)
+def calculate_month_record(weather_readings, current_year, month_number):
+    month_list = weather_readings.get_months_list_by_year(current_year)
     result = []
     month = month_list[month_number]
     if month is not None:
@@ -64,8 +64,8 @@ def calculate_month_record(years, current_year, month_number):
     return result
 
 
-def calculate_month_record_for_bar_charts(years_holder, current_year, month_number):
-    month_list = years_holder.get_months_list_by_year(current_year)
+def calculate_month_record_for_bar_charts(weather_readings, current_year, month_number):
+    month_list = weather_readings.get_months_list_by_year(current_year)
     result = {}
     month = month_list[month_number]
     if month is not None:
