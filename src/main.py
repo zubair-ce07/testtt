@@ -1,4 +1,3 @@
-#!/usr/bin/python3
 import argparse
 from datetime import datetime
 
@@ -22,20 +21,21 @@ def main():
     parser.add_argument('-c', type=month_date, nargs='*')
     args = parser.parse_args()
 
-    data_calculations = WeatherCalculations()
-    data = data_calculations.all_weather_record(args.dir_path)
+    weather_calculations = WeatherCalculations()
+    weather_records = weather_calculations.all_weather_record(args.dir_path)
 
     report_generator = ReportGenerator()
 
     if args.e:
         for date in args.e:
-            report_generator.print_extreme_record(data_calculations.year_records(data, date))
+            report_generator.generate_year_report(weather_calculations.year_report(weather_records, date))
     if args.a:
         for date in args.a:
-            report_generator.print_average_record(data_calculations.month_records(data, date))
+            report_generator.generate_average_month_report(weather_calculations.average_report(weather_records, date))
     if args.c:
         for date in args.c:
-            report_generator.print_temp_chart_bounus(data_calculations.month_records(data, date))
+            report_generator.generate_temp_chart(weather_calculations.month_records(weather_records, date),
+                                                 single_line=True)
 
 
 if __name__ == '__main__':
