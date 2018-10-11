@@ -6,11 +6,11 @@ import re
 import argparse
 import os
 
-import calculations
 import constants
 
+from weather_data_analysis import WeatherDataAnalysis
 from weather_readings import WeatherReadings
-from result_generation import display_results
+from weather_reporting import WeatherReporting
 from csv_file_data_holder import CsvFileDataHolder
 
 
@@ -18,46 +18,52 @@ def parse_yearly_records(values, weather_readings, files_path):
     if values is None:
         return
     for value in values:
+        weather_analysis = WeatherDataAnalysis()
+        weather_reporting = WeatherReporting()
         current_year = value
         add_current_year(current_year, weather_readings, files_path)
-        result = calculations.calculate_yearly_record(
-            weather_readings, current_year)
-        result.append(current_year)
-        display_results(result, 'e')
+        report = weather_analysis.analyse(
+            'e', weather_readings, current_year)
+        report.append(current_year)
+        weather_reporting.display_report(report, 'e')
 
 
 def parse_monthly_records(values, weather_readings, files_path):
     if values is None:
         return
     for value in values:
+        weather_analysis = WeatherDataAnalysis()
+        weather_reporting = WeatherReporting()
         current_year = value.split('/')[0]
         month_number = int(value.split('/')[1])-1
         add_current_year(current_year, weather_readings, files_path)
-        result = calculations.calculate_month_record(
-            weather_readings, current_year, month_number
+        report = weather_analysis.analyse(
+            'a', weather_readings, current_year, month_number
         )
-        result.append(
+        report.append(
             constants.MONTHS_NAME[month_number]
             + ', ' + current_year
         )
-        display_results(result, 'a')
+        weather_reporting.display_report(report, 'a')
 
 
 def parse_monthly_records_for_barchart(values, weather_readings, files_path):
     if values is None:
         return
     for value in values:
+        weather_analysis = WeatherDataAnalysis()
+        weather_reporting = WeatherReporting()
         current_year = value.split('/')[0]
         month_number = int(value.split('/')[1])-1
         add_current_year(current_year, weather_readings, files_path)
-        result = calculations.calculate_month_record_for_bar_charts(
-            weather_readings, current_year, month_number
+        report = weather_analysis.analyse(
+            'c', weather_readings, current_year, month_number
         )
-        result['year'] = (
+        report['year'] = (
             constants.MONTHS_NAME[month_number]
             + ', ' + current_year
         )
-        display_results(result, 'c')
+        weather_reporting.display_report(report, 'c')
 
 
 def add_current_year(current_year, weather_readings, files_path):
