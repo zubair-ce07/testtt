@@ -30,11 +30,12 @@ class ProductsSpider(CrawlSpider):
                 url=url,
                 callback=self.parse_product
             )
+
         next_page_url = self.find_next_page(response)
         if next_page_url:
             yield scrapy.Request(
                 url=next_page_url,
-                callback=self.parse_product
+                callback=self.parse_product_list
             )
 
     def parse_product(self, response):
