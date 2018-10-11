@@ -4,27 +4,28 @@ from constants import FILE_ERROR_MESSAGE
 
 class WeatherReporting:
 
-    def print_yearly_result(self, result):
+    def print_yearly_report(self, report, record_info):
         print(
-            result[3],
-            '\nHighest: ', result[0][0], 'C on ', result[0][1], result[0][2],
-            '\nLowest: ', result[1][0], 'C on ', result[1][1], result[1][2],
-            '\nHumidity: ', result[2][0], '% on ', result[2][1], result[2][2],
+            record_info,
+            '\nHighest: ', report[0][0], 'C on ', report[0][1], report[0][2],
+            '\nLowest: ', report[1][0], 'C on ', report[1][1], report[1][2],
+            '\nHumidity: ', report[2][0], '% on ', report[2][1], report[2][2],
             '\n-------------------------------------\n'
         )
 
-    def print_monthly_result(self, result):
+    def print_monthly_report(self, report, record_info):
         print(
-            result[3],
-            '\nHighest Average: ', round(result[0]), 'C',
-            '\nLowest Average: ', round(result[1]), 'C',
-            '\nAverage Mean Humidity: ', round(result[2]), '%',
+            record_info,
+            '\nHighest Average: ', round(report[0]), 'C',
+            '\nLowest Average: ', round(report[1]), 'C',
+            '\nAverage Mean Humidity: ', round(report[2]), '%',
             '\n-------------------------------------\n'
         )
 
-    def print_monthly_bar_cahart(self, result):
-        high_temperature_list = result.get('high_temprature')
-        low_temperature_list = result.get('low_temprature')
+    def print_monthly_bar_cahart(self, report, record_info):
+        high_temperature_list = report.get('high_temprature')
+        low_temperature_list = report.get('low_temprature')
+        print(record_info)
         count = 1
         for high, low in zip(high_temperature_list, low_temperature_list):
             if low is None and high is None:
@@ -43,13 +44,13 @@ class WeatherReporting:
             count += 1
         print('\n-------------------------------------\n')
 
-    def display_report(self, result, operation):
-        if len(result) > 2:
+    def display_report(self, report, operation, record_info):
+        if len(report) > 1:
             if operation is 'e':
-                self.print_yearly_result(result)
+                self.print_yearly_report(report, record_info)
             elif operation is 'a':
-                self.print_monthly_result(result)
-            elif operation is 'c':
-                self.print_monthly_bar_cahart(result)
+                self.print_monthly_report(report, record_info)
+            else:
+                self.print_monthly_bar_cahart(report, record_info)
         else:
             print(FILE_ERROR_MESSAGE, '\n\n')

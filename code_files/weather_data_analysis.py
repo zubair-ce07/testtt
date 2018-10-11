@@ -5,7 +5,7 @@ from constants import MONTHS_NAME
 
 class WeatherDataAnalysis:
 
-    def analyse(self, operation, weather_readings, current_year, month_number=0):
+    def analyse(self, operation, weather_readings, current_year, month_number):
         if operation is 'e':
             return self.calculate_yearly_record(weather_readings, current_year)
         elif operation is 'a':
