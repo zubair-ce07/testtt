@@ -8,17 +8,15 @@ function login(event)
 	.then(response => response.json())
 	.then(user_list => 
 	{
-        if(user_list.length)
+        if(user_list.length && user_list[0].password == password)
         {
-            user = user_list[0]
-	 		if(user.password==password)
-	 		{
-	 			sessionStorage.setItem("loggedin_user", JSON.stringify(user));
-	 			window.location.replace('home.html');
-	 		}
+            sessionStorage.setItem("loggedin_user", JSON.stringify(user));
+	 		window.location.replace('home.html');
         }
         else
         	document.getElementById('login_error').innerHTML = " ** Invalid username or password";
 	})
+	.catch(alert)
+	
 	return false;
 }
