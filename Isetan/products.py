@@ -18,12 +18,22 @@ class ProductsSpider(CrawlSpider):
     def parse_product_urls(self, response):
         return response.css(".custm-tags a::attr(href)").extract()
 
+    def find_next_page(self, response):
+        return response.css(
+            ".pagination-item--next a::attr(href)").extract_first()
+
     def parse_product_list(self, response):
         product_urls = self.parse_product_urls(response)
 
         for url in product_urls:
             yield scrapy.Request(
                 url=url,
+                callback=self.parse_product
+            )
+        next_page_url = self.find_next_page(response)
+        if next_page_url:
+            yield scrapy.Request(
+                url=next_page_url,
                 callback=self.parse_product
             )
 
