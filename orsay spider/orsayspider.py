@@ -1,5 +1,8 @@
+import w3lib.url
+import scrapy
+
 from scrapy.spiders import CrawlSpider, Rule
-from scrapy.linkextractors import LinkExtractor 
+from scrapy.linkextractors import LinkExtractor
 
 from .ProductParser import ProductParser
 
@@ -14,11 +17,9 @@ class OrsaySpider(CrawlSpider):
     rules = (
         Rule(
             LinkExtractor(restrict_css=('.level-3')),
-                callback='parse'),
-        
+            callback='parse'),
+
         Rule(
-            LinkExtractor(restrict_css=('.thumb-link')), 
-            callback='caller_parse_product_details'),
-        )
-    def caller_parse_product_details(self, response):
-        return self.product_parser.parse_product_details(response)
+            LinkExtractor(restrict_css=('.thumb-link')),
+            callback=product_parser.parse),
+    )

@@ -5,7 +5,7 @@ class Product(scrapy.Item):
 
     brand = scrapy.Field()
     care = scrapy.Field()
-    category = scrapy.Field() 
+    category = scrapy.Field()
     discription = scrapy.Field()
     image_urls = scrapy.Field()
     retailer_sku = scrapy.Field()
