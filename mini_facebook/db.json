@@ -1,0 +1,125 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "tehreem",
+      "email": "tehreem@tehreem.com",
+      "password": "bcsf14m036*B",
+      "mobileNumber": "03214067419"
+    },
+    {
+      "id": 2,
+      "username": "hana",
+      "email": "tehreem@tehreem.com",
+      "password": "bcsf14m036*B",
+      "mobileNumber": "03214067419"
+    },
+    {
+      "username": "aisha",
+      "email": "aisha@aisha.com",
+      "password": "bcsf14m036*B",
+      "mobileNumber": "03214067419",
+      "id": 3
+    },
+    {
+      "username": "nabia",
+      "email": "nabia@nabia.com",
+      "password": "bcsf14m036*B",
+      "mobileNumber": "03214067419",
+      "id": 4
+    },
+    {
+      "username": "nabeel",
+      "email": "nabeel@nabeel.com",
+      "password": "bcsf14m036*B",
+      "mobileNumber": "03214067419",
+      "id": 5
+    },
+    {
+      "username": "danial",
+      "email": "danial@danial.com",
+      "password": "bcsf14m036*B",
+      "mobileNumber": "03214067419",
+      "id": 6
+    },
+    {
+      "username": "sana",
+      "email": "sana@sana.com",
+      "password": "bcsf14m036*B",
+      "mobileNumber": "03214067419",
+      "id": 7
+    },
+    {
+      "username": "ali",
+      "email": "ali@ali.com",
+      "password": "bcsf14m036*B",
+      "mobileNumber": "03214067419",
+      "id": 8
+    },
+    {
+      "username": "mariam",
+      "email": "mariam@mariam.com",
+      "password": "bcsf14m036*B",
+      "mobileNumber": "03214067419",
+      "id": 9
+    },
+    {
+      "username": "areeba",
+      "email": "areeba@areeba.com",
+      "password": "bcsf14m036*B",
+      "mobileNumber": "03214067419",
+      "id": 10
+    },
+    {
+      "username": "aleena",
+      "email": "aleena@aleena.com",
+      "password": "bcsf14m036*B",
+      "mobileNumber": "03214067419",
+      "id": 11
+    }
+  ],
+  "posts": [
+    {
+      "id": 1,
+      "userId": "1",
+      "title": "I Love Food",
+      "post": "Food is my passionHealthy foods assist a person in enhancing the physical and mental well-being. These foods are full of nourishment and enhance growth. Some of the significant examples of healthy food involve natural food, fiber-rich food, vitamin-rich food, protein-rich food, etc. Healthy food keeps us away from diseases. We feel relaxed, light and stress-free when we eat nourishing food because we know we are feeding something healthy and good to our bodies.",
+      "date": "October 5, 2018",
+      "likes[]": [
+        "aisha",
+        "hana"
+      ]
+    },
+    {
+      "id": 2,
+      "userId": "1",
+      "title": "Life",
+      "post": "Life is beautiful but not always easy, it has problems, too, and the challenge lies in facing them with courage, letting the beauty of life act like a balm, which makes the pain bearable, during trying times, by providing hope. Happiness, sorrow, victory, defeat, day-night are the two sides of the me coin. Similarly life is full of moments of joy, pleasure, success and comfort punctuated by misery, defeat, failures and problems. There is no human being on Earth, strong, powerful, wise or rich, who has not experienced, struggle, suffering or failure.",
+      "date": "July 26, 2018",
+      "likes[]": [
+        "aisha",
+        "hana"
+      ]
+    }
+  ],
+  "comments": [
+    {
+      "id": 1,
+      "comment_by": "aisha",
+      "comment": "Keep up the GREAT work! I am cheering for you!!",
+      "postId": "1"
+    },
+    {
+      "id": 2,
+      "comment_by": "hana",
+      "comment": "I am so happy for you man! Finally. I am looking forward to read about your trendy life.",
+      "postId": "1"
+    },
+    {
+      "comment_by": "tehreem",
+      "comment": "thankyou @aisha",
+      "postId": "1",
+      "id": 3
+    }
+  ]
+}

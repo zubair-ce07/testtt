@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+   <title></title>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+</head>
+<body>
+   <h1 class="text-white text-center font-weight-bold bg-success" style="font-size: 55px;"> Sign Up</h1>
+  	<div class="container"><br>
+		
+		<div class="col-lg-6 m-auto d-block">
+			
+			<form class="bg-light" onsubmit="return validation(this)" id="signup_form">
+				
+				<div class="form-group">
+					<label for="username" class="font-weight-bold"> Username: </label>
+					<input type="text" name="username" class="form-control" id="username" autocomplete="off" required="true">
+					<span id="username_error" class="text-danger font-weight-bold"> </span>
+				</div>
+
+				<div class="form-group">
+					<label class="font-weight-bold"> Password: </label>
+					<input type="password" name="password" class="form-control" id="password" autocomplete="off" required="true">
+					<span id="password_error" class="text-danger font-weight-bold"> </span>
+				</div>
+
+				<div class="form-group">
+					<label class="font-weight-bold"> Confirm Password: </label>
+					<input type="password" name="confirmPassword" class="form-control" id="confirmPassword" autocomplete="off" required="true">
+					<span id="confirmPassword_error" class="text-danger font-weight-bold"> </span>
+				</div>
+
+				<div class="form-group">
+					<label class="font-weight-bold"> Mobile Number: </label>
+					<input type="text" name="mobileNumber" class="form-control" id="mobileNumber" autocomplete="off" required="true">
+					<span id="mobileNumber_error" class="text-danger font-weight-bold"> </span>
+				</div>
+
+				<div class="form-group">
+					<label class="font-weight-bold"> Email: </label>
+					<input type="email" name="email" class="form-control" id="email" autocomplete="off" required="true">
+					<span id="email_error" class="text-danger font-weight-bold"> </span>
+				</div>
+
+				<input type="submit"  name="submit" value="register me" class="btn btn-success" autocomplete="off">
+                <a href="login.html" class="btn btn-success">Log in</a>
+			</form><br><br>
+		</div>
+	</div>
+</body>
+<script type="text/javascript" src="signup.js"></script>
+</html>
