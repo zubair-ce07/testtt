@@ -6,8 +6,6 @@ function* fetchMonthlyData(action) {
     try {
 
         const data = yield call(api.get, 'weather/average-monthly/'+action.payload);
-        debugger;
-
         yield put({type: "FETCH_MONTHLY_WEATHER_SUCCEEDED", payload: data})
     } catch (error) {
         yield put({type: "FETCH_MONTHLY_WEATHER_FAILED", error})
@@ -17,7 +15,6 @@ function* fetchMonthlyData(action) {
 function* fetchYearlyData(action) {
     try {
         const data = yield call(api.get, 'weather/yearly/'+action.payload);
-        debugger;
         yield put({type: "FETCH_YEARLY_WEATHER_SUCCEEDED", payload: data})
     } catch (error) {
         yield put({type: "FETCH_YEARLY_WEATHER_FAILED", error})

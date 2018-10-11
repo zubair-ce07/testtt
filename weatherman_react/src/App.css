@@ -4,7 +4,7 @@
 /*}*/
 
 #root{
-        background: url("/images/pattern.jpg");
+    background: url("/images/pattern.jpg");
     height: 100%;
 }
 
@@ -16,11 +16,12 @@
 
 .paper-style {
     margin-top: 20px;
+
     padding-top: 2px;
     padding-left: 20px;
     padding-right: 20px;
     background-color: lightgray!important;
-    height: 100%;
+    height: fit-content;
 }
 
 .card-style{

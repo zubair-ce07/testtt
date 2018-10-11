@@ -7,23 +7,6 @@ import SimpleSelect from '../Partials/SimpleSelect'
 import store from "../../store";
 
 
-const styles = theme => ({
-    root: {
-        display: 'flex',
-        flexWrap: 'wrap',
-        justifyContent: 'space-around',
-        overflow: 'hidden',
-        backgroundColor: theme.palette.background.paper,
-    },
-    gridList: {
-        width: 500,
-        height: 450,
-    },
-    icon: {
-        color: 'rgba(255, 255, 255, 0.54)',
-    },
-});
-
 let selectedYear = "";
 const action = (type, payload) => store.dispatch({type, payload});
 
@@ -33,19 +16,12 @@ class Detail extends React.Component {
         this.state = {
             cityId: props.match.params.cityId,
             cityName: props.match.params.cityName,
-
-            monthlyWeather: null
         }
     }
 
     componentDidMount() {
         document.title="Weather Detail of "+this.state.cityName+" - Weatherman";
-        var cityId = this.state.cityId;
-        action('FETCH_YEARS', cityId)
-
-
-
-
+        action('FETCH_YEARS', this.state.cityId)
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
@@ -56,9 +32,6 @@ class Detail extends React.Component {
             this.setState({
                 cityId: cityId,
                 cityName: this.props.match.params.cityName,
-
-
-                monthlyWeather: null
             });
             action('FETCH_YEARS', cityId)
         }
@@ -80,7 +53,7 @@ class Detail extends React.Component {
 
 
     render() {
-        const classes = styles;
+        const {classes} = this.props;
         return (
             <div>
                 <Paper className="paper-style">
@@ -110,21 +83,22 @@ class Detail extends React.Component {
                             <h3>Yearly Weather of {this.state.cityName} of year {selectedYear}</h3>
                             <Typography variant="subheading">
                                 Higest: <span>{this.props.yearlyWeather.higest_temperature}&deg;C</span>
-                                <br/>
+                            </Typography>
+                            <Typography variant="subheading">
                                 Lowest: <span>{this.props.yearlyWeather.lowest_temperature}&deg;C</span>
-                                <br/>
+                            </Typography>
+                            <Typography variant="subheading">
                                 Most Humid: <span>{this.props.yearlyWeather.humidity}</span>%<br/>
                             </Typography>
+                            <br/>
                         </Paper>
                         }
                         {this.props.monthlyWeather &&
                         <Paper className="paper-style">
-                            <div className={classes.root}>
-                                <GridList cellHeight={180} cols={3} className={classes.gridList}>
-                                    <GridListTile key="Subheader" cols={3} style={{height: 'auto'}}>
-                                        <h3>Monthly Weather of {this.state.cityName} of
-                                            year {selectedYear}</h3>
-                                    </GridListTile>
+                            <div>
+                                <GridList cellHeight={180} cols={3}>
+                                    <h3 cols={3} style={{height: 'auto'}}>Monthly Weather of {this.state.cityName} of
+                                        year {selectedYear}</h3>
                                     {this.props.monthlyWeather.map((monthly, index) =>
                                         <GridListTile key={index} cols={1}>
                                             <MonthCard month={monthly}/>
