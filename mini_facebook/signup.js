@@ -105,7 +105,9 @@ function validation()
       displayNameError("Already registered, try another.");
       return false;
     }
-    if(validatePassword(pass) && validateConfirmPaasword(pass, confirmPass) && validateMobileNumber(mobileNumber))
+    if(validatePassword(pass) &&
+       validateConfirmPaasword(pass, confirmPass) &&
+       validateMobileNumber(mobileNumber))
     {
       
       let formData = {

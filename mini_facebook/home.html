@@ -11,13 +11,15 @@
   <body>
     <div class="container-fluid content">
       <h4><small>POSTS</small>
-        <button class="btn btn-danger btn-sm logout-btn" onclick="logout()"><span class="glyphicon glyphicon-log-out"></span> Log out</button>
+        <button class="btn btn-danger btn-sm logout-btn" onclick="logout()">
+          <span class="glyphicon glyphicon-log-out"></span> Log out</button>
       </h4>
       <hr>
       <h4>What&rsquo;s on your mind?</h4>
       <form role="form">
         <div class="form-group">
-          <input type="text" class="form-control" id="newPostTitle" autocomplete="off" placeholder="Title" required >
+          <input type="text" class="form-control" id="newPostTitle"
+            autocomplete="off" placeholder="Title" required >
           <textarea class="form-control" id="newPostText" rows="3" required ></textarea>
         </div>
         <input type="button" class="btn btn-success" onclick="makePost()" value="Make new post">
@@ -25,10 +27,16 @@
       <div class="container" id="postContainer">
         <div class="post" name="post_template" style="display:none">
           <h2 class="post-title"></h2>
-          <h5><span class="glyphicon glyphicon-time"></span> Post by <span class="post-username"></span>, <span class="post-date"></span>.</h5>
-          <h5><span class="label label-success">Likes: <span class="post-likes"></span></span> <i onclick="makeLike()" class="like fa"></i></h5>
+          <h5>
+            <span class="glyphicon glyphicon-time"></span>&nbsp;Post by&nbsp;
+            <span class="post-username"></span>&#44; <span class="post-date"></span>&#46;
+          </h5>
+          <h5>
+            <span class="label label-success">Likes: <span class="post-likes"></span></span> 
+            <i onclick="makeLike()" class="like fa"></i>
+          </h5>
           <p class="post-data"></p>
-          <p><span class="badge post-comment-count"></span> Comments:</p>
+          <p><span class="badge post-comment-count"></span>&nbsp;Comments:</p>
 
           <h4>Leave a Comment:</h4>
 
@@ -36,7 +44,7 @@
             <div class="form-group">
               <textarea class="form-control comment-area" rows="2"></textarea>
             </div>
-            <input type="button" class="btn btn-success comment-btn" onclick="makeComment()" value="comment">
+            <input type="button" class="btn btn-success comment-btn"onclick="makeComment()" value="comment">
           </form>
 
           <div class="row comment-container" >

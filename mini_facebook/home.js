@@ -102,7 +102,7 @@ function makePost()
             "post": document.getElementById("newPostText").value,
             "date": getCurrentDate()
         };
-
+        
         $.ajax({
             type        : 'POST',
             url         : `${baseUrl}/users/${loggedInUser.id}/posts`,
