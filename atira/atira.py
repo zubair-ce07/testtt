@@ -1,0 +1,335 @@
+import re
+import json
+import datetime
+
+import scrapy
+from scrapy.spiders import CrawlSpider, Rule
+from scrapy.linkextractors import LinkExtractor
+from scrapy import Request, Selector
+
+
+class Property(scrapy.Item):
+    deals = scrapy.Field()
+    property_name = scrapy.Field()
+    landlord_slug = scrapy.Field()
+    property_description = scrapy.Field()
+    property_contact_info = scrapy.Field()
+    property_amenities = scrapy.Field()
+    property_images = scrapy.Field()
+    room_photos = scrapy.Field()
+    deposit_type = scrapy.Field()
+    property_url = scrapy.Field()
+    room_availability = scrapy.Field()
+    room_amenities = scrapy.Field()
+    floor_plans = scrapy.Field()
+    listing_type = scrapy.Field()
+    deposit_amount = scrapy.Field()
+    deposit_name = scrapy.Field()
+    property_ts_cs_url = scrapy.Field()
+    room_name = scrapy.Field()
+    room_price = scrapy.Field()
+    min_duration = scrapy.Field()
+    available_from = scrapy.Field()
+    room_type = scrapy.Field()
+    property_id = scrapy.Field()
+
+
+class Atira(CrawlSpider):
+    custom_settings = {
+        "DOWNLOAD_DELAY": 1
+    }
+
+    name = 'atira'
+    land_lord_slug = 'atira-student-living'
+    property_ts_cs_url = 'https://atira.com/terms-conditions/'
+    available_date = str(datetime.date.today())
+    peel_latrobe_date = '2019-01-14'
+    room_type = 'private_room'
+
+    start_urls = [
+        'https://atira.com/why-atira/specials/'
+    ]
+    allowed_domains = ['atira.com']
+
+    locations_css = '.nav-menu-locations .ubermenu-target-with-image'
+    rules = (
+        Rule(LinkExtractor(restrict_css=locations_css), callback='parse_locations'),
+    )
+
+    deals = []
+    duration_map = {
+        "1": '119',
+        "2": '308'
+    }
+    name_map = (
+        ('woolloongabba', 'Atira Woolloongabba'),
+        ('south-brisbane', 'Atira South Brisbane'),
+        ('toowong', 'Atira Toowong'),
+        ('waymouth', 'Atira Adelaide'),
+        ('peel', 'Atira Peel'),
+        ('latrobe', 'Atira La Trobe')
+    )
+
+    images_regex = re.compile('\((.+)\)')
+    duration_price_regex = re.compile('(\d+).*?(\$\d+)')
+    map_regex = re.compile('UberGoogleMaps\((.+?)\);', re.S)
+
+    def parse_start_url(self, response):
+        self.deals = self.extract_deals(response)
+
+    def parse_locations(self, response):
+        item = Property()
+        item['landlord_slug'] = self.land_lord_slug
+        item['property_ts_cs_url'] = self.property_ts_cs_url
+        item['deals'] = self.deals
+        item['property_name'] = self.extract_property_name(response)
+        item['property_description'] = self.extract_property_description(response)
+        item['property_contact_info'] = self.extract_contact_info(response)
+        item['property_images'] = self.extract_property_images(response)
+        item['property_amenities'] = self.extract_property_amenities(response)
+        item['room_type'] = self.room_type
+        item['deposit_type'] = 'fixed'
+        item['deposit_name'] = 'deposit'
+        item['deposit_amount'] = ''
+        item['listing_type'] = 'flexible_open_end'
+
+        if 'peel' in response.url or 'latrobe' in response.url:
+            return self.parse_peel_latrobe(response, item)
+
+        return self.parse_available_locations(response, item)
+
+    def parse_available_locations(self, response, item):
+        if self.has_facilities_link(response):
+            yield from self.make_facilities_requests(response, item)
+        else:
+            yield from self.make_apartment_requests(response, item)
+
+    def parse_peel_latrobe(self, response, item):
+        item['property_url'] = response.url
+        item['available_from'] = self.peel_latrobe_date
+
+        rooms_css = '#rooms div:nth-child(n+3) .et_pb_column'
+        for apartment_html in response.css(rooms_css).extract():
+            yield from self.extract_apartments_peel_latrobe(apartment_html, item.copy())
+
+    def parse_facilities(self, response):
+        item = response.meta['item']
+
+        item['property_images'] = self.extract_property_images(response)
+        item['property_amenities'] = self.extract_property_amenities(response)
+
+        yield from self.make_apartment_requests(response.meta['response'], item)
+
+    def parse_apartments(self, response):
+        item = response.meta['item']
+
+        item['property_url'] = response.url
+        item['floor_plans'] = self.extract_floor_plan(response)
+        item['room_photos'] = self.extract_room_photos(response)
+        item['room_amenities'] = self.extract_room_amenities(response)
+        item['room_availability'] = self.detect_availability(response)
+        item['available_from'] = self.available_date
+
+        return self.yield_room_variations(item, self.extract_room_variants(response))
+
+    def extract_apartments_peel_latrobe(self, html, item):
+        selector = Selector(text=html)
+
+        item['room_photos'] = self.extract_room_photos(selector)
+        item['room_amenities'] = self.extract_room_amenities(selector)
+        item['room_availability'] = self.detect_availability(selector)
+        item['floor_plans'] = self.extract_floor_plan(selector)
+
+        return self.yield_room_variations(item, self.extract_peel_latrobe_room_variants(selector))
+
+    def yield_room_variations(self, item, room_variants):
+        for room_details in room_variants:
+            current_item = item.copy()
+            current_item.update(room_details)
+            current_item['property_id'] = f'{current_item["property_name"]}_{current_item["room_name"]}' \
+                                          f'_{current_item["min_duration"]}'.replace(' ', '-')
+            yield current_item
+
+    def make_facilities_requests(self, response, item):
+        css = '.grid-seemore ::attr(href)'
+        facilities_url = response.css(css).extract_first()
+
+        meta = {
+            'item': item,
+            'response': response
+        }
+        return [Request(url=facilities_url, meta=meta, callback=self.parse_facilities)]
+
+    def make_apartment_requests(self, response, item):
+        apartment_urls = self.extract_apartment_urls(response)
+
+        apartment_requests = []
+        for url in apartment_urls:
+            request = Request(url=url, callback=self.parse_apartments)
+            request.meta['item'] = item.copy()
+            apartment_requests.append(request)
+        return apartment_requests
+
+    def has_facilities_link(self, response):
+        css = '.grid-seemore ::attr(href)'
+        return response.css(css).extract_first()
+
+    def extract_apartment_urls(self, response):
+        css = '.d-1of3 a::attr(href), #rooms .et_pb_image > a::attr(href)'
+        return response.css(css).extract()
+
+    def extract_room_variants(self, response):
+        if self.has_no_table(response):
+            return self.extract_without_table_room_variants(response)
+
+        name_duration_prices = self.extract_name_duration_prices(response)
+        room_options = self.extract_room_options(response)
+
+        rooms_variants = []
+        for apartment_name, durations_and_prices in name_duration_prices.items():
+            for duration_and_prices in durations_and_prices:
+                for room_option, price in zip(room_options, duration_and_prices[1:]):
+                    room_info = {
+                        'min_duration': self.duration_map.get(duration_and_prices[0].split(' ')[0]),
+                        'room_name': f'{apartment_name} {room_option}',
+                        'room_price': price.split(' ')[0]
+                    }
+                    rooms_variants.append(room_info)
+
+        return rooms_variants
+
+    def extract_room_options(self, response):
+        room_altitudes = [''.join(Selector(text=html).css('::text').extract())
+                          for html in response.css('thead th').extract()]
+        return [ra.strip() for ra in room_altitudes if ra.strip()]
+
+    def extract_duration_and_prices(self, response):
+        return [Selector(text=html).css('::text').extract() for html in response.css('.row-hover tr').extract()]
+
+    def extract_name_duration_prices(self, response):
+        apartment_name = self.extract_apartment_name(response)
+        room_options = self.extract_room_options(response)
+        durations_and_prices = self.extract_duration_and_prices(response)
+
+        name_duration_prices = {}
+        for row_variants in durations_and_prices:
+            if len(row_variants) == len(room_options) + 2:
+                apartment_name = row_variants[0]
+                name_duration_prices[apartment_name] = [row_variants[1:]]
+            else:
+                name_duration_prices[apartment_name] = name_duration_prices.get(apartment_name, []) + [row_variants]
+
+        return name_duration_prices
+
+    def extract_peel_latrobe_room_variants(self, selector):
+        apartment_name = self.extract_apartment_name(selector)
+        variations_table = selector.css('tr').extract()
+
+        room_variations_table = []
+        for variants_row in variations_table:
+            room_variations_table.append([vr.strip()
+                                          for vr in Selector(text=variants_row).css('::text').extract() if vr.strip()])
+
+        durations = room_variations_table[0][1:]
+        room_options_and_prices = room_variations_table[1:]
+
+        room_variants = []
+        for room_option_and_prices in room_options_and_prices:
+            for duration, price in zip(durations, room_option_and_prices[1:]):
+                room_info = {
+                    'min_duration': int(duration.split(' ')[0]) * 7,
+                    'room_name': f'{apartment_name} {room_option_and_prices[0]}',
+                    'room_price': price.split(' ')[0]
+                }
+                room_variants.append(room_info)
+        return room_variants
+
+    def extract_without_table_room_variants(self, response):
+        apartment_name = self.extract_apartment_name(response)
+
+        css = '.room-type-pricebreakdown ::text'
+        durations_and_prices = response.css(css).extract()
+
+        rooms_variants = []
+        for duration_and_price in durations_and_prices:
+            duration, price = self.duration_price_regex.findall(duration_and_price)[0]
+            room_info = {
+                "min_duration": self.duration_map.get(duration),
+                "room_name": apartment_name,
+                "room_price": price,
+            }
+            rooms_variants.append(room_info)
+
+        return rooms_variants
+
+    def has_no_table(self, response):
+        return not response.css('thead').extract()
+
+    def detect_availability(self, response):
+        button_css = '.button-max::text, .et_pb_button ::text'
+        if response.css(button_css).extract_first() == 'Book Now':
+            return 'Available'
+        return 'Fully Booked'
+
+    def extract_contact_info(self, response):
+        contact_jsons = response.css('script::text').re(self.map_regex)
+
+        for contact_json in contact_jsons:
+            raw_contact_info = json.loads(contact_json)
+            info_windows = raw_contact_info['infoWindows']
+            for info_window in info_windows:
+                if info_window['subtitle'] and info_window['subtitle'] in self.extract_property_name(response):
+                    return [info_window['phone'], info_window['email']]
+        return []
+
+    def extract_room_photos(self, response):
+        peel_latrobe_css = '.et_pb_image img::attr(src)'
+        photos = response.css(peel_latrobe_css).extract()
+
+        css = '.flexslider-roomtype li::attr(style)'
+        return sum([self.images_regex.findall(a) for a in response.css(css).extract()], photos)
+
+    def extract_property_images(self, response):
+        new_format_css = '.et_pb_lightbox_image::attr(href)'
+        property_images = response.css(new_format_css).extract()
+
+        legacy_format_css = '.slides li::attr(style)'
+        return sum([self.images_regex.findall(a) for a in response.css(legacy_format_css).extract()], property_images)
+
+    def extract_floor_plan(self, response):
+        id_css = '.wp-image-423::attr(data-izimodal-open)'
+        floor_plan_div_id = response.css(id_css).extract_first()
+        
+        css = f'.floorplan-thumbnail a::attr(data-featherlight), {floor_plan_div_id} img::attr(src)'
+        return response.css(css).extract()
+
+    def extract_room_amenities(self, response):
+        css = '.et_pb_column li ::text, .home-icon-grid-inner-container p::text'
+        return response.css(css).extract()
+
+    def extract_property_amenities(self, response):
+        new_format_css = '#facilities .et_pb_blurb_description ::text'
+        amenities = list(set([d.strip() for d in response.css(new_format_css).extract()]))
+
+        legacy_format_css = '.home-icon-grid-contents p::text'
+        return response.css(legacy_format_css).extract() + amenities
+
+    def extract_property_name(self, response):
+        for name_str, name in self.name_map:
+            if name_str in response.url:
+                return name
+
+    def extract_property_description(self, response):
+        new_format_css = '.et_pb_fullwidth_header_subhead::text, #hero p::text'
+        description = list(set(response.css(new_format_css).extract()))
+
+        legacy_format_css = '[itemprop="articleBody"] ::text'
+        return response.css(legacy_format_css).extract() + description
+
+    def extract_apartment_name(self, response):
+        css = '.page-title ::text, h4::text'
+        return response.css(css).extract_first()
+
+    def extract_deals(self, response):
+        css = '.wrap.cf.two-column-padding p:first-of-type::text'
+        return response.css(css).extract()
