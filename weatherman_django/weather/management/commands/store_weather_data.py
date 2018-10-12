@@ -76,92 +76,41 @@ def read_csv_and_save_data(file_path, city):
                 weather = Weather()
                 weather.date = weather_date
                 try:
-                    # setting temperatures
-                    max_value = None
-                    if row['Max TemperatureC']:
-                        max_value = float(row['Max TemperatureC'])
-                    mean_value = None
-                    if row['Mean TemperatureC']:
-                        mean_value = float(row['Mean TemperatureC'])
-                    min_value = None
-                    if row['Min TemperatureC']:
-                        min_value = float(row['Min TemperatureC'])
-                    weather.temperature = WeatherCharacteristics(max_value=max_value,
-                                                                 mean_value=mean_value,
-                                                                 min_value=min_value)
+                    weather.temperature = set_weather_characteristics(row, 'Max TemperatureC',
+                                                                      'Mean TemperatureC',
+                                                                      'Min TemperatureC')
                     weather.temperature.save()
                     weather.temperature = weather.temperature
 
                     # setting Dew Point
-                    max_value = None
-                    if row['Dew PointC']:
-                        max_value = float(row['Dew PointC'])
-                    mean_value = None
-                    if row['MeanDew PointC']:
-                        mean_value = float(row['MeanDew PointC'])
-                    min_value = None
-                    if row['Min DewpointC']:
-                        min_value = float(row['Min DewpointC'])
-                    weather.dew_point = WeatherCharacteristics(max_value=max_value,
-                                                               mean_value=mean_value,
-                                                               min_value=min_value)
+                    weather.dew_point = set_weather_characteristics(row, 'Dew PointC',
+                                                                    'MeanDew PointC',
+                                                                    'Min DewpointC')
                     weather.dew_point.save()
 
                     # setting Humidity
-                    max_value = None
-                    if row['Max Humidity']:
-                        max_value = float(row['Max Humidity'])
-                    mean_value = None
-                    if row[' Mean Humidity']:
-                        mean_value = float(row[' Mean Humidity'])
-                    min_value = None
-                    if row[' Min Humidity']:
-                        min_value = float(row[' Min Humidity'])
-                    weather.humidity = WeatherCharacteristics(max_value=max_value,
-                                                              mean_value=mean_value,
-                                                              min_value=min_value)
+                    weather.humidity = set_weather_characteristics(row, 'Max Humidity',
+                                                                   ' Mean Humidity',
+                                                                   ' Min Humidity')
                     weather.humidity.save()
 
                     # setting Sea Level Pressure
-                    max_value = None
-                    if row[' Max Sea Level PressurehPa']:
-                        max_value = float(row[' Max Sea Level PressurehPa'])
-                    mean_value = None
-                    if row[' Mean Sea Level PressurehPa']:
-                        mean_value = float(row[' Mean Sea Level PressurehPa'])
-                    min_value = None
-                    if row[' Min Sea Level PressurehPa']:
-                        min_value = float(row[' Min Sea Level PressurehPa'])
-                    weather.sea_pressure = WeatherCharacteristics(max_value=max_value,
-                                                                  mean_value=mean_value,
-                                                                  min_value=min_value)
+                    weather.sea_pressure = set_weather_characteristics(
+                        row,
+                        ' Max Sea Level PressurehPa',
+                        ' Mean Sea Level PressurehPa',
+                        ' Min Sea Level PressurehPa')
                     weather.sea_pressure.save()
 
                     # setting Visibility
-                    max_value = None
-                    if row[' Max VisibilityKm']:
-                        max_value = float(row[' Max VisibilityKm'])
-                    mean_value = None
-                    if row[' Mean VisibilityKm']:
-                        mean_value = float(row[' Mean VisibilityKm'])
-                    min_value = None
-                    if row[' Min VisibilitykM']:
-                        min_value = float(row[' Min VisibilitykM'])
-                    weather.visibility = WeatherCharacteristics(max_value=max_value,
-                                                                mean_value=mean_value,
-                                                                min_value=min_value)
+                    weather.visibility = set_weather_characteristics(row, ' Max VisibilityKm',
+                                                                     ' Mean VisibilityKm',
+                                                                     ' Min VisibilitykM')
                     weather.visibility.save()
 
                     # setting Wind Speed
-                    max_value = None
-                    if row[' Max Wind SpeedKm/h']:
-                        max_value = float(row[' Max Wind SpeedKm/h'])
-                    mean_value = None
-                    if row[' Mean Wind SpeedKm/h']:
-                        mean_value = float(row[' Mean Wind SpeedKm/h'])
-
-                    weather.wind = WeatherCharacteristics(max_value=max_value,
-                                                          mean_value=mean_value)
+                    weather.wind = set_weather_characteristics(row, ' Max Wind SpeedKm/h',
+                                                               ' Mean Wind SpeedKm/h')
                     weather.wind.save()
 
                     weather.max_gust_speed = None
@@ -192,3 +141,28 @@ def read_csv_and_save_data(file_path, city):
                 except:
                     logger.error(
                         "some error occured so data of date: %s could not be saved" % weather_date)
+
+
+def set_weather_characteristics(row, max_character, mean_character, min_charatcer=None):
+    """
+    this fucntion takes a row, min value index name, max value index name and mean value index name
+    and returns a new object of WeatherCharacteristics
+    :param row:
+    :param max_character:
+    :param mean_character:
+    :param min_charatcer:
+    :return:
+    """
+    max_value = None
+    if row[max_character]:
+        max_value = float(row[max_character])
+    mean_value = None
+    if row[mean_character]:
+        mean_value = float(row[mean_character])
+    if min_charatcer:
+        min_value = None
+        if row[min_charatcer]:
+            min_value = float(row[min_charatcer])
+        return WeatherCharacteristics(max_value=max_value, mean_value=mean_value,
+                                      min_value=min_value)
+    return WeatherCharacteristics(max_value=max_value, mean_value=mean_value)
