@@ -1,0 +1,12 @@
+{% extends 'user/form_template.html' %}
+{% block title %}Sign Up{% endblock %}
+
+{% block heading %}
+    <h3>Register for an Account</h3>
+{% endblock %}
+
+{% block panel_footer %}
+    Already have an account? <a href="{% url 'my_user:login' %}">Click here</a> to log in.
+{% endblock %}
+
+

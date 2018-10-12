@@ -1,0 +1,10 @@
+{% extends 'user/form_template.html' %}
+{% block title %}Login{% endblock %}
+
+{% block heading %}
+    <h3>Login</h3>
+{% endblock %}
+
+{% block panel_footer %}
+    Do not have an account? <a href="{% url 'my_user:register' %}">Click here</a> to Register.
+{% endblock %}
