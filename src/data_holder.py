@@ -7,4 +7,5 @@ class WeatherData:
         self.max_temp = int(row.get('Max TemperatureC'))
         self.min_temp = int(row.get('Min TemperatureC'))
         self.mean_humidity = int(row[' Mean Humidity'])
-        self.date = datetime.strptime(row.get('PKT') or row.get('PKST'), '%Y-%m-%d')
+        raw_date = row.get('PKT') or row.get('PKST')
+        self.date = datetime.strptime(raw_date, '%Y-%m-%d')

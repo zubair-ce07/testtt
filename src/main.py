@@ -5,20 +5,12 @@ from calculations import WeatherCalculations
 from report_generator import ReportGenerator
 
 
-def month_date(date):
-    return datetime.strptime(date, '%Y/%m')
-
-
-def year_date(date):
-    return datetime.strptime(date, '%Y')
-
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("dir_path", type=str)
-    parser.add_argument('-e', type=year_date, nargs='*')
-    parser.add_argument('-a', type=month_date, nargs='*')
-    parser.add_argument('-c', type=month_date, nargs='*')
+    parser.add_argument('-e', type=lambda date: datetime.strptime(date, '%Y'), nargs='*')
+    parser.add_argument('-a', type=lambda date: datetime.strptime(date, '%Y/%m'), nargs='*')
+    parser.add_argument('-c', type=lambda date: datetime.strptime(date, '%Y/%m'), nargs='*')
     args = parser.parse_args()
 
     weather_calculations = WeatherCalculations()
@@ -28,14 +20,16 @@ def main():
 
     if args.e:
         for date in args.e:
-            report_generator.generate_year_report(weather_calculations.year_report(weather_records, date))
+            year_report = weather_calculations.year_report(weather_records, date)
+            report_generator.generate_year_report(year_report)
     if args.a:
         for date in args.a:
-            report_generator.generate_average_month_report(weather_calculations.average_report(weather_records, date))
+            month_report = weather_calculations.average_report(weather_records, date)
+            report_generator.generate_month_report(month_report)
     if args.c:
         for date in args.c:
-            report_generator.generate_temp_chart(weather_calculations.month_records(weather_records, date),
-                                                 single_line=True)
+            month_report = weather_calculations.month_records(weather_records, date)
+            report_generator.generate_month_chart_report(month_report, single_line=True)
 
 
 if __name__ == '__main__':
