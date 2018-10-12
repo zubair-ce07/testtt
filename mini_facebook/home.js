@@ -120,8 +120,6 @@ function makePost()
             alert("new post has been added");
             document.getElementById("newPostTitle").value = "";
             document.getElementById("newPostText").value = "";
-            let mod = document.getElementById("addPostModal")
-            mod.modal('hide');
         });
     }
 }
