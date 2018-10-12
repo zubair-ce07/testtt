@@ -1,15 +1,14 @@
 import scrapy
 
 
-class Product(scrapy.Item):
-
+class OrsayItem(scrapy.Item):
     brand = scrapy.Field()
     care = scrapy.Field()
     category = scrapy.Field()
-    discription = scrapy.Field()
+    description = scrapy.Field()
     image_urls = scrapy.Field()
     retailer_sku = scrapy.Field()
     name = scrapy.Field()
     skus = scrapy.Field()
     url = scrapy.Field()
-    request_queue = scrapy.Field()
+    colors_queue = scrapy.Field()
