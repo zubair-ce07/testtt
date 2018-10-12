@@ -7,19 +7,7 @@ import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
 import PropTypes from 'prop-types';
 
-const styles = theme => ({
-    root: {
-        display: 'flex',
-        flexWrap: 'wrap',
-    },
-    formControl: {
-        margin: theme.spacing.unit,
-        minWidth: 120,
-    },
-    selectEmpty: {
-        marginTop: theme.spacing.unit * 2,
-    },
-});
+import styles from '../../themes/simpleSelectTheme'
 
 class SimpleSelect extends React.Component {
     constructor(props){

@@ -12,21 +12,13 @@ import LocationCity from '@material-ui/icons/LocationCity';
 import ExpandLess from '@material-ui/icons/ExpandLess';
 import ExpandMore from '@material-ui/icons/ExpandMore';
 import Divider from '@material-ui/core/Divider';
+
 import {connect} from 'react-redux';
 import { Link } from 'react-router-dom'
 
 import store from '../../store'
+import styles from '../../themes/sidebarTheme'
 
-
-const styles = theme => ({
-    root: {
-        backgroundColor: "#F5F5F5",
-        height: '100%'
-    },
-    nested: {
-        paddingLeft: theme.spacing.unit * 4,
-    },
-});
 
 const action = type => store.dispatch({type})
 

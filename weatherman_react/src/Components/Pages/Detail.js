@@ -1,28 +1,13 @@
 import React from "react"
 import {Typography, Paper, GridList, GridListTile} from "@material-ui/core/"
+
 import {connect} from 'react-redux';
 
 import MonthCard from '../Partials/MonthCard'
 import SimpleSelect from '../Partials/SimpleSelect'
 import store from "../../store";
+import styles from '../../themes/detailTheme'
 
-
-const styles = theme => ({
-    root: {
-        display: 'flex',
-        flexWrap: 'wrap',
-        justifyContent: 'space-around',
-        overflow: 'hidden',
-        backgroundColor: theme.palette.background.paper,
-    },
-    gridList: {
-        width: 500,
-        height: 450,
-    },
-    icon: {
-        color: 'rgba(255, 255, 255, 0.54)',
-    },
-});
 
 const action = (type, payload) => store.dispatch({type, payload});
 
@@ -41,9 +26,6 @@ class Detail extends React.Component {
         var cityId = this.state.cityId;
         action('FETCH_YEARS', cityId)
 
-
-
-
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
@@ -60,6 +42,7 @@ class Detail extends React.Component {
         }
 
     }
+
 
     componentWillUnmount() {
         action('RESET_WEATHER', null);
