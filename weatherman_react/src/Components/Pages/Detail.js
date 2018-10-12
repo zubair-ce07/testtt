@@ -2,29 +2,11 @@ import React from "react"
 import {Typography, Paper, GridList, GridListTile} from "@material-ui/core/"
 import axios from "axios";
 import * as constants from '../../constants'
-
+import BASE_URL from '../../config'
 import MonthCard from '../Partials/MonthCard'
 import SimpleSelect from '../Partials/SimpleSelect'
+import styles from '../../themes/detailTheme'
 
-
-const styles = theme => ({
-    root: {
-        display: 'flex',
-        flexWrap: 'wrap',
-        justifyContent: 'space-around',
-        overflow: 'hidden',
-        backgroundColor: theme.palette.background.paper,
-    },
-    gridList: {
-        width: 500,
-        height: 450,
-    },
-    icon: {
-        color: 'rgba(255, 255, 255, 0.54)',
-    },
-});
-
-let selectedYear = "";
 
 export default class Detail extends React.Component {
     constructor(props) {
@@ -34,7 +16,8 @@ export default class Detail extends React.Component {
             cityName: props.match.params.cityName,
             years: null,
             yearlyWeather: null,
-            monthlyWeather: null
+            monthlyWeather: null,
+            selectedYear: ""
         }
     }
 
@@ -43,7 +26,7 @@ export default class Detail extends React.Component {
         var cityId = this.state.cityId;
         var self = this;
 
-        axios.get(constants.BASE_URL + 'weather/years/' + cityId)
+        axios.get(BASE_URL + 'weather/years/' + cityId)
             .then(function (response) {
                 self.setState({years: response.data})
 
@@ -61,15 +44,17 @@ export default class Detail extends React.Component {
         var self = this;
         if (cityId !== prevState.cityId) {
             document.title="Weather Detail of "+this.props.match.params.cityName+" - Weatherman";
-            selectedYear = "";
+
             this.setState({
                 cityId: cityId,
                 cityName: this.props.match.params.cityName,
                 years: null,
                 yearlyWeather: null,
-                monthlyWeather: null
-            })
-            axios.get(constants.BASE_URL + 'weather/years/' + cityId)
+                monthlyWeather: null,
+                selectedYear: ""
+
+            });
+            axios.get(BASE_URL + 'weather/years/' + cityId)
                 .then(function (response) {
                     self.setState({years: response.data})
 
@@ -82,16 +67,12 @@ export default class Detail extends React.Component {
 
     }
 
-    componentWillUnmount() {
-        selectedYear = "";
-    }
 
     handleSelect(e) {
         var year = e.target.value;
-        // if it would be a state, when i save the state here, it would call render again which is useless
-        selectedYear = year;
+        this.setState({selectedYear: year});
         var self = this;
-        axios.get(constants.BASE_URL + 'weather/average-monthly/' + year)
+        axios.get(BASE_URL + 'weather/average-monthly/' + year)
             .then(function (response) {
                 self.setState({monthlyWeather: response.data})
 
@@ -100,7 +81,7 @@ export default class Detail extends React.Component {
                 // handle error
                 console.error(error);
             });
-        axios.get(constants.BASE_URL + 'weather/yearly/' + year)
+        axios.get(BASE_URL + 'weather/yearly/' + year)
             .then(function (response) {
                 self.setState({yearlyWeather: response.data})
 
@@ -135,12 +116,12 @@ export default class Detail extends React.Component {
                         <Paper className="paper-style">
                             <SimpleSelect handleSelect={this.handleSelect.bind(this)}
                                           label={"Select Year"}
-                                          selected={selectedYear}
+                                          selected={this.state.selectedYear}
                                           items={this.state.years}/>
                         </Paper>
                         {this.state.yearlyWeather &&
                         <Paper className="paper-style">
-                            <h3>Yearly Weather of {this.state.cityName} of year {selectedYear}</h3>
+                            <h3>Yearly Weather of {this.state.cityName} of year {this.state.selectedYear}</h3>
                             <Typography variant="subheading">
                                 Higest: <span>{this.state.yearlyWeather.higest_temperature}&deg;C</span>
                                 <br/>
@@ -156,7 +137,7 @@ export default class Detail extends React.Component {
                                 <GridList cellHeight={180} cols={3} className={classes.gridList}>
                                     <GridListTile key="Subheader" cols={3} style={{height: 'auto'}}>
                                         <h3>Monthly Weather of {this.state.cityName} of
-                                            year {selectedYear}</h3>
+                                            year {this.state.selectedYear}</h3>
                                     </GridListTile>
                                     {this.state.monthlyWeather.map((monthly, index) =>
                                         <GridListTile key={index} cols={1}>

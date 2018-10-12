@@ -12,20 +12,11 @@ import LocationCity from '@material-ui/icons/LocationCity';
 import ExpandLess from '@material-ui/icons/ExpandLess';
 import ExpandMore from '@material-ui/icons/ExpandMore';
 import Divider from '@material-ui/core/Divider';
-import * as constatnts from '../../constants'
+import BASE_URL from '../../config'
 import axios from "axios";
 import { Link } from 'react-router-dom'
 
-
-const styles = theme => ({
-    root: {
-        backgroundColor: "#F5F5F5",
-        height: '100%'
-    },
-    nested: {
-        paddingLeft: theme.spacing.unit * 4,
-    },
-});
+import styles from '../../themes/sidebarTheme'
 
 class Sidebar extends React.Component {
     constructor() {
@@ -39,8 +30,8 @@ class Sidebar extends React.Component {
     }
 
     componentDidMount() {
-        var self = this
-        axios.get(constatnts.BASE_URL + 'weather/cities/')
+        var self = this;
+        axios.get(BASE_URL + 'weather/cities/')
             .then(function (response) {
                 self.setState({cities: response.data})
             })
