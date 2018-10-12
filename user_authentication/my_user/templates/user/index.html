@@ -1,9 +1,13 @@
 {% extends 'user/base.html' %}
-{% block title %}Register{% endblock %}
 
+{% block title %}
+    {% if is_rest %}
+        REST Home
+    {% else %}
+        Home
+    {% endif %}
 
-
-
+{% endblock %}
 
 {% block body %}
     {% if request.user.is_authenticated %}
@@ -12,10 +16,27 @@
         <p>Your email is: {{ request.user.email }}</p>
         <hr />
         <p>What do you want to do?</p>
-        <p><a href="{% url 'my_user:logout' %}">Logout</a> | <a href="{% url 'my_user:edit'%}">Edit Profile</a></p>
+        {% if is_rest %}
+            <p><a href="{% url 'my_user:rest_logout' %}">Logout</a> | <a href="{% url 'my_user:rest_edit'%}">Edit Profile</a></p>
+        {% else %}
+            <p><a href="{% url 'my_user:logout' %}">Logout</a> | <a href="{% url 'my_user:edit'%}">Edit Profile</a></p>
+        {% endif %}
     {% else %}
         <h1>Hello World</h1>
         <P>Please Login or Register First</P>
-        <p><a href="{% url 'my_user:login' %}">Login</a> | <a href="{% url 'my_user:register' %}">Register</a></p>
+        {% if is_rest %}
+            <p><a href="{% url 'my_user:rest_login' %}">Login</a> | <a href="{% url 'my_user:rest_register' %}">Register</a></p>
+        {% else %}
+            <p><a href="{% url 'my_user:login' %}">Login</a> | <a href="{% url 'my_user:register' %}">Register</a></p>
+        {% endif %}
+    {% endif %}
+
+
+    <hr/>
+    {% if is_rest %}
+        <h3>This is a special view for REST Framework</h3>
+        <p>To go to simple home <a href="{% url 'my_user:index' %}">Click Here</a> </p>
+    {% else %}
+        <p>To go to REST Framework home <a href="{% url 'my_user:rest_index' %}">Click Here</a> </p>
     {% endif %}
 {% endblock %}

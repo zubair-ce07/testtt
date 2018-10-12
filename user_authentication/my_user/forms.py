@@ -20,7 +20,7 @@ class UserEditForm(forms.ModelForm):
 
     class Meta:
         """
-        Meta class of UserEditForm
+            Meta class of UserEditForm
         """
         model = User
         fields = ['first_name', 'last_name', 'username', 'email']

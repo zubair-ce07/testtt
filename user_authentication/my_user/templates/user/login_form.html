@@ -6,5 +6,11 @@
 {% endblock %}
 
 {% block panel_footer %}
-    Do not have an account? <a href="{% url 'my_user:register' %}">Click here</a> to Register.
+    Do not have an account?
+    {% if is_rest %}
+        <a href="{% url 'my_user:rest_register' %}">Click here</a>
+    {% else %}
+        <a href="{% url 'my_user:register' %}">Click here</a>
+    {% endif %}
+     to Register.
 {% endblock %}
