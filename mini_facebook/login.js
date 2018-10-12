@@ -1,22 +1,23 @@
-function login(event)
+function login()
 {
-	document.getElementById('login_error').innerHTML = "";
-    let username = document.getElementById("login_username").value;
-    let password = document.getElementById("login_password").value;
-    
-	fetch(`http://localhost:3000/users?username=${username}`)
-	.then(response => response.json())
-	.then(user_list => 
-	{
-        if(user_list.length && user_list[0].password == password)
-        {
-            sessionStorage.setItem("loggedin_user", JSON.stringify(user));
-	 		window.location.replace('home.html');
-        }
-        else
-        	document.getElementById('login_error').innerHTML = " ** Invalid username or password";
-	})
-	.catch(alert)
-	
-	return false;
+  let baseUrl = `http://localhost:3000`;
+  localStorage.setItem("base_url", baseUrl);
+  document.getElementById('loginError').innerHTML = "";
+  let username = document.getElementById("loginUsername").value;
+  let password = document.getElementById("loginPassword").value;
+
+  fetch(`${baseUrl}/users?username=${username}`)
+  .then(response => response.json())
+  .then(userList =>
+  {
+    if(userList.length && userList[0].password == password)
+    {
+      localStorage.setItem("loggedin_user", JSON.stringify(userList[0]));
+      window.location.replace('home.html');
+    }
+    else
+      document.getElementById('loginError').innerHTML = " ** Invalid username or password";
+  })
+  .catch(console.error);
+  return false;
 }

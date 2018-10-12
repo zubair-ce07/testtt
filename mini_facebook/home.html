@@ -1,93 +1,64 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <title>Home</title>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-  <script>
-     if(!sessionStorage.getItem("loggedin_user"))
-     {
-        window.location.href = "login.html";
-     }
-  </script>
-  
-  <style>
-    footer {
-      background-color: #555;
-      color: white;
-      padding: 15px;
-      position: fixed;
-      left: 0;
-      bottom: 0;
-      width: 100%;
-      text-align: center;
-    }
-    .logout_btn {
-      position: fixed;
-      right: 10px;
-    }   
-  </style>
-</head>
-<body>
-<div class="container-fluid content">
-   <h4><small>POSTS</small>   
-   <button class="btn btn-danger btn-sm logout_btn" onclick="logout()"  >
-      <span class="glyphicon glyphicon-log-out"></span> Log out
-   </button></h4>
-   <hr>
-   
-    <h4>What's on your mind?</h4>
+  <head>
+    <title>Home</title>
+    <meta charset="utf-8" name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script type="text/javascript" src="onload.js"></script>
+  </head>
+  <body>
+    <div class="container-fluid content">
+      <h4><small>POSTS</small>
+        <button class="btn btn-danger btn-sm logout-btn" onclick="logout()"><span class="glyphicon glyphicon-log-out"></span> Log out</button>
+      </h4>
+      <hr>
+      <h4>What&rsquo;s on your mind?</h4>
       <form role="form">
         <div class="form-group">
-          <input type="text" name="new_post_title" class="form-control" id="new_post_title" autocomplete="off" required placeholder="Title">
-          <br>
-          <textarea class="form-control" rows="3" required name="new_post_text" id="new_post_text"></textarea>
+          <input type="text" class="form-control" id="newPostTitle" autocomplete="off" placeholder="Title" required >
+          <textarea class="form-control" id="newPostText" rows="3" required ></textarea>
         </div>
-        <input type="button" class="btn btn-success" onclick="make_post()" value="Make new post">
+        <input type="button" class="btn btn-success" onclick="makePost()" value="Make new post">
       </form>
-      <br><br>
-   <div class="container" id="post_container">
-      <div class="post" name="post_template" style="display:none">         
-         <h2 class="post_title"></h2>
-         <h5><span class="glyphicon glyphicon-time"></span> Post by <span class="post_username"></span>, <span class="post_date"></span>.</h5>
-         <h5><span class="label label-success">Likes: <span class="post_likes"></span></span> <i onclick="make_like(this)" class="like fa"></i></h5><br>      
-         <p class="post_data"></p>
-         <br>
-         <p><span class="badge post_comment_count"></span> Comments:</p>
-         
-         <h4>Leave a Comment:</h4>
-	      <form role="form">
-	        <div class="form-group">
-	          <textarea class="form-control comment_area" rows="2"></textarea>
-	        </div>
-	        <input type="button" class="btn btn-success comment_btn" onclick="make_comment(this)" value="comment">
-	      </form>
-	   
-	      <br>      
-         <div class="row comment_container" >
-           <div class="comment_template">            
-            <div class="col-sm-2 text-center">
-               <h4 class="comment_by"></h4>
-            </div>
-            <div class="col-sm-10">
-               <p class="comment"></p>
-               <br>
-            </div>
-            </div>
-         </div>
-         <hr>      
-      </div>    
-   </div>      
-</div>
-<script type="text/javascript" src="home.js"></script>
-<br><br>
-<footer class="container-fluid">
-  <p>Footer Text</p>
-</footer>
+      <div class="container" id="postContainer">
+        <div class="post" name="post_template" style="display:none">
+          <h2 class="post-title"></h2>
+          <h5><span class="glyphicon glyphicon-time"></span> Post by <span class="post-username"></span>, <span class="post-date"></span>.</h5>
+          <h5><span class="label label-success">Likes: <span class="post-likes"></span></span> <i onclick="makeLike()" class="like fa"></i></h5>
+          <p class="post-data"></p>
+          <p><span class="badge post-comment-count"></span> Comments:</p>
 
-</body>
+          <h4>Leave a Comment:</h4>
+
+          <form role="form">
+            <div class="form-group">
+              <textarea class="form-control comment-area" rows="2"></textarea>
+            </div>
+            <input type="button" class="btn btn-success comment-btn" onclick="makeComment()" value="comment">
+          </form>
+
+          <div class="row comment-container" >
+            <div>
+              <div class="col-sm-2 text-center">
+                <h4 class="comment-by"></h4>
+              </div>
+              <div class="col-sm-10">
+                <p class="comment"></p>
+              </div>
+            </div>
+          </div>
+          <hr>
+        </div>
+      </div>
+    </div>
+
+    <footer class="container-fluid">
+      <p>Footer Text</p>
+    </footer>
+  </body>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  <script type="text/javascript" src="home.js"></script>
 </html>

@@ -2,216 +2,222 @@ let months = [
     'January', 'February', 'March', 'April', 'May',
     'June', 'July', 'August', 'September',
     'October', 'November', 'December'
-    ];
+]
 
 
 function logout()
 {
-   sessionStorage.removeItem("loggedin_user");
+   localStorage.removeItem("loggedin_user");
    window.location.href = "login.html";
 }
 
 
-function get_current_date()
+function getCurrentDate()
 {
-	let date = new Date();
-	month = months[date.getMonth()-1]
+    let date = new Date();
+    month = months[date.getMonth()-1];
     return `${month} ${date.getDate()}, ${date.getFullYear()}`;
 }
 
 
-function increase_comment_badge(post_id)
+function increaseCommentBadge(postId)
 {
-	let comment_badge = document.getElementById(`${post_id}_comment_badge`)
-	count = comment_badge.innerHTML
-	count= parseInt(count, 10)+1
-	comment_badge.innerHTML = count
+    let commentBadge = document.getElementById(`${postId}_commentBadge`);
+    count = commentBadge.innerHTML;
+    count= parseInt(count, 10)+1;
+    commentBadge.innerHTML = count;
 }
 
 
-function get_post_div()
+function getPostDiv()
 {
-	let post_template = document.getElementsByName("post_template")[0]
-	var post_div = post_template.cloneNode(true)
-			
-	post_div.style.display = "block"
-    post_div.removeAttribute("name")
-    return post_div
+    let postTemplate = document.getElementsByName("post_template")[0];
+    var postDiv = postTemplate.cloneNode(true);
+    postDiv.style.display = "block";
+    postDiv.removeAttribute("name");
+    return postDiv;
 }
 
 
-function display_comment(comment_container, comment)
+function displayComment(commentContainer, comment)
 {
-	comment_div = comment_container.firstElementChild.cloneNode(true)
-	comment_div.getElementsByClassName("comment_by")[0].innerHTML = comment["comment_by"]
-	comment_div.getElementsByClassName("comment")[0].innerHTML = comment["comment"]
-	comment_container.appendChild(comment_div)
+    commentDiv = commentContainer.firstElementChild.cloneNode(true);
+    commentDiv.getElementsByClassName("comment-by")[0].innerHTML = comment["comment_by"];
+    commentDiv.getElementsByClassName("comment")[0].innerHTML = comment["comment"];
+    commentContainer.appendChild(commentDiv);
 }
 
-function display_post(user_post, post_div)
+function displayPost(userPost, postDiv)
 {
-	let logged_in_user = JSON.parse(sessionStorage.getItem("loggedin_user"));
-	if(!(user_post["likes[]"]))
-		user_post["likes[]"] =  new Array()
-    else if (!Array.isArray(user_post["likes[]"]))
-    {	
-    	let arr = new Array()
-        arr.push(user_post["likes[]"])
-        user_post["likes[]"] = arr
-    }  
+    let loggedInUser = JSON.parse(localStorage.getItem("loggedin_user"));
+    if(!(userPost["likes[]"]))
+        userPost["likes[]"] =  new Array();
+    else if (!Array.isArray(userPost["likes[]"]))
+    {
+        let arr = new Array();
+        arr.push(userPost["likes[]"]);
+        userPost["likes[]"] = arr;
+    }
 
-    post_div.getElementsByClassName("post_username")[0].innerHTML = user_post["post_user"]["username"]
-	post_div.getElementsByClassName("post_date")[0].innerHTML = user_post.date
-	post_div.getElementsByClassName("post_title")[0].innerHTML = user_post.title
-	post_div.getElementsByClassName("post_data")[0].innerHTML = user_post.post
-	
-	let comment_badge = post_div.getElementsByClassName("post_comment_count")[0]
-	comment_badge.innerHTML =  user_post["post_comments"].length
-	comment_badge.id = `${user_post.id}_comment_badge`
+    postDiv.getElementsByClassName("post-username")[0].innerHTML = userPost["post_user"]["username"];
+    postDiv.getElementsByClassName("post-date")[0].innerHTML = userPost.date;
+    postDiv.getElementsByClassName("post-title")[0].innerHTML = userPost.title;
+    postDiv.getElementsByClassName("post-data")[0].innerHTML = userPost.post;
 
-	let like_badge = post_div.getElementsByClassName("post_likes")[0]
-	like_badge.innerHTML = user_post["likes[]"].length
-	like_badge.id = `${user_post.id}_likecount`
-    
-    let like_element = post_div.getElementsByClassName("like")[0]
-    like_element.id =  `${user_post.id}_like`
+    let commentBadge = postDiv.getElementsByClassName("post-comment-count")[0];
+    commentBadge.innerHTML =  userPost["post_comments"].length;
+    commentBadge.id = `${userPost.id}_commentBadge`;
 
-    if(user_post["likes[]"].includes(logged_in_user.username))
-        like_element.classList.add("fa-thumbs-down");
+    let likeBadge = postDiv.getElementsByClassName("post-likes")[0];
+    likeBadge.innerHTML = userPost["likes[]"].length;
+    likeBadge.id = `${userPost.id}_likecount`;
+
+    let likeElement = postDiv.getElementsByClassName("like")[0];
+    likeElement.id =  `${userPost.id}_like`;
+
+    if(userPost["likes[]"].includes(loggedInUser.username))
+        likeElement.classList.add("fa-thumbs-down");
     else
-        like_element.classList.add("fa-thumbs-up");
+        likeElement.classList.add("fa-thumbs-up");
 
-    post_div.getElementsByClassName("comment_btn")[0].id =  `${user_post.id}_btn`
-    post_div.getElementsByClassName("comment_area")[0].id =  `${user_post.id}_comment`
+    postDiv.getElementsByClassName("comment-btn")[0].id =  `${userPost.id}_btn`;
+    postDiv.getElementsByClassName("comment-area")[0].id =  `${userPost.id}_comment`;
 
-    let comment_container = post_div.getElementsByClassName("comment_container")[0]
-    comment_container.id = `${user_post.id}_comments`
+    let commentContainer = postDiv.getElementsByClassName("comment-container")[0];
+    commentContainer.id = `${userPost.id}_comments`;
 
-    for(let comment of user_post["post_comments"])
-    	display_comment(comment_container, comment)
+    for(let comment of userPost["post_comments"])
+        displayComment(commentContainer, comment);
 }
 
 
-function make_post()
+function makePost()
 {
-	let logged_in_user = JSON.parse(sessionStorage.getItem("loggedin_user"));
-	if(logged_in_user)
-	{
-		let formData = {
-			"title": document.getElementById("new_post_title").value,
-			"post": document.getElementById("new_post_text").value,
-			"date": get_current_date()			
-		};
-
-		$.ajax({
-			type        : 'POST',
-			url         : `http://localhost:3000/users/${logged_in_user.id}/posts`, 
-			data        : formData, 
-			dataType    : 'json' 
-		})
-		.done(new_post => 
-		{
-			let post_container = document.getElementById("post_container")
-			post_div = get_post_div()
-			new_post["post_comments"] = []
-			new_post["post_user"] = logged_in_user
-			display_post(new_post, post_div)
-    	    post_container.appendChild(post_div)
-		})
-	}
-}
-
-
-function make_comment(btn)
-{
-	let post_id = (btn.id.split("_"))[0];
-	let logged_in_user = JSON.parse(sessionStorage.getItem("loggedin_user"));
-	
-	let formData = {
-		"comment_by": logged_in_user.username,
-		"comment": document.getElementById(`${post_id}_comment`).value 
-	};
-
-	$.ajax({
-		type        : 'POST',
-		url         : `http://localhost:3000/posts/${post_id}/comments`, 
-		data        : formData, 
-		dataType    : 'json' 
-	})
-	.done(comment =>
-	{
-		let comment_container = document.getElementById(`${comment.postId}_comments`)
-		display_comment(comment_container, comment)
-		increase_comment_badge(comment.postId)
-	})
-}
-
-
-function make_like(btn)
-{
-	let logged_in_user = JSON.parse(sessionStorage.getItem("loggedin_user"));
-	btn.classList.toggle("fa-thumbs-down");
-	let post_id = (btn.id.split("_"))[0];
-
-	fetch(`http://localhost:3000/posts/${post_id}`)
-	.then(response => response.json())
-    .then(post => 
+    let loggedInUser = JSON.parse(localStorage.getItem("loggedin_user"));
+    if(loggedInUser)
     {
-    	if(!(post["likes[]"]))
-        	post["likes[]"] =  new Array()
-        else if (!Array.isArray(post["likes[]"]))
-        {	
-        	let arr = new Array()
-        	arr.push(post["likes[]"])
-        	post["likes[]"] = arr
-        }
- 
-    	like_index = post["likes[]"].findIndex(username => username == logged_in_user.username)
-        if(like_index!=-1)
-            post["likes[]"].splice(like_index, 1);
-        else
-            post["likes[]"].push(logged_in_user.username)
-    	
-    	$.ajax({
-    		type        : 'PUT',
-    		url         : `http://localhost:3000/posts/${post_id}`, 
-    		data        : post,
-    		dataType    : 'json' 
-    	})
-    	.done(data => document.getElementById(`${post_id}_likecount`).innerHTML = post["likes[]"].length )
+        let baseUrl = localStorage.getItem("base_url");
+        let formData = {
+            "title": document.getElementById("newPostTitle").value,
+            "post": document.getElementById("newPostText").value,
+            "date": getCurrentDate()
+        };
+
+        $.ajax({
+            type        : 'POST',
+            url         : `${baseUrl}/users/${loggedInUser.id}/posts`,
+            data        : formData,
+            dataType    : 'json'
+        })
+        .done(newPost =>
+        {
+            let postContainer = document.getElementById("postContainer");
+            postDiv = getPostDiv();
+            newPost["post_comments"] = [];
+            newPost["post_user"] = loggedInUser;
+            displayPost(newPost, postDiv);
+            postContainer.appendChild(postDiv);
+            alert("new post has been added");
+            document.getElementById("newPostTitle").value = "";
+            document.getElementById("newPostText").value = "";
+        });
+    }
+}
+
+
+function makeComment()
+{
+    let baseUrl = localStorage.getItem("base_url");
+    let postId = (event.srcElement.id.split("_"))[0];
+    let loggedInUser = JSON.parse(localStorage.getItem("loggedin_user"));
+
+    let formData = {
+        "comment_by": loggedInUser.username,
+        "comment": document.getElementById(`${postId}_comment`).value
+    };
+
+    $.ajax({
+        type        : 'POST',
+        url         : `${baseUrl}/posts/${postId}/comments`,
+        data        : formData,
+        dataType    : 'json'
     })
-    .catch(alert);
+    .done(comment =>
+    {
+        let commentContainer = document.getElementById(`${comment.postId}_comments`);
+        displayComment(commentContainer, comment);
+        increaseCommentBadge(comment.postId);
+        document.getElementById(`${postId}_comment`).value = "";
+    });
 }
 
 
-let logged_in_user = JSON.parse(sessionStorage.getItem("loggedin_user"));
-fetch(`http://localhost:3000/posts`)
-.then(response => response.json())
-.then(post_list => 
+function makeLike()
 {
-	let post_container = document.getElementById("post_container")
-    for (let user_post of post_list) 
+    let baseUrl = localStorage.getItem("base_url");
+    let loggedInUser = JSON.parse(localStorage.getItem("loggedin_user"));
+    event.srcElement.classList.toggle("fa-thumbs-down");
+    let postId = (event.srcElement.id.split("_"))[0];
+
+    fetch(`${baseUrl}/posts/${postId}`)
+    .then(response => response.json())
+    .then(post =>
     {
-    	fetch(`http://localhost:3000/posts/${user_post.id}/comments`)
-    	.then(response => response.json())
-    	.then(post_comments => 
-    	{
-    		user_post["post_comments"] = post_comments
-    		if(logged_in_user.id == user_post.userId)
-    			user_post["post_user"] = logged_in_user
-    		else
-    		{
-    			fetch(`http://localhost:3000/users/${user_post.userId}`)
-    			.then(response => response.json())
-    			.then(post_user => 
-    			{
-    				user_post["post_user"] = post_user
-    	    	})
-    	    	.catch(alert);
-    		}
-    		post_div = get_post_div()
-    		display_post(user_post, post_div)
-    	    post_container.appendChild(post_div)
-    	}).catch(alert);
-	}
-}).catch(alert);
+        if(!(post["likes[]"]))
+            post["likes[]"] =  new Array();
+        else if (!Array.isArray(post["likes[]"]))
+        {
+            let arr = new Array();
+            arr.push(post["likes[]"]);
+            post["likes[]"] = arr;
+        }
+
+        likeIndex = post["likes[]"].findIndex(username => username == loggedInUser.username);
+        if(likeIndex!=-1)
+            post["likes[]"].splice(likeIndex, 1);
+        else
+            post["likes[]"].push(loggedInUser.username);
+
+        $.ajax({
+            type        : 'PUT',
+            url         : `${baseUrl}/posts/${postId}`,
+            data        : post,
+            dataType    : 'json'
+        })
+        .done(data => document.getElementById(`${postId}_likecount`).innerHTML = post["likes[]"].length)
+    })
+    .catch(console.error)
+}
+
+let baseUrl = localStorage.getItem("base_url");
+let loggedInUser = JSON.parse(localStorage.getItem("loggedin_user"));
+fetch(`${baseUrl}/posts`)
+.then(response => response.json())
+.then(postList =>
+{
+    let postContainer = document.getElementById("postContainer");
+    for (let userPost of postList)
+    {
+        fetch(`${baseUrl}/posts/${userPost.id}/comments`)
+        .then(response => response.json())
+        .then(postComments =>
+        {
+            userPost["post_comments"] = postComments;
+            if(loggedInUser.id == userPost.userId)
+                userPost["post_user"] = loggedInUser;
+            else
+            {
+                fetch(`${baseUrl}/users/${userPost.userId}`)
+                .then(response => response.json())
+                .then(postUser =>
+                {
+                    userPost["post_user"] = postUser;
+                })
+                .catch(console.error);
+            }
+            postDiv = getPostDiv();
+            displayPost(userPost, postDiv);
+            postContainer.appendChild(postDiv);
+        }).catch(console.error);
+    }
+}).catch(console.error);
