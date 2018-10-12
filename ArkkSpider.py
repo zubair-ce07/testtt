@@ -7,7 +7,7 @@ from scrapy.spiders import Rule, CrawlSpider
 class ArkkSpider(CrawlSpider):
     name = "ArkkSpider"
     base_url = ['https://www.arkkcopenhagen.com']
-    start_urls = ['https://www.arkkcopenhagen.com/collections/all-sneakers?page=1']
+    start_urls = ['https://www.arkkcopenhagen.com']
 
     rules = (
         Rule(LinkExtractor(
@@ -19,7 +19,7 @@ class ArkkSpider(CrawlSpider):
         item = {
             'brand': response.css('.analytics').re_first('"brand":"(.*?)",'),
             'care': None,
-            'care-instructions': None,
+            'care_instructions': None,
             'category': response.css('.analytics').re_first('"category":"(.*?)",'),
             'currency': response.xpath('//meta[@property="og:price:currency"]/@content').extract_first(),
             'description': response.css('.product-single__description>p::text').extract_first(),
@@ -28,10 +28,18 @@ class ArkkSpider(CrawlSpider):
             'name': response.css('.product-single__title::text').extract_first(),
             'skus': self.get_skus(response),
             'material': self.get_materials(response),
-            'trail': response.urljoin(response.css('.breadcrumb>a::attr(href)').extract()[-1]),
+            'trail': self.get_trail(response),
             'url': response.request.url,
         }
         yield item
+
+    def get_trail(self,response):
+        trail_list = []
+        trails = response.css('.breadcrumb>a::attr(href)').extract()
+        for trail in trails:
+            trail_url = response.urljoin(trail)
+            trail_list.append(trail_url)
+        return trail_list
 
     def get_img_urls(self, response):
         imgs_urls_list = []
