@@ -88,6 +88,7 @@ function clearAll()
 
 function validation()
 {
+  clearErrors();
   let baseUrl = `http://localhost:3000`;
   localStorage.setItem("base_url", baseUrl);
   let user = document.getElementById('username').value;

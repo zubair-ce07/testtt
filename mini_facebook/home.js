@@ -102,7 +102,7 @@ function makePost()
             "post": document.getElementById("newPostText").value,
             "date": getCurrentDate()
         };
-        
+
         $.ajax({
             type        : 'POST',
             url         : `${baseUrl}/users/${loggedInUser.id}/posts`,
@@ -120,6 +120,8 @@ function makePost()
             alert("new post has been added");
             document.getElementById("newPostTitle").value = "";
             document.getElementById("newPostText").value = "";
+            let mod = document.getElementById("addPostModal")
+            mod.modal('hide');
         });
     }
 }

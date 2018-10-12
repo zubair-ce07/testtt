@@ -18,15 +18,23 @@ footer {
   right: 10px;
 }
 
-#newPostTitle{
+#newPostTitle {
 	margin-bottom: 15px;
 }
 
-.content{
+.content {
 	margin-bottom: 30px;
 }
 
-.comment
-{
+.comment {
 	margin-bottom: 50px;
+}
+
+.main-heading {
+	font-size: 55px;
+}
+
+#newPost{
+	position: fixed;
+	right:100px;
 }

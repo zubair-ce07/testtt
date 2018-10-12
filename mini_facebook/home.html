@@ -12,18 +12,11 @@
     <div class="container-fluid content">
       <h4><small>POSTS</small>
         <button class="btn btn-danger btn-sm logout-btn" onclick="logout()">
-          <span class="glyphicon glyphicon-log-out"></span> Log out</button>
+          <span class="glyphicon glyphicon-log-out"></span>&nbsp;Log out</button>
+        <button type="button" class="btn btn-info btn-sm" data-toggle="modal" data-target="#addPostModal"
+          id ="newPost" ><span class="glyphicon glyphicon-plus"></span>&nbsp;Make a Post</button>
       </h4>
       <hr>
-      <h4>What&rsquo;s on your mind?</h4>
-      <form role="form">
-        <div class="form-group">
-          <input type="text" class="form-control" id="newPostTitle"
-            autocomplete="off" placeholder="Title" required >
-          <textarea class="form-control" id="newPostText" rows="3" required ></textarea>
-        </div>
-        <input type="button" class="btn btn-success" onclick="makePost()" value="Make new post">
-      </form>
       <div class="container" id="postContainer">
         <div class="post" name="post_template" style="display:none">
           <h2 class="post-title"></h2>
@@ -37,16 +30,13 @@
           </h5>
           <p class="post-data"></p>
           <p><span class="badge post-comment-count"></span>&nbsp;Comments:</p>
-
           <h4>Leave a Comment:</h4>
-
           <form role="form">
             <div class="form-group">
               <textarea class="form-control comment-area" rows="2"></textarea>
             </div>
             <input type="button" class="btn btn-success comment-btn"onclick="makeComment()" value="comment">
           </form>
-
           <div class="row comment-container" >
             <div>
               <div class="col-sm-2 text-center">
@@ -62,6 +52,29 @@
       </div>
     </div>
 
+    <div id="addPostModal" class="modal fade" role="dialog">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+            <h4>What&rsquo;s on your mind?</h4>
+          </div>
+          <form role="form">
+            <div class="modal-body">
+              <div class="form-group">
+                <input type="text" class="form-control" id="newPostTitle"
+                  autocomplete="off" placeholder="Title" required >
+                <textarea class="form-control" id="newPostText" rows="3" required ></textarea>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <input type="button" class="btn btn-success" onclick="makePost()" value="Make new post">
+              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
     <footer class="container-fluid">
       <p>Footer Text</p>
     </footer>
