@@ -24,7 +24,6 @@ const styles = theme => ({
     },
 });
 
-let selectedYear = "";
 const action = (type, payload) => store.dispatch({type, payload});
 
 class Detail extends React.Component {
@@ -33,8 +32,7 @@ class Detail extends React.Component {
         this.state = {
             cityId: props.match.params.cityId,
             cityName: props.match.params.cityName,
-
-            monthlyWeather: null
+            selectedYear: ""
         }
     }
 
@@ -52,13 +50,11 @@ class Detail extends React.Component {
         var cityId = this.props.match.params.cityId;
         if (cityId !== prevState.cityId) {
             document.title="Weather Detail of "+this.props.match.params.cityName+" - Weatherman";
-            selectedYear = "";
+            action('RESET_WEATHER', null);
             this.setState({
                 cityId: cityId,
                 cityName: this.props.match.params.cityName,
-
-
-                monthlyWeather: null
+                selectedYear: ""
             });
             action('FETCH_YEARS', cityId)
         }
@@ -67,15 +63,13 @@ class Detail extends React.Component {
 
     componentWillUnmount() {
         action('RESET_WEATHER', null);
-        selectedYear = "";
     }
 
     handleSelect(e) {
         var year = e.target.value;
-        // if it would be a state, when i save the state here, it would call render again which is useless
-        selectedYear = year;
         action('FETCH_MONTHLY_WEATHER', year);
         action('FETCH_YEARLY_WEATHER', year);
+        this.setState({selectedYear: year});
     }
 
 
@@ -102,12 +96,12 @@ class Detail extends React.Component {
                         <Paper className="paper-style">
                             <SimpleSelect handleSelect={this.handleSelect.bind(this)}
                                           label={"Select Year"}
-                                          selected={selectedYear}
+                                          selected={this.state.selectedYear}
                                           items={this.props.years}/>
                         </Paper>
                         {this.props.yearlyWeather &&
                         <Paper className="paper-style">
-                            <h3>Yearly Weather of {this.state.cityName} of year {selectedYear}</h3>
+                            <h3>Yearly Weather of {this.state.cityName} of year {this.state.selectedYear}</h3>
                             <Typography variant="subheading">
                                 Higest: <span>{this.props.yearlyWeather.higest_temperature}&deg;C</span>
                                 <br/>
@@ -123,7 +117,7 @@ class Detail extends React.Component {
                                 <GridList cellHeight={180} cols={3} className={classes.gridList}>
                                     <GridListTile key="Subheader" cols={3} style={{height: 'auto'}}>
                                         <h3>Monthly Weather of {this.state.cityName} of
-                                            year {selectedYear}</h3>
+                                            year {this.state.selectedYear}</h3>
                                     </GridListTile>
                                     {this.props.monthlyWeather.map((monthly, index) =>
                                         <GridListTile key={index} cols={1}>
