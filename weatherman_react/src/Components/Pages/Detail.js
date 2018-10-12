@@ -28,7 +28,6 @@ class Detail extends React.Component {
         var cityId = this.props.match.params.cityId;
         if (cityId !== prevState.cityId) {
             document.title="Weather Detail of "+this.props.match.params.cityName+" - Weatherman";
-            selectedYear = "";
             this.setState({
                 cityId: cityId,
                 cityName: this.props.match.params.cityName,
