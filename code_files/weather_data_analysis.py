@@ -64,13 +64,10 @@ class WeatherDataAnalysis:
                 'Min TemperatureC')
             mean_humidty_list = month.get_int_converted_attribute_values(
                 'Mean Humidity')
-
             report.append(sum(list(filter(None.__ne__, max_temp_list)))
                           / len(list(filter(None.__ne__, max_temp_list))))
-
             report.append(sum(list(filter(None.__ne__, min_temp_list)))
                           / len(list(filter(None.__ne__, min_temp_list))))
-
             report.append(sum(list(filter(None.__ne__, mean_humidty_list)))
                           / len(list(filter(None.__ne__, mean_humidty_list))))
         return report
