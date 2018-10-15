@@ -24,12 +24,7 @@ def clean_text(self, info):
     return [text for text in values if text]
 
 
-def find_currency(self, text):
-    return re.findall(r"[^\d.]", text[0])
-
-
 class IsetanItemLoader(ItemLoader):
     default_item_class = IsetanItem
     default_input_processor = clean_text
     quantity_out = TakeFirst()
-    currency_in = find_currency

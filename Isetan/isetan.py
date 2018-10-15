@@ -10,26 +10,17 @@ class IsetanSpider(CrawlSpider):
     name = 'isetan'
     allowed_domains = ['isetan.com.sg']
     start_urls = ['http://isetan.com.sg/']
+    urls_css = [
+        ".navPages-list .navPages-item",
+        ".pagination-item--next"]
 
     rules = (
-        Rule(LinkExtractor(restrict_css=(".navPages-list > .navPages-item > a"),
-                deny=("/workshops/")), callback="parse_product_list", follow=True),
         Rule(LinkExtractor(
-            restrict_css=(".pagination-item--next > a"), allow=("page=")),
-            callback="parse_product_list", follow=True),
+            restrict_css=url_css,
+            deny=("/workshops/")), callback="parse"),
+        Rule(LinkExtractor(restrict_css=(".custm-tags")),
+            callback="parse_product")
     )
-
-    def parse_product_urls(self, response):
-        return response.css(".custm-tags a::attr(href)").extract()
-
-    def parse_product_list(self, response):
-        product_urls = self.parse_product_urls(response)
-
-        for url in product_urls:
-            yield scrapy.Request(
-                url=url,
-                callback=self.parse_product
-            )
 
     def parse_product(self, response):
         loader = IsetanItemLoader(item=IsetanItem(), response=response)
@@ -40,7 +31,7 @@ class IsetanSpider(CrawlSpider):
         loader.add_css("categories", ".breadcrumb-label::text")
         loader.add_css("description", "#tab-description p::text")
         loader.add_css("image_urls", ".productView-thumbnail a::attr(href)")
-        loader.add_css("currency", ".productView-price div .price::text")
+        loader.add_css("currency", "meta[property='product:price:currency']::attr(content)")
         loader.add_css("product_type", "ul.breadcrumbs > li:nth-child(2) a::text")
         loader.add_value("url", response.url)
         loader.add_value("website", "https://www.isetan.com.sg/")
