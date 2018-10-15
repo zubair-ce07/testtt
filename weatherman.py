@@ -6,18 +6,16 @@ from statistics import mean
 
 
 class Weatherman:
-    def __init__(self, path, year, month=None):
+    def __init__(self, path):
         self.path = path
-        self.year = year
-        self.month = month
 
     def filter_year_files(self):
         all_files = os.listdir(self.path)
-        year_files = filter(lambda x: str(self.year) in x, all_files)
+        year_files = filter(lambda x: str(year) in x, all_files)
         return year_files
 
     def filter_month_files(self):
-        month_files = filter(lambda x: x.endswith(str(self.year) + "_" + str(self.month) + ".txt"),
+        month_files = filter(lambda x: x.endswith(str(year) + "_" + str(month) + ".txt"),
                              os.listdir(self.path))
         return month_files
 
@@ -120,11 +118,10 @@ parser.add_argument('-c', help='For month, displays extreme temperatures in red 
 parser.add_argument('-b', help='For month, displays extreme temperatures in red and blue in same line for each day')
 args = parser.parse_args()
 path = args.path
-
+weatherman1 = Weatherman(path)
 if args.e:
     year = args.e
     month = None
-    weatherman1 = Weatherman(path, year, month)
     year_files = weatherman1.filter_year_files()
     yearly_data = weatherman1.weatherman_readings(year_files)
     records = weatherman1.record(yearly_data)
@@ -133,7 +130,7 @@ if args.a:
     ym = datetime.strptime(args.a, '%Y/%m')
     year = ym.strftime('%Y')
     month = ym.strftime('%b')
-    weatherman1 = Weatherman(path, year, month)
+    weatherman1 = Weatherman(path)
     month_files = weatherman1.filter_month_files()
     monthly_data = weatherman1.weatherman_readings(month_files)
     records = weatherman1.record(monthly_data)
@@ -142,7 +139,7 @@ if args.c:
     ym = datetime.strptime(args.c, '%Y/%m')
     year = ym.strftime('%Y')
     month = ym.strftime('%b')
-    weatherman1 = Weatherman(path, year, month)
+    weatherman1 = Weatherman(path)
     month_files = weatherman1.filter_month_files()
     monthly_data = weatherman1.weatherman_readings(month_files)
     records = weatherman1.record(monthly_data)
@@ -151,7 +148,7 @@ if args.b:
     ym = datetime.strptime(args.b, '%Y/%m')
     year = ym.strftime('%Y')
     month = ym.strftime('%b')
-    weatherman1 = Weatherman(path, year, month)
+    weatherman1 = Weatherman(path)
     month_files = weatherman1.filter_month_files()
     monthly_data = weatherman1.weatherman_readings(month_files)
     records = weatherman1.record(monthly_data)
