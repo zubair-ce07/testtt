@@ -27,51 +27,6 @@ def get_first(response, path):
     return response.css(path).extract_first()
 
 
-def parse_item_color_sku(response, hm_item):
-    """
-    Add color_sku based on color codes and yield final item
-    :param response: response object received from item-url
-    :param hm_item: semi-filled item object to add color_sku
-    :return: final product item
-    """
-    color_codes = parse_color_codes(response)
-    if not color_codes:
-        yield hm_item
-    else:
-        request_parse_color(response, color_codes, hm_item)
-
-
-def parse_color(response):
-    """
-    Callback function to scrape item color and size information.
-    :param response: response received by POST request of an item.
-    :return: yields the item after scrapping the color
-    and size information of the item.
-    """
-    # get meta data from response
-    hm_item = response.meta['item']
-    color_codes = response.meta['color_codes']
-
-    data = json.loads(response.body)
-    for value in data:
-        if 'replaceDynamicParts' in value.values():
-            html_value = html.fromstring(value['args'][0]['replaceWith'])
-            color_code = get_color_from_html(html_value)
-            sizes = get_sizes_from_html(html_value)
-            color_sku = {
-                'color_code': color_code,
-                'sizes': sizes,
-            }
-            # append the color_sku to item
-            hm_item['color_skus'].append(color_sku)
-    # if more colors are left
-    if color_codes:
-        # yield request to parse next color
-        request_next_color(response, color_codes, hm_item)
-    else:
-        yield hm_item
-
-
 def parse_description(response):
     """
     parse the item description
@@ -140,7 +95,13 @@ def parse_price(response):
     :param response: response object to parse detail from
     :return: item price
     """
-    price_path = "div.special--price span.price-amount::text"
+    price_path = "div.special--price"
+    if response.css(price_path) is None:
+        # no discount, use simple value
+        price_path = "div.content__title_wrapper span.price-amount::text"
+    else:
+        # discount given, use this path
+        price_path = "{} span.price-amount::text".format(price_path)
     return get_first(response, price_path)
 
 
@@ -226,15 +187,7 @@ def get_color_from_html(html_value):
     return html_value.xpath(color_xpath)[0]
 
 
-def request_parse_color(response, color_codes, hm_item):
-    """
-    Send POST request to get json response and
-    yield a callback to parse colors of item.
-    :param response: response object to parse detail from
-    :param color_codes: color codes present in item
-    :param hm_item: item object to add color-sku in it
-    :return: Yield a POST request
-    """
+def prepare_parse_color_request(response, color_codes, hm_item):
     sku_id = parse_sku_id(response)
     form_id = parse_form_id(response)
     form_build_id = parse_form_build_id(response)
@@ -257,39 +210,9 @@ def request_parse_color(response, color_codes, hm_item):
         'data': form_data,
         'color_codes': color_codes[1:],
     }
-    yield scrapy.FormRequest(url=request_url,
-                             method='POST',
-                             callback=parse_color,
-                             headers=headers,
-                             meta=request_meta,
-                             formdata=form_data,
-                             dont_filter=True)
-
-
-def request_next_color(response, color_codes, hm_item):
-    """
-    Yield a POST request to parse next color in color codes
-    :param response: response object to parse detail from
-    :param color_codes: color codes list to use in request
-    :param hm_item: item object to add color sized in it
-    :return: POST request to parse color information
-    """
-    header = response.meta['header']
-    form_data = response.meta['data']
-
-    form_data['configurables[article_castor_id]'] = color_codes[0]
-    # create meta for next request
-    meta = {
-        'item': hm_item,
-        'header': header,
-        'data': form_data,
-        'color_codes': color_codes[1:],
+    return {
+        'url': request_url,
+        'meta': request_meta,
+        'header': headers,
+        'form_data': form_data,
     }
-    # yield request for next color
-    yield scrapy.FormRequest(url=response.url,
-                             method='POST',
-                             callback=parse_color,
-                             headers=header,
-                             meta=meta,
-                             formdata=form_data,
-                             dont_filter=True)
