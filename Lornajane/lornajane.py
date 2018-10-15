@@ -8,14 +8,14 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 
 
-class ProductsSpider(CrawlSpider):
-    name = 'products'
-    allowed_domains = ['www.lornajane.sg']
-    start_urls = ['http://www.lornajane.sg/']
+class LornajaneSpider(CrawlSpider):
+    name = "lornajane"
+    allowed_domains = ["www.lornajane.sg"]
+    start_urls = ["http://www.lornajane.sg/"]
     rules = (
         Rule(LinkExtractor(
-            allow=('/c-Shop-All')),
-            callback='parse_products_list'),
+            allow=("/c-Shop-All")),
+            callback="parse_products_list"),
         )
 
     def parse_products_list(self, response):
@@ -46,7 +46,7 @@ class ProductsSpider(CrawlSpider):
         json_data = json.loads(response.body)
         parser = HTMLParser()
         new_response = response.replace(
-            body=parser.unescape(json_data['products'])
+            body=parser.unescape(json_data["products"])
             )
         urls = new_response.css(".name::attr(href)").extract()
         urls = [response.urljoin(url) for url in urls]
@@ -56,19 +56,18 @@ class ProductsSpider(CrawlSpider):
 
     def parse_product(self, response):
         """Getting all the product details and storind it in the item"""
-
         product_details = {
-            '_id': self.find_id(response),
-            'brand': "Lornajane",
-            'care': [self.find_care_text(response)],
-            'category': self.find_category(response),
-            'description': self.find_description(response),
-            'gender': "Women",
-            'image_urls': self.extract_image_urls(response),
-            'name': self.find_name(response),
-            'retailer_sku': self.find_id(response),
-            'skus': self.develop_skus(response),
-            'url': {response.url}
+            "_id": self.find_id(response),
+            "brand": "Lornajane",
+            "care": [self.find_care_text(response)],
+            "category": self.find_category(response),
+            "description": self.find_description(response),
+            "gender": "Women",
+            "image_urls": self.extract_image_urls(response),
+            "name": self.find_name(response),
+            "retailer_sku": self.find_id(response),
+            "skus": self.develop_skus(response),
+            "url": {response.url}
         }
         item = LornajaneItem(product_details)
 
@@ -78,8 +77,8 @@ class ProductsSpider(CrawlSpider):
             yield scrapy.Request(
                     url=color_url,
                     callback=self.develop_skus,
-                    meta={'colors': colors,
-                          'item':  item})
+                    meta={"colors": colors,
+                          "item":  item})
         else:
             yield item
 
@@ -110,7 +109,7 @@ class ProductsSpider(CrawlSpider):
 
     def has_more_colors(self, response):
         """Checks if the meta has been initailized with more colors"""
-        if 'colors' in response.meta:
+        if "colors" in response.meta:
             return True
         else:
             return False
@@ -118,31 +117,31 @@ class ProductsSpider(CrawlSpider):
     def find_color_variations(self, response, skus, image_urls):
         """Updates the skus according to the provided colors in meta"""
         item = response.meta['item']
-        item['skus'].update(skus)
-        item['url'].add(response.url)
-        item['image_urls'] = item['image_urls'] | image_urls
-        if len(response.meta['colors']) == 0:
+        item["skus"].update(skus)
+        item["url"].add(response.url)
+        item["image_urls"] = item["image_urls"] | image_urls
+        if len(response.meta["colors"]) == 0:
             yield item
         else:
-            colors = response.meta['colors']
+            colors = response.meta["colors"]
             color_url = colors.pop(0)
             yield scrapy.Request(
                     url=color_url,
                     callback=self.develop_skus,
-                    meta={'colors': colors,
-                          'item':  item}
+                    meta={"colors": colors,
+                          "item":  item}
             )
 
     def find_total_products(self, response):
         total_products = response.css(".count-text::text").extract()
-        return re.findall(r'\d+', total_products[0])[0]
+        return re.findall(r"\d+", total_products[0])[0]
 
     def find_name(self, response):
         return response.css(".limitedEdit + h1::text").extract_first()
 
     def find_id(self, response):
         _id = response.css(".mobile_toggle p::text").extract_first()
-        return re.findall(r'\d+', _id)[0]
+        return re.findall(r"\d+", _id)[0]
 
     def find_category(self, response):
         breadcrum = response.css(".breadcrumb ul li a::text").extract()
@@ -166,12 +165,6 @@ class ProductsSpider(CrawlSpider):
 
     def extract_image_urls(self, response):
         images = response.css(".aos-item__inner img::attr(src)").extract()
-        main_image = response.css(
-            ".pdpBannerImage::attr(style)").extract_first()
-        main_image_url = re.findall(r'(\/medias.+\))', main_image)
-        if main_image_url:
-            main_image_url = main_image_url[0].replace(")", "")
-            images.append(main_image_url)
         return {response.urljoin(image) for image in images}
 
     def find_sizes(self, response):
