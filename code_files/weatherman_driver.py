@@ -26,8 +26,8 @@ def parse_records(operation, date_values, complete_weather_records, weather_reco
         record_info = current_year
         month_number = 0
         if operation is not 'e':
-            current_year = date_values.split('/')[0]
-            month_number = int(date_values.split('/')[1])-1
+            current_year = date.split('/')[0]
+            month_number = int(date.split('/')[1])-1
             record_info = (MONTHS_NAME[month_number] + ', ' + current_year)
         add_current_year_weather_readings(
             current_year, complete_weather_records, weather_records_files_path)
