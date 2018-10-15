@@ -1,5 +1,6 @@
-#loginForm, #signupForm {
-  margin-top: 30px; 
+#loginForm,
+#signupForm {
+  margin-top: 30px;
 }
 
 footer {
@@ -19,22 +20,38 @@ footer {
 }
 
 #newPostTitle {
-	margin-bottom: 15px;
+  margin-bottom: 15px;
 }
 
 .content {
-	margin-bottom: 30px;
+  margin-bottom: 30px;
 }
 
 .comment {
-	margin-bottom: 50px;
+  margin-bottom: 20px;
 }
 
 .main-heading {
-	font-size: 55px;
+  font-size: 55px;
 }
 
-#newPost{
-	position: fixed;
-	right:100px;
+#newPost {
+  position: fixed;
+  right: 100px;
+}
+
+.text-danger,
+label,
+h1 {
+  font-weight: bold;
+}
+
+.comment-btn {
+  margin-bottom: 10px;
+  margin-top: 15px;
+}
+
+.text-success {
+  font-weight: bold;
+  font-size: 20px;
 }

@@ -20,20 +20,6 @@
       "password": "bcsf14m036*B",
       "mobileNumber": "03214067419",
       "id": 3
-    },
-    {
-      "username": "nabia",
-      "email": "nabia@nabia.com",
-      "password": "bcsf14m036*B",
-      "mobileNumber": "03214067419",
-      "id": 4
-    },
-    {
-      "username": "nabeel",
-      "email": "nabeel@nabeel.com",
-      "password": "bcsf14m036*B",
-      "mobileNumber": "03214067419",
-      "id": 5
     }
   ],
   "posts": [
@@ -58,55 +44,6 @@
         "aisha",
         "hana"
       ]
-    },
-    {
-      "title": "new post",
-      "post": "test 1234",
-      "date": "September 12, 2018",
-      "userId": "1",
-      "id": 3
-    },
-    {
-      "title": "another new post",
-      "post": "testing 123",
-      "date": "September 12, 2018",
-      "userId": "1",
-      "id": 4
-    },
-    {
-      "title": "try another",
-      "post": "yayyyyu",
-      "date": "September 12, 2018",
-      "userId": "1",
-      "id": 5
-    },
-    {
-      "title": "df",
-      "post": "fdf",
-      "date": "September 12, 2018",
-      "userId": "1",
-      "id": 6
-    },
-    {
-      "title": "dfds",
-      "post": "dfvdfv",
-      "date": "September 12, 2018",
-      "userId": "1",
-      "id": 7
-    },
-    {
-      "title": "ftg",
-      "post": "gfg",
-      "date": "September 12, 2018",
-      "userId": "1",
-      "id": 8
-    },
-    {
-      "title": "rtgre",
-      "post": "rtrt",
-      "date": "September 12, 2018",
-      "userId": "1",
-      "id": 9
     }
   ],
   "comments": [
@@ -127,12 +64,6 @@
       "comment": "thankyou @aisha",
       "postId": "1",
       "id": 3
-    },
-    {
-      "comment_by": "tehreem",
-      "comment": "thankyou @hana",
-      "postId": "1",
-      "id": 4
     }
   ]
 }
