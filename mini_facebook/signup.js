@@ -132,17 +132,16 @@ function validation()
           mobileNumber
         };
 
-        $.ajax(
-        {
-          type        : 'POST',
+        $.ajax({
+          type        : `POST`,
           url         : `${baseUrl}/users`,
           data        : formData,
-          dataType    : 'json'
+          dataType    : `json`
         })
-        .done(function(data) {
-          clearAll();
-          alert(`successfully registered`);
-        });
+          .done(function(data) {
+            clearAll();
+            alert(`successfully registered`);
+          });
       }
     }).catch(console.error);
   return false;
