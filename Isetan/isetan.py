@@ -7,7 +7,7 @@ from isetan.items import IsetanItem, IsetanItemLoader
 
 
 class IsetanSpider(CrawlSpider):
-    name = 'products'
+    name = 'isetan'
     allowed_domains = ['isetan.com.sg']
     start_urls = ['http://isetan.com.sg/']
 
