@@ -1,15 +1,17 @@
 import json
 import re
+
 import w3lib.url
+
 import scrapy
 from orsay.items import OrsayItem
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 
 
-class ProductsSpider(CrawlSpider):
+class OrsaySpider(CrawlSpider):
 
-    name = 'products'
+    name = 'orsay'
     allowed_domains = ['www.orsay.com']
     start_urls = [
         'http://www.orsay.com/de-de/',
@@ -17,12 +19,12 @@ class ProductsSpider(CrawlSpider):
 
     rules = (
         Rule(LinkExtractor(
-            allow=(r'/produkte/')),
-            callback='parse_product_list'),
+            allow=("/produkte/")),
+            callback="parse_product_list"),
         Rule(LinkExtractor(
-            allow=(r'/.*[.]html$'),
-            deny=('/help/')),
-            callback='parse_product')
+            allow=(r"/.*[.]html$"),
+            deny=("/help/")),
+            callback="parse_product")
     )
 
     def extract_product_urls(self, response):
@@ -67,17 +69,17 @@ class ProductsSpider(CrawlSpider):
         """Getting all the product details and storind it in the item"""
         details = self.parse_product_details(response)
         product_details = {
-            '_id': details["productId"],
-            'brand': "Orsay",
-            'care': self.find_care_text(response),
-            'category': details["categoryName"],
-            'description': self.find_description(response),
-            'gender': "Women",
-            'image_urls': self.extract_image_urls(response),
-            'name': details["name"],
-            'retailer_sku': details["idListRef6"],
-            'skus': self.develop_skus(response),
-            'url': {response.url}
+            "_id": details["productId"],
+            "brand": "Orsay",
+            "care": self.find_care_text(response),
+            "category": details["categoryName"],
+            "description": self.find_description(response),
+            "gender": "Women",
+            "image_urls": self.extract_image_urls(response),
+            "name": details["name"],
+            "retailer_sku": details["idListRef6"],
+            "skus": self.develop_skus(response),
+            "url": {response.url}
         }
         item = OrsayItem(product_details)  # Initializing Item
 
@@ -87,8 +89,8 @@ class ProductsSpider(CrawlSpider):
             yield scrapy.Request(
                     url=color_url,
                     callback=self.develop_skus,
-                    meta={'colors': colors,
-                          'item':  item})
+                    meta={"colors": colors,
+                          "item":  item})
         else:
             yield item
 
@@ -98,7 +100,7 @@ class ProductsSpider(CrawlSpider):
 
     def clean_description(self, details):
         """Remove the irrelevant data from the description"""
-        details = [re.sub('\s+', ' ', d).strip() for d in details if d]
+        details = [re.sub("\s+", " ", d).strip() for d in details if d]
         details = [d for d in details if d]
         details.pop(0)
         return details
@@ -126,7 +128,7 @@ class ProductsSpider(CrawlSpider):
 
     def has_more_colors(self, response):
         """Checks if the meta has been initailized with more colors"""
-        if 'colors' in response.meta:
+        if "colors" in response.meta:
             return True
         else:
             return False
@@ -134,19 +136,19 @@ class ProductsSpider(CrawlSpider):
     def find_color_variations(self, response, skus, image_urls):
         """Updates the skus according to the provided colors in meta"""
         item = response.meta['item']
-        item['skus'].update(skus)
-        item['url'].add(response.url)  # Appending new color url
-        item['image_urls'] = item['image_urls'] | image_urls
-        if len(response.meta['colors']) == 0:
+        item["skus"].update(skus)
+        item["url"].add(response.url)  # Appending new color url
+        item["image_urls"] = item["image_urls"] | image_urls
+        if len(response.meta["colors"]) == 0:
             yield item
         else:
-            colors = response.meta['colors']
+            colors = response.meta["colors"]
             color_url = colors.pop(0)
             yield scrapy.Request(
                     url=color_url,
                     callback=self.develop_skus,
-                    meta={'colors': colors,
-                          'item':  item})
+                    meta={"colors": colors,
+                          "item":  item})
 
     def parse_product_details(self, response):
         return json.loads(
@@ -170,7 +172,7 @@ class ProductsSpider(CrawlSpider):
 
     def find_sizes(self, response):
         sizes = set(response.css(".swatches li.selectable a::text").extract())
-        sizes = [re.sub('\s+', ' ', size).strip() for size in sizes if size]
+        sizes = [re.sub("\s+", " ", size).strip() for size in sizes if size]
         return [size for size in sizes if size]
 
     def find_availability(self, response):
