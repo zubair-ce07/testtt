@@ -42,23 +42,23 @@ class ReportGenerator:
         print(f"{records[0].date.strftime('%B')} {records[0].date.year}")
         for day in records:
             if single_line:
-                self.generate_single_line_chart(day.date.day, day.max_temp, day.min_temp)
+                self.generate_single_line_chart(day)
             else:
-                self.generate_multi_line_chart(day.date.day, day.max_temp, day.min_temp)
+                self.generate_multi_line_chart(day)
         print(self.COLOR_DEFAULT)
 
-    def generate_single_line_chart(self, day, max_temp, min_temp):
-        print(f"{self.COLOR_PURPLE}{str(day).zfill(2)}", end=' ')
-        print(f"{self.COLOR_BLUE}+" * min_temp, end='')
-        print(f"{self.COLOR_RED}+" * max_temp, end=' ')
-        print(f"{self.COLOR_PURPLE}{min_temp}C", end=' ')
-        print(f"{self.COLOR_PURPLE}{max_temp}C")
+    def generate_single_line_chart(self, day):
+        print(f"{self.COLOR_PURPLE}{str(day.date.day).zfill(2)}", end=' ')
+        print(f"{self.COLOR_BLUE}+" * day.min_temp, end='')
+        print(f"{self.COLOR_RED}+" * day.max_temp, end=' ')
+        print(f"{self.COLOR_PURPLE}{day.min_temp}C", end=' ')
+        print(f"{self.COLOR_PURPLE}{day.max_temp}C")
 
-    def generate_multi_line_chart(self, day, max_temp, min_temp):
-        print(f"{self.COLOR_PURPLE}{str(day).zfill(2)}", end=' ')
-        print(f"{self.COLOR_RED}+" * max_temp, end=' ')
-        print(f"{self.COLOR_PURPLE}{max_temp}C")
+    def generate_multi_line_chart(self, day):
+        print(f"{self.COLOR_PURPLE}{str(day.date.day).zfill(2)}", end=' ')
+        print(f"{self.COLOR_RED}+" * day.max_temp, end=' ')
+        print(f"{self.COLOR_PURPLE}{day.max_temp}C")
 
-        print(f"{self.COLOR_PURPLE}{str(day).zfill(2)}", end=' ')
-        print(f"{self.COLOR_BLUE}+" * min_temp, end=' ')
-        print(f"{self.COLOR_PURPLE}{min_temp}C")
+        print(f"{self.COLOR_PURPLE}{str(day.date.day).zfill(2)}", end=' ')
+        print(f"{self.COLOR_BLUE}+" * day.min_temp, end=' ')
+        print(f"{self.COLOR_PURPLE}{day.min_temp}C")

@@ -1,7 +1,7 @@
 import csv
 from glob import glob
 
-from data_holder import WeatherData
+from weather_records import WeatherRecord
 
 
 class WeatherCalculations:
@@ -9,14 +9,14 @@ class WeatherCalculations:
     This class perform calculation to create weather report
     """
 
-    def all_weather_record(self, dir_path):
+    def read_weather_records(self, dir_path):
         """
         This method directory path and return read all txt files.
         """
         weather_records = []
         for file_name in glob(f'{dir_path}*.txt'):
             with open(file_name) as data_file:
-                weather_records += [WeatherData(row) for row in csv.DictReader(data_file) if self.is_valid(row)]
+                weather_records += [WeatherRecord(row) for row in csv.DictReader(data_file) if self.is_valid(row)]
         return weather_records
 
     def is_valid(self, weather_record):
@@ -34,11 +34,11 @@ class WeatherCalculations:
         if not req_records:
             return
 
-        height_temperature_record = max(req_records, key=lambda day: day.max_temp)
+        highest_temperature_record = max(req_records, key=lambda day: day.max_temp)
         lowest_temperature_record = min(req_records, key=lambda day: day.max_temp)
         highest_humidity_record = max(req_records, key=lambda day: day.mean_humidity)
 
-        return height_temperature_record, lowest_temperature_record, highest_humidity_record
+        return highest_temperature_record, lowest_temperature_record, highest_humidity_record
 
     def average_report(self, weather_records, req_date):
         req_records = self.month_records(weather_records, req_date)

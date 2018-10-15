@@ -1,7 +1,7 @@
 from datetime import datetime
 
 
-class WeatherData:
+class WeatherRecord:
 
     def __init__(self, row):
         self.max_temp = int(row.get('Max TemperatureC'))
