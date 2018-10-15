@@ -14,28 +14,14 @@ class SheegoSpider(CrawlSpider):
 
     rules = (
         Rule(LinkExtractor(
-            allow=("/damenmode/$"),
+            allow=["/damenmode/$", "/?pageNr="],
             deny=("/damenmode-sale/")),
-            callback="parse_product_list", follow=True),
-
+            callback="parse"),
         Rule(LinkExtractor(
-            allow=("/?pageNr=")),
-            callback="parse_product_list", follow=True),
+            restrict_css=[".js-product__link"]),
+            callback="parse_product"),
 
             )
-
-    def parse_product_list(self, response):
-        product_urls = self.extract_product_urls(response)
-        for url in product_urls:
-            yield scrapy.Request(
-                url=url,
-                callback=self.parse_product,
-                dont_filter=True
-            )
-
-    def extract_product_urls(self, response):
-        urls = response.css(".js-product__link::attr(href)").extract()
-        return [response.urljoin(url) for url in urls]
 
     def find_details(self, response):
         details = response.css(
@@ -71,7 +57,8 @@ class SheegoSpider(CrawlSpider):
         for size in sizes:
             skus["{}_{}".format(color_name, size)] = {
                 "color": color_name,
-                "currency": "EUR",
+                "currency": response.css(
+                    "meta[itemprop='priceCurrency']::attr(content)").extract_first(),
                 "price": details["productPrice"],
                 "rating": details["productRating"],
                 "Availability": details["productAvailability"],
