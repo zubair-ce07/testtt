@@ -5,10 +5,10 @@ import scrapy
 from greatfoodhall.items import GreatfoodhallItem, GreatfoodhallLoader
 
 
-class ProductsSpider(scrapy.Spider):
-    name = 'products'
-    allowed_domains = ['www.greatfoodhall.com']
-    start_urls = ['http://www.greatfoodhall.com/eshop/LoginPage.do']
+class GreatFoodHallSpider(scrapy.Spider):
+    name = "greatfoodhall"
+    allowed_domains = ["www.greatfoodhall.com"]
+    start_urls = ["http://www.greatfoodhall.com/eshop/LoginPage.do"]
 
     def parse(self, response):
         """Requests the main page url for each category
@@ -39,8 +39,8 @@ class ProductsSpider(scrapy.Spider):
     def get_total_pages(self, response):
         """Return total pages for each category"""
         total_pages = re.findall(
-            r'\d+',
-            re.findall(r'totalpage = (.*)', response.text)[0])[0]
+            r"\d+",
+            re.findall(r"totalpage = (.*)", response.text)[0])[0]
         return int(total_pages)
 
     def parse_list(self, response):
@@ -51,7 +51,7 @@ class ProductsSpider(scrapy.Spider):
             yield scrapy.Request(
                 url=url,
                 callback=self.parse_product,
-                meta={'cookiejar': response.meta["cookiejar"]},
+                meta={"cookiejar": response.meta["cookiejar"]},
             )
 
         if "total_pages" in response.meta:
@@ -66,34 +66,34 @@ class ProductsSpider(scrapy.Spider):
                         response.meta["current_page"] + 1)),
                 callback=self.parse_list,
                 meta={
-                    'cookiejar': response.meta["cookiejar"],
-                    'total_pages': total_pages,
-                    'current_page': response.meta["current_page"] + 1},
+                    "cookiejar": response.meta["cookiejar"],
+                    "total_pages": total_pages,
+                    "current_page": response.meta["current_page"] + 1},
                 dont_filter=True
             )
 
     def parse_product(self, response):
         """Item Loader implementation for products"""
-        l = GreatfoodhallLoader(item=GreatfoodhallItem(), response=response)
-        l.add_value("_id", re.findall(r"sp=(.*)", response.url)[0])
-        l.add_css("name", ".description::text")
-        l.add_css("price", ".itemOrgPrice2::text")
-        l.add_value('currency', 'Hong Kong dollar (HK$)')
-        l.add_css(
+        loader = GreatfoodhallLoader(item=GreatfoodhallItem(), response=response)
+        loader.add_value("_id", re.findall(r"sp=(.*)", response.url)[0])
+        loader.add_css("name", ".description::text")
+        loader.add_css("price", ".itemOrgPrice2::text")
+        loader.add_css('currency', ".itemOrgPrice2::text")
+        loader.add_css(
             "nutrition_info_values",
             "#nutrition table tr td[align=right]::text")
-        l.add_css(
+        loader.add_css(
             "nutrition_info_fields",
             "#nutrition table tr td[align=left]::text")
-        l.add_css("quantity", ".ml::text")
-        l.add_css("categories", ".breadCrumbArea ul::text")
-        l.add_css("product_type", "h1.pL6::text")
-        l.add_css("image_url", ".productPhoto img::attr(src)")
-        l.add_css("flag_image", ".flag::attr(src)")
-        l.add_css("availability", ".btnAddToCart img")
-        l.add_value('website', 'http://www.greatfoodhall.com')
-        l.add_value("url", response.url)
-        return l.load_item()
+        loader.add_css("quantity", ".ml::text")
+        loader.add_css("categories", ".breadCrumbArea ul::text")
+        loader.add_css("product_type", "h1.pL6::text")
+        loader.add_css("image_url", ".productPhoto img::attr(src)")
+        loader.add_css("flag_image", ".flag::attr(src)")
+        loader.add_css("availability", ".btnAddToCart img")
+        loader.add_value("website", "http://www.greatfoodhall.com")
+        loader.add_value("url", response.url)
+        return loader.load_item()
 
     def get_category_urls(self, response):
         category_urls = response.css(".item a::attr(href)").extract()

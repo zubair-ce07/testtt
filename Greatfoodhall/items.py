@@ -1,30 +1,28 @@
 import re
 
-import scrapy
+from scrapy import Field, Item
 from scrapy.loader import ItemLoader
 from scrapy.loader.processors import Identity, Join, MapCompose, TakeFirst
 
 
-class GreatfoodhallItem(scrapy.Item):
+class GreatfoodhallItem(Item):
     """Item class which contains all the required
     fields which has to be crawled from the website
     """
-
-    _id = scrapy.Field()    # Defined id for checking repetition
-    image_url = scrapy.Field()
-    flag_image = scrapy.Field()
-    name = scrapy.Field()
-    website = scrapy.Field()
-    url = scrapy.Field()
-    price = scrapy.Field()
-    nutrition_info_values = scrapy.Field()
-    nutrition_info_fields = scrapy.Field()
-    quantity = scrapy.Field()
-    categories = scrapy.Field()
-    product_type = scrapy.Field()
-    currency = scrapy.Field()
-    availability = scrapy.Field()
-    pass
+    _id = Field()    # Defined id for checking repetition
+    image_url = Field()
+    flag_image = Field()
+    name = Field()
+    website = Field()
+    url = Field()
+    price = Field()
+    nutrition_info_values = Field()
+    nutrition_info_fields = Field()
+    quantity = Field()
+    categories = Field()
+    product_type = Field()
+    currency = Field()
+    availability = Field()
 
 
 def clean_name(text):
@@ -32,7 +30,7 @@ def clean_name(text):
 
 
 def clean_price(text):
-    return text.replace("HK$", "")
+    return "".join(re.findall(r"([^\d.])", text))
 
 
 def check_availablility(self, text):
@@ -60,7 +58,7 @@ def clean_category_text(self, category):
 class GreatfoodhallLoader(ItemLoader):
     default_item_class = GreatfoodhallItem
     name_in = MapCompose(clean_name)
-    price_in = MapCompose(clean_price)
+    currency_in = MapCompose(clean_price)
     nutrition_info_values_in = clean_info
     nutrition_info_fields_in = clean_info
     quantity_out = TakeFirst()
