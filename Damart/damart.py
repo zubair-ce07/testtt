@@ -1,30 +1,28 @@
-import scrapy
-import re
 import json
+import re
+
+import scrapy
 from damart.items import DamartItem
-from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
+from scrapy.spiders import CrawlSpider, Rule
 
 
-class ProductsSpider(CrawlSpider):
-    name = 'products'
-    allowed_domains = ['www.damart.co.uk']
-    start_urls = ['http://www.damart.co.uk/']
+class DamartSpider(CrawlSpider):
+    name = "damart"
+    allowed_domains = ["www.damart.co.uk"]
+    start_urls = ["http://www.damart.co.uk/"]
     rules = (
             Rule(LinkExtractor(
-                allow=(r'/C-')),
-                callback='parse_list'),
+                allow=("/C-"), deny=("/NW-")),
+                callback="parse_list", follow=True),
+            Rule(LinkExtractor(
+                allow=("/I-Page"), deny=("/NW-")),
+                callback="parse_list", follow=True),
             )
 
     def parse_list(self, response):
         """Gets all the products list"""
         urls = self.extract_product_urls(response)
-        next_page = self.find_next_page(response)
-        if next_page:
-            yield scrapy.Request(
-                url=next_page,
-                callback=self.parse_list
-            )
         for url in urls:
             yield scrapy.Request(
                 url=url,
@@ -35,16 +33,16 @@ class ProductsSpider(CrawlSpider):
     def parse_product(self, response):
         """Getting all the product details and storind it in the item"""
         product_details = {
-            '_id': self.find_id(response),
-            'brand': "Damart",
-            'care': self.find_care_text(response),
-            'category': self.find_category(response),
-            'description': self.find_description(response),
-            'image_urls': self.extract_image_urls(response),
-            'name': self.find_name(response),
-            'retailer_sku': "P-" + self.find_id(response),
-            'skus': {},
-            'url': {response.url}
+            "_id": self.find_id(response),
+            "brand": "Damart",
+            "care": self.find_care_text(response),
+            "category": self.find_category(response),
+            "description": self.find_description(response),
+            "image_urls": self.extract_image_urls(response),
+            "name": self.find_name(response),
+            "retailer_sku": "P-" + self.find_id(response),
+            "skus": {},
+            "url": {response.url}
         }
         item = DamartItem(product_details)
 
@@ -99,8 +97,8 @@ class ProductsSpider(CrawlSpider):
     def find_sizes_and_stock_availability(self, response):
         """Parse the json object and returns the specified
         size and stock description"""
-        json_data = json.loads(response.body.decode('utf-8'))
-        component = json_data['inits'][2]['initDDdSlickComponent']
+        json_data = json.loads(response.body.decode("utf-8"))
+        component = json_data["inits"][2]["initDDdSlickComponent"]
         ddData = component[0]["ddData"]
         info = {
             "sizes": [],
@@ -140,7 +138,7 @@ class ProductsSpider(CrawlSpider):
             color_urls = response.meta["color_urls"]
             item = response.meta["item"]
             skus = self.develop_skus(response)
-            item['skus'].update(skus)
+            item["skus"].update(skus)
 
             if color_urls:
                 yield scrapy.Request(
