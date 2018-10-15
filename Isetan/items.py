@@ -1,24 +1,22 @@
 import re
 
-import scrapy
+from scrapy import Field, Item
 from scrapy.loader import ItemLoader
 from scrapy.loader.processors import Identity, Join, MapCompose, TakeFirst
 
 
-class IsetanItem(scrapy.Item):
-    _id = scrapy.Field()    # Defined id for checking repetition
-    image_urls = scrapy.Field()
-    name = scrapy.Field()
-    brand = scrapy.Field()
-    website = scrapy.Field()
-    description = scrapy.Field()
-    url = scrapy.Field()
-    price = scrapy.Field()
-    quantity = scrapy.Field()
-    categories = scrapy.Field()
-    product_type = scrapy.Field()
-    currency = scrapy.Field()
-    pass
+class IsetanItem(Item):
+    image_urls = Field()
+    name = Field()
+    brand = Field()
+    website = Field()
+    description = Field()
+    url = Field()
+    price = Field()
+    quantity = Field()
+    categories = Field()
+    product_type = Field()
+    currency = Field()
 
 
 def clean_text(self, info):
@@ -26,8 +24,12 @@ def clean_text(self, info):
     return [text for text in values if text]
 
 
+def find_currency(self, text):
+    return re.findall(r"[^\d.]", text[0])
+
+
 class IsetanItemLoader(ItemLoader):
     default_item_class = IsetanItem
     default_input_processor = clean_text
-    description_out = TakeFirst()
     quantity_out = TakeFirst()
+    currency_in = find_currency
