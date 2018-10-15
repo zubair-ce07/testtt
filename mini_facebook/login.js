@@ -1,5 +1,5 @@
 /* exported login */
-function login()
+function authenticate()
 {
   document.getElementById(`loginError`).innerHTML = ``;
   let username = document.getElementById(`loginUsername`).value;

@@ -1,11 +1,4 @@
-let months = [
-  `January`, `February`, `March`, `April`, `May`,
-  `June`, `July`, `August`, `September`,
-  `October`, `November`, `December`
-];
-
-
-function logout()
+function logoutUser()
 {
   localStorage.removeItem(`loggedin_user`);
   window.location.href = `index.html`;
@@ -221,9 +214,7 @@ function getPostUser(userPost)
   }
 }
 
-
-addClickEvent(`comment-btn`, makeComment);
-addClickEvent(`logout-btn`, logout);
+addClickEvent(`logout-btn`, logoutUser);
 let loggedInUser = JSON.parse(localStorage.getItem(`loggedin_user`));
 fetch(`${baseUrl}/posts`)
   .then(response => response.json())

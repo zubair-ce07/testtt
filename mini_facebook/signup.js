@@ -101,15 +101,20 @@ function clearAll()
   clearErrors();
 }
 
+function getValue(id)
+{
+  return document.getElementById(id).value;
+}
+
 
 function validation()
 {
   clearErrors();
-  let username = document.getElementById(`username`).value;
-  let password = document.getElementById(`password`).value;
-  let confirmPass = document.getElementById(`confirmPassword`).value;
-  let mobileNumber = document.getElementById(`mobileNumber`).value;
-  let email = document.getElementById(`email`).value;
+  let username = getValue(`username`);
+  let password = getValue(`password`);
+  let confirmPass = getValue(`confirmPassword`);
+  let mobileNumber = getValue(`mobileNumber`);
+  let email = getValue(`email`);
 
   fetch(`${baseUrl}/users?username=${username}`)
     .then(response => response.json())

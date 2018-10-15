@@ -45,6 +45,13 @@
         "aisha",
         "hana"
       ]
+    },
+    {
+      "title": "gh",
+      "post": "hg",
+      "date": "September 15, 2018",
+      "userId": "1",
+      "id": 3
     }
   ],
   "comments": [
@@ -68,7 +75,7 @@
     },
     {
       "comment_by": "tehreem",
-      "comment": "",
+      "comment": "trg",
       "postId": "1",
       "id": 4
     }
