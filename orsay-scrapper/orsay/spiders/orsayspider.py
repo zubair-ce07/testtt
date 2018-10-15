@@ -10,7 +10,8 @@ from .ProductParser import ProductParser
 class OrsaySpider(CrawlSpider):
 
     product_parser = ProductParser()
-    name = 'orsayspider'
+    name = 'orsay-crawl'
+    PAGE_SIZE = 72
     allowed_domains = ['orsay.com']
     start_urls = ['http://www.orsay.com/de-de/produkte/']
 
@@ -34,7 +35,7 @@ class OrsaySpider(CrawlSpider):
             parameter = w3lib.url.url_query_parameter(response.url, "sz")
             if parameter:
                 url = w3lib.url.add_or_replace_parameter(
-                    response.url, 'sz', str(int(parameter) + 72))
+                    response.url, 'sz', str(int(parameter) + self.PAGE_SIZE))
             else:
                 url = response.url+'?sz=144'
 

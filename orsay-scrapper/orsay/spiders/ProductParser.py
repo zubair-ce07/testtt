@@ -8,9 +8,7 @@ from scrapy.linkextractors import LinkExtractor
 
 
 class ProductParser(Spider):
-    name = 'orsayspider1'
-    start_urls = [
-        'http://www.orsay.com/de-de/mantel-mit-bindeguertel-830106046000.html']
+    name = 'orsay-parse'
 
     def parse(self, response):
 
@@ -25,43 +23,44 @@ class ProductParser(Spider):
         product['name'] = self.product_name(response)
         product['skus'] = self.product_sku(response)
         product['url'] = response.url
-        product['colors_queue'] = self.product_colors_links(response)
-        return self.next_request(product)
+        product['request_queue'] = self.product_colors_requests(
+            response, product)
+        return self.next_request_or_item(product)
 
-    def parse_request_or_item(self, response):
+    def parse_colors(self, response):
         item = response.meta['item']
-        item['skus'] += self.product_sku(response)
+        item['skus'].update(self.product_sku(response))
         item['image_urls'] += self.product_image_urls(response)
 
-        return self.next_request(item)
+        return self.next_request_or_item(item)
 
-    def next_request(self, item):
-        color_links = item['colors_queue']
-        if color_links:
-            link = color_links.pop()
-            req = scrapy.Request(url=link, callback=self.parse_request_or_item)
-            req.meta['item'] = item
+    def next_request_or_item(self, item):
+        color_requests = item['request_queue']
+        if color_requests:
+            req = color_requests.pop()
             yield req
         else:
-            item.pop('colors_queue')
+            item.pop('request_queue')
             yield item
 
     def product_sku(self, response):
         sizes = self.product_size(response)
-        sku = []
+        skus = {}
+
         single_item = {}
+        single_item['price'] = self.product_price(response)
+        single_item['color'] = self.product_selected_color(response)
+        single_item['currency'] = self.product_currency(response)
+
         for size in sizes:
             size = size.strip()
-            single_item['price'] = self.product_price(response)
-            single_item['color'] = self.product_selected_color(response)
-            single_item['currency'] = self.product_currency(response)
-            single_item['size'] = size
+            sku = single_item.copy()
+            sku['size'] = size
             unique_id = size + "_" + self.product_selected_color(response)
 
-            sku.append({unique_id: single_item})
-            single_item = {}
+            skus.update({unique_id: sku})
 
-        return sku
+        return skus
 
     def product_care(self, response):
         css = '.product-material p::text'
@@ -116,10 +115,16 @@ class ProductParser(Spider):
         data = self.extract_raw_data(response)
         return data['idListRef12']
 
-    def product_colors_links(self, response):
+    def product_colors_requests(self, response, item):
         xpath = '//ul[contains(@class, "swatches color")]/'\
             + 'li[not(contains(@class, "selected"))]//a/@href'
-        return response.xpath(xpath).extract()
+        links = response.xpath(xpath).extract()
+        requests = []
+        for link in links:
+            req = scrapy.Request(url=link, callback=self.parse_colors)
+            req.meta['item'] = item
+            requests.append(req)
+        return requests
 
     def product_id(self, response):
         data = self.extract_raw_data(response)
