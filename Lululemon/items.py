@@ -1,28 +1,27 @@
 import re
 
-import scrapy
+from scrapy import Field, Item
 from scrapy.loader import ItemLoader
 from scrapy.loader.processors import Identity, Join, MapCompose, TakeFirst
 
 
-class LululemonItem(scrapy.Item):
-    _id = scrapy.Field()    # Defined id for checking repetition
-    brand = scrapy.Field()
-    care = scrapy.Field()
-    fabric = scrapy.Field()
-    features = scrapy.Field()
-    category = scrapy.Field()
-    description = scrapy.Field()
-    is_new = scrapy.Field()
-    is_sold_out = scrapy.Field()
-    image_urls = scrapy.Field()
-    name = scrapy.Field()
-    title = scrapy.Field()
-    default_sku = scrapy.Field()
-    skus = scrapy.Field()
-    url = scrapy.Field()
-    website = scrapy.Field()
-    pass
+class LululemonItem(Item):
+    _id = Field()    # Defined id for checking repetition
+    brand = Field()
+    care = Field()
+    fabric = Field()
+    features = Field()
+    category = Field()
+    description = Field()
+    is_new = Field()
+    is_sold_out = Field()
+    image_urls = Field()
+    name = Field()
+    title = Field()
+    default_sku = Field()
+    skus = Field()
+    url = Field()
+    website = Field()
 
 
 def clean_text(self, info):

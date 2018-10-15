@@ -1,15 +1,17 @@
 import json
+
 import w3lib.url
+
 import scrapy
 from lululemon.items import LululemonItem, LululemonItemLoader
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 
 
-class ProductsSpider(CrawlSpider):
-    name = 'products'
+class LululemonSpider(CrawlSpider):
+    name = 'lululemon'
     allowed_domains = ['shop.lululemon.com']
-    start_urls = ['http://shop.lululemon.com//']
+    start_urls = ['http://shop.lululemon.com/']
 
     rules = (Rule(LinkExtractor(
             allow=('view-all')),
@@ -81,28 +83,28 @@ class ProductsSpider(CrawlSpider):
         product_attr = json_data[
             "data"]["attributes"]["product-attributes"]
 
-        l = LululemonItemLoader(item=LululemonItem(), response=response)
-        l.add_value("_id", product_summary["product-id"])
-        l.add_value("name", product_summary["display-name"])
-        l.add_value("title", product_summary["title"])
-        l.add_value("brand", "lululemon")
-        l.add_value("default_sku", product_summary["default-sku"])
-        l.add_value("is_new", product_summary["is-new"])
-        l.add_value("is_sold_out", product_summary["is-sold-out"])
-        l.add_value("category", product_summary["product-category"])
-        l.add_value("description", product_summary["why-we-made-this"])
-        l.add_value("image_urls", product_summary["sku-sku-images"])
-        l.add_value(
+        loader = LululemonItemLoader(item=LululemonItem(), response=response)
+        loader.add_value("_id", product_summary["product-id"])
+        loader.add_value("name", product_summary["display-name"])
+        loader.add_value("title", product_summary["title"])
+        loader.add_value("brand", "lululemon")
+        loader.add_value("default_sku", product_summary["default-sku"])
+        loader.add_value("is_new", product_summary["is-new"])
+        loader.add_value("is_sold_out", product_summary["is-sold-out"])
+        loader.add_value("category", product_summary["product-category"])
+        loader.add_value("description", product_summary["why-we-made-this"])
+        loader.add_value("image_urls", product_summary["sku-sku-images"])
+        loader.add_value(
             "fabric",
             product_attr["product-content-fabric"][0]["fabricDescription"])
-        l.add_value(
+        loader.add_value(
             "care",
             [c["careDescription"] for c in
                 product_attr["product-content-care"][0]["care"] if c])
-        l.add_value(
+        loader.add_value(
             "features",
             [f["featureDescription"] for f in
                 product_attr["product-content-feature"][0]["f5Features"] if f])
-        l.add_value("website", self.start_urls)
-        l.add_value("skus", self.develop_skus(response, json_data))
-        yield l.load_item()
+        loader.add_value("website", self.start_urls)
+        loader.add_value("skus", self.develop_skus(response, json_data))
+        yield loader.load_item()
