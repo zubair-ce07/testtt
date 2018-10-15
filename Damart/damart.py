@@ -13,21 +13,11 @@ class DamartSpider(CrawlSpider):
     start_urls = ["http://www.damart.co.uk/"]
     rules = (
             Rule(LinkExtractor(
-                allow=("/C-"), deny=("/NW-")),
-                callback="parse_list", follow=True),
+                allow=["/C-", "/I-Page"], deny=("/NW-")),
+                callback="parse"),
             Rule(LinkExtractor(
-                allow=("/I-Page"), deny=("/NW-")),
-                callback="parse_list", follow=True),
-            )
-
-    def parse_list(self, response):
-        """Gets all the products list"""
-        urls = self.extract_product_urls(response)
-        for url in urls:
-            yield scrapy.Request(
-                url=url,
-                callback=self.parse_product,
-                dont_filter=True
+                restrict_css=[".photo-data"]),
+                callback="parse_product")
             )
 
     def parse_product(self, response):
