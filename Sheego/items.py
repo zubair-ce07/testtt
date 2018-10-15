@@ -1,24 +1,23 @@
 import re
 
-import scrapy
+from scrapy import Field, Item
 from scrapy.loader import ItemLoader
 from scrapy.loader.processors import Identity, Join, MapCompose, TakeFirst
 
 
-class SheegoItem(scrapy.Item):
+class SheegoItem(Item):
 
-    _id = scrapy.Field()    # Defined id for checking repetition
-    brand = scrapy.Field()
-    care = scrapy.Field()
-    categories = scrapy.Field()
-    description = scrapy.Field()
-    gender = scrapy.Field()
-    image_urls = scrapy.Field()
-    name = scrapy.Field()
-    retailer_sku = scrapy.Field()
-    skus = scrapy.Field()
-    url = scrapy.Field()
-    pass
+    _id = Field()    # Defined id for checking repetition
+    brand = Field()
+    care = Field()
+    categories = Field()
+    description = Field()
+    gender = Field()
+    image_urls = Field()
+    name = Field()
+    retailer_sku = Field()
+    skus = Field()
+    url = Field()
 
 
 def clean_text(self, description):

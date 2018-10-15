@@ -7,15 +7,21 @@ from scrapy.spiders import CrawlSpider, Rule
 from sheego.items import SheegoItem, SheegoItemLoader
 
 
-class ProductsSpider(CrawlSpider):
-    name = 'products'
-    allowed_domains = ['www.sheego.de']
-    start_urls = ['https://www.sheego.de/']
+class SheegoSpider(CrawlSpider):
+    name = "sheego"
+    allowed_domains = ["www.sheego.de"]
+    start_urls = ["https://www.sheego.de/"]
 
-    rules = (Rule(LinkExtractor(
-            allow=('/damenmode/$'),
-            deny=('/damenmode-sale/')),
-            callback='parse_product_list'),
+    rules = (
+        Rule(LinkExtractor(
+            allow=("/damenmode/$"),
+            deny=("/damenmode-sale/")),
+            callback="parse_product_list", follow=True),
+
+        Rule(LinkExtractor(
+            allow=("/?pageNr=")),
+            callback="parse_product_list", follow=True),
+
             )
 
     def parse_product_list(self, response):
@@ -25,12 +31,6 @@ class ProductsSpider(CrawlSpider):
                 url=url,
                 callback=self.parse_product,
                 dont_filter=True
-            )
-        next_page = self.find_next_page(response)
-        if next_page:
-            yield scrapy.Request(
-                url=next_page,
-                callback=self.parse_product_list,
             )
 
     def extract_product_urls(self, response):
@@ -43,17 +43,9 @@ class ProductsSpider(CrawlSpider):
             ).extract_first()
         return json.loads(details)
 
-    def find_next_page(self, response):
-        next_page_url = response.css(
-            ".at-pl-page-navi-next::attr(href)").extract_first()
-        if next_page_url:
-            return response.urljoin(next_page_url)
-        else:
-            return False
-
     def find_sizes(self, response):
         sizes = response.css(".sizespots__item::text").extract()
-        sizes = [re.sub('\s+', ' ', s).strip() for s in sizes if s]
+        sizes = [re.sub("\s+", " ", s).strip() for s in sizes if s]
         return [s for s in sizes if s]
 
     def extract_image_urls(self, response):
@@ -94,16 +86,16 @@ class ProductsSpider(CrawlSpider):
         item_loader.add_value("image_urls", image_urls)
         item_loader.add_value("url", response.url)
 
-        if len(response.meta['colors']) == 0:
+        if len(response.meta["colors"]) == 0:
             yield item_loader.load_item()
         else:
-            colors = response.meta['colors']
+            colors = response.meta["colors"]
             color_url = colors.pop(0)
             yield scrapy.Request(
                     url=color_url,
                     callback=self.develop_skus,
-                    meta={'colors': colors,
-                          'item_loader':  item_loader})
+                    meta={"colors": colors,
+                          "item_loader":  item_loader})
 
     def find_colors_variant_id(self, response):
         colors = response.css(
@@ -122,15 +114,15 @@ class ProductsSpider(CrawlSpider):
     def parse_product(self, response):
         details = self.find_details(response)
 
-        l = SheegoItemLoader(item=SheegoItem(), response=response)
-        l.add_value("_id", details["productId"])
-        l.add_value("name", details["productName"])
-        l.add_css("categories", "span[itemprop=name]::text")
-        l.add_value("brand", "Sheego Style")
-        l.add_value("retailer_sku", details["productId"])
-        l.add_value("gender", "Female")
-        l.add_css("description", ".details__box__desc p::text")
-        l.add_css("care", ".p-details__material td::text")
+        loader = SheegoItemLoader(item=SheegoItem(), response=response)
+        loader.add_value("_id", details["productId"])
+        loader.add_value("name", details["productName"])
+        loader.add_css("categories", "span[itemprop=name]::text")
+        loader.add_value("brand", "Sheego Style")
+        loader.add_value("retailer_sku", details["productId"])
+        loader.add_value("gender", "Female")
+        loader.add_css("description", ".details__box__desc p::text")
+        loader.add_css("care", ".p-details__material td::text")
 
         colors = self.find_colors_variant_id(response)
         if len(colors):
@@ -138,7 +130,7 @@ class ProductsSpider(CrawlSpider):
             yield scrapy.Request(
                     url=color_url,
                     callback=self.develop_skus,
-                    meta={'colors': colors,
-                          'item_loader':  l})
+                    meta={"colors": colors,
+                          "item_loader":  loader})
         else:
-            yield l.load_item()
+            yield loader.load_item()
