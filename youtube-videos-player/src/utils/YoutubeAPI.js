@@ -1,8 +1,8 @@
 import YTSearch from 'youtube-api-search';
-import * as configs from '../configs/configurations'
+import {YoutubeAPIKey} from '../configs/'
 
-export const search = (searchQuery, callback) =>
-    YTSearch({
-        key: configs.YoutubeAPIKey,
-        term: searchQuery
-    }, callback);
+export const search = (term, callback) =>
+  YTSearch({
+    key: YoutubeAPIKey,
+    term,
+  }, callback);

@@ -1,41 +1,41 @@
-import _ from 'underscore';
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
+import { isEmpty } from 'underscore';
+import React from 'react';
+import { object } from 'prop-types';
+import { youtubeVideoPlayUrl } from '../../configs/';
+import Loading from '../common/Loading';
 
-class VideoPlay extends Component {
-    // Play video component
-    static propTypes = {
-        video: PropTypes.object.isRequired
-    };
+const VideoPlay = (props) => {
+  // Play video component
 
-    render() {
-        const youtubeVideoPlayUrl = 'https://www.youtube.com/embed/';
-        const video = this.props.video;
+  const video = props.video;
 
-        // Checks if there is no video to play
-        if(_.isEmpty(video)){
-            return <div>Loading...</div>;
-        }
+  // Checks if there is no video to play
+  if (isEmpty(video)) {
+    return <Loading />
+  }
 
-        const videoUrl = `${youtubeVideoPlayUrl}${video.id.videoId}`;
-        const { title:videoTitle, description:videoDescription } = video.snippet;
+  const videoUrl = `${youtubeVideoPlayUrl}${video.id.videoId}`;
+  const { title, description } = video.snippet;
 
-        return (
-            <div className="video-play col-md-8 col-sm-12">
-                <div className="embed-responsive embed-responsive-16by9">
-                    <iframe
-                        className="embed-responsive-item"
-                        src={videoUrl}
-                        title={videoTitle}
-                    >videoTitle</iframe>
-                </div>
-                <div className="details">
-                    <div className='left-allign'>{videoTitle}</div>
-                    <div className='left-allign grey-small'>{videoDescription}</div>
-                </div>
-            </div>
-        )
-    }
-}
+  return (
+    <div className="video-play col-md-8 col-sm-12">
+      <div className="embed-responsive embed-responsive-16by9">
+        <iframe
+          className="embed-responsive-item"
+          src={videoUrl}
+          title={title}
+        ></iframe>
+      </div>
+      <div className="details">
+        <div className='left-allign'>{title}</div>
+        <div className='left-allign grey-small'>{description}</div>
+      </div>
+    </div>
+  )
+};
+
+VideoPlay.propTypes = {
+  video: object.isRequired
+};
 
 export default VideoPlay

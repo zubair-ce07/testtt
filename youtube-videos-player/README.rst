@@ -12,7 +12,7 @@ After cloning the repo use the following commands to start the app.
     cd youtube-videos-player
     npm install
 
-Put your Youtube API key copied from google and put in **src/configs/configurations.js** file. And use following command.
+Put your Youtube API key copied from google and put in **src/configs/index.js** file. And use following command.
 .. code-block:: bash
 
     npm start
