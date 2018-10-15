@@ -31,7 +31,8 @@
       "date": "October 5, 2018",
       "likes[]": [
         "aisha",
-        "hana"
+        "hana",
+        "tehreem"
       ]
     },
     {
@@ -64,6 +65,12 @@
       "comment": "thankyou @aisha",
       "postId": "1",
       "id": 3
+    },
+    {
+      "comment_by": "tehreem",
+      "comment": "",
+      "postId": "1",
+      "id": 4
     }
   ]
 }

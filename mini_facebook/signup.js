@@ -22,7 +22,7 @@ function displayNameError(errorMsg)
 function validatePassword(pass)
 {
   let errorMsg = null;
-  let passwordRegex = new RegExp("^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])");
+  let passwordRegex = new RegExp(`^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])`);
   if((pass.length <= 5) || (pass.length > 20))
   {
     errorMsg = `Passwords length must be between 5 and 20`;
@@ -138,7 +138,7 @@ function validation()
           data        : formData,
           dataType    : `json`
         })
-          .done(function(data) {
+          .done(function() {
             clearAll();
             alert(`successfully registered`);
           });

@@ -37,6 +37,25 @@ function getPostDiv()
   return postDiv;
 }
 
+function handleLikes(likes)
+{
+  /*
+    if likes array is not there => form new arrray 
+    if there is single element (likes array is pointing directly to that element)  
+      => form new array with that element
+  */
+  if(!likes)
+  {
+    return new Array();
+  }
+  else if (!Array.isArray(likes))
+  {
+    return (new Array()).push(likes);
+  }
+  else
+    return likes;
+}
+
 
 function displayComment(commentContainer, comment)
 {
@@ -49,16 +68,7 @@ function displayComment(commentContainer, comment)
 function displayPost(userPost, postDiv)
 {
   let loggedInUser = JSON.parse(localStorage.getItem(`loggedin_user`));
-  if(!(userPost[`likes[]`]))
-  {
-    userPost[`likes[]`] =  new Array();
-  }
-  else if (!Array.isArray(userPost[`likes[]`]))
-  {
-    let arr = new Array();
-    arr.push(userPost[`likes[]`]);
-    userPost[`likes[]`] = arr;
-  }
+  userPost[`likes[]`] =  handleLikes(userPost[`likes[]`]);
 
   postDiv.getElementsByClassName(`post-username`)[0].innerHTML = userPost[`post_user`][`username`];
   postDiv.getElementsByClassName(`post-date`)[0].innerHTML = userPost.date;
@@ -168,21 +178,7 @@ function makeLike()
     .then(response => response.json())
     .then(post =>
     {
-      /*
-        if likes array is not there => form new arrray 
-        if there is single element=> form new array with that element
-      */
-      if(!(post[`likes[]`])) 
-      {
-        post[`likes[]`] =  new Array();
-      }
-      else if (!Array.isArray(post[`likes[]`]))
-      {
-        let arr = new Array();
-        arr.push(post[`likes[]`]);
-        post[`likes[]`] = arr;
-      }
-
+      post[`likes[]`] =  handleLikes(post[`likes[]`]);
       let likeIndex = post[`likes[]`].findIndex(username => username == loggedInUser.username);
       if(likeIndex!=-1)
       {
@@ -197,11 +193,37 @@ function makeLike()
         data        : post,
         dataType    : `json`
       })
-        .done(data => document.getElementById(`${postId}_likecount`).innerHTML = post[`likes[]`].length);
+        .done(() => document.getElementById(`${postId}_likecount`).innerHTML = post[`likes[]`].length);
     })
     .catch(console.error);
 }
 
+
+function addClickEvent(className, functionName)
+{
+  let btnArr = document.getElementsByClassName(className);
+  Array.from(btnArr).forEach(element => element.addEventListener(`click`, functionName));
+}
+
+
+function getPostUser(userPost)
+{
+  if(loggedInUser.id == userPost.userId)
+  {  
+    userPost[`post_user`] = loggedInUser;
+  }
+  else
+  {
+    fetch(`${baseUrl}/users/${userPost.userId}`)
+      .then(response => response.json())
+      .then(postUser => userPost[`post_user`] = postUser)
+      .catch(console.error);
+  }
+}
+
+
+addClickEvent(`comment-btn`, makeComment);
+addClickEvent(`logout-btn`, logout);
 let loggedInUser = JSON.parse(localStorage.getItem(`loggedin_user`));
 fetch(`${baseUrl}/posts`)
   .then(response => response.json())
@@ -215,21 +237,7 @@ fetch(`${baseUrl}/posts`)
         .then(postComments =>
         {
           userPost[`post_comments`] = postComments;
-          if(loggedInUser.id == userPost.userId)
-          {  
-            userPost[`post_user`] = loggedInUser;
-          }
-          else
-          {
-            fetch(`${baseUrl}/users/${userPost.userId}`)
-              .then(response => response.json())
-              .then(postUser =>
-              {
-                userPost[`post_user`] = postUser;
-              })
-              .catch(console.error);
-          }
-            
+          getPostUser(userPost);
           let postDiv = getPostDiv();
           displayPost(userPost, postDiv);
           postContainer.appendChild(postDiv);

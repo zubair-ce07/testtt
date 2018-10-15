@@ -1,3 +1,4 @@
+/* exported login */
 function login()
 {
   document.getElementById(`loginError`).innerHTML = ``;
