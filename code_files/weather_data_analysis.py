@@ -19,7 +19,7 @@ class WeatherDataAnalysis:
         highest_temp_struct, lowest_temp_struct = [], []
         most_humid_struct, report = [], []
         year_max_temp, year_min_temp, year_highest_humidity = -273, 200, 0
-        month_list = weather_readings.get_months_list_by_year(current_year)
+        month_list = weather_readings.get_months_data_of_year(current_year)
         for month in month_list:
             if month is not None:
                 max_temp_list = month.get_int_converted_attribute_values(
@@ -54,7 +54,7 @@ class WeatherDataAnalysis:
         return report
 
     def calculate_monthly_record(self, weather_readings, current_year, month_number):
-        month_list = weather_readings.get_months_list_by_year(current_year)
+        month_list = weather_readings.get_months_data_of_year(current_year)
         report = []
         month = month_list[month_number]
         if month is not None:
@@ -73,7 +73,7 @@ class WeatherDataAnalysis:
         return report
 
     def calculate_monthly_record_for_bar_charts(self, weather_readings, current_year, month_number):
-        month_list = weather_readings.get_months_list_by_year(current_year)
+        month_list = weather_readings.get_months_data_of_year(current_year)
         report = {}
         month = month_list[month_number]
         if month is not None:

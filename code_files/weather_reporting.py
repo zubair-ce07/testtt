@@ -4,7 +4,7 @@ from constants import FILE_ERROR_MESSAGE
 
 class WeatherReporting:
 
-    def print_yearly_report(self, report, record_info):
+    def display_yearly_report(self, report, record_info):
         print(
             record_info,
             '\nHighest: ', report[0][0], 'C on ', report[0][1], report[0][2],
@@ -13,7 +13,7 @@ class WeatherReporting:
             '\n-------------------------------------\n'
         )
 
-    def print_monthly_report(self, report, record_info):
+    def display_monthly_report(self, report, record_info):
         print(
             record_info,
             '\nHighest Average: ', round(report[0]), 'C',
@@ -22,7 +22,7 @@ class WeatherReporting:
             '\n-------------------------------------\n'
         )
 
-    def print_monthly_bar_cahart(self, report, record_info):
+    def display_monthly_bar_chart(self, report, record_info):
         high_temperature_list = report.get('high_temprature')
         low_temperature_list = report.get('low_temprature')
         print(record_info)
@@ -47,10 +47,10 @@ class WeatherReporting:
     def display_report(self, report, operation, record_info):
         if len(report) > 1:
             if operation is 'e':
-                self.print_yearly_report(report, record_info)
+                self.display_yearly_report(report, record_info)
             elif operation is 'a':
-                self.print_monthly_report(report, record_info)
+                self.display_monthly_report(report, record_info)
             else:
-                self.print_monthly_bar_cahart(report, record_info)
+                self.display_monthly_bar_chart(report, record_info)
         else:
             print(FILE_ERROR_MESSAGE, '\n\n')

@@ -9,6 +9,6 @@ class WeatherReadings:
     def add_new_year(self, year='', months=[]):
         self.year_holder[year] = months
 
-    def get_months_list_by_year(self, year):
+    def get_months_data_of_year(self, year):
         months = self.year_holder.get(year)
         return months
