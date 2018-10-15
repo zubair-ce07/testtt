@@ -228,12 +228,15 @@ class ComparablySpiderSpider(scrapy.Spider):
     custom_settings = {
         "USER_AGENT": "Mozilla/5.0 (X11; Linux x86_64) "
                       "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36",
-        "DOWNLOAD_DELAY": 1.25
+        "DOWNLOAD_DELAY": 1.25,
+        "ITEM_PIPELINES":  {
+            'comparably.pipelines.FlatenPipeline': 300,
+        }
     }
 
     def start_requests(self):
-        company_names = self.read_company_names()
-        # company_names = ["Select Rehabilitation"]
+        # company_names = self.read_company_names()
+        company_names = ["Select Rehabilitation"]
 
         for company_name in company_names:
             url = "https://www.comparably.com/search"
