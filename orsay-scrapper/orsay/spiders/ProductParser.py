@@ -23,7 +23,7 @@ class ProductParser(Spider):
         product['name'] = self.product_name(response)
         product['skus'] = self.product_sku(response)
         product['url'] = response.url
-        product['request_queue'] = self.product_colors_requests(
+        product['meta'] = self.product_colors_requests(
             response, product)
         return self.next_request_or_item(product)
 
@@ -35,12 +35,12 @@ class ProductParser(Spider):
         return self.next_request_or_item(item)
 
     def next_request_or_item(self, item):
-        color_requests = item['request_queue']
+        color_requests = item['meta']
         if color_requests:
             req = color_requests.pop()
             yield req
         else:
-            item.pop('request_queue')
+            item.pop('meta')
             yield item
 
     def product_sku(self, response):
@@ -119,11 +119,9 @@ class ProductParser(Spider):
         xpath = '//ul[contains(@class, "swatches color")]/'\
             + 'li[not(contains(@class, "selected"))]//a/@href'
         links = response.xpath(xpath).extract()
-        requests = []
-        for link in links:
-            req = scrapy.Request(url=link, callback=self.parse_colors)
-            req.meta['item'] = item
-            requests.append(req)
+        requests = [scrapy.Request(link, callback=self.parse_colors, meta={
+                                   'item': item}) for link in links]
+
         return requests
 
     def product_id(self, response):

@@ -11,4 +11,4 @@ class OrsayItem(scrapy.Item):
     name = scrapy.Field()
     skus = scrapy.Field()
     url = scrapy.Field()
-    request_queue = scrapy.Field()
+    meta = scrapy.Field()
