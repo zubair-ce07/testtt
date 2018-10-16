@@ -33,8 +33,8 @@ class CsvFileDataHolder:
         try:
             with open(file_path) as csvfile:
                 values = []
-                readCSV = csv.reader(csvfile, delimiter=',')
-                for row in readCSV:
+                csv_reader = csv.reader(csvfile, delimiter=',')
+                for row in csv_reader:
                     values.append(row)
             colom_iterator = 0
             while colom_iterator < len(values[0]):
