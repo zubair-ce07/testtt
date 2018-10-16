@@ -2,7 +2,6 @@ import scrapy
 
 
 class Product(scrapy.Item):
-
     retailer_sku = scrapy.Field()
     uuid = scrapy.Field()
     trail = scrapy.Field()
@@ -23,5 +22,3 @@ class Product(scrapy.Item):
     merch_info = scrapy.Field()
     image_urls = scrapy.Field()
     skus = scrapy.Field()
-    spider_name = scrapy.Field()
-    crawl_start_time = scrapy.Field()

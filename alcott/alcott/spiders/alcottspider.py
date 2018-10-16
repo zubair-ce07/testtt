@@ -13,12 +13,13 @@ class AlcottSpider(CrawlSpider):
     name = 'alcott-crawler'
     allowed_domains = ['alcott.eu']
     start_urls = ['https://www.alcott.eu/en/catalogo']
+    url_query = '/ProductListingView?categoryId={}&storeId={}'
+
     rules = (
         Rule(
-            LinkExtractor(restrict_css=('.submenu-item a')),
-            callback='parse'),
+            LinkExtractor(restrict_css=('.submenu-item')), callback='parse'),
         Rule(
-            LinkExtractor(restrict_css=('.product_name a')),
+            LinkExtractor(restrict_css=('.product_name')),
             callback=productparser.parse),
     )
 
@@ -33,10 +34,10 @@ class AlcottSpider(CrawlSpider):
         yield from super(AlcottSpider, self).parse(response)
 
     def query_string_data(self, response):
-        css = '*[name=storeId]::attr(value)'
+        css = '[name=storeId]::attr(value)'
         store_id = response.css(css).extract_first()
 
-        css = '*[name=pageId]::attr(content)'
+        css = '[name=pageId]::attr(content)'
         category_id = response.css(css).extract_first()
 
-        return '/ProductListingView?categoryId='+category_id+'&storeId='+store_id
+        return self.url_query.format(category_id, store_id)
