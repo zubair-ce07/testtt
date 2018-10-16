@@ -12,7 +12,6 @@ import (
 )
 
 var READINGS [] weatherInfo
-
 type weatherInfo struct {
 
 	date string
@@ -24,11 +23,13 @@ type weatherInfo struct {
 	minHumidity int
 }
 
+
 func ReadFileData(fileName string) []string{
 	var fileData []string
 	file, err := os.Open(fileName)
 	if err != nil {
 		log.Fatal(err)
+		os.Exit(0)
 	}
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
@@ -39,30 +40,32 @@ func ReadFileData(fileName string) []string{
 
 
 func ParseRawData(rawData[] string) [][]string{
-	var data [][]string
+	var dataReadings [][]string
 	for i :=0; i< len(rawData); i++{
 		parsedData := strings.Split(rawData[i], ",")
-		data = append(data, parsedData)
+		dataReadings = append(dataReadings, parsedData)
 	}
-	return data
+	return dataReadings
 }
 
-func PopulateREADINGS(data[][] string){
 
-	for i := 1; i < len(data); i++{
-		date := data[i][0]
-		maxtemp, _ := strconv.Atoi(data[i][1])
-		meanTemp, _ := strconv.Atoi(data[i][2])
-		minTemp, _ := strconv.Atoi(data[i][3])
-		maxHumidity, _ := strconv.Atoi(data[i][7])
-		meanHumidity, _ := strconv.Atoi(data[i][8])
-		minHumidity, _ := strconv.Atoi(data[i][9])
+func PopulateREADINGS(dataReadings[][] string){
+
+	for i := 1; i < len(dataReadings); i++{
+		date := dataReadings[i][0]
+		maxtemp, _ := strconv.Atoi(dataReadings[i][1])
+		meanTemp, _ := strconv.Atoi(dataReadings[i][2])
+		minTemp, _ := strconv.Atoi(dataReadings[i][3])
+		maxHumidity, _ := strconv.Atoi(dataReadings[i][7])
+		meanHumidity, _ := strconv.Atoi(dataReadings[i][8])
+		minHumidity, _ := strconv.Atoi(dataReadings[i][9])
 		weatherData := weatherInfo{ date, maxtemp, meanTemp, minTemp,
 			maxHumidity, meanHumidity, minHumidity,
 		}
 		READINGS = append(READINGS, weatherData)
 	}
 }
+
 
 func ReadAllFileNames(path string) []string {
 	var fileNames []string
@@ -77,6 +80,7 @@ func ReadAllFileNames(path string) []string {
 	return fileNames
 }
 
+
 func AppendAllFilesData(fileNames[] string){
 
 	var rawData []string
@@ -87,6 +91,7 @@ func AppendAllFilesData(fileNames[] string){
 		PopulateREADINGS(data)
 	}
 }
+
 
 func GetYearData(year string) map[string]string{
 
@@ -122,6 +127,7 @@ func GetYearData(year string) map[string]string{
 	return weatherData
 }
 
+
 func GetMonthYearData(monthYear string)(int, int, int){
 
 	yearMonth := strings.Split(monthYear, "/")
@@ -145,6 +151,7 @@ func GetMonthYearData(monthYear string)(int, int, int){
 	return averageHighestTemp, averageLowestTemp, averageMeanHumidity
 }
 
+
 func GenerateExtremeReport(weatherData  map[string]string){
 
 	fmt.Print("Extreme Weather Report")
@@ -153,12 +160,14 @@ func GenerateExtremeReport(weatherData  map[string]string){
 	fmt.Printf("Humidity: %sC on %s \n", weatherData["highestHumidity"], weatherData["highestHumidityDate"])
 }
 
+
 func GenerateAverageReport(averageHighestTemp int, averageLowestTemp int, averageMeanHumidity int){
 
 	fmt.Printf("Highest Average: %sC\n", strconv.Itoa(averageHighestTemp))
 	fmt.Printf("Lowest Average: %sC \n", strconv.Itoa(averageLowestTemp))
 	fmt.Printf("Average Mean Humidity: %s%%\n", strconv.Itoa(averageMeanHumidity))
 }
+
 
 func GenerateExtremeBarChart(monthYear string) {
 
@@ -177,6 +186,7 @@ func GenerateExtremeBarChart(monthYear string) {
 	}
 }
 
+
 func GenerateExtremeBonusChart(monthYear string) {
 
 	yearMonth := strings.Split(monthYear, "/")
@@ -193,6 +203,7 @@ func GenerateExtremeBonusChart(monthYear string) {
 		}
 	}
 }
+
 
 func GenerateReports(arguments[] string){
 
@@ -234,6 +245,7 @@ func GenerateReports(arguments[] string){
 	}
 }
 
+
 func ValidateInput(arguments[] string){
 	for i := 0; i < len(arguments); i++{
 		yearMonth := strings.Split(arguments[i], "/")
@@ -244,6 +256,7 @@ func ValidateInput(arguments[] string){
 	}
 }
 
+
 func ValidateYear(input string){
 	year, _ := strconv.Atoi(input)
 	if year > 2016 || year < 2004 {
@@ -252,6 +265,7 @@ func ValidateYear(input string){
 	}
 }
 
+
 func ValidateMonth(input string){
 	month, _ := strconv.Atoi(input)
 	if month > 12 || month < 1 {
@@ -259,6 +273,7 @@ func ValidateMonth(input string){
 		runtime.Breakpoint()
 	}
 }
+
 
 func main() {
 
