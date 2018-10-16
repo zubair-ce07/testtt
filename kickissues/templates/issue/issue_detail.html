@@ -1,7 +1,5 @@
 {% extends "base_layout.html" %}
 {% block content %}
-    {{ time }}
-    {{ settings }}
     {% include "issue/_modal.html" %}
     <br>
     <br>
@@ -16,12 +14,20 @@
                             {% if  object.created_by == request.user %}
                                 <a class="btn btn-danger float-right" href="{% url 'issue:edit' object.id %}">Edit</a>
                                 {% if object.status == 'resolved' %}
-                                    <a href="{% url 'issue:open_again' id=object.id %}" class="btn btn-success float-right" name="resolve">Open Issue Again</a>
+                                    <form method="post" action="{% url 'issue:open_again' %}" >
+                                        {% csrf_token %}
+                                        <input type="hidden" name="id" value="{{ object.id }}">
+                                        <button type="submit" class="btn btn-success">Open Issue Again</button>
+                                    </form>
                                 {% endif %}
                             {% endif %}
                             {% if object.manage_by == request.user %}
                                 {% if object.status != 'resolved' %}
-                                    <a href="{% url 'issue:resolve' id=object.id %}" class="btn btn-success float-right" name="resolve">Issue Resolved</a>
+                                    <form method="post" action="{% url 'issue:resolve' %}" >
+                                        {% csrf_token %}
+                                        <input type="hidden" name="id" value="{{ object.id }}">
+                                        <button type="submit" class="btn btn-success">Resolve Issue</button>
+                                    </form>
                                 {% endif %}
                             {% endif %}
                         </div>
@@ -36,18 +42,22 @@
                             <p class="card-text"><strong>Status:</strong> {{ object.status }}</p>
                             {% if object.status == 'review' or object.status == 'resolved' %}
                                 <p class="card-text"><strong>Manage By:</strong> {{ object.manage_by }}</p>
-                                <p class="card-text"><strong>Assigned Date:</strong> {{ object.assigned_date }}</p>
+                                <p class="card-text"><strong>Assigned Date:</strong> {{ object.assigned_at }}</p>
                             {% endif %}
                             {% if object.status == 'resolved' %}
-                                <p class="card-text"><strong>Resolved Date:</strong> {{ object.resolved_date }}</p>
+                                <p class="card-text"><strong>Resolved Date:</strong> {{ object.resolved_at }}</p>
                             {% endif %}
-                            <p class="card-text"><strong>Created at:</strong> {{ object.date_created }}</p>
-                            {% if object.last_edit %}
-                                <p class="card-text"><strong>Last Edited:</strong> {{ object.last_edit }}</p>
+                            <p class="card-text"><strong>Created at:</strong> {{ object.created_at }}</p>
+                            {% if object.edited_at %}
+                                <p class="card-text"><strong>Last Edited:</strong> {{ object.edited_at }}</p>
                             {% endif %}
                             {% if manager %}
                                 {% if object.status == 'todo' or object.status == 'review' and object.manage_by == None %}
-                                    <a href="{% url 'issue:assign' id=object.id %}" class="btn btn-success" name="assign">Assign To You</a>
+                                    <form method="post" action="{% url 'issue:assign' %}" >
+                                        {% csrf_token %}
+                                        <input type="hidden" name="id" value="{{ object.id }}">
+                                        <button type="submit" class="btn btn-success">Assign to You</button>
+                                    </form>
                                 {% endif %}
                             {% endif %}
                         </div>

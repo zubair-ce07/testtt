@@ -5,15 +5,15 @@ from rest_framework.permissions import IsAuthenticated
 
 from web.account.utils import is_manager
 from web.issue.models import Issue, Comment
-from .paginations import CustomPageNumberPagination
-from .permissions import IsCommentedAndCanChange, IsOwnerOrManager, IsOwner
-from .serializers import IssueCreateUpdateSerializer, IssueStatusChangeSerializer, CommentSerializer
+from web.issue.api.paginations import CustomPageNumberPagination
+from web.issue.api.permissions import IsCommentOwner, IsCustomerOrManager, IsIssueOwner
+from web.issue.api.serializers import IssueSerializer, IssueStatusChangeSerializer, CommentSerializer
 
 
-class IssueListCreateView(ListCreateAPIView):
+class IssueListCreateAPIView(ListCreateAPIView):
     queryset = Issue.objects.all()
-    serializer_class = IssueCreateUpdateSerializer
-    permission_classes = ([IsAuthenticated, IsOwnerOrManager])
+    serializer_class = IssueSerializer
+    permission_classes = ([IsAuthenticated, IsCustomerOrManager])
     filter_backends = [SearchFilter]
     search_fields = ['title', 'description', 'priority']
     pagination_class = CustomPageNumberPagination
@@ -30,25 +30,25 @@ class IssueListCreateView(ListCreateAPIView):
         return query_set
 
 
-class IssueRetriveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
+class IssueRetriveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
     queryset = Issue.objects.all()
-    serializer_class = IssueCreateUpdateSerializer
-    permission_classes = ([IsAuthenticated, IsOwnerOrManager, IsOwner])
+    serializer_class = IssueSerializer
+    permission_classes = ([IsAuthenticated, IsCustomerOrManager, IsIssueOwner])
 
 
-class IssueStatusChangeView(RetrieveUpdateAPIView):
+class IssueStatusChangeAPIView(RetrieveUpdateAPIView):
     queryset = Issue.objects.all()
     serializer_class = IssueStatusChangeSerializer
-    permission_classes = ([IsAuthenticated, IsOwnerOrManager])
+    permission_classes = ([IsAuthenticated, IsCustomerOrManager])
 
 
-class CommentRetriveUpdateDestoryView(RetrieveUpdateDestroyAPIView):
+class CommentRetriveUpdateDestoryAPIView(RetrieveUpdateDestroyAPIView):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    permission_classes = [IsAuthenticated, IsCommentedAndCanChange]
+    permission_classes = [IsAuthenticated, IsCommentOwner]
 
 
-class CommentListView(ListCreateAPIView):
+class CommentListCreateAPIView(ListCreateAPIView):
     serializer_class = CommentSerializer
     permission_classes = [IsAuthenticated]
 
@@ -57,10 +57,10 @@ class CommentListView(ListCreateAPIView):
         issue = Issue.objects.filter(id=issueid, created_by=self.request.user).exists()
         if not issue:
             raise PermissionDenied("You are not allowed to see comments from this issue")
-        return Comment.objects.filter(issue_id=issueid)
+        return Comment.objects.filter(issue=issueid)
 
     def perform_create(self, serializer):
         issue_id = self.kwargs["issueid"]
         issue = Issue.objects.get(id=issue_id)
-        serializer.save(issue_id=issue, comment_by=self.request.user)
+        serializer.save(issue=issue, comment_by=self.request.user)
 

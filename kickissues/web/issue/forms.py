@@ -1,7 +1,7 @@
 from bootstrap_modal_forms.mixins import CreateUpdateAjaxMixin, PopRequestMixin
 from django import forms
 
-from .models import Comment, Issue
+from web.issue.models import Comment, Issue
 
 
 class IssueForm(forms.ModelForm):

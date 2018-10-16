@@ -1,7 +1,7 @@
 from rest_framework import permissions
 
 
-class IsOwner(permissions.BasePermission):
+class IsIssueOwner(permissions.BasePermission):
     message = "You are not allowed to View this Issue"
 
     def has_object_permission(self, request, view, obj):
@@ -12,7 +12,7 @@ class IsOwner(permissions.BasePermission):
         return obj.created_by == request.user
 
 
-class IsCommentedAndCanChange(permissions.BasePermission):
+class IsCommentOwner(permissions.BasePermission):
     """
     Custom permission to only allow owners of an object to edit it.
     """
@@ -22,7 +22,7 @@ class IsCommentedAndCanChange(permissions.BasePermission):
         return obj.comment_by == request.user
 
 
-class IsOwnerOrManager(permissions.BasePermission):
+class IsCustomerOrManager(permissions.BasePermission):
     message = "You are not allowed to View/Create Issue"
 
     def has_permission(self, request, view):

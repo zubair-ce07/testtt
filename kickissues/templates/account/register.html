@@ -7,11 +7,13 @@
                     <div class="col-md-4">
                     </div>
                     <div class="col-md-4">
-                        <form action="{% url 'account:register' %}" method="post" enctype="multipart/form-data" class="form-control">
+                        <form action="{% url actionurl %}" method="post" enctype="multipart/form-data" class="form-control">
                             {% csrf_token %}
                             <div class="form-group">
                                 {{form.as_p}}
                             </div>
+                            <label for="type">User Type:</label>
+                            <input type="text" name="type" value="{{ type }}" disabled>
                             <input type="submit" value="Signup" class='form-control btn btn-lg btn-danger'>
                         </form>
                     </div>

@@ -2,7 +2,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import include, path
 
-from .views import HomepageView
+from web.views import HomepageView
 
 urlpatterns = [
     path('', HomepageView.as_view(), name='homepage'),

@@ -1,5 +1,69 @@
 {% extends "base_layout.html" %}
 {% block content %}
-    
-    <h1>Kick Issues</h1>
+    <div class="col-md-12">
+        <div class="row">
+            <div class="col-md-3">
+            </div>
+            <div class="col-md-6">
+                <h1 size="2em" style="margin: 10%;"><center>Kick Issues</center></h1>
+            </div>
+            <div class="col-md-3">
+            </div>
+        </div>
+    </div>
+    <div class="col-md-12">
+        <div class="row">
+            <div class="col-md-6">
+                <h1 style="margin-bottom: 20%"><center>Login</center></h1>
+                <form method="post" action="{%  url 'account:login' %}">
+                    {% csrf_token %}
+                    {{ login_form.as_p }}
+                    <input type="submit" value="Login" class="btn btn-success">
+                </form>
+            </div>
+            <div class="col-md-6" style="border: 1px #0b2e13;">
+                <h1><center>Sign Up</center></h1>
+                <div class="container" style="margin: 20% auto;">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <a href="{% url 'account:customer_register' %}" class="btn btn-block btn-lg btn-outline-success">Customer</a>
+                                            <div class="btn-lg">
+                                                <div class="_1BN1N Kzi1t _2DJZN">
+                                                    <div class="_1HjH7">
+                                                        <div class="_3qe6h">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <a href="{% url 'account:manager_register' %}" class="btn btn-block btn-lg btn-outline-danger">Manager</a>
+                                        </div>
+                                        <div class="col-md-4">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock content %}

@@ -1,0 +1,8 @@
+{% extends 'base_layout.html' %}
+{% block content %}
+    {% if exception %}
+        <p>{{ exception }}</p>
+    {% else %}
+        <p>Static generic message</p>
+    {% endif %}
+{% endblock content %}

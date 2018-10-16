@@ -1,17 +1,18 @@
-import datetime
-
 from bootstrap_modal_forms.mixins import DeleteAjaxMixin, PassRequestMixin
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.models import Group
 from django.contrib.messages.views import SuccessMessageMixin
+from django.core.exceptions import PermissionDenied
 from django.shortcuts import redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.views.generic import (
     CreateView, DeleteView, UpdateView, View
 )
 
-from .forms import CommentEditForm, CommentForm, IssueForm
-from .models import Comment, Issue
+from web.account.mixins import IssueOwnerPermissionMixin
+from web.account.utils import is_manager
+from web.issue.forms import CommentEditForm, CommentForm, IssueForm
+from web.issue.models import Comment, Issue, StatusChoices
 
 
 class CreateIssueView(LoginRequiredMixin, CreateView):
@@ -34,10 +35,7 @@ class IssueDetailView(LoginRequiredMixin, View):
 
     def get(self, request, pk):
         issue = Issue.objects.get(id=pk)
-        group = Group.objects.filter(user=request.user).first().name
-        context = {}
-        if group == 'Manager':
-                context['manager'] = True
+        context = {'manager': is_manager(request.user)}
         if self.request.user == issue.created_by or self.request.user == issue.manage_by:
             context['form'] = self.form_class()
         context['comment_list'] = Comment.objects.filter(issue_id=pk).order_by('-timestamp')
@@ -47,41 +45,37 @@ class IssueDetailView(LoginRequiredMixin, View):
     def post(self, request, pk):
         form = self.form_class(request.POST, request.FILES)
         if form.is_valid():
-            draft = form.save(commit=False)
-            draft.comment_by = request.user
+            draft_issue = form.save(commit=False)
+            draft_issue.comment_by = request.user
             issue = Issue.objects.get(id=pk)
-            draft.issue_id = issue
-            draft.save()
+            draft_issue.issue = issue
+            draft_issue.save()
             return redirect('issue:issuedetail', pk=pk)
+
         return render(request, 'issue/issue_detail.html', {'form': form})
 
 
 class AssignView(LoginRequiredMixin, View):
     login_url = 'account:login'
 
-    def get(self, request, id):
-        issue = Issue.objects.get(id=id)
-        issue.manage_by = self.request.user
-        issue.status = 'review'
-        issue.assigned_date = datetime.datetime.now()
-        issue.save()
-        return redirect('issue:issuedetail', pk=id)
+    def post(self, request):
+        if is_manager(request.user):
+            issue_id = request.POST.get("id")
+            issue = Issue.objects.get(id=issue_id)
+            issue.manage_by = self.request.user
+            issue.status = StatusChoices.REVIEW
+            issue.assigned_at = timezone.datetime.now()
+            issue.save()
+        else:
+            raise PermissionDenied("You don't have access to this page")
+        return redirect('issue:issuedetail', pk=issue_id)
 
 
-class EditIssueView(LoginRequiredMixin, UpdateView):
+class EditIssueView(LoginRequiredMixin, IssueOwnerPermissionMixin, UpdateView):
     login_url = 'account:login'
     model = Issue
     form_class = IssueForm
     template_name = 'issue/edit.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        issue = Issue.objects.get(id=self.object.pk)
-        if issue.created_by == self.request.user:
-            context["form"] = self.form_class(instance=issue)
-        else:
-            context["not_allowed"] = True
-        return context
 
     def get_success_url(self):
         return reverse('issue:issuedetail', args=[self.object.pk])
@@ -106,23 +100,30 @@ class CommentDeleteView(DeleteAjaxMixin, DeleteView):
         return reverse('issue:issuedetail', args=[self.kwargs["id"]])
 
 
-class ResolveIssueView(LoginRequiredMixin, View):
+class UpdateIssueStatusView(LoginRequiredMixin, View):
     login_url = 'account:login'
 
-    def get(self, request, id):
-        issue = Issue.objects.get(id=id)
-        issue.status = 'resolved'
-        issue.resolved_date = datetime.datetime.now()
-        issue.save()
-        return redirect('issue:issuedetail', pk=id)
+    def post(self, request):
+        if is_manager(request.user):
+            issue_id = request.POST.get("id")
+            issue = Issue.objects.get(id=issue_id)
+            if issue:
+                issue.status = StatusChoices.RESOLVED
+                issue.resolved_at = timezone.datetime.now()
+                issue.save()
+        else:
+            raise PermissionDenied("You don't have access to this page")
+        return redirect('issue:issuedetail', pk=issue_id)
 
 
-class OpenAgainView(LoginRequiredMixin, View):
+class OpenIssueAgainView(LoginRequiredMixin, IssueOwnerPermissionMixin, View):
     login_url = 'account:login'
 
-    def get(self, request, id):
-        issue = Issue.objects.get(id=id)
-        issue.status = 'review'
-        issue.resolved_date = None
-        issue.save()
-        return redirect('issue:issuedetail', pk=id)
+    def post(self, request):
+        issue_id = request.POST.get("id")
+        issue = Issue.objects.get(id=issue_id)
+        if issue:
+            issue.status = StatusChoices.REVIEW
+            issue.resolved_at = None
+            issue.save()
+        return redirect('issue:issuedetail', pk=issue_id)

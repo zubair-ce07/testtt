@@ -8,15 +8,15 @@ class CommentSerializer(ModelSerializer):
         model= Comment
         fields = [
             'id',
-            'issue_id',
+            'issue',
             'comment_by',
             'comment',
             'timestamp',
-            'last_edit'
+            'edited_at'
         ]
 
 
-class IssueCreateUpdateSerializer(ModelSerializer):
+class IssueSerializer(ModelSerializer):
     comments = SerializerMethodField()
     created_by = SerializerMethodField()
     manage_by = SerializerMethodField()
@@ -34,7 +34,7 @@ class IssueCreateUpdateSerializer(ModelSerializer):
         ]
 
     def get_comments(self, obj):
-        issue_comments = Comment.objects.filter(issue_id=obj.id)
+        issue_comments = Comment.objects.filter(issue=obj.id)
         return CommentSerializer(issue_comments, many=True).data
 
     def get_created_by(self, obj):

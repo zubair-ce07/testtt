@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     'web.account',
     'web.issue',
     'widget_tweaks',
-    'rest_framework'
+    'rest_framework',
+    'bootstrap_modal_forms',
 
 ]
 
