@@ -17,7 +17,8 @@ class WeatherCalculations:
 
         for file_name in glob(f'{dir_path}*.txt'):
             with open(file_name) as data_file:
-                weather_records += [WeatherRecord(row) for row in csv.DictReader(data_file) if self.is_valid(row)]
+                weather_records += [WeatherRecord(record) for record in csv.DictReader(data_file) if
+                                    self.is_valid(record)]
 
         return weather_records
 

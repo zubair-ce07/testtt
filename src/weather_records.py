@@ -3,9 +3,9 @@ from datetime import datetime
 
 class WeatherRecord:
 
-    def __init__(self, row):
-        self.max_temp = int(row.get('Max TemperatureC'))
-        self.min_temp = int(row.get('Min TemperatureC'))
-        self.mean_humidity = int(row[' Mean Humidity'])
-        raw_date = row.get('PKT') or row.get('PKST')
+    def __init__(self, record):
+        self.max_temp = int(record.get('Max TemperatureC'))
+        self.min_temp = int(record.get('Min TemperatureC'))
+        self.mean_humidity = int(record[' Mean Humidity'])
+        raw_date = record.get('PKT') or record.get('PKST')
         self.date = datetime.strptime(raw_date, '%Y-%m-%d')
