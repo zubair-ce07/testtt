@@ -11,19 +11,20 @@ from scrapy.spiders import CrawlSpider, Rule
 
 class OrsaySpider(CrawlSpider):
 
-    name = 'orsay'
-    allowed_domains = ['www.orsay.com']
-    start_urls = [
-        'http://www.orsay.com/de-de/',
-    ]
+    name = "orsay"
+    allowed_domains = ["www.orsay.com"]
+    start_urls = ["http://www.orsay.com/de-de/"]
+    allow_re_category = ["/produkte/"]
+    allow_re_products = ["[.]html$"]
+    deny_re = ["/help/"]
 
     rules = (
         Rule(LinkExtractor(
-            allow=("/produkte/")),
+            allow=allow_re_category),
             callback="parse_product_list"),
         Rule(LinkExtractor(
-            allow=(r"/.*[.]html$"),
-            deny=("/help/")),
+            allow=allow_re_products,
+            deny=deny_re),
             callback="parse_product")
     )
 
@@ -135,7 +136,7 @@ class OrsaySpider(CrawlSpider):
 
     def find_color_variations(self, response, skus, image_urls):
         """Updates the skus according to the provided colors in meta"""
-        item = response.meta['item']
+        item = response.meta["item"]
         item["skus"].update(skus)
         item["url"].add(response.url)  # Appending new color url
         item["image_urls"] = item["image_urls"] | image_urls
@@ -168,7 +169,7 @@ class OrsaySpider(CrawlSpider):
 
     def extract_image_urls(self, response):
         images = response.css(".productthumbnail::attr(src)").extract()
-        return {re.sub(r'[?].*fit$', "", image) for image in images}
+        return {re.sub(r"[?].*fit$", "", image) for image in images}
 
     def find_sizes(self, response):
         sizes = set(response.css(".swatches li.selectable a::text").extract())
