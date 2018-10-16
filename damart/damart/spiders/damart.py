@@ -1,10 +1,8 @@
 """
 This module crawls pages and gets data.
 """
-from scrapy.loader import ItemLoader
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
-from ..items import Product
 
 
 class Damart(CrawlSpider):
@@ -14,13 +12,10 @@ class Damart(CrawlSpider):
     start_urls = ['https://www.damart.co.uk']
     rules = [
         Rule(LinkExtractor(
-            allow=(r'https://www.damart.co.uk/C-*'),
-        ),
-             follow=True),
+            restrict_css=['li'],),            ),
         Rule(LinkExtractor(
-            allow=(r'https://www.damart.co.uk/F-*')),
-             callback='parse_item_detail',
-             follow=False),
+            restrict_css=['.k-product'],),
+             callback='parse_item_detail'),
     ]
 
     def parse_item_detail(self, response):
@@ -48,16 +43,15 @@ class Damart(CrawlSpider):
             sale_price = full_price
         full_price = full_price + '00'
         sale_price = sale_price + '00'
-        loader = ItemLoader(item=Product(), response=response)
-        loader.add_value('item_detail_url', response.url)
-        loader.add_value('title', title.strip())
-        loader.add_value('product_id', product_id)
-        loader.add_value(
-            'title_description', title_description)
-        loader.add_value(
-            'description', description)
-        loader.add_value('more_description', more_description)
-        loader.add_value('full_price', full_price)
-        loader.add_value('sale_price', sale_price)
-        loader.add_value('discount_upto', discount_upto)
-        return loader.load_item()
+        product_data = {
+            'item_detail_url': response.url,
+            'title': title.strip(),
+            'product_id': product_id,
+            'title_description': title_description,
+            'description': description,
+            'more_description': more_description,
+            'full_price': full_price,
+            'sale_price': sale_price,
+            'discount_upto': discount_upto,
+        }
+        yield product_data
