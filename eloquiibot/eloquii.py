@@ -10,18 +10,11 @@ class EloquiiSpider(CrawlSpider):
     name = 'eloquii'
     allowed_domains = ['www.eloquii.com']
     start_urls = ['https://www.eloquii.com']
-    rules = (
-        Rule(LinkExtractor(
-            allow=(r'https://www.eloquii.com/.*'),
-            deny=(r'.*\.html.*'),
-            restrict_css=["#nav_menu a", ".row.justify-content-center.mt-5"]
-        )),
-        Rule(LinkExtractor(
-            allow=(r'.*\.html.*'),
-            restrict_css=".product-images a"
-        ),
-             callback='parse_product'),
-    )
+    rules = (Rule(LinkExtractor(
+        restrict_css=["#nav_menu a",
+                      ".row.justify-content-center.mt-5"])),
+             Rule(LinkExtractor(restrict_css=".product-images a"),
+                  callback='parse_product'))
 
     def parse_product(self, response):
         product = EloquiiProduct()
@@ -34,72 +27,57 @@ class EloquiiSpider(CrawlSpider):
         product["image_urls"] = self.image_urls(response)
         product["skus"] = {}
         product["merch_info"] = self.merch_info(response)
-        if not product["merch_info"]:
+        if "COMING SOON" not in product["merch_info"]:
             product["skus"] = self.skus(response)
         yield product
 
     def product_id(self, response):
-        pid = response.css(
-            "#yotpo-bottomline-top-div::attr(data-product-id)"
-            ).extract_first()
-        return pid
+        return response.css("#yotpo-bottomline-top-div::attr(data-product-id)"
+                            ).extract_first()
 
     def product_name(self, response):
-        pro_name = response.css(
-            "#yotpo-bottomline-top-div::attr(data-name)"
-            ).extract_first()
-        return pro_name
+        return response.css("#yotpo-bottomline-top-div::attr(data-name)"
+                            ).extract_first()
 
     def product_category(self, response):
-        category = response.css(
+        return response.css(
             "#yotpo-bottomline-top-div::attr(data-bread-crumbs)"
-            ).extract_first()
-        return category
+        ).extract_first()
 
     def product_description(self, response):
-        desc = response.css(
-            "[name=description]::attr(content)"
-            ).extract_first()
-        return desc
+        return response.css("[name=description]::attr(content)"
+                            ).extract_first()
 
     def image_urls(self, response):
-        image_url = response.css(
-            ".productthumbnails image::attr(src)"
-            ).extract()
-        image_url = [
-            response.urljoin(i.replace('small', 'large', 1)) for i in image_url
-        ]
+        image_url = response.css(".productthumbnails img::attr(src)"
+                                 ).extract()
+        image_url = [response.urljoin(i.replace('small', 'large', 1)) for i in
+                     image_url]
         if not image_url:
-            image_url = response.css(
-                ".productimagearea image::attr(src)"
-                ).extract_first()
+            image_url = response.css(".productimagearea img::attr(src)"
+                                     ).extract_first()
             image_url = response.urljoin(image_url)
         return image_url
 
     def merch_info(self, response):
-        pro_merch_info = response.css(
-            "h3.text-24.font-demi.mb-3::text"
-            ).extract_first()
-        if not pro_merch_info:
-            pro_merch_info = re.findall(r'\'COMINGSOON\': (true|false)',
-                                        response.text)
-            if pro_merch_info:
-                pro_merch_info = "Coming Soon"
-        return pro_merch_info
+        product_merch_info = []
+        product_merch_info.append(response.css(
+            "h3.text-24.font-demi.mb-3::text").extract_first(default=''))
+        product_merch_info.append(response.css(".finalsale::text"
+                                               ).extract_first(default=''))
+        if bool(re.search(r'\'COMINGSOON\': (true)',
+                          response.text)):
+            product_merch_info.append("COMING SOON")
+        return product_merch_info
 
     def skus(self, response):
         skus = {}
-        colours = response.css(
-            ".swatchesdisplay a::attr(title)"
-            ).extract()
+        colours = response.css(".swatchesdisplay a::attr(title)").extract()
         sizes = response.css(
-            "#product_detail_size_drop_down_expanded a::attr(title)"
-            ).extract()
+            "#product_detail_size_drop_down_expanded a::attr(title)").extract()
         sizes = sizes[1:]
-
-        previous_price = response.css(
-            ".priceGroup strike::text"
-            ).extract_first()
+        previous_price = response.css(".priceGroup strike::text"
+                                      ).re_first(r'(\d+\.\d+)')
         price = response.css(".priceGroup span::text").extract_first()
         currency = ''
         if price:
