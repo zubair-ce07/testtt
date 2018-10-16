@@ -14,6 +14,7 @@ class ReportGenerator:
         if not records:
             print('No data found')
             return
+
         print(f"Highest: {records[0].max_temp}C on "
               f"{records[0].date.strftime('%B')} {records[0].date.day}")
         print(f"Lowest: {records[1].max_temp}C on "
@@ -28,6 +29,7 @@ class ReportGenerator:
         if not records:
             print('No data found')
             return
+
         print(f"Highest Average: {records[0]}C")
         print(f"Lowest Average: {records[1]}C")
         print(f"Average Mean Humidity: {records[2]}C\n")
@@ -39,12 +41,15 @@ class ReportGenerator:
         if not records:
             print('No data found')
             return
+
         print(f"{records[0].date.strftime('%B')} {records[0].date.year}")
+
         for day in records:
             if single_line:
                 self.generate_single_line_chart(day)
             else:
                 self.generate_multi_line_chart(day)
+
         print(self.COLOR_DEFAULT)
 
     def generate_single_line_chart(self, day):

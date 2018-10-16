@@ -14,9 +14,11 @@ class WeatherCalculations:
         This method directory path and return read all txt files.
         """
         weather_records = []
+
         for file_name in glob(f'{dir_path}*.txt'):
             with open(file_name) as data_file:
                 weather_records += [WeatherRecord(row) for row in csv.DictReader(data_file) if self.is_valid(row)]
+
         return weather_records
 
     def is_valid(self, weather_record):
