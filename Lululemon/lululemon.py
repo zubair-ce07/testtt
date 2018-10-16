@@ -9,13 +9,14 @@ from scrapy.spiders import CrawlSpider, Rule
 
 
 class LululemonSpider(CrawlSpider):
-    name = 'lululemon'
-    allowed_domains = ['shop.lululemon.com']
-    start_urls = ['http://shop.lululemon.com/']
+    name = "lululemon"
+    allowed_domains = ["shop.lululemon.com"]
+    start_urls = ["http://shop.lululemon.com/"]
+    allow_re = ["view-all"]
 
     rules = (Rule(LinkExtractor(
-            allow=('view-all')),
-            callback='parse_product_list'),
+            allow=allow_re),
+            callback="parse_product_list"),
     )
 
     def parse_product_list(self, response):
@@ -63,12 +64,12 @@ class LululemonSpider(CrawlSpider):
 
         for sku in child_skus:
             skus[f"{sku['color-code']}_{sku['size']}"] = {
-                "color_id": sku['color-code'],
+                "color_id": sku["color-code"],
                 "color_name": [
                     color["display-name"] for color in
-                    all_colors if color["color-code"] == sku['color-code']],
-                "size": sku['size'],
-                "currency": "USD ($)",
+                    all_colors if color["color-code"] == sku["color-code"]],
+                "size": sku["size"],
+                "currency": sku["price-details"]["currency-code"],
                 "price": sku["price-details"]["list-price"],
                 "on sale": sku["price-details"]["on-sale"],
                 "style_id": sku["style-id"],
@@ -105,6 +106,6 @@ class LululemonSpider(CrawlSpider):
             "features",
             [f["featureDescription"] for f in
                 product_attr["product-content-feature"][0]["f5Features"] if f])
-        loader.add_value("website", self.start_urls)
+        loader.add_value("website", self.start_urls[0])
         loader.add_value("skus", self.develop_skus(response, json_data))
         yield loader.load_item()
