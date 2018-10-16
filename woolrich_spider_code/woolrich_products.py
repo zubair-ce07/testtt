@@ -14,21 +14,18 @@ class WoolrichSpiderSpider(CrawlSpider):
         Rule(
             LinkExtractor(
                 allow=(r'/[a-z]+$'), restrict_css=('#primary > ul > li > a')),
-            callback='parse_product_catagory', follow=True
+            callback='parse_product_catagory',
         ),
     )
 
     def parse_product_catagory(self, response):
-        # self.log('\n\n'+str(response.url))
-        # extracting product ids
         product_ids = response.meta.get('product_ids')
-        if product_ids is None:
+        if not product_ids:
             product_ids = list()
         product_ids.extend(
             response.css('#product-listing-container .card::attr(data-prod)')
             .extract()
         )
-        # checking for next page and hitting link
         next_page_url = response.css(
             '.pagination-item--next > a::attr(href)').extract_first()
         if next_page_url is not None:
@@ -36,7 +33,7 @@ class WoolrichSpiderSpider(CrawlSpider):
                                  callback=self.parse_product_catagory,
                                  meta={'product_ids': product_ids}
                                  )
-        else:       # parse product
+        else:
             for product_id in product_ids:
                 url = '/products.php?productId=' + str(product_id)
                 yield scrapy.Request(
