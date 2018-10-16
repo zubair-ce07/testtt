@@ -11,12 +11,16 @@ class DamartSpider(CrawlSpider):
     name = "damart"
     allowed_domains = ["www.damart.co.uk"]
     start_urls = ["http://www.damart.co.uk/"]
+    allow_re = ["/C-", "/I-Page"]
+    deny_re = ["/NW-"]
+    products_css = [".photo-data"]
+
     rules = (
             Rule(LinkExtractor(
-                allow=["/C-", "/I-Page"], deny=("/NW-")),
+                allow=allow_re, deny=deny_re),
                 callback="parse"),
             Rule(LinkExtractor(
-                restrict_css=[".photo-data"]),
+                restrict_css=products_css),
                 callback="parse_product")
             )
 
