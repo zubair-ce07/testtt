@@ -1,11 +1,12 @@
 import re
+import js2py
 import datetime
 
 from alcott.items import Product
 
 
 class ProductParser():
-    name = 'alcot-parser'
+    name = 'alcott-parser'
 
     def parse(self, response):
         item = Product()
@@ -75,8 +76,7 @@ class ProductParser():
     def extract_data(self, response):
         css = '[id*=entitledItem]::text'
         raw_items = response.css(css).extract_first()
-        simple_items = re.sub('[\n\r\t]', '', raw_items)
-        items = eval(simple_items)
+        items = js2py.eval_js(raw_items)
         return items
 
     def extract_images(self, products):
