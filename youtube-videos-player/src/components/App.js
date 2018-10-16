@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { Route } from 'react-router-dom';
 import * as YoutubeAPI from '../utils/YoutubeAPI'
-import { StartSearchQuery } from '../configs/'
+import { DEFAULT_SEARCH_QUERY, ROUTE_PREFIX } from '../configs/'
 import Home from './home/';
 import '../App.css';
 
@@ -14,11 +14,10 @@ class App extends Component {
   };
 
   componentDidMount() {
-    this.searchOnYoutube(StartSearchQuery);
+    this.searchOnYoutube(DEFAULT_SEARCH_QUERY);
   }
 
   searchOnYoutube = (searchQuery) => {
-    // Search on youtube videos search API and set state accordingly.
     YoutubeAPI.search(searchQuery, (videos) => {
       if (videos) {
         this.setState({
@@ -30,7 +29,6 @@ class App extends Component {
   };
 
   playVideo = (video) => {
-    // Play video (set the video as main)
     this.setState({
       mainVideo: video
     });
@@ -38,10 +36,10 @@ class App extends Component {
 
 
   render() {
-    const {videos, mainVideo} = this.state;
+    const { videos, mainVideo } = this.state;
 
     return (
-      <Route exact path='/' render={() => (
+      <Route exact path={ROUTE_PREFIX} render={() => (
         <Home
           videos={videos}
           mainVideo={mainVideo}

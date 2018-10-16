@@ -1,10 +1,9 @@
 import React from 'react';
 import { object, func } from 'prop-types';
 
-const VideoGroupItem = (props) => {
+const VideoGroupItem = ({ videoItem, playVideo }) => {
   // Video group component
 
-  const { videoItem, playVideo } = props;
   const url = videoItem.snippet.thumbnails.default.url;
   const { title, publishedAt } = videoItem.snippet;
 

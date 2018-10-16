@@ -1,3 +1,4 @@
-export const YoutubeAPIKey = 'AIzaSyBdVut9QCzqAHBzfDEh30yUp4E529som6s';
-export const StartSearchQuery = 'The new world order';
-export const youtubeVideoPlayUrl = 'https://www.youtube.com/embed/';
+export const YOUTUBE_API_KEY = '';
+export const DEFAULT_SEARCH_QUERY = 'The new world order';
+export const YOUTUBE_VIDEO_PLAY_URL = 'https://www.youtube.com/embed/';
+export const ROUTE_PREFIX = '/';

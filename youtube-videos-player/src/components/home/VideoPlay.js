@@ -1,20 +1,17 @@
 import { isEmpty } from 'underscore';
 import React from 'react';
 import { object } from 'prop-types';
-import { youtubeVideoPlayUrl } from '../../configs/';
+import { YOUTUBE_VIDEO_PLAY_URL } from '../../configs/';
 import Loading from '../common/Loading';
 
-const VideoPlay = (props) => {
+const VideoPlay = ({ video }) => {
   // Play video component
 
-  const video = props.video;
-
-  // Checks if there is no video to play
   if (isEmpty(video)) {
     return <Loading />
   }
 
-  const videoUrl = `${youtubeVideoPlayUrl}${video.id.videoId}`;
+  const videoUrl = `${YOUTUBE_VIDEO_PLAY_URL}${video.id.videoId}`;
   const { title, description } = video.snippet;
 
   return (

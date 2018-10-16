@@ -1,13 +1,11 @@
 import React from 'react';
-import {array, func, object} from 'prop-types';
+import { array, func, object } from 'prop-types';
 import Header from '../common/Header'
 import VideoPlay from './VideoPlay';
 import VideoGroup from './videoGroup/';
 
-const Index = (props) => {
+const Home = ({ videos, mainVideo, searchOnYoutube, playVideo }) => {
   // Home component
-
-  const { videos, mainVideo, searchOnYoutube, playVideo } = props;
 
   return (
     <div className='row'>
@@ -25,11 +23,11 @@ const Index = (props) => {
   )
 };
 
-Index.propTypes = {
+Home.propTypes = {
   videos: array.isRequired,
   mainVideo: object.isRequired,
   searchOnYoutube: func.isRequired,
-  playVideo: func.isRequired,
+  playVideo: func.isRequired
 };
 
-export default Index
+export default Home
