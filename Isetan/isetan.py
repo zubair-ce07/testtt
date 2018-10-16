@@ -15,10 +15,10 @@ class IsetanSpider(CrawlSpider):
         ".pagination-item--next"
         ]
     products_css = [".custm-tags"]
-    extra_links = ["/workshops/"]
+    deny_re = ["/workshops/"]
 
     rules = (
-        Rule(LinkExtractor(restrict_css=listings_css, deny=extra_links),
+        Rule(LinkExtractor(restrict_css=listings_css, deny=deny_re),
             callback="parse"),
         Rule(LinkExtractor(restrict_css=products_css),
             callback="parse_product")
@@ -36,5 +36,5 @@ class IsetanSpider(CrawlSpider):
         loader.add_css("currency", "meta[property='product:price:currency']::attr(content)")
         loader.add_css("product_type", ".breadcrumb:nth-child(2) a::text")
         loader.add_value("url", response.url)
-        loader.add_value("website", self.start_urls)
+        loader.add_value("website", self.start_urls[0])
         return loader.load_item()
