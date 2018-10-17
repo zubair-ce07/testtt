@@ -57,8 +57,7 @@ def year_validator(date_value):
         datetime.datetime.strptime(date_value, '%Y')
         return date_value
     except ValueError:
-        print(constants.YEAR_ARGUMENT_ERROR_MESSAGE)
-        raise argparse.ArgumentTypeError
+        raise argparse.ArgumentTypeError(constants.YEAR_ARGUMENT_ERROR_MESSAGE)
 
 
 def year_and_month_validator(date_value):
@@ -66,30 +65,32 @@ def year_and_month_validator(date_value):
         datetime.datetime.strptime(date_value, '%Y/%m')
         return date_value
     except ValueError:
-        print(constants.MONTH_ARGUMENT_ERROR_MESSAGE)
-        raise argparse.ArgumentTypeError
+        raise argparse.ArgumentTypeError(
+            constants.MONTH_ARGUMENT_ERROR_MESSAGE)
+
+
+def path_validator(path_value):
+    if os.access(path_value, os.R_OK):
+        return path_value
+    else:
+        raise argparse.ArgumentTypeError(constants.DIRECTORY_ERROR_MESSAGE)
 
 
 def driver():
     parser = argparse.ArgumentParser()
-    try:
-        parser.add_argument('path', help=constants.PATH_ARGUMENT_DISCRIPTION)
-        parser.add_argument('-e', type=year_validator, nargs='*',
-                            help=constants.YEAR_ARGUMENT_DISCRIPTION)
-        parser.add_argument('-a', type=year_and_month_validator,
-                            nargs='*', help=constants.MONTH_ARGUMENT_DISCRIPTION)
-        parser.add_argument('-c', type=year_and_month_validator, nargs='*',
-                            help=constants.MONTH_BARCHART_ARGUMENT_DISCRIPTION)
-        args = parser.parse_args()
-        if os.access(args.path, os.R_OK):
-            complete_weather_records = WeatherReadings()
-            parse_records('e', args.e, complete_weather_records, args.path)
-            parse_records('a', args.a, complete_weather_records, args.path)
-            parse_records('c', args.c, complete_weather_records, args.path)
-        else:
-            print(constants.DIRECTORY_ERROR_MESSAGE)
-    except argparse.ArgumentTypeError:
-        pass
+    parser.add_argument('path', type=path_validator,
+                        help=constants.PATH_ARGUMENT_DISCRIPTION)
+    parser.add_argument('-e', type=year_validator, nargs='+',
+                        help=constants.YEAR_ARGUMENT_DISCRIPTION)
+    parser.add_argument('-a', type=year_and_month_validator,
+                        nargs='+', help=constants.MONTH_ARGUMENT_DISCRIPTION)
+    parser.add_argument('-c', type=year_and_month_validator, nargs='+',
+                        help=constants.MONTH_BARCHART_ARGUMENT_DISCRIPTION)
+    args = parser.parse_args()
+    complete_weather_records = WeatherReadings()
+    parse_records('e', args.e, complete_weather_records, args.path)
+    parse_records('a', args.a, complete_weather_records, args.path)
+    parse_records('c', args.c, complete_weather_records, args.path)
 
 
 if __name__ == '__main__':
