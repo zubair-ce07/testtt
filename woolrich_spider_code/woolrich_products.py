@@ -5,42 +5,17 @@ from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 
 
-class WoolrichSpiderSpider(CrawlSpider):
+class WoolrichSpider(CrawlSpider):
     name = 'woolrich_products'
     allowed_domains = ['woolrich.com']
     start_urls = ['https://www.woolrich.com/']
 
     rules = (
-        Rule(
-            LinkExtractor(
-                allow=(r'/[a-z]+$'), restrict_css=('#primary > ul > li > a')),
-            callback='parse_product_catagory',
-        ),
+        Rule(LinkExtractor(deny=('.php$'), restrict_css=(
+            ['#primary > ul > li > a', '.pagination-item--next > a']))),
+        Rule(LinkExtractor(restrict_css=('#product-listing-container .card')),
+             callback='parse_products'),
     )
-
-    def parse_product_catagory(self, response):
-        product_ids = response.meta.get('product_ids')
-        if not product_ids:
-            product_ids = list()
-        product_ids.extend(
-            response.css('#product-listing-container .card::attr(data-prod)')
-            .extract()
-        )
-        next_page_url = response.css(
-            '.pagination-item--next > a::attr(href)').extract_first()
-        if next_page_url is not None:
-            yield scrapy.Request(response.urljoin(next_page_url),
-                                 callback=self.parse_product_catagory,
-                                 meta={'product_ids': product_ids}
-                                 )
-        else:
-            for product_id in product_ids:
-                url = '/products.php?productId=' + str(product_id)
-                yield scrapy.Request(
-                    response.urljoin(url),
-                    callback=self.parse_products,
-                    meta={'product_id': product_id},
-                )
 
     def parse_products(self, response):
         product = {
@@ -49,7 +24,7 @@ class WoolrichSpiderSpider(CrawlSpider):
             'category': response.css('.breadcrumb > a::text')[-1].extract(),
             'description': response.css('#details-content::text').extract_first(),
             'name': response.css('.productView-title::text').extract_first(),
-            'retailer_sku': response.meta.get('product_id'),
+            'retailer_sku': response.css('input[name="product_id"]::attr(value)').extract_first(),
             'skus': {},
             'url': response.url
         }
@@ -211,3 +186,4 @@ class WoolrichSpiderSpider(CrawlSpider):
             fit_attributes[str(fit_value)] = response.xpath(
                 '//label[@data-product-attribute-value=$val]/span/text()', val=fit_value).extract_first()
         return fit_attributes
+
