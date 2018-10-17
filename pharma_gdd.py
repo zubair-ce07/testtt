@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 import scrapy
-from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 from scrapy.loader import ItemLoader
 from scrapy.loader.processors import TakeFirst, Identity
-
-from logging import debug
+from scrapy.spiders import CrawlSpider, Rule
 
 
 class ProductItem(scrapy.Item):
@@ -27,7 +25,9 @@ class ProductLoader(ItemLoader):
 
     @staticmethod
     def fetch_images(product_gallery, loader_context):
-        return [loader_context.get('response').urljoin(i.replace('/thumbnails/70/', '/thumbnails/400/')) for i in product_gallery]
+        return [loader_context.get(
+            'response').urljoin(i.replace('/thumbnails/70/', '/thumbnails/400/'))
+                for i in product_gallery]
 
     @staticmethod
     def clean(value):
@@ -46,7 +46,8 @@ class PharmaGddSpider(CrawlSpider):
     allowed_domains = ['www.pharma-gdd.com']
 
     rules = (
-        Rule(LinkExtractor(restrict_css=['.menu a', '.border_nav a', '[rel="next"]']), callback='parse'),
+        Rule(LinkExtractor(restrict_css=['.menu a', '.border_nav a', '[rel="next"]']),
+             callback='parse'),
         Rule(LinkExtractor(restrict_css=['.product-title a']), callback='parse_product'),
     )
 
@@ -64,7 +65,8 @@ class PharmaGddSpider(CrawlSpider):
         product_loader.add_css('brand', '.product-brand a::text')
         product_loader.add_css('image_urls', '.photo-thumbs img::attr(data-src)')
 
-        product_loader.add_value('ean', response.xpath('//script[contains(text(), "sku")]').re(r'sku":"(\d+)"'))
+        product_loader.add_value('ean', response.xpath(
+            '//script[contains(text(), "sku")]').re(r'sku":"(\d+)"'))
         
         category, segments = self.fetch_categories(response)
         product_loader.add_value('category', category)
@@ -89,4 +91,3 @@ class PharmaGddSpider(CrawlSpider):
             count += 1
 
         return categories[1], segments
-        
