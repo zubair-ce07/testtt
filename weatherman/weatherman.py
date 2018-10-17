@@ -1,106 +1,90 @@
-"""This script use to run the waetherman app
-it tasks command line arguments to differntiate
-that wether it prints the YEAR,MONTH and DAY report"""
 import re
 import calendar
-from cla_parser import validate_argumets
-from year_report import YearReport
-from month_report import MonthReport
-from eachday_report import EachDayReport
-from constants import MONTHS,DATA_COL
-from file_reading import file_reading
+import argparse
+import os.path
+
+from weatherman_class import WeathermanClass
+from file_reading import data_reading
 
 
+def main():
+    cmd_args = validate_argumets()
+    weatherman = WeathermanClass()
+    if cmd_args.year:
+        for year in cmd_args.year:
+            weather_data = data_reading(cmd_args.dir, None, year)
+            if weather_data:
+                print("---------Weather Report of " + year + "---------")
+                weatherman.max_temp_min_temp_max_humidity(weather_data)
+            else:
+                print("Data not found")
+    if cmd_args.month:
+        for month in cmd_args.month:
+            year_month = date_format(month)
+            weather_data = data_reading(
+                cmd_args.dir, year_month[1], year_month[0])
+            if weather_data:
+                print("--------------Weather Report of " +
+                      calendar.month_name[int(year_month[1])] + " " +
+                      year_month[0] + "-----------------")
+                weatherman.average_max_min_temp_mean_himidity(weather_data)
+            else:
+                print("Data not found")
+    if cmd_args.month_eachday:
+        for month in cmd_args.month_eachday:
+            year_month = date_format(month)
+            weather_data = data_reading(
+                cmd_args.dir, year_month[1], year_month[0])
+            if weather_data:
+                print("--------------Weather Report of " +
+                      calendar.month_name[int(year_month[1])] + " " +
+                      year_month[0] + "-----------------")
+                weatherman.each_day_bar(weather_data, 'c')
+            else:
+                print("Data not found")
+    if cmd_args.month_eachday_bonus:
+        for month in cmd_args.month_eachday_bonus:
+            year_month = date_format(month)
+            weather_data = data_reading(
+                cmd_args.dir, year_month[1], year_month[0])
+            if weather_data:
+                print("--------------Weather Report of " +
+                      calendar.month_name[int(year_month[1])] + " " +
+                      year_month[0] + "-----------------")
+                weatherman.each_day_bar(weather_data, 'cb')
+            else:
+                print("Data not found")
 
-cla = validate_argumets()
 
-if cla.yearly:
-    year_report = YearReport()
-    for month in MONTHS:
-        FILE_READER = file_reading(cla.dir,month,cla.date_str)
-        if FILE_READER:
-            for line in FILE_READER:
-                if len(line.strip()) == 16:
-                    continue
-                zipList = zip(DATA_COL, line.split(","))
-                dictOfWeather = dict(zipList)
-                year_report.set_accurate_date(dictOfWeather)
-                dictOfWeather.clear()
-    print(
-    "----------Weather Report of " + cla.date_str +
-    "-----------"
-    )
-    year_report.print_year_report()
+def arguments_parser():
+    cla_parser = argparse.ArgumentParser()
+    cla_parser.add_argument("dir", help="Data DIR path", type=str)
+    cla_parser.add_argument("-e", "--year", help="For Year weather report",
+                            nargs="*", type=str)
+    cla_parser.add_argument("-a", "--month", help="For maonth weather report",
+                            nargs="*", type=str)
+    cla_parser.add_argument("-c", "--month_eachday", help="For eachday report",
+                            nargs="*", type=str)
+    cla_parser.add_argument("-cb", "--month_eachday_bonus",
+                            help="For eachday report(bonus)", nargs="*",
+                            type=str)
+    return cla_parser.parse_args()
 
-elif cla.monthly:
-    month_report = MonthReport()
-    if not re.search(r'\d{4}/{0,1}\d{0,2}',cla.date_str):
+
+def validate_argumets():
+    cmd_line_args = arguments_parser()
+    if not os.path.exists(cmd_line_args.dir):
+        print("Provide existing path of directory")
+        exit(0)
+    return cmd_line_args
+
+
+def date_format(date):
+    if not re.search(r'\d{4}/\d{0,2}', date):
         print("Enter the correct format of date")
         exit(0)
-    YEAR_MONTH = cla.date_str.split("/")
-    FILE_READER = file_reading(cla.dir,MONTHS[int(YEAR_MONTH[1])-1],YEAR_MONTH[0])
-    if FILE_READER:
-        for line in FILE_READER:
-            if len(line.strip()) == 16:
-                continue
-            zipList = zip(DATA_COL, line.split(","))
-            dictOfWeather = dict(zipList)
-            month_report.cal_sum_of_data(dictOfWeather)
-            dictOfWeather.clear()
-        month_report.take_avg_of_data()
-        print(
-            "--------------Weather Report of " +
-            calendar.month_name[int(YEAR_MONTH[1])] + " " +
-            YEAR_MONTH[0] + "-----------------"
-            )
-        month_report.print_month_report()
-    else:
-        print("No data found")
+    return date.split("/")
 
-elif cla.monthly_eachday:
-    each_day_report = EachDayReport()
-    if not re.search(r'\d{4}/{0,1}\d{0,2}',cla.date_str):
-        print("Enter the correct format of date")
-        exit(0)
-    YEAR_MONTH = cla.date_str.split("/")
-    FILE_READER = file_reading(cla.dir,MONTHS[int(YEAR_MONTH[1])-1],YEAR_MONTH[0])
-    if FILE_READER:
-        print(
-            "--------------Weather Report of " +
-            calendar.month_name[int(YEAR_MONTH[1])] + " " +
-            YEAR_MONTH[0] + "-----------------"
-        )
-        for line in FILE_READER:
-            if len(line.strip()) == 16:
-                continue
-            zipList = zip(DATA_COL, line.split(","))
-            dictOfWeather = dict(zipList)
-            each_day_report.print_eachday_report(dictOfWeather)
-            each_day_report.print_eachday_report(dictOfWeather)
-            dictOfWeather.clear()
-    else:
-        print("No data found")
-    
-elif cla.monthly_bonus:
-    each_day_report = EachDayReport()
-    if not re.search(r'\d{4}/{0,1}\d{0,2}',cla.date_str):
-        print("Enter the correct format of date")
-        exit(0)
-    YEAR_MONTH = cla.date_str.split("/")
-    FILE_READER = file_reading(cla.dir,MONTHS[int(YEAR_MONTH[1])-1],YEAR_MONTH[0])
-    if FILE_READER:
-        print(
-            "--------------Weather Report of " +
-            calendar.month_name[int(YEAR_MONTH[1])] + " " +
-            YEAR_MONTH[0] + "-----------------"
-        )
-        for line in FILE_READER:
-            if len(line.strip()) == 16:
-                continue
-            zipList = zip(DATA_COL, line.split(","))
-            dictOfWeather = dict(zipList)
-            each_day_report.print_eachday_report(dictOfWeather)
-            each_day_report.print_eachday_report_bonus(dictOfWeather)
-            dictOfWeather.clear()
-    else:
-        print("No data found")
+
+if __name__ == "__main__":
+    main()
