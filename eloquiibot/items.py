@@ -18,3 +18,4 @@ class EloquiiProduct(scrapy.Item):
     skus = scrapy.Field()
     url = scrapy.Field()
     merch_info = scrapy.Field()
+    out_of_stock = scrapy.Field()
