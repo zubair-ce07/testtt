@@ -31,8 +31,7 @@ class LindexItem(Item):
 
 
 def clean_text(self, description):
-    values = [re.sub('\s+', ' ', text).strip() for text in description if text]
-    return [text for text in values if text]
+    return [re.sub('\s+', ' ', text).strip() for text in description if text.strip()]
 
 
 def clean_category(self, text):

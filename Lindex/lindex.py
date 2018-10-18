@@ -14,49 +14,50 @@ class LindexSpider(CrawlSpider):
     name = "lindex"
     allowed_domains = ["www.lindex.com"]
     start_urls = ["http://www.lindex.com/uk/"]
-    allow_re = ["/women/", "/lingerie/", "/beauty/", "/kids/"]
-    deny_re = ["/sale/", "/new-in/", "guide", "giftcard"]
+    listing_css = [".mega_menu_box"]
+    products_css = [".gridPage .img_wrapper"]
+    deny_re = [
+        "/sale/", "/new-in/",
+        "guide", "giftcard",
+        "/children-wear/", "/campaign/", "/Assets/"
+        ]
+    rules = [
+        Rule(LinkExtractor(restrict_css=listing_css, deny=deny_re), callback="parse_list"),
+        Rule(LinkExtractor(restrict_css=products_css, deny=deny_re), callback="parse_product")
+    ]
 
-    rules = [Rule(LinkExtractor(allow=allow_re, deny=deny_re), callback="parse_list")]
-
-    def find_data_page_count(self, response):
+    def extract_pages_count(self, response):
         if "total_pages" in response.meta:
             return response.meta["total_pages"]
         else:
-            return int(response.css(".gridPages::attr(data-page-count)").extract_first())
+            return int(response.css(
+                ".gridPages::attr(data-page-count)").extract_first())
 
-    def find_current_page(self, response):
+    def extract_current_page(self, response):
         if "page" in response.meta:
             return response.meta["page"]
         else:
             return 1
 
-    def find_nodeId(self, response):
+    def extract_nodeId(self, response):
         if "nodeId" in response.meta:
             return response.meta["nodeId"]
         else:
             return response.css("body::attr(data-page-id)").extract_first()
 
-    def find_product_id(self, response):
+    def extract_product_id(self, response):
         return response.css(
             ".main_content .product_placeholder::attr(data-product-identifier)"
             ).extract_first()
 
-    def find_product_urls(self, response):
-        urls = response.css(".gridPage .img_wrapper > a::attr(href)").extract()
-        return [response.urljoin(url) for url in urls]
-
-    def find_colors(self, response):
-        return response.css(".info_wrapper .colors a::attr(data-colorid)").extract()
+    def extract_colors(self, response):
+        return response.css(
+            ".info_wrapper .colors a::attr(data-colorid)").extract()
 
     def parse_list(self, response):
-        product_urls = self.find_product_urls(response)
-        for url in product_urls:
-            yield scrapy.Request(url=url, callback=self.parse_product)
-
-        node_id = self.find_nodeId(response)
-        total_pages = self.find_data_page_count(response)
-        curr_page = self.find_current_page(response)
+        node_id = self.extract_nodeId(response)
+        total_pages = self.extract_pages_count(response)
+        curr_page = self.extract_current_page(response)
 
         if curr_page < total_pages:
             yield scrapy.FormRequest(
@@ -74,19 +75,38 @@ class LindexSpider(CrawlSpider):
                     "nodeId": node_id,
                     "total_pages": total_pages
                     },
-                callback=self.parse_list
+                callback=self.parse
                 )
 
-    def develop_skus(self, response, content, item_loader):
-        details = content["d"]
-        loader = item_loader
+    def has_more_colors(self, response, colors, loader):
+        if len(colors) == 0:
+            yield loader.load_item()
+        else:
+            yield scrapy.Request(
+                url="https://www.lindex.com/WebServices/ProductService.asmx/GetProductData",
+                headers={
+                        "X-Requested-With": "XMLHttpRequest",
+                        "Content-Type": "application/json; charset=UTF-8",
+                    },
+                method="POST",
+                body=json.dumps({
+                    "productIdentifier": self.extract_product_id(response),
+                    "colorId": colors.pop(0),
+                    "primaryImageType": "1"
+                    }),
+                meta={"loader": loader, "colors": colors},
+                callback=self.skus
+            )
+
+    def skus(self, response):
+        details = json.loads(response.body)["d"]
+        loader = response.meta["loader"]
         sizes = details["SizeInfo"]
         color_name = details["Color"]
         images = [image["Standard"] for image in details["Images"]]
         sku = []
 
-        for i, size in enumerate(sizes):
-            if i is not 0:
+        for size in sizes[1:]:
                 size = re.split("[ -]", size["Text"])[0]
                 sku.append({
                     "color": color_name,
@@ -97,45 +117,91 @@ class LindexSpider(CrawlSpider):
                 })
         loader.add_value("image_urls", images)
         loader.add_value("skus", sku)
-        return loader
+
+        return self.has_more_colors(response, response.meta["colors"], loader)
 
     def parse_product(self, response):
         loader = LindexItemLoader(item=LindexItem(), response=response)
-        loader.add_css("uuid", ".main_content::attr(data-productid)")
-        loader.add_css("retailer_sku", ".main_content .product_placeholder::attr(data-product-identifier)")
-        loader.add_css("industry", ".main_content .product_placeholder::attr(data-style)")
-        loader.add_css("name", ".name::text")
-        loader.add_css("brand", ".main_content .product_placeholder::attr(data-product-brand)")
-        loader.add_css("price", ".main_content .product_placeholder::attr(data-product-price)")
-        loader.add_css("currency", ".totalPrice::text")
+        loader.add_value("uuid", self.extract_uuid(response))
+        loader.add_value("retailer_sku", self.extract_retailer_sku(response))
+        loader.add_value("industry", self.extract_industry(response))
+        loader.add_value("name", self.extract_name(response))
+        loader.add_value("brand", self.extract_brand(response))
+        loader.add_value("price", self.extract_price(response))
+        loader.add_value("currency", self.extract_currency(response))
         loader.add_value("gender", "Women")
-        loader.add_css("category", ".main_content .product_placeholder::attr(data-product-category)")
-        loader.add_css("description", ".description ::text")
-        loader.add_css("care", ".more_info ::text")
+        loader.add_value("category", self.extract_category(response))
+        loader.add_value("description", self.extract_description_text(response))
+        loader.add_value("care", self.extract_care(response))
         loader.add_value("url_orignal", response.url)
-        loader.add_css("url", "link[rel='canonical']::attr(href)")
+        loader.add_value("url", self.extract_url(response))
         loader.add_value("date", datetime.now().strftime("%Y-%m-%d"))
-        loader.add_css("market", ".selectedCountry[type='hidden']::attr(value)")
+        loader.add_value("market", self.extract_market(response))
         loader.add_value("retailer", "lindex-uk")
         loader.add_value("spider_name", "lindex-uk-crawl")
         loader.add_value("crawl_id", f"lindex-uk-{datetime.now().strftime('%Y%m%d-%H%M%s')}-axuj")
         loader.add_value("crawl_start_time", datetime.now().isoformat())
 
-        colors = self.find_colors(response)
-        for color in colors:
-            new_response = requests.post(
-                url="https://www.lindex.com/WebServices/ProductService.asmx/GetProductData",
-                headers={
-                        "X-Requested-With": "XMLHttpRequest",
-                        "Cache-Control": "no-cache",
-                        "Content-Type": "application/json; charset=UTF-8",
-                        "Accept": "application/json, text/javascript, */*; q=0.01",
-                    },
-                json={
-                    "productIdentifier": self.find_product_id(response),
-                    "colorId": color,
-                    "primaryImageType": "1"
-                    }
-                )
-            self.develop_skus(new_response, json.loads(new_response.content), loader)
-        yield loader.load_item()
+        colors = self.extract_colors(response)
+        yield scrapy.Request(
+            url="https://www.lindex.com/WebServices/ProductService.asmx/GetProductData",
+            headers={
+                    "X-Requested-With": "XMLHttpRequest",
+                    "Content-Type": "application/json; charset=UTF-8",
+                },
+            method="POST",
+            body=json.dumps({
+                "productIdentifier": self.extract_product_id(response),
+                "colorId": colors.pop(0),
+                "primaryImageType": "1"
+                }),
+            meta={"loader": loader, "colors": colors},
+            callback=self.skus
+            )
+
+    def extract_uuid(self, response):
+        return response.css(".main_content::attr(data-productid)").extract()
+
+    def extract_name(self, response):
+        return response.css(".name::text").extract()
+
+    def extract_retailer_sku(self, response):
+        return response.css(
+            ".main_content .product_placeholder::attr(data-product-identifier)"
+            ).extract()
+
+    def extract_industry(self, response):
+        return response.css(
+            ".main_content .product_placeholder::attr(data-style)"
+        ).extract()
+
+    def extract_brand(self, response):
+        return response.css(
+            ".main_content .product_placeholder::attr(data-product-brand)"
+        ).extract()
+
+    def extract_price(self, response):
+        return response.css(
+            ".main_content .product_placeholder::attr(data-product-price)"
+        ).extract()
+
+    def extract_currency(self, response):
+        return response.css(".totalPrice::text").extract()
+
+    def extract_category(self, response):
+        return response.css(
+            ".main_content .product_placeholder::attr(data-product-category)"
+        ).extract()
+
+    def extract_description_text(self, response):
+        return response.css(".description ::text").extract()
+
+    def extract_care(self, response):
+        return response.css(".more_info ::text").extract()
+
+    def extract_url(self, response):
+        return response.css("link[rel='canonical']::attr(href)").extract()
+
+    def extract_market(self, response):
+        return response.css(
+            ".selectedCountry[type='hidden']::attr(value)").extract()
