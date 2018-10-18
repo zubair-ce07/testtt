@@ -13,7 +13,6 @@ class ScrapypracticeItem(scrapy.Item):
     # name = scrapy.Field()
     pass
 
-
 class Record(scrapy.Item):
     docket = scrapy.Field()
     filler = scrapy.Field()
@@ -45,3 +44,4 @@ class ProductItem(scrapy.Item):
     variations = scrapy.Field()
     breadcrumbs = scrapy.Field()
     description = scrapy.Field()
+
