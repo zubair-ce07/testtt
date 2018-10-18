@@ -11,9 +11,17 @@ from scrapy.loader.processors import TakeFirst, Identity
 
 
 def clean_values(self, values):
-    # full_form = ""
     all_values = [value.strip("\t\r\n\xa0") for value in values if value.strip("\t\r\n\xa0")]
     return " ".join(all_values)
+
+
+def ean_clean(self, ean):
+    return ean[0].replace("EAN : ", "")
+
+
+def image_url_process(self, urls):
+    urls = ["https:{}".format(url) for url in urls]
+    return [url.replace("180x240", "750x1000") for url in urls]
 
 
 class ProductItem(scrapy.Item):
@@ -27,6 +35,8 @@ class ProductItem(scrapy.Item):
     price = scrapy.Field()
     form = scrapy.Field()
     ean = scrapy.Field()
+    variant = scrapy.Field()
+    image_urls = scrapy.Field()
 
 
 class ProdcutItemLoader(ItemLoader):
@@ -35,10 +45,6 @@ class ProdcutItemLoader(ItemLoader):
 
     price_in = clean_values
     form_in = clean_values
-    ean_out = Identity()
-
-
-class CooconcenterItem(scrapy.Item):
-    # define the fields for your item here like:
-    # name = scrapy.Field()
-    pass
+    ean_in = ean_clean
+    image_urls_in = image_url_process
+    image_urls_out = Identity()
