@@ -13,8 +13,10 @@ class EloquiiSpider(CrawlSpider):
 
     listings_css = ['#nav_menu', '.row.justify-content-center.mt-5']
     products_css = ".product-images a"
-    merch_map = [("limited edition", "Limited Edition"), ("special edition",
-                                                          "Special Edition"), ("discounted", "Discount")]
+    merch_map = [("limited edition", "Limited Edition"),
+                 ("special edition", "Special Edition"),
+                 ("discounted", "Discount"),
+                 ("COMINGSOON", "COMING SOON")]
 
     rules = (
         Rule(LinkExtractor(restrict_css=listings_css), callback='parse'),
@@ -62,21 +64,15 @@ class EloquiiSpider(CrawlSpider):
         soup = ' '.join(product["name"] + product["description"]).lower()
         merch_info = [i[1] for i in self.merch_map if i[0] in soup]
         if bool(re.search(r'\'COMINGSOON\': (true)', response.text)):
-            merch_info.append("COMING SOON")
+            merch_info.append(self.merch_map[3][1])
         return merch_info
 
     def is_coming_soon(self, merch_info):
-        if "COMING SOON" not in merch_info:
-            return True
-        else:
-            return False
+        return not "COMING SOON" not in merch_info
 
     def out_of_stock(self, response):
         availability = response.css("[property='og:availability']::attr(content)").extract_first()
-        if availability is "IN_STOCK":
-            return False
-        else:
-            return True
+        return not availability == "IN_STOCK"
 
     def skus(self, response):
         skus = {}
@@ -85,7 +81,7 @@ class EloquiiSpider(CrawlSpider):
         sizes = response.css(sizes_css).extract()[1:]
         for colour in colours:
             for size in sizes:
-                sku = self.product_pricing(response).copy()
+                sku = self.product_pricing(response)
                 sku['size'] = size
                 sku['colour'] = colour
                 skus[colour + "_" + size] = sku.copy()
