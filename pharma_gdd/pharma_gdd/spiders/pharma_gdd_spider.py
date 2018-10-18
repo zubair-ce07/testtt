@@ -26,8 +26,7 @@ class ProductLoader(ItemLoader):
     @staticmethod
     def fetch_images(product_gallery, loader_context):
         return [loader_context.get(
-            'response').urljoin(i.replace('/thumbnails/70/', '/thumbnails/400/'))
-                for i in product_gallery]
+            'response').urljoin(product_gallery[0].replace('/thumbnails/70/', '/thumbnails/400/'))]
 
     @staticmethod
     def clean(value):
@@ -52,7 +51,12 @@ class PharmaGddSpider(CrawlSpider):
     )
 
     custom_settings = {
-        'DOWNLOAD_DELAY': 1.25
+        'DOWNLOAD_DELAY': 0.75,
+        'ITEM_PIPELINES': {
+            'pharma_gdd.pipelines.ImageCustomPipeline': 200,
+            'pharma_gdd.pipelines.PharmaGddPipeline': 300
+        },
+        'IMAGES_STORE': "/home/ali/Dev/Github/Shub - PharmaGDD/the-lab/pharma_gdd/"
     }
 
     start_urls = ['https://www.pharma-gdd.com/']
