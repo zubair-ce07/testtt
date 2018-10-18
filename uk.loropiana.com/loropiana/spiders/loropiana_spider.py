@@ -1,5 +1,6 @@
 import json
 import re
+from urllib.parse import urlencode
 
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
@@ -8,105 +9,128 @@ from loropiana.items import LoropianaItem
 
 
 class LoropianaParse:
+    ONE_SIZES = ['NR']
+    COLOUR_REQUEST_URL = "https://uk.loropiana.com/en/api/pdp/product-variants?{}"
+    IMAGES_REQUEST_URL = "https://uk.loropiana.com/en/api/pdp/get-images?{}"
+
     def parse(self, response):
         item = LoropianaItem()
+        raw_product = self.common_data(response)
 
-        item['retailer_sku'] = self.common_data(response)['id']
-        item['trail'] = response.meta.get('trail')
-        item['category'] = self.category(response)
-        item['brand'] = self.common_data(response)['brand']
-        item['name'] = self.common_data(response)['name']
+        item['retailer_sku'] = raw_product['id']
+        item['brand'] = raw_product['brand']
+        item['name'] = raw_product['name']
+        item['trail'] = response.meta['trail']
         item['care'] = self.care(response)
-        item['description'] = self.description(response)
-        item['gender'] = self.gender(item['category'] + item['description'])
-        item['image_urls'] = []
         item['url'] = response.url
+        item['category'] = self.category(response)
+        item['description'] = self.description(response)
+        item['gender'] = self.gender(item)
+        item['image_urls'] = []
         item['skus'] = []
 
-        requests = [response.follow(url=self.color_request_url(item['retailer_sku'], color), callback=self.parse_skus,
-                                    meta={'item': item, 'price': self.common_data(response)['price'],
-                                          'currency': self.currency(response)}) for color in
-                    self.color_codes(response)] + [
-                       response.follow(url=self.image_request_url(item['retailer_sku'], color),
-                                       callback=self.parse_image_urls, meta={'item': item}) for color in
-                       self.color_codes(response)]
+        item['meta'] = self.image_requests(item, response) + self.colour_requests(item, response)
 
-        return self.next_request(item, requests)
-
-    def next_request(self, item, resquests):
-        if resquests:
-            next_request = resquests.pop()
-            next_request.meta['resquests'] = resquests
-            return next_request
-        else:
-            return item
+        return self.next_requests(item)
 
     def parse_skus(self, response):
-        raw_sku = json.loads(response.text)
         item = response.meta['item']
+        common_sku = {}
+        common_sku['price'] = response.meta['price']
+        common_sku['currency'] = response.meta['currency']
 
-        for color in raw_sku:
-            for size in color.get('sizes', []):
-                sku = dict()
+        for colour in json.loads(response.text):
+            common_sku['colour'] = colour['description']
+
+            for size in colour['sizes']:
+                sku = common_sku.copy()
+
                 sku['sku_id'] = size['variantCode']
-                sku['color'] = color['description']
-                sku['price'] = response.meta['price']
-                sku['currency'] = response.meta['currency']
-                sku['size'] = 'One_size' if size['code'] == 'NR' else size['code']
+                sku['size'] = 'One size' if size['code'] in self.ONE_SIZES else size['code']
                 if size['stock']['stockLevelStatus']['code'] == "outOfStock":
                     sku['outOfStock'] = True
 
                 item['skus'] += [sku]
 
-        return self.next_request(item, response.meta['resquests'])
+        return self.next_requests(item)
 
     def parse_image_urls(self, response):
         item = response.meta['item']
-        raw_images = json.loads(response.text)
 
-        for images in raw_images:
-            item['image_urls'] += [format['url'] for format in images.get('formats') if 'LARGE' in format.get('url')]
+        for raw_image_url in json.loads(response.text):
+            item['image_urls'] += [image_format['url'] for image_format in raw_image_url['formats'] if
+                                   'LARGE' in image_format['url']]
 
-        return self.next_request(item, response.meta['resquests'])
+        return self.next_requests(item)
 
-    def color_codes(self, response):
-        raw_colors = json.loads(response.css('#js-pdp-initial-variants::attr(value)').extract_first())
-        return [color.get('code') for color in raw_colors]
+    def next_requests(self, item):
+        if item['meta']:
+            next_request = item['meta'].pop()
+            return next_request
+        else:
+            del item['meta']
+            return item
 
-    def gender(self, details):
+    def colour_requests(self, item, response):
+        request_meta = {'item': item, 'price': self.common_data(response)['price'],
+                        'currency': self.currency(response)}
+        colour_requests = []
+
+        for colour in self.colour_codes(response):
+            params = {"articleCode": item['retailer_sku'], "colorCode": colour}
+            request_url = self.COLOUR_REQUEST_URL.format(urlencode(params))
+            colour_requests.append(
+                response.follow(url=request_url, callback=self.parse_skus, meta=request_meta))
+
+        return colour_requests
+
+    def image_requests(self, item, response):
+        image_requests = []
+
+        for colour in self.colour_codes(response):
+            params = {"articleCode": item['retailer_sku'], "colorCode": colour}
+            request_url = self.IMAGES_REQUEST_URL.format(urlencode(params))
+            image_requests.append(
+                response.follow(url=request_url, callback=self.parse_image_urls, meta={'item': item}))
+
+        return image_requests
+
+    def colour_codes(self, response):
+        css = '#js-pdp-initial-variants::attr(value)'
+        raw_colours = json.loads(response.css(css).extract_first())
+        return [colour['code'] for colour in raw_colours]
+
+    def gender(self, item):
+        soup = item['category'] + item['description']
         gender = 'unisex-adults'
         genders = {'Men': 'men', 'girl': 'girl', 'Women': 'women', 'boy': 'boy', 'girl or boy': 'unisex-kids',
                    'Children': 'unisex-kids'}
 
-        for key in genders.keys():
-            if key in details:
-                gender = genders[key]
+        for key, value in genders.items():
+            if key in soup:
+                gender = value
 
         return gender
 
     def category(self, response):
         raw_categoty = self.common_data(response)['category'].split('/')
-        return [category for category in raw_categoty if category != '']
+        return [category for category in raw_categoty if category]
 
     def description(self, response):
         return response.css('.t-caption::text, .t-pdp-page-section-title.title ~ p::text').extract()
 
     def care(self, response):
-        raw_care = response.css('button[aria-label="Care & Maintenance"] ~ .content ::text').extract()
+        css = 'button[aria-label="Care & Maintenance"] ~ .content ::text'
+        raw_care = response.css(css).extract()
         return [d.strip() for d in raw_care if d.strip()]
 
     def currency(self, response):
-        raw_currency = response.css('.t-product-cta-price::text').extract_first()
+        css = '.t-product-cta-price::text'
+        raw_currency = response.css(css).extract_first()
         return re.findall('[A-Z]+', raw_currency)[0]
 
     def common_data(self, response):
         return json.loads(response.css('#js-gtm-pdp-landing::attr(data-gtm-info)').extract_first())
-
-    def color_request_url(self, retailer_sku, color_code):
-        return f"https://uk.loropiana.com/en/api/pdp/product-variants?articleCode={retailer_sku}&colorCode={color_code}"
-
-    def image_request_url(self, retailer_sku, color_code):
-        return f"https://uk.loropiana.com/en/api/pdp/get-images?articleCode={retailer_sku}&colorCode={color_code}"
 
 
 class LoropianaCrawler(CrawlSpider):
@@ -115,11 +139,11 @@ class LoropianaCrawler(CrawlSpider):
     start_urls = ['https://uk.loropiana.com/en']
     loropiana_parse = LoropianaParse()
 
-    listing_css = '[class=menu-mask]'
-    catagorise_css = '.category-results-grid'
+    listing_css = '.menu-mask'
+    product_css = '.category-results-grid'
 
-    rules = [Rule(LinkExtractor(restrict_css=[listing_css]), callback='parse'),
-             Rule(LinkExtractor(restrict_css=[catagorise_css]), callback=loropiana_parse.parse)]
+    rules = [Rule(LinkExtractor(restrict_css=listing_css), callback='parse'),
+             Rule(LinkExtractor(restrict_css=product_css), callback=loropiana_parse.parse)]
 
     def parse(self, response):
         trail = [(response.css('head title::text').extract_first().strip(), response.url)]
