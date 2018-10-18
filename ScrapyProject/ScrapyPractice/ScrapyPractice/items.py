@@ -20,7 +20,6 @@ class Record(scrapy.Item):
     description = scrapy.Field()
     date_filed = scrapy.Field()
 
-
 class SizeItem(scrapy.Item):
     size_name = scrapy.Field()
     is_available = scrapy.Field()
@@ -45,3 +44,4 @@ class ProductItem(scrapy.Item):
     variations = scrapy.Field()
     breadcrumbs = scrapy.Field()
     description = scrapy.Field()
+
