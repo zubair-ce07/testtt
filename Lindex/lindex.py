@@ -2,8 +2,6 @@ import json
 import re
 from datetime import datetime
 
-import requests
-
 import scrapy
 from lindex.items import LindexItem, LindexItemLoader
 from scrapy.linkextractors import LinkExtractor
