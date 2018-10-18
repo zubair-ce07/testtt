@@ -4,7 +4,6 @@ import json
 import scrapy
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
-from scrapy.shell import inspect_response, open_in_browser
 from ..items import ProdcutItemLoader
 
 
@@ -17,15 +16,17 @@ class CocooncenterRuleSpider(CrawlSpider):
         "USER_AGENT": "Mozilla/5.0 (X11; Linux x86_64) "
                       "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36",
         "DOWNLOAD_DELAY": 0.5,
+        "ITEM_PIPELINES": {
+            'cooconcenter.pipelines.ImageCustomPipeline': 200,
+            'cooconcenter.pipelines.CooconcenterPipeline': 300,
+        },
+        "IMAGES_STORE": "/home/arslan/Desktop/test"
     }
 
     rules = (
-        Rule(LinkExtractor(restrict_css=[".nav", "#pagination"]), callback='parse_item', follow=True),
+        Rule(LinkExtractor(restrict_css=[".nav", "#pagination"])),
         Rule(LinkExtractor(restrict_css=".bloc_nom"), callback="parse_product")
     )
-
-    def parse_item(self, response):
-        pass
 
     def parse_product(self, response):
         product_il = ProdcutItemLoader(response=response)
