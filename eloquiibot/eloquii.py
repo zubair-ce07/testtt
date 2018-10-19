@@ -74,7 +74,9 @@ class EloquiiSpider(CrawlSpider):
         return [merch for merch_str, merch in self.merch_map if merch_str in soup]
 
     def is_available(self, response):
-        return not bool(re.search(r"\'COMINGSOON\': (true)", response.text))
+        css = "#bt_pdp_main > script::text"
+        regex = r"\"coming_soon_status\" : \"(.*)?\""
+        return not response.css(css).re_first(regex) == "Is Coming Soon"
 
     def is_out_of_stock(self, response):
         css = "[property='og:availability']::attr(content)"
@@ -92,7 +94,18 @@ class EloquiiSpider(CrawlSpider):
         for data in raw_skus:
             sku = self.product_pricing(data)
             sku["color"] = data["attributes"]["colorCode"]
-            sku["size"] = data["attributes"]["size"]
+            size = data["attributes"]["size"]
+            size_type = data.get("attributes").get("sizeType")
+
+            if size_type:
+                size += f"_{size_type}"
+
+            length_type = data.get("attributes").get("pantLength")
+
+            if length_type:
+                size += f"_{length_type}"
+
+            sku["size"] = size
 
             if not data["inStock"]:
                 sku["out_of_stock"] = not data["inStock"]
