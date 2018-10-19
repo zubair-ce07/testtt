@@ -3,9 +3,10 @@ import { Link } from 'react-router-dom';
 
 import { Col } from 'reactstrap';
 
-import Tag from './tag';
+import { BLOG_TILE_DESCRIPTION_LENGTH } from '../../../constants';
+import Tag from '../tags/tag';
 
-const truncateString = (str, length = 200) => {
+const truncateString = (str, length = BLOG_TILE_DESCRIPTION_LENGTH) => {
   if (str.length <= length) {
     return str;
   }

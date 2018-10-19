@@ -2,6 +2,9 @@ from django.db import models
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 
 class Tag(models.Model):
@@ -14,7 +17,7 @@ class Tag(models.Model):
 class Comment(models.Model):
     body = models.TextField()
     writer = models.ForeignKey(
-        'auth.User', related_name='comments', on_delete=models.CASCADE)
+        User, related_name='comments', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True, blank=True)
 
     comments = GenericRelation('self')
@@ -32,7 +35,7 @@ class Blog(models.Model):
     title = models.CharField(max_length=300)
     body = models.TextField()
     writer = models.ForeignKey(
-        'auth.User', related_name='blogs', on_delete=models.CASCADE)
+        User, related_name='blogs', on_delete=models.CASCADE)
     tags = models.ManyToManyField(Tag)
     created_at = models.DateTimeField(auto_now_add=True, blank=True)
 

@@ -22,7 +22,6 @@ class App extends Component {
         <NavBar />
         <main>
           <Container>
-            <br /><br /><br /><br />
             <Switch>
               <Redirect exact from='/' to='/blogs' />
               <Route path='/blogs' component={Blogs} />
@@ -30,7 +29,6 @@ class App extends Component {
               <Route path='/404' component={NotFound} />
               <Redirect to='/404' />
             </Switch>
-            <br /><br />
           </Container>
         </main>
         <NotificationContainer />

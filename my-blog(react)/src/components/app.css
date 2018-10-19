@@ -1,3 +1,8 @@
+main .container {
+  margin-top: 80px;
+  margin-bottom: 50px;
+}
+
 .dropdown-menu {
   top: auto;
   bottom: 38px;
@@ -16,22 +21,12 @@
 
 /* Commenting Styles */
 
-.media-body .media {
-  /* margin-left: 20px; */
-}
-
 .media {
   padding: 10px;
   border-radius: 5px;
   margin-top: 15px;
   box-shadow: 1px 1px 10px #adadad;
 }
-
-/* .media-heading {
-  padding: 3px 0;
-  border-bottom: 2px solid #212529;
-} */
-
 
 /* React Tag Autocomplete */
 

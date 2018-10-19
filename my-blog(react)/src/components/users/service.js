@@ -1,4 +1,4 @@
-import BaseService from '../../base.service';
+import BaseService from '../../base-service';
 
 class UsersService extends BaseService {
   ACTION = './user';
@@ -9,7 +9,7 @@ class UsersService extends BaseService {
     return this.fetch(url, 'POST', user, false);
   }
 
-  async login(credentials) {
+  async signIn(credentials) {
     const action = './login';
     const url = new URL(action, BaseService.BASE_URL);
     const response = await this.fetch(url, 'POST', credentials, false);
@@ -21,8 +21,17 @@ class UsersService extends BaseService {
     return response;
   }
 
+  async signOut() {
+    localStorage.clear();
+    return { success: true };
+  }
+
   update(object, authRequired) {
     return super.update('', object, authRequired);
+  }
+
+  getSignedInUser() {
+    return super.get();
   }
 }
 

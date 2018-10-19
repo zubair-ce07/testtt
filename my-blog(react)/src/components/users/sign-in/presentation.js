@@ -4,14 +4,7 @@ import {
   Button, Form, FormGroup, Label, Input, Row, Col, FormFeedback
 } from 'reactstrap';
 
-import container from './container';
-
-class SignIn extends Component {
-  constructor(props) {
-    super(props);
-
-    this.signIn = this.signIn.bind(this);
-  }
+class SignInUser extends Component {
 
   componentDidMount() {
     const { history, user } = this.props;
@@ -21,7 +14,7 @@ class SignIn extends Component {
     }
   }
 
-  async signIn(event) {
+  signIn = async (event) => {
     event.preventDefault();
     const form = event.target;
     const username = form.username.value;
@@ -31,7 +24,7 @@ class SignIn extends Component {
   }
 
   render() {
-    const invalid = this.props.user.errors.password;
+    const invalid = Boolean(this.props.errors.confirm_password);
     return (
       <Row>
         <Col sm="12" md={{ size: 4, offset: 4 }}>
@@ -71,4 +64,4 @@ class SignIn extends Component {
   }
 }
 
-export default container(SignIn);
+export default SignInUser;

@@ -1,7 +1,7 @@
 import { NotificationManager } from 'react-notifications';
 
 class BaseService {
-  static BASE_URL = 'http://172.16.10.213:8000/api/';
+  static BASE_URL = `${process.env.REACT_APP_API_URL}api/`;
   ACTION = './unknown';
 
   constructor() {
@@ -49,6 +49,10 @@ class BaseService {
 
       if (rawResponse.ok) {
         response.success = true;
+      }
+
+      if (authRequired && rawResponse.status === 401) {
+        localStorage.clear();
       }
 
       response.code = rawResponse.status;

@@ -1,4 +1,4 @@
-import BaseService from '../../base.service';
+import BaseService from '../../../base-service';
 
 class CommentsService extends BaseService {
   ACTION = './blogs/comments/';

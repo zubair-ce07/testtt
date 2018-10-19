@@ -26,7 +26,7 @@ class CommentSerializer(serializers.ModelSerializer):
 class BlogSerializer(serializers.ModelSerializer):
     writer = serializers.ReadOnlyField(source='writer.id')
     tags = TagSerializer(many=True)
-    comments = CommentSerializer(many=True, read_only=True)
+    # comments = CommentSerializer(many=True, read_only=True)
 
     def create(self, validated_data):
         tags = [Tag.objects.get_or_create(
@@ -57,4 +57,4 @@ class BlogSerializer(serializers.ModelSerializer):
     class Meta:
         model = Blog
         fields = ('id', 'title', 'body', 'writer',
-                  'tags', 'created_at', 'comments')
+                  'tags', 'created_at')

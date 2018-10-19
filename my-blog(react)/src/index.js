@@ -24,9 +24,7 @@ const render = () => {
   );
 };
 
-// eslint-disable-next-line
 if (module.hot) {
-  // eslint-disable-next-line
   module.hot.accept('./components/app', render);
 }
 

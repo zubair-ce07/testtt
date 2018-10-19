@@ -3,15 +3,10 @@ import React, { Component } from 'react';
 import { Button, Form, Row, Col } from 'reactstrap';
 
 import InputField from './input-field';
-import container from './container';
 
-class SignUp extends Component {
+class CreateUser extends Component {
   constructor(props) {
     super(props);
-
-    this.updateValue = this.updateValue.bind(this);
-    this.submit = this.submit.bind(this);
-    this.matchPassword = this.matchPassword.bind(this);
 
     if (props.user.id) {
       this.title = 'Profile';
@@ -30,30 +25,33 @@ class SignUp extends Component {
     }
   }
 
-  updateValue(event) {
+  updateValue = (event) => {
     const { name, value, required } = event.target;
     this.props.updateField(name, value, required);
   }
 
-  submit(event) {
+  submit = (event) => {
     event.preventDefault();
-    this.props.saveUser();
+    this.props.save();
   }
 
-  matchPassword() {
+  matchPassword = () => {
     this.props.matchPassword();
   }
 
   render() {
     const {
-      first_name,
-      last_name,
-      username,
-      password,
-      confirm_password,
-      email,
       errors,
-    } = this.props.user;
+      user: {
+        first_name,
+        last_name,
+        username,
+        password,
+        confirm_password,
+        email,
+        phone_number,
+      }
+    } = this.props;
 
     return (
       <Row>
@@ -115,6 +113,15 @@ class SignUp extends Component {
               errors={errors['email']}
               onChange={this.updateValue}
             />
+            <InputField
+              title='Phone Number'
+              name='phone_number'
+              type='text'
+              value={phone_number}
+              errors={errors['phone_number']}
+              onChange={this.updateValue}
+              required={false}
+            />
             <br />
             <Row>
               <Col sm="12" md={{ size: 8, offset: 2 }}>
@@ -129,4 +136,4 @@ class SignUp extends Component {
   }
 }
 
-export default container(SignUp);
+export default CreateUser;
