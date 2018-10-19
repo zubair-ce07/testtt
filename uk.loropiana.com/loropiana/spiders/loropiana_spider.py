@@ -56,13 +56,14 @@ class LoropianaParse:
         """
         if not item.get('meta'):
             return item
-        elif item['meta'].get('requests'):
+
+        if item['meta'].get('requests'):
             next_request = item['meta']['requests'].pop()
             next_request.meta['item'] = item
             return next_request
-        else:
-            del item['meta']
-            return item
+
+        del item['meta']
+        return item
 
     def skus(self, response):
         """
@@ -97,8 +98,8 @@ class LoropianaParse:
         image_urls = []
 
         for raw_image_url in json.loads(response.text):
-            image_urls += [image_format['url'] for image_format in raw_image_url['formats'] if
-                           'LARGE' in image_format['url']]
+            image_urls += [image_url['url'] for image_url in raw_image_url['formats'] if
+                           'LARGE' in image_url['url']]
 
         return image_urls
 
@@ -114,8 +115,9 @@ class LoropianaParse:
         meta = {'common': common_sku}
         requests = []
 
+        url = add_or_replace_parameter(self.colour_request_url, 'articleCode', raw_product['id'])
+
         for colour in self.colour_codes(response):
-            url = add_or_replace_parameter(self.colour_request_url, 'articleCode', raw_product['id'])
             url = add_or_replace_parameter(url, 'colorCode', colour)
 
             requests.append(response.follow(url=url, callback=self.parse_skus, meta=meta))
@@ -128,12 +130,12 @@ class LoropianaParse:
         :param response: response of product page
         :return: list of requests
         """
-        raw_product = self.raw_product(response)
         image_requests = []
 
+        url = add_or_replace_parameter(
+            self.image_requests_url, 'articleCode', self.raw_product(response)['id'])
+
         for colour in self.colour_codes(response):
-            url = add_or_replace_parameter(
-                self.image_requests_url, 'articleCode', self.raw_product(response)['id'])
             url = add_or_replace_parameter(url, 'colorCode', colour)
 
             image_requests.append(response.follow(url=url, callback=self.parse_image_urls))
@@ -146,13 +148,13 @@ class LoropianaParse:
         return [colour['code'] for colour in raw_colours]
 
     def gender(self, item):
-        soup = ' '.join(item['category'] + item['description'])
+        soup = ' '.join(item['category'] + item['description']).lower()
 
         for gender_str, gender in self.gender_map.items():
-            if gender_str.lower() in soup.lower():
+            if gender_str.lower() in soup:
                 return gender
-        else:
-            return 'unisex-adults'
+
+        return 'unisex-adults'
 
     def category(self, response):
         raw_categoty = self.raw_product(response)['category'].split('/')
@@ -185,8 +187,8 @@ class LoropianaCrawler(CrawlSpider):
     start_urls = ['https://uk.loropiana.com/en']
     loropiana_parse = LoropianaParse()
 
-    listing_css = '.menu-mask'
-    product_css = '.category-results-grid'
+    listing_css = ['.menu-mask']
+    product_css = ['.category-results-grid']
 
     rules = [Rule(LinkExtractor(restrict_css=listing_css), callback='parse'),
              Rule(LinkExtractor(restrict_css=product_css), callback='parse_item')]
