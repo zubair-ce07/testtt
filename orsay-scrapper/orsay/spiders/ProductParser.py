@@ -2,17 +2,17 @@ import re
 import json
 import scrapy
 
-from orsay.items import OrsayItem
+from orsay.items import Product
 from scrapy.spiders import CrawlSpider, Rule, Spider
 from scrapy.linkextractors import LinkExtractor
 
 
 class ProductParser(Spider):
-    name = 'orsay-parse'
+    name = 'orsay-parser'
+    sku_id_format = '{}_{}'
 
     def parse(self, response):
-
-        product = OrsayItem()
+        product = Product()
 
         product['brand'] = 'orsay'
         product['care'] = self.product_care(response)
@@ -47,42 +47,45 @@ class ProductParser(Spider):
         sizes = self.product_size(response)
         skus = {}
 
-        single_item = {}
-        single_item['price'] = self.product_price(response)
-        single_item['color'] = self.product_selected_color(response)
-        single_item['currency'] = self.product_currency(response)
+        common_sku = {}
+        common_sku['price'] = int(self.product_price(response))
+        common_sku['previous_prices'] = self.product_previous_price(response)
+        common_sku['colour'] = self.product_selected_color(response)
+        common_sku['currency'] = self.product_currency(response)
 
-        for size in sizes:
-            size = size.strip()
-            sku = single_item.copy()
-            sku['size'] = size
-            unique_id = size + "_" + self.product_selected_color(response)
-
-            skus.update({unique_id: sku})
+        if sizes:
+            for size in sizes:
+                size = size.strip()
+                sku = common_sku.copy()
+                sku['size'] = size
+                sku_id = self.sku_id_format.format(common_sku['colour'], size)
+                skus[sku_id] = sku
+        else:
+            sku_id = self.sku_id_format.format(
+                common_sku['colour'], 'One Size')
+            skus[sku_id] = common_sku.copy()
 
         return skus
 
     def product_care(self, response):
-        css = '.product-material p::text'
-        return response.css(css).extract()
+        return response.css('.product-material p::text').extract()
 
     def product_category(self, response):
-        css = '.breadcrumb a span::text'
-        return response.css(css).extract()
+        return response.css('.breadcrumb a:nth-child(n+3) span::text').extract()
 
     def product_description(self, response):
         css = '.with-gutter::text, .product-info-title + div::text'
-        data = response.css(css).extract()
-        data = [re.sub('[-\n]', '', item) for item in data]
-        return data
+        raw_discription = response.css(css).extract()
+        discriptions = [re.sub('[-\n]', '', discription)
+                        for discription in raw_discription]
+        return [discription for discription in discriptions if discription != '']
 
     def product_image_urls(self, response):
-        css = '.productthumbnail::attr(src)'
-        return response.css(css).extract()
+        raw_images = response.css('.productthumbnail::attr(src)').extract()
+        return [image.split('?')[0] for image in raw_images]
 
     def product_name(self, response):
-        css = '.product-name::text'
-        return response.css(css).extract_first()
+        return response.css('.product-name::text').extract_first()
 
     def product_color(self, response):
         colors = []
@@ -93,32 +96,32 @@ class ProductParser(Spider):
         return colors
 
     def product_selected_color(self, response):
-        css = '.selected-value::text'
-        return response.css(css).extract_first()
+        return response.css('.selected-value::text').extract_first()
 
     def product_currency(self, response):
-        css = '.country-currency::text'
-        return response.css(css).extract_first()
+        return response.css('.country-currency::text').extract_first()
 
     def product_price(self, response):
-        css = '.product-price span::text'
-        price = response.css(css).extract_first()
+        price = response.css('.product-price span::text').extract_first()
         replaced = re.sub('[,€]', '', price)
         return replaced.strip()
 
+    def product_previous_price(self, response):
+        css = '.product-price .price-standard::text'
+        raw_price = response.css(css).extract()
+        return re.sub('[,€\n\t\r]', '', raw_price) if raw_price else ''
+
     def product_size(self, response):
         css = '.size li.selectable a::text'
-        size = response.css(css).extract()
-        return size
+        return response.css(css).extract()
 
     def sku_id(self, response):
-        data = self.extract_raw_data(response)
-        return data['idListRef12']
+        raw_data = self.extract_raw_data(response)
+        return raw_data['idListRef12']
 
     def product_colors_requests(self, response, item):
-        xpath = '//ul[contains(@class, "swatches color")]/'\
-            + 'li[not(contains(@class, "selected"))]//a/@href'
-        links = response.xpath(xpath).extract()
+        css = '.color li:not(.selected) a::attr(href)'
+        links = response.css(css).extract()
         return [scrapy.Request(link, callback=self.parse_colors,
                                meta={'item': item}) for link in links]
 
@@ -129,5 +132,4 @@ class ProductParser(Spider):
     def extract_raw_data(self, response):
         css = '.js-product-content-gtm::attr(data-product-details)'
         data = response.css(css).extract_first()
-        data = json.loads(data)
-        return data
+        return json.loads(data)

@@ -1,7 +1,7 @@
 import scrapy
 
 
-class OrsayItem(scrapy.Item):
+class Product(scrapy.Item):
     brand = scrapy.Field()
     care = scrapy.Field()
     category = scrapy.Field()
