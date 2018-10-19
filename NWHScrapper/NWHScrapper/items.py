@@ -1,8 +1,15 @@
+"""
+Item objects used by nwhspider
+"""
 # -*- coding: utf-8 -*-
 from scrapy import Item, Field
 
 
-class NwhscrapperItem(Item):
+class NwhDoctor(Item):
+    """
+    Doctor object containing all
+    detail of a profile
+    """
     crawled_date = Field()
     speciality = Field()
     source_url = Field()

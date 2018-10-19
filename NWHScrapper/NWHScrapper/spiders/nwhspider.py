@@ -1,64 +1,82 @@
+"""
+Spider to Scrape details of doctors from
+Newton Wellesley Hospital's site
+"""
 # -*- coding: utf-8 -*-
-import scrapy
 from datetime import datetime
-from NWHScrapper.items import NwhscrapperItem
+import scrapy
+from scrapy.loader import ItemLoader
+from scrapy.loader.processors import TakeFirst
+import NWHScrapper.utilities as util
+from NWHScrapper.items import NwhDoctor
 
 
 class NWHSpider(scrapy.Spider):
+    """
+    Spider class to scrape doctor details.
+    """
     name = 'nwhspider'
     allowed_domains = ['www.nwh.org']
     start_urls = ['https://www.nwh.org/find-a-doctor/find-a-doctor-home']
 
-    def parse(self, response):
+    def parse(self, _):
+        """
+        Do a POST request to get links of all doctors' profiles
+        :param _: response from hitting start_url
+        :return: Yield POST request to get list of profiles
+        """
         # create request to get all doctors
-        data = {
-            '__EVENTTARGET': 'ctl00$cphContent$ctl01$lnkSeachResults',
-            'ctl00$cphContent$ctl01$ddlResultsPerPage': '99999',
-        }
-
-        url = 'https://www.nwh.org/find-a-doctor/find-a-doctor-home?type=1'
-        print("Loading all doctors")
-        yield scrapy.FormRequest(url=url, method='POST', formdata=data, callback=self.parse_doctors)
+        request_data = util.prepare_search_request()
+        yield scrapy.FormRequest(
+            url=request_data['url'],
+            method='POST',
+            formdata=request_data['data'],
+            callback=self.parse_doctors
+        )
 
     def parse_profile(self, response):
-        doctor = NwhscrapperItem()
+        """
+        Use Item Loaders to parse profile details
+        from given response
+        :param response: response from hitting profile url
+        :return: NwhScrapperItem object containing
+        scraped details of doctor.
+        """
+        doctor_loader = ItemLoader(item=NwhDoctor(),
+                                   response=response)
+        doctor_loader.default_output_processor = TakeFirst()
 
-        doctor['source_url'] = response.url
-        full_name = "div.pnl-doctor-name>h1::text"
-        doctor['full_name'] = response.css(full_name).extract_first()
-        address = "div[id *= 'Residency']>ul>li::text"
-        doctor['address'] = response.css(address).extract_first()
-        speciality = "div.pnl-doctor-specialty>h2::text"  # strip
-        doctor['speciality'] = response.css(speciality).extract_first().strip()
-        image_url = "div.pnl-doctor-image>img::attr(src)"  # response.urljoin
-        doctor['image_url'] = response.css(image_url).extract_first()
-        affiliation = "div[id *= 'Fellowship']>ul>li::text"
-        doctor['affiliation'] = response.css(affiliation).extract_first()
-        medical_school = "div[id *= 'MedicalSchool']>ul>li::text"
-        doctor['medical_school'] = response.css(medical_school).extract_first()
-        graduate_education = "div[id *= 'Certifications']>ul>li::text"
-        doctor['graduate_education'] = response.css(graduate_education).extract_first()
-        doctor['crawled_date'] = datetime.now()
+        doctor_loader.add_value('source_url',
+                                response.url)
+        doctor_loader.add_value('crawled_date',
+                                str(datetime.now()))
+        doctor_loader.add_value('full_name',
+                                util.parse_name(response))
+        doctor_loader.add_value('address',
+                                util.parse_address(response))
+        doctor_loader.add_value('image_url',
+                                util.parse_image_url(response))
+        doctor_loader.add_value('speciality',
+                                util.parse_speciality(response))
+        doctor_loader.add_value('affiliation',
+                                util.parse_affiliation(response))
+        doctor_loader.add_value('graduate_education',
+                                util.parse_education(response))
+        doctor_loader.add_value('medical_school',
+                                util.parse_medical_school(response))
 
-        yield doctor
-
-    def get_profile_ids(self, response):
-        profile_ids = "div.search-results-physician>input::attr(value)"
-        return response.css(profile_ids).extract()
-
-    def make_profile_urls(self, response):
-        profile_urls = []
-        profile_ids = self.get_profile_ids(response)
-        print("ids: "+str(len(profile_ids)))
-        base_url = "https://www.nwh.org/find-a-doctor/find-a-doctor-profile"
-        for profile_id in profile_ids:
-            profile_url = base_url + "?id=" + str(profile_id)
-            profile_urls.append(profile_url)
-        return profile_urls
+        yield doctor_loader.load_item()
 
     def parse_doctors(self, response):
+        """
+        Parse profile urls from response and
+         yield request to parse each profile
+        :param response: response of POST request
+         done be self.parse()
+        :return: yield GET requests for all profiles
+        """
         # retrieve list of all profile links
-        profile_urls = self.make_profile_urls(response)
+        profile_urls = util.make_profile_urls(response)
         # yield requests to parse each profile
         for profile_url in profile_urls:
             yield scrapy.Request(profile_url,
