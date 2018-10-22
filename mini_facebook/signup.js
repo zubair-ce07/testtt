@@ -1,35 +1,53 @@
+/**
+ * reason: needed to display Password error msgs
+*/
 function displayPasswordError(errorMsg) {
   document.getElementById(`passwordError`).innerHTML = ` ** ${errorMsg}`;
 }
 
 
+/**
+ * reason: needed to display Confirm password error msgs
+*/
 function displayConfirmPasswordError(errorMsg) {
   document.getElementById(`confirmPasswordError`).innerHTML = ` ** ${errorMsg}`;
 }
 
 
+/**
+ * reason: needed to display mobile Number error msgs
+*/
 function displayNumberError(errorMsg) {
   document.getElementById(`mobileNumberError`).innerHTML = ` ** ${errorMsg}`;
 }
 
 
+/**
+ * reason: needed to display usrename error msg
+*/
 function displayNameError(errorMsg)
 {
   document.getElementById(`usernameError`).innerHTML = ` ** ${errorMsg}`;
 }
 
 
+/**
+ * reason: needed to validate password 
+ *   password length must in range(5 to 20)
+ *   password must contain atleast
+ *     1 uppercase, 1 lowercase & 1 special character (!@#$%^&*)
+*/
 function validatePassword(pass)
 {
   let errorMsg = null;
   let passwordRegex = new RegExp(`^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])`);
   if((pass.length <= 5) || (pass.length > 20))
   {
-    errorMsg = `Passwords length must be between 5 and 20`;
+    errorMsg = passwordError.length;
   }
   else if(!passwordRegex.test(pass))
   {
-    errorMsg = `Invalid Password`;
+    errorMsg = passwordError.regex;
   }
   else
   {
@@ -40,12 +58,16 @@ function validatePassword(pass)
 }
 
 
+/**
+ * reason: needed to validate confirm password 
+ *   password and confirmPassword must be matched
+*/
 function validateConfirmPaasword(pass, confirmPass)
 {
   let errorMsg = null;
   if(pass != confirmPass)
   {
-    errorMsg = `Password does not match the confirm password`;
+    errorMsg = passwordError.misMatched;
   }
   else
   {
@@ -56,16 +78,20 @@ function validateConfirmPaasword(pass, confirmPass)
 }
 
 
+/**
+ * reason: needed to validate mobile Number
+ *   mobile number should only contain disgits and must be of length 11
+*/
 function validateMobileNumber(mobileNumber)
 {
   let errorMsg = null;
   if(isNaN(mobileNumber))
   {
-    errorMsg =`Characters are not allowed`;
+    errorMsg = mobileError.notDigit;
   }
   else if(mobileNumber.length!=11)
   {
-    errorMsg = `Mobile Number must be 10 digits only`;
+    errorMsg = mobileError.length;
   }
   else
   {
@@ -76,37 +102,72 @@ function validateMobileNumber(mobileNumber)
 }
 
 
-function clearFields()
+/**
+ * reason: needed clear field on the base of id
+*/
+function clearField(id)
 {
-  document.getElementById(`username`).value = ``;
-  document.getElementById(`password`).value = ``;
-  document.getElementById(`confirmPassword`).value = ``;
-  document.getElementById(`mobileNumber`).value = ``;
-  document.getElementById(`email`).value = ``;
+  document.getElementById(id).value = '';
 }
 
 
+/**
+ * reason: needed clear error msg on the base of id
+*/
+function clearMsg(id)
+{
+  document.getElementById(id).innerHTML = '';
+}
+
+
+/**
+ * reason: needed clear all fields
+*/
+function clearAllFields()
+{
+  clearField(`username`);
+  clearField(`password`);
+  clearField(`confirmPassword`);
+  clearField(`mobileNumber`);
+  clearField(`email`);
+}
+
+
+/**
+ * reason: needed clear all error msgs
+*/
 function clearErrors()
 {
-  document.getElementById(`usernameError`).innerHTML = ``;
-  document.getElementById(`passwordError`).innerHTML = ``;
-  document.getElementById(`confirmPasswordError`).innerHTML = ``;
-  document.getElementById(`mobileNumberError`).innerHTML = ``;
+  clearMsg(`usernameError`);
+  clearMsg(`passwordError`);
+  clearMsg(`confirmPasswordError`);
+  clearMsg(`mobileNumberError`);
 }
 
 
+/**
+ * reason: needed clear all fields and all error msgs
+*/
 function clearAll()
 {
-  clearFields();
+  clearAllFields();
   clearErrors();
 }
 
+
+/**
+ * reason: needed to get value from specific field on the bases of give id
+*/
 function getValue(id)
 {
   return document.getElementById(id).value;
 }
 
 
+/**
+ * reason: calls when user clik on sign up button
+ *   + done all the validations after getting user list through API call
+*/
 function validation()
 {
   clearErrors();
@@ -116,13 +177,13 @@ function validation()
   let mobileNumber = getValue(`mobileNumber`);
   let email = getValue(`email`);
 
-  fetch(`${baseUrl}/users?username=${username}`)
+  fetch(`${BASEURL}/users?username=${username}`)
     .then(response => response.json())
     .then(userData =>
     {
       if(userData.length)
       {
-        displayNameError(`Already registered, try another.`);
+        displayNameError(usernameError);
         return false;
       }
       if(validatePassword(password) &&
@@ -139,13 +200,13 @@ function validation()
 
         $.ajax({
           type        : `POST`,
-          url         : `${baseUrl}/users`,
+          url         : `${BASEURL}/users`,
           data        : formData,
           dataType    : `json`
         })
           .done(function() {
             clearAll();
-            alert(`successfully registered`);
+            alert(registerSuccessMsg);
           });
       }
     }).catch(console.error);

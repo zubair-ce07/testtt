@@ -43,7 +43,8 @@
       "date": "July 26, 2018",
       "likes[]": [
         "aisha",
-        "hana"
+        "hana",
+        "tehreem"
       ]
     },
     {
@@ -51,7 +52,8 @@
       "post": "hg",
       "date": "September 15, 2018",
       "userId": "1",
-      "id": 3
+      "id": 3,
+      "likes[]": "tehreem"
     }
   ],
   "comments": [
@@ -78,6 +80,12 @@
       "comment": "trg",
       "postId": "1",
       "id": 4
+    },
+    {
+      "comment_by": "tehreem",
+      "comment": "grfg",
+      "postId": "1",
+      "id": 5
     }
   ]
 }
