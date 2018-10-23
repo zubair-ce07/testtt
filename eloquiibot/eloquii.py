@@ -107,7 +107,7 @@ class EloquiiSpider(CrawlSpider):
             sku["size"] = size
 
             if not raw_sku["inStock"]:
-                sku["out_of_stock"] = not raw_sku["inStock"]
+                sku["out_of_stock"] = raw_sku["inStock"]
 
             skus[f"{sku['colour']}_{sku['size']}"] = sku
         return skus
