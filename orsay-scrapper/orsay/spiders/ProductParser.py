@@ -15,24 +15,26 @@ class ProductParser(Spider):
     ids_seen = set()
 
     def parse(self, response):
-        if self.product_id(response) in self.ids_seen:
+        product_id = self.product_id(response)
+        
+        if product_id in self.ids_seen:
             return
-        else:
-            self.ids_seen.add(self.product_id(response))
-            product = Product()
-            product['brand'] = 'orsay'
-            product['care'] = self.product_care(response)
-            product['category'] = self.product_category(response)
-            product['description'] = self.product_description(response)
-            product['image_urls'] = self.product_image_urls(response)
-            product['retailer_sku'] = self.product_id(response)
-            product['name'] = self.product_name(response)
-            product['skus'] = self.product_sku(response)
-            product['url'] = response.url
-            product['meta'] = {'requests': self.product_colors_requests(
-                response, product)}
+        
+        self.ids_seen.add(product_id)
+        product = Product()
+        product['brand'] = 'orsay'
+        product['care'] = self.product_care(response)
+        product['category'] = self.product_category(response)
+        product['description'] = self.product_description(response)
+        product['image_urls'] = self.product_image_urls(response)
+        product['retailer_sku'] = product_id
+        product['name'] = self.product_name(response)
+        product['skus'] = self.product_sku(response)
+        product['url'] = response.url
+        product['meta'] = {'requests': self.product_colors_requests(
+            response, product)}
 
-            return self.next_request_or_item(product)
+        return self.next_request_or_item(product)
 
     def parse_colors(self, response):
         item = response.meta['item']
