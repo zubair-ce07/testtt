@@ -1,5 +1,4 @@
 import json
-import re
 
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule, CrawlSpider, Request
@@ -17,7 +16,7 @@ class EloquiiSpider(CrawlSpider):
         ("special edition", "Special Edition")
     ]
     skus_req_url_t = "https://www.eloquii.com/on/demandware.store/Sites-eloquii-Site/" \
-                    "default/Product-GetVariants?pid={}&format=json"
+                     "default/Product-GetVariants?pid={}&format=json"
 
     listings_css = ["#nav_menu", ".row.justify-content-center.mt-5"]
     products_css = ".product-images"
@@ -54,7 +53,7 @@ class EloquiiSpider(CrawlSpider):
 
     def product_name(self, response):
         css = "#yotpo-bottomline-top-div::attr(data-name)"
-        return response.css(css).extract_first()
+        return response.css(css).extract()
 
     def product_category(self, response):
         css = ".breadcrumb span[itemprop=title]::text"
@@ -70,13 +69,13 @@ class EloquiiSpider(CrawlSpider):
         return [url["url"] for raw_url in raw_images for url in json.loads(raw_url)]
 
     def merch_info(self, product):
-        soup = " ".join(product["name"] + "".join(product["description"])).lower()
+        soup = " ".join(product["name"] + product["description"]).lower()
         return [merch for merch_str, merch in self.merch_map if merch_str in soup]
 
     def is_available(self, response):
         css = "#bt_pdp_main > script::text"
         regex = r"\"coming_soon_status\" : \"(.*)?\""
-        return not response.css(css).re_first(regex) == "Is Coming Soon"
+        return response.css(css).re_first(regex) != "Is Coming Soon"
 
     def is_out_of_stock(self, response):
         css = "[property='og:availability']::attr(content)"
@@ -91,26 +90,26 @@ class EloquiiSpider(CrawlSpider):
 
     def skus(self, raw_skus):
         skus = {}
-        for data in raw_skus:
-            sku = self.product_pricing(data)
-            sku["color"] = data["attributes"]["colorCode"]
-            size = data["attributes"]["size"]
-            size_type = data.get("attributes").get("sizeType")
+        for raw_sku in raw_skus:
+            sku = self.product_pricing(raw_sku)
+            sku["colour"] = raw_sku["attributes"]["colorCode"]
+            size = raw_sku["attributes"]["size"]
+            size_type = raw_sku.get("attributes").get("sizeType")
 
             if size_type:
                 size += f"_{size_type}"
 
-            length_type = data.get("attributes").get("pantLength")
+            length_type = raw_sku.get("attributes").get("pantLength")
 
             if length_type:
                 size += f"_{length_type}"
 
             sku["size"] = size
 
-            if not data["inStock"]:
-                sku["out_of_stock"] = not data["inStock"]
+            if not raw_sku["inStock"]:
+                sku["out_of_stock"] = not raw_sku["inStock"]
 
-            skus["_".join(data["attributes"].values())] = sku
+            skus[f"{sku['colour']}_{sku['size']}"] = sku
         return skus
 
     def product_pricing(self, json_data):
