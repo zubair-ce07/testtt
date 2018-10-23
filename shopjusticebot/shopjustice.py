@@ -1,146 +1,113 @@
-# -*- coding: utf-8 -*-
-import re
 import json
+import re
 
-from scrapy.spiders import Rule, CrawlSpider
 from scrapy.linkextractors import LinkExtractor
+from scrapy.spiders import Rule, CrawlSpider
+
 from shopjusticebot.items import ShopjusticeProduct
 
 
 class ShopjusticeSpider(CrawlSpider):
-    name = 'shopjustice'
-    allowed_domains = ['shopjustice.com']
-    start_urls = ['http://www.shopjustice.com']
+    name = "shopjustice"
+    allowed_domains = ["shopjustice.com"]
+    start_urls = ["http://www.shopjustice.com"]
+
+    image_url_t = "https://shopjustice.scene7.com/is/image/justiceProdATG/{}_{}{}?" \
+                  "fmt=jpeg&qlt=95,0&resMode=sharp2&op_usm=0.8,1.0,8,0&op_sharpen=1" \
+                  "&fit=constrain,1&wid=478&hei=690"
+    different_images_t = ["", "_alt1", "_atl2", "_Back"]
+
+    listing_css = [".mar-nav a", ".nextPage"]
+    product_css = ".mar-prd-item-image-container"
+
     rules = (
-        Rule(LinkExtractor(
-            allow=(r'.*/P-\d+.*'),
-            restrict_css=[".mar-nav a", ".nextPage"]
-        )),
-        Rule(LinkExtractor(
-            allow=(r'.*/prd-\d+'),
-            restrict_css=".asc-prduct-holder.mar-product-holder"
-        ),
-             callback='parse_product'
-            )
+        Rule(LinkExtractor(restrict_css=listing_css), callback="parse"),
+        Rule(LinkExtractor(restrict_css=product_css), callback="parse_product")
     )
 
     def parse_product(self, response):
         product = ShopjusticeProduct()
         product["product_id"] = self.product_id(response)
+        product["gender"] = "women"
         product["brand"] = "Shopjustice"
-        product["name"] = self.prodcut_name(response)
+        product["name"] = self.product_name(response)
         product["url"] = response.url
-        product["category"] = self.category(response)
-        product["description"] = self.description(response)
-        product["care"] = self.care(response)
-        product["image_urls"] = self.image_urls(
-            response, product["product_id"]
-            )
+        product["care"] = self.product_care(response)
+        product["description"] = self.product_description(response)
+        raw_product = self.raw_product(response)
+        product["image_urls"] = self.image_urls(raw_product, product["product_id"])
+        product["category"] = self.product_category(raw_product)
+
+        if self.is_out_of_stock(response):
+            product["out_of_stock"] = True
+
         product["skus"] = {}
-        product["skus"] = self.skus(response)
+        product["skus"] = self.skus(raw_product)
         yield product
 
     def product_id(self, response):
-        pid = response.css(
-            "#pdpProductID::attr(value)"
-            ).extract_first()
-        return pid
+        return response.css("#pdpProductID::attr(value)").extract_first()
 
-    def prodcut_name(self, response):
-        name = response.css(
-            ".jst-product-title::text"
-            ).extract_first()
-        return name
+    def product_name(self, response):
+        return response.css(".jst-product-title::text").extract_first()
 
-    def description(self, response):
+    def product_description(self, response):
         description = response.css("#tab1")
+
         if description:
             return description[0].css("li::text").extract()
-        else:
-            return None
 
-    def care(self, response):
-        care = response.css(
-            "#tab2 li:nth-child(1)::text"
-            ).extract_first()
-        return care
+    def product_care(self, response):
+        return response.css("#tab2 li::text").extract()
 
-    def image_urls(self, response, pid):
-        # Image issue check url
-        colour_code = self.colours(response, "ids")
-        image_url = []
-        img_start_link = "https://shopjustice.scene7.com/is/" \
-            + "image/justiceProdATG/"
-        img_end_link = "?fmt=jpeg&qlt=95,0&resMode=sharp2&op_usm=0.8,1.0,8,0" \
-            + "&op_sharpen=1&fit=constrain,1&wid=478&hei=690"
-        diff_img = ["", "_alt1", "_atl2", "_Back"]
-        image_url = [img_start_link + pid + '_' + colour + dif + img_end_link
-                     for colour in colour_code for dif in diff_img]
-        return image_url
+    def image_urls(self, raw_image_urls, product_id):
+        return [self.image_url_t.format(product_id, colour, dif) for colour in
+                self.colours(raw_image_urls, "ids") for dif in self.different_images_t]
 
-    def category(self, response):
-        json_data = self.json_data(response)
-        ensighten_data = json_data["pdpDetail"]["product"][0]
-        ensighten_data = ensighten_data["ensightenData"][0]
-        category = ensighten_data["categoryPath"]
-        return category
+    def product_category(self, raw_category):
+        return raw_category["ensightenData"][0]["categoryPath"].split(":")
 
-    def colours(self, response, key):
-        json_data = self.json_data(response)
-        available_colour = json_data["pdpDetail"]["product"][0]
-        available_colour = available_colour["all_available_colors"]
-        available_colour = available_colour[0]["values"]
-        colours = []
-        for colour in available_colour:
-            if key is "name":
-                colours.append(colour["name"])
+    def colours(self, raw_colour, key):
+        available_colour = raw_colour["all_available_colors"][0]["values"]
+        return [colour["name"] for colour in available_colour] if key == "name" \
+            else [colour["id"] for colour in available_colour]
 
-            elif key is "ids":
-                colours.append(colour["id"])
-        return colours
+    def sizes(self, raw_sizes):
+        available_sizes = raw_sizes["all_available_sizes"][0]["values"]
+        return [size["value"] for size in available_sizes]
 
-    def sizes(self, response):
-        json_data = self.json_data(response)
-        sizes = []
-        available_sizes = json_data["pdpDetail"]["product"][0]
-        available_sizes = available_sizes["all_available_sizes"][0]["values"]
-        for size in available_sizes:
-            sizes.append(size["value"])
-        return sizes
+    def raw_product(self, response):
+        raw_product = response.css("#pdpInitialData::text").extract_first()
+        raw_product = json.loads(raw_product)
+        return raw_product["pdpDetail"]["product"][0]
 
-    def json_data(self, response):
-        json_str = response.css("#pdpInitialData::text").extract_first()
-        json_data = json.loads(json_str)
-        return json_data
-
-    def skus(self, response):
-        colours = self.colours(response, "name")
-        sizes = self.sizes(response)
-        prices = self.porduct_prices(response)
+    def skus(self, raw_skus):
+        colours = self.colours(raw_skus, "name")
+        sizes = self.sizes(raw_skus)
+        common_sku = self.product_pricing(raw_skus)
         skus = {}
-        currency = ''
-        if prices:
-            currency = re.search(r'([^0-9.])', prices[0]).group(1)
-            prices[0] = float(re.search(r'(\d+\.\d+)', prices[0]).group(1))
-            prices[1] = float(re.search(r'(\d+\.\d+)', prices[1]).group(1))
         for colour in colours:
             for size in sizes:
-                skus[colour + '_' + size] = {
-                    "colour": colour,
-                    "currency": currency,
-                    "previouse_price": prices[0],
-                    "price": prices[1],
-                    "size": size,
-                }
+                sku = common_sku.copy()
+                sku["size"] = size
+                sku["colour"] = colour
+                skus[colour + "_" + size] = sku
         return skus
 
-    def porduct_prices(self, response):
-        json_data = self.json_data(response)
-        prices = []
-        values = json_data["pdpDetail"]["product"][0]
-        values = values["all_available_colors"][0]["values"]
-        previous_price = values[0]["prices"]["list_price"]
-        price = values[0]["prices"]["sale_price"]
-        prices.append(previous_price)
-        prices.append(price)
+    def product_pricing(self, raw_prices):
+        prices = {}
+        values = raw_prices["all_available_colors"][0]["values"][0]["prices"]
+        previous_price = float(re.findall(r"(\d+\.\d+)", values["list_price"])[0])
+        prices["currency"] = re.findall(r"([^0-9.])", values["sale_price"])[0]
+        prices["price"] = float(re.findall(r"(\d+\.\d+)", values["sale_price"])[0])
+
+        if previous_price != prices["price"]:
+            prices["previous_price"] = previous_price
+
         return prices
+
+    def is_out_of_stock(self, response):
+        raw_product = response.css("#pdpInitialData::text").extract_first()
+        raw_product = json.loads(raw_product)
+        raw_product = raw_product["inventoryDetail"]["action_status"]
+        return False if raw_product["out_of_stock"] == "false" else True
