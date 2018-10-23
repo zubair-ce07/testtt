@@ -12,6 +12,7 @@ from maurices.maurices_parse_product import MauricesParseProduct
 
 class MauricesSpider(CrawlSpider):
     name = 'maurices_spider'
+    product_pagination_url = 'https://www.maurices.com/maurices/plp/includes/plp-filters.jsp'
     allowed_domains = ['maurices.com']
     start_urls = ['https://www.maurices.com']
 
@@ -27,8 +28,7 @@ class MauricesSpider(CrawlSpider):
         is_json_request = response.meta.get('is_json_request')
         if not is_json_request:
             sub_catagory_id = response.url.split('/')[-1].replace('-', '=')
-            url = 'https://www.maurices.com/maurices/plp' \
-                f'/includes/plp-filters.jsp?{sub_catagory_id}&No=0'
+            url = self.product_pagination_url + f'?{sub_catagory_id}&No=0'
             yield scrapy.Request(url, callback=self.parse_product_subcatagory,
                                  meta={'is_json_request': True, 'product_urls': []})
         else:
@@ -47,5 +47,6 @@ class MauricesSpider(CrawlSpider):
                                      meta={'is_json_request': True, 'product_urls': product_urls})
             else:
                 for product_url in product_urls:
-                    yield scrapy.Request(response.urljoin(product_url), callback=product_parser.parse_product)
+                    yield scrapy.Request(response.urljoin(product_url),
+                                         callback=product_parser.parse_product)
 
