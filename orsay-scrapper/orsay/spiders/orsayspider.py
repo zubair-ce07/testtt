@@ -12,10 +12,12 @@ class OrsaySpider(CrawlSpider):
     product_parser = ProductParser()
     name = 'orsay-crawl'
     PAGE_SIZE = 72
-    navigation_bar_urls = '.level-3'
-    product_urls = '.thumb-link'
+    navigation_bar_urls = '.navigation-link'
+    product_urls = '.product-image'
     allowed_domains = ['orsay.com']
     start_urls = ['http://www.orsay.com/de-de/produkte/']
+
+    my_urls = []
 
     rules = (
         Rule(
@@ -28,10 +30,8 @@ class OrsaySpider(CrawlSpider):
     )
 
     def parse(self, response):
-        css = '[class*=pagination-product-count]::attr(data-count)'
-        total_items = response.css(css).extract_first()
-        css = '.load-more-progress-label span::text'
-        shown_items = response.css(css).extract_first()
+        total_items = self.product_parser.extract_total_items(response)
+        shown_items = self.product_parser.extract_shown_items(response)
 
         if int(total_items.replace('.', '')) > int(shown_items.replace('.', '')):
             parameter = url_query_parameter(response.url, "sz")
@@ -39,7 +39,7 @@ class OrsaySpider(CrawlSpider):
                 url = add_or_replace_parameter(
                     response.url, 'sz', str(int(parameter) + self.PAGE_SIZE))
             else:
-                url = add_or_replace_parameter(response.url, 'sz', '72')
+                url = add_or_replace_parameter(response.url, 'sz', '144')
 
             yield scrapy.Request(url=url, callback=self.parse)
 

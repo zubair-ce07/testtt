@@ -3,6 +3,8 @@ import json
 import scrapy
 
 from orsay.items import Product
+from scrapy.exceptions import DropItem
+from w3lib.url import url_query_cleaner
 from scrapy.spiders import CrawlSpider, Rule, Spider
 from scrapy.linkextractors import LinkExtractor
 
@@ -10,22 +12,27 @@ from scrapy.linkextractors import LinkExtractor
 class ProductParser(Spider):
     name = 'orsay-parser'
     sku_id_format = '{}_{}'
+    ids_seen = set()
 
     def parse(self, response):
-        product = Product()
+        if self.product_id(response) in self.ids_seen:
+            return
+        else:
+            self.ids_seen.add(self.product_id(response))
+            product = Product()
+            product['brand'] = 'orsay'
+            product['care'] = self.product_care(response)
+            product['category'] = self.product_category(response)
+            product['description'] = self.product_description(response)
+            product['image_urls'] = self.product_image_urls(response)
+            product['retailer_sku'] = self.product_id(response)
+            product['name'] = self.product_name(response)
+            product['skus'] = self.product_sku(response)
+            product['url'] = response.url
+            product['meta'] = {'requests': self.product_colors_requests(
+                response, product)}
 
-        product['brand'] = 'orsay'
-        product['care'] = self.product_care(response)
-        product['category'] = self.product_category(response)
-        product['description'] = self.product_description(response)
-        product['image_urls'] = self.product_image_urls(response)
-        product['retailer_sku'] = self.product_id(response)
-        product['name'] = self.product_name(response)
-        product['skus'] = self.product_sku(response)
-        product['url'] = response.url
-        product['meta'] = {'requests': self.product_colors_requests(
-            response, product)}
-        return self.next_request_or_item(product)
+            return self.next_request_or_item(product)
 
     def parse_colors(self, response):
         item = response.meta['item']
@@ -81,8 +88,8 @@ class ProductParser(Spider):
         return [discription for discription in discriptions if discription != '']
 
     def product_image_urls(self, response):
-        raw_images = response.css('.productthumbnail::attr(src)').extract()
-        return [image.split('?')[0] for image in raw_images]
+        raw_image_urls = response.css('.productthumbnail::attr(src)').extract()
+        return [url_query_cleaner(image_url) for image_url in raw_image_urls]
 
     def product_name(self, response):
         return response.css('.product-name::text').extract_first()
@@ -102,14 +109,15 @@ class ProductParser(Spider):
         return response.css('.country-currency::text').extract_first()
 
     def product_price(self, response):
-        price = response.css('.product-price span::text').extract_first()
-        replaced = re.sub('[,€]', '', price)
-        return replaced.strip()
+        raw_price = response.css('.product-price span::text').extract_first()
+        price = re.sub('[,€\n\r\t]', '', raw_price)
+        return price
 
     def product_previous_price(self, response):
         css = '.product-price .price-standard::text'
-        raw_price = response.css(css).extract()
-        return re.sub('[,€\n\t\r]', '', raw_price) if raw_price else ''
+        raw_prices = response.css(css).extract()
+        prices = [re.sub('[,€\n\t\r]', '', price) for price in raw_prices]
+        return [int(price) for price in prices if price != '']
 
     def product_size(self, response):
         css = '.size li.selectable a::text'
@@ -123,7 +131,7 @@ class ProductParser(Spider):
         css = '.color li:not(.selected) a::attr(href)'
         links = response.css(css).extract()
         return [scrapy.Request(link, callback=self.parse_colors,
-                               meta={'item': item}) for link in links]
+                               meta={'item': item}, dont_filter=True) for link in links]
 
     def product_id(self, response):
         data = self.extract_raw_data(response)
@@ -133,3 +141,11 @@ class ProductParser(Spider):
         css = '.js-product-content-gtm::attr(data-product-details)'
         data = response.css(css).extract_first()
         return json.loads(data)
+
+    def extract_total_items(self, response):
+        css = '[class*=pagination-product-count]::attr(data-count)'
+        return response.css(css).extract_first()
+
+    def extract_shown_items(self, response):
+        css = '.load-more-progress-label span::text'
+        return response.css(css).extract_first()
