@@ -19,63 +19,64 @@ class LindexSpider(CrawlSpider):
         "/children-wear/", "/campaign/", "/Assets/"
         ]
     rules = [
-        Rule(LinkExtractor(restrict_css=listing_css, deny=deny_re), callback="parse_product_listing"),
+        Rule(LinkExtractor(restrict_css=listing_css, deny=deny_re), callback="parse_pagination"),
         Rule(LinkExtractor(restrict_css=products_css, deny=deny_re), callback="parse_product")
     ]
 
-    def parse_product_listing(self, response):
+    def parse_pagination(self, response):
         node_id = self.product_node_id(response)
         total_pages = self.total_page_count(response)
         curr_page = 0
+        url = "https://www.lindex.com/uk/SiteV3/Category/GetProductGridPage"
+        headers = {"X-Requested-With": "XMLHttpRequest"}
 
         for curr_page in range(total_pages):
             yield FormRequest(
-                url="https://www.lindex.com/uk/SiteV3/Category/GetProductGridPage",
-                headers={"X-Requested-With": "XMLHttpRequest"},
+                url=url, headers=headers,
                 formdata={"nodeId": node_id, "pageIndex": str(curr_page)},
-                callback=self.parse
-                )
+                callback=self.parse)
 
-    def parse_colors(self, response, colors, item_loader):
-        if len(colors) == 0:
-            yield item_loader.load_item()
-        else:
-            yield Request(
-                url="https://www.lindex.com/WebServices/ProductService.asmx/GetProductData",
-                callback=self.skus,
-                method="POST",
-                headers={
-                    "X-Requested-With": "XMLHttpRequest",
-                    "Content-Type": "application/json; charset=UTF-8"
-                    },
-                body=json.dumps({
-                    "productIdentifier": self.product_id(response),
-                    "colorId": colors.pop(0),
-                    "primaryImageType": "1"
-                    }),
-                meta={"item-loader": item_loader, "colors": colors},
-                )
-
-    def skus(self, response):
-        details = json.loads(response.body)["d"]
-        item_loader = response.meta["item-loader"]
+    def skus(self, details):
         sizes = details["SizeInfo"]
         color_name = details["Color"]
-        sku = []
+        skus = []
 
         for size in sizes[1:]:
                 size = re.findall(".+?(?=\s|-|\()", size["Text"])[0]
-                sku.append({
-                    "color": color_name,
-                    "price": details["Price"],
-                    "is_sold_out": details["IsSoldOut"],
-                    "size": size,
+                skus.append({
+                    "color": color_name, "price": details["Price"],
+                    "is_sold_out": details["IsSoldOut"], "size": size,
                     "sku_id": "{}_{}".format(size, color_name)
                 })
-        item_loader.add_value("skus", sku)
+        return skus
 
-        self.load_product_images(details, item_loader)
-        return self.parse_colors(response, response.meta["colors"], item_loader)
+    def parse_colors(self, response):
+        details = json.loads(response.body)["d"]
+        item_loader = response.meta["item-loader"]
+        item_loader.add_value("skus", self.skus(details))
+        item_loader.add_value("image_urls", self.image_urls(details))
+
+        response.meta["colors"].pop(0)
+        if len(response.meta["colors"]) == 0:
+            yield item_loader.load_item()
+
+    def make_colors_request(self, response, item_loader):
+        colors = self.product_colors_id(response)
+        headers = {
+            "X-Requested-With": "XMLHttpRequest",
+            "Content-Type": "application/json; charset=UTF-8"}
+        url = "https://www.lindex.com/WebServices/ProductService.asmx/GetProductData"
+
+        for color in colors:
+            yield Request(
+                url=url, callback=self.parse_colors, method="POST",
+                headers=headers,
+                body=json.dumps({
+                    "productIdentifier": self.product_id(response),
+                    "colorId": color,
+                    "primaryImageType": "1"}),
+                meta={"item-loader": item_loader, "colors": colors},
+                )
 
     def parse_product(self, response):
         item_loader = LindexItemLoader(item=LindexItem(), response=response)
@@ -93,34 +94,18 @@ class LindexSpider(CrawlSpider):
         item_loader.add_value("url_orignal", response.url)
         item_loader.add_value("url", self.product_url(response))
         item_loader.add_value("date", datetime.now().strftime("%Y-%m-%d"))
-        item_loader.add_value("market", self.current_market(response))
+        item_loader.add_value("market", self.get_market(response))
         item_loader.add_value("retailer", "lindex-uk")
         item_loader.add_value("spider_name", "lindex-uk-crawl")
         item_loader.add_value("crawl_id", f"lindex-uk-{datetime.now().strftime('%Y%m%d-%H%M%s')}-axuj")
         item_loader.add_value("crawl_start_time", datetime.now().isoformat())
 
-        colors = self.product_colors_id(response)
-        yield Request(
-            url="https://www.lindex.com/WebServices/ProductService.asmx/GetProductData",
-            callback=self.skus,
-            method="POST",
-            headers={
-                "X-Requested-With": "XMLHttpRequest",
-                "Content-Type": "application/json; charset=UTF-8"
-                },
-            body=json.dumps({
-                "productIdentifier": self.product_id(response),
-                "colorId": colors.pop(0),
-                "primaryImageType": "1"
-                }),
-            meta={"item-loader": item_loader, "colors": colors},
-            )
+        return self.make_colors_request(response, item_loader)
 
-    def load_product_images(self, details, item_loader):
-        images = [image["Standard"] for image in details["Images"]]
-        return item_loader.add_value("image_urls", images)
+    def image_urls(self, details):
+        return [image["Standard"] for image in details["Images"]]
 
-    def current_market(self, response):
+    def get_market(self, response):
         css = ".selectedCountry[type='hidden']::attr(value)"
         return response.css(css).extract()
 
