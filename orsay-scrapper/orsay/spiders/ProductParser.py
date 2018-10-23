@@ -1,12 +1,10 @@
 import re
 import json
-import scrapy
 
+from scrapy import Request
 from orsay.items import Product
-from scrapy.exceptions import DropItem
 from w3lib.url import url_query_cleaner
-from scrapy.spiders import CrawlSpider, Rule, Spider
-from scrapy.linkextractors import LinkExtractor
+from scrapy.spiders import Spider
 
 
 class ProductParser(Spider):
@@ -85,13 +83,12 @@ class ProductParser(Spider):
     def product_description(self, response):
         css = '.with-gutter::text, .product-info-title + div::text'
         raw_discription = response.css(css).extract()
-        discriptions = [re.sub('[-\n]', '', discription)
-                        for discription in raw_discription]
-        return [discription for discription in discriptions if discription != '']
+        discriptions = [re.sub('[-\n]', '', d)for d in raw_discription]
+        return [d for d in discriptions if d != '']
 
     def product_image_urls(self, response):
         raw_image_urls = response.css('.productthumbnail::attr(src)').extract()
-        return [url_query_cleaner(image_url) for image_url in raw_image_urls]
+        return [url_query_cleaner(url) for url in raw_image_urls]
 
     def product_name(self, response):
         return response.css('.product-name::text').extract_first()
@@ -119,35 +116,27 @@ class ProductParser(Spider):
         css = '.product-price .price-standard::text'
         raw_prices = response.css(css).extract()
         prices = [re.sub('[,€\n\t\r]', '', price) for price in raw_prices]
-        return [int(price) for price in prices if price != '']
+        return [int(p) for p in prices if p != '']
 
     def product_size(self, response):
         css = '.size li.selectable a::text'
         return response.css(css).extract()
 
     def sku_id(self, response):
-        raw_data = self.extract_raw_data(response)
+        raw_data = self.raw_item(response)
         return raw_data['idListRef12']
 
     def product_colors_requests(self, response, item):
         css = '.color li:not(.selected) a::attr(href)'
-        links = response.css(css).extract()
-        return [scrapy.Request(link, callback=self.parse_colors,
-                               meta={'item': item}, dont_filter=True) for link in links]
+        urls = response.css(css).extract()
+        return [Request(url, callback=self.parse_colors,
+                               meta={'item': item}, dont_filter=True) for url in urls]
 
     def product_id(self, response):
-        data = self.extract_raw_data(response)
+        data = self.raw_item(response)
         return data['idListRef6']
 
-    def extract_raw_data(self, response):
+    def raw_item(self, response):
         css = '.js-product-content-gtm::attr(data-product-details)'
         data = response.css(css).extract_first()
         return json.loads(data)
-
-    def extract_total_items(self, response):
-        css = '[class*=pagination-product-count]::attr(data-count)'
-        return response.css(css).extract_first()
-
-    def extract_shown_items(self, response):
-        css = '.load-more-progress-label span::text'
-        return response.css(css).extract_first()
