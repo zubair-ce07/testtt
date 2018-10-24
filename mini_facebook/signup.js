@@ -32,7 +32,7 @@ function displayNameError(errorMsg)
 
 
 /**
- * reason: needed to validate password 
+ * reason: needed to validate password
  *   password length must in range(5 to 20)
  *   password must contain atleast
  *     1 uppercase, 1 lowercase & 1 special character (!@#$%^&*)
@@ -59,7 +59,7 @@ function validatePassword(pass)
 
 
 /**
- * reason: needed to validate confirm password 
+ * reason: needed to validate confirm password
  *   password and confirmPassword must be matched
 */
 function validateConfirmPaasword(pass, confirmPass)

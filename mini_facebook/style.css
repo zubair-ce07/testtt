@@ -10,12 +10,12 @@ footer {
 	bottom: 0;
 	width: 100%;
 	text-align: center;
- }
+}
  
 .logout-btn {
 	position: fixed;
 	right: 10px;
- }
+}
  
 #newPostTitle {margin-bottom: 15px;}
  
@@ -28,7 +28,7 @@ footer {
 #newPost {
 	position: fixed;
 	right: 100px;
- }
+}
  
 .text-danger,
 label,
@@ -37,11 +37,9 @@ h1 {font-weight: bold;}
 .comment-btn {
 	margin-bottom: 10px;
 	margin-top: 15px;
- }
+}
  
 .text-success {
 	font-weight: bold;
 	font-size: 20px;
- }
- 
- 
+}
