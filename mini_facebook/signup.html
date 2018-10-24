@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <h1 class="text-white text-center font-weight-bold bg-success main-heading"> Sign Up</h1>
+    <div class="container">
+      <div class="col-lg-6 m-auto d-block">
+        <form class="bg-light" onsubmit="return validation()" id="signupForm">
+          <div class="form-group">
+            <label for="username" >Username:</label>
+            <input type="text" name="username" class="form-control"
+              id="username" autocomplete="off" required="true">
+            <span id="usernameError" class="msg text-danger"> </span>
+          </div>
+          <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" name="password" class="form-control" 
+              id="password" autocomplete="off" required="true">
+            <span id="passwordError" class="msg text-danger"> </span>
+          </div>
+          <div class="form-group">
+            <label for="confirmPassword">Confirm Password:</label>
+            <input type="password" name="confirmPassword" class="form-control" 
+              id="confirmPassword" autocomplete="off" required="true">
+            <span id="confirmPasswordError" class="msg text-danger> </span>
+          </div>
+          <div class="form-group">
+            <label for="mobileNumber">Mobile Number:</label>
+            <input type="text" name="mobileNumber" class="form-control"
+              id="mobileNumber" autocomplete="off" required="true">
+            <span id="mobileNumberError" class="msg text-danger"> </span>
+          </div>
+          <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" name="email" class="form-control"
+              id="email" autocomplete="off" required="true">
+            <span id="emailError" class="msg text-danger"> </span>
+          </div>
+          <span id="successMsg" class="msg text-success"></span>
+          <input type="submit"  name="submit" value="register me"
+            class="btn btn-success" autocomplete="off">
+          <a href="index.html" class="btn btn-success">Log in</a>
+        </form>
+      </div>
+    </div>
+  </body>
+  <script defer src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+  <script defer src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+  <script defer type="text/javascript" src="constants.js"></script>
+  <script defer type="text/javascript" src="apiCaller.js"></script>
+  <script defer type="text/javascript" src="signup.js"></script>
+</html>

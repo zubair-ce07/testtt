@@ -1,0 +1,52 @@
+#loginForm,
+#signupForm {margin-top: 30px;}
+ 
+footer {
+	background-color: #555;
+	color: white;
+	padding: 15px;
+	position: fixed;
+	left: 0;
+	bottom: 0;
+	width: 100%;
+	text-align: center;
+}
+ 
+.logout-btn {
+	position: fixed;
+	right: 10px;
+}
+ 
+#newPostTitle {margin-bottom: 15px;}
+ 
+.content {margin-bottom: 70px;}
+ 
+.comment {margin-bottom: 20px;}
+ 
+.main-heading {font-size: 55px;}
+ 
+#newPost {
+	position: fixed;
+	right: 100px;
+}
+ 
+.text-danger,
+label,
+h1 {font-weight: bold;}
+ 
+.comment-btn {
+	margin-bottom: 10px;
+	margin-top: 15px;
+}
+ 
+.text-success {
+	font-weight: bold;
+	font-size: 20px;
+}
+
+.msg 
+{
+	font-weight: bold;
+	display: block;
+	margin-bottom: 10px;
+}
