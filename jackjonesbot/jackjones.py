@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import json
 import re
 
@@ -12,24 +11,24 @@ class JackjonesSpider(scrapy.Spider):
     allowed_domains = ["jackjones.com.cn"]
     start_urls = ["https://www.jackjones.com.cn/api/service/init?channel=6"]
 
-    token = ""
-    category_urls_req = "https://www.jackjones.com.cn/assets/pc/JACKJONES/nav.json"
+    headers = ""
+    category_req_url = "https://www.jackjones.com.cn/assets/pc/JACKJONES/nav.json"
     category_url_t = "https://www.jackjones.com.cn/api/goods/{}&currentpage=1" \
                      "&sortDirection=desc&sortType=1"
     product_url_t = "https://www.jackjones.com.cn/detail/JACKJONES/{}.json"
     category_urls = []
 
     def parse(self, response):
-        raw_token = json.loads(response.text)
-        self.token = raw_token["data"]["token"]
-        yield scrapy.Request(url=self.category_urls_req, callback=self.parse_category_urls)
+        raw_headers = json.loads(response.text)
+        self.headers = raw_headers["data"]["token"]
+        yield scrapy.Request(url=self.category_req_url, callback=self.parse_category_urls)
 
     def parse_category_urls(self, response):
         raw_category_urls = json.loads(response.text)
         raw_category_urls = raw_category_urls["data"]
         self.process_category_urls(raw_category_urls)
         for category in self.category_urls:
-            yield scrapy.Request(url=category, headers={"token": self.token},
+            yield scrapy.Request(url=category, headers={"token": self.headers},
                                  callback=self.parse_category)
 
     def process_category_urls(self, raw_urls):
@@ -62,13 +61,12 @@ class JackjonesSpider(scrapy.Spider):
             next_page_url = re.sub(r"currentpage=(\d+)", "currentpage=" +
                                    str(next_page), response.url)
 
-            yield scrapy.Request(url=next_page_url, headers={"token": str(self.token)},
+            yield scrapy.Request(url=next_page_url, headers={"token": str(self.headers)},
                                  callback=self.parse_category)
 
     def parse_product(self, response):
         product = JackjonesProduct()
-        raw_product = json.loads(response.text)
-        raw_product = raw_product["data"]
+        raw_product = json.loads(response.text)["data"]
         product["product_id"] = self.product_id(raw_product)
         product["brand"] = "JACKJONES"
         product["care"] = self.product_care(raw_product)
@@ -80,20 +78,20 @@ class JackjonesSpider(scrapy.Spider):
         product["url"] = response.url
         yield product
 
-    def product_id(self, json_data):
-        return json_data["projectCode"]
+    def product_id(self, raw_product):
+        return raw_product["projectCode"]
 
-    def product_care(self, json_data):
-        return json_data["goodsInfo"]
+    def product_care(self, raw_product):
+        return raw_product["goodsInfo"]
 
-    def product_name(self, json_data):
-        return json_data["goodsName"]
+    def product_name(self, raw_product):
+        return raw_product["goodsName"]
 
-    def product_category(self, json_data):
-        return json_data["color"][0]["categoryName"]
+    def product_category(self, raw_product):
+        return raw_product["color"][0]["categoryName"]
 
-    def product_description(self, json_data):
-        return json_data["describe"]
+    def product_description(self, raw_product):
+        return raw_product["describe"]
 
     def image_urls(self, raw_images):
         return [images.get("picurls") for images in raw_images.get("color")]
@@ -112,7 +110,7 @@ class JackjonesSpider(scrapy.Spider):
                 if raw_colour["status"] != "InShelf":
                     sku["out_of_stock"] = True
 
-                skus[sku["colour"] + "_" + sku["size"]] = sku
+                skus[f"{sku['colour']}_{sku['size']}"] = sku
         return skus
 
     def product_pricing(self, raw_prices):
