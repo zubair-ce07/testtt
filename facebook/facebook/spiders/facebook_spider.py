@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-import scrapy
 import csv
-from logging import debug
 import re
+
+import scrapy
+
 
 class FacebookSpiderSpider(scrapy.Spider):
     name = 'facebook'
@@ -17,7 +18,7 @@ class FacebookSpiderSpider(scrapy.Spider):
     custom_settings = {
         'ROBOTSTXT_OBEY': False,
         'USER_AGENT': 'Mozilla/5.0 (X11; Linux x86_64; rv:62.0) Gecko/20100101 Firefox/62.0',
-        'DOWNLOAD_DELAY': 5,
+        'DOWNLOAD_DELAY': 2,
         'COOKIES_ENABLED': False
     }
 
@@ -26,19 +27,27 @@ class FacebookSpiderSpider(scrapy.Spider):
             d = csv.DictReader(f)
             for df in d:
                 yield scrapy.Request('https://www.facebook.com/pg/{}/'.format(df['fb_id']))
+                break
 
     def parse(self, response):
         fields = {
             'name': response.css('#seo_h1_tag span::text').extract_first(),
-            'id': self.pick_first(response.css('[property="al:android:url"]::attr(content)').re(r'\d+')),
-            'talking_about_count': self.pick_first(response.css('[name="description"]::attr(content)').re(r'([\d,])\s*talking\s*about\s*this')),
-            'were_here_count': self.pick_first(response.css('[name="description"]::attr(content)').re(r'([\d,])\s*were\s*here')),
-            'overall_star_rating': self.pick_first(response.xpath('//*[contains(text(), "out of 5")]/text()').re(r'[\d\.]+')),
+            'id': self.pick_first(
+                response.css('[property="al:android:url"]::attr(content)').re(r'\d+')),
+            'talking_about_count': response.css('[name="description"]::attr(content)').re_first(
+                r'([\d,])\s*talking\s*about\s*this'),
+            'were_here_count': response.css('[name="description"]::attr(content)').re_first(
+                r'([\d,])\s*were\s*here'),
+            'overall_star_rating': response.xpath(
+                '//*[contains(text(), "out of 5")]/text()').re_first(r'[\d\.]+'),
             'engagement': {
-                'like_count': self.pick_first(response.xpath('//*[contains(text(), "people like this")]/text()').re(r'[\d,]+')),
-                'social_sentence': self.pick_first(response.xpath('//*[contains(text(), "people follow this")]/text()').re(r'[\d,]+'))
+                'like_count': response.xpath(
+                    '//*[contains(text(), "people like this")]/text()').re_first(r'[\d,]+'),
+                'social_sentence': response.xpath(
+                    '//*[contains(text(), "people follow this")]/text()').re_first(r'[\d,]+')
             },
-            'fan_count': self.pick_first(response.xpath('//*[contains(text(), "people like this")]/text()').re(r'[\d,]+')),
+            'fan_count': response.xpath(
+                '//*[contains(text(), "people like this")]/text()').re_first(r'[\d,]+'),
             'link': response.url,
         }
 
@@ -48,27 +57,46 @@ class FacebookSpiderSpider(scrapy.Spider):
 
     def parse_about(self, response):
         fields = {
-            'price_range': response.xpath('//*[text()="Price range"]/following::div[1]//*/text()').extract_first(),
-            'food_style': response.xpath('//*[text()="Cuisine"]/following::span[1]/text()').extract(),
-            'restaurant_specialties': response.xpath('//*[text()="Specialties"]/following::span[1]/text()').extract(),
-            'company_overview': ''.join(response.xpath('//*[text()="Company Overview"]/following::div[1]/text()').extract()),
-            'phone': self.pick_first(response.xpath('//div[contains(text(), "Call")]').re(r'\+[\- 0-9]+')),
+            'price_range': response.xpath(
+                '//*[text()="Price range"]/following::div[1]//*/text()').extract_first(),
+            'food_style': response.xpath(
+                '//*[text()="Cuisine"]/following::span[1]/text()').extract(),
+            'restaurant_specialties': response.xpath(
+                '//*[text()="Specialties"]/following::span[1]/text()').extract(),
+            'company_overview': ''.join(response.xpath(
+                '//*[text()="Company Overview"]/following::div[1]/text()').extract()),
+            'phone': self.pick_first(
+                response.xpath('//div[contains(text(), "Call")]').re(r'\+[\- 0-9]+')),
             'emails': response.css('[href^="mailto"] div::text').extract(),
-            'about': response.xpath('//*[contains(text(), "MORE INFO")]/following::*[contains(text(), "About")][1]/following::div[1]/text()').extract_first(),
+            'about': ''.join(response.xpath(
+                '//*[contains(text(), "MORE INFO")]/following::*[contains(text(), "About")][1]'
+                '/following::div[1]/text()').extract()),
             'category': response.css('[href*="/search"]::text').extract_first(),
             'category_list': response.css('[href*="/search"]::text').extract(),
-            'location': ''.join(response.xpath('//*[@src="https://static.xx.fbcdn.net/rsrc.php/v3/yS/r/QeKYFue6x0O.png"]/following::div[1]//*/text()').extract())
+            'location': ''.join(response.xpath(
+                '//*[@src="https://static.xx.fbcdn.net/rsrc.php/v3/yS/r/QeKYFue6x0O.png"]'
+                '/following::div[1]//*/text()').extract()),
+            'start_info': {}
         }
 
-        fields['start_info'] = {}
-        fields['start_info']['type'], fields['start_info']['date'] = self.fetch_start_info(response.xpath('//*[@src="https://static.xx.fbcdn.net/rsrc.php/v3/yZ/r/Qz1rawS_hSy.png"]/following::div[1]//*/text()').extract_first())
-        fields['founded'] = self.pick_first(response.xpath('//*[@src="https://static.xx.fbcdn.net/rsrc.php/v3/yZ/r/Qz1rawS_hSy.png"]/following::div[1]//*/text()').re(r'\d\d\d\d'))
+        start_type, start_date = self.fetch_start_info(response.xpath(
+            '//*[@src="https://static.xx.fbcdn.net/rsrc.php/v3/yZ/r/Qz1rawS_hSy.png"]'
+            '/following::div[1]//*/text()').extract_first())
+        fields['start_info']['type'] = start_type
+        fields['start_info']['date'] = start_date
+
+        fields['founded'] = response.xpath(
+            '//*[@src="https://static.xx.fbcdn.net/rsrc.php/v3/yZ/r/Qz1rawS_hSy.png"]/'
+            'following::div[1]//*/text()').re_first(r'\d\d\d\d')
         r = response.xpath('//*[contains(text(), "Mission")]/following::div[1]')
-        fields['mission'] = ''.join(r.css('.text_exposed_root::text, .text_exposed_show::text').extract())
+        fields['mission'] = ''.join(r.css(
+            '.text_exposed_root::text, .text_exposed_show::text').extract())
         r = response.xpath('//div[contains(text(), "Products")]')
-        fields['products'] = ''.join(r.css('div + div .text_exposed_root::text, div + div .text_exposed_show::text').extract())
+        fields['products'] = ''.join(r.css(
+            'div + div .text_exposed_root::text, div + div .text_exposed_show::text').extract())
         r = response.xpath('//*[text()="General Information"]/following::div[1]')
-        fields['general_info'] = ''.join(r.css('.text_exposed_root::text, .text_exposed_show::text').extract())
+        fields['general_info'] = ''.join(r.css(
+            '.text_exposed_root::text, .text_exposed_show::text').extract())
         fields.update(response.meta['fields'])
 
         request = response.follow('./reviews', callback=self.parse_reviews)
@@ -77,7 +105,8 @@ class FacebookSpiderSpider(scrapy.Spider):
 
     def parse_reviews(self, response):
         fields = {
-            'rating_count': self.pick_first(response.xpath('//*[contains(text(), "Based on the opinion of")]/text()').re(r'[\d,]+'))
+            'rating_count': response.xpath(
+                '//*[contains(text(), "Based on the opinion of")]/text()').re_first(r'[\d,]+')
         }
 
         fields.update(response.meta['fields'])
@@ -86,13 +115,15 @@ class FacebookSpiderSpider(scrapy.Spider):
         request.meta['fields'] = fields
         return request
 
-    def parse_posts(self, response):
+    @staticmethod
+    def parse_posts(response):
         posts = []
         raw_posts = response.css(".userContentWrapper")
         page_id = response.css("meta[property='al:ios:url']::attr(content)").re_first(r'id?=(\d+)')
         for post in raw_posts:
             post_id = post.css("[name='ft_ent_identifier']::attr(value)").extract_first()
-            post_time = post.xpath("descendant-or-self::*[@class='timestampContent']/../@title").extract_first()
+            post_time = post.xpath(
+                "descendant-or-self::*[@class='timestampContent']/../@title").extract_first()
             message = post.xpath("descendant-or-self::*[@data-ad-preview='message']"
                                  "[contains(@class,'userContent')]//text()").extract()
             name = post.css('.fwb a::text').extract()[0]
@@ -112,7 +143,8 @@ class FacebookSpiderSpider(scrapy.Spider):
             'fb_posts': posts
         }
 
-    def pick_first(self, value):
+    @staticmethod
+    def pick_first(value):
         if value:
             return value[0]
 
@@ -124,9 +156,10 @@ class FacebookSpiderSpider(scrapy.Spider):
 
         if 'in' in value:
             s = value.split('in')
-
-        if 'on' in value:
+        elif 'on' in value:
             s = value.split('on')
+        else:
+            return None, None
 
         s_type = s[0].strip()
         s_month = self.pick_first(re.findall(r'[A-Za-z]+', s[1]))
