@@ -12,17 +12,12 @@ class ShopjusticeSpider(CrawlSpider):
     allowed_domains = ["shopjustice.com"]
     start_urls = ["http://www.shopjustice.com"]
 
-    image_url_t = "https://shopjustice.scene7.com/is/image/justiceProdATG/{}_{}{}?" \
-                  "fmt=jpeg&qlt=95,0&resMode=sharp2&op_usm=0.8,1.0,8,0&op_sharpen=1" \
-                  "&fit=constrain,1&wid=478&hei=690"
-    different_images_t = ["", "_alt1", "_atl2", "_Back"]
-
-    listing_css = [".mar-nav a", ".nextPage"]
-    product_css = ".mar-prd-item-image-container"
+    listings_css = [".mar-nav a", ".nextPage"]
+    products_css = ".mar-prd-item-image-container"
 
     rules = (
-        Rule(LinkExtractor(restrict_css=listing_css), callback="parse"),
-        Rule(LinkExtractor(restrict_css=product_css), callback="parse_product")
+        Rule(LinkExtractor(restrict_css=listings_css), callback="parse"),
+        Rule(LinkExtractor(restrict_css=products_css), callback="parse_product")
     )
 
     def parse_product(self, response):
@@ -35,13 +30,12 @@ class ShopjusticeSpider(CrawlSpider):
         product["care"] = self.product_care(response)
         product["description"] = self.product_description(response)
         raw_product = self.raw_product(response)
-        product["image_urls"] = self.image_urls(raw_product, product["product_id"])
+        product["image_urls"] = self.image_urls(response)
         product["category"] = self.product_category(raw_product)
 
-        if self.is_out_of_stock(response):
+        if self.is_out_of_stock(raw_product):
             product["out_of_stock"] = True
 
-        product["skus"] = {}
         product["skus"] = self.skus(raw_product)
         yield product
 
@@ -60,9 +54,10 @@ class ShopjusticeSpider(CrawlSpider):
     def product_care(self, response):
         return response.css("#tab2 li::text").extract()
 
-    def image_urls(self, raw_image_urls, product_id):
-        return [self.image_url_t.format(product_id, colour, dif) for colour in
-                self.colours(raw_image_urls, "ids") for dif in self.different_images_t]
+    def image_urls(self, response):
+        raw_image_urls = self.raw_product(response)
+        return [raw_image["sku_image"] for raw_image in
+                raw_image_urls["all_available_colors"][0]["values"]]
 
     def product_category(self, raw_category):
         return raw_category["ensightenData"][0]["categoryPath"].split(":")
@@ -78,8 +73,7 @@ class ShopjusticeSpider(CrawlSpider):
 
     def raw_product(self, response):
         raw_product = response.css("#pdpInitialData::text").extract_first()
-        raw_product = json.loads(raw_product)
-        return raw_product["pdpDetail"]["product"][0]
+        return json.loads(raw_product)["pdpDetail"]["product"][0]
 
     def skus(self, raw_skus):
         colours = self.colours(raw_skus, "name")
@@ -91,23 +85,19 @@ class ShopjusticeSpider(CrawlSpider):
                 sku = common_sku.copy()
                 sku["size"] = size
                 sku["colour"] = colour
-                skus[colour + "_" + size] = sku
+                skus[f"{sku['colour']}_{sku['size']}"] = sku
         return skus
 
     def product_pricing(self, raw_prices):
         prices = {}
         values = raw_prices["all_available_colors"][0]["values"][0]["prices"]
-        previous_price = float(re.findall(r"(\d+\.\d+)", values["list_price"])[0])
         prices["currency"] = re.findall(r"([^0-9.])", values["sale_price"])[0]
-        prices["price"] = float(re.findall(r"(\d+\.\d+)", values["sale_price"])[0])
+        prices["price"] = float(values["sale_price"][1:])
 
-        if previous_price != prices["price"]:
-            prices["previous_price"] = previous_price
+        if float(values["list_price"][1:]) != prices["price"]:
+            prices["previous_price"] = float(values["list_price"][1:])
 
         return prices
 
-    def is_out_of_stock(self, response):
-        raw_product = response.css("#pdpInitialData::text").extract_first()
-        raw_product = json.loads(raw_product)
-        raw_product = raw_product["inventoryDetail"]["action_status"]
-        return False if raw_product["out_of_stock"] == "false" else True
+    def is_out_of_stock(self, raw_product):
+        return not raw_product["ensightenData"][0]["productAvailable"] == 'true'
