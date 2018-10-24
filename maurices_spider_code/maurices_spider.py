@@ -13,7 +13,7 @@ from maurices.maurices_parse_product import MauricesParseProduct
 class MauricesSpider(CrawlSpider):
     name = 'maurices_spider'
     product_pagination_url = 'https://www.maurices.com/maurices/plp/includes/plp-filters.jsp'
-    allowed_domains = ['maurices.com']
+    allowed_domains = ['maurices.com', 'mauricesprodatg.scene7.com']
     start_urls = ['https://www.maurices.com']
 
     rules = (
