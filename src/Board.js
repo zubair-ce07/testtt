@@ -1,5 +1,6 @@
 import React from 'react';
-import Square from './Square';
+import PropTypes from 'prop-types';
+import {Square} from './Square';
 
 var Board = function(props){
   let count=0;
@@ -35,4 +36,10 @@ var Board = function(props){
     return (<div>{renderTable()}</div>);
 }
 
-export default Board;
+Board.propTypes={
+  squares:PropTypes.array,
+  onClick:PropTypes.func
+}
+
+
+export {Board};

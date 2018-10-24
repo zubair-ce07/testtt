@@ -1,5 +1,7 @@
 import React from 'react';
-var Square = function(props) {
+import PropTypes from 'prop-types';
+
+let Square = function(props) {
   return (
     <button className="square" onClick={props.onClick}>
       {props.value}
@@ -7,4 +9,10 @@ var Square = function(props) {
   );
 }
 
-export default Square;
+Square.propTypes={
+  value:PropTypes.string
+}
+
+
+
+export {Square};

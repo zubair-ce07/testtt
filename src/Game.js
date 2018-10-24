@@ -1,6 +1,6 @@
 import React from 'react';
-import Square from './Square';
-import Board from './Board';
+import {Square} from './Square';
+import {Board} from './Board';
 import calculateWinner from './Helper';
 
 class Game extends React.Component {
@@ -16,19 +16,24 @@ class Game extends React.Component {
   }
 
   handleClick(i) {
-    const history = this.state.history.slice(0, this.state.stepNumber + 1);
+    let {
+      'history': history,
+      'stepNumber': stepNumber,
+      'xIsNext': xIsNext
+    } = this.state
+    history = history.slice(0, stepNumber + 1);
     const current = history[history.length - 1];
     const squares = current.squares.slice();
     if (calculateWinner(squares) || squares[i]) {
       return;
     }
-    squares[i] = this.state.xIsNext ? 'X' : 'O';
+    squares[i] = xIsNext ? 'X' : 'O';
     this.setState({
       history: history.concat([{
         squares: squares
       }]),
       stepNumber: history.length,
-      xIsNext: !this.state.xIsNext,
+      xIsNext: !xIsNext,
     });
   }
 
@@ -39,17 +44,26 @@ class Game extends React.Component {
     });
   }
 
-  getStatus(winner){
+  getStatus(){
+    let {
+      'history': history,
+      'stepNumber': stepNumber,
+      'xIsNext': xIsNext
+    } = this.state
+    const current = history[stepNumber];
+    const winner = calculateWinner(current.squares);
+
     let status;
     if (winner) {
       status = `Winner: ${winner}`;
     } else {
-      status = `Next player: ${(this.state.xIsNext ? 'X' : 'O')}`;
+      status = `Next player: ${(xIsNext ? 'X' : 'O')}`;
     }
     return status;
   }
 
-  getMoves(history){
+  getMoves(){
+    const {'history': history} = this.state
     const moves = history.map((step, move) => {
       const desc = move ? `Go to move # ${move}` : 'Go to game start';
       return (<li key={move}>
@@ -60,10 +74,8 @@ class Game extends React.Component {
   }
 
   render() {
-    const history = this.state.history;
-    const current = history[this.state.stepNumber];
-    const winner = calculateWinner(current.squares);
-
+    const {'history': history, 'stepNumber': stepNumber} = this.state
+    const current = history[stepNumber];
 
     return (
       <div className="game">
@@ -74,12 +86,12 @@ class Game extends React.Component {
           />
         </div>
         <div className="game-info">
-          <div>{this.getStatus(winner)}</div>
-          <ol>{this.getMoves(history)}</ol>
+          <div>{this.getStatus()}</div>
+          <ol>{this.getMoves()}</ol>
         </div>
       </div>
     );
   }
 }
 
-export default Game;
+export {Game};
