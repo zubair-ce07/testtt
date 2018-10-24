@@ -43,3 +43,10 @@ h1 {font-weight: bold;}
 	font-weight: bold;
 	font-size: 20px;
 }
+
+.msg 
+{
+	font-weight: bold;
+	display: block;
+	margin-bottom: 10px;
+}

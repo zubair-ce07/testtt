@@ -136,12 +136,13 @@ function clearAllFields()
 /**
  * reason: needed clear all error msgs
 */
-function clearErrors()
+function clearMsgs()
 {
   clearMsg(`usernameError`);
   clearMsg(`passwordError`);
   clearMsg(`confirmPasswordError`);
   clearMsg(`mobileNumberError`);
+  clearMsg(`successMsg`);
 }
 
 
@@ -151,7 +152,7 @@ function clearErrors()
 function clearAll()
 {
   clearAllFields();
-  clearErrors();
+  clearMsgs();
 }
 
 
@@ -180,6 +181,15 @@ function getFieldsData()
 
 
 /**
+ * reason: display msg on successfull registrartion
+*/
+function displaySuccessMsg()
+{
+  document.getElementById(`successMsg`).value = SUCESSFULLY_REGISTERED_MSG
+}
+
+
+/**
  * reason: register user through API call
 */
 function registerUser(formData)
@@ -188,7 +198,8 @@ function registerUser(formData)
   makeAjaxCall(`POST`, `${BASEURL}/users`, formData)
     .done(function() {
       clearAll();
-      alert(SUCESSFULLY_REGISTERED_MSG);
+      displaySuccessMsg()
+      alert();
     });
 }
 
