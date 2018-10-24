@@ -1,17 +1,17 @@
 /**
- * [logoutUser - call when user clik on logout button]
+ * [logoutUser - call when user click on logout button]
  * reason: needed to clear local storge and for redirection to index page
  */
 function logoutUser()
 {
-  localStorage.removeItem(`loggedin_user`);
+  localStorage.removeItem(`loggedInUser`);
   window.location.href = `index.html`;
 }
 
 
 /**
  * [getCurrentDate - return current date in specific format]
- * reason: we need to store curret date string as a posted-date
+ * reason: needed to store curret date string as a posted-date in post object
  * @return {string} [current date string]
  */
 function getCurrentDate()
@@ -24,8 +24,8 @@ function getCurrentDate()
 
 /**
  * [increaseCommentBadge - increase comment count on badge of specific post]
- * reason: After adding comment we need to increase comment count on badge.
- * @param  {int} postId [id of the post of which badge need to be incremented] 
+ * reason: After adding comment, comment count on badge need to be increased
+ * @param  {int} postId [id of the post of which badge need to be incremented]
  */
 function increaseCommentBadge(postId)
 {
@@ -52,16 +52,17 @@ function getPostDiv()
 
 /**
  * [handleLikes - handle likes array if it is pointing to string element or there is no like array]
- * reason: needed in cases when likeArray (likes[]) is not there in a response object (for newly created post) or
- *         if there is only element in array then array is pointing directly to that element (likes[] = "usernamme")
- * @param  {array} likes [current likes array that can be undefine or a single element (array of char) or array of usrenames] 
+ * reason: needed in cases when likeArray (likes[]) is not there in a response 
+ *         object (for newly created post) or if there is only element in array
+ *         then array is pointing directly to that element (likes[] = "usernamme")
+ * @param  {array} likes [current likes array that can be undefine or a single element (array of char) or array of usrenames]
  * @return {array} [likes array that contain usernames]
  */
 function handleLikes(likes)
 {
   /*
     if likes array is not there => form new arrray 
-    if there is single element (likes array is pointing directly to that element)  
+    if there is single element (likes array is pointing directly to that element)
       => form new array and push that only element
   */
   if(!likes)
@@ -70,7 +71,10 @@ function handleLikes(likes)
   }
   else if (!Array.isArray(likes))
   {
-    return (new Array()).push(likes);
+    //convert single element to array
+    let likesArray = new Array();
+    likesArray.push(likes)
+    return likesArray
   }
   else
     return likes;
@@ -102,16 +106,16 @@ function displayComment(commentContainer, comment)
  */
 function displayPost(userPost, postDiv)
 {
-  let loggedInUser = JSON.parse(localStorage.getItem(`loggedin_user`));
+  let loggedInUser = JSON.parse(localStorage.getItem(`loggedInUser`));
   userPost[`likes[]`] =  handleLikes(userPost[`likes[]`]);
 
-  postDiv.getElementsByClassName(`post-username`)[0].innerHTML = userPost[`post_user`][`username`];
+  postDiv.getElementsByClassName(`post-username`)[0].innerHTML = userPost[`postUser`][`username`];
   postDiv.getElementsByClassName(`post-date`)[0].innerHTML = userPost.date;
   postDiv.getElementsByClassName(`post-title`)[0].innerHTML = userPost.title;
   postDiv.getElementsByClassName(`post-data`)[0].innerHTML = userPost.post;
 
   let commentBadge = postDiv.getElementsByClassName(`post-comment-count`)[0];
-  commentBadge.innerHTML =  userPost[`post_comments`].length;
+  commentBadge.innerHTML =  userPost[`postComments`].length;
   commentBadge.id = `${userPost.id}_commentBadge`;
 
   let likeBadge = postDiv.getElementsByClassName(`post-likes`)[0];
@@ -121,7 +125,7 @@ function displayPost(userPost, postDiv)
   let likeElement = postDiv.getElementsByClassName(`like`)[0];
   likeElement.id =  `${userPost.id}_like`;
 
-  if(userPost[`likes[]`].includes(loggedInUser.username))
+  if(userPost[`likes[]`].some( username => username == loggedInUser.username ))
   {
     likeElement.classList.add(`fa-thumbs-down`);
   }
@@ -136,7 +140,7 @@ function displayPost(userPost, postDiv)
   let commentContainer = postDiv.getElementsByClassName(`comment-container`)[0];
   commentContainer.id = `${userPost.id}_comments`;
 
-  for(let comment of userPost[`post_comments`])
+  for(let comment of userPost[`postComments`])
   {
     displayComment(commentContainer, comment);
   }
@@ -144,12 +148,21 @@ function displayPost(userPost, postDiv)
 
 
 /**
+ * reason: calls after posting successfull user post
+ */
+function clearNewPostFields()
+{
+  document.getElementById(`newPostTitle`).value = '';
+  document.getElementById(`newPostText`).value = '';
+}
+
+/**
  * [makePost - make new post through API call and append that post in a post container]
  * reason: calls when user wanted to make a new post
  */
 function makePost()
 {
-  let loggedInUser = JSON.parse(localStorage.getItem(`loggedin_user`));
+  let loggedInUser = JSON.parse(localStorage.getItem(`loggedInUser`));
   if(loggedInUser)
   {
     let formData = 
@@ -159,30 +172,26 @@ function makePost()
       "date": getCurrentDate()
     };
 
-    $.ajax({
-      type        : `POST`,
-      url         : `${BASEURL}/users/${loggedInUser.id}/posts`,
-      data        : formData,
-      dataType    : `json`
-    })
+    url = `${BASEURL}/users/${loggedInUser.id}/posts`
+    makeAjaxCall(`POST`, url, formData)
       .done(newPost =>
       {
         let postContainer = document.getElementById(`postContainer`);
         let postDiv = getPostDiv();
-        newPost[`post_comments`] = [];
-        newPost[`post_user`] = loggedInUser;
+        newPost.postComments = [];
+        newPost.postUser = loggedInUser;
         displayPost(newPost, postDiv);
         postContainer.appendChild(postDiv);
-        document.getElementById(`addMsg`).innerHTML = `your post has been posted...`;
-        document.getElementById(`newPostTitle`).value = '';
-        document.getElementById(`newPostText`).value = '';
+        document.getElementById(`addMsg`).innerHTML = NEW_POST_SUCCESS_MSG;
+        clearNewPostFields()
+       
       });
   }
 }
 
 
 /**
- * [makeComment - make new comment through API call 
+ * [makeComment - make new comment through API call
  *   + display that comment in a  comment container of specific post
  *   + increase badge comment count
  * ]
@@ -191,19 +200,15 @@ function makePost()
  function makeComment()
 {
   let postId = (event.srcElement.id.split(`_`))[0];
-  let loggedInUser = JSON.parse(localStorage.getItem(`loggedin_user`));
+  let loggedInUser = JSON.parse(localStorage.getItem(`loggedInUser`));
 
   let formData = {
     "comment_by": loggedInUser.username,
     "comment": document.getElementById(`${postId}_comment`).value
   };
 
-  $.ajax({
-    type        : `POST`,
-    url         : `${BASEURL}/posts/${postId}/comments`,
-    data        : formData,
-    dataType    : `json`
-  })
+  url = `${BASEURL}/posts/${postId}/comments`
+  makeAjaxCall(`POST`, url, formData)
     .done(comment =>
     {
       let commentContainer = document.getElementById(`${comment.postId}_comments`);
@@ -215,15 +220,33 @@ function makePost()
 
 
 /**
+ * [toggleUsernameInLikeArray - if username is in list remove it else add it ]
+ * reason: calls when user like or dislike post
+ */
+function toggleUsernameInLikeArray(likesArray)
+{
+  let loggedInUser = JSON.parse(localStorage.getItem(`loggedInUser`));
+  let likeIndex = likesArray.findIndex(username => username == loggedInUser.username);
+  if(likeIndex!=-1)
+  {
+    likesArray.splice(likeIndex, 1);
+  }
+  else
+    likesArray.push(loggedInUser.username);
+  return likesArray
+}
+
+
+/**
  * [makeLike - add or remove username from a like array through API call
  *   + toggle like button
- *   + update like count badge 
+ *   + update like count badge
  * ]
  * reason: calls when user like or unlike a post
  */
 function makeLike()
 {
-  let loggedInUser = JSON.parse(localStorage.getItem(`loggedin_user`));
+  let loggedInUser = JSON.parse(localStorage.getItem(`loggedInUser`));
   event.srcElement.classList.toggle(`fa-thumbs-down`);
   let postId = (event.srcElement.id.split(`_`))[0];
 
@@ -232,20 +255,9 @@ function makeLike()
     .then(post =>
     {
       post[`likes[]`] =  handleLikes(post[`likes[]`]);
-      let likeIndex = post[`likes[]`].findIndex(username => username == loggedInUser.username);
-      if(likeIndex!=-1)
-      {
-        post[`likes[]`].splice(likeIndex, 1);
-      }
-      else
-        post[`likes[]`].push(loggedInUser.username);
-
-      $.ajax({
-        type        : `PUT`,
-        url         : `${BASEURL}/posts/${postId}`,
-        data        : post,
-        dataType    : `json`
-      })
+      post[`likes[]`] = toggleUsernameInLikeArray(post[`likes[]`])
+      url = `${BASEURL}/posts/${postId}`
+      makeAjaxCall(`PUT`, url, post)
         .done(() => document.getElementById(`${postId}_likecount`).innerHTML = post[`likes[]`].length);
     })
     .catch(console.error);
@@ -266,52 +278,27 @@ function addClickEvent(className, functionName)
 
 
 /**
- * [getPostUser - get user (owner) of the post ]
- * @param  {object} userPost [post object]
- * reason: needed to display username on posts
- */
-function getPostUser(userPost)
-{
-  if(loggedInUser.id == userPost.userId)
-  {  
-    userPost[`post_user`] = loggedInUser;
-  }
-  else
-  {
-    fetch(`${BASEURL}/users/${userPost.userId}`)
-      .then(response => response.json())
-      .then(postUser => userPost[`post_user`] = postUser)
-      .catch(console.error);
-  }
-}
-
-
-/**
  * [ loadAllPosts - append all posts after getting post-list through API call in a post container ]
  * reason: needed to display all posts
  */
 function loadAllPosts()
 {
-  let loggedInUser = JSON.parse(localStorage.getItem(`loggedin_user`));
-  fetch(`${BASEURL}/posts`)
-    .then(response => response.json())
+  let loggedInUser = JSON.parse(localStorage.getItem(`loggedInUser`));
+  getAllPosts()
     .then(postList =>
     {
       let postContainer = document.getElementById(`postContainer`);
       for (let userPost of postList)
       {
-        fetch(`${BASEURL}/posts/${userPost.id}/comments`)
-          .then(response => response.json())
-          .then(postComments =>
+        getPostCommentsAndUser(userPost)
+          .then(post =>
           {
-            userPost[`post_comments`] = postComments;
-            getPostUser(userPost);
             let postDiv = getPostDiv();
-            displayPost(userPost, postDiv);
+            displayPost(post, postDiv);
             postContainer.appendChild(postDiv);
-          }).catch(console.error);
+          });
       }
-    }).catch(console.error);
+    });
 }
 
 

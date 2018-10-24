@@ -43,11 +43,11 @@ function validatePassword(pass)
   let passwordRegex = new RegExp(`^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])`);
   if((pass.length <= 5) || (pass.length > 20))
   {
-    errorMsg = passwordError.length;
+    errorMsg = PASSWORD_ERROR.length;
   }
   else if(!passwordRegex.test(pass))
   {
-    errorMsg = passwordError.regex;
+    errorMsg = PASSWORD_ERROR.regex;
   }
   else
   {
@@ -67,7 +67,7 @@ function validateConfirmPaasword(pass, confirmPass)
   let errorMsg = null;
   if(pass != confirmPass)
   {
-    errorMsg = passwordError.misMatched;
+    errorMsg = PASSWORD_ERROR.misMatched;
   }
   else
   {
@@ -87,11 +87,11 @@ function validateMobileNumber(mobileNumber)
   let errorMsg = null;
   if(isNaN(mobileNumber))
   {
-    errorMsg = mobileError.notDigit;
+    errorMsg = MOBILE_ERROR.notDigit;
   }
   else if(mobileNumber.length!=11)
   {
-    errorMsg = mobileError.length;
+    errorMsg = MOBILE_ERROR.length;
   }
   else
   {
@@ -165,50 +165,76 @@ function getValue(id)
 
 
 /**
- * reason: calls when user clik on sign up button
- *   + done all the validations after getting user list through API call
+ * reason: return object after getting values from all fields
 */
-function validation()
+function getFieldsData()
 {
-  clearErrors();
-  let username = getValue(`username`);
-  let password = getValue(`password`);
-  let confirmPass = getValue(`confirmPassword`);
-  let mobileNumber = getValue(`mobileNumber`);
-  let email = getValue(`email`);
+  fieldsData = {}
+  fieldsData.username = getValue(`username`);
+  fieldsData.password = getValue(`password`);
+  fieldsData.confirmPass = getValue(`confirmPassword`);
+  fieldsData.mobileNumber = getValue(`mobileNumber`);
+  fieldsData.email = getValue(`email`);
+  return fieldsData
+}
 
-  fetch(`${BASEURL}/users?username=${username}`)
-    .then(response => response.json())
+
+/**
+ * reason: register user through API call
+*/
+function registerUser(formData)
+{
+
+  makeAjaxCall(`POST`, `${BASEURL}/users`, formData)
+    .done(function() {
+      clearAll();
+      alert(SUCESSFULLY_REGISTERED_MSG);
+    });
+}
+
+
+/**
+ * reason: needed to validate username after making API call
+ *   username should be unique
+*/
+function validateUsername(username)
+{
+  return getUserList(username)
     .then(userData =>
     {
       if(userData.length)
       {
-        displayNameError(usernameError);
+        displayNameError(USERNAME_ERROR);
         return false;
       }
-      if(validatePassword(password) &&
-         validateConfirmPaasword(password, confirmPass) &&
-         validateMobileNumber(mobileNumber))
+      else
       {
-
-        let formData = {
-          username,
-          email,
-          password,
-          mobileNumber
-        };
-
-        $.ajax({
-          type        : `POST`,
-          url         : `${BASEURL}/users`,
-          data        : formData,
-          dataType    : `json`
-        })
-          .done(function() {
-            clearAll();
-            alert(registerSuccessMsg);
-          });
+        return true
       }
-    }).catch(console.error);
+    })
+}
+
+
+/**
+ * reason: calls when user clik on sign up button
+ *   + do all the validations after getting user list through API call
+*/
+function validation()
+{
+  clearErrors();
+  let fieldsData = getFieldsData();
+  validateUsername(fieldsData.username)
+    .then(isValidUsername => 
+    {
+      if(isValidUsername &&
+         validatePassword(fieldsData.password) &&
+         validateMobileNumber(fieldsData.mobileNumber) &&
+         validateConfirmPaasword(fieldsData.password, fieldsData.confirmPass))
+      {
+        delete fieldsData.confirmPass
+        registerUser(fieldsData)
+      }
+    })
+    .catch(console.err)
   return false;
 }
