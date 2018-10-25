@@ -13,10 +13,9 @@ class JackjonesSpider(scrapy.Spider):
 
     headers = ""
     category_req_url = "https://www.jackjones.com.cn/assets/pc/JACKJONES/nav.json"
-    category_url_t = "https://www.jackjones.com.cn/api/goods/{}&currentpage=1" \
-                     "&sortDirection=desc&sortType=1"
+    category_url_t = "https://www.jackjones.com.cn/api/goods/goodsList?classifyIds" \
+                     "={}&currentpage=1&sortDirection=desc&sortType=1"
     product_url_t = "https://www.jackjones.com.cn/detail/JACKJONES/{}.json"
-    category_urls = []
 
     def parse(self, response):
         raw_headers = json.loads(response.text)
@@ -24,28 +23,14 @@ class JackjonesSpider(scrapy.Spider):
         yield scrapy.Request(url=self.category_req_url, callback=self.parse_category_urls)
 
     def parse_category_urls(self, response):
-        raw_category_urls = json.loads(response.text)
-        raw_category_urls = raw_category_urls["data"]
-        self.process_category_urls(raw_category_urls)
-        for category in self.category_urls:
+        category_urls = self.process_category_urls(response.text)
+        for category in category_urls:
             yield scrapy.Request(url=category, headers={"token": self.headers},
                                  callback=self.parse_category)
 
     def process_category_urls(self, raw_urls):
-        for raw_url in raw_urls:
-            category_id = re.findall(r".*(goodsList\.html\?classifyIds=\d+).*",
-                                     raw_url["navigationUrl"])
-
-            if category_id:
-                self.category_urls.append(self.category_url_t.format(
-                    category_id[0].replace(".html", "")))
-
-            sub_list = raw_url.get("list")
-
-            if sub_list:
-                self.process_category_urls(sub_list)
-            else:
-                continue
+        return [self.category_url_t.format(category_id) for category_id in
+                re.findall(r"\"navigationUrl\":\"\D*(\d+)\"", raw_urls)]
 
     def parse_category(self, response):
         raw_products = json.loads(response.text)
