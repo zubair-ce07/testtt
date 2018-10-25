@@ -7,7 +7,3 @@ def clean_text(self, description):
 
 def clean_category(self, text):
     return text[0].split('/')
-
-
-def clean_currency(self, text):
-    return "".join(re.findall(r"[^\d. ]", text[0]))

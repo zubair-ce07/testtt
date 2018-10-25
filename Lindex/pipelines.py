@@ -6,7 +6,8 @@ class LindexPipeline(object):
         prices = []
         skus = item["skus"]
         for sku in skus:
-            prices.append(float(re.findall(r"\d+.\d+", sku["price"])[0]))
+            prices.append(sku["price"])
 
-        item["price"] = min(price)
+        item["price"] = min(prices)
+        item["currency"] = skus[0]["currency"]
         return item

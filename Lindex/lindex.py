@@ -18,6 +18,7 @@ class LindexSpider(CrawlSpider):
         "/sale/", "/new-in/", "guide", "giftcard",
         "/children-wear/", "/campaign/", "/Assets/"
         ]
+    currency = "GBP"
 
     rules = [
         Rule(LinkExtractor(restrict_css=listing_css, deny=deny_re),callback="parse_pagination"),
@@ -37,27 +38,26 @@ class LindexSpider(CrawlSpider):
                 formdata={"nodeId": node_id, "pageIndex": str(curr_page)},
                 callback=self.parse)
 
-    def skus(self, details, item_loader):
+    def skus(self, details):
         sizes = details["SizeInfo"]
         color_name = details["Color"]
         skus = []
-        pricing_details = self.product_pricing(details, item_loader)
 
         for size in sizes[1:]:
                 size = re.findall(".+?(?=\s|-|\()", size["Text"])[0]
-                skus.append({
-                    "color": color_name, "price": pricing_details["price"],
-                    "is_sold_out": details["IsSoldOut"], "size": size,
-                    "currency": pricing_details["currency"],
-                    "symbol": pricing_details["symbol"],
-                    "sku_id": "{}_{}".format(size, color_name)
-                })
+                sku = self.product_pricing(details)
+                sku["color"] = color_name
+                sku["size"] = size
+                sku["sku_id"] = "{}_{}".format(size, color_name)
+                if details["IsSoldOut"]:
+                    sku["out_of_stock"] = True
+                skus.append(sku)
         return skus
 
     def parse_colors(self, response):
         details = json.loads(response.body)["d"]
         item_loader = response.meta["item-loader"]
-        item_loader.add_value("skus", self.skus(details, item_loader))
+        item_loader.add_value("skus", self.skus(details))
         item_loader.add_value("image_urls", self.image_urls(details))
         return self.next_request_or_item(item_loader)
 
@@ -95,8 +95,6 @@ class LindexSpider(CrawlSpider):
         item_loader.add_value("industry", self.product_industry(response))
         item_loader.add_value("name", self.product_name(response))
         item_loader.add_value("brand", self.product_brand(response))
-        item_loader.add_value("price", self.product_price(response))
-        item_loader.add_value("currency", self.currency_type(response))
         item_loader.add_value("gender", "Women")
         item_loader.add_value("categories", self.product_categories(response))
         item_loader.add_value("description", self.product_description(response))
@@ -155,12 +153,10 @@ class LindexSpider(CrawlSpider):
         css = ".main_content .product_placeholder::attr(data-product-price)"
         return response.css(css).extract_first()
 
-    def product_pricing(self, details, item_loader):
+    def product_pricing(self, details):
         return {
-            "price": details["Price"],
-            "currency": item_loader.get_collected_values("currency")[0],
-            "symbol": re.findall(r"[^\d.]", details["Price"])[0]
-        }
+            "price": int(float(re.findall(r"\d+.\d+", details["Price"])[0]))*100,
+            "currency": self.currency}
 
     def product_categories(self, response):
         css = ".main_content .product_placeholder::attr(data-product-category)"

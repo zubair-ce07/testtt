@@ -3,7 +3,7 @@ import re
 from scrapy import Field, Item
 from scrapy.loader import ItemLoader
 from scrapy.loader.processors import Identity, Join, MapCompose, TakeFirst
-from lindex.utils import clean_category, clean_currency, clean_text
+from lindex.utils import clean_category, clean_text
 
 
 class LindexItem(Item):
@@ -51,5 +51,3 @@ class LindexItemLoader(ItemLoader):
     categories_in = clean_category
     description_in = clean_text
     care_in = clean_text
-    currency_in = clean_currency
-    currency_out = TakeFirst()
