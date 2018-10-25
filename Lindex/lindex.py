@@ -72,7 +72,7 @@ class LindexSpider(CrawlSpider):
         for color in colors:
             colors_request.append(Request(
                 url=url, method="POST", callback=self.parse_colors,
-                headers=headers, priority=10,
+                headers=headers, priority=1,
                 body=json.dumps({
                     "productIdentifier": self.product_id(response),
                     "colorId": color,
