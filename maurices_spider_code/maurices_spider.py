@@ -17,7 +17,8 @@ class MauricesSpider(CrawlSpider):
     start_urls = ['https://www.maurices.com']
 
     rules = (
-        Rule(LinkExtractor(allow=(r'/c/.*'), restrict_css=('.menu'))),
+        Rule(LinkExtractor(allow=(r'/c/.*'), restrict_css=('.menu')),
+             callback='parse'),
         Rule(LinkExtractor(allow=(r'/p/.*N-[0-9]*$'), restrict_css=('.nav')),
              callback='parse_product_subcatagory',)
     )

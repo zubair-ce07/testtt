@@ -22,35 +22,27 @@ class MauricesParseProduct(scrapy.Spider):
         product_data = response.css('#pdpInitialData::text').extract_first()
         product_detail = json.loads(product_data)['pdpDetail']['product'][0]
         self.add_skus(product, product_detail)
-        product['sku_data'] = self.create_color_urls(
+        product['request_urls'] = self.create_color_urls(
             product_detail, product['retailer_sku'])
-        color_request = self.create_color_request(product)
-        if color_request:
-            yield color_request
-        else:
-            yield product
+        yield self.create_color_request(product)
 
     def parse_colors(self, response):
         product = response.meta.get('product')
-        image_url_re = re.compile(
-            'mauricesProdATG/[0-9]+_C[0-9]+(?:_alt1|_Back)?')
+        image_url_regx = 'mauricesProdATG/[0-9]+_C[0-9]+(?:_alt1|_Back)?'
+        image_url_re = re.compile(image_url_regx)
         product['image_urls'].extend(
             list(set(image_url_re.findall(str(response.body)))))
-        color_request = self.create_color_request(product)
-        if color_request:
-            yield color_request
-        else:
-            yield product
+        yield self.create_color_request(product)
 
     def create_color_request(self, product):
-        color_urls = product['sku_data']
+        color_urls = product['request_urls']
         if color_urls:
             color_url = color_urls.pop()
-            product['sku_data'] = color_urls
+            product['request_urls'] = color_urls
             return scrapy.Request(color_url, callback=self.parse_colors, meta={'product': product})
         else:
-            del product['sku_data']
-            return None
+            del product['request_urls']
+            return product
 
     def create_color_urls(self, product_detail, product_id):
         colors = self.attribute_map(product_detail['all_available_colors'])
@@ -76,7 +68,7 @@ class MauricesParseProduct(scrapy.Spider):
         for sku in product_detail['skus']:
             color_id = sku['color']
             size_id = sku['size']
-            sku_key = str(colors[color_id] + '_' + sizes[size_id])
+            sku_key = str(colors.get(color_id)) + '_' + str(sizes.get(size_id))
             if sku_key in sku_keys:
                 sku_keys.remove(sku_key)
         for sku_key in sku_keys:
@@ -95,8 +87,8 @@ class MauricesParseProduct(scrapy.Spider):
 
     def attribute_map(self, all_attributes):
         attribute_map = {}
-        for attributes in all_attributes:
-            for attribute in attributes['values']:
+        if all_attributes:
+            for attribute in all_attributes[0]['values']:
                 key = str(attribute['id'])
                 value = str(attribute['value'])
                 attribute_map[key] = value
