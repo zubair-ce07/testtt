@@ -24,7 +24,7 @@ class MauricesParseProduct(scrapy.Spider):
         self.add_skus(product, product_detail)
         product['request_urls'] = self.create_color_urls(
             product_detail, product['retailer_sku'])
-        yield self.create_color_request(product)
+        yield self.request_or_item(product)
 
     def parse_colors(self, response):
         product = response.meta.get('product')
@@ -32,9 +32,9 @@ class MauricesParseProduct(scrapy.Spider):
         image_url_re = re.compile(image_url_regx)
         product['image_urls'].extend(
             list(set(image_url_re.findall(str(response.body)))))
-        yield self.create_color_request(product)
+        yield self.request_or_item(product)
 
-    def create_color_request(self, product):
+    def request_or_item(self, product):
         color_urls = product['request_urls']
         if color_urls:
             color_url = color_urls.pop()
