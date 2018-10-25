@@ -52,10 +52,7 @@ class Reporting:
         low_temp = self.needed_row(
             data, 'Min TemperatureC', reverse_flag=False)
         temperature = low_temp['Min TemperatureC']
-        if 'PKT' in high_temp:
-            key = 'PKT'
-        else:
-            key = 'PKST'
+        key = 'PKT' if 'PKT' in high_temp else 'PKST'
         date_to_parse = high_temp.get(key)
         date = datetime.strptime(date_to_parse, "%Y-%m-%d")
         print("Lowest : ", temperature, "C", date.strftime("%B"), date.day)
