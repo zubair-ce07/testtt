@@ -22,25 +22,37 @@ class MauricesParseProduct(scrapy.Spider):
         product_data = response.css('#pdpInitialData::text').extract_first()
         product_detail = json.loads(product_data)['pdpDetail']['product'][0]
         self.add_skus(product, product_detail)
-        color_urls = self.create_image_requests(
+        product['sku_data'] = self.create_color_urls(
             product_detail, product['retailer_sku'])
-        yield scrapy.Request(color_urls.pop(), callback=self.parse_colors,
-                             meta={'product': product, 'color_urls': color_urls})
-
-    def parse_colors(self, response):
-        product = response.meta.get('product')
-        image_url_r = re.compile(
-            'mauricesProdATG/[0-9]+_C[0-9]+(?:_alt1|_Back)?')
-        product['image_urls'].extend(
-            list(set(image_url_r.findall(str(response.body)))))
-        color_urls = response.meta.get('color_urls')
-        if color_urls:
-            yield scrapy.Request(color_urls.pop(), callback=self.parse_colors,
-                                 meta={'product': product, 'color_urls': color_urls})
+        color_request = self.create_color_request(product)
+        if color_request:
+            yield color_request
         else:
             yield product
 
-    def create_image_requests(self, product_detail, product_id):
+    def parse_colors(self, response):
+        product = response.meta.get('product')
+        image_url_re = re.compile(
+            'mauricesProdATG/[0-9]+_C[0-9]+(?:_alt1|_Back)?')
+        product['image_urls'].extend(
+            list(set(image_url_re.findall(str(response.body)))))
+        color_request = self.create_color_request(product)
+        if color_request:
+            yield color_request
+        else:
+            yield product
+
+    def create_color_request(self, product):
+        color_urls = product['sku_data']
+        if color_urls:
+            color_url = color_urls.pop()
+            product['sku_data'] = color_urls
+            return scrapy.Request(color_url, callback=self.parse_colors, meta={'product': product})
+        else:
+            del product['sku_data']
+            return None
+
+    def create_color_urls(self, product_detail, product_id):
         colors = self.attribute_map(product_detail['all_available_colors'])
         urls = [self.image_url_t +
                 f'{product_id}_{color_id}_ms?req=set,json&id={color_id}' for color_id in colors]
@@ -81,10 +93,12 @@ class MauricesParseProduct(scrapy.Spider):
     def product_retailer_sku(self, response):
         return response.url.split('/')[-1]
 
-    def attribute_map(self, attribute_list):
-        attributes = dict()
-        if attribute_list:
-            for attribute in attribute_list[0]['values']:
-                attributes[str(attribute['id'])] = str(attribute['value'])
-        return attributes
+    def attribute_map(self, all_attributes):
+        attribute_map = {}
+        for attributes in all_attributes:
+            for attribute in attributes['values']:
+                key = str(attribute['id'])
+                value = str(attribute['value'])
+                attribute_map[key] = value
+        return attribute_map
 
