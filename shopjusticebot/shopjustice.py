@@ -12,7 +12,7 @@ class ShopjusticeSpider(CrawlSpider):
     allowed_domains = ["shopjustice.com"]
     start_urls = ["http://www.shopjustice.com"]
 
-    listings_css = [".mar-nav a", ".nextPage"]
+    listings_css = [".mar-nav", ".nextPage"]
     products_css = ".mar-prd-item-image-container"
 
     rules = (
@@ -23,14 +23,14 @@ class ShopjusticeSpider(CrawlSpider):
     def parse_product(self, response):
         product = ShopjusticeProduct()
         product["product_id"] = self.product_id(response)
-        product["gender"] = "women"
-        product["brand"] = "Shopjustice"
+        product["gender"] = "girls"
+        product["brand"] = "Justice"
         product["name"] = self.product_name(response)
         product["url"] = response.url
         product["care"] = self.product_care(response)
         product["description"] = self.product_description(response)
         raw_product = self.raw_product(response)
-        product["image_urls"] = self.image_urls(response)
+        product["image_urls"] = self.image_urls(raw_product)
         product["category"] = self.product_category(raw_product)
 
         if self.is_out_of_stock(raw_product):
@@ -46,39 +46,34 @@ class ShopjusticeSpider(CrawlSpider):
         return response.css(".jst-product-title::text").extract_first()
 
     def product_description(self, response):
-        description = response.css("#tab1")
-
-        if description:
-            return description[0].css("li::text").extract()
+        return response.css("#tab1:nth-child(1) li::text").extract()
 
     def product_care(self, response):
         return response.css("#tab2 li::text").extract()
 
-    def image_urls(self, response):
-        raw_image_urls = self.raw_product(response)
+    def image_urls(self, raw_product):
         return [raw_image["sku_image"] for raw_image in
-                raw_image_urls["all_available_colors"][0]["values"]]
+                raw_product["all_available_colors"][0]["values"]]
 
-    def product_category(self, raw_category):
-        return raw_category["ensightenData"][0]["categoryPath"].split(":")
+    def product_category(self, raw_product):
+        return raw_product["ensightenData"][0]["categoryPath"].split(":")
 
-    def colours(self, raw_colour, key):
-        available_colour = raw_colour["all_available_colors"][0]["values"]
-        return [colour["name"] for colour in available_colour] if key == "name" \
-            else [colour["id"] for colour in available_colour]
+    def colours(self, raw_product):
+        available_colour = raw_product["all_available_colors"][0]["values"]
+        return [colour["name"] for colour in available_colour]
 
-    def sizes(self, raw_sizes):
-        available_sizes = raw_sizes["all_available_sizes"][0]["values"]
+    def sizes(self, raw_product):
+        available_sizes = raw_product["all_available_sizes"][0]["values"]
         return [size["value"] for size in available_sizes]
 
     def raw_product(self, response):
         raw_product = response.css("#pdpInitialData::text").extract_first()
         return json.loads(raw_product)["pdpDetail"]["product"][0]
 
-    def skus(self, raw_skus):
-        colours = self.colours(raw_skus, "name")
-        sizes = self.sizes(raw_skus)
-        common_sku = self.product_pricing(raw_skus)
+    def skus(self, raw_product):
+        colours = self.colours(raw_product)
+        sizes = self.sizes(raw_product)
+        common_sku = self.product_pricing(raw_product)
         skus = {}
         for colour in colours:
             for size in sizes:
@@ -88,14 +83,14 @@ class ShopjusticeSpider(CrawlSpider):
                 skus[f"{sku['colour']}_{sku['size']}"] = sku
         return skus
 
-    def product_pricing(self, raw_prices):
+    def product_pricing(self, raw_product):
         prices = {}
-        values = raw_prices["all_available_colors"][0]["values"][0]["prices"]
-        prices["currency"] = re.findall(r"([^0-9.])", values["sale_price"])[0]
-        prices["price"] = float(values["sale_price"][1:])
+        raw_prices = raw_product["all_available_colors"][0]["values"][0]["prices"]
+        prices["currency"] = re.findall(r"([^0-9.])", raw_prices["sale_price"])[0]
+        prices["price"] = float(raw_prices["sale_price"][1:])
 
-        if float(values["list_price"][1:]) != prices["price"]:
-            prices["previous_price"] = float(values["list_price"][1:])
+        if float(raw_prices["list_price"][1:]) != prices["price"]:
+            prices["previous_price"] = float(raw_prices["list_price"][1:])
 
         return prices
 
