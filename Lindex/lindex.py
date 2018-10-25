@@ -2,7 +2,8 @@ import json
 import re
 from datetime import datetime
 
-from lindex.items import LindexItem, LindexItemLoader
+from lindex.items import LindexItem
+from lindex.utils import LindexItemLoader
 from scrapy import FormRequest, Request
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
@@ -14,11 +15,11 @@ class LindexSpider(CrawlSpider):
     start_urls = ["http://www.lindex.com/uk/"]
     listing_css = [".mega_menu_box"]
     products_css = [".gridPage .img_wrapper"]
-    # allow_re = ["/women/tops/tops-t-shirts/"]
     deny_re = [
         "/sale/", "/new-in/", "guide", "giftcard",
         "/children-wear/", "/campaign/", "/Assets/"
         ]
+
     rules = [
         Rule(LinkExtractor(restrict_css=listing_css, deny=deny_re),callback="parse_pagination"),
         Rule(LinkExtractor(restrict_css=products_css, deny=deny_re), callback="parse_product")
@@ -56,7 +57,7 @@ class LindexSpider(CrawlSpider):
         item_loader = response.meta["item-loader"]
         item_loader.add_value("skus", self.skus(details))
         item_loader.add_value("image_urls", self.image_urls(details))
-        return self.parse_request(item_loader)
+        return self.next_request_or_item(item_loader)
 
     def color_requests(self, response, item_loader):
         colors = self.product_colors_id(response)
@@ -78,7 +79,7 @@ class LindexSpider(CrawlSpider):
                 ))
         return colors_request
 
-    def parse_request(self, item_loader):
+    def next_request_or_item(self, item_loader):
         colors_request = item_loader.get_collected_values("meta")
         if not colors_request:
             yield item_loader.load_item()
@@ -92,8 +93,7 @@ class LindexSpider(CrawlSpider):
         item_loader.add_value("industry", self.product_industry(response))
         item_loader.add_value("name", self.product_name(response))
         item_loader.add_value("brand", self.product_brand(response))
-        item_loader.add_value("price", self.product_price(response))
-        item_loader.add_value("currency", self.currency_type(response))
+        item_loader.add_value("pricing_details", self.get_pricing_details(response))
         item_loader.add_value("gender", "Women")
         item_loader.add_value("categories", self.product_categories(response))
         item_loader.add_value("description", self.product_description(response))
@@ -107,7 +107,7 @@ class LindexSpider(CrawlSpider):
         item_loader.add_value("crawl_id", f"lindex-uk-{datetime.now().strftime('%Y%m%d-%H%M%s')}-axuj")
         item_loader.add_value("crawl_start_time", datetime.now().isoformat())
         item_loader.add_value("meta", self.color_requests(response, item_loader))
-        return self.parse_request(item_loader)
+        return self.next_request_or_item(item_loader)
 
     def image_urls(self, details):
         return [image["Standard"] for image in details["Images"]]
@@ -118,7 +118,8 @@ class LindexSpider(CrawlSpider):
 
     def currency_type(self, response):
         css = ".totalPrice::text"
-        return response.css(css).extract()
+        currency = response.css(css).extract()
+        return "".join(re.findall(r"[^\d. ]", currency[0]))
 
     def total_page_count(self, response):
         css = ".gridPages::attr(data-page-count)"
@@ -150,7 +151,14 @@ class LindexSpider(CrawlSpider):
 
     def product_price(self, response):
         css = ".main_content .product_placeholder::attr(data-product-price)"
-        return response.css(css).extract()
+        return response.css(css).extract_first()
+
+    def get_pricing_details(self, response):
+        return {
+            "price": self.product_price(response),
+            "currency": self.currency_type(response),
+            "symbol": re.findall(r"[^\d.]", self.product_price(response))[0]
+        }
 
     def product_categories(self, response):
         css = ".main_content .product_placeholder::attr(data-product-category)"
