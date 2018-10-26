@@ -1,3 +1,5 @@
+import json
+
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 
@@ -58,6 +60,10 @@ class FredperryParser:
         common_sku = {'price': self.extract_price(response),
                       'sku_id': self.extract_retailer_sku(response),
                       'currency': self.extract_currency(response)}
+        previous_prices = self.extract_previous_prices(response)
+
+        if previous_prices:
+            common_sku['previous_prices'] = self.extract_previous_prices(response)
 
         colour = self.extract_colour(response)
 
@@ -104,10 +110,10 @@ class FredperryParser:
         return response.css(css).extract()
 
     def extract_colour(self, response):
-        css = '.label .colour-description ::text'
-        raw_colour = response.css(css).extract()
+        css = "script[type='application/ld+json']::text"
+        raw_colour = json.loads(response.css(css).extract_first())
 
-        return ''.join(raw_colour).replace(' ', '')
+        return raw_colour['color']
 
     def extract_retailer_sku(self, response):
         css = '.product-sku p::text'
@@ -121,9 +127,21 @@ class FredperryParser:
             return 'GBP'
 
     def extract_price(self, response):
-        css = '.price::text'
+        css = '.product-essential .special-price .price::text'
         raw_currency = response.css(css).extract_first()
-        return int(raw_currency.strip()[1:])
+
+        if raw_currency:
+            return int(float(raw_currency.strip()[1:]) * 100)
+
+        raw_currency = response.css('.price::text').extract_first()
+
+        return int(float(raw_currency.strip()[1:]) * 100)
+
+    def extract_previous_prices(self, response):
+        css = '.product-essential .old-price .price::text'
+        raw_prices = set(response.css(css).extract())
+
+        return [int(float(price.strip()[1:]) * 100) for price in raw_prices]
 
     def extract_name(self, response):
         css = '.product-name h1 ::text'
@@ -170,7 +188,7 @@ class FredperryParser:
 class FredperryCrawler(CrawlSpider):
     name = 'fredperry_spider'
     allowed_domains = ['fredperry.com']
-    start_urls = ['https://www.fredperry.com']
+    start_urls = ['https://www.fredperry.com/classic-oxford-shirt-m3551-644.html']
 
     listing_css = ['.skip-links-left', '.pages']
     product_css = ['.product-name']
