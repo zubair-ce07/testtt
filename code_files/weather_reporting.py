@@ -46,9 +46,9 @@ class WeatherReporting:
 
     def display_report(self, report, operation, record_info):
         if len(report) > 1:
-            if operation is 'e':
+            if operation == 'e':
                 self.display_yearly_report(report, record_info)
-            elif operation is 'a':
+            elif operation == 'a':
                 self.display_monthly_report(report, record_info)
             else:
                 self.display_monthly_bar_chart(report, record_info)

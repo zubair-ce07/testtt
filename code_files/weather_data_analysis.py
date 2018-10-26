@@ -6,9 +6,9 @@ from constants import MONTHS_NAME
 class WeatherDataAnalysis:
 
     def analyse(self, operation, weather_readings, current_year, month_number):
-        if operation is 'e':
+        if operation == 'e':
             return self.calculate_yearly_record(weather_readings, current_year)
-        elif operation is 'a':
+        elif operation == 'a':
             return self.calculate_monthly_record(
                 weather_readings, current_year, month_number)
         else:
