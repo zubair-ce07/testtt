@@ -21,7 +21,7 @@ class LindexSpider(CrawlSpider):
     currency = "GBP"
 
     rules = [
-        Rule(LinkExtractor(restrict_css=listing_css, deny=deny_re),callback="parse_pagination"),
+        Rule(LinkExtractor(restrict_css=listing_css, deny=deny_re), callback="parse_pagination"),
         Rule(LinkExtractor(restrict_css=products_css, deny=deny_re), callback="parse_product")
     ]
 
