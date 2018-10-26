@@ -140,15 +140,15 @@ class LindexSpider(CrawlSpider):
         return response.css(css).extract()
 
     def product_id(self, response):
-        css = ".main_content .product_placeholder::attr(data-product-identifier)"
+        css = ".main_content ::attr(data-product-identifier)"
         return response.css(css).extract_first()
 
     def product_brand(self, response):
-        css = ".main_content .product_placeholder::attr(data-product-brand)"
+        css = ".main_content ::attr(data-product-brand)"
         return response.css(css).extract()
 
     def product_price(self, response):
-        css = ".main_content .product_placeholder::attr(data-product-price)"
+        css = ".main_content ::attr(data-product-price)"
         return response.css(css).extract_first()
 
     def product_pricing(self, details):
@@ -157,7 +157,7 @@ class LindexSpider(CrawlSpider):
             "currency": self.currency}
 
     def product_categories(self, response):
-        css = ".main_content .product_placeholder::attr(data-product-category)"
+        css = ".main_content ::attr(data-product-category)"
         return response.css(css).extract()
 
     def product_description(self, response):
@@ -173,5 +173,5 @@ class LindexSpider(CrawlSpider):
         return response.css(css).extract()
 
     def product_industry(self, response):
-        css = ".main_content .product_placeholder::attr(data-style)"
+        css = ".main_content ::attr(data-style)"
         return response.css(css).extract()
