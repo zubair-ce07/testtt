@@ -28,7 +28,6 @@ class LindexSpider(CrawlSpider):
     def parse_pagination(self, response):
         node_id = self.product_node_id(response)
         total_pages = self.total_page_count(response)
-        curr_page = 0
         url = "https://www.lindex.com/uk/SiteV3/Category/GetProductGridPage"
         headers = {"X-Requested-With": "XMLHttpRequest"}
 
@@ -49,8 +48,10 @@ class LindexSpider(CrawlSpider):
                 sku["color"] = color_name
                 sku["size"] = size
                 sku["sku_id"] = "{}_{}".format(size, color_name)
+
                 if details["IsSoldOut"]:
                     sku["out_of_stock"] = True
+
                 skus.append(sku)
         return skus
 
@@ -83,10 +84,7 @@ class LindexSpider(CrawlSpider):
 
     def next_request_or_item(self, item_loader):
         colors_request = item_loader.get_collected_values("meta")
-        if not colors_request:
-            yield item_loader.load_item()
-        else:
-            yield colors_request.pop(0)
+        yield (colors_request and colors_request.pop(0)) or item_loader.load_item()
 
     def parse_product(self, response):
         item_loader = LindexItemLoader(item=LindexItem(), response=response)
@@ -155,7 +153,7 @@ class LindexSpider(CrawlSpider):
 
     def product_pricing(self, details):
         return {
-            "price": int(float(re.findall(r"\d+.\d+", details["Price"])[0]))*100,
+            "price": int(float(re.findall(r"\d+.\d+", details["Price"])[0])) * 100,
             "currency": self.currency}
 
     def product_categories(self, response):
