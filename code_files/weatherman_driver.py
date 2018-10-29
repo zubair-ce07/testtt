@@ -1,6 +1,4 @@
 #!/usr/bin/python3.6
-
-
 import argparse
 import os
 import glob
@@ -20,42 +18,27 @@ def parse_records(operation, dates, weather_records, path_to_files):
     for date in dates:
         analyse_weather = WeatherDataAnalysis()
         report_weather = WeatherReporting()
-        current_year = date
-        month_number = 0
-        record_info = current_year
-        if operation != 'e':
-            current_year = date.split('/')[0]
-            month_number = int(date.split('/')[1])-1
-            record_info = (
-                constants.MONTHS_NAME[month_number] + ', ' + current_year)
         add_current_year_weather_readings(
-            current_year, weather_records, path_to_files)
-        report = analyse_weather.analyse(
-            operation, weather_records, current_year, month_number)
-        report_weather.display_report(report, operation, record_info)
+            date, weather_records, path_to_files)
+        report = analyse_weather.analyse(operation, weather_records, date)
+        report_weather.display_report(report, operation, date)
 
 
-def add_current_year_weather_readings(current_year, weather_records, path_to_files):
-    months_in_year = weather_records.get_months_data_of_year(
-        current_year)
+def add_current_year_weather_readings(date, weather_records, path_to_files):
+    months_in_year = weather_records.get_months_data_of_year(date.year)
     if months_in_year is None:
-        months_in_year = []
-        for name in constants.MONTHS_NAME:
-            current_month = name[:3]
-            weather_report_file_path = glob.glob(
-                path_to_files+'/*_weather_'+current_year+'_'+current_month+'.txt')
-            if weather_report_file_path:
-                month = CsvFileDataHolder()
-                month.read_csv_file(weather_report_file_path.pop())
-                months_in_year.append(month)
-            else:
-                months_in_year.append(None)
-        weather_records.add_new_year(current_year, months_in_year)
+        months_in_year = {}
+        month_files_path = glob.glob(path_to_files+'/*'+str(date.year)+'*.txt')
+        for month_file_path in month_files_path:
+            month = CsvFileDataHolder()
+            month.read_csv_file(month_file_path)
+            months_in_year[month.months_name()] = month
+        weather_records.add_new_year(date.year, months_in_year)
 
 
 def year_validator(date_value):
     try:
-        datetime.datetime.strptime(date_value, '%Y')
+        date_value = datetime.datetime.strptime(date_value, '%Y')
         return date_value
     except ValueError:
         raise argparse.ArgumentTypeError(constants.YEAR_ARGUMENT_ERROR_MESSAGE)
@@ -63,7 +46,7 @@ def year_validator(date_value):
 
 def year_and_month_validator(date_value):
     try:
-        datetime.datetime.strptime(date_value, '%Y/%m')
+        date_value = datetime.datetime.strptime(date_value, '%Y/%m')
         return date_value
     except ValueError:
         raise argparse.ArgumentTypeError(
