@@ -1,7 +1,7 @@
 import json
-import scrapy
-import w3lib.url
 
+from scrapy import Request
+from w3lib.url import url_query_parameter
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 
@@ -14,26 +14,27 @@ class AlcottSpider(CrawlSpider):
     allowed_domains = ['alcott.eu']
     start_urls = ['https://www.alcott.eu/en/catalogo']
     url_query = '/ProductListingView?categoryId={}&storeId={}'
+    sub_menu = '.submenu-item'
+    product = '.product_name'
 
     rules = (
-        Rule(
-            LinkExtractor(restrict_css=('.submenu-item')), callback='parse'),
-        Rule(
-            LinkExtractor(restrict_css=('.product_name')),
-            callback=productparser.parse),
+        Rule(LinkExtractor(restrict_css=(sub_menu)), callback='parse'),
+        Rule(LinkExtractor(restrict_css=(product)),
+             callback=productparser.parse),
     )
 
     def parse(self, response):
-        category = w3lib.url.url_query_parameter(response.url, "categoryId")
-        storeId = w3lib.url.url_query_parameter(response.url, "storeId")
+        category = url_query_parameter(response.url, "categoryId")
+        storeId = url_query_parameter(response.url, "storeId")
+
         if not(category and storeId):
-            url = response.url + self.query_string_data(response)
-            req = scrapy.Request(url=url, method="GET", callback=self.parse)
+            url = response.url + self.query(response)
+            req = Request(url=url, callback=self.parse)
             yield req
 
         yield from super(AlcottSpider, self).parse(response)
 
-    def query_string_data(self, response):
+    def query(self, response):
         css = '[name=storeId]::attr(value)'
         store_id = response.css(css).extract_first()
 
