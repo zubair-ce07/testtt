@@ -1,8 +1,9 @@
 import json
 import re
 import urllib.parse
-import w3lib.url
 from datetime import datetime
+
+from w3lib.url import add_or_replace_parameter
 
 from childrensplace.items import ChildrensPlaceItem
 from scrapy import Request
@@ -28,7 +29,7 @@ class ChildrensPlaceParser(Mixin):
         details = json.loads(response.body)["response"]["products"]
         product_details = {
             "uuid": self.product_id(details),
-            "retailer_sku": self.product_id(details),
+            "retailer_sku": self.retailer_sku(details),
             "name": self.product_name(details),
             "description": self.product_description(details),
             "crawl_id": f"childrensplace-us-{datetime.now().strftime('%Y%m%d-%H%M%s')}-axuj",
@@ -82,7 +83,7 @@ class ChildrensPlaceParser(Mixin):
         return details[0]["uniqueId"]
 
     def product_url(self, details, response):
-        return f"http://www.childrensplace.com/us//p/{details[0]['seo_token']}"
+        return f"http://www.childrensplace.com/us/p/{details[0]['seo_token']}"
 
     def product_description(self, details):
         return [details[0]["product_short_description"]]
@@ -147,5 +148,5 @@ class ChildrensPlaceCrawler(CrawlSpider, Mixin):
 
         page = response.meta["page"]
         if (page + 100) < int(details["numberOfProducts"]):
-            url = w3lib.url.add_or_replace_parameter(response.url, "start", page + 100)
+            url = add_or_replace_parameter(response.url, "start", page + 100)
             yield Request(url=url, callback=self.parse_details, meta={"page": page + 100})
