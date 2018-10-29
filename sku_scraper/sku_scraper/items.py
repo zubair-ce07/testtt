@@ -13,3 +13,4 @@ class Item(scrapy.Item):
     skus = scrapy.Field()
     image_urls = scrapy.Field()
     url = scrapy.Field()
+    meta = scrapy.Field()

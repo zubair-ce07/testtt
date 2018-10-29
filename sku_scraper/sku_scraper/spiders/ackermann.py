@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 
-from scrapy import Request,Spider
+from scrapy import Request, Spider
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule, CrawlSpider
 from scrapy.selector import Selector
