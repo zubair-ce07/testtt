@@ -37,6 +37,7 @@ class MauricesSpider(CrawlSpider):
         product_requests = self.product_requests(html_response, response)
         for product_request in product_requests:
             yield product_request
+
         next_page_url = response_json.get('nextPageUrl')
         if next_page_url:
             product_count = w3lib.url.url_query_parameter(next_page_url, 'No')

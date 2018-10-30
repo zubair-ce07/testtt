@@ -66,12 +66,19 @@ class MauricesParseProduct(scrapy.Spider):
                 sku_key = str(colors[color_id] + '_' + sizes[size_id])
                 product['skus'][sku_key] = {
                     'color': colors[color_id],
-                    'currency': 'USD',
-                    'price': raw_product['all_available_colors'][0]['values'][0]['prices']['sale_price'],
                     'size': sizes[size_id],
                 }
+                self.product_currency_and_price(product, raw_product, sku_key)
                 if sku_key not in available_sku_keys:
                     product['skus'][sku_key]['out_of_stock'] = True
+
+    def product_currency_and_price(self, product, raw_product, sku_key):
+        product['skus'][sku_key]['currency'] = 'USD'
+        curr_price = raw_product['all_available_colors'][0]['values'][0]['prices']['sale_price']
+        previous_price = raw_product['all_available_colors'][0]['values'][0]['prices']['list_price']
+        product['skus'][sku_key]['price'] = curr_price
+        if curr_price != previous_price:
+            product['skus'][sku_key]['previous_price'] = previous_price
 
     def product_name(self, response):
         name_css = '.mar-product-title::text'
