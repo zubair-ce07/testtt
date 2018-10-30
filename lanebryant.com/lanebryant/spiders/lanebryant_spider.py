@@ -1,10 +1,8 @@
 import json
 import re
 
-from scrapy import Selector
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
-from w3lib.url import add_or_replace_parameter
 
 from lanebryant.items import LanebryantItem
 
@@ -27,19 +25,18 @@ class LanebryantParser:
         item['gender'] = 'women'
         item['image_urls'] = []
 
-        item['meta'] = {'requests': self.create_image_requests(response)}
+        item['meta'] = {'requests': self.extract_image_requests(response)}
 
-        return self.generate_request_or_item(item)
+        return self.extract_next_request_or_item(item)
 
     def parse_image_urls(self, response):
         item = response.meta['item']
         item['image_urls'] += self.extract_image_urls(response)
 
-        return self.generate_request_or_item(item)
+        return self.extract_next_request_or_item(item)
 
     def extract_image_urls(self, response):
-        json_regex = '\{.*\:\{.*\:.*\}\}'
-        raw_urls = json.loads(re.findall(json_regex, response.text)[0])['set']['item']
+        raw_urls = json.loads(re.findall('{.+}', response.text)[0])['set']['item']
 
         urls = []
 
@@ -51,7 +48,7 @@ class LanebryantParser:
 
         return urls
 
-    def generate_request_or_item(self, item):
+    def extract_next_request_or_item(self, item):
 
         if item.get('meta') is None:
             return item
@@ -78,18 +75,22 @@ class LanebryantParser:
             sku['colour'] = self.extract_colour_name(response, raw_sku['color'])
             sku['size'] = self.extract_size(response, raw_sku['size'])
 
+            sku['price'] = self.extract_price(raw_sku['prices']['sale_price'])
+            sku['currency'] = self.extract_currency(raw_sku['prices']['sale_price'])
+
             if self.is_out_of_stock(response, raw_sku['sku_id']):
                 sku['out_of_stock'] = True
-
-            raw_price = raw_sku['prices']['sale_price']
-            sku['price'] = float(raw_price[1:])
-
-            if '$' in raw_price:
-                sku['price'] = 'USD'
 
             skus += [sku]
 
         return skus
+
+    def extract_price(self, raw_price):
+        return float(raw_price[1:]) * 100
+
+    def extract_currency(self, raw_currency):
+        if '$' in raw_currency:
+            return 'USD'
 
     def is_out_of_stock(self, response, sku_id):
         common_data = self.extract_common_data(response)
@@ -121,7 +122,7 @@ class LanebryantParser:
             if raw_colour['id'] == sku_id:
                 return raw_colour['name']
 
-    def create_image_requests(self, response):
+    def extract_image_requests(self, response):
         common_data = self.extract_common_data(response)
 
         raw_colours = common_data['pdpDetail']['product'][0]['all_available_colors'][0]['values']
@@ -174,66 +175,22 @@ class LanebryantCrawler(CrawlSpider):
     allowed_domains = ['lanebryant.com']
     start_urls = ['https://www.lanebryant.com']
 
-    listing_css = ['.mar-nav']
+    listing_css = ['.mar-nav', '.mar-pagination']
+    product_css = ['.mar-prd-product-item']
 
-    rules = [Rule(LinkExtractor(restrict_css=listing_css), callback='parse_category')]
+    rules = (
+        Rule(LinkExtractor(restrict_css=listing_css), callback='parse'),
+        Rule(LinkExtractor(restrict_css=product_css), callback='parse_item')
+    )
 
     lanebryant_parse = LanebryantParser()
-    product_page_request_t = 'https://www.lanebryant.com/lanebryant/plp/includes/plp-filters.jsp'
 
-    def parse_category(self, response):
-        requests = self.create_listing_requests(response)
-        return self.generate_requests(requests)
+    def parse(self, response):
+        trail = [(response.css('head title::text').extract_first().strip(), response.url)]
 
-    def parse_products(self, response):
-        requests = self.create_product_requests(response)
-        return self.generate_requests(requests)
+        for req in super().parse(response):
+            req.meta['trail'] = trail
+            yield req
 
     def parse_item(self, response):
         return self.lanebryant_parse.parse(response)
-
-    def generate_requests(self, requests):
-        for request in requests:
-            yield request
-
-    def create_listing_requests(self, response):
-        requests = []
-
-        total_products = self.extract_total_product_num(response)
-        category_id = re.findall('[\d]+', response.url)[0]
-        visited_product = 0
-
-        url = add_or_replace_parameter(self.product_page_request_t, 'N', category_id)
-
-        trail = [(response.css('head title::text').extract_first(), response.url)]
-        meta = {'trail': trail}
-
-        while visited_product < total_products:
-            url = add_or_replace_parameter(url, 'No', 0)
-
-            requests.append(response.follow(url, callback=self.parse_products, meta=meta))
-            visited_product += 66
-
-        return requests
-
-    def create_product_requests(self, response):
-        raw_response = json.loads(response.text)
-        raw_products_response = raw_response['product_grid']['html_content']
-
-        products_response = Selector(text=raw_products_response)
-        urls = products_response.css('.mar-prd-product-item a::attr(href)').extract()
-
-        meta = response.meta
-
-        requests = []
-
-        for url in set(urls):
-            requests.append(response.follow(url, callback=self.parse_item, meta=meta))
-
-        return requests
-
-    def extract_total_product_num(self, response):
-        css = '.mar-items-found-amt::text'
-        raw_total_product_num = response.css(css).extract_first()
-
-        return int(re.findall('\d+', raw_total_product_num)[0])
