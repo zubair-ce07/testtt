@@ -18,4 +18,5 @@ class MauricesProduct(scrapy.Item):
     retailer_sku = scrapy.Field()
     skus = scrapy.Field()
     url = scrapy.Field()
-    request_urls = scrapy.Field()
+    requests = scrapy.Field()
+

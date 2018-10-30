@@ -8,7 +8,7 @@ from maurices.items import MauricesProduct
 
 class MauricesParseProduct(scrapy.Spider):
     name = 'maurices_parse_product'
-    image_url_t = 'https://mauricesprodatg.scene7.com/is/image/mauricesProdATG/'
+    image_url_t = 'https://mauricesprodatg.scene7.com/is/image/mauricesProdATG/{pid}_{color_id}_ms?req=set,json&id={color_id}'
 
     def parse_product(self, response):
         product = MauricesProduct()
@@ -20,59 +20,59 @@ class MauricesParseProduct(scrapy.Spider):
         product['skus'] = {}
         product['image_urls'] = []
         product_data = response.css('#pdpInitialData::text').extract_first()
-        product_detail = json.loads(product_data)['pdpDetail']['product'][0]
-        self.add_skus(product, product_detail)
-        product['request_urls'] = self.create_color_urls(
-            product_detail, product['retailer_sku'])
+        raw_product = json.loads(product_data)['pdpDetail']['product'][0]
+        self.add_skus(product, raw_product)
+        product['requests'] = self.create_color_requests(raw_product, product)
         yield self.request_or_item(product)
 
     def parse_colors(self, response):
         product = response.meta.get('product')
-        image_url_regx = 'mauricesProdATG/[0-9]+_C[0-9]+(?:_alt1|_Back)?'
-        image_url_re = re.compile(image_url_regx)
+        image_url_r = 'mauricesProdATG/[^"]*'
+        image_url_re = re.compile(image_url_r)
         product['image_urls'].extend(
-            list(set(image_url_re.findall(str(response.body)))))
+            list(set(image_url_re.findall(response.body.decode()))))
         yield self.request_or_item(product)
 
     def request_or_item(self, product):
-        color_urls = product['request_urls']
-        if color_urls:
-            color_url = color_urls.pop()
-            product['request_urls'] = color_urls
-            return scrapy.Request(color_url, callback=self.parse_colors, meta={'product': product})
+        color_requests = product['requests']
+        if color_requests:
+            color_request = color_requests.pop()
+            product['requests'] = color_requests
+            color_request.meta['product'] = product
+            return color_request
         else:
-            del product['request_urls']
+            del product['requests']
             return product
 
-    def create_color_urls(self, product_detail, product_id):
-        colors = self.attribute_map(product_detail['all_available_colors'])
-        urls = [self.image_url_t +
-                f'{product_id}_{color_id}_ms?req=set,json&id={color_id}' for color_id in colors]
-        return urls
+    def create_color_requests(self, raw_product, product):
+        product_id = product['retailer_sku']
+        colors = self.attribute_map(raw_product['all_available_colors'])
+        requests = []
+        for color_id in colors:
+            url = self.image_url_t.format(pid=product_id, color_id=color_id)
+            requests.append(scrapy.Request(url, callback=self.parse_colors))
+        return requests
 
-    def add_skus(self, product, product_detail):
-        colors = self.attribute_map(product_detail['all_available_colors'])
-        sizes = self.attribute_map(product_detail['all_available_sizes'])
-        product['category'] = product_detail['ensightenData'][0]['categoryPath']
-        sku_keys = []
+    def add_skus(self, product, raw_product):
+        colors = self.attribute_map(raw_product['all_available_colors'])
+        sizes = self.attribute_map(raw_product['all_available_sizes'])
+        product['category'] = raw_product['ensightenData'][0]['categoryPath']
+        available_sku_keys = []
+        for raw_sku in raw_product['skus']:
+            sku_key = str(colors.get(raw_sku['color']))
+            sku_key += '_' + str(sizes.get(raw_sku['size']))
+            available_sku_keys.append(sku_key)
         for color_id in colors:
             for size_id in sizes:
                 sku_key = str(colors[color_id] + '_' + sizes[size_id])
-                sku_keys.append(sku_key)
                 product['skus'][sku_key] = {
                     'color': colors[color_id],
                     'currency': 'USD',
-                    'price': product_detail['all_available_colors'][0]['values'][0]['prices']['sale_price'],
+                    'price': raw_product['all_available_colors'][0]['values'][0]['prices']['sale_price'],
                     'size': sizes[size_id],
                 }
-        for sku in product_detail['skus']:
-            color_id = sku['color']
-            size_id = sku['size']
-            sku_key = str(colors.get(color_id)) + '_' + str(sizes.get(size_id))
-            if sku_key in sku_keys:
-                sku_keys.remove(sku_key)
-        for sku_key in sku_keys:
-            product['skus'][sku_key]['out_of_stock'] = True
+                if sku_key not in available_sku_keys:
+                    product['skus'][sku_key]['out_of_stock'] = True
 
     def product_name(self, response):
         name_css = '.mar-product-title::text'
@@ -86,11 +86,8 @@ class MauricesParseProduct(scrapy.Spider):
         return response.url.split('/')[-1]
 
     def attribute_map(self, all_attributes):
-        attribute_map = {}
-        if all_attributes:
-            for attribute in all_attributes[0]['values']:
-                key = str(attribute['id'])
-                value = str(attribute['value'])
-                attribute_map[key] = value
-        return attribute_map
+        if not all_attributes:
+            return {}
+
+        return {str(attribute['id']): str(attribute['value']) for attribute in all_attributes[0]['values']}
 
