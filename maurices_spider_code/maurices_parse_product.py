@@ -8,7 +8,8 @@ from maurices.items import MauricesProduct
 
 class MauricesParseProduct(scrapy.Spider):
     name = 'maurices_parse_product'
-    image_url_t = 'https://mauricesprodatg.scene7.com/is/image/mauricesProdATG/{pid}_{color_id}_ms?req=set,json&id={color_id}'
+    image_url_t = 'https://mauricesprodatg.scene7.com/is/image/mauricesProdATG/' \
+        '{pid}_{color_id}_ms?req=set,json&id={color_id}'
 
     def parse_product(self, response):
         product = MauricesProduct()
@@ -25,7 +26,7 @@ class MauricesParseProduct(scrapy.Spider):
         product['requests'] = self.create_color_requests(raw_product, product)
         yield self.request_or_item(product)
 
-    def parse_colors(self, response):
+    def parse_color(self, response):
         product = response.meta.get('product')
         image_url_r = 'mauricesProdATG/[^"]*'
         image_url_re = re.compile(image_url_r)
@@ -34,15 +35,13 @@ class MauricesParseProduct(scrapy.Spider):
         yield self.request_or_item(product)
 
     def request_or_item(self, product):
-        color_requests = product['requests']
-        if color_requests:
-            color_request = color_requests.pop()
-            product['requests'] = color_requests
-            color_request.meta['product'] = product
-            return color_request
-        else:
-            del product['requests']
-            return product
+        requests = product['requests']
+        if requests:
+            request = requests.pop()
+            request.meta['product'] = product
+            return request
+        del product['requests']
+        return product
 
     def create_color_requests(self, raw_product, product):
         product_id = product['retailer_sku']
@@ -50,7 +49,7 @@ class MauricesParseProduct(scrapy.Spider):
         requests = []
         for color_id in colors:
             url = self.image_url_t.format(pid=product_id, color_id=color_id)
-            requests.append(scrapy.Request(url, callback=self.parse_colors))
+            requests.append(scrapy.Request(url, callback=self.parse_color))
         return requests
 
     def add_skus(self, product, raw_product):
@@ -59,9 +58,9 @@ class MauricesParseProduct(scrapy.Spider):
         product['category'] = raw_product['ensightenData'][0]['categoryPath']
         available_sku_keys = []
         for raw_sku in raw_product['skus']:
-            sku_key = str(colors.get(raw_sku['color']))
-            sku_key += '_' + str(sizes.get(raw_sku['size']))
+            sku_key = f"{colors.get(raw_sku['color'])}_{sizes.get(raw_sku['size'])}"
             available_sku_keys.append(sku_key)
+
         for color_id in colors:
             for size_id in sizes:
                 sku_key = str(colors[color_id] + '_' + sizes[size_id])
