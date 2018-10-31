@@ -37,19 +37,11 @@ class LanebryantParser:
 
     def extract_image_urls(self, response):
         raw_urls = json.loads(re.findall('{.+}', response.text)[0])['set']['item']
+        raw_urls = [raw_urls] if isinstance(raw_urls, dict) else raw_urls
 
-        urls = []
-
-        if isinstance(raw_urls, dict):
-            urls.append(f"{self.image_request_url_t}{raw_urls['i']['n']}")
-        else:
-            for raw_url in raw_urls:
-                urls.append(f"{self.image_request_url_t}{raw_url['i']['n']}")
-
-        return urls
+        return [f"{self.image_request_url_t}{raw_url['i']['n']}" for raw_url in raw_urls]
 
     def extract_next_request_or_item(self, item):
-
         if item.get('meta') is None:
             return item
 
@@ -62,21 +54,17 @@ class LanebryantParser:
         return item
 
     def extract_skus(self, response):
-        common_data = self.extract_common_data(response)
-
-        raw_skus = common_data['pdpDetail']['product'][0]['skus']
         skus = []
 
-        for raw_sku in raw_skus:
-            sku = {}
+        colour_map = self.extract_colour_map(response)
+        size_map = self.extract_size_map(response)
+
+        for raw_sku in self.extract_raw_product_details(response)['skus']:
+            sku = {**self.extract_pricing(raw_sku['prices'])}
 
             sku['sku_id'] = raw_sku['sku_id']
-
-            sku['colour'] = self.extract_colour_name(response, raw_sku['color'])
-            sku['size'] = self.extract_size(response, raw_sku['size'])
-
-            sku['price'] = self.extract_price(raw_sku['prices']['sale_price'])
-            sku['currency'] = self.extract_currency(raw_sku['prices']['sale_price'])
+            sku['colour'] = colour_map[raw_sku['color']]
+            sku['size'] = size_map[raw_sku['size']]
 
             if self.is_out_of_stock(response, raw_sku['sku_id']):
                 sku['out_of_stock'] = True
@@ -85,50 +73,34 @@ class LanebryantParser:
 
         return skus
 
-    def extract_price(self, raw_price):
-        return float(raw_price[1:]) * 100
+    def extract_pricing(self, raw_prices):
+        pricing = {}
 
-    def extract_currency(self, raw_currency):
-        if '$' in raw_currency:
-            return 'USD'
+        pricing['currency'] = 'USD' if '$' in raw_prices['sale_price'] else None
+
+        prices = sorted([float(price[1:]) * 100 for _, price in raw_prices.items()])
+        pricing['price'] = prices[0]
+
+        if len(prices) > 1:
+            pricing['previous_prices'] = prices[1:]
+
+        return pricing
 
     def is_out_of_stock(self, response, sku_id):
-        common_data = self.extract_common_data(response)
-
-        product_id = common_data['pdpDetail']['product'][0]['product_id']
-        raw_stock = common_data['inventoryDetail']['inventory']['products'][product_id]['skus']
+        product_id = self.extract_raw_product_details(response)['product_id']
+        raw_stock = self.extract_raw_inventory_details(response)[product_id]['skus']
 
         for stock_id, quantity in raw_stock.items():
 
             if stock_id == sku_id and quantity.get('show_threshold_message'):
                 return True
 
-    def extract_size(self, response, sku_id):
-        common_data = self.extract_common_data(response)
-
-        raw_sizes = common_data['pdpDetail']['product'][0]['all_available_sizes'][0]['values']
-
-        for raw_size in raw_sizes:
-            if raw_size['id'] == sku_id:
-                return raw_size['value']
-
-    def extract_colour_name(self, response, sku_id):
-        common_data = self.extract_common_data(response)
-
-        raw_colours = common_data['pdpDetail']['product'][0]['all_available_colors'][0]['values']
-
-        for raw_colour in raw_colours:
-
-            if raw_colour['id'] == sku_id:
-                return raw_colour['name']
-
     def extract_image_requests(self, response):
-        common_data = self.extract_common_data(response)
+        raw_image_urls = self.extract_raw_product_details(response)
 
-        raw_colours = common_data['pdpDetail']['product'][0]['all_available_colors'][0]['values']
         requests = []
 
-        for raw_colour in raw_colours:
+        for raw_colour in raw_image_urls['all_available_colors'][0]['values']:
             url = f"https:{raw_colour['swatch_image']}".replace('swatch', 'ms?req=set,json')
 
             requests.append(response.follow(url, callback=self.parse_image_urls, dont_filter=True))
@@ -136,9 +108,9 @@ class LanebryantParser:
         return requests
 
     def extract_category(self, response):
-        common_data = self.extract_common_data(response)
-        raw_category = common_data['pdpDetail']['product'][0]['ensightenData'][0]['categoryPath']
-        return raw_category.split(':')
+        raw_category = self.extract_raw_product_details(response)
+
+        return raw_category['ensightenData'][0]['categoryPath'].split(':')
 
     def extract_brand(self, response):
         css = '.mar-text-logo::text'
@@ -152,22 +124,47 @@ class LanebryantParser:
         css = '#tab1 p::text, #tab1 ul ::text'
         return response.css(css).extract()
 
-    def extract_common_data(self, response):
-        css = '#pdpInitialData::text'
-        raw_data = response.css(css).extract_first()
-
-        return json.loads(raw_data)
-
     def extract_retailer_sku(self, response):
-        common_data = self.extract_common_data(response)
-        return common_data['pdpDetail']['product'][0]['product_id']
+        raw_product_details = self.extract_raw_product_details(response)
+        return raw_product_details['product_id']
 
     def extract_name(self, response):
-        common_data = self.extract_common_data(response)
-        return common_data['pdpDetail']['product'][0]['product_name']
+        raw_product_details = self.extract_raw_product_details(response)
+        return raw_product_details['product_name']
 
     def extract_trail(self, response):
         return response.meta['trail']
+
+    def extract_raw_product_details(self, response):
+        raw_data = response.css('#pdpInitialData::text').extract_first()
+        return json.loads(raw_data)['pdpDetail']['product'][0]
+
+    def extract_raw_inventory_details(self, response):
+        css = '#pdpInitialData::text'
+        raw_data = response.css(css).extract_first()
+
+        return json.loads(raw_data)['inventoryDetail']['inventory']['products']
+
+    def extract_colour_map(self, response):
+        raw_colours = self.extract_raw_product_details(response)
+
+        colour_map = {}
+
+        for raw_colour in raw_colours['all_available_colors'][0]['values']:
+            colour_map[raw_colour['id']] = raw_colour['name']
+
+        return colour_map
+
+    def extract_size_map(self, response):
+        raw_sizes = self.extract_raw_product_details(response)
+        raw_sizes = raw_sizes['all_available_sizes'][0]['values']
+
+        size_map = {}
+
+        for raw_size in raw_sizes:
+            size_map[raw_size['id']] = raw_size['value']
+
+        return size_map
 
 
 class LanebryantCrawler(CrawlSpider):
