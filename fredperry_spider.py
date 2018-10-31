@@ -14,7 +14,7 @@ class FredperryParser:
     def parse(self, response):
         product_id = self.extract_retailer_sku(response)
 
-        if self.id_exists(product_id):
+        if self.is_visited_id(product_id):
             return
 
         item = FredperryItem()
@@ -43,7 +43,6 @@ class FredperryParser:
         return self.generate_request_or_item(item)
 
     def generate_request_or_item(self, item):
-
         if not item.get('meta'):
             return item
 
@@ -57,18 +56,11 @@ class FredperryParser:
 
     def extract_skus(self, response):
         skus = []
-        common_sku = {'price': self.extract_price(response),
-                      'sku_id': self.extract_retailer_sku(response),
-                      'currency': self.extract_currency(response)}
-        previous_prices = self.extract_previous_prices(response)
-
-        if previous_prices:
-            common_sku['previous_prices'] = self.extract_previous_prices(response)
+        common_sku = {'sku_id': self.extract_retailer_sku(response),
+                      **self.extract_pricing(response)}
 
         colour = self.extract_colour(response)
-
-        if colour:
-            common_sku['colour'] = colour
+        common_sku['colour'] = self.extract_colour(response)
 
         out_stock_sizes = self.extract_out_stock_sizes(response)
 
@@ -76,7 +68,7 @@ class FredperryParser:
             sku = common_sku.copy()
             sku['size'] = size
 
-            sku['sku_id'] = f"{colour}_{size}" if colour else f"{size}"
+            sku['sku_id'] = f"{sku['sku_id']}_{colour}_{size}"
 
             if size in out_stock_sizes:
                 sku['out_of_stock'] = True
@@ -119,29 +111,22 @@ class FredperryParser:
         css = '.product-sku p::text'
         return response.css(css).extract_first()
 
-    def extract_currency(self, response):
-        css = '.price::text'
-        raw_currency = response.css(css).extract_first()
+    def extract_pricing(self, response):
+        css = '.product-essential .old-price .price::text,\
+                .product-essential .special-price .price::text,' \
+              '.product-essential .regular-price .price ::text'
 
-        if '£' in raw_currency:
-            return 'GBP'
+        raw_prices = list(set(response.css(css).extract()))
 
-    def extract_price(self, response):
-        css = '.product-essential .special-price .price::text'
-        raw_currency = response.css(css).extract_first()
+        prices = sorted([float(price.strip()[1:]) * 100 for price in raw_prices])
+        currency = 'GBP' if '£' in raw_prices[0] else None
 
-        if raw_currency:
-            return int(float(raw_currency.strip()[1:]) * 100)
+        pricing = {'price': prices[0], 'currency': currency}
 
-        raw_currency = response.css('.price::text').extract_first()
+        if len(prices) > 1:
+            pricing['previous_prices'] = prices[1:]
 
-        return int(float(raw_currency.strip()[1:]) * 100)
-
-    def extract_previous_prices(self, response):
-        css = '.product-essential .old-price .price::text'
-        raw_prices = set(response.css(css).extract())
-
-        return [int(float(price.strip()[1:]) * 100) for price in raw_prices]
+        return pricing
 
     def extract_name(self, response):
         css = '.product-name h1 ::text'
@@ -177,7 +162,7 @@ class FredperryParser:
     def extract_trail(self, response):
         return response.meta['trail']
 
-    def id_exists(self, product_id):
+    def is_visited_id(self, product_id):
 
         if product_id in self.visited_products:
             return True
