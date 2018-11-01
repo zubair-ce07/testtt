@@ -32,13 +32,11 @@ class LanebryantParser:
     def parse_image_urls(self, response):
         item = response.meta['item']
         item['image_urls'] += self.extract_image_urls(response)
-
         return self.extract_next_request_or_item(item)
 
     def extract_image_urls(self, response):
         raw_urls = json.loads(re.findall('{.+}', response.text)[0])['set']['item']
         raw_urls = [raw_urls] if isinstance(raw_urls, dict) else raw_urls
-
         return [f"{self.image_request_url_t}{raw_url['i']['n']}" for raw_url in raw_urls]
 
     def extract_next_request_or_item(self, item):
@@ -60,8 +58,7 @@ class LanebryantParser:
         size_map = self.extract_size_map(response)
 
         for raw_sku in self.extract_raw_product_details(response)['skus']:
-            sku = {**self.extract_pricing(raw_sku['prices'])}
-
+            sku = self.extract_pricing(raw_sku['prices'])
             sku['sku_id'] = raw_sku['sku_id']
             sku['colour'] = colour_map[raw_sku['color']]
             sku['size'] = size_map[raw_sku['size']]
@@ -70,14 +67,12 @@ class LanebryantParser:
                 sku['out_of_stock'] = True
 
             skus += [sku]
-
         return skus
 
     def extract_pricing(self, raw_prices):
         pricing = {}
 
         pricing['currency'] = 'USD' if '$' in raw_prices['sale_price'] else None
-
         prices = sorted([float(price[1:]) * 100 for _, price in raw_prices.items()])
         pricing['price'] = prices[0]
 
@@ -91,7 +86,6 @@ class LanebryantParser:
         raw_stock = self.extract_raw_inventory_details(response)[product_id]['skus']
 
         for stock_id, quantity in raw_stock.items():
-
             if stock_id == sku_id and quantity.get('show_threshold_message'):
                 return True
 
@@ -102,14 +96,12 @@ class LanebryantParser:
 
         for raw_colour in raw_image_urls['all_available_colors'][0]['values']:
             url = f"https:{raw_colour['swatch_image']}".replace('swatch', 'ms?req=set,json')
-
             requests.append(response.follow(url, callback=self.parse_image_urls, dont_filter=True))
 
         return requests
 
     def extract_category(self, response):
         raw_category = self.extract_raw_product_details(response)
-
         return raw_category['ensightenData'][0]['categoryPath'].split(':')
 
     def extract_brand(self, response):
@@ -140,38 +132,24 @@ class LanebryantParser:
         return json.loads(raw_data)['pdpDetail']['product'][0]
 
     def extract_raw_inventory_details(self, response):
-        css = '#pdpInitialData::text'
-        raw_data = response.css(css).extract_first()
-
-        return json.loads(raw_data)['inventoryDetail']['inventory']['products']
+        raw_product = response.css('#pdpInitialData::text').extract_first()
+        return json.loads(raw_product)['inventoryDetail']['inventory']['products']
 
     def extract_colour_map(self, response):
         raw_colours = self.extract_raw_product_details(response)
-
-        colour_map = {}
-
-        for raw_colour in raw_colours['all_available_colors'][0]['values']:
-            colour_map[raw_colour['id']] = raw_colour['name']
-
-        return colour_map
+        raw_colours = raw_colours['all_available_colors'][0]['values']
+        return {raw_colour['id']: raw_colour['name'] for raw_colour in raw_colours}
 
     def extract_size_map(self, response):
         raw_sizes = self.extract_raw_product_details(response)
         raw_sizes = raw_sizes['all_available_sizes'][0]['values']
-
-        size_map = {}
-
-        for raw_size in raw_sizes:
-            size_map[raw_size['id']] = raw_size['value']
-
-        return size_map
+        return {raw_size['id']: raw_size['value'] for raw_size in raw_sizes}
 
 
 class LanebryantCrawler(CrawlSpider):
     name = 'lanebryant_spider'
     allowed_domains = ['lanebryant.com']
     start_urls = ['https://www.lanebryant.com']
-
     listing_css = ['.mar-nav', '.mar-pagination']
     product_css = ['.mar-prd-product-item']
 
