@@ -153,7 +153,7 @@ class LindexSpider(CrawlSpider):
 
     def product_pricing(self, details):
         return {
-            "price": int(float(re.findall(r"\d+.\d+", details["Price"])[0])) * 100,
+            "price": int(float(re.findall(r"\d+.\d+", details["Price"])[0]) * 100),
             "currency": self.currency}
 
     def product_categories(self, response):
