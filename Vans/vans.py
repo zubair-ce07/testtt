@@ -1,3 +1,4 @@
+import json
 import re
 from datetime import datetime
 
@@ -7,7 +8,7 @@ from scrapy.spiders import CrawlSpider, Rule
 from vans.items import VansItem
 
 
-class Minix():
+class Mixin:
     name = "vans"
     allowed_domains = ["vans.fr"]
     start_urls = ["http://www.vans.fr/"]
@@ -15,30 +16,29 @@ class Minix():
     market = "FR"
 
 
-class VansParser(Minix):
-    name = Minix.name + "-parser"
+class VansParser(Mixin):
+    name = Mixin.name + "-parser"
 
     def parse_product(self, response):
-        product_details = {
-            "uuid": self.product_id(response),
-            "name": self.product_name(response),
-            "gender": self.get_gender(response),
-            "market": self.market,
-            "retailer": self.retailer,
-            "retailer_sku": self.retailer_sku(response),
-            "description": self.product_description(response),
-            "care": self.product_care(response),
-            "category": self.product_category(response),
-            "crawl_id": f"vans-us-{datetime.now().strftime('%Y%m%d-%H%M%s')}-axuj",
-            "spider_name": Minix.name,
-            "skus": [],
-            "image_urls": [],
-            "date": datetime.now().strftime("%Y-%m-%d"),
-            "crawl_start_time": datetime.now().isoformat(),
-            "url_orignal": response.url,
-            }
-        item = VansItem(product_details)
+        item = VansItem()
+        item["uuid"] = self.product_id(response)
+        item["name"] = self.product_name(response)
+        item["gender"] = self.get_gender(response)
+        item["market"] = self.market
+        item["retailer"] = self.retailer
+        item["retailer_sku"] = self.retailer_sku(response)
+        item["description"] = self.product_description(response)
+        item["care"] = self.product_care(response)
+        item["category"] = self.product_category(response)
+        item["crawl_id"] = self.get_crawl_id()
+        item["spider_name"] = Mixin.name
+        item["date"] = datetime.now().strftime("%Y-%m-%d")
+        item["crawl_start_time"] = datetime.now().isoformat()
+        item["url_orignal"] = response.url
+        item["skus"] = []
+        item["image_urls"] = []
         item["meta"] = self.color_requests(response, item)
+
         return self.next_request_or_item(item)
 
     def skus(self, response):
@@ -76,7 +76,13 @@ class VansParser(Minix):
 
     def product_price(self, response):
         css = "meta[property='og:price:amount']::attr(content)"
-        return int(float(response.css(css).extract_first())) * 100
+        return int(float(response.css(css).extract_first()) * 100)
+
+    def previous_price(self, response):
+        script = "var itemPrices = (.+?);\n"
+        price_details = json.loads(re.findall(script, response.body.decode("utf-8"))[0])
+        return int(float(price_details[self.product_id(response)][
+            "pricing"]["default"]["lowListPriceNumeric"]) * 100)
 
     def product_description(self, response):
         css = ".desc-container ::text"
@@ -84,7 +90,7 @@ class VansParser(Minix):
 
     def product_care(self, response):
         css = ".desc-container ::text"
-        return self.clean_care_info(response.css(css).extract()[-1])
+        return self.clean(response.css(css).extract()[-1])
 
     def product_category(self, response):
         css = "#product-attr-form::attr(data-seo-category)"
@@ -102,14 +108,21 @@ class VansParser(Minix):
         css = "#product-attr-form::attr(data-master-category-identifier)"
         return response.css(css).extract_first()
 
+    def get_crawl_id(self):
+        return f"vans-us-{datetime.now().strftime('%Y%m%d-%H%M%s')}-axuj"
+
     def currency_type(self, response):
         css = "meta[property='og:price:currency']::attr(content)"
         return response.css(css).extract_first()
 
     def pricing_details(self, response):
-        return {
+        pricing_details = {
             "price": self.product_price(response),
             "currency": self.currency_type(response)}
+        prev_price = self.previous_price(response)
+        if prev_price != pricing_details["price"]:
+            pricing_details["previous_price"] = prev_price
+        return pricing_details
 
     def image_urls(self, response):
         css = ".vfdp-s7-viewer-preload-image::attr(src)"
@@ -120,16 +133,18 @@ class VansParser(Minix):
         urls = response.css("button img::attr(data-product-url)").extract()
         return [Request(url, callback=self.parse_colors, meta={"item": item}) for url in urls]
 
-    def clean_care_info(self, info):
-        return [re.sub(':\s+', ' ', text).strip() for text in info.split(";")]
+    def clean(self, dirty_strs):
+        return [re.sub(':\s+', ' ', text).strip() for text in dirty_strs.split(";")]
 
 
-class VansCrawler(CrawlSpider, Minix):
-    name = Minix.name + "-crawler"
+class VansCrawler(CrawlSpider, Mixin):
+    name = Mixin.name + "-crawler"
     parser = VansParser()
     listings_css = [".sub-category"]
     product_css = [".product-block-figure"]
     deny_re = [".html"]
+    PAGE_SIZE = 48
+
     rules = (
         Rule(LinkExtractor(restrict_css=listings_css, deny=deny_re), callback="parse_pagination"),
         Rule(LinkExtractor(restrict_css=product_css), callback="parse_item")
@@ -137,15 +152,13 @@ class VansCrawler(CrawlSpider, Minix):
 
     def parse_pagination(self, response):
         pages = self.page_count(response)
-        count = 1
-        for page in range(0, pages, 48):
-            url = f"{response.url}#esp_pg={count}"
+        for page in range(0, pages, self.PAGE_SIZE):
+            url = f"{response.url}#esp_pg={page//self.PAGE_SIZE}"
             yield Request(url, callback=self.parse, dont_filter=True)
-            count += 1
 
     def parse_item(self, response):
         return self.parser.parse_product(response)
 
     def page_count(self, response):
         css = ".header-result-counter ::text"
-        return int(re.findall(r"\d+", response.css(css).extract()[-1])[0])
+        return int(response.css(css).re_first("\d+") or '0')
