@@ -8,8 +8,8 @@ from fredperry.items import FredperryItem
 
 class FredperryParser:
     visited_products = set()
-
-    gender_map = {'women': 'women', 'men': 'men', 'kid': 'unisex-kids'}
+    gender_map = {'women': 'women', 'men': 'men',
+                  'kid': 'unisex-kids'}
 
     def parse(self, response):
         product_id = self.extract_retailer_sku(response)
@@ -39,7 +39,6 @@ class FredperryParser:
         item = response.meta['item']
         item['skus'] += self.extract_skus(response)
         item['image_urls'] += self.extract_image_urls(response)
-
         return self.generate_request_or_item(item)
 
     def generate_request_or_item(self, item):
@@ -56,23 +55,20 @@ class FredperryParser:
 
     def extract_skus(self, response):
         skus = []
+
         common_sku = self.extract_pricing(response)
-
         common_sku['colour'] = self.extract_colour(response)
-
         out_stock_sizes = self.extract_out_stock_sizes(response)
 
         for size in self.extract_sizes(response):
             sku = common_sku.copy()
             sku['size'] = size
-
             sku['sku_id'] = f"{sku['colour']}_{size}"
 
             if size in out_stock_sizes:
                 sku['out_of_stock'] = True
 
             skus += [sku]
-
         return skus
 
     def generate_colour_requests(self, response):
@@ -102,7 +98,6 @@ class FredperryParser:
     def extract_colour(self, response):
         css = "script[type='application/ld+json']::text"
         raw_colour = json.loads(response.css(css).extract_first())
-
         return raw_colour['color']
 
     def extract_retailer_sku(self, response):
@@ -115,10 +110,9 @@ class FredperryParser:
               '.product-essential .regular-price .price ::text'
 
         raw_prices = list(set(response.css(css).extract()))
-
         prices = sorted([float(price.strip()[1:]) * 100 for price in raw_prices])
-        currency = 'GBP' if '£' in raw_prices[0] else None
 
+        currency = 'GBP' if '£' in raw_prices[0] else None
         pricing = {'price': prices[0], 'currency': currency}
 
         if len(prices) > 1:
@@ -161,12 +155,10 @@ class FredperryParser:
         return response.meta['trail']
 
     def is_visited_id(self, product_id):
-
         if product_id in self.visited_products:
             return True
 
         self.visited_products.add(product_id)
-
 
 
 class FredperryCrawler(CrawlSpider):
