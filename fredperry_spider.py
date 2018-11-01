@@ -56,10 +56,8 @@ class FredperryParser:
 
     def extract_skus(self, response):
         skus = []
-        common_sku = {'sku_id': self.extract_retailer_sku(response),
-                      **self.extract_pricing(response)}
+        common_sku = self.extract_pricing(response)
 
-        colour = self.extract_colour(response)
         common_sku['colour'] = self.extract_colour(response)
 
         out_stock_sizes = self.extract_out_stock_sizes(response)
@@ -68,7 +66,7 @@ class FredperryParser:
             sku = common_sku.copy()
             sku['size'] = size
 
-            sku['sku_id'] = f"{sku['sku_id']}_{colour}_{size}"
+            sku['sku_id'] = f"{sku['colour']}_{size}"
 
             if size in out_stock_sizes:
                 sku['out_of_stock'] = True
@@ -168,6 +166,7 @@ class FredperryParser:
             return True
 
         self.visited_products.add(product_id)
+
 
 
 class FredperryCrawler(CrawlSpider):
