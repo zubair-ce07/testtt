@@ -72,8 +72,8 @@ class ChildrensPlaceParser(Mixin):
 
     def pricing_details(self, product_details):
         return {
-            "price": int(float(product_details["v_offerprice"])) * 100,
-            "previous_price": int(float(product_details["v_listprice"])) * 100,
+            "price": int(float(product_details["v_offerprice"]) * 100),
+            "previous_price": int(float(product_details["v_listprice"]) * 100),
             "currency": product_details["v_currency"]}
 
     def retailer_sku(self, product_details):
