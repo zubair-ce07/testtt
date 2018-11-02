@@ -3,7 +3,6 @@ import calendar
 import datetime
 
 from csv_file_data_holder import CsvFileDataHolder
-from constants import MONTHS_NAME
 
 
 class WeatherDataAnalysis:
@@ -16,92 +15,107 @@ class WeatherDataAnalysis:
         elif operation == 'c':
             return self.calculate_monthly_record_for_bar_charts(weather_readings, date)
 
-    def yearly_highest_temp_struct(self, date_values, month_data, year_max_temp, highest_temp_struct):
-        max_temp_list = month_data.get_int_converted_attribute_values(
+    def update_yearly_highest_temp(self, report):
+        max_temp_list = report['month_data'].attribute_values(
             'Max TemperatureC')
-        month_max_temp = max(list(filter(None.__ne__, max_temp_list)))
+        year_max_temp = report['highest_temp']
+        month_max_temp = max(list(filter(None, max_temp_list)))
         if year_max_temp <= month_max_temp:
-            date = max_temp_list.index(month_max_temp)
+            row = max_temp_list.index(month_max_temp)
             date_value = datetime.datetime.strptime(
-                date_values[date], '%Y-%m-%d')
-            highest_temp_struct = [month_max_temp, date_value]
-        return highest_temp_struct
+                report['date_values'][row], '%Y-%m-%d')
+            report['highest_temp'] = month_max_temp
+            report['highest_temp_date'] = date_value
 
-    def yearly_lowest_temp_struct(self, date_values, month_data, year_min_temp, lowest_temp_struct):
-        min_temp_list = month_data.get_int_converted_attribute_values(
+    def update_yearly_lowest_temp(self, report):
+        min_temp_list = report['month_data'].attribute_values(
             'Min TemperatureC')
-        month_min_temp = min(list(filter(None.__ne__, min_temp_list)))
+        month_min_temp = min(list(filter(None, min_temp_list)))
+        year_min_temp = report['lowest_temp']
         if year_min_temp >= month_min_temp:
-            date = min_temp_list.index(month_min_temp)
+            row = min_temp_list.index(month_min_temp)
             date_value = datetime.datetime.strptime(
-                date_values[date], '%Y-%m-%d')
-            lowest_temp_struct = [month_min_temp, date_value]
-        return lowest_temp_struct
+                report['date_values'][row], '%Y-%m-%d')
+            report['lowest_temp'] = month_min_temp
+            report['lowest_temp_date'] = date_value
 
-    def yearly_most_humid_struct(self, date_values, month_data, year_highest_humidity, most_humid_struct):
-        highest_humidity_list = month_data.get_int_converted_attribute_values(
+    def update_yearly_most_humidity(self, report):
+        highest_humidity_list = report['month_data'].attribute_values(
             'Max Humidity')
-        month_highest_humid_day = max(list(filter(None.__ne__,
-                                                  highest_humidity_list)))
+        year_highest_humidity = report['highest_humidity']
+        month_highest_humid_day = max(
+            list(filter(None, highest_humidity_list)))
         if year_highest_humidity <= month_highest_humid_day:
-            date = highest_humidity_list.index(month_highest_humid_day)
+            row = highest_humidity_list.index(month_highest_humid_day)
             date_value = datetime.datetime.strptime(
-                date_values[date], '%Y-%m-%d')
-            most_humid_struct = [month_highest_humid_day, date_value]
-        return most_humid_struct
+                report['date_values'][row], '%Y-%m-%d')
+            report['highest_humidity'] = month_highest_humid_day
+            report['highest_humidity_date'] = date_value
 
     def calculate_yearly_record(self, weather_readings, year):
-        highest_temp_struct, lowest_temp_struct = [], []
-        most_humid_struct, report = [], []
-        year_max_temp, year_min_temp, year_highest_humidity = -273, 200, 0
-        months_data = weather_readings.get_months_data_of_year(year)
+        months_data = weather_readings.months_data_of_year(year)
+        report = {
+            'highest_temp': float('-Inf'),
+            'lowest_temp': float('Inf'),
+            'highest_humidity': float('-Inf'),
+        }
         for month in months_data:
             month_data = months_data.get(month)
-            if month_data is not None:
-                key = [val for val in month_data.data.keys() if 'PK' in val]
-                date_values = month_data.data.get(key[0])
-                highest_temp_struct = self.yearly_highest_temp_struct(
-                    date_values, month_data, year_max_temp, highest_temp_struct)
-                year_max_temp = highest_temp_struct[0]
-                lowest_temp_struct = self.yearly_lowest_temp_struct(
-                    date_values, month_data, year_min_temp, lowest_temp_struct)
-                year_min_temp = lowest_temp_struct[0]
-                most_humid_struct = self.yearly_most_humid_struct(
-                    date_values, month_data, year_highest_humidity, most_humid_struct)
-                year_highest_humidity = most_humid_struct[0]
-                report = [highest_temp_struct,
-                          lowest_temp_struct,
-                          most_humid_struct]
+            if not month_data:
+                continue
+
+            date_header = [header_value for header_value in month_data.csv_file_data.keys()
+                           if 'PK' in header_value]
+            date_values = month_data.csv_file_data.get(date_header[0])
+            report['date_values'] = date_values
+            report['month_data'] = month_data
+            report['operation'] = 'e'
+            self.update_yearly_highest_temp(report)
+            self.update_yearly_lowest_temp(report)
+            self.update_yearly_most_humidity(report)
         return report
 
     def calculate_monthly_record(self, weather_readings, date):
-        months = weather_readings.get_months_data_of_year(date.year)
-        report = []
+        months = weather_readings.months_data_of_year(date.year)
+        report = {}
         month = months.get(calendar.month_name[date.month])
-        if month is not None:
-            max_temp_list = month.get_int_converted_attribute_values(
-                'Max TemperatureC')
-            min_temp_list = month.get_int_converted_attribute_values(
-                'Min TemperatureC')
-            mean_humidty_list = month.get_int_converted_attribute_values(
-                'Mean Humidity')
-            report.append(sum(list(filter(None.__ne__, max_temp_list)))
-                          / len(list(filter(None.__ne__, max_temp_list))))
-            report.append(sum(list(filter(None.__ne__, min_temp_list)))
-                          / len(list(filter(None.__ne__, min_temp_list))))
-            report.append(sum(list(filter(None.__ne__, mean_humidty_list)))
-                          / len(list(filter(None.__ne__, mean_humidty_list))))
+        if not month:
+            return report
+
+        max_temp_values = month.attribute_values(
+            'Max TemperatureC')
+        min_temp_values = month.attribute_values(
+            'Min TemperatureC')
+        mean_humidity_values = month.attribute_values(
+            'Mean Humidity')
+        max_temp_sum = sum(list(filter(None, max_temp_values)))
+        min_temp_sum = sum(list(filter(None, min_temp_values)))
+        mean_humidity_sum = sum(list(filter(None, mean_humidity_values)))
+        total_max_temp_records = len(list(filter(None, max_temp_values)))
+        total_min_temp_records = len(list(filter(None, min_temp_values)))
+        total_mean_humidity_records = len(
+            list(filter(None, mean_humidity_values)))
+        report['operation'] = 'a'
+        report['average_max_temp'] = (max_temp_sum / total_max_temp_records)
+        report['average_min_temp'] = (min_temp_sum / total_min_temp_records)
+        report['average_mean_humidity'] = (
+            mean_humidity_sum / total_mean_humidity_records)
         return report
 
     def calculate_monthly_record_for_bar_charts(self, weather_readings, date):
-        months = weather_readings.get_months_data_of_year(date.year)
-        report = {}
-        month = months.get(calendar.month_name[date.month])
-        if month is not None:
-            max_temp_list = month.get_int_converted_attribute_values(
-                'Max TemperatureC')
-            min_temp_list = month.get_int_converted_attribute_values(
-                'Min TemperatureC')
-            report['high_temprature'] = max_temp_list
-            report['low_temprature'] = min_temp_list
+        months_data = weather_readings.months_data_of_year(date.year)
+        month_data = months_data.get(calendar.month_name[date.month])
+        if not month_data:
+            return {}
+
+        date_header = [header_value for header_value in month_data.csv_file_data.keys()
+                       if 'PK' in header_value]
+        date_values = month_data.csv_file_data.get(date_header[0])
+        report = {
+            'operation': 'c',
+            'high_temprature': month_data.attribute_values('Max TemperatureC'),
+            'low_temprature': month_data.attribute_values('Min TemperatureC'),
+            'dates': [datetime.datetime.strptime(date_value, '%Y-%m-%d')
+                      for date_value in date_values]
+        }
         return report

@@ -1,8 +1,5 @@
 #!/usr/bin/python3.6
 
-MONTHS_NAME = ["January", "February", "March", "April", "May", "June",
-               "July", "August", "September", "October", "November", "December"]
-
 YEAR_ARGUMENT_ERROR_MESSAGE = "Incorrect data format, should be YYYY"
 
 MONTH_ARGUMENT_ERROR_MESSAGE = "Incorrect data format, should be YYYY/MM"

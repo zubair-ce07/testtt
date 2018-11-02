@@ -21,19 +21,21 @@ def parse_records(operation, dates, weather_records, path_to_files):
         add_current_year_weather_readings(
             date, weather_records, path_to_files)
         report = analyse_weather.analyse(operation, weather_records, date)
-        report_weather.display_report(report, operation, date)
+        report_weather.display_report(report, date)
 
 
 def add_current_year_weather_readings(date, weather_records, path_to_files):
-    months_in_year = weather_records.get_months_data_of_year(date.year)
-    if months_in_year is None:
-        months_in_year = {}
-        month_files_path = glob.glob(path_to_files+'/*'+str(date.year)+'*.txt')
-        for month_file_path in month_files_path:
-            month = CsvFileDataHolder()
-            month.read_csv_file(month_file_path)
-            months_in_year[month.months_name()] = month
-        weather_records.add_new_year(date.year, months_in_year)
+    months_in_year = weather_records.months_data_of_year(date.year)
+    if months_in_year:
+        return
+
+    months_in_year = {}
+    month_files_path = glob.glob(path_to_files+'/*'+str(date.year)+'*.txt')
+    for month_file_path in month_files_path:
+        month = CsvFileDataHolder()
+        month.read_csv_file(month_file_path)
+        months_in_year[month.months_name()] = month
+    weather_records.add_new_year(date.year, months_in_year)
 
 
 def year_validator(date_value):
@@ -60,7 +62,7 @@ def path_validator(path_value):
         raise argparse.ArgumentTypeError(constants.DIRECTORY_ERROR_MESSAGE)
 
 
-def driver():
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('path', type=path_validator,
                         help=constants.PATH_ARGUMENT_DISCRIPTION)
@@ -78,4 +80,4 @@ def driver():
 
 
 if __name__ == '__main__':
-    driver()
+    main()

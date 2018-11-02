@@ -6,56 +6,58 @@ from constants import FILE_ERROR_MESSAGE
 
 class WeatherReporting:
 
-    def display_yearly_report(self, report, date):
-        highest_month_name = calendar.month_name[report[0][1].month]
-        lowest_month_name = calendar.month_name[report[1][1].month]
-        most_humid_month_name = calendar.month_name[report[2][1].month]
+    def yearly_report(self, report, date):
+        highest_temp_date = report['highest_temp_date']
+        lowest_temp_date = report['lowest_temp_date']
+        highest_humidity_date = report['highest_humidity_date']
         print(
             date.year,
-            '\nHighest: ', report[0][0], 'C on ', highest_month_name, report[0][1].day,
-            '\nLowest: ', report[1][0], 'C on ', lowest_month_name, report[1][1].day,
-            '\nHumidity: ', report[2][0], '% on ', most_humid_month_name, report[2][1].day,
+            '\nHighest: ', report['highest_temp'], 'C on ',
+            calendar.month_name[highest_temp_date.month], highest_temp_date.day,
+            '\nLowest: ', report['lowest_temp'], 'C on ',
+            calendar.month_name[lowest_temp_date.month], lowest_temp_date.day,
+            '\nHumidity: ', report['highest_humidity'], '% on ',
+            calendar.month_name[highest_humidity_date.month], highest_humidity_date.day,
             '\n-------------------------------------\n'
         )
 
-    def display_monthly_report(self, report, date):
+    def monthly_report(self, report, date):
+        highest_temp_avg = round(report['average_max_temp'])
+        lowest_temp_avg = round(report['average_min_temp'])
+        mean_humidity_avg = round(report['average_mean_humidity'])
         print(
             date.year, calendar.month_name[date.month],
-            '\nHighest Average: ', round(report[0]), 'C',
-            '\nLowest Average: ', round(report[1]), 'C',
-            '\nAverage Mean Humidity: ', round(report[2]), '%',
+            '\nHighest Average: ', highest_temp_avg, 'C',
+            '\nLowest Average: ', lowest_temp_avg, 'C',
+            '\nAverage Mean Humidity: ', mean_humidity_avg, '%',
             '\n-------------------------------------\n'
         )
 
-    def display_monthly_bar_chart(self, report, date):
+    def monthly_bar_chart(self, report, record_date):
         high_temperature_list = report.get('high_temprature')
         low_temperature_list = report.get('low_temprature')
-        print(date.year, calendar.month_name[date.month])
-        count = 1
-        for high, low in zip(high_temperature_list, low_temperature_list):
-            if low is None and high is None:
-                print(count)
-            elif low is None or high is None:
-                if low is None:
-                    print(count, "\033[0;31;48m+"*abs(high), "\033[0m  ",
-                          str(high) + "C")
-                if high is None:
-                    print(count, "\033[0;34;48m+"*abs(low),
-                          "\033[0m", str(low), "C")
-            else:
-                print(count, "\033[0;34;48m+"*abs(low),
-                      "\033[0;31;48m+"*abs(high), "\033[0m", str(low), 'C',
-                      str(high) + 'C')
-            count += 1
+        dates = report['dates']
+        print(record_date.year, calendar.month_name[record_date.month])
+        color_blue = "\033[0;34;48m"
+        color_normal = "\033[0m"
+        color_red = "\033[0;31;48m"
+        for high, low, date in zip(high_temperature_list, low_temperature_list, dates):
+            highest_temp_bar = f"{color_red}{'+'*abs(high)}{color_normal}" if high else ''
+            lowest_temp_bar = f"{color_blue}{'+'*abs(low)}{color_normal}" if low else ''
+            highest_temp = f"{high} C" if high else ''
+            lowest_temp = f"{low} C" if low else ''
+            print(date.day, lowest_temp_bar, highest_temp_bar,
+                  lowest_temp, highest_temp)
+
         print('\n-------------------------------------\n')
 
-    def display_report(self, report, operation, date):
-        if len(report) > 1:
-            if operation == 'e':
-                self.display_yearly_report(report, date)
-            elif operation == 'a':
-                self.display_monthly_report(report, date)
-            else:
-                self.display_monthly_bar_chart(report, date)
+    def display_report(self, report, date):
+        operation = report.get('operation')
+        if operation == 'e':
+            self.yearly_report(report, date)
+        elif operation == 'a':
+            self.monthly_report(report, date)
+        elif operation == 'c':
+            self.monthly_bar_chart(report, date)
         else:
             print(FILE_ERROR_MESSAGE, '\n\n')

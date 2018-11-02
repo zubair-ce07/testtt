@@ -4,11 +4,10 @@ from csv_file_data_holder import CsvFileDataHolder
 
 class WeatherReadings:
     def __init__(self):
-        self.year_holder = dict()
+        self.weather_records = {}
 
     def add_new_year(self, year='', months=[]):
-        self.year_holder[year] = months
+        self.weather_records[year] = months
 
-    def get_months_data_of_year(self, year):
-        months = self.year_holder.get(year)
-        return months
+    def months_data_of_year(self, year):
+        return self.weather_records.get(year)
