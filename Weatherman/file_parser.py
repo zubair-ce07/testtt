@@ -1,48 +1,29 @@
-import calendar
 import csv
 import glob
 from datetime import datetime
 
+from weather_records import WeatherRecords
+
 
 class FileParser:
-    """
-    Class for parsing the file given the command line arguments.
-    It also reads the files and returns the details.
-    """
-    files = []
-    record = {}
+    """ Class for parsing the all weather files and returing the requried details """
 
-    def parse_file_yearly(self, file_path, year):
-        """Parse the file on the basis on year only"""
-        self.files = glob.glob(
-            f"{file_path}/Murree_weather_{year}_*.txt")
+    def read_all_weather_files(self, files_dir):
+        all_weather_records = []
 
-    def parse_file_monthly(self, file_path, year, n):
-        """Parse the file on the basis on year and month"""
-        self.files = glob.glob(
-            f"{file_path}/Murree_weather_{year}_{calendar.month_abbr[int(n)]}.txt"
-            )
+        for file in glob.glob(f"{files_dir}*.txt"):
+            with open(file, "r") as file_data:
+                file_reader = csv.DictReader(file_data)
+                for instance in file_reader:
+                    req_attrs = {
+                        "Max Temperature": instance["Max TemperatureC"],
+                        "Min Temperature": instance["Min TemperatureC"],
+                        "Max Humidity": instance["Max Humidity"],
+                        "Min Humidity": instance[" Min Humidity"],
+                        "Mean Humidity": instance[" Mean Humidity"]}
+                    date = instance.get("PKT", instance.get("PKST"))
+                    req_attrs["Date"] = datetime.strptime(date, "%Y-%m-%d")
+                    if all(req_attrs.values()):
+                        all_weather_records.append(WeatherRecords(req_attrs))
 
-    def read_file(self):
-        """Function for reading the files (using csv DictReader)"""
-        if self.files:
-            for path in self.files:
-                with open(path, 'r') as file:
-                    reader = csv.DictReader(file)
-                    for row in reader:
-                        info = row.get("PKT", row.get("PKST"))
-                        date = datetime.strptime(
-                            info,
-                            "%Y-%m-%d"
-                        )
-                        details = {
-                            'Max TemperatureC': row['Max TemperatureC'],
-                            'Min TemperatureC': row['Min TemperatureC'],
-                            'Max Humidity': row['Max Humidity'],
-                            'Min Humidity': row[' Min Humidity'],
-                            'Mean Humidity': row[' Mean Humidity']
-                        }
-                        self.record[date] = details
-        else:
-            return False
-        return self.record
+        return all_weather_records

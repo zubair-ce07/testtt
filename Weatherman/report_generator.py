@@ -1,72 +1,45 @@
-import calendar
-
-
 class ReportGenerator:
-    """
-    This class generate the reports provided the accurate details
-    and display it on the console.
-    """
-    def generate_report_for_yearly_details(self, details):
-        """Printing the requried calculations for yearly details"""
+    """ This class generate the reports provided the accurate details
+    and display it on the console """
+
+    RED_START = "\033[91m"
+    BLUE_START = "\33[34m"
+    RED_END = "\033[0m"
+    BLUE_END = "\33[0m"
+
+    def generate_yearly_report(self, calculated_records):
         print("Highest: {}C on {} {}".format(
-            int(details["Max Temperature"][0]),
-            calendar.month_name[details["Max Temperature"][1].month],
-            details["Max Temperature"][1].day))
+            calculated_records[0].max_temperature,
+            calculated_records[0].date.strftime("%B"),
+            calculated_records[0].date.day))
         print("Lowest: {}C on {} {}".format(
-            int(details["Min Temperature"][0]),
-            calendar.month_name[details["Min Temperature"][1].month],
-            details["Min Temperature"][1].day))
+            calculated_records[1].min_temperature,
+            calculated_records[1].date.strftime("%B"),
+            calculated_records[1].date.day))
         print("Humidity: {}% on {} {}".format(
-            int(details["Max Humidity"][0]),
-            calendar.month_name[details["Max Humidity"][1].month],
-            details["Max Humidity"][1].day))
+            calculated_records[2].max_humidity,
+            calculated_records[2].date.strftime("%B"),
+            calculated_records[2].date.day))
 
-    def generate_report_for_monthly_details(self, details):
-        """Printing the requried calculations for monthly details"""
-        print("Highest Average: {}C".format(round(details[0], 2)))
-        print("Lowest Average: {}C".format(round(details[1], 2)))
-        print("Average Mean Humidity: {}%".format(round(details[2], 2)))
+    def generate_monthly_report(self, calculated_records):
+        print("Highest Average: {}C".format(round(calculated_records[0], 2)))
+        print("Lowest Average: {}C".format(round(calculated_records[1], 2)))
+        print("Average Mean Humidity: {}%".format(round(calculated_records[2], 2)))
 
-    def generate_graph(self, details):
-        """Printing the temperature graph """
-        for i, item in enumerate(details):
-            if i == 0:
-                print(calendar.month_name[item.month], item.year)
-            else:
-                pass
-            if details[item]["Max Temperature"] != "" and details[item][
-                "Min Temperature"
-            ] != "":
-                print(i+1, " ", end="")
-                print(
-                    '\033[91m' + "+"*int(details[item]["Max Temperature"]) +
-                    '\033[0m' + " (" + details[item]["Max Temperature"] + "C)")
-                print(i+1, " ", end="")
-                print(
-                    '\33[34m' +
-                    "-"*abs(int(details[item]["Min Temperature"])) +
-                    '\33[0m' + " (" + details[item]["Min Temperature"] +
-                    "C)\n"
-                    )
+    def generate_graph(self, calculated_records):
+        print(calculated_records[0].date.strftime("%B"), calculated_records[0].date.year)
 
-    def generate_horizontal_graph(self, details):
-        """Printing the horizontal temperature graph """
-        for i, item in enumerate(details):
-            if i == 0:
-                print(calendar.month_name[item.month], item.year)
-            else:
-                pass
-            if details[item]["Max Temperature"] != "" and details[item][
-                "Min Temperature"
-            ] != "":
-                print(i+1, " ", end="")
-                print(
-                    '\33[34m' + "+"*abs(
-                        int(details[item]["Min Temperature"])) +
-                    '\33[0m', end="")
-                print(
-                    '\033[91m' +
-                    "+"*int(details[item]["Max Temperature"]) +
-                    '\033[0m' + " (" + details[item]["Min Temperature"] +
-                    "C - " + details[item]["Max Temperature"] + " C)"
-                    )
+        for record in calculated_records:
+            print(f"{self.RED_START}+{self.RED_END}" * record.max_temperature, end="")
+            print(f"{record.max_temperature}C")
+            print(f"{self.BLUE_START}-{self.BLUE_END}" * record.min_temperature, end="")
+            print(f"{record.min_temperature}C")
+
+    def generate_horizontal_graph(self, calculated_records):
+        print(calculated_records[0].date.strftime("%B"), calculated_records[0].date.year)
+
+        for record in calculated_records:
+            print(f"{self.BLUE_START}-{self.BLUE_END}" * record.min_temperature, end="")
+            print(f"{self.RED_START}+{self.RED_END}" * record.max_temperature, end="")
+            print(f"{record.min_temperature}C-", end="")
+            print(f"{record.max_temperature}C")
