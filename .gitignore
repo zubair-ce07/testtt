@@ -58,3 +58,16 @@ target/
 
 # VSCode
 .vscode
+
+#MAC Stuff
+__MACOSX/
+
+weatherfiles/
+
+weatherfiles.zip
+
+__pychache__/
+
+fTask/
+
+
