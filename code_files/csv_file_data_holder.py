@@ -18,18 +18,20 @@ class CsvFileDataHolder:
     def add_new_attribute(self, header, values):
         self.csv_file_data[header] = values
 
-    def attribute_values(self, attribute=''):
-        key = [val for val in self.csv_file_data.keys() if attribute in val]
-        return [int(val) if val else None for val in self.csv_file_data.get(key[0])]
+    def attribute_values(self, attribute):
+        header = [header_value for header_value in self.csv_file_data.keys()
+                  if attribute in header_value]
+        return [int(value) if value else None for value in self.csv_file_data.get(header[0])]
 
     def read_csv_file(self, file_path):
         try:
             with open(file_path, 'r') as csvfile:
                 csv_reader = csv.DictReader(csvfile)
                 headers = csv_reader.fieldnames
+
                 for row in csv_reader:
                     for header in headers:
-                        self.csv_file_data.setdefault(
-                            header, []).append(row.get(header))
+                        self.csv_file_data.setdefault(header, []).append(row.get(header))
+
         except IOError:
             self.csv_file_data = None
