@@ -18,10 +18,10 @@ class CsvFileDataHolder:
     def add_new_attribute(self, header, values):
         self.csv_file_data[header] = values
 
-    def attribute_values(self, attribute):
-        header = [header_value for header_value in self.csv_file_data.keys()
-                  if attribute in header_value]
-        return [int(value) if value else None for value in self.csv_file_data.get(header[0])]
+    def attribute_values(self, header):
+        headers = [header_value for header_value in self.csv_file_data.keys()
+                  if header in header_value]
+        return [int(value) if value else None for value in self.csv_file_data.get(headers[0])]
 
     def read_csv_file(self, file_path):
         try:
