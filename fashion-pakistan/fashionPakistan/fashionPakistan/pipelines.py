@@ -24,9 +24,6 @@ class VerifyProduct(object):
     def process_item(self, item, spider):
         if not(item["product_sku"]) or not(item["url"]) or not(item["name"]) or not(item["skus"]):
             raise DropItem("Basic Things are not found: %s" % item)
-        for key in item["skus"]:
-            if item[key].get("prev_price") is None:
-                raise DropItem("Price not found: %s" % item)
         
         return item
 

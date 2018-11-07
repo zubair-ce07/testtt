@@ -8,7 +8,7 @@
 import scrapy
 
 
-class FashionPakistna(scrapy.Item):
+class FashionPakistan(scrapy.Item):
     # define the fields for your item here like:
     name = scrapy.Field()
     product_sku = scrapy.Field()

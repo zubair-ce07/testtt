@@ -2,7 +2,7 @@
 import json
 from parsel import Selector
 import math
-from warda.items import WardaItem
+from fashionPakistan.items import FashionPakistan
 import scrapy
 
 
@@ -33,7 +33,7 @@ class WardaComSpider(scrapy.Spider):
     def parse_items(self, response):
         json_items = json.loads(response.body)
         for item in json_items:
-            product = WardaItem()
+            product = FashionPakistan()
             product["name"] = item["productName"]
             product["product_sku"] = item["productSKU"]
             product["description"] = self.parse_description(item)

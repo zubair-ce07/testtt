@@ -1,31 +1,28 @@
 # -*- coding: utf-8 -*-
-import re
-import json
 import scrapy
 from fashionPakistan.items import FashionPakistan
 
 
-class SanasafinazComSpider(scrapy.Spider):
-    name = 'sanasafinaz.com'
-    # allowed_domains = ['https://www.sanasafinaz.com']
-    start_urls = ['https://www.sanasafinaz.com/']
+class CrossstitchComSpider(scrapy.Spider):
+    name = 'crossstitch.pk'
+    start_urls = ['https://www.crossstitch.pk']
 
     def parse(self, response):
         category_links = response.xpath(
-            "//div[@id='om']/ul/li/a/@href").extract()
-        category_links = category_links[:-3]
+            "//ul[@class='top-menu']/li/a/@href").extract()
         for link in category_links:
-            yield scrapy.Request(link, callback=self.parse_product_links)
+            yield scrapy.Request(response.urljoin(link)+"?pagenumber=1", self.parse_product_links)
 
     def parse_product_links(self, response):
         product_links = response.xpath(
-            "//a[contains(@class, 'product-item-photo')]/@href").extract()
+            "//div[@class='picture ']/a/@href").extract()
         for link in product_links:
-            yield scrapy.Request(link, self.parse_product_details)
+            yield scrapy.Request(response.urljoin(link), self.parse_product_details)
 
-        next_link = response.xpath("//a[@title='Next']/@href").extract_first()
-        if next_link:
-            yield scrapy.Request(next_link, self.parse_product_links)
+        if product_links:
+            pagenumber = int(response.url[response.url.find("=")+1:])
+            pagenumber = pagenumber + 1
+            yield scrapy.Request(response.urljoin("?pagenumber="+str(pagenumber)), self.parse_product_links)
 
     def parse_product_details(self, response):
         product = FashionPakistan()
@@ -34,13 +31,10 @@ class SanasafinazComSpider(scrapy.Spider):
         product["description"] = self.get_item_description(response)
         product["images"] = self.get_item_images(response)
         product["attributes"] = self.get_item_attributes(response)
-        product["out_of_stock"] = self.get_stock_availablity(response)
+        product["out_of_stock"] = False
         product["skus"] = self.get_item_skus(response)
         product["url"] = response.url
         yield product
-
-    def get_stock_availablity(self, response):
-        return response.xpath("//div[@title='Availability']/span/text()").extract_first()
 
     def get_item_name(self, response):
         return response.xpath("//span[@data-ui-id]/text()").extract_first()
@@ -53,38 +47,39 @@ class SanasafinazComSpider(scrapy.Spider):
 
     def get_item_images(self, response):
         images = response.xpath(
-            "//div[@class='slideset']//img/@src").extract()
+            "//div[@class='MagicToolboxSelectorsContainer']//img/@src").extract()
+        images.append(response.xpath(
+            "//img[@itemprop='image']/@src").extract_first())
         return images
 
     def get_item_attributes(self, response):
-        detail = response.xpath(
-            "//div[@id='product.info.description']//tbody/tr//td/text()").extract()
-        detail = [ x+y for x,y in zip(detail[0::2], detail[1::2]) ]
-        if detail:
+        material = response.xpath(
+            "//td[@data-th='Material']/text()").extract_first()
+        if material:
             return {
-                "detail": detail,
+                "Material": material,
             }
         else:
             return {}
 
     def get_item_sizes(self, response):
-        size_string = re.findall(r'swatchOptions\":[\W\w]*,\"position\":\"0\"}},|$',response.text)[0]
+        size_string = re.findall(
+            r'swatchOptions\":[\W\w]*,\"position\":\"0\"}},|$', response.text)[0]
         size_string = size_string.strip("swatchOptions\":")
         size_string = size_string.strip(",")
         size_string = size_string+"}"
         sizes = []
         if size_string != "}":
+            print("find me ", size_string)
             json_string = json.loads(size_string)
-            for option in json_string["attributes"]["580"]["options"]:
+            for option in json_string["attributes"]["142"]["options"]:
                 sizes.append(option["label"])
-        
+
         return sizes
 
     def get_item_skus(self, response):
         color_name = response.xpath(
             "//td[@data-th='Color']/text()").extract_first()
-        if not(color_name):
-            color_name = "no_color"
         price = response.xpath("//span[@class='price']/text()").extract_first()
         currency = response.xpath(
             "//meta[@itemprop='priceCurrency']/@content").extract_first()

@@ -2,7 +2,7 @@
 import re
 import json
 import scrapy
-from khaadi.items import KhaadiItem
+from fashionPakistan.items import FashionPakistan
 
 
 class KhaadiComSpider(scrapy.Spider):
@@ -28,7 +28,7 @@ class KhaadiComSpider(scrapy.Spider):
             yield scrapy.Request(next_link, self.parse_product_links)
 
     def parse_product_details(self, response):
-        product = KhaadiItem()
+        product = FashionPakistan()
         product["name"] = self.get_item_name(response)
         product["product_sku"] = self.get_item_sku(response)
         product["description"] = self.get_item_description(response)
