@@ -37,7 +37,6 @@ class NikeParser:
         item['url'] = response.url
 
         requests = self.generate_colour_requests(response)
-        print(item)
         return [item] + requests
 
     def parse_secondry(self, response):
