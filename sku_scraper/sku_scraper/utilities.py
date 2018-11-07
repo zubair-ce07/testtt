@@ -1,9 +1,10 @@
 
 def convert_price_to_integer(price):
-    return int(float(price)*100)
+    return int(float(price.replace(',', ''))*100)
 
 
 def pricing(prices):
+    prices = set(prices)
     converted_prices = [convert_price_to_integer(price) for price in prices if price]
     converted_prices.sort()
     price_map = {
