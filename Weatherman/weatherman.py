@@ -8,11 +8,11 @@ from result_calculations import ResultCalculations
 
 
 def is_actual_dir(dirname):
-    if not os.path.isdir(dirname):
-        msg = "{0} is not a directory".format(dirname)
-        raise argparse.ArgumentTypeError(msg)
-    else:
+    if os.path.isdir(dirname):
         return dirname
+
+    msg = "{0} is not a directory".format(dirname)
+    raise argparse.ArgumentTypeError(msg)
 
 
 def parse_arguments():
@@ -32,16 +32,17 @@ def parse_arguments():
     parser.add_argument(
         '-b', type=lambda arg: datetime.strptime(arg, '%Y/%m'),
         help="Enter the year/month (i.e 2011/03) -- Bonus")
+
     return parser.parse_args()
 
 
-def weatherman_main():
+def main():
     arguments = parse_arguments()
-    file_object = FileParser()
+    file_parser = FileParser()
     calculations = ResultCalculations()
     report = ReportGenerator()
 
-    records = file_object.read_all_weather_files(arguments.path)
+    records = file_parser.read_all_weather_files(arguments.path)
 
     if arguments.e:
         report.generate_yearly_report(
@@ -60,4 +61,4 @@ def weatherman_main():
             calculations.find_monthly_data(records, arguments.b.date()))
 
 if __name__ == "__main__":
-    weatherman_main()
+    main()

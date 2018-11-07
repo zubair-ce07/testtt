@@ -9,21 +9,27 @@ class FileParser:
     """ Class for parsing the all weather files and returing the requried details """
 
     def read_all_weather_files(self, files_dir):
-        all_weather_records = []
+        all_records = []
 
-        for file in glob.glob(f"{files_dir}*.txt"):
-            with open(file, "r") as file_data:
-                file_reader = csv.DictReader(file_data)
-                for instance in file_reader:
-                    req_attrs = {
-                        "Max Temperature": instance["Max TemperatureC"],
-                        "Min Temperature": instance["Min TemperatureC"],
-                        "Max Humidity": instance["Max Humidity"],
-                        "Min Humidity": instance[" Min Humidity"],
-                        "Mean Humidity": instance[" Mean Humidity"]}
-                    date = instance.get("PKT", instance.get("PKST"))
-                    req_attrs["Date"] = datetime.strptime(date, "%Y-%m-%d")
-                    if all(req_attrs.values()):
-                        all_weather_records.append(WeatherRecords(req_attrs))
+        for file_tag in glob.glob(f"{files_dir}*.txt"):
+            with open(file_tag, "r") as file_data:
+                reader = csv.DictReader(file_data)
+                [all_records.append(WeatherRecords(
+                    self.get_record(record))) for record in reader if self.get_record(record)]
 
-        return all_weather_records
+        return all_records
+
+    def get_record(self, record):
+        req_attrs = {
+            "Max Temperature": record["Max TemperatureC"],
+            "Min Temperature": record["Min TemperatureC"],
+            "Max Humidity": record["Max Humidity"],
+            "Min Humidity": record[" Min Humidity"],
+            "Mean Humidity": record[" Mean Humidity"]}
+        date = record.get("PKT") or record.get("PKST")
+        req_attrs["Date"] = datetime.strptime(date, "%Y-%m-%d")
+
+        if not all(req_attrs.values()):
+            return False
+
+        return req_attrs
