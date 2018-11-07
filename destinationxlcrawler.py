@@ -30,7 +30,7 @@ class DestinationxlParseSpider(scrapy.Spider):
         category_info = self.extract_category_id(response)
         return Request(self.product_url_t.format(category_info[0], category_info[1]),
                        meta={'category_info': category_info, 'item': item},
-                       callback=self.extract_colour_ids)
+                       callback=self.parse_colors)
 
     def extract_sizes_or_skus(self, response):
         raw_colour = json.loads(response.text)
@@ -79,7 +79,7 @@ class DestinationxlParseSpider(scrapy.Spider):
         del item['meta']
         return item
 
-    def extract_colour_ids(self, response):
+    def parse_colors(self, response):
         raw_product = json.loads(response.text)
         item = response.meta['item']
         category_info = response.meta['category_info']
