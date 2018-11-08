@@ -4,8 +4,7 @@ class ReportGenerator:
 
     RED_START = "\033[91m"
     BLUE_START = "\33[34m"
-    RED_END = "\033[0m"
-    BLUE_END = "\33[0m"
+    END = "\033[0m"
 
     def generate_yearly_report(self, record):
         print(
@@ -30,16 +29,16 @@ class ReportGenerator:
         print(records[0].date.strftime("%B"), records[0].date.year)
 
         for record in records:
-            print(f"{self.RED_START}+{self.RED_END}" * record.max_temperature, end=" ")
+            print(f"{self.RED_START}+{self.END}" * record.max_temperature, end=" ")
             print(f"{record.max_temperature}C")
-            print(f"{self.BLUE_START}-{self.BLUE_END}" * record.min_temperature, end=" ")
+            print(f"{self.BLUE_START}-{self.END}" * record.min_temperature, end=" ")
             print(f"{record.min_temperature}C")
 
     def generate_horizontal_graph(self, records):
         print(records[0].date.strftime("%B"), records[0].date.year)
 
         for record in records:
-            print(f"{self.BLUE_START}-{self.BLUE_END}" * record.min_temperature, end="")
-            print(f"{self.RED_START}+{self.RED_END}" * record.max_temperature, end=" ")
+            print(f"{self.BLUE_START}-{self.END}" * record.min_temperature, end="")
+            print(f"{self.RED_START}+{self.END}" * record.max_temperature, end=" ")
             print(f"{record.min_temperature}C-", end="")
             print(f"{record.max_temperature}C")

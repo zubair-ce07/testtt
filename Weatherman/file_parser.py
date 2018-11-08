@@ -1,6 +1,5 @@
 import csv
 import glob
-from datetime import datetime
 
 from weather_records import WeatherRecords
 
@@ -13,24 +12,15 @@ class FileParser:
 
         for file_name in glob.glob(f"{files_dir}*.txt"):
             with open(file_name, "r") as file_data:
-                for record in csv.DictReader(file_data):
-                    attrs = self.requried_attrs(record)
-                    if self.is_valid(attrs):
-                        all_records.append(WeatherRecords(attrs))
+                reader = csv.DictReader(file_data)
+                [all_records.append(WeatherRecords(record)) for record in reader if self.is_valid_record(record)]
 
         return all_records
 
-    def requried_attrs(self, record):
-        req_attrs = {
-            "Max Temperature": record["Max TemperatureC"],
-            "Min Temperature": record["Min TemperatureC"],
-            "Max Humidity": record["Max Humidity"],
-            "Min Humidity": record[" Min Humidity"],
-            "Mean Humidity": record[" Mean Humidity"]}
-        date = record.get("PKT") or record.get("PKST")
-        req_attrs["Date"] = datetime.strptime(date, "%Y-%m-%d")
+    def is_valid_record(self, record):
+        req_attrs = [
+            record["Max TemperatureC"], record["Min TemperatureC"],
+            record["Max Humidity"], record[" Min Humidity"],
+            record[" Mean Humidity"]]
 
-        return req_attrs
-
-    def is_valid(self, attrs):
-        return all(attrs.values())
+        return all(req_attrs)
