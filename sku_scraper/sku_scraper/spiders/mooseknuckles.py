@@ -33,55 +33,55 @@ class MooseknucklesParseSpider(Mixin, Spider):
         item['gender'] = self.extract_gender(response)
         item['category'] = self.extract_category(response)
         item['url'] = self.extract_product_url(response)
-        item['skus'] = self.make_skus(response)
+        item['skus'] = self.extract_skus(response)
 
         return item
 
     def extract_retailer_sku(self, response):
-        retailer_sku_css = 'meta[property="product:retailer_item_id"]::attr(content)'
-        return response.css(retailer_sku_css).extract_first()
+        css = 'meta[property="product:retailer_item_id"]::attr(content)'
+        return response.css(css).extract_first()
 
     def extract_name(self, response):
-        name_css = 'meta[property="og:title"]::attr(content)'
-        return response.css(name_css).extract_first()
+        css = 'meta[property="og:title"]::attr(content)'
+        return response.css(css).extract_first()
 
     def extract_gender(self, response):
-        gender_css = 'button.btn-cart::attr(data-category)'
-        return response.css(gender_css).extract_first().split('/')[0]
+        css = 'button.btn-cart::attr(data-category)'
+        return response.css(css).extract_first().split('/')[0]
 
     def extract_care(self, response):
-        care_css = 'div.tab-content > li::text'
-        return ' '.join(response.css(care_css).extract())
+        css = 'div.tab-content > li::text'
+        return ' '.join(response.css(css).extract())
 
     def extract_description(self, response):
-        description_css = 'div.tab-content > div::text'
-        description = response.css(description_css).extract()
-        return description[0].strip() if description else None
+        css = 'div.tab-content > div::text'
+        description = response.css(css).extract_first()
+        return description.strip() if description else []
 
     def extract_image_urls(self, response):
-        image_urls_css = 'div.product-image-gallery img::attr(src)'
-        return response.css(image_urls_css).extract()
+        css = 'div.product-image-gallery img::attr(src)'
+        return response.css(css).extract()
 
     def extract_product_url(self, response):
         return response.url
 
     def extract_category(self, response):
-        category_css = 'button.btn-cart::attr(data-category)'
-        return response.css(category_css).extract_first().split('/')
+        css = 'button.btn-cart::attr(data-category)'
+        return response.css(css).extract_first().split('/')
 
     def extract_money_strings(self, raw_price):
         return [raw_price['basePrice'], raw_price['oldPrice']]
 
     def extract_currency(self, response):
-        currency_css = 'meta[property="product:price:currency"]::attr(content)'
-        return response.css(currency_css).extract_first()
+        css = 'meta[property="product:price:currency"]::attr(content)'
+        return response.css(css).extract_first()
 
     def extract_raw_skus(self, response):
         raw_skus = response.css('div.product-options script::text').extract_first()
         raw_skus = re.search('Product.Config[(](.*)[)];', raw_skus).group(1)
         return json.loads(raw_skus)
 
-    def make_skus(self, response):
+    def extract_skus(self, response):
         raw_skus = self.extract_raw_skus(response)
         skus = {}
 
@@ -92,36 +92,35 @@ class MooseknucklesParseSpider(Mixin, Spider):
         raw_sizes = raw_skus['attributes']['142']['options']
 
         for raw_colour in raw_colours:
-            colour = raw_colour['label']
+            colour_sku = common_sku.copy()
+            colour_sku['colour'] = raw_colour['label']
 
             for raw_size in raw_sizes:
-                sku = common_sku.copy()
-                
-                size = 'One Size' if raw_size['label'] == 'OS' else raw_size['label']
+                sku = colour_sku.copy()
 
-                sku['size'] = size
-                sku['colour'] = colour
+                size = raw_size['label']
+                sku['size'] = 'One Size' if size == 'OS' else size
 
-                if not self.check_common_product(raw_colour, raw_size):
+                if not self.is_sku_available(raw_colour, raw_size):
                     sku['out_of_stock'] = True
 
-                skus[f'{colour}_{size}'] = sku
+                skus[f'{sku["colour"]}_{sku["size"]}'] = sku
 
         return skus
 
-    def check_common_product(self, raw_colour, raw_size):
+    def is_sku_available(self, raw_colour, raw_size):
         return set(raw_colour['products']).intersection(raw_size['products'])
 
 
 class MooseknucklesCrawlSpider(Mixin, CrawlSpider):
     name = 'mooseknuckles-crawl'
 
-    listings_x = ['//ol[contains(@class, "nav-primary")]', '//div[@class="pager"]']
-    products_x = ['//a[contains(@class,"shop-now")]']
+    listings_css = ['ol.nav-primary', 'div.pager']
+    products_css = ['a.shop-now']
 
     rules = (
-        Rule(LinkExtractor(restrict_xpaths=listings_x)),
-        Rule(LinkExtractor(restrict_xpaths=products_x), callback='parse_product')
+        Rule(LinkExtractor(restrict_css=listings_css)),
+        Rule(LinkExtractor(restrict_css=products_css), callback='parse_product')
     )
 
     product_parser = MooseknucklesParseSpider()
