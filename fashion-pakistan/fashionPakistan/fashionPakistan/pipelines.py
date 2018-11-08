@@ -29,7 +29,7 @@ class VerifyProduct(object):
 
 class JsonWrite(object):
     def open_spider(self, spider):
-        self.file = open('items.jl', 'w')
+        self.file = open(spider.name+'.jl', 'w')
 
     def close_spider(self, spider):
         self.file.close()
