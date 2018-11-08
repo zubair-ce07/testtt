@@ -168,8 +168,6 @@ class DestinationxlCrawlSpider(CrawlSpider):
         total_pages = response.css('.page-nos span:nth-last-child(-n+2)::text').extract()
 
         if total_pages[-1] == 'View All':
-            print(total_pages[-2])
             return total_pages[-2]
         else:
-            print(total_pages[-1])
             return total_pages[-1]
