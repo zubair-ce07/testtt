@@ -1,7 +1,7 @@
 import json
 
 import scrapy
-from destinationxl.items import DestinationxlItem
+from destinationxl.items import DestinationxlItem, SizeItem
 from scrapy.http import Request
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
@@ -10,6 +10,8 @@ from w3lib.url import url_query_parameter
 
 class DestinationxlParseSpider(scrapy.Spider):
     name = 'destinationxl-parser'
+    start_urls = [
+        'https://www.destinationxl.com/mens-big-and-tall-store/mens-tees/harbor-bay-moisture-wicking-pocket-t-shirt/cat140084/G3356']
     seen_ids = []
 
     color_url_t = '{}?&isSelection=true&attributes=color={}'
@@ -28,9 +30,9 @@ class DestinationxlParseSpider(scrapy.Spider):
         item['url'] = self.extract_product_url(response)
 
         category_info = self.extract_category_id(response)
-        return Request(self.product_url_t.format(category_info[0], category_info[1]),
-                       meta={'item': item},
-                       callback=self.parse_colors)
+        yield Request(self.product_url_t.format(category_info[0], category_info[1]),
+                      meta={'item': item},
+                      callback=self.parse_colors)
 
     def parse_colors(self, response):
         raw_product = json.loads(response.text)
@@ -98,10 +100,10 @@ class DestinationxlParseSpider(scrapy.Spider):
         if item['meta'].get('requests'):
             request = item['meta']['requests'].pop(0)
             request.meta['item'] = item
-            return request
+            yield request
 
         del item['meta']
-        return item
+        yield item
 
     def extract_sizes_requests(self, response):
         raw_product = json.loads(response.text)
@@ -154,7 +156,9 @@ class DestinationxlCrawlSpider(CrawlSpider):
     destinationxl_parser = DestinationxlParseSpider()
 
     rules = (
-        Rule(LinkExtractor(restrict_css=('a.ng-trigger'), deny=('/brands', '/looks', '/everyday-specials'))),
+        Rule(LinkExtractor(restrict_css=('a.ng-trigger'),
+                           deny=('/mens-shoes', '/brands', '/looks', '/everyday-specials')),
+             callback='parse'),
         Rule(LinkExtractor(restrict_css=('.switch-hover')), callback=destinationxl_parser.parse),
     )
 
