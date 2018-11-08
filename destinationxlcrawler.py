@@ -12,7 +12,7 @@ class DestinationxlParseSpider(scrapy.Spider):
     name = 'destinationxl-parser'
     seen_ids = []
 
-    color_url_t = 'https://www.destinationxl.com/public/v1/dxlproducts/{}/{}?&isSelection=true&attributes=color={}'
+    color_url_t = '{}?&isSelection=true&attributes=color={}'
     product_url_t = 'https://www.destinationxl.com/public/v1/dxlproducts/{}/{}?'
 
     def parse(self, response):
@@ -24,26 +24,49 @@ class DestinationxlParseSpider(scrapy.Spider):
         item['country_code'] = 'US'
         item['currency'] = 'USD'
         item['language_code'] = 'en'
-        item['base_sku'] = self.extract_base_sku(response)
+        item['base_sku'] = product_id
         item['url'] = self.extract_product_url(response)
 
         category_info = self.extract_category_id(response)
         return Request(self.product_url_t.format(category_info[0], category_info[1]),
-                       meta={'category_info': category_info, 'item': item},
+                       meta={'item': item},
                        callback=self.parse_colors)
 
+    def parse_colors(self, response):
+        raw_product = json.loads(response.text)
+        item = response.meta['item']
+        item['brand'] = raw_product['brandName']
+        item['description_text'] = raw_product['longDescription']
+
+        for raw_color in raw_product['colorGroups']:
+
+            if 'Save' in raw_color['name']:
+                item['new_price_text'] = raw_color['name'].split(':')[0]
+            else:
+                item['old_price_text'] = raw_color['name']
+
+            for color in raw_color['colors']:
+                item['image_urls'] = [color['largeSwatchImageUrl'], color['swatchImageUrl']]
+                item['color_name'] = color['name']
+                item['color_code'] = color['id']
+                item['identifier'] = '{}-{}'.format(item['base_sku'], item['color_code'])
+
+                yield Request(self.color_url_t.format(response.url, color['id']),
+                              meta={'item': item},
+                              callback=self.extract_sizes_or_skus)
+
     def extract_sizes_or_skus(self, response):
-        raw_colour = json.loads(response.text)
+        colour = json.loads(response.text)
         item = response.meta['item']
 
-        if bool(raw_colour['inStock']):
+        if bool(colour['inStock']):
             item['available'] = 'True'
 
-        if len(raw_colour['sizes']) > 1:
+        if len(colour['sizes']) > 1:
             item['meta'] = {'requests': self.extract_sizes_requests(response)}
         else:
             item['meta'] = {}
-            item['size_infos'] = self.make_skus(raw_colour)
+            item['size_infos'] = self.make_skus(colour)
 
         return self.next_request_or_item(item)
 
@@ -78,30 +101,6 @@ class DestinationxlParseSpider(scrapy.Spider):
 
         del item['meta']
         return item
-
-    def parse_colors(self, response):
-        raw_product = json.loads(response.text)
-        item = response.meta['item']
-        category_info = response.meta['category_info']
-        item['brand'] = raw_product['brandName']
-        item['description_text'] = raw_product['longDescription']
-
-        for raw_color in raw_product['colorGroups']:
-
-            if 'Save' in raw_color['name']:
-                item['new_price_text'] = raw_color['name'].split(':')[0]
-            else:
-                item['old_price_text'] = raw_color['name']
-
-            for color in raw_color['colors']:
-                item['image_urls'] = [color['largeSwatchImageUrl'], color['swatchImageUrl']]
-                item['color_name'] = color['name']
-                item['color_code'] = color['id']
-                item['identifier'] = '{}-{}'.format(item['base_sku'], item['color_code'])
-
-                yield Request(self.color_url_t.format(category_info[0], category_info[1], color['id']),
-                              meta={'item': item},
-                              callback=self.extract_sizes_or_skus)
 
     def extract_sizes_requests(self, response):
         raw_product = json.loads(response.text)
