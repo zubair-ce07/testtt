@@ -139,7 +139,7 @@ class DestinationxlParseSpider(scrapy.Spider):
 
 class DestinationxlCrawlSpider(CrawlSpider):
     name = 'destinationxl-crawler'
-    start_urls = ['https://www.destinationxl.com/mens-big-and-tall-store/mens-clothing/cat130006',
+    start_urls = ['https://www.destinationxl.com/mens-big-and-tall-store',
                   'https://www.destinationxl.com/mens-big-and-tall-store/mens-shoes/cat130012?N=11070+4294944243&No=0&nocache=1541591936534']
     allowed_domains = ['www.destinationxl.com']
 
@@ -151,6 +151,7 @@ class DestinationxlCrawlSpider(CrawlSpider):
     destinationxl_parser = DestinationxlParseSpider()
 
     rules = (
+        Rule(LinkExtractor(restrict_css=('a.ng-trigger'), deny=('/brands', '/looks', '/everyday-specials'))),
         Rule(LinkExtractor(restrict_css=('.switch-hover')), callback=destinationxl_parser.parse),
     )
 
@@ -164,4 +165,9 @@ class DestinationxlCrawlSpider(CrawlSpider):
         yield from super(DestinationxlCrawlSpider, self).parse(response)
 
     def extract_total_pages(self, response):
-        return response.css('.page-nos span:last-child::text').extract_first()
+        total_pages = response.css('.page-nos span:nth-last-child(-n+2)::text').extract()
+
+        if total_pages[-1] == 'View All':
+            return total_pages[-2]
+        else:
+            return total_pages[-1]
