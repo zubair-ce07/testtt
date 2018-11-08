@@ -157,7 +157,7 @@ class DestinationxlCrawlSpider(CrawlSpider):
 
     def parse(self, response):
 
-        if not url_query_parameter(response.url, 'No'):
+        if not url_query_parameter(response.url, 'No') and response.url not in self.start_urls:
             for page in range(30, (int(self.extract_total_pages(response)) - 1) * 30, 30):
                 url = '{}?No={}'.format(response.url, page)
                 yield Request(url, callback=self.parse)
@@ -168,6 +168,8 @@ class DestinationxlCrawlSpider(CrawlSpider):
         total_pages = response.css('.page-nos span:nth-last-child(-n+2)::text').extract()
 
         if total_pages[-1] == 'View All':
+            print(total_pages[-2])
             return total_pages[-2]
         else:
+            print(total_pages[-1])
             return total_pages[-1]
