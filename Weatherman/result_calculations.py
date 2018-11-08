@@ -8,11 +8,11 @@ class ResultCalculations:
         if not records:
             return
 
-        instance_max_temp = max(records, key=lambda record: record.max_temperature)
-        instance_min_temp = min(records, key=lambda record: record.min_temperature)
-        instance_max_humidity = max(records, key=lambda record: record.max_humidity)
+        max_temp_record = max(records, key=lambda record: record.max_temperature)
+        min_temp_record = min(records, key=lambda record: record.min_temperature)
+        max_humidity_record = max(records, key=lambda record: record.max_humidity)
 
-        return instance_max_temp, instance_min_temp, instance_max_humidity
+        return max_temp_record, min_temp_record, max_humidity_record
 
     def find_monthly_data(self, records, date):
         return [
@@ -24,11 +24,8 @@ class ResultCalculations:
         if not records:
             return
 
-        avg_max_temp = sum([
-            record.max_temperature for record in records]) // len(records)
-        avg_min_temp = sum([
-            record.min_temperature for record in records]) // len(records)
-        avg_mean_humidity = sum([
-            record.mean_humidity for record in records]) // len(records)
+        avg_max_temp = sum([record.max_temperature for record in records]) // len(records)
+        avg_min_temp = sum([record.min_temperature for record in records]) // len(records)
+        avg_mean_humidity = sum([record.mean_humidity for record in records]) // len(records)
 
         return avg_max_temp, avg_min_temp, avg_mean_humidity

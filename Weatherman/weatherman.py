@@ -22,16 +22,16 @@ def parse_arguments():
         help="Path to directory containing files (i.e weatherfiles/..)")
     parser.add_argument(
         '-e', type=lambda arg: datetime.strptime(arg, '%Y'),
-        help="Enter the year (i.e 2002)")
+        nargs="*", help="Enter the year (i.e 2002)")
     parser.add_argument(
         '-a', type=lambda arg: datetime.strptime(arg, '%Y/%m'),
-        help="Enter the year/month (i.e 2011/03)")
+        nargs="*", help="Enter the year/month (i.e 2011/03)")
     parser.add_argument(
         '-c', type=lambda arg: datetime.strptime(arg, '%Y/%m'),
-        help="Enter the year/month (i.e 2011/03)")
+        nargs="*", help="Enter the year/month (i.e 2011/03)")
     parser.add_argument(
         '-b', type=lambda arg: datetime.strptime(arg, '%Y/%m'),
-        help="Enter the year/month (i.e 2011/03) -- Bonus")
+        nargs="*", help="Enter the year/month (i.e 2011/03) -- Bonus")
 
     return parser.parse_args()
 
@@ -45,20 +45,24 @@ def main():
     records = file_parser.read_all_weather_files(arguments.path)
 
     if arguments.e:
-        report.generate_yearly_report(
-            calculations.find_yearly_data(records, arguments.e.year))
+        for arg in arguments.e:
+            report.generate_yearly_report(
+                calculations.find_yearly_data(records, arg.year))
 
     if arguments.a:
-        report.generate_monthly_report(
-            calculations.calculate_average(records, arguments.a.date()))
+        for arg in arguments.a:
+            report.generate_monthly_report(
+                calculations.calculate_average(records, arg.date()))
 
     if arguments.c:
-        report.generate_graph(
-            calculations.find_monthly_data(records, arguments.c.date()))
+        for arg in arguments.c:
+            report.generate_graph(
+                calculations.find_monthly_data(records, arg.date()))
 
     if arguments.b:
-        report.generate_horizontal_graph(
-            calculations.find_monthly_data(records, arguments.b.date()))
+        for arg in arguments.b:
+            report.generate_horizontal_graph(
+                calculations.find_monthly_data(records, arg.date()))
 
 if __name__ == "__main__":
     main()

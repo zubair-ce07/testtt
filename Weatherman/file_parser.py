@@ -11,15 +11,16 @@ class FileParser:
     def read_all_weather_files(self, files_dir):
         all_records = []
 
-        for file_tag in glob.glob(f"{files_dir}*.txt"):
-            with open(file_tag, "r") as file_data:
-                reader = csv.DictReader(file_data)
-                [all_records.append(WeatherRecords(
-                    self.get_record(record))) for record in reader if self.get_record(record)]
+        for file_name in glob.glob(f"{files_dir}*.txt"):
+            with open(file_name, "r") as file_data:
+                for record in csv.DictReader(file_data):
+                    attrs = self.requried_attrs(record)
+                    if self.is_valid(attrs):
+                        all_records.append(WeatherRecords(attrs))
 
         return all_records
 
-    def get_record(self, record):
+    def requried_attrs(self, record):
         req_attrs = {
             "Max Temperature": record["Max TemperatureC"],
             "Min Temperature": record["Min TemperatureC"],
@@ -29,7 +30,7 @@ class FileParser:
         date = record.get("PKT") or record.get("PKST")
         req_attrs["Date"] = datetime.strptime(date, "%Y-%m-%d")
 
-        if not all(req_attrs.values()):
-            return False
-
         return req_attrs
+
+    def is_valid(self, attrs):
+        return all(attrs.values())
