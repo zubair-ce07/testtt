@@ -1,5 +1,4 @@
 import json
-import re
 
 from scrapy.selector import Selector
 from scrapy.spiders import CrawlSpider
@@ -96,7 +95,7 @@ class NikeParser:
     def extract_skus_secondary(self, raw_product):
         skus = []
         common_sku = self.extract_pricing_secondary(raw_product)
-        common_sku['colour'] = self.extract_colour_secondary(raw_product)
+        common_sku['colour'] = raw_product['colorDescription']
 
         for raw_sku in raw_product['skuContainer']['productSkus']:
             sku = common_sku.copy()
@@ -119,9 +118,6 @@ class NikeParser:
             pricing['previous_prices'] = [float(previous_price[1:]) * 100]
 
         return pricing
-
-    def extract_colour_secondary(self, raw_colour):
-        return raw_colour['colorDescription']
 
     def extract_pricing(self, raw_prices):
         prices = [raw_prices['currentPrice'], raw_prices['fullPrice']]
@@ -148,11 +144,9 @@ class NikeParser:
 
     def extract_brand(self, response):
         css = '#app-root ~ script::text'
-        raw_brand_details = response.css(css).extract_first()
-
-        if raw_brand_details:
-            raw_brand = json.loads(re.findall('{.+}', raw_brand_details)[0])
-            return raw_brand['@carts']['cart']['brand']
+        brand = response.css(css).re('{"brand":"(.*?)",')
+        if brand:
+            return brand[0]
 
         css = "[type='application/ld+json']::text"
         raw_brand = response.css(css).extract_first().replace('\n', '')
@@ -168,7 +162,7 @@ class NikeParser:
         raw_gender = raw_product.get(raw_product.get('retailer_sku'))
 
         soup = ' '.join(raw_gender['genders']).lower() if raw_gender else \
-            [raw_product['trackingData']['product']['gender']]
+            raw_product['trackingData']['product']['gender']
 
         for gender_str, gender in self.gender_map.items():
             if gender_str.lower() in soup:
@@ -204,29 +198,25 @@ class NikeParser:
 
     def extract_raw_product(self, response):
         css = '#app-root ~ script::text'
-        raw_product_details = response.css(css).extract_first()
-        raw_product_details = json.loads(re.findall('{.+}', raw_product_details)[0])
-        raw_product_details = raw_product_details['Threads']['products']
+        raw_product = response.css(css).re_first('{.+}')
+        raw_product = json.loads(raw_product)
+        raw_product = raw_product['Threads']['products']
 
-        raw_product_details['retailer_sku'] = self.retailer_sku(response)
-        return raw_product_details
+        raw_product['retailer_sku'] = self.retailer_sku(response)
+        return raw_product
 
     def extract_raw_product_secondary(self, response):
         css = '#product-data::text'
-        raw_product_detail = response.css(css).extract_first()
-        return json.loads(raw_product_detail)
+        raw_product = response.css(css).extract_first()
+        return json.loads(raw_product)
 
     def generate_colour_requests(self, response):
-        css = '.colorway-product-overlay:not' \
-              '(.colorway-product-overlay--selected) a::attr(href)'
+        css = '.colorway-product-overlay:not(.colorway-product-overlay--selected) a::attr(href),' \
+              '.color-chip-container li:not(.selected) a::attr(href)'
         urls = response.css(css).extract()
 
-        if not urls:
-            css = '.color-chip-container li:not(.selected) a::attr(href)'
-            urls = response.css(css).extract()
-
         meta = {'trail': self.extract_trail(response)}
-        return [response.follow(url, callback=self.parse, meta=meta) for url in urls]
+        return [response.follow(url, callback=self.parse, meta=meta.copy()) for url in urls]
 
     def is_visited_id(self, product_id):
         if product_id in self.visited_products:
@@ -243,28 +233,24 @@ class NikeCrawler(CrawlSpider):
 
     listing_url_t = 'https://store.nike.com/html-services/' \
                     'gridwallData?country=GB&lang_locale=en_GB&gridwallPath=n/1j5'
+    page_size = 60
 
     def parse(self, response):
-        requests = self.create_listings_requests(response)
-        return self.generate_requests(requests)
+        yield from self.create_listings_requests(response)
 
     def parse_products(self, response):
-        requests = self.create_product_requests(response)
-        return self.generate_requests(requests)
-
-    def generate_requests(self, requests):
-        for request in requests:
-            yield request
+        yield from self.create_product_requests(response)
 
     def create_listings_requests(self, response):
-        total_products_number = self.extract_total_products_number(response)
+        total_products = self.extract_total_products(response)
+        total_pages = (total_products // self.page_size) + 1
         meta = {'trail': [(self.extract_title(response), response.url)]}
 
         requests = []
 
-        for page_number in range((total_products_number // 60) + 1):
-            url = add_or_replace_parameter(self.listing_url_t, 'pn', page_number)
-            requests.append(response.follow(url, callback=self.parse_products, meta=meta))
+        for page_number in range(total_pages):
+            url = add_or_replace_parameter(self.listing_url_t, 'pn', page_number + 1)
+            requests.append(response.follow(url, callback=self.parse_products, meta=meta.copy()))
 
         return requests
 
@@ -272,11 +258,11 @@ class NikeCrawler(CrawlSpider):
         raw_urls = json.loads(response.text)['sections'][0]['items']
 
         requests = []
+        meta = {'trail': response.meta['trail'] + [('', response.url)]}
 
         for raw_url in raw_urls:
             url = raw_url['pdpUrl']
-            meta = {'trail': response.meta['trail'] + [('', url)]}
-            requests.append(response.follow(url, callback=self.nike_parser.parse, meta=meta))
+            requests.append(response.follow(url, callback=self.nike_parser.parse, meta=meta.copy()))
 
         return requests
 
@@ -284,7 +270,7 @@ class NikeCrawler(CrawlSpider):
         css = 'head title::text'
         return response.css(css).extract_first()
 
-    def extract_total_products_number(self, response):
+    def extract_total_products(self, response):
         css = '#pageTrackingDataElement::text'
         raw_number = json.loads(response.css(css).extract_first())
         return raw_number['response']['totalResults']
