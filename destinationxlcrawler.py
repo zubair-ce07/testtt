@@ -37,6 +37,7 @@ class DestinationxlParseSpider(scrapy.Spider):
         item = response.meta['item']
         item['brand'] = raw_product['brandName']
         item['description_text'] = raw_product['longDescription']
+        item['category_names'] = self.extract_category_names(raw_product)
 
         for raw_color in raw_product['colorGroups']:
 
@@ -134,6 +135,9 @@ class DestinationxlParseSpider(scrapy.Spider):
 
     def extract_category_id(self, response):
         return response.url.split('/')[-2:]
+
+    def extract_category_names(self, raw_product):
+        return [breadcrumb['name'] for breadcrumb in raw_product['breadCrumbsItems']]
 
 
 class DestinationxlCrawlSpider(CrawlSpider):
