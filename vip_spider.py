@@ -85,7 +85,7 @@ class VipParseSpider(BaseParseSpider):
         colour_soup = self.product_name(response)
         colour = clean(response.css(colour_css)) or [self.detect_colour(colour_soup)]
 
-        if all(colour):
+        if colour:
             common_sku['colour'] = colour[0]
 
         for size_s in response.css('.size-list li'):
@@ -95,7 +95,7 @@ class VipParseSpider(BaseParseSpider):
             if size_s.css('.sli-disabled'):
                 sku['out_of_stock'] = True
 
-            sku_id = f'{sku["colour"]}_{sku["size"]}' if all(colour) else sku['size']
+            sku_id = f'{sku["colour"]}_{sku["size"]}' if colour else sku['size']
             skus[sku_id] = sku
 
         return skus
@@ -104,9 +104,9 @@ class VipParseSpider(BaseParseSpider):
 class VipCrawlSpider(BaseCrawlSpider):
 
     def start_requests(self):
-        yield Request(url=self.categories_url, callback=self.category_requests)
+        yield Request(url=self.categories_url, callback=self.parse_start_url)
 
-    def category_requests(self, response):
+    def parse_start_url(self, response):
         meta = response.meta
         meta['trail'] = self.add_trail(response)
         raw_categories = json.loads(re.findall('getTopCategory\((.+)\)', response.text)[0])
