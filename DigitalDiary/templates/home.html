@@ -1,0 +1,130 @@
+<!-- templates/home.html -->
+{% load socialaccount %}
+<head>
+    <style>
+        body{margin-top:20px;}
+        ul.notes{
+         overflow-y:scroll;
+         height: 80%;
+        }
+        ul.notes li {
+          margin: 10px 40px 50px 0px;
+          float: left;
+        }
+        ul.notes li, ul.tag-list li{
+          list-style: none;
+        }
+        ul.notes li div small {
+          position: absolute;
+          top: 5px;
+          right: 5px;
+          font-size: 20px;
+          padding-right: 1em;
+        }
+        small>form{
+          padding-left: 3em;
+          display: inline;
+        }
+        ul.notes li div h4{
+          text-align: center;
+          background-color: white;
+        }
+        ul.notes li div p{
+          color: white;
+          height: 120px;
+        }
+        div.rotate {
+          -o-transform: rotate(4deg);
+          -webkit-transform: rotate(4deg);
+          -moz-transform: rotate(4deg);
+          position: relative;
+          top: 5px;
+        }
+        .note-bg {
+          background-color: grey;
+          color: #ffffff;
+        }
+        ul.notes li div {
+          text-decoration: none;
+          color: #000;
+          display: block;
+          height: 210px;
+          width: 210px;
+          padding: 1em;
+          -moz-box-shadow: 5px 5px 7px #212121;
+          -webkit-box-shadow: 5px 5px 7px rgba(33, 33, 33, 0.7);
+          box-shadow: 5px 5px 7px rgba(33, 33, 33, 0.7);
+          -moz-transition: -moz-transform 0.15s linear;
+          -o-transition: -o-transform 0.15s linear;
+          -webkit-transition: -webkit-transform 0.15s linear;
+        }
+        .header {
+            text-align: center;
+            margin-right: 100px;
+            margin-left: 100px;
+        }
+        div.header h1.title{
+            display: inline-block;
+        }
+        div.header h2.user{
+            display: inline-block;
+            float: left;
+        }
+
+        div.header a.signout{
+            float: right;
+            padding-right: 200px;
+        }
+        p>a{
+          float: center;
+        }
+        div.add_note{
+          margin-left: 50px;
+          margin-bottom: 10px;
+        }
+
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body>
+    <div class="container bootstrap snippet">
+        <div class="row">
+            {% if user.is_authenticated %}
+                <div class="header">
+                    <h2 class="user">{{ user.username }}</h2>
+                    <h1 class="title">Digital Diary</h1>
+                    <a class="signout" href="{% url 'account_logout' %}">Log out</a>
+                </div>
+                <ul class="notes">
+                  {% for note in notes.all %}
+                        <li>
+                            <div class="rotate note-bg">
+                                <small>
+                                    {{ note.date }}
+                                    <a href="#" class="text-danger pull-right">
+                                        <i class="fa fa-trash-o "></i>
+                                    </a>
+                                </small>
+                                <h4>{{ note.title }}</h4>
+                                <p>{{ note.body }}</p>
+
+                            </div>
+                        </li>
+                  {% endfor %}
+                </ul>
+                <div class="add_note">
+                    <button style="font-size:24px">
+                        <a href="add/" class="text-danger pull-right">Add New Note</a>
+                    </button>
+                </div>
+            {% else %}
+                <div class="header">
+                    <h1 class="title">Digital Diary</h1>
+                </div>
+                <p><a href="{% url 'account_signup' %}">Sign Up</a></p>
+                <p><a href="{% url 'account_login' %}">Log In </a></p>
+                <p><a href="{% provider_login_url 'google' %}">Log In with Gmail</a></p>
+            {% endif %}
+        </div>
+    </div>
+</body>
