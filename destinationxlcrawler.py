@@ -1,4 +1,5 @@
 import json
+import re
 
 import scrapy
 from destinationxl.items import DestinationxlItem, SizeItem
@@ -6,12 +7,18 @@ from scrapy.http import Request
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 from w3lib.url import url_query_parameter
+import html
 
 
 class DestinationxlParseSpider(scrapy.Spider):
     name = 'destinationxl-parser'
-    start_urls = [
-        'https://www.destinationxl.com/mens-big-and-tall-store/mens-tees/harbor-bay-moisture-wicking-pocket-t-shirt/cat140084/G3356']
+    start_urls = ['https://www.destinationxl.com/mens-big-and-tall-store/nfl/nfl-heather-jacket/cat440092/G6066']
+    allowed_domains = ['www.destinationxl.com']
+
+    custom_settings = {
+        'USER_AGENT': "Mozilla/5.0(X11; Linux x86_64)AppleWebKit/537.36" \
+                      "(KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36",
+    }
     seen_ids = []
 
     color_url_t = '{}?&isSelection=true&attributes=color={}'
@@ -28,6 +35,8 @@ class DestinationxlParseSpider(scrapy.Spider):
         item['language_code'] = 'en'
         item['base_sku'] = product_id
         item['url'] = self.extract_product_url(response)
+        item['meta'] = {}
+        item['size_infos'] = {}
 
         category_info = self.extract_category_id(response)
         yield Request(self.product_url_t.format(category_info[0], category_info[1]),
@@ -37,8 +46,10 @@ class DestinationxlParseSpider(scrapy.Spider):
     def parse_colors(self, response):
         raw_product = json.loads(response.text)
         item = response.meta['item']
+
+        item['title'] = raw_product['description']
         item['brand'] = raw_product['brandName']
-        item['description_text'] = raw_product['longDescription']
+        item['description_text'] = self.extract_description(raw_product)
         item['category_names'] = self.extract_category_names(raw_product)
 
         for raw_color in raw_product['colorGroups']:
@@ -49,13 +60,13 @@ class DestinationxlParseSpider(scrapy.Spider):
                 item['old_price_text'] = raw_color['name']
 
             for color in raw_color['colors']:
-                item['image_urls'] = [color['largeSwatchImageUrl'], color['swatchImageUrl']]
+                item['image_urls'] = self.extract_image_urls(color)
                 item['color_name'] = color['name']
                 item['color_code'] = color['id']
                 item['identifier'] = '{}-{}'.format(item['base_sku'], item['color_code'])
 
                 yield Request(self.color_url_t.format(response.url, color['id']),
-                              meta={'item': item},
+                              meta={'item': item.copy()},
                               callback=self.extract_sizes_or_skus)
 
     def extract_sizes_or_skus(self, response):
@@ -67,8 +78,8 @@ class DestinationxlParseSpider(scrapy.Spider):
 
         if len(colour['sizes']) > 1:
             item['meta'] = {'requests': self.extract_sizes_requests(response)}
+
         else:
-            item['meta'] = {}
             item['size_infos'] = self.make_skus(colour)
 
         return self.next_request_or_item(item)
@@ -82,9 +93,9 @@ class DestinationxlParseSpider(scrapy.Spider):
 
             if bool(size['available']):
                 size_name = {size_dict['displayName']: size['name'],
-                             raw_product['sizes'][0]['displayName']: response.meta['size']['name']
+                             raw_product['sizes'][0]['displayName']: response.meta['size']
                              }
-                size_identifier = '{}_{}'.format(size['name'], response.meta['size']['name'])
+                size_identifier = '{}_{}'.format(size['name'], response.meta['size'])
 
                 sku = {'size_identifier': size_identifier,
                        'size_name': size_name
@@ -92,7 +103,7 @@ class DestinationxlParseSpider(scrapy.Spider):
 
                 sku['stock'] = 1
 
-                item['size_infos'][response.meta['size']['name']] = sku
+                item['size_infos'][response.meta['size']] = sku
 
         return self.next_request_or_item(item)
 
@@ -100,15 +111,17 @@ class DestinationxlParseSpider(scrapy.Spider):
         if item['meta'].get('requests'):
             request = item['meta']['requests'].pop(0)
             request.meta['item'] = item
-            yield request
+            return request
 
         del item['meta']
-        yield item
+        return item
 
     def extract_sizes_requests(self, response):
         raw_product = json.loads(response.text)
+
         return [Request('{}@{}Size={}'.format(response.url, raw_product['sizes'][0]['displayName'], size['name']),
-                        meta={'size': size}, callback=self.parse_sizes) for size in raw_product['sizes'][0]['values']]
+                        meta={'size': size['name']}, callback=self.parse_sizes) for size in
+                raw_product['sizes'][0]['values'] if bool(size['available'])]
 
     def make_skus(self, raw_product):
         skus = {}
@@ -141,11 +154,22 @@ class DestinationxlParseSpider(scrapy.Spider):
     def extract_category_names(self, raw_product):
         return [breadcrumb['name'] for breadcrumb in raw_product['breadCrumbsItems']]
 
+    def extract_image_urls(self, color):
+        return color['largeSwatchImageUrl'].split('_')[0]
+
+    def extract_description(self, raw_product):
+        return self.clean_collected_data(html.unescape(raw_product['longDescription']))
+
+    def clean_collected_data(self, text):
+        text = re.sub('<[^<]+?>', '', text)
+        return text
+
 
 class DestinationxlCrawlSpider(CrawlSpider):
     name = 'destinationxl-crawler'
     start_urls = ['https://www.destinationxl.com/mens-big-and-tall-store',
-                  'https://www.destinationxl.com/mens-big-and-tall-store/mens-shoes/cat130012?N=11070+4294944243&No=0&nocache=1541591936534']
+                  'https://www.destinationxl.com/mens-big-and-tall-store\
+                  /mens-shoes/cat130012?N=11070+4294944243&No=0&nocache=1541591936534']
     allowed_domains = ['www.destinationxl.com']
 
     custom_settings = {
