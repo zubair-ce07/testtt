@@ -19,5 +19,6 @@ class WoolrichItem(scrapy.Item):
     retailer_sku = scrapy.Field()
     skus = scrapy.Field()
     url = scrapy.Field()
-    requests_data = scrapy.Field()
+    requests = scrapy.Field()
     pass
+
