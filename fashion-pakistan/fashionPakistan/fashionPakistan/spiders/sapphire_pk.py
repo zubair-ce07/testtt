@@ -10,7 +10,7 @@ class SapphirePkSpider(scrapy.Spider):
     def parse(self, response):
         category_links = response.xpath("//ul[@id='_menuBar']//ul/li/a/@href").extract()
         for link in category_links:
-            yield scrapy.Request(response.urljoin(link)+"?view=all", callback=self.parse_product_links)
+            yield scrapy.Request(response.urljoin(link), callback=self.parse_product_links)
 
     def parse_product_links(self, response):
         product_links = response.xpath(
@@ -21,7 +21,7 @@ class SapphirePkSpider(scrapy.Spider):
         next_link = response.xpath("//ul[@class='pagination-page abs']/li/a/i[@class='fa fa-angle-right']").extract()
         if next_link:
             next_link = response.xpath("//ul[@class='pagination-page abs']/li/a/@href").extract()[-1]
-            yield scrapy.Request(next_link, self.parse_product_links)
+            yield scrapy.Request(response.urljoin(next_link), self.parse_product_links)
 
 
     def parse_product_details(self, response):
@@ -61,53 +61,28 @@ class SapphirePkSpider(scrapy.Spider):
             desc = response.xpath("//div[@id='collapse-tab2']//ul[{}]//text()".format(i+1)).extract()
             attributes[attrib] = desc
         
+        fabric = response.xpath("//div[@class='short-description']/p/text()").extract()
+        if fabric[-1].strip().split(":")[0] == "Fabric":
+            attributes["fabric"] = fabric[-1].strip().split(":")[1]
         return attributes
 
-    def get_item_sizes(self, response):
-        size_string = re.findall(r'swatchOptions\":[\W\w]*,\"position\":\"0\"}},|$',response.text)[0]
-        size_string = size_string.strip("swatchOptions\":")
-        size_string = size_string.strip(",")
-        size_string = size_string+"}"
-        sizes = []
-        if size_string != "}":
-            json_string = json.loads(size_string)
-            for option in json_string["attributes"]["142"]["options"]:
-                sizes.append(option["label"])
-        
-        return sizes
-
-    def get_item_types(self, response):
-        pass
-
     def get_item_skus(self, response):
-        color_name = response.xpath("//div[@class='short-description']/p/text()").extract()
-        price = response.xpath("//span[@itemprop='price']//text()").extract_first()
-        currency = response.xpath(
-            "//meta[@itemprop='priceCurrency']/@content").extract_first()
-        if color_name[-1].strip().split(":")[0] == "Color":
-            color_name = color_name[-1].strip().split(":")[1]
-        elif color_name[-2].strip().split(":")[0] == "Color":
-            color_name = color_name[-2].strip().split(":")[1]
-        else:
-            color_name = response.xpath("//div[contains(@class, 'swatch-element')]/div[@class='tooltip']/text()").extract_first()
-        if not(color_name):
-            color_name = "no_color"
-        product_types = self.get_item_types(response)
-        sizes = self.get_item_sizes(response)
-        if sizes:
-            return {
-                color_name: {
-                    "color": color_name,
-                    "price": price,
-                    "available_size": sizes,
-                    "currency_code": currency,
-                }
-            }
-        else:
-            return {
-                color_name: {
-                    "color": color_name,
-                    "price": price,
-                    "currency_code": currency,
-                }
-            }
+        currency = response.xpath("//meta[@itemprop='priceCurrency']/@content").extract_first()
+        attribs = response.xpath("//div[@class='swatch clearfix']/div[@class='header']/text()").extract()
+        attrib_values_data = response.xpath("//select[@id='product-selectors']/option//text()").extract()
+        attrib_values = attrib_values_data[::2]
+        prices = attrib_values_data[1::2]
+        attrib_values = [attrib.replace("/", "_").replace(" ", '').strip() for attrib in attrib_values]
+        color_scheme = {}
+        for attrib_value, price in zip(attrib_values, prices):
+            attrib_value_split = attrib_value.split("_")
+            key = str(attrib_value.strip("-"))
+            color_scheme[key] = {}
+            for val, attrib in zip(attrib_value_split, attribs):
+                sub_key = str(attrib)
+                color_scheme[key][attrib] = str(val)
+
+            color_scheme[key]["currency_code"] = currency
+            color_scheme[key]["price"] = price
+        
+        return color_scheme
