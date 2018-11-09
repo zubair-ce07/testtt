@@ -29,9 +29,6 @@ def parse_arguments():
     parser.add_argument(
         '-c', type=lambda arg: datetime.strptime(arg, '%Y/%m'),
         nargs="*", help="Enter the year/month (i.e 2011/03)")
-    parser.add_argument(
-        '-b', type=lambda arg: datetime.strptime(arg, '%Y/%m'),
-        nargs="*", help="Enter the year/month (i.e 2011/03) -- Bonus")
 
     return parser.parse_args()
 
@@ -57,11 +54,6 @@ def main():
     if arguments.c:
         for arg in arguments.c:
             report.generate_graph(
-                calculations.find_monthly_data(records, arg.date()))
-
-    if arguments.b:
-        for arg in arguments.b:
-            report.generate_horizontal_graph(
                 calculations.find_monthly_data(records, arg.date()))
 
 if __name__ == "__main__":

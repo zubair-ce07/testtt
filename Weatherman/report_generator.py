@@ -11,10 +11,12 @@ class ReportGenerator:
             f"Highest: {record[0].max_temperature}C on ",
             f"{record[0].date.strftime('%B')}",
             f"{record[0].date.day}")
+
         print(
             f"Lowest: {record[1].min_temperature}C on ",
             f"{record[1].date.strftime('%B')}",
             f"{record[1].date.day}")
+
         print(
             f"Humidity: {record[2].max_humidity}% on ",
             f"{record[2].date.strftime('%B')}",
@@ -25,14 +27,17 @@ class ReportGenerator:
         print(f"Lowest Average: {record[1]}C")
         print(f"Average Mean Humidity: {record[2]}%")
 
-    def generate_graph(self, records):
+    def generate_graph(self, records, horizontal_graph=False):
         print(records[0].date.strftime("%B"), records[0].date.year)
 
-        for record in records:
-            print(f"{self.RED_START}+{self.END}" * record.max_temperature, end=" ")
-            print(f"{record.max_temperature}C")
-            print(f"{self.BLUE_START}-{self.END}" * record.min_temperature, end=" ")
-            print(f"{record.min_temperature}C")
+        if horizontal_graph:
+            self.generate_horizontal_graph(records)
+        else:
+            for record in records:
+                print(f"{self.RED_START}+{self.END}" * record.max_temperature, end=" ")
+                print(f"{record.max_temperature}C")
+                print(f"{self.BLUE_START}-{self.END}" * record.min_temperature, end=" ")
+                print(f"{record.min_temperature}C")
 
     def generate_horizontal_graph(self, records):
         print(records[0].date.strftime("%B"), records[0].date.year)

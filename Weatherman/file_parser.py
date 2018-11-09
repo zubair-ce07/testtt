@@ -22,5 +22,6 @@ class FileParser:
             record["Max TemperatureC"], record["Min TemperatureC"],
             record["Max Humidity"], record[" Min Humidity"],
             record[" Mean Humidity"]]
+        req_attrs.append(record.get("PKT") or record.get("PKST"))
 
         return all(req_attrs)
