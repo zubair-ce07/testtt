@@ -123,12 +123,12 @@ class BeaverBrooksCrawlSpider(CrawlSpider):
     start_urls = ['http://www.beaverbrooks.co.uk/']
 
     deny = ['accessories']
-    allow = ['https://www.beaverbrooks.co.uk/jewellery/engagement-rings/all']
+
     listings_css = ['div.main-nav__category', 'ul.list-pagination']
     products_css = ['div.product-list__item']
 
     rules = (
-        Rule(LinkExtractor(restrict_css=listings_css, deny=deny, allow=allow)),
+        Rule(LinkExtractor(restrict_css=listings_css, deny=deny)),
         Rule(LinkExtractor(restrict_css=products_css), callback='parse_product'),
     )
 
