@@ -13,12 +13,12 @@ class Mixin:
     allowed_domains = ["www.softsurroundings.com"]
     start_urls = ["http://www.softsurroundings.com/"]
 
-    market = "softsurroundings-us"
-    retailer = "US"
+    market = "US"
+    retailer = "softsurroundings-us"
 
 
 class SoftSurroundingsParser(Mixin):
-    name = Mixin.name + "-parser"
+    name = Mixin.retailer + "-parser"
     headers = {"X-Requested-With": "XMLHttpRequest"}
 
     def parse_product(self, response):
@@ -37,14 +37,15 @@ class SoftSurroundingsParser(Mixin):
         item["care"] = self.product_care(response)
         item["website_name"] = self.start_urls[0]
         item["skus"] = []
+        item["meta"] = {}
         item["image_urls"] = self.image_urls(response)
-        item["meta"] = self.color_requests(
+        item["meta"]["requests"] = self.color_requests(
             response, item) + self.size_category_requests(response, item)
 
         return self.next_request_or_item(item)
 
     def next_request_or_item(self, item):
-        requests = item["meta"]
+        requests = item["meta"]["requests"]
         yield (requests and requests.pop(0)) or item
 
     def size_category_requests(self, response, item):
@@ -53,8 +54,8 @@ class SoftSurroundingsParser(Mixin):
             return []
 
         size_cat_requests = []
-        for size_cat in size_cat_ids:
-            url = url = response.urljoin(f"/p/{size_cat.lower()}/")
+        for size_cat_id in size_cat_ids:
+            url = response.urljoin(f"/p/{size_cat_id.lower()}/")
             size_cat_requests.append(
                 Request(url, headers=self.headers, callback=self.parse_size_category,
                     meta={"item": item}))
@@ -63,7 +64,7 @@ class SoftSurroundingsParser(Mixin):
 
     def parse_size_category(self, response):
         item = response.meta["item"]
-        item["meta"] += self.color_requests(response, item)
+        item["meta"]["requests"] += self.color_requests(response, item)
         return self.next_request_or_item(item)
 
     def size_categories(self, response):
@@ -94,7 +95,7 @@ class SoftSurroundingsParser(Mixin):
 
     def parse_colors(self, response):
         item = response.meta["item"]
-        item["meta"] += self.size_requests(response, item)
+        item["meta"]["requests"] += self.size_requests(response, item)
         return self.next_request_or_item(item)
 
     def color_ids(self, response):
@@ -106,15 +107,15 @@ class SoftSurroundingsParser(Mixin):
         return response.css(css).extract_first()
 
     def size_requests(self, response, item):
-        sizes = self.size_ids(response)
-        if not sizes:
+        product_sizes = self.size_ids(response)
+        if not product_sizes:
             return []
 
         size_cat = self.selected_size_cat_id(response)
         color_id = self.selected_color_id(response)
         size_requests = []
 
-        for size in sizes:
+        for size in product_sizes:
             url = response.urljoin(f"/p/{size_cat}/{color_id}{size}/")
             size_requests.append(
                 Request(url, headers=self.headers, callback=self.parse_size,
@@ -130,28 +131,25 @@ class SoftSurroundingsParser(Mixin):
     def size_ids(self, response):
         css = "#size > a::attr(id)"
         sel_css = "input[name*='specTwo']::attr(value)"
-        sizes = response.css(css).extract()
-        if sizes:
-            return [size.split("_")[1] for size in sizes if size]
+        size_ids = response.css(css).extract()
+        if size_ids:
+            return [size_id.split("_")[1] for size_id in size_ids if size_id]
         else:
             return response.css(sel_css).extract()
 
     def skus(self, response):
         skus = self.pricing_details(response)
-        skus["color"] = self.color_name(response)
-        skus["size"] = self.size_name(response)
+
+        color_css = "#color b::text"
+        skus["color"] = response.css(color_css).extract_first()
+
+        size_css = "#size b::text"
+        skus["size"] = response.css(size_css).extract_first()
+
         skus["availability"] = self.product_availability(response)
         skus["sku_id"] = f"{skus['color']}_{skus['size']}"
 
         return skus
-
-    def color_name(self, response):
-        css = "#color b::text"
-        return response.css(css).extract_first()
-
-    def size_name(self, response):
-        css = "#size b::text"
-        return response.css(css).extract_first()
 
     def product_availability(self, response):
         css = ".stockStatus b::text"
@@ -211,7 +209,7 @@ class SoftSurroundingsParser(Mixin):
 
 
 class SoftSurroundingsCrawler(CrawlSpider, Mixin):
-    name = Mixin.name + "-crawler"
+    name = Mixin.retailer + "-crawler"
     parser = SoftSurroundingsParser()
     listing_css = [".dropdown-menu-wrapper"]
     product_css = [".product"]
@@ -223,14 +221,11 @@ class SoftSurroundingsCrawler(CrawlSpider, Mixin):
         )
 
     def parse_pagination(self, response):
-        total_pages = self.total_pages(response)
+        total_pages_css = "form.thumbscroll input[name='page']::attr(value)"
+        total_pages = response.css(total_pages_css).extract()
 
         url = f"{response.url}page-{total_pages[-1]}/" if total_pages else response.url
         yield Request(url, callback=self.parse)
-
-    def total_pages(self, response):
-        css = "form.thumbscroll input[name='page']::attr(value)"
-        return response.css(css).extract()
 
     def parse_item(self, response):
         return self.parser.parse_product(response)
