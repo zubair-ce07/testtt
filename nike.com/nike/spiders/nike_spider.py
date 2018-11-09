@@ -67,8 +67,55 @@ class NikeParser:
 
         return [item] + self.generate_colour_requests(response)
 
+    def is_visited_id(self, product_id):
+        if product_id in self.visited_products:
+            return True
+
+        self.visited_products.add(product_id)
+
+    def extract_raw_product(self, response):
+        css = '#app-root ~ script::text'
+        raw_product = response.css(css).re_first('{.+}')
+        raw_product = json.loads(raw_product)
+        raw_product = raw_product['Threads']['products']
+
+        raw_product['retailer_sku'] = self.retailer_sku(response)
+        return raw_product
+
+    def extract_raw_product_secondary(self, response):
+        css = '#product-data::text'
+        raw_product = response.css(css).extract_first()
+        return json.loads(raw_product)
+
+    def retailer_sku(self, response):
+        css = '.description-preview__style-color.ncss-li::text'
+        return response.css(css).extract_first().replace('Style: ', '')
+
     def retailer_sku_secondary(self, raw_product):
         return f"{raw_product['styleNumber']}{raw_product['colorNumber']}"
+
+    def clean_pricing(self, prices):
+        pricing = {}
+        prices = [float(p) * 100 if isinstance(p, float) or p.replace('.', '', 1).isdigit()
+                  else float(p[1:]) * 100 for p in prices]
+        pricing['price'], *previous_prices = sorted(prices)
+
+        if previous_prices and pricing['price'] < previous_prices[0]:
+            pricing['previous_prices'] = previous_prices
+        return pricing
+
+    def extract_pricing(self, raw_prices):
+        pricing = self.clean_pricing([raw_prices['currentPrice'], raw_prices['fullPrice']])
+        pricing['currency'] = raw_prices['currency']
+        return pricing
+
+    def extract_pricing_secondary(self, raw_pricing):
+        pricing = self.clean_pricing([raw_pricing['rawPrice'], raw_pricing['overriddenLocalPrice']])
+        pricing['currency'] = raw_pricing['currencyCode']
+        return pricing
+
+    def extract_in_stock_skus(self, raw_skus):
+        return [raw_sku['skuId'] for raw_sku in raw_skus['availableSkus']]
 
     def extract_skus(self, raw_product):
         skus = []
@@ -109,38 +156,14 @@ class NikeParser:
 
         return skus
 
-    def extract_pricing_secondary(self, raw_pricing):
-        pricing = {'price': float(raw_pricing['rawPrice']) * 100,
-                   'currency': raw_pricing['currencyCode']}
-        previous_price = raw_pricing['overriddenLocalPrice']
-
-        if previous_price:
-            pricing['previous_prices'] = [float(previous_price[1:]) * 100]
-
-        return pricing
-
-    def extract_pricing(self, raw_prices):
-        prices = [raw_prices['currentPrice'], raw_prices['fullPrice']]
-        prices = sorted([float(price) * 100 for price in prices])
-        pricing = {'currency': raw_prices['currency']}
-        pricing['price'] = prices[0]
-
-        if prices[0] < prices[1]:
-            pricing['previous_prices'] = prices[1:]
-
-        return pricing
-
     def extract_image_urls(self, raw_product):
-        raw_colour = raw_product[raw_product['retailer_sku']]
-        raw_images = raw_colour['nodes'][0]['nodes']
-        return [img['properties'].get('squarishURL') or
-                img['properties']['startImageURL'] for img in raw_images]
+        raw_urls = raw_product[raw_product['retailer_sku']]
+        raw_urls = raw_urls['nodes'][0]['nodes']
+        return [url['properties'].get('squarishURL') or
+                url['properties']['startImageURL'] for url in raw_urls]
 
     def extract_image_urls_secondary(self, raw_product):
         return raw_product['imagesHeroLarge']
-
-    def extract_in_stock_skus(self, raw_skus):
-        return [raw_sku['skuId'] for raw_sku in raw_skus['availableSkus']]
 
     def extract_brand(self, response):
         css = '#app-root ~ script::text'
@@ -150,7 +173,10 @@ class NikeParser:
 
         css = "[type='application/ld+json']::text"
         raw_brand = response.css(css).extract_first().replace('\n', '')
-        return json.loads(raw_brand)['brand']
+        brand = json.loads(raw_brand)['brand']
+        if brand:
+            return brand
+        return 'NIKE'
 
     def extract_name(self, raw_product):
         return raw_product[raw_product['retailer_sku']]['title']
@@ -170,24 +196,6 @@ class NikeParser:
 
         return 'unisex-adults'
 
-    def extract_description(self, raw_product):
-        raw_description = raw_product[raw_product['retailer_sku']]
-        return raw_description['descriptionPreview'].split('.')
-
-    def extract_description_secondary(self, raw_product):
-        raw_description = raw_product['content']
-        return Selector(text=raw_description).css('p ::text').extract()
-
-    def retailer_sku(self, response):
-        css = '.description-preview__style-color.ncss-li::text'
-        return response.css(css).extract_first().replace('Style: ', '')
-
-    def extract_trail(self, response):
-        return response.meta['trail']
-
-    def extract_category(self, response):
-        return [t for t, _ in response.meta['trail'] if t]
-
     def extract_care(self, response):
         css = '.pi-pdpmainbody li ::text'
         return response.css(css).extract()
@@ -196,19 +204,19 @@ class NikeParser:
         raw_care = raw_product['content']
         return Selector(text=raw_care).css('ul li::text').extract()
 
-    def extract_raw_product(self, response):
-        css = '#app-root ~ script::text'
-        raw_product = response.css(css).re_first('{.+}')
-        raw_product = json.loads(raw_product)
-        raw_product = raw_product['Threads']['products']
+    def extract_description(self, raw_product):
+        raw_description = raw_product[raw_product['retailer_sku']]
+        return raw_description['descriptionPreview'].split('.')
 
-        raw_product['retailer_sku'] = self.retailer_sku(response)
-        return raw_product
+    def extract_description_secondary(self, raw_product):
+        raw_description = raw_product['content']
+        return Selector(text=raw_description).css('p ::text').extract()
 
-    def extract_raw_product_secondary(self, response):
-        css = '#product-data::text'
-        raw_product = response.css(css).extract_first()
-        return json.loads(raw_product)
+    def extract_trail(self, response):
+        return response.meta['trail']
+
+    def extract_category(self, response):
+        return [t for t, _ in response.meta['trail'] if t]
 
     def generate_colour_requests(self, response):
         css = '.colorway-product-overlay:not(.colorway-product-overlay--selected) a::attr(href),' \
@@ -217,12 +225,6 @@ class NikeParser:
 
         meta = {'trail': self.extract_trail(response)}
         return [response.follow(url, callback=self.parse, meta=meta.copy()) for url in urls]
-
-    def is_visited_id(self, product_id):
-        if product_id in self.visited_products:
-            return True
-
-        self.visited_products.add(product_id)
 
 
 class NikeCrawler(CrawlSpider):
