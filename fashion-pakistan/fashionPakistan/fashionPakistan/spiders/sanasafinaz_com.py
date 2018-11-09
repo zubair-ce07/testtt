@@ -68,17 +68,19 @@ class SanasafinazComSpider(scrapy.Spider):
             return {}
 
     def get_item_sizes(self, response):
-        size_string = re.findall(r'swatchOptions\":[\W\w]*,\"position\":\"0\"}},|$',response.text)[0]
+        size_string = re.findall(r'swatchOptions\":[\W\w]*},\"tierPrices\":\[\]}},|$',response.text)[0]
         size_string = size_string.strip("swatchOptions\":")
         size_string = size_string.strip(",")
         size_string = size_string+"}"
         sizes = []
+        prices = []
         if size_string != "}":
             json_string = json.loads(size_string)
             for option in json_string["attributes"]["580"]["options"]:
                 sizes.append(option["label"])
-        
-        return sizes
+                prices.append(json_string["optionPrices"][option["products"][0]]["finalPrice"]["amount"])
+
+        return sizes, prices
 
     def get_item_skus(self, response):
         color_name = response.xpath(
@@ -88,21 +90,20 @@ class SanasafinazComSpider(scrapy.Spider):
         price = response.xpath("//span[@class='price']/text()").extract_first()
         currency = response.xpath(
             "//meta[@itemprop='priceCurrency']/@content").extract_first()
-        sizes = self.get_item_sizes(response)
+        sizes, prices = self.get_item_sizes(response)
+        color_scheme = {}
         if sizes:
-            return {
-                color_name: {
+            for size, amount in zip(sizes, prices):
+                color_scheme[color_name+"_"+size] = {
                     "color": color_name,
-                    "price": price,
-                    "available_size": sizes,
+                    "price": amount,
+                    "size": size,
                     "currency_code": currency,
                 }
-            }
         else:
-            return {
-                color_name: {
-                    "color": color_name,
-                    "price": price,
-                    "currency_code": currency,
-                }
+            color_scheme[color_name] = {
+                "color": color_name,
+                "price": price,
+                "currency_code": currency,
             }
+        return color_scheme
