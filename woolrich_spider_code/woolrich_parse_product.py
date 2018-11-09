@@ -1,12 +1,12 @@
 import json
 
-import scrapy
+from scrapy import Spider
 from scrapy.http import FormRequest
 
 from woolrich.items import WoolrichItem
 
 
-class WoolrichParseProduct(scrapy.Spider):
+class WoolrichParseProduct(Spider):
     name = 'woolrich_parse_product'
     product_sku_url_t = 'https://www.woolrich.com/remote/v1/product-attributes/{pid}'
 
@@ -22,55 +22,42 @@ class WoolrichParseProduct(scrapy.Spider):
         product['skus'] = {}
         product['url'] = response.url
         product['requests'] = self.product_sku_requests(response)
-        
-	yield self.request_or_item(product)
+
+        yield self.request_or_item(product)
 
     def parse_sku(self, response):
         product = response.meta['product']
-        raw_sku = json.loads(response.body)
-
-        if raw_sku['data']['purchasable']:
-            product['skus'].update(self.product_sku(response))
-        else:
-            product['requests'] = []
-            product['skus'] = {'purchaseable': False}
+        product['skus'].update(self.product_sku(response))
 
         yield self.request_or_item(product)
 
     def product_sku(self, response):
+        sku = {}
         raw_sku = json.loads(response.body)
-        sku_key = response.meta.get('color')
         size = self.sku_size(response)
-        in_stock = raw_sku['data']['instock']
+        sku_key = f"{response.meta.get('color')}_{size}"
 
-        if size:
-            sku_key += f"_{size}"
-
-        sku = {sku_key: {}}
-        sku[sku_key] = self.product_currancy(response)
+        sku[sku_key] = self.sku_price(response)
         sku[sku_key]['color'] = response.meta.get('color')
+        sku[sku_key]['size'] = size
 
-        if size:
-            sku[sku_key]['size'] = size
-
-        if not in_stock:
+        if not raw_sku['data']['instock']:
             sku[sku_key]['out_of_stock'] = True
 
         return sku
 
     def sku_size(self, response):
-        if response.meta.get('fit'):
-            return f"{response.meta.get('size')}-{response.meta.get('fit')}"
-        return response.meta.get('size')
+        raw_size = [response.meta.get('size'), response.meta.get('fit')]
+        return '/'.join([rs for rs in raw_size if rs]) or 'One Size'
 
-    def product_currancy(self, response):
+    def sku_price(self, response):
         raw_sku = json.loads(response.body)
         price = raw_sku['data']['price']['without_tax']['value']
+        previous_price = raw_sku['data']['price'].get('rrp_without_tax')
         sku = {
-            'currancy': 'USD',
+            'currency': 'USD',
             'price': price,
         }
-        previous_price = raw_sku['data']['price'].get('rrp_without_tax')
 
         if previous_price:
             sku['previous_price'] = previous_price['value']
@@ -87,22 +74,25 @@ class WoolrichParseProduct(scrapy.Spider):
         return product
 
     def product_sku_requests(self, response):
+        requests = []
         params = self.fit_params(response) or self.size_params(
             response) or self.color_params(response)
-
         url = self.product_sku_url_t.format(pid=self.product_retailer_sku(response))
-        return [FormRequest(url, callback=self.parse_sku,
-                            meta=self.product_sku_meta(param, response), formdata=param)
-                for param in params]
+
+        for param in params:
+            request = FormRequest(url, callback=self.parse_sku, meta=self.product_sku_meta(
+                param, response), formdata=param)
+            requests.append(request)
+        return requests
 
     def product_sku_meta(self, param, response):
         color_key = f"attribute[{self.color_attribute_key(response)}]"
         size_key = f"attribute[{self.size_attribute_key(response)}]"
         fit_key = f"attribute[{self.fit_attribute_key(response)}]"
 
-        color_values = self.map_color(response, color_key)
-        size_values = self.map_size(response, size_key)
-        fit_values = self.map_fit(response, fit_key)
+        color_values = self.map_color(response)
+        size_values = self.map_size(response)
+        fit_values = self.map_fit(response)
 
         return {
             'color': color_values.get(param.get(color_key)),
@@ -112,18 +102,18 @@ class WoolrichParseProduct(scrapy.Spider):
 
     def color_params(self, response):
         color_key = f"attribute[{self.color_attribute_key(response)}]"
-        color_values = self.map_color(response, color_key)
+        color_values = self.map_color(response)
         return [{color_key: color_value} for color_value in color_values]
 
     def size_params(self, response):
         color_key = f"attribute[{self.color_attribute_key(response)}]"
         size_key = f"attribute[{self.size_attribute_key(response)}]"
 
-        color_values = self.map_color(response, color_key)
-        size_values = self.map_size(response, size_key)
+        color_values = self.map_color(response)
+        size_values = self.map_size(response)
 
         if not size_values:
-            return None
+            return
 
         return [{color_key: color_value, size_key: size_value, }
                 for color_value in color_values for size_value in size_values]
@@ -133,17 +123,17 @@ class WoolrichParseProduct(scrapy.Spider):
         size_key = f"attribute[{self.size_attribute_key(response)}]"
         fit_key = f"attribute[{self.fit_attribute_key(response)}]"
 
-        color_values = self.map_color(response, color_key)
-        size_values = self.map_size(response, size_key)
-        fit_values = self.map_fit(response, fit_key)
+        color_values = self.map_color(response)
+        size_values = self.map_size(response)
+        fit_values = self.map_fit(response)
 
         if not fit_values:
-            return None
+            return
 
         return [{color_key: color_value, size_key: size_value, fit_key: fit_value, }
                 for color_value in color_values for size_value in size_values for fit_value in fit_values]
 
-    def map_color(self, response, color_key):
+    def map_color(self, response):
         color_values = {}
         css = '.form-option-swatch::attr(data-product-attribute-value)'
         color_attribute_values = response.css(css).extract()
@@ -154,8 +144,9 @@ class WoolrichParseProduct(scrapy.Spider):
 
         return color_values
 
-    def map_size(self, response, size_key):
+    def map_size(self, response):
         size_values = {}
+        size_key = self.size_attribute_key(response)
         if not size_key:
             return size_values
 
@@ -168,8 +159,9 @@ class WoolrichParseProduct(scrapy.Spider):
 
         return size_values
 
-    def map_fit(self, response, fit_key):
+    def map_fit(self, response):
         fit_values = {}
+        fit_key = self.fit_attribute_key(response)
         if not fit_key:
             return fit_values
 
@@ -212,7 +204,7 @@ class WoolrichParseProduct(scrapy.Spider):
 
     def product_image_url(self, response):
         image_url_css = '.productView-image img::attr(src)'
-        return response.css(image_url_css).extract()
+        return list(set(response.css(image_url_css).extract()))
 
     def product_name(self, response):
         name_css = '.productView-title::text'
