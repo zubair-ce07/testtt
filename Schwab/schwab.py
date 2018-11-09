@@ -21,7 +21,7 @@ class Mixin:
 
 
 class SchwabParser(Mixin):
-    name = Mixin.name + "-parser"
+    name = Mixin.retailer + "-parser"
 
     def parse_product(self, response):
         item = SchwabItem()
@@ -41,21 +41,25 @@ class SchwabParser(Mixin):
         item["care"] = self.product_care(response)
         item["skus"] = []
         item["image_urls"] = []
-        item["meta"] = self.color_requests(response, item)
+        item["meta"] = {"requests": self.color_requests(response, item)}
 
         return self.next_request_or_item(item)
 
     def skus(self, response):
-        sizes = self.clean(self.product_sizes(response))
-        if not sizes:
-            sizes.append("One_size")
+        product_sizes = self.clean(self.product_sizes(response))
+        if not product_sizes:
+            product_sizes.append("One_size")
+
         skus = []
-        for size in sizes:
+        color_css = ".js-current-color-name::attr(value)"
+
+        for size in product_sizes:
             sku = self.product_pricing(response)
-            sku["color"] = self.color_name(response)
+            sku["color"] = response.css(color_css).extract_first()
             sku["size"] = size
             sku["sku_id"] = f"{sku['color']}_{size}"
             skus.append(sku)
+
         return skus
 
     def parse_colors(self, response):
@@ -65,58 +69,38 @@ class SchwabParser(Mixin):
         return self.next_request_or_item(item)
 
     def next_request_or_item(self, item):
-        color_requests = item["meta"]
+        color_requests = item["meta"]["requests"]
         yield (color_requests and color_requests.pop(0)) or item
 
     def color_requests(self, response, item):
         colors = self.colors_varsel_id(response)
         if not colors:
             colors.append("One_Color")
+
         color_requests = []
+        anid_css = ".js-current-articleid::attr(value)"
+        version_css = ".js-varselid-VERSION::attr(value)"
+
         parameters = {
             "cl": "oxwarticledetails", "ajaxdetails": "adsColorChange",
-            "anid": self.article_id(response), "varselid[0]": "",
-            "varselid[1]": self.version_varsel_id(response)}
+            "anid": response.css(anid_css).extract_first(), "varselid[0]": "",
+            "varselid[1]": response.css(version_css).extract_first()}
 
         for color in colors:
             parameters["varselid[2]"] = color
             url = self.color_req_url_t.format(urllib.parse.urlencode(parameters))
             color_requests.append(Request(
                 url, callback=self.parse_colors, meta={"item": item}))
+
         return color_requests
 
     def colors_varsel_id(self, response):
         css = ".js-colorspot-wrapper::attr(data-varselid)"
         return response.css(css).extract()
 
-    def version_varsel_id(self, response):
-        css = ".js-varselid-VERSION::attr(value)"
-        return response.css(css).extract_first()
-
-    def article_id(self, response):
-        css = ".js-current-articleid::attr(value)"
-        return response.css(css).extract_first()
-
-    def color_name(self, response):
-        css = ".js-current-color-name::attr(value)"
-        return response.css(css).extract_first()
-
     def product_name(self, response):
         css = ".at-dv-itemName::text"
         return self.clean(response.css(css).extract())
-
-    def product_price(self, response):
-        css = ".js-webtrends-data::attr(data-content)"
-        return int(float(json.loads(response.css(css).extract_first())[
-            "productPrice"]) * 100)
-
-    def currency_type(self, response):
-        css = "meta[itemprop='priceCurrency']::attr(content)"
-        return response.css(css).extract_first()
-
-    def previous_price(self, response):
-        css = ".js-wrong-price::text"
-        return response.css(css).extract_first()
 
     def product_id(self, response):
         css = ".js-current-parentid::attr(value)"
@@ -147,10 +131,16 @@ class SchwabParser(Mixin):
         return response.css(css).extract()
 
     def product_pricing(self, response):
+        price_css = ".js-webtrends-data::attr(data-content)"
+        currency_css = "meta[itemprop='priceCurrency']::attr(content)"
+        prev_price_css = ".js-wrong-price::text"
+
         pricing_details = {
-            "price": self.product_price(response),
-            "currency": self.currency_type(response)}
-        prev_price = self.previous_price(response)
+            "price": int(float(json.loads(response.css(price_css).extract_first())[
+                "productPrice"]) * 100),
+            "currency": response.css(currency_css).extract_first()}
+
+        prev_price = response.css(prev_price_css).extract_first()
         if prev_price:
             pricing_details["previous_price"] = int(float(prev_price) * 100)
         return pricing_details
@@ -163,11 +153,11 @@ class SchwabParser(Mixin):
         return f"schwab-us-{datetime.now().strftime('%Y%m%d-%H%M%s')}-axuj"
 
     def clean(self, content):
-        return [re.sub('\s+', ' ', text) for text in content if text.strip()]
+        return [re.sub('\s+', ' ', text).strip() for text in content]
 
 
 class SchwabCrawler(CrawlSpider, Mixin):
-    name = Mixin.name + "-crawler"
+    name = Mixin.retailer + "-crawler"
     parser = SchwabParser()
     paging_css = [".paging__btn"]
     product_css = [".product__top"]
