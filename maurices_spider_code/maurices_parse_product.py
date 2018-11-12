@@ -14,32 +14,36 @@ class MauricesParseProduct(Spider):
 
     def parse_product(self, response):
         product = MauricesProduct()
+        product['image_urls'] = []
         product['brand'] = 'maurices'
+        product['url'] = response.url
         product['name'] = self.product_name(response)
+        product['skus'] = self.product_skus(response)
+        product['category'] = self.product_category(response)
         product['description'] = self.product_description(response)
         product['retailer_sku'] = self.product_retailer_sku(response)
-        product['url'] = response.url
-        product['category'] = self.product_category(response)
-        product['skus'] = self.product_skus(response)
-        product['image_urls'] = []
-        product['requests'] = self.product_color_requests(response)
+        product['requests'] = self.color_requests(response)
+
         yield self.request_or_item(product)
 
     def parse_color(self, response):
         product = response.meta.get('product')
-        image_url_r = 'mauricesProdATG/[^"]*'
-        image_url_re = re.compile(image_url_r)
-        product['image_urls'].extend(list(set(image_url_re.findall(response.body.decode()))))
+        product['image_urls'].extend(self.product_image_urls(response))
+
         yield self.request_or_item(product)
+
+    def product_image_urls(self, response):
+        image_url_r = 'mauricesProdATG/[^"]*'
+        image_urls = re.compile(image_url_r).findall(response.body.decode())
+        return list(set(image_urls))
 
     def request_or_item(self, product):
         requests = product['requests']
-        
         if requests:
             request = requests.pop()
             request.meta['product'] = product
             return request
-        
+
         del product['requests']
         return product
 
@@ -51,26 +55,26 @@ class MauricesParseProduct(Spider):
         for raw_sku in raw_product['skus']:
             sku_key = f"{colors.get(raw_sku['color'])}_{sizes.get(raw_sku['size'])}"
             available_sku_keys.append(sku_key)
-        
+
         return available_sku_keys
 
-    def product_color_requests(self, response):
-        product_id = self.product_retailer_sku(response)
+    def color_requests(self, response):
         raw_product = self.raw_product(response)
+        product_id = self.product_retailer_sku(response)
         colors = self.attribute_map(raw_product['all_available_colors'])
         requests = []
-        
+
         for color_id in colors:
             url = self.image_url_t.format(pid=product_id, color_id=color_id)
             requests.append(Request(url, callback=self.parse_color))
-        
+
         return requests
 
     def product_skus(self, response):
         raw_product = self.raw_product(response)
+        available_sku_keys = self.available_sku_keys(raw_product)
         colors = self.attribute_map(raw_product['all_available_colors'])
         sizes = self.attribute_map(raw_product['all_available_sizes'])
-        available_sku_keys = self.available_sku_keys(raw_product)
         skus = {}
 
         for color_id in colors:
@@ -81,10 +85,10 @@ class MauricesParseProduct(Spider):
                     'size': sizes[size_id],
                 }
                 skus[sku_key].update(self.product_currency_and_price(response))
-                
+
                 if sku_key not in available_sku_keys:
                     skus[sku_key]['out_of_stock'] = True
-        
+
         return skus
 
     def product_currency_and_price(self, response):
@@ -95,11 +99,11 @@ class MauricesParseProduct(Spider):
         currency_and_price = {
             'currency': 'USD',
             'price': curr_price,
-            }
+        }
 
         if curr_price != previous_price:
             currency_and_price['previous_price'] = previous_price
-        
+
         return currency_and_price
 
     def raw_product(self, response):
