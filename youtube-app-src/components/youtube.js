@@ -50,7 +50,7 @@ class Youtube extends Component {
 
   render() {
     return (
-      <div className="youtube winter-neva-gradient color-block mb-3 mx-auto rounded-circle z-depth-1-half">
+      <div className="youtube">
         <Search onClick={this.search.bind(this)} />
         <Player source={this.state.playerSource} />
         <VideoList sources={this.state.listSources} onSelect={this.onSelect.bind(this)} />
