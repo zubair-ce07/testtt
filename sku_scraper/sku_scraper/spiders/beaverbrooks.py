@@ -145,11 +145,12 @@ class BeaverBrooksCrawlSpider(CrawlSpider):
         for request_or_item in super().parse(response):
             if isinstance(request_or_item, Request):
                 request_or_item.meta['trail'] = self.make_trail(response)
+
             yield request_or_item
 
     def parse_product(self, response):
         yield from self.product_parser.parse(response)
 
     def make_trail(self, response):
-        link_text = response.meta.get('link_text') or ''
-        return (response.meta.get('trail') or []) + [(link_text.strip(), response.url)]
+        link_text = response.meta.get('link_text').strip() or ''
+        return (response.meta.get('trail') or []) + [(link_text, response.url)]
