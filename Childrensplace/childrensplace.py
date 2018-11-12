@@ -11,9 +11,8 @@ from scrapy.spiders import CrawlSpider
 
 
 class Mixin:
-    name = "childrensplace"
-    allowed_domains = ['childrensplace.com', "search.unbxd.io"]
-    start_urls = ['http://www.childrensplace.com/us/home/']
+    allowed_domains = ["childrensplace.com", "search.unbxd.io"]
+    start_urls = ["http://www.childrensplace.com/us/home/"]
     retailer = "childrensplace-us"
     market = "US"
 
@@ -27,7 +26,7 @@ class Mixin:
 
 
 class ChildrensPlaceParser(Mixin):
-    name = Mixin.name + "-parser"
+    name = Mixin.retailer + "-parser"
 
     def parse_product(self, response):
         product_details = json.loads(response.body)["response"]["products"]
@@ -42,7 +41,7 @@ class ChildrensPlaceParser(Mixin):
         item["retailer_sku"] = self.retailer_sku(product_details)
         item["categories"] = self.product_categories(product_details)
         item["gender"] = self.product_gender(product_details)
-        item["spider_name"] = self.name
+        item["spider_name"] = Mixin.retailer
         item["date"] = datetime.now().strftime("%Y-%m-%d")
         item["crawl_start_time"] = datetime.now().isoformat()
         item["url"] = self.product_url(product_details)
@@ -106,7 +105,7 @@ class ChildrensPlaceParser(Mixin):
 
 
 class ChildrensPlaceCrawler(CrawlSpider, Mixin):
-    name = Mixin.name + "-crawler"
+    name = Mixin.retailer + "-crawler"
     parser = ChildrensPlaceParser()
     PAGE_SIZE = 100
 
