@@ -1,8 +1,8 @@
 import * as constants from './constants.js';
 
-
 export const urlFormer = (query, relatedVideoId) => {
-  let url = `${constants.BASE_URL}?part=snippet&order=rating&key=${constants.KEY}&type=video&`
+  let url = `${constants.BASE_URL}?part=snippet&order=rating&`
+  url += `key=${constants.KEY}&type=video&`
   if(query) {
     url+=`q=${query}`
   }
@@ -11,7 +11,6 @@ export const urlFormer = (query, relatedVideoId) => {
   }
   return url
 }
-
 
 export const fetchData = (url) => {
   return fetch(url)
