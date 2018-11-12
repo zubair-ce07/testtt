@@ -1,65 +1,48 @@
-#!/usr/bin/python3.6
 import calendar
-
-from constants import FILE_ERROR_MESSAGE
 
 
 class WeatherReporting:
     color_blue = "\033[0;34;48m"
-    color_normal = "\033[0m"
+    colour_default = "\033[0m"
     color_red = "\033[0;31;48m"
 
-    def yearly_report(self, report):
-        if not report:
-            print(FILE_ERROR_MESSAGE, '\n\n')
-            return
+    def display_year_report(self, report):
+        print(
+            f"Highest: {report['highest']['max_temp']}C on"
+            f" {calendar.month_name[report['highest']['pkt'].month]}"
+            f" {report['highest']['pkt'].day}"
+        )
 
-        highest_temp_date = report['highest_temperature_date']
-        lowest_temp_date = report['lowest_temperature_date']
-        highest_humidity_date = report['highest_humidity_date']
+        print(
+            f"Lowest: {report['lowest']['min_temp']}C on"
+            f" {calendar.month_name[report['lowest']['pkt'].month]}"
+            f" {report['lowest']['pkt'].day}"
+        )
 
-        highest_temperature_report = f"Highest: {report['highest_temperature']}C"\
-            f"on {calendar.month_name[highest_temp_date.month]} {highest_temp_date.day}"
-        lowest_temperature_report = f"Lowest: {report['lowest_temperature']}C"\
-            f"on {calendar.month_name[lowest_temp_date.month]} {lowest_temp_date.day}"
-        highest_humidity_report = f"Humidity: {report['highest_humidity']}% "\
-            f"on {calendar.month_name[highest_humidity_date.month]} {highest_humidity_date.day}"
-        
-        print(highest_temperature_report)
-        print(lowest_temperature_report)
-        print(highest_humidity_report)
+        print(
+            f"Humidity: {report['humidity']['max_humidity']}% on"
+            f" {calendar.month_name[report['humidity']['pkt'].month]}"
+            f" {report['humidity']['pkt'].day}"
+        )
         print('-------------------------------------\n')
 
-    def monthly_report(self, report):
-        if not report:
-            print(FILE_ERROR_MESSAGE, '\n\n')
-            return
+    def display_month_report(self, report):
+        print(f"Highest Average: {report['average_max_temp']}C")
 
-        highest_average = f"Highest Average: {round(report['average_max_temperature'])}C"
-        lowest_average = f"Lowest Average: {round(report['average_min_temperature'])}C"
-        mean_humidity = f"Average Mean Humidity: {round(report['average_mean_humidity'])}%"
+        print(f"Lowest Average: {report['average_min_temp']}C")
 
-        print(highest_average)
-        print(lowest_average)
-        print(mean_humidity)
+        print(f"Average Mean Humidity: {report['average_mean_humidity']}%")
+
         print('-------------------------------------\n')
 
-    def monthly_bar_chart(self, weather_records, date):
-        month_record = weather_records.month_readings(date)
-        if not month_record:
-            print(FILE_ERROR_MESSAGE, '\n\n')
-            return
-        
-        high_temperatures = month_record.get('max_temperature')
-        low_temperatures = month_record.get('min_temperature')
-        dates = month_record.get('pkt')
-        
-        for high, low, date in zip(high_temperatures, low_temperatures, dates):
-            highest_temp_bar = f"{self.color_red}{'+'*abs(high)}{self.color_normal}" if high else ''
-            lowest_temp_bar = f"{self.color_blue}{'+'*abs(low)}{self.color_normal}" if low else ''
-            highest_temp = f"{high} C" if high else ''
-            lowest_temp = f"{low} C" if low else ''
+    def display_month_bar_chart(self, month_record):
+        for record in month_record:
+            lowest_temp_bar = f"{self.color_blue}{'+'*abs(record['min_temp'])}{self.colour_default}"
+            highest_temp_bar = f"{self.color_red}{'+'*abs(record['max_temp'])}{self.colour_default}"
+            highest_temp = f"{record['max_temp']} C"
+            lowest_temp = f"{record['min_temp']} C"
 
-            print(date.day, lowest_temp_bar, highest_temp_bar, lowest_temp, highest_temp)
+            print(record['pkt'].day, lowest_temp_bar,
+                  highest_temp_bar, lowest_temp, highest_temp)
 
         print('-------------------------------------\n')
