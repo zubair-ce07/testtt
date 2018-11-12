@@ -9,7 +9,6 @@ from vans.items import VansItem
 
 
 class Mixin:
-    name = "vans"
     allowed_domains = ["vans.fr"]
     start_urls = ["http://www.vans.fr/"]
     retailer = "vans-fr"
@@ -17,7 +16,7 @@ class Mixin:
 
 
 class VansParser(Mixin):
-    name = Mixin.name + "-parser"
+    name = Mixin.retailer + "-parser"
 
     def parse_product(self, response):
         item = VansItem()
@@ -31,7 +30,7 @@ class VansParser(Mixin):
         item["care"] = self.product_care(response)
         item["category"] = self.product_category(response)
         item["crawl_id"] = self.get_crawl_id()
-        item["spider_name"] = Mixin.name
+        item["spider_name"] = Mixin.retailer
         item["date"] = datetime.now().strftime("%Y-%m-%d")
         item["crawl_start_time"] = datetime.now().isoformat()
         item["url_orignal"] = response.url
@@ -45,7 +44,7 @@ class VansParser(Mixin):
         sizes = self.product_sizes(response)
         skus = []
         for size in sizes:
-            sku = self.pricing_details(response)
+            sku = self.product_pricing(response)
             sku["color"] = self.color_name(response)
             sku["size"] = size
             sku["sku_id"] = f"{sku['color']}_{size}"
@@ -115,10 +114,11 @@ class VansParser(Mixin):
         css = "meta[property='og:price:currency']::attr(content)"
         return response.css(css).extract_first()
 
-    def pricing_details(self, response):
+    def product_pricing(self, response):
         pricing_details = {
             "price": self.product_price(response),
             "currency": self.currency_type(response)}
+
         prev_price = self.previous_price(response)
         if prev_price != pricing_details["price"]:
             pricing_details["previous_price"] = prev_price
@@ -138,7 +138,7 @@ class VansParser(Mixin):
 
 
 class VansCrawler(CrawlSpider, Mixin):
-    name = Mixin.name + "-crawler"
+    name = Mixin.retailer + "-crawler"
     parser = VansParser()
     listings_css = [".sub-category"]
     product_css = [".product-block-figure"]
