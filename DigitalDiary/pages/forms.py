@@ -6,7 +6,7 @@ class NoteForm(forms.ModelForm):
 
     class Meta:
         model = Note
-        fields = ('title', 'body', 'date')
+        fields = ('title', 'body', 'date',)
         widgets = {
             'body': forms.Textarea,
             'date': forms.SelectDateWidget(),

@@ -101,13 +101,12 @@
                             <div class="rotate note-bg">
                                 <small>
                                     {{ note.date }}
-                                    <a href="#" class="text-danger pull-right">
+                                    <a href="delete/{{ note.id }}/" class="text-danger pull-right" onclick="return confirm('Are you sure you want to delete this?')">
                                         <i class="fa fa-trash-o "></i>
                                     </a>
                                 </small>
                                 <h4>{{ note.title }}</h4>
                                 <p>{{ note.body }}</p>
-
                             </div>
                         </li>
                   {% endfor %}
