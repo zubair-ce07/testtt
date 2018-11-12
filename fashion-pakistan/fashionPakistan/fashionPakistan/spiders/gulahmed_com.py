@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import scrapy
-from fashionPakistan import FashionPakistan
+from fashionPakistan.items import FashionPakistan
 
 class GulahmedComSpider(scrapy.Spider):
     name = 'gulahmed.com'
