@@ -39,10 +39,10 @@ class BeaverBrooksParseSpider(Spider):
         return self.generate_request_or_item(item)
 
     def create_size_requests(self, response):
-        size_codes = self.extract_size_codes(response)
+        size_details = self.extract_size_details(response)
 
-        return [Request(self.size_request_t.format(size_code),
-                        callback=self.parse_size_request) for size_code in size_codes]
+        return [Request(self.size_request_t.format(size_detail['size_code']), meta=size_detail,
+                        callback=self.parse_size_request) for size_detail in size_details]
 
     def generate_request_or_item(self, item):
         if item['meta'].get('requests'):
@@ -53,9 +53,24 @@ class BeaverBrooksParseSpider(Spider):
         del item['meta']
         return item
 
-    def extract_size_codes(self, response):
-        css = 'form.form-select option:not([disabled="disabled"])::attr(value)'
-        return response.css(css).extract()
+    def extract_size_details(self, response):
+        size_codes_css = 'form.form-select option:not([disabled="disabled"])::attr(value)'
+        size_detail_css = 'form.form-select option:not([disabled="disabled"])::text'
+        raw_size_codes = response.css(size_codes_css).extract()
+        raw_size_details = response.css(size_detail_css).extract()
+
+        size_details = []
+        for code, detail in zip(raw_size_codes, raw_size_details):
+            detail = detail.split(',')
+            size_name = detail[0].strip()
+            availability = detail[1].strip()
+
+            size_details.append({
+                'size_code': code,
+                'size_name': size_name,
+                'size_availability': availability,
+            })
+        return size_details
 
     def extract_retailer_sku(self, response):
         css = 'meta[itemprop="sku"]::attr(content)'
@@ -103,24 +118,20 @@ class BeaverBrooksParseSpider(Spider):
         return response.css(css).extract_first()
 
     def check_availability(self, response):
-        css = 'div#productStockCheckAvailability'
-        return response.css(css).extract()
+        availability = response.meta.get('size_availability') or ''
+        if 'out of stock' in availability.lower():
+            return {'out_of_stock': True}
+        return {}
 
     def extract_sku(self, response):
         sku = pricing(self.extract_money_strings(response))
 
-        if 'ajax' in response.url:
-            size = response.url[-3:] if response.url[-1].isdigit() else response.url[-1]
-        else:
-            size = 'One Size'
-
-        sku['size'] = size
+        sku['size'] = response.meta.get('size_name') or 'One Size'
         sku['currency'] = self.extract_currency(response)
 
-        if not self.check_availability(response):
-            sku['out_of_stock'] = True
+        sku.update(self.check_availability(response))
 
-        return {size: sku}
+        return {sku['size']: sku}
 
 
 class BeaverBrooksCrawlSpider(CrawlSpider):
@@ -129,7 +140,7 @@ class BeaverBrooksCrawlSpider(CrawlSpider):
     allowed_domains = ['beaverbrooks.co.uk']
     start_urls = ['https://www.beaverbrooks.co.uk/']
 
-    deny = ['accessories', 'favourites', 'gift']
+    deny = ['accessories', 'favourites', 'gift', 'sale']
 
     listings_css = ['div.main-nav__category', 'ul.list-pagination']
     products_css = ['div.product-list__item']
