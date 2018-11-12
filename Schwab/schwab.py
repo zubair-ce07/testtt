@@ -1,7 +1,7 @@
 import json
 import re
-import urllib.parse
 from datetime import datetime
+from urllib.parse import urlencode
 
 from schwab.items import SchwabItem
 from scrapy import Request
@@ -10,13 +10,12 @@ from scrapy.spiders import CrawlSpider, Rule
 
 
 class Mixin:
-    name = "schwab"
     allowed_domains = ["www.schwab.de"]
     start_urls = ["http://www.schwab.de/"]
     retailer = "schwab-gr"
     market = "GR"
 
-    category_req_url_t = "https://www.schwab.de/index.php?cl=oxwCategoryTree&jsonly=true"
+    category_req_url = "https://www.schwab.de/index.php?cl=oxwCategoryTree&jsonly=true"
     color_req_url_t = "https://www.schwab.de/index.php?{0}"
 
 
@@ -30,7 +29,7 @@ class SchwabParser(Mixin):
         item["brand"] = self.product_brand(response)
         item["category"] = self.product_category(response)
         item["crawl_id"] = self.get_crawl_id()
-        item["spider_name"] = Mixin.name
+        item["spider_name"] = Mixin.retailer
         item["date"] = datetime.now().strftime("%Y-%m-%d")
         item["crawl_start_time"] = datetime.now().isoformat()
         item["url_orignal"] = response.url
@@ -88,7 +87,7 @@ class SchwabParser(Mixin):
 
         for color in colors:
             parameters["varselid[2]"] = color
-            url = self.color_req_url_t.format(urllib.parse.urlencode(parameters))
+            url = self.color_req_url_t.format(urlencode(parameters))
             color_requests.append(Request(
                 url, callback=self.parse_colors, meta={"item": item}))
 
@@ -135,9 +134,10 @@ class SchwabParser(Mixin):
         currency_css = "meta[itemprop='priceCurrency']::attr(content)"
         prev_price_css = ".js-wrong-price::text"
 
+        raw_price = json.loads(response.css(price_css).extract_first())
+
         pricing_details = {
-            "price": int(float(json.loads(response.css(price_css).extract_first())[
-                "productPrice"]) * 100),
+            "price": int(float(raw_price["productPrice"]) * 100),
             "currency": response.css(currency_css).extract_first()}
 
         prev_price = response.css(prev_price_css).extract_first()
@@ -167,7 +167,7 @@ class SchwabCrawler(CrawlSpider, Mixin):
         Rule(LinkExtractor(restrict_css=product_css), callback="parse_item"))
 
     def start_requests(self):
-        yield Request(self.category_req_url_t, callback=self.parse_category)
+        yield Request(self.category_req_url, callback=self.parse_category)
 
     def parse_category(self, response):
         category_tree = json.loads(response.body)
@@ -175,10 +175,7 @@ class SchwabCrawler(CrawlSpider, Mixin):
         return self.category_requests(subcategory_urls)
 
     def category_requests(self, subcategory_urls):
-        category_requests = []
-        for url in subcategory_urls:
-            category_requests.append(Request(url, callback=self.parse))
-        return category_requests
+        return [Request(url, callback=self.parse) for url in subcategory_urls]
 
     def parse_item(self, response):
         return self.parser.parse_product(response)
