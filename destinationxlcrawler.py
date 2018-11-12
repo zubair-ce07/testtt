@@ -1,3 +1,4 @@
+import html
 import json
 import re
 
@@ -7,12 +8,12 @@ from scrapy.http import Request
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 from w3lib.url import url_query_parameter
-import html
 
 
 class DestinationxlParseSpider(scrapy.Spider):
     name = 'destinationxl-parser'
-    start_urls = ['https://www.destinationxl.com/mens-big-and-tall-store/nfl/nfl-heather-jacket/cat440092/G6066']
+    start_urls = [
+        'https://www.destinationxl.com/mens-big-and-tall-store/mens-dress-boots/nunn-bush-ozark-plain-toe-chukka-boots/cat250025/F1329']
     allowed_domains = ['www.destinationxl.com']
 
     custom_settings = {
@@ -37,6 +38,7 @@ class DestinationxlParseSpider(scrapy.Spider):
         item['url'] = self.extract_product_url(response)
         item['meta'] = {}
         item['size_infos'] = {}
+        item['image_urls'] = []
 
         category_info = self.extract_category_id(response)
         yield Request(self.product_url_t.format(category_info[0], category_info[1]),
@@ -60,7 +62,7 @@ class DestinationxlParseSpider(scrapy.Spider):
                 item['old_price_text'] = raw_color['name']
 
             for color in raw_color['colors']:
-                item['image_urls'] = self.extract_image_urls(color)
+                item['image_urls'] = self.extract_image_urls(raw_product, color)
                 item['color_name'] = color['name']
                 item['color_code'] = color['id']
                 item['identifier'] = '{}-{}'.format(item['base_sku'], item['color_code'])
@@ -77,6 +79,7 @@ class DestinationxlParseSpider(scrapy.Spider):
             item['available'] = 'True'
 
         if len(colour['sizes']) > 1:
+            item['size_infos'] = {}
             item['meta'] = {'requests': self.extract_sizes_requests(response)}
 
         else:
@@ -88,7 +91,7 @@ class DestinationxlParseSpider(scrapy.Spider):
         raw_product = json.loads(response.text)
         item = response.meta['item']
         size_dict = raw_product['sizes'][1]
-
+        skus = []
         for size in size_dict['values']:
 
             if bool(size['available']):
@@ -102,10 +105,11 @@ class DestinationxlParseSpider(scrapy.Spider):
                        }
 
                 sku['stock'] = 1
+                skus.append(sku)
 
-                item['size_infos'][response.meta['size']] = sku
+        item['size_infos'][response.meta['size']] = skus
 
-        return self.next_request_or_item(item)
+        return self.next_request_or_item(item.copy())
 
     def next_request_or_item(self, item):
         if item['meta'].get('requests'):
@@ -118,10 +122,15 @@ class DestinationxlParseSpider(scrapy.Spider):
 
     def extract_sizes_requests(self, response):
         raw_product = json.loads(response.text)
-
-        return [Request('{}@{}Size={}'.format(response.url, raw_product['sizes'][0]['displayName'], size['name']),
-                        meta={'size': size['name']}, callback=self.parse_sizes) for size in
-                raw_product['sizes'][0]['values'] if bool(size['available'])]
+        requests = []
+        for size in raw_product['sizes'][0]['values']:
+            if bool(size['available']):
+                if raw_product['sizes'][0]['displayName'] == 'shoe size':
+                    raw_product['sizes'][0]['displayName'] = 'shoe'
+                requests.append(
+                    Request('{}@{}Size={}'.format(response.url, raw_product['sizes'][0]['displayName'], size['name']),
+                            meta={'size': size['name']}, callback=self.parse_sizes))
+        return requests
 
     def make_skus(self, raw_product):
         skus = {}
@@ -154,14 +163,24 @@ class DestinationxlParseSpider(scrapy.Spider):
     def extract_category_names(self, raw_product):
         return [breadcrumb['name'] for breadcrumb in raw_product['breadCrumbsItems']]
 
-    def extract_image_urls(self, color):
-        return color['largeSwatchImageUrl'].split('_')[0]
+    def extract_image_urls(self, response, color):
+        images = []
+        color = color['largeSwatchImageUrl'][:-17]
+        images.append(color)
+        index = re.findall(r'([0-9]+)', color)
+        for image_count in range(1, response['alternateImagesCount'] + 1, 1):
+            images.append(('{}{}_{}_alt{}'.format(color.split(index[0])[0], index[0],
+                                                  color.split(index[0])[1], image_count)))
+        return images
 
     def extract_description(self, raw_product):
         return self.clean_collected_data(html.unescape(raw_product['longDescription']))
 
     def clean_collected_data(self, text):
         text = re.sub('<[^<]+?>', '', text)
+        text = text.replace('\r', "")
+        text = text.replace('\t', "")
+        text = text.replace('\n', "")
         return text
 
 
@@ -170,6 +189,7 @@ class DestinationxlCrawlSpider(CrawlSpider):
     start_urls = ['https://www.destinationxl.com/mens-big-and-tall-store',
                   'https://www.destinationxl.com/mens-big-and-tall-store\
                   /mens-shoes/cat130012?N=11070+4294944243&No=0&nocache=1541591936534']
+
     allowed_domains = ['www.destinationxl.com']
 
     custom_settings = {
@@ -187,7 +207,6 @@ class DestinationxlCrawlSpider(CrawlSpider):
     )
 
     def parse(self, response):
-
         if not url_query_parameter(response.url, 'No') and response.url not in self.start_urls:
             for page in range(30, (int(self.extract_total_pages(response)) - 1) * 30, 30):
                 url = '{}?No={}'.format(response.url, page)
