@@ -30,13 +30,13 @@ class BeaverBrooksParseSpider(Spider):
         if not item['meta']['requests']:
             item['skus'].update(self.extract_sku(response))
 
-        yield self.generate_item_or_request(item)
+        yield self.generate_request_or_item(item)
 
     def parse_size_request(self, response):
         item = response.meta['item']
         item['skus'].update(self.extract_sku(response))
 
-        return self.generate_item_or_request(item)
+        return self.generate_request_or_item(item)
 
     def create_size_requests(self, response):
         size_codes = self.extract_size_codes(response)
@@ -44,7 +44,7 @@ class BeaverBrooksParseSpider(Spider):
         return [Request(self.size_request_t.format(size_code),
                         callback=self.parse_size_request) for size_code in size_codes]
 
-    def generate_item_or_request(self, item):
+    def generate_request_or_item(self, item):
         if item['meta'].get('requests'):
             request = item['meta']['requests'].pop()
             request.meta['item'] = item
@@ -70,7 +70,7 @@ class BeaverBrooksParseSpider(Spider):
         return response.css(css).extract()
 
     def extract_image_urls(self, response):
-        css = 'a.product-gallery__thumb img::attr(src)'
+        css = 'a.product-gallery__thumb img::attr(src), div.product-image img::attr(src)'
         return response.css(css).extract()
 
     def extract_description(self, response):
@@ -78,7 +78,8 @@ class BeaverBrooksParseSpider(Spider):
         return response.css(css).extract()
 
     def extract_category(self, response):
-        return [link_text.strip() for link_text, _ in response.meta.get('trail') or []]
+        trail = response.meta.get('trail') or []
+        return [link_text for link_text, _ in trail if link_text and not link_text.isdigit()]
 
     def extract_product_url(self, response):
         css = 'meta[itemprop="url"]::attr(content)'
@@ -88,7 +89,8 @@ class BeaverBrooksParseSpider(Spider):
         care_key_css = 'table.product-specification td.attrib::text'
         care_value_css = 'table.product-specification td:not(.attrib)::text'
         raw_care_keys = response.css(care_key_css).extract()
-        raw_care_values = [value.strip() for value in response.css(care_value_css).extract()]
+        raw_care_values = [value.strip()
+                           for value in response.css(care_value_css).extract()]
 
         return [key + ': ' + value for key, value in zip(raw_care_keys, raw_care_values)]
 
@@ -107,28 +109,33 @@ class BeaverBrooksParseSpider(Spider):
     def extract_sku(self, response):
         sku = pricing(self.extract_money_strings(response))
 
-        sku['size'] = response.url[-1] if 'ajax' in response.url else 'One Size'
+        if 'ajax' in response.url:
+            size = response.url[-3:] if response.url[-1].isdigit() else response.url[-1]
+        else:
+            size = 'One Size'
+
+        sku['size'] = size
         sku['currency'] = self.extract_currency(response)
 
         if not self.check_availability(response):
             sku['out_of_stock'] = True
 
-        return {sku['size']: sku}
+        return {size: sku}
 
 
 class BeaverBrooksCrawlSpider(CrawlSpider):
     name = 'beaverbrooks-crawl'
 
     allowed_domains = ['beaverbrooks.co.uk']
-    start_urls = ['http://www.beaverbrooks.co.uk/']
+    start_urls = ['https://www.beaverbrooks.co.uk/']
 
-    deny = ['accessories']
+    deny = ['accessories', 'favourites', 'gift']
 
     listings_css = ['div.main-nav__category', 'ul.list-pagination']
     products_css = ['div.product-list__item']
 
     rules = (
-        Rule(LinkExtractor(restrict_css=listings_css, deny=deny)),
+        Rule(LinkExtractor(restrict_css=listings_css, deny=deny), callback='parse'),
         Rule(LinkExtractor(restrict_css=products_css), callback='parse_product'),
     )
 
@@ -145,4 +152,4 @@ class BeaverBrooksCrawlSpider(CrawlSpider):
 
     def make_trail(self, response):
         link_text = response.meta.get('link_text') or ''
-        return (response.meta.get('trail') or []) + [(link_text, response.url)]
+        return (response.meta.get('trail') or []) + [(link_text.strip(), response.url)]
