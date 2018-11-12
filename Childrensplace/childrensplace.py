@@ -1,7 +1,7 @@
 import json
 import re
-import urllib.parse
 from datetime import datetime
+from urllib.parse import urlencode
 
 from w3lib.url import add_or_replace_parameter
 
@@ -13,6 +13,7 @@ from scrapy.spiders import CrawlSpider
 class Mixin:
     allowed_domains = ["childrensplace.com", "search.unbxd.io"]
     start_urls = ["http://www.childrensplace.com/us/home/"]
+
     retailer = "childrensplace-us"
     market = "US"
 
@@ -50,20 +51,24 @@ class ChildrensPlaceParser(Mixin):
 
     def skus(self, color_variant):
         skus = []
+
         for size_variant in color_variant["variants"]:
             sku = self.product_pricing(size_variant)
             sku["color"] = size_variant["auxdescription"]
             sku["size"] = size_variant["v_tcpsize"]
             sku["sku_id"] = f"{size_variant['auxdescription']}_{size_variant['v_tcpsize']}"
             skus.append(sku)
+
         return skus
 
     def color_variants(self, product_details, item):
         item["skus"] = []
         item["image_urls"] = []
+
         for color_variant in product_details:
             item["skus"] += self.skus(color_variant)
             item["image_urls"] += self.image_urls(color_variant)
+
         yield item
 
     def product_name(self, product_details):
@@ -131,9 +136,11 @@ class ChildrensPlaceCrawler(CrawlSpider, Mixin):
 
     def map_category(self, naviagtion_details):
         category_map = {}
+
         for menu in naviagtion_details:
             category_map[menu["categoryId"]] = [
                 [sub["url"], sub["categoryId"]] for sub in menu["menuItems"][0]]
+
         return category_map
 
     def parse_listing(self, response):
@@ -141,7 +148,8 @@ class ChildrensPlaceCrawler(CrawlSpider, Mixin):
         parameters = {
             "start": 0, "rows": self.PAGE_SIZE, "pagetype": "boolean",
             "p-id": f'categoryPathId:"{meta["category"]}>{meta["sub_category"]}"'}
-        request_url = self.category_req_url_t.format(urllib.parse.urlencode(parameters))
+        request_url = self.category_req_url_t.format(urlencode(parameters))
+
         yield Request(request_url, callback=self.parse_pagination)
 
     def parse_pagination(self, response):
@@ -157,8 +165,10 @@ class ChildrensPlaceCrawler(CrawlSpider, Mixin):
 
     def parse_products(self, parameters, product_list):
         product_requests = []
+
         for product_details in product_list["products"]:
             parameters["q"] = product_details["style_partno"]
-            request_url = self.variant_req_url_t.format(urllib.parse.urlencode(parameters))
+            request_url = self.variant_req_url_t.format(urlencode(parameters))
             product_requests.append(Request(request_url, callback=self.parser.parse_product))
+
         return product_requests
