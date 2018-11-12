@@ -1,4 +1,4 @@
-FILE_ERROR_MESSAGE = "***No such file/files***"
+RECORDS_MESSAGE = "***No records found***"
 DIRECTORY_ERROR_MESSAGE = "***No such directory/not readable***"
 YEAR_ARGUMENT_ERROR_MESSAGE = "Incorrect data format, should be YYYY"
 MONTH_ARGUMENT_ERROR_MESSAGE = "Incorrect data format, should be YYYY/MM"

@@ -12,13 +12,11 @@ class WeatherReporting:
             f" {calendar.month_name[report['highest']['pkt'].month]}"
             f" {report['highest']['pkt'].day}"
         )
-
         print(
             f"Lowest: {report['lowest']['min_temp']}C on"
             f" {calendar.month_name[report['lowest']['pkt'].month]}"
             f" {report['lowest']['pkt'].day}"
         )
-
         print(
             f"Humidity: {report['humidity']['max_humidity']}% on"
             f" {calendar.month_name[report['humidity']['pkt'].month]}"
@@ -28,11 +26,8 @@ class WeatherReporting:
 
     def display_month_report(self, report):
         print(f"Highest Average: {report['average_max_temp']}C")
-
         print(f"Lowest Average: {report['average_min_temp']}C")
-
         print(f"Average Mean Humidity: {report['average_mean_humidity']}%")
-
         print('-------------------------------------\n')
 
     def display_month_bar_chart(self, month_record):

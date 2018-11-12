@@ -20,8 +20,7 @@ def validate_year_and_month(date_value):
     try:
         return datetime.datetime.strptime(date_value, '%Y/%m')
     except ValueError:
-        raise argparse.ArgumentTypeError(
-            constants.MONTH_ARGUMENT_ERROR_MESSAGE)
+        raise argparse.ArgumentTypeError(constants.MONTH_ARGUMENT_ERROR_MESSAGE)
 
 
 def validate_path(path_value):
@@ -49,28 +48,28 @@ def main():
     weather_records.read_weather_records(args.path)
 
     for date in args.e:
-        year_records = weather_records.extract_year_readings(date)
+        year_records = weather_records.extract_year_records(date)
 
         if not year_records:
-            print(constants.FILE_ERROR_MESSAGE, '\n\n')
+            print(constants.RECORDS_MESSAGE, '\n\n')
             continue
 
         year_report = analyse_weather.calculate_yearly_report(year_records)
         report_weather.display_year_report(year_report)
 
     for date in args.a:
-        month_records = weather_records.extract_month_readings(date)
+        month_records = weather_records.extract_month_records(date)
         if not month_records:
-            print(constants.FILE_ERROR_MESSAGE, '\n\n')
+            print(constants.RECORDS_MESSAGE, '\n\n')
             continue
 
         month_report = analyse_weather.calculate_monthly_report(month_records)
         report_weather.display_month_report(month_report)
 
     for date in args.c:
-        month_records = weather_records.extract_month_readings(date)
+        month_records = weather_records.extract_month_records(date)
         if not month_records:
-            print(constants.FILE_ERROR_MESSAGE, '\n\n')
+            print(constants.RECORDS_MESSAGE, '\n\n')
             continue
 
         report_weather.display_month_bar_chart(month_records)
