@@ -9,7 +9,6 @@ from softsurroundings.items import SoftSurroundingsItem
 
 
 class Mixin:
-    name = "softsurroundings"
     allowed_domains = ["www.softsurroundings.com"]
     start_urls = ["http://www.softsurroundings.com/"]
 
@@ -27,7 +26,7 @@ class SoftSurroundingsParser(Mixin):
         item["name"] = self.product_name(response)
         item["category"] = self.product_category(response)
         item["crawl_id"] = self.get_crawl_id()
-        item["spider_name"] = Mixin.name
+        item["spider_name"] = Mixin.retailer
         item["date"] = datetime.now().strftime("%Y-%m-%d")
         item["crawl_start_time"] = datetime.now().isoformat()
         item["url_orignal"] = response.url
@@ -37,10 +36,10 @@ class SoftSurroundingsParser(Mixin):
         item["care"] = self.product_care(response)
         item["website_name"] = self.start_urls[0]
         item["skus"] = []
-        item["meta"] = {}
         item["image_urls"] = self.image_urls(response)
-        item["meta"]["requests"] = self.color_requests(
-            response, item) + self.size_category_requests(response, item)
+        item["meta"] = {
+            "requests": self.color_requests(response, item) +
+            self.size_category_requests(response, item)}
 
         return self.next_request_or_item(item)
 
@@ -78,7 +77,6 @@ class SoftSurroundingsParser(Mixin):
 
     def color_requests(self, response, item):
         colors = self.color_ids(response)
-
         if not colors:
             return self.size_requests(response, item)
 
@@ -132,6 +130,7 @@ class SoftSurroundingsParser(Mixin):
         css = "#size > a::attr(id)"
         sel_css = "input[name*='specTwo']::attr(value)"
         size_ids = response.css(css).extract()
+
         if size_ids:
             return [size_id.split("_")[1] for size_id in size_ids if size_id]
         else:
