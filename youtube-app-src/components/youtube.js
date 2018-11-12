@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
-import * as constants from '../constants.js';
-import { urlFormer, fetchData } from '../utils.js';
+import {urlFormer, fetchData} from '../utils.js';
 import Search from './search.js'
 import Player from './player.js'
 import VideoList from './videoList.js'
@@ -26,7 +25,6 @@ class Youtube extends Component {
             'title': item.snippet.title,
             'description': item.snippet.description,
             'thumbnail': item.snippet.thumbnails.default.url,
-            'url': `${constants.BASE_SOURCE}${item.id.videoId}`,
             'id': item.id.videoId
           }
           listSources.push(videoIcon)
@@ -53,11 +51,13 @@ class Youtube extends Component {
       <div className="youtube">
         <Search onClick={this.search.bind(this)} />
         <Player source={this.state.playerSource} />
-        <VideoList sources={this.state.listSources} onSelect={this.onSelect.bind(this)} />
+        <VideoList
+          sources={this.state.listSources}
+          onSelect={this.onSelect.bind(this)}
+        />
       </div>
     )
   }
-
 }
 
 
