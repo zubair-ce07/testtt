@@ -11,6 +11,7 @@ from vans.items import VansItem
 class Mixin:
     allowed_domains = ["vans.fr"]
     start_urls = ["http://www.vans.fr/"]
+
     retailer = "vans-fr"
     market = "FR"
 
@@ -36,23 +37,25 @@ class VansParser(Mixin):
         item["url_orignal"] = response.url
         item["skus"] = []
         item["image_urls"] = []
-        item["meta"] = self.color_requests(response, item)
+        item["meta"] = {"requests": self.color_requests(response, item)}
 
         return self.next_request_or_item(item)
 
     def skus(self, response):
         sizes = self.product_sizes(response)
         skus = []
+
         for size in sizes:
             sku = self.product_pricing(response)
             sku["color"] = self.color_name(response)
             sku["size"] = size
             sku["sku_id"] = f"{sku['color']}_{size}"
             skus.append(sku)
+
         return skus
 
     def next_request_or_item(self, item):
-        color_requests = item["meta"]
+        color_requests = item["meta"]["requests"]
         yield (color_requests and color_requests.pop(0)) or item
 
     def parse_colors(self, response):
@@ -80,8 +83,9 @@ class VansParser(Mixin):
     def previous_price(self, response):
         script = "var itemPrices = (.+?);\n"
         price_details = json.loads(re.findall(script, response.body.decode("utf-8"))[0])
-        return int(float(price_details[self.product_id(response)][
-            "pricing"]["default"]["lowListPriceNumeric"]) * 100)
+        raw_price = price_details[self.product_id(response)]["pricing"]
+
+        return int(float(raw_price["default"]["lowListPriceNumeric"]) * 100)
 
     def product_description(self, response):
         css = ".desc-container ::text"
@@ -122,6 +126,7 @@ class VansParser(Mixin):
         prev_price = self.previous_price(response)
         if prev_price != pricing_details["price"]:
             pricing_details["previous_price"] = prev_price
+
         return pricing_details
 
     def image_urls(self, response):
@@ -147,8 +152,7 @@ class VansCrawler(CrawlSpider, Mixin):
 
     rules = (
         Rule(LinkExtractor(restrict_css=listings_css, deny=deny_re), callback="parse_pagination"),
-        Rule(LinkExtractor(restrict_css=product_css), callback="parse_item")
-    )
+        Rule(LinkExtractor(restrict_css=product_css), callback="parse_item"))
 
     def parse_pagination(self, response):
         pages = self.page_count(response)
