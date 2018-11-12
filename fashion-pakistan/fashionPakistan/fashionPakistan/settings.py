@@ -67,7 +67,7 @@ ROBOTSTXT_OBEY = False
 ITEM_PIPELINES = {
    'fashionPakistan.pipelines.FilterDuplicate': 300,
    'fashionPakistan.pipelines.VerifyProduct': 400,
-   'fashionPakistan.pipelines.JsonWrite': 500,
+#    'fashionPakistan.pipelines.JsonWrite': 500,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
