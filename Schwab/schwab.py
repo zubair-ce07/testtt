@@ -12,6 +12,7 @@ from scrapy.spiders import CrawlSpider, Rule
 class Mixin:
     allowed_domains = ["www.schwab.de"]
     start_urls = ["http://www.schwab.de/"]
+
     retailer = "schwab-gr"
     market = "GR"
 
@@ -133,7 +134,6 @@ class SchwabParser(Mixin):
         price_css = ".js-webtrends-data::attr(data-content)"
         currency_css = "meta[itemprop='priceCurrency']::attr(content)"
         prev_price_css = ".js-wrong-price::text"
-
         raw_price = json.loads(response.css(price_css).extract_first())
 
         pricing_details = {
@@ -143,6 +143,7 @@ class SchwabParser(Mixin):
         prev_price = response.css(prev_price_css).extract_first()
         if prev_price:
             pricing_details["previous_price"] = int(float(prev_price) * 100)
+
         return pricing_details
 
     def image_urls(self, response):
@@ -172,9 +173,7 @@ class SchwabCrawler(CrawlSpider, Mixin):
     def parse_category(self, response):
         category_tree = json.loads(response.body)
         subcategory_urls = [sub["url"] for cat in category_tree for sub in cat["sCat"]]
-        return self.category_requests(subcategory_urls)
 
-    def category_requests(self, subcategory_urls):
         return [Request(url, callback=self.parse) for url in subcategory_urls]
 
     def parse_item(self, response):
