@@ -39,7 +39,7 @@ class DestinationxlParseSpider(scrapy.Spider):
         item['meta'] = {}
         item['size_infos'] = {}
         item['image_urls'] = []
-
+        item['category_names'] = self.extract_category(response)
         category_info = self.extract_category_id(response)
         yield Request(self.product_url_t.format(category_info[0], category_info[1]),
                       meta={'item': item},
@@ -52,7 +52,7 @@ class DestinationxlParseSpider(scrapy.Spider):
         item['title'] = raw_product['description']
         item['brand'] = raw_product['brandName']
         item['description_text'] = self.extract_description(raw_product)
-        item['category_names'] = self.extract_category_names(raw_product)
+        #    item['category_names'] = self.extract_category_names(raw_product)
 
         for raw_color in raw_product['colorGroups']:
 
@@ -176,6 +176,9 @@ class DestinationxlParseSpider(scrapy.Spider):
     def extract_description(self, raw_product):
         return self.clean_collected_data(html.unescape(raw_product['longDescription']))
 
+    def extract_category(self, response):
+        return response.meta['breadcrumbs']
+
     def clean_collected_data(self, text):
         text = re.sub('<[^<]+?>', '', text)
         text = text.replace('\r', "")
@@ -186,10 +189,8 @@ class DestinationxlParseSpider(scrapy.Spider):
 
 class DestinationxlCrawlSpider(CrawlSpider):
     name = 'destinationxl-crawler'
-    start_urls = ['https://www.destinationxl.com/mens-big-and-tall-store',
-                  'https://www.destinationxl.com/mens-big-and-tall-store\
-                  /mens-shoes/cat130012?N=11070+4294944243&No=0&nocache=1541591936534']
-
+    start_urls = ['https://www.destinationxl.com/mens-big-and-tall-store']
+    base_url = 'https://www.destinationxl.com'
     allowed_domains = ['www.destinationxl.com']
 
     custom_settings = {
@@ -199,20 +200,25 @@ class DestinationxlCrawlSpider(CrawlSpider):
 
     destinationxl_parser = DestinationxlParseSpider()
 
-    rules = (
-        Rule(LinkExtractor(restrict_css=('a.ng-trigger'),
-                           deny=('/mens-shoes', '/brands', '/looks', '/everyday-specials')),
-             callback='parse'),
-        Rule(LinkExtractor(restrict_css=('.switch-hover')), callback=destinationxl_parser.parse),
-    )
-
     def parse(self, response):
+        categories = self.extract_categories(response)
+        for category in categories:
+            category = '{}{}'.format(self.base_url, category)
+            yield Request(category, meta={'breadcrumbs': category.split('/')[-2]}, callback=self.parse_products)
+
+    def parse_products(self, response):
+        products = response.css('.switch-hover a::attr(href)').extract()
+        link_text = response.meta['breadcrumbs']
+        for product in products:
+            product = '{}{}'.format(self.base_url, product)
+            product_link_text = "{} {}".format(link_text, product.split('/')[-4])
+            yield Request(product, meta={'breadcrumbs': product_link_text},
+                          callback=self.destinationxl_parser.parse)
+
         if not url_query_parameter(response.url, 'No') and response.url not in self.start_urls:
             for page in range(30, (int(self.extract_total_pages(response)) - 1) * 30, 30):
                 url = '{}?No={}'.format(response.url, page)
-                yield Request(url, callback=self.parse)
-
-        yield from super(DestinationxlCrawlSpider, self).parse(response)
+                yield Request(url, meta={'breadcrumbs': ""}, callback=self.parse_products)
 
     def extract_total_pages(self, response):
         total_pages = response.css('.page-nos span:nth-last-child(-n+2)::text').extract()
@@ -221,3 +227,10 @@ class DestinationxlCrawlSpider(CrawlSpider):
             return total_pages[-2]
         else:
             return total_pages[-1]
+
+    def extract_categories(self, response):
+        categories = []
+        categories.append(response.xpath('//a[@aria-label="Mega Menu New"]//@href').extract_first())
+        categories.append(response.xpath('//a[@aria-label="Mega Menu Clothing"]//@href').extract_first())
+        categories.append(response.xpath('//a[@aria-label="Mega Menu Sale"]//@href').extract_first())
+        return categories
