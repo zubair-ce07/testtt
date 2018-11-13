@@ -87,12 +87,12 @@ class SapphirePkSpider(scrapy.Spider):
         for attrib_value, price in zip(attrib_values, prices):
             attrib_value_split = attrib_value.split("_")
             key = str(attrib_value.strip("-"))
-            color_scheme[key] = {}
             for val, attrib in zip(attrib_value_split, attribs):
                 sub_key = str(attrib).strip("-")
-                color_scheme[key][attrib] = str(val)
+                color_scheme[key][attrib] = str(val).strip("-")
 
             color_scheme[key]["currency_code"] = currency
-            color_scheme[key]["price"] = price.strip("Rs.").replace(",", '')
+            color_scheme[key]["new_price"] = price.strip(
+                "Rs.").replace(",", '')
 
         return color_scheme

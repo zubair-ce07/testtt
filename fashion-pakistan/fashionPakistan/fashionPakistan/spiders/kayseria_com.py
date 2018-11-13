@@ -101,7 +101,7 @@ class KayseriaComSpider(scrapy.Spider):
         else:
             skus[color_name] = {
                 "color": color_name,
-                "price": price.replace(",", ''),
+                "new_price": price.replace(",", ''),
                 "available_sizes": available_sizes,
                 "currency_code": "PKR",
             }

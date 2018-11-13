@@ -122,7 +122,7 @@ class GulahmedComSpider(scrapy.Spider):
                 }
             else:
                 color_scheme["no_color_size"] = {
-                    "price": price.replace(",", ''),
+                    "new_price": price.replace(",", ''),
                     "currency_code": currency,
                 }
         return color_scheme

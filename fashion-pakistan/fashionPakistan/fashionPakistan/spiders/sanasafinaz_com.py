@@ -99,14 +99,14 @@ class SanasafinazComSpider(scrapy.Spider):
             for size, amount in zip(sizes, prices):
                 color_scheme[color_name+"_"+size] = {
                     "color": color_name,
-                    "price": amount,
+                    "new_price": amount,
                     "size": size,
                     "currency_code": currency,
                 }
         else:
             color_scheme[color_name] = {
                 "color": color_name,
-                "price": price.replace(",", ''),
+                "new_price": price.replace(",", ''),
                 "currency_code": currency,
             }
         return color_scheme
