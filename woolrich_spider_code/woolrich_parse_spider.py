@@ -6,13 +6,15 @@ from scrapy.http import FormRequest
 from woolrich.items import WoolrichItem
 
 
-class WoolrichParseProduct(Spider):
+class WoolrichParseSpider(Spider):
     name = 'woolrich_parse_product'
     product_sku_url_t = 'https://www.woolrich.com/remote/v1/product-attributes/{pid}'
+    BRAND = 'Woolrich'
+    CURRENCY = 'USD'
 
     def parse_product(self, response):
         product = WoolrichItem()
-        product['brand'] = 'woolrich'
+        product['brand'] = self.BRAND
         product['care'] = self.product_care(response)
         product['category'] = self.product_catagory(response)
         product['description'] = self.product_description(response)
@@ -55,7 +57,7 @@ class WoolrichParseProduct(Spider):
         price = raw_sku['data']['price']['without_tax']['value']
         previous_price = raw_sku['data']['price'].get('rrp_without_tax')
         sku = {
-            'currency': 'USD',
+            'currency': self.CURRENCY,
             'price': price,
         }
 
@@ -75,8 +77,7 @@ class WoolrichParseProduct(Spider):
 
     def product_sku_requests(self, response):
         requests = []
-        params = self.fit_params(response) or self.size_params(
-            response) or self.color_params(response)
+        params = self.fit_params(response) or self.size_params(response) or self.color_params(response)
         url = self.product_sku_url_t.format(pid=self.product_retailer_sku(response))
 
         for param in params:
@@ -86,9 +87,9 @@ class WoolrichParseProduct(Spider):
         return requests
 
     def product_sku_meta(self, param, response):
-        color_key = f"attribute[{self.color_attribute_key(response)}]"
-        size_key = f"attribute[{self.size_attribute_key(response)}]"
-        fit_key = f"attribute[{self.fit_attribute_key(response)}]"
+        color_key = self.color_attribute_key(response)
+        size_key = self.size_attribute_key(response)
+        fit_key = self.fit_attribute_key(response)
 
         color_values = self.map_color(response)
         size_values = self.map_size(response)
@@ -101,27 +102,27 @@ class WoolrichParseProduct(Spider):
         }
 
     def color_params(self, response):
-        color_key = f"attribute[{self.color_attribute_key(response)}]"
+        color_key = self.color_attribute_key(response)
         color_values = self.map_color(response)
         return [{color_key: color_value} for color_value in color_values]
 
     def size_params(self, response):
-        color_key = f"attribute[{self.color_attribute_key(response)}]"
-        size_key = f"attribute[{self.size_attribute_key(response)}]"
+        color_key = self.color_attribute_key(response)
+        size_key = self.size_attribute_key(response)
 
         color_values = self.map_color(response)
         size_values = self.map_size(response)
 
         if not size_values:
-            return
+            return None
 
         return [{color_key: color_value, size_key: size_value, }
                 for color_value in color_values for size_value in size_values]
 
     def fit_params(self, response):
-        color_key = f"attribute[{self.color_attribute_key(response)}]"
-        size_key = f"attribute[{self.size_attribute_key(response)}]"
-        fit_key = f"attribute[{self.fit_attribute_key(response)}]"
+        color_key = self.color_attribute_key(response)
+        size_key = self.size_attribute_key(response)
+        fit_key = self.fit_attribute_key(response)
 
         color_values = self.map_color(response)
         size_values = self.map_size(response)
@@ -165,7 +166,7 @@ class WoolrichParseProduct(Spider):
         if not fit_key:
             return fit_values
 
-        fit_values_xpath = f'//input[@name="attribute[{fit_key}]"]/@value'
+        fit_values_xpath = f'//input[@name="{fit_key}"]/@value'
         fit_attribute_values = response.xpath(fit_values_xpath).extract()
 
         for fit_value in fit_attribute_values:
@@ -176,19 +177,15 @@ class WoolrichParseProduct(Spider):
 
     def color_attribute_key(self, response):
         css = '.form-option-swatch::attr(data-swatch-id)'
-        return response.css(css).extract_first()
+        return f"attribute[{response.css(css).extract_first()}]"
 
     def size_attribute_key(self, response):
         css = '.product-size input::attr(name)'
-        size_key = response.css(css).extract_first()
-        size_key = size_key[10:-1] if size_key else size_key
-        return size_key
+        return response.css(css).extract_first()
 
     def fit_attribute_key(self, response):
         xpath = '//div[@class="form-field" and @data-product-attribute="set-rectangle"]/input/@name'
-        fit_key = response.xpath(xpath).extract_first()
-        fit_key = fit_key[10:-1] if fit_key else fit_key
-        return fit_key
+        return response.xpath(xpath).extract_first()
 
     def product_care(self, response):
         care_css = '#features-content > li::text'
