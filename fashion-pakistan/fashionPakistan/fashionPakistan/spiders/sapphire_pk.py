@@ -68,7 +68,7 @@ class SapphirePkSpider(scrapy.Spider):
 
         fabric = response.xpath(
             "//div[@class='short-description']/p/text()").extract()
-        if fabric[-1].strip().split(":")[0] == "Fabric":
+        if fabric and fabric[-1].strip().split(":")[0] == "Fabric":
             attributes["fabric"] = fabric[-1].strip().split(":")[1]
         return attributes
 
