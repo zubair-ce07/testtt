@@ -46,16 +46,17 @@ class SchwabParser(Mixin):
         return self.next_request_or_item(item)
 
     def skus(self, response):
+        skus = []
+        color_css = ".js-current-color-name::attr(value)"
+
         product_sizes = self.clean(self.product_sizes(response))
         if not product_sizes:
             product_sizes.append("One_size")
 
-        skus = []
-        color_css = ".js-current-color-name::attr(value)"
+        sku = self.product_pricing(response)
+        sku["color"] = response.css(color_css).extract_first()
 
         for size in product_sizes:
-            sku = self.product_pricing(response)
-            sku["color"] = response.css(color_css).extract_first()
             sku["size"] = size
             sku["sku_id"] = f"{sku['color']}_{size}"
             skus.append(sku)
