@@ -6,7 +6,7 @@ from scrapy import Spider, Request
 from maurices.items import MauricesProduct
 
 
-class MauricesParseProduct(Spider):
+class MauricesParseSpider(Spider):
     name = 'maurices_parse_product'
     color_url_t = 'https://mauricesprodatg.scene7.com/is/image/mauricesProdATG/' \
         '{pid}_{color_id}_ms?req=set,json&id={color_id}'

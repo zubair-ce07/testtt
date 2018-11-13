@@ -8,14 +8,14 @@ from scrapy.selector import Selector
 from scrapy import Request
 from w3lib.url import url_query_parameter, add_or_replace_parameter
 
-from maurices.maurices_parse_product import MauricesParseProduct
+from maurices.maurices_parse_spider import MauricesParseSpider
 
 
-class MauricesSpider(CrawlSpider):
+class MauricesCrawlSpider(CrawlSpider):
     name = 'maurices_spider'
     start_urls = ['https://www.maurices.com']
     sub_catagory_allow_r = '/p/'
-    product_parser = MauricesParseProduct()
+    product_parser = MauricesParseSpider()
     allowed_domains = ['maurices.com', 'mauricesprodatg.scene7.com']
     product_pagination_url_t = 'https://www.maurices.com/maurices/plp/includes' \
         '/plp-filters.jsp?N={sub_catagory_id}&No=0'
