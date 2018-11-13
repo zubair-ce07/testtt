@@ -17,4 +17,4 @@ def pricing(prices):
     return price_map
 
 def remove_non_numerics(price):
-    return ''.join(p for p in price if p.isdigit())
+    return ''.join(p for p in price if p.isdigit() or p == '.')
