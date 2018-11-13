@@ -1,6 +1,7 @@
 import json
 import re
 from datetime import datetime
+from urllib.parse import urlencode
 
 from scrapy import Request
 from scrapy.linkextractors import LinkExtractor
@@ -14,6 +15,8 @@ class Mixin:
 
     retailer = "vans-fr"
     market = "FR"
+
+    pagniation_req_url_t = "https://fsm-vfc.attraqt.com/zones-js.aspx?{0}"
 
 
 class VansParser(Mixin):
@@ -93,7 +96,8 @@ class VansParser(Mixin):
 
     def product_care(self, response):
         css = ".desc-container ::text"
-        return self.clean(response.css(css).extract()[-1])
+        care = response.css(css).extract()[-1] if response.css(css).extract() else None
+        return care
 
     def product_category(self, response):
         css = "#product-attr-form::attr(data-seo-category)"
@@ -136,7 +140,7 @@ class VansParser(Mixin):
 
     def color_requests(self, response, item):
         urls = response.css("button img::attr(data-product-url)").extract()
-        return [Request(url, callback=self.parse_colors, meta={"item": item}) for url in urls]
+        return [Request(url, callback=self.parse_colors, meta={"item": item}, dont_filter=True) for url in urls]
 
     def clean(self, dirty_strs):
         return [re.sub(':\s+', ' ', text).strip() for text in dirty_strs.split(";")]
@@ -145,23 +149,74 @@ class VansParser(Mixin):
 class VansCrawler(CrawlSpider, Mixin):
     name = Mixin.retailer + "-crawler"
     parser = VansParser()
-    listings_css = [".sub-category"]
+    listings_css = [".sub-category-header"]
     product_css = [".product-block-figure"]
     deny_re = [".html"]
     PAGE_SIZE = 48
 
     rules = (
-        Rule(LinkExtractor(restrict_css=listings_css, deny=deny_re), callback="parse_pagination"),
-        Rule(LinkExtractor(restrict_css=product_css), callback="parse_item"))
+        Rule(LinkExtractor(restrict_css=listings_css, deny=deny_re), callback="parse_pagination"),)
+
+    def category_zones(self, response):
+        css = ".body-container div::attr(lmzone)"
+        return response.css(css).extract()
+
+    def site_id(self, response):
+        script = "WCS_CONFIG.ATTRAQT = (.+?);"
+        raw_site_id = json.loads(re.findall(script, response.body.decode("utf-8").replace("\n", ""))[0])
+        return re.findall("zones/(.*).min", raw_site_id["MAINJS"])[0]
+
+    def config_categorytree(self, response):
+        return re.findall('categorytree : "(.*)"', response.body.decode("utf-8"))[0]
+
+    def config_category(self, response):
+        return re.findall('category : "(.*)"', response.body.decode("utf-8"))[0]
+
+    def config_collection(self, response):
+        return re.findall('collection : "(.*)"', response.body.decode("utf-8"))[0]
+
+    def config_category_title(self, response):
+        return re.findall('category_title : "(.*)"', response.body.decode("utf-8"))[0]
+
+    def config_language(self, response):
+        css = "meta[name='locale']::attr(content)"
+        return response.css(css).extract_first()
 
     def parse_pagination(self, response):
         pages = self.page_count(response)
-        for page in range(0, pages, self.PAGE_SIZE):
-            url = f"{response.url}#esp_pg={page//self.PAGE_SIZE}"
-            yield Request(url, callback=self.parse, dont_filter=True)
+        cat_zones = self.category_zones(response)
+        lang = self.config_language(response)
+
+        parameters = {
+            "zone0": cat_zones[0], "zone1": cat_zones[1],
+            "config_categorytree": self.config_categorytree(response),
+            "config_category": self.config_category(response),
+            "config_collection": self.config_collection(response),
+            "siteId": self.site_id(response),
+            "config_category_title": self.config_category_title(response),
+            "config_language": lang, "language": lang,
+            "config_country": self.market, "mergehash": "true"}
+
+        for page in range(0, pages + self.PAGE_SIZE, self.PAGE_SIZE):
+            parameters["pageurl"] = f"{response.url}#esp_pg={page//self.PAGE_SIZE}"
+            url = self.pagniation_req_url_t.format(urlencode(parameters))
+
+            yield Request(url, callback=self.parse_raw_content, dont_filter=True)
+
+    def parse_raw_content(self, response):
+        script = "LM.buildZone\((.*)\)"
+        raw_html = json.loads(re.findall(script, response.body.decode("utf-8"))[0])
+        new_response = response.replace(body=raw_html["html"])
+
+        return [Request(url, callback=self.parse_item) for url in self.product_urls(new_response)]
 
     def parse_item(self, response):
         return self.parser.parse_product(response)
+
+    def product_urls(self, response):
+        css = ".product-block-pdp-url::attr(href)"
+        urls = response.css(css).extract()
+        return [f"{self.start_urls[0]}{url}" for url in urls]
 
     def page_count(self, response):
         css = ".header-result-counter ::text"
