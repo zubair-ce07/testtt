@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from scrapy import Spider, Request
 from scrapy.spiders import Rule, CrawlSpider
 from scrapy.linkextractors import LinkExtractor
@@ -40,10 +39,10 @@ class BeaverBrooksParseSpider(Spider):
         return self.generate_request_or_item(item)
 
     def create_size_requests(self, response):
-        size_details = self.extract_size_details(response)
+        size_skus = self.extract_size_skus(response)
 
         return [Request(self.size_request_t.format(size_code), meta={'sku': common_sku},
-                        callback=self.parse_size) for size_code, common_sku in size_details]
+                        callback=self.parse_size) for size_code, common_sku in size_skus]
 
     def generate_request_or_item(self, item):
         if item['meta'].get('requests'):
@@ -54,26 +53,25 @@ class BeaverBrooksParseSpider(Spider):
         del item['meta']
         return item
 
-    def extract_size_details(self, response):
+    def extract_size_skus(self, response):
         size_codes_css = 'form.form-select option:not([disabled="disabled"])::attr(value)'
         size_detail_css = 'form.form-select option:not([disabled="disabled"])::text'
         raw_size_codes = response.css(size_codes_css).extract()
         raw_size_details = response.css(size_detail_css).extract()
 
-        size_details = []
+        size_skus = []
 
-        for code, detail in zip(raw_size_codes, raw_size_details):
-            detail = detail.split(',')
+        for code, raw_size in zip(raw_size_codes, raw_size_details):
+            size, availability = raw_size.split(',')
 
-            sku = {'size': detail[0].strip()}
+            sku = {'size': size.strip()}
 
-            availability = detail[1].strip()
             if 'out of stock' in availability.lower():
                 sku['out_of_stock'] = True
 
-            size_details.append((code, sku))
+            size_skus.append((code, sku))
 
-        return size_details
+        return size_skus
 
     def extract_retailer_sku(self, response):
         css = 'meta[itemprop="sku"]::attr(content)'
@@ -122,22 +120,22 @@ class BeaverBrooksParseSpider(Spider):
 
     def extract_sku(self, response):
         sku = pricing(self.extract_money_strings(response))
+
+        common_sku = response.meta.get('sku') or {}
+        sku.update(common_sku)
+
         sku['currency'] = self.extract_currency(response)
+        sku['size'] = sku['size'] if sku.get('size') else 'One Size'
 
-        common_sku = response.meta.get('sku')
-        if common_sku:
-            sku.update(common_sku)
-        else:
-            sku['size'] = 'One Size'
-
-            if self.check_availability(response):
-                sku['out_of_stock'] = True
+        if self.check_availability(response):
+            sku['out_of_stock'] = True
 
         return {sku['size']: sku}
 
     def check_availability(self, response):
         css = 'span.product-offer__msg > strong::text'
-        return 'out' in response.css(css).extract_first()
+        availability = response.css(css).extract_first() or ''
+        return 'out' in availability
 
 
 class BeaverBrooksCrawlSpider(CrawlSpider):
