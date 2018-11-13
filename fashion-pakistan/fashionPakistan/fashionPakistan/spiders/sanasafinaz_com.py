@@ -40,7 +40,7 @@ class SanasafinazComSpider(scrapy.Spider):
         yield product
 
     def get_stock_availablity(self, response):
-        return response.xpath("//div[@title='Availability']/span/text()").extract_first()
+        return False if response.xpath("//div[@title='Availability']/span/text()").extract_first().strip() == "In stock" else True
 
     def get_item_name(self, response):
         return response.xpath("//span[@data-ui-id]/text()").extract_first()
@@ -59,7 +59,7 @@ class SanasafinazComSpider(scrapy.Spider):
     def get_item_attributes(self, response):
         detail = response.xpath(
             "//div[@id='product.info.description']//tbody/tr//td/text()").extract()
-        detail = [ x+y for x,y in zip(detail[0::2], detail[1::2]) ]
+        detail = [x+y for x, y in zip(detail[0::2], detail[1::2])]
         if detail:
             return {
                 "detail": detail,
@@ -68,7 +68,8 @@ class SanasafinazComSpider(scrapy.Spider):
             return {}
 
     def get_item_sizes(self, response):
-        size_string = re.findall(r'swatchOptions\":[\W\w]*},\"tierPrices\":\[\]}},|$',response.text)[0]
+        size_string = re.findall(
+            r'swatchOptions\":[\W\w]*},\"tierPrices\":\[\]}},|$', response.text)[0]
         size_string = size_string.strip("swatchOptions\":")
         size_string = size_string.strip(",")
         size_string = size_string+"}"
@@ -78,7 +79,8 @@ class SanasafinazComSpider(scrapy.Spider):
             json_string = json.loads(size_string)
             for option in json_string["attributes"]["580"]["options"]:
                 sizes.append(option["label"])
-                prices.append(json_string["optionPrices"][option["products"][0]]["finalPrice"]["amount"])
+                prices.append(
+                    json_string["optionPrices"][option["products"][0]]["finalPrice"]["amount"])
 
         return sizes, prices
 
@@ -87,9 +89,10 @@ class SanasafinazComSpider(scrapy.Spider):
             "//td[@data-th='Color']/text()").extract_first()
         if not(color_name):
             color_name = "no_color"
-        price = response.xpath("//span[@class='price']/text()").extract_first()
         currency = response.xpath(
             "//meta[@itemprop='priceCurrency']/@content").extract_first()
+        price = response.xpath(
+            "//meta[@itemprop='price']/@content").extract_first()
         sizes, prices = self.get_item_sizes(response)
         color_scheme = {}
         if sizes:
@@ -103,7 +106,7 @@ class SanasafinazComSpider(scrapy.Spider):
         else:
             color_scheme[color_name] = {
                 "color": color_name,
-                "price": price,
+                "price": price.replace(",", ''),
                 "currency_code": currency,
             }
         return color_scheme

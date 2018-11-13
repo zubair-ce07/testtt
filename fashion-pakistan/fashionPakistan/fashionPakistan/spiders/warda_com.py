@@ -40,11 +40,14 @@ class WardaComSpider(scrapy.Spider):
             product["category"] = self.parse_category(item)
             product["images"] = self.parse_images(item)
             product["attributes"] = self.parse_attributes(item)
-            product["out_of_stock"] = True if item["inventoryQuantity"] <= 1 else False
+            product["out_of_stock"] = self.is_in_stock(item)
             product["skus"] = self.parse_skus(item)
             product["url"] = "https://warda.com.pk/product/" + \
                 item["productUrl"]
             yield product
+
+    def is_in_stock(self, item):
+        return True if item["inventoryQuantity"] <= 1 else False
 
     def parse_description(self, item):
         description_html = Selector(item["productDescription"])

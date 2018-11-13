@@ -66,7 +66,8 @@ class KhaadiComSpider(scrapy.Spider):
             return {}
 
     def get_item_sizes(self, response):
-        size_string = re.findall(r'swatchOptions\":[\W\w]*},\"tierPrices\":\[\]}},|$',response.text)[0]
+        size_string = re.findall(
+            r'swatchOptions\":[\W\w]*},\"tierPrices\":\[\]}},|$', response.text)[0]
         size_string = size_string.strip("swatchOptions\":")
         size_string = size_string.strip(",")
         size_string = size_string+"}"
@@ -76,16 +77,18 @@ class KhaadiComSpider(scrapy.Spider):
             json_string = json.loads(size_string)
             for option in json_string["attributes"]["142"]["options"]:
                 sizes.append(option["label"])
-                prices.append(json_string["optionPrices"][option["products"][0]]["finalPrice"]["amount"])
+                prices.append(
+                    json_string["optionPrices"][option["products"][0]]["finalPrice"]["amount"])
 
         return sizes, prices
 
     def get_item_skus(self, response):
-        color_name = response.xpath(
-            "//td[@data-th='Color']/text()").extract_first()
-        price = response.xpath("//span[@class='price']/text()").extract_first()
         currency = response.xpath(
             "//meta[@itemprop='priceCurrency']/@content").extract_first()
+        color_name = response.xpath(
+            "//td[@data-th='Color']/text()").extract_first()
+        price = response.xpath(
+            "//span[contains(@id, 'product-price-')]/span/text()").extract_first().strip(currency)
         sizes, prices = self.get_item_sizes(response)
         color_scheme = {}
         if sizes:
@@ -99,7 +102,7 @@ class KhaadiComSpider(scrapy.Spider):
         else:
             color_scheme[color_name] = {
                 "color": color_name,
-                "price": price,
+                "price": price.replace(",", ''),
                 "currency_code": currency,
             }
         return color_scheme
