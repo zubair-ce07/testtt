@@ -1,17 +1,15 @@
 import React, { Component } from 'react';
-import {urlFormer, fetchData} from '../utils.js';
-import Search from './search.js'
-import Player from './player.js'
-import VideoList from './videoList.js'
+import { urlFormer, fetchData } from '../../utils.js';
+import Search from '../Search/index.js'
+import Player from '../Player/index.js'
+import VideoList from '../VideoList/index.js'
 
 
 class Youtube extends Component {
-  constructor(props) {
-    super(props)
-    this.state = {
-      listSources: Array(5).fill(null),
-      playerSource : null
-    }
+
+  state = {
+    listSources: Array(5).fill(null),
+    playerSource : null
   }
 
   updateList(url)
@@ -34,7 +32,8 @@ class Youtube extends Component {
       .catch(console.error);
   }
 
-  search(query) {
+  search() {
+    let query = document.getElementById("searchInput").value
     let url = urlFormer(query, null)
     this.updateList(url)
   }

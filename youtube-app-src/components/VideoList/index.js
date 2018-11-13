@@ -2,15 +2,15 @@ import React from 'react';
 import VideoListObject from './videoListObject.js'
 
 
-function  VideoList(props) {
-  let videosList = props.sources.map (
+function  VideoList ({ sources, onSelect }) {
+  let videosList = sources.map (
     (icon,i) => {
       if(icon)
         return (
           <li className="col-sm-2" key={i} >
             <VideoListObject
               videoIcon={icon}
-              onSelect={props.onSelect}
+              onSelect={onSelect}
             />
           </li>
         )

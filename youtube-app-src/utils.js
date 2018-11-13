@@ -12,6 +12,7 @@ export const urlFormer = (query, relatedVideoId) => {
   return url
 }
 
+
 export const fetchData = (url) => {
   return fetch(url)
     .then(response => response.json())

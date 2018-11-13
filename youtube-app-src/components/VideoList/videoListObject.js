@@ -2,8 +2,7 @@ import React from 'react';
 
 
 function  VideoListObject(props) {
-  const thumbnail = props.videoIcon.thumbnail
-  const title = props.videoIcon.title
+  const { videoIcon: { title, thumbnail}} = props
 
   return (
     <div className="card video-list-object"
