@@ -1,29 +1,45 @@
 # FINAL
 
+# Car Model { 'Brand': 'Honda', 'Model': 'Accord EX', 'Make': '2012' }
+
 import csv
+import unittest
 
 
-def find_min_car(cars):
-    min_year = int(cars[0]['Make'])
-    min_car = cars[0]
+class CarFinder:
+    def __init__(self, *args, **kwargs):
+        with open('cars.csv') as f:
+            self.cars = list(csv.DictReader(f))
 
-    for car in cars:
-        if int(car['Make']) < min_year:
-            min_year = int(car['Make'])
-            min_car = car
+    def find_min_car(self):
+        min_year = int(self.cars[0]['Make'])
+        min_car = self.cars[0]
 
-    return min_car
+        for car in self.cars:
+            if int(car['Make']) < min_year:
+                min_year = int(car['Make'])
+                min_car = car
+
+        return min_car
+
+
+class PrimesTestCase(unittest.TestCase):
+    def test_car_finder(self):
+        car_finder = CarFinder()
+        min_car = car_finder.find_min_car()
+        self.assertTrue(type(min_car['Brand']))
+        self.assertTrue(type(min_car['Model']))
+        self.assertTrue(min_car['Make'].isdigit())
 
 
 def main():
-    with open('cars.csv') as f:
-        cars = list(csv.DictReader(f))
-
-    min_car = find_min_car(cars)
+    car_finder = CarFinder()
+    min_car = car_finder.find_min_car()
     print(min_car['Brand'])
     print(min_car['Model'])
     print(min_car['Make'])
 
 
 if __name__ == '__main__':
-    main()
+    # main()
+    unittest.main()
