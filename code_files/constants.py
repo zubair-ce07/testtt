@@ -9,3 +9,4 @@ MONTH_ARGUMENT_DISCRIPTION = "Takes a list of month in YYY/MM formate and displa
     " highest temperature, average lowest temperature, average mean humidity."
 MONTH_BARCHART_ARGUMENT_DISCRIPTION = "Takes a list of month in YYY/MM formate and draw two horizontal bar"\
     " charts on the console for the highest and lowest temperature on each day. Highest in red and lowest in blue."
+REQUIRED_ATTRIBUTES = ['Max TemperatureC','Min TemperatureC', ' Mean Humidity', 'Max Humidity']
