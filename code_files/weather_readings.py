@@ -1,7 +1,6 @@
 import glob
 import datetime
 import csv
-from itertools import chain
 
 from constants import REQUIRED_ATTRIBUTES
 
@@ -19,7 +18,7 @@ class WeatherReadings:
 
     def extract_year_records(self, date):
         year_records = self.weather_records.get(date.year, {})
-        return list(chain.from_iterable(year_records.values()))
+        return sum(year_records.values(), [])
 
     def extract_month_records(self, date):
         return self.weather_records.get(date.year, {}).get(date.month)
