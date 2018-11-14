@@ -1,0 +1,37 @@
+/*.MuiDrawer-paper-237{*/
+/*margin-top: 65px !important;*/
+/*background-color: #F5F5F5;*/
+/*}*/
+
+#root{
+        background: url("/images/pattern.jpg");
+    height: 100%;
+}
+
+.actual-body {
+    padding-left: 20px;
+    padding-right: 20px;
+
+}
+
+.paper-style {
+    margin-top: 20px;
+    padding-top: 2px;
+    padding-left: 20px;
+    padding-right: 20px;
+    background-color: lightgray!important;
+    height: 100%;
+}
+
+.card-style{
+    margin: 10px !important;
+}
+
+html, body{
+    height: 100%
+}
+
+.link-style{
+    text-decoration: none;
+    color: inherit;
+}
