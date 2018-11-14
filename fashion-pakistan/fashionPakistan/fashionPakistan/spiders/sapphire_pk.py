@@ -88,12 +88,20 @@ class SapphirePkSpider(scrapy.Spider):
             attrib_value_split = attrib_value.split("_")
             key = str(attrib_value.strip("-"))
             color_scheme[key] = {}
+            is_valid_swatch_key = False
             for val, attrib in zip(attrib_value_split, attribs):
                 sub_key = str(attrib).strip("-")
-                color_scheme[key][sub_key] = str(val).strip("-")
+                val = str(val).strip("-")
+                is_valid_swatch = response.xpath("//div[@data-value='{}']/input[@disabled]".format(val)).extract()
+                if not(is_valid_swatch):
+                    color_scheme[key][sub_key] = val
+                    is_valid_swatch_key = True
 
-            color_scheme[key]["currency_code"] = currency
-            color_scheme[key]["new_price"] = price.strip(
-                "Rs.").replace(",", '')
+            if is_valid_swatch_key:
+                color_scheme[key]["currency_code"] = currency
+                color_scheme[key]["new_price"] = price.strip(
+                    "Rs.").replace(",", '')
+            else:
+                del color_scheme[key]
 
         return color_scheme
