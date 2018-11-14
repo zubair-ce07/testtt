@@ -45,12 +45,14 @@ class VansParser(Mixin):
         return self.next_request_or_item(item)
 
     def skus(self, response):
-        sizes = self.product_sizes(response)
+        color_css = ".attr-selected-color-js::text"
         skus = []
 
+        sku = self.product_pricing(response)
+        sku["color"] = response.css(color_css).extract_first()
+
+        sizes = self.product_sizes(response)
         for size in sizes:
-            sku = self.product_pricing(response)
-            sku["color"] = self.color_name(response)
             sku["size"] = size
             sku["sku_id"] = f"{sku['color']}_{size}"
             skus.append(sku)
@@ -103,10 +105,6 @@ class VansParser(Mixin):
         css = "#product-attr-form::attr(data-seo-category)"
         return response.css(css).extract()
 
-    def color_name(self, response):
-        css = ".attr-selected-color-js::text"
-        return response.css(css).extract_first()
-
     def product_sizes(self, response):
         css = ".swatches .attr-box::attr(data-attribute-value)"
         return response.css(css).extract()
@@ -140,7 +138,8 @@ class VansParser(Mixin):
 
     def color_requests(self, response, item):
         urls = response.css("button img::attr(data-product-url)").extract()
-        return [Request(url, callback=self.parse_colors, meta={"item": item}, dont_filter=True) for url in urls]
+        return [Request(url, callback=self.parse_colors, meta={"item": item},
+                dont_filter=True) for url in urls]
 
     def clean(self, dirty_strs):
         return [re.sub(':\s+', ' ', text).strip() for text in dirty_strs.split(";")]
