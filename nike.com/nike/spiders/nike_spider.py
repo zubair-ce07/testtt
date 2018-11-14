@@ -94,25 +94,24 @@ class NikeParser:
     def retailer_sku_secondary(self, raw_product):
         return f"{raw_product['styleNumber']}{raw_product['colorNumber']}"
 
-    def clean_pricing(self, prices):
-        pricing = {}
-        prices = [float(p) * 100 if isinstance(p, float) or p.replace('.', '', 1).isdigit()
-                  else float(p[1:]) * 100 for p in prices]
-        pricing['price'], *previous_prices = sorted(prices)
+    def extract_pricing(self, price_soup):
+        price_soup = [str(p) for p in price_soup]
+        price_map = {}
+        prices = []
 
-        if previous_prices and pricing['price'] < previous_prices[0]:
-            pricing['previous_prices'] = previous_prices
-        return pricing
+        for raw_price in set(price_soup):
+            if raw_price.replace('.', '', 1).isdigit():
+                prices += [float(raw_price)]
 
-    def extract_pricing(self, raw_prices):
-        pricing = self.clean_pricing([raw_prices['currentPrice'], raw_prices['fullPrice']])
-        pricing['currency'] = raw_prices['currency']
-        return pricing
+        price_map['price'], *previous_prices = sorted(prices)
 
-    def extract_pricing_secondary(self, raw_pricing):
-        pricing = self.clean_pricing([raw_pricing['rawPrice'], raw_pricing['overriddenLocalPrice']])
-        pricing['currency'] = raw_pricing['currencyCode']
-        return pricing
+        if previous_prices:
+            price_map['previous_prices'] = previous_prices
+
+        if 'GBP' in ' '.join(price_soup):
+            price_map['currency'] = 'GBP'
+
+        return price_map
 
     def extract_in_stock_skus(self, raw_skus):
         return [raw_sku['skuId'] for raw_sku in raw_skus['availableSkus']]
@@ -123,7 +122,9 @@ class NikeParser:
 
         raw_colour = raw_product[raw_product['retailer_sku']]
         common_sku['colour'] = raw_colour['colorDescription']
-        common_sku.update(self.extract_pricing(raw_colour))
+
+        price_soup = [raw_colour['currentPrice'], raw_colour['fullPrice'], raw_colour['currency']]
+        common_sku.update(self.extract_pricing(price_soup))
         in_stock_skus = self.extract_in_stock_skus(raw_colour)
 
         for raw_sku in raw_colour['skus']:
@@ -141,7 +142,9 @@ class NikeParser:
 
     def extract_skus_secondary(self, raw_product):
         skus = []
-        common_sku = self.extract_pricing_secondary(raw_product)
+
+        price_soup = [raw_product['rawPrice'], raw_product['overriddenLocalPrice'], raw_product['currencyCode']]
+        common_sku = self.extract_pricing(price_soup)
         common_sku['colour'] = raw_product['colorDescription']
 
         for raw_sku in raw_product['skuContainer']['productSkus']:
@@ -167,16 +170,13 @@ class NikeParser:
 
     def extract_brand(self, response):
         css = '#app-root ~ script::text'
-        brand = response.css(css).re('{"brand":"(.*?)",')
+        brand = response.css(css).re_first('{"brand":"(.*?)",')
         if brand:
-            return brand[0]
+            return brand
 
         css = "[type='application/ld+json']::text"
         raw_brand = response.css(css).extract_first().replace('\n', '')
-        brand = json.loads(raw_brand)['brand']
-        if brand:
-            return brand
-        return 'NIKE'
+        return brand or json.loads(raw_brand)['brand'] or 'Nike'
 
     def extract_name(self, raw_product):
         return raw_product[raw_product['retailer_sku']]['title']
