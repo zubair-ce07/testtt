@@ -23,4 +23,5 @@ class Product(scrapy.Item):
     description = scrapy.Field(input_processor=strip_text)
     skus = scrapy.Field()
     image_urls = scrapy.Field()
-    crawl_start_time = scrapy.Field() 
+    crawl_start_time = scrapy.Field()
+    meta = scrapy.Field(output_processor=TakeFirst())
