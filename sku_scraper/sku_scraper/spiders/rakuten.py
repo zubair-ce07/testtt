@@ -20,13 +20,13 @@ class RakutenParseSpider(Spider):
     }
 
     def parse_cookie(self, response):
-        return Request(response.meta['url'], callback=self.parse)
+        return Request(response.meta['url'], callback=self.parse, dont_filter=True)
 
     def parse(self, response):
         raw_product = self.extract_raw_product(response)
         if not raw_product:
             return Request(self.cookie_url, callback=self.parse_cookie,
-                           meta={'url': response.url})
+                           meta={'url': response.url}, dont_filter=True)
 
         item = Item()
         item['retailer_sku'] = self.extract_retailer_sku(raw_product)
