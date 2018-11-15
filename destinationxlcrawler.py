@@ -5,8 +5,7 @@ import re
 import scrapy
 from destinationxl.items import DestinationxlItem, SizeItem
 from scrapy.http import Request
-from scrapy.linkextractors import LinkExtractor
-from scrapy.spiders import CrawlSpider, Rule
+from scrapy.spiders import CrawlSpider
 from w3lib.html import remove_tags, replace_escape_chars
 from w3lib.url import url_query_parameter
 
@@ -30,9 +29,9 @@ class DestinationxlParseSpider(scrapy.Spider):
         item['base_sku'] = product_id
         item['url'] = self.extract_product_url(response)
         item['meta'] = {}
-        item['size_infos'] = {}
+        item['size_infos'] = []
         item['image_urls'] = []
-        item['category_names'] = self.extract_category_names(resopnse)
+        item['category_names'] = self.extract_category_names(response)
 
         category_info = self.extract_category_id(response)
         yield Request(self.product_url_t.format(category_info[0], category_info[1]),
@@ -72,7 +71,7 @@ class DestinationxlParseSpider(scrapy.Spider):
             item['available'] = 'True'
 
         if len(colour['sizes']) > 1:
-            item['size_infos'] = {}
+            item['size_infos'] = []
             item['meta'] = {'requests': self.extract_sizes_requests(response)}
 
         else:
@@ -84,7 +83,7 @@ class DestinationxlParseSpider(scrapy.Spider):
         raw_product = json.loads(response.text)
         item = response.meta['item']
         size_dict = raw_product['sizes'][1]
-        skus = []
+
         for size in size_dict['values']:
 
             if bool(size['available']):
@@ -98,9 +97,8 @@ class DestinationxlParseSpider(scrapy.Spider):
                        }
 
                 sku['stock'] = 1
-                skus.append(sku)
 
-        item['size_infos'][response.meta['size']] = skus
+                item['size_infos'].append(sku)
 
         return self.next_request_or_item(item.copy())
 
@@ -126,7 +124,7 @@ class DestinationxlParseSpider(scrapy.Spider):
         return requests
 
     def make_skus(self, raw_product):
-        skus = {}
+        skus = []
         if len(raw_product['sizes']) > 0:
             for size in raw_product['sizes'][0]['values']:
                 sku = {'size_identifier': size['name'],
@@ -134,9 +132,7 @@ class DestinationxlParseSpider(scrapy.Spider):
                        }
                 if bool(size['available']):
                     sku['stock'] = 1
-
-                skus[size['name']] = sku
-
+                skus.append(sku)
             return skus
 
     def extract_product_url(self, response):
@@ -174,15 +170,18 @@ class DestinationxlParseSpider(scrapy.Spider):
         clean_text = remove_tags(text)
         return replace_escape_chars(clean_text)
 
+    def extract_category_breadcrumbs(self, response):
+        return response.css('breadcrumb.ng-star-inserted nav ul li a::attr(aria-label)').extract()[1:]
+
 
 class DestinationxlCrawlSpider(CrawlSpider):
     name = 'destinationxl-crawler'
     start_urls = ['https://www.destinationxl.com/mens-big-and-tall-store']
-    base_url = 'https://www.destinationxl.com'
+    base_url_t = 'https://www.destinationxl.com'
     allowed_domains = ['www.destinationxl.com']
 
     logger_info = []
-    handle_httpstatus_list = [403, 401]
+
     custom_settings = {
         'USER_AGENT': "Mozilla/5.0(X11; Linux x86_64)AppleWebKit/537.36" \
                       "(KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36",
@@ -200,7 +199,6 @@ class DestinationxlCrawlSpider(CrawlSpider):
 
         raw_category = self.extract_raw_category(response)
         for raw_filter in self.get_navigation(raw_category):
-
             if 'refinements' in raw_filter.keys():
                 for applied_filter in raw_filter['refinements']:
                     url = applied_filter['navigationState'].split('&')[0]
@@ -213,18 +211,15 @@ class DestinationxlCrawlSpider(CrawlSpider):
                                           callback=self.parse_products)
 
     def parse_products(self, response):
-        products = response.css('.switch-hover a::attr(href)').extract()
 
+        products = response.css('.switch-hover a::attr(href)').extract()
         for product in products:
-            product = '{}{}'.format(self.base_url, product)
+            product = '{}{}'.format(self.base_url_t, product)
             yield Request(product, meta={'name': response.meta['name'], 'breadcrumbs': response.meta['breadcrumbs']},
                           callback=self.destinationxl_parser.parse)
 
-        control_value = url_query_parameter(response.url, "No", 0)
-
-        if control_value == 0 or response.url not in self.start_urls or self.extract_total_pages(response) != 0:
+        if not url_query_parameter(response.url, 'No') and self.extract_total_pages(response) != 0:
             for page in range(30, (int(self.extract_total_pages(response)) - 1) * 30, 30):
-                print(response.url)
                 url = '{}?No={}'.format(response.url.split('+')[0], page)
                 yield Request(url, meta={'name': response.meta['name'], 'breadcrumbs': response.meta['breadcrumbs']},
                               callback=self.parse_products)
