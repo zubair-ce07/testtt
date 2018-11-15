@@ -148,7 +148,7 @@ class VansParser(Mixin):
 class VansCrawler(CrawlSpider, Mixin):
     name = Mixin.retailer + "-crawler"
     parser = VansParser()
-    listings_css = [".sub-category-header"]
+    listings_css = [".topnav-main-item"]
     product_css = [".product-block-figure"]
     deny_re = [".html"]
     PAGE_SIZE = 48
