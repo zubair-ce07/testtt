@@ -11,13 +11,7 @@ from ..utilities import pricing, map_currency_code
 
 class RakutenParseSpider(Spider):
     name = 'rakuten-parse'
-
     cookie_url = 'https://www.rakuten.com/eCa432UiJrqnJsU3'
-
-    custom_settings = {
-        'USER_AGENT': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:63.0) '
-                      'Gecko/20100101 Firefox/63.0',
-    }
 
     def parse_cookie(self, response):
         return Request(response.meta['url'], callback=self.parse, dont_filter=True)
@@ -38,6 +32,8 @@ class RakutenParseSpider(Spider):
         item['skus'] = self.extract_skus(raw_product)
         item['image_urls'] = self.extract_image_urls(raw_product)
         item['url'] = self.extract_url(response)
+        
+        item['gender'] = self.extract_gender(raw_product, item)
 
         if self.is_limited_item(item):
             item['merch_info'] = 'Limited'
@@ -69,9 +65,20 @@ class RakutenParseSpider(Spider):
     def extract_category(self, raw_product):
         return raw_product['item']['categoryName']
 
-    def extract_gender(self, raw_product):
-        return raw_product['item'].get('variants').get('variantsViewLabels').get('Age Gender') \
-               or []
+    def extract_gender(self, raw_product, item):
+        gender = ((raw_product['item'].get('variants') or {}).get(
+            'variantsViewLabels') or {}).get('Age Gender')
+        if gender:
+            return gender
+        raw_strings = item['care'] + item['description'] + item['name']
+        if 'women' in raw_strings:
+            return 'Women'
+        elif 'men' in raw_strings:
+            return 'Men'
+        elif any(['kids' in raw_strings, 'boy' in raw_strings, 'girl' in raw_strings]):
+            return 'Kids'
+        else:
+            return 'One gender'
 
     def extract_description(self, raw_product):
         sel = Selector(text=raw_product['info']['description'])
@@ -143,9 +150,11 @@ class RakutenParseSpider(Spider):
 
 class RakutenCrawlSpider(CrawlSpider):
     name = 'rakuten-crawl'
+    cookie_url = 'https://www.rakuten.com/eCa432UiJrqnJsU3'
 
     allowed_domains = ['rakuten.com']
-    start_urls = ['https://www.rakuten.com/eCa432UiJrqnJsU3']
+
+    start_urls = ['https://www.rakuten.com/shop/?scid=ebates-home-3&l-id=ebates-home-3']
 
     listings_css = ['div.r-categories__list',
                     'li.r-search-page__category-item.is-parent ul',
@@ -166,9 +175,11 @@ class RakutenCrawlSpider(CrawlSpider):
 
     product_parser = RakutenParseSpider()
 
+    def start_requests(self):
+        return [Request(self.cookie_url, callback=self.parse)]
+
     def parse(self, response):
-        url = 'https://www.rakuten.com/shop/?scid=ebates-home-3&l-id=ebates-home-3'
-        return Request(url, callback=super().parse)
+        return Request(self.start_urls[0], callback=super().parse)
 
     def parse_category(self, response):
         if self.verify_category(response):
