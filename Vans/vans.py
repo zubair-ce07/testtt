@@ -168,15 +168,6 @@ class VansCrawler(CrawlSpider, Mixin):
     def config_categorytree(self, response):
         return re.findall('categorytree : "(.*)"', response.body.decode("utf-8"))[0]
 
-    def config_category(self, response):
-        return re.findall('category : "(.*)"', response.body.decode("utf-8"))[0]
-
-    def config_collection(self, response):
-        return re.findall('collection : "(.*)"', response.body.decode("utf-8"))[0]
-
-    def config_category_title(self, response):
-        return re.findall('category_title : "(.*)"', response.body.decode("utf-8"))[0]
-
     def config_language(self, response):
         css = "meta[name='locale']::attr(content)"
         return response.css(css).extract_first()
@@ -187,14 +178,10 @@ class VansCrawler(CrawlSpider, Mixin):
         lang = self.config_language(response)
 
         parameters = {
-            "zone0": cat_zones[0], "zone1": cat_zones[1],
+            "zone0": cat_zones[0], "zone1": cat_zones[1], "mergehash": "true",
             "config_categorytree": self.config_categorytree(response),
-            "config_category": self.config_category(response),
-            "config_collection": self.config_collection(response),
-            "siteId": self.site_id(response),
-            "config_category_title": self.config_category_title(response),
-            "config_language": lang, "language": lang,
-            "config_country": self.market, "mergehash": "true"}
+            "siteId": self.site_id(response), "config_language": lang,
+            "language": lang, "config_country": self.market}
 
         for page in range(0, pages + self.PAGE_SIZE, self.PAGE_SIZE):
             parameters["pageurl"] = f"{response.url}#esp_pg={page//self.PAGE_SIZE}"
