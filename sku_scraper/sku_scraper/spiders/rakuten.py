@@ -23,10 +23,10 @@ class RakutenParseSpider(Spider):
         return Request(response.meta['url'], callback=self.parse, dont_filter=True)
 
     def parse(self, response):
-        raw_product = self.extract_raw_product(response)
-        if not raw_product:
+        if not self.check_valid_response(response):
             return Request(self.cookie_url, callback=self.parse_cookie,
                            meta={'url': response.url}, dont_filter=True)
+        raw_product = self.extract_raw_product(response)
 
         item = Item()
         item['retailer_sku'] = self.extract_retailer_sku(raw_product)
@@ -44,11 +44,13 @@ class RakutenParseSpider(Spider):
 
         return item
 
+    def check_valid_response(self, response):
+        css = 'div#rat'
+        return response.css(css).extract()
+
     def extract_raw_product(self, response):
         css = 'script[data-component-name="Product"]::text'
-        raw_product = response.css(css).extract_first()
-        if raw_product:
-            return json.loads(raw_product)['main']['product']
+        return json.loads(response.css(css).extract_first())['main']['product']
 
     def extract_retailer_sku(self, raw_product):
         return raw_product['item']['baseSku']
@@ -68,7 +70,8 @@ class RakutenParseSpider(Spider):
         return raw_product['item']['categoryName']
 
     def extract_gender(self, raw_product):
-        return raw_product['item'].get('variants').get('variantsViewLabels').get('Age Gender') or []
+        return raw_product['item'].get('variants').get('variantsViewLabels').get('Age Gender') \
+               or []
 
     def extract_description(self, raw_product):
         sel = Selector(text=raw_product['info']['description'])
@@ -85,7 +88,8 @@ class RakutenParseSpider(Spider):
         raw_price =  raw_product.get('price')
         if raw_price:
             return raw_price['listPrice'] + raw_price['price'] + raw_price['originalPrice']
-        return raw_product['itemPrice'] + raw_product['itemListPrice'] + raw_product['itemOriginalPrice']
+        return raw_product['itemPrice'] + raw_product['itemListPrice'] + \
+               raw_product['itemOriginalPrice']
 
     def extract_currency(self, raw_product):
         raw_price = raw_product.get('price') or {}
@@ -120,9 +124,10 @@ class RakutenParseSpider(Spider):
         specs_details = raw_skus.get('variantsObjectWithKey') or {}
 
         for spec, specs_detail in zip(sku_specs or [], specs_details.items()):
-            if 'color' in specs_detail[0].lower():
+            spec_type = specs_detail[0]
+            if 'color' in spec_type.lower():
                 colour = self.get_key_from_value(specs_detail[1], spec)
-            elif not 'gender' in specs_detail[0].lower() and not 'outerwear' in specs_detail[0].lower():
+            elif not 'gender' in spec_type.lower() and not 'outerwear' in spec_type.lower():
                 sizes.append(self.get_key_from_value(specs_detail[1], spec))
 
         common_sku = {}
@@ -142,7 +147,9 @@ class RakutenCrawlSpider(CrawlSpider):
     allowed_domains = ['rakuten.com']
     start_urls = ['https://www.rakuten.com/eCa432UiJrqnJsU3']
 
-    listings_css = ['div.r-categories__list', 'nav.r-pagination']
+    listings_css = ['div.r-categories__list',
+                    'li.r-search-page__category-item.is-parent ul',
+                    'nav.r-pagination']
     products_css = ['div.r-product__main-block']
     products_deny = ['TRENDING', 'DEALS', 'redirect']
 
