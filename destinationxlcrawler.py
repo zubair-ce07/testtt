@@ -7,19 +7,12 @@ from destinationxl.items import DestinationxlItem, SizeItem
 from scrapy.http import Request
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
+from w3lib.html import remove_tags, replace_escape_chars
 from w3lib.url import url_query_parameter
 
 
 class DestinationxlParseSpider(scrapy.Spider):
     name = 'destinationxl-parser'
-    start_urls = [
-        'https://www.destinationxl.com/mens-big-and-tall-store/mens-dress-boots/nunn-bush-ozark-plain-toe-chukka-boots/cat250025/F1329']
-    allowed_domains = ['www.destinationxl.com']
-
-    custom_settings = {
-        'USER_AGENT': "Mozilla/5.0(X11; Linux x86_64)AppleWebKit/537.36" \
-                      "(KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36",
-    }
     seen_ids = []
 
     color_url_t = '{}?&isSelection=true&attributes=color={}'
@@ -39,7 +32,8 @@ class DestinationxlParseSpider(scrapy.Spider):
         item['meta'] = {}
         item['size_infos'] = {}
         item['image_urls'] = []
-        item['category_names'] = self.extract_category(response)
+        item['category_names'] = self.extract_category_names(resopnse)
+
         category_info = self.extract_category_id(response)
         yield Request(self.product_url_t.format(category_info[0], category_info[1]),
                       meta={'item': item},
@@ -52,7 +46,6 @@ class DestinationxlParseSpider(scrapy.Spider):
         item['title'] = raw_product['description']
         item['brand'] = raw_product['brandName']
         item['description_text'] = self.extract_description(raw_product)
-        #    item['category_names'] = self.extract_category_names(raw_product)
 
         for raw_color in raw_product['colorGroups']:
 
@@ -160,9 +153,6 @@ class DestinationxlParseSpider(scrapy.Spider):
     def extract_category_id(self, response):
         return response.url.split('/')[-2:]
 
-    def extract_category_names(self, raw_product):
-        return [breadcrumb['name'] for breadcrumb in raw_product['breadCrumbsItems']]
-
     def extract_image_urls(self, response, color):
         images = []
         color = color['largeSwatchImageUrl'][:-17]
@@ -176,15 +166,13 @@ class DestinationxlParseSpider(scrapy.Spider):
     def extract_description(self, raw_product):
         return self.clean_collected_data(html.unescape(raw_product['longDescription']))
 
-    def extract_category(self, response):
-        return response.meta['breadcrumbs']
+    def extract_category_names(self, response):
+        return '{} {}={}'.format(self.extract_category_breadcrumbs(response), response.meta['name'],
+                                 response.meta['breadcrumbs'])
 
     def clean_collected_data(self, text):
-        text = re.sub('<[^<]+?>', '', text)
-        text = text.replace('\r', "")
-        text = text.replace('\t', "")
-        text = text.replace('\n', "")
-        return text
+        clean_text = remove_tags(text)
+        return replace_escape_chars(clean_text)
 
 
 class DestinationxlCrawlSpider(CrawlSpider):
@@ -193,6 +181,8 @@ class DestinationxlCrawlSpider(CrawlSpider):
     base_url = 'https://www.destinationxl.com'
     allowed_domains = ['www.destinationxl.com']
 
+    logger_info = []
+    handle_httpstatus_list = [403, 401]
     custom_settings = {
         'USER_AGENT': "Mozilla/5.0(X11; Linux x86_64)AppleWebKit/537.36" \
                       "(KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36",
@@ -201,36 +191,65 @@ class DestinationxlCrawlSpider(CrawlSpider):
     destinationxl_parser = DestinationxlParseSpider()
 
     def parse(self, response):
-        categories = self.extract_categories(response)
+
+        categories = self.extract_subcategories(response)
         for category in categories:
-            category = '{}{}'.format(self.base_url, category)
-            yield Request(category, meta={'breadcrumbs': category.split('/')[-2]}, callback=self.parse_products)
+            yield response.follow(category, callback=self.parse_filters)
+
+    def parse_filters(self, response):
+
+        raw_category = self.extract_raw_category(response)
+        for raw_filter in self.get_navigation(raw_category):
+
+            if 'refinements' in raw_filter.keys():
+                for applied_filter in raw_filter['refinements']:
+                    url = applied_filter['navigationState'].split('&')[0]
+                    self.logger_info.append(
+                        'category={}, {}={}, total products={}'.format(response.url.split('/')[-2], raw_filter['name'],
+                                                                       applied_filter['label'],
+                                                                       applied_filter['count']))
+                    yield response.follow(url,
+                                          meta={'name': raw_filter['name'], 'breadcrumbs': applied_filter['label']},
+                                          callback=self.parse_products)
 
     def parse_products(self, response):
         products = response.css('.switch-hover a::attr(href)').extract()
-        link_text = response.meta['breadcrumbs']
+
         for product in products:
             product = '{}{}'.format(self.base_url, product)
-            product_link_text = "{} {}".format(link_text, product.split('/')[-4])
-            yield Request(product, meta={'breadcrumbs': product_link_text},
+            yield Request(product, meta={'name': response.meta['name'], 'breadcrumbs': response.meta['breadcrumbs']},
                           callback=self.destinationxl_parser.parse)
 
-        if not url_query_parameter(response.url, 'No') and response.url not in self.start_urls:
+        control_value = url_query_parameter(response.url, "No", 0)
+
+        if control_value == 0 or response.url not in self.start_urls or self.extract_total_pages(response) != 0:
             for page in range(30, (int(self.extract_total_pages(response)) - 1) * 30, 30):
-                url = '{}?No={}'.format(response.url, page)
-                yield Request(url, meta={'breadcrumbs': ""}, callback=self.parse_products)
+                print(response.url)
+                url = '{}?No={}'.format(response.url.split('+')[0], page)
+                yield Request(url, meta={'name': response.meta['name'], 'breadcrumbs': response.meta['breadcrumbs']},
+                              callback=self.parse_products)
 
     def extract_total_pages(self, response):
+
         total_pages = response.css('.page-nos span:nth-last-child(-n+2)::text').extract()
-
-        if total_pages[-1] == 'View All':
-            return total_pages[-2]
+        if total_pages:
+            if total_pages[-1] == 'View All':
+                return total_pages[-2]
+            else:
+                return total_pages[-1]
         else:
-            return total_pages[-1]
+            return 0
 
-    def extract_categories(self, response):
-        categories = []
-        categories.append(response.xpath('//a[@aria-label="Mega Menu New"]//@href').extract_first())
-        categories.append(response.xpath('//a[@aria-label="Mega Menu Clothing"]//@href').extract_first())
-        categories.append(response.xpath('//a[@aria-label="Mega Menu Sale"]//@href').extract_first())
-        return categories
+    def extract_subcategories(self, response):
+        return response.css('nav.ng-star-inserted ul li ul li:nth-child(n+2) a::attr(href)').extract()
+
+    def extract_raw_category(self, response):
+        raw_category = response.css('script#dxl-state').extract_first()
+        raw_script = raw_category.split('<script id="dxl-state" type="application/json">')[1]
+        clean_script = raw_script.strip('</script>')
+        clean_category = clean_script.replace('&q;', '"')
+        return json.loads(clean_category)
+
+    def get_navigation(self, raw_category):
+        return raw_category['plpResponse']['contents'][0]['SecondaryContent'][1]['contents'][0][
+            'navigation']
