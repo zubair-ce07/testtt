@@ -52,14 +52,9 @@ class SoftSurroundingsParser(Mixin):
         if not size_cat_ids:
             return []
 
-        size_cat_requests = []
-        for size_cat_id in size_cat_ids:
-            url = response.urljoin(f"/p/{size_cat_id.lower()}/")
-            size_cat_requests.append(
-                Request(url, headers=self.headers, callback=self.parse_size_category,
-                    meta={"item": item}))
-
-        return size_cat_requests
+        return [response.follow(
+            f"/p/{size_cat_id.lower()}/", self.parse_size_category,
+            headers=self.headers, meta={"item": item}) for size_cat_id in size_cat_ids]
 
     def parse_size_category(self, response):
         item = response.meta["item"]
@@ -81,15 +76,10 @@ class SoftSurroundingsParser(Mixin):
             return self.size_requests(response, item)
 
         size_cat = self.selected_size_cat_id(response)
-        color_requests = []
 
-        for color in colors:
-            url = response.urljoin(f"/p/{size_cat}/{color}/")
-            color_requests.append(
-                Request(url, headers=self.headers, callback=self.parse_colors,
-                    meta={"item": item}))
-
-        return color_requests
+        return [response.follow(
+            f"/p/{size_cat}/{color}/", self.parse_colors,
+            headers=self.headers, meta={"item": item}) for color in colors]
 
     def parse_colors(self, response):
         item = response.meta["item"]
@@ -111,15 +101,10 @@ class SoftSurroundingsParser(Mixin):
 
         size_cat = self.selected_size_cat_id(response)
         color_id = self.selected_color_id(response)
-        size_requests = []
 
-        for size in product_sizes:
-            url = response.urljoin(f"/p/{size_cat}/{color_id}{size}/")
-            size_requests.append(
-                Request(url, headers=self.headers, callback=self.parse_size,
-                    meta={"item": item}))
-
-        return size_requests
+        return [response.follow(
+            f"/p/{size_cat}/{color_id}{size}/", self.parse_size,
+            headers=self.headers, meta={"item": item}) for size in product_sizes]
 
     def parse_size(self, response):
         item = response.meta["item"]
@@ -131,10 +116,7 @@ class SoftSurroundingsParser(Mixin):
         sel_css = "input[name*='specTwo']::attr(value)"
         size_ids = response.css(css).extract()
 
-        if size_ids:
-            return [size_id.split("_")[1] for size_id in size_ids if size_id]
-        else:
-            return response.css(sel_css).extract()
+        return [size_id.split("_")[1] for size_id in size_ids or [] if size_id] or response.css(sel_css).extract()
 
     def skus(self, response):
         skus = self.pricing_details(response)
@@ -177,8 +159,8 @@ class SoftSurroundingsParser(Mixin):
     def pricing_details(self, response):
         pricing_details = {
             "price": self.product_price(response),
-            "currency": self.currency_type(response),
-        }
+            "currency": self.currency_type(response)}
+
         prev_price = self.previous_price(response)
         if prev_price:
             pricing_details["previous_price"] = prev_price
@@ -216,8 +198,7 @@ class SoftSurroundingsCrawler(CrawlSpider, Mixin):
 
     rules = (
         Rule(LinkExtractor(restrict_css=listing_css), callback="parse_pagination"),
-        Rule(LinkExtractor(restrict_css=product_css, deny=deny_re), callback="parse_item")
-        )
+        Rule(LinkExtractor(restrict_css=product_css, deny=deny_re), callback="parse_item"))
 
     def parse_pagination(self, response):
         total_pages_css = "form.thumbscroll input[name='page']::attr(value)"
