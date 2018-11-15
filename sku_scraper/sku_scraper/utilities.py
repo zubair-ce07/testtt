@@ -30,3 +30,7 @@ def map_currency_code(currency_code):
         '£': 'GBP'
     }
     return currencies[currency_code]
+
+  
+def remove_non_numerics(price):
+    return ''.join(p for p in price if p.isdigit() or p == '.')
