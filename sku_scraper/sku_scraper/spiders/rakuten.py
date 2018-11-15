@@ -11,22 +11,22 @@ from ..utilities import pricing, map_currency_code
 
 class RakutenParseSpider(Spider):
     name = 'rakuten-parse'
-    
-    start_urls = ['https://www.rakuten.com/eCa432UiJrqnJsU3','product-url']
+
+    cookie_url = 'https://www.rakuten.com/eCa432UiJrqnJsU3'
 
     custom_settings = {
         'USER_AGENT': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:63.0) '
                       'Gecko/20100101 Firefox/63.0',
     }
 
-    def start_requests(self):
-        return [Request(self.start_urls[0], callback=self.parse)]
+    def parse_cookie(self, response):
+        return Request(response.meta['url'], callback=self.parse)
 
     def parse(self, response):
-        return Request(self.start_urls[1], callback=self.parse_product)
-
-    def parse_product(self, response):
         raw_product = self.extract_raw_product(response)
+        if not raw_product:
+            return Request(self.cookie_url, callback=self.parse_cookie,
+                           meta={'url': response.url})
 
         item = Item()
         item['retailer_sku'] = self.extract_retailer_sku(raw_product)
@@ -42,11 +42,13 @@ class RakutenParseSpider(Spider):
         if self.is_limited_item(item):
             item['merch_info'] = 'Limited'
 
-        yield item
+        return item
 
     def extract_raw_product(self, response):
         css = 'script[data-component-name="Product"]::text'
-        return json.loads(response.css(css).extract_first())['main']['product']
+        raw_product = response.css(css).extract_first()
+        if raw_product:
+            return json.loads(raw_product)['main']['product']
 
     def extract_retailer_sku(self, raw_product):
         return raw_product['item']['baseSku']
@@ -60,7 +62,7 @@ class RakutenParseSpider(Spider):
     def extract_care(self, raw_product):
         sel = Selector(text=raw_product['info']['description'])
         css = 'div.b-features *::text'
-        return ' '.join(sel.css(css).extract())
+        return ' '.join(c.strip() for c in sel.css(css).extract())
 
     def extract_category(self, raw_product):
         return raw_product['item']['categoryName']
@@ -71,7 +73,7 @@ class RakutenParseSpider(Spider):
     def extract_description(self, raw_product):
         sel = Selector(text=raw_product['info']['description'])
         css = 'div.b-description *::text'
-        return ' '.join(sel.css(css).extract())
+        return ' '.join(d.strip() for d in sel.css(css).extract())
 
     def extract_image_urls(self, raw_product):
         return [image.get('location') for image in raw_product['item'].get('images')]
@@ -171,7 +173,7 @@ class RakutenCrawlSpider(CrawlSpider):
             yield request_or_item
 
     def parse_product(self, response):
-        return self.product_parser.parse_product(response)
+        return self.product_parser.parse(response)
 
     def verify_category(self, response):
         deny = ['electronics', 'home', 'outdoor', 'beauty', 'personal', 'care', 'health',
