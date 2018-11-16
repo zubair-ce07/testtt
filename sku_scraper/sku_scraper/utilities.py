@@ -1,6 +1,7 @@
 
 def convert_price_to_integer(price):
-    return int(float(price.replace(',', ''))*100)
+    price = remove_non_numerics(price)
+    return int(float(price)*100)
 
 
 def pricing(prices):
@@ -15,3 +16,7 @@ def pricing(prices):
         price_map['previous_price'] = previous_price
 
     return price_map
+
+
+def remove_non_numerics(price):
+    return ''.join(p for p in price if p.isdigit() or p == '.')
