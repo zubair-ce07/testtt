@@ -24,12 +24,18 @@ class MixinCN(Mixin):
     product_api = 'https://category.vip.com/ajax/mapi.php?'
     product_url_t = '{}detail-{}-{}.html'
 
+    greedy_colour_detection = True
+    ONE_SIZES = ['均码', 'FREE']
+
+    deny_care = [
+        '商品名称', '配件/备注'
+    ]
+
 
 class VipParseSpider(BaseParseSpider):
     price_css = '.pbox-price ::text, .pbox-market ::text, .pbox-yen::text,' \
                 ' .prepay-fav-title ::text, .J-price::text, .J-mPrice::text'
-    raw_description_css = '.dc-info table ::text'
-    brand_css = '.pib-title-class ::text'
+    brand_css = '.pib-title-class ::text, .global-brand ::text'
 
     def parse(self, response):
         pid = self.product_id(response)
@@ -53,9 +59,8 @@ class VipParseSpider(BaseParseSpider):
         return garment
 
     def product_id(self, response):
-        css = '.other-infoCoding ::text'
-        raw_product_id = ''.join(clean(response.css(css)))
-        return raw_product_id.split('：')[-1]
+        css = 'script:contains("merchandiseId")'
+        return response.css(css).re_first('merchandiseId\S:"(.*?)"')
 
     def product_name(self, response):
         return clean(response.css('.pib-title-detail ::text'))[0]
@@ -64,12 +69,20 @@ class VipParseSpider(BaseParseSpider):
         return clean(response.css('.M-class a ::text'))[1:]
 
     def product_gender(self, response):
-        soup = self.product_name(response)
-        return self.gender_lookup(soup) or Gender.ADULTS.value
+        soup = self.product_name(response) + ''.join(self.raw_description(response))
+        return self.gender_lookup(soup, greedy=True) or Gender.ADULTS.value
 
-    @remove_duplicates
+    def raw_description(self, response, **kwargs):
+        css = '.dc-table tr th'
+        raw_description = [
+            ' '.join(clean(rd_s.css('::text')) + clean(rd_s.css('th + td ::text')))
+            for rd_s in response.css(css)
+        ]
+
+        return clean(raw_description)
+
     def image_urls(self, response):
-        css = '.J-mer-bigImgZoom ::attr(href), .J-mer-bigImg::attr(data-original)'
+        css = '.J-mer-bigImgZoom ::attr(href)'
         return clean(response.css(css))
 
     def is_out_of_stock(self, response):
@@ -90,7 +103,8 @@ class VipParseSpider(BaseParseSpider):
 
         for size_s in response.css('.size-list li'):
             sku = common_sku.copy()
-            sku['size'] = clean(size_s.css('::attr(title)'))[0]
+            size = clean(size_s.css('::attr(title)'))[0]
+            sku['size'] = self.one_size if size in self.ONE_SIZES else size
 
             if size_s.css('.sli-disabled'):
                 sku['out_of_stock'] = True
