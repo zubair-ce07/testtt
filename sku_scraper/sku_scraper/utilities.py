@@ -5,6 +5,7 @@ def convert_price_to_integer(price):
 
 
 def pricing(prices):
+    prices = set(prices)
     converted_prices = [convert_price_to_integer(price) for price in prices if price]
     converted_prices.sort()
     price_map = {
@@ -15,6 +16,7 @@ def pricing(prices):
         price_map['previous_price'] = previous_price
 
     return price_map
+
 
 def remove_non_numerics(price):
     return ''.join(p for p in price if p.isdigit() or p == '.')

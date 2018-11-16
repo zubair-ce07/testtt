@@ -7,6 +7,7 @@ class Item(scrapy.Item):
     retailer_sku = scrapy.Field()
     name = scrapy.Field()
     brand = scrapy.Field()
+    gender = scrapy.Field()
     care = scrapy.Field()
     category = scrapy.Field()
     description = scrapy.Field()
