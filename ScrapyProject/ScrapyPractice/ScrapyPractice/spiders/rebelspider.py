@@ -79,12 +79,12 @@ class RebelSpider(Spider):
         next_page_xpath = "//div[@class='search-result-content']/div[@data-loading-state='unloaded']/@data-grid-url"
         next_page = response.xpath(next_page_xpath).extract_first()
 
-        # if next_page:
-        #     yield Request(
-        #         url=next_page,
-        #         callback=self.parse_category_levels,
-        #         meta=response.meta,
-        #     )
+        if next_page:
+            yield Request(
+                url=next_page,
+                callback=self.parse_categories,
+                meta=response.meta,
+            )
         pass
 
     def parse_product(self, response):
