@@ -81,6 +81,7 @@ class VipParseSpider(BaseParseSpider):
 
         return clean(raw_description)
 
+    @remove_duplicates
     def image_urls(self, response):
         css = '.J-mer-bigImgZoom ::attr(href)'
         return clean(response.css(css))
@@ -101,9 +102,9 @@ class VipParseSpider(BaseParseSpider):
         if colour:
             common_sku['colour'] = colour[0]
 
-        for size_s in response.css('.size-list li'):
+        for size_s in response.css('.size-list li, .size-list option'):
             sku = common_sku.copy()
-            size = clean(size_s.css('::attr(title)'))[0]
+            size = clean(size_s.css('li::attr(title), ::attr(data-size-name)'))[0]
             sku['size'] = self.one_size if size in self.ONE_SIZES else size
 
             if size_s.css('.sli-disabled'):
