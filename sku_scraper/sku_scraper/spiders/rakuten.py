@@ -66,8 +66,8 @@ class RakutenParseSpider(Spider):
         return raw_product['item']['categoryName']
 
     def extract_gender(self, raw_product, item):
-        gender = ((raw_product['item'].get('variants') or {}).get(
-            'variantsViewLabels') or {}).get('Age Gender')
+        gender = raw_product['item'].get('variants', {}).get(
+            'variantsViewLabels', {}).get('Age Gender')
         if gender:
             return gender
         raw_strings = item['care'] + item['description'] + item['name']
@@ -99,8 +99,8 @@ class RakutenParseSpider(Spider):
                raw_product['itemOriginalPrice']
 
     def extract_currency(self, raw_product):
-        raw_price = raw_product.get('price') or {}
-        return raw_price.get('currencyCode') or raw_product['defaultPointMoney'][0]
+        raw_price = raw_product.get('price', {})
+        return raw_price.get('currencyCode', raw_product['defaultPointMoney'][0])
 
     def is_limited_item(self, item):
         raw_string = item.get('care').lower() + item['name'].lower() +\
@@ -110,8 +110,8 @@ class RakutenParseSpider(Spider):
 
     def extract_skus(self, raw_product):
         skus = {}
-        raw_skus = raw_product['item'].get('variants') or {}
-        raw_skus_details = raw_skus.get('variantsInfo') or {}
+        raw_skus = raw_product['item'].get('variants', {})
+        raw_skus_details = raw_skus.get('variantsInfo', {})
 
         for raw_sku in raw_skus_details.values() or [raw_product['item']]:
             sku = pricing(self.extract_money_strings(raw_sku))
@@ -128,7 +128,7 @@ class RakutenParseSpider(Spider):
 
     def extract_colours_and_sizes(self, raw_skus, sku_specs):
         colour, sizes = '', []
-        specs_details = raw_skus.get('variantsObjectWithKey') or {}
+        specs_details = raw_skus.get('variantsObjectWithKey',{})
 
         for spec, specs_detail in zip(sku_specs or [], specs_details.items()):
             spec_type = specs_detail[0]
@@ -153,7 +153,6 @@ class RakutenCrawlSpider(CrawlSpider):
     cookie_url = 'https://www.rakuten.com/eCa432UiJrqnJsU3'
 
     allowed_domains = ['rakuten.com']
-
     start_urls = ['https://www.rakuten.com/shop/?scid=ebates-home-3&l-id=ebates-home-3']
 
     listings_css = ['div.r-categories__list','nav.r-pagination'
@@ -199,5 +198,5 @@ class RakutenCrawlSpider(CrawlSpider):
         return any(category in response.url for category in deny)
 
     def make_trail(self, response):
-        link_text = (response.meta.get('link_text') or '').strip()
-        return (response.meta.get('trail') or []) + [(link_text, response.url)]
+        link_text = response.meta.get('link_text', '').strip()
+        return response.meta.get('trail', []) + [(link_text, response.url)]
