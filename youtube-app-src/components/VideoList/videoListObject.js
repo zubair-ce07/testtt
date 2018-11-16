@@ -1,5 +1,7 @@
 import React from 'react';
-import Image from './videoImage.js"';
+import { string, shape, func } from 'prop-types';
+
+import Image from './videoImage';
 
 const VideoListObject = ({ videoIcon, onSelect }) => {
   return (
@@ -9,12 +11,26 @@ const VideoListObject = ({ videoIcon, onSelect }) => {
         onSelect(videoIcon);
       }}
     >
-      <Image src={videoIcon.thumbnail} />
+      <Image source={videoIcon.thumbnail} />
       <span className="card-body">
         <p className="card-text">{videoIcon.title}</p>
       </span>
     </div>
   );
+};
+
+VideoListObject.propTypes = {
+  videoIcon: string
+};
+
+VideoListObject.propTypes = {
+  videoIcon: shape({
+    title: string,
+    description: string,
+    id: string,
+    thumbnail: string
+  }),
+  onSelect: func
 };
 
 export default VideoListObject;

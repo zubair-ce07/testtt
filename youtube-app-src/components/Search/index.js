@@ -1,5 +1,7 @@
 import React from 'react';
-import { BRAND_NAME, SEARCH_BUTTON } from '../../shared/copies.js';
+import { func } from 'prop-types';
+
+import { BRAND_NAME, SEARCH_BUTTON } from '../../shared/copies';
 
 const Search = ({ onClick }) => {
   return (
@@ -24,6 +26,10 @@ const Search = ({ onClick }) => {
       </div>
     </nav>
   );
+};
+
+Search.propTypes = {
+  onClick: func
 };
 
 export default Search;

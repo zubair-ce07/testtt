@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
-import { urlFormer } from '../../shared/utils.js';
-import { fetchData } from '../../shared/apiCaller.js';
+
+import { urlFormer } from './helpers';
+import { fetchData } from './apiCaller';
 import Search from '../Search';
 import Player from '../Player';
 import VideoList from '../VideoList';
@@ -11,18 +12,7 @@ class Youtube extends Component {
     playerSource: null
   };
 
-  updateList = data => {
-    debugger;
-    let listSources = [];
-    for (let item of data.items) {
-      let videoIcon = {
-        title: item.snippet.title,
-        description: item.snippet.description,
-        thumbnail: item.snippet.thumbnails.default.url,
-        id: item.id.videoId
-      };
-      listSources.push(videoIcon);
-    }
+  updateList = listSources => {
     this.setState({ listSources });
   };
 

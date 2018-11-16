@@ -1,5 +1,7 @@
 import React from 'react';
-import VideoListObject from './videoListObject.js';
+import { array, func } from 'prop-types';
+
+import VideoListObject from './videoListObject';
 
 const VideoList = ({ sources, onSelect }) => {
   if (!sources) return null;
@@ -11,6 +13,11 @@ const VideoList = ({ sources, onSelect }) => {
     );
   });
   return <ul className="row video-list">{videosList}</ul>;
+};
+
+VideoList.propTypes = {
+  sources: array,
+  onSelect: func
 };
 
 export default VideoList;

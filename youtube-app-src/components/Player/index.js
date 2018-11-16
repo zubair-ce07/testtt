@@ -1,8 +1,10 @@
 import React from 'react';
-import * as constants from '../../shared/constants.js';
-import CardTitle from './cardTitle.js';
-import CardDescription from './cardDescription.js';
-import Iframe from './iframe.js';
+import { string, shape } from 'prop-types';
+
+import * as constants from '../../shared/constants';
+import CardTitle from './cardTitle';
+import CardDescription from './cardDescription';
+import Iframe from './iframe';
 
 const Player = props => {
   if (!props.source) return null;
@@ -23,6 +25,15 @@ const Player = props => {
       </div>
     </div>
   );
+};
+
+Player.propTypes = {
+  source: shape({
+    title: string,
+    description: string,
+    id: string,
+    thumbnail: string
+  })
 };
 
 export default Player;
