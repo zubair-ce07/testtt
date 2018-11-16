@@ -103,9 +103,9 @@ class RakutenParseSpider(Spider):
         return raw_price.get('currencyCode') or raw_product['defaultPointMoney'][0]
 
     def is_limited_item(self, item):
-        if ('limited' in item.get('care').lower() or
-                'limited' in item['name'].lower() or
-                'limited' in item.get('description').lower()):
+        raw_string = item.get('care').lower() + item['name'].lower() +\
+                      item.get('description').lower()
+        if 'limited' in raw_string:
             return True
 
     def extract_skus(self, raw_product):
@@ -156,9 +156,8 @@ class RakutenCrawlSpider(CrawlSpider):
 
     start_urls = ['https://www.rakuten.com/shop/?scid=ebates-home-3&l-id=ebates-home-3']
 
-    listings_css = ['div.r-categories__list',
-                    'li.r-search-page__category-item.is-parent ul',
-                    'nav.r-pagination']
+    listings_css = ['div.r-categories__list','nav.r-pagination'
+                    'li.r-search-page__category-item.is-parent ul']
     products_css = ['div.r-product__main-block']
     products_deny = ['TRENDING', 'DEALS', 'redirect']
 
