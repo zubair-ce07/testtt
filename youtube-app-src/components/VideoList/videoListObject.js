@@ -1,23 +1,20 @@
 import React from 'react';
+import Image from './videoImage.js"';
 
-
-function  VideoListObject(props) {
-  const { videoIcon: { title, thumbnail}} = props
-
+const VideoListObject = ({ videoIcon, onSelect }) => {
   return (
-    <div className="card video-list-object"
-      onClick={() => {props.onSelect(props.videoIcon)}}>
-      <img
-        className="card-img-top"
-        src={thumbnail}
-        alt="video"
-      />
-      <div className="card-body">
-        <p className="card-text">{title}</p>
-      </div>
+    <div
+      className="card video-list-object"
+      onClick={() => {
+        onSelect(videoIcon);
+      }}
+    >
+      <Image src={videoIcon.thumbnail} />
+      <span className="card-body">
+        <p className="card-text">{videoIcon.title}</p>
+      </span>
     </div>
-  )
-}
-
+  );
+};
 
 export default VideoListObject;

@@ -1,34 +1,28 @@
 import React from 'react';
-import * as constants from '../../constants.js';
+import * as constants from '../../shared/constants.js';
+import CardTitle from './cardTitle.js';
+import CardDescription from './cardDescription.js';
+import Iframe from './iframe.js';
 
+const Player = props => {
+  if (!props.source) return null;
 
-function  Player (props) {
-  if(!props.source)
-    return null
-
-  const { source: { title, description, videoId}} = props
-  const url = `${constants.BASE_SOURCE}${videoId}`
+  const {
+    source: { title, description, id }
+  } = props;
+  const url = `${constants.BASE_SOURCE}${id}`;
 
   return (
     <div className="main-player row">
-      <iframe className="col-sm-9"
-        title={title}
-        src={url}
-      >
-      </iframe>
+      <Iframe title={title} src={url} />
       <div className="card col-sm-3 player-detail">
         <div className="card-body">
-          <h4 className="card-title player-title">
-            {title}
-          </h4>
-          <p className="card-text player-description">
-            {description}
-          </p>
+          <CardTitle title={title} />
+          <CardDescription description={description} />
         </div>
       </div>
     </div>
-  )
-}
-
+  );
+};
 
 export default Player;

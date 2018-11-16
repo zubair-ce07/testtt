@@ -1,22 +1,6 @@
 body {
-  font-family: 'Black Ops One', cursive;
+  font-family: "Black Ops One", cursive;
   margin: 20px;
-
-}
-
-.player-detail {
-  overflow: auto;
-
-}
-
-.search-panel {
-  margin-bottom: 2vh;
-  min-height: 7vh;
-  text-aligh: center;
-}
-
-.navbar-brand {
-  font-family: 'Black Ops One', cursive;
 }
 
 .main-player {
@@ -24,20 +8,34 @@ body {
   padding: 3vh;
 }
 
-.player-title {
-  font-family: 'Playfair Display', serif;
+.navbar-brand {
+  font-family: "Black Ops One", cursive;
 }
 
 .player-description {
-  font-family: 'Slabo 13px', serif;
+  font-family: "Slabo 13px", serif;
+}
+
+.player-detail {
+  overflow: auto;
+}
+
+.player-title {
+  font-family: "Playfair Display", serif;
+}
+
+.search-panel {
+  min-height: 7vh;
+  margin-bottom: 2vh;
+  text-align: center;
 }
 
 .video-list {
-  min-height: 30vh;
   display: flex;
   flex-direction: row;
-  justify-content: center;
+  min-height: 30vh;
   list-style-type: none;
+  justify-content: center;
 }
 
 .video-list-object {
