@@ -30,3 +30,20 @@ def map_currency_code(currency_code):
         '£': 'GBP'
     }
     return currencies[currency_code]
+
+
+def map_gender(raw_string):
+    gender_map = {
+        'women': 'Women',
+        'men': 'Men',
+        'female': 'Women',
+        'male': 'Men',
+        'kids': 'Kids',
+        'boy': 'Kids',
+        'girl': 'Kids',
+        'unisex': 'Unisex'
+    }
+
+    for gender in gender_map.keys():
+        if gender in raw_string:
+            return gender_map.get(gender, 'unisex-adults')

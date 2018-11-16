@@ -1,4 +1,6 @@
+
 import json
+import itertools
 
 from scrapy import Request, Spider
 from scrapy.selector import Selector
@@ -6,7 +8,7 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule, CrawlSpider
 
 from ..items import Item
-from ..utilities import pricing, map_currency_code
+from ..utilities import pricing, map_currency_code, map_gender
 
 
 class RakutenParseSpider(Spider):
@@ -17,7 +19,7 @@ class RakutenParseSpider(Spider):
         return Request(response.meta['url'], callback=self.parse, dont_filter=True)
 
     def parse(self, response):
-        if not self.check_valid_response(response):
+        if not response.css('div#rat'):
             return Request(self.cookie_url, callback=self.parse_cookie,
                            meta={'url': response.url}, dont_filter=True)
         raw_product = self.extract_raw_product(response)
@@ -31,18 +33,11 @@ class RakutenParseSpider(Spider):
         item['description'] = self.extract_description(raw_product)
         item['skus'] = self.extract_skus(raw_product)
         item['image_urls'] = self.extract_image_urls(raw_product)
-        item['url'] = self.extract_url(response)
-        
+        item['merch_info'] = self.extract_merch_info(item)
         item['gender'] = self.extract_gender(raw_product, item)
-
-        if self.is_limited_item(item):
-            item['merch_info'] = 'Limited'
+        item['url'] = response.url
 
         return item
-
-    def check_valid_response(self, response):
-        css = 'div#rat'
-        return response.css(css).extract()
 
     def extract_raw_product(self, response):
         css = 'script[data-component-name="Product"]::text'
@@ -59,7 +54,7 @@ class RakutenParseSpider(Spider):
 
     def extract_care(self, raw_product):
         sel = Selector(text=raw_product['info']['description'])
-        css = 'div.b-features *::text'
+        css = 'div.b-features ::text'
         return ' '.join(c.strip() for c in sel.css(css).extract())
 
     def extract_category(self, raw_product):
@@ -70,43 +65,33 @@ class RakutenParseSpider(Spider):
             'variantsViewLabels', {}).get('Age Gender')
         if gender:
             return gender
-        raw_strings = item['care'] + item['description'] + item['name']
-        if 'women' in raw_strings:
-            return 'Women'
-        elif 'men' in raw_strings:
-            return 'Men'
-        elif any(['kids' in raw_strings, 'boy' in raw_strings, 'girl' in raw_strings]):
-            return 'Kids'
-        else:
-            return 'One gender'
+
+        return map_gender(item['care'] + item['description'] + item['name'])
 
     def extract_description(self, raw_product):
         sel = Selector(text=raw_product['info']['description'])
-        css = 'div.b-description *::text'
+        css = 'div.b-description ::text'
         return ' '.join(d.strip() for d in sel.css(css).extract())
 
     def extract_image_urls(self, raw_product):
-        return [image.get('location') for image in raw_product['item'].get('images')]
-
-    def extract_url(self, response):
-        return response.url
+        return [url['location'] for url in raw_product['item'].get('images') if url.get('location')]
 
     def extract_money_strings(self, raw_product):
-        raw_price =  raw_product.get('price')
-        if raw_price:
-            return raw_price['listPrice'] + raw_price['price'] + raw_price['originalPrice']
-        return raw_product['itemPrice'] + raw_product['itemListPrice'] + \
-               raw_product['itemOriginalPrice']
+        raw_price_map =  raw_product.get('price') or raw_product
+        price_keys = ['listPrice', 'price', 'originalPrice', 'itemListPrice',
+                      'itemPrice', 'itemOriginalPrice']
+        return [p for k in price_keys for p in raw_price_map.get(k,[])]
 
     def extract_currency(self, raw_product):
         raw_price = raw_product.get('price', {})
-        return raw_price.get('currencyCode', raw_product['defaultPointMoney'][0])
+        return raw_price.get('currencyCode') or raw_product['defaultPointMoney'][0]
 
-    def is_limited_item(self, item):
-        raw_string = item.get('care').lower() + item['name'].lower() +\
-                      item.get('description').lower()
-        if 'limited' in raw_string:
-            return True
+    def extract_merch_info(self, item):
+        item_details = item.get('care').lower() + item['name'].lower() + \
+                       item.get('description').lower()
+        if 'limited' in item_details:
+            return 'Limited'
+        return []
 
     def extract_skus(self, raw_product):
         skus = {}
@@ -120,7 +105,7 @@ class RakutenParseSpider(Spider):
             if raw_sku.get('soldOut') or raw_sku.get('isSoldOut'):
                 sku['out_of_stock'] = True
 
-            sku.update(self.extract_colours_and_sizes(raw_skus, raw_sku.get('value')))
+            sku.update(self.extract_colours_and_sizes(raw_skus, raw_sku.get('value', [])))
                 
             sku_id = '_'.join(sc for sc in [sku.get("colour"), sku["size"]] if sc)
             skus[sku_id] = sku
@@ -130,12 +115,13 @@ class RakutenParseSpider(Spider):
         colour, sizes = '', []
         specs_details = raw_skus.get('variantsObjectWithKey',{})
 
-        for spec, specs_detail in zip(sku_specs or [], specs_details.items()):
+        for spec, specs_detail in zip(sku_specs, specs_details.items()):
             spec_type = specs_detail[0]
+            specs_detail_reversed = self.reverse_dictionary(specs_detail[1])
             if 'color' in spec_type.lower():
-                colour = self.get_key_from_value(specs_detail[1], spec)
+                colour = specs_detail_reversed.get(spec)
             elif not 'gender' in spec_type.lower() and not 'outerwear' in spec_type.lower():
-                sizes.append(self.get_key_from_value(specs_detail[1], spec))
+                sizes.append(specs_detail_reversed.get(spec))
 
         common_sku = {}
         if colour:
@@ -144,8 +130,11 @@ class RakutenParseSpider(Spider):
         
         return common_sku
 
-    def get_key_from_value(self, dictionary, value):
-        return list(dictionary.keys())[list(dictionary.values()).index(value)]
+    def reverse_dictionary(self, dictionary):
+        reversed_dict = {}
+        for item in dictionary.items():
+            reversed_dict[item[1]] = item[0]
+        return reversed_dict
 
 
 class RakutenCrawlSpider(CrawlSpider):
@@ -155,13 +144,13 @@ class RakutenCrawlSpider(CrawlSpider):
     allowed_domains = ['rakuten.com']
     start_urls = ['https://www.rakuten.com/shop/?scid=ebates-home-3&l-id=ebates-home-3']
 
-    listings_css = ['div.r-categories__list','nav.r-pagination'
-                    'li.r-search-page__category-item.is-parent ul']
-    products_css = ['div.r-product__main-block']
+    listings_css = ['.r-categories__list','.r-pagination',
+                    '.r-search-page__category-item']
+    products_css = ['.r-product__main-block']
     products_deny = ['TRENDING', 'DEALS', 'redirect']
 
     rules = (
-        Rule(LinkExtractor(restrict_css=listings_css), callback='parse_category'),
+        Rule(LinkExtractor(restrict_css=listings_css), callback='parse'),
         Rule(LinkExtractor(restrict_css=products_css,
                            deny=products_deny), callback='parse_product'),
     )
@@ -174,13 +163,13 @@ class RakutenCrawlSpider(CrawlSpider):
     product_parser = RakutenParseSpider()
 
     def start_requests(self):
-        return [Request(self.cookie_url, callback=self.parse)]
+        return [Request(self.cookie_url, callback=self.parse_start_url)]
 
-    def parse(self, response):
+    def parse_start_url(self, response):
         return Request(self.start_urls[0], callback=super().parse)
 
-    def parse_category(self, response):
-        if self.verify_category(response):
+    def parse(self, response):
+        if self.deny_category(response):
             return
 
         for request_or_item in super().parse(response):
@@ -191,7 +180,7 @@ class RakutenCrawlSpider(CrawlSpider):
     def parse_product(self, response):
         return self.product_parser.parse(response)
 
-    def verify_category(self, response):
+    def deny_category(self, response):
         deny = ['electronics', 'home', 'outdoor', 'beauty', 'personal', 'care', 'health',
             'sports', 'fitness', 'toys', 'toddlers', 'baby', 'pet', 'supplies', 'media',
             'food', 'beverage', 'automotive', 'parts', 'everything', 'else', 'luggage']
