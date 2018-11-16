@@ -7,6 +7,7 @@ def convert_price_to_integer(price):
 def pricing(prices):
     converted_prices = [convert_price_to_integer(price) for price in set(prices) if price]
     converted_prices.sort()
+
     price_map = {
         'price': converted_prices[0]
     }
