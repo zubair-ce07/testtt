@@ -31,13 +31,13 @@ class RebelSpider(Spider):
         yield Request(start_url, callback=self.parse_homepage)
 
     def parse_homepage(self, response):
-        for category_level1 in response.xpath("//nav[@id='navigation']/ul/li"):
+        for category_level1 in response.xpath("//nav[@id='navigation']/ul/li")[0:1]:
             yield self.make_request([category_level1], response)
 
-            for category_level2 in category_level1.xpath(".//div[@class='level-2-outer']"):
+            for category_level2 in category_level1.xpath(".//div[@class='level-2-outer']")[0:1]:
                 yield self.make_request([category_level1, category_level2], response)
 
-                for category_level3 in category_level2.xpath(".//div/ul/li"):
+                for category_level3 in category_level2.xpath(".//div/ul/li")[0:10]:
                     yield self.make_request([category_level1, category_level2, category_level3], response)
 
     def make_request(self, selectors, response):
@@ -66,13 +66,13 @@ class RebelSpider(Spider):
         next_page_xpath = "//div[@class='search-result-content']/div[@data-loading-state='unloaded']/@data-grid-url"
         next_page = response.xpath(next_page_xpath).extract_first()
 
-        if next_page:
-            yield Request(
-                url=next_page,
-                callback=self.parse_categories,
-                meta=response.meta,
-            )
-        pass
+        # if next_page:
+        #     yield Request(
+        #         url=next_page,
+        #         callback=self.parse_categories,
+        #         meta=response.meta,
+        #     )
+        # pass
 
     def parse_product(self, response):
         item = response.meta['item']
@@ -90,11 +90,6 @@ class RebelSpider(Spider):
         )
         product["store_keeping_unit"] = item["store_keeping_unit"]
 
-        colors_exist = response.xpath("//div[@class='product-variations']").extract()
-        if not colors_exist:
-            yield self.parse_no_variation_items(response, product)
-            return
-
         color_xpath = "//ul[@class='swiper-wrapper swatches color']/li[not(contains(@class,'unselectable'))][1]/a/@href"
         color_url = response.xpath(color_xpath).extract_first()
         if color_url:
@@ -104,7 +99,6 @@ class RebelSpider(Spider):
                 meta={'product': product}
             )
             return
-
         yield self.parse_no_variation_items(response, product)
 
     def color_info(self, response):
@@ -140,15 +134,7 @@ class RebelSpider(Spider):
             size_name = size_name.strip()
             price_dict = self.get_price_values(response)
 
-            product['variations'][-1]['sizes'].append(
-                SizeItem(
-                    size_name=size_name,
-                    is_available=True,
-                    price=price_dict['price'],
-                    is_discounted=price_dict['is_discounted'],
-                    discounted_price=price_dict['discounted_price'],
-                )
-            )
+            product['variations'][-1]['sizes'].append(self.make_size_item(size_name, price_dict))
 
             next_size_url = response.xpath("//option[@selected]/following-sibling::option[1]/@value").extract_first()
         else:
@@ -181,13 +167,7 @@ class RebelSpider(Spider):
             VariationItem(
                 display_color_name=None,
                 images_urls=response.xpath("//div[@id='pdp-swiper']/div[1]//a/@href").extract(),
-                sizes=SizeItem(
-                    size_name=None,
-                    is_available=True,
-                    price=price_dict['price'],
-                    is_discounted=price_dict['is_discounted'],
-                    discounted_price=price_dict['discounted_price'],
-                ),
+                sizes=self.make_size_item(None, price_dict),
             )
         )
 
@@ -196,15 +176,7 @@ class RebelSpider(Spider):
     def parse_no_size_item(self, response, product):
         price_dict = self.get_price_values(response)
 
-        product['variations'][-1]['sizes'].append(
-            SizeItem(
-                size_name=None,
-                is_available=True,
-                price=price_dict['price'],
-                is_discounted=price_dict['is_discounted'],
-                discounted_price=price_dict['discounted_price'],
-            )
-        )
+        product['variations'][-1]['sizes'].append(self.make_size_item(None, price_dict))
         path = "//li[contains(@class,'selected')]/following-sibling::li[not(contains(@class,'unselectable'))]/a/@href"
         next_color = response.xpath(path).extract_first()
         if next_color:
@@ -215,6 +187,15 @@ class RebelSpider(Spider):
             )
 
         return product
+
+    def make_size_item(self, size_name, price):
+        return SizeItem(
+            size_name=size_name,
+            is_available=True,
+            price=price['price'],
+            is_discounted=price['is_discounted'],
+            discounted_price=price['discounted_price'],
+        )
 
     def get_price_values(self, response):
         price_standard = response.xpath("//span[@class='price-standard']/text()").extract_first(default=None)
