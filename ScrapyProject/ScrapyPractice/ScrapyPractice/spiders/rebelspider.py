@@ -17,7 +17,7 @@ class RebelSpider(Spider):
         return spider
 
     def process_items(self, spider):
-        if self.items:
+        while self.items:
             sku, item = self.items.popitem()
             req = Request(
                 url=urljoin(self.domain_url, item['product_url']),
@@ -32,37 +32,24 @@ class RebelSpider(Spider):
 
     def parse_homepage(self, response):
         for category_level1 in response.xpath("//nav[@id='navigation']/ul/li"):
-            category_level1_label = category_level1.xpath("./a/text()").extract_first('').strip()
-            category_level1_url = category_level1.xpath("./a/@href").extract_first()
-            meta = copy.deepcopy(response.meta)
-
-            meta['category'] = 'Home', category_level1_label
-            yield Request(
-                url=category_level1_url,
-                callback=self.parse_categories,
-                meta=meta,
-            )
+            yield self.make_request([category_level1], response)
 
             for category_level2 in category_level1.xpath(".//div[@class='level-2-outer']"):
-                category_level2_label = category_level2.xpath("./a/text()").extract_first('').strip()
-                category_level2_url = category_level2.xpath("./a/@href").extract_first()
+                yield self.make_request([category_level1, category_level2], response)
 
-                meta['category'] = 'Home', category_level1_label, category_level2_label
-                yield Request(
-                    url=category_level2_url,
-                    callback=self.parse_categories,
-                    meta=meta,
-                )
                 for category_level3 in category_level2.xpath(".//div/ul/li"):
-                    category_level3_label = category_level3.xpath("./a/text()").extract_first('').strip()
-                    category_level3_url = category_level3.xpath("./a/@href").extract_first()
+                    yield self.make_request([category_level1, category_level2, category_level3], response)
 
-                    meta['category'] = 'Home', category_level1_label, category_level2_label, category_level3_label
-                    yield Request(
-                        url=category_level3_url,
-                        callback=self.parse_categories,
-                        meta=meta,
-                    )
+    def make_request(self, selectors, response):
+        category_level1_label = [sel.xpath("./a/text()").extract_first('').strip() for sel in selectors]
+        url = selectors[-1].xpath("./a/@href").extract_first()
+        meta = copy.deepcopy(response.meta)
+        meta['category'] = category_level1_label
+        return Request(
+            url=url,
+            callback=self.parse_categories,
+            meta=meta,
+        )
 
     def parse_categories(self, response):
         for product in response.xpath("//ul[@id='search-result-items']/li"):
@@ -92,7 +79,7 @@ class RebelSpider(Spider):
 
         des_xpath = "//div[@id='product-description']//p/text() | //div[@id='product-description']//ul/li/text()"
         product = ProductItem(
-            product_url=urljoin(self.domain_url,item['product_url']),
+            product_url=response.url,
             title=response.xpath("//h1[@class='product-name']/text()").extract_first(),
             brand=response.xpath("//span[@class='product-brand']/text()").extract_first(),
             locale="en_AU",
@@ -119,14 +106,6 @@ class RebelSpider(Spider):
             return
 
         yield self.parse_no_variation_items(response, product)
-
-        if self.items:
-            sku, item = self.items.popitem()
-            yield Request(
-                url=urljoin(self.domain_url, item['product_url']),
-                callback=self.parse_product,
-                meta={'item': item},
-            )
 
     def color_info(self, response):
         product = response.meta['product']
