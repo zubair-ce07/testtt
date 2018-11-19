@@ -86,8 +86,8 @@ class VansParser(Mixin):
         return int(float(response.css(css).extract_first()) * 100)
 
     def previous_price(self, response):
-        script = "var itemPrices = (.+?);\n"
-        price_details = json.loads(re.findall(script, response.body.decode("utf-8"))[0])
+        script_re = "var itemPrices = (.+?);\n"
+        price_details = json.loads(re.findall(script_re, response.body.decode("utf-8"))[0])
         raw_price = price_details[self.product_id(response)]["pricing"]
 
         return int(float(raw_price["default"]["lowListPriceNumeric"]) * 100)
@@ -98,8 +98,7 @@ class VansParser(Mixin):
 
     def product_care(self, response):
         css = ".desc-container ::text"
-        care = response.css(css).extract()[-1] if response.css(css).extract() else None
-        return care
+        return response.css(css).extract()[-1] if response.css(css).extract() else []
 
     def product_category(self, response):
         css = "#product-attr-form::attr(data-seo-category)"
@@ -161,8 +160,8 @@ class VansCrawler(CrawlSpider, Mixin):
         return response.css(css).extract()
 
     def site_id(self, response):
-        script = "WCS_CONFIG.ATTRAQT = (.+?);"
-        raw_site_id = json.loads(re.findall(script, response.body.decode("utf-8").replace("\n", ""))[0])
+        script_re = "WCS_CONFIG.ATTRAQT = (.+?);"
+        raw_site_id = json.loads(re.findall(script_re, response.body.decode("utf-8").replace("\n", ""))[0])
         return re.findall("zones/(.*).min", raw_site_id["MAINJS"])[0]
 
     def config_categorytree(self, response):
@@ -190,8 +189,8 @@ class VansCrawler(CrawlSpider, Mixin):
             yield Request(url, callback=self.parse_raw_content, dont_filter=True)
 
     def parse_raw_content(self, response):
-        script = "LM.buildZone\((.*)\)"
-        raw_html = json.loads(re.findall(script, response.body.decode("utf-8"))[0])
+        script_re = "LM.buildZone\((.*)\)"
+        raw_html = json.loads(re.findall(script_re, response.body.decode("utf-8"))[0])
         new_response = response.replace(body=raw_html["html"])
 
         return [Request(url, callback=self.parse_item) for url in self.product_urls(new_response)]
