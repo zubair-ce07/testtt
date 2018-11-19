@@ -7,7 +7,7 @@ from termcolor import colored, cprint
 
 
 class Weather:
-    
+
     # class variables
     temp_max = []
     temp_low = []
@@ -91,28 +91,28 @@ class Weather:
         h = self.temp_max.index(max_temperature)
         l = self.temp_low.index(min_temperature)
         k = self.max_humidity.index(max_humid)
-        print("Highest: " + str(self.temp_max[h]) + "C on " + date_strings[h])
-        print("Lowest: " + str(self.temp_low[l]) + "C on " + date_strings[l])
-        print("Humidity: " + str(self.max_humidity[k]) + "% on " + date_strings[k])
+        print("Highest: {0}C on {1} ".format(str(self.temp_max[h]),date_strings[h]))
+        print("Lowest: {0}C on {1}".format(str(self.temp_low[l]),date_strings[l]))
+        print("Humidity: {0}% on {1}".format(str(self.max_humidity[k]), date_strings[k]))
         print('\n')
 
     # calculate the average max, average min and average humidity
     def average_max_min_humid_day(self):
         sum_temp = sum(self.temp_max)
         len_temp = len(self.temp_max)
-        avg_temp = sum_temp/len_temp
+        avg_temp = round(sum_temp/len_temp)
 
         sum_l_temp = sum(self.temp_low)
         len_l_temp = len(self.temp_low)
-        avg_l_temp = sum_l_temp/len_l_temp
+        avg_l_temp = round(sum_l_temp/len_l_temp)
 
         sum_humidity = sum(self.mean_humidity)
         len_humidity = len(self.mean_humidity)
-        avg_mean_hum = sum_humidity/len_humidity
+        avg_mean_hum = round(sum_humidity/len_humidity)
 
-        print("Highest Average: " + str(avg_temp) + "C")
-        print("Lowest Average: " + str(avg_l_temp) + "C")
-        print("Humidity: " + str(avg_mean_hum) + "%")
+        print("Highest Average: {0}C ".format(str(avg_temp)))
+        print("Lowest Average: {0}C ".format(str(avg_l_temp)))
+        print("Humidity: {0}% ".format(str(avg_mean_hum)))
         print('\n')
 
     # print two bar graphs
@@ -125,19 +125,21 @@ class Weather:
         hig_low_temp = min(self.temp_max)
         for i in range(hig_max_temp):
                 i = cprint('+', 'red', end=' ')
-        print(str(hig_max_temp) + 'C')
+        print('{0}C'.format(str(hig_max_temp)))
+
         for j in range(hig_low_temp):
             j = cprint('+', 'blue', end=' ')
-        print(str(hig_low_temp) + 'C')
+        print('{0}C'.format(str(hig_low_temp)))
 
         low_max_temp = max(self.temp_low)
         low_min_temp = min(self.temp_low)
         for i in range(low_max_temp):
             i = cprint('+', 'red', end=' ')
-        print(str(low_max_temp) + 'C')
+        print('{0}C'.format(str(low_max_temp)))
+
         for j in range(low_min_temp):
             j = cprint('+', 'blue', end=' ')
-        print(str(low_min_temp) + 'C')
+        print('{0}C'.format(str(low_min_temp)))
 
     # print one bar graph
     def one_bar(self, month, year):
@@ -150,7 +152,7 @@ class Weather:
             i = cprint('+', 'red', end=' ')
         for j in range(hig_low_temp):
             j = cprint('+', 'blue', end=' ')
-        print(str(hig_max_temp) + 'C' + '-' + str(hig_low_temp) + 'C')
+        print('{0}C-{1}C'.format(str(hig_max_temp),str(hig_low_temp)))
 
         low_max_temp = max(self.temp_low)
         low_min_temp = min(self.temp_low)
@@ -158,4 +160,4 @@ class Weather:
             i = cprint('+', 'red', end=' ')
         for j in range(low_min_temp):
             j = cprint('+', 'blue', end=' ')
-        print(str(low_max_temp) + 'C' + '-' + str(low_min_temp) + 'C')
+        print('{0}C-{1}C'.format(str(low_max_temp),str(low_min_temp)))

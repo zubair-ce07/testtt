@@ -29,7 +29,7 @@ def main():
         weather.filter_data()
         weather.hot_cold_humid_day()
 
-    if args.a:
+    elif args.a:
         year_month = datetime.strptime(args.a, '%Y/%m')
         year = year_month.strftime('%Y')
         month = year_month.strftime('%b')
@@ -38,7 +38,7 @@ def main():
         weather.filter_data()
         weather.average_max_min_humid_day()
 
-    if args.c:
+    elif args.c:
         year_month = datetime.strptime(args.c, '%Y/%m')
         year = year_month.strftime('%Y')
         month = year_month.strftime('%b')
@@ -47,7 +47,7 @@ def main():
         weather.filter_data()
         weather.max_min_bar(month, year)
 
-    if args.d:
+    elif args.d:
         year_month = datetime.strptime(args.d, '%Y/%m')
         year = year_month.strftime('%Y')
         month = year_month.strftime('%b')
@@ -55,6 +55,8 @@ def main():
         weather.read_month_data()
         weather.filter_data()
         weather.one_bar(month, year)
+    else:
+        print("Please select correct option")
 
 if __name__ == '__main__':
         main()
