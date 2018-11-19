@@ -40,8 +40,8 @@ class RebelliousParseSpider(Spider):
         sku_currency_price = self.sku_currency_price(raw_sku)
 
         for size in raw_sku.get('attributes').get('967').get('options'):
-            skus[size.get('label')] = {'size': size.get('label')}
-            skus[size.get('label')].update(sku_currency_price)
+            skus[size.get('label')] = sku = {'size': size.get('label')}
+            sku.update(sku_currency_price)
 
         return skus
 
@@ -58,8 +58,7 @@ class RebelliousParseSpider(Spider):
 
     def raw_sku(self, response):
         xpath = '//script[contains(text(), "Product.Config")]/text()'
-        sku_r = '{.*}'
-        return json.loads(response.xpath(xpath).re_first(sku_r))
+        return json.loads(response.xpath(xpath).re_first('{.*}'))
 
     def product_name(self, response):
         css = '.product-name h1::text'
