@@ -1,7 +1,7 @@
 
 def convert_price_to_integer(price):
     if price:
-        return int(float(price)*100)
+        return int(float(price) * 100)
 
 
 def pricing(raw_prices):

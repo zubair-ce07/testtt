@@ -1,6 +1,4 @@
-
 import json
-import itertools
 
 from scrapy import Request, Spider
 from scrapy.selector import Selector
@@ -92,10 +90,10 @@ class RakutenParseSpider(Mixin, Spider):
         return [url['location'] for url in raw_product['item'].get('images') if url.get('location')]
 
     def extract_money_strings(self, raw_product):
-        raw_price_map =  raw_product.get('price') or raw_product
+        raw_price_map = raw_product.get('price') or raw_product
         price_keys = ['listPrice', 'price', 'originalPrice', 'itemListPrice',
                       'itemPrice', 'itemOriginalPrice']
-        return [p for k in price_keys for p in raw_price_map.get(k,[])]
+        return [p for k in price_keys for p in raw_price_map.get(k, [])]
 
     def extract_currency(self, raw_product):
         raw_price = raw_product.get('price', {})
@@ -124,7 +122,7 @@ class RakutenParseSpider(Mixin, Spider):
                 attribute_map = raw_detail_maps[index][1]
                 if 'color' in attribute.lower():
                     sku['colour'] = attribute_map.get(attribute_value)
-                elif not 'gender' in attribute.lower() and not 'outerwear' in attribute.lower():
+                elif 'gender' not in attribute.lower() and 'outerwear' not in attribute.lower():
                     sizes.append(attribute_map.get(attribute_value))
 
             sku['size'] = '_'.join(sizes) if sizes else 'One Size'
@@ -149,7 +147,7 @@ class RakutenParseSpider(Mixin, Spider):
 class RakutenCrawlSpider(Mixin, CrawlSpider):
     name = Mixin.retailer + '-crawl'
 
-    listings_css = ['.r-categories__list','.r-pagination',
+    listings_css = ['.r-categories__list', '.r-pagination',
                     '.r-search-page__category-item']
     products_css = ['.r-product__main-block']
     products_deny = ['TRENDING', 'DEALS', 'redirect']
@@ -179,8 +177,8 @@ class RakutenCrawlSpider(Mixin, CrawlSpider):
 
     def deny_category(self, response):
         deny = ['electronics', 'home', 'outdoor', 'beauty', 'personal', 'care', 'health',
-            'sports', 'fitness', 'toys', 'toddlers', 'baby', 'pet', 'supplies', 'media',
-            'food', 'beverage', 'automotive', 'parts', 'everything', 'else', 'luggage']
+                'sports', 'fitness', 'toys', 'toddlers', 'baby', 'pet', 'supplies', 'media',
+                'food', 'beverage', 'automotive', 'parts', 'everything', 'else', 'luggage']
         return any(category in response.url for category in deny)
 
     def make_trail(self, response):
