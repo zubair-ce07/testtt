@@ -15,6 +15,9 @@ class RebelliousCrawler(CrawlSpider):
 
     rules = (
         Rule(LinkExtractor(restrict_css=(listings_css)), callback='parse'),
-        Rule(LinkExtractor(restrict_css=(product_css), allow=(allow_r)),
-             callback=product_parser.parse_product),
+        Rule(LinkExtractor(restrict_css=(product_css), allow=(allow_r)), callback='parse_product'),
     )
+
+    def parse_product(self, response):
+        return self.product_parser.parse_product(response)
+
