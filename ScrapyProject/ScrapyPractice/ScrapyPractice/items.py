@@ -14,6 +14,7 @@ class ScrapypracticeItem(scrapy.Item):
     pass
 
 
+
 class Record(scrapy.Item):
     docket = scrapy.Field()
     filler = scrapy.Field()
