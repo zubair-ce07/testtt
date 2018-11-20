@@ -8,18 +8,33 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule, CrawlSpider
 
 from ..items import Item
-from ..utilities import pricing, map_currency_code, map_gender
+from ..utilities import pricing, map_gender, map_merch_info
 
 
-class RakutenParseSpider(Spider):
-    name = 'rakuten-parse'
+class Mixin:
+    retailer = 'rakuten'
     cookie_url = 'https://www.rakuten.com/eCa432UiJrqnJsU3'
 
+    allowed_domains = ['rakuten.com']
+    start_urls = [
+        'https://www.rakuten.com/shop/?scid=ebates-home-3&l-id=ebates-home-3'
+    ]
+    custom_settings = {
+        'USER_AGENT': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:63.0) '
+                      'Gecko/20100101 Firefox/63.0',
+    }
+
     def parse_cookie(self, response):
-        return Request(response.meta['url'], callback=self.parse, dont_filter=True)
+        if response.meta.get('url'):
+            return Request(response.meta['url'], callback=self.parse, dont_filter=True)
+        return Request(self.start_urls[0], callback=super().parse)
+
+
+class RakutenParseSpider(Mixin, Spider):
+    name = Mixin.retailer + '-parse'
 
     def parse(self, response):
-        if not response.css('div#rat'):
+        if not response.css('#rat'):
             return Request(self.cookie_url, callback=self.parse_cookie,
                            meta={'url': response.url}, dont_filter=True)
         raw_product = self.extract_raw_product(response)
@@ -53,12 +68,12 @@ class RakutenParseSpider(Spider):
         return raw_product['spec']['brand']
 
     def extract_care(self, raw_product):
-        sel = Selector(text=raw_product['info']['description'])
+        sel = self.extract_raw_description(raw_product)
         css = 'div.b-features ::text'
         return ' '.join(c.strip() for c in sel.css(css).extract())
 
     def extract_category(self, raw_product):
-        return raw_product['item']['categoryName']
+        return [raw_product['item']['categoryName']]
 
     def extract_gender(self, raw_product, item):
         gender = raw_product['item'].get('variants', {}).get(
@@ -69,7 +84,7 @@ class RakutenParseSpider(Spider):
         return map_gender(item['care'] + item['description'] + item['name'])
 
     def extract_description(self, raw_product):
-        sel = Selector(text=raw_product['info']['description'])
+        sel = self.extract_raw_description(raw_product)
         css = 'div.b-description ::text'
         return ' '.join(d.strip() for d in sel.css(css).extract())
 
@@ -84,65 +99,55 @@ class RakutenParseSpider(Spider):
 
     def extract_currency(self, raw_product):
         raw_price = raw_product.get('price', {})
-        return raw_price.get('currencyCode') or raw_product['defaultPointMoney'][0]
+        return [raw_price.get('currencyCode')] or [raw_product['defaultPointMoney'][0]]
 
     def extract_merch_info(self, item):
-        item_details = item.get('care').lower() + item['name'].lower() + \
-                       item.get('description').lower()
-        if 'limited' in item_details:
-            return 'Limited'
-        return []
+        item_details = item['care'] + item['name'] + item['description']
+        return map_merch_info(item_details)
 
     def extract_skus(self, raw_product):
         skus = {}
         raw_skus = raw_product['item'].get('variants', {})
         raw_skus_details = raw_skus.get('variantsInfo', {})
 
-        for raw_sku in raw_skus_details.values() or [raw_product['item']]:
-            sku = pricing(self.extract_money_strings(raw_sku))
-            sku['currency'] = map_currency_code(self.extract_currency(raw_sku))
+        for sku_id, raw_sku in raw_skus_details.items() or [('One Size', raw_product['item'])]:
+            sku = pricing(self.extract_money_strings(raw_sku) + self.extract_currency(raw_sku))
 
             if raw_sku.get('soldOut') or raw_sku.get('isSoldOut'):
                 sku['out_of_stock'] = True
 
-            sku.update(self.extract_colours_and_sizes(raw_skus, raw_sku.get('value', [])))
-                
-            sku_id = '_'.join(sc for sc in [sku.get("colour"), sku["size"]] if sc)
+            raw_detail_maps = self.create_detail_maps(raw_skus)
+            raw_sku = raw_sku.get('value', [])
+            sizes = []
+            for index, attribute_value in enumerate(raw_sku):
+                attribute = raw_detail_maps[index][0]
+                attribute_map = raw_detail_maps[index][1]
+                if 'color' in attribute.lower():
+                    sku['colour'] = attribute_map.get(attribute_value)
+                elif not 'gender' in attribute.lower() and not 'outerwear' in attribute.lower():
+                    sizes.append(attribute_map.get(attribute_value))
+
+            sku['size'] = '_'.join(sizes) if sizes else 'One Size'
             skus[sku_id] = sku
+
         return skus
 
-    def extract_colours_and_sizes(self, raw_skus, sku_specs):
-        colour, sizes = '', []
-        specs_details = raw_skus.get('variantsObjectWithKey',{})
+    def extract_raw_description(self, raw_product):
+        return Selector(text=raw_product['info']['description'])
 
-        for spec, specs_detail in zip(sku_specs, specs_details.items()):
-            spec_type = specs_detail[0]
-            specs_detail_reversed = self.reverse_dictionary(specs_detail[1])
-            if 'color' in spec_type.lower():
-                colour = specs_detail_reversed.get(spec)
-            elif not 'gender' in spec_type.lower() and not 'outerwear' in spec_type.lower():
-                sizes.append(specs_detail_reversed.get(spec))
+    def create_detail_maps(self, raw_skus):
+        raw_maps = raw_skus.get('variantsObjectWithKey')
+        return [(raw_map[0], self.reverse_dictionary(raw_map[1])) for raw_map in raw_maps.items()]
 
-        common_sku = {}
-        if colour:
-            common_sku['colour'] = colour
-        common_sku['size'] = '_'.join(sizes) if sizes else 'One Size'
-        
-        return common_sku
-
-    def reverse_dictionary(self, dictionary):
+    def reverse_dictionary(self, dictionary={}):
         reversed_dict = {}
         for item in dictionary.items():
             reversed_dict[item[1]] = item[0]
         return reversed_dict
 
 
-class RakutenCrawlSpider(CrawlSpider):
-    name = 'rakuten-crawl'
-    cookie_url = 'https://www.rakuten.com/eCa432UiJrqnJsU3'
-
-    allowed_domains = ['rakuten.com']
-    start_urls = ['https://www.rakuten.com/shop/?scid=ebates-home-3&l-id=ebates-home-3']
+class RakutenCrawlSpider(Mixin, CrawlSpider):
+    name = Mixin.retailer + '-crawl'
 
     listings_css = ['.r-categories__list','.r-pagination',
                     '.r-search-page__category-item']
@@ -155,18 +160,10 @@ class RakutenCrawlSpider(CrawlSpider):
                            deny=products_deny), callback='parse_product'),
     )
 
-    custom_settings = {
-        'USER_AGENT': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:63.0) '
-                      'Gecko/20100101 Firefox/63.0',
-    }
-
     product_parser = RakutenParseSpider()
 
     def start_requests(self):
-        return [Request(self.cookie_url, callback=self.parse_start_url)]
-
-    def parse_start_url(self, response):
-        return Request(self.start_urls[0], callback=super().parse)
+        return [Request(self.cookie_url, callback=self.parse_cookie)]
 
     def parse(self, response):
         if self.deny_category(response):
