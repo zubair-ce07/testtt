@@ -25,7 +25,7 @@ class Mixin:
     def parse_cookie(self, response):
         if response.meta.get('url'):
             return Request(response.meta['url'], callback=self.parse, dont_filter=True)
-        return Request(self.start_urls[0], callback=super().parse)
+        return [Request(url, callback=super().parse) for url in start_urls]
 
 
 class RakutenParseSpider(Mixin, Spider):
@@ -53,7 +53,7 @@ class RakutenParseSpider(Mixin, Spider):
         return item
 
     def extract_raw_product(self, response):
-        css = 'script[data-component-name="Product"]::text'
+        css = '[data-component-name="Product"]::text'
         return json.loads(response.css(css).extract_first())['main']['product']
 
     def extract_retailer_sku(self, raw_product):
@@ -67,23 +67,22 @@ class RakutenParseSpider(Mixin, Spider):
 
     def extract_care(self, raw_product):
         sel = self.extract_raw_description(raw_product)
-        css = 'div.b-features ::text'
+        css = '.b-features ::text'
         return ' '.join(c.strip() for c in sel.css(css).extract())
 
     def extract_category(self, raw_product):
         return [raw_product['item']['categoryName']]
 
     def extract_gender(self, raw_product, item):
-        gender = raw_product['item'].get('variants', {}).get(
-            'variantsViewLabels', {}).get('Age Gender')
-        if gender:
-            return gender
+        raw_gender = raw_product['item'].get('variants', {})
+        gender = raw_gender.get('variantsViewLabels', {}).get('Age Gender')
+        soup = item['care'] + item['description'] + item['name']
 
-        return map_gender(item['care'] + item['description'] + item['name'])
+        return gender or map_gender(soup)
 
     def extract_description(self, raw_product):
         sel = self.extract_raw_description(raw_product)
-        css = 'div.b-description ::text'
+        css = '.b-description ::text'
         return ' '.join(d.strip() for d in sel.css(css).extract())
 
     def extract_image_urls(self, raw_product):
@@ -118,11 +117,11 @@ class RakutenParseSpider(Mixin, Spider):
             raw_sku = raw_sku.get('value', [])
             sizes = []
             for index, attribute_value in enumerate(raw_sku):
-                attribute = raw_detail_maps[index][0]
-                attribute_map = raw_detail_maps[index][1]
+                attribute, attribute_map = raw_detail_maps[index][0]
+
                 if 'color' in attribute.lower():
                     sku['colour'] = attribute_map.get(attribute_value)
-                elif 'gender' not in attribute.lower() and 'outerwear' not in attribute.lower():
+                elif 'size' in attribute.lower() and 'width' in attribute.lower():
                     sizes.append(attribute_map.get(attribute_value))
 
             sku['size'] = '_'.join(sizes) if sizes else 'One Size'
