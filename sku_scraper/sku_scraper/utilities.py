@@ -51,17 +51,17 @@ def remove_non_numerics(raw_prices):
     return [''.join(p for p in price if p.isdigit() or p == '.') for price in raw_prices if price]
 
 
-def map_currency_code(currency_code):
+def detect_currency(currency_code):
     return currency_map.get(currency_code)
 
 
-def map_merch_info(soup):
+def detect_merch_info(soup):
     for merch_info in merch_info_map.keys():
         if merch_info in soup.lower():
             return merch_info_map.get(merch_info)
 
 
-def map_gender(soup):
+def detect_gender(soup):
     for gender in gender_map.keys():
         if gender in soup:
             return gender_map.get(gender, 'unisex-adults')
