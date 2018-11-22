@@ -6,7 +6,7 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule, CrawlSpider
 
 from ..items import Item
-from ..utilities import pricing, map_gender, map_merch_info
+from ..utilities import pricing, detect_gender, detect_merch_info
 
 
 class Mixin:

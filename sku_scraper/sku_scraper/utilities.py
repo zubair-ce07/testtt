@@ -71,6 +71,6 @@ def extract_currency(money_strings):
     if isinstance(money_strings, list):
         money_string = ' '.join(m_str for m_str in money_strings if m_str)
     for char in money_string:
-        currency = map_currency_code(char)
+        currency = detect_currency_code(char)
         if currency:
             return currency
