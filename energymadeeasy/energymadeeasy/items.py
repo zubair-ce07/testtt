@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 
 # Define here the models for your scraped items
-#
-# See documentation in:
-# https://doc.scrapy.org/en/latest/topics/items.html
+
 
 import scrapy
 
@@ -27,3 +25,17 @@ class EnergymadeeasyItem(scrapy.Item):
     solar = scrapy.Field()
     solar_meter_fee = scrapy.Field()
     guaranteed_discount_off_usage = scrapy.Field()
+    pot_discount_off_usage = scrapy.Field()
+    pot_discount_off_bill = scrapy.Field()
+    incentive_type = scrapy.Field()
+    approx_incentive_value = scrapy.Field()
+    other_incentives = scrapy.Field()
+    restricted_eligibility = scrapy.Field()
+    guaranteed_discount_off_bill = scrapy.Field()
+    fit = scrapy.Field()
+    dd_discount_off_bill = scrapy.Field()
+    dd_discount_off_usage = scrapy.Field()
+    dual_fuel_discount_off_bill = scrapy.Field()
+    dual_fuel_discount_off_usage = scrapy.Field()
+    db = scrapy.Field()
+    minimum_monthly_demand_charged = scrapy.Field()
