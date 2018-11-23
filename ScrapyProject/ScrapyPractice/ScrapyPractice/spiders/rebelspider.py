@@ -63,16 +63,16 @@ class RebelSpider(Spider):
             else:
                 self.items[item['store_keeping_unit']]['breadcrumbs'].append(item['breadcrumbs'])
 
-        next_page_xpath = "//div[@class='search-result-content']/div[@data-loading-state='unloaded']/@data-grid-url"
-        next_page = response.xpath(next_page_xpath).extract_first()
+        next_page_css = " div.search-result-content > div[data-loading-state=unloaded]::attr( data-grid-url)"
+        next_page = response.css(next_page_css).extract_first()
 
-        # if next_page:
-        #     yield Request(
-        #         url=next_page,
-        #         callback=self.parse_categories,
-        #         meta=response.meta,
-        #     )
-        # pass
+        if next_page:
+            yield Request(
+                url=next_page,
+                callback=self.parse_categories,
+                meta=response.meta,
+            )
+        pass
 
     def parse_product(self, response):
         item = response.meta['item']
