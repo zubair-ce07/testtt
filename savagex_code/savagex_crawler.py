@@ -7,10 +7,11 @@ from w3lib.url import url_query_parameter, add_or_replace_parameter
 from savagex.items import SavagexItem
 
 
-class SavagexSpider(Spider):
-    name = 'savagex_{type}'
+class Mixin(Spider):
+    retailer = 'savagex'
     allowed_domains = ['savagex.com']
     start_urls = ['http://savagex.com/']
+    CURRENCY = 'USD'
     request_header = {}
     configration_r = '__CONFIG__ = ({.*})'
 
@@ -19,12 +20,11 @@ class SavagexSpider(Spider):
         self.request_header[raw_header.get('keyHeader')] = raw_header.get('key')
 
 
-class SavagexParseSpider(SavagexSpider):
-    name = SavagexSpider.name.format(type='parser')
+class SavagexParseSpider(Mixin):
+    name = Mixin.retailer + '_parse'
     color_url_t = 'https://www.savagex.com/api/products/{color_id}'
     BRAND = 'Savage x'
     GENDER = 'women'
-    CURRENCY = 'USD'
 
     def parse_product(self, response):
         product = SavagexItem()
@@ -45,23 +45,23 @@ class SavagexParseSpider(SavagexSpider):
         product = response.meta.get('product')
         raw_product = json.loads(response.text)
         product['image_urls'].append(raw_product.get('image_view_list'))
-        product['skus'].update(self.color_sku(raw_product))
+        product['skus'].update(self.skus(raw_product))
 
         yield self.request_or_item(product)
 
-    def color_sku(self, raw_product):
+    def skus(self, raw_product):
         color = raw_product.get('color')
         currency_and_price = self.product_currency_and_price(raw_product)
-        sku = {}
+        skus = {}
 
         for size in self.color_sizes(raw_product):
-            sku[f'{color}_{size}'] = {
+            skus[f'{color}_{size}'] = sku = {
                 'color': color,
                 'size': size,
             }
-            sku[f'{color}_{size}'].update(currency_and_price)
+            sku.update(currency_and_price)
 
-        return sku
+        return skus
 
     def color_sizes(self, raw_product):
         raw_sizes = raw_product.get('related_product_id_object_list')[0]
@@ -109,8 +109,8 @@ class SavagexParseSpider(SavagexSpider):
         return response.xpath(xpath).extract_first()
 
 
-class SavagexCrawlSpider(SavagexSpider):
-    name = SavagexSpider.name.format(type='crawler')
+class SavagexCrawlSpider(Mixin):
+    name = Mixin.retailer + '_crawl'
     product_parser = SavagexParseSpider()
     product_url_t = 'https://www.savagex.com/shop/{link}-{pid}'
     product_category_url_t = 'https://www.savagex.com/api/products?aggs={aggs}&'\
@@ -120,15 +120,11 @@ class SavagexCrawlSpider(SavagexSpider):
     def parse(self, response):
         self.category_request_header(response)
 
-        for product_category_request in self.product_category_requests(response):
-            yield product_category_request
+        yield from self.product_category_requests(response)
 
     def parse_category(self, response):
         yield from self.product_requests(response)
-        next_page_request = self.next_page_request(response)
-
-        if next_page_request:
-            yield next_page_request
+        yield self.next_page_request(response)
 
     def next_page_request(self, response):
         if not response:
@@ -142,24 +138,20 @@ class SavagexCrawlSpider(SavagexSpider):
 
     def product_requests(self, response):
         requests = []
-        if not response:
-            return requests
 
         for raw_product in self.raw_products(response):
             category = response.meta.get('category')
-            url = self.product_url_t.format(
-                link=raw_product['permalink'], pid=raw_product['master_product_id'])
+            url = self.product_url_t.format(link=raw_product['permalink'], pid=raw_product['master_product_id'])
             requests.append(Request(url=url, callback=self.product_parser.parse_product, meta={'category': category}))
 
         return requests
 
     def raw_products(self, response):
+        if not response:
+            return []
+
         raw_products = json.loads(response.text)
-
-        if type(raw_products) is type({}):
-            return raw_products.get('products')
-
-        return raw_products
+        return raw_products.get('products') if isinstance(raw_products, dict) else raw_products
 
     def product_category_requests(self, response):
         product_categories = self.product_categories(response)
