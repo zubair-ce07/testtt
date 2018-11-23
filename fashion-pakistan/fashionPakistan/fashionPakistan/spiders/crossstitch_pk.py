@@ -32,18 +32,17 @@ class CrossstitchComSpider(scrapy.Spider):
 
     def parse_product_details(self, response):
         product = FashionPakistan()
-        product["name"] = self.get_item_name(response)
-        product["product_sku"] = self.get_item_sku(response)
-        product["description"] = self.get_item_description(response)
-        product["images"] = self.get_item_images(response)
+        product["name"] = response.xpath("//h1[@itemprop='name']/text()").extract_first().strip()
+        product["product_sku"] = response.xpath("//span[@itemprop='sku']/text()").extract_first()
+        product["description"] = response.xpath("//div[@itemprop='description']/p/text()").extract()
+        product["images"] = response.xpath("//div[@class='owl-carousel']//img/@src").extract()
         product["attributes"] = self.get_item_attributes(response)
         product["out_of_stock"] = self.is_out_of_stock(response)
         product["url"] = response.url
         product["skus"] = self.get_item_skus(response)
         sizes, sizes_keys = self.get_item_sizes(response)
 
-        p_id = int(response.xpath(
-            "//div[@data-productid]/@data-productid").extract_first())
+        p_id = int(response.xpath("//div[@data-productid]/@data-productid").extract_first())
         sku_link = "https://www.crossstitch.pk/shoppingcart/productdetails_attributechange?productId={}&validateAttributeConditions=False&loadPicture=True".format(
             p_id)
         form_data = {
@@ -53,8 +52,7 @@ class CrossstitchComSpider(scrapy.Spider):
         def parse_price(response):
             nonlocal product, sizes, sizes_keys, sku_link, p_id
             json_resp = json.loads(response.text)
-            product["skus"][sizes[0]+"_"+sizes_keys[0]
-                            ]["new_price"] = json_resp["price"].strip("Rs. ").replace(",", '')
+            product["skus"][sizes[0]]["new_price"] = json_resp["price"].strip("Rs. ").replace(",", '')
             sizes = sizes[1:]
             sizes_keys = sizes_keys[1:]
             if sizes:
@@ -77,26 +75,13 @@ class CrossstitchComSpider(scrapy.Spider):
         else:
             return False
 
-    def get_item_name(self, response):
-        return response.xpath("//h1[@itemprop='name']/text()").extract_first().strip()
-
-    def get_item_sku(self, response):
-        return response.xpath("//span[@itemprop='sku']/text()").extract_first()
-
-    def get_item_description(self, response):
-        return response.xpath("//div[@itemprop='description']/p/text()").extract()
-
-    def get_item_images(self, response):
-        images = response.xpath(
-            "//div[@class='owl-carousel']//img/@src").extract()
-        return images
-
     def get_item_attributes(self, response):
         attribute = response.xpath("//ul[@id='tabs']//a/text()").extract()
         attributes = {}
         for attrib in attribute:
-            attributes[attrib] = [desc.strip() for desc in response.xpath(
-                "//div[@id='{}']/p/text()".format(attrib)).extract()]
+            attributes[attrib.strip()] = [desc.strip() for desc in response.xpath(
+                "//div[@id='{}']/p/text()".format(attrib.strip())).extract()]
+
         return attributes
 
     def get_item_sizes(self, response):
@@ -113,18 +98,11 @@ class CrossstitchComSpider(scrapy.Spider):
         currency_code = response.xpath(
             "//meta[@itemprop='priceCurrency']/@content").extract_first()
         color_scheme = {}
-        if prev_price:
-            for size, key in zip(available_sizes, size_keys):
-                color_scheme[size+"_"+key] = {
-                    "prev_price": prev_price.strip(currency_code).strip().replace(",", ''),
-                    "size": size,
-                    "currency_code": currency_code,
-                }
-
-        else:
-            for size, key in zip(available_sizes, size_keys):
-                color_scheme[size+"_"+key] = {
-                    "size": size,
-                    "currency_code": currency_code,
-                }
+        for size, key in zip(available_sizes, size_keys):
+            color_scheme[size] = {
+                "size": size,
+                "currency_code": currency_code,
+            }
+            if prev_price:
+                color_scheme[size]["prev_price"] = prev_price.strip(currency_code).strip().replace(",", '')
         return color_scheme

@@ -28,10 +28,10 @@ class SapphirePkSpider(scrapy.Spider):
 
     def parse_product_details(self, response):
         product = FashionPakistan()
-        product["name"] = self.get_item_name(response)
-        product["product_sku"] = self.get_item_sku(response)
-        product["description"] = self.get_item_description(response)
-        product["images"] = self.get_item_images(response)
+        product["name"] = response.xpath("//h2[@itemprop='name']/span/text()").extract_first()
+        product["product_sku"] = response.xpath("//span[@class='variant-sku']/text()").extract_first()[4:]
+        product["description"] = response.xpath("//div[@class='short-description']/p/text()").extract()
+        product["images"] = response.xpath("//div[@class='MagicToolboxSelectorsContainer']//img/@src").extract()
         product["attributes"] = self.get_item_attributes(response)
         product["out_of_stock"] = self.is_out_of_stock(response)
         product["skus"] = self.get_item_skus(response)
@@ -39,23 +39,8 @@ class SapphirePkSpider(scrapy.Spider):
         yield product
 
     def is_out_of_stock(self, response):
-        value = response.xpath(
-            "//link[@itemprop='availability']/@href").extract_first().split("/")[-1]
+        value = response.xpath("//link[@itemprop='availability']/@href").extract_first().split("/")[-1]
         return False if value.strip() == "InStock" else True
-
-    def get_item_name(self, response):
-        return response.xpath("//h2[@itemprop='name']/span/text()").extract_first()
-
-    def get_item_sku(self, response):
-        return response.xpath("//span[@class='variant-sku']/text()").extract_first()[4:]
-
-    def get_item_description(self, response):
-        return response.xpath("//div[@class='short-description']/p/text()").extract()
-
-    def get_item_images(self, response):
-        images = response.xpath(
-            "//div[@class='MagicToolboxSelectorsContainer']//img/@src").extract()
-        return images
 
     def get_item_attributes(self, response):
         attribute = response.xpath(
@@ -66,19 +51,15 @@ class SapphirePkSpider(scrapy.Spider):
                 "//div[@id='collapse-tab2']//ul[{}]//text()".format(i+1)).extract()
             attributes[attrib] = desc
 
-        fabric = response.xpath(
-            "//div[@class='short-description']/p/text()").extract()
-        if fabric and fabric[-1].strip().split(":")[0] == "Fabric":
+        fabric = response.xpath("//div[@class='short-description']/p/text()").extract()
+        if fabric and fabric[-1].split(":")[0].strip() == "Fabric":
             attributes["fabric"] = fabric[-1].strip().split(":")[1]
         return attributes
 
     def get_item_skus(self, response):
-        currency = response.xpath(
-            "//meta[@itemprop='priceCurrency']/@content").extract_first()
-        attribs = response.xpath(
-            "//div[@class='swatch clearfix']/div[@class='header']/text()").extract()
-        attrib_values_data = response.xpath(
-            "//select[@id='product-selectors']/option//text()").extract()
+        currency = response.xpath("//meta[@itemprop='priceCurrency']/@content").extract_first()
+        attribs = response.xpath("//div[@class='swatch clearfix']/div[@class='header']/text()").extract()
+        attrib_values_data = response.xpath("//select[@id='product-selectors']/option//text()").extract()
         attrib_values = attrib_values_data[::2]
         prices = attrib_values_data[1::2]
         attrib_values = [attrib.replace(

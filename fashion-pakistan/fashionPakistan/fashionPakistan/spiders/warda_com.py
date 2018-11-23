@@ -8,7 +8,6 @@ import scrapy
 
 class WardaComSpider(scrapy.Spider):
     name = 'warda.com'
-    # allowed_domains = ['warda.com.pk']
     start_urls = ['http://warda.com.pk/']
 
     def parse(self, response):
@@ -40,14 +39,10 @@ class WardaComSpider(scrapy.Spider):
             product["category"] = self.parse_category(item)
             product["images"] = self.parse_images(item)
             product["attributes"] = self.parse_attributes(item)
-            product["out_of_stock"] = self.is_in_stock(item)
+            product["out_of_stock"] = True if item["inventoryQuantity"] <= 1 else False
             product["skus"] = self.parse_skus(item)
-            product["url"] = "https://warda.com.pk/product/" + \
-                item["productUrl"]
+            product["url"] = "https://warda.com.pk/product/" + item["productUrl"]
             yield product
-
-    def is_in_stock(self, item):
-        return True if item["inventoryQuantity"] <= 1 else False
 
     def parse_description(self, item):
         description_html = Selector(item["productDescription"])
@@ -81,6 +76,7 @@ class WardaComSpider(scrapy.Spider):
         product_collections = item["productCollections"].replace("\\", '')
         product_collections = json.loads(product_collections)
         prev_price = item["productPrice"]
+        discount = 0
         if len(product_collections) > 1:
             discount = product_collections[product_collection_list[1]]["url"].split(
                 "-")[0]
@@ -116,58 +112,39 @@ class WardaComSpider(scrapy.Spider):
                 if qty > 0:
                     size = (el for el in varient["name"] if el in all_sizes)
                     avail_sizes.append(next(size, None))
+            colors[color_name] = {
+                "color": color_name,
+                "prev_price": prev_price,
+                "new_price": new_price,
+                "currency_code": "PKR",
+            }
             if avail_sizes:
-                colors[color_name] = {
-                    "color": color_name,
-                    "available_sizes": avail_sizes,
-                    "prev_price": prev_price,
-                    "new_price": new_price,
-                    "currency_code": "PKR",
-                }
-            else:
-                colors[color_name] = {
-                    "color": color_name,
-                    "prev_price": prev_price,
-                    "new_price": new_price,
-                    "currency_code": "PKR",
-                }
+                colors[color_name]["available_sizes"] = avail_sizes
         elif with_inner:
             varients = item["productVarients"].replace("\\", '')
             varients = json.loads(varients)
             for varient in varients:
+                with_slip = varient["name"][len(varient["name"])-1]
                 try:
-                    qty = int(varient["inventoryQuantity"])
                     prev_price = int(varient["price"])
                     new_price = prev_price - \
                         math.ceil(((prev_price/100)*float(discount)))
                     with_slip = varient["name"][len(varient["name"])-1]
-                    if qty > 0:
-                        colors[color_name+"_"+with_slip] = {
-                            "color": color_name,
-                            "with Inner/Slip": with_slip,
-                            "available": "Yes",
-                            "prev_price": prev_price,
-                            "new_price": new_price,
-                            "currency_code": "PKR",
-                        }
-                    else:
-                        colors[color_name+"_"+with_slip] = {
-                            "color": color_name,
-                            "with Inner/Slip": with_slip,
-                            "available": "No",
-                            "prev_price": prev_price,
-                            "new_price": new_price,
-                            "currency_code": "PKR",
-                        }
-                except:
                     colors[color_name+"_"+with_slip] = {
                         "color": color_name,
                         "with Inner/Slip": with_slip,
-                        "available": "No",
+                        "available": "Yes",
                         "prev_price": prev_price,
                         "new_price": new_price,
                         "currency_code": "PKR",
                     }
+                    qty = int(varient["inventoryQuantity"])
+                    if qty > 0:
+                        colors[color_name+"_"+with_slip]["available"] = "yes"
+                    else:
+                        colors[color_name+"_"+with_slip]["available"] = "no"
+                except:
+                    colors[color_name+"_"+with_slip]["available"] = "no"                    
         else:
             colors[color_name] = {
                 "color": color_name,
