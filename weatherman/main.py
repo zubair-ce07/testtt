@@ -1,4 +1,6 @@
-from weatherFunc import Weather
+from weather import ReadWeatherData
+from calculations import CalculateResults
+from report import Reports
 from datetime import datetime
 import argparse
 
@@ -19,44 +21,36 @@ def main():
 
     args = parser.parse_args()
     path = args.path
-    weather = Weather(path)
+    weather = ReadWeatherData(path)
+    cal = CalculateResults()
+    rep = Reports()
 
     if args.e:
         year = args.e
         month = None
         weather.read_data_year(str(year))
-        weather.read_data()
-        weather.filter_data()
-        weather.hot_cold_humid_day()
+        cal.hot_cold_humid_day(weather.read_data())
+        rep.yearly_weather(cal.hot_cold_humid_day(weather.read_data()))
 
     elif args.a:
         year_month = datetime.strptime(args.a, '%Y/%m')
         year = year_month.strftime('%Y')
         month = year_month.strftime('%b')
         weather.read_data_file_month(year, month)
-        weather.read_month_data()
-        weather.filter_data()
-        weather.average_max_min_humid_day()
+        cal.average_max_min_humid_day(weather.read_data())
+        rep.monthly_weather(cal.average_max_min_humid_day(weather.read_data()))
 
     elif args.c:
         year_month = datetime.strptime(args.c, '%Y/%m')
         year = year_month.strftime('%Y')
         month = year_month.strftime('%b')
         weather.read_data_file_month(year, month)
-        weather.read_month_data()
-        weather.filter_data()
-        weather.max_min_bar(month, year)
+        result = cal.max_min_temp_day(weather.read_data())
+        rep.max_min_bar(month, year, result)
 
-    elif args.d:
-        year_month = datetime.strptime(args.d, '%Y/%m')
-        year = year_month.strftime('%Y')
-        month = year_month.strftime('%b')
-        weather.read_data_file_month(year, month)
-        weather.read_month_data()
-        weather.filter_data()
-        weather.one_bar(month, year)
     else:
         print("Please select correct option")
 
+
 if __name__ == '__main__':
-        main()
+    main()
