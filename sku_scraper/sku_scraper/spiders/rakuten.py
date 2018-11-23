@@ -22,19 +22,11 @@ class Mixin:
                       'Gecko/20100101 Firefox/63.0',
     }
 
-    def parse_cookie(self, response):
-        if response.meta.get('url'):
-            return Request(response.meta['url'], callback=self.parse, dont_filter=True)
-        return [Request(url, callback=super().parse) for url in start_urls]
-
 
 class RakutenParseSpider(Mixin, Spider):
     name = Mixin.retailer + '-parse'
 
     def parse(self, response):
-        if not response.css('#rat'):
-            return Request(self.cookie_url, callback=self.parse_cookie,
-                           meta={'url': response.url}, dont_filter=True)
         raw_product = self.extract_raw_product(response)
 
         item = Item()
@@ -46,8 +38,8 @@ class RakutenParseSpider(Mixin, Spider):
         item['description'] = self.extract_description(raw_product)
         item['skus'] = self.extract_skus(raw_product)
         item['image_urls'] = self.extract_image_urls(raw_product)
-        item['merch_info'] = self.extract_merch_info(item)
         item['gender'] = self.extract_gender(raw_product, item)
+        item['merch_info'] = self.extract_merch_info(item)
         item['url'] = response.url
 
         return item
@@ -78,7 +70,7 @@ class RakutenParseSpider(Mixin, Spider):
         gender = raw_gender.get('variantsViewLabels', {}).get('Age Gender')
         soup = item['care'] + item['description'] + item['name']
 
-        return gender or map_gender(soup)
+        return gender or detect_gender(soup)
 
     def extract_description(self, raw_product):
         sel = self.extract_raw_description(raw_product)
@@ -100,7 +92,7 @@ class RakutenParseSpider(Mixin, Spider):
 
     def extract_merch_info(self, item):
         item_details = item['care'] + item['name'] + item['description']
-        return map_merch_info(item_details)
+        return detect_merch_info(item_details)
 
     def extract_skus(self, raw_product):
         skus = {}
@@ -117,11 +109,11 @@ class RakutenParseSpider(Mixin, Spider):
             raw_sku = raw_sku.get('value', [])
             sizes = []
             for index, attribute_value in enumerate(raw_sku):
-                attribute, attribute_map = raw_detail_maps[index][0]
+                attribute, attribute_map = raw_detail_maps[index]
 
                 if 'color' in attribute.lower():
                     sku['colour'] = attribute_map.get(attribute_value)
-                elif 'size' in attribute.lower() and 'width' in attribute.lower():
+                elif 'size' in attribute.lower() or 'width' in attribute.lower():
                     sizes.append(attribute_map.get(attribute_value))
 
             sku['size'] = '_'.join(sizes) if sizes else 'One Size'
@@ -134,7 +126,7 @@ class RakutenParseSpider(Mixin, Spider):
 
     def create_detail_maps(self, raw_skus):
         raw_maps = raw_skus.get('variantsObjectWithKey')
-        return [(raw_map[0], self.reverse_dictionary(raw_map[1])) for raw_map in raw_maps.items()]
+        return [(name, self.reverse_dictionary(map)) for name, map in raw_maps.items()]
 
     def reverse_dictionary(self, dictionary={}):
         reversed_dict = {}
@@ -160,7 +152,11 @@ class RakutenCrawlSpider(Mixin, CrawlSpider):
     product_parser = RakutenParseSpider()
 
     def start_requests(self):
-        return [Request(self.cookie_url, callback=self.parse_cookie)]
+        return [Request(self.cookie_url, callback=self.parse_start_url)]
+
+    def parse_start_url(self, response):
+        callback = super().parse
+        return [Request(url, callback=callback) for url in self.start_urls]
 
     def parse(self, response):
         if self.deny_category(response):
