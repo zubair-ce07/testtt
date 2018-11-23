@@ -4,6 +4,7 @@ import re
 from ScrapyPractice.items import Record
 
 
+
 class RipucSpider(scrapy.Spider):
     """
     Spider to scrap table from webpage: 'http://www.ripuc.org/eventsactions/docket.html' and yield a dictionary of
@@ -18,7 +19,10 @@ class RipucSpider(scrapy.Spider):
     def parse(self, response):
         for table_row in response.xpath('//table[@border="1"]/*[td[not(@class="smallheader")]]'):
             # iterate over all row except for the header row
-            row_cols = table_row.xpath('./td')  # take columns of each row
+
+
+            row_cols = table_row.xpath('./td')      # take columns of each row
+
 
             if len(row_cols) == 3:
                 # if a row have 3 columns meaning no column is missing in rowspan
@@ -61,6 +65,13 @@ class RipucSpider(scrapy.Spider):
             if dates_in_descriptions:
                 date_filed = dates_in_descriptions
 
+            date_filed = ""
+
+            dates_in_descriptions = re.findall('([0-9]+/[0-9]+/[0-9]+)', description)
+
+            if dates_in_descriptions:
+                date_filed = dates_in_descriptions
+
             if docket != '':
                 # docket number is available yield data
                 record = Record(
@@ -70,3 +81,4 @@ class RipucSpider(scrapy.Spider):
                     date_filed=date_filed,
                 )
                 yield record
+
