@@ -1,12 +1,12 @@
 import json
 import re
 
-from parsel import Selector
+from scrapy import Selector
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
-from skuscraper.spiders.base import BaseCrawlSpider, BaseParseSpider, Gender, clean
-
 from w3lib.url import add_or_replace_parameter
+
+from .base import BaseCrawlSpider, BaseParseSpider, Gender, clean
 
 
 class Mixin:
@@ -21,6 +21,7 @@ class MixinUK(Mixin):
 
 
 class RussellAndBromleyParseSpider(BaseParseSpider):
+    brand_css = '.logoBox.grid_5 a::attr(title)'
     care_css = '.detailsWrapper ::text'
     raw_description_css = '.invtdesc1 .scrollWrap ::text'
     price_css = '.oneProduct .priceField ::text'
@@ -49,54 +50,41 @@ class RussellAndBromleyParseSpider(BaseParseSpider):
 
     def product_id(self, response):
         css = '#tag-invtref::text'
-        return clean(response.css(css).extract()[0][:4])
+        return clean(response.css(css))[0][:4]
 
     def product_name(self, response):
         css = '#tag-invtname::text'
-        return clean(response.css(css).extract()[0])
-
-    def product_brand(self, response):
-        css = '.logoBox.grid_5 a::attr(title)'
-        return clean(response.css(css).extract()[0])
+        return clean(response.css(css))[0]
 
     def product_category(self, response):
         css = '.crumbtrail a::text'
-        return clean(response.css(css).extract()[1:])
+        return clean(response.css(css))[1:]
 
     def product_gender(self, response):
         css = '.crumbtrail a::text, .scrollWrap ::text'
-        soup = ' '.join(clean(response.css(css).extract()))
+        soup = ' '.join(clean(response.css(css)))
         return self.gender_lookup(soup) or Gender.ADULTS.value
 
     def image_urls(self, response):
         css = '#productdetail-altview ~ script:contains(StoreImageSwaps)'
-        raw_urls = clean(response.css(css).extract()[0])
+        raw_urls = clean(response.css(css))[0]
         raw_urls = re.findall(f'imgL: \[(.*?)\]', raw_urls)[0].split(',')
         return [url.replace('"', '') for url in raw_urls if url != '""']
 
-    def attribute_from_text(self, text, attr, is_string=True):
-        if is_string:
-            return re.findall(f'{attr}":"(.*?)"', text)[0]
-
-        return int(re.findall(f'{attr}":(.*?),', text)[0])
-
-    def sku_colour(self, response):
-        x = "//*[contains(@name, 'oitemxoixtcolour')]/@value"
-        return response.xpath(x).extract()[0]
-
     def skus(self, response):
-        css = 'script:contains(StoreJSON)'
-        raw_skus = response.css(css).re('{.*}')
         skus = {}
         common_sku = self.product_pricing_common(response)
-        common_sku['colour'] = self.sku_colour(response)
+        colour_x = "//*[contains(@name, 'oitemxoixtcolour')]/@value"
+        common_sku['colour'] = clean(response.xpath(colour_x))[0]
 
-        for raw_sku in raw_skus:
+        for raw_sku in response.css('script:contains(StoreJSON)').re('{.*}'):
+            raw_sku = json.loads(f'[{raw_sku}]')
             sku = common_sku.copy()
-            sku['size'] = self.attribute_from_text(raw_sku, 'att1')
-            sku_id = self.attribute_from_text(raw_sku, 'atrsku')
+            size = raw_sku[0]['att1']
+            sku['size'] = 'One Size' if size == 'One Size Only' else size
+            sku_id = raw_sku[1]['atrsku']
 
-            if not self.attribute_from_text(raw_sku, 'atronhand', False):
+            if not raw_sku[1]['atronhand']:
                 sku['out_of_stock'] = True
 
             skus[sku_id] = sku
@@ -105,7 +93,7 @@ class RussellAndBromleyParseSpider(BaseParseSpider):
 
     def colour_requests(self, response):
         css = '#otherColoursMaterials a::attr(href)'
-        urls = response.css(css).extract()
+        urls = clean(response.css(css))
         requests = []
 
         for url in set(urls):
@@ -139,8 +127,8 @@ class RussellAndBromleyCrawlSpider(BaseCrawlSpider):
 
     def product_requests(self, response):
         raw_urls = json.loads(re.findall('{.*}', response.text)[1])
-        raw_urls = Selector(raw_urls['html'])
-        urls = raw_urls.css('.image a::attr(href)').extract()
+        raw_urls = Selector(text=raw_urls['html'])
+        urls = clean(raw_urls.css('.image a::attr(href)'))
         response.meta['trail'] = self.add_trail(response)
 
         requests = []
@@ -157,12 +145,12 @@ class RussellAndBromleyCrawlSpider(BaseCrawlSpider):
             return requests
 
         css = ".pagnNumbers a[rel='next']::attr(href)"
-        page_url = raw_urls.css(css).extract_first()
+        page_url = clean(raw_urls.css(css))
 
         if not page_url:
             return requests
 
-        page_url = f'http://www.russellandbromley.co.uk{page_url}'
+        page_url = f'http://www.russellandbromley.co.uk{page_url[0]}'
         url = add_or_replace_parameter(url, 'pageurl', response.url)
         url = add_or_replace_parameter(url, 'pageurl', page_url)
         requests.append(response.follow(url, callback=self.parse_products, dont_filter=True))
@@ -170,11 +158,8 @@ class RussellAndBromleyCrawlSpider(BaseCrawlSpider):
         return requests
 
     def listing_request(self, response):
-        url = add_or_replace_parameter(self.listing__request_url_t,
-                                       'config_categorytree', self.exract_category(response))
-        url = add_or_replace_parameter(url, 'pageurl', response.url)
+        url = add_or_replace_parameter(self.listing__request_url_t, 'pageurl', response.url)
         url = add_or_replace_parameter(url, 'mergehash', 'true')
-
         category_values = self.exract_category(response)
         url = add_or_replace_parameter(url, 'config_categorytree', category_values[0])
         url = add_or_replace_parameter(url, 'config_parentcategorytree', category_values[1])
