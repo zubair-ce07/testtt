@@ -11,6 +11,8 @@ from .base import BaseCrawlSpider, BaseParseSpider, Gender, clean
 
 class Mixin:
     retailer = 'russellandbromley'
+    listing_request_url_t = 'http://fsm.attraqt.com/zones-js.aspx?' \
+                            'siteId=ba6279ce-57d8-4069-8651-04459b92bceb&zone0=category'
 
 
 class MixinUK(Mixin):
@@ -21,9 +23,9 @@ class MixinUK(Mixin):
 
 
 class RussellAndBromleyParseSpider(BaseParseSpider):
-    brand_css = '.logoBox.grid_5 a::attr(title)'
+    brand_css = '.logoBox a::attr(title)'
     care_css = '.detailsWrapper ::text'
-    raw_description_css = '.invtdesc1 .scrollWrap ::text'
+    raw_description_css = '.invtdesc1 ::text'
     price_css = '.oneProduct .priceField ::text'
 
     def parse(self, response):
@@ -34,7 +36,7 @@ class RussellAndBromleyParseSpider(BaseParseSpider):
             return
 
         self.boilerplate_normal(garment, response)
-        garment['gender'] = self.product_gender(response)
+        garment['gender'] = self.product_gender(garment['category'])
         garment['image_urls'] = self.image_urls(response)
         garment['skus'] = self.skus(response)
 
@@ -43,10 +45,10 @@ class RussellAndBromleyParseSpider(BaseParseSpider):
         return self.next_request_or_garment(garment)
 
     def parse_colour(self, response):
-        item = response.meta['garment']
-        item['skus'].update(self.skus(response))
-        item['image_urls'] += self.image_urls(response)
-        return self.next_request_or_garment(item)
+        garment = response.meta['garment']
+        garment['skus'].update(self.skus(response))
+        garment['image_urls'] += self.image_urls(response)
+        return self.next_request_or_garment(garment)
 
     def product_id(self, response):
         css = '#tag-invtref::text'
@@ -60,16 +62,18 @@ class RussellAndBromleyParseSpider(BaseParseSpider):
         css = '.crumbtrail a::text'
         return clean(response.css(css))[1:]
 
-    def product_gender(self, response):
-        css = '.crumbtrail a::text, .scrollWrap ::text'
-        soup = ' '.join(clean(response.css(css)))
+    def product_gender(self, soup):
+        soup = ' '.join(soup)
         return self.gender_lookup(soup) or Gender.ADULTS.value
 
     def image_urls(self, response):
         css = '#productdetail-altview ~ script:contains(StoreImageSwaps)'
-        raw_urls = clean(response.css(css))[0]
-        raw_urls = re.findall(f'imgL: \[(.*?)\]', raw_urls)[0].split(',')
+        raw_urls = clean(response.css(css).re(f'imgL: \[(.*?)\]'))[0].split(',')
         return [url.replace('"', '') for url in raw_urls if url != '""']
+
+    def raw_skus(self, response):
+        raw_skus = response.css('script:contains(StoreJSON)').re('{.*}')
+        return [json.loads(f'[{raw_sku}]') for raw_sku in raw_skus]
 
     def skus(self, response):
         skus = {}
@@ -77,16 +81,15 @@ class RussellAndBromleyParseSpider(BaseParseSpider):
         colour_x = "//*[contains(@name, 'oitemxoixtcolour')]/@value"
         common_sku['colour'] = clean(response.xpath(colour_x))[0]
 
-        for raw_sku in response.css('script:contains(StoreJSON)').re('{.*}'):
-            raw_sku = json.loads(f'[{raw_sku}]')
+        for raw_sku in self.raw_skus(response):
             sku = common_sku.copy()
             size = raw_sku[0]['att1']
-            sku['size'] = 'One Size' if size == 'One Size Only' else size
-            sku_id = raw_sku[1]['atrsku']
+            sku['size'] = self.one_size if size == 'One Size Only' else size
 
             if not raw_sku[1]['atronhand']:
                 sku['out_of_stock'] = True
 
+            sku_id = raw_sku[1]['atrsku']
             skus[sku_id] = sku
 
         return skus
@@ -94,12 +97,7 @@ class RussellAndBromleyParseSpider(BaseParseSpider):
     def colour_requests(self, response):
         css = '#otherColoursMaterials a::attr(href)'
         urls = clean(response.css(css))
-        requests = []
-
-        for url in set(urls):
-            requests.append(response.follow(url, callback=self.parse_colour))
-
-        return requests
+        return [response.follow(url, callback=self.parse_colour) for url in set(urls)]
 
 
 class RussellAndBromleyCrawlSpider(BaseCrawlSpider):
@@ -115,9 +113,6 @@ class RussellAndBromleyCrawlSpider(BaseCrawlSpider):
         Rule(LinkExtractor(restrict_css=listing_css), callback='parse'),
         Rule(LinkExtractor(restrict_css=sub_listing_css), callback='parse_listing'),
     ]
-
-    listing__request_url_t = 'http://fsm.attraqt.com/zones-js.aspx?' \
-                             'siteId=ba6279ce-57d8-4069-8651-04459b92bceb&zone0=category'
 
     def parse_listing(self, response):
         return self.listing_request(response)
@@ -158,7 +153,7 @@ class RussellAndBromleyCrawlSpider(BaseCrawlSpider):
         return requests
 
     def listing_request(self, response):
-        url = add_or_replace_parameter(self.listing__request_url_t, 'pageurl', response.url)
+        url = add_or_replace_parameter(self.listing_request_url_t, 'pageurl', response.url)
         url = add_or_replace_parameter(url, 'mergehash', 'true')
         category_values = self.exract_category(response)
         url = add_or_replace_parameter(url, 'config_categorytree', category_values[0])
