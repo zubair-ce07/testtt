@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import scrapy
-from docket_spider.items import DocketSpiderItem
+from items import DocketSpiderItem
 import re
 
 
@@ -22,17 +22,14 @@ class DocketSpider(scrapy.Spider):
                 if identifier == "":
                     identifier = row.xpath('string(.//td[1][@class="normal"]//text())').extract()
 
-            val = row.xpath('.//td[last()-1]//text()').extract() or row.xpath('.//td[last()-1]//p//text()').extract()
-            for v in val:
-                value = v
+            filer_names = row.xpath('.//td[last()-1]//text()').extract() or row.xpath('.//td[last()-1]//p//text()').extract()
+            for name in filer_names:
+                value = name
 
-            descrip = row.xpath('.//td[last()-0]//text()')
-            for desc in descrip:
-                description = descrip.extract_first()
+            description = row.xpath('.//td[last()-0]//text()').extract_first()
+            regex = re.compile(r'\d{1,2}\/\d{1,2}\/\/?\d{1,4}')
+            date = regex.findall(description)
 
-                regex = re.compile(r'\d{1,2}\/\d{1,2}\/\/?\d{1,4}')
-                date = regex.findall(description)
-#
             docket['docket_id'] = identifier.strip('').strip().strip(')')
             docket['filer'] = value.strip().strip(')')
             docket['description'] = description.strip()
