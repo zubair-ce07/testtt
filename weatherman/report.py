@@ -3,30 +3,31 @@ from termcolor import colored, cprint
 
 
 class Reports:
+
     """Class for generating reports and printing on to the console"""
 
-    def yearly_weather(self, result):
-
-            """reads the temperature results for the year and displays on the console"""
+    def highest_temp(self, result):
 
             print("Highest {0}C on {1} {2}" .format(result[0].max_temperature, \
                     result[0].date.strftime('%B'), result[0].date.day))
+
+    def lowest_temp(self, result):
+
             print("Lowest: {0}C on {1} {2}" .format(result[1].min_temperature, \
                     result[1].date.strftime('%B'), result[1].date.day ))
+
+    def most_humidty(self, result):
+
             print("Humidity: {0}% on {1} {2} ".format(result[2].max_humidity, \
                     result[2].date.strftime('%B'), result[2].date.day))
 
     def monthly_weather(self, result):
-
-            """reads temperature results for month and displays output on the console"""
 
             print("Highest Average: {0}C ".format(result[0]))
             print("Lowest Average: {0}C ".format(result[1]))
             print("Average Mean Humidity: {0}% ".format(result[2]))
 
     def max_min_bar(self, month, year, result):
-
-        """reads the result and displays graphs """
 
         s = datetime.strptime(month, '%b')
         m = s.strftime('%B')

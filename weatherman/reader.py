@@ -40,14 +40,11 @@ class ReadWeatherData:
         return list_of_records
 
     def read_data_year(self, year):
-        """this function reads files of the specific year"""
         for f in os.listdir(self.path):
             if re.match('.*'+year+'.*', f):
                 self.files.append(f)
 
     def read_data_file_month(self, year, month):
-        """reads files for a specific months and store them in
-            files list"""
         for f in os.listdir(self.path):
             if re.match('.*'+year+'_'+month+'.*', f):
                 self.files.append(f)
