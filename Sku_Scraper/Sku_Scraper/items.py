@@ -15,7 +15,7 @@ def strip_text(text):
 
 
 class Product(scrapy.Item):
-    pid = scrapy.Field(output_processor=TakeFirst())
+    pid = scrapy.Field(input_processor=strip_text, output_processor=TakeFirst())
     gender = scrapy.Field(output_processor=TakeFirst())
     category = scrapy.Field(input_processor=strip_text)
     url = scrapy.Field(output_processor=TakeFirst())
