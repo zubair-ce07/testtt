@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 import scrapy
+from items import DocketSpiderItem
 import re
 
 
@@ -10,32 +10,26 @@ class DocketSpider(scrapy.Spider):
     base_url = 'http://www.ripuc.org/eventsactions/docket.html'
 
     def parse(self, response):
+        docket = DocketSpiderItem()
         identifier = ''
         previous_id = ''
         table = response.xpath('//table[3]//td[@class="normal"]//table[@width = "100%"]/tr')
         for row in table:
-            id = row.xpath('.//td[last()-2]//a//text()').extract() or row.xpath('.//td[last()-2]//text()').extract()
-            for i in id:
+            docket_id = row.xpath('.//td[last()-2]//a//text()').extract() or row.xpath('.//td[last()-2]//text()').extract()
+            for i in docket_id:
                 identifier = i
-                continue
 
-            val = row.xpath('.//td[last()-1]//text()').extract()
-            for v in val:
-                value = v
-                continue
+            filer_names = row.xpath('.//td[last()-1]//text()').extract() or row.xpath('.//td[last()-1]//p//text()').extract()
+            for name in filer_names:
+                value = name
 
-            descrip = row.xpath('.//td[last()-0]//text()')
-            for desc in descrip:
-                description = descrip.extract_first()
-                continue
+            description = row.xpath('.//td[last()-0]//text()').extract_first()
 
-            dates = row.xpath('.//td[last()-0]//text()').re(r'\d{1,2}\/\d{1,2}\/\/?\d{1,4}')
-            date_filed = dates
+            date = row.xpath('.//td[last()-0]//text()').re(r'\d{1,2}\/\d{1,2}\/\/?\d{1,4}')
 
-            yield {
-                'identifier': identifier.strip('').strip().strip(')'),
-                'value': value.strip().strip(')'),
-                'description': description.strip(),
-                'date_filed': date_filed,
-            }
+            docket['docket_id'] = identifier.strip('').strip().strip(')')
+            docket['filer'] = value.strip().strip(')')
+            docket['description'] = description.strip()
+            docket['date'] = date
 
+            yield docket

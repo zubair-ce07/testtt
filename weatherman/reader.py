@@ -22,19 +22,13 @@ class ReadWeatherData:
                 for row in reader:
                     dates = row.get('PKT') or row.get('PKST')
                     date = datetime.strptime(dates, "%Y-%m-%d")
-                    max_temp = row['Max TemperatureC']
-                    mean_tem = row['Mean TemperatureC']
-                    min_tem = row['Min TemperatureC']
-                    max_hum = row['Max Humidity']
-                    mean_hum = row[' Mean Humidity']
-                    min_hum = row[' Min Humidity']
                     record = (Records(date,
-                                      max_temp,
-                                      mean_tem,
-                                      min_tem,
-                                      max_hum,
-                                      mean_hum,
-                                      min_hum))
+                                      row['Max TemperatureC'],
+                                      row['Mean TemperatureC'],
+                                      row['Min TemperatureC'],
+                                      row['Max Humidity'],
+                                      row[' Mean Humidity'],
+                                      row[' Min Humidity']))
                     list_of_records.append((record))
 
         return list_of_records

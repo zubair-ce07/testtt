@@ -5,21 +5,12 @@ class CalculateResults:
 
         def yearly_result(self, list_of_records):
 
-            records = [record for record in list_of_records]
-            max_temp = max(records, key=lambda rec: rec.max_temperature)
-            min_temp = min(records, key=lambda rec: rec.min_temperature)
-            max_humidity = max(records, key=lambda rec: rec.max_humidity)
+            max_temp = max(list_of_records, key=lambda rec: rec.max_temperature)
+            min_temp = min(list_of_records, key=lambda rec: rec.min_temperature)
+            max_humidity = max(list_of_records, key=lambda rec: rec.max_humidity)
             return max_temp, min_temp, max_humidity
 
         def average_result(self, list_of_records):
-
-            max_temperature = []
-            min_temperature = []
-            mean_temperature = []
-            for record in list_of_records:
-                max_temperature.append(record.max_temperature)
-                min_temperature.append(record.min_temperature)
-                mean_temperature.append(record.mean_temperature)
 
             max_temperature = [record.max_temperature for record in list_of_records if record.max_temperature]
             min_temperature = [record.min_temperature for record in list_of_records if record.min_temperature]
@@ -34,8 +25,6 @@ class CalculateResults:
 
         def monthly_graph(self, list_of_records):
 
-            records = [record for record in list_of_records]
-
-            max_temp_highest = max(records, key=lambda record: record.max_temperature)
-            min_temp_lowest = min(records, key=lambda record: record.min_temperature)
+            max_temp_highest = max(list_of_records, key=lambda record: record.max_temperature)
+            min_temp_lowest = min(list_of_records, key=lambda record: record.min_temperature)
             return max_temp_highest, min_temp_lowest
