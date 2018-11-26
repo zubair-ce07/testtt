@@ -3,6 +3,7 @@ import scrapy
 
 class SavagexItem(scrapy.Item):
     brand = scrapy.Field()
+    trail = scrapy.Field()
     category = scrapy.Field()
     description = scrapy.Field()
     gender = scrapy.Field()
@@ -13,3 +14,4 @@ class SavagexItem(scrapy.Item):
     url = scrapy.Field()
     requests = scrapy.Field()
     pass
+

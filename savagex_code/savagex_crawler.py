@@ -1,7 +1,6 @@
 import json
 
-from scrapy import Spider
-from scrapy import Request
+from scrapy import Spider, Request
 from w3lib.url import url_query_parameter, add_or_replace_parameter
 
 from savagex.items import SavagexItem
@@ -14,10 +13,6 @@ class Mixin(Spider):
     CURRENCY = 'USD'
     request_header = {}
     configration_r = '__CONFIG__ = ({.*})'
-
-    def category_request_header(self, response):
-        raw_header = json.loads(response.css('script').re_first(self.configration_r)).get('api')
-        self.request_header[raw_header.get('keyHeader')] = raw_header.get('key')
 
 
 class SavagexParseSpider(Mixin):
@@ -33,6 +28,7 @@ class SavagexParseSpider(Mixin):
         product['url'] = response.url
         product['brand'] = self.BRAND
         product['gender'] = self.GENDER
+        product['trail'] = response.meta.get('trail')
         product['category'] = response.meta.get('category')
         product['name'] = self.product_name(response)
         product['retailer_sku'] = self.product_retailer_sku(response)
@@ -55,11 +51,9 @@ class SavagexParseSpider(Mixin):
         skus = {}
 
         for size in self.color_sizes(raw_product):
-            skus[f'{color}_{size}'] = sku = {
-                'color': color,
-                'size': size,
-            }
-            sku.update(currency_and_price)
+            skus[f'{color}_{size}'] = sku = currency_and_price.copy()
+            sku['color'] = color
+            sku['size'] = size
 
         return skus
 
@@ -113,8 +107,8 @@ class SavagexCrawlSpider(Mixin):
     name = Mixin.retailer + '_crawl'
     product_parser = SavagexParseSpider()
     product_url_t = 'https://www.savagex.com/shop/{link}-{pid}'
-    product_category_url_t = 'https://www.savagex.com/api/products?aggs={aggs}&'\
-        'includeOutOfStock=true&page={page_number}&size=28&defaultProductCategoryIds'\
+    product_category_url_t = 'https://www.savagex.com/api/products?aggs=true&'\
+        'includeOutOfStock=true&page=1&size=28&defaultProductCategoryIds'\
         '={category_id}&sort=newarrivals&excludeFpls=13506&warehouseId=154'
 
     def parse(self, response):
@@ -124,25 +118,31 @@ class SavagexCrawlSpider(Mixin):
 
     def parse_category(self, response):
         yield from self.product_requests(response)
-        yield self.next_page_request(response)
+        
+	yield self.next_page_request(response)
 
     def next_page_request(self, response):
         if not response:
             return
 
+        meta = {'category': response.meta.get('category')}
         url = add_or_replace_parameter(response.url, 'aggs', 'false')
         page_count = int(url_query_parameter(response.url, 'page')) + 1
         url = add_or_replace_parameter(url, 'page', page_count)
 
-        return Request(url=url, callback=self.parse_category, headers=self.request_header)
+        return Request(url=url, callback=self.parse_category, headers=self.request_header, meta=meta)
 
     def product_requests(self, response):
         requests = []
+        category = response.meta.get('category')
+        meta = {
+            'trail': [('', response.url)],
+            'category': category,
+        }
 
         for raw_product in self.raw_products(response):
-            category = response.meta.get('category')
             url = self.product_url_t.format(link=raw_product['permalink'], pid=raw_product['master_product_id'])
-            requests.append(Request(url=url, callback=self.product_parser.parse_product, meta={'category': category}))
+            requests.append(Request(url=url, callback=self.product_parser.parse_product, meta=meta))
 
         return requests
 
@@ -154,12 +154,11 @@ class SavagexCrawlSpider(Mixin):
         return raw_products.get('products') if isinstance(raw_products, dict) else raw_products
 
     def product_category_requests(self, response):
-        product_categories = self.product_categories(response)
+        product_categories = self.map_categories(response)
         requests = []
 
         for category in product_categories:
-            url = self.product_category_url_t.format(
-                aggs='true', page_number=1, category_id=product_categories[category])
+            url = self.product_category_url_t.format(category_id=product_categories[category])
             requests.append(Request(
                 url=url, callback=self.parse_category,
                 meta={'category': category}, headers=self.request_header
@@ -167,10 +166,14 @@ class SavagexCrawlSpider(Mixin):
 
         return requests
 
-    def product_categories(self, response):
+    def map_categories(self, response):
         raw_configrations = json.loads(response.css('script').re_first(self.configration_r))
         raw_category = raw_configrations.get('productBrowser').get('sections')
 
         return {category: raw_category.get(category).get('defaultProductCategoryIds')
                 for category in raw_category.keys()}
+
+    def category_request_header(self, response):
+        raw_header = json.loads(response.css('script').re_first(self.configration_r)).get('api')
+        self.request_header[raw_header.get('keyHeader')] = raw_header.get('key')
 
