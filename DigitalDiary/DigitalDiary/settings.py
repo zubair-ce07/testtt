@@ -28,7 +28,7 @@ SECRET_KEY = '4=883)%e(=1_q5zs^v!&%-yf0$!c8yy5bt*(2a12++j9ul+!3o'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['0.0.0.0', 'localhost', 'digitaldiary42.herokuapp.com']
+ALLOWED_HOSTS = ['0.0.0.0', 'localhost', 'testdigitaldiary.herokuapp.com']
 
 
 
@@ -134,7 +134,7 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
-PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.join(os.path.abspath(__file__))
 STATIC_ROOT = os.path.join(PROJECT_ROOT, 'staticfiles')
 STATIC_URL = '/static/'
 # Extra places for collect static to find static files.
@@ -153,13 +153,13 @@ AUTHENTICATION_BACKENDS = (
 SITE_ID = 1
 
 ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_USERNAME_REQUIRED = True
 
 # Activate Django-Heroku.
 django_heroku.settings(locals())
 
 #  Add configuration for static files storage using whitenoise
-STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # database settings
 prod_db = dj_database_url.config(conn_max_age=500)
