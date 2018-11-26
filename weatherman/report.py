@@ -35,16 +35,16 @@ class Reports:
         lowest_temp = result[0].min_temperature
 
         for i in range(int(highest_temp)):
-            i = cprint('+', 'red', end=' ')
+            cprint('+', 'red', end=' ')
         print('{0}C'.format(str(highest_temp)))
 
         for j in range(int(lowest_temp)):
-            j = cprint('+', 'blue', end=' ')
+            cprint('+', 'blue', end=' ')
         print('{0}C'.format(str(lowest_temp)))
 
         # print one bar graph
         for i in range(int(highest_temp)):
-            i = cprint('+', 'red', end=' ')
+            cprint('+', 'red', end=' ')
         for j in range(int(lowest_temp)):
-            j = cprint('+', 'blue', end=' ')
+            cprint('+', 'blue', end=' ')
         print('{0}C-{1}C'.format(str(highest_temp), str(lowest_temp)))

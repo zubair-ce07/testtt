@@ -1,4 +1,4 @@
-from weather import ReadWeatherData
+from reader import ReadWeatherData
 from calculations import CalculateResults
 from report import Reports
 from datetime import datetime

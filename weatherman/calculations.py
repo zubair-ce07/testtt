@@ -17,9 +17,9 @@ class CalculateResults:
             for record in list_of_records:
                     records.append(record)
 
-            max_temp = max(records, key=lambda rec: int(rec.max_temperature))
-            min_temp = min(records, key=lambda rec: int(rec.min_temperature))
-            max_humidity = max(records, key=lambda rec: int(rec.max_humidity))
+            max_temp = max(records, key=lambda rec: rec.max_temperature)
+            min_temp = min(records, key=lambda rec: rec.min_temperature)
+            max_humidity = max(records, key=lambda rec: rec.max_humidity)
             return max_temp, min_temp, max_humidity
 
         def average_max_min_humid_day(self, list_of_records):
@@ -39,13 +39,8 @@ class CalculateResults:
                 mean_temperature.append(record.mean_temperature)
 
             max_temperature = filter(None, max_temperature)
-            max_temperature = list(map(int, max_temperature))
-
             min_temperature = filter(None, min_temperature)
-            min_temperature = list(map(int, min_temperature))
-
             mean_temperature = filter(None, mean_temperature)
-            mean_temperature = list(map(int, mean_temperature))
 
             avg_max_temp = sum(max_temperature) // len(records)
             avg_min_temp = sum(min_temperature) // len(records)
