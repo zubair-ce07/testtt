@@ -65,6 +65,7 @@ class MixinEG(Mixin):
 class ElabelzParseSpider(BaseParseSpider):
     default_brand = 'Elabelz'
     price_css = '.price-info .price::text'
+    brand_css = '.product-name a::text'
     description_css = '.attribute_description_text ul ::text'
     care_css = '#product-attribute-specs-table ::text'
 
@@ -78,18 +79,11 @@ class ElabelzParseSpider(BaseParseSpider):
 
         self.boilerplate_normal(garment, response)
 
-        garment['brand'] = self.product_brand(response)
         garment['image_urls'] = self.image_urls(response)
         garment['skus'] = self.sku(response)
         garment['gender'] = self.product_gender(garment)
 
         return self.next_request_or_garment(garment)
-
-    def extract_raw_product(self, response):
-        raw_product = clean(response.css('body script::text'))[0]
-        raw_product = raw_product.strip('dataLayer.push(').strip(');').replace('\'', '\"')
-        print(raw_product)
-        return json.loads(json.dumps(raw_product))
 
     def product_id(self, response):
         x = '//th[contains(text(),"SKU ")]/following-sibling::td/text()'
@@ -97,9 +91,6 @@ class ElabelzParseSpider(BaseParseSpider):
 
     def product_name(self, response):
         return clean(response.css('.productnametop::text'))
-
-    def product_brand(self, response):
-        return clean(response.css('.product-name a::text'))
 
     def product_category(self, response):
         css = '.breadcrumbs a:not([title*="Home"])::text'
