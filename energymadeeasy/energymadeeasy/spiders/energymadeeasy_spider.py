@@ -3,7 +3,7 @@ import scrapy
 from logging import warning
 import json
 import csv
-# import termcolor
+import termcolor
 import datetime
 import re
 
@@ -17,6 +17,9 @@ global_arr = set()
 
 class ProductLoader(ItemLoader):
     default_output_processor = TakeFirst()
+
+    raw_discount_and_incentives_out = Identity()
+    raw_restrictions_out = Identity()
 
 
 class EnergymadeeasySpiderSpider(scrapy.Spider):
@@ -218,37 +221,79 @@ class EnergymadeeasySpiderSpider(scrapy.Spider):
         #     self.analyze(response, 'discounts')
         #     self.analyze(response, 'eligibility')
 
-        # self.analyze_multi(response, '#pricing *::text',
+        # self.analyze_multi(response, '*::text',
         #                    ['dual'])
-        # self.analyze(response, 'dual')
 
+        if raw_tarrif:
+            loader.add_value('raw_usage_rates', raw_tarrif)
+        else:
+            raw_usage_rates = []
+            raw_rates = response.css('#pricing .panel__item--chartular th')
+            for raw_rate in raw_rates:
+                raw_text = raw_rate.css('th::text').extract()
+                rate = raw_rate.css('strong::text').extract_first()
+                raw_usage_rates.append({
+                    'name': raw_text[0],
+                    'rates': [{'price': rate + raw_text[-1]}]
+                })
+
+            loader.add_value('raw_usage_rates', {'blocks': raw_usage_rates})
+
+        raw_discounts = []
+
+        for discount in response.xpath('//*[text()="Discounts"]//../../section//li'):
+            raw_discounts.append({
+                'name': discount.css('.panel__list-item::text').extract_first(),
+                'description': discount.css('.panel__list-subtext::text').extract_first(),
+                'value': discount.css('.panel__list-value::text').extract_first(),
+            })
+
+        loader.add_value('raw_discount_and_incentives', raw_discounts)
+        loader.add_value('raw_restrictions', restrictions)
+
+        # if not raw_tarrif:
+        # print(raw_usage_rates)
+        # p_type = response.css(
+        #     '.icon-aer-tariff + span strong::text').extract_first()
+        #
+        # if p_type not in global_arr:
+        #     termcolor.cprint(p_type, color='red')
+        #     global_arr.add(p_type)
+        #     inspect_response(response, self)
+
+        # return raw_tarrif
+
+        # termcolor.cprint(json.dumps(raw_tarrif, indent=2), color='blue')
+        # self.analyze(response, 'summer peak')
+
+        # print('\n\n')
         # for g in global_arr:
         #     termcolor.cprint(g, color='red')
 
         return loader.load_item()
 
-    # def analyze_multi(self, response, target, value):
-    #     source = ''.join(response.css(target).extract())
-    #     if all(v.lower() in source.lower() for v in value):
-    #         termcolor.cprint(value, color='magenta')
-    #         inspect_response(response, self)
+    def analyze_multi(self, response, target, value):
+        source = ''.join(response.css(target).extract())
+        if all(v.lower() in source.lower() for v in value):
+            termcolor.cprint(value, color='magenta')
+            inspect_response(response, self)
 
-    # def analyze(self, response, value):
-    #     if value.lower() in response.text.lower():
-    #         termcolor.cprint(value, color='magenta')
-    #         inspect_response(response, self)
+    def analyze(self, response, value):
+        if value.lower() in response.text.lower():
+            termcolor.cprint(value, color='magenta')
+            inspect_response(response, self)
 
-    # def analyze_re(self, response, value):
-    #     if re.findall(value, response.text):
-    #         termcolor.cprint(value, color='magenta')
-    #         inspect_response(response, self)
+    def analyze_re(self, response, value):
+        if re.findall(value, response.text):
+            termcolor.cprint(value, color='magenta')
+            inspect_response(response, self)
 
-    # def analyze_sensitive(self, response, value):
-    #     if value in response.text:
-    #         termcolor.cprint(value, color='magenta')
-    #         inspect_response(response, self)
+    def analyze_sensitive(self, response, value):
+        if value in response.text:
+            termcolor.cprint(value, color='magenta')
+            inspect_response(response, self)
 
-    # def analyze_css(self, response, value):
-    #     if not response.css(value):
-    #         termcolor.cprint(value, color='magenta')
-    #         inspect_response(response, self)
+    def analyze_css(self, response, value):
+        if not response.css(value):
+            termcolor.cprint(value, color='magenta')
+            inspect_response(response, self)

@@ -39,3 +39,6 @@ class EnergymadeeasyItem(scrapy.Item):
     dual_fuel_discount_off_usage = scrapy.Field()
     db = scrapy.Field()
     minimum_monthly_demand_charged = scrapy.Field()
+    raw_usage_rates = scrapy.Field()
+    raw_discount_and_incentives = scrapy.Field()
+    raw_restrictions = scrapy.Field()
