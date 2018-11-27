@@ -18,8 +18,8 @@ class Mixin:
 
     COLOUR_KEYS = ["色", "カラー", "色彩", "顔色", "ストリーマ", "ストリーマー", "呈色", "色のついた"]
 
-    one_colour = ["ワンカラー"]
-    one_size = ["ワンサイズ"]
+    one_colour = "ワンカラー"
+    one_size = "ワンサイズ"
 
     default_brand = ["rakuten"]
 
@@ -112,7 +112,7 @@ class RakutenParser(Mixin, BaseParseSpider):
             clean(response.css(css_col).extract()))
 
         if not colours:
-            colours = self.one_colour
+            colours = [self.one_colour]
             sizes = [f"{row}/{col}" for row in row_attr for col in col_attr]
         else:
             sizes = row_attr if row_attr else col_attr
