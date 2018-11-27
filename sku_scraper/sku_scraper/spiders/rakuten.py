@@ -17,10 +17,6 @@ class Mixin:
     start_urls = [
         'https://www.rakuten.com/shop/?scid=ebates-home-3&l-id=ebates-home-3'
     ]
-    custom_settings = {
-        'USER_AGENT': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:63.0) '
-                      'Gecko/20100101 Firefox/63.0',
-    }
 
 
 class RakutenParseSpider(Mixin, Spider):
@@ -59,8 +55,7 @@ class RakutenParseSpider(Mixin, Spider):
 
     def extract_care(self, raw_product):
         sel = self.extract_raw_description(raw_product)
-        css = '.b-features ::text'
-        return ' '.join(c.strip() for c in sel.css(css).extract())
+        return ' '.join(c.strip() for c in sel.css('.b-features ::text').extract())
 
     def extract_category(self, raw_product):
         return [raw_product['item']['categoryName']]
@@ -74,8 +69,7 @@ class RakutenParseSpider(Mixin, Spider):
 
     def extract_description(self, raw_product):
         sel = self.extract_raw_description(raw_product)
-        css = '.b-description ::text'
-        return ' '.join(d.strip() for d in sel.css(css).extract())
+        return ' '.join(d.strip() for d in sel.css('.b-description ::text').extract())
 
     def extract_image_urls(self, raw_product):
         return [url['location'] for url in raw_product['item'].get('images') if url.get('location')]
@@ -99,17 +93,18 @@ class RakutenParseSpider(Mixin, Spider):
         raw_skus = raw_product['item'].get('variants', {})
         raw_skus_details = raw_skus.get('variantsInfo', {})
 
+        raw_variants = self.create_detail_maps(raw_skus)
+
         for sku_id, raw_sku in raw_skus_details.items() or [('One Size', raw_product['item'])]:
             sku = pricing(self.extract_money_strings(raw_sku) + self.extract_currency(raw_sku))
 
             if raw_sku.get('soldOut') or raw_sku.get('isSoldOut'):
                 sku['out_of_stock'] = True
 
-            raw_detail_maps = self.create_detail_maps(raw_skus)
             raw_sku = raw_sku.get('value', [])
             sizes = []
             for index, attribute_value in enumerate(raw_sku):
-                attribute, attribute_map = raw_detail_maps[index]
+                attribute, attribute_map = raw_variants[index]
 
                 if 'color' in attribute.lower():
                     sku['colour'] = attribute_map.get(attribute_value)
@@ -126,13 +121,10 @@ class RakutenParseSpider(Mixin, Spider):
 
     def create_detail_maps(self, raw_skus):
         raw_maps = raw_skus.get('variantsObjectWithKey')
-        return [(name, self.reverse_dictionary(map)) for name, map in raw_maps.items()]
+        return [(name, self.reverse_dictionary(raw_map)) for name, raw_map in raw_maps.items()]
 
     def reverse_dictionary(self, dictionary={}):
-        reversed_dict = {}
-        for item in dictionary.items():
-            reversed_dict[item[1]] = item[0]
-        return reversed_dict
+        return {v: k for k, v in dictionary.items()}
 
 
 class RakutenCrawlSpider(Mixin, CrawlSpider):
@@ -148,6 +140,11 @@ class RakutenCrawlSpider(Mixin, CrawlSpider):
         Rule(LinkExtractor(restrict_css=products_css,
                            deny=products_deny), callback='parse_product'),
     )
+
+    custom_settings = {
+        'USER_AGENT': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:63.0) '
+                      'Gecko/20100101 Firefox/63.0',
+    }
 
     product_parser = RakutenParseSpider()
 
