@@ -12,7 +12,8 @@ from .base import BaseCrawlSpider, BaseParseSpider, Gender, clean
 class Mixin:
     retailer = 'russellandbromley'
     listing_request_url_t = 'http://fsm.attraqt.com/zones-js.aspx?' \
-                            'siteId=ba6279ce-57d8-4069-8651-04459b92bceb&zone0=category'
+                            'siteId=ba6279ce-57d8-4069-8651-04459b92bceb&' \
+                            'zone0=category&mergehash=true'
 
 
 class MixinUK(Mixin):
@@ -36,7 +37,7 @@ class RussellAndBromleyParseSpider(BaseParseSpider):
             return
 
         self.boilerplate_normal(garment, response)
-        garment['gender'] = self.product_gender(garment['category'])
+        garment['gender'] = self.product_gender(garment)
         garment['image_urls'] = self.image_urls(response)
         garment['skus'] = self.skus(response)
 
@@ -62,14 +63,14 @@ class RussellAndBromleyParseSpider(BaseParseSpider):
         css = '.crumbtrail a::text'
         return clean(response.css(css))[1:]
 
-    def product_gender(self, soup):
-        soup = ' '.join(soup)
+    def product_gender(self, garment):
+        soup = ' '.join(garment['category'])
         return self.gender_lookup(soup) or Gender.ADULTS.value
 
     def image_urls(self, response):
         css = '#productdetail-altview ~ script:contains(StoreImageSwaps)'
         raw_urls = clean(response.css(css).re(f'imgL: \[(.*?)\]'))[0].split(',')
-        return [url.replace('"', '') for url in raw_urls if url != '""']
+        return [url.strip('"') for url in raw_urls if url != '""']
 
     def raw_skus(self, response):
         raw_skus = response.css('script:contains(StoreJSON)').re('{.*}')
@@ -115,53 +116,35 @@ class RussellAndBromleyCrawlSpider(BaseCrawlSpider):
     ]
 
     def parse_listing(self, response):
-        return self.listing_request(response)
-
-    def parse_products(self, response):
-        return self.product_requests(response)
-
-    def product_requests(self, response):
-        raw_urls = json.loads(re.findall('{.*}', response.text)[1])
-        raw_urls = Selector(text=raw_urls['html'])
-        urls = clean(raw_urls.css('.image a::attr(href)'))
-        response.meta['trail'] = self.add_trail(response)
-
-        requests = []
-
-        for url in urls:
-            request = response.follow(f'http://www.russellandbromley.co.uk{url}',
-                                      callback=self.parse_item)
-            request.meta['trail'] = self.add_trail(response)
-            requests.append(request)
-
-        url = response.meta.get('request_url')
-
-        if not url:
-            return requests
-
-        css = ".pagnNumbers a[rel='next']::attr(href)"
-        page_url = clean(raw_urls.css(css))
-
-        if not page_url:
-            return requests
-
-        page_url = f'http://www.russellandbromley.co.uk{page_url[0]}'
-        url = add_or_replace_parameter(url, 'pageurl', response.url)
-        url = add_or_replace_parameter(url, 'pageurl', page_url)
-        requests.append(response.follow(url, callback=self.parse_products, dont_filter=True))
-
-        return requests
-
-    def listing_request(self, response):
-        url = add_or_replace_parameter(self.listing_request_url_t, 'pageurl', response.url)
-        url = add_or_replace_parameter(url, 'mergehash', 'true')
         category_values = self.exract_category(response)
+        url = add_or_replace_parameter(self.listing_request_url_t, 'pageurl', response.url)
         url = add_or_replace_parameter(url, 'config_categorytree', category_values[0])
         url = add_or_replace_parameter(url, 'config_parentcategorytree', category_values[1])
         url = add_or_replace_parameter(url, 'config_category', category_values[2])
 
         meta = {'request_url': url}
         return response.follow(url, callback=self.parse_products, meta=meta, dont_filter=True)
+
+    def parse_products(self, response):
+        raw_urls_s = json.loads(re.findall('{.*}', response.text)[1])
+        raw_urls_s = Selector(text=raw_urls_s['html'])
+        urls = clean(raw_urls_s.css('.image a::attr(href)'))
+        meta = {'trail': self.add_trail(response)}
+
+        requests = [response.follow(f'http://www.russellandbromley.co.uk{url}',
+                                    callback=self.parse_item, meta=meta.copy())
+                    for url in urls]
+
+        url = response.meta.get('request_url')
+        css = ".pagnNumbers a[rel='next']::attr(href)"
+        page_url = clean(raw_urls_s.css(css))
+
+        if not all([page_url, url]):
+            return requests
+
+        page_url = f'http://www.russellandbromley.co.uk{page_url[0]}'
+        url = add_or_replace_parameter(url, 'pageurl', page_url)
+        return requests + [response.follow(url, callback=self.parse_products, dont_filter=True)]
 
     def exract_category(self, response):
         css = 'script:contains(config)'
