@@ -19,6 +19,9 @@ class Mixin:
     COLOUR_KEYS = ["色", "カラー", "色彩", "顔色", "ストリーマ", "ストリーマー", "呈色", "色のついた"]
 
     one_colour = ["ワンカラー"]
+    one_size = ["ワンサイズ"]
+
+    default_brand = ["rakuten"]
 
 
 class RakutenParser(Mixin, BaseParseSpider):
@@ -36,6 +39,7 @@ class RakutenParser(Mixin, BaseParseSpider):
         self.boilerplate_normal(garment, response)
 
         garment["url"] = response.url
+        garment["brand"] = self.default_brand
         garment["image_urls"] = self.image_urls(response)
         garment["merch_info"] = self.merch_info(garment)
         garment["gender"] = self.product_gender(garment)
@@ -91,6 +95,7 @@ class RakutenParser(Mixin, BaseParseSpider):
         skus_dimension = self.sku_dimensions(response)
         if not skus_dimension:
             sku = self.product_pricing_common(None, money_strs=money_str)
+            sku["size"] = self.one_size
             skus[self.product_id(response)] = sku
             return skus
 
