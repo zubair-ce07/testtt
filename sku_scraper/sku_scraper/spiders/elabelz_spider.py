@@ -76,12 +76,11 @@ class ElabelzParseSpider(BaseParseSpider):
         if not garment:
             return
 
+        self.boilerplate_normal(garment, response)
+
         garment['brand'] = self.product_brand(response)
         garment['image_urls'] = self.image_urls(response)
         garment['skus'] = self.sku(response)
-
-        self.boilerplate_normal(garment, response)
-
         garment['gender'] = self.product_gender(garment)
 
         return self.next_request_or_garment(garment)
