@@ -90,10 +90,15 @@ class RakutenParseSpider(Mixin, Spider):
 
     def extract_skus(self, raw_product):
         skus = {}
-        raw_skus = raw_product['item'].get('variants', {})
+        raw_maps = raw_product['item'].get('variants', {}).get('variantsObjectWithKey', {})
         raw_skus_details = raw_skus.get('variantsInfo', {})
 
-        raw_variants = self.create_detail_maps(raw_skus)
+        size_map_keys = ['Shirts & Tops Size', 'Apparel Size', 'Size',
+                         'Footwear Size', 'Pant Size', 'Apparel Footwear Width']
+        color_map_keys = ['Color', 'Pattern']
+
+        size_map = self.create_maps_by_keys(raw_skus, size_map_keys)
+        color_map = self.create_maps_by_keys(raw_skus, color_map_keys)
 
         for sku_id, raw_sku in raw_skus_details.items() or [('One Size', raw_product['item'])]:
             sku = pricing(self.extract_money_strings(raw_sku) + self.extract_currency(raw_sku))
@@ -103,15 +108,11 @@ class RakutenParseSpider(Mixin, Spider):
 
             raw_sku = raw_sku.get('value', [])
             sizes = []
-            for index, attribute_value in enumerate(raw_sku):
-                attribute, attribute_map = raw_variants[index]
+            for value in raw_sku:
+                sku['colour'] = sku.get('colour', '') + color_map.get(value)
+                sizes.append(size_map.get(value, ''))
 
-                if 'color' in attribute.lower():
-                    sku['colour'] = attribute_map.get(attribute_value)
-                elif 'size' in attribute.lower() or 'width' in attribute.lower():
-                    sizes.append(attribute_map.get(attribute_value))
-
-            sku['size'] = '_'.join(sizes) if sizes else 'One Size'
+            sku['size'] = '_'.join(size for size in sizes if size) if sizes else 'One Size'
             skus[sku_id] = sku
 
         return skus
@@ -119,12 +120,9 @@ class RakutenParseSpider(Mixin, Spider):
     def extract_raw_description(self, raw_product):
         return Selector(text=raw_product['info']['description'])
 
-    def create_detail_maps(self, raw_skus):
+    def create_maps_by_keys(self, raw_skus, map_keys):
         raw_maps = raw_skus.get('variantsObjectWithKey')
-        return [(name, self.reverse_dictionary(raw_map)) for name, raw_map in raw_maps.items()]
-
-    def reverse_dictionary(self, dictionary={}):
-        return {v: k for k, v in dictionary.items()}
+        return {v: k for key in map_keys for k, v in raw_maps.get(key).items()}
 
 
 class RakutenCrawlSpider(Mixin, CrawlSpider):
