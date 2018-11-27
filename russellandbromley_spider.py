@@ -1,7 +1,7 @@
 import json
 import re
 
-from scrapy import Selector
+from scrapy import Request, Selector
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
 from w3lib.url import add_or_replace_parameter
@@ -11,9 +11,9 @@ from .base import BaseCrawlSpider, BaseParseSpider, Gender, clean
 
 class Mixin:
     retailer = 'russellandbromley'
-    listing_request_url_t = 'http://fsm.attraqt.com/zones-js.aspx?' \
-                            'siteId=ba6279ce-57d8-4069-8651-04459b92bceb&' \
-                            'zone0=category&mergehash=true'
+    listing_request_url_t = "http://fsm.attraqt.com/zones-js.aspx?siteId=ba6279ce-57d8-4069-8651-04459b92bceb&" \
+                            "zone0=category&mergehash=true&pageurl={}&config_categorytree={}&" \
+                            "config_parentcategorytree={}&config_category={}"
 
 
 class MixinUK(Mixin):
@@ -117,34 +117,30 @@ class RussellAndBromleyCrawlSpider(BaseCrawlSpider):
 
     def parse_listing(self, response):
         category_values = self.exract_category(response)
-        url = add_or_replace_parameter(self.listing_request_url_t, 'pageurl', response.url)
-        url = add_or_replace_parameter(url, 'config_categorytree', category_values[0])
-        url = add_or_replace_parameter(url, 'config_parentcategorytree', category_values[1])
-        url = add_or_replace_parameter(url, 'config_category', category_values[2])
-
-        meta = {'request_url': url}
-        return response.follow(url, callback=self.parse_products, meta=meta, dont_filter=True)
+        api_request_url = self.listing_request_url_t.format(response.url, category_values[0],
+                                                            category_values[1], category_values[2])
+        meta = {'request_url': api_request_url}
+        return Request(api_request_url, callback=self.parse_products, meta=meta, dont_filter=True)
 
     def parse_products(self, response):
-        raw_urls_s = json.loads(re.findall('{.*}', response.text)[1])
-        raw_urls_s = Selector(text=raw_urls_s['html'])
+        raw_urls = json.loads(re.findall('{.*}', response.text)[1])
+        raw_urls_s = Selector(text=raw_urls['html'])
         urls = clean(raw_urls_s.css('.image a::attr(href)'))
         meta = {'trail': self.add_trail(response)}
 
-        requests = [response.follow(f'http://www.russellandbromley.co.uk{url}',
-                                    callback=self.parse_item, meta=meta.copy())
-                    for url in urls]
+        requests = [Request(f'http://www.russellandbromley.co.uk{url}',
+                            callback=self.parse_item, meta=meta.copy()) for url in urls]
 
-        url = response.meta.get('request_url')
+        api_request_url = response.meta.get('request_url')
         css = ".pagnNumbers a[rel='next']::attr(href)"
-        page_url = clean(raw_urls_s.css(css))
+        next_page_url = clean(raw_urls_s.css(css))
 
-        if not all([page_url, url]):
+        if not all([next_page_url, api_request_url]):
             return requests
 
-        page_url = f'http://www.russellandbromley.co.uk{page_url[0]}'
-        url = add_or_replace_parameter(url, 'pageurl', page_url)
-        return requests + [response.follow(url, callback=self.parse_products, dont_filter=True)]
+        page_url = f'http://www.russellandbromley.co.uk{next_page_url[0]}'
+        api_request_url = add_or_replace_parameter(api_request_url, 'pageurl', page_url)
+        return requests + [Request(api_request_url, callback=self.parse_products, dont_filter=True)]
 
     def exract_category(self, response):
         css = 'script:contains(config)'
