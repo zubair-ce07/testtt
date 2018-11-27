@@ -19,9 +19,6 @@ class Mixin:
         ('أولاد', Gender.BOYS.value),
         ('بنات', Gender.GIRLS.value),
     ]
-    spider_colour_map = [
-        ()
-    ]
 
 
 class MixinUS(Mixin):
