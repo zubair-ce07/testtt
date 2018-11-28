@@ -60,3 +60,4 @@ target/
 .vscode
 
 test.txt
+.scrapy/
