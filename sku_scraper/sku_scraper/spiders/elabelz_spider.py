@@ -128,7 +128,6 @@ class ElabelzUSCrawlSpider(ElabelzCrawlSpider, MixinUS):
 
 class ElabelzAEParseSpider(ElabelzParseSpider, MixinAE):
     name = MixinAE.retailer + '-parse'
-    start_urls = ['https://www.elabelz.com/ar_ae/buy-sacoor-brothers-blue-classic-full-suit-for-men-clothing-417681.html']
 
 
 class ElabelzAECrawlSpider(ElabelzCrawlSpider, MixinAE):
