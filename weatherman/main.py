@@ -24,7 +24,7 @@ def main():
     cal = CalculateResults()
     rep = Reports()
 
-    if args.e:
+    def get_year_result():
         year = args.e
         month = None
         weather.read_data_year(str(year))
@@ -33,7 +33,7 @@ def main():
         rep.lowest_temp(result)
         rep.most_humidty(result)
 
-    elif args.a:
+    def get_monthly_result():
         year_month = datetime.strptime(args.a, '%Y/%m')
         year = year_month.strftime('%Y')
         month = year_month.strftime('%b')
@@ -41,13 +41,22 @@ def main():
         result = cal.average_result(weather.read_data())
         rep.monthly_weather(result)
 
-    elif args.c:
+    def get_graph():
         year_month = datetime.strptime(args.c, '%Y/%m')
         year = year_month.strftime('%Y')
         month = year_month.strftime('%b')
         weather.read_data_file_month(year, month)
         result = cal.monthly_graph(weather.read_data())
         rep.max_min_bar(month, year, result)
+
+    if args.e:
+        get_year_result()
+
+    elif args.a:
+       get_monthly_result()
+
+    elif args.c:
+        get_graph()
 
     else:
         print("Please select correct option")
