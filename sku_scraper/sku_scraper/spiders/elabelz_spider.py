@@ -85,8 +85,7 @@ class ElabelzParseSpider(BaseParseSpider):
         return clean(response.css(css))
 
     def product_gender(self, garment):
-        soup = soupify([garment.get('name', '')] + garment.get('category') +
-                       garment.get('description'))
+        soup = soupify([garment['name']] + garment['category'] + garment['description'])
         return self.gender_lookup(soup) or Gender.ADULTS.value
 
     def skus(self, response):
