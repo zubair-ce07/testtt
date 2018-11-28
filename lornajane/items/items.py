@@ -17,5 +17,5 @@ class LornajaneCrawlerItem(scrapy.Item):
     description = scrapy.Field()
     product_id = scrapy.Field(output_processor=TakeFirst())
     image_urls = scrapy.Field()
-    colors = scrapy.Field(output_processor=TakeFirst())
+    skus = scrapy.Field(output_processor=TakeFirst())
     url = scrapy.Field(output_processor=TakeFirst())
