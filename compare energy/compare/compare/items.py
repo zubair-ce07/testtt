@@ -52,7 +52,10 @@ class CompareItem(scrapy.Item):
     dual_fuel_discount_off_usage = scrapy.Field()#Written in a line and same location as dual_fuel_discount_off_bill
     db = scrapy.Field()
     minimum_monthly_demand_charged = scrapy.Field()#
-
+    vec_discount_summary = scrapy.Field()
+    vec_discount_description = scrapy.Field()
+    vec_tariff_summary = scrapy.Field()
+    vec_tariff_description = scrapy.Field()
 class CompareItemLoader(ItemLoader):
     default_item_class = CompareItem
     default_output_processor = TakeFirst()
@@ -61,3 +64,7 @@ class CompareItemLoader(ItemLoader):
     incentive_type_out = Identity()
     approx_incentive_value_out = Identity()
     other_incentives_out = Identity()
+    vec_discount_summary_out = Identity()
+    vec_discount_description_out = Identity()
+    vec_tariff_summary_out = Identity()
+    vec_tariff_description_out = Identity()

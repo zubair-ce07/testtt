@@ -148,30 +148,44 @@ class CompareElecSpider(scrapy.Spider):
         il.add_xpath("contract_length", "//*[contains(@class, 'contract-table')]//td[contains(text(), 'Contract term')]/../td[2]/text()")
         il.add_xpath("meter_type", common_xpath.format("Rate type:"))
         il.add_xpath("solar", common_xpath.format("Avail. to solar customers"))
-        il.add_xpath("pot_discount_off_usage", "//*[contains(text(), 'Pay on Time Discount')]/../../p[2]/text()")
-        il.add_xpath("pot_discount_off_bill", "//*[contains(text(), 'Pay on Time Discount')]/../../p[2]/text()")
+        # il.add_xpath("pot_discount_off_usage", "//*[contains(text(), 'Pay on Time Discount')]/../../p[2]/text()")
+        # il.add_xpath("pot_discount_off_bill", "//*[contains(text(), 'Pay on Time Discount')]/../../p[2]/text()")
         il.add_xpath("incentive_type", "//*[contains(text(), 'Incentives')]/../td[2]//i/text()")
         il.add_xpath("other_incentives", "//*[contains(text(), 'Incentives')]/../td[2]//i/text()")
         il.add_xpath("approx_incentive_value", "//*[contains(text(), 'Incentives')]/../td[2]/p/text()")
-        il.add_xpath("guaranteed_discount_off_usage", "//*[contains(text(), 'Guaranteed Discount')]/../../p[2]/text()")
-        il.add_xpath("guaranteed_discount_off_bill", "//*[contains(text(), 'Guaranteed Discount')]/../../p[2]/text()")
+        # il.add_xpath("guaranteed_discount_off_usage", "//*[contains(text(), 'Guaranteed Discount')]/../../p[2]/text()")
+        # il.add_xpath("guaranteed_discount_off_bill", "//*[contains(text(), 'Guaranteed Discount')]/../../p[2]/text()")
         il.add_value("etf", "y" if response.xpath("//*[contains(text(), 'Early termination fee')]") else "n")
         il.add_xpath("shoulder", "//*[contains(@class, 'tariff-details')]//p[contains(text(), 'Shoulder')]/../div[contains(@class, 'tariff-separator')]//div[2]/p/strong/text()")
         il.add_xpath("peak_rate", "//*[contains(@class, 'tariff-details')]//p[contains(text(), 'Peak')]/../div[contains(@class, 'tariff-separator')]//div[2]/p/strong/text()")
         il.add_xpath("off_peak_rate", "//*[contains(@class, 'tariff-details')]//p[contains(text(), 'Off-peak')]/../div[contains(@class, 'tariff-separator')]//div[2]/p/strong/text()")
         il.add_xpath("fit", "//*[text()='Feed in Tariff']/../../following::div[contains(@class, 'value')]/p/*/text()")
-        il.add_xpath("dd_discount_off_bill", "//*[text()='Discounts:']/..//*[contains(text(), 'Direct Debit')]/../following::p[1]/text()")
-        il.add_xpath("dd_discount_off_usage", "//*[text()='Discounts:']/..//*[contains(text(), 'Direct Debit')]/../following::p[1]/text()")
-        il.add_xpath("dual_fuel_discount_off_bill", "//*[text()='Discounts:']/../..//*[contains(text(), 'Dual Fuel')]/text()")
-        il.add_xpath("dual_fuel_discount_off_usage", "//*[text()='Discounts:']/../..//*[contains(text(), 'Dual Fuel')]/text()")
+        # il.add_xpath("dd_discountiscoun_off_bill", "//*[text()='Discounts:']/..//*[contains(text(), 'Direct Debit')]/../following::p[1]/text()")
+        # il.add_xpath("dd_discountiscoun_off_usage", "//*[text()='Discounts:']/..//*[contains(text(), 'Direct Debit')]/../following::p[1]/text()")
+        # il.add_xpath("dual_fuel_discouniscount_off_bill", "//*[text()='Discounts:']/../..//*[contains(text(), 'Dual Fuel')]/text()")
+        # il.add_xpath("dual_fuel_discouniscount_off_usage", "//*[text()='Discounts:']/../..//*[contains(text(), 'Dual Fuel')]/text()")
         il.add_xpath("db", common_xpath.format("Distributor:"))
+        il.add_xpath("vec_discount_summary", "//*[text()='Discounts:']/../p/strong/text()")
+        il.add_xpath("vec_discount_description", "//*[text()='Discounts:']/../p[not(strong)]/text()")
+        raw_rates = response.xpath("//*[@class='row offer-rate-header']")
+        for rate in raw_rates[1:]:
+            raw_summary = rate.xpath("descendant-or-self::*[@class]/text()").extract()
+            raw_summary = " ".join([text for text in raw_summary if text.strip(" \n")])
+            il.add_value("vec_tariff_summary", raw_summary)
+        
+        raw_rate_details = response.xpath("//*[@class='row tariff-details']")
+        for detail in raw_rate_details:
+            values = detail.css(".row ::text").extract()
+            values = " ".join([text for text in values if text.strip(" \n")])
+            il.add_value("vec_tariff_description", values)
+
         yield il.load_item()
 
-        discount = response.xpath("//*").extract()
-        discount = "".join(discount).lower()
-        keywords = ["demand charge"]
-        for keyword in keywords:
-            if keyword in discount:# and "agl" not in discount.lower():
-                 print("Found {}".format(keyword))
-                 inspect_response(response, self)
-        # inspect_response(response, self)
+        # discount = response.xpath("//*").extract()
+        # discount = "".join(discount).lower()
+        # keywords = ["demand charge"]
+        # for keyword in keywords:
+        #     if keyword in discount:# and "agl" not in discount.lower():
+        #          print("Found {}".format(keyword))
+        #          inspect_response(response, self)
+        inspect_response(response, self)
