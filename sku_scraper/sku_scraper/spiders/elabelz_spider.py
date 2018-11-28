@@ -49,7 +49,7 @@ class MixinEG(Mixin):
 
 class ElabelzParseSpider(BaseParseSpider):
     default_brand = 'Elabelz'
-    price_css = '.price-info .price::text, .special-price::text'
+    price_css = '.price-box ::text'
     brand_css = '.product-name a::text'
     raw_description_css = '.attribute_description_text ul ::text, '\
                           '#product-attribute-specs-table ::text'
@@ -70,7 +70,7 @@ class ElabelzParseSpider(BaseParseSpider):
         return garment
 
     def product_id(self, response):
-        css = '#product-attribute-specs-table .data::text'
+        css = '#product-attribute-specs-table :contains(SKU) ~ td::text'
         return clean(response.css(css))[0]
 
     def product_name(self, response):
@@ -78,7 +78,7 @@ class ElabelzParseSpider(BaseParseSpider):
 
     def product_category(self, response):
         css = '.breadcrumbs a::text'
-        return clean(response.css(css))
+        return clean(response.css(css))[1:]
 
     def image_urls(self, response):
         css = '#product-gallery-container img::attr(src)'
