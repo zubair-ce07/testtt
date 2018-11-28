@@ -9,8 +9,6 @@ from scrapy.loader.processors import TakeFirst, Identity
 
 from ..items import EnergymadeeasyItem
 
-global_arr = set()
-
 
 class ProductLoader(ItemLoader):
     default_output_processor = TakeFirst()
@@ -39,7 +37,7 @@ class EnergymadeeasySpiderSpider(scrapy.Spider):
             reader = csv.DictReader(f)
             readings = list(reader)
 
-        for reading in readings[::-1]:
+        for reading in readings:
             if reading['type'] == 'E':
                 url = 'https://www.energymadeeasy.gov.au/results.html?' \
                     'postcode={}&fuelType={}&customerType={}&pool={}'.format(
