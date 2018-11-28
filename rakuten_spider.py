@@ -8,7 +8,6 @@ class Mixin:
     allowed_domains = ["rakuten.co.jp"]
     start_urls = ["https://www.rakuten.co.jp"]
 
-    lang = "ja"
     market = "JP"
     retailer = "rakuten-jp"
     default_brand = "rakuten"
@@ -16,10 +15,16 @@ class Mixin:
     merch_map = [
         ("期間限定", "Limited Time"),
         ("送料無料", "Free Shipping")]
-    colour_keys = ["色", "カラー", "色彩", "顔色", "ストリーマ", "ストリーマー", "呈色", "色のついた"]
 
-    one_colour = "ワンカラー"
-    one_size = "ワンサイズ"
+    colour_keys = [
+        "COLOR", "色", "カラー", "色彩", "顔色", "ストリーマ",
+        "ストリーマー", "呈色", "色のついた"]
+
+    size_keys = [
+        "SIZE", "サイズ", "寸法", "大小", "大小", "判",
+        "値", "大きさ"]
+
+    one_colour = "One Colour"
 
 
 class RakutenParser(Mixin, BaseParseSpider):
@@ -38,7 +43,6 @@ class RakutenParser(Mixin, BaseParseSpider):
         self.boilerplate_normal(garment, response)
 
         garment["url"] = response.url
-        garment["brand"] = self.default_brand
         garment["image_urls"] = self.image_urls(response)
         garment["merch_info"] = self.merch_info(garment)
         garment["gender"] = self.product_gender(garment)
@@ -48,7 +52,7 @@ class RakutenParser(Mixin, BaseParseSpider):
         return self.next_request_or_garment(garment)
 
     def product_id(self, response):
-        css = "meta[property='apprakuten:item_id']::attr(content)"
+        css = ".spux-settings-spu::attr(data-item-id)"
         return clean(response.css(css))[0]
 
     def product_name(self, response):
@@ -77,7 +81,6 @@ class RakutenParser(Mixin, BaseParseSpider):
 
     def skus(self, response):
         skus = {}
-        row_attr, col_attr = [], []
         common_sku = self.product_pricing_common(response)
 
         css_row = ".skuDisplayTable table tr:nth-child(1) ::text"
@@ -90,29 +93,37 @@ class RakutenParser(Mixin, BaseParseSpider):
             skus[self.product_id(response)] = sku
             return skus
 
-        row_soup = skus_dimension[0].split()
-        row_check = [key for key in self.colour_keys if key in row_soup]
+        row_soup = skus_dimension[0].lower()
+        col_soup = skus_dimension[-1].lower()
 
-        colours = clean(response.css(css_row)) if row_check else row_attr.extend(
-            clean(response.css(css_row)))
+        row_check_color = [key for key in self.colour_keys if key.lower() in row_soup]
+        row_check_size = [key for key in self.size_keys if key.lower() in row_soup]
 
-        col_soup = skus_dimension[-1].split()
-        col_check = [key for key in self.colour_keys if key in col_soup]
+        colours = clean(response.css(css_row)) if row_check_color else []
+        sizes = clean(response.css(css_row)) if row_check_size else []
 
-        colours = clean(response.css(css_col)) if col_check else col_attr.extend(
-            clean(response.css(css_col)))
+        if len(skus_dimension) > 1:
+            col_check_color = [key for key in self.colour_keys if key.lower() in col_soup]
+            col_check_size = [key for key in self.size_keys if key.lower() in col_soup]
 
+            colours = clean(response.css(css_col)) if col_check_color else colours
+            sizes = clean(response.css(css_col)) if col_check_size else sizes
+
+        if not sizes:
+            sizes.append(self.one_size)
         if not colours:
-            colours = [self.one_colour]
-            sizes = [f"{row}/{col}" for row in row_attr for col in col_attr]
-        else:
-            sizes = row_attr if row_attr else col_attr
+            colours.append(self.detect_colour_from_name(response) or self.one_colour)
 
-        for colour in colours:
-            for size in sizes:
+        for i, colour in enumerate(colours):
+            for j, size in enumerate(sizes):
                 sku = common_sku.copy()
-                sku["colour"] = colour
                 sku["size"] = size
+                sku["colour"] = colour
+
+                availability_css = f".inventory[rownum='{i}'][colnum='{j}'] .sku_cross"
+                if clean(response.css(availability_css)) and sku["colour"] != self.one_colour:
+                    sku["out_of_stock"] = True
+
                 skus[f"{colour}_{size}"] = sku
 
         return skus
@@ -123,10 +134,10 @@ class RakutenCrawler(Mixin, BaseCrawlSpider):
     parse_spider = RakutenParser()
 
     listings_css = [".categoryMenu__l1Container", ".dui-pagination"]
-    product_css = [".aditem"]
+    product_css = [".searchresultitems .dui-card"]
 
-    deny_re = ["review"]
+    deny_re = ["review", "/gold/"]
 
     rules = [
-        Rule(LinkExtractor(restrict_css=listings_css), callback="parse"),
+        Rule(LinkExtractor(restrict_css=listings_css, deny=deny_re), callback="parse"),
         Rule(LinkExtractor(restrict_css=product_css, deny=deny_re), callback="parse_item")]
