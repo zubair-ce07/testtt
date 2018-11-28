@@ -70,7 +70,8 @@ class ElabelzParseSpider(BaseParseSpider):
         return garment
 
     def product_id(self, response):
-        return clean(response.css('td::text'))[0]
+        css = '#product-attribute-specs-table .data::text'
+        return clean(response.css(css))[0]
 
     def product_name(self, response):
         return clean(response.css('.productnametop::text'))[0]
