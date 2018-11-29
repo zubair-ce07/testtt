@@ -116,29 +116,24 @@ class SavagexCrawlSpider(Mixin):
 
         yield from self.product_category_requests(response)
 
-    def parse_category(self, response):
+    def parse_category_pagination(self, response):
         yield from self.product_requests(response)
-        
-	yield self.next_page_request(response)
+        yield self.next_page_request(response)
 
     def next_page_request(self, response):
         if not response:
             return
 
-        meta = {'category': response.meta.get('category')}
+        meta = self.request_meta(response)
         url = add_or_replace_parameter(response.url, 'aggs', 'false')
         page_count = int(url_query_parameter(response.url, 'page')) + 1
         url = add_or_replace_parameter(url, 'page', page_count)
 
-        return Request(url=url, callback=self.parse_category, headers=self.request_header, meta=meta)
+        return Request(url=url, callback=self.parse_category_pagination, headers=self.request_header, meta=meta)
 
     def product_requests(self, response):
         requests = []
-        category = response.meta.get('category')
-        meta = {
-            'trail': [('', response.url)],
-            'category': category,
-        }
+        meta = self.request_meta(response)
 
         for raw_product in self.raw_products(response):
             url = self.product_url_t.format(link=raw_product['permalink'], pid=raw_product['master_product_id'])
@@ -156,15 +151,32 @@ class SavagexCrawlSpider(Mixin):
     def product_category_requests(self, response):
         product_categories = self.map_categories(response)
         requests = []
+        trail = self.requests_trail(response)
+        meta = {'trail': trail}
 
         for category in product_categories:
             url = self.product_category_url_t.format(category_id=product_categories[category])
+            meta['category'] = category
             requests.append(Request(
-                url=url, callback=self.parse_category,
-                meta={'category': category}, headers=self.request_header
+                url=url, callback=self.parse_category_pagination,
+                meta=meta, headers=self.request_header
             ))
 
         return requests
+
+    def requests_trail(self, response):
+        trail = response.meta.get('trail')
+        trail = trail.copy() if trail else []
+        trail.append(('', response.url))
+        return trail
+
+    def request_meta(self, response):
+        category = response.meta.get('category')
+        trail = self.requests_trail(response)
+        return {
+            'category': category,
+            'trail': trail,
+        }
 
     def map_categories(self, response):
         raw_configrations = json.loads(response.css('script').re_first(self.configration_r))
