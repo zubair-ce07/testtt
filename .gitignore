@@ -18,7 +18,6 @@ lib64/
 parts/
 sdist/
 var/
-venv/
 *.egg-info/
 .installed.cfg
 *.egg
@@ -59,8 +58,3 @@ target/
 
 # VSCode
 .vscode
-
-# Scrapy files
-scrapy.cfg
-middlewares.py
-
