@@ -53,7 +53,7 @@ class RakutenParser(Mixin, BaseParseSpider):
         return self.next_request_or_garment(garment)
 
     def product_id(self, response):
-        css = ".spux-settings-spu::attr(data-item-id)"
+        css = "meta[property='apprakuten:item_id']::attr(content)"
         return clean(response.css(css))[0]
 
     def product_name(self, response):
@@ -80,7 +80,7 @@ class RakutenParser(Mixin, BaseParseSpider):
         css = "td[valign='bottom'] .inventory_title::text"
         return clean(response.css(css))
 
-    def colours_and_sizes(self, response, soup, css, colours=[], sizes=[]):
+    def get_attributes(self, response, soup, css, colours=[], sizes=[]):
         check_colour = [key for key in self.colour_keys if key.lower() in soup]
         check_size = [key for key in self.size_keys if key.lower() in soup]
 
@@ -89,12 +89,27 @@ class RakutenParser(Mixin, BaseParseSpider):
 
         return colours, sizes
 
+    def table_skus_content(self, response, common_sku, skus_dimension):
+        css_row = ".skuDisplayTable table tr td:nth-child(1) ::text"
+        css_col = ".skuDisplayTable table tr:nth-child(1) ::text"
+
+        col_soup = skus_dimension[0].lower()
+        colours, sizes = self.get_attributes(response, col_soup, css_col)
+
+        if len(skus_dimension) > 1:
+            row_soup = skus_dimension[-1].lower()
+            colours, sizes = self.get_attributes(response, row_soup, css_row, colours, sizes)
+
+        if not sizes:
+            sizes.append(self.one_size)
+        if not colours:
+            colours.append(self.detect_colour_from_name(response) or self.one_colour)
+
+        return colours, sizes
+
     def skus(self, response):
         skus = {}
         common_sku = self.product_pricing_common(response)
-
-        css_row = ".skuDisplayTable table tr td:nth-child(1) ::text"
-        css_col = ".skuDisplayTable table tr:nth-child(1) ::text"
         skus_dimension = self.sku_dimensions(response)
 
         if not skus_dimension:
@@ -103,17 +118,7 @@ class RakutenParser(Mixin, BaseParseSpider):
             skus[self.product_id(response)] = sku
             return skus
 
-        col_soup = skus_dimension[0].lower()
-        colours, sizes = self.colours_and_sizes(response, col_soup, css_col)
-
-        if len(skus_dimension) > 1:
-            row_soup = skus_dimension[-1].lower()
-            colours, sizes = self.colours_and_sizes(response, row_soup, css_row, colours, sizes)
-
-        if not sizes:
-            sizes.append(self.one_size)
-        if not colours:
-            colours.append(self.detect_colour_from_name(response) or self.one_colour)
+        colours, sizes = self.table_skus_content(response, common_sku, skus_dimension)
 
         for row, colour in enumerate(colours):
             for col, size in enumerate(sizes):
