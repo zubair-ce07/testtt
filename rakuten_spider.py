@@ -32,6 +32,7 @@ class RakutenParser(Mixin, BaseParseSpider):
 
     description_css = "meta[name='description']::attr(content), .item_desc::text"
     price_css = ".price2::text"
+    availability_css = ".inventory[rownum='{0}'][colnum='{1}'] .sku_cross"
 
     def parse(self, response):
         product_id = self.product_id(response)
@@ -79,49 +80,49 @@ class RakutenParser(Mixin, BaseParseSpider):
         css = "td[valign='bottom'] .inventory_title::text"
         return clean(response.css(css))
 
+    def colours_and_sizes(self, response, soup, css, colours=[], sizes=[]):
+        check_colour = [key for key in self.colour_keys if key.lower() in soup]
+        check_size = [key for key in self.size_keys if key.lower() in soup]
+
+        colours = clean(response.css(css)) if check_colour else colours
+        sizes = clean(response.css(css)) if check_size else sizes
+
+        return colours, sizes
+
     def skus(self, response):
         skus = {}
         common_sku = self.product_pricing_common(response)
 
-        css_row = ".skuDisplayTable table tr:nth-child(1) ::text"
-        css_col = ".skuDisplayTable table tr td:nth-child(1) ::text"
-
+        css_row = ".skuDisplayTable table tr td:nth-child(1) ::text"
+        css_col = ".skuDisplayTable table tr:nth-child(1) ::text"
         skus_dimension = self.sku_dimensions(response)
+
         if not skus_dimension:
             sku = common_sku.copy()
             sku["size"] = self.one_size
             skus[self.product_id(response)] = sku
             return skus
 
-        row_soup = skus_dimension[0].lower()
-        col_soup = skus_dimension[-1].lower()
-
-        row_check_color = [key for key in self.colour_keys if key.lower() in row_soup]
-        row_check_size = [key for key in self.size_keys if key.lower() in row_soup]
-
-        colours = clean(response.css(css_row)) if row_check_color else []
-        sizes = clean(response.css(css_row)) if row_check_size else []
+        col_soup = skus_dimension[0].lower()
+        colours, sizes = self.colours_and_sizes(response, col_soup, css_col)
 
         if len(skus_dimension) > 1:
-            col_check_color = [key for key in self.colour_keys if key.lower() in col_soup]
-            col_check_size = [key for key in self.size_keys if key.lower() in col_soup]
-
-            colours = clean(response.css(css_col)) if col_check_color else colours
-            sizes = clean(response.css(css_col)) if col_check_size else sizes
+            row_soup = skus_dimension[-1].lower()
+            colours, sizes = self.colours_and_sizes(response, row_soup, css_row, colours, sizes)
 
         if not sizes:
             sizes.append(self.one_size)
         if not colours:
             colours.append(self.detect_colour_from_name(response) or self.one_colour)
 
-        for i, colour in enumerate(colours):
-            for j, size in enumerate(sizes):
+        for row, colour in enumerate(colours):
+            for col, size in enumerate(sizes):
                 sku = common_sku.copy()
                 sku["size"] = size
                 sku["colour"] = colour
 
-                availability_css = f".inventory[rownum='{i}'][colnum='{j}'] .sku_cross"
-                if clean(response.css(availability_css)) and sku["colour"] != self.one_colour:
+                css = self.availability_css.format(row, col)
+                if clean(response.css(css)) and colour != self.one_colour:
                     sku["out_of_stock"] = True
 
                 skus[f"{colour}_{size}"] = sku
