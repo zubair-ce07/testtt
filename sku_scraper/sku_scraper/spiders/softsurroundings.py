@@ -6,7 +6,7 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule, CrawlSpider
 
 from ..items import Item
-from ..utilities import convert_price_to_integer
+from ..utilities import pricing
 
 
 class SoftsurroundingsParseSpider(Spider):
@@ -54,7 +54,7 @@ class SoftsurroundingsParseSpider(Spider):
             request = item['meta']['requests'].pop()
             request.meta['item'] = item
             return request
-        
+
         del item['meta']
         return item
 
@@ -120,7 +120,7 @@ class SoftsurroundingsParseSpider(Spider):
     def extract_care(self, response):
         care_css = 'div.tabContent > span::text'
         return response.css(care_css).extract()
-    
+
     def extract_image_urls(self, response):
         image_urls_css = 'div.dtlAltThms img::attr(src)'
         return response.css(image_urls_css).extract()
@@ -132,22 +132,6 @@ class SoftsurroundingsParseSpider(Spider):
     def extract_category(self, response):
         category_css = 'div.pagingBreadCrumb *::text'
         return [cat for cat in response.css(category_css).extract() if '/' not in cat]
-
-    def extract_price(self, response):
-        price_css = 'span[itemprop="price"]::text'
-        price = response.css(price_css).extract_first()
-        return convert_price_to_integer(price)
-
-    def extract_currency(self, response):
-        currency_css = 'span[itemprop="priceCurrency"]::attr(content)'
-        return response.css(currency_css).extract_first()
-
-    def extract_previous_price(self, response):
-        previous_price_css = 'div.ctntPrice::text'
-        previous_price = response.css(previous_price_css).extract_first()
-        if previous_price:
-            previous_price = previous_price.split(' ')[1].replace(';', '')[1:]
-            return convert_price_to_integer(previous_price)
 
     def extract_skus(self, response):
         size_css = '#size b.basesize::text'
@@ -162,9 +146,11 @@ class SoftsurroundingsParseSpider(Spider):
         availability_css = 'p.sizetbs.stockStatus b.basesize::text'
         availability = response.css(availability_css).extract_first()
 
-        sku = {}
-        sku['currency'] = self.extract_currency(response)
-        sku['price'] = self.extract_price(response)
+        price_currency_css = 'span[itemprop="price"]::text, div.ctntPrice::text, '\
+                             'span[itemprop="priceCurrency"]::attr(content)'
+
+        sku = pricing(response.css(price_currency_css).extract())
+
         sku['colour'] = colour
         sku['size'] = '/'.join([s for s in [size_type, size] if s])
 
@@ -188,16 +174,16 @@ class SoftsurroundingsCrawlSpider(CrawlSpider):
     listings_x = ['//ul[contains(@class, "categories")]']
     products_x = ['//div[contains(@class, "thmImgWrap")]']
     deny = ['gift-card']
-    
+
     custom_settings = {
-        'DOWNLOAD_DELAY' : '1'
+        'DOWNLOAD_DELAY': '1'
     }
-    
+
     rules = (
         Rule(LinkExtractor(restrict_xpaths=listings_x, deny=deny), callback='parse_pagination'),
         Rule(LinkExtractor(restrict_xpaths=products_x, deny=deny), callback='parse_product'),
     )
-    
+
     product_parser = SoftsurroundingsParseSpider()
 
     def parse_pagination(self, response):
