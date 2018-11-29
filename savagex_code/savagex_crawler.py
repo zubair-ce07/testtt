@@ -10,15 +10,14 @@ class Mixin(Spider):
     retailer = 'savagex'
     allowed_domains = ['savagex.com']
     start_urls = ['http://savagex.com/']
-    CURRENCY = 'USD'
     request_header = {}
-    configration_r = '__CONFIG__ = ({.*})'
 
 
 class SavagexParseSpider(Mixin):
     name = Mixin.retailer + '_parse'
     color_url_t = 'https://www.savagex.com/api/products/{color_id}'
     BRAND = 'Savage x'
+    CURRENCY = 'USD'
     GENDER = 'women'
 
     def parse_product(self, response):
@@ -106,6 +105,7 @@ class SavagexParseSpider(Mixin):
 class SavagexCrawlSpider(Mixin):
     name = Mixin.retailer + '_crawl'
     product_parser = SavagexParseSpider()
+    configuration_r = '__CONFIG__ = ({.*})'
     product_url_t = 'https://www.savagex.com/shop/{link}-{pid}'
     product_category_url_t = 'https://www.savagex.com/api/products?aggs=true&'\
         'includeOutOfStock=true&page=1&size=28&defaultProductCategoryIds'\
@@ -113,10 +113,9 @@ class SavagexCrawlSpider(Mixin):
 
     def parse(self, response):
         self.category_request_header(response)
-
         yield from self.product_category_requests(response)
 
-    def parse_category_pagination(self, response):
+    def parse_category(self, response):
         yield from self.product_requests(response)
         yield self.next_page_request(response)
 
@@ -129,7 +128,7 @@ class SavagexCrawlSpider(Mixin):
         page_count = int(url_query_parameter(response.url, 'page')) + 1
         url = add_or_replace_parameter(url, 'page', page_count)
 
-        return Request(url=url, callback=self.parse_category_pagination, headers=self.request_header, meta=meta)
+        return Request(url=url, callback=self.parse_category, headers=self.request_header, meta=meta)
 
     def product_requests(self, response):
         requests = []
@@ -157,35 +156,27 @@ class SavagexCrawlSpider(Mixin):
         for category in product_categories:
             url = self.product_category_url_t.format(category_id=product_categories[category])
             meta['category'] = category
-            requests.append(Request(
-                url=url, callback=self.parse_category_pagination,
-                meta=meta, headers=self.request_header
-            ))
+            requests.append(Request(url=url, callback=self.parse_category, meta=meta, headers=self.request_header))
 
         return requests
 
     def requests_trail(self, response):
-        trail = response.meta.get('trail')
-        trail = trail.copy() if trail else []
-        trail.append(('', response.url))
-        return trail
+        return response.meta.get('trail', []) + [('', response.url)]
 
     def request_meta(self, response):
-        category = response.meta.get('category')
-        trail = self.requests_trail(response)
         return {
-            'category': category,
-            'trail': trail,
+            'category': response.meta.get('category'),
+            'trail': self.requests_trail(response),
         }
 
     def map_categories(self, response):
-        raw_configrations = json.loads(response.css('script').re_first(self.configration_r))
-        raw_category = raw_configrations.get('productBrowser').get('sections')
+        raw_configurations = json.loads(response.css('script').re_first(self.configuration_r))
+        raw_category = raw_configurations.get('productBrowser').get('sections')
 
         return {category: raw_category.get(category).get('defaultProductCategoryIds')
                 for category in raw_category.keys()}
 
     def category_request_header(self, response):
-        raw_header = json.loads(response.css('script').re_first(self.configration_r)).get('api')
+        raw_header = json.loads(response.css('script').re_first(self.configuration_r)).get('api')
         self.request_header[raw_header.get('keyHeader')] = raw_header.get('key')
 
