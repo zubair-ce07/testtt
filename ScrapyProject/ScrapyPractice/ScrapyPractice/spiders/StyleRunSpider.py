@@ -9,6 +9,8 @@ class StyleRunnerSpider(Spider):
     name = "SRspider"
     domain_url = "https://www.stylerunner.com"
     items = {}
+    item_details_url = "https://www.stylerunner.com/api/items?country=AU&currency=AUD&fieldset=details&include" \
+                       "=facets&language=en&url={}"
 
     def start_requests(self):
         start_url = 'https://www.stylerunner.com/?cur={}&'.format(self.cur)
@@ -19,13 +21,12 @@ class StyleRunnerSpider(Spider):
         url = selectors[-1].xpath("./a/@href").extract_first()
         meta = copy.deepcopy(response.meta)
         meta['category'] = category_level_label
-        if url != "/accessories/giftcards":
-            url = response.urljoin(url) + "?page=1"
-            return Request(
-                url=url,
-                callback=self.parse_categories,
-                meta=meta,
-            )
+        url = response.urljoin(url) + "?page=1"
+        return Request(
+            url=url,
+            callback=self.parse_categories,
+            meta=meta,
+        )
 
     def parse_navigations(self, response):
         for level1 in response.xpath("//ul[@class='header-menu-level1']/li")[1:]:
@@ -38,8 +39,6 @@ class StyleRunnerSpider(Spider):
                     yield self.make_request([level1, level2, level3], response)
 
     def parse_categories(self, response):
-        item_details_url = "https://www.stylerunner.com/api/items?country=AU&currency=AUD&fieldset=details&include" \
-                           "=facets&language=en&url="
         for item in response.css('.facets-item-cell-grid'):
             item_url = item.css('a::attr(href)').extract_first()
             if "Gift" in item_url:
@@ -53,12 +52,16 @@ class StyleRunnerSpider(Spider):
             if product['store_keeping_unit'] not in self.items.keys():
                 self.items[product['store_keeping_unit']] = product
                 yield Request(
-                    url=item_details_url + item_url[1:],
+                    url=self.item_details_url.format(item_url[1:]),
                     callback=self.parse_product,
                     meta={'product': product},
                     dont_filter=True,
                 )
 
+        for req in self.parse_pagination(response):
+            yield req
+
+    def parse_pagination(self, response):
         next_page = response.xpath("//link[@rel='next']/@href").extract_first()
         if next_page:
             yield Request(
@@ -71,7 +74,7 @@ class StyleRunnerSpider(Spider):
     def parse_product(self, response):
         product = response.meta['product']
         details = json.loads(response.text)
-        item = details.get("items",[])
+        item = details.get("items", [])
         if not item:
             return
         item = item[0]
@@ -101,7 +104,7 @@ class StyleRunnerSpider(Spider):
         product['variations'].append(
             VariationItem(
                 display_color_name=item.get('custitem_item_colour', ''),
-                images_urls=[image['url'] for image in item['itemimages_detail']['urls']],
+                images_urls=[image.get('url', '') for image in item['itemimages_detail'].get('urls', [])],
                 sizes=self.size_info(item),
             )
         )
