@@ -1,9 +1,5 @@
-import re
-import json
-
 from scrapy.linkextractors import LinkExtractor
-from scrapy.spiders import Rule, Request
-from scrapy.selector import Selector
+from scrapy.spiders import Rule
 
 from .base import BaseParseSpider, BaseCrawlSpider, clean, soupify, Gender
 
@@ -55,9 +51,7 @@ class ElabelzParseSpider(BaseParseSpider):
                           '#product-attribute-specs-table ::text'
 
     def parse(self, response):
-        product_id = self.product_id(response)
-        garment = self.new_unique_garment(product_id)
-
+        garment = self.new_unique_garment(self.product_id(response))
         if not garment:
             return
 
