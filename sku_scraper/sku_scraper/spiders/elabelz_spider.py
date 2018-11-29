@@ -85,15 +85,13 @@ class ElabelzParseSpider(BaseParseSpider):
     def skus(self, response):
         skus = {}
 
-        colour = clean(response.css('.Color p::text'))[0]
-
         common_sku = self.product_pricing_common(response)
-        common_sku['colour'] = colour
+        common_sku['colour'] = clean(response.css('.Color p::text'))[0]
 
         for size in clean(response.css('.Size span::text')):
             sku = common_sku.copy()
             sku['size'] = self.one_size if size == 'OS' else size
-            skus[f'{sku["size"]}_{colour}'] = sku
+            skus[f'{sku["size"]}_{sku["colour"]}'] = sku
 
         return skus
 
