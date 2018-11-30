@@ -126,6 +126,9 @@ class EnergymadeeasySpiderSpiderElectricity(scrapy.Spider):
         loader.add_xpath('solar_meter_fee', '//*[@id="pricing"]//*[@class="icon-aer-solar-feed"]//'
                                             'following::div[contains(@class, "panel__list")][1]//'
                                             'strong/text()')
+        loader.add_xpath('fit', '//*[@id="pricing"]//*[@class="icon-aer-solar-feed"]//'
+                                'following::div[contains(@class, "panel__list")][1]//'
+                                'strong/text()')
         loader.add_xpath('guaranteed_discount_off_usage',
                          '//*[contains(text(), "Guaranteed discount on total usage")]/'
                          'following::div[@class="panel__list-value"][1]/text()', re=r'[\d\.]+')
@@ -193,6 +196,12 @@ class EnergymadeeasySpiderSpiderElectricity(scrapy.Spider):
 
                 rates.append({title: {'blocks': raw_usage_rates}})
 
+            fields = self.calculate_single_rates(rates)
+
+            if fields:
+                for f in fields.keys():
+                    loader.add_value(f, fields[f])
+
             loader.add_value('raw_usage_rates', rates)
 
         raw_discounts = []
@@ -212,6 +221,31 @@ class EnergymadeeasySpiderSpiderElectricity(scrapy.Spider):
         loader.add_value('controlled_loads', self.fetch_controlled_loads(response))
 
         return loader.load_item()
+
+    @staticmethod
+    def calculate_single_rates(rates):
+        fields = {}
+        if len(rates) != 1:
+            return
+
+        raw_rates = list(rates[0].values())[0]
+
+        for i, rates in enumerate(raw_rates['blocks']):
+            if i == 4:
+                break
+
+            if i == 0:
+                fields['single_rate'] = rates['rates'][0]['price']
+                if len(raw_rates['blocks']) > 1:
+                    fields['peak_step_{}'.format(i + 1)] = rates['name']
+                continue
+
+            fields['peak_rate_{}'.format(i + 1)] = rates['rates'][0]['price']
+
+            if i + 1 != len(raw_rates['blocks']):
+                fields['peak_step_{}'.format(i + 1)] = rates['name']
+
+        return fields
 
     def fetch_controlled_loads(self, response):
         controlled_loads = []

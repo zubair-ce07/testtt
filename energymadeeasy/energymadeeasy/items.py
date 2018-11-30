@@ -45,3 +45,15 @@ class EnergymadeeasyItem(scrapy.Item):
     raw_restrictions = scrapy.Field()
     block_type = scrapy.Field()
     controlled_loads = scrapy.Field()
+
+    single_rate = scrapy.Field()
+
+    peak_step_1 = scrapy.Field()
+    peak_step_2 = scrapy.Field()
+    peak_step_3 = scrapy.Field()
+    peak_step_4 = scrapy.Field()
+
+    peak_rate_1 = scrapy.Field()
+    peak_rate_2 = scrapy.Field()
+    peak_rate_3 = scrapy.Field()
+    peak_rate_4 = scrapy.Field()
