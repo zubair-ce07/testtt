@@ -2,6 +2,7 @@
 import csv
 import datetime
 import json
+import re
 
 import scrapy
 from scrapy.loader import ItemLoader
@@ -15,12 +16,14 @@ class ProductLoader(ItemLoader):
 
     raw_discount_and_incentives_out = Identity()
     raw_restrictions_out = Identity()
+    raw_usage_rates_out = Identity()
 
 
-class EnergymadeeasySpiderSpider(scrapy.Spider):
-    name = 'energymadeeasy_spider'
+class EnergymadeeasySpiderSpiderElectricity(scrapy.Spider):
+    name = 'energymadeeasy_e'
     allowed_domains = ['energymadeeasy.gov.au']
     start_urls = ['https://www.energymadeeasy.gov.au/']
+    filename = 'electricity.csv'
 
     custom_settings = {
         'DOWNLOAD_DELAY': 0.5,
@@ -33,7 +36,7 @@ class EnergymadeeasySpiderSpider(scrapy.Spider):
         pool = 'N'
         gas_heater = 'N'
 
-        with open('data.csv') as f:
+        with open(self.filename) as f:
             reader = csv.DictReader(f)
             readings = list(reader)
 
@@ -42,13 +45,17 @@ class EnergymadeeasySpiderSpider(scrapy.Spider):
                 url = 'https://www.energymadeeasy.gov.au/results.html?' \
                     'postcode={}&fuelType={}&customerType={}&pool={}'.format(
                         reading['zipcode'], reading['type'], customer_type, pool)
-            else:
+            elif reading['type'] == 'G':
                 url = 'https://www.energymadeeasy.gov.au/results.html?' \
                     'postcode={}&fuelType={}&customerType={}&gasHeater={}'.format(
                         reading['zipcode'], reading['type'], customer_type, gas_heater)
+            else:
+                url = 'https://www.energymadeeasy.gov.au/results.html?' \
+                    'postcode={}&fuelType={}&customerType={}&pool={}' \
+                    '&gasHeater={}'.format(reading['zipcode'], reading['type'], customer_type, pool,
+                                           gas_heater)
 
-            request = scrapy.Request(
-                url, callback=self.parse)
+            request = scrapy.Request(url, callback=self.parse)
             request.meta['type'] = reading['type']
             request.meta['zipcode'] = reading['zipcode']
             yield request
@@ -64,10 +71,11 @@ class EnergymadeeasySpiderSpider(scrapy.Spider):
         for result in raw_results['acccResultsData'][response.meta['type']]:
             url = '{}?postcode={}'.format(
                 result['offer']['link'], response.meta['zipcode'])
-            yield response.follow(url, callback=self.parse_product)
+            request = response.follow(url, callback=self.parse_product)
+            request.meta['type'] = response.meta['type']
+            yield request
 
-    @staticmethod
-    def parse_product(response):
+    def parse_product(self, response):
         raw_product = response.xpath(
             '//script[contains(text(), "Drupal")]').re_first(r'{.+}')
         raw_product = json.loads(raw_product)
@@ -93,6 +101,7 @@ class EnergymadeeasySpiderSpider(scrapy.Spider):
             loader.add_value('green_note', ''.join(green_panel.css(
                 'p::text, p strong::text').extract()))
 
+        loader.add_value('energy_plan', response.meta['type'])
         loader.add_value('source', response.url)
         loader.add_value('timestamp', str(datetime.datetime.utcnow()))
         loader.add_value('green', bool(response.css('.icon-aer-green-power')))
@@ -168,17 +177,23 @@ class EnergymadeeasySpiderSpider(scrapy.Spider):
         if raw_tariff:
             loader.add_value('raw_usage_rates', raw_tariff)
         else:
-            raw_usage_rates = []
-            raw_rates = response.css('#pricing .panel__item--chartular th')
-            for raw_rate in raw_rates:
-                raw_text = raw_rate.css('th::text').extract()
-                rate = raw_rate.css('strong::text').extract_first()
-                raw_usage_rates.append({
-                    'name': raw_text[0],
-                    'rates': [{'price': rate + raw_text[-1]}]
-                })
+            rates = []
+            for rate_tables in response.css('[id^="pricing"] .panel__item--chartular'):
+                raw_usage_rates = []
+                raw_rates = rate_tables.css('.panel__item--chartular th')
+                title = rate_tables.css('.panel__item--chartular '
+                                        '.panel__chart-title strong::text').extract_first()
+                for raw_rate in raw_rates:
+                    raw_text = raw_rate.css('th::text').extract()
+                    rate = raw_rate.css('strong::text').extract_first()
+                    raw_usage_rates.append({
+                        'name': raw_text[0],
+                        'rates': [{'price': rate + raw_text[-1]}]
+                    })
 
-            loader.add_value('raw_usage_rates', {'blocks': raw_usage_rates})
+                rates.append({title: {'blocks': raw_usage_rates}})
+
+            loader.add_value('raw_usage_rates', rates)
 
         raw_discounts = []
 
@@ -186,9 +201,59 @@ class EnergymadeeasySpiderSpider(scrapy.Spider):
             raw_discounts.append({
                 'name': discount.css('.panel__list-item::text').extract_first(),
                 'description': discount.css('.panel__list-subtext::text').extract_first(),
+                'description_values': discount.css('.panel__list-subtext::text').re(r'\d+\.?\d*%?'),
                 'value': discount.css('.panel__list-value::text').extract_first(),
             })
 
+        loader.add_css('block_type',
+                       '[id^="pricing"] .panel__item--chartular .panel__subnote strong::text')
+
         loader.add_value('raw_discount_and_incentives', raw_discounts)
+        loader.add_value('controlled_loads', self.fetch_controlled_loads(response))
 
         return loader.load_item()
+
+    def fetch_controlled_loads(self, response):
+        controlled_loads = []
+        raw_controlled_loads = []
+
+        headers = []
+        raw_table = response.xpath('//*[@class="flex-primary"]//*[contains(text(), '
+                                   '"Controlled load charges")]//following::table[1]')
+
+        if raw_table:
+            for header in raw_table.css('table > tr td'):
+                headers.append(header.css('td strong::text').extract_first())
+
+            for row in raw_table.css('tbody tr'):
+                row_data = []
+                for column in row.css('td'):
+                    row_data.append(self.clean(''.join(column.css(' ::text').extract())))
+
+                raw_controlled_loads.append(dict(zip(headers, row_data)))
+
+        # print(json.dumps(raw_controlled_loads, indent=2))
+
+        for i, load in enumerate(raw_controlled_loads):
+            if load.get('Controlled load usage'):
+                controlled_loads.append({
+                    'name': 'Controlled Load {}'.format(i + 1),
+                    'rate': load['Controlled load usage']
+                })
+
+        # print(json.dumps(controlled_loads, indent=2))
+        return controlled_loads
+
+    @staticmethod
+    def clean(value):
+        return re.sub(r'\s+', ' ', value).strip()
+
+
+class EnergymadeeasySpiderSpiderGas(EnergymadeeasySpiderSpiderElectricity):
+    name = 'energymadeeasy_g'
+    filename = 'gas.csv'
+
+
+class EnergymadeeasySpiderSpiderDual(EnergymadeeasySpiderSpiderElectricity):
+    name = 'energymadeeasy_d'
+    filename = 'dual.csv'

@@ -9,6 +9,7 @@ import scrapy
 class EnergymadeeasyItem(scrapy.Item):
     source = scrapy.Field()
     id = scrapy.Field()
+    energy_plan = scrapy.Field()
     timestamp = scrapy.Field()
     effective_from = scrapy.Field()
     retailer = scrapy.Field()
@@ -42,3 +43,5 @@ class EnergymadeeasyItem(scrapy.Item):
     raw_usage_rates = scrapy.Field()
     raw_discount_and_incentives = scrapy.Field()
     raw_restrictions = scrapy.Field()
+    block_type = scrapy.Field()
+    controlled_loads = scrapy.Field()
