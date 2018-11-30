@@ -34,11 +34,12 @@ class CapucParseSpider(scrapy.Spider):
         yield Request(self.proceeding_filings_url_t, meta={'item': item}, callback=self.parse_proceeding_filings)
 
     def parse_proceeding_filings(self, response):
-        filings = {}
+
         item = response.meta['item']
 
         proceeding_filings = response.css('.apexir_WORKSHEET_DATA')
         for raw_filing in proceeding_filings.css('tr'):
+            filings = {}
             filings['filed_on'] = self.extract_filing_date(raw_filing)
             filings['source_filing_parties'] = self.extract_filing_parties(raw_filing)
             filings['description'] = self.extract_filing_description(raw_filing)
@@ -46,18 +47,21 @@ class CapucParseSpider(scrapy.Spider):
 
             item['meta'].append(filings)
 
+        item['meta'].pop(0)
         return self.next_filing_or_item(item)
 
     def next_filing_or_item(self, item):
+
         if item['meta']:
             filing = item['meta'].pop(0)
-            if filing['meta']:
+            if filing['meta'].get('docs_request'):
                 request = filing['meta'].get('docs_request')
                 request.meta['item'] = item
                 request.meta['filing'] = filing
                 yield request
 
         else:
+            del item['meta']
             yield item
 
     def extract_filing_docs(self, response):
@@ -75,7 +79,7 @@ class CapucParseSpider(scrapy.Spider):
             filing['extension'] = filing['source_url'].split('.')[-1]
             filing['name'] = filing['source_url'].split('/')[-1]
 
-
+        del filing['meta']
         item['filings'].append(filing)
 
         return self.next_filing_or_item(item)
@@ -111,13 +115,16 @@ class CapucParseSpider(scrapy.Spider):
         return response.css('#P56_CATEGORY::text').extract_first()
 
     def extract_filing_date(self, raw_filing):
-        return raw_filing.css('td[headers="FILING_DATE"]::text').extract_first()
+        if raw_filing.css('td[headers="FILING_DATE"]::text').extract_first():
+            return raw_filing.css('td[headers="FILING_DATE"]::text').extract_first()
 
     def extract_filing_parties(self, raw_filing):
-        return raw_filing.css('td[headers="FILED_BY"]::text').extract_first()
+        if raw_filing.css('td[headers="FILED_BY"]::text').extract_first():
+            return raw_filing.css('td[headers="FILED_BY"]::text').extract_first()
 
     def extract_filing_description(self, raw_filing):
-        return raw_filing.css('td[headers="DESCRIPTION"]::text').extract_first()
+        if raw_filing.css('td[headers="DESCRIPTION"]::text').extract_first():
+            return raw_filing.css('td[headers="DESCRIPTION"]::text').extract_first()
 
     def extract_docs_requests(self, raw_filing):
         if raw_filing.css('td[headers="DOCUMENT_TYPE"] a::attr(href)').extract_first():
@@ -183,6 +190,7 @@ class SavageCrawlSpider(CrawlSpider):
             yield Request('{}:{}'.format(self.proceeding_url_t, proceeding), callback=self.capuc_parser.parse)
 
     def extract_proceeding_ids(self, response):
+        proceedings = []
         soup = BeautifulSoup(response.body, "html.parser")
         raw_proceedings = soup.find_all("td", class_="ResultTitleTD")
         for rp in raw_proceedings:
@@ -190,5 +198,6 @@ class SavageCrawlSpider(CrawlSpider):
             clean_proceeding = remove_tags(proceeding)
             raw_proceeding_ids = re.findall((r": [A-Z].*[0-9]"), clean_proceeding)
             proceeding_ids = raw_proceeding_ids[0].split(';')
+            proceedings.append(proceeding_ids[0].strip(': '))
 
-            return [proceeding.strip(': ') for proceeding in proceeding_ids]
+        return proceedings
