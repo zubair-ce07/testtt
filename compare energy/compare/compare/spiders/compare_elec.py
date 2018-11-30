@@ -8,13 +8,15 @@ from scrapy.shell import inspect_response
 
 from ..items import CompareItemLoader
 
-custom_settings = {
-    "CONCURRENT_REQUESTS": 1,
-    "COOKIES_ENABLED": False,
-    "DOWNLOAD_DELAY": 0.5
-}
 class CompareElecSpider(scrapy.Spider):
-    name = 'compare_elec'
+
+    custom_settings = {
+        "DOWNLOAD_DELAY": 0.5,
+        "FEED_EXPORT_ENCODING": "utf-8"
+    }
+
+    filename = "electricity.csv"
+    name = 'compare_elec_electricity'
     allowed_domains = ['compare.energy.vic.gov.au']
     start_urls = ['http://compare.energy.vic.gov.au/']
 
@@ -49,7 +51,7 @@ class CompareElecSpider(scrapy.Spider):
     def start_requests(self):
         requests = []
         url = "http://compare.energy.vic.gov.au/"
-        with open('input.csv', 'r') as f:
+        with open(self.filename, 'r') as f:
             locations = list(csv.DictReader(f))
         
         for jar_index, location in enumerate(locations):
@@ -72,10 +74,10 @@ class CompareElecSpider(scrapy.Spider):
                         "cookiejar": jar_index
                     },
                     callback=self.parse, dont_filter=True))
+        
         return requests
 
     def parse(self, response):
-        # inspect_response(response, self)
         form_data = {
             "energy_category": response.meta["type"],
             "location": "home",
@@ -94,7 +96,6 @@ class CompareElecSpider(scrapy.Spider):
         formdata=form_data, callback=self.parse_questions, meta=response.meta, dont_filter=True)
 
     def parse_questions(self, response):
-        # inspect_response(response, self)
         form_data={
             "person-count": "1",
             "room-count": "1",
@@ -120,22 +121,24 @@ class CompareElecSpider(scrapy.Spider):
         formdata=form_data, callback=self.parse_result_page, meta=response.meta, dont_filter=True)
 
     def parse_result_page(self, response):
-        # inspect_response(response, self)
-        yield scrapy.Request(url="https://compare.energy.vic.gov.au/service/offers", callback=self.parse_results, meta=response.meta, dont_filter=True)
+        yield scrapy.Request(url="https://compare.energy.vic.gov.au/service/offers",
+         callback=self.parse_results, meta=response.meta, dont_filter=True)
     
     def parse_results(self, response):
         all_results = json.loads(response.text)["offersList"]
         for result in all_results:
             key = result["offerDetails"][0]["offerKey"]
-            # if result["offerDetails"][0]["offerId"] == "DOD66811MR":
             response.meta["offer_json"] = json.dumps(result["offerDetails"][0])
             yield scrapy.Request(url="https://compare.energy.vic.gov.au/modal/offers/{}".format(key),
             callback=self.parse_result, meta=response.meta, dont_filter=True)
     
+
     def parse_result(self, response):
         offer_data = json.loads(response.meta["offer_json"])
         common_xpath = "//*[contains(text(),'{}')]/../td[2]/text()"
         il = CompareItemLoader(response=response)
+        
+        il.add_value("energy_plan", response.meta["type"])
         il.add_value("source", response.url)
         il.add_xpath("id", common_xpath.format("Offer ID:"))
         il.add_value("timestamp", str(datetime.datetime.utcnow()))
@@ -145,28 +148,26 @@ class CompareElecSpider(scrapy.Spider):
         il.add_css("supply", ".supply-charge .value::text")
         il.add_value("green", "y" if offer_data["greenPower"] else "n")
         il.add_value("green_note", offer_data["greenPower"])
-        il.add_xpath("contract_length", "//*[contains(@class, 'contract-table')]//td[contains(text(), 'Contract term')]/../td[2]/text()")
+        
+        il.add_xpath("contract_length", "//*[contains(@class, 'contract-table')]//"
+                                        "td[contains(text(), 'Contract term')]/../td[2]/text()")
         il.add_xpath("meter_type", common_xpath.format("Rate type:"))
         il.add_xpath("solar", common_xpath.format("Avail. to solar customers"))
-        # il.add_xpath("pot_discount_off_usage", "//*[contains(text(), 'Pay on Time Discount')]/../../p[2]/text()")
-        # il.add_xpath("pot_discount_off_bill", "//*[contains(text(), 'Pay on Time Discount')]/../../p[2]/text()")
         il.add_xpath("incentive_type", "//*[contains(text(), 'Incentives')]/../td[2]//i/text()")
         il.add_xpath("other_incentives", "//*[contains(text(), 'Incentives')]/../td[2]//i/text()")
         il.add_xpath("approx_incentive_value", "//*[contains(text(), 'Incentives')]/../td[2]/p/text()")
-        # il.add_xpath("guaranteed_discount_off_usage", "//*[contains(text(), 'Guaranteed Discount')]/../../p[2]/text()")
-        # il.add_xpath("guaranteed_discount_off_bill", "//*[contains(text(), 'Guaranteed Discount')]/../../p[2]/text()")
         il.add_value("etf", "y" if response.xpath("//*[contains(text(), 'Early termination fee')]") else "n")
-        il.add_xpath("shoulder", "//*[contains(@class, 'tariff-details')]//p[contains(text(), 'Shoulder')]/../div[contains(@class, 'tariff-separator')]//div[2]/p/strong/text()")
-        il.add_xpath("peak_rate", "//*[contains(@class, 'tariff-details')]//p[contains(text(), 'Peak')]/../div[contains(@class, 'tariff-separator')]//div[2]/p/strong/text()")
+        il.add_xpath("shoulder", "//*[contains(@class, 'tariff-details')]//p[contains(text(),"
+                                 " 'Shoulder')]/../div[contains(@class, 'tariff-separator')]//div[2]/p/strong/text()")
+        il.add_xpath("peak_rate", "//*[contains(@class, 'tariff-details')]//p[contains(text(), 'Peak')]"
+                                  "/../div[contains(@class, 'tariff-separator')]//div[2]/p/strong/text()")
+        
         il.add_xpath("off_peak_rate", "//*[contains(@class, 'tariff-details')]//p[contains(text(), 'Off-peak')]/../div[contains(@class, 'tariff-separator')]//div[2]/p/strong/text()")
         il.add_xpath("fit", "//*[text()='Feed in Tariff']/../../following::div[contains(@class, 'value')]/p/*/text()")
-        # il.add_xpath("dd_discountiscoun_off_bill", "//*[text()='Discounts:']/..//*[contains(text(), 'Direct Debit')]/../following::p[1]/text()")
-        # il.add_xpath("dd_discountiscoun_off_usage", "//*[text()='Discounts:']/..//*[contains(text(), 'Direct Debit')]/../following::p[1]/text()")
-        # il.add_xpath("dual_fuel_discouniscount_off_bill", "//*[text()='Discounts:']/../..//*[contains(text(), 'Dual Fuel')]/text()")
-        # il.add_xpath("dual_fuel_discouniscount_off_usage", "//*[text()='Discounts:']/../..//*[contains(text(), 'Dual Fuel')]/text()")
         il.add_xpath("db", common_xpath.format("Distributor:"))
         il.add_xpath("vec_discount_summary", "//*[text()='Discounts:']/../p/strong/text()")
         il.add_xpath("vec_discount_description", "//*[text()='Discounts:']/../p[not(strong)]/text()")
+        
         raw_rates = response.xpath("//*[@class='row offer-rate-header']")
         for rate in raw_rates[1:]:
             raw_summary = rate.xpath("descendant-or-self::*[@class]/text()").extract()
@@ -181,11 +182,7 @@ class CompareElecSpider(scrapy.Spider):
 
         yield il.load_item()
 
-        # discount = response.xpath("//*").extract()
-        # discount = "".join(discount).lower()
-        # keywords = ["demand charge"]
-        # for keyword in keywords:
-        #     if keyword in discount:# and "agl" not in discount.lower():
-        #          print("Found {}".format(keyword))
-        #          inspect_response(response, self)
-        inspect_response(response, self)
+class CompareElecSpiderSecond(CompareElecSpider):
+
+    filename = "gas.csv"
+    name = 'compare_elec_gas'

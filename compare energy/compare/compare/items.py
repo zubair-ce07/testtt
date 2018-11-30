@@ -4,13 +4,16 @@
 #
 # See documentation in:
 # https://doc.scrapy.org/en/latest/topics/items.html
+import re
 
 import scrapy
 from scrapy.loader import ItemLoader
 from scrapy.loader.processors import TakeFirst, Identity
 
+
+
 def _clean_in(self, values):
-    return [value.strip("\n ") if type(value) == str else value for value in values]
+    return [re.sub(r'[ \t]+', ' ', val).strip(' \n') for val in values if type(val)==str]
 
 # def _option(self, values):
 #     for value in values:
@@ -22,6 +25,7 @@ def _clean_in(self, values):
 class CompareItem(scrapy.Item):
     source = scrapy.Field()
     id = scrapy.Field()
+    energy_plan = scrapy.Field() 
     timestamp = scrapy.Field()
     effective_from = scrapy.Field()
     retailer = scrapy.Field()
@@ -56,6 +60,7 @@ class CompareItem(scrapy.Item):
     vec_discount_description = scrapy.Field()
     vec_tariff_summary = scrapy.Field()
     vec_tariff_description = scrapy.Field()
+    
 class CompareItemLoader(ItemLoader):
     default_item_class = CompareItem
     default_output_processor = TakeFirst()
