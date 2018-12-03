@@ -129,24 +129,6 @@ class EnergymadeeasySpiderSpiderElectricity(scrapy.Spider):
         loader.add_xpath('fit', '//*[@id="pricing"]//*[@class="icon-aer-solar-feed"]//'
                                 'following::div[contains(@class, "panel__list")][1]//'
                                 'strong/text()')
-        loader.add_xpath('guaranteed_discount_off_usage',
-                         '//*[contains(text(), "Guaranteed discount on total usage")]/'
-                         'following::div[@class="panel__list-value"][1]/text()', re=r'[\d\.]+')
-        loader.add_xpath('guaranteed_discount_off_bill',
-                         '//*[contains(text(), "Guaranteed discount on total bill")]/'
-                         'following::div[@class="panel__list-value"][1]/text()', re=r'[\d\.]+')
-        loader.add_xpath('pot_discount_off_usage',
-                         '//*[contains(text(), "Pay on time discount on total usage")]/'
-                         'following::div[@class="panel__list-value"][1]/text()', re=r'[\d\.]+')
-        loader.add_xpath('pot_discount_off_bill',
-                         '//*[contains(text(), "Pay on time discount on total bill")]/'
-                         'following::div[@class="panel__list-value"][1]/text()', re=r'[\d\.]+')
-        loader.add_xpath('dd_discount_off_usage',
-                         '//*[contains(text(), "Direct debit discount on total usage")]/'
-                         'following::div[@class="panel__list-value"][1]/text()', re=r'[\d\.]+')
-        loader.add_xpath('dd_discount_off_bill',
-                         '//*[contains(text(), "Direct debit discount on total bill")]/'
-                         'following::div[@class="panel__list-value"][1]/text()', re=r'[\d\.]+')
         loader.add_xpath('minimum_monthly_demand_charged',
                          '//*[@id="pricing"]//*[contains(text(), "Demand charges")]/'
                          '../..//*[contains(text(), "minimum demand")]/text()')
@@ -217,6 +199,11 @@ class EnergymadeeasySpiderSpiderElectricity(scrapy.Spider):
         loader.add_css('block_type',
                        '[id^="pricing"] .panel__item--chartular .panel__subnote strong::text')
 
+        discounts = self.fetch_discounts(raw_discounts)
+
+        for d in discounts.keys():
+            loader.add_value(d, discounts[d])
+
         loader.add_value('raw_discount_and_incentives', raw_discounts)
         loader.add_value('controlled_loads', self.fetch_controlled_loads(response))
 
@@ -281,6 +268,45 @@ class EnergymadeeasySpiderSpiderElectricity(scrapy.Spider):
     @staticmethod
     def clean(value):
         return re.sub(r'\s+', ' ', value).strip()
+
+    @staticmethod
+    def fetch_discounts(raw_discounts):
+        discounts = {}
+
+        for raw_discount in raw_discounts:
+            name = raw_discount['name'].lower()
+            value = raw_discount['value']
+
+            if not value and raw_discount['description_values']:
+                value = raw_discount['description_values'][0]
+
+            if 'guaranteed discount' in name:
+                if 'usage' in name:
+                    discounts['guaranteed_discount_off_usage'] = value
+                elif 'bill' in name:
+                    discounts['guaranteed_discount_off_bill'] = value
+            elif 'pay on time' in name:
+                if 'usage' in name:
+                    discounts['pot_discount_off_usage'] = value
+                elif 'bill' in name:
+                    discounts['pot_discount_off_bill'] = value
+            elif 'direct debit' in name:
+                if 'usage' in name:
+                    discounts['dd_discount_off_usage'] = value
+                elif 'bill' in name:
+                    discounts['dd_discount_off_bill'] = value
+            elif re.findall(r'e.?bill', name):
+                if 'usage' in name:
+                    discounts['e_bill_discount_off_usage'] = value
+                elif 'bill' in name:
+                    discounts['e_bill_discount_off_bill'] = value
+            elif 'dual' in name:
+                if 'usage' in name:
+                    discounts['dual_fuel_discount_off_usage'] = value
+                elif 'bill' in name:
+                    discounts['dual_fuel_discount_off_bill'] = value
+
+        return discounts
 
 
 class EnergymadeeasySpiderSpiderGas(EnergymadeeasySpiderSpiderElectricity):
