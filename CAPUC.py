@@ -31,7 +31,8 @@ class CapucParseSpider(scrapy.Spider):
         item['filings'] = []
         item['meta'] = []
 
-        yield Request(self.proceeding_filings_url_t, meta={'item': item}, callback=self.parse_proceeding_filings)
+        yield Request(self.proceeding_filings_url_t, meta={'item': item}, dont_fiter=True,
+                      callback=self.parse_proceeding_filings)
 
     def parse_proceeding_filings(self, response):
 
