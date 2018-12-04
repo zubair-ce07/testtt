@@ -9,12 +9,6 @@ from .base import BaseCrawlSpider, BaseParseSpider, Gender, clean
 class Mixin:
     retailer = 'aloyoga'
     default_brand = 'Alo Yoga'
-    allowed_domains = [
-        'www.aloyoga.com'
-    ]
-    start_urls = [
-        'https://www.aloyoga.com/'
-    ]
     spider_one_sizes = ['1']
     merch_info_map = [
         ('limited-edition', 'Limited Edition')
@@ -23,15 +17,20 @@ class Mixin:
 
 class MixinUS(Mixin):
     retailer = Mixin.retailer + '-us'
-    lang = 'en'
     market = 'US'
+    allowed_domains = [
+        'www.aloyoga.com'
+    ]
+    start_urls = [
+        'https://www.aloyoga.com/'
+    ]
 
 
 class AloYogaParseSpider(BaseParseSpider):
-    care_css = '#fit p::text'
     price_css = '.main-product-info .price-discount ::text, ' \
                 '.main-product-info .price-old ::text'
     raw_description_css = '#description ::text'
+    care_css = '#fit p::text'
 
     def parse(self, response):
         raw_product = self.raw_product(response)
@@ -102,7 +101,7 @@ class AloYogaParseSpider(BaseParseSpider):
 class AloYogaCrawlSpider(BaseCrawlSpider):
     listings_css = [
         '.nav-link.nav-link-main',
-        '.pagination a'
+        '.pagination'
     ]
     products_css = [
         '.product-list-wrapper'
