@@ -253,8 +253,6 @@ class EnergymadeeasySpiderElectricity(scrapy.Spider):
 
                 raw_controlled_loads.append(dict(zip(headers, row_data)))
 
-        # print(json.dumps(raw_controlled_loads, indent=2))
-
         for i, load in enumerate(raw_controlled_loads):
             if load.get('Controlled load usage'):
                 controlled_loads.append({
@@ -262,7 +260,6 @@ class EnergymadeeasySpiderElectricity(scrapy.Spider):
                     'rate': load['Controlled load usage']
                 })
 
-        # print(json.dumps(controlled_loads, indent=2))
         return controlled_loads
 
     @staticmethod
