@@ -19,7 +19,7 @@ class ProductLoader(ItemLoader):
     raw_usage_rates_out = Identity()
 
 
-class EnergymadeeasySpiderSpiderElectricity(scrapy.Spider):
+class EnergymadeeasySpiderElectricity(scrapy.Spider):
     name = 'energymadeeasy_e'
     allowed_domains = ['energymadeeasy.gov.au']
     start_urls = ['https://www.energymadeeasy.gov.au/']
@@ -274,6 +274,9 @@ class EnergymadeeasySpiderSpiderElectricity(scrapy.Spider):
         discounts = {}
 
         for raw_discount in raw_discounts:
+            if not raw_discount['name']:
+                continue
+
             name = raw_discount['name'].lower()
             value = raw_discount['value']
 
@@ -309,11 +312,11 @@ class EnergymadeeasySpiderSpiderElectricity(scrapy.Spider):
         return discounts
 
 
-class EnergymadeeasySpiderSpiderGas(EnergymadeeasySpiderSpiderElectricity):
+class EnergymadeeasySpiderGas(EnergymadeeasySpiderElectricity):
     name = 'energymadeeasy_g'
     filename = 'gas.csv'
 
 
-class EnergymadeeasySpiderSpiderDual(EnergymadeeasySpiderSpiderElectricity):
+class EnergymadeeasySpiderDual(EnergymadeeasySpiderElectricity):
     name = 'energymadeeasy_d'
     filename = 'dual.csv'
