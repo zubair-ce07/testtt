@@ -10,10 +10,10 @@ class Mixin:
     retailer = 'aloyoga'
     default_brand = 'Alo Yoga'
     allowed_domains = [
-        'www.aloyoga.com',
+        'www.aloyoga.com'
     ]
     start_urls = [
-        'https://www.aloyoga.com/',
+        'https://www.aloyoga.com/'
     ]
     spider_one_sizes = ['1']
     merch_info_map = [
@@ -109,7 +109,7 @@ class AloYogaCrawlSpider(BaseCrawlSpider):
     ]
     rules = (
         Rule(LinkExtractor(restrict_css=listings_css), callback='parse'),
-        Rule(LinkExtractor(restrict_css=products_css, ), callback='parse_item')
+        Rule(LinkExtractor(restrict_css=products_css), callback='parse_item')
     )
 
 
