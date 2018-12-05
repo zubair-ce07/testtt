@@ -156,7 +156,9 @@ class SavagexCrawlSpider(Mixin):
         for category in product_categories:
             url = self.product_category_url_t.format(category_id=product_categories[category])
             meta['category'] = category
-            requests.append(Request(url=url, callback=self.parse_category, meta=meta.copy(), headers=self.request_header))
+            requests.append(
+                Request(url=url, callback=self.parse_category, meta=meta.copy(), headers=self.request_header)
+            )
 
         return requests
 
