@@ -78,8 +78,7 @@ class AloYogaParseSpider(BaseParseSpider):
 
     def merch_info(self, garment):
         soup = garment['name'].lower()
-        return [merch for merch_str, merch in self.merch_info_map
-                if merch_str in soup]
+        return [merch for merch_str, merch in self.merch_info_map if merch_str in soup]
 
     def skus(self, response):
         common_sku = self.product_pricing_common(response)
