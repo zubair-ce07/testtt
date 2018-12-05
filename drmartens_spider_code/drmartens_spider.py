@@ -4,7 +4,8 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
 from scrapy.http import Request
 
-from .base import BaseParseSpider, BaseCrawlSpider
+from skuscraper.parsers.genders import Gender
+from .base import BaseParseSpider, BaseCrawlSpider, clean
 from ..parsers.genders import Gender
 
 
@@ -29,66 +30,52 @@ class DrmartensParseSpider(BaseParseSpider, Mixin):
             return
 
         self.boilerplate_normal(garment, response)
-        garment['url'] = response.url
-        garment['image_urls'] = self.product_image_urls(response)
+        garment['image_urls'] = self.image_urls(response)
         garment['category'] = self.product_category(response)
-        garment['skus'] = self.product_skus(response)
+        garment['gender'] = self.product_gender(garment)
+        garment['skus'] = self.skus(response)
 
         return garment
 
-    def product_category(self, response):
-        css = '.breadcrumbs a::text'
-        return response.css(css).extract()[1:-1]
-
-    def color_sku(self, response, raw_sku_id):
+    def skus(self, response):
         skus = {}
-        common = self.product_pricing_common(response)
-        raw_skus = self.raw_sku(response, raw_sku_id)
-        common['colour'] = self.color(response, raw_sku_id)
-
-        for raw_sku in json.loads(raw_skus):
-            sku = common.copy()
-            sku['size'] = raw_sku['display']
-            sku_id = f'{sku["colour"]}_{sku["size"]}'
-            skus[sku_id] = sku
-
-            if not raw_sku['stockLevel']:
-                sku['out_of_stock'] = True
-
-        return skus
-
-    def product_skus(self, response):
-        skus = {}
-        raw_sku_ids = self.sku_ids(response)
+        sku_ids_css = '.colour-pallet-device span::attr(id)'
+        raw_sku_ids = clean(response.css(sku_ids_css))
 
         for raw_sku_id in raw_sku_ids:
-            skus.update(self.color_sku(response, raw_sku_id))
+            common = self.product_pricing_common(response)
+            colour_css = f'#{raw_sku_id}::attr(title)'
+            raw_sku_css = f'#{raw_sku_id}::attr(data-size-displays)'
+            raw_skus = clean(response.css(raw_sku_css))[0]
+            common['colour'] = clean(response.css(colour_css))[0]
+
+            for raw_sku in json.loads(raw_skus):
+                sku = common.copy()
+                sku['size'] = raw_sku['display'] if '1 - SIZE' != raw_sku['display'] else 'One Size'
+                sku_id = f'{sku["colour"]}_{sku["size"]}'
+                skus[sku_id] = sku
+
+                if not raw_sku['stockLevel']:
+                    sku['out_of_stock'] = True
 
         return skus
 
-    def color(self, response, id):
-        css = f'#{id}::attr(title)'
-        return response.css(css).extract_first()
+    def product_gender(self, garment):
+        soup = ' '.join(garment['category'] + [garment['name']] + clean(garment['trail'][1]))
+        return self.gender_lookup(soup) or Gender.ADULTS.value
 
-    def raw_sku(self, response, id):
-        css = f'#{id}::attr(data-size-displays)'
-        return response.css(css).extract_first()
+    def product_category(self, response):
+        return clean(response.css('.breadcrumbs a::text'))[1:-1]
 
-    def sku_ids(self, response):
-        css = '.colour-pallet-device span::attr(id)'
-        return response.css(css).extract()
-
-    def product_image_urls(self, response):
+    def image_urls(self, response):
         css = '.sync2.owl-carousel img::attr(src)'
-        return response.css(css).extract()
+        return clean(response.css(css))
 
     def product_id(self, response):
-        css = '.product-code ::text'
-        return response.css(css).extract_first()
+        return clean(response.css('.product-code ::text'))[0]
 
     def product_name(self, response):
-        css = '.box-details h1 ::text'
-        return response.css(css).extract_first()
+        return clean(response.css('.box-details h1 ::text'))[0]
 
 
 class DrmartensCrawlSpider(BaseCrawlSpider, Mixin):
@@ -99,19 +86,11 @@ class DrmartensCrawlSpider(BaseCrawlSpider, Mixin):
     rules = (
         Rule(
             LinkExtractor(allow=category_allow_r),
-            callback="gender_category",
+            callback="parse",
         ),
         Rule(
             LinkExtractor(allow=product_allow_r),
             callback="parse_item",
         ),
     )
-
-    def gender_category(self, response):
-        if 'c/womens' in response.url:
-            return self.parse_and_add_women(response)
-        elif 'c/mens' in response.url:
-            return self.parse_and_add_men(response)
-        elif 'c/kids' in response.url:
-            return self.parse_and_add_unisex_kids(response)
 
