@@ -11,7 +11,11 @@ class Mixin:
     default_brand = 'Alo Yoga'
     spider_one_sizes = ['1']
     merch_info_map = [
-        ('limited-edition', 'Limited Edition')
+        ('limited-edition', 'Limited Edition'),
+        ('limited edition', 'Limited Edition'),
+        ("alo's exclusive edition", "Exclusive Edition"),
+        ('alo exclusive', 'Exclusive Edition'),
+        ('exclusive edition', 'Exclusive Edition')
     ]
 
 
@@ -42,9 +46,9 @@ class AloYogaParseSpider(BaseParseSpider):
 
         self.boilerplate(garment, response)
         garment['name'] = self.product_name(raw_product)
-        garment['merch_info'] = self.merch_info(garment)
         garment['care'] = self.product_care(response)
         garment['description'] = self.product_description(response)
+        garment['merch_info'] = self.merch_info(garment)
         garment['category'] = self.product_category(response)
         garment['brand'] = self.product_brand(raw_product)
         garment['gender'] = self.product_gender(raw_product)
@@ -73,11 +77,11 @@ class AloYogaParseSpider(BaseParseSpider):
         return raw_product['images']
 
     def product_gender(self, raw_product):
-        soup = raw_product['type']
+        soup = f"{raw_product['type']} {raw_product['title']}".lower()
         return self.gender_lookup(soup) or Gender.ADULTS.value
 
     def merch_info(self, garment):
-        soup = garment['name'].lower()
+        soup = f"{garment['name']} {garment['description']}".lower()
         return [merch for merch_str, merch in self.merch_info_map if merch_str in soup]
 
     def skus(self, response):
