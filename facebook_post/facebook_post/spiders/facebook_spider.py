@@ -2,6 +2,7 @@
 import scrapy
 import json
 from scrapy_splash import SplashRequest, SlotPolicy
+import base64
 
 from scrapy.shell import open_in_browser, inspect_response
 
@@ -14,9 +15,13 @@ function main(splash, args)
     assert(splash:wait(5))
 
     splash:runjs("document.querySelector('[href*=\"comment_track\"]').click();")
+    splash:runjs("window.scrollTo(0,document.body.scrollHeight);")
     splash:wait(10)
 
-    return splash:html()
+      return {
+        html = splash:html(),
+        png = splash:png(),
+    }
 end
 '''
 
@@ -43,7 +48,11 @@ class FacebookSpiderSpider(scrapy.Spider):
         'DNS_TIMEOUT': 60,
         'CONCURRENT_REQUESTS': 1
     }
-    start_urls = ['https://www.facebook.com/HaloTop/posts/']
+    start_urls = [#
+    'https://www.facebook.com/HaloTop/posts/',
+    # 'https://www.facebook.com/pg/Valkyrie-Brewing-Company-328598723841647/posts/',
+    # 'https://www.facebook.com/pg/Lewis-Circle-of-Horses-LLC-172603192788791/posts/'
+    ]
 
     
     def parse(self, response):
@@ -76,7 +85,11 @@ class FacebookSpiderSpider(scrapy.Spider):
 
 
     def parse_post(self, response):
-        response = scrapy.http.HtmlResponse(url='converted response ', body=response.body, encoding='utf-8')
+        name = response.url.split('/')[-1] + '.png'
+        with open(name, 'wb') as f:
+            f.write(base64.b64decode(response.data['png']))
+
+        response = scrapy.http.HtmlResponse(url='converted response ', body=response.data['html'], encoding='utf-8')
 
         post_data = {
             'likes_count': response.css('[href*="comment_tracking"] span:contains(Likes)::text').re_first(r'\d+'),
