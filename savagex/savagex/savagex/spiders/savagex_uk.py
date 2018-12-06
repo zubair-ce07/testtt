@@ -22,8 +22,8 @@ class SavagexUkSpider(Spider):
         for key, item in products.items():
             base_link = "https://www.savagex.co.uk/shop/"
 
-            if not(item["color"]):
-                base_link = base_link + "sets/"
+            if not item["color"]:
+                base_link = "{}{}".format(base_link, "sets/")
 
             item_link = "{}{}-{}".format(base_link,
                                          item["permalink"], item["master_product_id"])
@@ -48,7 +48,7 @@ class SavagexUkSpider(Spider):
             base_link = "https://www.savagex.co.uk/shop/"
 
             if not item["color"]:
-                base_link = base_link + "sets/"
+                base_link = "{}{}".format(base_link, "sets/")
 
             item_link = "{}{}-{}".format(base_link,
                                          item["permalink"], item["master_product_id"])
@@ -79,7 +79,7 @@ class SavagexUkSpider(Spider):
         link = "https://www.savagex.co.uk/shop/"
 
         if not color:
-            link = link + "sets/"
+            link = "{}{}".format(link, "sets/")
 
         product["url"] = "{}{}-{}".format(link,
                                           item["permalink"], item["master_product_id"])
@@ -139,7 +139,7 @@ class SavagexUkSpider(Spider):
         skus = {}
 
         for one_set in item_sets:
-            key = one_set["label"] + "_" + one_set["color"]
+            key = "{}_{}".format(one_set["label"], one_set["color"])
             available_sizes = [
                 size["size"] for size in one_set["product_id_object_list"] if size["available_quantity"]]
             price = item["retail_unit_price"]
