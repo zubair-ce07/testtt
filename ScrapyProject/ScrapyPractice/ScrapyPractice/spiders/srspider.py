@@ -24,7 +24,7 @@ class StyleRunnerSpider(SSBaseSpider):
     language_code = 'en'
     currency = 'AUD'
     auto_register = True
-    version = '2.0.0'
+    version = '2.0.2'
     gst = 10
     seen_basesku = []
 
@@ -124,7 +124,7 @@ class StyleRunnerSpider(SSBaseSpider):
         if not product:
             return
 
-        colors = self.extract_siblingcolors(product)
+        colors = self.extract_colors(product)
 
         item['base_sku'] = self.extract_base_sku(colors)
         item['description_text'] = self.extract_description(product)
@@ -140,32 +140,31 @@ class StyleRunnerSpider(SSBaseSpider):
         yield final_item
 
         for color_code in colors:
-            yield self.siblingcolor_request(item, response, color_code, final_item['identifier'])
+            yield self.make_color_request(item, response, color_code, final_item['identifier'])
 
-    def siblingcolor_request(self, item, response, color_code, cur_color_code):
-            temp_item = copy.deepcopy(item)
-            temp_item['url'] = temp_item['url'].replace(cur_color_code, color_code)
-            url = response.url.replace(cur_color_code, color_code)
-            temp_item['identifier'] = color_code
-            if temp_item['identifier'] not in self.seen_basesku:
-                self.seen_basesku.append(temp_item['identifier'])
-                return Request(
-                    url=url,
-                    meta={'item': temp_item},
-                    callback=self.parse_detail
-                )
+    def make_color_request(self, item, response, color_code, cur_color_code):
+        color_item = copy.deepcopy(item)
+        color_item['url'] = color_item['url'].replace(cur_color_code, color_code)
+        url = response.url.replace(cur_color_code, color_code)
+        color_item['identifier'] = color_code
+        if color_item['identifier'] not in self.seen_basesku:
+            self.seen_basesku.append(color_item['identifier'])
+            return Request(
+                url=url,
+                meta={'item': color_item},
+                callback=self.parse_detail
+            )
 
-    def extract_siblingcolors(self, product):
+    def extract_colors(self, product):
         colors = [clr for clr in product['custitem_related_items'].split(', ') if clr != '&nbsp;']
         if colors:
             colors = [color.split(' : ')[1].split(' ')[0] for color in colors]
-        colors = colors + [product.get('itemid')]
-        return colors
+        return colors + [product.get('itemid')]
 
     def extract_json_details(self, json_text):
         details = json.loads(json_text)
         product = details.get('items', [])
-        return product[0] if product else []
+        return product[0] if product else {}
 
     def extract_description(self, product):
         description_details = product.get("storedetaileddescription")
@@ -176,10 +175,7 @@ class StyleRunnerSpider(SSBaseSpider):
     def extract_base_sku(self, color_codes):
         code = color_codes[0]
         if len(color_codes) == 1:
-            index = code.rfind('-')
-            if index != -1:
-                code = code[:index + 1]
-            return code
+            return '-'.join(code.split('-')[:-1]) or code
         base_sku = ''
         for index, value in enumerate(code):
             for color in color_codes:
