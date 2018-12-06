@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 
 # Define here the models for your scraped items
@@ -17,4 +18,4 @@ class Watches2USpiderItem(scrapy.Item):
     brand = scrapy.Field()
     stock = scrapy.Field()
     category = scrapy.Field()
-
+    

@@ -12,7 +12,6 @@ class DocketSpider(scrapy.Spider):
     def parse(self, response):
         docket = DocketSpiderItem()
         identifier = ''
-        previous_id = ''
         table = response.xpath('//table[3]//td[@class="normal"]//table[@width = "100%"]/tr')
         for row in table:
             docket_id = row.xpath('.//td[last()-2]//a//text()').extract() or row.xpath('.//td[last()-2]//text()').extract()
