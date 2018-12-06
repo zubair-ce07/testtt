@@ -3,19 +3,25 @@ import json
 
 from scrapy import Spider, Request
 from scrapy.selector import Selector
+
 from cecil.items import CecilItem
 
 
 class CecilDeSpider(Spider):
-    name = 'cecil.de'
-    start_urls = ['https://www.cecil.de/']
-    header = {
+    name = "cecil.de"
+    headers = {
         "x-shop": "3:de"
     }
 
-    def parse(self, response):
+    custom_settings = {
+        "ITEM_PIPELINES": {
+            "cecil.pipelines.FilterDuplicate": 300,
+        }
+    }
+
+    def start_requests(self):
         categories_link = "https://www.cecil.de/rest/web/category-tree-desktop"
-        yield Request(categories_link, self.parse_categories, headers=self.header)
+        yield Request(categories_link, self.parse_categories, headers=self.headers)
 
     def parse_categories(self, response):
         products = json.loads(response.text)
@@ -23,59 +29,57 @@ class CecilDeSpider(Spider):
         for category in products.values():
             category_link = category["mainUrl"]
 
-            if "Inspirations" not in category_link:
-                yield Request("https://www.cecil.de/rest/web{}".format(category_link), self.parse_item_links, headers=self.header)
+            if "Inspirations" in category_link:
+                continue
+            yield Request("https://www.cecil.de/rest/web{}".format(category_link),
+                              self.parse_product_links, headers=self.headers)
 
-    def parse_item_links(self, response):
+    def parse_product_links(self, response):
         products = self.get_product(response)
 
         if not products:
             return
 
-        products = products["products"]
-
-        for product_id in products:
+        for product_id in products["products"]:
             link = "https://www.cecil.de/rest/web/products?ids={}".format(
                 product_id)
-            yield Request(link, self.parse_product_detail, headers=self.header, dont_filter=True)
+            yield Request(link, self.parse_product_detail, headers=self.headers, dont_filter=True)
 
     def parse_product_detail(self, response):
         raw_product = self.get_product(response)
 
         if not raw_product:
             return
+
         raw_product = raw_product[0]
         product = CecilItem()
-        product["url"] = "https://www.cecil.de{}".format(raw_product["mainUrl"])
+        product["url"] = "https://www.cecil.de{}".format(
+            raw_product["mainUrl"])
         product["name"] = raw_product["displayTitle"]
         product["pid"] = raw_product["oxartnum"]
-        product["available"] = raw_product["stock"] > 0
+        product["available"] = bool(raw_product["stock"])
         product["description"] = self.get_item_description(raw_product)
         product["attributes"] = self.get_item_attribute(raw_product)
-        breadcrumb = raw_product["seourl"]
+        breadcrumbs = raw_product["seourl"]
 
-        if breadcrumb:
-            breadcrumb = breadcrumb[0]["breadcrumb"]
-            product["category"] = breadcrumb[0]["title"]
-            product["subcategory"] = [bread["title"]
-                                      for bread in breadcrumb[1:]]
+        if breadcrumbs:
+            breadcrumbs = breadcrumbs[0]["breadcrumb"]
+            product["category"] = breadcrumbs[0]["title"]
+            product["subcategory"] = [breadcrum["title"]
+                                      for breadcrum in breadcrumbs[1:]]
         product["images"] = []
         color_urls = ["https://www.cecil.de/rest/web/products?ids={}".format(varient["oxid"])
                       for varient in raw_product["colorVariants"]]
-        color_link = color_urls[0]
-        color_urls = color_urls[1:]
+        color_link = color_urls.pop()
         meta = {
             "product": product,
             "color_urls": color_urls,
             "skus": {}
         }
-        yield Request(color_link, self.get_item_skus, headers=self.header, meta=meta, dont_filter=True)
+        yield Request(color_link, self.get_item_skus, headers=self.headers, meta=meta, dont_filter=True)
 
     def get_product(self, response):
-        raw_text = response.text
-        raw_text = raw_text.replace('motion":,', 'motion":{},')
-        raw_product = json.loads(raw_text)
-        return raw_product
+        return json.loads(response.text.replace('motion":,', 'motion":{},'))
 
     def get_item_description(self, product):
         desc = Selector(text=product["longDesc"].strip())
@@ -129,7 +133,7 @@ class CecilDeSpider(Spider):
                 "color_urls": color_urls,
                 "skus": skus
             }
-            return Request(next_color_link, self.get_item_skus, headers=self.header, meta=meta, dont_filter=True)
+            return Request(next_color_link, self.get_item_skus, headers=self.headers, meta=meta, dont_filter=True)
         else:
             product["skus"] = skus
             return dict(product)
