@@ -240,7 +240,9 @@ class EnergymadeeasySpiderElectricity(scrapy.Spider):
         raw_rates = list(rates[0].values())[0]
 
         for i, rates in enumerate(raw_rates['blocks']):
-            if i == 4:
+            if i == 3:
+                fields['peak_rate_{}'.format(
+                    i + 1)] = rates['rates'][0]['price']
                 break
 
             if i == 0:
@@ -347,6 +349,11 @@ class EnergymadeeasySpiderElectricity(scrapy.Spider):
                     discounts['dual_fuel_discount_off_usage'] = value
                 elif 'bill' in name:
                     discounts['dual_fuel_discount_off_bill'] = value
+            elif 'online' in name:
+                if 'usage' in name:
+                    discounts['online_signup_discount_off_usage'] = value
+                elif 'bill' in name:
+                    discounts['online_signup_discount_off_bill'] = value
 
         return discounts
 
