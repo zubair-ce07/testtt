@@ -300,7 +300,7 @@ class EnergymadeeasySpiderElectricity(scrapy.Spider):
                     discounts['e_bill_discount_off_usage'] = value
                 elif 'bill' in name:
                     discounts['e_bill_discount_off_bill'] = value
-            elif 'dual' in name:
+            elif 'dual' in name or 'bundling' in name:
                 if 'usage' in name:
                     discounts['dual_fuel_discount_off_usage'] = value
                 elif 'bill' in name:
