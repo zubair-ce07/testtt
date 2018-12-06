@@ -7,6 +7,7 @@ import re
 import scrapy
 from scrapy.loader import ItemLoader
 from scrapy.loader.processors import TakeFirst, Identity
+from scrapy.shell import inspect_response
 
 from ..items import EnergymadeeasyItem
 
@@ -17,6 +18,7 @@ class ProductLoader(ItemLoader):
     raw_discount_and_incentives_out = Identity()
     raw_restrictions_out = Identity()
     raw_usage_rates_out = Identity()
+    controlled_loads = Identity()
 
 
 class EnergymadeeasySpiderElectricity(scrapy.Spider):
@@ -205,9 +207,29 @@ class EnergymadeeasySpiderElectricity(scrapy.Spider):
             loader.add_value(d, discounts[d])
 
         loader.add_value('raw_discount_and_incentives', raw_discounts)
-        loader.add_value('controlled_loads', self.fetch_controlled_loads(response))
+        controlled_loads = self.fetch_controlled_loads(response)
+        load_flag = True
+        item = loader.load_item()
 
-        return loader.load_item()
+        for load in controlled_loads:
+            # print(load)
+            if not load['name']:
+                continue
+
+            if 'Controlled Load 1' in load['name']:
+                load_item = item.copy()
+                load_item['controlled_load_1'] = load['rate']
+                load_flag = False
+                yield load_item
+
+            if 'Controlled Load 2' in load['name']:
+                load_item = item.copy()
+                load_item['controlled_load_2'] = load['rate']
+                load_flag = False
+                yield load_item
+
+        if load_flag:
+            yield item
 
     @staticmethod
     def calculate_single_rates(rates):
@@ -243,24 +265,44 @@ class EnergymadeeasySpiderElectricity(scrapy.Spider):
                                    '"Controlled load charges")]//following::table[1]')
 
         if raw_table:
-            for header in raw_table.css('table > tr td'):
-                headers.append(header.css('td strong::text').extract_first())
+            for i, header in enumerate(raw_table.css('table > tr td')):
+                headers.append(header.css(
+                    'td strong::text').extract_first() or i)
 
             for row in raw_table.css('tbody tr'):
                 row_data = []
                 for column in row.css('td'):
-                    row_data.append(self.clean(''.join(column.css(' ::text').extract())))
+                    row_data.append(self.clean(
+                        ''.join(column.css(' ::text').extract())))
 
                 raw_controlled_loads.append(dict(zip(headers, row_data)))
 
-        for i, load in enumerate(raw_controlled_loads):
+        # print(raw_controlled_loads)
+        # print(response.url)
+
+        for load in raw_controlled_loads:
             if load.get('Controlled load usage'):
+                # if not self.fetch_load_name(load):
+                #     print(load)
+                #     inspect_response(response, self)
+
                 controlled_loads.append({
-                    'name': 'Controlled Load {}'.format(i + 1),
+                    'name': self.fetch_load_name(load),
                     'rate': load['Controlled load usage']
                 })
 
+        # print(controlled_loads)
+
+        # if response.url == 'https://www.energymadeeasy.gov.au/offer/575437?postcode=2600':
+        #     inspect_response(response, self)
+
         return controlled_loads
+
+    @staticmethod
+    def fetch_load_name(load):
+        for field in load.values():
+            if re.findall(r'Controlled Load\s*\d', field):
+                return field
 
     @staticmethod
     def clean(value):
