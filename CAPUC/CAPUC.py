@@ -2,7 +2,6 @@ import re
 
 import scrapy
 from CAPUC.items import Item
-from bs4 import BeautifulSoup
 from scrapy.http import Request, FormRequest
 from scrapy.spiders import CrawlSpider, Rule
 
