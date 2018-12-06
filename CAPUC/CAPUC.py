@@ -227,7 +227,7 @@ class CapucCrawlSpider(CrawlSpider):
             proceeding_id = re.findall(r"(: [A-Z].*[0-9])", proceeding)
             if len(proceeding_id) > 0:
                 clean_proceeding = proceeding.split(';')
-                proceeding = new_proceeding[0].strip(': ')
+                proceeding = clean_proceeding[0].strip(': ')
                 proceedings_list.append(proceeding.strip("Proceeding: "))
 
         return proceedings_list
