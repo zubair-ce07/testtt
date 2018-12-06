@@ -1,17 +1,16 @@
 # coding: utf-8
 """
 Scrapy spider for stylerunner.
-@author: Adeel Ehsan
+@author: Muhammad Tauseeq
 """
 import copy
 import json
 
-from scrapy.http.request import Request
-from scrapy.selector import Selector
+from scrapy import Request, Selector
 
 from scrapyproduct.items import ProductItem, SizeItem
 from scrapyproduct.spiderlib import SSBaseSpider
-from scrapyproduct.toolbox import selective_copy
+from scrapyproduct.toolbox import category_mini_item
 
 
 class StyleRunnerSpider(SSBaseSpider):
@@ -25,7 +24,7 @@ class StyleRunnerSpider(SSBaseSpider):
     language_code = 'en'
     currency = 'AUD'
     auto_register = True
-    version = '1.0.1'
+    version = '2.0.0'
     gst = 10
     seen_basesku = []
 
@@ -94,11 +93,7 @@ class StyleRunnerSpider(SSBaseSpider):
             item['currency'] = self.currency
             item['brand'] = sel_product.xpath("./div[2]/a[1]/span/text()").extract()[0].strip()
 
-            mini_item = ProductItem()
-            selective_copy(item, mini_item, [
-                'language_code', 'identifier', 'category_names', 'language_code'])
-
-            yield mini_item
+            yield category_mini_item(item)
             if item['identifier'] not in self.seen_basesku:
                 self.seen_basesku.append(item['identifier'])
                 yield Request(
@@ -106,13 +101,12 @@ class StyleRunnerSpider(SSBaseSpider):
                     meta={'item': item},
                     callback=self.parse_detail
                 )
-        for req in self.parse_pagination(response):
-            yield req
+        yield self.parse_pagination(response)
 
     def parse_pagination(self, response):
         next_page = response.xpath("//link[@rel='next']/@href").extract_first()
         if next_page:
-            yield Request(
+            return Request(
                 url=next_page,
                 callback=self.extract_products,
                 meta=response.meta,
@@ -146,13 +140,16 @@ class StyleRunnerSpider(SSBaseSpider):
         yield final_item
 
         for color_code in colors:
+            yield self.siblingcolor_request(item, response, color_code, final_item['identifier'])
+
+    def siblingcolor_request(self, item, response, color_code, cur_color_code):
             temp_item = copy.deepcopy(item)
-            temp_item['url'] = temp_item['url'].replace(final_item['identifier'], color_code)
-            url = response.url.replace(final_item['identifier'], color_code)
+            temp_item['url'] = temp_item['url'].replace(cur_color_code, color_code)
+            url = response.url.replace(cur_color_code, color_code)
             temp_item['identifier'] = color_code
             if temp_item['identifier'] not in self.seen_basesku:
                 self.seen_basesku.append(temp_item['identifier'])
-                yield Request(
+                return Request(
                     url=url,
                     meta={'item': temp_item},
                     callback=self.parse_detail
@@ -163,15 +160,12 @@ class StyleRunnerSpider(SSBaseSpider):
         if colors:
             colors = [color.split(' : ')[1].split(' ')[0] for color in colors]
         colors = colors + [product.get('itemid')]
-
         return colors
 
     def extract_json_details(self, json_text):
         details = json.loads(json_text)
         product = details.get('items', [])
-        if product:
-            return product[0]
-        return []
+        return product[0] if product else []
 
     def extract_description(self, product):
         description_details = product.get("storedetaileddescription")
@@ -180,25 +174,21 @@ class StyleRunnerSpider(SSBaseSpider):
         return description_details
 
     def extract_base_sku(self, color_codes):
+        code = color_codes[0]
         if len(color_codes) == 1:
-            code = color_codes[0]
             index = code.rfind('-')
-            if index:
+            if index != -1:
                 code = code[:index + 1]
             return code
-
-        i = 0
-        match = True
-        while i < len(color_codes[0]):
-            base_sku = color_codes[0][i]
+        base_sku = ''
+        for index, value in enumerate(code):
             for color in color_codes:
-                if color[i] != base_sku:
-                    match = False
+                if color[index] != value:
+                    base_sku = color[:index]
                     break
-            if not match:
-                return color_codes[0][:i]
-            i += 1
-        return color_codes[0]
+            if base_sku:
+                return base_sku
+        return code
 
     def extract_sizes(self, product, item):
         item_price = self.add_gst(product['pricelevel7'])
