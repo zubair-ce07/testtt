@@ -39,16 +39,14 @@ class DrmartensParseSpider(BaseParseSpider, Mixin):
     def skus(self, response):
         skus = {}
         sku_ids_css = '.colour-pallet-device span::attr(id)'
-        raw_sku_ids = clean(response.css(sku_ids_css))
         common = self.product_pricing_common(response)
 
-        for raw_sku_id in raw_sku_ids:
+        for raw_sku_id in clean(response.css(sku_ids_css)):
             colour_css = f'#{raw_sku_id}::attr(title)'
             raw_sku_css = f'#{raw_sku_id}::attr(data-size-displays)'
-            raw_skus = clean(response.css(raw_sku_css))[0]
             common['colour'] = clean(response.css(colour_css))[0]
 
-            for raw_sku in json.loads(raw_skus):
+            for raw_sku in json.loads(clean(response.css(raw_sku_css))[0]):
                 sku = common.copy()
                 sku['size'] = self.one_size if '1 - SIZE' == raw_sku['display'] else raw_sku['display']
                 sku_id = f'{sku["colour"]}_{sku["size"]}'
