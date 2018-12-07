@@ -52,8 +52,8 @@ class JackjoneComSpider(Spider):
             "[name='description']::attr(content)").extract_first()
         product["attributes"] = self.item_attributes(response)
         product["images"] = []
-        color_urls = response.css(".colorpattern>li[class='js-swatch-item" \
-                                "swatch__item--selectable-colorpattern']>a::attr(data-href)").extract()
+        color_urls = response.css(".colorpattern>.js-swatch-item" \
+                                ".swatch__item--selectable-colorpattern>a::attr(data-href)").extract()
 
         currency = response.css("[property='og:price:currency']::attr(content)").extract_first()
         meta = {
@@ -66,12 +66,12 @@ class JackjoneComSpider(Spider):
 
     def item_attributes(self, response):
         attributes = {}
-        fabric = response.css("[class~='pdp-description__text__value--fabric']::text").extract_first()
+        fabric = response.css(".pdp-description__text__value--fabric::text").extract_first()
 
         if fabric:
             attributes["fabric"] = fabric.strip()
 
-        care = response.css("[class~='pdp-description__list__item']::text").extract()
+        care = response.css(".pdp-description__list__item::text").extract()
 
         if care:
             attributes["care"] = [c.strip() for c in care]
@@ -79,7 +79,7 @@ class JackjoneComSpider(Spider):
         return attributes
 
     def sku_attribute_color(self, response):
-        color = response.css("[class~='swatch__item--selected-colorpattern']>a>span::text").extract_first()
+        color = response.css(".swatch__item--selected-colorpattern>a>span::text").extract_first()
         product = response.meta["product"]
         product["images"].extend(response.css(
                     ".product-images__thumbnails__underlay>img::attr(data-src)").extract())
