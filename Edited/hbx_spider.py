@@ -90,7 +90,7 @@ class MixinDE(Mixin):
 class HbxParseSpider(BaseParseSpider):
     raw_description_css = '.description ::text'
     brand_css = '#product-summary::attr(data-brand)'
-    price_css = '.offers .regular-price::text'
+    price_css = '.offers .regular-price::text, .offers .sale-price::text'
 
     def parse(self, response):
         product_id = self.product_id(response)
@@ -131,9 +131,6 @@ class HbxParseSpider(BaseParseSpider):
 
     def skus(self, response):
         skus = {}
-
-        if clean(response.css('.offers .sale-price::text'))[0]:
-            self.price_css = '.offers .sale-price::text'
 
         common_sku = self.product_pricing_common(response)
         common_sku['colour'] = colour = self.raw_skus(response)['display_color']
