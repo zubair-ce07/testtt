@@ -1,4 +1,4 @@
-from scrapy import Request, FormRequest
+from scrapy import FormRequest, Request
 
 from .base import BaseCrawlSpider, BaseParseSpider, Gender, clean
 
@@ -6,16 +6,13 @@ from .base import BaseCrawlSpider, BaseParseSpider, Gender, clean
 class Mixin:
     retailer = 'macjeans'
     default_brand = 'Mac'
-    spider_one_sizes = []
-    merch_info_map = [
-        ('', '')
-    ]
 
 
 class MixinAT(Mixin):
     retailer = Mixin.retailer + '-at'
     market = 'AT'
     allowed_domains = [
+        'mac-jeans.com'
     ]
     start_urls = [
         'https://mac-jeans.com/at-de/csrftoken'
@@ -117,19 +114,18 @@ class MacJeansParseSpider(BaseParseSpider):
         return skus
 
     def stock_requests(self, response):
-        css = '.variant--group:first-child .variant--option:not(.no--stock) ' \
-              '.option--input:not([checked="checked"])::attr(value)'
-        size_values = clean(response.css(css))
         css = '.variant--group:nth-child(2) .variant--option input::attr(value)'
         length_value = clean(response.css(css))[0]
         formdata = {"group[1]": "", 'group[2]': length_value,
                     '__csrf_token': response.meta['csrf_token']}
         cookies = {'__csrf_token-3': response.meta['csrf_token']}
         requests = []
+        css = '.variant--group:first-child .variant--option:not(.no--stock) ' \
+              '.option--input:not([checked="checked"])::attr(value)'
 
-        for size in size_values:
+        for size in clean(response.css(css)):
             formdata['group[1]'] = size
-            requests.append(FormRequest(response.url, method='POST', formdata=formdata,
+            requests.append(FormRequest(response.url, formdata=formdata,
                                         cookies=cookies, callback=self.parse_stock))
 
         return requests
@@ -140,13 +136,14 @@ class MacJeansParseSpider(BaseParseSpider):
         urls = clean(response.css(css))
         return [response.follow(url, callback=self.parse_colour, meta=response.meta.copy()) for url in urls]
 
+
 class MacJeansCrawlSpider(BaseCrawlSpider):
     home_url = 'https://mac-jeans.com/at-de/'
     csrf_token = ''
 
     def parse_start_url(self, response):
-        meta = {'trail': self.add_trail(response)}
         self.csrf_token = response.headers['X-Csrf-Token'].decode("utf-8")
+        meta = {'trail': self.add_trail(response)}
         return Request(self.home_url, callback=self.parse_category, meta=meta.copy())
 
     def parse_category(self, response):
