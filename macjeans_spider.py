@@ -11,12 +11,17 @@ class Mixin:
 class MixinAT(Mixin):
     retailer = Mixin.retailer + '-at'
     market = 'AT'
-    allowed_domains = [
-        'mac-jeans.com'
-    ]
-    start_urls = [
-        'https://mac-jeans.com/at-de/csrftoken'
-    ]
+    allowed_domains = ['mac-jeans.com']
+    start_urls = ['https://mac-jeans.com/at-de/csrftoken']
+    home_url = 'https://mac-jeans.com/at-de/'
+
+
+class MixinDE(Mixin):
+    retailer = Mixin.retailer + '-de'
+    market = 'DE'
+    allowed_domains = ['mac-jeans.com']
+    start_urls = ['https://mac-jeans.com/de-de/csrftoken']
+    home_url = 'https://mac-jeans.com/de-de/'
 
 
 class MacJeansParseSpider(BaseParseSpider):
@@ -54,7 +59,7 @@ class MacJeansParseSpider(BaseParseSpider):
 
     def product_id(self, response):
         css = '[itemprop="sku"]::text'
-        return ''.join(response.css(css).re('[\d]+'))
+        return clean(response.css(css))[0]
 
     def product_name(self, response):
         css = '.product--header .product--title::text'
@@ -80,12 +85,12 @@ class MacJeansParseSpider(BaseParseSpider):
 
     def skus(self, response):
         common_sku = self.product_pricing_common(response)
-        css = '.variant--option.selected--option a::attr(title)'
-        common_sku['colour'] = clean(response.css(css))[0]
+        colour_css = '.variant--option.selected--option a::attr(title)'
+        common_sku['colour'] = clean(response.css(colour_css))[0]
         skus = {}
 
-        css = '.variant--group:first-child .no--stock:not(.is--disabled) ::text'
-        out_stock_sizes = clean(response.css(css))
+        oos_css = '.variant--group:contains(Größe) .no--stock:not(.is--disabled) ::text'
+        out_stock_sizes = clean(response.css(oos_css))
 
         for size in out_stock_sizes:
             sku = common_sku.copy()
@@ -94,36 +99,31 @@ class MacJeansParseSpider(BaseParseSpider):
             sku_id = '_'.join([sku['colour'], size])
             skus[sku_id] = sku
 
-        css = '.variant--group:first-child [checked="checked"] ~ ::text'
-        size = clean(response.css(css))[0]
-        css = '.variant--group:nth-child(2) label::text'
-        lengths = clean(response.css(css))
-
-        css = '.variant--group:nth-child(2) .variant--option.no--stock ::text'
-        out_stock_lengths = response.css(css)
-        common_sku['size'] = size
+        length_css = '.variant--group:contains(Länge) .variant--option:not(.no--stock) ::text'
+        lengths = clean(response.css(length_css))
+        size_css = '.variant--group:contains(Größe) [checked="checked"] ~ ::text'
+        common_sku['size'] = clean(response.css(size_css))[0]
 
         for length in lengths:
             sku = common_sku.copy()
-            if length in out_stock_lengths:
-                sku['out_of_stock'] = True
 
-            sku_id = '_'.join([sku['colour'], size, length])
+            sku_id = '_'.join([sku['colour'], sku['size'], length])
             skus[sku_id] = sku
 
         return skus
 
     def stock_requests(self, response):
-        css = '.variant--group:nth-child(2) .variant--option input::attr(value)'
-        length_value = clean(response.css(css))[0]
-        formdata = {"group[1]": "", 'group[2]': length_value,
-                    '__csrf_token': response.meta['csrf_token']}
-        cookies = {'__csrf_token-3': response.meta['csrf_token']}
+        length_css = '.variant--group:contains(Länge) .variant--option input::attr(value)'
+        length_value = clean(response.css(length_css))[0]
+        formdata = {'__csrf_token': response.meta['csrf_token'],
+                    'group[2]': length_value, }
+        cookies = {'__csrf_token-3': response.meta['csrf_token'],
+                   '__csrf_token-1': response.meta['csrf_token']}
         requests = []
-        css = '.variant--group:first-child .variant--option:not(.no--stock) ' \
-              '.option--input:not([checked="checked"])::attr(value)'
+        size_css = '.variant--group:contains(Größe) .variant--option:not(.no--stock) ' \
+                   '.option--input:not([checked="checked"])::attr(value)'
 
-        for size in clean(response.css(css)):
+        for size in clean(response.css(size_css)):
             formdata['group[1]'] = size
             requests.append(FormRequest(response.url, formdata=formdata,
                                         cookies=cookies, callback=self.parse_stock))
@@ -131,45 +131,39 @@ class MacJeansParseSpider(BaseParseSpider):
         return requests
 
     def colour_requests(self, response):
-        css = '.variant--group:first-child ' \
+        css = '.variant--group:contains(Größe) ' \
               '.variant--option:not(.selected--option) a::attr(href)'
         urls = clean(response.css(css))
         return [response.follow(url, callback=self.parse_colour, meta=response.meta.copy()) for url in urls]
 
 
 class MacJeansCrawlSpider(BaseCrawlSpider):
-    home_url = 'https://mac-jeans.com/at-de/'
-    csrf_token = ''
-
     def parse_start_url(self, response):
-        self.csrf_token = response.headers['X-Csrf-Token'].decode("utf-8")
-        meta = {'trail': self.add_trail(response)}
+        meta = {'trail': self.add_trail(response),
+                'csrf_token': response.headers['X-Csrf-Token'].decode("utf-8")}
         return Request(self.home_url, callback=self.parse_category, meta=meta.copy())
 
     def parse_category(self, response):
-        meta = {'trail': self.add_trail(response)}
+        response.meta['trail'] = self.add_trail(response)
         urls = response.css('#menu-overlay a::attr(href)')
-        return [response.follow(url, callback=self.parse_products, meta=meta.copy()) for url in urls]
+        return [response.follow(url, callback=self.parse_products, meta=response.meta.copy()) for url in urls]
 
     def parse_products(self, response):
-        css = '.product--info > a::attr(href)'
-        urls = clean(response.css(css))
+        products_url_css = '.product--info > a::attr(href)'
+        urls = clean(response.css(products_url_css))
 
         if not urls:
             return
 
-        meta = {'csrf_token': self.csrf_token,
-                'trail': self.add_trail(response)}
-        yield from [response.follow(url, callback=self.parse_item, meta=meta.copy())
+        response.meta['trail'] = self.add_trail(response)
+        yield from [response.follow(url, callback=self.parse_item, meta=response.meta.copy())
                     for url in set(urls)]
-        css = '.paging--link.is--active ~ a::attr(href)'
-        url = clean(response.css(css))
+        url = clean(response.css('.paging--link.is--active ~ a::attr(href)'))
 
         if not url:
             return
 
-        meta = {'trail': self.add_trail(response)}
-        yield response.follow(url[0], callback=self.parse_products, meta=meta.copy())
+        yield response.follow(url[0], callback=self.parse_products, meta=response.meta.copy())
 
 
 class MacJeansParseSpiderAT(MacJeansParseSpider, MixinAT):
@@ -179,3 +173,12 @@ class MacJeansParseSpiderAT(MacJeansParseSpider, MixinAT):
 class MacJeansCrawlSpiderAT(MacJeansCrawlSpider, MixinAT):
     name = MixinAT.retailer + '-crawl'
     parse_spider = MacJeansParseSpiderAT()
+
+
+class MacJeansParseSpiderDE(MacJeansParseSpider, MixinDE):
+    name = MixinDE.retailer + '-parse'
+
+
+class MacJeansCrawlSpiderDE(MacJeansCrawlSpider, MixinDE):
+    name = MixinDE.retailer + '-crawl'
+    parse_spider = MacJeansParseSpiderDE()
