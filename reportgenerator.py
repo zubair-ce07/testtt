@@ -1,53 +1,64 @@
 
 def report_generator(report, calculation_result):
-    output = []
-    if report == 'yearly':
-        output = generate_yearly_report(calculation_result)
-    elif report == 'monthly':
-        output = generate_monthly_report(calculation_result)
-    elif report == 'bar_chart':
-        output = generate_bar_chart(calculation_result)
+    if report == 'e':
+        generate_yearly_report(calculation_result)
+    elif report == 'a':
+        generate_monthly_report(calculation_result)
+    elif report == 'c':
+        generate_bar_chart(calculation_result)
 
-    for item in output:
-        print(item)
+
+def generate_yearly_report(calculation_result):
+    max_temp = calculation_result.get('max_temp')
+    max_temp_day = calculation_result.get('max_temp_day')
+    low_temp = calculation_result.get('low_temp')
+    low_temp_day = calculation_result.get('low_temp_day')
+    max_humid = calculation_result.get('max_humid')
+    max_humid_day = calculation_result.get('max_humid_day')
+
+    result = "\nYearly Analysis Report Generated :\n\n Highest: {0}C on {1}\n Lowest: {2}C on {3} \n Humidity: {4}% " \
+             "on {5} \n".format(max_temp, max_temp_day, low_temp, low_temp_day, max_humid, max_humid_day)
+
+    print(result)
+    print('--------------------------------')
+
+
+def generate_monthly_report(calculation_result):
+    avg_max_temp = calculation_result.get('avg_max_temp')
+    avg_low_temp = calculation_result.get('avg_low_temp')
+    avg_mean_humid = calculation_result.get('avg_mean_humid')
+
+    result = "\nMonthly Analysis Report Generated : \n\n Highest Average: {0}C \n Lowest Average: {1}C \n " \
+             "Average Mean Humidity: {2}% \n".format(avg_max_temp, avg_low_temp, avg_mean_humid)
+
+    print(result)
     print('--------------------------------')
 
 
 def generate_bar_chart(calculation_result):
-    output, bonus_task = [], []
-    output.append('\nBar Chart Report Generated : \n')
-    bonus_task.append('\nBonus implementation single bar chart :')
+    print('\nBar Chart Report Generated : \n\n')
+    for record in calculation_result:
+        max_temp = record.get('max_temp')
+        low_temp = record.get('low_temp')
+        day = record.get('day')
+        max_tmp_bar = '+' * max_temp
+        low_tmp_bar = '+' * low_temp
+        print("{0}\033[31m {1} {2}C \n{0}\033[34m {3} {4}C".format(day, max_tmp_bar, max_temp, low_tmp_bar, low_temp))
 
-    for item in calculation_result:
-        max_temp_bar, low_temp_bar, remain_max_temp = '', '', ''
-        if item['max_temp'] != '':
-            max_temp_bar = '+' * int(item['max_temp'])
-
-        if item['low_temp'] != '':
-            low_temp_bar = '+' * int(item['low_temp'])
-
-        remain_max_temp = '+' * (len(max_temp_bar) - len(low_temp_bar))
-        output.append("%s \033[31m %s %sC"%(item['day'], max_temp_bar,item['max_temp']))
-        output.append("%s \033[34m %s %sC" % (item['day'], low_temp_bar, item['low_temp']))
-        bonus_task.append("%s \033[34m %s \033[31m %s \033[34m %sC - \033[31m %sC" % (item['day'], low_temp_bar, remain_max_temp, item['low_temp'], item['max_temp']))
-
-    output.extend(bonus_task)
-
-    return output
+    print('--------------------------------')
 
 
-def generate_yearly_report(calculation_result):
-    output = []
-    output.append('\nYearly Analysis Report Generated : \n')
-    output.append('Highest: %sC on %s' % (str(calculation_result.max_temp), calculation_result.max_temp_day))
-    output.append('Lowest: %sC on %s' % (str(calculation_result.low_temp), calculation_result.low_temp_day))
-    output.append('Humidity: %s%% on %s' % (str(calculation_result.max_humid), calculation_result.max_humid_day))
-    return output
+def generate_bonus_bar_chart(calculation_result):
+    print('\nBonus implementation single bar chart : \n\n')
+    for record in calculation_result:
+        max_temp = record.get('max_temp')
+        low_temp = record.get('low_temp')
+        day = record.get('day')
+        low_tmp_bar = '+' * low_temp
+        remain_tmp = '+' * (max_temp - low_temp)
 
-def generate_monthly_report(calculation_result):
-    output = []
-    output.append('\nMonthly Analysis Report Generated : \n')
-    output.append('Highest Average: %sC' % (str(calculation_result.average_max_temp)))
-    output.append('Lowest Average: %sC' % (str(calculation_result.average_low_temp)))
-    output.append('Average Mean Humidity: %s%%' % (str(calculation_result.average_mean_humid)))
-    return output
+        print("{0}\033[34m {1}\033[31m{2} \033[34m {3}C - \033[31m {4}C".format(day, low_tmp_bar, remain_tmp, low_temp,
+                                                                                max_temp))
+
+    print('--------------------------------')
+

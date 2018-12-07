@@ -1,88 +1,68 @@
 from datetime import datetime
-from classes import CalculationResults
 
 
-def yearly_report(data_set,  year):
-    max_temp, low_temp, max_humid = 0, 0, 0
-    max_temp_day, low_temp_day, max_humid_day = '', '', ''
+def yearly_report(files_data,  year):
+    reading, result = {}, {}
+    for record in files_data:
+        record_year = datetime.strptime(record.date, '%Y-%m-%d').strftime('%Y')
+        if record_year == year:
+            reading[record.date] = ({'max_temp': record.max_temp, 'low_temp': record.low_temp, 'max_humid': record.max_humid})
 
-    for item in data_set:
-        item_year = datetime.strptime(item.date, '%Y-%m-%d').strftime('%Y')
+    if reading:
+        low_temp_day = min(reading, key=lambda k: reading[k]['low_temp'])
+        low_temp = reading[low_temp_day]['low_temp']
 
-        if int(item_year) == year:
-            if low_temp == 0:
-                if item.low_temp != '':
-                    low_temp = int(item.low_temp)
+        max_humid_day = max(reading, key=lambda k: reading[k]['max_humid'])
+        max_humid = reading[max_humid_day]['max_humid']
 
-            if item.max_temp != '':
-                if int(item.max_temp) > max_temp:
-                    max_temp = int(item.max_temp)
-                    max_temp_day = item.date
+        max_temp_day = max(reading, key=lambda k: reading[k]['max_temp'])
+        max_temp = reading[max_temp_day]['max_temp']
 
-            if item.low_temp != '':
-                if int(item.low_temp) < low_temp:
-                    low_temp = int(item.low_temp)
-                    low_temp_day = item.date
+        max_temp_day = datetime.strptime(max_temp_day, '%Y-%m-%d').strftime('%B %d')
+        low_temp_day = datetime.strptime(low_temp_day, '%Y-%m-%d').strftime('%B %d')
+        max_humid_day = datetime.strptime(max_humid_day, '%Y-%m-%d').strftime('%B %d')
 
-            if item.max_humid != '':
-                if int(item.max_humid) > max_humid:
-                    max_humid = int(item.max_humid)
-                    max_humid_day = item.date
-
-    result = CalculationResults()
-    if max_temp_day != '':
-        result.max_temp_day = datetime.strptime(max_temp_day, '%Y-%m-%d').strftime('%B %d')
-
-    if low_temp_day != '':
-        result.low_temp_day = datetime.strptime(low_temp_day, '%Y-%m-%d').strftime('%B %d')
-
-    if max_humid_day != '':
-        result.max_humid_day = datetime.strptime(max_humid_day, '%Y-%m-%d').strftime('%B %d')
-
-    result.max_temp = max_temp
-    result.low_temp = low_temp
-    result.max_humid = max_humid
+        result = ({'max_temp': max_temp, 'max_temp_day': max_temp_day, 'low_temp': low_temp,
+                   'max_humid': max_humid, 'low_temp_day': low_temp_day, 'max_humid_day': max_humid_day})
     return result
 
 
-def monthly_report(data_set, year, month):
-    max_temp, low_temp, mean_humid, no_days = 0, 0, 0, 0
+def monthly_report(files_data, time_period):
+    year = datetime.strptime(time_period, '%Y/%m').strftime('%Y')
+    month = datetime.strptime(time_period, '%Y/%m').strftime('%b')
+    max_temp, low_temp, mean_humid = [], [], []
 
-    for item in data_set:
-        item_year = datetime.strptime(item.date, '%Y-%m-%d').strftime('%Y')
-        item_month = datetime.strptime(item.date, '%Y-%m-%d').strftime('%b')
+    for record in files_data:
+        record_year = datetime.strptime(record.date, '%Y-%m-%d').strftime('%Y')
+        record_month = datetime.strptime(record.date, '%Y-%m-%d').strftime('%b')
 
-        if (int(item_year) == year) & (item_month == month):
-            no_days += 1
-            if item.max_temp != '':
-                max_temp += int(item.max_temp)
+        if (record_year == year) & (record_month == month):
+            max_temp.append(record.max_temp)
+            low_temp.append(record.low_temp)
+            mean_humid.append(record.mean_humid)
 
-            if item.low_temp != '':
-                low_temp += int(item.low_temp)
+    no_days = len(max_temp)
 
-            if item.mean_humid != '':
-                mean_humid += int(item.mean_humid)
+    avg_max_temp = sum(max_temp) // no_days
+    avg_low_temp = sum(low_temp) // no_days
+    avg_mean_humid = sum(mean_humid) // no_days
 
-    result = CalculationResults()
-    if max_temp > 0:
-        result.average_max_temp = round(max_temp / no_days, 1)
-
-    if low_temp > 0:
-        result.average_low_temp = round(low_temp / no_days, 1)
-
-    if mean_humid > 0:
-        result.average_mean_humid = round(mean_humid / no_days, 1)
+    result = ({'avg_max_temp': avg_max_temp, 'avg_low_temp': avg_low_temp, 'avg_mean_humid': avg_mean_humid})
 
     return result
 
 
-def bar_chart_report(data_set, year, month):
+def bar_chart_report(files_data, time_period):
     output = []
-    for item in data_set:
-        item_year = datetime.strptime(item.date, '%Y-%m-%d').strftime('%Y')
-        item_month = datetime.strptime(item.date, '%Y-%m-%d').strftime('%b')
+    year = datetime.strptime(time_period, '%Y/%m').strftime('%Y')
+    month = datetime.strptime(time_period, '%Y/%m').strftime('%b')
 
-        if (int(item_year) == year) & (item_month == month):
-            day = datetime.strptime(item.date, '%Y-%m-%d').strftime('%d')
-            output.append({'day':day,'max_temp':item.max_temp, 'low_temp':item.low_temp})
+    for record in files_data:
+        record_year = datetime.strptime(record.date, '%Y-%m-%d').strftime('%Y')
+        record_month = datetime.strptime(record.date, '%Y-%m-%d').strftime('%b')
+
+        if (record_year == year) & (record_month == month):
+            day = datetime.strptime(record.date, '%Y-%m-%d').strftime('%d')
+            output.append({'day': day,'max_temp': record.max_temp, 'low_temp': record.low_temp})
     return output
+

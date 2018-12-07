@@ -1,24 +1,21 @@
 import glob
 import csv
-from classes import WeatherInformation
+from classes import WeatherRecord
 
 
 def data_parser(path):
-    files_data = glob.glob(path)
     weather_reading = []
+    for f in glob.glob(path):
+        readings = csv.DictReader(open(f))
+        for reading in readings:
+            reading = {k.strip():v for k,v in reading.items()}
+            date = reading.get('PKST', reading.get('PKT'))
+            max_temp = reading.get('Max TemperatureC')
+            low_temp = reading.get('Min TemperatureC')
+            max_humid = reading.get('Max Humidity')
+            mean_humid = reading.get('Mean Humidity')
 
-    for item in files_data:
-        with open(item, "r") as file_data:
-            header = file_data.readline().split(',')
-            header = [column.strip() for column in header]
-            readings = csv.DictReader(file_data, fieldnames=header)
+            if (date != '') & (max_temp != '') & (low_temp != '') & (max_humid != '') & (mean_humid != ''):
+                weather_reading.append(WeatherRecord(date, int(max_temp), int(low_temp), max_humid, int(mean_humid)))
 
-            for reading in readings:
-                weather_information = WeatherInformation()
-                weather_information.date = reading.get('PKST', reading.get('PKT', ''))
-                weather_information.max_temp = reading.get('Max TemperatureC', '')
-                weather_information.low_temp = reading.get('Min TemperatureC', '')
-                weather_information.max_humid = reading.get('Max Humidity', '')
-                weather_information.mean_humid = reading.get('Mean Humidity', '')
-                weather_reading.append(weather_information)
     return weather_reading
