@@ -1,6 +1,4 @@
-import re
-
-from scrapy import Request, FormRequest
+from scrapy import FormRequest
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
 from w3lib.url import url_query_cleaner
@@ -10,14 +8,12 @@ from .base import BaseCrawlSpider, BaseParseSpider, clean, Gender
 
 class Mixin:
     allowed_domains = ["klingel.de"]
-    start_urls = ["www.klingel.de"]
+    start_urls = ["https://www.klingel.de"]
 
     market = "DE"
     retailer = "klingel-de"
     default_brand = "klingel"
 
-    category_req_url = "https://www.klingel.de/AjaxCategoryNavDataJSONView?" \
-                       "catalogId=1000100000&langId=-3&storeId=100004"
     ajax_url_t = "AjaxProductDescription?storeId=100004&langId=-3&catalogId=1000100000&productId={}"
 
 
@@ -125,18 +121,9 @@ class KlingelCrawler(Mixin, BaseCrawlSpider):
     name = Mixin.retailer + "-crawl"
     parse_spider = KlingelParser()
 
+    listings_css = [".hasNavbox", ".secondLevelNav", ".categoryPageNumberNext"]
     product_css = [".productBoxContainer"]
-    pagination_css = [".categoryPageNumberNext"]
 
     rules = [
-        Rule(LinkExtractor(restrict_css=pagination_css), callback="parse"),
+        Rule(LinkExtractor(restrict_css=listings_css), callback="parse"),
         Rule(LinkExtractor(restrict_css=product_css), callback="parse_item")]
-
-    def start_requests(self):
-        yield Request(self.category_req_url, callback=self.parse_category)
-
-    def parse_category(self, response):
-        script_re = "url : '(.*)'"
-        category_urls = re.findall(script_re, response.text)
-
-        return [response.follow(url, callback=self.parse) for url in category_urls]
