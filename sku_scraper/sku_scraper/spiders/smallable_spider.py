@@ -168,7 +168,6 @@ class SmallableParseSpider(BaseParseSpider):
 
     def is_unwanted(self, response):
         soup = soupify(clean(response.css('.c-breadcrumb-elem::text')))
-        print(any(u in soup.lower() for u in self.unwanted_items), '\n\n\n')
         return any(u in soup.lower() for u in self.unwanted_items)
 
     def is_outlet(self, response):
