@@ -10,40 +10,38 @@ class Mixin:
     retailer = 'hbx'
     allowed_domains = ['hbx.com']
     default_brand = 'HBX'
+    MERCH_INFO = [
+        'HBX exclusive'
+    ]
 
 
 class MixinUK(Mixin):
     retailer = Mixin.retailer + '-uk'
     market = 'UK'
-    lang = 'en'
     start_urls = ['https://www.hbx.com/catalog/settings?country=GB']
 
 
 class MixinCN(Mixin):
     retailer = Mixin.retailer + '-cn'
     market = 'CN'
-    lang = 'zh'
     start_urls = ['https://www.hbx.com/catalog/settings?country=CN']
 
 
 class MixinJP(Mixin):
     retailer = Mixin.retailer + '-jp'
     market = 'JP'
-    lang = 'en'
     start_urls = ['https://www.hbx.com/catalog/settings?country=JP']
 
 
 class MixinAU(Mixin):
     retailer = Mixin.retailer + '-au'
     market = 'AU'
-    lang = 'en'
     start_urls = ['https://www.hbx.com/catalog/settings?country=AU']
 
 
 class MixinCA(Mixin):
     retailer = Mixin.retailer + '-ca'
     market = 'CA'
-    lang = 'en'
     start_urls = ['https://www.hbx.com/catalog/settings?country=CA']
 
 
@@ -71,14 +69,12 @@ class MixinKR(Mixin):
 class MixinUS(Mixin):
     retailer = Mixin.retailer + '-us'
     market = 'US'
-    lang = 'en'
     start_urls = ['https://www.hbx.com/catalog/settings?country=US']
 
 
 class MixinAE(Mixin):
     retailer = Mixin.retailer + '-ae'
     market = 'AE'
-    lang = 'en'
     start_urls = ['https://www.hbx.com/catalog/settings?country=AE']
 
 
@@ -105,6 +101,7 @@ class HbxParseSpider(BaseParseSpider):
         garment['image_urls'] = self.image_urls(response)
         garment['gender'] = self.product_gender(response)
         garment['skus'] = self.skus(response)
+        garment['merch_info'] = self.merch_info(garment)
 
         return garment
 
@@ -121,23 +118,27 @@ class HbxParseSpider(BaseParseSpider):
         return clean(response.css(css))
 
     def product_gender(self, response):
-        soup = self.raw_skus(response)['gender']
+        soup = self.raw_product(response)['gender']
         return self.gender_lookup(soupify(soup)) or Gender.ADULTS.value
 
-    def raw_skus(self, response):
+    def raw_product(self, response):
         css = '#product-summary ::attr(data-product)'
         return json.loads(clean(response.css(css))[0])
 
     def image_urls(self, response):
-        return [raw_url['_links']['full']['href'] for raw_url in self.raw_skus(response)['images']]
+        return [raw_image['_links']['full']['href'] for raw_image in self.raw_product(response)['images']]
+
+    def merch_info(self, garment):
+        soup = ' '.join(garment['description'] + garment['care'])
+        return [m for m in self.MERCH_INFO if m in soup]
 
     def skus(self, response):
         skus = {}
 
         common_sku = self.product_pricing_common(response)
-        common_sku['colour'] = colour = self.raw_skus(response)['display_color']
+        common_sku['colour'] = colour = self.raw_product(response)['display_color']
 
-        raw_sizes = self.raw_skus(response)['variants']
+        raw_sizes = self.raw_product(response)['variants']
         for raw_size in raw_sizes[1:] or raw_sizes:
             sku = common_sku.copy()
             sku['size'] = size = raw_size['_embedded']['size'] or self.one_size
