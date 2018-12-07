@@ -67,11 +67,13 @@ class MixinKR(Mixin):
     lang = 'en'
     start_urls = ['https://www.hbx.com/catalog/settings?country=KR']
 
+
 class MixinUS(Mixin):
     retailer = Mixin.retailer + '-us'
     market = 'US'
     lang = 'en'
     start_urls = ['https://www.hbx.com/catalog/settings?country=US']
+
 
 class MixinAE(Mixin):
     retailer = Mixin.retailer + '-ae'
