@@ -1,9 +1,6 @@
-import json
-
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule, Request
 from scrapy.http.request.form import FormRequest
-from scrapy.selector import Selector
 
 from .base import BaseParseSpider, BaseCrawlSpider, clean, soupify, Gender
 
@@ -11,6 +8,10 @@ from .base import BaseParseSpider, BaseCrawlSpider, clean, soupify, Gender
 class Mixin:
     retailer = 'smallable'
     allowed_domains = ['smallable.com']
+
+    unwanted_items = [
+        'pushchairs', 'poussette', 'cochecitos', 'kinderwagen', 'passaggini',
+    ]
 
 
 class MixinUK(Mixin):
@@ -136,31 +137,17 @@ class MixinQA(Mixin):
     start_urls = ['https://en.smallable.com/']
 
 
-class MixinEU(Mixin):
-    retailer = Mixin.retailer + '-eu'
-    market = 'EU'
-    retailer_currency = 'EUR'
-    start_urls = ['https://en.smallable.com/']
-
-
 class SmallableParseSpider(BaseParseSpider):
     brand_css = '[itemprop="brand"] ::text'
     raw_description_css = '[itemprop="description"] ::text'
 
-    # def parse(self, response):
-    #     url = 'https://en.smallable.com/currency/change'
-    #     headers = {
-    #         'Referer': response.url
-    #     }
-    #     yield FormRequest(url, method='POST', headers=headers, body=json.dumps({'id': '9'}), callback=self.parse1)
-
-    # def parse1(self, response):
-    #     url = 'https://fr.smallable.com/robe-boutonnee-naia-collection-ado-et-femme-ecru-numero-74-118141.html',
-    #     yield response.follow(url, dont_filter=True, callback=self.parse2)
+    spider_one_sizes = ['TU']
 
     def parse(self, response):
-        garment = self.new_unique_garment(self.product_id(response))
+        if self.is_unwanted(response):
+            return
 
+        garment = self.new_unique_garment(self.product_id(response))
         if not garment:
             return
 
@@ -171,14 +158,24 @@ class SmallableParseSpider(BaseParseSpider):
         else:
             garment['gender'] = self.product_gender(garment)
 
+        if self.is_outlet(response):
+            garment['outlet'] = True
+
         garment['image_urls'] = self.image_urls(response)
         garment['skus'] = self.sku(response)
 
         return garment
 
+    def is_unwanted(self, response):
+        soup = soupify(clean(response.css('.c-breadcrumb-elem::text')))
+        print(any(u in soup.lower() for u in self.unwanted_items), '\n\n\n')
+        return any(u in soup.lower() for u in self.unwanted_items)
+
+    def is_outlet(self, response):
+        return 'outlet' in clean(response.css('title::text'))[0].lower()
+
     def is_homeware(self, response, garment):
-        homeware_keys = ['Design']
-        return any(key in garment['category'] for key in homeware_keys)
+        return 'design' in soupify(garment['category']).lower()
 
     def product_id(self, response):
         return response.url.split('-')[-1].strip('.html')
@@ -204,17 +201,15 @@ class SmallableParseSpider(BaseParseSpider):
 
         for size_s in response.css('#form_size_select option:not(.hide)'):
             price_css = '::attr(data-price), ::attr(data-discount-price)'
-            currency_css = '[itemprop="priceCurrency"]::attr(content)'
+            default_price_css = '.full-price strong::text'
+
+            money_strs = clean(size_s.css(price_css)) + clean(response.css(default_price_css))
+            sku = self.product_pricing_common(response, money_strs=money_strs)
 
             if size_s.css('.oos'):
-                continue
-            else:
-                money_strs = clean(size_s.css(price_css)) + clean(response.css(currency_css))
-                sku = self.product_pricing_common(response, money_strs=money_strs)
+                sku['out_of_stock'] = True
 
-            size = clean(size_s.css('::attr(data-size)'))[0]
-
-            sku['size'] = self.one_size if size == 'TU' else size
+            sku['size'] = clean(size_s.css('::attr(data-size)'))[0]
             sku['colour'] = colour
 
             skus[f"{sku['colour']}_{sku['size']}"] = sku
@@ -226,11 +221,12 @@ class SmallableCrawlSpider(BaseCrawlSpider):
     listings_css = ['.nav-list', '[rel="next"]']
     products_css = ['.ratio-product-item']
 
-    deny_re = ['brands', 'toys', 'baby']
+    deny_re = ['brands', 'toys', 'marques', 'jouets', 'marcas', 'juguetes',
+               'marken', 'spiel', 'marche', 'giocattoli']
 
-    # custom_settings = {
-    #     'DOWNLOAD_DELAY': '2'
-    # }
+    custom_settings = {
+        'DOWNLOAD_DELAY': '2'
+    }
 
     rules = (
         Rule(LinkExtractor(restrict_css=listings_css, deny=deny_re), callback='parse'),
@@ -238,34 +234,24 @@ class SmallableCrawlSpider(BaseCrawlSpider):
     )
 
     def start_requests(self):
-        return [Request(url, callback=self.currency_change, dont_filter=True) for url in self.start_urls]
+        return [Request(url, callback=self.change_currency, dont_filter=True) for url in self.start_urls]
 
-    def currency_change(self, response):
+    def change_currency(self, response):
         currencies_css = f'.selector-container a[data-label={self.retailer_currency}]::attr(data-currency)'
         currency_code = clean(response.css(currencies_css))[0]
-        url = 'https://en.smallable.com/currency/change'
-        headers = {'Referer': response.url}
-        return FormRequest(url, method='POST', headers=headers, formdata={'id': currency_code},
-                           callback=self.location_change, dont_filter=True)
+        return FormRequest('https://en.smallable.com/currency/change', method='POST',
+                           formdata={'id': currency_code}, callback=self.change_location, dont_filter=True)
 
-    def location_change(self, response):
-        css = '.country-change [data-iso=IC]::attr(value)'
+    def change_location(self, response):
+        market = 'GB' if self.market == 'UK' else self.market
+        css = f'.country-change [data-iso={market}]::attr(value)'
         country_code = clean(response.css(css))[0]
-        url = 'https://en.smallable.com/country/change'
-        headers = {'Referer': response.url}
-        return FormRequest(url, method='POST', headers=headers, formdata={'id': country_code},
-                           callback=self.parse, dont_filter=True)
+        return FormRequest('https://en.smallable.com/country/change', method='POST',
+                           formdata={'id': country_code}, callback=self.parse, dont_filter=True)
 
 
 class SmallableUKParseSpider(SmallableParseSpider, MixinUK):
     name = MixinUK.retailer + '-parse'
-    # start_urls = [
-    #     'https://fr.smallable.com/robe-boutonnee-naia-collection-ado-et-femme-ecru-numero-74-118141.html',
-    #     'https://en.smallable.com/two-con-me-suede-double-velcro-sandals-grey-pepe-57158.html',
-    #     'https://en.smallable.com/cotton-and-silk-blouse-mustard-pomandere-131232.html',
-    #     'https://en.smallable.com/cotton-and-silk-blouse-raspberry-red-pomandere-131233.html',
-    #     'https://en.smallable.com/cotton-and-silk-blouse-pink-pomandere-131234.html',
-    # ]
 
 
 class SmallableUKCrawlSpider(SmallableCrawlSpider, MixinUK):
@@ -320,6 +306,9 @@ class SmallableDECrawlSpider(SmallableCrawlSpider, MixinDE):
 
 class SmallableFRParseSpider(SmallableParseSpider, MixinFR):
     name = MixinFR.retailer + '-parse'
+    start_urls = [
+        'https://fr.smallable.com/sac-yoyo-bag-noir-babyzen-139850.html'
+    ]
 
 
 class SmallableFRCrawlSpider(SmallableCrawlSpider, MixinFR):
@@ -415,12 +404,3 @@ class SmallableQAParseSpider(SmallableParseSpider, MixinQA):
 class SmallableQACrawlSpider(SmallableCrawlSpider, MixinQA):
     name = MixinQA.retailer + '-crawl'
     parse_spider = SmallableQAParseSpider()
-
-
-class SmallableEUParseSpider(SmallableParseSpider, MixinEU):
-    name = MixinEU.retailer + '-parse'
-
-
-class SmallableEUCrawlSpider(SmallableCrawlSpider, MixinEU):
-    name = MixinEU.retailer + '-crawl'
-    parse_spider = SmallableEUParseSpider()
