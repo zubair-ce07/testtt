@@ -31,7 +31,6 @@ class DrmartensParseSpider(BaseParseSpider, Mixin):
 
         self.boilerplate_normal(garment, response)
         garment['image_urls'] = self.image_urls(response)
-        garment['category'] = self.product_category(response)
         garment['gender'] = self.product_gender(garment)
         garment['skus'] = self.skus(response)
 
@@ -41,9 +40,9 @@ class DrmartensParseSpider(BaseParseSpider, Mixin):
         skus = {}
         sku_ids_css = '.colour-pallet-device span::attr(id)'
         raw_sku_ids = clean(response.css(sku_ids_css))
+        common = self.product_pricing_common(response)
 
         for raw_sku_id in raw_sku_ids:
-            common = self.product_pricing_common(response)
             colour_css = f'#{raw_sku_id}::attr(title)'
             raw_sku_css = f'#{raw_sku_id}::attr(data-size-displays)'
             raw_skus = clean(response.css(raw_sku_css))[0]
@@ -51,7 +50,7 @@ class DrmartensParseSpider(BaseParseSpider, Mixin):
 
             for raw_sku in json.loads(raw_skus):
                 sku = common.copy()
-                sku['size'] = raw_sku['display'] if '1 - SIZE' != raw_sku['display'] else 'One Size'
+                sku['size'] = self.one_size if '1 - SIZE' == raw_sku['display'] else raw_sku['display']
                 sku_id = f'{sku["colour"]}_{sku["size"]}'
                 skus[sku_id] = sku
 
@@ -72,7 +71,7 @@ class DrmartensParseSpider(BaseParseSpider, Mixin):
         return clean(response.css(css))
 
     def product_id(self, response):
-        return clean(response.css('.product-code ::text'))[0]
+        return clean(response.css('.product-code ::text'))[0][:-3]
 
     def product_name(self, response):
         return clean(response.css('.box-details h1 ::text'))[0]
@@ -82,15 +81,9 @@ class DrmartensCrawlSpider(BaseCrawlSpider, Mixin):
     name = Mixin.retailer + '-crawl'
     parse_spider = DrmartensParseSpider()
     category_allow_r = ['c/womens$', 'c/mens$', 'c/kids$']
-    product_allow_r = r'/p/[a-z-]+'
+    products_css = '.box-product-list'
     rules = (
-        Rule(
-            LinkExtractor(allow=category_allow_r),
-            callback="parse",
-        ),
-        Rule(
-            LinkExtractor(allow=product_allow_r),
-            callback="parse_item",
-        ),
+        Rule(LinkExtractor(allow=category_allow_r), callback="parse"),
+        Rule(LinkExtractor(restrict_css=products_css), callback="parse_item"),
     )
 
