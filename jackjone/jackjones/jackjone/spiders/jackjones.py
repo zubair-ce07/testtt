@@ -40,7 +40,7 @@ class JackjoneComSpider(Spider):
         product["url"] = response.url
         product["pid"] = response.css("#pid::attr(value)").extract_first()
         product["article_number"] = response.css(
-            "form[data-articlenumber]::attr(data-articlenumber)").extract_first()
+            "::attr(data-articlenumber)").extract_first()
         product["name"] = response.css(".product-name--visible::text").extract_first()
         category = response.css(".breadcrumb>a::text").extract()
 
@@ -62,7 +62,7 @@ class JackjoneComSpider(Spider):
             "color_urls": color_urls,
             "skus": {}
         }
-        yield Request(response.url, self.sku_attribute_color, meta=meta, dont_filter=True)
+        return Request(response.url, self.sku_attribute_color, meta=meta, dont_filter=True)
 
     def item_attributes(self, response):
         attributes = {}
@@ -83,32 +83,30 @@ class JackjoneComSpider(Spider):
         product = response.meta["product"]
         product["images"].extend(response.css(
                     ".product-images__thumbnails__underlay>img::attr(data-src)").extract())
-        size_urls = response.css(".size>li>a::attr(data-href)").extract()
-        sizes = response.css(".size>li>a>div::text").extract()
-        first_size_url = size_urls[0]
-        size_urls = size_urls[1:]
+        size_urls = response.css(".size a::attr(data-href)").extract()
+        sizes = response.css(".size a>div::text").extract()
+        first_size_url = size_urls.pop(0)
         meta = response.meta
         meta["product"] = product
         meta["size_urls"] = size_urls
         meta["sizes"] = sizes
         meta["color"] = color
         first_size_url = "{}{}".format(first_size_url, self.item_link_attrib)
-        yield Request(first_size_url, self.sku_attribute_size, meta=meta, dont_filter=True)
+        return Request(first_size_url, self.sku_attribute_size, meta=meta, dont_filter=True)
 
     def sku_attribute_size(self, response):
-        length_urls = response.css(".length>li>a::attr(data-href)").extract()
+        length_urls = response.css(".length a::attr(data-href)").extract()
 
         if length_urls:
-            first_length_url = length_urls[0]
-            length_urls = length_urls[1:]
-            lengths = response.css(".length>li>a>div::text").extract()
+            first_length_url = length_urls.pop(0)
+            lengths = response.css(".length a>div::text").extract()
             meta = response.meta
             meta["length_urls"] = length_urls
             meta["lengths"] = lengths
             first_length_url = "{}{}".format(first_length_url, self.item_link_attrib)
-            yield Request(first_length_url, self.fill_sku_attributes, meta=meta)
-        else:
-            yield from self.fill_sku_attributes(response)
+            return Request(first_length_url, self.fill_sku_attributes, meta=meta)
+        
+        return self.fill_sku_attributes(response)
 
     def fill_sku_attributes(self, response):
         available = response.css("#add-to-cart").extract()
@@ -119,12 +117,12 @@ class JackjoneComSpider(Spider):
             sizes = response.meta.get("sizes")
 
             if lengths:
-                yield from self.fill_sku_length(response, price, was_price)
+                return self.fill_sku_length(response, price, was_price)
             elif sizes:
-                yield from self.fill_sku_sizes(response, price, was_price)
+                return self.fill_sku_sizes(response, price, was_price)
 
         else:
-            yield from self.move_to_next_sku(response.meta)
+            return self.move_to_next_sku(response.meta)
 
     def fill_sku_length(self, response, price, was_price):
         lengths = response.meta["lengths"]
@@ -134,7 +132,6 @@ class JackjoneComSpider(Spider):
         currency = response.meta["currency"]
         size = sizes[0]
         length = lengths[0]
-        lengths = lengths[1:]
         key = "{}_{}_{}".format(color, size, length)
         skus[key] = {
             "color": color,
@@ -150,7 +147,7 @@ class JackjoneComSpider(Spider):
         meta = response.meta
         meta["lengths"] = lengths
         meta["skus"] = skus
-        yield from self.move_to_next_sku(meta)
+        return self.move_to_next_sku(meta)
 
     def fill_sku_sizes(self, response, price, was_price):
         sizes = response.meta.get("sizes")
@@ -170,7 +167,7 @@ class JackjoneComSpider(Spider):
 
         meta = response.meta
         meta["skus"] = skus
-        yield from self.move_to_next_sku(meta)
+        return self.move_to_next_sku(meta)
 
     def move_to_next_sku(self, meta):
         length_urls = meta.get("length_urls")
@@ -179,28 +176,24 @@ class JackjoneComSpider(Spider):
         sizes = meta["sizes"]
 
         if length_urls:
-            lengths = meta.get("lengths")
-            next_length_url = length_urls[0]
-            length_urls = length_urls[1:]
+            next_length_url = length_urls.pop(0)
+            meta["lengths"].pop(0)
             meta["length_urls"] = length_urls
-            meta["lengths"] = lengths
             next_length_url = "{}{}".format(next_length_url, self.item_link_attrib)
-            yield Request(next_length_url, self.fill_sku_attributes, meta=meta, dont_filter=True)
+            return Request(next_length_url, self.fill_sku_attributes, meta=meta, dont_filter=True)
         elif size_urls:
-            next_size_url = size_urls[0]
-            size_urls = size_urls[1:]
-            sizes = sizes[1:]
+            next_size_url = size_urls.pop(0)
+            sizes.pop(0)
             meta["size_urls"] = size_urls
             meta["sizes"] = sizes
             next_size_url = "{}{}".format(next_size_url, self.item_link_attrib)
-            yield Request(next_size_url, self.sku_attribute_size, meta=meta, dont_filter=True)
+            return Request(next_size_url, self.sku_attribute_size, meta=meta, dont_filter=True)
         elif color_urls:
-            next_color_url = color_urls[0]
-            color_urls = color_urls[1:]
+            next_color_url = color_urls.pop(0)
             meta["color_urls"] = color_urls
             next_color_url = "{}{}".format(next_color_url, self.item_link_attrib)
-            yield Request(next_color_url, self.sku_attribute_color, meta=meta, dont_filter=True)
+            return Request(next_color_url, self.sku_attribute_color, meta=meta, dont_filter=True)
         else:
             product = meta.get("product")
             product["skus"] = meta.get("skus")
-            yield product
+            return dict(product)
