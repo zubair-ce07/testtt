@@ -3,6 +3,7 @@ import re
 from scrapy import Request, FormRequest
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
+from w3lib.url import url_query_cleaner
 
 from .base import BaseCrawlSpider, BaseParseSpider, clean, Gender
 
@@ -21,7 +22,7 @@ class Mixin:
 
 
 class KlingelParser(Mixin, BaseParseSpider):
-    name = Mixin.retailer + "-parser"
+    name = Mixin.retailer + "-parse"
 
     description_css = "span[itemprop='description']::text"
     care_css = ".materialDescription ::text"
@@ -29,15 +30,14 @@ class KlingelParser(Mixin, BaseParseSpider):
     price_css = "span[id*='offerPrice']::text"
 
     def parse(self, response):
-        part_no = self.product_part_number(response)
-        garment = self.new_unique_garment(part_no)
+        product_id = self.product_id(response)
+        garment = self.new_unique_garment(product_id)
 
         if not garment:
             return
 
         self.boilerplate_normal(garment, response)
 
-        garment["url"] = response.url
         garment["image_urls"] = self.image_urls(response)
         garment["category"] = self.product_category(response)
         garment["gender"] = self.product_gender(garment)
@@ -47,7 +47,7 @@ class KlingelParser(Mixin, BaseParseSpider):
 
         return self.next_request_or_garment(garment)
 
-    def product_part_number(self, response):
+    def product_id(self, response):
         css = "#productPartNumber::attr(value)"
         return clean(response.css(css))[0]
 
@@ -66,46 +66,40 @@ class KlingelParser(Mixin, BaseParseSpider):
     def image_urls(self, response):
         css = ".productThumbNail::attr(src)"
         raw_img_urls = clean(response.css(css))
-        return [response.urljoin(url[:url.find('?')]) for url in raw_img_urls]
+        return [url_query_cleaner(response.urljoin(url)) for url in raw_img_urls]
 
-    def product_id(self, response):
+    def colour_id(self, response):
         css = "input[name='productId']::attr(value)"
         return clean(response.css(css))[0]
 
     def colour_requests(self, response):
         colours_css = ".color::attr(title)"
         colours = clean(response.css(colours_css))
+        colour_id = self.colour_id(response)
 
-        product_id = self.product_id(response)
-
-        return [FormRequest(response.urljoin(self.ajax_url_t.format(product_id)), method="POST",
+        return [FormRequest(response.urljoin(self.ajax_url_t.format(colour_id)),
                             callback=self.parse_colour, formdata={"colorId": colour},
                             dont_filter=True) for colour in colours]
 
     def parse_colour(self, response):
         garment = response.meta['garment']
         garment['meta']["requests_queue"] += self.size_requests(response)
-
         return self.next_request_or_garment(garment)
 
     def size_requests(self, response):
-        size_css = ".sizeLabel::attr(id)"
+        size_css = ".sizeLabel::attr(id), .singleSize::text"
         sizes = clean(response.css(size_css))
 
         selected_colour_css = "input[name='selectedColor']::attr(value)"
         selected_colour = clean(response.css(selected_colour_css))[0]
 
-        if not sizes:
-            sizes.append("")
-
-        return [FormRequest(response.url, method="POST", callback=self.parse_size,
+        return [FormRequest(response.url, callback=self.parse_size,
                             formdata={"colorId": selected_colour, "sizeId": size},
                             dont_filter=True) for size in sizes]
 
     def parse_size(self, response):
         garment = response.meta['garment']
         garment["skus"].update(self.skus(response))
-
         return self.next_request_or_garment(garment)
 
     def skus(self, response):
@@ -128,7 +122,7 @@ class KlingelParser(Mixin, BaseParseSpider):
 
 
 class KlingelCrawler(Mixin, BaseCrawlSpider):
-    name = Mixin.retailer + "-crawler"
+    name = Mixin.retailer + "-crawl"
     parse_spider = KlingelParser()
 
     product_css = [".productBoxContainer"]
@@ -143,6 +137,6 @@ class KlingelCrawler(Mixin, BaseCrawlSpider):
 
     def parse_category(self, response):
         script_re = "url : '(.*)'"
-        category_urls = re.findall(script_re, response.body.decode("utf-8"))
+        category_urls = re.findall(script_re, response.text)
 
         return [response.follow(url, callback=self.parse) for url in category_urls]
