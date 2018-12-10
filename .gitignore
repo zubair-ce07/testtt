@@ -59,3 +59,8 @@ target/
 
 # VSCode
 .vscode
+
+# Scrapy files
+scrapy.cfg
+middlewares.py
+.scrapy/
