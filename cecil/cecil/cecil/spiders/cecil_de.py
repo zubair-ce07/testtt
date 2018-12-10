@@ -16,7 +16,8 @@ class CecilDeSpider(Spider):
     custom_settings = {
         "ITEM_PIPELINES": {
             "cecil.pipelines.FilterDuplicate": 300,
-        }
+        },
+        "ROBOTSTXT_OBEY": False,
     }
 
     def start_requests(self):
@@ -126,14 +127,14 @@ class CecilDeSpider(Spider):
             skus[color]["was_price"] = was_price
 
         if color_urls:
-            next_color_link = color_urls[0]
-            color_urls = color_urls[1:]
+            next_color_link = color_urls.pop()
             meta = {
                 "product": product,
                 "color_urls": color_urls,
                 "skus": skus
             }
-            return Request(next_color_link, self.get_item_skus, headers=self.headers, meta=meta, dont_filter=True)
+            return Request(next_color_link, self.get_item_skus, \
+                        headers=self.headers, meta=meta, dont_filter=True)
         else:
             product["skus"] = skus
             return dict(product)
