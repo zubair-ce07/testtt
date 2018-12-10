@@ -79,9 +79,9 @@ class MixinAE(Mixin):
     start_urls = ['https://www.hbx.com/catalog/settings?country=AE']
 
 
-class MixinDE(Mixin):
-    retailer = Mixin.retailer + '-de'
-    market = 'DE'
+class MixinEU(Mixin):
+    retailer = Mixin.retailer + '-eu'
+    market = 'EU'
     lang = 'en'
     start_urls = ['https://www.hbx.com/catalog/settings?country=DE']
 
@@ -255,10 +255,10 @@ class HbxAECrawlSpider(HbxCrawlSpider, MixinAE):
     parse_spider = HbxAEParseSpider()
 
 
-class HbxDEParseSpider(HbxParseSpider, MixinDE):
-    name = MixinDE.retailer + '-parse'
+class HbxEUParseSpider(HbxParseSpider, MixinEU):
+    name = MixinEU.retailer + '-parse'
 
 
-class HbxDECrawlSpider(HbxCrawlSpider, MixinDE):
-    name = MixinDE.retailer + '-crawl'
-    parse_spider = HbxDEParseSpider()
+class HbxEUCrawlSpider(HbxCrawlSpider, MixinEU):
+    name = MixinEU.retailer + '-crawl'
+    parse_spider = HbxEUParseSpider()
