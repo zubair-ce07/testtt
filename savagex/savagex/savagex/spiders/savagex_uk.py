@@ -12,7 +12,7 @@ class SavagexUkSpider(Spider):
     name = 'savagex.uk'
     start_urls = ['https://www.savagex.co.uk/products']
     base_item_link = "https://www.savagex.co.uk/shop/"
-    header = {
+    headers = {
         "x-api-key": "V0X9UnXkvO4vTk1gYHnpz7jQyAMO64Qp4ONV2ygu",
         "x-tfg-storedomain": "www.savagex.co.uk"
     }
@@ -20,7 +20,8 @@ class SavagexUkSpider(Spider):
     custom_settings = {
         "ITEM_PIPELINES": {
             "savagex.pipelines.FilterDuplicate": 300,
-        }
+        },
+        "ROBOTSTXT_OBEY": False,
     }
 
     def parse(self, response):
@@ -40,10 +41,12 @@ class SavagexUkSpider(Spider):
 
         next_page_url = "https://www.savagex.co.uk/api/products?" \
             "aggs=false&includeOutOfStock=true&page=2&size=28&sort=newarrivals&excludeFpls=13511"
-        yield Request(url=next_page_url, callback=self.parse_pages, meta={"page_num": 2}, headers=self.header)
+        yield Request(url=next_page_url, callback=self.parse_pages,\
+                meta={"page_num": 2}, headers=self.headers)
 
     def get_products(self, response):
-        raw_product = re.findall(r'State\":\s*(.+),\s*\"initialP', response.text)
+        raw_product = re.findall(
+            r'State\":\s*(.+),\s*\"initialP', response.text)
 
         if raw_product:
             return json.loads(raw_product[0])
@@ -64,10 +67,11 @@ class SavagexUkSpider(Spider):
         if products:
             page_num = response.meta["page_num"]
             page_num = page_num + 1
-            next_page_url = "https://www.savagex.co.uk/api/products?"\
-                "aggs=false&includeOutOfStock=true&page={}&size=28&sort=newarrivals&excludeFpls=13511".format(
-                    page_num)
-            yield Request(url=next_page_url, callback=self.parse_pages, meta={"page_num": page_num}, headers=self.header)
+            next_page_url = "https://www.savagex.co.uk/api/products?aggs=false&"\
+                "includeOutOfStock=true&page={}&size=28&sort=newarrivals&"\
+                "excludeFpls=13511".format(page_num)
+            yield Request(url=next_page_url, callback=self.parse_pages,
+                          meta={"page_num": page_num}, headers=self.headers)
 
     def parse_item_details(self, response):
         raw_product = self.get_products(response)
@@ -98,8 +102,7 @@ class SavagexUkSpider(Spider):
 
         color_urls = ["{}{}-{}".format(base_link, color_data["permalink"], color_data["related_product_id"])
                       for color_data in item["related_product_id_object_list"]]
-        first_color_url = color_urls[0]
-        color_urls = color_urls[1:]
+        first_color_url = color_urls.pop()
 
         if color:
             meta = {
@@ -107,20 +110,20 @@ class SavagexUkSpider(Spider):
                 "color_urls": color_urls,
                 "skus": {}
             }
-            yield Request(url=first_color_url, callback=self.get_item_skus, meta=meta, dont_filter=True)
+            return Request(url=first_color_url, callback=self.get_item_skus, meta=meta, dont_filter=True)
         elif "products_in_set" in item:
             currency = response.xpath(
                 "//meta[@property='og:price:currency']/@content").extract_first()
-            yield from self.get_set_item_skus(product, item, currency)
+            return self.get_set_item_skus(product, item, currency)
 
     def get_item_attributes(self, raw_product):
         item = list(raw_product["products"]["byMasterProductId"].values())
-        assets = raw_product["assets"]["products_image_banner"]["assets"]
+        assets = raw_product["assets"].get("products_image_banner")
         attribute = {}
 
-        if not item:
+        if not item or not assets:
             return attribute
-
+        assets = assets["assets"]
         item = item[0]
         promo_ids = item["featured_product_location_id_list"]
         flag = True
@@ -147,8 +150,8 @@ class SavagexUkSpider(Spider):
 
         for one_set in item_sets:
             key = "{}_{}".format(one_set["label"], one_set["color"])
-            available_sizes = [
-                size["size"] for size in one_set["product_id_object_list"] if size["available_quantity"]]
+            available_sizes = [size["size"] for size in one_set["product_id_object_list"]
+                               if size["available_quantity"]]
             price = item["retail_unit_price"]
             skus[key] = {
                 "set": one_set["label"],
@@ -202,14 +205,14 @@ class SavagexUkSpider(Spider):
             }
 
         if color_urls:
-            next_color_url = color_urls[0]
-            color_urls = color_urls[1:]
+            next_color_url = color_urls.pop()
             meta = {
                 "product": product,
                 "color_urls": color_urls,
                 "skus": skus,
             }
-            return Request(url=next_color_url, callback=self.get_item_skus, meta=meta, dont_filter=True)
+            return Request(url=next_color_url, callback=self.get_item_skus,\
+                        meta=meta, dont_filter=True)
         else:
             product["skus"] = skus
             product["available"] = bool(skus)
