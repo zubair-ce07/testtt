@@ -74,8 +74,7 @@ class KlingelParser(Mixin, BaseParseSpider):
         colour_id = self.colour_id(response)
 
         return [FormRequest(response.urljoin(self.ajax_url_t.format(colour_id)),
-                            callback=self.parse_colour, formdata={"colorId": colour},
-                            dont_filter=True) for colour in colours]
+                callback=self.parse_colour, formdata={"colorId": colour}) for colour in colours]
 
     def parse_colour(self, response):
         garment = response.meta['garment']
@@ -90,8 +89,7 @@ class KlingelParser(Mixin, BaseParseSpider):
         selected_colour = clean(response.css(selected_colour_css))[0]
 
         return [FormRequest(response.url, callback=self.parse_size,
-                            formdata={"colorId": selected_colour, "sizeId": size},
-                            dont_filter=True) for size in sizes]
+                formdata={"colorId": selected_colour, "sizeId": size}) for size in sizes]
 
     def parse_size(self, response):
         garment = response.meta['garment']
@@ -105,7 +103,6 @@ class KlingelParser(Mixin, BaseParseSpider):
         unavailable_sizes = clean(response.css(unavailable_size_css))
 
         sku = self.product_pricing_common(response)
-
         sku["colour"] = clean(response.css(colour_css))[0]
 
         size = clean(response.css(size_css))
