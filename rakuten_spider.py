@@ -24,11 +24,9 @@ class Mixin:
         "SIZE", "サイズ", "寸法", "大小", "大小", "判",
         "値", "大きさ"]
 
-    one_colour = "One Colour"
-
 
 class RakutenParser(Mixin, BaseParseSpider):
-    name = Mixin.retailer + "-parser"
+    name = Mixin.retailer + "-parse"
 
     description_css = "meta[name='description']::attr(content), .item_desc::text"
     price_css = ".price2::text"
@@ -43,7 +41,6 @@ class RakutenParser(Mixin, BaseParseSpider):
 
         self.boilerplate_normal(garment, response)
 
-        garment["url"] = response.url
         garment["image_urls"] = self.image_urls(response)
         garment["merch_info"] = self.merch_info(garment)
         garment["gender"] = self.product_gender(garment)
@@ -80,54 +77,50 @@ class RakutenParser(Mixin, BaseParseSpider):
         css = "td[valign='bottom'] .inventory_title::text"
         return clean(response.css(css))
 
-    def get_attributes(self, response, soup, css, colours=[], sizes=[]):
-        check_colour = [key for key in self.colour_keys if key.lower() in soup]
-        check_size = [key for key in self.size_keys if key.lower() in soup]
+    def get_attributes(self, response):
+        colour_index, size_index = -1, -1
 
-        colours = clean(response.css(css)) if check_colour else colours
-        sizes = clean(response.css(css)) if check_size else sizes
+        for index, attr in enumerate(self.sku_dimensions(response)):
+            if any([key for key in self.colour_keys if key.lower() in attr]):
+                colour_index = index
+            if any([key for key in self.size_keys if key.lower() in attr]):
+                size_index = index
 
-        return colours, sizes
+        return colour_index, size_index
 
-    def table_skus_content(self, response, common_sku, skus_dimension):
-        css_row = ".skuDisplayTable table tr td:nth-child(1) ::text"
-        css_col = ".skuDisplayTable table tr:nth-child(1) ::text"
+    def table_skus_content(self, response):
+        css_col = ".skuDisplayTable table tr td:nth-child(1) ::text"
+        css_row = ".skuDisplayTable table tr:nth-child(1) ::text"
+        colours = clean(response.css(css_row))
+        sizes = clean(response.css(css_col))
 
-        col_soup = skus_dimension[0].lower()
-        colours, sizes = self.get_attributes(response, col_soup, css_col)
+        colour_index, size_index = self.get_attributes(response)
 
-        if len(skus_dimension) > 1:
-            row_soup = skus_dimension[-1].lower()
-            colours, sizes = self.get_attributes(response, row_soup, css_row, colours, sizes)
-
-        if not sizes:
-            sizes.append(self.one_size)
-        if not colours:
-            colours.append(self.detect_colour_from_name(response) or self.one_colour)
+        if colour_index > size_index and colour_index is not -1:
+            colours, sizes = sizes, colours
+        if colour_index == -1:
+            colours.clear() or colours.append(self.detect_colour_from_name(response))
+        if size_index == -1:
+            sizes.clear() or sizes.append(self.one_size)
 
         return colours, sizes
 
     def skus(self, response):
         skus = {}
         common_sku = self.product_pricing_common(response)
-        skus_dimension = self.sku_dimensions(response)
 
-        if not skus_dimension:
-            sku = common_sku.copy()
-            sku["size"] = self.one_size
-            skus[self.product_id(response)] = sku
-            return skus
-
-        colours, sizes = self.table_skus_content(response, common_sku, skus_dimension)
+        colours, sizes = self.table_skus_content(response)
 
         for row, colour in enumerate(colours):
             for col, size in enumerate(sizes):
                 sku = common_sku.copy()
                 sku["size"] = size
-                sku["colour"] = colour
+
+                if colour:
+                    sku["colour"] = colour
 
                 css = self.availability_css.format(row, col)
-                if clean(response.css(css)) and colour != self.one_colour:
+                if clean(response.css(css)) and colour:
                     sku["out_of_stock"] = True
 
                 skus[f"{colour}_{size}"] = sku
@@ -136,10 +129,10 @@ class RakutenParser(Mixin, BaseParseSpider):
 
 
 class RakutenCrawler(Mixin, BaseCrawlSpider):
-    name = Mixin.retailer + "-crawler"
+    name = Mixin.retailer + "-crawl"
     parse_spider = RakutenParser()
 
-    listings_css = [".categoryMenu__l1Container", ".dui-pagination"]
+    listings_css = [".categoryMenu__l3Link", ".nextPage"]
     product_css = [".searchresultitems .dui-card"]
 
     deny_re = ["review", "/gold/"]
