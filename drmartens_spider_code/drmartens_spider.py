@@ -2,15 +2,13 @@ import json
 
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
-from scrapy.http import Request
 
 from skuscraper.parsers.genders import Gender
 from .base import BaseParseSpider, BaseCrawlSpider, clean
-from ..parsers.genders import Gender
 
 
 class Mixin:
-    retailer = 'drmartens'
+    retailer = 'drmartens-jp'
     market = 'JP'
     allowed_domains = ['drmartens.com']
     start_urls = ['https://www.drmartens.com/jp/']
@@ -58,7 +56,8 @@ class DrmartensParseSpider(BaseParseSpider, Mixin):
         return skus
 
     def product_gender(self, garment):
-        soup = ' '.join(garment['category'] + [garment['name']] + clean(garment['trail'][1]))
+        trail = sum([list(trail) for trail in garment['trail']], [])
+        soup = ' '.join(garment['category'] + [garment['name']] + clean(trail))
         return self.gender_lookup(soup) or Gender.ADULTS.value
 
     def product_category(self, response):
