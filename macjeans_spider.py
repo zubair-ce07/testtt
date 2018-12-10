@@ -74,13 +74,12 @@ class MacJeansParseSpider(BaseParseSpider):
         return clean(response.css(css))[0]
 
     def image_urls(self, response):
-        css = '.product--image-container ' \
-              '.image--element::attr(data-img-large)'
+        css = '.product--image-container .image--element::attr(data-img-large)'
         return clean(response.css(css))
 
     def product_gender(self, response):
         css = '.breadcrumb--list a::attr(title)'
-        soup = ' '.join(clean(response.css(css))).lower()
+        soup = ' '.join(clean(response.css(css)))
         return self.gender_lookup(soup) or Gender.ADULTS.value
 
     def skus(self, response):
@@ -88,16 +87,6 @@ class MacJeansParseSpider(BaseParseSpider):
         colour_css = '.variant--option.selected--option a::attr(title)'
         common_sku['colour'] = clean(response.css(colour_css))[0]
         skus = {}
-
-        oos_css = '.variant--group:contains(Größe) .no--stock:not(.is--disabled) ::text'
-        out_stock_sizes = clean(response.css(oos_css))
-
-        for size in out_stock_sizes:
-            sku = common_sku.copy()
-            sku['size'] = size
-            sku['out_of_stock'] = True
-            sku_id = '_'.join([sku['colour'], size])
-            skus[sku_id] = sku
 
         length_css = '.variant--group:contains(Länge) .variant--option:not(.no--stock) ::text'
         lengths = clean(response.css(length_css))
@@ -146,24 +135,27 @@ class MacJeansCrawlSpider(BaseCrawlSpider):
     def parse_category(self, response):
         response.meta['trail'] = self.add_trail(response)
         urls = response.css('#menu-overlay a::attr(href)')
-        return [response.follow(url, callback=self.parse_products, meta=response.meta.copy()) for url in urls]
+        return [response.follow(url, callback=self.parse_listing, meta=response.meta.copy()) for url in urls]
 
-    def parse_products(self, response):
-        products_url_css = '.product--info > a::attr(href)'
-        urls = clean(response.css(products_url_css))
-
-        if not urls:
-            return
-
-        response.meta['trail'] = self.add_trail(response)
-        yield from [response.follow(url, callback=self.parse_item, meta=response.meta.copy())
-                    for url in set(urls)]
+    def parse_listing(self, response):
+        yield from self.product_requests(response)
         url = clean(response.css('.paging--link.is--active ~ a::attr(href)'))
 
         if not url:
             return
 
-        yield response.follow(url[0], callback=self.parse_products, meta=response.meta.copy())
+        yield response.follow(url[0], callback=self.parse_listing, meta=response.meta.copy())
+
+    def product_requests(self, response):
+        products_url_css = '.product--info > a::attr(href)'
+        urls = clean(response.css(products_url_css))
+
+        if not urls:
+            return []
+
+        response.meta['trail'] = self.add_trail(response)
+        return [response.follow(url, callback=self.parse_item, meta=response.meta.copy())
+                for url in set(urls)]
 
 
 class MacJeansParseSpiderAT(MacJeansParseSpider, MixinAT):
