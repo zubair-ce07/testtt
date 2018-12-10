@@ -29,15 +29,15 @@ def main():
 
     if 'e' in parsed_args and parsed_args.e:
         result = reports.yearly_report(files_data, parsed_args.e)
-        reportgenerator.report_generator('e', result)
+        reportgenerator.generate_yearly_report(result)
 
     if 'a' in parsed_args and parsed_args.a:
         result = reports.monthly_report(files_data, parsed_args.a)
-        reportgenerator.report_generator('a', result)
+        reportgenerator.generate_monthly_report(result)
 
     if 'c' in parsed_args and parsed_args.c:
         result = reports.bar_chart_report(files_data, parsed_args.c)
-        reportgenerator.report_generator('c', result)
+        reportgenerator.generate_bonus_bar_chart(result)
 
 
 if __name__ == "__main__":

@@ -1,13 +1,4 @@
 
-def report_generator(report, calculation_result):
-    if report == 'e':
-        generate_yearly_report(calculation_result)
-    elif report == 'a':
-        generate_monthly_report(calculation_result)
-    elif report == 'c':
-        generate_bonus_bar_chart(calculation_result)
-
-
 def generate_yearly_report(calculation_result):
     max_temp = calculation_result['max_temp']
     low_temp = calculation_result['low_temp']
