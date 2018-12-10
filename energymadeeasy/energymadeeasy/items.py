@@ -61,7 +61,7 @@ class EnergymadeeasyItem(scrapy.Item):
 
     # SELF INSERTED
 
-    controlled_loads = scrapy.Field()
+    raw_controlled_loads = scrapy.Field()
     energy_plan = scrapy.Field()
     raw_usage_rates = scrapy.Field()
     raw_restrictions = scrapy.Field()

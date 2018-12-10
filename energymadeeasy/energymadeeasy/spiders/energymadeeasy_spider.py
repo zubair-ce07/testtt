@@ -18,7 +18,7 @@ class ProductLoader(ItemLoader):
     raw_discount_and_incentives_out = Identity()
     raw_restrictions_out = Identity()
     raw_usage_rates_out = Identity()
-    controlled_loads = Identity()
+    raw_controlled_loads_out = Identity()
 
 
 class EnergymadeeasySpiderElectricity(scrapy.Spider):
@@ -209,6 +209,7 @@ class EnergymadeeasySpiderElectricity(scrapy.Spider):
         loader.add_value('raw_discount_and_incentives', raw_discounts)
         controlled_loads = self.fetch_controlled_loads(response)
         load_flag = True
+        loader.add_value('raw_controlled_loads', controlled_loads)
         item = loader.load_item()
 
         # yield {response.url: controlled_loads}
