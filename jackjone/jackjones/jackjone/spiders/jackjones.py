@@ -145,7 +145,6 @@ class JackjoneComSpider(Spider):
             skus[key]["was_price"] = was_price.strip("£ ")
 
         meta = response.meta
-        meta["lengths"] = lengths
         meta["skus"] = skus
         return self.move_to_next_sku(meta)
 
@@ -176,21 +175,17 @@ class JackjoneComSpider(Spider):
         sizes = meta["sizes"]
 
         if length_urls:
-            next_length_url = length_urls.pop(0)
+            next_length_url = meta["length_urls"].pop(0)
             meta["lengths"].pop(0)
-            meta["length_urls"] = length_urls
             next_length_url = "{}{}".format(next_length_url, self.item_link_attrib)
             return Request(next_length_url, self.fill_sku_attributes, meta=meta, dont_filter=True)
         elif size_urls:
-            next_size_url = size_urls.pop(0)
-            sizes.pop(0)
-            meta["size_urls"] = size_urls
-            meta["sizes"] = sizes
+            next_size_url = meta["size_urls"].pop(0)
+            meta["sizes"].pop(0)
             next_size_url = "{}{}".format(next_size_url, self.item_link_attrib)
             return Request(next_size_url, self.sku_attribute_size, meta=meta, dont_filter=True)
         elif color_urls:
-            next_color_url = color_urls.pop(0)
-            meta["color_urls"] = color_urls
+            next_color_url = meta["color_urls"].pop(0)
             next_color_url = "{}{}".format(next_color_url, self.item_link_attrib)
             return Request(next_color_url, self.sku_attribute_color, meta=meta, dont_filter=True)
         else:
