@@ -56,7 +56,7 @@ class DrmartensParseSpider(BaseParseSpider, Mixin):
         return skus
 
     def product_gender(self, garment):
-        trail = sum([list(trail) for trail in garment['trail']], [])
+        trail = [' '.join(trail) for trail in garment['trail']]
         soup = ' '.join(garment['category'] + [garment['name']] + clean(trail))
         return self.gender_lookup(soup) or Gender.ADULTS.value
 
