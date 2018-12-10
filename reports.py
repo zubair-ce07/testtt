@@ -10,13 +10,16 @@ def yearly_report(files_data,  year):
 
     if reading:
         low_temp_day = min(reading, key=lambda k: reading[k]['low_temp'])
-        low_temp = reading[low_temp_day]['low_temp']
+        low_temp = reading.get(low_temp_day)
+        low_temp = low_temp.get('low_temp')
 
         max_humid_day = max(reading, key=lambda k: reading[k]['max_humid'])
-        max_humid = reading[max_humid_day]['max_humid']
+        max_humid = reading.get(max_humid_day)
+        max_humid = max_humid.get('max_humid')
 
         max_temp_day = max(reading, key=lambda k: reading[k]['max_temp'])
-        max_temp = reading[max_temp_day]['max_temp']
+        max_temp = reading.get(max_temp_day)
+        max_temp = max_temp.get('max_temp')
 
         max_temp_day = datetime.strptime(max_temp_day, '%Y-%m-%d').strftime('%B %d')
         low_temp_day = datetime.strptime(low_temp_day, '%Y-%m-%d').strftime('%B %d')
