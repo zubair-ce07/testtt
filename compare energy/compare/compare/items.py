@@ -23,41 +23,67 @@ def _clean_in(self, values):
 #             return ["n"]
         
 class CompareItem(scrapy.Item):
-    source = scrapy.Field()
     id = scrapy.Field()
-    energy_plan = scrapy.Field() 
     timestamp = scrapy.Field()
+    db = scrapy.Field()
+    meter_type = scrapy.Field()
     effective_from = scrapy.Field()
+    solar = scrapy.Field()
+    restricted_eligibility = scrapy.Field()
+    solar_meter_fee = scrapy.Field()
     retailer = scrapy.Field()
     name = scrapy.Field()
     supply = scrapy.Field()
     peak_rate = scrapy.Field()
-    shoulder = scrapy.Field()
+    block_type = scrapy.Field()
+    peak_step_1 = scrapy.Field()
+    peak_rate_2 = scrapy.Field()
+    peak_step_2 = scrapy.Field()
+    peak_rate_3 = scrapy.Field()
+    peak_step_3 = scrapy.Field()
+    peak_rate_4 = scrapy.Field()
     off_peak_rate = scrapy.Field()
+    shoulder = scrapy.Field()
+    minimum_monthly_demand_charged = scrapy.Field()
+    fit = scrapy.Field()
     green = scrapy.Field()
     green_note = scrapy.Field()
-    etf = scrapy.Field()
+
+    guaranteed_discount_off_usage = scrapy.Field()
+    guaranteed_discount_off_bill = scrapy.Field()
+    pot_discount_off_usage = scrapy.Field()
+    pot_discount_off_bill = scrapy.Field()
+    dd_discount_off_bill = scrapy.Field()
+    dd_discount_off_usage = scrapy.Field()
+    e_bill_discount_off_bill = scrapy.Field()
+    e_bill_discount_off_usage = scrapy.Field()
+    online_signup_discount_off_bill = scrapy.Field()
+    online_signup_discount_off_usage = scrapy.Field()
+    dual_fuel_discount_off_bill = scrapy.Field()
+    dual_fuel_discount_off_usage = scrapy.Field()
+
     contract_length = scrapy.Field()
-    meter_type = scrapy.Field()
-    solar = scrapy.Field()
-    solar_meter_fee = scrapy.Field()##
-    guaranteed_discount_off_usage = scrapy.Field() #Written in a paragraph and same location as guaranteed_discount_off_bill
-    pot_discount_off_usage = scrapy.Field() #Written in a paragraph and same location as pot_discount_off_bill
-    pot_discount_off_bill = scrapy.Field() #Written in a paragraph and same location as pot_discount_off_usage
-    incentive_type = scrapy.Field()# same as other incentives as they come in same place
-    approx_incentive_value = scrapy.Field()# complete paragraph as the $ value come inside of paragraph
-    other_incentives = scrapy.Field()# same as incentive type as they come in same place
-    restricted_eligibility = scrapy.Field()##
-    guaranteed_discount_off_bill = scrapy.Field()#Written in a paragraph and same location as guaranteed_discount_off_usage
-    fit = scrapy.Field()
-    dd_discount_off_bill = scrapy.Field()#Written in a paragraph and same location as dd_discount_off_usage
-    dd_discount_off_usage = scrapy.Field()#Written in a paragraph and same location as dd_discount_off_bill
-    dual_fuel_discount_off_bill = scrapy.Field()#Written in a line and same location as dual_fuel_discount_off_usage
-    dual_fuel_discount_off_usage = scrapy.Field()#Written in a line and same location as dual_fuel_discount_off_bill
-    db = scrapy.Field()
-    minimum_monthly_demand_charged = scrapy.Field()#
+    etf = scrapy.Field()
+    other_incentives = scrapy.Field()
+    incentive_type = scrapy.Field()
+    approx_incentive_value = scrapy.Field()
+    source = scrapy.Field()
+
+    # ADDED LATER
+
+    single_rate = scrapy.Field()
+    controlled_load_1 = scrapy.Field()
+    controlled_load_2 = scrapy.Field()
     vec_discount_summary = scrapy.Field()
     vec_discount_description = scrapy.Field()
+
+    # SELF INSERTED
+
+    controlled_loads = scrapy.Field()
+    energy_plan = scrapy.Field()
+    raw_usage_rates = scrapy.Field()
+    raw_restrictions = scrapy.Field()
+    raw_discount_and_incentives = scrapy.Field()
     vec_tariff_summary = scrapy.Field()
     vec_tariff_description = scrapy.Field()
     

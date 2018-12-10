@@ -27,25 +27,33 @@ class CompareElecSpider(scrapy.Spider):
         "Jemena": "14",
         "Powercor": "16"
     }
+
     gas_distributor_map = {
-        "Ausnet": "20",
+        "AusNet Services": "20",
         "Australian Gas Networks": "19",
         "Multinet Gas": "21",
         "Enwave": "22"
     }
+
     distributor_zone = {
-        "Bairnsdale": "8",
-        "North": "9",
-        "Mildura": "10",
-        "Murry": "11",
-        "Central": "12",
-        "Adjoining Central": "13",
-        "Adjoining West": "14",
-        "Central": "15",
-        "West": "16",
-        "Yarra Valley Extension": "17",
-        "South Gippsland Extension": "18",
-        "Melbourne Metropolitan Area": "19",
+        "CitiPower - All": "1",
+        "Jemena - All": "2",
+        "Powercor - All": "3",
+        "AusNet Services - All": "4",
+        "United Energy - All": "5",
+        "Australian Gas Networks - Bairnsdale": "8",
+        "Australian Gas Networks - North": "9",
+        "Australian Gas Networks - Mildura": "10",
+        "Australian Gas Networks - Murry": "11",
+        "Australian Gas Networks - Central": "12",
+        "AusNet Services - Adjoining Central": "13",
+        "AusNet Services - Adjoining West": "14",
+        "AusNet Services - Central": "15",
+        "AusNet Services - West": "16",
+        "Multinet Gas - Yarra Valley Extension": "17",
+        "Multinet Gas - South Gippsland Extension": "18",
+        "Multinet Gas - Melbourne Metropolitan Area": "19",
+        "Enwave - All": "20",
     }
 
     def start_requests(self):
