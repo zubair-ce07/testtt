@@ -130,8 +130,8 @@ class HbxParseSpider(BaseParseSpider):
         return [raw_image['_links']['full']['href'] for raw_image in self.raw_product(response)['images']]
 
     def merch_info(self, response):
-        soup = ' '.join(self.product_description(response))
-        return [m for m in self.MERCH_INFO if m.lower() in soupify(soup.lower())]
+        soup = soupify(self.product_description(response)).lower()
+        return [m for m in self.MERCH_INFO if m.lower() in soup]
 
     def skus(self, response):
         skus = {}
