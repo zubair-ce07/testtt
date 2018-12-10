@@ -211,18 +211,20 @@ class EnergymadeeasySpiderElectricity(scrapy.Spider):
         load_flag = True
         item = loader.load_item()
 
+        # yield {response.url: controlled_loads}
+
         for load in controlled_loads:
             # print(load)
             if not load['name']:
                 continue
 
-            if 'Controlled Load 1' in load['name']:
+            if re.findall(r'Controlled Load\s*1', load['name'], re.IGNORECASE):
                 load_item = item.copy()
                 load_item['controlled_load_1'] = load['rate']
                 load_flag = False
                 yield load_item
 
-            if 'Controlled Load 2' in load['name']:
+            if re.findall(r'Controlled Load\s*2', load['name'], re.IGNORECASE):
                 load_item = item.copy()
                 load_item['controlled_load_2'] = load['rate']
                 load_flag = False
@@ -288,9 +290,12 @@ class EnergymadeeasySpiderElectricity(scrapy.Spider):
                 #     print(load)
                 #     inspect_response(response, self)
 
+                name, step = self.fetch_load_name(load)
+
                 controlled_loads.append({
-                    'name': self.fetch_load_name(load),
-                    'rate': load['Controlled load usage']
+                    'name': name,
+                    'rate': load['Controlled load usage'],
+                    'step': step
                 })
 
         # print(controlled_loads)
@@ -302,9 +307,39 @@ class EnergymadeeasySpiderElectricity(scrapy.Spider):
 
     @staticmethod
     def fetch_load_name(load):
-        for field in load.values():
-            if re.findall(r'Controlled Load\s*\d', field):
-                return field
+        name_key = None
+        name = None
+        step = None
+
+        for key in load.keys():
+            load[key] = re.sub(r'two', '2', load[key], flags=re.IGNORECASE)
+            load[key] = re.sub(r'one', '1', load[key], flags=re.IGNORECASE)
+            name_find = re.findall(r'Controlled Load\s*\d', load[key], re.IGNORECASE)
+            if name_find:
+                name_key = key
+                name = name_find[0]
+                break
+
+        load_copy = load.copy()
+
+        if name_key is not None:
+            del load_copy[name_key]
+
+        if load_copy.get('Daily supply charge'):
+            del load_copy['Daily supply charge']
+
+        del load_copy['Controlled load usage']
+
+        for v in load_copy.values():
+            if not v.strip():
+                continue
+
+            if not step:
+                step = ''
+
+            step = '{} {}'.format(step, v).strip()
+
+        return name, step
 
     @staticmethod
     def clean(value):
