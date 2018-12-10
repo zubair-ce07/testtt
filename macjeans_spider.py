@@ -41,7 +41,7 @@ class MacJeansParseSpider(BaseParseSpider):
         garment['image_urls'] = self.image_urls(response)
         garment['skus'] = self.skus(response)
 
-        requests = self.stock_requests(response) + self.colour_requests(response)
+        requests = self.size_requests(response) + self.colour_requests(response)
         garment['meta'] = {'requests_queue': requests}
 
         return self.next_request_or_garment(garment)
@@ -101,7 +101,7 @@ class MacJeansParseSpider(BaseParseSpider):
 
         return skus
 
-    def stock_requests(self, response):
+    def size_requests(self, response):
         length_css = '.variant--group:contains(Länge) .variant--option input::attr(value)'
         length_value = clean(response.css(length_css))[0]
         formdata = {'__csrf_token': response.meta['csrf_token'],
