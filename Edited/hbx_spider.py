@@ -30,6 +30,7 @@ class MixinCN(Mixin):
 class MixinJP(Mixin):
     retailer = Mixin.retailer + '-jp'
     market = 'JP'
+    lang = 'en'
     start_urls = ['https://www.hbx.com/catalog/settings?country=JP']
 
 
@@ -101,7 +102,7 @@ class HbxParseSpider(BaseParseSpider):
         garment['image_urls'] = self.image_urls(response)
         garment['gender'] = self.product_gender(response)
         garment['skus'] = self.skus(response)
-        garment['merch_info'] = self.merch_info(garment)
+        garment['merch_info'] = self.merch_info(response)
 
         return garment
 
@@ -128,9 +129,9 @@ class HbxParseSpider(BaseParseSpider):
     def image_urls(self, response):
         return [raw_image['_links']['full']['href'] for raw_image in self.raw_product(response)['images']]
 
-    def merch_info(self, garment):
-        soup = ' '.join(garment['description'] + garment['care'])
-        return [m for m in self.MERCH_INFO if m in soup]
+    def merch_info(self, response):
+        soup = ' '.join(self.product_description(response))
+        return [m for m in self.MERCH_INFO if m.lower() in soupify(soup.lower())]
 
     def skus(self, response):
         skus = {}
