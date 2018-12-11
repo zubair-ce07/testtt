@@ -46,21 +46,21 @@ class CapucParseSpider(scrapy.Spider):
             if filings['filed_on'] != None:
                 item['meta'].append(filings)
 
-        if self.extract_current_filings != self.extract_total_filings:
-            formdata = {
-                'p_request': 'APXWGT',
-                'p_widget_num_return': '100',
-                'p_widget_name': 'worksheet',
-                'p_widget_mod': 'ACTION',
-                'p_widget_action': 'PAGE',
-                'p_widget_action_mod': 'pgR_min_row={}max_rows=100rows_fetched=100'.format(
-                    int(self.extract_current_filings(response) + 1)),
-                'x01': self.extract_formdata_X01(response),
-                'x02': self.extract_formdata_X02(response),
-            }
-
-            return FormRequest.from_response(response, formid='wwvFlowForm', dont_filter=True, formdata=formdata,
-                                             callback=self.parse_proceeding_filings)
+        # if self.extract_current_filings != self.extract_total_filings:
+        #     formdata = {
+        #         'p_request': 'APXWGT',
+        #         'p_widget_num_return': '100',
+        #         'p_widget_name': 'worksheet',
+        #         'p_widget_mod': 'ACTION',
+        #         'p_widget_action': 'PAGE',
+        #         'p_widget_action_mod': 'pgR_min_row={}max_rows=100rows_fetched=100'.format(
+        #             int(self.extract_current_filings(response) + 1)),
+        #         'x01': self.extract_formdata_X01(response),
+        #         'x02': self.extract_formdata_X02(response),
+        #     }
+        #
+        #     return FormRequest.from_response(response, formid='wwvFlowForm', dont_filter=True, formdata=formdata,
+        #                                      callback=self.parse_proceeding_filings)
 
         return self.next_filing_or_item(item)
 
@@ -204,8 +204,9 @@ class CapucCrawlSpider(CrawlSpider):
                           callback=self.capuc_parser.parse)
 
         if response.xpath('//a[contains(@id,"lnkNextPage")]').extract():
+            page_no='rptPages$ctl0{}$btnPage'.format(str(int(response.meta['page']) + 1))
             formdata = {
-                '__EVENTTARGET': 'rptPages$ctl0{}$btnPage'.format(response.meta[page] + 1),
+                '__EVENTTARGET': page_no,
                 '__EVENTARGUMENT': '',
                 '__VIEWSTATE': self.get_viewstate(response),
                 '__EVENTVALIDATION': self.get_eventvalidation(response),
@@ -213,26 +214,26 @@ class CapucCrawlSpider(CrawlSpider):
             }
 
             yield FormRequest('http://docs.cpuc.ca.gov/SearchRes.aspx', formdata=formdata,
-                              meta={'page': response.meta['page'] + 1}, callback=self.parse_proceeding)
+                              meta={'page': int(response.meta['page']) + 1}, callback=self.parse_proceeding)
 
 
-def extract_proceeding_ids(self, response):
-    proceedings_list = []
-    proceedings = response.xpath('//table[@class="ResultTable"]//td[@class="ResultTitleTD"]//text()').extract()
-    for proceeding in proceedings:
-        if re.findall(r"(\w\d\d\d\d\d\d\d)", proceeding):
-            proceedings_list.append(re.findall(r"(\w\d\d\d\d\d\d\d)", proceeding)[0])
+    def extract_proceeding_ids(self, response):
+        proceedings_list = []
+        proceedings = response.xpath('//table[@class="ResultTable"]//td[@class="ResultTitleTD"]//text()').extract()
+        for proceeding in proceedings:
+            if re.findall(r"(\w\d\d\d\d\d\d\d)", proceeding):
+                proceedings_list.append(re.findall(r"(\w\d\d\d\d\d\d\d)", proceeding)[0])
 
-    return proceedings_list
-
-
-def get_viewstate(self, response):
-    return response.xpath('//input[contains(@id,"__VIEWSTATE")]/@value').extract_first()
+        return proceedings_list
 
 
-def get_viewstategenerator(self, response):
-    return response.xpath('//input[contains(@id,"__VIEWSTATEGENERATOR")]/@value').extract_first()
+    def get_viewstate(self, response):
+        return response.xpath('//input[contains(@id,"__VIEWSTATE")]/@value').extract_first()
 
 
-def get_eventvalidation(self, response):
-    return response.xpath('//input[contains(@id,"__EVENTVALIDATION")]/@value').extract()
+    def get_viewstategenerator(self, response):
+        return response.xpath('//input[contains(@id,"__VIEWSTATEGENERATOR")]/@value').extract_first()
+
+
+    def get_eventvalidation(self, response):
+        return response.xpath('//input[contains(@id,"__EVENTVALIDATION")]/@value').extract()
