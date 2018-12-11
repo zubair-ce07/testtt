@@ -1,6 +1,6 @@
 from scrapy.linkextractors import LinkExtractor
-from scrapy.spiders import Rule, Request
-from scrapy.http.request.form import FormRequest
+from scrapy.spiders import Rule
+from scrapy.http import Request, FormRequest
 
 from .base import BaseParseSpider, BaseCrawlSpider, clean, soupify, Gender
 
@@ -8,6 +8,9 @@ from .base import BaseParseSpider, BaseCrawlSpider, clean, soupify, Gender
 class Mixin:
     retailer = 'smallable'
     allowed_domains = ['smallable.com']
+
+    currency_url = 'https://smallable.com/currency/change'
+    country_url = 'https://smallable.com/country/change'
 
     unwanted_items = [
         'pushchairs', 'poussette', 'cochecitos', 'kinderwagen', 'passaggini',
@@ -141,8 +144,6 @@ class SmallableParseSpider(BaseParseSpider):
     brand_css = '[itemprop="brand"] ::text'
     raw_description_css = '[itemprop="description"] ::text'
 
-    spider_one_sizes = ['TU']
-
     def parse(self, response):
         if self.is_unwanted(response):
             return
@@ -167,8 +168,8 @@ class SmallableParseSpider(BaseParseSpider):
         return garment
 
     def is_unwanted(self, response):
-        soup = soupify(clean(response.css('.c-breadcrumb-elem::text')))
-        return any(u in soup.lower() for u in self.unwanted_items)
+        soup = soupify(clean(response.css('.c-breadcrumb-elem::text'))).lower()
+        return any(u in soup for u in self.unwanted_items)
 
     def is_outlet(self, response):
         return 'outlet' in clean(response.css('title::text'))[0].lower()
@@ -184,7 +185,7 @@ class SmallableParseSpider(BaseParseSpider):
 
     def product_category(self, response):
         raw_categories = clean(response.css('.c-breadcrumb-elem::text'))[1:-1]
-        return [c for rc in raw_categories for c in rc.split('/')]
+        return clean(soupify(raw_categories).split('/'))
 
     def image_urls(self, response):
         return clean(response.css('.image-wrapper .zoomIn::attr(data-src)'))
@@ -238,15 +239,17 @@ class SmallableCrawlSpider(BaseCrawlSpider):
     def change_currency(self, response):
         currencies_css = f'.selector-container a[data-label={self.retailer_currency}]::attr(data-currency)'
         currency_code = clean(response.css(currencies_css))[0]
-        return FormRequest('https://en.smallable.com/currency/change', method='POST',
-                           formdata={'id': currency_code}, callback=self.change_location, dont_filter=True)
+
+        return FormRequest(self.currency_url, formdata={'id': currency_code},
+                           callback=self.change_location, dont_filter=True)
 
     def change_location(self, response):
         market = 'GB' if self.market == 'UK' else self.market
         css = f'.country-change [data-iso={market}]::attr(value)'
         country_code = clean(response.css(css))[0]
-        return FormRequest('https://en.smallable.com/country/change', method='POST',
-                           formdata={'id': country_code}, callback=self.parse, dont_filter=True)
+
+        return FormRequest(self.country_url, formdata={'id': country_code},
+                           callback=self.parse, dont_filter=True)
 
 
 class SmallableUKParseSpider(SmallableParseSpider, MixinUK):
@@ -305,9 +308,6 @@ class SmallableDECrawlSpider(SmallableCrawlSpider, MixinDE):
 
 class SmallableFRParseSpider(SmallableParseSpider, MixinFR):
     name = MixinFR.retailer + '-parse'
-    start_urls = [
-        'https://fr.smallable.com/sac-yoyo-bag-noir-babyzen-139850.html'
-    ]
 
 
 class SmallableFRCrawlSpider(SmallableCrawlSpider, MixinFR):
