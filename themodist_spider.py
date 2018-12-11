@@ -127,7 +127,7 @@ class ThemodistParseSpider(BaseParseSpider):
 
 
 class ThemodistCrawlSpider(BaseCrawlSpider):
-    listings_css = [".header__catmenu", ".paging"]
+    listings_css = [".header__catmenu", ".page-next"]
     product_css = [".product__images"]
 
     deny_re = ["edits", "festive", "magazine", "giftcards"]
