@@ -46,21 +46,21 @@ class CapucParseSpider(scrapy.Spider):
             if filings['filed_on'] != None:
                 item['meta'].append(filings)
 
-        # if self.extract_current_filings != self.extract_total_filings:
-        #     formdata = {
-        #         'p_request': 'APXWGT',
-        #         'p_widget_num_return': '100',
-        #         'p_widget_name': 'worksheet',
-        #         'p_widget_mod': 'ACTION',
-        #         'p_widget_action': 'PAGE',
-        #         'p_widget_action_mod': 'pgR_min_row={}max_rows=100rows_fetched=100'.format(
-        #             int(self.extract_current_filings(response) + 1)),
-        #         'x01': self.extract_formdata_X01(response),
-        #         'x02': self.extract_formdata_X02(response),
-        #     }
-        #
-        #     return FormRequest.from_response(response, formid='wwvFlowForm', dont_filter=True, formdata=formdata,
-        #                                      callback=self.parse_proceeding_filings)
+        if self.extract_current_filings != self.extract_total_filings:
+            formdata = {
+                'p_request': 'APXWGT',
+                'p_widget_num_return': '100',
+                'p_widget_name': 'worksheet',
+                'p_widget_mod': 'ACTION',
+                'p_widget_action': 'PAGE',
+                'p_widget_action_mod': 'pgR_min_row={}max_rows=100rows_fetched=100'.format(
+                    int(self.extract_current_filings(response) + 1)),
+                'x01': self.extract_formdata_X01(response),
+                'x02': self.extract_formdata_X02(response),
+            }
+
+            return FormRequest.from_response(response, formid='wwvFlowForm', dont_filter=True, formdata=formdata,
+                                             callback=self.parse_proceeding_filings)
 
         return self.next_filing_or_item(item)
 
