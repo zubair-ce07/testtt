@@ -33,6 +33,7 @@ class CapucParseSpider(scrapy.Spider):
                       callback=self.parse_proceeding_filings)
 
     def parse_proceeding_filings(self, response):
+
         item = response.meta['item']
 
         proceeding_filings = response.xpath('//table[@class="apexir_WORKSHEET_DATA"]')
@@ -192,7 +193,7 @@ class CapucCrawlSpider(CrawlSpider):
             'SearchButton': 'Search',
         }
 
-        yield FormRequest.from_response(response, formid='frmSearchform', formdata=formdata,
+        yield FormRequest.from_response(response, formid='frmSearchform', formdata=formdata, meta={'page': '00'},
                                         callback=self.parse_proceeding)
 
     def parse_proceeding(self, response):
@@ -202,40 +203,36 @@ class CapucCrawlSpider(CrawlSpider):
             yield Request('{}:{}'.format(self.proceeding_url_t, proceeding), dont_filter=True,
                           callback=self.capuc_parser.parse)
 
-        if response.url == 'http://docs.cpuc.ca.gov/advancedsearchform.aspx':
-            for page in range(1, int(self.get_total_pages(response)), 1):
-                f_d = 'rptPages$ctl0{}$btnPage'.format(page)
-                formdata = {
-                    '__EVENTTARGET': f_d,
-                    '__EVENTARGUMENT': '',
-                    '__VIEWSTATE': self.get_VIEWSTATE(response),
-                    '__EVENTVALIDATION': self.get_EVENTVALIDATION(response),
-                    ' __VIEWSTATEGENERATOR': self.get_VIEWSTATEGENERATOR(response),
-                }
+        if response.xpath('//a[contains(@id,"lnkNextPage")]').extract():
+            formdata = {
+                '__EVENTTARGET': 'rptPages$ctl0{}$btnPage'.format(response.meta[page] + 1),
+                '__EVENTARGUMENT': '',
+                '__VIEWSTATE': self.get_viewstate(response),
+                '__EVENTVALIDATION': self.get_eventvalidation(response),
+                ' __VIEWSTATEGENERATOR': self.get_viewstategenerator(response),
+            }
 
-                yield FormRequest('http://docs.cpuc.ca.gov/SearchRes.aspx', formdata=formdata,
-                                  callback=self.parse_proceeding)
+            yield FormRequest('http://docs.cpuc.ca.gov/SearchRes.aspx', formdata=formdata,
+                              meta={'page': response.meta['page'] + 1}, callback=self.parse_proceeding)
 
-    def get_total_pages(self, response):
-        return response.xpath('//table[@class="PageTable"]//tr//td[2]//a[last()]//text()').extract()[0]
 
-    def extract_proceeding_ids(self, response):
-        proceedings_list = []
-        proceedings = response.xpath('//table[@class="ResultTable"]//td[@class="ResultTitleTD"]//text()').extract()
-        for proceeding in proceedings:
-            proceeding_id = re.findall(r"(: [A-Z].*[0-9])", proceeding)
-            if len(proceeding_id) > 0:
-                clean_proceeding = proceeding.split(';')
-                proceeding = clean_proceeding[0].strip(': ')
-                proceedings_list.append(proceeding.strip("Proceeding: "))
+def extract_proceeding_ids(self, response):
+    proceedings_list = []
+    proceedings = response.xpath('//table[@class="ResultTable"]//td[@class="ResultTitleTD"]//text()').extract()
+    for proceeding in proceedings:
+        if re.findall(r"(\w\d\d\d\d\d\d\d)", proceeding):
+            proceedings_list.append(re.findall(r"(\w\d\d\d\d\d\d\d)", proceeding)[0])
 
-        return proceedings_list
+    return proceedings_list
 
-    def get_VIEWSTATE(self, response):
-        return response.xpath('//input[contains(@id,"__VIEWSTATE")]/@value').extract()[0]
 
-    def get_VIEWSTATEGENERATOR(self, response):
-        return response.xpath('//input[contains(@id,"__VIEWSTATE")]/@value').extract()[1]
+def get_viewstate(self, response):
+    return response.xpath('//input[contains(@id,"__VIEWSTATE")]/@value').extract_first()
 
-    def get_EVENTVALIDATION(self, response):
-        return response.xpath('//input[contains(@id,"__EVENTVALIDATION")]/@value').extract()
+
+def get_viewstategenerator(self, response):
+    return response.xpath('//input[contains(@id,"__VIEWSTATEGENERATOR")]/@value').extract_first()
+
+
+def get_eventvalidation(self, response):
+    return response.xpath('//input[contains(@id,"__EVENTVALIDATION")]/@value').extract()
