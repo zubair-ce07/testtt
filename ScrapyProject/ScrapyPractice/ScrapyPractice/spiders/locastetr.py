@@ -12,11 +12,11 @@ from urlparse import urljoin
 
 from scrapyproduct.items import ProductItem, SizeItem
 from scrapyproduct.spiderlib import SSBaseSpider
-from scrapyproduct.toolbox import category_mini_item
+from scrapyproduct.toolbox import category_mini_item, extract_text_nodes
 
 
 class LacosteSpiderTR(SSBaseSpider):
-    name = 'lacostetr'
+    name = 'trlac'
     long_name = 'lacostetr'
     brand = 'lacoste'
     country = 'TR'
@@ -24,9 +24,9 @@ class LacosteSpiderTR(SSBaseSpider):
     country_code = 'tr'
     currency = 'TRY'
     max_stock_level = 1
-    version = '1.0.0'
+    version = '1.0.2'
     seen_base_sku = []
-    seen_identifiers =[]
+    seen_identifiers = []
     base_url = 'https://www.lacoste.com.tr'
     color_url = '{}?integration_renk={}'
     nav_url = 'https://www.lacoste.com.tr/menus/generate/?format=json&depth_height=3&include_parent=true'
@@ -57,13 +57,13 @@ class LacosteSpiderTR(SSBaseSpider):
     def parse_pagination(self, response):
         last_page = int(
             response.xpath("//a[contains(@class,'pagination-item')][last()]/text()").extract_first(default=1))
-        if last_page != 1:
-            for page_no in range(2, last_page + 1):
-                yield Request(
-                    url="{}={}".format(response.url.split('=')[0], page_no),
-                    callback=self.parse_products,
-                    meta=response.meta,
-                )
+
+        for page_no in range(2, last_page + 1):
+            yield Request(
+                url="{}={}".format(response.url.split('=')[0], page_no),
+                callback=self.parse_products,
+                meta=response.meta,
+            )
 
     def parse_products(self, response):
         for product in response.css('.product-item-box'):
@@ -71,7 +71,7 @@ class LacosteSpiderTR(SSBaseSpider):
             item = ProductItem(
                 url=response.urljoin(item_url),
                 referer_url=response.url,
-                base_sku=item_url.split('-')[-2],
+                base_sku=self.get_base_sku(item_url),
                 title=product.xpath(".//p[@class='product-name']/a/text()").extract_first(),
                 brand=self.brand,
                 language_code=self.language_code,
@@ -88,48 +88,53 @@ class LacosteSpiderTR(SSBaseSpider):
                 meta['item'] = item
                 yield Request(
                     url=item['url'],
-                    callback=self.extract_details,
+                    callback=self.extract_colors,
                     meta=meta,
                 )
 
         for req in self.parse_pagination(response):
             yield req
 
-    def extract_details(self, response):
-        item = response.meta.get('item')
-
-        mini_details = json.loads(response.css(".js-content .analytics-data::text").extract_first().strip())
-        mini_details = mini_details['productDetail']['data']
-        cur_price, old_price, is_dis = self.extract_price(response)
-
-        final_item = deepcopy(item)
-        final_item['sku'] = mini_details['sku']
-        final_item['base_sku'] = mini_details['product_id']
-        final_item['identifier'] = mini_details['dimension14']
-        final_item['image_urls'] = response.css(".js-product-slider__popup div img::attr(src)").extract()
-        final_item['new_price_text'] = cur_price
-        final_item['old_price_text'] = old_price if is_dis else cur_price
-        final_item['color_name'] = response.css(".selected-type > strong::text").extract_first('').strip()
-        final_item['color_code'] = response.css(".variant-colors a.is-select::attr(data-value)").extract_first()
-        final_item['description_text'] = self.extract_description(response)
-        self.extract_sizes(response, final_item)
-
-        if final_item['identifier'] not in self.seen_identifiers:
-            self.seen_identifiers.append(final_item['identifier'])
-            yield final_item
-
-        for req in self.extract_colors(response):
-            yield req
-
     def extract_colors(self, response):
+        color_item = deepcopy(response.meta['item'])
         sibling_colors = response.css(".variant-colors a:not(.is-disable)::attr(data-value)").extract()
         for color in sibling_colors:
-            url = self.color_url.format(response.url.split('?')[0], color)
+            url = self.color_url.format(response.url, color)
+            color_item['url'] = url
+            meta = deepcopy(response.meta)
+            meta['item'] = color_item
             yield Request(
                 url=url,
                 meta=response.meta,
                 callback=self.extract_details,
             )
+
+    def extract_details(self, response):
+        item = response.meta.get('item')
+        final_item = deepcopy(item)
+        final_item['image_urls'] = response.css(".js-product-slider__popup div img::attr(src)").extract()
+        final_item['color_name'] = response.css(".selected-type > strong::text").extract_first('').strip()
+        final_item['color_code'] = response.css(".variant-colors a.is-select::attr(data-value)").extract_first()
+        final_item['identifier'] = '{}-{}'.format(final_item['base_sku'], final_item['color_code'])
+        if final_item['identifier'] not in self.seen_identifiers:
+            self.seen_identifiers.append(final_item['identifier'])
+
+        final_item['description_text'] = extract_text_nodes(
+            response.xpath("//div[@class='content-row']//div[@class='content']//*/text()")
+        )
+        self.set_prices(response, final_item)
+        self.extract_sizes(response, final_item)
+        yield final_item
+
+    def set_prices(self, response, item):
+        cur_price = response.xpath("//*[@class='cf']//*[@class='current-price']/text()").extract_first('')
+        old_price = response.xpath("//*[@class='cf']//*[@class='old-price hidden-xs']/text()").extract_first('')
+
+        if old_price:
+            item['new_price_text'] = cur_price
+            item['old_price_text'] = old_price
+        else:
+            item['full_price_text'] = cur_price
 
     def extract_sizes(self, response, item):
         in_stock_sizes = response.css(".dropdown  a.js-variant::text").extract()
@@ -140,19 +145,7 @@ class LacosteSpiderTR(SSBaseSpider):
             [SizeItem(size_name='-'.join(size.split('-')[:-1]).strip(), stock=0) for size in out_stock_sizes]
         )
 
-    def extract_description(self, response):
-        description = response.xpath("//div[@class='content-row']//div[@class='content']//*/text()").extract()
-        description = [text.strip() for text in description]
-        return description
-
-    def extract_price(self, response):
-        cur_price = response.xpath("//*[@class='cf']//*[@class='current-price']/text()").extract_first('')
-        old_price = response.xpath("//*[@class='cf']//*[@class='old-price hidden-xs']/text()").extract_first('')
-
-        cur_price = re.sub("[^0-9,.]", "", cur_price)
-        is_discounted = False
-        if old_price:
-            old_price = re.sub("[^0-9,.]", "", old_price)
-            is_discounted = True
-
-        return cur_price, old_price, is_discounted
+    def get_base_sku(self, url):
+        for base_sku in url.split('-'):
+            if re.search('\d\d\d', base_sku):
+                return base_sku
