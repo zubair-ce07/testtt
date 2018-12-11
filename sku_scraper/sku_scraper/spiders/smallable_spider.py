@@ -21,6 +21,7 @@ class MixinUK(Mixin):
     retailer = Mixin.retailer + '-uk'
     market = 'UK'
     currency_code = '3'
+    country_code = '11'
     start_urls = ['https://en.smallable.com/']
 
 
@@ -28,6 +29,7 @@ class MixinUS(Mixin):
     retailer = Mixin.retailer + '-us'
     market = 'US'
     currency_code = '2'
+    country_code = '15'
     start_urls = ['https://en.smallable.com/']
 
 
@@ -35,6 +37,7 @@ class MixinCA(Mixin):
     retailer = Mixin.retailer + '-ca'
     market = 'CA'
     currency_code = '8'
+    country_code = '4'
     start_urls = ['https://en.smallable.com/']
 
 
@@ -43,6 +46,7 @@ class MixinCN(Mixin):
     market = 'CN'
     lang = 'en'
     currency_code = '5'
+    country_code = '46'
     start_urls = ['https://en.smallable.com/']
 
 
@@ -51,6 +55,7 @@ class MixinJP(Mixin):
     market = 'JP'
     lang = 'en'
     currency_code = '14'
+    country_code = '45'
     start_urls = ['https://en.smallable.com/']
 
 
@@ -58,6 +63,7 @@ class MixinDE(Mixin):
     retailer = Mixin.retailer + '-de'
     market = 'DE'
     currency_code = '1'
+    country_code = '1'
     start_urls = ['https://de.smallable.com/']
 
 
@@ -65,6 +71,7 @@ class MixinFR(Mixin):
     retailer = Mixin.retailer + '-fr'
     market = 'FR'
     currency_code = '1'
+    country_code = '7'
     start_urls = ['https://fr.smallable.com/']
 
 
@@ -72,6 +79,7 @@ class MixinES(Mixin):
     retailer = Mixin.retailer + '-es'
     market = 'ES'
     currency_code = '1'
+    country_code = '5'
     start_urls = ['https://es.smallable.com/']
 
 
@@ -79,6 +87,7 @@ class MixinIT(Mixin):
     retailer = Mixin.retailer + '-it'
     market = 'IT'
     currency_code = '1'
+    country_code = '8'
     start_urls = ['https://it.smallable.com/']
 
 
@@ -86,6 +95,7 @@ class MixinNL(Mixin):
     retailer = Mixin.retailer + '-nl'
     market = 'NL'
     currency_code = '1'
+    country_code = '18'
     start_urls = ['https://en.smallable.com/']
 
 
@@ -93,6 +103,7 @@ class MixinAE(Mixin):
     retailer = Mixin.retailer + '-ae'
     market = 'AE'
     currency_code = '10'
+    country_code = '63'
     start_urls = ['https://en.smallable.com/']
 
 
@@ -100,6 +111,7 @@ class MixinAU(Mixin):
     retailer = Mixin.retailer + '-au'
     market = 'AU'
     currency_code = '9'
+    country_code = '43'
     start_urls = ['https://en.smallable.com/']
 
 
@@ -108,6 +120,7 @@ class MixinKR(Mixin):
     market = 'KR'
     lang = 'en'
     currency_code = '13'
+    country_code = '56'
     start_urls = ['https://en.smallable.com/']
 
 
@@ -116,6 +129,7 @@ class MixinHK(Mixin):
     market = 'HK'
     lang = 'en'
     currency_code = '6'
+    country_code = '65'
     start_urls = ['https://en.smallable.com/']
 
 
@@ -123,6 +137,7 @@ class MixinSA(Mixin):
     retailer = Mixin.retailer + '-sa'
     market = 'SA'
     currency_code = '11'
+    country_code = '64'
     start_urls = ['https://en.smallable.com/']
 
 
@@ -130,6 +145,7 @@ class MixinKW(Mixin):
     retailer = Mixin.retailer + '-kw'
     market = 'KW'
     currency_code = '15'
+    country_code = '62'
     start_urls = ['https://en.smallable.com/']
 
 
@@ -137,6 +153,7 @@ class MixinQA(Mixin):
     retailer = Mixin.retailer + '-qa'
     market = 'QA'
     currency_code = '12'
+    country_code = '61'
     start_urls = ['https://en.smallable.com/']
 
 
@@ -242,11 +259,7 @@ class SmallableCrawlSpider(BaseCrawlSpider):
                            callback=self.parse_location, dont_filter=True)
 
     def parse_location(self, response):
-        market = 'GB' if self.market == 'UK' else self.market
-        css = f'.country-change [data-iso={market}]::attr(value)'
-        country_code = clean(response.css(css))[0]
-
-        return FormRequest(self.country_url, formdata={'id': country_code},
+        return FormRequest(self.country_url, formdata={'id': self.country_code},
                            callback=self.parse, dont_filter=True)
 
 
