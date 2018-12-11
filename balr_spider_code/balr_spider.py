@@ -1,0 +1,178 @@
+import json
+
+from w3lib.url import url_query_parameter, add_or_replace_parameter
+from scrapy.linkextractors import LinkExtractor
+from scrapy.spiders import Rule
+from scrapy import Request
+
+from skuscraper.parsers.genders import Gender
+from .base import BaseParseSpider, BaseCrawlSpider, clean
+
+
+class Mixin:
+    retailer = 'balr'
+    currency = 'Euro'
+    allowed_domains = ['balr.com']
+
+
+class MixinDE(Mixin):
+    lang = 'de'
+    market = 'DE'
+    retailer = Mixin.retailer + '-de'
+    start_urls = ['https://www.balr.com/de']
+
+
+class MixinNL(Mixin):
+    lang = 'nl'
+    market = 'NL'
+    retailer = Mixin.retailer + '-nl'
+    start_urls = ['https://www.balr.com/nl']
+
+
+class MixinES(Mixin):
+    lang = 'es'
+    market = 'ES'
+    retailer = Mixin.retailer + '-es'
+    start_urls = ['https://www.balr.com/es']
+
+
+class MixinFR(Mixin):
+    lang = 'fr'
+    market = 'FR'
+    retailer = Mixin.retailer + '-fr'
+    start_urls = ['https://www.balr.com/fr']
+
+
+class BalrParseSpider(BaseParseSpider, Mixin):
+    description_css = '.description::text'
+    care_css = '.product-care-tab::text'
+    price_css = '.price ::text'
+
+    def parse(self, response):
+        raw_product = self.raw_product(response)
+        product_id = raw_product.get('id')
+        garment = self.new_unique_garment(product_id)
+
+        if not garment:
+            return
+
+        self.boilerplate_normal(garment, response)
+        garment['image_urls'] = self.image_urls(response)
+        garment['category'] = raw_product['category'].split('/')
+        garment['gender'] = self.product_gender(garment)
+        garment['skus'] = self.skus(response)
+
+        return garment
+
+    def skus(self, response):
+        skus = {}
+        oos_css = '.carousel-product-variant::attr(data-availability-message)'
+        availability = response.css(oos_css).extract()
+        common = self.product_pricing_common(response)
+        raw_product = self.raw_product(response)
+        common['colour'] = raw_product['variant']
+        sizes = raw_product['dimension2']
+
+        if not sizes:
+            sizes = [self.one_size]
+
+        for size, is_oos in zip(sizes, availability):
+            sku = common.copy()
+            sku['size'] = size
+            sku_id = f'{sku["colour"]}_{sku["size"]}'
+            skus[sku_id] = sku
+
+            if is_oos:
+                sku['out_of_stock'] = True
+
+        return skus
+
+    def raw_product(self, response):
+        raw_product = response.xpath('//script/text()').re_first(r'push\((.*Product.*)\)')
+        return json.loads(raw_product)['ecommerce']['detail']['products'][0]
+
+    def image_urls(self, response):
+        return clean(response.css('.carousel-product-variant img::attr(src)'))
+
+    def product_gender(self, garment):
+        soup = ' '.join(garment['category'])
+        return self.gender_lookup(soup) or Gender.ADULTS.value
+
+    def product_name(self, response):
+        return response.css('h1::text').extract_first()
+
+
+class BalrCrawlSpider(BaseCrawlSpider, Mixin):
+    category_css = '.menu-level-2'
+    pagination_url_t = 'https://www.balr.com/{lang}/shop-api{category}?max=16&page=1'
+
+    rules = (
+        Rule(LinkExtractor(restrict_css=category_css), callback="parse_category"),
+    )
+
+    def parse_category(self, response):
+        category = response.url.split('/shop')[-1]
+        url = self.pagination_url_t.format(lang=self.lang, category=category)
+        yield Request(url=url, meta={'trail': self.add_trail(response)}, callback=self.parse_pagination)
+
+    def parse_pagination(self, response):
+        yield from self.product_requests(response)
+
+        next_page = json.loads(response.text)['pager']['has_next_page']
+        if next_page:
+            page_count = int(url_query_parameter(response.url, 'page')) + 1
+            url = add_or_replace_parameter(response.url, 'page', page_count)
+
+            yield Request(url, meta={'trail': self.add_trail(response)}, callback=self.parse_pagination,)
+
+    def product_requests(self, response):
+        product_urls = self.product_urls(response)
+        requests = []
+
+        for product_url in product_urls:
+            requests.append(Request(response.urljoin(product_url), meta={'trail': self.add_trail(response)},
+                                    callback=self.parse_item))
+
+        return requests
+
+    def product_urls(self, response):
+        raw_products = json.loads(response.body)['product_thumbnails']
+
+        return [raw_product['uri'] for raw_product in raw_products]
+
+
+class BalrDEParseSpider(BalrParseSpider, MixinDE):
+    name = MixinDE.retailer + '-parse'
+
+
+class BalrDECrawlSpider(BalrCrawlSpider, MixinDE):
+    name = MixinDE.retailer + '-crawl'
+    parse_spider = BalrDEParseSpider()
+
+
+class BalrNLParseSpider(BalrParseSpider, MixinNL):
+    name = MixinNL.retailer + '-parse'
+
+
+class BalrNLCrawlSpider(BalrCrawlSpider, MixinNL):
+    name = MixinNL.retailer + '-crawl'
+    parse_spider = BalrNLParseSpider()
+
+
+class BalrESParseSpider(BalrParseSpider, MixinES):
+    name = MixinES.retailer + '-parse'
+
+
+class BalrESCrawlSpider(BalrCrawlSpider, MixinES):
+    name = MixinES.retailer + '-crawl'
+    parse_spider = BalrESParseSpider()
+
+
+class BalrFRParseSpider(BalrParseSpider, MixinFR):
+    name = MixinFR.retailer + '-parse'
+
+
+class BalrFRCrawlSpider(BalrCrawlSpider, MixinFR):
+    name = MixinFR.retailer + '-crawl'
+    parse_spider = BalrFRParseSpider()
+
