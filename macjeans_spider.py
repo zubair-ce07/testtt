@@ -28,6 +28,7 @@ class MacJeansParseSpider(BaseParseSpider):
     price_css = '.product--detail-upper .product--price ::text'
     raw_description_css = '.product--description ::text'
     care_css = '.product--properties ::text'
+    brand_css = '[itemprop="brand"]::attr(content)'
 
     def parse(self, response):
         product_id = self.product_id(response)
@@ -68,10 +69,6 @@ class MacJeansParseSpider(BaseParseSpider):
     def product_category(self, response):
         css = '.breadcrumb--list a::attr(title)'
         return clean(response.css(css))[1:-1]
-
-    def product_brand(self, response):
-        css = '[itemprop="brand"]::attr(content)'
-        return clean(response.css(css))[0]
 
     def image_urls(self, response):
         css = '.product--image-container .image--element::attr(data-img-large)'
