@@ -20,21 +20,21 @@ class Mixin:
 class MixinUK(Mixin):
     retailer = Mixin.retailer + '-uk'
     market = 'UK'
-    retailer_currency = 'GBP'
+    currency_code = '3'
     start_urls = ['https://en.smallable.com/']
 
 
 class MixinUS(Mixin):
     retailer = Mixin.retailer + '-us'
     market = 'US'
-    retailer_currency = 'USD'
+    currency_code = '2'
     start_urls = ['https://en.smallable.com/']
 
 
 class MixinCA(Mixin):
     retailer = Mixin.retailer + '-ca'
     market = 'CA'
-    retailer_currency = 'CAD'
+    currency_code = '8'
     start_urls = ['https://en.smallable.com/']
 
 
@@ -42,7 +42,7 @@ class MixinCN(Mixin):
     retailer = Mixin.retailer + '-cn'
     market = 'CN'
     lang = 'en'
-    retailer_currency = 'CNY'
+    currency_code = '5'
     start_urls = ['https://en.smallable.com/']
 
 
@@ -50,56 +50,56 @@ class MixinJP(Mixin):
     retailer = Mixin.retailer + '-jp'
     market = 'JP'
     lang = 'en'
-    retailer_currency = 'JPY'
+    currency_code = '14'
     start_urls = ['https://en.smallable.com/']
 
 
 class MixinDE(Mixin):
     retailer = Mixin.retailer + '-de'
     market = 'DE'
-    retailer_currency = 'EUR'
+    currency_code = '1'
     start_urls = ['https://de.smallable.com/']
 
 
 class MixinFR(Mixin):
     retailer = Mixin.retailer + '-fr'
     market = 'FR'
-    retailer_currency = 'EUR'
+    currency_code = '1'
     start_urls = ['https://fr.smallable.com/']
 
 
 class MixinES(Mixin):
     retailer = Mixin.retailer + '-es'
     market = 'ES'
-    retailer_currency = 'EUR'
+    currency_code = '1'
     start_urls = ['https://es.smallable.com/']
 
 
 class MixinIT(Mixin):
     retailer = Mixin.retailer + '-it'
     market = 'IT'
-    retailer_currency = 'EUR'
+    currency_code = '1'
     start_urls = ['https://it.smallable.com/']
 
 
 class MixinNL(Mixin):
     retailer = Mixin.retailer + '-nl'
     market = 'NL'
-    retailer_currency = 'EUR'
+    currency_code = '1'
     start_urls = ['https://en.smallable.com/']
 
 
 class MixinAE(Mixin):
     retailer = Mixin.retailer + '-ae'
     market = 'AE'
-    retailer_currency = 'AED'
+    currency_code = '10'
     start_urls = ['https://en.smallable.com/']
 
 
 class MixinAU(Mixin):
     retailer = Mixin.retailer + '-au'
     market = 'AU'
-    retailer_currency = 'AUD'
+    currency_code = '9'
     start_urls = ['https://en.smallable.com/']
 
 
@@ -107,7 +107,7 @@ class MixinKR(Mixin):
     retailer = Mixin.retailer + '-kr'
     market = 'KR'
     lang = 'en'
-    retailer_currency = 'KRW'
+    currency_code = '13'
     start_urls = ['https://en.smallable.com/']
 
 
@@ -115,34 +115,35 @@ class MixinHK(Mixin):
     retailer = Mixin.retailer + '-hk'
     market = 'HK'
     lang = 'en'
-    retailer_currency = 'HKD'
+    currency_code = '6'
     start_urls = ['https://en.smallable.com/']
 
 
 class MixinSA(Mixin):
     retailer = Mixin.retailer + '-sa'
     market = 'SA'
-    retailer_currency = 'SAR'
+    currency_code = '11'
     start_urls = ['https://en.smallable.com/']
 
 
 class MixinKW(Mixin):
     retailer = Mixin.retailer + '-kw'
     market = 'KW'
-    retailer_currency = 'KWD'
+    currency_code = '15'
     start_urls = ['https://en.smallable.com/']
 
 
 class MixinQA(Mixin):
     retailer = Mixin.retailer + '-qa'
     market = 'QA'
-    retailer_currency = 'QAR'
+    currency_code = '12'
     start_urls = ['https://en.smallable.com/']
 
 
 class SmallableParseSpider(BaseParseSpider):
     brand_css = '[itemprop="brand"] ::text'
     raw_description_css = '[itemprop="description"] ::text'
+    sentence_delimiter_r = ':|,'
 
     def parse(self, response):
         if self.is_unwanted(response):
@@ -200,14 +201,14 @@ class SmallableParseSpider(BaseParseSpider):
         colour = clean(response.css(colour_css))[0]
 
         for size_s in response.css('#form_size_select option:not(.hide)'):
-            price_css = '::attr(data-price), ::attr(data-discount-price)'
-            default_price_css = '.full-price strong::text'
-
-            money_strs = clean(size_s.css(price_css)) + clean(response.css(default_price_css))
-            sku = self.product_pricing_common(response, money_strs=money_strs)
-
             if size_s.css('.oos'):
-                sku['out_of_stock'] = True
+                continue
+
+            price_css = '::attr(data-price), ::attr(data-discount-price)'
+            currency_css = '.-cur-sel > div ::text'
+
+            money_strs = clean(size_s.css(price_css)) + [clean(response.css(currency_css))[0]]
+            sku = self.product_pricing_common(response, money_strs=money_strs)
 
             sku['size'] = clean(size_s.css('::attr(data-size)'))[0]
             sku['colour'] = colour
@@ -234,16 +235,13 @@ class SmallableCrawlSpider(BaseCrawlSpider):
     )
 
     def start_requests(self):
-        return [Request(url, callback=self.change_currency, dont_filter=True) for url in self.start_urls]
+        return [Request(self.start_urls[0], callback=self.parse_currency)]
 
-    def change_currency(self, response):
-        currencies_css = f'.selector-container a[data-label={self.retailer_currency}]::attr(data-currency)'
-        currency_code = clean(response.css(currencies_css))[0]
+    def parse_currency(self, response):
+        return FormRequest(self.currency_url, formdata={'id': self.currency_code},
+                           callback=self.parse_location, dont_filter=True)
 
-        return FormRequest(self.currency_url, formdata={'id': currency_code},
-                           callback=self.change_location, dont_filter=True)
-
-    def change_location(self, response):
+    def parse_location(self, response):
         market = 'GB' if self.market == 'UK' else self.market
         css = f'.country-change [data-iso={market}]::attr(value)'
         country_code = clean(response.css(css))[0]
