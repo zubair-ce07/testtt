@@ -99,7 +99,7 @@ class BalrParseSpider(BaseParseSpider, Mixin):
         return self.gender_lookup(soup) or Gender.ADULTS.value
 
     def product_name(self, response):
-        return response.css('h1::text').extract_first()
+        return clean(response.css('h1::text'))[0]
 
 
 class BalrCrawlSpider(BaseCrawlSpider, Mixin):
@@ -117,8 +117,8 @@ class BalrCrawlSpider(BaseCrawlSpider, Mixin):
 
     def parse_pagination(self, response):
         yield from self.product_requests(response)
-
         next_page = json.loads(response.text)['pager']['has_next_page']
+
         if next_page:
             page_count = int(url_query_parameter(response.url, 'page')) + 1
             url = add_or_replace_parameter(response.url, 'page', page_count)
@@ -137,7 +137,6 @@ class BalrCrawlSpider(BaseCrawlSpider, Mixin):
 
     def product_urls(self, response):
         raw_products = json.loads(response.body)['product_thumbnails']
-
         return [raw_product['uri'] for raw_product in raw_products]
 
 
