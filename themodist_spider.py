@@ -11,43 +11,48 @@ class Mixin:
     allowed_domains = ["themodist.com"]
 
     default_brand = "Themodist"
-    country_codes = {"UK": "GB", "EU": "DE"}
 
 
 class MixinAE(Mixin):
     retailer = Mixin.retailer + "-ae"
     market = "AE"
     lang = "ar"
+    country = market
     start_urls = ["https://www.themodist.com/ar/"]
 
 
 class MixinCN(Mixin):
     retailer = Mixin.retailer + "-cn"
     market = "CN"
+    country = market
     start_urls = ["https://www.themodist.com/en/"]
 
 
 class MixinEU(Mixin):
     retailer = Mixin.retailer + "-eu"
     market = "EU"
+    country = "DE"
     start_urls = ["https://www.themodist.com/en/"]
 
 
 class MixinHK(Mixin):
     retailer = Mixin.retailer + "-hk"
     market = "HK"
+    country = market
     start_urls = ["https://www.themodist.com/en/"]
 
 
 class MixinUK(Mixin):
     retailer = Mixin.retailer + "-uk"
     market = "UK"
+    country = "GB"
     start_urls = ["https://www.themodist.com/en/"]
 
 
 class MixinUS(Mixin):
     retailer = Mixin.retailer + "-us"
     market = "US"
+    country = market
     start_urls = ["https://www.themodist.com/en/"]
 
 
@@ -99,20 +104,19 @@ class ThemodistParseSpider(BaseParseSpider):
         common_sku = self.product_pricing_common(response)
 
         colour = clean(response.css(".no-sample::text"))
-        if colour:
-            common_sku["colour"] = colour[0]
+        common_sku["colour"] = colour[0] if colour else self.detect_colour_from_name(response)
 
         size_css = ".variation-select option:not(.emptytext)::text"
         sizes = clean(response.css(size_css)) or [self.one_size]
 
         for size in sizes:
             sku = common_sku.copy()
-            sku["size"] = size.split("–")[0].strip()
+            sku["size"] = clean(size.split("–")[0])
 
             if any(msg in size for msg in self.out_of_stock_messages):
                 sku["out_of_stock"] = True
 
-            sku_id = f"{sku['colour']}_{sku['size']}" if colour else size
+            sku_id = f"{sku['colour']}_{sku['size']}" if colour else sku["size"]
             skus[sku_id] = sku
 
         return skus
@@ -130,8 +134,7 @@ class ThemodistCrawlSpider(BaseCrawlSpider):
     )
 
     def start_requests(self):
-        cookie = self.country_codes.get(self.market) or self.market
-        yield Request(self.start_urls[0], cookies={"preferredCountry": cookie}, callback=self.parse)
+        yield Request(self.start_urls[0], cookies={"preferredCountry": self.country}, callback=self.parse)
 
 
 class ThemodistAEParseSpider(MixinAE, ThemodistParseSpider):
