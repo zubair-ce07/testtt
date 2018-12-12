@@ -11,7 +11,7 @@ class Mixin:
     allowed_domains = ["themodist.com"]
 
     default_brand = "Themodist"
-    currency_map = {"UK": "GB", "EU": "DE"}
+    country_codes = {"UK": "GB", "EU": "DE"}
 
 
 class MixinAE(Mixin):
@@ -98,8 +98,7 @@ class ThemodistParseSpider(BaseParseSpider):
 
     def skus(self, response):
         skus = {}
-        colour_css = ".no-sample::text"
-        colour = clean(response.css(colour_css))
+        colour = clean(response.css(".no-sample::text"))
         size_css = ".variation-select option:not(.emptytext)::text"
         sizes = clean(response.css(size_css)) or [self.one_size]
 
@@ -132,7 +131,7 @@ class ThemodistCrawlSpider(BaseCrawlSpider):
     )
 
     def start_requests(self):
-        cookie = self.currency_map.get(self.market) or self.market
+        cookie = self.country_codes.get(self.market) or self.market
         yield Request(self.start_urls[0], cookies={"preferredCountry": cookie}, callback=self.parse)
 
 
