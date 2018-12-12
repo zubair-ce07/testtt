@@ -3,7 +3,7 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
 from w3lib.url import url_query_cleaner
 
-from .base import BaseCrawlSpider, BaseParseSpider, clean, Gender
+from .base import BaseCrawlSpider, BaseParseSpider, clean, Gender, soupify
 
 
 class Mixin:
@@ -69,7 +69,6 @@ class ThemodistParseSpider(BaseParseSpider):
         self.boilerplate_normal(garment, response)
 
         garment["image_urls"] = self.image_urls(response)
-        garment["category"] = self.product_category(response)
         garment["gender"] = self.product_gender(garment)
         garment["skus"] = self.skus(response)
 
@@ -85,32 +84,32 @@ class ThemodistParseSpider(BaseParseSpider):
 
     def image_urls(self, response):
         css = ".pdp__gallery__media::attr(src)"
-        raw_img_urls = clean(response.css(css))
-        return [url_query_cleaner(response.urljoin(url)) for url in raw_img_urls]
+        return [url_query_cleaner(response.urljoin(url)) for url in clean(response.css(css))]
 
     def product_category(self, response):
         css = "a[id*='breadcrumb']:not(#breadcrumb1)::text"
         return clean(response.css(css))
 
     def product_gender(self, garment):
-        soup = " ".join(garment["description"] + [garment["name"]] + garment["category"])
+        soup = soupify(garment["description"] + [garment["name"]] + garment["category"])
         return self.gender_lookup(soup) or Gender.ADULTS.value
 
     def skus(self, response):
         skus = {}
-        colour = clean(response.css(".no-sample::text"))
-        size_css = ".variation-select option:not(.emptytext)::text"
-        sizes = clean(response.css(size_css)) or [self.one_size]
-
         common_sku = self.product_pricing_common(response)
+
+        colour = clean(response.css(".no-sample::text"))
         if colour:
             common_sku["colour"] = colour[0]
+
+        size_css = ".variation-select option:not(.emptytext)::text"
+        sizes = clean(response.css(size_css)) or [self.one_size]
 
         for size in sizes:
             sku = common_sku.copy()
             sku["size"] = size.split("–")[0].strip()
 
-            if any(key in size for key in self.out_of_stock_messages):
+            if any(msg in size for msg in self.out_of_stock_messages):
                 sku["out_of_stock"] = True
 
             sku_id = f"{sku['colour']}_{sku['size']}" if colour else size
