@@ -1,6 +1,6 @@
 import glob as gb
 import csv
-from weather import WeatherRecord
+from weatherman_data_structure import WeatherRecord
 
 
 def data_parser(path):
@@ -9,12 +9,11 @@ def data_parser(path):
     for f in gb.glob(f'{path}/*.txt'):
         with open(f) as weather_file:
             reader = csv.DictReader(weather_file)
-            weather_reading += [WeatherRecord(record) for record in reader if valid_record(record)]
+            weather_reading += [WeatherRecord(record) for record in reader if is_valid_record(record)]
 
     return weather_reading
 
 
-def valid_record(record):
-    date = record.get('PKST', record.get('PKT'))
-    mean_humid = record[' Mean Humidity']
-    return all([date, record['Max TemperatureC'], record['Min TemperatureC'], record['Max Humidity'], mean_humid])
+def is_valid_record(record):
+    req_fields = ['Max TemperatureC', 'Min TemperatureC', 'Max Humidity', ' Mean Humidity']
+    return all([record[f] for f in req_fields] + [record.get('PKST', record.get('PKT'))])
