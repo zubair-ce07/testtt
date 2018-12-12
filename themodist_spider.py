@@ -24,35 +24,30 @@ class MixinAE(Mixin):
 class MixinCN(Mixin):
     retailer = Mixin.retailer + "-cn"
     market = "CN"
-    lang = "en"
     start_urls = ["https://www.themodist.com/en/"]
 
 
 class MixinEU(Mixin):
     retailer = Mixin.retailer + "-eu"
     market = "EU"
-    lang = "en"
     start_urls = ["https://www.themodist.com/en/"]
 
 
 class MixinHK(Mixin):
     retailer = Mixin.retailer + "-hk"
     market = "HK"
-    lang = "en"
     start_urls = ["https://www.themodist.com/en/"]
 
 
 class MixinUK(Mixin):
     retailer = Mixin.retailer + "-uk"
     market = "UK"
-    lang = "en"
     start_urls = ["https://www.themodist.com/en/"]
 
 
 class MixinUS(Mixin):
     retailer = Mixin.retailer + "-us"
     market = "US"
-    lang = "en"
     start_urls = ["https://www.themodist.com/en/"]
 
 
@@ -62,7 +57,7 @@ class ThemodistParseSpider(BaseParseSpider):
     care_css = ".pdp__info__content li:not(:last-child) ::text"
     price_css = ".price-sales::text, .price-standard::text"
 
-    out_of_stock_text = ["Sold Out", "مُباع بالكامل"]
+    out_of_stock_messages = ["Sold Out", "مُباع بالكامل"]
 
     def parse(self, response):
         product_id = self.product_id(response)
@@ -81,7 +76,7 @@ class ThemodistParseSpider(BaseParseSpider):
         return self.next_request_or_garment(garment)
 
     def product_id(self, response):
-        css = "span[itemprop='productID']::attr(data-masterid)"
+        css = "[itemprop='productID']::attr(data-masterid)"
         return clean(response.css(css))[0]
 
     def product_name(self, response):
@@ -106,21 +101,20 @@ class ThemodistParseSpider(BaseParseSpider):
         colour_css = ".no-sample::text"
         colour = clean(response.css(colour_css))
         size_css = ".variation-select option:not(.emptytext)::text"
-        sizes = clean(response.css(size_css))
+        sizes = clean(response.css(size_css)) or [self.one_size]
 
-        if not sizes:
-            sizes.append(self.one_size)
+        common_sku = self.product_pricing_common(response)
+        if colour:
+            common_sku["colour"] = colour[0]
 
         for size in sizes:
-            sku = self.product_pricing_common(response)
+            sku = common_sku.copy()
             sku["size"] = size.split("–")[0].strip()
-            if colour:
-                sku["colour"] = colour[0]
 
-            if any([key for key in self.out_of_stock_text if key in size]):
+            if any(key in size for key in self.out_of_stock_messages):
                 sku["out_of_stock"] = True
 
-            sku_id = "_".join(key for key in [sku.get("colour", ""), sku["size"]] if key)
+            sku_id = f"{sku['colour']}_{sku['size']}" if colour else size
             skus[sku_id] = sku
 
         return skus
@@ -132,13 +126,14 @@ class ThemodistCrawlSpider(BaseCrawlSpider):
 
     deny_re = ["edits", "festive", "magazine", "giftcards"]
 
-    rules = [
+    rules = (
         Rule(LinkExtractor(restrict_css=listings_css, deny=deny_re), callback="parse"),
-        Rule(LinkExtractor(restrict_css=product_css), callback="parse_item")]
+        Rule(LinkExtractor(restrict_css=product_css), callback="parse_item")
+    )
 
     def start_requests(self):
         cookie = self.currency_map.get(self.market) or self.market
-        return [Request(url, cookies={"preferredCountry": cookie}, callback=self.parse) for url in self.start_urls]
+        yield Request(self.start_urls[0], cookies={"preferredCountry": cookie}, callback=self.parse)
 
 
 class ThemodistAEParseSpider(MixinAE, ThemodistParseSpider):
