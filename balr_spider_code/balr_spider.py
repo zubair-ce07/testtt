@@ -7,37 +7,33 @@ from scrapy import Request
 
 from skuscraper.parsers.genders import Gender
 from .base import BaseParseSpider, BaseCrawlSpider, clean
+from skuscraper.utils.market_lang import get_spider_lang
 
 
 class Mixin:
     retailer = 'balr'
-    currency = 'Euro'
     allowed_domains = ['balr.com']
 
 
 class MixinDE(Mixin):
-    lang = 'de'
     market = 'DE'
     retailer = Mixin.retailer + '-de'
     start_urls = ['https://www.balr.com/de']
 
 
 class MixinNL(Mixin):
-    lang = 'nl'
     market = 'NL'
     retailer = Mixin.retailer + '-nl'
     start_urls = ['https://www.balr.com/nl']
 
 
 class MixinES(Mixin):
-    lang = 'es'
     market = 'ES'
     retailer = Mixin.retailer + '-es'
     start_urls = ['https://www.balr.com/es']
 
 
 class MixinFR(Mixin):
-    lang = 'fr'
     market = 'FR'
     retailer = Mixin.retailer + '-fr'
     start_urls = ['https://www.balr.com/fr']
@@ -47,6 +43,7 @@ class BalrParseSpider(BaseParseSpider, Mixin):
     description_css = '.description::text'
     care_css = '.product-care-tab::text'
     price_css = '.price ::text'
+    default_brand = 'Balr'
 
     def parse(self, response):
         raw_product = self.raw_product(response)
@@ -92,7 +89,9 @@ class BalrParseSpider(BaseParseSpider, Mixin):
         return json.loads(raw_product)['ecommerce']['detail']['products'][0]
 
     def image_urls(self, response):
-        return clean(response.css('.carousel-product-variant img::attr(src)'))
+        code = clean(response.css('.product-code::text'))[0]
+        css = f'.carousel-product-variant[data-code="{code}"] img::attr(src)'
+        return clean(response.css(css))
 
     def product_gender(self, garment):
         soup = ' '.join(garment['category'])
@@ -112,7 +111,7 @@ class BalrCrawlSpider(BaseCrawlSpider, Mixin):
 
     def parse_category(self, response):
         category = response.url.split('/shop')[-1]
-        url = self.pagination_url_t.format(lang=self.lang, category=category)
+        url = self.pagination_url_t.format(lang=get_spider_lang(self), category=category)
         yield Request(url=url, meta={'trail': self.add_trail(response)}, callback=self.parse_pagination)
 
     def parse_pagination(self, response):
@@ -127,11 +126,11 @@ class BalrCrawlSpider(BaseCrawlSpider, Mixin):
 
     def product_requests(self, response):
         product_urls = self.product_urls(response)
+        meta = {'trail': self.add_trail(response)}
         requests = []
 
         for product_url in product_urls:
-            requests.append(Request(response.urljoin(product_url), meta={'trail': self.add_trail(response)},
-                                    callback=self.parse_item))
+            requests.append(Request(response.urljoin(product_url), meta=meta, callback=self.parse_item))
 
         return requests
 
