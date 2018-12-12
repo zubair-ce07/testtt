@@ -1,3 +1,6 @@
+blue = '\033[34m'
+red = '\033[31m'
+
 
 def generate_yearly_report(record):
     max_temp_record, low_temp_record, humidity_record = record
@@ -23,8 +26,6 @@ def generate_monthly_report(record):
 
 def generate_bar_chart(records):
     print('\nBar Chart Report Generated : \n')
-    blue = '\033[34m'
-    red = '\033[31m'
 
     for record in records:
         day = record.date.day
@@ -38,8 +39,6 @@ def generate_bar_chart(records):
 
 def generate_bonus_bar_chart(records):
     print('\nBonus implementation single bar chart : \n')
-    blue = '\033[34m'
-    red = '\033[31m'
 
     for record in records:
         day = record.date.day

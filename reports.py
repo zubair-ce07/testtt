@@ -27,10 +27,4 @@ def generate_bar_chart_report(weather_records, date):
 
 
 def extract_month_data(weather_records, date):
-    month_records = []
-
-    for record in weather_records:
-        if record.date.year == date.year and record.date.month == date.month:
-            month_records.append(record)
-
-    return month_records
+    return [record for record in weather_records if record.date.year == date.year and record.date.month == date.month]
