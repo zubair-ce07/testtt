@@ -15,16 +15,14 @@ class Mixin:
 
 class MixinAE(Mixin):
     retailer = Mixin.retailer + "-ae"
-    market = "AE"
     lang = "ar"
-    country = market
+    country = market = "AE"
     start_urls = ["https://www.themodist.com/ar/"]
 
 
 class MixinCN(Mixin):
     retailer = Mixin.retailer + "-cn"
-    market = "CN"
-    country = market
+    country = market = "CN"
     start_urls = ["https://www.themodist.com/en/"]
 
 
@@ -37,8 +35,7 @@ class MixinEU(Mixin):
 
 class MixinHK(Mixin):
     retailer = Mixin.retailer + "-hk"
-    market = "HK"
-    country = market
+    country = market = "HK"
     start_urls = ["https://www.themodist.com/en/"]
 
 
@@ -51,8 +48,7 @@ class MixinUK(Mixin):
 
 class MixinUS(Mixin):
     retailer = Mixin.retailer + "-us"
-    market = "US"
-    country = market
+    country = market = "US"
     start_urls = ["https://www.themodist.com/en/"]
 
 
@@ -77,7 +73,7 @@ class ThemodistParseSpider(BaseParseSpider):
         garment["gender"] = self.product_gender(garment)
         garment["skus"] = self.skus(response)
 
-        return self.next_request_or_garment(garment)
+        return garment
 
     def product_id(self, response):
         css = "[itemprop='productID']::attr(data-masterid)"
@@ -134,7 +130,8 @@ class ThemodistCrawlSpider(BaseCrawlSpider):
     )
 
     def start_requests(self):
-        yield Request(self.start_urls[0], cookies={"preferredCountry": self.country}, callback=self.parse)
+        return [
+            Request(url, cookies={"preferredCountry": self.country}, callback=self.parse) for url in self.start_urls]
 
 
 class ThemodistAEParseSpider(MixinAE, ThemodistParseSpider):
