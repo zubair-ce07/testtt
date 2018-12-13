@@ -134,7 +134,7 @@ class ThemodistCrawlSpider(BaseCrawlSpider):
     def start_requests(self):
         yield Request(self.currency_url_t.format(self.country), callback=self.parse_cookie_request)
 
-    def parse_cookie_request(self, response):
+    def parse_cookies(self, response):
         return [response.follow(url, callback=self.parse) for url in self.start_urls]
 
 
