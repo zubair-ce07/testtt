@@ -17,7 +17,10 @@ class DictionaryReplica(object):
 
     def _popitem(self):
         keys = [x for x in self.my_dict]
-        del self.my_dict[keys[-1]]
+        try:
+            del self.my_dict[keys[-1]]
+        except KeyError:
+            return 'Dictionary is empty !'
 
     def _setdefault(self, key, val):
         try:
@@ -44,7 +47,13 @@ class DictionaryReplica(object):
         return {self.my_dict[x] for x in self.my_dict}
 
     def _clear(self):
-       return {self._pop(x) for x in self.my_dict}
+        for key in list(self.my_dict):
+            try:
+                del self.my_dict[key]
+            except KeyError:
+                return 'Dictionary is clearing failed !'
+
+        return self.my_dict
 
     def _items(self):
         return {(x, self.my_dict[x]) for x in self.my_dict}

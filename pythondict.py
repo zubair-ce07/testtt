@@ -20,6 +20,8 @@ def main():
     print(dict_replica._values())
     dict_replica._popitem()
     print(dict_replica._values())
+    print(dict_replica._clear())
+
 
 if __name__ == "__main__":
     main()
