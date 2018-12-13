@@ -11,6 +11,8 @@ class Mixin:
     allowed_domains = ["themodist.com"]
 
     default_brand = "Themodist"
+    currency_url_t = "https://www.themodist.com/on/demandware.store/Sites-TheModist-Site/en/" \
+                     "Currency-SetSessionCountryAndCurrency?format=ajax&countryCode={}"
 
 
 class MixinAE(Mixin):
@@ -130,8 +132,10 @@ class ThemodistCrawlSpider(BaseCrawlSpider):
     )
 
     def start_requests(self):
-        return [
-            Request(url, cookies={"preferredCountry": self.country}, callback=self.parse) for url in self.start_urls]
+        yield Request(self.currency_url_t.format(self.country), callback=self.parse_cookie_request)
+
+    def parse_cookie_request(self, response):
+        return [response.follow(url, callback=self.parse) for url in self.start_urls]
 
 
 class ThemodistAEParseSpider(MixinAE, ThemodistParseSpider):
