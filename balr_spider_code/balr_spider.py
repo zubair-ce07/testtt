@@ -130,7 +130,7 @@ class BalrCrawlSpider(BaseCrawlSpider, Mixin):
         requests = []
 
         for product_url in product_urls:
-            requests.append(Request(response.urljoin(product_url), meta=meta, callback=self.parse_item))
+            requests.append(Request(response.urljoin(product_url), meta=meta.copy(), callback=self.parse_item))
 
         return requests
 
