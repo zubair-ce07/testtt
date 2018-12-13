@@ -22,9 +22,9 @@ class MixinAU(Mixin):
 
 
 class FilaParseSpider(BaseParseSpider):
+    sentence_delimiter_r = ','
     price_css = '.summary .price ::text'
     raw_description_css = '.tab-content .active ::text'
-    care_css = '.tab-content .active :contains(Fabric)::text'
 
     def parse(self, response):
         garment = self.new_unique_garment(self.product_id(response))
