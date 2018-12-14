@@ -18,11 +18,6 @@ class MixinBR(Mixin):
 	]
 
 
-class MixinAR(Mixin):
-	market = "AR"
-	lang = ''
-
-
 class FilaParseSpider(BaseParseSpider, Mixin):
 
 	def parse(self, response):
