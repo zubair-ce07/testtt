@@ -60,7 +60,7 @@ class CapucParseSpider(scrapy.Spider):
                 'x02': self.extract_formdata_X02(response),
             }
 
-            return FormRequest.from_response(response, formid='wwvFlowForm', dont_filter=True, formdata=formdata,
+            return FormRequest.from_response(response, formid='wwvFlowForm', formdata=formdata,
                                              callback=self.parse_proceeding_filings)
 
         return self.next_filing_or_item(item)
