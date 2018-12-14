@@ -34,18 +34,17 @@ class FilaParseSpider(BaseParseSpider):
 
         self.boilerplate_normal(garment, response)
         garment['image_urls'] = self.image_urls(response)
-        garment['gender'] = self.product_gender(response)
+        garment['gender'] = self.product_gender(garment)
         garment['skus'] = self.skus(response)
 
-        if not garment['skus']:
-            garment['meta'] = {'requests_queue': self.sku_requests(response, garment)}
+        if not garment.get('skus'):
+            garment['meta'] = {'requests_queue': self.sku_requests(response)}
 
         return self.next_request_or_garment(garment)
 
     def parse_sku(self, response):
         garment = response.meta['garment']
-        sku_id, sku = self.single_sku(response)
-        garment['skus'][sku_id] = sku
+        garment['skus'].update(self.skus(response))
         return self.next_request_or_garment(garment)
 
     def product_id(self, response):
@@ -59,16 +58,17 @@ class FilaParseSpider(BaseParseSpider):
         return json.loads(response.css(css).re(r'(\[\".*\"\])')[0])
 
     def image_urls(self, response):
-        css = '.woocommerce-product-gallery__image a::attr(href)'
-        return set(clean(response.css(css)))
+        css = '.product-images--main a::attr(href)'
+        return clean(response.css(css))
 
-    def product_gender(self, response):
-        return self.detect_gender_from_name(response) or Gender.KIDS.value
+    def product_gender(self, garment):
+        return self.gender_lookup(garment['name']) or Gender.KIDS.value
 
     def skus(self, response):
-        common_sku = self.product_pricing_common(response)
+        common_sku = response.meta.get('common_sku')
         css = '.variations_form::attr(data-product_variations)'
-        raw_skus = json.loads(clean(response.css(css))[0])
+        raw_skus = [json.loads(response.text)] if common_sku else json.loads(clean(response.css(css))[0])
+        common_sku = common_sku or self.product_pricing_common(response)
         skus = {}
 
         if not raw_skus:
@@ -86,14 +86,12 @@ class FilaParseSpider(BaseParseSpider):
 
         return skus
 
-    def sku_requests(self, response, garment):
+    def sku_requests(self, response):
         requests = []
         colours = clean(response.css('#pa_colour ::attr(value)'))
         sizes = clean(response.css('#pa_size ::attr(value)'))
         common_sku = self.product_pricing_common(response)
-        formdata = {
-            'product_id': garment['retailer_sku']
-        }
+        formdata = {'product_id': self.product_id(response)}
 
         for colour, size in product(colours, sizes):
             formdata['attribute_pa_colour'] = colour
@@ -104,17 +102,6 @@ class FilaParseSpider(BaseParseSpider):
                                         meta=meta.copy(), callback=self.parse_sku))
 
         return requests
-
-    def single_sku(self, response):
-        raw_sku = json.loads(response.text)
-        sku = response.meta['common_sku']
-        sku['colour'] = raw_sku['attributes']['attribute_pa_colour']
-        sku['size'] = raw_sku['attributes']['attribute_pa_size']
-
-        if not raw_sku['is_in_stock']:
-            sku['out_of_stock'] = True
-
-        return raw_sku['sku'], sku
 
 
 class FilaCrawlSpider(BaseCrawlSpider):
