@@ -136,14 +136,8 @@ class FilaCrawlSpider(BaseCrawlSpider, Mixin):
 
 class FilaBRParseSpider(FilaParseSpider, MixinBR):
 	name = MixinBR.retailer + '-parse'
-	custom_settings = {
-		"DOWNLOAD_DELAY": 3,
-	}
 
 
 class FilaBRCrawlSpider(FilaCrawlSpider, MixinBR):
 	name = MixinBR.retailer + '-crawl'
-	custom_settings = {
-		"HTTPCACHE_ENABLED": True,
-	}
 	parse_spider = FilaBRParseSpider()
