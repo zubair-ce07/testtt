@@ -26,7 +26,7 @@ class FilaParseSpider(BaseParseSpider, Mixin):
 
 		garment = self.new_unique_garment(sku_id)
 
-		if not garment or "https://www.fila.com.br/" == response.url:
+		if not garment or 'https://www.fila.com.br/' == response.url:
 			return
 
 		self.boilerplate_normal(garment, response)
@@ -64,7 +64,7 @@ class FilaParseSpider(BaseParseSpider, Mixin):
 	def colour_requests(self, response):
 		css = '.wrap-other-desktop .carrossel-link::attr(href)'
 		return [response.follow(url, callback=self.parse_colours, dont_filter=True) \
-					for  url in response.css(css).extract()]
+					for url in response.css(css).extract()]
 
 	def parse_colours(self, response):
 		garment = response.meta['garment']
@@ -95,8 +95,7 @@ class FilaParseSpider(BaseParseSpider, Mixin):
 		return skus
 	
 	def product_prices(self, response):
-		old_price = response.css('.pdv_original ::text').extract_first()
-		old_price = old_price if old_price else ''
+		old_price = response.css('.pdv_original ::text').extract_first() or ''
 		price = response.css('.normal_price_span ::text').extract_first()
 		return price, old_price
 	
