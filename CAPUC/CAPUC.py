@@ -37,16 +37,17 @@ class CapucParseSpider(scrapy.Spider):
         item = response.meta['item']
 
         proceeding_filings = response.xpath('//table[@class="apexir_WORKSHEET_DATA"]')
-        for raw_filing in proceeding_filings.xpath('//tr'):
+        for raw_filing in proceeding_filings.xpath('.//tr'):
             filings = {}
             filings['filed_on'] = self.extract_filing_date(raw_filing)
             filings['source_filing_parties'] = self.extract_filing_parties(raw_filing)
             filings['description'] = self.extract_filing_description(raw_filing)
             filings['meta'] = {'docs_request': self.extract_docs_requests(raw_filing)}
-            if filings['filed_on'] != None:
+
+            if filings['filed_on']:
                 item['meta'].append(filings)
 
-        if self.extract_current_filings != self.extract_total_filings:
+        if self.get_next_button(response):
             formdata = {
                 'p_request': 'APXWGT',
                 'p_widget_num_return': '100',
@@ -84,13 +85,13 @@ class CapucParseSpider(scrapy.Spider):
         filing = response.meta['filing']
 
         filings_docs = response.xpath('//table[@class="ResultTable"]')
-        for raw_filing in filings_docs.xpath('//tr'):
+        for raw_filing in filings_docs.xpath('.//tr'):
             filing['title'] = self.extract_filings_titles(raw_filing)
             filing['source_url'] = '{}{}'.format('http://docs.cpuc.ca.gov', self.extract_filings_docs_links(raw_filing))
             filing['blob_name'] = "{}-{}-{}".format(item['state'], item['state_id'],
                                                     filing['source_url'].split('/')[-1])
-            filing['extension'] = filing['source_url'].split('.')[-1]
-            filing['name'] = filing['source_url'].split('/')[-1]
+            filing['extension'] = filing['source_url'].rsplit('.', 1)
+            filing['name'] = filing['source_url'].rsplit('/', 1)
 
         del filing['meta']
         item['filings'].append(filing)
@@ -128,16 +129,13 @@ class CapucParseSpider(scrapy.Spider):
         return response.css('#P56_CATEGORY::text').extract_first()
 
     def extract_filing_date(self, raw_filing):
-        if len(raw_filing.css('td[headers="FILING_DATE"]::text').extract()) == 1:
-            return raw_filing.css('td[headers="FILING_DATE"]::text').extract()
+        return raw_filing.css('td[headers="FILING_DATE"]::text').extract()
 
     def extract_filing_parties(self, raw_filing):
-        if len(raw_filing.css('td[headers="FILED_BY"]::text').extract()) == 1:
-            return raw_filing.css('td[headers="FILED_BY"]::text').extract()
+        return raw_filing.css('td[headers="FILED_BY"]::text').extract()
 
     def extract_filing_description(self, raw_filing):
-        if len(raw_filing.css('td[headers="DESCRIPTION"]::text').extract()) == 1:
-            return raw_filing.css('td[headers="DESCRIPTION"]::text').extract()
+        return raw_filing.css('td[headers="DESCRIPTION"]::text').extract()
 
     def extract_docs_requests(self, raw_filing):
         if raw_filing.css('td[headers="DOCUMENT_TYPE"] a::attr(href)').extract_first():
@@ -145,27 +143,25 @@ class CapucParseSpider(scrapy.Spider):
                            dont_filter=True, callback=self.extract_filing_docs)
 
     def extract_filings_titles(self, response):
-        if len(response.xpath('//td[@class="ResultTitleTD"]//text()').extract()) == 1:
-            return response.xpath('//td[@class="ResultTitleTD"]//text()').extract()
+        return response.xpath('//td[@class="ResultTitleTD"]//text()').extract()
 
     def extract_filings_docs_links(self, response):
-        if len(response.xpath('//td[@class="ResultLinkTD"]//text()').extract()) == 1:
-            return response.xpath('//td[@class="ResultLinkTD"]//text()').extract()
+        return response.xpath('//td[@class="ResultLinkTD"]//text()').extract()
 
     def extract_filing_source_url(self, raw_filing):
         return re.findall(r'(\/PublishedDocs.*?")', str(raw_filing[1]))[0].strip('"')
 
-    def extract_total_filings(self, response):
-        return int(response.xpath('//span[@class="fielddata"]//text()').extract()[0].split('of')[1])
-
     def extract_current_filings(self, response):
-        return int(response.xpath('//span[@class="fielddata"]//text()').extract()[0].split('-')[1].split('of')[0])
+        return re.findall(r"-(.*)of", response.xpath('//span[@class="fielddata"]//text()').extract_first())[0]
 
     def extract_formdata_X01(self, response):
         return response.xpath('//input[contains(@id,"apexir_WORKSHEET_ID")]/@value').extract()
 
     def extract_formdata_X02(self, response):
         return response.xpath('//input[contains(@id,"apexir_REPORT_ID")]/@value').extract()
+
+    def get_next_button(self, response):
+        return response.xpath('//td[@class="pagination"]//span//a//img//@title').extract()
 
 
 class CapucCrawlSpider(CrawlSpider):
@@ -178,6 +174,7 @@ class CapucCrawlSpider(CrawlSpider):
 
     base_url_t = 'http://docs.cpuc.ca.gov/advancedsearchform.aspx'
     proceeding_url_t = 'https://apps.cpuc.ca.gov/apex/f?p=401:56:12117329809176::NO:RP,57,RIR:P5_PROCEEDING_SELECT'
+    page_count = 00
 
     capuc_parser = CapucParseSpider()
 
@@ -193,20 +190,23 @@ class CapucCrawlSpider(CrawlSpider):
             'SearchButton': 'Search',
         }
 
-        yield FormRequest.from_response(response, formid='frmSearchform', formdata=formdata, meta={'page': '00'},
+        yield FormRequest.from_response(response, formid='frmSearchform', formdata=formdata,
                                         callback=self.parse_proceeding)
 
     def parse_proceeding(self, response):
         proceeding_ids = self.extract_proceeding_ids(response)
 
         for proceeding in proceeding_ids:
-            yield Request('{}:{}'.format(self.proceeding_url_t, proceeding), dont_filter=True,
-                          callback=self.capuc_parser.parse)
+            yield Request('{}:{}'.format(self.proceeding_url_t, proceeding), callback=self.capuc_parser.parse)
 
         if response.xpath('//a[contains(@id,"lnkNextPage")]').extract():
-            page_no='rptPages$ctl0{}$btnPage'.format(str(int(response.meta['page']) + 1))
+            if self.page_count == 24:
+                self.page_count = 00
+
+            self.page_count += 1
+
             formdata = {
-                '__EVENTTARGET': page_no,
+                '__EVENTTARGET': 'rptPages$ctl0{}$btnPage'.format(self.page_count),
                 '__EVENTARGUMENT': '',
                 '__VIEWSTATE': self.get_viewstate(response),
                 '__EVENTVALIDATION': self.get_eventvalidation(response),
@@ -214,26 +214,22 @@ class CapucCrawlSpider(CrawlSpider):
             }
 
             yield FormRequest('http://docs.cpuc.ca.gov/SearchRes.aspx', formdata=formdata,
-                              meta={'page': int(response.meta['page']) + 1}, callback=self.parse_proceeding)
-
+                              callback=self.parse_proceeding)
 
     def extract_proceeding_ids(self, response):
         proceedings_list = []
         proceedings = response.xpath('//table[@class="ResultTable"]//td[@class="ResultTitleTD"]//text()').extract()
         for proceeding in proceedings:
-            if re.findall(r"(\w\d\d\d\d\d\d\d)", proceeding):
-                proceedings_list.append(re.findall(r"(\w\d\d\d\d\d\d\d)", proceeding)[0])
+            if re.findall(r"(\w\d{7})", proceeding):
+                proceedings_list.append(re.findall(r"(\w\d{7})", proceeding)[0])
 
         return proceedings_list
-
 
     def get_viewstate(self, response):
         return response.xpath('//input[contains(@id,"__VIEWSTATE")]/@value').extract_first()
 
-
     def get_viewstategenerator(self, response):
         return response.xpath('//input[contains(@id,"__VIEWSTATEGENERATOR")]/@value').extract_first()
-
 
     def get_eventvalidation(self, response):
         return response.xpath('//input[contains(@id,"__EVENTVALIDATION")]/@value').extract()
