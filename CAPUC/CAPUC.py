@@ -60,7 +60,7 @@ class CapucParseSpider(scrapy.Spider):
                 'x02': self.extract_formdata_X02(response),
             }
 
-            return FormRequest.from_response(response, formid='wwvFlowForm', formdata=formdata,
+            return FormRequest.from_response(response, formid='wwvFlowForm', formdata=formdata,dont_filter=True,
                                              callback=self.parse_proceeding_filings)
 
         return self.next_filing_or_item(item)
@@ -140,7 +140,7 @@ class CapucParseSpider(scrapy.Spider):
     def extract_docs_requests(self, raw_filing):
         if raw_filing.css('td[headers="DOCUMENT_TYPE"] a::attr(href)').extract_first():
             return Request(raw_filing.css('td[headers="DOCUMENT_TYPE"] a::attr(href)').extract_first(),
-                           dont_filter=True, callback=self.extract_filing_docs)
+                           callback=self.extract_filing_docs)
 
     def extract_filings_titles(self, response):
         return response.xpath('//td[@class="ResultTitleTD"]//text()').extract()
