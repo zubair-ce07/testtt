@@ -39,4 +39,4 @@ class Item(scrapy.Item):
     uploaded=scrapy.Field()
     states=scrapy.Field()
     meta=scrapy.Field()
-    pass
+    
