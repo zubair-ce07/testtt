@@ -3,7 +3,7 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
 from w3lib.url import url_query_cleaner
 
-from .base import BaseCrawlSpider, BaseParseSpider, clean, Gender, soupify
+from .base import BaseCrawlSpider, BaseParseSpider, clean, Gender
 
 
 class Mixin:
@@ -73,7 +73,6 @@ class ThemodistParseSpider(BaseParseSpider):
         self.boilerplate_normal(garment, response)
 
         garment["image_urls"] = self.image_urls(response)
-        garment["gender"] = self.gender
         garment["skus"] = self.skus(response)
 
         return garment
