@@ -26,7 +26,7 @@ class FilaParseSpider(BaseParseSpider, Mixin):
 
 		garment = self.new_unique_garment(sku_id)
 
-		if not garment:
+		if not garment or "https://www.fila.com.br/" == response.url:
 			return
 
 		self.boilerplate_normal(garment, response)
@@ -63,7 +63,8 @@ class FilaParseSpider(BaseParseSpider, Mixin):
 
 	def colour_requests(self, response):
 		css = '.wrap-other-desktop .carrossel-link::attr(href)'
-		return [response.follow(url, callback=self.parse_colours, dont_filter=True) for  url in response.css(css).extract()]
+		return [response.follow(url, callback=self.parse_colours, dont_filter=True) \
+					for  url in response.css(css).extract()]
 
 	def parse_colours(self, response):
 		garment = response.meta['garment']
@@ -101,7 +102,8 @@ class FilaParseSpider(BaseParseSpider, Mixin):
 	
 	def product_sizes(self, response):
 		css = '#configurable_swatch_size .swatch-label::text'
-		return [self.one_size if size in self.one_sizes else size for size in response.css(css).extract()]
+		return [self.one_size if size in self.one_sizes else size \
+					for size in response.css(css).extract()]
 	
 	def product_description(self, response):
 		css = '.wrap-description ::text, .wrap-long-description ::text'
