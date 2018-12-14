@@ -1,26 +1,28 @@
-from dictionaryreplica import DictionaryReplica
+from dictionary_hash_structure import DictionaryHash
 
 
 def main():
-    dict_replica = DictionaryReplica()
-    print(dict_replica._fromkeys(('key1', 'key2', 'key3'), 0))
 
-    dict_replica._add('brand', '__Ford')
-    dict_replica._add('model', '__Mustang')
-    dict_replica._add('year', '__year')
+    hash_dict = DictionaryHash()
+    hash_dict['year'] = 2018
+    hash_dict['month'] = 'Dec'
+    hash_dict['day'] = 'Monday'
+    hash_dict['brand'] = '_Ford'
+    hash_dict['model'] = '_Mustang'
 
-    print(dict_replica._copy())
-    print(dict_replica._get("model"))
-    print(dict_replica._items())
-    print(dict_replica._keys())
+    print(hash_dict.fromkeys(('key1', 'key2', 'key3'), 0))
 
-    dict_replica._pop("model")
-    dict_replica._update({'color': '_White'})
+    hash_dict.pop("day")
+    update_dict = DictionaryHash()
+    update_dict['year'] = 2019
+    update_dict['color'] = '_White'
+    update_dict['last item'] = 'last item'
+    hash_dict.update(update_dict)
+    hash_dict.popitem()
+    hash_dict.setdefault('DOB', '1993')
 
-    print(dict_replica._values())
-    dict_replica._popitem()
-    print(dict_replica._values())
-    print(dict_replica._clear())
+    hash_dict_copy = hash_dict.copy()
+    print(hash_dict_copy)
 
 
 if __name__ == "__main__":
