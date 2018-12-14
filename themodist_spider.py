@@ -11,6 +11,7 @@ class Mixin:
     allowed_domains = ["themodist.com"]
 
     default_brand = "Themodist"
+    gender = Gender.WOMEN.value
     currency_url_t = "https://www.themodist.com/on/demandware.store/Sites-TheModist-Site/en/" \
                      "Currency-SetSessionCountryAndCurrency?format=ajax&countryCode={}"
 
@@ -57,7 +58,7 @@ class MixinUS(Mixin):
 class ThemodistParseSpider(BaseParseSpider):
     description_css = ".pdp__info__content p:nth-child(1)::text"
     brand_css = ".pdp__brand ::text"
-    care_css = ".pdp__info__content li:not(:last-child) ::text"
+    care_css = ".pdp__info > div:nth-child(2) li:not(:last-child)::text"
     price_css = ".price-sales::text, .price-standard::text"
 
     out_of_stock_messages = ["Sold Out", "مُباع بالكامل"]
@@ -72,7 +73,7 @@ class ThemodistParseSpider(BaseParseSpider):
         self.boilerplate_normal(garment, response)
 
         garment["image_urls"] = self.image_urls(response)
-        garment["gender"] = self.product_gender(garment)
+        garment["gender"] = self.gender
         garment["skus"] = self.skus(response)
 
         return garment
@@ -92,10 +93,6 @@ class ThemodistParseSpider(BaseParseSpider):
     def product_category(self, response):
         css = "a[id*='breadcrumb']:not(#breadcrumb1)::text"
         return clean(response.css(css))
-
-    def product_gender(self, garment):
-        soup = soupify(garment["description"] + [garment["name"]] + garment["category"])
-        return self.gender_lookup(soup) or Gender.ADULTS.value
 
     def skus(self, response):
         skus = {}
