@@ -1,6 +1,6 @@
+from scrapy.http import Request, FormRequest
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
-from scrapy.http import Request, FormRequest
 
 from .base import BaseParseSpider, BaseCrawlSpider, clean, soupify, Gender
 
@@ -10,7 +10,7 @@ class Mixin:
     allowed_domains = ['smallable.com']
 
     currency_url = 'https://smallable.com/currency/change'
-    country_url = 'https://smallable.com/country/change'
+    location_url = 'https://smallable.com/country/change'
 
     unwanted_items = [
         'pushchairs', 'poussette', 'cochecitos', 'kinderwagen', 'passaggini',
@@ -158,9 +158,10 @@ class MixinQA(Mixin):
 
 
 class SmallableParseSpider(BaseParseSpider):
-    brand_css = '[itemprop="brand"] ::text'
+    price_x = '//*[@class="product"]//*[@itemprop="priceCurrency"]//@content |' \
+              '@data-price | @data-discount-price'
+    brand_css = '[data-brand]::attr(data-brand)'
     raw_description_css = '[itemprop="description"] ::text'
-    sentence_delimiter_r = ':|,'
 
     def parse(self, response):
         if self.is_unwanted(response):
@@ -172,7 +173,7 @@ class SmallableParseSpider(BaseParseSpider):
 
         self.boilerplate_normal(garment, response)
 
-        if self.is_homeware(response, garment):
+        if self.is_homeware(garment):
             garment['industry'] = 'homeware'
         else:
             garment['gender'] = self.product_gender(garment)
@@ -192,14 +193,18 @@ class SmallableParseSpider(BaseParseSpider):
     def is_outlet(self, response):
         return 'outlet' in clean(response.css('title::text'))[0].lower()
 
-    def is_homeware(self, response, garment):
+    def is_homeware(self, garment):
         return 'design' in soupify(garment['category']).lower()
 
     def product_id(self, response):
         return response.url.split('-')[-1].strip('.html')
 
-    def product_name(self, response):
+    def raw_name(self, response):
         return clean(response.css('.p-name::text'))[0]
+
+    def product_name(self, response):
+        name = self.raw_name(response)
+        return self.remove_color_from_name(name)
 
     def product_category(self, response):
         raw_categories = clean(response.css('.c-breadcrumb-elem::text'))[1:-1]
@@ -221,18 +226,18 @@ class SmallableParseSpider(BaseParseSpider):
             if size_s.css('.oos'):
                 continue
 
-            price_css = '::attr(data-price), ::attr(data-discount-price)'
-            currency_css = '.-cur-sel > div ::text'
-
-            money_strs = clean(size_s.css(price_css)) + [clean(response.css(currency_css))[0]]
-            sku = self.product_pricing_common(response, money_strs=money_strs)
-
+            sku = self.product_pricing_common(size_s)
             sku['size'] = clean(size_s.css('::attr(data-size)'))[0]
             sku['colour'] = colour
 
             skus[f"{sku['colour']}_{sku['size']}"] = sku
 
         return skus
+
+    def remove_color_from_name(self, name):
+        color = self.detect_colour(name)
+        name = name.lower().replace(color, '')
+        return ' '.join(name.split()).title()
 
 
 class SmallableCrawlSpider(BaseCrawlSpider):
@@ -259,7 +264,7 @@ class SmallableCrawlSpider(BaseCrawlSpider):
                            callback=self.parse_location, dont_filter=True)
 
     def parse_location(self, response):
-        return FormRequest(self.country_url, formdata={'id': self.country_code},
+        return FormRequest(self.location_url, formdata={'id': self.country_code},
                            callback=self.parse, dont_filter=True)
 
 
