@@ -6,12 +6,11 @@ from .base import BaseCrawlSpider, BaseParseSpider, clean
 class Mixin:
 	retailer = 'fila'
 	allowed_domains = ['fila.com.br']
-	one_sizes = ['U']
 
 
 class MixinBR(Mixin):
+	default_brand = 'Fila'
 	market = 'BR'
-	lang = 'pt'
 	retailer = Mixin.retailer + '-br'
 	start_urls = [
 		'https://www.fila.com.br/'
@@ -19,52 +18,23 @@ class MixinBR(Mixin):
 
 
 class FilaParseSpider(BaseParseSpider, Mixin):
+	description_css = care_css = '.wrap-description ::text, .wrap-long-description ::text'
 
 	def parse(self, response):
-		care_css = '.wrap-description ::text'
 		sku_id = self.product_id(response)
-
 		garment = self.new_unique_garment(sku_id)
 
-		if not garment or 'https://www.fila.com.br/' == response.url:
+		if not garment:
 			return
 
 		self.boilerplate_normal(garment, response)
-		garment['gender'] = self.gender_lookup(garment['name'])
-		garment['image_urls'] = []
-		garment['skus'] = {}
+		garment['gender'] = self.product_gender(response)
+		garment['image_urls'] = self.product_images(response)
+		garment['skus'] = self.skus(response)
 
 		garment['meta'] = {'requests_queue': self.colour_requests(response)}
 
 		return self.next_request_or_garment(garment)
-	
-	def next_request_or_garment(self, garment, drop_meta=True):
-		"""
-			Assuming that ['meta']['requests_queue'] contains queue of prepared requests,
-			to be processed from right to left
-		"""
-		if not 'meta' in garment:
-			return garment
-
-		if garment['meta']['requests_queue']:
-			request = garment['meta']['requests_queue'].pop()
-			request.meta.setdefault('garment', garment)
-			return [self.elevate_request_priority(request)]
-
-		garment['meta'].pop('requests_queue')
-
-		if drop_meta or not garment['meta']:
-			garment.pop('meta')
-
-		if not garment['skus']:
-			garment['out_of_stock'] = True
-
-		return garment
-
-	def colour_requests(self, response):
-		css = '.wrap-other-desktop .carrossel-link::attr(href)'
-		return [response.follow(url, callback=self.parse_colours, dont_filter=True) \
-					for url in response.css(css).extract()]
 
 	def parse_colours(self, response):
 		garment = response.meta['garment']
@@ -72,20 +42,18 @@ class FilaParseSpider(BaseParseSpider, Mixin):
 		garment['skus'].update(self.skus(response))
 		return self.next_request_or_garment(garment)	
 
-	def product_images(self, response):
-		return clean(response.css('a.thumb-link>img::attr(src)'))
-
 	def skus(self, response):
+		size_css = '#configurable_swatch_size .swatch-label::text'
 		skus = {}
 		price, old_price = self.product_prices(response)
-		colour = self.product_colour(response)
+		colour = clean(response.css('.wrap-sku>small ::text'))[1]
 
 		if not price:
 			return skus
 			
 		common = self.product_pricing_common(response, money_strs=[price + old_price])
 		common['colour'] = colour
-		available_size = self.product_sizes(response)
+		available_size = [size for size in clean(response.css(size_css))]
 
 		for size in available_size:
 			sku = common.copy()
@@ -94,34 +62,39 @@ class FilaParseSpider(BaseParseSpider, Mixin):
 		
 		return skus
 	
+	def product_images(self, response):
+		return clean(response.css('a.thumb-link>img::attr(src)'))
+	
+	def product_gender(self, response):
+		return self.gender_lookup(self.product_name(response)) 
+
 	def product_prices(self, response):
 		old_price = response.css('.pdv_original ::text').extract_first() or ''
 		price = response.css('.normal_price_span ::text').extract_first()
 		return price, old_price
-	
-	def product_sizes(self, response):
-		css = '#configurable_swatch_size .swatch-label::text'
-		return [self.one_size if size in self.one_sizes else size \
-					for size in response.css(css).extract()]
-	
-	def product_description(self, response):
-		css = '.wrap-description ::text, .wrap-long-description ::text'
-		return clean(response.css(css))
-
-	def product_colour(self, response):
-		return response.css('.wrap-sku>small ::text').extract()[1]
-	
-	def product_brand(self, response):
-		return 'Fila'
 		
 	def product_category(self, response):
 		return clean(response.css('.breadcrumbs a[href] ::text'))[1:]
 
 	def product_id(self, response):
-		return response.css('.wrap-sku>small ::text').extract_first().split('_')[0]
+		return clean(response.css('.wrap-sku>small ::text'))[0].split('_')[0]
 
 	def product_name(self, response):
 		return clean(response.css('.product-name ::text'))[0]
+	
+	def colour_requests(self, response):
+		css = '.wrap-other-desktop .carrossel-link::attr(href)'
+		urls = clean(response.css(css))
+		current_url = clean(response.css('.thumb-block.current a::attr(href)'))
+		if current_url:
+			urls.remove(current_url[0])
+		return [Request(url, callback=self.parse_colours, dont_filter=True) \
+					for url in urls]
+	
+	def next_request_or_garment(self, garment, drop_meta=True):
+		if not (garment['meta'] and garment['skus']):
+			garment['out_of_stock'] = True
+		return super().next_request_or_garment(garment, drop_meta=drop_meta)
 
 
 class FilaCrawlSpider(BaseCrawlSpider, Mixin):
@@ -136,6 +109,9 @@ class FilaCrawlSpider(BaseCrawlSpider, Mixin):
 
 class FilaBRParseSpider(FilaParseSpider, MixinBR):
 	name = MixinBR.retailer + '-parse'
+	custom_settings = {
+		'DOWNLOAD_DELAY': 5,
+	}
 
 
 class FilaBRCrawlSpider(FilaCrawlSpider, MixinBR):
