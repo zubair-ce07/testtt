@@ -12,6 +12,12 @@ from skuscraper.utils.market_lang import get_spider_lang
 class Mixin:
     retailer = 'balr'
     allowed_domains = ['balr.com']
+    MERCH_INFO = [
+        'Disponibilidad limitada',
+        'Beperkt verkrijgbaar',
+        'Édition limitée',
+        'Begrenzte Verfügbarkeit'
+    ]
 
 
 class MixinDE(Mixin):
@@ -39,7 +45,7 @@ class MixinFR(Mixin):
 
 
 class BalrParseSpider(BaseParseSpider):
-    description_css = '.description::text'
+    description_css = '.product-desc-short ::text'
     care_css = '.product-care-tab::text'
     price_css = '.price ::text'
     default_brand = 'Balr'
@@ -52,6 +58,7 @@ class BalrParseSpider(BaseParseSpider):
             return
 
         self.boilerplate_normal(garment, response)
+        garment['merch_info'] = self.merch_info(response)
         garment['image_urls'] = self.image_urls(response)
         garment['gender'] = self.product_gender(garment)
         garment['skus'] = self.skus(response)
@@ -69,7 +76,7 @@ class BalrParseSpider(BaseParseSpider):
 
         for size, is_oos in zip(sizes, availability):
             sku = common.copy()
-            sku['size'] = size
+            sku['size'] = size[size.find(' ')+1:] if size != self.one_size else size
             sku_id = f'{sku["colour"]}_{sku["size"]}'
             skus[sku_id] = sku
 
@@ -77,6 +84,10 @@ class BalrParseSpider(BaseParseSpider):
                 sku['out_of_stock'] = True
 
         return skus
+
+    def merch_info(self, response):
+        soup = clean(response.css('.product-detail-column.arrow-up ::text'))
+        return [m for m in self.MERCH_INFO if m in soup]
 
     def product_category(self, response):
         raw_product = self.raw_product(response)
@@ -91,8 +102,8 @@ class BalrParseSpider(BaseParseSpider):
         return json.loads(raw_product)['ecommerce']['detail']['products'][0]
 
     def image_urls(self, response):
-        code = clean(response.css('.product-code::text'))[0]
-        css = f'.carousel-product-variant[data-code="{code}"] img::attr(src)'
+        code = clean(response.css('.carousel-product-variant::attr(data-code)'))[0]
+        css = f'.carousel-product-variant[data-code="{code}"] > img::attr(src)'
         return clean(response.css(css))
 
     def product_gender(self, garment):
