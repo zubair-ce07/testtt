@@ -67,12 +67,9 @@ class FilaParseSpider(BaseParseSpider):
     def skus(self, response):
         common_sku = response.meta.get('common_sku')
         css = '.variations_form::attr(data-product_variations)'
-        raw_skus = [json.loads(response.text)] if common_sku else json.loads(clean(response.css(css))[0])
+        raw_skus = [json.loads(response.text)] if common_sku else json.loads(clean(response.css(css))[0]) or []
         common_sku = common_sku or self.product_pricing_common(response)
         skus = {}
-
-        if not raw_skus:
-            return skus
 
         for raw_sku in raw_skus:
             sku = common_sku.copy()
@@ -90,13 +87,13 @@ class FilaParseSpider(BaseParseSpider):
         requests = []
         colours = clean(response.css('#pa_colour ::attr(value)'))
         sizes = clean(response.css('#pa_size ::attr(value)'))
-        common_sku = self.product_pricing_common(response)
         formdata = {'product_id': self.product_id(response)}
+        common_sku = self.product_pricing_common(response)
+        meta = {'common_sku': common_sku.copy()}
 
         for colour, size in product(colours, sizes):
             formdata['attribute_pa_colour'] = colour
             formdata['attribute_pa_size'] = size
-            meta = {'common_sku': common_sku.copy()}
 
             requests.append(FormRequest(self.sku_request_url, formdata=formdata,
                                         meta=meta.copy(), callback=self.parse_sku))
