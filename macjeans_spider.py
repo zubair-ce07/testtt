@@ -60,7 +60,7 @@ class MacJeansParseSpider(BaseParseSpider):
 
     def product_id(self, response):
         css = '[itemprop="sku"]::text'
-        return clean(response.css(css))[0]
+        return ''.join(response.css(css).re('\d'))
 
     def product_name(self, response):
         css = '.product--header .product--title::text'
