@@ -2,6 +2,7 @@ from scrapy.spiders import Rule, Request
 from scrapy.linkextractors import LinkExtractor
 
 from .base import BaseCrawlSpider, BaseParseSpider, clean
+from ..parsers.genders import Gender
 
 class Mixin:
 	retailer = 'fila'
@@ -18,7 +19,7 @@ class MixinBR(Mixin):
 
 
 class FilaParseSpider(BaseParseSpider, Mixin):
-	description_css = care_css = '.wrap-description ::text, .wrap-long-description ::text'
+	raw_description_css = '.wrap-description ::text, .wrap-long-description ::text'
 
 	def parse(self, response):
 		sku_id = self.product_id(response)
@@ -58,7 +59,7 @@ class FilaParseSpider(BaseParseSpider, Mixin):
 		for size in available_size:
 			sku = common.copy()
 			sku['size'] = size
-			skus['{}_{}'.format(colour, size)] = sku
+			skus[f'{colour}_{size}'] = sku
 		
 		return skus
 	
@@ -66,7 +67,7 @@ class FilaParseSpider(BaseParseSpider, Mixin):
 		return clean(response.css('a.thumb-link>img::attr(src)'))
 	
 	def product_gender(self, response):
-		return self.gender_lookup(self.product_name(response)) 
+		return self.gender_lookup(self.product_name(response)) or Gender.ADULTS.value
 
 	def product_prices(self, response):
 		old_price = response.css('.pdv_original ::text').extract_first() or ''
@@ -77,7 +78,7 @@ class FilaParseSpider(BaseParseSpider, Mixin):
 		return clean(response.css('.breadcrumbs a[href] ::text'))[1:]
 
 	def product_id(self, response):
-		return clean(response.css('.wrap-sku>small ::text'))[0].split('_')[0]
+		return clean(response.css('.wrap-sku > small ::text'))[0].split('_')[0]
 
 	def product_name(self, response):
 		return clean(response.css('.product-name ::text'))[0]
@@ -88,8 +89,7 @@ class FilaParseSpider(BaseParseSpider, Mixin):
 		current_url = clean(response.css('.thumb-block.current a::attr(href)'))
 		if current_url:
 			urls.remove(current_url[0])
-		return [Request(url, callback=self.parse_colours, dont_filter=True) \
-					for url in urls]
+		return [Request(url, callback=self.parse_colours, dont_filter=True) for url in urls]
 	
 	def next_request_or_garment(self, garment, drop_meta=True):
 		if not (garment['meta'] and garment['skus']):
