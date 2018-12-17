@@ -20,6 +20,7 @@ class MixinBR(Mixin):
 
 class FilaParseSpider(BaseParseSpider, Mixin):
 	raw_description_css = '.wrap-description ::text, .wrap-long-description ::text'
+	price_css = '.pdv_original ::text, .normal_price_span ::text'
 
 	def parse(self, response):
 		sku_id = self.product_id(response)
@@ -46,13 +47,12 @@ class FilaParseSpider(BaseParseSpider, Mixin):
 	def skus(self, response):
 		size_css = '#configurable_swatch_size .swatch-label::text'
 		skus = {}
-		price, old_price = self.product_prices(response)
-		colour = clean(response.css('.wrap-sku>small ::text'))[1]
 
-		if not price:
+		if not response.css('.normal_price_span'):
 			return skus
-			
-		common = self.product_pricing_common(response, money_strs=[price + old_price])
+
+		colour = clean(response.css('.wrap-sku > small ::text'))[1]
+		common = self.product_pricing_common(response)
 		common['colour'] = colour
 		available_size = [size for size in clean(response.css(size_css))]
 
@@ -64,15 +64,10 @@ class FilaParseSpider(BaseParseSpider, Mixin):
 		return skus
 	
 	def product_images(self, response):
-		return clean(response.css('a.thumb-link>img::attr(src)'))
+		return clean(response.css('a.thumb-link > img::attr(src)'))
 	
 	def product_gender(self, response):
 		return self.gender_lookup(self.product_name(response)) or Gender.ADULTS.value
-
-	def product_prices(self, response):
-		old_price = response.css('.pdv_original ::text').extract_first() or ''
-		price = response.css('.normal_price_span ::text').extract_first()
-		return price, old_price
 		
 	def product_category(self, response):
 		return clean(response.css('.breadcrumbs a[href] ::text'))[1:]
@@ -90,11 +85,6 @@ class FilaParseSpider(BaseParseSpider, Mixin):
 		if current_url:
 			urls.remove(current_url[0])
 		return [Request(url, callback=self.parse_colours, dont_filter=True) for url in urls]
-	
-	def next_request_or_garment(self, garment, drop_meta=True):
-		if not (garment['meta'] and garment['skus']):
-			garment['out_of_stock'] = True
-		return super().next_request_or_garment(garment, drop_meta=drop_meta)
 
 
 class FilaCrawlSpider(BaseCrawlSpider, Mixin):
