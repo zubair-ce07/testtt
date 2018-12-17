@@ -27,7 +27,7 @@ class MixinDE(Mixin):
 class MacJeansParseSpider(BaseParseSpider):
     price_css = '.product--detail-upper .product--price ::text'
     raw_description_css = '.product--description ::text'
-    care_css = '.product--properties ::text'
+    care_css = '.product--properties ::text, block-prices--cell ::text'
     brand_css = '[itemprop="brand"]::attr(content)'
 
     def parse(self, response):
