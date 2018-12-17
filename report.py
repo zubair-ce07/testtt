@@ -1,112 +1,73 @@
-
-import statistics
-from colr import Colr as C
+from colr import Colr
 
 
-# task 1 Calculation
-def yearly_lowest_highest_values(this_year_data_list):
+def yearly_lowest_highest_values(year_data):
+    max_day = year_data[0][0]
+    min_day = year_data[0][0]
+    max_humidity_day = year_data[0][0]
 
-    temporary_max_temperature_day = this_year_data_list[0][0]
-    temporary_min_temperature_day = this_year_data_list[0][0]
-    temporary_max_humidity_day = this_year_data_list[0][0]
+    for month_num in range(len(year_data)):
+        for day in range(len(year_data[month_num])):
+            if max_day.max_temp < year_data[month_num][day].max_temp:
+                max_day = year_data[month_num][day]
+            if min_day.min_temp > year_data[month_num][day].min_temp:
+                min_day = year_data[month_num][day]
+            if max_humidity_day.max_humidity < year_data[month_num][day].max_humidity:
+                max_humidity_day = year_data[month_num][day]
 
-    for month_number in range(len(this_year_data_list)):
-        for day_number in range(len(this_year_data_list[month_number])):
-            if temporary_max_temperature_day.max_temp < this_year_data_list[month_number][day_number].max_temp:
-                temporary_max_temperature_day = this_year_data_list[month_number][day_number]
-            if temporary_min_temperature_day.min_temp > this_year_data_list[month_number][day_number].min_temp:
-                temporary_min_temperature_day = this_year_data_list[month_number][day_number]
-            if temporary_max_humidity_day.max_humidity < this_year_data_list[month_number][day_number].max_humidity:
-                temporary_max_humidity_day = this_year_data_list[month_number][day_number]
-
-    print('\n')
-    print("======================================")
-    print(f"Highest temperature: {temporary_max_temperature_day.max_temp} on "
-          f"{temporary_max_temperature_day.date.strftime('%B %d')}")
-    print(f"Lowest temperature: {temporary_min_temperature_day.min_temp} on "
-          f"{temporary_min_temperature_day.date.strftime('%B %d')}")
-    print(f"Maximum Humidity: {temporary_max_humidity_day.max_humidity} on "
-          f"{temporary_max_humidity_day.date.strftime('%B %d')}")
-    print("======================================")
-    print('\n')
+    print(f"Highest temperature: {max_day.max_temp} on {max_day.date.strftime('%B %d')}")
+    print(f"Lowest temperature: {min_day.min_temp} on {min_day.date.strftime('%B %d')}")
+    print(f"Maximum Humidity: {max_humidity_day.max_humidity} on {max_humidity_day.date.strftime('%B %d')}")
 
 
-# Task 2 Calculation
-def monthly_average_values(required_month, this_year_data_list):
+def monthly_average_values(month_data):
+    highest_temp = [float(day.max_temp) if day.max_temp else 0 for day in month_data]
+    lowest_temp = [float(day.min_temp) if day.min_temp else 0 for day in month_data]
+    highest_humidity = [float(day.max_humidity) if day.max_humidity else 0 for day in month_data]
 
-    record_of_required_month = this_year_data_list[required_month-1]
-
-    highest_temp_values = [float(max_T.max_temp) if max_T.max_temp else 0 for max_T in record_of_required_month]
-    lowest_temp_values = [float(min_T.min_temp) if min_T.min_temp else 0 for min_T in record_of_required_month]
-    highest_humidity_values = [float(max_T.max_humidity) if max_T.max_humidity else 0
-                               for max_T in record_of_required_month]
-
-    print('\n')
-    print("=====================================")
-    print(f"Highest Average: {statistics.mean(highest_temp_values).__round__()}")
-    print(f"Lowest Average: {statistics.mean(lowest_temp_values).__round__()}")
-    print(f"Average Mean Humidity: {statistics.mean(highest_humidity_values).__round__()}%")
-    print("=====================================")
-    print('\n')
+    print(f"Highest Average: {(sum(highest_temp) / len(highest_temp)).__round__()}")
+    print(f"Lowest Average: {(sum(lowest_temp) / len(lowest_temp)).__round__()}")
+    print(f"Average Mean Humidity: {(sum(highest_humidity) / len(highest_humidity)).__round__()}%")
 
 
-# Task 3 Calculation
-def horizontal_bar_for_given_month(required_month, this_year_data_list):
+def horizontal_bar_for_given_month(month_data):
+    max_day = month_data[0]
+    min_day = month_data[0]
 
-    record_of_required_month = this_year_data_list[required_month - 1]
+    for day in month_data:
+        if max_day.max_temp < day.max_temp:
+            max_day = day
+        if min_day.min_temp > day.min_temp:
+            min_day = day
 
-    temporary_max_temp_day = record_of_required_month[0]
-    temporary_min_temp_day = record_of_required_month[0]
-
-    for day_number in record_of_required_month:
-        if temporary_max_temp_day.max_temp < day_number.max_temp:
-            temporary_max_temp_day = day_number
-        if temporary_min_temp_day.min_temp > day_number.min_temp:
-            temporary_min_temp_day = day_number
-
-    print('\n')
-    print("===============================================")
-    print(f"Highest temperature: on {temporary_max_temp_day.date.strftime('%B %d')} "
-          f"{C('+' * int(temporary_max_temp_day.max_temp), fore='red')} "
-          f"{temporary_max_temp_day.max_temp}")
-    print(f"Highest temperature: on {temporary_max_temp_day.date.strftime('%B %d')} "
-          f"{C('+' * int(temporary_max_temp_day.min_temp), fore='blue')} {temporary_max_temp_day.min_temp}")
-    print('\n')
-    print(f"Lowest High temperature: on {temporary_min_temp_day.date.strftime('%B %d')} "
-          f"{C('+' * int(temporary_min_temp_day.max_temp) if temporary_min_temp_day.max_temp else 0, fore='red')} "
-          f"{temporary_min_temp_day.max_temp if temporary_min_temp_day.max_temp else 0}")
-    print(f"Lowest Low temperature: on {temporary_min_temp_day.date.strftime('%B %d')} "
-          f"{C('+' * int(temporary_min_temp_day.min_temp) if temporary_min_temp_day.min_temp else 0, fore='blue')} "
-          f"{temporary_min_temp_day.min_temp if temporary_min_temp_day.min_temp else 0}")
-    print("===============================================")
-    print('\n')
+    print(f"Highest temperature: on {max_day.date.strftime('%B %d')} "
+          f"{Colr('+' * int(max_day.max_temp), fore='red')} {max_day.max_temp}")
+    print(f"Highest temperature: on {max_day.date.strftime('%B %d')} "
+          f"{Colr('+' * int(max_day.min_temp), fore='blue')} {max_day.min_temp}")
+    print(f"Lowest High temperature: on {min_day.date.strftime('%B %d')} "
+          f"{Colr('+' * int(min_day.max_temp) if min_day.max_temp else 0, fore='red')} "
+          f"{min_day.max_temp if min_day.max_temp else 0}")
+    print(f"Lowest Low temperature: on {min_day.date.strftime('%B %d')} "
+          f"{Colr('+' * int(min_day.min_temp) if min_day.min_temp else 0, fore='blue')} "
+          f"{min_day.min_temp if min_day.min_temp else 0}")
 
 
-# Task 5 Calculation BONUS task
-def mixed_bar_for_given_month(required_month, this_year_data_list):
+def mixed_bar_for_given_month(month_data):
+    max_day = month_data[0]
+    min_day = month_data[0]
 
-    record_of_required_month = this_year_data_list[required_month - 1]
+    for day in month_data:
+        if max_day.max_temp < day.max_temp:
+            max_day = day
+        if min_day.min_temp > day.min_temp:
+            min_day = day
 
-    temporary_max_temp_day = record_of_required_month[0]
-    temporary_min_temp_day = record_of_required_month[0]
-
-    for day_number in record_of_required_month:
-        if temporary_max_temp_day.max_temp < day_number.max_temp:
-            temporary_max_temp_day = day_number
-        if temporary_min_temp_day.min_temp > day_number.min_temp:
-            temporary_min_temp_day = day_number
-
-    print('\n')
-    print("=============================================")
-    print(f"Highest temperature: on {temporary_max_temp_day.date.strftime('%B %d')} "
-          f"{C('+' * int(temporary_max_temp_day.min_temp), fore='blue')}"
-          f"{C('+' * int(temporary_max_temp_day.max_temp), fore='red')} "
-          f"{temporary_max_temp_day.min_temp}C- {temporary_max_temp_day.max_temp}C")
-    print('\n')
-    print(f"Highest temperature: on {temporary_min_temp_day.date.strftime('%B %d')} "
-          f"{C('+' * int(temporary_min_temp_day.min_temp) if temporary_min_temp_day.min_temp else 0, fore='blue')}"
-          f"{C('+' * int(temporary_min_temp_day.max_temp) if temporary_min_temp_day.max_temp else 0, fore='red')} "
-          f"{temporary_min_temp_day.min_temp if temporary_min_temp_day.min_temp else 0}C - "
-          f"{temporary_min_temp_day.max_temp if temporary_min_temp_day.max_temp else 0}C")
-    print("=============================================")
-    print('\n')
+    print(f"Highest temperature: on {max_day.date.strftime('%B %d')} "
+          f"{Colr('+' * int(max_day.min_temp), fore='blue')}"
+          f"{Colr('+' * int(max_day.max_temp), fore='red')} "
+          f"{max_day.min_temp}C- {max_day.max_temp}C")
+    print(f"Highest temperature: on {min_day.date.strftime('%B %d')} "
+          f"{Colr('+' * int(min_day.min_temp) if min_day.min_temp else 0, fore='blue')}"
+          f"{Colr('+' * int(min_day.max_temp) if min_day.max_temp else 0, fore='red')} "
+          f"{min_day.min_temp if min_day.min_temp else 0}C - "
+          f"{min_day.max_temp if min_day.max_temp else 0}C")
