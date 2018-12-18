@@ -1,5 +1,5 @@
-blue = '\033[34m'
-red = '\033[31m'
+BLUE = '\033[34m'
+RED = '\033[31m'
 
 
 def generate_yearly_report(record):
@@ -32,8 +32,8 @@ def generate_bar_chart(records):
         max_tmp_bar = '+' * record.max_temp
         low_tmp_bar = '+' * record.low_temp
         print(
-            f"{day} {red}{max_tmp_bar} {record.max_temp}C \n"
-            f"{day} {blue}{low_tmp_bar} {record.low_temp}C"
+            f"{day} {RED}{max_tmp_bar} {record.max_temp}C \n"
+            f"{day} {BLUE}{low_tmp_bar} {record.low_temp}C"
         )
 
 
@@ -44,4 +44,4 @@ def generate_bonus_bar_chart(records):
         day = record.date.day
         low_tmp_bar = '+' * record.low_temp
         remain_tmp = '+' * (record.max_temp - record.low_temp)
-        print(f"{day} {blue}{low_tmp_bar}{red}{remain_tmp} {blue}{record.low_temp}C - {red}{record.max_temp}C")
+        print(f"{day} {BLUE}{low_tmp_bar}{RED}{remain_tmp} {BLUE}{record.low_temp}C - {RED}{record.max_temp}C")

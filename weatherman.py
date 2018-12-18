@@ -1,9 +1,10 @@
-import argparse
 import os
+import argparse
 from datetime import datetime
+
 import datareader
-import reports
-import reportgenerator
+import report_calculations
+import report_generator
 
 
 def parse_arguments():
@@ -50,20 +51,20 @@ def main():
     if parsed_args.yearly:
 
         for year in parsed_args.yearly:
-            year_records = reports.generate_yearly_report(weather_records, year)
-            reportgenerator.generate_yearly_report(year_records)
+            year_records = report_calculations.generate_yearly_report(weather_records, year)
+            report_generator.generate_yearly_report(year_records)
 
     if parsed_args.monthly:
 
         for month in parsed_args.monthly:
-            month_records = reports.generate_monthly_report(weather_records, month)
-            reportgenerator.generate_monthly_report(month_records)
+            month_records = report_calculations.generate_monthly_report(weather_records, month)
+            report_generator.generate_monthly_report(month_records)
 
     if parsed_args.bar_chart:
 
         for chart in parsed_args.bar_chart:
-            bar_chart_records = reports.generate_bar_chart_report(weather_records, chart)
-            reportgenerator.generate_bonus_bar_chart(bar_chart_records)
+            bar_chart_records = report_calculations.generate_bar_chart_report(weather_records, chart)
+            report_generator.generate_bonus_bar_chart(bar_chart_records)
 
 
 if __name__ == "__main__":
