@@ -16,6 +16,10 @@ class Mixin:
         'pushchairs', 'poussette', 'cochecito', 'kinderwagen', 'passaggini',
         'baby-carrier', 'porte-bebes', 'porta-bebes', 'babytrage', 'marsupi',
         'toys', 'jouet', 'juguetes', 'spiel', 'giocattoli',
+        'headphones', 'ecouteurs', 'auriculares', 'kopfhoerer', 'cuffie-auricolari',
+        'speakers', 'enceintes', 'altavoces', 'lautsprecher', 'casse',
+        'cameras', 'appareils-photos', 'camaras', 'fotoapparate', 'fotografiche',
+        'radio',
     ]
 
 
@@ -186,6 +190,8 @@ class SmallableParseSpider(BaseParseSpider):
         garment['name'] = self.remove_color_from_name(response)
         garment['image_urls'] = self.image_urls(response)
         garment['skus'] = self.sku(response)
+        if not garment['skus']:
+            garment['out_of_stock'] = True
 
         return garment
 
@@ -200,7 +206,7 @@ class SmallableParseSpider(BaseParseSpider):
         return 'design' in soupify(garment['category']).lower()
 
     def product_id(self, response):
-        return response.url.split('-')[-1].strip('.html')
+        return clean(response.css('.p-action [data-id]::attr(data-id)'))[0]
 
     def product_name(self, response):
         return clean(response.css('.p-name::text'))[0]
@@ -235,15 +241,12 @@ class SmallableParseSpider(BaseParseSpider):
 
 
 class SmallableCrawlSpider(BaseCrawlSpider):
-    listings_css = ['.nav-list', '[rel="next"]', '.cms-block-list']
+    listings_css = ['.nav-list', '[rel="next"]']
     products_css = ['.ratio-product-item']
 
     deny_re = ['brands', 'marques', 'marcas', 'marken', 'marche',
                'toys', 'jouet', 'juguetes', 'spiel', 'giocattoli',
-               'headphones', 'ecouteurs', 'auriculares', 'kopfhoerer', 'cuffie-auricolari',
-               'speakers', 'enceintes', 'altavoces', 'lautsprecher', 'casse',
-               'cameras', 'appareils-photos', 'camaras', 'fotoapparate', 'fotografiche',
-               'gift-card', 'tech', 'radio']
+               'gift-card', 'tech', 'wishlist']
 
     custom_settings = {
         'DOWNLOAD_DELAY': '1'
