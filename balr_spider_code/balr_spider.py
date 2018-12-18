@@ -13,10 +13,10 @@ class Mixin:
     retailer = 'balr'
     allowed_domains = ['balr.com']
     MERCH_INFO = [
-        'Disponibilidad limitada',
-        'Beperkt verkrijgbaar',
-        'Édition limitée',
-        'Begrenzte Verfügbarkeit'
+        'disponibilidad limitada',
+        'beperkt verkrijgbaar',
+        'edition limitée',
+        'begrenzte verfügbarkeit'
     ]
 
 
@@ -76,7 +76,7 @@ class BalrParseSpider(BaseParseSpider):
 
         for size, is_oos in zip(sizes, availability):
             sku = common.copy()
-            sku['size'] = size[size.find(' ')+1:] if size != self.one_size else size
+            sku['size'] = size.replace('Size ', '')
             sku_id = f'{sku["colour"]}_{sku["size"]}'
             skus[sku_id] = sku
 
@@ -86,7 +86,7 @@ class BalrParseSpider(BaseParseSpider):
         return skus
 
     def merch_info(self, response):
-        soup = clean(response.css('.product-detail-column.arrow-up ::text'))
+        soup = (' '.join(clean(response.css('.product-detail-column.arrow-up ::text')))).lower()
         return [m for m in self.MERCH_INFO if m in soup]
 
     def product_category(self, response):
