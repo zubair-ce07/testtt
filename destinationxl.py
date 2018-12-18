@@ -2,6 +2,7 @@
 import json
 
 import scrapy
+from scrapy import Selector
 from destinationxl_spider.items import DestinationxlSpiderItem
 
 
@@ -65,8 +66,9 @@ class DestinationxlSpider(scrapy.Spider):
 
     def parse_item(self, response):
         item = DestinationxlSpiderItem()
-        category = response.xpath('//breadcrumb/nav/ul//li//text()').extract()[1:]
-        item['category'] = category
+        page_url = response.url
+        item['page_url'] = page_url
+        item['category'] = self.get_item_categroy(response)
         item_url = 'https://www.destinationxl.com/public/v1/dxlproducts/{}/{}'
 
         url = item_url.format(response.url.split('/')[-2], response.url.split('/')[-1])
@@ -74,7 +76,28 @@ class DestinationxlSpider(scrapy.Spider):
         yield scrapy.Request(url, meta={'item': item}, callback=self.parse_combinations)
 
     def parse_combinations(self, response):
+
+        item = response.meta['item']
         size_and_color = json.loads(response.text)
+
+        text = Selector(text=size_and_color['longDescription'])
+        description = text.css('p::text').extract_first()
+
+        price = size_and_color['price']
+        original_price = price['originalPrice']
+        if bool(price['onSale']):
+            sale_price = price['salePrice']
+            on_sale = price['saleMessage']
+        else:
+            sale_price = None
+            on_sale = None
+
+        item['original_price'] = original_price
+        item['sale_price'] = sale_price
+        item['on_sale'] = on_sale
+        item['description'] = description
+        item['image_url'] = self.get_image_url(response)
+
         c_url = '{}?&isSelection=True&attributes=color={}'
         for color_id in size_and_color['colorGroups'][0]['colors']:
             url = c_url.format(response.url, color_id['id'])
@@ -111,9 +134,8 @@ class DestinationxlSpider(scrapy.Spider):
 
     def parse_size(self, response):
         colors = []
-        sizes_item = []
-        combintaions = []
         item = response.meta['item']
+        item['info'] = []
         data = json.loads(response.text)
         for color in data['colorGroups'][0]['colors']:
             if bool(color['selected']) and bool(color['available']):
@@ -122,17 +144,26 @@ class DestinationxlSpider(scrapy.Spider):
         for sizes in data['sizes']:
             for size in sizes['values']:
                 if bool(size['available']) and bool(size['selected']):
-                    sizes_item.append(data['sizes'][0]['displayName'])
-                    sizes_item.append(size['value'])
-
+                    size_name = {'name':data['sizes'][0]['displayName']}
+                    size_value = {'selected_length': size['value']}
+                    selected_size = {
+                        'size_name':size_name,
+                        'size_value':size_value
+                    }
+                    item['info'].append(selected_size)
         for sizes in data['sizes'][1]['values']:
             if bool(sizes['available']):
-                combintaions.append(data['sizes'][1]['displayName'])
-                combintaions.append(sizes['value'])
+                size_name = {'name':data['sizes'][1]['displayName']}
+                size_value = {'lenght':sizes['value']}
+
+                size_details = {
+                    'size_name':size_name,
+                    'size_value': size_value
+                }
+                item['info'].append(size_details)
+
 
         item['selected_color'] = colors
-        item['selected_size'] = sizes_item
-        item['available_combinations'] = combintaions
         yield item
 
     def parse_next_url(self, response):
@@ -142,3 +173,15 @@ class DestinationxlSpider(scrapy.Spider):
             return int(no_of_pages)
         else:
             return 0
+
+    def get_image_url(self, response):
+        size_and_color = json.loads(response.text)
+        image_url = size_and_color['colorGroups'][0]['colors'][0]['largeSwatchImageUrl']
+        zoomed_url = image_url[:-17]
+        return zoomed_url
+
+    def get_item_categroy(self, response):
+        category = response.xpath('//breadcrumb/nav/ul//li//text()').extract()[1:]
+        category = [cat.strip('//') for cat in category]
+        category = [i for i in category if i != ' ']
+        return category
