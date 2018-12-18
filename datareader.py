@@ -1,5 +1,6 @@
 import glob as gb
 import csv
+
 from weatherman_data_structure import WeatherRecord
 
 
