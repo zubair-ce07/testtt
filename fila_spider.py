@@ -5,7 +5,7 @@ from scrapy import FormRequest
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
 
-from .base import BaseCrawlSpider, BaseParseSpider, Gender, clean
+from .base import BaseCrawlSpider, BaseParseSpider, Gender, clean, soupify
 
 
 class Mixin:
@@ -62,7 +62,8 @@ class FilaParseSpider(BaseParseSpider):
         return clean(response.css(css))
 
     def product_gender(self, garment):
-        return self.gender_lookup(garment['name']) or Gender.KIDS.value
+        soup = soupify(garment['description'] + [garment['name']])
+        return self.gender_lookup(soup) or Gender.KIDS.value
 
     def skus(self, response):
         common_sku = response.meta.get('common_sku')
