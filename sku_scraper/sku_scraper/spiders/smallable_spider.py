@@ -13,7 +13,9 @@ class Mixin:
     location_url = 'https://smallable.com/country/change'
 
     unwanted_items = [
-        'pushchairs', 'poussette', 'cochecitos', 'kinderwagen', 'passaggini',
+        'pushchairs', 'poussette', 'cochecito', 'kinderwagen', 'passaggini',
+        'baby-carrier', 'porte-bebes', 'porta-bebes', 'babytrage', 'marsupi',
+        'toys', 'jouet', 'juguetes', 'spiel', 'giocattoli',
     ]
 
 
@@ -181,6 +183,7 @@ class SmallableParseSpider(BaseParseSpider):
         if self.is_outlet(response):
             garment['outlet'] = True
 
+        garment['name'] = self.remove_color_from_name(response)
         garment['image_urls'] = self.image_urls(response)
         garment['skus'] = self.sku(response)
 
@@ -199,12 +202,8 @@ class SmallableParseSpider(BaseParseSpider):
     def product_id(self, response):
         return response.url.split('-')[-1].strip('.html')
 
-    def raw_name(self, response):
-        return clean(response.css('.p-name::text'))[0]
-
     def product_name(self, response):
-        name = self.raw_name(response)
-        return self.remove_color_from_name(name)
+        return clean(response.css('.p-name::text'))[0]
 
     def product_category(self, response):
         raw_categories = clean(response.css('.c-breadcrumb-elem::text'))[1:-1]
@@ -234,21 +233,20 @@ class SmallableParseSpider(BaseParseSpider):
 
         return skus
 
-    def remove_color_from_name(self, name):
-        color = self.detect_colour(name)
-        name = name.lower().replace(color, '')
-        return ' '.join(name.split()).title()
-
 
 class SmallableCrawlSpider(BaseCrawlSpider):
-    listings_css = ['.nav-list', '[rel="next"]']
+    listings_css = ['.nav-list', '[rel="next"]', '.cms-block-list']
     products_css = ['.ratio-product-item']
 
-    deny_re = ['brands', 'toys', 'marques', 'jouets', 'marcas', 'juguetes',
-               'marken', 'spiel', 'marche', 'giocattoli']
+    deny_re = ['brands', 'marques', 'marcas', 'marken', 'marche',
+               'toys', 'jouet', 'juguetes', 'spiel', 'giocattoli',
+               'headphones', 'ecouteurs', 'auriculares', 'kopfhoerer', 'cuffie-auricolari',
+               'speakers', 'enceintes', 'altavoces', 'lautsprecher', 'casse',
+               'cameras', 'appareils-photos', 'camaras', 'fotoapparate', 'fotografiche',
+               'gift-card', 'tech', 'radio']
 
     custom_settings = {
-        'DOWNLOAD_DELAY': '2'
+        'DOWNLOAD_DELAY': '1'
     }
 
     rules = (
