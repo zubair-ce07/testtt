@@ -5,7 +5,7 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
 from scrapy import Request
 
-from .base import BaseParseSpider, BaseCrawlSpider, clean, Gender
+from .base import BaseParseSpider, BaseCrawlSpider, clean, Gender, soupify
 from skuscraper.utils.market_lang import get_spider_lang
 
 
@@ -86,8 +86,8 @@ class BalrParseSpider(BaseParseSpider):
         return skus
 
     def merch_info(self, response):
-        soup = (' '.join(clean(response.css('.product-detail-column.arrow-up ::text')))).lower()
-        return [m for m in self.MERCH_INFO if m in soup]
+        soup = soupify(clean(response.css('.product-detail-column.arrow-up ::text'))).lower()
+        return [m for m in self.MERCH_INFO if m.lower() in soup]
 
     def product_category(self, response):
         raw_product = self.raw_product(response)
