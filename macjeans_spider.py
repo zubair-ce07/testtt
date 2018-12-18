@@ -11,23 +11,25 @@ class Mixin:
 class MixinAT(Mixin):
     retailer = Mixin.retailer + '-at'
     market = 'AT'
+    home_url = 'https://mac-jeans.com/at-de/'
     allowed_domains = ['mac-jeans.com']
     start_urls = ['https://mac-jeans.com/at-de/csrftoken']
-    home_url = 'https://mac-jeans.com/at-de/'
+    cookies = {'x-ua-device': 'desktop'}
 
 
 class MixinDE(Mixin):
     retailer = Mixin.retailer + '-de'
     market = 'DE'
+    home_url = 'https://mac-jeans.com/de-de/'
     allowed_domains = ['mac-jeans.com']
     start_urls = ['https://mac-jeans.com/de-de/csrftoken']
-    home_url = 'https://mac-jeans.com/de-de/'
+    cookies = {'x-ua-device': 'desktop'}
 
 
 class MacJeansParseSpider(BaseParseSpider):
-    price_css = '.product--detail-upper .product--price ::text'
+    price_css = '.product--detail-upper .product--price ::text, .block-prices--cell:contains(EUR) ::text'
     raw_description_css = '.product--description ::text'
-    care_css = '.product--properties ::text, block-prices--cell ::text'
+    care_css = '.product--properties ::text'
     brand_css = '[itemprop="brand"]::attr(content)'
 
     def parse(self, response):
@@ -55,12 +57,13 @@ class MacJeansParseSpider(BaseParseSpider):
     def parse_colour(self, response):
         garment = response.meta['garment']
         garment['image_urls'] += self.image_urls(response)
+        garment['meta']['requests_queue'] += self.size_requests(response)
         garment['skus'].update(self.skus(response))
         return self.next_request_or_garment(garment)
 
     def product_id(self, response):
         css = '[itemprop="sku"]::text'
-        return ''.join(response.css(css).re('\d'))
+        return ''.join(response.css(css).re(r'\d'))
 
     def product_name(self, response):
         css = '.product--header .product--title::text'
@@ -111,14 +114,13 @@ class MacJeansParseSpider(BaseParseSpider):
 
         for size in clean(response.css(size_css)):
             formdata['group[1]'] = size
-            requests.append(FormRequest(response.url, formdata=formdata,
+            requests.append(FormRequest(response.url, formdata=formdata, dont_filter=False,
                                         cookies=cookies, callback=self.parse_stock))
 
         return requests
 
     def colour_requests(self, response):
-        css = '.variant--group:contains(Größe) ' \
-              '.variant--option:not(.selected--option) a::attr(href)'
+        css = '.variant--group:contains(Farbe) .variant--option:not(.selected--option) a::attr(href)'
         urls = clean(response.css(css))
         return [response.follow(url, callback=self.parse_colour, meta=response.meta.copy()) for url in urls]
 
