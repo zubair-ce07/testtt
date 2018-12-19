@@ -14,7 +14,6 @@ class MixinAT(Mixin):
     home_url = 'https://mac-jeans.com/at-de/'
     allowed_domains = ['mac-jeans.com']
     start_urls = ['https://mac-jeans.com/at-de/csrftoken']
-    cookies = {'x-ua-device': 'desktop'}
 
 
 class MixinDE(Mixin):
@@ -23,7 +22,6 @@ class MixinDE(Mixin):
     home_url = 'https://mac-jeans.com/de-de/'
     allowed_domains = ['mac-jeans.com']
     start_urls = ['https://mac-jeans.com/de-de/csrftoken']
-    cookies = {'x-ua-device': 'desktop'}
 
 
 class MacJeansParseSpider(BaseParseSpider):
