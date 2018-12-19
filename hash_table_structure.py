@@ -100,7 +100,8 @@ class HashTable(object):
 
     def remove_last_index(self):
         hashed_items = [hashed_item for hashed_item in self.hashed_items if hashed_item.key is not None]
-        self.clear_item(hashed_items[self.used - 1])
+        if self.used > 0:
+            self.clear_item(hashed_items[self.used - 1])
 
     def clear_item(self,hashed_item):
         hashed_item.key = None
