@@ -104,7 +104,7 @@ class MaxFashionParseSpider(BaseParseSpider):
         return skus
 
     def is_homeware(self, garment):
-        return True if any("Home" in c for c in garment['category'][1:]) else False
+        return True if any("home" in c.lower() for c in garment['category'][1:]) else False
 
 
 class MaxFashionCrawlSpider(BaseCrawlSpider, Mixin):
