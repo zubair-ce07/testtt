@@ -4,6 +4,10 @@ from scrapy.linkextractors import LinkExtractor
 from .base import BaseCrawlSpider, BaseParseSpider, clean
 from ..parsers.genders import Gender
 
+
+# out of stock items are dropped because they don't have price.
+
+
 class Mixin:
 	retailer = 'fila'
 	allowed_domains = ['fila.com.br']
@@ -54,9 +58,8 @@ class FilaParseSpider(BaseParseSpider, Mixin):
 		colour = clean(response.css('.wrap-sku > small ::text'))[1]
 		common = self.product_pricing_common(response)
 		common['colour'] = colour
-		available_size = [size for size in clean(response.css(size_css))]
 
-		for size in available_size:
+		for size in clean(response.css(size_css)):
 			sku = common.copy()
 			sku['size'] = size
 			skus[f'{colour}_{size}'] = sku
