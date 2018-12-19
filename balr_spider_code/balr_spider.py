@@ -45,7 +45,7 @@ class MixinFR(Mixin):
 
 
 class BalrParseSpider(BaseParseSpider):
-    description_css = '.product-desc-short ::text'
+    description_css = '.product-desc-short ::text, .description::text, .product-detail-column.arrow-up ul ::text'
     care_css = '.product-care-tab::text'
     price_css = '.price ::text'
     default_brand = 'Balr'
