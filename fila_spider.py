@@ -11,6 +11,10 @@ from .base import BaseCrawlSpider, BaseParseSpider, Gender, clean, soupify
 class Mixin:
     retailer = 'fila'
     default_brand = 'fila'
+    deny_care = ['review', 'logged', 'cancel', 'You must be']
+    merch_map = [
+        ('limited edition', 'Limited Edition')
+    ]
 
 
 class MixinAU(Mixin):
@@ -35,6 +39,7 @@ class FilaParseSpider(BaseParseSpider):
         self.boilerplate_normal(garment, response)
         garment['image_urls'] = self.image_urls(response)
         garment['gender'] = self.product_gender(garment)
+        garment['merch_info'] = self.merch_info(garment)
         garment['skus'] = self.skus(response)
 
         if not garment.get('skus'):
@@ -64,6 +69,10 @@ class FilaParseSpider(BaseParseSpider):
     def product_gender(self, garment):
         soup = soupify(garment['description'] + [garment['name']])
         return self.gender_lookup(soup) or Gender.KIDS.value
+
+    def merch_info(self, garment):
+        soup = " ".join(garment['description'] + garment['care']).lower()
+        return [merch for merch_str, merch in self.merch_map if merch_str in soup]
 
     def skus(self, response):
         common_sku = response.meta.get('common_sku')
