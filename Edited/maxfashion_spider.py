@@ -62,14 +62,13 @@ class MaxFashionParseSpider(BaseParseSpider):
             return
 
         self.boilerplate_normal(garment, response)
-        garment['trail'] = self.add_trail(response)
         garment['image_urls'] = self.image_urls(response)
         garment['skus'] = self.skus(response)
 
-        if self.is_homeware(garment):
+        if self.is_homeware(response):
             garment['industry'] = 'homeware'
         else:
-            garment['gender'] = self.product_gender(garment)
+            garment['gender'] = self.product_gender(response)
 
         return garment
 
@@ -85,9 +84,10 @@ class MaxFashionParseSpider(BaseParseSpider):
         css = '.breadcrumb ::text'
         return clean(response.css(css))
 
-    def product_gender(self, garment):
-        trail = [text for text, _ in garment['trail']]
-        soup = garment['category'] + [garment['name']] + trail + garment['description']
+    def product_gender(self, response):
+        trail = [text for text, _ in response.meta.get('trail') or []]
+        soup = trail + self.product_category(response) + \
+               [self.product_name(response)] + self.product_description(response)
 
         return self.gender_lookup(soupify(soup)) or Gender.ADULTS.value
 
@@ -108,18 +108,18 @@ class MaxFashionParseSpider(BaseParseSpider):
             sku = common_sku.copy()
 
             size = clean(raw_size_s.css('[id^="filter-form-label-size"]::text'))
-            sku['size'] = size[0] if size else self.one_size
+            sku['size'] = (size or [self.one_size])[0]
 
-            stock_s = clean(raw_size_s.css('::attr(data-stock-status)'))
-            if raw_size_s.css('[class="stock hide"]') or (stock_s and stock_s[0] == 'outOfStock'):
+            stock_status = soupify(clean(raw_size_s.css('::attr(data-stock-status)')))
+            if raw_size_s.css('[class="stock hide"]') or 'outOfStock' in stock_status:
                 sku['out_of_stock'] = True
 
             skus[f'{sku["colour"]}_{sku["size"]}'] = sku
 
         return skus
 
-    def is_homeware(self, garment):
-        return any("home" in c.lower() for c in garment['category'][1:])
+    def is_homeware(self, response):
+        return any("home" in c.lower() for c in self.product_category(response)[1:])
 
 
 class MaxFashionCrawlSpider(BaseCrawlSpider, Mixin):
@@ -141,17 +141,23 @@ class MaxFashionCrawlSpider(BaseCrawlSpider, Mixin):
                 "params" : urlencode(self.listings_data, quote_via=quote, safe='*')
         }]}
 
+        meta = {
+            'trail' : self.add_trail(response),
+            'category' : category
+        }
         return Request(url=self.category_url,
                        callback=self.parse_navigation,
                        body=json.dumps(listings_form_data),
                        method='POST',
-                       meta={'category' : category})
+                       meta=meta.copy())
 
     def parse_navigation(self, response):
         raw_urls = json.loads(response.text)
+        meta = {'trail': self.add_trail(response)}
+
         for raw_url in raw_urls['results'][0]['hits']:
             path = raw_url['url'][next(iter(raw_url['url']))]['ar']
-            yield Request(url=f'{self.start_url}/{path}', callback=self.parse_item)
+            yield Request(url=self.start_url.replace("/search", path), callback=self.parse_item, meta=meta.copy())
 
         if raw_urls['results'][0]['page'] == 0:
             for page_no in range(1, raw_urls['results'][0]['nbPages'] + 1):
@@ -164,11 +170,12 @@ class MaxFashionCrawlSpider(BaseCrawlSpider, Mixin):
                         "params": urlencode(self.listings_data, quote_via=quote, safe='*')
                     }]}
 
+                meta['category'] = category
                 yield Request(url=self.category_url,
                                callback=self.parse_navigation,
                                body=json.dumps(listings_form_data),
                                method='POST',
-                               meta={'category': category})
+                               meta=meta.copy())
 
 
 class MaxFashionAEParseSpider(MaxFashionParseSpider, MixinAE):
