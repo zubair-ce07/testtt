@@ -10,13 +10,13 @@ from ..parsers.genders import Gender
 
 class Mixin:
 	retailer = 'fila'
-	allowed_domains = ['fila.com.br']
 
 
 class MixinBR(Mixin):
 	default_brand = 'Fila'
 	market = 'BR'
 	retailer = Mixin.retailer + '-br'
+	allowed_domains = ['fila.com.br']
 	start_urls = [
 		'https://www.fila.com.br/'
 	]
@@ -35,7 +35,7 @@ class FilaParseSpider(BaseParseSpider, Mixin):
 
 		self.boilerplate_normal(garment, response)
 		garment['gender'] = self.product_gender(response)
-		garment['image_urls'] = self.product_images(response)
+		garment['image_urls'] = self.image_urls(response)
 		garment['skus'] = self.skus(response)
 
 		garment['meta'] = {'requests_queue': self.colour_requests(response)}
@@ -66,7 +66,7 @@ class FilaParseSpider(BaseParseSpider, Mixin):
 		
 		return skus
 	
-	def product_images(self, response):
+	def image_urls(self, response):
 		return clean(response.css('a.thumb-link > img::attr(src)'))
 	
 	def product_gender(self, response):
@@ -85,8 +85,10 @@ class FilaParseSpider(BaseParseSpider, Mixin):
 		css = '.wrap-other-desktop .carrossel-link::attr(href)'
 		urls = clean(response.css(css))
 		current_url = clean(response.css('.thumb-block.current a::attr(href)'))
+
 		if current_url:
 			urls.remove(current_url[0])
+
 		return [Request(url, callback=self.parse_colours, dont_filter=True) for url in urls]
 
 
@@ -103,6 +105,7 @@ class FilaCrawlSpider(BaseCrawlSpider, Mixin):
 class FilaBRParseSpider(FilaParseSpider, MixinBR):
 	name = MixinBR.retailer + '-parse'
 	custom_settings = {
+		'HTTPCACHE_ENABLED': True,
 		'DOWNLOAD_DELAY': 5,
 	}
 
