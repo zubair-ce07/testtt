@@ -10,7 +10,23 @@ from .base import BaseParseSpider, BaseCrawlSpider, clean, soupify, Gender
 class Mixin:
     retailer = 'maxfashion'
     allowed_domains = ['maxfashion.com', '3hwowx4270-dsn.algolia.net']
-    default_brand = 'max'
+    default_brand = 'MAX'
+    category_url = 'https://3hwowx4270-dsn.algolia.net/1/indexes/*/queries?' \
+                   'X-Algolia-API-Key=4c4f62629d66d4e9463ddb94b9217afb&' \
+                   'X-Algolia-Application-Id=3HWOWX4270&' \
+                   'X-Algolia-Agent=Algolia%20for%20vanilla%20JavaScript%202.9.7'
+    listings_data = {
+        "query": "*",
+        "hitsPerPage": "50",
+        "page": "0",
+        "facets": "*",
+        "query": "",
+        "numericFilters": "price > 1",
+        "getRankingInfo": "1",
+        "attributesToHighlight": "null",
+        "attributesToRetrieve": "url",
+        "tagFilters": '[["max"]]'
+    }
 
 
 class MixinAE(Mixin):
@@ -22,7 +38,7 @@ class MixinAE(Mixin):
 
 class MixinSA(Mixin):
     retailer = Mixin.retailer + '-sa'
-    market = 'AE'
+    market = 'SA'
     lang = 'ar'
     start_url = 'https://www.maxfashion.com/sa/ar/search'
 
@@ -70,8 +86,8 @@ class MaxFashionParseSpider(BaseParseSpider):
         return clean(response.css(css))
 
     def product_gender(self, garment):
-        soup = garment['category'] + [garment['name']] + \
-               [text for text, _ in garment['trail']] + garment['description']
+        trail = [text for text, _ in garment['trail']]
+        soup = garment['category'] + [garment['name']] + trail + garment['description']
 
         return self.gender_lookup(soupify(soup)) or Gender.ADULTS.value
 
@@ -85,46 +101,28 @@ class MaxFashionParseSpider(BaseParseSpider):
         common_sku = self.product_pricing_common(response)
 
         colour_css = '[checked=\'checked\']::attr(data-product-color)'
-        common_sku['colour'] = colour = clean(response.css(colour_css))[0]
+        common_sku['colour'] = clean(response.css(colour_css))[0]
 
         raw_sizes_s = response.css('.set-size li') or [response]
         for raw_size_s in raw_sizes_s:
             sku = common_sku.copy()
 
-            size_css = '[id^="filter-form-label-size"]::text'
-            sku['size'] = size = clean(raw_size_s.css(size_css))[0] if raw_size_s.css(size_css) else self.one_size
+            size = clean(raw_size_s.css('[id^="filter-form-label-size"]::text'))
+            sku['size'] = size[0] if size else self.one_size
 
-            stock_css = '::attr(data-stock-status)'
-            if raw_size_s.css('[class="stock hide"]') or \
-                (raw_size_s.css(stock_css) and clean(raw_size_s.css(stock_css))[0] == 'outOfStock'):
+            stock_s = clean(raw_size_s.css('::attr(data-stock-status)'))
+            if raw_size_s.css('[class="stock hide"]') or (stock_s and stock_s[0] == 'outOfStock'):
                 sku['out_of_stock'] = True
 
-            skus[f'{colour}_{size}'] = sku
+            skus[f'{sku["colour"]}_{sku["size"]}'] = sku
 
         return skus
 
     def is_homeware(self, garment):
-        return True if any("home" in c.lower() for c in garment['category'][1:]) else False
+        return any("home" in c.lower() for c in garment['category'][1:])
 
 
 class MaxFashionCrawlSpider(BaseCrawlSpider, Mixin):
-    category_url = 'https://3hwowx4270-dsn.algolia.net/1/indexes/*/queries?' \
-                   'X-Algolia-API-Key=4c4f62629d66d4e9463ddb94b9217afb&' \
-                   'X-Algolia-Application-Id=3HWOWX4270&' \
-                   'X-Algolia-Agent=Algolia%20for%20vanilla%20JavaScript%202.9.7'
-    listings_data = {
-        "query" : "*",
-        "hitsPerPage": "50",
-        "page" : "0",
-        "facets" : "*",
-        "query" : "",
-        "numericFilters" : "price > 1",
-        "getRankingInfo": "1",
-        "attributesToHighlight": "null",
-        "attributesToRetrieve": "url",
-        "tagFilters": '[["max"]]'
-    }
-
     def start_requests(self):
         categories = ['women', 'men', 'girls', 'boys', 'home', 'shoes-women','shoes-men', 'shoes-girls', 'shoes-boys']
         return [Request(url=add_or_replace_parameter(self.start_url, 'q', f'allCategories:{category}'),
@@ -137,19 +135,19 @@ class MaxFashionCrawlSpider(BaseCrawlSpider, Mixin):
         category = url_query_parameter(response.url, 'q').split(':')[-1]
 
         self.listings_data['facetFilters'] = f'["inStock:1","approvalStatus:1","allCategories:{category}"]'
-        form_listings_data = {
+        listings_form_data = {
             "requests" : [{
                 "indexName" : index_name,
                 "params" : urlencode(self.listings_data, quote_via=quote, safe='*')
         }]}
 
         return Request(url=self.category_url,
-                       callback=self.parse_urls_and_navigation,
-                       body=json.dumps(form_listings_data),
+                       callback=self.parse_navigation,
+                       body=json.dumps(listings_form_data),
                        method='POST',
                        meta={'category' : category})
 
-    def parse_urls_and_navigation(self, response):
+    def parse_navigation(self, response):
         raw_urls = json.loads(response.text)
         for raw_url in raw_urls['results'][0]['hits']:
             path = raw_url['url'][next(iter(raw_url['url']))]['ar']
@@ -160,15 +158,15 @@ class MaxFashionCrawlSpider(BaseCrawlSpider, Mixin):
                 category = response.meta['category']
                 self.listings_data['facetFilters'] = f'["inStock:1","approvalStatus:1","allCategories:{category}"]'
                 self.listings_data['page'] = str(page_no)
-                form_listings_data = {
+                listings_form_data = {
                     "requests": [{
                         "indexName": raw_urls['results'][0]["indexUsed"],
                         "params": urlencode(self.listings_data, quote_via=quote, safe='*')
                     }]}
 
                 yield Request(url=self.category_url,
-                               callback=self.parse_urls_and_navigation,
-                               body=json.dumps(form_listings_data),
+                               callback=self.parse_navigation,
+                               body=json.dumps(listings_form_data),
                                method='POST',
                                meta={'category': category})
 
