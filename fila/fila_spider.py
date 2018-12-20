@@ -70,7 +70,8 @@ class FilaParseSpider(BaseParseSpider, Mixin):
 		return clean(response.css('a.thumb-link > img::attr(src)'))
 	
 	def product_gender(self, response):
-		return self.gender_lookup(self.product_name(response)) or Gender.ADULTS.value
+		gender_soup = self.product_name(response) + ' '.join(self.product_description(response))
+		return self.gender_lookup(gender_soup) or Gender.ADULTS.value
 		
 	def product_category(self, response):
 		return clean(response.css('.breadcrumbs a[href] ::text'))[1:]
@@ -105,7 +106,6 @@ class FilaCrawlSpider(BaseCrawlSpider, Mixin):
 class FilaBRParseSpider(FilaParseSpider, MixinBR):
 	name = MixinBR.retailer + '-parse'
 	custom_settings = {
-		'HTTPCACHE_ENABLED': True,
 		'DOWNLOAD_DELAY': 5,
 	}
 
@@ -113,3 +113,4 @@ class FilaBRParseSpider(FilaParseSpider, MixinBR):
 class FilaBRCrawlSpider(FilaCrawlSpider, MixinBR):
 	name = MixinBR.retailer + '-crawl'
 	parse_spider = FilaBRParseSpider()
+
