@@ -44,7 +44,7 @@ class FilaParseSpider(BaseParseSpider, Mixin):
 
 	def parse_colours(self, response):
 		garment = response.meta['garment']
-		garment['image_urls'].extend(self.product_images(response))
+		garment['image_urls'].extend(self.image_urls(response))
 		garment['skus'].update(self.skus(response))
 		return self.next_request_or_garment(garment)	
 
@@ -93,7 +93,7 @@ class FilaParseSpider(BaseParseSpider, Mixin):
 
 
 class FilaCrawlSpider(BaseCrawlSpider, Mixin):
-	listings_css = ['a.level2', '[title="Próximo"]']
+	listings_css = ['.level2', '[title="Próximo"]']
 	products_css = '.product-image'
 
 	rules = (
