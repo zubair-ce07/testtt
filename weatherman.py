@@ -1,6 +1,6 @@
 import glob
 import csv
-import datetime
+from datetime import datetime
 import argparse
 import os
 
@@ -20,7 +20,7 @@ def read_weather_data(files_record):
             with open(file_name, 'r') as csv_file:
                 csv_reader = csv.DictReader(csv_file)
                 for line in csv_reader:
-                    formatted_date = datetime.datetime.strptime(list(line.values())[0], '%Y-%m-%d')
+                    formatted_date = datetime.strptime(list(line.values())[0], '%Y-%m-%d')
 
                     if is_valid(line):
                         max_temperature = line['Max TemperatureC']
@@ -44,13 +44,12 @@ def is_valid(line):
     return all([line[field] for field in validation_fields])
 
 
-def weather_record(month_date, directory_path):
-    year = month_date.year
-    if datetime.datetime.strftime(month_date, '%b'):
-        month = datetime.datetime.strftime(month_date, '%b')
-        files_record = glob.glob(f"{directory_path}*{repr(year)}?{month}.txt")
+def weather_record(year_date, directory_path, month_date=0):
+    if month_date == 0:
+        month_date = '*'
     else:
-        files_record = glob.glob(f"{directory_path}*{repr(year)}?*.txt")
+        month_date = datetime.strftime(datetime.strptime(repr(month_date), '%m'), '%b')
+    files_record = glob.glob(f"{directory_path}*{repr(year_date)}?{month_date}.txt")
     try:
         if files_record:
             return files_record
@@ -70,50 +69,46 @@ def valid_directory(path):
         print(error)
 
 
-def valid_year(year_date):
-    try:
-        return datetime.datetime.strptime(year_date, '%Y')
-    except ValueError:
-        print(f"{RED}Invalid date {RESET}")
-
-
 def valid_month(month_date):
     try:
-        print(datetime.datetime.strptime(month_date, '%Y/%m'))
-        return datetime.datetime.strptime(month_date, '%Y/%m')
+        return datetime.strptime(month_date, '%Y')
     except ValueError:
-        print(f"{RED}Invalid date{RESET}")
+        pass
+    try:
+        return datetime.strptime(month_date, '%Y/%m')
+    except ValueError:
+        print(f"{RED}Invalid date {RESET}")
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('path', type=valid_directory, help='Enter path of the directory!')
-    parser.add_argument('-e', type=valid_year)
+    parser.add_argument('-e', type=valid_month)
     parser.add_argument('-a', type=valid_month)
     parser.add_argument('-c', type=valid_month)
     parser.add_argument('-d', type=valid_month)
     args = parser.parse_args()
 
     if args.e:
-        files_record = weather_record(args.e, args.path)
+        files_record = weather_record(args.e.year, args.path)
         year_weather_data = read_weather_data(files_record)
         calculated_data = calculation.year_peak_calculation(year_weather_data)
         report.year_peak_report(calculated_data)
 
     if args.a:
-        files_record = weather_record(args.a, args.path)
+        files_record = weather_record(args.a.year, args.path, args.a.month)
         month_weather_data = read_weather_data(files_record)
         calculated_data = calculation.month_average_calculation(month_weather_data)
         report.month_average_report(calculated_data)
 
     if args.c:
-        files_record = weather_record(args.c, args.path)
+        files_record = weather_record(args.c.year, args.path, args.c.month)
         month_weather_data = read_weather_data(files_record)
         calculated_data = calculation.month_peak_calculation(month_weather_data)
         report.bar_chart_report(calculated_data)
 
     if args.d:
-        files_record = weather_record(args.d, args.path)
+        files_record = weather_record(args.d.year, args.path, args.d.month)
         month_weather_data = read_weather_data(files_record)
         calculated_data = calculation.month_peak_calculation(month_weather_data)
         report.bar_chart_report_bonus(calculated_data)
@@ -121,4 +116,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

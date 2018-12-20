@@ -1,5 +1,4 @@
 class Weather:
-
     def __init__(self, date, max_temp, mean_temp, min_temp, max_humidity, mean_humidity, min_humidity):
         self.date = date
         self.max_temp = max_temp
