@@ -58,6 +58,7 @@ class EnergymadeeasyItem(scrapy.Item):
     single_rate = scrapy.Field()
     controlled_load_1 = scrapy.Field()
     controlled_load_2 = scrapy.Field()
+    demand_usage_rate = scrapy.Field()
 
     # SELF INSERTED
 

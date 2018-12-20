@@ -134,6 +134,9 @@ class EnergymadeeasySpiderElectricity(scrapy.Spider):
         loader.add_xpath('minimum_monthly_demand_charged',
                          '//*[@id="pricing"]//*[contains(text(), "Demand charges")]/'
                          '../..//*[contains(text(), "minimum demand")]/text()')
+        loader.add_xpath('demand_usage_rate', '//*[@id="pricing"]//*[contains(text(), '
+                                              '"Demand usage rate")]/../../td[contains(text(),'
+                                              ' "cents")]/text()')
 
         bill_c_incentive = response.xpath(
             '//*[contains(text(), "Incentives")]/following::div[@class="panel__list-item"]'
@@ -219,20 +222,61 @@ class EnergymadeeasySpiderElectricity(scrapy.Spider):
             if not load['name']:
                 continue
 
-            if re.findall(r'Controlled Load\s*1', load['name'], re.IGNORECASE):
+            if re.findall(r'Controlled Load\s*1', load['name'], re.IGNORECASE) or \
+                    re.findall(r'Tariff\s*31', load['name'], re.IGNORECASE) or \
+                    re.findall(r'Tariff\s*31', item['name'], re.IGNORECASE) or \
+                    re.findall(r'Controlled Load\s*1', item['name'], re.IGNORECASE) or \
+                    re.findall(r'CL\s*1', item['name'], re.IGNORECASE):
                 load_item = item.copy()
                 load_item['controlled_load_1'] = load['rate']
                 load_flag = False
                 yield load_item
 
-            if re.findall(r'Controlled Load\s*2', load['name'], re.IGNORECASE):
+            if re.findall(r'Controlled Load\s*2', load['name'], re.IGNORECASE) or \
+                    re.findall(r'Tariff\s*33', load['name'], re.IGNORECASE) or \
+                    re.findall(r'Tariff\s*33', item['name'], re.IGNORECASE) or \
+                    re.findall(r'Controlled Load\s*2', item['name'], re.IGNORECASE) or \
+                    re.findall(r'CL\s*2', item['name'], re.IGNORECASE):
                 load_item = item.copy()
                 load_item['controlled_load_2'] = load['rate']
                 load_flag = False
                 yield load_item
 
         if load_flag:
-            yield item
+            forced_items = self.enforce_controlled_loads(item)
+
+            if not forced_items:
+                yield item
+            else:
+                yield from (i for i in forced_items)
+
+    @staticmethod
+    def enforce_controlled_loads(item):
+        items = []
+
+        cl1_conditions = ["Tariff 31", "Controlled load 1", "EA010EA030",
+                          "BLNN2AUBLNC1AU", "N70N50", "84009000"]
+
+        cl2_conditions = ["Tariff 33", "Controlled load 2", "EA010EA040", "BLNN2AUBLNC2AU",
+                          "N70N54", "84009100"]
+
+        for load in item.get('raw_controlled_loads', []):
+            for cl1_condition in cl1_conditions:
+                if cl1_condition.lower() in json.dumps(load).lower() or \
+                        item['db'] == 'SA Power Networks':
+                    load_item = item.copy()
+                    load_item['controlled_load_1'] = load['rate']
+                    items.append(load_item)
+                    break
+
+            for cl2_condition in cl2_conditions:
+                if cl2_condition.lower() in json.dumps(load).lower():
+                    load_item = item.copy()
+                    load_item['controlled_load_2'] = load['rate']
+                    items.append(load_item)
+                    break
+
+        return items
 
     @staticmethod
     def calculate_single_rates(rates):
