@@ -3,7 +3,7 @@ import csv
 from datetime import datetime
 
 from temperature import Weather
-import colors
+import color
 
 
 class DataParser:
@@ -14,16 +14,18 @@ class DataParser:
             try:
                 with open(file_name, 'r') as csv_file:
                     csv_reader = csv.DictReader(csv_file)
-                    for line in csv_reader:
-                        formatted_date = datetime.strptime(list(line.values())[0], '%Y-%m-%d')
-
-                        if self.fun(line):
-                            max_temperature = line['Max TemperatureC']
-                            mean_temperature = line['Mean TemperatureC']
-                            min_temperature = line['Min TemperatureC']
-                            max_humidity = line['Max Humidity']
-                            mean_humidity = line[' Mean Humidity']
-                            min_humidity = line[' Min Humidity']
+                    for record in csv_reader:
+                        if 'PKT' in record.keys():
+                            formatted_date = datetime.strptime(record['PKT'], '%Y-%m-%d')
+                        else:
+                            formatted_date = datetime.strptime(record['PKST'], '%Y-%m-%d')
+                        if self.validate_record(record):
+                            max_temperature = record['Max TemperatureC']
+                            mean_temperature = record['Mean TemperatureC']
+                            min_temperature = record['Min TemperatureC']
+                            max_humidity = record['Max Humidity']
+                            mean_humidity = record[' Mean Humidity']
+                            min_humidity = record[' Min Humidity']
 
                             weather = Weather(formatted_date, max_temperature, mean_temperature, min_temperature,
                                               max_humidity, mean_humidity, min_humidity)
@@ -32,12 +34,12 @@ class DataParser:
                     print(err)
         return weather_data
 
-    def fun(self, line):
-        validation_fields = ['Max TemperatureC', 'Mean TemperatureC', 'Min TemperatureC', 'Max Humidity',
-                             ' Mean Humidity', ' Min Humidity']
-        return all([line[field] for field in validation_fields])
+    def validate_record(self, record):
+        validation_fields = ['Max TemperatureC', 'Mean TemperatureC', 'Min TemperatureC',
+                             'Max Humidity', ' Mean Humidity', ' Min Humidity']
+        return all([record[field] for field in validation_fields])
 
-    def weather_record(self, year_date, directory_path, month_date=0):
+    def find_record(self, year_date, directory_path, month_date=0):
         if month_date == 0:
             month_date = '*'
         else:
@@ -47,6 +49,6 @@ class DataParser:
             if files_record:
                 return files_record
             else:
-                raise ValueError(f"{colors.RED}Record Not Found{colors.RESET}")
+                raise ValueError(f"{color.RED}Record Not Found{color.RESET}")
         except ValueError as ve:
             print(ve)
