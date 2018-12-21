@@ -1,4 +1,3 @@
-
 class HashItem(object):
     def __init__(self, key=None, value=None, hash_value=None):
         self.key = key
@@ -19,9 +18,7 @@ class HashTable(object):
 
     def __getitem__(self, key):
         hash_item = self.get_hashed_item(key)
-        if hash_item is not None:
-            return hash_item.value
-        return None
+        return hash_item.value if hash_item else None
 
     def __setitem__(self, key, value):
         self.add(key, value)

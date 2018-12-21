@@ -15,7 +15,8 @@ class Dictionary(object):
         self.hash_table.remove(key)
 
     def __repr__(self):
-        return "Dictionary({" + ", ".join([f"{hash_item.key} : {hash_item.value}" for hash_item in self.hash_table.items()]) + "})"
+        return "Dictionary({" + ", ".join([f"{hash_item.key} : {hash_item.value}"
+                                           for hash_item in self.hash_table.items()]) + "})"
 
     def fromkeys(self, keys, value=0):
         self.clear()
