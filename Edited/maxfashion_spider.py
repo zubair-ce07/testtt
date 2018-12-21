@@ -28,6 +28,7 @@ class Mixin:
         "tagFilters": '[["max"]]'
     }
 
+    categories = ['women', 'men', 'girls', 'boys', 'home', 'shoes-women', 'shoes-men', 'shoes-girls', 'shoes-boys']
 
 class MixinAE(Mixin):
     retailer = Mixin.retailer + '-ae'
@@ -97,7 +98,6 @@ class MaxFashionParseSpider(BaseParseSpider):
 
     def skus(self, response):
         skus = {}
-
         common_sku = self.product_pricing_common(response)
 
         colour_css = '[checked=\'checked\']::attr(data-product-color)'
@@ -124,10 +124,9 @@ class MaxFashionParseSpider(BaseParseSpider):
 
 class MaxFashionCrawlSpider(BaseCrawlSpider, Mixin):
     def start_requests(self):
-        categories = ['women', 'men', 'girls', 'boys', 'home', 'shoes-women','shoes-men', 'shoes-girls', 'shoes-boys']
         return [Request(url=add_or_replace_parameter(self.start_url, 'q', f'allCategories:{category}'),
                         callback=self.parse_listings)
-                        for category in categories]
+                        for category in self.categories]
 
     def parse_listings(self, response):
         session_x = '//script[contains(., "SearchKey")]/text()'
@@ -138,12 +137,11 @@ class MaxFashionCrawlSpider(BaseCrawlSpider, Mixin):
         listings_form_data = {
             "requests" : [{
                 "indexName" : index_name,
-                "params" : urlencode(self.listings_data, quote_via=quote, safe='*')
+                "params" : urlencode(self.listings_data, quote_via=quote)
         }]}
 
         meta = {
-            'trail' : self.add_trail(response),
-            'category' : category
+            'trail' : self.add_trail(response)
         }
         return Request(url=self.category_url,
                        callback=self.parse_navigation,
@@ -161,16 +159,13 @@ class MaxFashionCrawlSpider(BaseCrawlSpider, Mixin):
 
         if raw_urls['results'][0]['page'] == 0:
             for page_no in range(1, raw_urls['results'][0]['nbPages'] + 1):
-                category = response.meta['category']
-                self.listings_data['facetFilters'] = f'["inStock:1","approvalStatus:1","allCategories:{category}"]'
                 self.listings_data['page'] = str(page_no)
                 listings_form_data = {
                     "requests": [{
                         "indexName": raw_urls['results'][0]["indexUsed"],
-                        "params": urlencode(self.listings_data, quote_via=quote, safe='*')
+                        "params": urlencode(self.listings_data, quote_via=quote)
                     }]}
 
-                meta['category'] = category
                 yield Request(url=self.category_url,
                                callback=self.parse_navigation,
                                body=json.dumps(listings_form_data),
