@@ -71,7 +71,7 @@ class FilaParseSpider(BaseParseSpider, Mixin):
 		return clean(response.css('a.thumb-link > img::attr(src)'))
 	
 	def product_gender(self, response):
-		gender_soup = soupify(self.product_description(response).append(self.product_name(response)))
+		gender_soup = f'{self.product_name(response)} {soupify(self.product_description(response))}'
 		return self.gender_lookup(gender_soup) or Gender.ADULTS.value
 		
 	def product_category(self, response):
