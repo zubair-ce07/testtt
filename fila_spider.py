@@ -67,11 +67,12 @@ class FilaParseSpider(BaseParseSpider):
         return clean(response.css(css))
 
     def product_gender(self, garment):
-        soup = soupify(garment['description'] + [garment['name']])
-        return self.gender_lookup(soup) or Gender.KIDS.value
+        trail = soupify([url for _, url in garment.get('trail') or []])
+        soup = soupify([garment['name']] + garment['category'])
+        return self.gender_lookup(soup) or self.gender_lookup(trail) or Gender.ADULTS.value
 
     def merch_info(self, garment):
-        soup = " ".join(garment['description'] + garment['care']).lower()
+        soup = ' '.join(garment['description'] + garment['care']).lower()
         return [merch for merch_str, merch in self.merch_map if merch_str in soup]
 
     def skus(self, response):
