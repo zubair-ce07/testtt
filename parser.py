@@ -39,12 +39,12 @@ class DataParser:
                              'Max Humidity', ' Mean Humidity', ' Min Humidity']
         return all([record[field] for field in validation_fields])
 
-    def find_record(self, year_date, directory_path, month_date=0):
-        if month_date == 0:
-            month_date = '*'
+    def find_record(self, year, directory_path, month=0):
+        if month == 0:
+            month = '*'
         else:
-            month_date = datetime.strftime(datetime.strptime(repr(month_date), '%m'), '%b')
-        files_record = glob.glob(f"{directory_path}*{repr(year_date)}?{month_date}.txt")
+            month = datetime.strftime(datetime.strptime(repr(month), '%m'), '%b')
+        files_record = glob.glob(f"{directory_path}*{repr(year)}?{month}.txt")
         try:
             if files_record:
                 return files_record

@@ -45,26 +45,26 @@ def main():
     if args.e:
         files_record = data_parser.find_record(args.e.year, args.path)
         year_weather_data = data_parser.read_weather_data(files_record)
-        calculated_data = calculator.calculate_year_values(year_weather_data)
-        report_generator.year_peak_report(calculated_data)
+        calculated_data = calculator.calculate_peak_values(year_weather_data)
+        report_generator.generate_peak_values(calculated_data)
 
     if args.a:
         files_record = data_parser.find_record(args.a.year, args.path, args.a.month)
         month_weather_data = data_parser.read_weather_data(files_record)
         calculated_data = calculator.calculate_average_values(month_weather_data)
-        report_generator.month_average_report(calculated_data)
+        report_generator.generate_peak_values(calculated_data, args.a.month)
 
     if args.c:
         files_record = data_parser.find_record(args.c.year, args.path, args.c.month)
         month_weather_data = data_parser.read_weather_data(files_record)
-        calculated_data = calculator.calculate_month_values(month_weather_data)
-        report_generator.bar_chart_report(calculated_data)
+        calculated_data = calculator.calculate_peak_values(month_weather_data, args.c.month)
+        report_generator.generate_bar_chart(calculated_data)
 
     if args.d:
         files_record = data_parser.find_record(args.d.year, args.path, args.d.month)
         month_weather_data = data_parser.read_weather_data(files_record)
-        calculated_data = calculator.calculate_month_values(month_weather_data)
-        report_generator.bar_chart_report(calculated_data, args.d.month)
+        calculated_data = calculator.calculate_peak_values(month_weather_data, args.d.month)
+        report_generator.generate_bar_chart(calculated_data, args.d.month)
 
 
 if __name__ == '__main__':
