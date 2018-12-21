@@ -223,7 +223,6 @@ class EnergymadeeasySpiderElectricity(scrapy.Spider):
                 continue
 
             if re.findall(r'Controlled Load\s*1', load['name'], re.IGNORECASE) or \
-                    re.findall(r'Tariff\s*31', load['name'], re.IGNORECASE) or \
                     re.findall(r'Tariff\s*31', item['name'], re.IGNORECASE) or \
                     re.findall(r'Controlled Load\s*1', item['name'], re.IGNORECASE) or \
                     re.findall(r'CL\s*1', item['name'], re.IGNORECASE):
@@ -233,7 +232,6 @@ class EnergymadeeasySpiderElectricity(scrapy.Spider):
                 yield load_item
 
             if re.findall(r'Controlled Load\s*2', load['name'], re.IGNORECASE) or \
-                    re.findall(r'Tariff\s*33', load['name'], re.IGNORECASE) or \
                     re.findall(r'Tariff\s*33', item['name'], re.IGNORECASE) or \
                     re.findall(r'Controlled Load\s*2', item['name'], re.IGNORECASE) or \
                     re.findall(r'CL\s*2', item['name'], re.IGNORECASE):
