@@ -30,12 +30,6 @@ class FilaParseSpider(BaseParseSpider):
     price_css = '.summary .price ::text'
     raw_description_css = '.tab-content .active ::text'
 
-    start_urls = [
-        'https://fila.com.au/product/history-tee/',
-        'https://fila.com.au/product/highlight-hoody/',
-        'https://fila.com.au/product/basic-t-shirt/'
-    ]
-
     def parse(self, response):
         garment = self.new_unique_garment(self.product_id(response))
 
