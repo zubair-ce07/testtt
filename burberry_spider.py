@@ -85,7 +85,7 @@ class BurberryParseSpider(BaseParseSpider):
         common_sku = self.product_pricing_common(None, money_strs=[raw_skus["formattedPrice"]])
         store = raw_skus["findInStore"]
 
-        common_sku["colour"] = store["colour"]["value"] if "colour" in store \
+        common_sku["colour"] = store["colour"]["value"] if "colour" in store and store["colour"] \
             else self.detect_colour(raw_skus["name"])
 
         sizes = store["size"]["items"] if "size" in store else [{"label": self.one_size}]
