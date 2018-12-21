@@ -14,14 +14,13 @@ class Mixin:
     allowed_domains = ["cn.burberry.com"]
 
     default_brand = "Burberry"
-    category_req_url_t = "https://cn.burberry.com/service/shelf{0}"
-    product_req_url_t = "https://cn.burberry.com/service/products{0}"
+    category_url_t = "https://cn.burberry.com/service/shelf{0}"
+    product_url_t = "https://cn.burberry.com/service/products{0}"
 
 
 class MixinCN(Mixin):
     retailer = Mixin.retailer + "-cn"
     market = "CN"
-    lang = "zh"
     start_urls = ["https://cn.burberry.com"]
 
 
@@ -61,9 +60,9 @@ class BurberryParseSpider(BaseParseSpider):
         soup = soupify([garment["name"]] + garment["description"] + garment["category"])
         return self.gender_lookup(soup) or Gender.ADULTS.value
 
-    def image_urls(self, response, raw_data):
+    def image_urls(self, response, raw_skus):
         return [url_query_cleaner(
-            response.urljoin(img["img"]["src"])) for img in raw_data["gallery"] if img and "img" in img.keys()]
+            response.urljoin(img["img"]["src"])) for img in raw_skus["gallery"] if img and "img" in img]
 
     def colour_requests(self, response):
         css = ".product-purchase_option a::attr(href)"
@@ -72,28 +71,29 @@ class BurberryParseSpider(BaseParseSpider):
         token = clean(response.css(".csrf-token::attr(value)"))[0]
         headers = {"x-csrf-token": token}
         return [response.follow(
-            self.product_req_url_t.format(url), headers=headers, callback=self.parse_colour) for url in urls]
+            self.product_url_t.format(url), headers=headers, callback=self.parse_colour) for url in urls]
 
     def parse_colour(self, response):
-        raw_data = json.loads(response.text)
+        raw_skus = json.loads(response.text)
         garment = response.meta['garment']
-        garment["image_urls"] += self.image_urls(response, raw_data)
-        garment["skus"].update(self.skus(raw_data))
+        garment["image_urls"] += self.image_urls(response, raw_skus)
+        garment["skus"].update(self.skus(raw_skus))
         return self.next_request_or_garment(garment)
 
-    def skus(self, raw_data):
+    def skus(self, raw_skus):
         skus = {}
-        common_sku = self.product_pricing_common(None, money_strs=[raw_data["formattedPrice"]])
-        store = raw_data["findInStore"]
+        common_sku = self.product_pricing_common(None, money_strs=[raw_skus["formattedPrice"]])
+        store = raw_skus["findInStore"]
 
-        common_sku["colour"] = store["colour"]["value"] or self.detect_colour(raw_data["name"])
+        common_sku["colour"] = store["colour"]["value"] if "colour" in store \
+            else self.detect_colour(raw_skus["name"])
 
-        sizes = store["size"]["items"] if "size" in store.keys() else [{"label": self.one_size}]
+        sizes = store["size"]["items"] if "size" in store else [{"label": self.one_size}]
         for size in sizes:
             sku = common_sku.copy()
             sku["size"] = size["label"]
 
-            if "isAvailable" in size.keys() and not size["isAvailable"]:
+            if "isAvailable" in size and not size["isAvailable"]:
                 sku["out_of_stock"] = True
 
             sku_id = f"{sku['colour']}_{size['label']}" if sku['colour'] else size["label"]
@@ -116,12 +116,13 @@ class BurberryCrawlSpider(BaseCrawlSpider):
         headers = {"x-csrf-token": token}
 
         for url in categories:
-            yield Request(self.category_req_url_t.format(url), headers=headers, callback=self.parse_category)
+            yield Request(self.category_url_t.format(url), meta={'trail': self.add_trail(response)},
+                          headers=headers, callback=self.parse_category)
 
     def parse_category(self, response):
-        raw_data = json.loads(response.text)
-        return [response.follow(
-            item['link'], callback=self.parse_item, meta={'trail': self.add_trail(response)}) for item in raw_data]
+        raw_category = json.loads(response.text)
+        return [response.follow(item['link'], callback=self.parse_item,
+                                meta={'trail': self.add_trail(response)}) for item in raw_category]
 
 
 class BurberryCNParseSpider(MixinCN, BurberryParseSpider):
