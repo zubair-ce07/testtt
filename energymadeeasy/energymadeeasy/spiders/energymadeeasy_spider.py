@@ -9,11 +9,54 @@ from scrapy.loader import ItemLoader
 from scrapy.loader.processors import TakeFirst, Identity
 from scrapy.shell import inspect_response
 
+import logging
+
 from ..items import EnergymadeeasyItem
 
 
 class ProductLoader(ItemLoader):
     default_output_processor = TakeFirst()
+
+    @staticmethod
+    def fetch_numerical(value):
+        if value:
+            r = re.findall(r'\d*\.?\d+', value[0])
+
+            if r:
+                return r[0]
+
+    solar_meter_fee_in = fetch_numerical
+    supply_in = fetch_numerical
+    peak_rate_in = fetch_numerical
+    block_type_in = fetch_numerical
+    peak_step_1_in = fetch_numerical
+    peak_rate_2_in = fetch_numerical
+    peak_step_2_in = fetch_numerical
+    peak_rate_3_in = fetch_numerical
+    peak_step_3_in = fetch_numerical
+    peak_rate_4_in = fetch_numerical
+    off_peak_rate_in = fetch_numerical
+    shoulder_in = fetch_numerical
+    minimum_monthly_demand_charged_in = fetch_numerical
+    fit_in = fetch_numerical
+    guaranteed_discount_off_usage_in = fetch_numerical
+    guaranteed_discount_off_bill_in = fetch_numerical
+    pot_discount_off_usage_in = fetch_numerical
+    pot_discount_off_bill_in = fetch_numerical
+    dd_discount_off_bill_in = fetch_numerical
+    dd_discount_off_usage_in = fetch_numerical
+    e_bill_discount_off_bill_in = fetch_numerical
+    e_bill_discount_off_usage_in = fetch_numerical
+    online_signup_discount_off_bill_in = fetch_numerical
+    online_signup_discount_off_usage_in = fetch_numerical
+    dual_fuel_discount_off_bill_in = fetch_numerical
+    dual_fuel_discount_off_usage_in = fetch_numerical
+    contract_length_in = fetch_numerical
+    approx_incentive_value_in = fetch_numerical
+    single_rate_in = fetch_numerical
+    controlled_load_1_in = fetch_numerical
+    controlled_load_2_in = fetch_numerical
+    demand_usage_rate_in = fetch_numerical
 
     raw_discount_and_incentives_out = Identity()
     raw_restrictions_out = Identity()
