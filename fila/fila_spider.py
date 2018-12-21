@@ -3,6 +3,7 @@ from scrapy.linkextractors import LinkExtractor
 
 from .base import BaseCrawlSpider, BaseParseSpider, clean
 from ..parsers.genders import Gender
+from ..utils.helpers import *
 
 
 # out of stock items are dropped because they don't have price.
@@ -70,7 +71,7 @@ class FilaParseSpider(BaseParseSpider, Mixin):
 		return clean(response.css('a.thumb-link > img::attr(src)'))
 	
 	def product_gender(self, response):
-		gender_soup = self.product_name(response) + ' '.join(self.product_description(response))
+		gender_soup = soupify(self.product_description(response).append(self.product_name(response)))
 		return self.gender_lookup(gender_soup) or Gender.ADULTS.value
 		
 	def product_category(self, response):
@@ -113,4 +114,3 @@ class FilaBRParseSpider(FilaParseSpider, MixinBR):
 class FilaBRCrawlSpider(FilaCrawlSpider, MixinBR):
 	name = MixinBR.retailer + '-crawl'
 	parse_spider = FilaBRParseSpider()
-
