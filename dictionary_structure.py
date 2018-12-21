@@ -38,9 +38,7 @@ class Dictionary(object):
 
     def get(self, key, default=0):
         dict_item = self.hash_table[key]
-        if dict_item is None:
-            return default
-        return dict_item.value
+        return dict_item.value if dict_item else default
 
     def update(self, records):
         self.hash_table.update(records)
