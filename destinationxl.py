@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
+import re
 
 import scrapy
 from scrapy import Selector
@@ -38,9 +39,12 @@ class DestinationxlSpider(scrapy.Spider):
                 if 'refinements' not in raw_keys.keys():
                     return
                 for keys in raw_keys['refinements']:
+                    product_url = '{}{}'
                     url_n = keys['navigationState'].split('&')[0]
                     url = url_n.split('+')[0]
-                    yield response.follow(url, callback=self.parse_products)
+
+                    yield scrapy.Request(product_url.format(response.url, url),
+                                         callback=self.parse_products)
 
     def parse_products(self, response):
         base_url = 'http://www.destinationxl.com'
@@ -76,7 +80,6 @@ class DestinationxlSpider(scrapy.Spider):
         yield scrapy.Request(url, meta={'item': item}, callback=self.parse_combinations)
 
     def parse_combinations(self, response):
-
         item = response.meta['item']
         size_and_color = json.loads(response.text)
 
@@ -99,72 +102,57 @@ class DestinationxlSpider(scrapy.Spider):
         item['image_url'] = self.get_image_url(response)
 
         c_url = '{}?&isSelection=True&attributes=color={}'
-        for color_id in size_and_color['colorGroups'][0]['colors']:
-            url = c_url.format(response.url, color_id['id'])
-            yield scrapy.Request(url, callback=self.filter_selection, meta=response.meta)
+        for colors in size_and_color['colorGroups']:
+            for color_id in colors['colors']:
+                url = c_url.format(response.url, color_id['id'])
+                yield scrapy.Request(url, callback=self.get_size, meta=response.meta)
 
-    def filter_selection(self, response):
 
-        base_url = 'http://www.destinationxl.com/mens-big-and-tall-store/{}/{}/{}/{}'
-        url_cat = response.url.split('/')
-        url = base_url.format(url_cat[-4], url_cat[-3], url_cat[-2], url_cat[-1])
-
-        yield scrapy.Request(url, callback=self.parse_details, meta=response.meta)
-
-    def parse_details(self, response):
-        script = response.css('script#dxl-state').extract_first()
-        get_script = script.split('<script id="dxl-state" type="application/json">')[1]
-        clean_data = get_script.strip('</script>')
-        category = clean_data.replace('&q;', '"')
-        data = json.loads(category)
-
-        try:
-            product_attr = data['pDetails']['sizes'][0]['attribute']
-        except IndexError:
-            product_attr = None
-
-        try:
-            for length in data['pDetails']['sizes'][0]['values']:
-                product_url = 'https://www.destinationxl.com/public/v1/dxlproducts/{}/{}@{}={}'
-                url = product_url.format(response.url.split('/')[-2],
-                                         response.url.split('/')[-1], product_attr, length['value'])
-                yield scrapy.Request(url, callback=self.parse_size, meta=response.meta)
-        except IndexError:
-            data['pDetails']['sizes'][0]['values'] = None
-
-    def parse_size(self, response):
-        colors = []
-        item = response.meta['item']
-        item['info'] = []
+    def get_size(self, response):
         data = json.loads(response.text)
-        for color in data['colorGroups'][0]['colors']:
-            if bool(color['selected']) and bool(color['available']):
-                colors.append(color['id'])
+        item = response.meta['item']
+        if len(data['sizes']) > 1:
+            item['info'] = []
+            item['requests'] = {'requests': self.get_requests(response)}
+        else:
+            item['info'] = None
+        return self.next_url(item)
 
-        for sizes in data['sizes']:
-            for size in sizes['values']:
-                if bool(size['available']) and bool(size['selected']):
-                    size_name = {'name':data['sizes'][0]['displayName']}
-                    size_value = {'selected_length': size['value']}
-                    selected_size = {
-                        'size_name':size_name,
-                        'size_value':size_value
-                    }
-                    item['info'].append(selected_size)
-        for sizes in data['sizes'][1]['values']:
-            if bool(sizes['available']):
-                size_name = {'name':data['sizes'][1]['displayName']}
-                size_value = {'lenght':sizes['value']}
-
-                size_details = {
-                    'size_name':size_name,
-                    'size_value': size_value
-                }
-                item['info'].append(size_details)
+    def get_requests(self, response):
+        raw_product = json.loads(response.text)
+        requests = []
+        for size in raw_product['sizes'][0]['values']:
+            if bool(size['available']):
+                sizes_url = scrapy.Request('{}@{}Size={}'.format(response.url, raw_product['sizes']
+                                                                 [0]['displayName'], size['name']),
+                                           meta={'size': size['name']}, callback=self.parse_sizes)
+                requests.append(sizes_url)
+        return requests
 
 
-        item['selected_color'] = colors
-        yield item
+
+    def parse_sizes(self, response):
+        data = json.loads(response.text)
+        item = response.meta['item']
+        sizes = data['sizes'][1]
+        for size in sizes['values']:
+            if bool(size['available']):
+                size_name = {sizes['displayName']: size['name'],
+                             data['sizes'][0]['displayName']: response.meta['size']
+                             }
+
+                combinations = {'size_name': size_name}
+                item['info'].append(combinations)
+
+        return self.next_url(item.copy())
+
+    def next_url(self, item):
+        if item['requests'].get('requests'):
+            url = item['requests']['requests'].pop(0)
+            url.meta['item'] = item
+            return url
+        del item['requests']
+        return item
 
     def parse_next_url(self, response):
         no_of_pages = response.xpath('//*[contains(@class,"page-nos")]/span[last()-1]//text()')\
@@ -175,10 +163,16 @@ class DestinationxlSpider(scrapy.Spider):
             return 0
 
     def get_image_url(self, response):
-        size_and_color = json.loads(response.text)
-        image_url = size_and_color['colorGroups'][0]['colors'][0]['largeSwatchImageUrl']
-        zoomed_url = image_url[:-17]
-        return zoomed_url
+        data = json.loads(response.text)
+        image_url = []
+        image = data['colorGroups'][0]['colors'][0]['largeSwatchImageUrl']
+        zoomed_url = image[:-17]
+        image_url.append(zoomed_url)
+        image_id = re.findall(r'([0-9]+)', image)
+        for images in range(1, data['alternateImagesCount']+1):
+            url = '{}{}_alt{}'.format(zoomed_url.split(image_id[0])[0], image_id[0], images)
+            image_url.append(url)
+        return image_url
 
     def get_item_categroy(self, response):
         category = response.xpath('//breadcrumb/nav/ul//li//text()').extract()[1:]
