@@ -28,7 +28,6 @@ class ProductLoader(ItemLoader):
     solar_meter_fee_in = fetch_numerical
     supply_in = fetch_numerical
     peak_rate_in = fetch_numerical
-    block_type_in = fetch_numerical
     peak_step_1_in = fetch_numerical
     peak_rate_2_in = fetch_numerical
     peak_step_2_in = fetch_numerical
@@ -51,7 +50,6 @@ class ProductLoader(ItemLoader):
     online_signup_discount_off_usage_in = fetch_numerical
     dual_fuel_discount_off_bill_in = fetch_numerical
     dual_fuel_discount_off_usage_in = fetch_numerical
-    contract_length_in = fetch_numerical
     approx_incentive_value_in = fetch_numerical
     single_rate_in = fetch_numerical
     controlled_load_1_in = fetch_numerical
@@ -131,7 +129,7 @@ class EnergymadeeasySpiderElectricity(scrapy.Spider):
         if raw_tariff.get('seasons'):
             for block in raw_tariff['seasons'][0]['blocks']:
                 if block['name'] == 'Peak':
-                    loader.add_value('peak_rate', block['rates'][0]['price'])
+                    loader.add_value('single_or_peak_rate', block['rates'][0]['price'])
 
                 if block['name'] == 'Shoulder':
                     loader.add_value('shoulder', block['rates'][0]['price'])
@@ -147,7 +145,9 @@ class EnergymadeeasySpiderElectricity(scrapy.Spider):
                 'p::text, p strong::text').extract()))
 
         loader.add_value('energy_plan', response.meta['type'])
+        loader.add_value('eme_url', response.url)
         loader.add_value('source', response.url)
+        loader.add_value('link_to_offer', response.url)
         loader.add_value('timestamp', str(datetime.datetime.utcnow()))
         loader.add_value('green', bool(response.css('.icon-aer-green-power')))
         loader.add_value('solar', bool(response.css('.icon-aer-solar-feed')))
@@ -156,6 +156,7 @@ class EnergymadeeasySpiderElectricity(scrapy.Spider):
                            'strong[contains(text(), "exit fee")]')))
 
         loader.add_css('id', '.plan-id strong::text')
+        loader.add_css('eme_offer_code', '.plan-id strong::text')
         loader.add_css('retailer', '.bp__provider-details .bp__title::text')
         loader.add_css('name', '.bp__summary-title::text')
         loader.add_css('meter_type', '.icon-aer-tariff + span strong::text')
@@ -164,22 +165,30 @@ class EnergymadeeasySpiderElectricity(scrapy.Spider):
                                            'from")]/../following::p[1]/text()')
         loader.add_xpath('db', '//*[@id="additional"]//*[contains(text(), "Distributor")]'
                                '/../following::p[1]/text()')
-        loader.add_xpath('supply', '//*[contains(text(), "Daily supply charge")]/strong/text()',
-                         re=r'[\d\.]+')
+        loader.add_xpath('supply', '//*[contains(text(), "Daily supply charge")]'
+                                          '/strong/text()', re=r'[\d\.]+')
         loader.add_xpath('contract_length', '//*[@id="additional"]//*[contains(text(), "Contract'
                                             ' Length")]/../following::p[1]/text()')
         loader.add_xpath('solar_meter_fee', '//*[@id="pricing"]//*[@class="icon-aer-solar-feed"]//'
                                             'following::div[contains(@class, "panel__list")][1]//'
                                             'strong/text()')
-        loader.add_xpath('fit', '//*[@id="pricing"]//*[@class="icon-aer-solar-feed"]//'
-                                'following::div[contains(@class, "panel__list")][1]//'
-                                'strong/text()')
+        loader.add_xpath('fit', '//*[@id="pricing"]//*[@class="icon-aer-solar-feed"]'
+                                '//following::div[contains(@class, "panel__list")]'
+                                '[1]//strong/text()')
         loader.add_xpath('minimum_monthly_demand_charged',
                          '//*[@id="pricing"]//*[contains(text(), "Demand charges")]/'
                          '../..//*[contains(text(), "minimum demand")]/text()')
         loader.add_xpath('demand_usage_rate', '//*[@id="pricing"]//*[contains(text(), '
                                               '"Demand usage rate")]/../../td[contains(text(),'
                                               ' "cents")]/text()')
+        loader.add_xpath('terms_and_conditions', '//*[@id="additional"]//*[contains(text(),'
+                                                 ' "Terms and conditions")]/following::p[1]/text()')
+        loader.add_xpath('billing_period', '//*[@id="additional"]//*[contains(text(), '
+                                           '"Billing period")]/following::p[1]/text()')
+        loader.add_xpath('contract_expiry', '//*[@id="additional"]//*[contains(text(), '
+                                            '"Contract expiry")]/following::p[1]/text()')
+        loader.add_xpath('meter_restrictions', '//*[@id="additional"]//*[contains(text(), "Meter '
+                                               'restrictions")]/following::p[1]/text()')
 
         bill_c_incentive = response.xpath(
             '//*[contains(text(), "Incentives")]/following::div[@class="panel__list-item"]'
@@ -334,7 +343,7 @@ class EnergymadeeasySpiderElectricity(scrapy.Spider):
                 break
 
             if i == 0:
-                fields['single_rate'] = rates['rates'][0]['price']
+                fields['single_or_peak_rate'] = rates['rates'][0]['price']
                 if len(raw_rates['blocks']) > 1:
                     fields['peak_step_{}'.format(i + 1)] = rates['name']
                 continue
@@ -383,6 +392,9 @@ class EnergymadeeasySpiderElectricity(scrapy.Spider):
                     'rate': load['Controlled load usage'],
                     'step': step
                 })
+
+        # if response.css('[id^="pricing"] .panel__item--chartular .panel__subnote strong::text'):
+        #     inspect_response(response, self)
 
         # print(controlled_loads)
 
