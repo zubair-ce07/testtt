@@ -18,7 +18,7 @@ class DestinationxlSpider(scrapy.Spider):
     def parse(self, response):
         all_categories_url = response.xpath('//header/nav/ul//li//a/@href').extract()
         for category in all_categories_url:
-            if 'mens-jeans' in category:
+            if 'athletic-fit-mens-jeans' in category:
                 yield response.follow(category, callback=self.parse_all_pages)
 
 
@@ -54,7 +54,6 @@ class DestinationxlSpider(scrapy.Spider):
             url = '{}{}'.format(base_url, product_url)
             yield scrapy.Request(url, callback=self.parse_item)
 
-
         if self.parse_next_url(response) != 0:
             for no_of_products in range(30, (self.parse_next_url(response)-1) * 30, 30):
                 if no_of_products == 90:
@@ -82,10 +81,11 @@ class DestinationxlSpider(scrapy.Spider):
     def parse_combinations(self, response):
         item = response.meta['item']
         size_and_color = json.loads(response.text)
-
+        description = []
         text = Selector(text=size_and_color['longDescription'])
-        description = text.css('p::text').extract_first()
-
+        details = text.css('p::text').extract()
+        lists = [[x] for x in details]
+        description.append(lists)
         price = size_and_color['price']
         original_price = price['originalPrice']
         if bool(price['onSale']):
@@ -93,7 +93,7 @@ class DestinationxlSpider(scrapy.Spider):
             on_sale = price['saleMessage']
         else:
             sale_price = None
-            on_sale = None
+            on_sale = False
 
         item['original_price'] = original_price
         item['sale_price'] = sale_price
@@ -109,13 +109,19 @@ class DestinationxlSpider(scrapy.Spider):
 
 
     def get_size(self, response):
+
         data = json.loads(response.text)
         item = response.meta['item']
+        parts = response.url.split('/')[7]
+        product_id = parts.split('?')[0]
+        color_code = response.url.split('=')[3]
+        sku = '{}_{}'.format(product_id, color_code)
+        item['sku'] = sku
         if len(data['sizes']) > 1:
             item['info'] = []
             item['requests'] = {'requests': self.get_requests(response)}
         else:
-            item['info'] = None
+            item['info'] = self.get_infos(response)
         return self.next_url(item)
 
     def get_requests(self, response):
@@ -129,7 +135,23 @@ class DestinationxlSpider(scrapy.Spider):
                 requests.append(sizes_url)
         return requests
 
-
+    def get_infos(self, response):
+        infos = []
+        requests = []
+        data = json.loads(response.text)
+        if len(data['sizes']) > 0:
+            for size in data['sizes'][0]['values']:
+                combinations = {'size_identifier': size['name'],
+                                'size_name': size['name']
+                                }
+                if bool(size['available']):
+                    sizes_url = scrapy.Request('{}@{}Size={}'.format(response.url, data['sizes'][0]
+                                                                     ['displayName'], size['name']),
+                                               meta={'size': size['name']}, callback=self.parse_sizes)
+                    requests.append(sizes_url)
+                infos.append(combinations)
+            return requests
+        return infos
 
     def parse_sizes(self, response):
         data = json.loads(response.text)
@@ -179,3 +201,4 @@ class DestinationxlSpider(scrapy.Spider):
         category = [cat.strip('//') for cat in category]
         category = [i for i in category if i != ' ']
         return category
+
