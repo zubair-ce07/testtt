@@ -102,3 +102,7 @@ class FilaBRParseSpider(MixinBR, FilaParseSpider):
 class FilaBRCrawlSpider(MixinBR, FilaCrawlSpider):
     name = MixinBR.retailer + '-crawl'
     parse_spider = FilaBRParseSpider()
+
+    custom_settings = {
+        'DOWNLOAD_DELAY': 5.0,  # otherwise website redirects pages to home page
+    }
