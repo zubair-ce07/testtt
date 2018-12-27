@@ -44,6 +44,7 @@ class XTOSpider(CrawlSpider):
         l.add_value('job_types', response.meta['job_type'])
         l.add_value('job_date', response.meta['date'])
         l.add_value('provider', 'exxonmobil')
+        l.add_value('external_id', self.extract_external_id(response.url))
         l.add_value('url', response.url)
         return l.load_item()
 
@@ -57,3 +58,6 @@ class XTOSpider(CrawlSpider):
 
     def extract_job_posting_date(self, job):
         return job.xpath('.//span[@class="jobDate"]//text()').extract()
+
+    def extract_external_id(self, response):
+        return response.split('/')[-2]
