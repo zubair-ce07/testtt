@@ -4,9 +4,9 @@ from item import Item
 class HashTable:
     def __init__(self):
         self.used = 0
-        self.min_size = 10
+        self.capacity = 10
         self.buckets_record = []
-        [self.buckets_record.append(Item()) for i in range(self.min_size)]
+        [self.buckets_record.append(Item()) for i in range(self.capacity)]
 
     def __setitem__(self, key, value):
         self.insert(key, value)
@@ -42,7 +42,7 @@ class HashTable:
             hashed_bucket.hashed_key = hashed_key
             self.used += 1
 
-        if self.used == (self.min_size - 1):
+        if self.used == (self.capacity - 1):
             self.extend_buckets()
 
     def fetch_bucket(self, key):
@@ -54,12 +54,12 @@ class HashTable:
         return result
 
     def extend_buckets(self):
-        [self.buckets_record.append(Item()) for i in range(self.min_size)]
-        self.min_size = self.min_size * 2
+        [self.buckets_record.append(Item()) for i in range(self.capacity)]
+        self.capacity = self.capacity * 2
 
     def clear_hash_table(self):
         self.buckets_record = []
-        [self.buckets_record.append(Item()) for i in range(self.min_size)]
+        [self.buckets_record.append(Item()) for i in range(self.capacity)]
         self.used = 0
         return self
 
@@ -79,7 +79,8 @@ class HashTable:
     def all_items(self):
         return [hashed_item for hashed_item in self.buckets_record if hashed_item.value is not None]
 
-    def update_bucket(self, key, value, bucket):
+    @staticmethod
+    def update_bucket(key, value, bucket):
         bucket.hashed_key = bucket.hashed_key
         bucket.key = key
         bucket.value = value

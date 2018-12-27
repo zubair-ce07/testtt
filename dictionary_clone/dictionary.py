@@ -29,4 +29,3 @@ class MyDictionary:
 
     def popitem(self):
         self.buckets.remove_last_index()
-
