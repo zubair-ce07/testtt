@@ -344,6 +344,7 @@ class EnergymadeeasySpiderElectricity(scrapy.Spider):
 
             if i == 0:
                 fields['single_or_peak_rate'] = rates['rates'][0]['price']
+                fields['peak_rate_1'] = rates['rates'][0]['price']
                 if len(raw_rates['blocks']) > 1:
                     fields['peak_step_{}'.format(i + 1)] = rates['name']
                 continue

@@ -20,6 +20,8 @@ class EnergymadeeasyItem(scrapy.Item):
     name = scrapy.Field()
     supply = scrapy.Field()
     single_or_peak_rate = scrapy.Field()
+    # Same as above field
+    peak_rate_1 = scrapy.Field()
     block_type = scrapy.Field()
     peak_step_1 = scrapy.Field()
     peak_rate_2 = scrapy.Field()
