@@ -4,4 +4,3 @@ def extract_price_details(price_record):
         'price': float(price_record[1]) * 100 if price_record[1] else None,
     }
     return price_details
-
