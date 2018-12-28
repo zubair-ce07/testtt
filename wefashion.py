@@ -1,6 +1,6 @@
-import scrapy
 import json
 
+import scrapy
 from scrapy.contrib.spiders import CrawlSpider, Rule
 from scrapy.linkextractor import LinkExtractor
 
@@ -9,7 +9,7 @@ from parse_item_structure import ParseItem
 
 class ProductParser(scrapy.Spider):
     def __init__(self):
-        self.seen_ids = {}
+        self.seen_ids = set()
 
     def parse(self, response):
         item = ParseItem()
@@ -31,12 +31,14 @@ class ProductParser(scrapy.Spider):
         item['image_urls'] = self.extract_image_urls(response)
         item['trail'] = response.meta.get('trail', [])
 
-        self.seen_ids[product['id']] = item
-
         return item
 
     def is_new_item(self, product):
-        return product and product['id'] not in self.seen_ids
+        if product and product['id'] not in self.seen_ids:
+            self.seen_ids.add(product['id'])
+            return True
+
+        return False
 
     def extract_product(self, response):
         product = response.css('[id=productEcommerceObject]::attr(value)').extract_first()
@@ -53,12 +55,10 @@ class ProductParser(scrapy.Spider):
 
     def extract_description(self, response):
         content = response.css('.product-details .tab-content::text').extract_first()
-        description = [x.strip() for x in content.split('.') if x.strip()]
-        return description
+        return [x.strip() for x in content.split('.') if x.strip()]
 
     def extract_image_urls(self, response):
-        image_urls = response.css('.productcarouselslides img::attr(data-image-replacement)').extract()
-        return image_urls
+        return response.css('.productcarouselslides img::attr(data-image-replacement)').extract()
 
     def extract_skus(self, product, response):
         skus = {}
