@@ -58,4 +58,6 @@ target/
 
 # VSCode
 .vscode
-dictionary_simple_structure.py
+
+#weatherfiles
+/weatherfiles
