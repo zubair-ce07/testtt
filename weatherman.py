@@ -46,25 +46,25 @@ def date_month(date):
 
 def main():
     parsed_args = parse_arguments()
-    weather_records = datareader.data_parser(parsed_args.path)
+    weather_records = datareader.prepare_weather_records(parsed_args.path)
 
     if parsed_args.yearly:
 
         for year in parsed_args.yearly:
-            year_records = report_calculations.generate_yearly_report(weather_records, year)
+            year_records = report_calculations.calculate_yearly_report(weather_records, year)
             report_generator.generate_yearly_report(year_records)
 
     if parsed_args.monthly:
 
         for month in parsed_args.monthly:
-            month_records = report_calculations.generate_monthly_report(weather_records, month)
+            month_records = report_calculations.calculate_monthly_report(weather_records, month)
             report_generator.generate_monthly_report(month_records)
 
     if parsed_args.bar_chart:
 
         for chart in parsed_args.bar_chart:
-            bar_chart_records = report_calculations.generate_bar_chart_report(weather_records, chart)
-            report_generator.generate_bonus_bar_chart(bar_chart_records)
+            bar_chart_records = report_calculations.calculate_bar_chart_report(weather_records, chart)
+            report_generator.generate_bar_chart(bar_chart_records)
 
 
 if __name__ == "__main__":

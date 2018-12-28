@@ -3,8 +3,10 @@ import csv
 
 from weatherman_data_structure import WeatherRecord
 
+REQ_FIELDS = ['Max TemperatureC', 'Min TemperatureC', 'Max Humidity', ' Mean Humidity']
 
-def data_parser(path):
+
+def prepare_weather_records(path):
     weather_reading = []
 
     for f in gb.glob(f'{path}/*.txt'):
@@ -16,5 +18,4 @@ def data_parser(path):
 
 
 def is_valid_record(record):
-    req_fields = ['Max TemperatureC', 'Min TemperatureC', 'Max Humidity', ' Mean Humidity']
-    return all([record[f] for f in req_fields] + [record.get('PKST', record.get('PKT'))])
+    return all([record[f] for f in REQ_FIELDS] + [record.get('PKST', record.get('PKT'))])
