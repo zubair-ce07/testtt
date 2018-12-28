@@ -1,16 +1,16 @@
 import json
-import scrapy
 
+import scrapy
 from scrapy.contrib.spiders import CrawlSpider, Rule
 from scrapy.linkextractor import LinkExtractor
 
 from parse_item_structure import ParseItem
-import helpers
+from helpers import extract_price_details
 
 
 class ProductParser(scrapy.Spider):
     def __init__(self):
-        self.seen_ids = {}
+        self.seen_ids = set()
 
     def parse(self, response):
         item = ParseItem()
@@ -33,12 +33,14 @@ class ProductParser(scrapy.Spider):
         item['trail'] = response.meta.get('trail', [])
         item['skus'] = self.extract_skus(response)
 
-        self.seen_ids[retailer_sku] = item
-
         return item
 
-    def is_new_item(self, item):
-        return item and item not in self.seen_ids
+    def is_new_item(self, retailer_sku):
+        if retailer_sku and retailer_sku not in self.seen_ids:
+            self.seen_ids.add(retailer_sku)
+            return True
+
+        return False
 
     def extract_id(self, response):
         return response.css('.extra-product::attr(data-sku)').extract_first()
@@ -47,8 +49,8 @@ class ProductParser(scrapy.Spider):
         return response.css('.product-info-main .page-title span::text').extract_first()
 
     def extract_care(self, response):
-        care_css = '.additional-attributes .large-4 .content-short-description p::text'
-        care_content = response.css(care_css).extract()
+        css = '.additional-attributes .large-4 .content-short-description p::text'
+        care_content = response.css(css).extract()
         return [care.strip() for care in care_content if care.strip()]
 
     def extract_category(self, response):
@@ -57,56 +59,37 @@ class ProductParser(scrapy.Spider):
 
     def extract_description(self, response):
         content = response.css('.additional-attributes .large-8 .content::text').extract_first()
-        description = [x.strip() for x in content.split('.') if x.strip()]
-        return description
+        return [x.strip() for x in content.split('.') if x.strip()]
 
     def extract_image_urls(self, response):
-        image_urls = []
         xpath = "//script[contains(., 'mage/gallery/gallery')]/text()"
-        images_data = response.xpath(xpath).re('"data": (.*?}])')
-        if images_data:
-            images_data = json.loads(images_data[0])
-            image_urls = [image['img'] for image in images_data]
+        raw_image_urls = response.xpath(xpath).re('"data": (.*?}])')
+        if raw_image_urls:
+            raw_image_urls = [image['img'] for image in json.loads(raw_image_urls[0])]
 
-        return image_urls
+        return raw_image_urls
 
     def extract_skus(self, response):
         skus = []
         xpath = "//script[contains(.,'sizeRangesSort')]/text()"
-        path_record = response.xpath(xpath)
-        price_record = path_record.re('"prices":{"oldPrice":({".*?"})')
-        size_record = path_record.re('jsonConfig:{"attributes":({.*?}})')
+        price = response.xpath(xpath).re('"prices":({".*?"}})')[0]
+        price = json.loads(price)
+        product_price = extract_price_details([price['oldPrice']['amount'], price['finalPrice']['amount']])
+        size_record = response.xpath(xpath).re('jsonConfig:{"attributes":({.*?}})')[0]
+        size_record = json.loads(size_record)
 
-        pattern = '.price-final_price meta::attr(content)'
-        price_details = response.css(pattern).extract()
-        product_price = helpers.extract_price_details(price_details, price_record)
+        item = {}
+        item['color'] = size_record['93']['options'][0]['label']
+        item['currency'] = response.css('.price-final_price meta:nth-child(3)::attr(content)').extract_first()
+        item.update(product_price)
 
-        if not size_record:
-            return size_record
-
-        size_record = json.loads(size_record[0])
-        size_options = {}
-        for key in size_record:
-            if size_record[key]['code'] == 'size':
-                size_options['size'] = size_record[key]['options']
-            else:
-                size_options['color'] = size_record[key]['options']
-
-        color = [x['label'] for x in size_options['color']]
-
-        for option in size_options['size']:
-            item = {}
-            item['price'] = product_price['price']
-            item['old_price'] = product_price['old_price']
-            item['currency'] = product_price['currency']
-            item['color'] = color[0]
-            item['size'] = option['label']
-            item['sku_id'] = f"{color[0]}_{option['label']}"
-
+        for option in size_record['243']['options']:
+            size_option = item.copy()
+            size_option['size'] = option['label']
+            size_option['sku_id'] = f"{item['color']}_{option['label']}"
             if not option['products']:
-                item['out_of_stockand'] = True
-
-            skus.append(item)
+                size_option['out_of_stockand'] = True
+            skus.append(size_option)
 
         return skus
 
@@ -145,7 +128,7 @@ class DrmartensSpider(CrawlSpider):
         trail = trail + [[title, response.url]]
 
         for request in super().parse(response):
-            request.meta['trail'] = trail
+            request.meta['trail'] = trail.copy()
             yield request
 
     def parse_item(self, response):
