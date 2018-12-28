@@ -5,7 +5,7 @@ from scrapy.contrib.spiders import CrawlSpider, Rule
 from scrapy.linkextractor import LinkExtractor
 
 from parse_item_structure import ParseItem
-
+from helpers import extract_price_details
 
 class ProductParser(scrapy.Spider):
     def __init__(self):
@@ -62,9 +62,14 @@ class ProductParser(scrapy.Spider):
 
     def extract_skus(self, product, response):
         skus = {}
+        old_price = response.css('.price-standard::text').extract_first()
+        if old_price:
+            old_price = old_price.replace('€', '').replace(',', '.').strip()
+
+        price_details = extract_price_details([old_price, product['price']])
+        skus.update(price_details)
         colours_data = response.css('.swatches.color a::text').extract()
         sizes = response.css('.swatches.size .emptyswatch a::text').extract()
-        skus['price'] = product['price']
         skus['currency'] = product['currencyCode']
         skus['colours'] = [x.strip() for x in colours_data]
         skus['sizes'] = [x.strip() for x in sizes]
