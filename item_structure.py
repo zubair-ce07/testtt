@@ -1,7 +1,7 @@
 import scrapy
 
 
-class ParseItem(scrapy.Item):
+class Item(scrapy.Item):
     name = scrapy.Field()
     retailer_sku = scrapy.Field()
     url = scrapy.Field()

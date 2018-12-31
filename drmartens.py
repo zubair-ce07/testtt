@@ -1,19 +1,19 @@
 import json
 
-import scrapy
+from scrapy import Spider
 from scrapy.contrib.spiders import CrawlSpider, Rule
 from scrapy.linkextractor import LinkExtractor
 
-from parse_item_structure import ParseItem
+from item_structure import Item
 from helpers import extract_price_details
 
 
-class ProductParser(scrapy.Spider):
+class ProductParser(Spider):
     def __init__(self):
         self.seen_ids = set()
 
     def parse(self, response):
-        item = ParseItem()
+        item = Item()
         retailer_sku = self.extract_id(response)
 
         if not self.is_new_item(retailer_sku):
@@ -58,8 +58,8 @@ class ProductParser(scrapy.Spider):
         return [category.strip()] if category else []
 
     def extract_description(self, response):
-        content = response.css('.additional-attributes .large-8 .content::text').extract_first()
-        return [x.strip() for x in content.split('.') if x.strip()]
+        description = response.css('.additional-attributes .large-8 .content::text').extract_first()
+        return [des.strip() for des in description.split('.') if des.strip()]
 
     def extract_image_urls(self, response):
         xpath = "//script[contains(., 'mage/gallery/gallery')]/text()"
