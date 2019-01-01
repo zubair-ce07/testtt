@@ -1,17 +1,17 @@
-import scrapy
+from scrapy import Item as it, Field
 
 
-class Item(scrapy.Item):
-    name = scrapy.Field()
-    retailer_sku = scrapy.Field()
-    url = scrapy.Field()
-    spider_name = scrapy.Field()
-    market = scrapy.Field()
-    retailer = scrapy.Field()
-    brand = scrapy.Field()
-    care = scrapy.Field()
-    category = scrapy.Field()
-    description = scrapy.Field()
-    image_urls = scrapy.Field()
-    trail = scrapy.Field()
-    skus = scrapy.Field()
+class Item(it):
+    name = Field()
+    retailer_sku = Field()
+    url = Field()
+    spider_name = Field()
+    market = Field()
+    retailer = Field()
+    brand = Field()
+    care = Field()
+    category = Field()
+    description = Field()
+    image_urls = Field()
+    trail = Field()
+    skus = Field()

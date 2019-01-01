@@ -17,7 +17,7 @@ class ProductParser(Spider):
         retailer_sku = self.extract_id(response)
 
         if not self.is_new_item(retailer_sku):
-            return item
+            return
 
         item['name'] = self.extract_name(response)
         item['retailer_sku'] = retailer_sku
@@ -50,12 +50,12 @@ class ProductParser(Spider):
 
     def extract_care(self, response):
         css = '.additional-attributes .large-4 .content-short-description p::text'
-        care_content = response.css(css).extract()
-        return [care.strip() for care in care_content if care.strip()]
+        raw_care = response.css(css).extract()
+        return [care.strip() for care in raw_care if care.strip()]
 
     def extract_category(self, response):
-        category = response.css('.breadcrumbs .item strong::text').extract_first()
-        return [category.strip()] if category else []
+        raw_category = response.css('.breadcrumbs .item strong::text').extract()
+        return [category.strip() for category in raw_category]
 
     def extract_description(self, response):
         description = response.css('.additional-attributes .large-8 .content::text').extract_first()
@@ -63,44 +63,58 @@ class ProductParser(Spider):
 
     def extract_image_urls(self, response):
         xpath = "//script[contains(., 'mage/gallery/gallery')]/text()"
-        raw_image_urls = response.xpath(xpath).re('"data": (.*?}])')
+        raw_image_urls = response.xpath(xpath).re_first('"data": (.*?}])')
         if raw_image_urls:
-            raw_image_urls = [image['img'] for image in json.loads(raw_image_urls[0])]
+            raw_image_urls = [image['img'] for image in json.loads(raw_image_urls)]
 
         return raw_image_urls
 
     def extract_skus(self, response):
-        skus = []
-        xpath = "//script[contains(.,'sizeRangesSort')]/text()"
-        price = response.xpath(xpath).re('"prices":({".*?"}})')[0]
-        price = json.loads(price)
-        product_price = extract_price_details([price['oldPrice']['amount'], price['finalPrice']['amount']])
-        size_record = response.xpath(xpath).re('jsonConfig:{"attributes":({.*?}})')[0]
-        size_record = json.loads(size_record)
+        skus, price_details = [], []
 
-        item = {}
-        item['color'] = size_record['93']['options'][0]['label']
-        item['currency'] = response.css('.price-final_price meta:nth-child(3)::attr(content)').extract_first()
-        item.update(product_price)
+        price = self.extract_price(response)
+        price_details.append(price['oldPrice']['amount'])
+        price_details.append(price['finalPrice']['amount'])
+        price_details.append(self.extract_currency(response))
+        product_price = extract_price_details(price_details)
 
-        for option in size_record['243']['options']:
-            size_option = item.copy()
-            size_option['size'] = option['label']
-            size_option['sku_id'] = f"{item['color']}_{option['label']}"
-            if not option['products']:
-                size_option['out_of_stockand'] = True
-            skus.append(size_option)
+        common_sku = {}
+        raw_skus = self.extract_raw_skus(response)
+        common_sku['color'] = raw_skus['93']['options'][0]['label']
+        common_sku.update(product_price)
+
+        for raw_sku in raw_skus['243']['options']:
+            sku = common_sku.copy()
+            sku['size'] = raw_sku['label']
+            sku['sku_id'] = f"{common_sku['color']}_{raw_sku['label']}"
+            if not raw_sku['products']:
+                sku['out_of_stockand'] = True
+            skus.append(sku)
 
         return skus
 
     def extract_market(self):
         return 'AU'
 
+    def extract_price(self, response):
+        xpath = "//script[contains(.,'sizeRangesSort')]/text()"
+        price = response.xpath(xpath).re_first('"prices":({".*?"}})')
+        return json.loads(price)
+
     def extract_retailer(self):
         return 'drmartens-au'
 
+    def extract_currency(self, response):
+        return response.css('.price-final_price meta::attr(content)').extract()[1]
+
     def extract_brand(self):
         return 'Dr. Martens'
+
+    def extract_raw_skus(self, response):
+        xpath = "//script[contains(.,'sizeRangesSort')]/text()"
+        pattern = 'jsonConfig:{"attributes":({.*?}})'
+        raw_size_record = response.xpath(xpath).re_first(pattern)
+        return json.loads(raw_size_record)
 
 
 class DrmartensSpider(CrawlSpider):
@@ -136,4 +150,4 @@ class DrmartensSpider(CrawlSpider):
 
     def extract_title(self, response):
         title = response.css('title::text').extract_first()
-        return title.split('|')[0] if title else title
+        return title.split('|')[0] or None
