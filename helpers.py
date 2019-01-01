@@ -3,6 +3,7 @@ CURRENCY_MAP = {
     'EUR': 'EUR',
     '$': 'AUD',
     'AUD': 'AUD',
+    'kr': 'SEK',
     'SEK': 'SEK',
 }
 
