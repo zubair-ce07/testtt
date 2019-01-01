@@ -1,90 +1,101 @@
-import json
-
-import scrapy
+from scrapy import Spider
 from scrapy.contrib.spiders import CrawlSpider, Rule
 from scrapy.linkextractor import LinkExtractor
 
-from parse_item_structure import ParseItem
+from item_structure import Item
 from helpers import extract_price_details
 
-class ProductParser(scrapy.Spider):
+
+class ProductParser(Spider):
     def __init__(self):
         self.seen_ids = set()
 
     def parse(self, response):
-        item = ParseItem()
-        product = self.extract_product(response)
+        item = Item()
+        product_id = self.extract_product_id(response)
 
-        if not self.is_new_item(product):
+        if not self.is_new_item(product_id):
             return
 
         item['name'] = self.extract_name(response)
-        item['retailer_sku'] = product['id']
+        item['retailer_sku'] = product_id
         item['spider_name'] = 'wefashion'
-        item['brand'] = product['brand']
-        item['category'] = product['category']
+        item['brand'] = self.extract_brand(response)
+        item['category'] = self.extract_category(response)
         item['market'] = self.extract_market()
         item['retailer'] = self.extract_retailer()
         item['url'] = response.url
         item['description'] = self.extract_description(response)
-        item['skus'] = self.extract_skus(product, response)
+        item['skus'] = self.extract_skus(response)
         item['image_urls'] = self.extract_image_urls(response)
         item['trail'] = response.meta.get('trail', [])
 
         return item
 
-    def is_new_item(self, product):
-        if product and product['id'] not in self.seen_ids:
-            self.seen_ids.add(product['id'])
+    def is_new_item(self, product_id):
+        if product_id and product_id not in self.seen_ids:
+            self.seen_ids.add(product_id)
             return True
 
         return False
 
-    def extract_product(self, response):
-        product = response.css('[id=productEcommerceObject]::attr(value)').extract_first()
-        if not product:
-            return product
-
-        product = product.split('"id"')
-        product = '{"id"' + product[1]
-        return json.loads(product)
+    def extract_product_id(self, response):
+        return response.css('[id="pid"]::attr(value)').extract_first()
 
     def extract_name(self, response):
-        product_name = response.css('.product-name::text').extract_first()
-        return product_name.strip() if product_name else None
+        return response.css('.product-name::text').extract_first().strip()
 
     def extract_description(self, response):
-        content = response.css('.product-details .tab-content::text').extract_first()
-        return [x.strip() for x in content.split('.') if x.strip()]
+        description = response.css('.product-details .tab-content::text').extract_first()
+        return [des.strip() for des in description.split('.') if des.strip()]
 
     def extract_image_urls(self, response):
         return response.css('.productcarouselslides img::attr(data-image-replacement)').extract()
 
-    def extract_skus(self, product, response):
-        skus = {}
-        old_price = response.css('.price-standard::text').extract_first()
-        if old_price:
-            old_price = old_price.replace('€', '').replace(',', '.').strip()
+    def extract_skus(self, response):
+        skus, price = [], []
+        price.append(self.extract_previous_price(response))
+        price.append(self.extract_price(response))
+        price.append(self.extract_currency(response))
+        price_details = extract_price_details(price)
 
-        price_details = extract_price_details([old_price, product['price']])
-        skus.update(price_details)
+        item = {}
         colours_data = response.css('.swatches.color a::text').extract()
-        sizes = response.css('.swatches.size .emptyswatch a::text').extract()
-        skus['currency'] = product['currencyCode']
-        skus['colours'] = [x.strip() for x in colours_data]
-        skus['sizes'] = [x.strip() for x in sizes]
+        size_options = response.css('.swatches.size .emptyswatch a::text').extract()
+        item['color'] = [color.strip() for color in colours_data]
+        item.update(price_details)
+
+        for option in size_options:
+            size_option = item.copy()
+            size_option['size'] = option.strip()
+            size_option['sku_id'] = f"{item['color'][0]}_{option.strip()}"
+            skus.append(size_option)
 
         return skus
+
+    def extract_currency(self, response):
+        return response.xpath("//script[contains(., 'productObj')]/text()").re('currencyCode":"(.*?)"')[0]
+
+    def extract_category(self, response):
+        return response.xpath("//script[contains(., 'productObj')]/text()").re('category":"(.*?)"')[0]
 
     def extract_market(self):
         return 'EU'
 
+    def extract_brand(self, response):
+        return response.xpath("//script[contains(., 'productObj')]/text()").re('brand":"(.*?)"')[0]
+
     def extract_retailer(self):
         return 'wefashion.de'
 
-    def extract_brand(self):
-        return 'We Fashion'
+    def extract_price(self, response):
+        return response.xpath("//script[contains(., 'productObj')]/text()").re('price":"(.*?)"')[0]
 
+    def extract_previous_price(self, response):
+        previous_price = response.css('.price-standard::text').extract_first()
+        if previous_price:
+            previous_price = previous_price.replace('€', '').replace(',', '.').strip()
+        return previous_price
 
 class WeFashionSpider(CrawlSpider):
     name = 'wefashion-crawl-spider'
