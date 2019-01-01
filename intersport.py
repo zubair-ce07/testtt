@@ -14,9 +14,11 @@ class ProductParser(Spider):
 
     def parse(self, response):
         item = Item()
-        retailer_sku = self.raw_product_id(response)
+        retailer_sku = self.extract_product_id(response)
+        color = self.extract_color(response)
+        product_id = f"{retailer_sku}_{color}"
 
-        if not self.is_new_item(retailer_sku):
+        if not self.is_new_item(product_id):
             return
 
         item['retailer_sku'] = retailer_sku
@@ -24,7 +26,7 @@ class ProductParser(Spider):
         item['spider_name'] = 'intersport'
         item['brand'] = self.extract_brand(response)
         item['url'] = response.url
-        item['description'] = self.raw_description(response)
+        item['description'] = self.extract_description(response)
         item['market'] = self.extract_market()
         item['retailer'] = self.extract_retailer()
         item['trail'] = response.meta.get('trail', [])
@@ -41,7 +43,7 @@ class ProductParser(Spider):
 
         return False
 
-    def raw_product_id(self, response):
+    def extract_product_id(self, response):
         product_id = response.xpath("//script/text()").re('"productPage":(.*)')
         if product_id:
             product_page = json.loads('{"productPage":'+product_id[0])
@@ -49,7 +51,7 @@ class ProductParser(Spider):
 
         return product_id
 
-    def raw_description(self, response):
+    def extract_description(self, response):
         description = response.css('.iceberg-body .m-b-half p::text').extract_first()
         return [des.strip() for des in description.split('.') if des.strip()]
 
@@ -66,16 +68,17 @@ class ProductParser(Spider):
         return response.css('.images a::attr(href)').extract()
 
     def extract_skus(self, response):
-        skus = []
-        price_details = response.xpath("//script/text()").re('("product":.*)')
-        price_details = json.loads("{" + price_details[0])['product']['price']
-        price_details = extract_price_details([price_details['regularPrice'], price_details['price']])
-        size_options = response.css('.button-list .item-button:enabled::text').extract()
+        skus, product_price = [], []
+        price_details = self.extract_price(response)
+        product_price.append(price_details['regularPrice'])
+        product_price.append(price_details['price'])
+        product_price.append(self.extract_currency())
+        price_details = extract_price_details(product_price)
 
         item = {}
-        item['currency'] = self.extract_currency()
-        item['color'] = self.extract_colour(response)
+        item['color'] = self.extract_color(response)
         item.update(price_details)
+        size_options = response.css('.button-list .item-button:enabled::text').extract()
 
         for option in size_options:
             size_option = item.copy()
@@ -85,11 +88,15 @@ class ProductParser(Spider):
 
         return skus
 
-    def extract_colour(self, response):
+    def extract_color(self, response):
         return response.css('.product-information .product-meta .list-item:nth-child(3)::text').extract_first()
 
     def extract_market(self):
         return 'SE'
+
+    def extract_price(self, response):
+        price_details = response.xpath("//script/text()").re('("product":.*)')
+        return json.loads("{" + price_details[0])['product']['price']
 
     def extract_retailer(self):
         return 'intersport.se'
@@ -111,7 +118,7 @@ class InterSportSpider(CrawlSpider):
     }
 
     product_css = ['.top-row-nav-container', '.nav-container']
-    listing_css = ['.container']
+    listing_css = ['.container','.slider-container']
     rules = [
         Rule(LinkExtractor(restrict_css=product_css), callback='parse'),
         Rule(LinkExtractor(restrict_css=listing_css), callback='parse_item')
