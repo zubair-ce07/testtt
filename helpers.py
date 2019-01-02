@@ -16,10 +16,9 @@ def extract_price_details(price_record):
     for record in price_record:
         prices.append(''.join(re.findall(r'\d+', record)) if record else None)
 
-    price_details = {
-        'price': prices[0],
-        'previous_price': prices[1],
-    }
+    price_details = {}
+    price_details['price'] = prices[0]
+    price_details['previous_price'] = prices[1] or None
 
     currency = [CURRENCY_MAP[cur] for cur in CURRENCY_MAP for rcd in price_record if rcd and cur in rcd]
     if currency:
