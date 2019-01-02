@@ -1,8 +1,8 @@
 import scrapy
+import json
 from scrapy.spiders import Rule, CrawlSpider
 from scrapy.linkextractors import LinkExtractor
 from orsay_crawler.items import OrsayCrawlerItem
-import json
 
 
 class OrsaySpider(CrawlSpider):
@@ -18,9 +18,9 @@ class OrsaySpider(CrawlSpider):
         for product in products:
             url = product.css("div.product-image a::attr(href)").extract_first()
             if url:
-                yield scrapy.Request(url=response.urljoin(url), callback=self.fetch_product_details)
+                yield scrapy.Request(url=response.urljoin(url), callback=self.fetch_product_detail)
 
-    def fetch_product_details(self, response):
+    def fetch_product_detail(self, response):
         item = OrsayCrawlerItem()
         json_data = json.loads(response.css("div.js-product-content-gtm::attr(data-product-details)").extract_first())
 
@@ -32,14 +32,18 @@ class OrsaySpider(CrawlSpider):
         item["lang"] = 'de'
         item["market"] = 'DE'
         item["name"] = json_data["name"]
-        item["image_urls"] = self.fetch_img_links(response)
+        item["image_urls"] = self.fetch_images_links(response)
         item["retailer_sku"] = json_data["idListRef6"]
         item["skus"] = []
         item["url"] = []
 
         colors = response.css("ul.swatches.color li a::attr(href)").extract()
         if colors:
-            yield scrapy.Request(url=colors[0], callback=self.fetch_product_skus, meta={"colors": colors, "item": item}, dont_filter=True)
+            yield scrapy.Request(
+                url=colors[0],
+                callback=self.fetch_product_skus,
+                meta={"colors": colors, "item": item},
+                dont_filter=True)
         else:
             yield item
 
@@ -51,12 +55,13 @@ class OrsaySpider(CrawlSpider):
         json_data = json.loads(response.css("div.js-product-content-gtm::attr(data-product-details)").extract_first())
 
         for size in sizes:
-            skus_data.append({f"{json_data['idListRef6']}_{size}": {
-                            "color": json_data['color'],
-                             "currency": json_data['currency_code'],
-                             "out_of_stock": 'False' if json_data['quantity'] else 'True',
-                             "price": json_data['grossPrice'],
-                             "size": size}})
+            skus_data.append(
+                {f"{json_data['idListRef6']}_{size}":
+                    {"color": json_data['color'],
+                     "currency": json_data['currency_code'],
+                     "out_of_stock": 'False' if json_data['quantity'] else 'True',
+                     "price": json_data['grossPrice'],
+                     "size": size}})
 
         item['skus'] = skus_data
         item["url"].append(response.url)
@@ -64,13 +69,15 @@ class OrsaySpider(CrawlSpider):
 
         if colors:
             yield scrapy.Request(
-                url=colors[0], callback=self.fetch_product_skus,
-                meta={"colors": colors, "item": item}, dont_filter=True)
+                url=colors[0],
+                callback=self.fetch_product_skus,
+                meta={"colors": colors, "item": item},
+                dont_filter=True)
         else:
             yield item
 
     @staticmethod
-    def fetch_img_links(response):
+    def fetch_images_links(response):
         return response.css("div.thumb.js-thumb img::attr(src)")
 
     @staticmethod
