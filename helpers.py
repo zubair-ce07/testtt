@@ -1,3 +1,6 @@
+import re
+
+
 CURRENCY_MAP = {
     '€': 'EUR',
     'EUR': 'EUR',
@@ -9,13 +12,16 @@ CURRENCY_MAP = {
 
 
 def extract_price_details(price_record):
-    price_details = {
-        'previous_price': int(float(price_record[0]) * 100) if price_record[0] else None,
-        'price': int(float(price_record[1]) * 100) if price_record[1] else None,
-    }
+    prices = []
+    for record in price_record:
+        prices.append(''.join(re.findall(r'\d+', record)) if record else None)
 
-    for currency in CURRENCY_MAP:
-        if currency in price_record:
-            price_details['currency'] = CURRENCY_MAP[currency]
+    price_details = {}
+    price_details['price'] = prices[0]
+    price_details['previous_price'] = prices[1] or None
+
+    currency = [CURRENCY_MAP[cur] for cur in CURRENCY_MAP for rcd in price_record if rcd and cur in rcd]
+    if currency:
+        price_details['currency'] = currency[0]
 
     return price_details

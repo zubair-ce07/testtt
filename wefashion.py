@@ -53,49 +53,48 @@ class ProductParser(Spider):
         return response.css('.productcarouselslides img::attr(data-image-replacement)').extract()
 
     def extract_skus(self, response):
-        skus, price = [], []
-        price.append(self.extract_previous_price(response))
-        price.append(self.extract_price(response))
-        price.append(self.extract_currency(response))
+        skus = []
+        price = self.extract_price(response)
         price_details = extract_price_details(price)
 
-        item = {}
+        common_sku = {}
         colours_data = response.css('.swatches.color a::text').extract()
-        size_options = response.css('.swatches.size .emptyswatch a::text').extract()
-        item['color'] = [color.strip() for color in colours_data]
-        item.update(price_details)
+        raw_skus = response.css('.swatches.size .emptyswatch a::text').extract()
+        common_sku['color'] = [color.strip() for color in colours_data]
+        common_sku.update(price_details)
 
-        for option in size_options:
-            size_option = item.copy()
-            size_option['size'] = option.strip()
-            size_option['sku_id'] = f"{item['color'][0]}_{option.strip()}"
-            skus.append(size_option)
+        for raw_sku in raw_skus:
+            sku = common_sku.copy()
+            sku['size'] = raw_sku.strip()
+            sku['sku_id'] = f"{common_sku['color'][0]}_{raw_sku.strip()}"
+            skus.append(sku)
 
         return skus
 
-    def extract_currency(self, response):
-        return response.xpath("//script[contains(., 'productObj')]/text()").re('currencyCode":"(.*?)"')[0]
-
     def extract_category(self, response):
-        return response.xpath("//script[contains(., 'productObj')]/text()").re('category":"(.*?)"')[0]
+        xpath = "//script[contains(., 'productObj')]/text()"
+        return response.xpath(xpath).re_first('category":"(.*?)"')
 
     def extract_market(self):
         return 'EU'
 
     def extract_brand(self, response):
-        return response.xpath("//script[contains(., 'productObj')]/text()").re('brand":"(.*?)"')[0]
+        xpath = "//script[contains(., 'productObj')]/text()"
+        return response.xpath(xpath).re_first('brand":"(.*?)"')
 
     def extract_retailer(self):
         return 'wefashion.de'
 
     def extract_price(self, response):
-        return response.xpath("//script[contains(., 'productObj')]/text()").re('price":"(.*?)"')[0]
+        price_details = []
+        product_obj = response.xpath("//script[contains(., 'productObj')]/text()")
 
-    def extract_previous_price(self, response):
-        previous_price = response.css('.price-standard::text').extract_first()
-        if previous_price:
-            previous_price = previous_price.replace('€', '').replace(',', '.').strip()
-        return previous_price
+        price_details.append(product_obj.re_first('price":"(.*?)"'))
+        price_details.append(response.css('.price-standard::text').extract_first())
+        price_details.append(product_obj.re_first('currencyCode":"(.*?)"'))
+
+        return price_details
+
 
 class WeFashionSpider(CrawlSpider):
     name = 'wefashion-crawl-spider'
@@ -130,4 +129,4 @@ class WeFashionSpider(CrawlSpider):
 
     def extract_title(self, response):
         title = response.css('title::text').extract_first()
-        return title.split('|')[0] if title else title
+        return title.split('|')[0] or title
