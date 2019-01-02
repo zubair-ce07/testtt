@@ -1,5 +1,3 @@
-import json
-
 from scrapy import Spider
 from scrapy.contrib.spiders import CrawlSpider, Rule
 from scrapy.linkextractor import LinkExtractor
@@ -15,16 +13,15 @@ class ProductParser(Spider):
     def parse(self, response):
         item = Item()
         retailer_sku = self.extract_product_id(response)
-        color = self.extract_color(response)
-        product_id = f"{retailer_sku}_{color}"
 
-        if not self.is_new_item(product_id):
+        if not self.is_new_item(retailer_sku):
             return
 
         item['retailer_sku'] = retailer_sku
         item['name'] = self.extract_name(response)
         item['spider_name'] = 'intersport'
         item['brand'] = self.extract_brand(response)
+        item['care'] = self.extract_care(response)
         item['url'] = response.url
         item['description'] = self.extract_description(response)
         item['market'] = self.extract_market()
@@ -44,12 +41,13 @@ class ProductParser(Spider):
         return False
 
     def extract_product_id(self, response):
-        product_id = response.xpath("//script/text()").re('"productPage":(.*)')
-        if product_id:
-            product_page = json.loads('{"productPage":'+product_id[0])
-            product_id = product_page['productPage']['productNumber']
+        pattern = '"productPage":{"size":.*?"productNumber":"(.*?.)"'
+        product_id = response.xpath("//script/text()").re_first(pattern)
+        if not product_id:
+            return None
 
-        return product_id
+        color = self.extract_color(response)
+        return f"{product_id}_{color}"
 
     def extract_description(self, response):
         description = response.css('.iceberg-body .m-b-half p::text').extract_first()
@@ -57,6 +55,9 @@ class ProductParser(Spider):
 
     def extract_name(self, response):
         return response.css('.product-name::text').extract_first()
+
+    def extract_care(self, response):
+        return response.css('.iceberg-body .list-item::text').extract()
 
     def extract_brand(self, response):
         return response.css('.product-information .product-meta .list-item::text').extract_first()
@@ -68,35 +69,39 @@ class ProductParser(Spider):
         return response.css('.images a::attr(href)').extract()
 
     def extract_skus(self, response):
-        skus, product_price = [], []
-        price_details = self.extract_price(response)
-        product_price.append(price_details['regularPrice'])
-        product_price.append(price_details['price'])
-        product_price.append(self.extract_currency())
-        price_details = extract_price_details(product_price)
+        skus = []
+        price = self.extract_price(response)
+        price_details = extract_price_details(price)
 
-        item = {}
-        item['color'] = self.extract_color(response)
-        item.update(price_details)
-        size_options = response.css('.button-list .item-button:enabled::text').extract()
+        common_sku = {}
+        common_sku['color'] = self.extract_color(response)
+        common_sku.update(price_details)
+        raw_skus = response.css('.button-list .item-button:enabled::text').extract()
 
-        for option in size_options:
-            size_option = item.copy()
-            size_option['size'] = option
-            size_option['sku_id'] = f"{item['color']}_{option}"
-            skus.append(size_option)
+        for raw_sku in raw_skus:
+            sku = common_sku.copy()
+            sku['size'] = raw_sku
+            sku['sku_id'] = f"{common_sku['color']}_{raw_sku}"
+            skus.append(sku)
 
         return skus
 
     def extract_color(self, response):
-        return response.css('.product-information .product-meta .list-item:nth-child(3)::text').extract_first()
+        css = '.product-information .product-meta .list-item:nth-child(3)::text'
+        return response.css(css).extract_first()
 
     def extract_market(self):
         return 'SE'
 
     def extract_price(self, response):
-        price_details = response.xpath("//script/text()").re('("product":.*)')
-        return json.loads("{" + price_details[0])['product']['price']
+        price_details = []
+        xpath = response.xpath("//script/text()")
+
+        price_details.append(xpath.re_first('"product":{.*?"price":{"price":"(.*?.)"'))
+        price_details.append(xpath.re_first('"product":{.*?"regularPrice":"(.*?.)"'))
+        price_details.append(self.extract_currency())
+
+        return price_details
 
     def extract_retailer(self):
         return 'intersport.se'
@@ -138,4 +143,4 @@ class InterSportSpider(CrawlSpider):
 
     def extract_title(self, response):
         title = response.css('title::text').extract_first()
-        return title.split('|')[0] if title else title
+        return title.split('|')[0] or None

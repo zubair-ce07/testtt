@@ -1,7 +1,7 @@
-from scrapy import Item as it, Field
+from scrapy import Item as scrapy_item, Field
 
 
-class Item(it):
+class Item(scrapy_item):
     name = Field()
     retailer_sku = Field()
     url = Field()
