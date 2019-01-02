@@ -70,12 +70,8 @@ class ProductParser(Spider):
         return raw_image_urls
 
     def extract_skus(self, response):
-        skus, price_details = [], []
-
-        price = self.extract_price(response)
-        price_details.append(price['oldPrice']['amount'])
-        price_details.append(price['finalPrice']['amount'])
-        price_details.append(self.extract_currency(response))
+        skus = []
+        price_details = self.extract_price(response)
         product_price = extract_price_details(price_details)
 
         common_sku = {}
@@ -99,7 +95,13 @@ class ProductParser(Spider):
     def extract_price(self, response):
         xpath = "//script[contains(.,'sizeRangesSort')]/text()"
         price = response.xpath(xpath).re_first('"prices":({".*?"}})')
-        return json.loads(price)
+        price = json.loads(price)
+
+        price_details = []
+        price_details.append(price['finalPrice']['amount'])
+        price_details.append(price['oldPrice']['amount'])
+        price_details.append(self.extract_currency(response))
+        return price_details
 
     def extract_retailer(self):
         return 'drmartens-au'
@@ -113,8 +115,8 @@ class ProductParser(Spider):
     def extract_raw_skus(self, response):
         xpath = "//script[contains(.,'sizeRangesSort')]/text()"
         pattern = 'jsonConfig:{"attributes":({.*?}})'
-        raw_size_record = response.xpath(xpath).re_first(pattern)
-        return json.loads(raw_size_record)
+        raw_skus = response.xpath(xpath).re_first(pattern)
+        return json.loads(raw_skus)
 
 
 class DrmartensSpider(CrawlSpider):
