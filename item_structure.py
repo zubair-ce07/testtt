@@ -15,3 +15,4 @@ class Item(scrapy_item):
     image_urls = Field()
     trail = Field()
     skus = Field()
+    meta = Field()
