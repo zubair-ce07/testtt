@@ -10,7 +10,6 @@ class OrsayCrawlerItem(scrapy.Item):
     image_urls = scrapy.Field()
     lang = scrapy.Field()
     market = scrapy.Field()
-    retailer = scrapy.Field()
     name = scrapy.Field()
     retailer_sku = scrapy.Field()
     skus = scrapy.Field()

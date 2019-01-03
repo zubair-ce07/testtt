@@ -29,10 +29,10 @@ class OrsaySpider(CrawlSpider):
         item["category"] = json_data["categoryName"]
         item["description"] = response.css("div.product-info-block.product-details div.with-gutter::text").extract()
         item["gender"] = 'women'
+        item["image_urls"] = self.fetch_images_links(response)
         item["lang"] = 'de'
         item["market"] = 'DE'
         item["name"] = json_data["name"]
-        item["image_urls"] = self.fetch_images_links(response)
         item["retailer_sku"] = json_data["idListRef6"]
         item["skus"] = []
         item["url"] = []
@@ -40,39 +40,8 @@ class OrsaySpider(CrawlSpider):
         colors = response.css("ul.swatches.color li a::attr(href)").extract()
         if colors:
             yield scrapy.Request(
-                url=colors[0],
-                callback=self.fetch_product_skus,
-                meta={"colors": colors, "item": item},
-                dont_filter=True)
-        else:
-            yield item
-
-    def fetch_product_skus(self, response):
-        skus_data = []
-        item = response.meta['item']
-        colors = response.meta['colors']
-        sizes = self.fetch_sizes(response)
-        json_data = json.loads(response.css("div.js-product-content-gtm::attr(data-product-details)").extract_first())
-
-        for size in sizes:
-            skus_data.append(
-                {f"{json_data['idListRef6']}_{size}":
-                    {"color": json_data['color'],
-                     "currency": json_data['currency_code'],
-                     "out_of_stock": 'False' if json_data['quantity'] else 'True',
-                     "price": json_data['grossPrice'],
-                     "size": size}})
-
-        item['skus'] = skus_data
-        item["url"].append(response.url)
-        colors.remove(response.url)
-
-        if colors:
-            yield scrapy.Request(
-                url=colors[0],
-                callback=self.fetch_product_skus,
-                meta={"colors": colors, "item": item},
-                dont_filter=True)
+                url=colors[0], callback=self.fetch_item_skus,
+                meta={"colors": colors, "item": item}, dont_filter=True)
         else:
             yield item
 
@@ -84,3 +53,27 @@ class OrsaySpider(CrawlSpider):
     def fetch_sizes(response):
         sizes = response.css("div.value ul.swatches.size li.selectable a::text").extract()
         return [size.strip('\n') for size in sizes if size != '']
+
+    def fetch_item_skus(self, response):
+        skus_data = []
+        item = response.meta['item']
+        colors = response.meta['colors']
+        sizes = self.fetch_sizes(response)
+        json_data = json.loads(response.css("div.js-product-content-gtm::attr(data-product-details)").extract_first())
+
+        for size in sizes:
+            skus_data.append(
+                {f"{json_data['idListRef6']}_{size}": {"color": json_data['color'],
+                 "currency": json_data['currency_code'], "out_of_stock": 'False' if json_data['quantity'] else 'True',
+                 "price": json_data['grossPrice'], "size": size}})
+
+        item['skus'] = skus_data
+        item["url"].append(response.url)
+        colors.remove(response.url)
+
+        if colors:
+            yield scrapy.Request(
+                url=colors[0], callback=self.fetch_item_skus,
+                meta={"colors": colors, "item": item}, dont_filter=True)
+        else:
+            yield item
