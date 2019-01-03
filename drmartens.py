@@ -72,19 +72,16 @@ class ProductParser(Spider):
     def extract_skus(self, response):
         skus = []
         price_details = self.extract_price(response)
-        product_price = extract_price_details(price_details)
-
-        common_sku = {}
+        common_sku = extract_price_details(price_details)
         raw_skus = self.extract_raw_skus(response)
         common_sku['color'] = raw_skus['93']['options'][0]['label']
-        common_sku.update(product_price)
 
         for raw_sku in raw_skus['243']['options']:
             sku = common_sku.copy()
             sku['size'] = raw_sku['label']
             sku['sku_id'] = f"{common_sku['color']}_{raw_sku['label']}"
             if not raw_sku['products']:
-                sku['out_of_stockand'] = True
+                sku['out_of_stock'] = True
             skus.append(sku)
 
         return skus
@@ -93,15 +90,7 @@ class ProductParser(Spider):
         return 'AU'
 
     def extract_price(self, response):
-        xpath = "//script[contains(.,'sizeRangesSort')]/text()"
-        price = response.xpath(xpath).re_first('"prices":({".*?"}})')
-        price = json.loads(price)
-
-        price_details = []
-        price_details.append(price['finalPrice']['amount'])
-        price_details.append(price['oldPrice']['amount'])
-        price_details.append(self.extract_currency(response))
-        return price_details
+        return response.css('.price-container .price::text').extract()
 
     def extract_retailer(self):
         return 'drmartens-au'
