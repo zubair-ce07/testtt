@@ -21,6 +21,7 @@ class ProductParser(Spider):
         item['retailer_sku'] = product_id
         item['spider_name'] = 'wefashion'
         item['brand'] = self.extract_brand(response)
+        item['care'] = self.extract_care(response)
         item['category'] = self.extract_category(response)
         item['market'] = self.extract_market()
         item['retailer'] = self.extract_retailer()
@@ -45,6 +46,10 @@ class ProductParser(Spider):
     def extract_name(self, response):
         return response.css('.product-name::text').extract_first().strip()
 
+    def extract_care(self, response):
+        care = response.css('.washingInstructions::text').extract()
+        return [cr.strip() for cr in care if cr.strip()]
+
     def extract_description(self, response):
         description = response.css('.product-details .tab-content::text').extract_first()
         return [des.strip() for des in description.split('.') if des.strip()]
@@ -53,21 +58,19 @@ class ProductParser(Spider):
         return response.css('.productcarouselslides img::attr(data-image-replacement)').extract()
 
     def extract_skus(self, response):
-        skus = []
+        skus = {}
         price = self.extract_price(response)
-        price_details = extract_price_details(price)
-
-        common_sku = {}
-        colours_data = response.css('.swatches.color a::text').extract()
+        common_sku = extract_price_details(price)
         raw_skus = response.css('.swatches.size .emptyswatch a::text').extract()
-        common_sku['color'] = [color.strip() for color in colours_data]
-        common_sku.update(price_details)
+        sku_colors = response.css('.swatches.color a::text').extract()
 
         for raw_sku in raw_skus:
-            sku = common_sku.copy()
-            sku['size'] = raw_sku.strip()
-            sku['sku_id'] = f"{common_sku['color'][0]}_{raw_sku.strip()}"
-            skus.append(sku)
+            for sku_color in sku_colors:
+                sku = common_sku.copy()
+                sku['color'] = sku_color.strip()
+                sku['size'] = raw_sku.strip()
+                sku['sku_id'] = f"{sku['color']}_{sku['size']}"
+                skus[sku['sku_id']] = sku
 
         return skus
 
@@ -86,14 +89,8 @@ class ProductParser(Spider):
         return 'wefashion.de'
 
     def extract_price(self, response):
-        price_details = []
-        product_obj = response.xpath("//script[contains(., 'productObj')]/text()")
-
-        price_details.append(product_obj.re_first('price":"(.*?)"'))
-        price_details.append(response.css('.price-standard::text').extract_first())
-        price_details.append(product_obj.re_first('currencyCode":"(.*?)"'))
-
-        return price_details
+        price_map = response.css('.product-content .product-price div::text').extract()
+        return [price.strip() for price in price_map if price.strip()]
 
 
 class WeFashionSpider(CrawlSpider):
