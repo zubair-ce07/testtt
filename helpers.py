@@ -14,8 +14,9 @@ CURRENCY_MAP = {
 def extract_price_details(price_record):
     prices_map = []
     for record in price_record:
-        if record:
-            prices_map.append(''.join(re.findall(r'\d+', record)))
+        price = ''.join(re.findall(r'\d+', record))
+        if price:
+            prices_map.append(price)
 
     prices_map.sort()
     price_details = {}
