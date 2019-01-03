@@ -14,3 +14,4 @@ class OrsayCrawlerItem(scrapy.Item):
     retailer_sku = scrapy.Field()
     skus = scrapy.Field()
     url = scrapy.Field()
+    req_list = scrapy.Field()
