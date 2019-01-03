@@ -69,20 +69,17 @@ class ProductParser(Spider):
         return response.css('.images a::attr(href)').extract()
 
     def extract_skus(self, response):
-        skus = []
+        skus = {}
         price = self.extract_price(response)
-        price_details = extract_price_details(price)
-
-        common_sku = {}
+        common_sku = extract_price_details(price)
         common_sku['color'] = self.extract_color(response)
-        common_sku.update(price_details)
         raw_skus = response.css('.button-list .item-button:enabled::text').extract()
 
         for raw_sku in raw_skus:
             sku = common_sku.copy()
             sku['size'] = raw_sku
             sku['sku_id'] = f"{common_sku['color']}_{raw_sku}"
-            skus.append(sku)
+            skus[sku['sku_id']] = sku
 
         return skus
 
