@@ -1,4 +1,6 @@
-from scrapy import Spider
+import json
+
+from scrapy import Spider, Request
 from scrapy.contrib.spiders import CrawlSpider, Rule
 from scrapy.linkextractor import LinkExtractor
 
@@ -30,8 +32,28 @@ class ProductParser(Spider):
         item['image_urls'] = self.extract_image_urls(response)
         item['category'] = self.extract_categories(response)
         item['skus'] = self.extract_skus(response)
+        item['meta'] = self.extract_requests(response)
 
-        return item
+        return self.item_or_request(item)
+
+    def extract_requests(self, response):
+        request_urls = response.css('.product-information .slider-container .list-item a::attr(href)').extract()
+        requests = [response.urljoin(url) for url in request_urls if url not in response.url]
+        return {'requests': requests}
+
+    def item_or_request(self, item):
+        if item['meta']['requests']:
+            url = item['meta']['requests'].pop()
+            yield Request(url=url, callback=self.parse_color_item, meta={'item':item})
+        else:
+            item.pop('meta')
+            yield item
+
+    def parse_color_item(self, response):
+        item = response.meta.get('item', {})
+        item['skus'].update(self.extract_skus(response))
+        item['image_urls'].extend(self.extract_image_urls(response))
+        return self.item_or_request(item)
 
     def is_new_item(self, product):
         if product and product not in self.seen_ids:
@@ -73,12 +95,16 @@ class ProductParser(Spider):
         price = self.extract_price(response)
         common_sku = extract_price_details(price)
         common_sku['color'] = self.extract_color(response)
-        raw_skus = response.css('.button-list .item-button:enabled::text').extract()
+        raw_skus = self.extract_raw_skus(response)
 
-        for raw_sku in raw_skus:
+        for raw_sku in json.loads(raw_skus):
             sku = common_sku.copy()
-            sku['size'] = raw_sku
-            sku['sku_id'] = f"{common_sku['color']}_{raw_sku}"
+            sku['size'] = raw_sku['label']
+            sku['sku_id'] = f"{common_sku['color']}_{sku['size']}"
+            stock = raw_sku['saldo']
+            if not stock or stock[0]['quantityAvailable'] < 1:
+                sku['out_of_stock'] = True
+
             skus[sku['sku_id']] = sku
 
         return skus
@@ -106,6 +132,10 @@ class ProductParser(Spider):
     def extract_currency(self):
         return 'SEK'
 
+    def extract_raw_skus(self, response):
+        xpath = "//script[contains(., 'sizes')]/text()"
+        pattern = '"sizes":(.*),"supplierItemNumber"'
+        return response.xpath(xpath).re_first(pattern)
 
 class InterSportSpider(CrawlSpider):
     name = 'intersport-crawl-spider'
