@@ -32,28 +32,29 @@ class ProductParser(Spider):
         item['image_urls'] = self.extract_image_urls(response)
         item['category'] = self.extract_categories(response)
         item['skus'] = self.extract_skus(response)
-        item['meta'] = self.extract_requests(response)
+        item['meta'] = {'requests': self.extract_colour_requests(response)}
 
         return self.item_or_request(item)
 
-    def extract_requests(self, response):
-        request_urls = response.css('.product-information .slider-container .list-item a::attr(href)').extract()
-        requests = [response.urljoin(url) for url in request_urls if url not in response.url]
-        return {'requests': requests}
+    def parse_colour_item(self, response):
+        item = response.meta.get('item', {})
+        item['skus'].update(self.extract_skus(response))
+        item['image_urls'] += self.extract_image_urls(response)
+        return self.item_or_request(item)
+
+    def extract_colour_requests(self, response):
+        css = '.product-information .slider-container .list-item a:not([class^="item-link is-active"])::attr(href)'
+        urls = response.css(css).extract()
+        return [Request(url=response.urljoin(url), callback=self.parse_colour_item) for url in urls]
 
     def item_or_request(self, item):
         if item['meta']['requests']:
-            url = item['meta']['requests'].pop()
-            yield Request(url=url, callback=self.parse_color_item, meta={'item':item})
+            request = item['meta']['requests'].pop()
+            request.meta['item'] = item
+            yield request
         else:
             item.pop('meta')
             yield item
-
-    def parse_color_item(self, response):
-        item = response.meta.get('item', {})
-        item['skus'].update(self.extract_skus(response))
-        item['image_urls'].extend(self.extract_image_urls(response))
-        return self.item_or_request(item)
 
     def is_new_item(self, product):
         if product and product not in self.seen_ids:
@@ -64,12 +65,7 @@ class ProductParser(Spider):
 
     def extract_product_id(self, response):
         pattern = '"productPage":{"size":.*?"productNumber":"(.*?.)"'
-        product_id = response.xpath("//script/text()").re_first(pattern)
-        if not product_id:
-            return None
-
-        color = self.extract_color(response)
-        return f"{product_id}_{color}"
+        return response.xpath("//script/text()").re_first(pattern)
 
     def extract_description(self, response):
         description = response.css('.iceberg-body .m-b-half p::text').extract_first()
@@ -85,31 +81,29 @@ class ProductParser(Spider):
         return response.css('.product-information .product-meta .list-item::text').extract_first()
 
     def extract_categories(self, response):
-        return response.css('.iceberg-body .list-item a::text').extract()
+        category = response.css('.iceberg-body .list-item a::text').extract()
+        return [cat.strip() for cat in category if cat.strip()]
 
     def extract_image_urls(self, response):
         return response.css('.images a::attr(href)').extract()
 
     def extract_skus(self, response):
         skus = {}
-        price = self.extract_price(response)
-        common_sku = extract_price_details(price)
-        common_sku['color'] = self.extract_color(response)
-        raw_skus = self.extract_raw_skus(response)
+        common_sku = extract_price_details(self.extract_price(response))
+        common_sku['colour'] = self.extract_colour(response)
 
-        for raw_sku in json.loads(raw_skus):
+        for raw_sku in self.extract_raw_skus(response):
             sku = common_sku.copy()
             sku['size'] = raw_sku['label']
-            sku['sku_id'] = f"{common_sku['color']}_{sku['size']}"
             stock = raw_sku['saldo']
             if not stock or stock[0]['quantityAvailable'] < 1:
                 sku['out_of_stock'] = True
 
-            skus[sku['sku_id']] = sku
+            skus[f"{common_sku['colour']}_{sku['size']}"] = sku
 
         return skus
 
-    def extract_color(self, response):
+    def extract_colour(self, response):
         css = '.product-information .product-meta .list-item:nth-child(3)::text'
         return response.css(css).extract_first()
 
@@ -135,7 +129,9 @@ class ProductParser(Spider):
     def extract_raw_skus(self, response):
         xpath = "//script[contains(., 'sizes')]/text()"
         pattern = '"sizes":(.*),"supplierItemNumber"'
-        return response.xpath(xpath).re_first(pattern)
+        raw_skus = response.xpath(xpath).re_first(pattern)
+        return json.loads(raw_skus)
+
 
 class InterSportSpider(CrawlSpider):
     name = 'intersport-crawl-spider'
