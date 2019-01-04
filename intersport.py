@@ -68,10 +68,10 @@ class ProductParser(Spider):
         return response.xpath("//script/text()").re_first(pattern)
 
     def extract_description(self, response):
-        description = response.css('.iceberg-body .m-b-half p::text').extract_first()
+        description = response.css('.iceberg-body .m-b-half p::text').extract()
         if not description:
-            return []
-        return [des.strip() for des in description.split('.') if des.strip()]
+            return description
+        return [des.strip() for des in description[0].split('.') if des.strip()]
 
     def extract_name(self, response):
         return response.css('.product-name::text').extract_first()
