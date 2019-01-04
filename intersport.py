@@ -69,6 +69,8 @@ class ProductParser(Spider):
 
     def extract_description(self, response):
         description = response.css('.iceberg-body .m-b-half p::text').extract_first()
+        if not description:
+            return []
         return [des.strip() for des in description.split('.') if des.strip()]
 
     def extract_name(self, response):
