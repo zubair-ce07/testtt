@@ -71,15 +71,14 @@ class ProductParser(Spider):
 
     def extract_skus(self, response):
         skus = []
-        price_details = self.extract_price(response)
-        common_sku = extract_price_details(price_details)
+        common_sku = extract_price_details(self.extract_price(response))
         raw_skus = self.extract_raw_skus(response)
-        common_sku['color'] = raw_skus['93']['options'][0]['label']
+        common_sku['colour'] = raw_skus['93']['options'][0]['label']
 
         for raw_sku in raw_skus['243']['options']:
             sku = common_sku.copy()
             sku['size'] = raw_sku['label']
-            sku['sku_id'] = f"{common_sku['color']}_{raw_sku['label']}"
+            sku['sku_id'] = f"{common_sku['colour']}_{raw_sku['label']}"
             if not raw_sku['products']:
                 sku['out_of_stock'] = True
             skus.append(sku)

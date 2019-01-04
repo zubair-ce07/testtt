@@ -12,21 +12,21 @@ CURRENCY_MAP = {
 
 
 def extract_price_details(price_record):
-    prices_map = []
+    prices = []
     for record in price_record:
         price = ''.join(re.findall(r'\d+', record))
         if price:
-            prices_map.append(price)
+            prices.append(price)
 
-    prices_map.sort()
-    price_details = {}
-    price, *previous_price = prices_map
-    price_details['price'] = price
+    prices.sort()
+    price_map = {}
+    price_map['price'], *previous_price = prices
     if previous_price:
-        price_details['previous_price'] = previous_price
+        price_map['previous_price'] = previous_price
 
-    currency = [CURRENCY_MAP[cur] for cur in CURRENCY_MAP for rcd in price_record if rcd and cur in rcd]
+    price_soup = ' '.join(price_record)
+    currency = [c for c_key, c in CURRENCY_MAP.items() if c_key in price_soup]
     if currency:
-        price_details['currency'] = currency[0]
+        price_map['currency'] = currency[0]
 
-    return price_details
+    return price_map
