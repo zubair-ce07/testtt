@@ -59,24 +59,23 @@ class ProductParser(Spider):
 
     def extract_skus(self, response):
         skus = {}
-        price = self.extract_price(response)
-        common_sku = extract_price_details(price)
-        raw_skus = response.css('.swatches.size .emptyswatch a::text').extract()
-        sku_colors = response.css('.swatches.color a::text').extract()
+        common_sku = extract_price_details(self.extract_price_text(response))
+        sizes = response.css('.swatches.size .emptyswatch a::text').extract()
+        colours = response.css('.swatches.color a::text').extract()
 
-        for raw_sku in raw_skus:
-            for sku_color in sku_colors:
+        for size in sizes:
+            for colour in colours:
                 sku = common_sku.copy()
-                sku['color'] = sku_color.strip()
-                sku['size'] = raw_sku.strip()
-                sku['sku_id'] = f"{sku['color']}_{sku['size']}"
-                skus[sku['sku_id']] = sku
+                sku['colour'] = colour.strip()
+                sku['size'] = size.strip()
+                skus[f"{sku['colour']}_{sku['size']}"] = sku
 
         return skus
 
     def extract_category(self, response):
         xpath = "//script[contains(., 'productObj')]/text()"
-        return response.xpath(xpath).re_first('category":"(.*?)"')
+        category = response.xpath(xpath).re('category":"(.*?)"')
+        return [cat.strip() for cat in category if cat.strip()]
 
     def extract_market(self):
         return 'EU'
@@ -88,7 +87,7 @@ class ProductParser(Spider):
     def extract_retailer(self):
         return 'wefashion.de'
 
-    def extract_price(self, response):
+    def extract_price_text(self, response):
         price_map = response.css('.product-content .product-price div::text').extract()
         return [price.strip() for price in price_map if price.strip()]
 
