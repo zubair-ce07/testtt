@@ -15,7 +15,6 @@ class OrsaySpider(CrawlSpider):
     product_css = [".js-product-grid-portion"]
     rules = (
         Rule(LinkExtractor(restrict_css=listing_css), callback="parse_pagination"),
-
         Rule(LinkExtractor(restrict_css=product_css), callback="parse_product_detail")
     )
 
