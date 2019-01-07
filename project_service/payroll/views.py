@@ -49,7 +49,6 @@ class EmployeesPayrollViewset(viewsets.ViewSet):
         Create a payslip for employee
         '''
         payslip_data = request.data
-        user = request.GET.get('user', 'admin')
 
         try:
             payslip = OdooPayslip.create(data=payslip_data)

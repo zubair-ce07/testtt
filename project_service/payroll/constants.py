@@ -11,3 +11,11 @@ Constant variables
 '''
 LIMIT = 200
 OFFSET = 0
+
+'''
+
+'''
+BASIC = 1
+ALLOWANCE = 2
+DEDUCTION = 4
+NET = 5

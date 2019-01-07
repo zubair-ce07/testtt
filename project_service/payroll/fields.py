@@ -14,3 +14,8 @@ PAYSLIP_DETAILS = [
     'worked_days_line_ids', 'input_line_ids', 'line_ids',
     'details_by_salary_rule_category', 'paid', 'display_name'
 ]
+
+PAYSLIP_LINE_DETAILS = [
+    'name', 'code', 'category_id', 'sequence', 'total',
+    'quantity', 'rate', 'salary_rule_id', 'amount'
+]
