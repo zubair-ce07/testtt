@@ -3,7 +3,7 @@ from scrapy.contrib.spiders import CrawlSpider, Rule
 from scrapy.linkextractor import LinkExtractor
 
 from item_structure import Item
-from helpers import extract_price_details
+from helpers import extract_price_details, extract_gender
 
 
 class ProductParser(Spider):
@@ -21,6 +21,7 @@ class ProductParser(Spider):
         item['retailer_sku'] = product_id
         item['spider_name'] = 'wefashion'
         item['brand'] = self.extract_brand(response)
+        item['gender'] = extract_gender(item['name'])
         item['care'] = self.extract_care(response)
         item['category'] = self.extract_category(response)
         item['market'] = self.extract_market()

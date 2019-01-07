@@ -16,3 +16,4 @@ class Item(ScrapyItem):
     trail = Field()
     skus = Field()
     meta = Field()
+    gender = Field()
