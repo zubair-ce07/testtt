@@ -15,18 +15,19 @@ class OrsaySpider(CrawlSpider):
     product_css = [".js-product-grid-portion"]
     rules = (
         Rule(LinkExtractor(restrict_css=listing_css), callback="parse_pagination"),
-
         Rule(LinkExtractor(restrict_css=product_css), callback="parse_product_detail")
     )
 
     def parse_pagination(self, response):
-        total_items = self.parse_products_count(response)
-        for items_count in range(0, total_items, MAX_PRODUCT_DISPLAY):
+        total_products = self.parse_products_count(response)
+
+        for items_count in range(0, total_products+1, MAX_PRODUCT_DISPLAY):
             next_url = response.url + "?sz=" + str(items_count)
             yield Request(url=next_url, callback=self.parse)
 
     def parse_products_count(self, response):
-        pages = response.css(".load-more-progress::attr(data-max)").extract_first()
+        total_product_css = ".load-more-progress::attr(data-max)"
+        pages = response.css(total_product_css).extract_first()
         return int(pages) if pages else 0
 
     def parse_product_detail(self, response):
@@ -58,12 +59,12 @@ class OrsaySpider(CrawlSpider):
         json_data = self.raw_data(response)
         sizes_css = "ul.swatches.size li.selectable a::text"
         sizes = response.css(sizes_css).extract()
-        sizes = [size.strip("\n") for size in sizes if size != ""]
+        sizes = [size.strip("\n") for size in sizes if size]
 
         skus = {}
         for size in sizes:
-            sku = {}
-            sku["colour"] = json_data["color"]
+            sku = {"colour": json_data["color"]}
+            sku["currency"] = json_data["currency_code"]
             sku["currency"] = json_data["currency_code"]
             sku["out_of_stock"] = "False" if json_data["quantity"] else "True"
             sku["price"] = json_data["grossPrice"]
@@ -101,6 +102,7 @@ class OrsaySpider(CrawlSpider):
         colours = response.css(colours_css).extract()
         for colour in colours:
             colour_requests.append(Request(
-                url=response.urljoin(colour), callback=self.parse_colours,
+                url=response.urljoin(colour),
+                callback=self.parse_colours,
                 dont_filter=True))
         return colour_requests
