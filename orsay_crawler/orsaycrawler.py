@@ -3,6 +3,7 @@ import json
 from scrapy.spiders import Rule, CrawlSpider, Request
 from scrapy.linkextractors import LinkExtractor
 from orsay_crawler.items import OrsayCrawlerItem
+MAX_PRODUCT_DISPLAY = 72
 
 
 class OrsaySpider(CrawlSpider):
@@ -13,9 +14,19 @@ class OrsaySpider(CrawlSpider):
     listing_css = [".navigation .level-1"]
     product_css = [".js-product-grid-portion"]
     rules = (
-        Rule(LinkExtractor(restrict_css=listing_css), callback="parse"),
+        Rule(LinkExtractor(restrict_css=listing_css), callback="parse_pagination"),
         Rule(LinkExtractor(restrict_css=product_css), callback="parse_product_detail")
     )
+
+    def parse_pagination(self, response):
+        total_items = self.parse_products_count(response)
+        for items_count in range(0, total_items, MAX_PRODUCT_DISPLAY):
+            next_url = response.url + "?sz=" + str(items_count)
+            yield Request(url=next_url, callback=self.parse)
+
+    def parse_products_count(self, response):
+        pages = response.css(".load-more-progress::attr(data-max)").extract_first()
+        return int(pages) if pages else 0
 
     def parse_product_detail(self, response):
         item = OrsayCrawlerItem()
