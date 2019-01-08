@@ -49,11 +49,6 @@ def extract_price_details(price_record):
     return price_map
 
 
-def extract_gender(product_info):
-    gender = 'Unisex-Adults'
-
-    gender_mapped = [g_val for g_key, g_val in GENDER_MAP.items() if g_key in product_info.lower()]
-    if gender_mapped:
-        gender = gender_mapped[0]
-
-    return gender
+def extract_gender(soup):
+    genders = [gender for g_key, gender in GENDER_MAP.items() if g_key in soup.lower()]
+    return (genders or ['Unisex-Adults'])[0]
