@@ -21,7 +21,7 @@ class ProductParser(Spider):
         item['retailer_sku'] = product_id
         item['spider_name'] = 'wefashion'
         item['brand'] = self.extract_brand(response)
-        item['gender'] = extract_gender(item['name'])
+        item['gender'] = self.extract_gender(response)
         item['care'] = self.extract_care(response)
         item['category'] = self.extract_category(response)
         item['market'] = self.extract_market()
@@ -57,6 +57,9 @@ class ProductParser(Spider):
 
     def extract_image_urls(self, response):
         return response.css('.productcarouselslides img::attr(data-image-replacement)').extract()
+
+    def extract_gender(self, response):
+        return extract_gender(response.css('.product-name::text').extract_first())
 
     def extract_skus(self, response):
         skus = {}

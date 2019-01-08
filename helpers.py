@@ -15,12 +15,16 @@ GENDER_MAP = {
     'herren': 'Men',
     'women': 'Women',
     'damen': 'Women',
+    'herr': 'Women',
+    'dam': 'Men',
     'boy': 'Boy',
     'jungen': 'Boy',
     'girl': 'Girl',
     'mädchen': 'Girl',
     'kid': 'Unisex-Kids',
     'kinder': 'Unisex-Kids',
+    'barn': 'Unisex-Kids',
+    'herr, dam': 'Unisex-Adults',
 }
 
 
