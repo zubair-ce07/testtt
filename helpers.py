@@ -11,6 +11,7 @@ CURRENCY_MAP = {
 }
 
 GENDER_MAP = {
+    'herr, dam': 'Unisex-Adults',
     'men': 'Men',
     'herren': 'Men',
     'women': 'Women',
@@ -24,7 +25,6 @@ GENDER_MAP = {
     'kid': 'Unisex-Kids',
     'kinder': 'Unisex-Kids',
     'barn': 'Unisex-Kids',
-    'herr, dam': 'Unisex-Adults',
 }
 
 
