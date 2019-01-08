@@ -21,5 +21,6 @@ urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
     url(r'^api-token-auth/', obtain_jwt_token),
     url(r'^api-token-refresh/', refresh_jwt_token),
-    url(r'^payroll/', include('payroll.urls'))
+    url(r'^payroll/', include('payroll.urls')),
+    url(r'payroll_extra/', include('payroll_extra_fields.urls'))
 ]

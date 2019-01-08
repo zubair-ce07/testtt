@@ -19,3 +19,9 @@ PAYSLIP_LINE_DETAILS = [
     'name', 'code', 'category_id', 'sequence', 'total',
     'quantity', 'rate', 'salary_rule_id', 'amount'
 ]
+
+EMPLOYEES_SUMMARY = [
+    "name", "work_phone", "work_email",
+    "company_id", "department_id", "job_id",
+    "parent_id", "coach_id", "message_needaction"
+]
