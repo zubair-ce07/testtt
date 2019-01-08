@@ -8,7 +8,6 @@ from item_structure import Item
 from helpers import extract_price_details, extract_gender, item_or_request
 
 
-
 class ProductParser(Spider):
     def __init__(self):
         self.seen_ids = set()
