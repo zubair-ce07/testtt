@@ -52,3 +52,13 @@ def extract_price_details(price_record):
 def extract_gender(soup):
     genders = [gender for g_key, gender in GENDER_MAP.items() if g_key in soup.lower()]
     return (genders or ['Unisex-Adults'])[0]
+
+
+def item_or_request(item):
+    if item['meta']['requests']:
+        request = item['meta']['requests'].pop()
+        request.meta['item'] = item
+        yield request
+    else:
+        item.pop('meta')
+        yield item
