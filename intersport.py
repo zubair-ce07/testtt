@@ -21,7 +21,7 @@ class ProductParser(Spider):
 
         item['retailer_sku'] = retailer_sku
         item['name'] = self.extract_name(response)
-        item['gender'] = self.extract_product_gender(response)
+        item['gender'] = self.extract_gender(response)
         item['spider_name'] = 'intersport'
         item['brand'] = self.extract_brand(response)
         item['care'] = self.extract_care(response)
@@ -113,7 +113,7 @@ class ProductParser(Spider):
     def extract_market(self):
         return 'SE'
 
-    def extract_product_gender(self, response):
+    def extract_gender(self, response):
         product_info = ' '.join(response.css('.product-information-head *::text').extract())
         return extract_gender(product_info)
 

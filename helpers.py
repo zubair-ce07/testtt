@@ -11,12 +11,13 @@ CURRENCY_MAP = {
 }
 
 GENDER_MAP = {
+    'herr, dam': 'Unisex-Adults',
     'men': 'Men',
     'herren': 'Men',
-    'dam': 'Men',
     'women': 'Women',
     'damen': 'Women',
     'herr': 'Women',
+    'dam': 'Men',
     'boy': 'Boy',
     'jungen': 'Boy',
     'girl': 'Girl',
@@ -52,12 +53,7 @@ def extract_gender(product_info):
     gender = 'Unisex-Adults'
 
     gender_mapped = [g_val for g_key, g_val in GENDER_MAP.items() if g_key in product_info.lower()]
-
-    if gender_mapped and 'Men' in gender_mapped and 'Women' in gender_mapped:
-        gender = 'Unisex-Adults'
-    elif 'Boy' in gender_mapped and 'Girl' in gender_mapped:
-        gender = 'Unisex-Kids'
-    elif gender_mapped:
+    if gender_mapped:
         gender = gender_mapped[0]
 
     return gender
