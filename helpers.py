@@ -10,6 +10,22 @@ CURRENCY_MAP = {
     'SEK': 'SEK',
 }
 
+GENDER_MAP = {
+    'men': 'Men',
+    'herren': 'Men',
+    'dam': 'Men',
+    'women': 'Women',
+    'damen': 'Women',
+    'herr': 'Women',
+    'boy': 'Boy',
+    'jungen': 'Boy',
+    'girl': 'Girl',
+    'mädchen': 'Girl',
+    'kid': 'Unisex-Kids',
+    'kinder': 'Unisex-Kids',
+    'barn': 'Unisex-Kids',
+}
+
 
 def extract_price_details(price_record):
     prices = []
@@ -30,3 +46,18 @@ def extract_price_details(price_record):
         price_map['currency'] = currency[0]
 
     return price_map
+
+
+def extract_gender(product_info):
+    gender = 'Unisex-Adults'
+
+    gender_mapped = [g_val for g_key, g_val in GENDER_MAP.items() if g_key in product_info.lower()]
+
+    if gender_mapped and 'Men' in gender_mapped and 'Women' in gender_mapped:
+        gender = 'Unisex-Adults'
+    elif 'Boy' in gender_mapped and 'Girl' in gender_mapped:
+        gender = 'Unisex-Kids'
+    elif gender_mapped:
+        gender = gender_mapped[0]
+
+    return gender

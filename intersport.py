@@ -5,7 +5,7 @@ from scrapy.contrib.spiders import CrawlSpider, Rule
 from scrapy.linkextractor import LinkExtractor
 
 from item_structure import Item
-from helpers import extract_price_details
+from helpers import extract_price_details, extract_gender
 
 
 class ProductParser(Spider):
@@ -21,6 +21,7 @@ class ProductParser(Spider):
 
         item['retailer_sku'] = retailer_sku
         item['name'] = self.extract_name(response)
+        item['gender'] = self.extract_product_gender(response)
         item['spider_name'] = 'intersport'
         item['brand'] = self.extract_brand(response)
         item['care'] = self.extract_care(response)
@@ -111,6 +112,10 @@ class ProductParser(Spider):
 
     def extract_market(self):
         return 'SE'
+
+    def extract_product_gender(self, response):
+        product_info = ' '.join(response.css('.product-information-head *::text').extract())
+        return extract_gender(product_info)
 
     def extract_price(self, response):
         price_details = []
