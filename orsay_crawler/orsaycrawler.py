@@ -3,7 +3,6 @@ import json
 from scrapy.spiders import Rule, CrawlSpider, Request
 from scrapy.linkextractors import LinkExtractor
 from orsay_crawler.items import OrsayCrawlerItem
-MAX_PRODUCT_DISPLAY = 72
 
 
 class OrsaySpider(CrawlSpider):
@@ -15,14 +14,14 @@ class OrsaySpider(CrawlSpider):
     product_css = [".js-product-grid-portion"]
     rules = (
         Rule(LinkExtractor(restrict_css=listing_css), callback="parse_pagination"),
-        Rule(LinkExtractor(restrict_css=product_css), callback="parse_product_detail")
+        Rule(LinkExtractor(restrict_css=product_css), callback="parse_product")
     )
 
     def parse_pagination(self, response):
         total_products = self.parse_products_count(response)
-
-        for items_count in range(0, total_products+1, MAX_PRODUCT_DISPLAY):
-            next_url = response.url + "?sz=" + str(items_count)
+        page_size = 72
+        for page in range(0, total_products+1, page_size):
+            next_url = response.url + "?sz=" + str(page)
             yield Request(url=next_url, callback=self.parse)
 
     def parse_products_count(self, response):
@@ -30,22 +29,21 @@ class OrsaySpider(CrawlSpider):
         pages = response.css(total_product_css).extract_first()
         return int(pages) if pages else 0
 
-    def parse_product_detail(self, response):
+    def parse_product(self, response):
         item = OrsayCrawlerItem()
         json_data = self.raw_data(response)
         item["brand"] = json_data["brand"]
-        item["care"] = self.parse_care(response)
+        item["care"] = self.product_care(response)
         item["category"] = json_data["categoryName"]
-        item["description"] = self.pasre_description(response)
+        item["description"] = self.product_description(response)
         item["gender"] = "women"
-        item["image_urls"] = self.parse_images_urls(response)
+        item["image_urls"] = self.product_images_urls(response)
         item["lang"] = "de"
         item["market"] = "DE"
         item["name"] = json_data["name"]
         item["retailer_sku"] = json_data["idListRef6"]
         item["url"] = response.url
         item["skus"] = {}
-
         requests = self.parse_colours_requests(response)
         return self.next_request(requests, item)
 
@@ -65,21 +63,21 @@ class OrsaySpider(CrawlSpider):
         for size in sizes:
             sku = {"colour": json_data["color"]}
             sku["currency"] = json_data["currency_code"]
-            sku["currency"] = json_data["currency_code"]
-            sku["out_of_stock"] = "False" if json_data["quantity"] else "True"
+            if not json_data["quantity"]:
+                sku["out_of_stock"] = "True"
             sku["price"] = json_data["grossPrice"]
             sku["size"] = json_data["size"]
             skus[f"{json_data['productId']}_{size}"] = sku
         return skus
 
-    def parse_images_urls(self, response):
+    def product_images_urls(self, response):
         return response.css(".thumb.js-thumb img::attr(src)").extract()
 
-    def parse_care(self, response):
+    def product_care(self, response):
         care_css = ".product-material.product-info-block.js-material-container p::text"
         return response.css(care_css).extract()
 
-    def pasre_description(self, response):
+    def product_description(self, response):
         desc_css = ".product-info-block.product-details div.with-gutter::text"
         return response.css(desc_css).extract()
 
