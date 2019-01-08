@@ -5,7 +5,8 @@ from scrapy.contrib.spiders import CrawlSpider, Rule
 from scrapy.linkextractor import LinkExtractor
 
 from item_structure import Item
-from helpers import extract_price_details, extract_gender
+from helpers import extract_price_details, extract_gender, item_or_request
+
 
 
 class ProductParser(Spider):
@@ -35,27 +36,18 @@ class ProductParser(Spider):
         item['skus'] = self.extract_skus(response)
         item['meta'] = {'requests': self.extract_colour_requests(response)}
 
-        return self.item_or_request(item)
+        return item_or_request(item)
 
     def parse_colour_item(self, response):
         item = response.meta.get('item', {})
         item['skus'].update(self.extract_skus(response))
         item['image_urls'] += self.extract_image_urls(response)
-        return self.item_or_request(item)
+        return item_or_request(item)
 
     def extract_colour_requests(self, response):
         css = '.product-information .slider-container .list-item a:not([class^="item-link is-active"])::attr(href)'
         urls = response.css(css).extract()
         return [Request(url=response.urljoin(url), callback=self.parse_colour_item) for url in urls]
-
-    def item_or_request(self, item):
-        if item['meta']['requests']:
-            request = item['meta']['requests'].pop()
-            request.meta['item'] = item
-            yield request
-        else:
-            item.pop('meta')
-            yield item
 
     def is_new_item(self, product):
         if product and product not in self.seen_ids:
