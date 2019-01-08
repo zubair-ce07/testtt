@@ -10,6 +10,23 @@ CURRENCY_MAP = {
     'SEK': 'SEK',
 }
 
+GENDER_MAP = {
+    'herr, dam': 'Unisex-Adults',
+    'men': 'Men',
+    'herren': 'Men',
+    'women': 'Women',
+    'damen': 'Women',
+    'herr': 'Women',
+    'dam': 'Men',
+    'boy': 'Boy',
+    'jungen': 'Boy',
+    'girl': 'Girl',
+    'mädchen': 'Girl',
+    'kid': 'Unisex-Kids',
+    'kinder': 'Unisex-Kids',
+    'barn': 'Unisex-Kids',
+}
+
 
 def extract_price_details(price_record):
     prices = []
@@ -30,3 +47,18 @@ def extract_price_details(price_record):
         price_map['currency'] = currency[0]
 
     return price_map
+
+
+def extract_gender(soup):
+    genders = [gender for g_key, gender in GENDER_MAP.items() if g_key in soup.lower()]
+    return (genders or ['Unisex-Adults'])[0]
+
+
+def item_or_request(item):
+    if item['meta']['requests']:
+        request = item['meta']['requests'].pop()
+        request.meta['item'] = item
+        yield request
+    else:
+        item.pop('meta')
+        yield item
