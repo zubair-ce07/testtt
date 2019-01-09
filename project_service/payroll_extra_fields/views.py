@@ -1,15 +1,12 @@
-from xmlrpc import client as xmlrpc_client
-
 from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
 from rest_framework import generics, status, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from payroll.constants import DB, LIMIT, OFFSET
-from payroll.fields import PAYSLIPS_SUMMARY, PAYSLIP_DETAILS
+from payroll.constants import LIMIT, OFFSET
 from payroll.permissions import IsAccountant
 from .models import Payslip
-from .utils import OdooAuthentication, OdooBadCallException, OdooPayslip
+from .utils import OdooBadCallException, OdooPayslip
 from .serializers import PayslipSerializer
 
 
@@ -120,4 +117,6 @@ class ConfirmPayslipView(generics.UpdateAPIView):
     def partial_update(self, request, *args, **kwargs):
         payslip_ids = request.data.get('payslip_ids', [])
 
-        OdooPayslip.bulk_update(ids=payslip_ids, data={'state': 'done'})
+        if OdooPayslip.bulk_update(ids=payslip_ids, data={'state': 'done'}):
+            return Response(status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_400_BAD_REQUEST)

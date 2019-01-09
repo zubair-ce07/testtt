@@ -56,55 +56,65 @@ class OdooAuthentication:
         return (OdooAuthentication.get_uid(), OdooAuthentication.get_models())
 
 
-class OdooPayslipLine:
+class OdooORMAuthMixin:
     @staticmethod
-    def __execute_kw(method, *args):
+    def _execute_kw(method, *args, **kwargs):
         uid, models = OdooAuthentication.get_uid_and_models()
 
         try:
-            return models.execute_kw(DB, uid, PASSWORD, 'hr.payslip.line', method, *args)
+            return models.execute_kw(DB, uid, PASSWORD, kwargs.get('model'), method, *args)
         except xmlrpc_client.Fault as error:
             raise OdooBadCallException(error.faultString)
+
+
+class OdooPayslipLine(OdooORMAuthMixin):
+    '''
+    Make payslip line crud requests to odoo
+    '''
+    @staticmethod
+    def _execute_kw(method, *args, **kwargs):
+        return super(OdooPayslipLine, OdooPayslipLine)._execute_kw(method, *args, model='hr.payslip.line')
 
     @staticmethod
     def filter(**kwargs):
         '''
-        Method to filter payslips
+        Method to filter payslip lines
         '''
         offset = kwargs.pop('offset') if 'offset' in kwargs else OFFSET
         limit = kwargs.pop('limit') if 'limit' in kwargs else LIMIT
 
         params = [[key, 'in', kwargs[key]] for key in kwargs]
 
-        return OdooPayslipLine.__execute_kw('search_read', [params], {
+        return OdooPayslipLine._execute_kw('search_read', [params], {
             'fields': PAYSLIP_LINE_DETAILS, 'offset': offset, 'limit':  limit
         })
 
     @staticmethod
     def update(id=None, data=None):
-        OdooPayslipLine.__execute_kw('write', [[id], data])
+        '''
+        Method to update payslip line
+        '''
+        OdooPayslipLine._execute_kw('write', [[id], data])
 
     @staticmethod
     def delete(ids):
-        OdooPayslipLine.__execute_kw('unlink', [ids])
+        '''
+        Method to delete payslip lines
+        '''
+        OdooPayslipLine._execute_kw('unlink', [ids])
 
 
-class OdooPayslip:
+class OdooPayslip(OdooORMAuthMixin):
     '''
-    Make payslip crud request to odoo
+    Make payslip crud requests to odoo
     '''
     @staticmethod
-    def __execute_kw(method, *args):
-        uid, models = OdooAuthentication.get_uid_and_models()
-
-        try:
-            return models.execute_kw(DB, uid, PASSWORD, 'hr.payslip', method, *args)
-        except xmlrpc_client.Fault as error:
-            raise OdooBadCallException(error.faultString)
+    def _execute_kw(method, *args, **kwargs):
+        return super(OdooPayslip, OdooPayslip)._execute_kw(method, *args, model='hr.payslip')
 
     @staticmethod
     def __update_payslip_line(id, data):
-        OdooPayslip.__execute_kw('write', [[id], data])
+        OdooPayslip._execute_kw('write', [[id], data])
 
         total_amount = 0
         for payslip_line in OdooPayslipLine.filter(slip_id=[id]):
@@ -124,7 +134,7 @@ class OdooPayslip:
         '''
         params = [[key, '=', kwargs[key]] for key in kwargs]
 
-        payslips = OdooPayslip.__execute_kw('search_read', [params], {'fields': PAYSLIP_DETAILS})
+        payslips = OdooPayslip._execute_kw('search_read', [params], {'fields': PAYSLIP_DETAILS})
 
         if payslips and len(payslips) == 1:
             # Get fields from our end
@@ -142,12 +152,12 @@ class OdooPayslip:
         '''
         Method to filter payslips
         '''
-        offset = kwargs.pop('offset') if 'offset' in kwargs else OFFSET
-        limit = kwargs.pop('limit') if 'limit' in kwargs else LIMIT
+        offset = int(kwargs.pop('offset')) if 'offset' in kwargs else OFFSET
+        limit = int(kwargs.pop('limit')) if 'limit' in kwargs else LIMIT
 
         params = [[key, '=', kwargs[key]] for key in kwargs]
 
-        odoo_payslips = OdooPayslip.__execute_kw('search_read', [params], {
+        odoo_payslips = OdooPayslip._execute_kw('search_read', [params], {
             'fields': PAYSLIPS_SUMMARY, 'offset': offset, 'limit':  limit
         })
 
@@ -174,7 +184,7 @@ class OdooPayslip:
             'line_ids': data.pop('line_ids') if 'line_ids' in data else []
         }
         description = data.pop('description') if 'description' in data else ''
-        payslip_id = OdooPayslip.__execute_kw('create', [data])
+        payslip_id = OdooPayslip._execute_kw('create', [data])
 
         # Adding extra fields' data
         payslip_serializer = PayslipSerializer(data={'description': description,
@@ -182,7 +192,7 @@ class OdooPayslip:
         if payslip_serializer.is_valid():
             payslip_serializer.save()
 
-            if OdooPayslip.__execute_kw('compute_sheet', [[payslip_id]]):
+            if OdooPayslip._execute_kw('compute_sheet', [[payslip_id]]):
                 return OdooPayslip.update(id=payslip_id, data=payslip_data)
 
             return OdooPayslip.get(id=payslip_id)
@@ -205,7 +215,7 @@ class OdooPayslip:
         if 'line_ids' in data:
             OdooPayslip.__update_payslip_line(id, data)
         else:
-            OdooPayslip.__execute_kw('write', [[id], data])
+            OdooPayslip._execute_kw('write', [[id], data])
 
         return OdooPayslip.get(id=id)
 
@@ -214,7 +224,7 @@ class OdooPayslip:
         '''
         Method to delete payslips
         '''
-        OdooPayslip.__execute_kw('unlink', [ids])
+        OdooPayslip._execute_kw('unlink', [ids])
 
         Payslip.objects.filter(odoo_payslip_id__in=ids).delete()
 
@@ -223,23 +233,18 @@ class OdooPayslip:
         '''
         Method to bulk update payslips data
         '''
-        OdooPayslip.__execute_kw('write', [ids, data])
+        return OdooPayslip._execute_kw('write', [ids, data])
 
 
-class OdooEmployee:
+class OdooEmployee(OdooORMAuthMixin):
 
     @staticmethod
-    def __execute_kw(method, *args):
-        uid, models = OdooAuthentication.get_uid_and_models()
-
-        try:
-            return models.execute_kw(DB, uid, PASSWORD, 'hr.employee', method, *args)
-        except xmlrpc_client.Fault as error:
-            raise OdooBadCallException(error.faultString)
+    def _execute_kw(method, *args, **kwargs):
+        return super(OdooEmployee, OdooEmployee)._execute_kw(method, *args, model='hr.employee')
 
     @staticmethod
     def compute_sheet(id=None):
-        return OdooEmployee.__execute_kw('compute_sheet', [[id]])
+        return OdooEmployee._execute_kw('compute_sheet', [[id]])
 
     @staticmethod
     def filter(**kwargs):
@@ -251,6 +256,6 @@ class OdooEmployee:
 
         params = [[key, '=', kwargs[key]] for key in kwargs]
 
-        return OdooEmployee.__execute_kw('search_read', [params], {
+        return OdooEmployee._execute_kw('search_read', [params], {
             'fields': EMPLOYEES_SUMMARY, 'offset': offset, 'limit':  limit
         })
