@@ -1,0 +1,18 @@
+type,postal_code,distributor,zone
+electricity,3128,United Energy,
+electricity,3075,AusNet,
+electricity,3000,CitiPower,
+electricity,3013,Jemena,
+electricity,3018,Powercor,
+gas,3441,Ausnet,Adjoining West
+gas,3011,Ausnet,Central 1
+gas,3024,Ausnet,Central 2
+gas,3250,Ausnet,West
+gas,3875,Envestra,Bairnsdale
+gas,3812,Envestra,Cardinia
+gas,3198,Envestra,Central 1
+gas,3000,Envestra,Central 2
+gas,3500,Mildura,
+gas,3004,Multinet,1
+gas,3150,Multinet,2
+gas,3139,Yarra Valley,
