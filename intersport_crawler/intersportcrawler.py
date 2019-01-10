@@ -69,7 +69,8 @@ class intersportcrawler(CrawlSpider):
 
     def product_skus(self, response):
         skus = {}
-        colours = self.product_colours(response)
+        colour_index = 0
+        colours = self.product_sizes(response, colour_index)
         for colour in colours:
             skus.update(self.skus(response, colour))
         return skus
@@ -77,19 +78,16 @@ class intersportcrawler(CrawlSpider):
     def skus(self, response, colour):
         json_data = self.product_raw_data(response)
         product_data = json_data['ecommerce']['detail']['products']
-        currency = json_data['ecommerce']['currencyCode']
-        price = product_data[0]['price']
-        quantity = product_data[0]['quantity']
         sizes = self.product_sizes(response)
         skus = {}
         for size in sizes:
             sku = {}
             if colour:
                 sku['colour']: colour
-            sku['currency'] = currency
-            if not quantity:
-                sku['out_of_stock'] = quantity
-            sku['price'] = price
+            if not product_data[0]['quantity']:
+                sku['out_of_stock'] = product_data[0]['quantity']
+            sku['currency'] = json_data['ecommerce']['currencyCode']
+            sku['price'] = product_data[0]['price']
             sku['size'] = size
             skus[f'{self.product_id(response)}_{size}'] = sku
         return skus
@@ -124,23 +122,11 @@ class intersportcrawler(CrawlSpider):
         list_data = raw_data['ecommerce']['detail']['products']
         return list_data[0]['category']
 
-    def product_colours(self, response):
-        colours = {}
-        css = 'script:contains("AEC.SUPER") ::text'
-        raw_data = response.css(css).re_first('AEC.SUPER = (\[.*\])')
-        json_data = json.loads(raw_data)[0]['options']
-        for k, v in [(key, d[key]) for d in json_data for key in d]:
-            if k not in colours:
-                colours[k] = [v]
-            else:
-                colours[k].append(v)
-        return colours['label']
-
-    def product_sizes(self, response):
+    def product_sizes(self, response, index=1):
         sizes = {}
         css = 'script:contains("AEC.SUPER") ::text'
         raw_data = response.css(css).re_first('AEC.SUPER = (\[.*\])')
-        json_data = json.loads(raw_data)[1]['options']
+        json_data = json.loads(raw_data)[index]['options']
         for k, v in [(key, d[key]) for d in json_data for key in d]:
             if k not in sizes:
                 sizes[k] = [v]
