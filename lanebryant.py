@@ -85,11 +85,14 @@ class ProductParser(Spider):
     def extract_skus(self, response):
         skus = {}
         in_stock_items = self.extract_in_stock_items(response)
+        colour_map = self.extract_colour_map(response)
+        size_map = self.extract_size_map(response)
 
         for raw_sku in self.extract_raw_skus(response):
             sku = extract_price_details(self.extract_price(raw_sku, response))
-            sku['colour'] = self.extract_colour(raw_sku['color'], response)
-            sku['size'] = self.extract_size_value(raw_sku['size'], response)
+            sku['colour'] = colour_map[raw_sku['color']]
+            sku['size'] = size_map[raw_sku['size']]
+
             if raw_sku['size'] not in in_stock_items:
                 sku['out_of_stock'] = True
 
@@ -104,9 +107,13 @@ class ProductParser(Spider):
         image_urls = response.xpath('//text()').re_first('item":(.*?])')
         return [image['s']['n'] for image in json.loads(image_urls)] if image_urls else []
 
-    def extract_size_value(self, size_id, response):
-        pattern = f'{{"id":"{size_id}".*?"value":"(.*?)"'
-        return response.xpath('//script[@id="pdpInitialData"]/text()').re_first(pattern)
+    def extract_size_map(self, response):
+        xpath = response.xpath('//script[@id="pdpInitialData"]/text()')
+        raw_skus = xpath.re_first('all_available_size_groups":\[{"values":(.*?])}],"status"')
+        if not raw_skus:
+            raw_skus = xpath.re_first('all_available_sizes":(.*?]),"product_name')
+
+        return {sku['id']: sku['value'] for raw_sku in json.loads(raw_skus) for sku in raw_sku['values']}
 
     def extract_retailer(self):
         return 'lanebryant'
@@ -122,12 +129,12 @@ class ProductParser(Spider):
 
     def extract_raw_skus(self, response):
         xpath = '//script[@id="pdpInitialData"]/text()'
-        pattern = '"skus":(\[.*?\]),"badge"'
-        return json.loads(response.xpath(xpath).re_first(pattern))
+        return json.loads(response.xpath(xpath).re_first('"skus":(\[.*?\]),"badge"'))
 
-    def extract_colour(self, colour_id, response):
-        pattern = f'{{"id":"{colour_id}".*?"name":"(.*?)"'
-        return response.xpath('//script[@id="pdpInitialData"]/text()').re_first(pattern)
+    def extract_colour_map(self, response):
+        pattern = '"all_available_colors":\[{"values":(.*?]),"option_key"'
+        raw_colours = response.xpath('//script[@id="pdpInitialData"]/text()').re_first(pattern)
+        return {colour['id']:colour['name'] for colour in json.loads(raw_colours)}
 
     def extract_price(self, raw_sku, response):
         prices = []
