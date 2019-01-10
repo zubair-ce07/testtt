@@ -5,7 +5,7 @@ from scrapy.linkextractors import LinkExtractor
 from intersport_crawler.items import IntersportCrawlerItem
 
 
-class OrsaySpider(CrawlSpider):
+class intersportcrawler(CrawlSpider):
     GENDER_MAP = {
         'men': 'Men',
         "men's": 'Men',
