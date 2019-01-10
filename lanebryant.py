@@ -38,19 +38,22 @@ class ProductParser(Spider):
         return item_or_request(item)
 
     def parse_images(self, response):
-        item = response.meta.get('item', {})
-        item['image_urls'] += self.extract_image_urls(response)
+        item = response.meta.get('item')
+        image_urls = self.extract_image_urls(response)
+        image_url_t = 'https://lanebryant.scene7.com/is/image'
+        item['image_urls'] += [f"{image_url_t}/{image}" for image in image_urls]
         return item_or_request(item)
 
     def extract_images_requests(self, response):
-        pattern = 'all_available_colors":.*?values":(.*?),"option_key'
-        image_dataset = response.xpath('//script[@id="pdpInitialData"]/text()').re_first(pattern)
         image_requests = []
+        pattern = 'all_available_colors":.*?values":(.*?),"option_key'
+        image_dataset = response.xpath('//script[@id="pdpInitialData"]/text()').re(pattern)
+        if not image_dataset:
+            return image_dataset
 
-        if image_dataset:
-            for image in json.loads(image_dataset):
-                url = f"{response.urljoin(image['sku_image'])}_ms?req=set,json&id={image['id']}"
-                image_requests.append(Request(url=url, callback=self.parse_images))
+        for image in json.loads(image_dataset[0]):
+            url = f"{response.urljoin(image['sku_image'])}_ms?req=set,json&id={image['id']}"
+            image_requests.append(Request(url=url, callback=self.parse_images))
 
         return image_requests
 
@@ -69,8 +72,7 @@ class ProductParser(Spider):
 
     def extract_care(self, response):
         css = '.mar-product-additional-info--tab-item ul:nth-child(3) li::text'
-        raw_care = response.css(css).extract()
-        return [care.strip() for care in raw_care if care.strip()]
+        return [care.strip() for care in response.css(css).extract() if care.strip()]
 
     def extract_category(self, response):
         raw_category = response.xpath("//script/text()").re('category": "(.*?.)"')
@@ -78,9 +80,7 @@ class ProductParser(Spider):
 
     def extract_description(self, response):
         description = response.css('.mar-product-additional-info--tab-item [id=tab1] p::text').extract()
-        if not description:
-            return description
-        return [des.strip() for des in description[0].split('.') if des.strip()]
+        return [des.strip() for des in description[0].split('.') if des.strip()] if description else []
 
     def extract_skus(self, response):
         skus = {}
@@ -90,7 +90,6 @@ class ProductParser(Spider):
             sku = extract_price_details(self.extract_price(raw_sku, response))
             sku['colour'] = self.extract_colour(raw_sku['color'], response)
             sku['size'] = self.extract_size_value(raw_sku['size'], response)
-
             if raw_sku['size'] not in in_stock_items:
                 sku['out_of_stock'] = True
 
@@ -102,12 +101,8 @@ class ProductParser(Spider):
         return 'US'
 
     def extract_image_urls(self, response):
-        raw_image_urls = response.xpath('//text()').re('item":(.*?])')
-        if raw_image_urls:
-            parent_url = 'https://lanebryant.scene7.com/is/image'
-            raw_image_urls = [f"{parent_url}/{image['s']['n']}" for image in json.loads(raw_image_urls[0])]
-
-        return raw_image_urls
+        image_urls = response.xpath('//text()').re_first('item":(.*?])')
+        return [image['s']['n'] for image in json.loads(image_urls)] if image_urls else []
 
     def extract_size_value(self, size_id, response):
         pattern = f'{{"id":"{size_id}".*?"value":"(.*?)"'
