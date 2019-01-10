@@ -1,6 +1,6 @@
 import json
-from w3lib.url import add_or_replace_parameter
 
+from w3lib.url import add_or_replace_parameter
 from scrapy.spiders import Rule, CrawlSpider, Request
 from scrapy.linkextractors import LinkExtractor
 from orsay_crawler.items import OrsayCrawlerItem
@@ -67,7 +67,7 @@ class OrsaySpider(CrawlSpider):
             sku['currency'] = raw_sku['currency_code']
             sku['price'] = raw_sku['grossPrice']
             sku['size'] = raw_sku['size']
-            skus[f'{raw_sku["productId"]}_{size}'] = sku
+            skus[f'{raw_sku["productId"]}_{raw_sku["color"]}_{size}'] = sku
         return skus
 
     def product_url(self, response):
@@ -109,9 +109,6 @@ class OrsaySpider(CrawlSpider):
         return item
 
     def colours_requests(self, response):
-        requests = []
         css = 'ul.swatches.color li a::attr(href)'
         colours = response.css(css).extract()
-        for colour in colours:
-            requests.append(Request(url=response.urljoin(colour), callback=self.parse_colour, dont_filter=True))
-        return requests
+        return [Request(url=response.urljoin(c), callback=self.parse_colour, dont_filter=True) for c in colours]
