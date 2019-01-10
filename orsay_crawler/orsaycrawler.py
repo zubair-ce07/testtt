@@ -1,4 +1,5 @@
 import json
+from w3lib.url import add_or_replace_parameter
 
 from scrapy.spiders import Rule, CrawlSpider, Request
 from scrapy.linkextractors import LinkExtractor
@@ -6,101 +7,111 @@ from orsay_crawler.items import OrsayCrawlerItem
 
 
 class OrsaySpider(CrawlSpider):
-    name = "orsaycrawler"
-    allowed_domains = ["orsay.com"]
-    start_urls = ["http://www.orsay.com/de-de/"]
+    name = 'orsaycrawler'
+    allowed_domains = ['orsay.com']
+    start_urls = ['http://www.orsay.com/de-de/']
 
-    listing_css = [".navigation .level-1"]
-    product_css = [".js-product-grid-portion"]
-    rules = (
-        Rule(LinkExtractor(restrict_css=listing_css), callback="parse_pagination"),
-        Rule(LinkExtractor(restrict_css=product_css), callback="parse_product")
-    )
+    listings_css = ['.navigation .level-1']
+    products_css = ['.js-product-grid-portion']
+
+    rules = (Rule(LinkExtractor(restrict_css=listings_css), callback='parse_pagination'),
+             Rule(LinkExtractor(restrict_css=products_css), callback='parse_product'))
 
     def parse_pagination(self, response):
-        total_products = self.parse_products_count(response)
         page_size = 72
-        for page in range(0, total_products+1, page_size):
-            next_url = response.url + "?sz=" + str(page)
-            yield Request(url=next_url, callback=self.parse)
+        css = '.load-more-progress::attr(data-max)'
+        pages = response.css(css).extract_first()
+        pages = int(pages) if pages else 0
 
-    def parse_products_count(self, response):
-        total_product_css = ".load-more-progress::attr(data-max)"
-        pages = response.css(total_product_css).extract_first()
-        return int(pages) if pages else 0
+        for page in range(0, pages+1, page_size):
+            next_url = add_or_replace_parameter(response.url, 'sz', page)
+            yield Request(url=next_url, callback=self.parse)
 
     def parse_product(self, response):
         item = OrsayCrawlerItem()
-        json_data = self.raw_data(response)
-        item["brand"] = json_data["brand"]
-        item["care"] = self.product_care(response)
-        item["category"] = json_data["categoryName"]
-        item["description"] = self.product_description(response)
-        item["gender"] = "women"
-        item["image_urls"] = self.product_images_urls(response)
-        item["lang"] = "de"
-        item["market"] = "DE"
-        item["name"] = json_data["name"]
-        item["retailer_sku"] = json_data["idListRef6"]
-        item["url"] = response.url
-        item["skus"] = {}
-        requests = self.parse_colours_requests(response)
-        return self.next_request(requests, item)
+        raw_product = self.raw_product(response)
 
-    def parse_colours(self, response):
-        item = response.meta["item"]
-        requests = response.meta["requests"]
-        item["skus"].update(self.skus(response))
-        return self.next_request(requests, item)
+        item['lang'] = 'de'
+        item['market'] = 'DE'
+        item['gender'] = 'women'
+        item['url'] = self.product_url(response)
+        item['care'] = self.product_care(response)
+        item['name'] = self.product_name(raw_product)
+        item['meta'] = self.colours_requests(response)
+        item['brand'] = self.product_brand(raw_product)
+        item['category'] = self.product_category(raw_product)
+        item['image_urls'] = self.product_images_urls(response)
+        item['description'] = self.product_description(response)
+        item['retailer_sku'] = self.product_retailer_sku(raw_product)
+        item['skus'] = {}
+
+        return self.next_request(item)
+
+    def parse_colour(self, response):
+        item = response.meta['item']
+        item['skus'].update(self.skus(response))
+        return self.next_request(item)
 
     def skus(self, response):
-        json_data = self.raw_data(response)
-        sizes_css = "ul.swatches.size li.selectable a::text"
-        sizes = response.css(sizes_css).extract()
-        sizes = [size.strip("\n") for size in sizes if size]
-
         skus = {}
-        for size in sizes:
-            sku = {"colour": json_data["color"]}
-            sku["currency"] = json_data["currency_code"]
-            if not json_data["quantity"]:
-                sku["out_of_stock"] = "True"
-            sku["price"] = json_data["grossPrice"]
-            sku["size"] = json_data["size"]
-            skus[f"{json_data['productId']}_{size}"] = sku
+        raw_sku = self.raw_product(response)
+        sizes_css = '.swatches.size > li'
+
+        for size_s in response.css(sizes_css):
+            size = size_s.css('a::text').extract_first().strip('\n')
+            sku = {'colour': raw_sku['color']}
+
+            if not size_s.css('.selectable'):
+                sku['out_of_stock'] = True
+
+            sku['currency'] = raw_sku['currency_code']
+            sku['price'] = raw_sku['grossPrice']
+            sku['size'] = raw_sku['size']
+            skus[f'{raw_sku["productId"]}_{size}'] = sku
         return skus
 
-    def product_images_urls(self, response):
-        return response.css(".thumb.js-thumb img::attr(src)").extract()
+    def product_url(self, response):
+        return response.url
 
-    def product_care(self, response):
-        care_css = ".product-material.product-info-block.js-material-container p::text"
-        return response.css(care_css).extract()
+    def product_name(self, raw_product):
+        return raw_product['name']
+
+    def product_brand(self, raw_product):
+        return raw_product['brand']
+
+    def product_category(self, raw_product):
+        return raw_product['categoryName']
+
+    def product_retailer_sku(self, raw_product):
+        return raw_product['idListRef6']
+
+    def raw_product(self, response):
+        css = '.js-product-content-gtm::attr(data-product-details)'
+        return json.loads(response.css(css).extract_first())
+
+    def product_images_urls(self, response):
+        return response.css('.thumb.js-thumb img::attr(src)').extract()
 
     def product_description(self, response):
-        desc_css = ".product-info-block.product-details div.with-gutter::text"
-        return response.css(desc_css).extract()
+        css = '.product-info-block.product-details div.with-gutter::text'
+        return response.css(css).extract()
 
-    def raw_data(self, response):
-        raw_css = ".js-product-content-gtm::attr(data-product-details)"
-        return json.loads(response.css(raw_css).extract_first())
+    def product_care(self, response):
+        css = '.product-material.product-info-block.js-material-container p::text'
+        return response.css(css).extract()
 
-    def next_request(self, requests, item):
+    def next_request(self, item):
+        requests = item['meta']
         if requests:
             request = requests.pop()
-            request.meta["item"] = item
-            request.meta["requests"] = requests
+            request.meta['item'] = item
             return request
-        else:
-            return item
+        return item
 
-    def parse_colours_requests(self, response):
-        colour_requests = []
-        colours_css = "ul.swatches.color li a::attr(href)"
-        colours = response.css(colours_css).extract()
+    def colours_requests(self, response):
+        requests = []
+        css = 'ul.swatches.color li a::attr(href)'
+        colours = response.css(css).extract()
         for colour in colours:
-            colour_requests.append(Request(
-                url=response.urljoin(colour),
-                callback=self.parse_colours,
-                dont_filter=True))
-        return colour_requests
+            requests.append(Request(url=response.urljoin(colour), callback=self.parse_colour, dont_filter=True))
+        return requests
