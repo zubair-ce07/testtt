@@ -49,9 +49,7 @@ class ProductParser(Spider):
 
     def extract_description(self, response):
         description = response.css('.pdpReadMore .visible-xs.visible-sm *::text').extract()
-        if not description:
-            return description
-        return [des.strip() for des in description if des.strip()]
+        return [des.strip() for des in description if des.strip()] if description else []
 
     def extract_name(self, response):
         xpath = "//script[contains(., 'digitalData')]/text()"
@@ -93,7 +91,8 @@ class ProductParser(Spider):
         return skus
 
     def extract_colour(self, response):
-        return response.xpath('//span[@itemprop="color"]/@content').extract_first()
+        xpath = "//script[contains(., 'digitalData')]/text()"
+        return response.xpath(xpath).re_first('color.*?"(.*?)"')
 
     def extract_market(self):
         return 'Sweden'
@@ -104,8 +103,8 @@ class ProductParser(Spider):
         return extract_gender(''.join(gender_info))
 
     def extract_price(self, response):
-        price_details = response.css('.atg_store_productPrice ::text').extract()
-        price_details = [price.strip() for price in price_details if price.strip() and '%' not in price]
+        css = '.atg_store_productPrice:not([class^="promotion-callout-msg"])::text'
+        price_details = [price.strip() for price in response.css(css).extract() if price.strip() and '%' not in price]
         price_details += self.extract_currency()
         return price_details
 
@@ -116,18 +115,12 @@ class ProductParser(Spider):
         return 'SEK'
 
     def extract_all_sizes(self, response):
-        sizes = response.css('[id="fp_allSizes"]::attr(value)').extract()
-        if not sizes:
-            return ['One Size']
-
-        return json.loads(sizes[0])
+        sizes = response.css('[id="fp_allSizes"]::attr(value)').extract_first()
+        return json.loads(sizes) if sizes else ['One Size']
 
     def extract_available_sizes(self, response):
-        available_sizes = response.css('[id="fp_availableSizes"]::attr(value)').extract()
-        if not available_sizes:
-            return ['One Size']
-
-        return json.loads(available_sizes[0])
+        available_sizes = response.css('[id="fp_availableSizes"]::attr(value)').extract_first()
+        return json.loads(available_sizes) if available_sizes else ['One Size']
 
 
 class BarneysSpider(CrawlSpider):
@@ -150,7 +143,8 @@ class BarneysSpider(CrawlSpider):
     ]
 
     def start_requests(self):
-        return [Request('https://www.barneys.com/global/ajaxGlobalNav.jsp', callback=self.parse)]
+        self.start_urls.append('https://www.barneys.com/global/ajaxGlobalNav.jsp')
+        return [Request(url, callback=self.parse) for url in self.start_urls]
 
     def parse(self, response):
         trail = response.meta.get('trail', [])
