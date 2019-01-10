@@ -1,4 +1,5 @@
 import json
+import re
 
 from scrapy import Spider, Request
 from scrapy.contrib.spiders import CrawlSpider, Rule
@@ -19,20 +20,21 @@ class ProductParser(Spider):
         if not self.is_new_item(retailer_sku):
             return
 
+        raw_product = self.extract_product(response)
         item['retailer_sku'] = retailer_sku
-        item['name'] = self.extract_name(response)
+        item['name'] = self.extract_name(raw_product)
         item['gender'] = self.extract_gender(response)
         item['spider_name'] = 'barneys'
-        item['brand'] = self.extract_brand(response)
+        item['brand'] = self.extract_brand(raw_product)
         item['url'] = response.url
         item['trail'] = response.meta.get('trail', [])
-        item['category'] = self.extract_categories(response)
+        item['category'] = self.extract_categories(raw_product)
         item['retailer'] = self.extract_retailer()
         item['market'] = self.extract_market()
         item['description'] = self.extract_description(response)
         item['care'] = self.extract_care(response)
         item['image_urls'] = self.extract_image_urls(response)
-        item['skus'] = self.extract_skus(response)
+        item['skus'] = self.extract_skus(raw_product, response)
 
         return item
 
@@ -44,38 +46,39 @@ class ProductParser(Spider):
         return False
 
     def extract_product_id(self, response):
+        response.css('.product-id::attr(value)').extract_first()
+
+    def extract_product(self, response):
         xpath = "//script[contains(., 'digitalData')]/text()"
-        return response.xpath(xpath).re_first('productID.*?"(.*?)"')
+        raw_product = response.xpath(xpath).re_first('digitalData.*?({.*);')
+        raw_product = re.sub("(\w+) : ", r'"\1" :', raw_product)
+        return json.loads(raw_product)
 
     def extract_description(self, response):
         description = response.css('.pdpReadMore .visible-xs.visible-sm *::text').extract()
         return [des.strip() for des in description if des.strip()] if description else []
 
-    def extract_name(self, response):
-        xpath = "//script[contains(., 'digitalData')]/text()"
-        return response.xpath(xpath).re_first('productName.*?"(.*?)"')
+    def extract_name(self, raw_product):
+        return raw_product['product']['StyleInfo']['productName']
 
     def extract_care(self, response):
         return response.css('div[class="visible-xs visible-sm"] ul li::text').extract()
 
-    def extract_brand(self, response):
-        xpath = "//script[contains(., 'digitalData')]/text()"
-        return response.xpath(xpath).re_first('brand.*?"(.*?)"')
+    def extract_brand(self, raw_product):
+        return raw_product['product']['StyleInfo']['brand']
 
-    def extract_categories(self, response):
-        xpath = "//script[contains(., 'digitalData')]/text()"
-        category = response.xpath(xpath).re('subCategory2.*?"(.*?)"')
-        return [cat.strip() for cat in category if cat.strip()]
+    def extract_categories(self, raw_product):
+        category = raw_product['page']['category']['subCategory2']
+        return [category] if category.strip() else []
 
     def extract_image_urls(self, response):
-        image_urls = response.css('.product-image-carousel .primary-image::attr(src)').extract()
-        image_urls += response.css('.product-single-image .primary-image::attr(src)').extract()
-        return image_urls
+        css = '.product-image-carousel .primary-image::attr(src), .product-single-image .primary-image::attr(src)'
+        return response.css(css).extract()
 
-    def extract_skus(self, response):
+    def extract_skus(self, raw_product, response):
         skus = {}
         common_sku = extract_price_details(self.extract_price(response))
-        common_sku['colour'] = self.extract_colour(response)
+        common_sku['colour'] = self.extract_colour(raw_product)
 
         sizes = self.extract_all_sizes(response)
         available_sizes = self.extract_available_sizes(response)
@@ -90,9 +93,8 @@ class ProductParser(Spider):
 
         return skus
 
-    def extract_colour(self, response):
-        xpath = "//script[contains(., 'digitalData')]/text()"
-        return response.xpath(xpath).re_first('color.*?"(.*?)"')
+    def extract_colour(self, raw_product):
+        return raw_product['product']['SkuInfo'][0]['productInfo']['color']
 
     def extract_market(self):
         return 'Sweden'
@@ -103,10 +105,8 @@ class ProductParser(Spider):
         return extract_gender(''.join(gender_info))
 
     def extract_price(self, response):
-        css = '.atg_store_productPrice:not([class^="promotion-callout-msg"])::text'
-        price_details = [price.strip() for price in response.css(css).extract() if price.strip() and '%' not in price]
-        price_details += self.extract_currency()
-        return price_details
+        css = '.atg_store_productPrice:not([class^="promotion-callout-msg"]) *::text'
+        return [price.strip() for price in response.css(css).extract() if price.strip() and '%' not in price]
 
     def extract_retailer(self):
         return 'barneys'
@@ -126,7 +126,7 @@ class ProductParser(Spider):
 class BarneysSpider(CrawlSpider):
     name = 'barneys-crawl-spider'
     allowed_domains = ['www.barneys.com']
-    start_urls = ['https://www.barneys.com/']
+    start_urls = ['https://www.barneys.com/', 'https://www.barneys.com/global/ajaxGlobalNav.jsp']
     product_parser = ProductParser()
 
     custom_settings = {
@@ -138,13 +138,9 @@ class BarneysSpider(CrawlSpider):
     product_css = ['[id="ajaxGlobalNav"]', '.topnav-level-1']
     listing_css = ['[id="main-container"]']
     rules = [
-        Rule(LinkExtractor(restrict_css=product_css), callback='parse'),
-        Rule(LinkExtractor(restrict_css=listing_css), callback='parse_item')
+        Rule(LinkExtractor(restrict_css=product_css), callback='parse', process_request='set_currency_cookie'),
+        Rule(LinkExtractor(restrict_css=listing_css), callback='parse_item', process_request='set_currency_cookie')
     ]
-
-    def start_requests(self):
-        self.start_urls.append('https://www.barneys.com/global/ajaxGlobalNav.jsp')
-        return [Request(url, callback=self.parse) for url in self.start_urls]
 
     def parse(self, response):
         trail = response.meta.get('trail', [])
@@ -154,11 +150,14 @@ class BarneysSpider(CrawlSpider):
 
         for request in super().parse(response):
             request.meta['trail'] = trail
-            request.cookies['usr_currency'] = 'SE-SEK'
             yield request
 
     def parse_item(self, response):
         return self.product_parser.parse(response)
+
+    def set_currency_cookie(self, request):
+        request.cookies['usr_currency'] = 'SE-SEK'
+        return request
 
     def extract_title(self, response):
         title = response.css('title::text').extract_first()
