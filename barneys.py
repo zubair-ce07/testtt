@@ -102,11 +102,9 @@ class ProductParser(Spider):
         return 'Sweden'
 
     def extract_gender(self, response):
-        gender = response.xpath('//span[@id="fp-data"]/@data-gender').extract_first()
-        if gender:
-            gender = extract_gender(gender)
-
-        return gender
+        gender_info = response.xpath('//span[@id="fp-data"]/@data-gender').extract()
+        gender_info += self.extract_categories(response)
+        return extract_gender(''.join(gender_info))
 
     def extract_price(self, response):
         price_details = response.css('.atg_store_productPrice ::text').extract()

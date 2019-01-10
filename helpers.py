@@ -12,11 +12,11 @@ CURRENCY_MAP = {
 
 GENDER_MAP = {
     'herr, dam': 'Unisex-Adults',
+    'women': 'Women',
+    'female': 'Women',
     'men': 'Men',
     'herren': 'Men',
     'male': 'Men',
-    'women': 'Women',
-    'female': 'Women',
     'damen': 'Women',
     'herr': 'Women',
     'dam': 'Men',
