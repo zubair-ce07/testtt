@@ -70,12 +70,9 @@ class ProductParser(Spider):
         return [cat.strip() for cat in category if cat.strip()]
 
     def extract_image_urls(self, response):
-        primary_image = response.css('.product-single-image .primary-image::attr(src)').extract_first()
-        secondary_images = response.css('.product-image-carousel .primary-image::attr(src)').extract()
-        if primary_image:
-            secondary_images.append(primary_image)
-
-        return secondary_images
+        image_urls = response.css('.product-image-carousel .primary-image::attr(src)').extract()
+        image_urls += response.css('.product-single-image .primary-image::attr(src)').extract()
+        return image_urls
 
     def extract_skus(self, response):
         skus = {}
@@ -109,7 +106,7 @@ class ProductParser(Spider):
     def extract_price(self, response):
         price_details = response.css('.atg_store_productPrice ::text').extract()
         price_details = [price.strip() for price in price_details if price.strip() and '%' not in price]
-        price_details.append(self.extract_currency())
+        price_details += self.extract_currency()
         return price_details
 
     def extract_retailer(self):
@@ -121,14 +118,14 @@ class ProductParser(Spider):
     def extract_all_sizes(self, response):
         sizes = response.css('[id="fp_allSizes"]::attr(value)').extract()
         if not sizes:
-            return sizes
+            return ['One Size']
 
         return json.loads(sizes[0])
 
     def extract_available_sizes(self, response):
         available_sizes = response.css('[id="fp_availableSizes"]::attr(value)').extract()
         if not available_sizes:
-            return available_sizes
+            return ['One Size']
 
         return json.loads(available_sizes[0])
 
