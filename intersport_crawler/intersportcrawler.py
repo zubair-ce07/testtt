@@ -1,6 +1,6 @@
 import json
-from w3lib.url import add_or_replace_parameter
 
+from w3lib.url import add_or_replace_parameter
 from scrapy.spiders import Rule, CrawlSpider, Request
 from scrapy.linkextractors import LinkExtractor
 from intersport_crawler.items import IntersportCrawlerItem
