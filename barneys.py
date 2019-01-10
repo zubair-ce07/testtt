@@ -23,7 +23,7 @@ class ProductParser(Spider):
         raw_product = self.extract_product(response)
         item['retailer_sku'] = retailer_sku
         item['name'] = self.extract_name(raw_product)
-        item['gender'] = self.extract_gender(response)
+        item['gender'] = self.extract_gender(raw_product, response)
         item['spider_name'] = 'barneys'
         item['brand'] = self.extract_brand(raw_product)
         item['url'] = response.url
@@ -46,13 +46,7 @@ class ProductParser(Spider):
         return False
 
     def extract_product_id(self, response):
-        response.css('.product-id::attr(value)').extract_first()
-
-    def extract_product(self, response):
-        xpath = "//script[contains(., 'digitalData')]/text()"
-        raw_product = response.xpath(xpath).re_first('digitalData.*?({.*);')
-        raw_product = re.sub("(\w+) : ", r'"\1" :', raw_product)
-        return json.loads(raw_product)
+        return response.xpath("//script[contains(., 'digitalData')]/text()").re_first('productID.*?"(.*?)"')
 
     def extract_description(self, response):
         description = response.css('.pdpReadMore .visible-xs.visible-sm *::text').extract()
@@ -99,9 +93,9 @@ class ProductParser(Spider):
     def extract_market(self):
         return 'Sweden'
 
-    def extract_gender(self, response):
+    def extract_gender(self, raw_product, response):
         gender_info = response.xpath('//span[@id="fp-data"]/@data-gender').extract()
-        gender_info += self.extract_categories(response)
+        gender_info += self.extract_categories(raw_product)
         return extract_gender(''.join(gender_info))
 
     def extract_price(self, response):
@@ -113,6 +107,12 @@ class ProductParser(Spider):
 
     def extract_currency(self):
         return 'SEK'
+
+    def extract_product(self, response):
+        xpath = "//script[contains(., 'digitalData')]/text()"
+        raw_product = response.xpath(xpath).re_first('digitalData.*?({.*);')
+        raw_product = re.sub("(\w+) : ", r'"\1" :', raw_product)
+        return json.loads(raw_product)
 
     def extract_all_sizes(self, response):
         sizes = response.css('[id="fp_allSizes"]::attr(value)').extract_first()
