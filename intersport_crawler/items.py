@@ -1,7 +1,7 @@
 import scrapy
 
 
-class IntersportCrawlerItem(scrapy.Item):
+class InterSportCrawlerItem(scrapy.Item):
     brand = scrapy.Field()
     category = scrapy.Field()
     description = scrapy.Field()

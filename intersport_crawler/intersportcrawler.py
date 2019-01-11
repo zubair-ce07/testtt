@@ -3,10 +3,10 @@ import json
 from w3lib.url import add_or_replace_parameter
 from scrapy.spiders import Rule, CrawlSpider, Request
 from scrapy.linkextractors import LinkExtractor
-from intersport_crawler.items import IntersportCrawlerItem
+from intersport_crawler.items import InterSportCrawlerItem
 
 
-class intersportcrawler(CrawlSpider):
+class InterSportCrawler(CrawlSpider):
     GENDER_MAP = {
         'men': 'Men',
         "men's": 'Men',
@@ -31,10 +31,8 @@ class intersportcrawler(CrawlSpider):
     listings_css = ['.navigation']
     products_css = ['.products.wrapper']
 
-    rules = (
-        Rule(LinkExtractor(restrict_css=listings_css), callback='parse_pagination'),
-        Rule(LinkExtractor(restrict_css=products_css), callback='parse_product')
-    )
+    rules = (Rule(LinkExtractor(restrict_css=listings_css), callback='parse_pagination'),
+             Rule(LinkExtractor(restrict_css=products_css), callback='parse_product'))
 
     def parse_pagination(self, response):
         page_size = 20
@@ -49,17 +47,17 @@ class intersportcrawler(CrawlSpider):
             yield Request(url=next_url, callback=self.parse)
 
     def parse_product(self, response):
-        item = IntersportCrawlerItem()
+        item = InterSportCrawlerItem()
 
         item['lang'] = 'nb'
         item['market'] = 'NB'
-        item['url'] = response.url
+        item['url'] = self.product_url(response)
         item['name'] = self.product_name(response)
         item['skus'] = self.product_skus(response)
         item['brand'] = self.product_brand(response)
+        item['retailer_sku'] = self.product_id(response)
         item['category'] = self.product_category(response)
         item['description'] = self.product_description(response)
-        item['retailer_sku'] = self.product_id(response)
 
         if self.product_gender(response):
             item['gender'] = self.product_gender(response)
@@ -73,22 +71,8 @@ class intersportcrawler(CrawlSpider):
         colours = self.product_sizes(response, colour_index)
         return [self.skus(response, c) for c in colours]
 
-    def skus(self, response, colour):
-        raw_sku = self.raw_sku(response)
-        product_data = raw_sku['ecommerce']['detail']['products']
-        sizes = self.product_sizes(response)
-        skus = {}
-        for size in sizes:
-            sku = {'size': size}
-            if colour:
-                sku['colour']: colour
-            if not product_data[0]['quantity']:
-                sku['out_of_stock'] = True
-
-            sku['price'] = product_data[0]['price']
-            sku['currency'] = raw_sku['ecommerce']['currencyCode']
-            skus[f'{self.product_id(response)}_{colour}_{size}'] = sku
-        return skus
+    def product_url(self, response):
+        return response.url
 
     def product_images_urls(self, response):
         css = '.mcs-items-container img::attr(src)'
@@ -111,8 +95,8 @@ class intersportcrawler(CrawlSpider):
 
     def product_category(self, response):
         raw_sku = self.raw_sku(response)
-        list_data = raw_sku['ecommerce']['detail']['products']
-        return list_data[0]['category']
+        raw_sku = raw_sku['ecommerce']['detail']['products']
+        return raw_sku[0]['category']
 
     def raw_sku(self, response):
         css = 'script:contains("AEC.Cookie.detail") ::text'
@@ -137,3 +121,26 @@ class intersportcrawler(CrawlSpider):
         for k, v in self.GENDER_MAP.items():
             if k in gender_data:
                 return v
+
+    def skus(self, response, colour):
+        skus = {}
+        raw_skus = self.raw_sku(response)
+        raw_sku = raw_skus['ecommerce']['detail']['products']
+        sizes = self.product_sizes(response)
+
+        for size in sizes:
+            sku = {'size': size}
+
+            if colour and colour != 'N/a':
+                sku['colour'] = colour
+            if not raw_sku[0]['quantity']:
+                sku['out_of_stock'] = True
+
+            sku['price'] = raw_sku[0]['price']
+            sku['currency'] = raw_skus['ecommerce']['currencyCode']
+
+            if colour and colour != 'N/a':
+                skus[f'{self.product_id(response)}_{colour}_{size}'] = sku
+            else:
+                skus[f'{self.product_id(response)}_{size}'] = sku
+        return skus
