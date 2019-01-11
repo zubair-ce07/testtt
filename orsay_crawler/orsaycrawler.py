@@ -7,6 +7,7 @@ from orsay_crawler.items import OrsayCrawlerItem
 
 
 class OrsaySpider(CrawlSpider):
+
     name = 'orsaycrawler'
     allowed_domains = ['orsay.com']
     start_urls = ['http://www.orsay.com/de-de/']
@@ -52,23 +53,13 @@ class OrsaySpider(CrawlSpider):
         item['skus'].update(self.skus(response))
         return self.next_request(item)
 
-    def skus(self, response):
-        skus = {}
-        raw_sku = self.raw_product(response)
-        sizes_css = '.swatches.size > li'
-
-        for size_s in response.css(sizes_css):
-            size = size_s.css('a::text').extract_first().strip('\n')
-            sku = {'colour': raw_sku['color']}
-
-            if not size_s.css('.selectable'):
-                sku['out_of_stock'] = True
-
-            sku['currency'] = raw_sku['currency_code']
-            sku['price'] = raw_sku['grossPrice']
-            sku['size'] = raw_sku['size']
-            skus[f'{raw_sku["productId"]}_{raw_sku["color"]}_{size}'] = sku
-        return skus
+    def next_request(self, item):
+        requests = item['meta']
+        if requests:
+            request = requests.pop()
+            request.meta['item'] = item
+            return request
+        return item
 
     def product_url(self, response):
         return response.url
@@ -100,15 +91,26 @@ class OrsaySpider(CrawlSpider):
         css = '.product-material.product-info-block.js-material-container p::text'
         return response.css(css).extract()
 
-    def next_request(self, item):
-        requests = item['meta']
-        if requests:
-            request = requests.pop()
-            request.meta['item'] = item
-            return request
-        return item
-
     def colours_requests(self, response):
         css = 'ul.swatches.color li a::attr(href)'
         colours = response.css(css).extract()
-        return [Request(url=response.urljoin(c), callback=self.parse_colour, dont_filter=True) for c in colours]
+        return [Request(url=response.urljoin(c),
+                callback=self.parse_colour, dont_filter=True) for c in colours]
+
+    def skus(self, response):
+        skus = {}
+        raw_sku = self.raw_product(response)
+        sizes_css = '.swatches.size > li'
+
+        for size_s in response.css(sizes_css):
+            size = size_s.css('a::text').extract_first().strip('\n')
+            sku = {'colour': raw_sku['color']}
+
+            if not size_s.css('.selectable'):
+                sku['out_of_stock'] = True
+
+            sku['currency'] = raw_sku['currency_code']
+            sku['price'] = raw_sku['grossPrice']
+            sku['size'] = raw_sku['size']
+            skus[f'{raw_sku["idListRef6"]}_{raw_sku["color"]}_{size}'] = sku
+        return skus
