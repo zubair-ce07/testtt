@@ -94,8 +94,8 @@ class OrsaySpider(CrawlSpider):
     def colours_requests(self, response):
         css = 'ul.swatches.color li a::attr(href)'
         colours = response.css(css).extract()
-        return [Request(url=response.urljoin(c),
-                callback=self.parse_colour, dont_filter=True) for c in colours]
+        return [Request(url=response.urljoin(c), callback=self.parse_colour,
+                        dont_filter=True) for c in colours]
 
     def skus(self, response):
         skus = {}
