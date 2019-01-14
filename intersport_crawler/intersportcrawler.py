@@ -1,8 +1,9 @@
 import json
 
-from w3lib.url import add_or_replace_parameter
-from scrapy.spiders import Rule, CrawlSpider, Request
 from scrapy.linkextractors import LinkExtractor
+from scrapy.spiders import Rule, CrawlSpider, Request
+from w3lib.url import add_or_replace_parameter
+
 from intersport_crawler.items import InterSportCrawlerItem
 
 
@@ -24,7 +25,7 @@ class InterSportCrawler(CrawlSpider):
         'kinder': 'Unisex-Kids',
         'barn': 'Unisex-Kids'}
 
-    name = 'intersportcrawler'
+    name = 'intersport-nb-crawl'
     allowed_domains = ['intersport.no']
     start_urls = ['https://www.intersport.no/']
 
@@ -41,7 +42,7 @@ class InterSportCrawler(CrawlSpider):
         products = response.css(css).extract_first()
         products = int(products) if products else 0
 
-        for page in range(0, products+1, page_size):
+        for page in range(0, products + 1, page_size):
             next_url = add_or_replace_parameter(response.url, 'p', page_number)
             page_number += 1
             yield Request(url=next_url, callback=self.parse)
@@ -68,8 +69,8 @@ class InterSportCrawler(CrawlSpider):
 
     def product_skus(self, response):
         colour_index = 0
-        colours = self.product_sizes(response, colour_index)
-        return [self.skus(response, c) for c in colours]
+        colours = self.product_sizesor_colours(response, colour_index)
+        return [self.skus(response, colour) for colour in colours]
 
     def product_url(self, response):
         return response.url
@@ -101,10 +102,9 @@ class InterSportCrawler(CrawlSpider):
     def raw_sku(self, response):
         css = 'script:contains("AEC.Cookie.detail") ::text'
         raw_sku = response.css(css).re_first('AEC.Cookie.detail\(({.*})')
-        raw_sku = json.loads(raw_sku)
-        return raw_sku
+        return json.loads(raw_sku)
 
-    def product_sizes(self, response, index=1):
+    def product_sizesor_colours(self, response, index=1):
         sizes = {}
         css = 'script:contains("AEC.SUPER") ::text'
         raw_product = response.css(css).re_first('AEC.SUPER = (\[.*\])')
@@ -122,11 +122,14 @@ class InterSportCrawler(CrawlSpider):
             if k in gender_data:
                 return v
 
+    def product_pricing(self, raw_sku):
+        return raw_sku[0]['price']
+
     def skus(self, response, colour):
         skus = {}
         raw_skus = self.raw_sku(response)
         raw_sku = raw_skus['ecommerce']['detail']['products']
-        sizes = self.product_sizes(response)
+        sizes = self.product_sizesor_colours(response)
 
         for size in sizes:
             sku = {'size': size}
@@ -136,11 +139,11 @@ class InterSportCrawler(CrawlSpider):
             if not raw_sku[0]['quantity']:
                 sku['out_of_stock'] = True
 
-            sku['price'] = raw_sku[0]['price']
+            sku['price'] = self.product_pricing(raw_sku)
             sku['currency'] = raw_skus['ecommerce']['currencyCode']
 
             if colour and colour != 'N/a':
-                skus[f'{self.product_id(response)}_{colour}_{size}'] = sku
+                skus[f'{colour}_{size}'] = sku
             else:
                 skus[f'{self.product_id(response)}_{size}'] = sku
         return skus
