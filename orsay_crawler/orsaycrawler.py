@@ -1,14 +1,15 @@
 import json
 
-from w3lib.url import add_or_replace_parameter
-from scrapy.spiders import Rule, CrawlSpider, Request
 from scrapy.linkextractors import LinkExtractor
+from scrapy.spiders import Rule, CrawlSpider, Request
+from w3lib.url import add_or_replace_parameter
+
 from orsay_crawler.items import OrsayCrawlerItem
 
 
 class OrsaySpider(CrawlSpider):
 
-    name = 'orsaycrawler'
+    name = 'orsay-de-crawl'
     allowed_domains = ['orsay.com']
     start_urls = ['http://www.orsay.com/de-de/']
 
@@ -32,33 +33,34 @@ class OrsaySpider(CrawlSpider):
         item = OrsayCrawlerItem()
         raw_product = self.raw_product(response)
 
+        item['skus'] = {}
         item['lang'] = 'de'
         item['market'] = 'DE'
         item['gender'] = 'women'
         item['url'] = self.product_url(response)
         item['care'] = self.product_care(response)
         item['name'] = self.product_name(raw_product)
-        item['meta'] = self.colours_requests(response)
         item['brand'] = self.product_brand(raw_product)
         item['category'] = self.product_category(raw_product)
         item['image_urls'] = self.product_images_urls(response)
         item['description'] = self.product_description(response)
         item['retailer_sku'] = self.product_retailer_sku(raw_product)
-        item['skus'] = {}
+        item['meta'] = {'requests_queue': self.colour_requests(response)}
 
-        return self.next_request(item)
+        return self.next_request_or_item(item)
 
     def parse_colour(self, response):
         item = response.meta['item']
         item['skus'].update(self.skus(response))
-        return self.next_request(item)
+        return self.next_request_or_item(item)
 
-    def next_request(self, item):
-        requests = item['meta']
+    def next_request_or_item(self, item):
+        requests = item['meta']['requests_queue']
         if requests:
             request = requests.pop()
             request.meta['item'] = item
             return request
+        item.pop('meta')
         return item
 
     def product_url(self, response):
@@ -91,26 +93,33 @@ class OrsaySpider(CrawlSpider):
         css = '.product-material.product-info-block.js-material-container p::text'
         return response.css(css).extract()
 
-    def colours_requests(self, response):
+    def product_pricing(self, response):
+        price = response.css('.price-sales::text').extract_first()
+        prev_price = response.css('.price-standard::text').extract_first()
+        if prev_price:
+            return {'price': price.strip('\n'),
+                    'previous_price': prev_price.strip('\n')}
+        return price.strip('\n')
+
+    def colour_requests(self, response):
         css = 'ul.swatches.color li a::attr(href)'
-        colours = response.css(css).extract()
         return [Request(url=response.urljoin(c), callback=self.parse_colour,
-                        dont_filter=True) for c in colours]
+                dont_filter=True) for c in response.css(css).extract()]
 
     def skus(self, response):
         skus = {}
-        raw_sku = self.raw_product(response)
         sizes_css = '.swatches.size > li'
+        raw_sku = self.raw_product(response)
 
         for size_s in response.css(sizes_css):
             size = size_s.css('a::text').extract_first().strip('\n')
             sku = {'colour': raw_sku['color']}
+            sku['price'] = self.product_pricing(response)
 
             if not size_s.css('.selectable'):
                 sku['out_of_stock'] = True
 
             sku['currency'] = raw_sku['currency_code']
-            sku['price'] = raw_sku['grossPrice']
             sku['size'] = raw_sku['size']
-            skus[f'{raw_sku["idListRef6"]}_{raw_sku["color"]}_{size}'] = sku
+            skus[f'{raw_sku["color"]}_{size}'] = sku
         return skus
