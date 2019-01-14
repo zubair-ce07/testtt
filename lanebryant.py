@@ -134,14 +134,11 @@ class ProductParser(Spider):
     def extract_colour_map(self, response):
         pattern = '"all_available_colors":\[{"values":(.*?]),"option_key"'
         raw_colours = response.xpath('//script[@id="pdpInitialData"]/text()').re_first(pattern)
-        return {colour['id']:colour['name'] for colour in json.loads(raw_colours)}
+        return {colour['id']: colour['name'] for colour in json.loads(raw_colours)}
 
     def extract_price(self, raw_sku, response):
-        prices = []
-        prices.append(raw_sku['prices']['sale_price'])
-        prices.append(raw_sku['prices']['list_price'])
-        prices.append(self.extract_currency(response))
-        return prices
+        prices = raw_sku['prices']
+        return [prices['sale_price'], prices['list_price'], self.extract_currency(response)]
 
     def extract_in_stock_items(self, response):
         pattern = 'all_available_sizes":.*?"values":(.*),"option'
