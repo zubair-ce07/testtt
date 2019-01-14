@@ -37,7 +37,7 @@ def extract_price_details(price_record):
     for record in price_record:
         price = ''.join(re.findall(r'\d+', record))
         if price:
-            prices.append(price)
+            prices.append(int(price))
 
     prices.sort()
     price_map = {}

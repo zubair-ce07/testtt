@@ -55,7 +55,6 @@ class ProductParser(Spider):
 
         return item_or_request(item)
 
-
     def extract_requests(self, response):
         prod_id = self.extract_product_id(response)
         url = f"https://stock.vip.com/detail/?callback=stock_detail&merchandiseId={prod_id}&is_old=0&areaId=104104101"
@@ -105,7 +104,10 @@ class ProductParser(Spider):
         skus = {}
         common_sku = extract_price_details(self.extract_price(response))
         common_sku['colour'] = self.extract_colour(response)
+
         raw_skus = self.extract_raw_skus(response)
+        if not raw_skus:
+            return skus
 
         for raw_sku in raw_skus:
             sku = common_sku.copy()
@@ -117,7 +119,8 @@ class ProductParser(Spider):
 
     def extract_colour(self, response):
         css = '.J-colorItem.color-selected .color-item-name::text'
-        return response.css(css).extract_first()
+        color = response.css(css).extract_first()
+        return color or "One Colour"
 
     def extract_market(self):
         return 'CHINA'
@@ -140,13 +143,13 @@ class ProductParser(Spider):
         xpath = "//script[contains(., 'sizeStock')]/text()"
         pattern = '"sizeStock":(.*?),"sizeLength"'
         raw_skus = response.xpath(xpath).re_first(pattern)
-        return json.loads(raw_skus)
+        return json.loads(raw_skus) if raw_skus else None
 
 
 class DrmartensSpider(CrawlSpider):
     name = 'vipshop-crawl-spider'
     allowed_domains = ['vip.com']
-    start_urls = ['https://www.vip.com/']
+    start_urls = ['https://category.vip.com/']
     product_parser = ProductParser()
 
     custom_settings = {
@@ -163,17 +166,65 @@ class DrmartensSpider(CrawlSpider):
     ]
 
     def parse(self, response):
-        title = self.extract_title(response)
-        trail = response.meta.get('trail', [])
-        trail = trail + [[title, response.url]]
+        trail = self.extract_trail(response)
+        categories = response.xpath('//script/text()').re_first('cateIdList =(.*])')
 
-        for request in super().parse(response):
-            request.meta['trail'] = trail.copy()
-            yield request
+        for category in json.loads(categories):
+            yield Request(f"https://category.vip.com/ajax/getTreeList.php?cid={category['cate_id']}&tree_id=107",
+                          callback=self.parse_category, meta={'trail': trail})
+
+    def parse_category(self, response):
+        trail = self.extract_trail(response)
+        sub_categories = response.xpath('//text()').re_first('children":(.*)}]')
+
+        for url in self.extract_sub_cat_urls(sub_categories):
+            yield Request(f"https://category.vip.com/{url}", callback=self.parse_sub_category, meta={'trail': trail})
+
+    def parse_sub_category(self, response):
+        trail = self.extract_trail(response)
+        raw_product_ids = response.xpath('//text()').re_first('merchandise.*productIds":(.*])')
+        product_ids = ",".join(json.loads(raw_product_ids))
+        functions = "brandShowName,surprisePrice,pcExtra,promotionPrice,businessCode,promotionTips"
+
+        yield Request(f"https://category.vip.com/ajax/mapi.php?service=product_info&callback=categoryMerchandiseInfo1"
+                      f"&productIds={product_ids}&functions={functions}&warehouse=VIP_NH&mobile_platform=1&"
+                      f"app_name=shop_pc&fdc_area_id=104104101", callback=self.parse_products, meta={'trail': trail})
+
+    def parse_products(self, response):
+        trail = self.extract_trail(response)
+        products = response.xpath('//text()').re_first('categoryMerchandiseInfo1.*products":(.*])')
+        if not products:
+            return
+
+        for product in json.loads(products):
+            yield Request(f"https://detail.vip.com/detail-{product['productId']}-{product['brandId']}.html",
+                          callback=self.parse_item, meta={'trail': trail})
 
     def parse_item(self, response):
         return self.product_parser.parse(response)
 
+    def extract_sub_cat_urls(self, sub_categories):
+        urls = []
+
+        for sub_cat in json.loads(sub_categories):
+            urls.append(sub_cat['url'])
+
+            for sub_cat2 in sub_cat['children']:
+                urls.append(sub_cat2['url'])
+
+        return urls
+
+    def extract_trail(self, response):
+        title = self.extract_title(response)
+        trail = response.meta.get('trail', [])
+        if title:
+            trail = trail + [[title, response.url]]
+
+        return trail
+
     def extract_title(self, response):
         title = response.css('title::text').extract_first()
-        return title.split('|')[0] or None
+        if title:
+            title = title.split('|')[0]
+
+        return title
