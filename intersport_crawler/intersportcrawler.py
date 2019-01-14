@@ -69,7 +69,7 @@ class InterSportCrawler(CrawlSpider):
 
     def product_skus(self, response):
         colour_index = 0
-        colours = self.product_sizesor_colours(response, colour_index)
+        colours = self.product_sizes_or_colours(response, colour_index)
         return [self.skus(response, colour) for colour in colours]
 
     def product_url(self, response):
@@ -129,7 +129,7 @@ class InterSportCrawler(CrawlSpider):
         skus = {}
         raw_skus = self.raw_sku(response)
         raw_sku = raw_skus['ecommerce']['detail']['products']
-        sizes = self.product_sizesor_colours(response)
+        sizes = self.product_sizes_or_colours(response)
 
         for size in sizes:
             sku = {'size': size}
