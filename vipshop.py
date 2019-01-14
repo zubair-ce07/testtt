@@ -87,7 +87,7 @@ class ProductParser(Spider):
 
     def extract_care(self, response):
         raw_care = response.css('.dc-table.fst td::text').extract()
-        return [care.strip() for care in raw_care if '℃' in care]
+        return [care.strip() for care in raw_care if '℃' in care or '度' in care]
 
     def extract_brand(self, response):
         return response.css('.pib-title-class ::text').extract_first()
