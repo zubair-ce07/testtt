@@ -104,7 +104,7 @@ class InterSportCrawler(CrawlSpider):
         raw_sku = response.css(css).re_first('AEC.Cookie.detail\(({.*})')
         return json.loads(raw_sku)
 
-    def product_sizesor_colours(self, response, index=1):
+    def product_sizes_or_colours(self, response, index=1):
         sizes = {}
         css = 'script:contains("AEC.SUPER") ::text'
         raw_product = response.css(css).re_first('AEC.SUPER = (\[.*\])')
