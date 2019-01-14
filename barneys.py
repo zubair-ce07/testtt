@@ -20,7 +20,7 @@ class ProductParser(Spider):
         if not self.is_new_item(retailer_sku):
             return
 
-        raw_product = self.extract_product(response)
+        raw_product = self.extract_raw_product(response)
         item['retailer_sku'] = retailer_sku
         item['name'] = self.extract_name(raw_product)
         item['gender'] = self.extract_gender(raw_product, response)
@@ -50,7 +50,7 @@ class ProductParser(Spider):
 
     def extract_description(self, response):
         description = response.css('.pdpReadMore .visible-xs.visible-sm *::text').extract()
-        return [des.strip() for des in description if des.strip()] if description else []
+        return [des.strip() for des in description if des.strip()]
 
     def extract_name(self, raw_product):
         return raw_product['product']['StyleInfo']['productName']
@@ -62,8 +62,8 @@ class ProductParser(Spider):
         return raw_product['product']['StyleInfo']['brand']
 
     def extract_categories(self, raw_product):
-        category = raw_product['page']['category']['subCategory2']
-        return [category] if category.strip() else []
+        category = raw_product['page']['category']
+        return [category['primaryCategory'], category['subCategory1'], category['subCategory2']]
 
     def extract_image_urls(self, response):
         css = '.product-image-carousel .primary-image::attr(src), .product-single-image .primary-image::attr(src)'
@@ -108,7 +108,7 @@ class ProductParser(Spider):
     def extract_currency(self):
         return 'SEK'
 
-    def extract_product(self, response):
+    def extract_raw_product(self, response):
         xpath = "//script[contains(., 'digitalData')]/text()"
         raw_product = response.xpath(xpath).re_first('digitalData.*?({.*);')
         raw_product = re.sub("(\w+) : ", r'"\1" :', raw_product)
