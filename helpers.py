@@ -2,19 +2,21 @@ import re
 
 
 CURRENCY_MAP = {
-    '€': 'EUR',
-    'EUR': 'EUR',
-    '$': 'AUD',
-    'AUD': 'AUD',
-    'kr': 'SEK',
     'SEK': 'SEK',
+    'AUD': 'AUD',
+    'EUR': 'EUR',
+    '€': 'EUR',
+    '$': 'AUD',
+    'kr': 'SEK',
 }
 
 GENDER_MAP = {
     'herr, dam': 'Unisex-Adults',
+    'women': 'Women',
+    'female': 'Women',
     'men': 'Men',
     'herren': 'Men',
-    'women': 'Women',
+    'male': 'Men',
     'damen': 'Women',
     'herr': 'Women',
     'dam': 'Men',
