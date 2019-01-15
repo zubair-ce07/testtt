@@ -146,7 +146,7 @@ class ProductParser(Spider):
         return json.loads(raw_skus) if raw_skus else None
 
 
-class DrmartensSpider(CrawlSpider):
+class VipshopSpider(CrawlSpider):
     name = 'vipshop-crawl-spider'
     allowed_domains = ['vip.com']
     start_urls = ['https://category.vip.com/']
