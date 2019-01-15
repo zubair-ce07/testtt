@@ -50,33 +50,35 @@ class ProductParser(Spider):
 
         for sku in item['skus']:
             if int(item['skus'][sku]['id']) in out_of_stock:
-                item['skus'][sku].pop('id')
                 item['skus'][sku]['out_of_stock'] = True
 
         return item_or_request(item)
 
     def extract_requests(self, response):
+        requests = self.extract_colour_requests(response)
+        requests.append(self.extract_stock_detail_request(response))
+        return requests
+
+    def extract_stock_detail_request(self, response):
         prod_id = self.extract_product_id(response)
         url = f"https://stock.vip.com/detail/?callback=stock_detail&merchandiseId={prod_id}&is_old=0&areaId=104104101"
-        requests = self.extract_colour_requests(response)
-        requests.append(Request(url, callback=self.parse_stock_item))
-        return requests
+        return Request(url, callback=self.parse_stock_item)
 
     def extract_colour_requests(self, response):
         css = '.color-list a:not([class="J-colorItem color-selected"])::attr(href)'
-        urls = response.css(css).extract()
-        return [Request(url=response.urljoin(url), callback=self.parse_colour_item) for url in urls]
+        return [response.follow(url, callback=self.parse_colour_item) for url in response.css(css).extract()]
 
-    def is_new_item(self, product):
-        if product and product not in self.seen_ids:
-            self.seen_ids.add(product)
+    def is_new_item(self, product_id):
+        if product_id and product_id not in self.seen_ids:
+            self.seen_ids.add(product_id)
             return True
 
         return False
 
     def extract_product_id(self, response):
         pattern = 'leftSideCoupon.*?productId":"(.*?)"'
-        return response.xpath("//script/text()").re_first(pattern)
+        xpath = "//script[contains(., 'leftSideCoupon')]/text()"
+        return response.xpath(xpath).re_first(pattern)
 
     def extract_description(self, response):
         description = response.css('.goods-description-title::text').extract_first()
@@ -94,7 +96,7 @@ class ProductParser(Spider):
 
     def extract_categories(self, response):
         trail = response.meta.get('trail', [])
-        return [category[0] for category in trail]
+        return [c for c, _ in trail]
 
     def extract_image_urls(self, response):
         image_urls = response.css('.pic-sliderwrap a::attr(href)').extract()
@@ -102,12 +104,12 @@ class ProductParser(Spider):
 
     def extract_skus(self, response):
         skus = {}
-        common_sku = extract_price_details(self.extract_price(response))
-        common_sku['colour'] = self.extract_colour(response)
-
         raw_skus = self.extract_raw_skus(response)
         if not raw_skus:
             return skus
+
+        common_sku = extract_price_details(self.extract_price(response))
+        common_sku['colour'] = self.extract_colour(response)
 
         for raw_sku in raw_skus:
             sku = common_sku.copy()
@@ -119,8 +121,7 @@ class ProductParser(Spider):
 
     def extract_colour(self, response):
         css = '.J-colorItem.color-selected .color-item-name::text'
-        color = response.css(css).extract_first()
-        return color or "One Colour"
+        return response.css(css).extract_first()
 
     def extract_market(self):
         return 'CHINA'
@@ -165,40 +166,43 @@ class VipshopSpider(CrawlSpider):
         Rule(LinkExtractor(restrict_css=listing_css), callback='parse_item')
     ]
 
+    url_templates = ['https://category.vip.com/ajax/mapi.php?service=product_info&productIds={0}&functions={1}&'
+                     'warehouse=VIP_NH', 'https://category.vip.com/ajax/getTreeList.php?cid={0}&tree_id=107',
+                     'https://category.vip.com/{0}', 'https://detail.vip.com/detail-{0}-{1}.html']
+
     def parse(self, response):
-        trail = self.extract_trail(response)
+        meta = {'trail': self.extract_trail(response)}
         categories = response.xpath('//script/text()').re_first('cateIdList =(.*])')
 
         for category in json.loads(categories):
-            yield Request(f"https://category.vip.com/ajax/getTreeList.php?cid={category['cate_id']}&tree_id=107",
-                          callback=self.parse_category, meta={'trail': trail})
+            yield Request(self.url_templates[1].format(category['cate_id']), callback=self.parse_category,
+                          meta=meta.copy())
 
     def parse_category(self, response):
-        trail = self.extract_trail(response)
+        meta = {'trail': self.extract_trail(response)}
         sub_categories = response.xpath('//text()').re_first('children":(.*)}]')
 
         for url in self.extract_sub_cat_urls(sub_categories):
-            yield Request(f"https://category.vip.com/{url}", callback=self.parse_sub_category, meta={'trail': trail})
+            yield Request(self.url_templates[2].format(url), callback=self.parse_sub_category, meta=meta.copy())
 
     def parse_sub_category(self, response):
-        trail = self.extract_trail(response)
+        meta = {'trail': self.extract_trail(response)}
         raw_product_ids = response.xpath('//text()').re_first('merchandise.*productIds":(.*])')
         product_ids = ",".join(json.loads(raw_product_ids))
         functions = "brandShowName,surprisePrice,pcExtra,promotionPrice,businessCode,promotionTips"
 
-        yield Request(f"https://category.vip.com/ajax/mapi.php?service=product_info&callback=categoryMerchandiseInfo1"
-                      f"&productIds={product_ids}&functions={functions}&warehouse=VIP_NH&mobile_platform=1&"
-                      f"app_name=shop_pc&fdc_area_id=104104101", callback=self.parse_products, meta={'trail': trail})
+        yield Request(self.url_templates[0].format(product_ids, functions), callback=self.parse_products,
+                      meta=meta.copy())
 
     def parse_products(self, response):
-        trail = self.extract_trail(response)
-        products = response.xpath('//text()').re_first('categoryMerchandiseInfo1.*products":(.*])')
+        meta = {'trail': self.extract_trail(response)}
+        products = response.xpath('//text()').re_first('products":(.*])')
         if not products:
             return
 
         for product in json.loads(products):
-            yield Request(f"https://detail.vip.com/detail-{product['productId']}-{product['brandId']}.html",
-                          callback=self.parse_item, meta={'trail': trail})
+            yield Request(self.url_templates[3].format(product['productId'], product['brandId']), meta=meta.copy(),
+                          callback=self.parse_item)
 
     def parse_item(self, response):
         return self.product_parser.parse(response)
