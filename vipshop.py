@@ -190,9 +190,8 @@ class VipshopSpider(CrawlSpider):
         meta = {'trail': self.extract_trail(response)}
         raw_product_ids = response.xpath('//text()').re_first('merchandise.*productIds":(.*])')
         product_ids = ",".join(json.loads(raw_product_ids))
-        functions = "brandShowName,surprisePrice,pcExtra,promotionPrice,businessCode,promotionTips"
 
-        yield Request(self.products_url_t.format(product_ids, functions), callback=self.parse_products,
+        yield Request(self.products_url_t.format(product_ids), callback=self.parse_products,
                       meta=meta.copy())
 
     def parse_products(self, response):
