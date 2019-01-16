@@ -44,10 +44,11 @@ class ProductParser(Spider):
         return False
 
     def extract_product_id(self, response):
-        return response.xpath('//script/text()').re_first('"pathname".*productId":"(.*?)"')
+        xpath = "//script[contains(.,'product')]/text()"
+        return response.xpath(xpath).re_first('"query".*productId":"(.*?)"')
 
     def extract_description(self, response):
-        css = '.ProductDescription__LongDescription-s19e216s-5.bLnlOW::text'
+        css = '.ProductDescription__LongDescription-sc-19e216s-5::text'
         description = response.css(css).extract_first()
         return [des.strip() for des in description.split('.') if des.strip()] if description else []
 
@@ -67,7 +68,7 @@ class ProductParser(Spider):
         return [c for c, _ in trail]
 
     def extract_image_urls(self, response):
-        return response.css('.ProductImageCarousel__StyledProductImage-x1qgfw-11::attr(src)').extract()
+        return response.css('.ProductImageCarousel__ImageCarousel-x1qgfw-7 img::attr(src)').extract()
 
     def extract_skus(self, response):
         skus = {}
@@ -121,9 +122,10 @@ class SavagexSpider(CrawlSpider):
                       'Safari/537.36'
     }
 
-    product_css = ['.NavBar__Wrapper-dkj1li-0.ezwYuW', '.NavMenuSubCategories__Wrapper-s1a71ucp-0',
-                   '.HoverMenu__SubmenuWrapper-um7uz7-2', '.ProductBrowserSidebar__Subcategories-s1ty7diy-2.KAtHz']
-    listing_css = ['.ProductGrid__Container-s3uyfmk-0.hrqmNO']
+    product_css = ['.NavBar__Wrapper-dkj1li-0.ezwYuW', '.HoverMenu__SubmenuWrapper-um7uz7-2',
+                   '.ProductBrowserSidebar__Subcategories-s1ty7diy-2.KAtHz', '.HoverMenu__Wrapper-um7uz7-0',
+                   '.ProductBrowserSidebar__Wrapper-sc-1ty7diy-0', '.FirstLookLayout__PanelColumns-sc-48pbor-1']
+    listing_css = ['.ProductGrid__Container-s3uyfmk-0.hrqmNO', '.ProductGrid__Container-sc-3uyfmk-0', '.slick-slider']
     rules = [
         Rule(LinkExtractor(restrict_css=product_css), callback='parse'),
         Rule(LinkExtractor(restrict_css=listing_css), callback='parse_item')
