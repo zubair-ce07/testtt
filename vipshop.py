@@ -9,6 +9,8 @@ from helpers import extract_price_details, extract_gender, item_or_request
 
 
 class ProductParser(Spider):
+    stock_request_t = 'https://stock.vip.com/detail/?callback=stock_detail&merchandiseId={}'
+
     def __init__(self):
         self.seen_ids = set()
 
@@ -33,7 +35,8 @@ class ProductParser(Spider):
         item['image_urls'] = self.extract_image_urls(response)
         item['category'] = self.extract_categories(response)
         item['skus'] = self.extract_skus(response)
-        item['meta'] = {'requests': self.extract_requests(response)}
+        requests = self.extract_colour_requests(response) + self.extract_stock_detail_request(response)
+        item['meta'] = {'requests': requests}
 
         return item_or_request(item)
 
@@ -60,9 +63,8 @@ class ProductParser(Spider):
         return requests
 
     def extract_stock_detail_request(self, response):
-        prod_id = self.extract_product_id(response)
-        url = f"https://stock.vip.com/detail/?callback=stock_detail&merchandiseId={prod_id}&is_old=0&areaId=104104101"
-        return Request(url, callback=self.parse_stock_item)
+        product_id = self.extract_product_id(response)
+        return [Request(self.stock_request_t.format(product_id), callback=self.parse_stock_item)]
 
     def extract_colour_requests(self, response):
         css = '.color-list a:not([class="J-colorItem color-selected"])::attr(href)'
@@ -159,23 +161,22 @@ class VipshopSpider(CrawlSpider):
                       'Safari/537.36'
     }
 
-    listing_css = ['.g-wrap', '.c-goods-list', '.goods-list', '.c-hot-category']
-    product_css = ['.wrap.clearfix', '.column-operation', '.index-content.s_bg_top', '.c-page']
     rules = [
-        Rule(LinkExtractor(restrict_css=product_css), callback='parse'),
-        Rule(LinkExtractor(restrict_css=listing_css), callback='parse_item')
+        Rule(LinkExtractor(), callback='parse'),
+        Rule(LinkExtractor(), callback='parse_item')
     ]
 
-    url_templates = ['https://category.vip.com/ajax/mapi.php?service=product_info&productIds={0}&functions={1}&'
-                     'warehouse=VIP_NH', 'https://category.vip.com/ajax/getTreeList.php?cid={0}&tree_id=107',
-                     'https://category.vip.com/{0}', 'https://detail.vip.com/detail-{0}-{1}.html']
+    products_url_t = 'https://category.vip.com/ajax/mapi.php?service=product_info&productIds={}'
+    category_url_t = 'https://category.vip.com/ajax/getTreeList.php?tree_id=107&cid={}'
+    sub_category_url_t = 'https://category.vip.com/{}'
+    product_detail_url_t = 'https://detail.vip.com/detail-{}-{}.html'
 
     def parse(self, response):
         meta = {'trail': self.extract_trail(response)}
         categories = response.xpath('//script/text()').re_first('cateIdList =(.*])')
 
         for category in json.loads(categories):
-            yield Request(self.url_templates[1].format(category['cate_id']), callback=self.parse_category,
+            yield Request(self.category_url_t.format(category['cate_id']), callback=self.parse_category,
                           meta=meta.copy())
 
     def parse_category(self, response):
@@ -183,7 +184,7 @@ class VipshopSpider(CrawlSpider):
         sub_categories = response.xpath('//text()').re_first('children":(.*)}]')
 
         for url in self.extract_sub_cat_urls(sub_categories):
-            yield Request(self.url_templates[2].format(url), callback=self.parse_sub_category, meta=meta.copy())
+            yield Request(self.sub_category_url_t.format(url), callback=self.parse_sub_category, meta=meta.copy())
 
     def parse_sub_category(self, response):
         meta = {'trail': self.extract_trail(response)}
@@ -191,7 +192,7 @@ class VipshopSpider(CrawlSpider):
         product_ids = ",".join(json.loads(raw_product_ids))
         functions = "brandShowName,surprisePrice,pcExtra,promotionPrice,businessCode,promotionTips"
 
-        yield Request(self.url_templates[0].format(product_ids, functions), callback=self.parse_products,
+        yield Request(self.products_url_t.format(product_ids, functions), callback=self.parse_products,
                       meta=meta.copy())
 
     def parse_products(self, response):
@@ -201,7 +202,7 @@ class VipshopSpider(CrawlSpider):
             return
 
         for product in json.loads(products):
-            yield Request(self.url_templates[3].format(product['productId'], product['brandId']), meta=meta.copy(),
+            yield Request(self.product_detail_url_t.format(product['productId'], product['brandId']), meta=meta.copy(),
                           callback=self.parse_item)
 
     def parse_item(self, response):
