@@ -100,8 +100,7 @@ class ProductParser(Spider):
         return 'Women'
 
     def extract_price(self, response):
-        css = '.ProductDetail__ProductPriceSpan-rkmewc-10 .bfx-price.ProductDetail__NonMemberOldPrice-rkmewc-11::text'
-        return response.css(css).extract()
+        return response.css('.ProductDetail__PriceContainer-rkmewc-15 span::text').extract()
 
     def extract_retailer(self):
         return 'savagex'
