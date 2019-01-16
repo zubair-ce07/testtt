@@ -2,7 +2,6 @@ import json
 
 from scrapy import Spider, Request
 from scrapy.contrib.spiders import CrawlSpider, Rule
-from scrapy.linkextractor import LinkExtractor
 
 from item_structure import Item
 from helpers import extract_price_details, extract_gender, item_or_request
@@ -56,11 +55,6 @@ class ProductParser(Spider):
                 item['skus'][sku]['out_of_stock'] = True
 
         return item_or_request(item)
-
-    def extract_requests(self, response):
-        requests = self.extract_colour_requests(response)
-        requests.append(self.extract_stock_detail_request(response))
-        return requests
 
     def extract_stock_detail_request(self, response):
         product_id = self.extract_product_id(response)
@@ -161,11 +155,6 @@ class VipshopSpider(CrawlSpider):
                       'Safari/537.36'
     }
 
-    rules = [
-        Rule(LinkExtractor(), callback='parse'),
-        Rule(LinkExtractor(), callback='parse_item')
-    ]
-
     products_url_t = 'https://category.vip.com/ajax/mapi.php?service=product_info&productIds={}'
     category_url_t = 'https://category.vip.com/ajax/getTreeList.php?tree_id=107&cid={}'
     sub_category_url_t = 'https://category.vip.com/{}'
@@ -175,9 +164,8 @@ class VipshopSpider(CrawlSpider):
         meta = {'trail': self.extract_trail(response)}
         categories = response.xpath('//script/text()').re_first('cateIdList =(.*])')
 
-        for category in json.loads(categories):
-            yield Request(self.category_url_t.format(category['cate_id']), callback=self.parse_category,
-                          meta=meta.copy())
+        for catg in json.loads(categories):
+            yield Request(self.category_url_t.format(catg['cate_id']), callback=self.parse_category, meta=meta.copy())
 
     def parse_category(self, response):
         meta = {'trail': self.extract_trail(response)}
@@ -189,9 +177,8 @@ class VipshopSpider(CrawlSpider):
     def parse_sub_category(self, response):
         meta = {'trail': self.extract_trail(response)}
         raw_product_ids = response.xpath('//text()').re_first('merchandise.*productIds":(.*])')
-        product_ids = ",".join(json.loads(raw_product_ids))
 
-        yield Request(self.products_url_t.format(product_ids), callback=self.parse_products,
+        yield Request(self.products_url_t.format(",".join(json.loads(raw_product_ids))), callback=self.parse_products,
                       meta=meta.copy())
 
     def parse_products(self, response):
