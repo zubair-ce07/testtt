@@ -53,7 +53,7 @@ class ProductParser(Spider):
         return [des.strip() for des in description.split('.') if des.strip()] if description else []
 
     def extract_name(self, response):
-        return response.css('.ProductDetail__ProductName-rkmewc-4::text').extract_first()
+        return response.css('.ProductDetail__ProductName-rkmewc-6::text').extract_first()
 
     def extract_care(self, response):
         xpath = '//*[@class="ProductDescription__DetailsList-s19e216s-6 kgSNjr"]/li[contains(.,"wash")]/text()'
