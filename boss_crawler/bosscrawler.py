@@ -81,10 +81,6 @@ class BossSpider(CrawlSpider):
         item.pop('meta')
         return item
 
-    def product_currency(self, response):
-        css = '.product-price meta::attr(content)'
-        return response.css(css).extract_first()
-
     def product_url(self, response):
         return response.url
 
@@ -100,25 +96,28 @@ class BossSpider(CrawlSpider):
     def product_retailer_sku(self, raw_product):
         return raw_product['sku']
 
-    def raw_product(self, response):
-        css = 'script:contains("dataLayer.push(") ::text'
-        raw_product = response.css(css).re_first('\{.ecommerce.*\}')
-        raw_product = json.loads(raw_product)
-        return raw_product['ecommerce']['detail']['products'][0]
+    def product_care(self, response):
+        css = '.accordion__care-icon__text::text'
+        return response.css(css).extract()
+
+    def product_currency(self, response):
+        css = '.product-price meta::attr(content)'
+        return response.css(css).extract_first()
 
     def product_images_urls(self, response):
         css = '.slider-item--thumbnail-image img::attr(src)'
-        img_urls = response.css(css).extract()
-        return img_urls
+        return response.css(css).extract()
 
     def product_description(self, response):
         css = '.product-container__text__description::text'
         description = response.css(css).extract_first()
         return description.replace('\t', '').replace('\n', '')
 
-    def product_care(self, response):
-        css = '.accordion__care-icon__text::text'
-        return response.css(css).extract()
+    def raw_product(self, response):
+        css = 'script:contains("dataLayer.push(") ::text'
+        raw_product = response.css(css).re_first('\{.ecommerce.*\}')
+        raw_product = json.loads(raw_product)
+        return raw_product['ecommerce']['detail']['products'][0]
 
     def product_pricing(self, response):
         prev_price_css = '.product-price.product-price--price-standard::text'
@@ -130,14 +129,14 @@ class BossSpider(CrawlSpider):
             prev_price = prev_price.strip('\n')
             if prev_price:
                 return {'price': price.strip('\n'),
-                    'previous_price': prev_price}
+                        'previous_price': prev_price}
 
         return price.strip('\n')
 
     def colour_requests(self, response):
-        css = '.swatch-list__button.swatch-list__button--is-large a::attr(href)'
+        urls_css = '.swatch-list__button.swatch-list__button--is-large a::attr(href)'
         colours_css = '.swatch-list__button.swatch-list__button--is-large a::attr(title)'
-        urls = response.css(css).extract()
+        urls = response.css(urls_css).extract()
         colours = response.css(colours_css).extract()
         return [Request(url=response.urljoin(u), callback=self.parse_colour,
                 meta={'colour': c}, dont_filter=True) for c, u in zip(colours, urls)]
