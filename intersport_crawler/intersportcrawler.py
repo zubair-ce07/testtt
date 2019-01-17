@@ -9,21 +9,21 @@ from intersport_crawler.items import InterSportCrawlerItem
 
 class InterSportCrawler(CrawlSpider):
     GENDER_MAP = {
-        'men': 'Men',
-        "men's": 'Men',
-        'herren': 'Men',
-        'herre': 'Men',
-        'dam': 'Men',
-        'women': 'Women',
-        'damen': 'Women',
-        'herr': 'Women',
-        'boy': 'Boy',
-        'jungen': 'Boy',
-        'girl': 'Girl',
-        'mädchen': 'Girl',
-        'kid': 'Unisex-Kids',
-        'kinder': 'Unisex-Kids',
-        'barn': 'Unisex-Kids'}
+        'men': 'men',
+        "men's": 'men',
+        'herren': 'men',
+        'herre': 'men',
+        'dam': 'men',
+        'women': 'women',
+        'damen': 'women',
+        'herr': 'women',
+        'boy': 'boy',
+        'jungen': 'boy',
+        'girl': 'girl',
+        'mädchen': 'girl',
+        'kid': 'unisex-kids',
+        'kinder': 'unisex-kids',
+        'barn': 'unisex-kids'}
 
     name = 'intersport-nb-crawl'
     allowed_domains = ['intersport.no']
@@ -62,20 +62,15 @@ class InterSportCrawler(CrawlSpider):
 
         if self.product_gender(response):
             item['gender'] = self.product_gender(response)
-        if self.product_images_urls(response):
-            item['image_urls'] = self.product_images_urls(response)
+        if self.product_image_urls(response):
+            item['image_urls'] = self.product_image_urls(response)
 
         return item
-
-    def product_skus(self, response):
-        colour_index = 0
-        colours = self.product_sizes_or_colours(response, colour_index)
-        return [self.skus(response, colour) for colour in colours]
 
     def product_url(self, response):
         return response.url
 
-    def product_images_urls(self, response):
+    def product_image_urls(self, response):
         css = '.mcs-items-container img::attr(src)'
         return response.css(css).extract()
 
@@ -84,20 +79,20 @@ class InterSportCrawler(CrawlSpider):
         sku_id = response.css(css).extract_first()
         return sku_id.split()[1]
 
+    def product_name(self, response):
+        return response.css('.base::text').extract_first()
+
     def product_description(self, response):
         css = '.product.attribute.description > .value::text'
         return response.css(css).extract_first()
-
-    def product_brand(self, response):
-        return response.css('.title-brand::text').extract_first()
-
-    def product_name(self, response):
-        return response.css('.base::text').extract_first()
 
     def product_category(self, response):
         raw_sku = self.raw_sku(response)
         raw_sku = raw_sku['ecommerce']['detail']['products']
         return raw_sku[0]['category']
+
+    def product_brand(self, response):
+        return response.css('.title-brand::text').extract_first()
 
     def raw_sku(self, response):
         css = 'script:contains("AEC.Cookie.detail") ::text'
@@ -122,25 +117,31 @@ class InterSportCrawler(CrawlSpider):
             if k in gender_data:
                 return v
 
-    def product_pricing(self, raw_sku):
-        return raw_sku[0]['price']
+    def product_skus(self, response):
+        colour_index = 0
+        colours = self.product_sizes_or_colours(response, colour_index)
+        return [self.skus(response, colour) for colour in colours]
+
+    def product_pricing(self, raw_skus):
+        raw_sku = raw_skus['ecommerce']['detail']['products']
+        currency = raw_skus['ecommerce']['currencyCode']
+        return {'currency': currency, 'price': raw_sku[0]['price']}
 
     def skus(self, response, colour):
         skus = {}
         raw_skus = self.raw_sku(response)
         raw_sku = raw_skus['ecommerce']['detail']['products']
         sizes = self.product_sizes_or_colours(response)
+        common_sku = self.product_pricing(raw_skus)
 
         for size in sizes:
-            sku = {'size': size}
+            sku = common_sku.copy()
+            sku['size'] = size
 
             if colour and colour != 'N/a':
                 sku['colour'] = colour
             if not raw_sku[0]['quantity']:
                 sku['out_of_stock'] = True
-
-            sku['price'] = self.product_pricing(raw_sku)
-            sku['currency'] = raw_skus['ecommerce']['currencyCode']
 
             if colour and colour != 'N/a':
                 skus[f'{colour}_{size}'] = sku
