@@ -42,7 +42,7 @@ class BossSpider(CrawlSpider):
         item['brand'] = self.product_brand(raw_product)
         item['gender'] = self.product_gender(raw_product)
         item['category'] = self.product_category(raw_product)
-        item['image_urls'] = self.product_images_urls(response)
+        item['image_urls'] = self.product_image_urls(response)
         item['description'] = self.product_description(response)
         item['retailer_sku'] = self.product_retailer_sku(raw_product)
         item['meta'] = {'requests_queue': self.colour_requests(response)}
@@ -103,14 +103,17 @@ class BossSpider(CrawlSpider):
         css = '.accordion__care-icon__text::text'
         return response.css(css).extract()
 
-    def product_images_urls(self, response):
+    def product_image_urls(self, response):
         css = '.slider-item--thumbnail-image img::attr(src)'
         return response.css(css).extract()
 
     def product_description(self, response):
         css = '.product-container__text__description::text'
         description = response.css(css).extract_first()
-        return description.replace('\t', '').replace('\n', '')
+        return self.clean(description)
+
+    def clean(self, raw_text):
+        return raw_text.replace('\t', '').replace('\n', '')
 
     def raw_product(self, response):
         css = 'script:contains("dataLayer.push(") ::text'
@@ -128,10 +131,10 @@ class BossSpider(CrawlSpider):
         prev_price = response.css(prev_price_css).extract_first()
 
         pricing = {'currency': currency}
-        pricing['price'] = price.strip('\n')
+        pricing['price'] = self.clean(price)
 
         if prev_price:
-            prev_price = prev_price.strip('\n')
+            prev_price = self.clean(prev_price)
             if prev_price:
                 pricing['previous_price'] = prev_price
 
