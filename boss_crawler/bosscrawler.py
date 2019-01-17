@@ -36,11 +36,11 @@ class BossSpider(CrawlSpider):
         item['skus'] = {}
         item['lang'] = 'en'
         item['market'] = 'UK'
-        item['gender'] = 'women'
         item['url'] = self.product_url(response)
         item['care'] = self.product_care(response)
         item['name'] = self.product_name(raw_product)
         item['brand'] = self.product_brand(raw_product)
+        item['gender'] = self.product_gender(raw_product)
         item['category'] = self.product_category(raw_product)
         item['image_urls'] = self.product_images_urls(response)
         item['description'] = self.product_description(response)
@@ -58,17 +58,17 @@ class BossSpider(CrawlSpider):
     def skus(self, response, colour):
         skus = {}
         sizes_css = '.product-stage__choose-size--container a'
+        common_sku = self.product_pricing(response)
+        common_sku['colour'] = colour
 
         for size_s in response.css(sizes_css):
             size = size_s.css('a::attr(title)').extract_first()
-            sku = {'colour': colour}
+            sku = common_sku.copy()
+            sku['size'] = size
 
             if size_s.css('a::attr(disabled)'):
                 sku['out_of_stock'] = True
 
-            sku['price'] = self.product_pricing(response)
-            sku['currency'] = self.product_currency(response)
-            sku['size'] = size
             skus[f'{colour}_{size}'] = sku
         return skus
 
@@ -90,6 +90,9 @@ class BossSpider(CrawlSpider):
     def product_brand(self, raw_product):
         return raw_product['brand']
 
+    def product_gender(self, raw_product):
+        return raw_product['gender']
+
     def product_category(self, raw_product):
         return raw_product['category']
 
@@ -99,10 +102,6 @@ class BossSpider(CrawlSpider):
     def product_care(self, response):
         css = '.accordion__care-icon__text::text'
         return response.css(css).extract()
-
-    def product_currency(self, response):
-        css = '.product-price meta::attr(content)'
-        return response.css(css).extract_first()
 
     def product_images_urls(self, response):
         css = '.slider-item--thumbnail-image img::attr(src)'
@@ -120,23 +119,29 @@ class BossSpider(CrawlSpider):
         return raw_product['ecommerce']['detail']['products'][0]
 
     def product_pricing(self, response):
+        currency_css = '.product-price meta::attr(content)'
         prev_price_css = '.product-price.product-price--price-standard::text'
         price_css = '.product-price.product-price--price-sales.product-price--price::text'
-        prev_price = response.css(prev_price_css).extract_first()
+
         price = response.css(price_css).extract_first()
+        currency = response.css(currency_css).extract_first()
+        prev_price = response.css(prev_price_css).extract_first()
+
+        pricing = {'currency': currency}
+        pricing['price'] = price.strip('\n')
 
         if prev_price:
             prev_price = prev_price.strip('\n')
             if prev_price:
-                return {'price': price.strip('\n'),
-                        'previous_price': prev_price}
+                pricing['previous_price'] = prev_price
 
-        return price.strip('\n')
+        return pricing
 
     def colour_requests(self, response):
         urls_css = '.swatch-list__button.swatch-list__button--is-large a::attr(href)'
         colours_css = '.swatch-list__button.swatch-list__button--is-large a::attr(title)'
         urls = response.css(urls_css).extract()
         colours = response.css(colours_css).extract()
+
         return [Request(url=response.urljoin(u), callback=self.parse_colour,
                 meta={'colour': c}, dont_filter=True) for c, u in zip(colours, urls)]
