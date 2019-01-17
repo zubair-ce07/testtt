@@ -118,7 +118,7 @@ class SavagexSpider(CrawlSpider):
     custom_settings = {
         'DOWNLOAD_DELAY': 1,
         'USER_AGENT': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 '
-                      'Safari/537.36'
+                      'Safari/537.36',
     }
 
     product_css = ['.NavBar__Wrapper-dkj1li-0.ezwYuW', '.HoverMenu__SubmenuWrapper-um7uz7-2',
@@ -131,17 +131,27 @@ class SavagexSpider(CrawlSpider):
     ]
 
     def parse(self, response):
-        trail = response.meta.get('trail', [])
-        title = self.extract_title(response)
-        if title:
-            trail = trail + [[title, response.url]]
+        meta = {'trail': self.extract_trail(response)}
+        page_urls = response.xpath("//text()").re('"pageUrl":"(.*?)"')
+        for url in page_urls:
+            yield Request(response.urljoin(url), callback=self.parse_page_urls, meta=meta.copy())
 
+    def parse_page_urls(self, response):
+        meta = {'trail': self.extract_trail(response)}
         for request in super().parse(response):
-            request.meta['trail'] = trail
+            request.meta['trail'] = meta['trail']
             yield request
 
     def parse_item(self, response):
         return self.product_parser.parse(response)
+
+    def extract_trail(self, response):
+        title = self.extract_title(response)
+        trail = response.meta.get('trail', [])
+        if title:
+            trail = trail + [[title, response.url]]
+
+        return trail
 
     def extract_title(self, response):
         title = response.css('title::text').extract_first()
