@@ -79,31 +79,29 @@ def load_secondary_sheet(file_key, path):
 def merge_records(primary_records, secondary_records):
     records = []
     for key, primary_value in primary_records.items():
+        record = {}
+        record['Title'] = unquote(''.join(re.findall(r'q=(.*)\+', primary_value[0])))
+        record['Location'] = unquote(''.join(re.findall(r'\+(.*?)&', primary_value[0])))
+        record['Google URL'] = primary_value[0]
+
         if key in secondary_records:
             for sc_record in secondary_records[key]:
-                record = {}
-                record['Title'] = unquote(''.join(re.findall(r'q=(.*)\+', primary_value[0])))
-                record['Location'] = unquote(''.join(re.findall(r'\+(.*?)&', primary_value[0])))
-                record['Google URL'] = primary_value[0]
-                record['Google Job URL'] = sc_record[0]
-                record['Job'] = sc_record[1]
-                record['Company'] = sc_record[2]
-                record['Location_2'] = sc_record[3]
-                record['Timestamp'] = sc_record[4]
-                record['Type'] = sc_record[5]
-                record['Salary'] = sc_record[6]
-                record['Description'] = sc_record[7]
-                record['Typical Salaries'] = sc_record[8]
-                record['Apply Link'] = sc_record[9]
-                record['Apply Link_link'] = sc_record[10]
-                record['Rank'] = primary_value[5]
-                record['Screen Capture'] = sc_record[12]
-                records.append(record)
+                new_record = record.copy()
+                new_record['Google Job URL'] = sc_record[0]
+                new_record['Job'] = sc_record[1]
+                new_record['Company'] = sc_record[2]
+                new_record['Location_2'] = sc_record[3]
+                new_record['Timestamp'] = sc_record[4]
+                new_record['Type'] = sc_record[5]
+                new_record['Salary'] = sc_record[6]
+                new_record['Description'] = sc_record[7]
+                new_record['Typical Salaries'] = sc_record[8]
+                new_record['Apply Link'] = sc_record[9]
+                new_record['Apply Link_link'] = sc_record[10]
+                new_record['Rank'] = primary_value[5]
+                new_record['Screen Capture'] = sc_record[12]
+                records.append(new_record)
         else:
-            record = {}
-            record['Title'] = unquote(''.join(re.findall(r'q=(.*)\+', primary_value[0])))
-            record['Location'] = unquote(''.join(re.findall(r'\+(.*?)&', primary_value[0])))
-            record['Google URL'] = primary_value[0]
             record['Google Job URL'] = key
             record['Job'] = 'JOB EXPIRED'
             record['Company'] = ''
