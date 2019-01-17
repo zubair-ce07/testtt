@@ -42,7 +42,7 @@ class OrsaySpider(CrawlSpider):
         item['name'] = self.product_name(raw_product)
         item['brand'] = self.product_brand(raw_product)
         item['category'] = self.product_category(raw_product)
-        item['image_urls'] = self.product_images_urls(response)
+        item['image_urls'] = self.product_image_urls(response)
         item['description'] = self.product_description(response)
         item['retailer_sku'] = self.product_retailer_sku(raw_product)
         item['meta'] = {'requests_queue': self.colour_requests(response)}
@@ -82,7 +82,7 @@ class OrsaySpider(CrawlSpider):
         css = '.js-product-content-gtm::attr(data-product-details)'
         return json.loads(response.css(css).extract_first())
 
-    def product_images_urls(self, response):
+    def product_image_urls(self, response):
         return response.css('.thumb.js-thumb img::attr(src)').extract()
 
     def product_description(self, response):
@@ -93,13 +93,22 @@ class OrsaySpider(CrawlSpider):
         css = '.product-material.product-info-block.js-material-container p::text'
         return response.css(css).extract()
 
+    def clean(self, raw_text):
+        return raw_text.replace('\t', '').replace('\n', '')
+
     def product_pricing(self, response):
+        raw_sku = self.raw_product(response)
+        currency = raw_sku['currency_code']
         price = response.css('.price-sales::text').extract_first()
         prev_price = response.css('.price-standard::text').extract_first()
+        pricing = {'price': self.clean(price), 'currency': currency}
+
         if prev_price:
-            return {'price': price.strip('\n'),
-                    'previous_price': prev_price.strip('\n')}
-        return price.strip('\n')
+            prev_price = self.clean(prev_price)
+            if prev_price:
+                pricing['previous_price'] = prev_price
+
+        return pricing
 
     def colour_requests(self, response):
         css = 'ul.swatches.color li a::attr(href)'
@@ -110,16 +119,16 @@ class OrsaySpider(CrawlSpider):
         skus = {}
         sizes_css = '.swatches.size > li'
         raw_sku = self.raw_product(response)
+        common_sku = self.product_pricing(response)
+        common_sku['colour'] = raw_sku['color']
 
         for size_s in response.css(sizes_css):
             size = size_s.css('a::text').extract_first().strip('\n')
-            sku = {'colour': raw_sku['color']}
-            sku['price'] = self.product_pricing(response)
+            sku = common_sku.copy()
 
             if not size_s.css('.selectable'):
                 sku['out_of_stock'] = True
 
-            sku['currency'] = raw_sku['currency_code']
             sku['size'] = raw_sku['size']
             skus[f'{raw_sku["color"]}_{size}'] = sku
         return skus
