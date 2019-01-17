@@ -56,8 +56,7 @@ class ProductParser(Spider):
         return response.css('.ProductDetail__ProductName-rkmewc-6::text').extract_first()
 
     def extract_care(self, response):
-        xpath = '//*[@class="ProductDescription__DetailsList-s19e216s-6 kgSNjr"]/li[contains(.,"wash")]/text()'
-        raw_care = response.xpath(xpath).extract_first()
+        raw_care = response.xpath('//li[contains(.,"wash")]/text()').extract_first()
         return [care.strip() for care in raw_care.split('.')] if raw_care else []
 
     def extract_brand(self):
