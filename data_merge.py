@@ -53,7 +53,7 @@ def load_primary_sheet(filename):
 
 
 def load_secondary_sheet(file_key, path):
-    other_files = gb.glob(f'{path}/{file_key}*.xlsx')
+    other_files = gb.glob(f'{path}/{file_key}-*.xlsx')
     secondary_records = {}
 
     for other_file in other_files:
