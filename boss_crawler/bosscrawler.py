@@ -2,7 +2,6 @@ import json
 
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule, CrawlSpider, Request
-from w3lib.url import add_or_replace_parameter
 
 from boss_crawler.items import BossCrawlerItem
 
