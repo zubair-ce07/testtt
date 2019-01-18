@@ -22,7 +22,6 @@ class BossSpider(CrawlSpider):
     def parse_product(self, response):
         item = BossCrawlerItem()
         raw_product = self.raw_product(response)
-
         item['skus'] = {}
         item['lang'] = 'en'
         item['market'] = 'UK'
@@ -36,7 +35,6 @@ class BossSpider(CrawlSpider):
         item['description'] = self.product_description(response)
         item['retailer_sku'] = self.product_retailer_sku(raw_product)
         item['meta'] = {'requests_queue': self.colour_requests(response)}
-
         return self.next_request_or_item(item)
 
     def parse_colour(self, response):
@@ -99,8 +97,7 @@ class BossSpider(CrawlSpider):
 
     def product_description(self, response):
         css = '.product-container__text__description::text'
-        description = response.css(css).extract_first()
-        return self.clean(description)
+        return self.clean(response.css(css).extract_first())
 
     def clean(self, raw_text):
         return raw_text.replace('\t', '').replace('\n', '')
@@ -119,7 +116,6 @@ class BossSpider(CrawlSpider):
         price = response.css(price_css).extract_first()
         currency = response.css(currency_css).extract_first()
         prev_price = response.css(prev_price_css).extract_first()
-
         pricing = {'currency': currency}
         pricing['price'] = self.clean(price)
 
@@ -135,6 +131,5 @@ class BossSpider(CrawlSpider):
         colours_css = '.swatch-list__button.swatch-list__button--is-large a::attr(title)'
         urls = response.css(urls_css).extract()
         colours = response.css(colours_css).extract()
-
         return [Request(url=response.urljoin(u), callback=self.parse_colour,
                 meta={'colour': c}, dont_filter=True) for c, u in zip(colours, urls)]
