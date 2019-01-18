@@ -13,21 +13,11 @@ class BossSpider(CrawlSpider):
     allowed_domains = ['hugoboss.com']
     start_urls = ['https://www.hugoboss.com/uk/']
 
-    listings_css = ['.nav-list.nav-list--first-level']
+    listings_css = ['.nav-list.nav-list--first-level', '.pagingbar__items--desktop li']
     products_css = ['.search-result-content.search-result-content--sticky.is-category-search']
 
-    rules = (Rule(LinkExtractor(restrict_css=listings_css), callback='parse_pagination'),
+    rules = (Rule(LinkExtractor(restrict_css=listings_css), callback='parse'),
              Rule(LinkExtractor(restrict_css=products_css), callback='parse_product'))
-
-    def parse_pagination(self, response):
-        page_size = 60
-        css = '.search-result-options__brand-badge::text'
-        pages = response.css(css).extract_first()
-        pages = int(pages) if pages else 0
-
-        for page in range(0, pages+1, page_size):
-            next_url = add_or_replace_parameter(response.url, 'sz=60&start', page)
-            yield Request(url=next_url, callback=self.parse)
 
     def parse_product(self, response):
         item = BossCrawlerItem()
