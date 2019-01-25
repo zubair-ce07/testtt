@@ -11,7 +11,7 @@ from whitestuff_crawler.items import WhiteStuffCrawlerItem
 
 class WhiteStuffCrawler(CrawlSpider):
 
-    name = 'whitestuff-global-crawl'
+    name = 'whitestuff-UK-crawl'
     allowed_domains = ['whitestuff.com', 'fsm.attraqt.com']
     start_urls = ['https://www.whitestuff.com/global/sale/',
                   'https://www.whitestuff.com/global/mens/',
