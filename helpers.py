@@ -2,10 +2,12 @@ import re
 
 
 CURRENCY_MAP = {
+    'GBP': 'GBP',
     'YUAN': 'YUAN',
     'SEK': 'SEK',
     'AUD': 'AUD',
     'EUR': 'EUR',
+    '£': 'GBP',
     '€': 'EUR',
     '¥': 'YUAN',
     '$': 'AUD',
