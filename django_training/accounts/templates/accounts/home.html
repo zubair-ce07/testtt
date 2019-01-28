@@ -1,8 +1,11 @@
-{% extends 'base.html' %}
+{% extends 'accounts/base.html' %}
 
 {% block title %} Homepage {% endblock %}
 
 {% block content %}
-    {{ if user.is_authenticated }}:
+<p>
+    You are not login. Please login first
+    <h2><a href="{% url 'login' %}">Login</a></h2>
+</p>
 
 {% endblock %}

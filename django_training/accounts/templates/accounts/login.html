@@ -1,13 +1,12 @@
-{% extends 'accounts\base.html' %}
+{% extends 'accounts/base.html' %}
 
 {% block title %} Login Page {% endblock %}
 
 {% block content %}
     <h2>Login</h2>
-    <form method="post" action="{% url 'handle_login' %}">
+    <form method="post" action="{% url 'login' %}">
         {% csrf_token %}
-        User Name: <input type="text" name="username"> <br><br>
-        Password: <input type="password" name="password"> <br><br>
-        <input type="submit" value="Login">
+        {{ form.as_p }}
+        <input type="submit" value="Submit">
     </form>
 {% endblock %}
