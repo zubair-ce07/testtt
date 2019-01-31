@@ -58,3 +58,8 @@ target/
 
 # VSCode
 .vscode
+
+django_env/
+
+#weatherfiles
+/weatherfiles
