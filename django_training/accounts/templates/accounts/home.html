@@ -3,9 +3,32 @@
 {% block title %} Homepage {% endblock %}
 
 {% block content %}
-<p>
-    You are not login. Please login first
-    <h2><a href="{% url 'login' %}">Login</a></h2>
-</p>
+    {% if user.is_authenticated %}
+        <p>Hi {{ user.username }} | <a href="{% url 'logout' %}">Logout</a></p>
+        <h3>
+            <a href="{% url 'add_blog' %}">Add New Blog</a>
+        </h3>
+
+    {% else %}
+        <p>
+           <a href="{% url 'login' %}">Login/</a>
+           <a href="{% url 'signup' %}">Signup</a>
+        </p>
+    {% endif %}
+
+    <h1>Blogs</h1>
+    <ul>
+        {% for blog in blogs %}
+            <li>
+                {{ blog.blog_title }}
+                {% if user == blog.user_id %}
+                    <a href="{% url 'edit_blog' blog.id %}">Edit|</a>
+                    <a href="{% url 'delete_blog' blog.id %}">Delete</a>
+                {% endif %}
+            </li>
+            {{ blog.blog_description }}
+            <br><br>
+        {% endfor %}
+    </ul>
 
 {% endblock %}
