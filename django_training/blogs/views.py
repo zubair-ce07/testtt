@@ -34,7 +34,8 @@ def edit_blog(request, blog_id):
         return render(request, 'blogs/edit_blog.html', {'form': form})
 
 
-def delete_blog(request, blog_id):
+def delete_blog(request):
+    blog_id = request.GET['blog_id']
     blog = get_object_or_404(Blog, id=blog_id)
     blog.delete()
-    return HttpResponse('<h2>Successfully Deleted. To see click on <a href={}>Home</a></h2>'.format(reverse('home')))
+    return HttpResponse('{} blog is successfully deleted'.format(blog))
