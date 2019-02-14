@@ -60,3 +60,6 @@ target/
 .vscode
 
 django_env/
+
+#weatherfiles
+/weatherfiles
