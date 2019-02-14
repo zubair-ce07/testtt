@@ -60,3 +60,5 @@ target/
 .vscode
 
 django_env/
+
+node_modules/
