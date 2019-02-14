@@ -28,14 +28,10 @@ class App extends Component {
     });
   }
 
-  videoSelect(userSelected) {
+  videoSelect(selectedVideo) {
     this.setState({
-      selectedVideo: userSelected
+      selectedVideo: selectedVideo
     });
-    
-    setTimeout(() => {
-      window.scrollTo(0, 0);
-    }, 500);
   }
 
   render() {
@@ -52,17 +48,14 @@ class App extends Component {
             <SearchBar onSearchTermChange={searchTerm => this.videoSearch(searchTerm)} />
           </div>
         </div>
-        
-        <br />
-
-        <div className="row">
+        <div className="row video-panel">
           <div className="col-lg-1"></div>
           <div className={this.state.selectedVideo ? "col-lg-7" : ""}>
             <VideoDetail video={this.state.selectedVideo} />
           </div>
           <div className="col-lg-4">
             <div className={this.state.selectedVideo ? "related-videos" : ""}>
-              <VideoList onVideoSelect={userSelected => this.videoSelect(userSelected)}
+              <VideoList onVideoSelect={selectedVideo => this.videoSelect(selectedVideo)}
                 videos={this.state.videos} />
             </div>
           </div>

@@ -26,7 +26,6 @@ input {
 .related-videos{
   position: absolute;
   right: 0px;
-  padding-left: 25px;
 }
 
 .related-video-list {
@@ -43,16 +42,11 @@ input {
   height: 120px;
 }
 
-.related-videos ul {
-  padding-right: 15px;
-  padding-left: 15px;
-}
-
-.related-videos-heading {
-  padding-bottom: 20px;
-}
-
-.search-bar{
+.search-bar {
   margin: 0px;
   text-align: center;
+}
+
+.video-panel {
+  padding-top: 30px;
 }
