@@ -61,5 +61,7 @@ target/
 
 django_env/
 
+db.sqlite3
+
 #weatherfiles
 /weatherfiles
