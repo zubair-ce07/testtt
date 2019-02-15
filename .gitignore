@@ -59,5 +59,8 @@ target/
 # VSCode
 .vscode
 
+django_env/
+db.sqlite3
+
 #weatherfiles
 /weatherfiles
