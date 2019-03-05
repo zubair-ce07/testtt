@@ -1,0 +1,43 @@
+body {
+  font-family: "Black Ops One", cursive;
+  margin: 20px;
+}
+
+.main-player {
+  height: 60vh;
+  padding: 3vh;
+}
+
+.navbar-brand {
+  font-family: "Black Ops One", cursive;
+}
+
+.player-description {
+  font-family: "Slabo 13px", serif;
+}
+
+.player-detail {
+  overflow: auto;
+}
+
+.player-title {
+  font-family: "Playfair Display", serif;
+}
+
+.search-panel {
+  min-height: 7vh;
+  margin-bottom: 2vh;
+  text-align: center;
+}
+
+.video-list {
+  display: flex;
+  flex-direction: row;
+  min-height: 30vh;
+  list-style-type: none;
+  justify-content: center;
+}
+
+.video-list-object {
+  cursor: pointer;
+}
