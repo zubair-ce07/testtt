@@ -102,7 +102,3 @@ ENV/
 .vscode/
 
 # PyCharm
-.idea/
-
-# request log
-userbooklog.txt
