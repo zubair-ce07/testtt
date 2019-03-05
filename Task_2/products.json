@@ -1,0 +1,216 @@
+{
+    "1": {
+        "color_urls": [],
+        "brand": "Orsay",
+        "description": "- Gesamtl\u00e4nge (Gr\u00f6\u00dfe 36): 90,4 cm",
+        "url": "http://www.orsay.com/de-de/chiffonkleid-uni-47007996.html",
+        "retailer_sku": "470079526000",
+        "name": [
+            "Chiffonkleid Uni"
+        ],
+        "skus": {
+            "470079526000_32": {
+                "color": "Blau",
+                "size": "32",
+                "price": "9.99",
+                "currency": "EUR"
+            },
+            "470079526000_34": {
+                "color": "Blau",
+                "size": "34",
+                "price": "9.99",
+                "currency": "EUR"
+            },
+            "470079526000_36": {
+                "color": "Blau",
+                "size": "36",
+                "price": "9.99",
+                "currency": "EUR"
+            },
+            "470079526000_38": {
+                "color": "Blau",
+                "size": "38",
+                "price": "9.99",
+                "currency": "EUR"
+            },
+            "470079526000_40": {
+                "color": "Blau",
+                "size": "40",
+                "price": "9.99",
+                "currency": "EUR"
+            },
+            "470079526000_42": {
+                "color": "Blau",
+                "size": "42",
+                "price": "9.99",
+                "currency": "EUR"
+            },
+            "470079526000_44": {
+                "color": "Blau",
+                "size": "44",
+                "price": "9.99",
+                "currency": "EUR",
+                "out_of_stock": "true"
+            }
+        },
+        "care": [
+            "100% POLYESTER",
+            "http://www.orsay.com/skin/frontend/enterprise/orsay/images/caresymbols/wash-30.png",
+            "http://www.orsay.com/skin/frontend/enterprise/orsay/images/caresymbols/chlore-0.png",
+            "http://www.orsay.com/skin/frontend/enterprise/orsay/images/caresymbols/sharp-L.png",
+            "http://www.orsay.com/skin/frontend/enterprise/orsay/images/caresymbols/clean-0.png",
+            "http://www.orsay.com/skin/frontend/enterprise/orsay/images/caresymbols/linge-0.png"
+        ],
+        "image_urls": [
+            "http://images.orsay.com/media/catalog/product/cache/allstores/image/9df78eab33525d08d6e5fb8d27136e95/4/7/470079_96f_2.jpg",
+            "http://images.orsay.com/media/catalog/product/cache/allstores/image/9df78eab33525d08d6e5fb8d27136e95/4/7/470079_96b.jpg",
+            "http://images.orsay.com/media/catalog/product/cache/allstores/image/9df78eab33525d08d6e5fb8d27136e95/4/7/470079_96p.jpg",
+            "http://images.orsay.com/media/catalog/product/cache/allstores/image/9df78eab33525d08d6e5fb8d27136e95/4/7/470079_96s.jpg",
+            "http://images.orsay.com/media/catalog/product/cache/allstores/image/9df78eab33525d08d6e5fb8d27136e95/4/7/470079_96d.jpg"
+        ]
+    },
+    "2": {
+        "color_urls": [],
+        "brand": "Orsay",
+        "description": "- Gesamtl\u00e4nge (Gr\u00f6\u00dfe 36): 45 cm",
+        "url": "http://www.orsay.com/de-de/glockenrock-mit-muster-72209797.html",
+        "retailer_sku": "722097001000",
+        "name": [
+            "Glockenrock mit Muster"
+        ],
+        "skus": {
+            "722097001000_32": {
+                "color": "Wei\u00df",
+                "size": "32",
+                "price": "9.99",
+                "currency": "EUR"
+            },
+            "722097001000_34": {
+                "color": "Wei\u00df",
+                "size": "34",
+                "price": "9.99",
+                "currency": "EUR"
+            },
+            "722097001000_36": {
+                "color": "Wei\u00df",
+                "size": "36",
+                "price": "9.99",
+                "currency": "EUR"
+            },
+            "722097001000_38": {
+                "color": "Wei\u00df",
+                "size": "38",
+                "price": "9.99",
+                "currency": "EUR"
+            },
+            "722097001000_40": {
+                "color": "Wei\u00df",
+                "size": "40",
+                "price": "9.99",
+                "currency": "EUR"
+            },
+            "722097001000_42": {
+                "color": "Wei\u00df",
+                "size": "42",
+                "price": "9.99",
+                "currency": "EUR"
+            },
+            "722097001000_44": {
+                "color": "Wei\u00df",
+                "size": "44",
+                "price": "9.99",
+                "currency": "EUR"
+            }
+        },
+        "care": [
+            "97% BAUMWOLLE, 3% ELASTHAN",
+            "http://www.orsay.com/skin/frontend/enterprise/orsay/images/caresymbols/wash-30.png",
+            "http://www.orsay.com/skin/frontend/enterprise/orsay/images/caresymbols/chlore-0.png",
+            "http://www.orsay.com/skin/frontend/enterprise/orsay/images/caresymbols/sharp-M.png",
+            "http://www.orsay.com/skin/frontend/enterprise/orsay/images/caresymbols/clean-P.png",
+            "http://www.orsay.com/skin/frontend/enterprise/orsay/images/caresymbols/linge-0.png"
+        ],
+        "image_urls": [
+            "http://images.orsay.com/media/catalog/product/cache/allstores/image/9df78eab33525d08d6e5fb8d27136e95/7/2/722097_97f_1.jpg",
+            "http://images.orsay.com/media/catalog/product/cache/allstores/image/9df78eab33525d08d6e5fb8d27136e95/7/2/722097_97b_1.jpg",
+            "http://images.orsay.com/media/catalog/product/cache/allstores/image/9df78eab33525d08d6e5fb8d27136e95/7/2/722097_97p_1.jpg",
+            "http://images.orsay.com/media/catalog/product/cache/allstores/image/9df78eab33525d08d6e5fb8d27136e95/7/2/722097_97s_1.jpg",
+            "http://images.orsay.com/media/catalog/product/cache/allstores/image/9df78eab33525d08d6e5fb8d27136e95/7/2/722097_97d_1.jpg"
+        ]
+    },
+    "3": {
+        "color_urls": [
+            "http://www.orsay.com/de-de/denim-capri-36301595.html",
+            "http://www.orsay.com/de-de/denim-capri-36301596.html",
+            "http://www.orsay.com/de-de/denim-capri-36301597.html"
+        ],
+        "brand": "Orsay",
+        "description": "- Innenbeinl\u00e4nge (Gr\u00f6\u00dfe 36): 47,2 cm",
+        "url": "http://www.orsay.com/de-de/denim-capri-36301598.html",
+        "retailer_sku": "363015001000",
+        "name": [
+            "Denim-Capri"
+        ],
+        "skus": {
+            "363015001000_32": {
+                "color": "Wei\u00df",
+                "size": "32",
+                "price": "9.99",
+                "currency": "EUR",
+                "out_of_stock": "true"
+            },
+            "363015001000_34": {
+                "color": "Wei\u00df",
+                "size": "34",
+                "price": "9.99",
+                "currency": "EUR",
+                "out_of_stock": "true"
+            },
+            "363015001000_36": {
+                "color": "Wei\u00df",
+                "size": "36",
+                "price": "9.99",
+                "currency": "EUR"
+            },
+            "363015001000_38": {
+                "color": "Wei\u00df",
+                "size": "38",
+                "price": "9.99",
+                "currency": "EUR"
+            },
+            "363015001000_40": {
+                "color": "Wei\u00df",
+                "size": "40",
+                "price": "9.99",
+                "currency": "EUR"
+            },
+            "363015001000_42": {
+                "color": "Wei\u00df",
+                "size": "42",
+                "price": "9.99",
+                "currency": "EUR"
+            },
+            "363015001000_44": {
+                "color": "Wei\u00df",
+                "size": "44",
+                "price": "9.99",
+                "currency": "EUR"
+            }
+        },
+        "care": [
+            "2% ELASTHAN, 98% BAUMWOLLE",
+            "http://www.orsay.com/skin/frontend/enterprise/orsay/images/caresymbols/wash-40.png",
+            "http://www.orsay.com/skin/frontend/enterprise/orsay/images/caresymbols/chlore-0.png",
+            "http://www.orsay.com/skin/frontend/enterprise/orsay/images/caresymbols/sharp-M.png",
+            "http://www.orsay.com/skin/frontend/enterprise/orsay/images/caresymbols/clean-0.png",
+            "http://www.orsay.com/skin/frontend/enterprise/orsay/images/caresymbols/linge-0.png"
+        ],
+        "image_urls": [
+            "http://images.orsay.com/media/catalog/product/cache/allstores/image/9df78eab33525d08d6e5fb8d27136e95/3/6/363015_98f.jpg",
+            "http://images.orsay.com/media/catalog/product/cache/allstores/image/9df78eab33525d08d6e5fb8d27136e95/3/6/363015_98b.jpg",
+            "http://images.orsay.com/media/catalog/product/cache/allstores/image/9df78eab33525d08d6e5fb8d27136e95/3/6/363015_98p.jpg",
+            "http://images.orsay.com/media/catalog/product/cache/allstores/image/9df78eab33525d08d6e5fb8d27136e95/3/6/363015_98s.jpg",
+            "http://images.orsay.com/media/catalog/product/cache/allstores/image/9df78eab33525d08d6e5fb8d27136e95/3/6/363015_98d.jpg"
+        ]
+    }
+}

@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}
+    Search Products
+{% endblock title %}
+    Search Products
+{% block heading %}
+    Search Products
+{% endblock %}
+{% block content %}
+    <div class="row">
+        <div class="col-md-2"></div>
+        <div class="col-md-6">
+            <form action="" method="get">
+                <input type="text" name="q" class="form-control form-group"/>
+                <input type="submit" value="Search" class="btn btn-primary">
+            </form>
+            <br>
+            {% if products %}
+                {% if query %}
+                    <p>Your search for <strong>{{ query }}</strong> returned the following results:</p>
+                    <p>Found {{ products|length }} product{{ products|pluralize }}.</p>
+                {% endif %}
+                <br/>
+                <br/>
+                <ol>
+                    {% for product in products %}
+                        <li><a href="{{ product.url }}">{{ product.name }}</a>&nbsp; &nbsp;<a
+                                href="{% url 'products:edit-product' pk=product.pk %}">Edit</a>&nbsp; &nbsp;<a
+                                href="{% url 'products:delete-product' pk=product.pk %}">Delete</a></li>
+                    {% endfor %}
+                </ol>
+
+            {% elif query %}
+                <p>Your search for <strong>{{ query }}</strong> returned no result.</p>
+            {% elif error %}
+                <p>You passed an empty query, please retry</p>
+            {% endif %}
+        </div>
+    </div>
+{% endblock content %}

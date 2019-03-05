@@ -1,0 +1,23 @@
+	attrs==17.2.0
+Automat==0.6.0
+cffi==1.10.0
+constantly==15.1.0
+Django==1.11.3
+django-crontab==0.7.1
+django-money==0.11.4
+hyperlink==17.3.0
+idna==2.5
+incremental==17.5.0
+olefile==0.44
+psycopg2==2.7.1
+py-moneyed==0.7.0
+pyasn1==0.2.3
+pyasn1-modules==0.0.9
+pycparser==2.18
+PyDispatcher==2.0.5
+pyOpenSSL==17.1.0
+pytz==2017.2
+queuelib==1.4.2
+service-identity==17.0.0
+six==1.10.0
+zope.interface==4.4.2

@@ -1,0 +1,17 @@
+{% extends "api/base.html" %}
+{% block title %}
+    Edit Details
+{% endblock title %}
+{% block heading %}
+    Edit Profile
+{% endblock %}
+{% block content %}
+    <div class="col-md-6 col-md-offset-2">
+        {% load rest_framework %}
+        <form action="" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% render_form serializer %}
+            <input type="submit" value="Save" class="btn btn-primary">
+        </form>
+    </div>
+{% endblock content %}

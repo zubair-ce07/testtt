@@ -1,0 +1,1 @@
+**Spider for sheego.co**.
