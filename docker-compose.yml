@@ -1,0 +1,20 @@
+version: '3'
+
+services:
+  apis:
+    build: ./django_rest
+    command: python3 manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./django_rest:/usr/apps/my-blog/back-end
+    ports:
+      - "8000:8000"
+
+  web:
+    build: ./my-blog(react)
+    command: npm start
+    volumes:
+      - ./my-blog(react):/usr/apps/my-blog/front-end
+    ports:
+      - "3000:3000"
+    depends_on:
+      - apis
