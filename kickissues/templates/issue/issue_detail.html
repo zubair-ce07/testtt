@@ -1,0 +1,123 @@
+{% extends "base_layout.html" %}
+{% block content %}
+    {% include "issue/_modal.html" %}
+    <br>
+    <br>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-2">
+                </div>
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header bg-dark text-white">
+                            {{ object.title }}
+                            {% if  object.created_by == request.user %}
+                                <a class="btn btn-danger float-right" href="{% url 'issue:edit' object.id %}">Edit</a>
+                                {% if object.status == 'resolved' %}
+                                    <form method="post" action="{% url 'issue:open_again' %}" >
+                                        {% csrf_token %}
+                                        <input type="hidden" name="id" value="{{ object.id }}">
+                                        <button type="submit" class="btn btn-success">Open Issue Again</button>
+                                    </form>
+                                {% endif %}
+                            {% endif %}
+                            {% if object.manage_by == request.user %}
+                                {% if object.status != 'resolved' %}
+                                    <form method="post" action="{% url 'issue:resolve' %}" >
+                                        {% csrf_token %}
+                                        <input type="hidden" name="id" value="{{ object.id }}">
+                                        <button type="submit" class="btn btn-success">Resolve Issue</button>
+                                    </form>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">{{ object.description }}</p>
+                            <p>
+                                {% if object.image %}
+                                    <a href="{{ object.image.url }}"><img class="card-img-top" src="{{ object.image.url }}" alt="No image" style="width:100%" width="200" height="500"></a>
+                                {% endif %}
+                            </p>
+                            <p class="card-text"><strong>Created By:</strong> {{ object.created_by }}</p>
+                            <p class="card-text"><strong>Status:</strong> {{ object.status }}</p>
+                            {% if object.status == 'review' or object.status == 'resolved' %}
+                                <p class="card-text"><strong>Manage By:</strong> {{ object.manage_by }}</p>
+                                <p class="card-text"><strong>Assigned Date:</strong> {{ object.assigned_at }}</p>
+                            {% endif %}
+                            {% if object.status == 'resolved' %}
+                                <p class="card-text"><strong>Resolved Date:</strong> {{ object.resolved_at }}</p>
+                            {% endif %}
+                            <p class="card-text"><strong>Created at:</strong> {{ object.created_at }}</p>
+                            {% if object.edited_at %}
+                                <p class="card-text"><strong>Last Edited:</strong> {{ object.edited_at }}</p>
+                            {% endif %}
+                            {% if manager %}
+                                {% if object.status == 'todo' or object.status == 'review' and object.manage_by == None %}
+                                    <form method="post" action="{% url 'issue:assign' %}" >
+                                        {% csrf_token %}
+                                        <input type="hidden" name="id" value="{{ object.id }}">
+                                        <button type="submit" class="btn btn-success">Assign to You</button>
+                                    </form>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                </div>
+            </div>
+        </div>
+
+        <br>
+        <br>
+        <br>
+        <div class="container">
+            <ul>
+                {% if comment_list %}
+                    {% for comment in comment_list %}
+                        <div class="card">
+                            <div class="card-header">
+                                Comment by: {{ comment.comment_by }}
+                                {% if  comment.comment_by == request.user %}
+                                    <button type="button" class="update-comment btn btn-sm btn-primary float-right" data-id="{% url 'issue:comment_update' id=object.id pk=comment.id %}">
+                                        Edit
+                                    </button>
+                                    <button type="button" class="delete-book btn btn-sm btn-danger float-right" data-id="{% url 'issue:delete_comment' id=object.id pk=comment.id %}">
+                                        Delete
+                                    </button>
+                                {% endif %}
+                            </div>
+                            <div class="card-body">{{ comment.comment }}</div> 
+                        </div>
+                        <br>
+                    {% endfor %}
+                {% else %}
+                    <ul>No Comments</ul>
+                {% endif %}
+            </ul>
+            {% if form %}
+                    <form action="{% url 'issue:issuedetail' object.id %}" method="POST" class='form-control'>
+                        {% csrf_token %}
+                        {{ form.as_p }}
+                        <input type="submit" value="Comment">
+                    </form>
+            {% else %}
+                <p>You are not authorized to create or view comments on this issue</p>
+            {% endif %}
+        </div>
+
+        <script type="text/javascript">
+            $(function () {
+              // Update book buttons
+              $(".update-comment").each(function () {
+                $(this).modalForm({formURL: $(this).data('id')});
+              });
+        
+              // Delete book buttons
+              $(".delete-book").each(function () {
+                $(this).modalForm({formURL: $(this).data('id')});
+              });
+          
+            });
+        </script>
+{% endblock content %}

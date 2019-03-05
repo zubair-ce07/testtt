@@ -1,0 +1,45 @@
+{% extends "base_layout.html" %}
+
+
+{% block content %}
+    {% if manageradmin %}
+        <div class="row"><br><br><br></div>
+        <div class="row">
+            <div class="col-md-2"></div>
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <center>Select Manager</center>
+                    </div>
+                    <div class="card-body">
+                        <center>
+                            <form action="{% url 'account:stats' %}" method="POST">
+                                {% csrf_token %}
+                                <div class="form-group">
+                                    <select name="manager" id="manager" class="form-control">
+                                        {% for manager in manager_list %}
+                                            <option 
+                                            value="{{ manager.id }}"
+                                            {% if  selected_manager == manager.id %}
+                                                selected
+                                            {% endif %}
+                                            >
+                                                {{ manager.username }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <input type="submit" value="Get Stats" class="btn btn-success form-control">
+                            </form>
+                        </center>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    {{ issue_chart|safe }}
+    {{ yearly_chart|safe }}
+    {{ top_manager_chart|safe }}
+    <script type="text/javascript" src="http://kozea.github.com/pygal.js/latest/pygal-tooltips.min.js"></script>
+{% endblock content %}

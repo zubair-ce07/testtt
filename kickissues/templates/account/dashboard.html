@@ -1,0 +1,330 @@
+{% extends "base_layout.html" %}
+
+
+{% block content %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-1">
+                <br>
+                <h2>Issues</h2>
+            </div>
+            <div class="col-md-3">
+                <br>
+                {% if customer %}
+                    <div class="container">
+                        <a href="{% url 'issue:create' %}" class="btn btn-lg btn-outline-success">Create Issue</a>
+                        <br>
+                        <br>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item">
+            {% if manager %}
+                    <a class="nav-link active" data-toggle="tab" href="#todo">Opened</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-toggle="tab" href="#assigned">Assigned</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-toggle="tab" href="#resolved">Resolved</a>
+                </li>
+            {% else %}
+                    <a class="nav-link active" data-toggle="tab" href="#todo">Opened</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-toggle="tab" href="#in-process">In Process/Review</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-toggle="tab" href="#resolved">Resolved</a>
+                </li>
+            {% endif %}
+        </ul>
+
+        <div class="tab-content">
+            {% if manager %}
+                <div id="todo" class="container tab-pane active"><br>
+                    {% if todo %}
+                        <div class="container-fluid">
+                            <table class="table">
+                                <thead class="thead-dark">
+                                    <tr>
+                                        <th>Issue Id</th>
+                                        <th>Title</th>
+                                        <th>Created By</th>
+                                        <th>Status</th>
+                                        <th>Priority</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for issue in todo %}
+                                        <tr>
+                                            <td>{{ issue.id }}</td>
+                                            <td><a href="{% url 'issue:issuedetail' issue.id%}">{{ issue.title }}</a></td>
+                                            <td>{{ issue.created_by }}</td>
+                                            <td>{{ issue.status }}</td>
+                                            <td>{{ issue.priority }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        No New Issues
+                    {% endif %}
+                </div>
+                <div id="assigned" class="container tab-pane fade"><br>
+                    {% if manage_by %}
+                        <div class="container-fluid">
+                            <table class="table">
+                                <thead class="thead-dark">
+                                    <tr>
+                                        <th>Issue Id</th>
+                                        <th>Title</th>
+                                        <th>Created By</th>
+                                        <th>Status</th>
+                                        <th>Priority</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for issue in manage_by %}
+                                        {% if issue.status == 'review' %}
+                                            <tr>
+                                                <td>{{ issue.id }}</td>
+                                                <td><a href="{% url 'issue:issuedetail' issue.id%}">{{ issue.title }}</a></td>
+                                                <td>{{ issue.created_by }}</td>
+                                                <td>{{ issue.status }}</td>
+                                                <td>{{ issue.priority }}</td>
+                                            </tr>
+                                        {% endif %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        No issues manage by you currently
+                    {% endif %}
+                </div>
+                <div id="resolved" class="container tab-pane fade"><br>
+                    {% if manage_by %}
+                        <div class="container-fluid">
+                            <table class="table">
+                                <thead class="thead-dark">
+                                    <tr>
+                                        <th>Issue Id</th>
+                                        <th>Title</th>
+                                        <th>Created By</th>
+                                        <th>Status</th>
+                                        <th>Priority</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for issue in manage_by %}
+                                        {% if issue.status == 'resolved' %}
+                                            <tr>
+                                                <td>{{ issue.id }}</td>
+                                                <td><a href="{% url 'issue:issuedetail' issue.id%}">{{ issue.title }}</a></td>
+                                                <td>{{ issue.created_by }}</td>
+                                                <td>{{ issue.status }}</td>
+                                                <td>{{ issue.priority }}</td>
+                                            </tr>
+                                        {% endif %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        No issues manage by you currently
+                    {% endif %}
+                </div>
+            {% else %}           
+                {% if manageradmin %}
+                    <div id="todo" class="container tab-pane active"><br>
+                        {% if todo %}
+                            <div class="container-fluid">
+                                <table class="table">
+                                    <thead class="thead-dark">
+                                        <tr>
+                                            <th>Issue Id</th>
+                                            <th>Title</th>
+                                            <th>Status</th>
+                                            <th>Priority</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for issue in todo %}
+                                            {% if  issue.status == 'todo'%}
+                                                <tr>
+                                                    <td>{{ issue.id }}</td>
+                                                    <td><a href="{% url 'issue:issuedetail' issue.id%}">{{ issue.title }}</a></td>
+                                                    <td>{{ issue.status }}</td>
+                                                    <td>{{ issue.priority }}</td>
+                                                </tr>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            No New Issues Created
+                        {% endif %}
+                    </div>
+                    <div id="in-process" class="container tab-pane fade"><br>
+                        {% if review %}
+                            <div class="container-fluid">
+                                <table class="table">
+                                    <thead class="thead-dark">
+                                        <tr>
+                                            <th>Issue Id</th>
+                                            <th>Title</th>
+                                            <th>Reviewing Manager</th>
+                                            <th>Status</th>
+                                            <th>Priority</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for issue in review %}
+                                            <tr>
+                                                <td>{{ issue.id }}</td>
+                                                <td><a href="{% url 'issue:issuedetail' issue.id%}">{{ issue.title }}</a></td>
+                                                <td>{{ issue.manage_by }}</td>
+                                                <td>{{ issue.status }}</td>
+                                                <td>{{ issue.priority }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            No Issue in Review Stage
+                        {% endif %}
+                    </div>
+                    <div id="resolved" class="container tab-pane fade"><br>
+                        {% if resolved %}
+                            <div class="container-fluid">
+                                <table class="table">
+                                    <thead class="thead-dark">
+                                        <tr>
+                                            <th>Issue Id</th>
+                                            <th>Title</th>
+                                            <th>Status</th>
+                                            <th>Resolved By</th>
+                                            <th>Priority</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for issue in resolved %}
+                                            <tr>
+                                                <td>{{ issue.id }}</td>
+                                                <td><a href="{% url 'issue:issuedetail' issue.id%}">{{ issue.title }}</a></td>
+                                                <td>{{ issue.status }}</td>
+                                                <td>{{ issue.manage_by }}</td>
+                                                <td>{{ issue.priority }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            No Issue Resolved
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div id="todo" class="container tab-pane active"><br>
+                        {% if created_by %}
+                            <div class="container-fluid">
+                                <table class="table">
+                                    <thead class="thead-dark">
+                                        <tr>
+                                            <th>Issue Id</th>
+                                            <th>Title</th>
+                                            <th>Status</th>
+                                            <th>Priority</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for issue in created_by %}
+                                            {% if  issue.status == 'todo'%}
+                                                <tr>
+                                                    <td>{{ issue.id }}</td>
+                                                    <td><a href="{% url 'issue:issuedetail' issue.id%}">{{ issue.title }}</a></td>
+                                                    <td>{{ issue.status }}</td>
+                                                    <td>{{ issue.priority }}</td>
+                                                </tr>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            No New Issues Created By You
+                        {% endif %}
+                    </div>
+                    <div id="in-process" class="container tab-pane fade"><br>
+                        {% if created_by %}
+                            <div class="container-fluid">
+                                <table class="table">
+                                    <thead class="thead-dark">
+                                        <tr>
+                                            <th>Issue Id</th>
+                                            <th>Title</th>
+                                            <th>Reviewing Manager</th>
+                                            <th>Status</th>
+                                            <th>Priority</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for issue in created_by %}
+                                            {% if  issue.status == 'review'%}
+                                                <tr>
+                                                    <td>{{ issue.id }}</td>
+                                                    <td><a href="{% url 'issue:issuedetail' issue.id%}">{{ issue.title }}</a></td>
+                                                    <td>{{ issue.manage_by }}</td>
+                                                    <td>{{ issue.status }}</td>
+                                                    <td>{{ issue.priority }}</td>
+                                                </tr>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            No Issue in Review Stage
+                        {% endif %}
+                    </div>
+                    <div id="resolved" class="container tab-pane fade"><br>
+                        {% if created_by %}
+                            <div class="container-fluid">
+                                <table class="table">
+                                    <thead class="thead-dark">
+                                        <tr>
+                                            <th>Issue Id</th>
+                                            <th>Title</th>
+                                            <th>Status</th>
+                                            <th>Priority</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for issue in created_by %}
+                                            {% if  issue.status == 'resolved' %}
+                                                <tr>
+                                                    <td>{{ issue.id }}</td>
+                                                    <td><a href="{% url 'issue:issuedetail' issue.id%}">{{ issue.title }}</a></td>
+                                                    <td>{{ issue.status }}</td>
+                                                    <td>{{ issue.priority }}</td>
+                                                </tr>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            No Issue Resolved
+                        {% endif %}
+                    </div>
+                    {% endif %}
+            {% endif %}
+        </div>
+    </div>
+{% endblock content %}

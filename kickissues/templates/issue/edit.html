@@ -1,0 +1,28 @@
+{% extends "base_layout.html" %}
+{% block content %}
+    <div class="container-fluid" style="margin: 10% auto;">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="row">
+                    <div class="col-md-4">
+                    </div>
+                    <div class="col-md-4">
+                        {% if not_allowed %}
+                            <p>You are not allowed to edit this issue as you are not the creator of this issue</p>
+                        {% else %}
+                            <form action="{% url 'issue:edit' object.id %}"  method="post" class='form-control' enctype="multipart/form-data">
+                                {% csrf_token %}
+                                <div class="form-group">
+                                        {{ form.as_p }}
+                                </div>
+                                <input type="submit" value="Update" class='form-control btn btn-lg btn-success'>
+                            </form>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-4">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}
