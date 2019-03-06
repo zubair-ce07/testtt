@@ -10,13 +10,12 @@ class QuotesSpider(scrapy.Spider):
 
     def parse(self, response):
         brands = response.css("div.tabledivinlineblock a.tablelink50::attr(href)").extract()
-        i = 0
         for brand in brands:
-            next_page = brand
-            if next_page is not None:
-                next_page = response.urljoin(next_page)
-                yield scrapy.Request(url=next_page, callback=self.product_scraper)
-        __EVENTTARGET = response.css(
+            if brand is not None:
+                brand = response.urljoin(brand)
+                yield scrapy.Request(url=brand, callback=self.product_scraper)
+        
+	__EVENTTARGET = response.css(
             "span#maincontent_DataPager span.decornonepagerlink ~ a::attr(href)").extract_first()
         if __EVENTTARGET is not None:
             __EVENTTARGET = __EVENTTARGET.split("'")[1]
@@ -79,14 +78,12 @@ class QuotesSpider(scrapy.Spider):
                 property_value = product_detail.css("span::text").extract_first()
             product_detail_list.append(property_value)
         len_var = len(product_detail_list)
-        if len_var == 3:
-            item['manufacturer'] = product_detail_list[0]
+	    item['manufacturer'] = product_detail_list[0]
             item['product_name'] = product_detail_list[1]
+        if len_var == 3:            
             item['condition'] = product_detail_list[2]
 
         if len_var == 4:
-            item['manufacturer'] = product_detail_list[0]
-            item['product_name'] = product_detail_list[1]
             item['technical_specification'] = product_detail_list[2]
             item['condition'] = product_detail_list[3]
         link = ""
@@ -108,4 +105,5 @@ class QuotesSpider(scrapy.Spider):
             file_name = "files/" + file_name
             open(file_name, 'wb').write(r.content)
             item['file_path'] = file_name
+	    file_name.close()
         yield item
