@@ -33,9 +33,10 @@ def upload(request):
         filename = fs.save(myfile.name, myfile)
 
         uploaded_file_url = fs.url(filename)
-        json_data = open('C:\\Users\\SHAHRUKH\\PycharmProjects\\awp_project\\' + filename)
+        json_data = open('../' + filename)
         json_data = json_data.read()
         json_file = json.loads(json_data)
+	json_data.close()
         file = json_file
         i = 0
         for data in file:

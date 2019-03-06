@@ -8,7 +8,6 @@ class Trends(models.Model):
 
 
 class Tweets(models.Model):
-    # id = models.IntegerField(primary_key=True)
     profile_image = models.CharField(max_length=100)
     username = models.CharField(max_length=100)
     tweet_data = models.TextField()
