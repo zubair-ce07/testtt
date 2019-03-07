@@ -10,7 +10,6 @@ from baurde_crawler.items import BaurdeCrawlerItem
 
 class BaurdeCrawler(CrawlSpider):
     GENDER_MAP = {
-        'men': 'men',
         'dam': 'men',
         ' men': 'men',
         ' Men': 'men',
