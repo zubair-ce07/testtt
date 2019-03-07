@@ -140,7 +140,6 @@ class BaurdeCrawler(CrawlSpider):
     def product_name(self, raw_product):
         return raw_product['name']
 
-
     def product_category(self, response):
         css = 'div.nav-breadcrumb .display-name ::text'
         breadcrumb = response.css(css).extract()
