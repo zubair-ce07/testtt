@@ -140,23 +140,20 @@ class BaurdeCrawler(CrawlSpider):
     def product_name(self, raw_product):
         return raw_product['name']
 
-    def product_category(self, response):
-        css = 'div.nav-breadcrumb .display-name ::text'
-        breadcrumb = response.css(css).extract()
-        return breadcrumb[1]
-
     def product_description(self, raw_product):
         return raw_product['longDescription']
 
     def product_retailer_sku(self, raw_product):
         return raw_product['sku']
 
+    def product_category(self, response):
+        css = 'div.nav-breadcrumb .display-name ::text'
+        breadcrumb = response.css(css).extract()
+        return breadcrumb[1]
+
     def product_image_urls(self, response):
         css = '.product-gallery-item > img::attr(src)'
         return response.css(css).extract()
-
-    def product_care(self, raw_product):
-        return raw_product['name']
 
     def raw_product(self, response):
         css = 'script:contains("axisTree") ::text'

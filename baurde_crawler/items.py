@@ -6,7 +6,6 @@ class BaurdeCrawlerItem(scrapy.Item):
     name = scrapy.Field()
     lang = scrapy.Field()
     skus = scrapy.Field()
-    care = scrapy.Field()
     brand = scrapy.Field()
     gender = scrapy.Field()
     market = scrapy.Field()
