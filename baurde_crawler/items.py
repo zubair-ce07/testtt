@@ -3,7 +3,6 @@ import scrapy
 
 class BaurdeCrawlerItem(scrapy.Item):
     url = scrapy.Field()
-    meta = scrapy.Field()
     name = scrapy.Field()
     lang = scrapy.Field()
     skus = scrapy.Field()
