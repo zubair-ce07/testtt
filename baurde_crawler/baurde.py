@@ -13,8 +13,6 @@ class BaurdeCrawler(CrawlSpider):
         'dam': 'men',
         ' men': 'men',
         ' Men': 'men',
-        " Men's": 'men',
-        " men's": 'men',
         'herren': 'men',
         'herr': 'women',
         'women': 'women',
@@ -27,7 +25,6 @@ class BaurdeCrawler(CrawlSpider):
         'Kid': 'unisex-kids',
         'barn': 'unisex-kids',
         'kinder': 'unisex-kids',
-        'herr, dam': 'unisex-adults',
     }
 
     name = 'baur-de-crawl'
@@ -40,38 +37,35 @@ class BaurdeCrawler(CrawlSpider):
     rules = (Rule(LinkExtractor(restrict_css=listings_css), callback='parse_sub_category'),
              Rule(LinkExtractor(restrict_css=products_css), callback='parse_product'))
 
+    next_url = 'https://www.baur.de/suche/mba/magellan'
+    headers = {
+        'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 \
+        (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36',
+        'authority': 'www.baur.de',
+        'accept': 'application/json',
+        'x-requested-with': 'XMLHttpRequest',
+        'origin': 'https://www.baur.de',
+        'content-type': 'application/json; charset=UTF-8'}
+    formdata = {
+        'start': 0,
+        'clientId': 'BaurDe',
+        'version': 44,
+        'channel': 'web',
+        'locale': 'de_DE',
+        'count': 72,
+        'personalization': '$$-2$$web$'}
+
     def parse_sub_category(self, response):
         css = '.layernavi-loading-cont ::attr(data-pagelet-url)'
         pattern = 'CatalogCategoryID=(.*?)&'
 
         for category in response.css(css).extract():
             category_id = re.findall(pattern, str(category))[0]
+            self.formdata['category'] = category_id
 
-            headers = {
-                'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) \
-                               Chrome/71.0.3578.98 Safari/537.36',
-                'authority': 'www.baur.de',
-                'accept': 'application/json',
-                'x-requested-with': 'XMLHttpRequest',
-                'origin': 'https://www.baur.de',
-                'content-type': 'application/json; charset=UTF-8',
-            }
-
-            formdata = {
-                'start': 0,
-                'clientId': 'BaurDe',
-                "version": 44,
-                "channel": "web",
-                'locale': 'de_DE',
-                'count': 72,
-                'category': category_id,
-                'personalization': '$$-2$$web$',
-            }
-
-            next_url = 'https://www.baur.de/suche/mba/magellan'
-            yield Request(url=next_url, callback=self.parse_pagination,
-                          headers=headers, body=json.dumps(formdata),
-                          meta={'headers': headers, 'formdata': formdata}, method='POST')
+            yield Request(url=self.next_url, callback=self.parse_pagination,
+                          headers=self.headers, body=json.dumps(self.formdata),
+                          meta={'headers': self.headers, 'formdata': self.formdata}, method='POST')
 
     def parse_pagination(self, response):
         page_size = 72
@@ -87,8 +81,7 @@ class BaurdeCrawler(CrawlSpider):
 
         if 'Page=P' not in response.url and products > page_size:
             for page, per_page_products in enumerate(range(0, int(products), page_size), start=1):
-                next_url = 'https://www.baur.de/suche/mba/magellan'
-                next_url = add_or_replace_parameter(next_url, 'Page', 'P'+str(page))
+                next_url = add_or_replace_parameter(self.next_url, 'Page', 'P'+str(page))
                 yield Request(url=next_url, callback=self.parse_pagination,
                               headers=headers, body=json.dumps(formdata),
                               meta={'headers': headers, 'formdata': formdata}, method='POST')
@@ -100,7 +93,7 @@ class BaurdeCrawler(CrawlSpider):
         item['lang'] = 'de'
         item['market'] = 'DE'
         item['url'] = self.product_url(response)
-        item['skus'] = self.product_skus(response)
+        item['skus'] = self.skus(response)
         item['name'] = self.product_name(raw_product)
         item['brand'] = self.product_brand(raw_product)
         item['category'] = self.product_category(response)
@@ -129,12 +122,9 @@ class BaurdeCrawler(CrawlSpider):
         name = self.product_name(raw_product)
 
         for key, value in self.GENDER_MAP.items():
-            if key in description:
+            if key in f'{name}{description}{sub_category[2]}':
                 return value
-            if key in sub_category[2]:
-                return value
-            if key in name:
-                return value
+
         return gender
 
     def product_name(self, raw_product):
@@ -148,8 +138,7 @@ class BaurdeCrawler(CrawlSpider):
 
     def product_category(self, response):
         css = 'div.nav-breadcrumb .display-name ::text'
-        breadcrumb = response.css(css).extract()
-        return breadcrumb[1]
+        return response.css(css).extract()[1]
 
     def product_image_urls(self, response):
         css = '.product-gallery-item > img::attr(src)'
@@ -157,8 +146,7 @@ class BaurdeCrawler(CrawlSpider):
 
     def raw_product(self, response):
         css = 'script:contains("axisTree") ::text'
-        raw_product = response.css(css).extract_first()
-        return json.loads(raw_product)
+        return json.loads(response.css(css).extract_first())
 
     def raw_sku(self, response):
         css = 'script:contains("axisTree") ::text'
@@ -166,7 +154,9 @@ class BaurdeCrawler(CrawlSpider):
         return json.loads(raw_product)
 
     def clean(self, raw_text):
-        return raw_text.replace('\r', '').replace('\t', '').replace('\n', '')
+        if raw_text:
+            return raw_text.replace('\r', '').replace('\t', '').replace('\n', '')
+        return raw_text
 
     def product_pricing(self, response):
         price_css = '.price-wrapper .price ::text'
@@ -179,42 +169,37 @@ class BaurdeCrawler(CrawlSpider):
         pricing = {'price': price}
         key = list(raw_product['variations'].keys())[0]
         pricing['currency'] = raw_product['variations'][key]['currentPrice']['currency']
+        prev_price = self.clean(prev_price)
 
         if prev_price:
-            prev_price = self.clean(prev_price)
-            if prev_price:
-                pricing['previous_price'] = prev_price
+            pricing['previous_price'] = prev_price
+
         return pricing
 
-    def product_skus(self, response):
-        item_skus = {}
+    def skus(self, response):
+        skus = {}
         raw_sku = self.raw_sku(response)
+        common_sku = self.product_pricing(response)
         colours = raw_sku['rootNode']['subTree'].keys()
 
         for colour in colours:
             if raw_sku['rootNode']['subTree'][colour]['subTree']:
                 for size in raw_sku['rootNode']['subTree'][colour]['subTree'].keys():
                     lengths = raw_sku['rootNode']['subTree'][colour]['subTree'][size]['subTree'].keys()
-                    item_skus.update(self.skus(response, colour, size, lengths))
+
+                    if lengths and size:
+                        for length in lengths:
+                            sku = common_sku.copy()
+                            sku['colour'] = colour
+                            sku['size'] = size
+                            skus[f'{colour}_{size}/{length}'] = sku
+                    elif size:
+                        sku = common_sku.copy()
+                        sku['size'] = size
+                        skus[f'{colour}_{size}'] = sku
             else:
-                item_skus.update(self.skus(response, colour))
-        return item_skus
-
-    def skus(self, response, colour, size=0, lengths=None):
-        skus = {}
-        common_sku = self.product_pricing(response)
-
-        if lengths and size:
-            for length in lengths:
                 sku = common_sku.copy()
-                sku['colour'] = colour
-                sku['size'] = size
-                skus[f'{colour}_{size}/{length}'] = sku
-        elif size:
-            sku = common_sku.copy()
-            sku['size'] = size
-            skus[f'{colour}_{size}'] = sku
-        else:
-            sku = common_sku.copy()
-            skus[f'{colour}'] = sku
+                skus[f'{colour}'] = sku
+
         return skus
+
