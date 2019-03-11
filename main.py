@@ -41,11 +41,10 @@ def is_dir(dir_name):
 
 
 def print_report(arguments):
-    w = weather_man.WeatherMan()
+    w = weather_man.WeatherReport()
     is_file = w.parse_file_name(arguments)
 
     if is_file:
-
         if arguments.year:
             w.print_annual_report()
 
