@@ -116,16 +116,17 @@ class CkCrawler(CrawlSpider):
     def skus(self, response, raw_product):
         skus = {}
         sku_id = self.product_retailer_sku(raw_product)
+        common_sku = self.product_pricing(response, raw_product)
 
         for colour in raw_product['details']['attributes']['PRODUCT_ATTR_PRODUCT_ATTR_COLOUR']['values'].values():
             for size in raw_product['details']['attributes']['PRODUCT_ATTR_SIZE_FR']['values'].values():
-                common_sku = self.product_pricing(response, raw_product)
-                common_sku['colour'] = colour['label']
+                sku = common_sku.copy()
+                sku['colour'] = colour['label']
 
                 if not size['selectableStock']:
-                    common_sku['out_of_stock'] = True
+                    sku['out_of_stock'] = True
 
-                common_sku['size'] = size['label']
-                skus[f'{sku_id}_{colour["label"]}_{size["label"]}'] = common_sku
+                sku['size'] = size['label']
+                skus[f'{sku_id}_{colour["label"]}_{size["label"]}'] = sku
 
         return skus
