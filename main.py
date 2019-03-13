@@ -17,7 +17,7 @@ def main():
                             help='Report to show bar chart of a month. Input format: year/month')
     arg_parser.add_argument('-b', '--year_month_bonus_chart', type=str,
                             help='Report to show Single bar chart of a month. Input format: year/month')
-    arg_parser.add_argument('data_dir', type=is_dir, help='Files directory path')
+    arg_parser.add_argument('directory', type=is_dir, help='Files directory path')
 
     try:
         arguments = arg_parser.parse_args()
@@ -42,17 +42,15 @@ def is_dir(dir_name):
 
 def print_report(arguments):
     w = weather_man.WeatherReport()
-    is_file = w.parse_file_name(arguments)
+    w.parse_file_name(arguments)
 
-    if is_file:
-        if arguments.year:
-            w.print_annual_report()
+    if arguments.year:
+        w.print_annual_report()
 
-        if arguments.year_month:
-            w.print_monthly_average_report()
-    else:
-        print('No files found against your input.')
+    if arguments.year_month:
+        w.print_monthly_average_report()
 
 
 if __name__ == '__main__':
     main()
+

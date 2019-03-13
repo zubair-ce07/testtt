@@ -1,17 +1,11 @@
 """This class is to get requried attributes for generating weather reports."""
-from datetime import datetime
 
 
 class WeatherAttributes:
     def __init__(self, **kwargs):
-        if (kwargs and kwargs.get('Max TemperatureC') != "" and kwargs.get('Min TemperatureC') != "" and
-                kwargs.get('Max Humidity') != "" and kwargs.get(' Mean Humidity') != ""):
-            self.date = datetime.strptime(kwargs.get('PKT', kwargs.get('PKST')), '%Y-%m-%d')
-            self.max_temp_date = datetime.strptime(kwargs.get('PKT', kwargs.get('PKST')), '%Y-%m-%d')
-            self.min_temp_date = datetime.strptime(kwargs.get('PKT', kwargs.get('PKST')), '%Y-%m-%d')
-            self.max_humidity_date = datetime.strptime(kwargs.get('PKT', kwargs.get('PKST')), '%Y-%m-%d')
-            self.max_temp = int(kwargs.get('Max TemperatureC'))
-            self.min_temp = int(kwargs.get('Min TemperatureC'))
-            self.max_humidity = int(kwargs.get('Max Humidity'))
-            self.mean_humidity = int(kwargs.get(' Mean Humidity'))
+        self.date = kwargs.get('date')
+        self.max_temp = kwargs.get('max_temp')
+        self.min_temp = kwargs.get('min_temp')
+        self.max_humidity = kwargs.get('max_humidity')
+        self.mean_humidity = kwargs.get('mean_humidity')
 
