@@ -1,6 +1,6 @@
 # """Module to print reports"""
 
-import weather_man
+import weather_record
 import argparse
 import os
 
@@ -41,7 +41,7 @@ def is_dir(dir_name):
 
 
 def print_report(arguments):
-    w = weather_man.WeatherReport()
+    w = weather_record.WeatherReport()
     w.parse_file_name(arguments)
 
     if arguments.year:
