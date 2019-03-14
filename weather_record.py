@@ -32,7 +32,25 @@ class WeatherReport:
                 file_record = csv.DictReader(reader)
                 for record in file_record:
                     weather_attribute = self.parse_weather_attributes(record)
-                    self.calculate_weather_record(weather_attribute, args)
+                    if weather_attribute:
+                        self.calculate_weather_record(weather_attribute, args)
+
+    def parse_weather_attributes(self, file_record):
+        weather_attributes = []
+        """ Created a list of required weather attributes to check whether the row value is valid or not """
+
+        weather_attributes.extend([file_record['Max TemperatureC'], file_record['Min TemperatureC']
+                                      , file_record['Max Humidity'], file_record[' Mean Humidity']])
+        if all(weather_attributes):
+            date = datetime.strptime(file_record.get('PKT', file_record.get('PKST')), '%Y-%m-%d')
+            highest_temp = int(file_record['Max TemperatureC'])
+            lowest_temp = int(file_record['Min TemperatureC'])
+            most_humidity = int(file_record['Max Humidity'])
+            mean_humidity = int(file_record[' Mean Humidity'])
+            return WeatherAttributes(date=date, max_temp=highest_temp, min_temp=lowest_temp
+                                     , max_humidity=most_humidity, mean_humidity=mean_humidity)
+        else:
+            return
 
     def calculate_weather_record(self, weather_attribute, args):
         if args.year:
@@ -57,47 +75,16 @@ class WeatherReport:
             self.print_monthly_temp_report_one_bar_chart(weather_attribute, int(year),
                                                          self.parse_month_into_num(month[:3]))
 
-    def parse_weather_attributes(self, file_record):
-        highest_temp = None
-        lowest_temp = None
-        most_humidity = None
-        mean_humidity = None
-        date = None
-
-        date = datetime.strptime(file_record.get('PKT', file_record.get('PKST')), '%Y-%m-%d')
-
-        """If conditions are added to check if valid attributes exists or not."""
-
-        if file_record['Max TemperatureC'] != "":
-            highest_temp = int(file_record['Max TemperatureC'])
-
-        if file_record['Min TemperatureC'] != "":
-            lowest_temp = int(file_record['Min TemperatureC'])
-
-        if file_record['Max Humidity'] != "":
-            most_humidity = int(file_record['Max Humidity'])
-
-        if file_record[' Mean Humidity'] != "":
-            mean_humidity = int(file_record[' Mean Humidity'])
-
-        return WeatherAttributes(date=date, max_temp=highest_temp, min_temp=lowest_temp
-                                 , max_humidity=most_humidity, mean_humidity=mean_humidity)
-
     def fill_weather_record(self, weather_attribute, year):
         if year == weather_attribute.date.year:
             self.weather_records.append(weather_attribute)
 
     def calculate_annual_weather_report(self):
-        maximum_temperatures = [weather for weather in self.weather_records if
-                                weather.max_temp is not None]
-        minimum_temperatures = [weather for weather in self.weather_records if
-                                weather.min_temp is not None]
-        maximum_humidity = [weather for weather in self.weather_records if
-                            weather.max_humidity is not None]
+        weather_attr = [weather for weather in self.weather_records]
 
-        maximum_temp = max(maximum_temperatures, key=lambda x: x.max_temp)
-        minimum_temp = min(minimum_temperatures, key=lambda x: x.min_temp)
-        max_humidity = max(maximum_humidity, key=lambda x: x.max_humidity)
+        maximum_temp = max(weather_attr, key=lambda weather: weather.max_temp)
+        minimum_temp = min(weather_attr, key=lambda weather: weather.min_temp)
+        max_humidity = max(weather_attr, key=lambda weather: weather.max_humidity)
 
         self.max_temp = maximum_temp.max_temp
         self.min_temp = minimum_temp.min_temp
@@ -108,14 +95,9 @@ class WeatherReport:
 
     def calculate_monthly_weather_report(self, weather_attributes, year, month):
         if year == weather_attributes.date.year and month == weather_attributes.date.month:
-            if weather_attributes.max_temp:
-                self.total_max_temp = self.total_max_temp + weather_attributes.max_temp
-
-            if weather_attributes.min_temp:
-                self.total_min_temp = self.total_min_temp + weather_attributes.min_temp
-
-            if weather_attributes.mean_humidity:
-                self.total_mean_humidity = self.total_mean_humidity + weather_attributes.mean_humidity
+            self.total_max_temp = self.total_max_temp + weather_attributes.max_temp
+            self.total_min_temp = self.total_min_temp + weather_attributes.min_temp
+            self.total_mean_humidity = self.total_mean_humidity + weather_attributes.mean_humidity
 
             self.average_max_temp = self.calculate_average(self.total_max_temp, weather_attributes.date)
             self.average_min_temp = self.calculate_average(self.total_min_temp, weather_attributes.date)
@@ -152,8 +134,7 @@ class WeatherReport:
         print('-' * 50)
 
     def print_monthly_temp_report(self, weather_attributes, year, month):
-        if (year == weather_attributes.date.year and month == weather_attributes.date.month
-                and weather_attributes.max_temp and weather_attributes.min_temp):
+        if (year == weather_attributes.date.year and month == weather_attributes.date.month):
             print("\x1b[30m{} \x1b[31m{} \x1b[30m{}".format(weather_attributes.date.day,
                                                             ('+' * weather_attributes.max_temp),
                                                             weather_attributes.max_temp))
@@ -162,8 +143,7 @@ class WeatherReport:
                                                             weather_attributes.min_temp))
 
     def print_monthly_temp_report_one_bar_chart(self, weather_attributes, year, month):
-        if (year == weather_attributes.date.year and month == weather_attributes.date.month and
-                weather_attributes.max_temp and weather_attributes.min_temp):
+        if (year == weather_attributes.date.year and month == weather_attributes.date.month):
             print("\x1b[30m{} \x1b[94m{}\x1b[31m{} \x1b[30m{}-\x1b[30m{}".format(weather_attributes.date.day,
                                                                                  ('+' * weather_attributes.min_temp),
                                                                                  ('+' * weather_attributes.max_temp),
