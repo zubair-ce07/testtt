@@ -7,7 +7,7 @@ import os
 
 def main():
     arg_parser = argparse.ArgumentParser()
-    arg_parser.add_argument('-e', '--year', type=str,
+    arg_parser.add_argument('-e', '--year', type=int,
                             help='Annual Max/Min temperatures. '
                                  'Input format: year')
     arg_parser.add_argument('-a', '--year_month', type=str,
@@ -45,6 +45,7 @@ def print_report(arguments):
     w.parse_file_name(arguments)
 
     if arguments.year:
+        w.calculate_annual_weather_report()
         w.print_annual_report()
 
     if arguments.year_month:
