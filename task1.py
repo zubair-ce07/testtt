@@ -1,183 +1,170 @@
 import sys
 from sys import stdout
+from operator import attrgetter
+
+class Weather :
+	
+	weather_date = ''
+	maximum_temperature =0
+	minimum_temperature = 0
+	maximum_humidity = 0
+	
+	def __init__(self, weather):  
+		weather_attributes_list = weather.split(',')
+		self.weather_date = weather_attributes_list[0]
+		if weather_attributes_list[1] :
+			self.maximum_temperature = int(weather_attributes_list[1])
+		if weather_attributes_list[3] :
+			self.minimum_temperature = int(weather_attributes_list[3])
+		if weather_attributes_list[7] : 
+			self.maximum_humidity = int(weather_attributes_list[7]) 
+	
+
+class WeatherCalculator :
+
+	months = [
+		'Jan', 'Feb' , 'Mar', 'Apr', 'May', 'Jun', 
+		'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+	]
+	year = ''
 
 
-date = 0
-max = 1
-min = 3
-humidity = 7 
-maxTemp = -50
-minTemp = 80
-maxTempD = ''
-minTempD = ''
-maxHumidity = 0
-maxHumidityD = ''
+	def print_bar(self, highest_temperature , lowest_temperature, day):
+		stdout.write(str(day))
+		stdout.write('- ')
 
-months = [
-	'Jan', 'Feb' , 'Mar', 'Apr', 'May', 'Jun', 
-	'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-]
-
-def print_bar(n, m, count):
-	stdout.write(str(count))
-	stdout.write('- ')
-
-	for x in range(0, n):	
-		stdout.write("\033[1;31;40m+")
-
-	stdout.write(str(n) + 'C' )
-	print(' ')
-	stdout.write(str(count))
-	stdout.write('- ')
-
-	for x in range(0, m):	
-		stdout.write("\033[1;34;40m+")	
-
-	stdout.write(str(m) + 'C' )
-	print(' ')	
-
-def print_bar_single_row(n, m, count):
-	stdout.write(str(count))
-	stdout.write('- ')
-
-	for x in range(0, n):
-		if x < m :	
-			stdout.write("\033[1;34;40m+")
-		else :
+		for i in range(0, highest_temperature):	
 			stdout.write("\033[1;31;40m+")
 
-	stdout.write(str(m) + 'C - ' + str(n) + 'C' )
-	print(' ')
+		stdout.write(str(highest_temperature) + 'C' )
+		print(' ')
+		stdout.write(str(day))
+		stdout.write('- ')
 
-def find_min_max(filename) :
-	global maxTemp, minTemp, maxTempD, minTempD, maxHumidity, maxHumidityD 
-	try :
-		f = open(filename)
-		line = f.readline()
-		line = f.readline()
-		s = line.split(',')
+		for x in range(0, lowest_temperature):	
+			stdout.write("\033[1;34;40m+")	
 
-		if int(s[max]) > maxTemp :	
-			maxTemp = int(s[max])
-			maxTempD = s[date]
-	
-		if int(s[min]) < minTemp :
-			minTemp = int(s[min])		
-			minTempD = s[date]
+		stdout.write(str(lowest_temperature) + 'C' )
+		print(' ')	
 
-		if int(s[humidity]) > maxHumidity :	
-			maxHumidity = int(s[humidity])
-			maxHumidityD = s[date]
-	
-		line = f.readline()
+	def print_bar_single_row(self, highest_temperature , lowest_temperature, day):
+		stdout.write(str(day))
+		stdout.write('- ')
 
-		while line :
-			s = line.split(',')
-			if s[max] :
-				if int(s[max]) > maxTemp :	
-					maxTemp = int(s[max])
-					maxTempD = s[date]
-				
-			if s[min] :
-				if int(s[min]) < minTemp :
-					minTemp = int(s[min])		
-					minTempD = s[date]
-				
-			if s[humidity] :
-				if int(s[humidity]) > maxHumidity :	
-					maxHumidity = int(s[humidity])
-					maxHumidityD = s[date]
+		for x in range(0, highest_temperature):
+			if x < lowest_temperature :	
+				stdout.write("\033[1;34;40m+")
+			else :
+				stdout.write("\033[1;31;40m+")
 
-			line = f.readline()
-		f.close()
+		stdout.write(str(lowest_temperature) + 'C - ' + str(highest_temperature) + 'C' )
+		print(' ')
 
-	except :
-		print('file ' + filename  + 'does not exist')
-
-def min_max_average(filename) :
-	minAvg = 0
-	maxAvg = 0 
-	humAvg = 0
-	count=0
-	try : 
-		f = open(filename)
-		line = f.readline()
-		line = f.readline()
-		s = line.split(',')
-		maxAvg  = maxAvg +int(s[max])				
-		minAvg  = minAvg + int(s[min])		
-		humAvg = humAvg + int(s[humidity])
-		count = count + 1
+	def maximum_minimum_temperature_of_year(self, year) :
 		
-		line = f.readline()
-		while line :		
-			s = line.split(',')
+		self.year = year
+		weatherList = []
+
+		try :
+			
+			for month in self.months :
+				path = './weatherfiles/Murree_weather_' +  self.year + '_' + month + '.txt'
+				try :
+					f = open(path)
+					line = f.readline()
+					line = f.readline()
+
+					while line :
+
+						weatherList.append(Weather(line))
+						line = f.readline()
+
+					f.close()		
+				except :
+					print('file ' + path  + ' does not exist')	
 	
-			if s[max] :
-				maxAvg  = maxAvg +int(s[max])
-			if s[min] :					
-				minAvg  = minAvg + int(s[min])	
-			if s[humidity] :		
-				humAvg = humAvg + int(s[humidity])
-				count = count + 1
+			weather_maximum = max(weatherList, key=attrgetter('maximum_temperature'))
+			weather_minimum = min(weatherList, key=attrgetter('minimum_temperature'))
+			weather_humidity = max(weatherList, key=attrgetter('maximum_humidity'))
+			print('Highest ' + str(weather_maximum.maximum_temperature) + 'C on '+ weather_maximum.weather_date)
+			print('Lowest ' + str(weather_minimum.minimum_temperature) + 'C on '+ weather_minimum.weather_date)
+			print('Humidity ' + str(weather_humidity.maximum_humidity) + ' on ' + weather_humidity.weather_date)
 
-			line = f.readline()
-	
-		f.close()
-		print('Highest Average : ' +  str(maxAvg/count) + 'C' )
-		print('Lowest Average : ' +  str(minAvg/count) + 'C' )
-		print('Average Humidity : ' +  str(humAvg/count) + 'C' )
+		except :
 
-	except :
-		print('file ' + filename  + 'does not exist')
+			print('file ' + path  + ' does not exist')	
 
-def daily_report(filename, option) :
-	count = 1
-
-	try : 
-		f = open(filename)
-		line = f.readline()
-		line = f.readline()
+	def maximum_minimum_average_temperature_of_month(self, year, month) :
 		
-		while line :		
-			s = line.split(',')			
-			if s[max] :
+		self.year = year
+		weatherList = []
+
+		try :
+			
+			path = './weatherfiles/Murree_weather_' +  self.year + '_' + self.months[month] + '.txt'
+			try :
+				f = open(path)
+				line = f.readline()
+				line = f.readline()
+
+				while line :
+
+					weatherList.append(Weather(line))
+					line = f.readline()
+
+				f.close()		
+			except :
+				print('file ' + path  + ' does not exist')	
+
+			sum_maximum_temperature = sum(i.maximum_temperature for i in weatherList)
+			sum_minimum_temperature = sum(i.minimum_temperature for i in weatherList)
+			sum_maximum_humidity = sum(i.maximum_humidity for i in weatherList)
+			print('Highest Average ' + str(sum_maximum_temperature/len(weatherList)))
+			print('Lowest Average ' + str(sum_minimum_temperature/len(weatherList)))
+			print('Average Humidity ' + str(sum_maximum_humidity/len(weatherList)))
+			
+		except :
+			print('file ' + path  + ' does not exist')	
+		
+	def daily_report_of_month(self, year, month, option) :
+		
+		self.year = year
+		weatherList = []
+
+		try :
+			counter = 1
+			path = './weatherfiles/Murree_weather_' +  self.year + '_' + self.months[month] + '.txt'
+			
+			f = open(path)
+			line = f.readline()
+			line = f.readline()
+
+			while line :
+
+				weatherList.append(Weather(line))
+				line = f.readline()
+			f.close()
+
+			for day in weatherList :
 				if option == 3  :
-					print_bar(int(s[max]) , int(s[min]), count)
+					self.print_bar(day.maximum_temperature , day.minimum_temperature , counter)
 				elif option == 4 :
-					print_bar_single_row(int(s[max]) , int(s[min]), count)
-				count = count +1
+					self.print_bar_single_row(day.maximum_temperature , day.minimum_temperature, counter)
+				counter = counter + 1
 
-			line = f.readline()	
-		f.close()
+		except :
+			print('file ' + path  + ' does not exist')	
 
-	except :
-		print('file ' + filename  + 'does not exist')
-
+calculator = WeatherCalculator()
 
 if int(sys.argv[1]) == 1 :
-	
-	for s in months :
-		s1 = './weatherfiles/Murree_weather_' +  str(sys.argv[2]) + '_' + s + '.txt'
-		find_min_max(s1)
-	print ('Maximum temperature details : ')
-	print(maxTemp) 
-	print(maxTempD)
-	print ('Minimum temperature details : ')
-	print ( minTemp ) 
-	print (minTempD )
-	print ('Humidity details : ')
-	print (maxHumidity)
-	print ( maxHumidityD)	
+	calculator.maximum_minimum_temperature_of_year(sys.argv[2])
 
 elif int(sys.argv[1]) == 2 :
-	s1 = './weatherfiles/Murree_weather_' +  str(sys.argv[2]) + '_' + months[int(sys.argv[3])] + '.txt'
-	min_max_average(s1)	
+	calculator.maximum_minimum_average_temperature_of_month(sys.argv[2], int(sys.argv[3]))
 
 elif int(sys.argv[1]) == 3 :
-	s1 = './weatherfiles/Murree_weather_' +  str(sys.argv[2]) + '_' + months[int(sys.argv[3])] + '.txt'
-	daily_report(s1, int(sys.argv[1]) )	
+	calculator.daily_report_of_month(sys.argv[2], int(sys.argv[3]), int(sys.argv[1]))
 
 elif int(sys.argv[1]) == 4 :
-	s1 = './weatherfiles/Murree_weather_' +  str(sys.argv[2]) + '_' + months[int(sys.argv[3])] + '.txt'
-	daily_report(s1, int(sys.argv[1]) )	
+	calculator.daily_report_of_month(sys.argv[2], int(sys.argv[3]), int(sys.argv[1]))
