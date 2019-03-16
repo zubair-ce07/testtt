@@ -11,15 +11,15 @@ from baurde_crawler.items import BaurdeCrawlerItem
 class BaurdeCrawler(CrawlSpider):
     GENDER_MAP = {
         'dam': 'men',
-        ' men': 'men',
-        ' Men': 'men',
+        'men': 'men',
+        'Men': 'men',
+        'boy': 'boy',
+        'girl': 'girl',
+        'jungen': 'boy',
         'herren': 'men',
         'herr': 'women',
         'women': 'women',
         'damen': 'women',
-        'boy': 'boy',
-        'jungen': 'boy',
-        'girl': 'girl',
         'mädchen': 'girl',
         'kid': 'unisex-kids',
         'Kid': 'unisex-kids',
@@ -92,8 +92,8 @@ class BaurdeCrawler(CrawlSpider):
 
         item['lang'] = 'de'
         item['market'] = 'DE'
-        item['url'] = self.product_url(response)
         item['skus'] = self.skus(response)
+        item['url'] = self.product_url(response)
         item['name'] = self.product_name(raw_product)
         item['brand'] = self.product_brand(raw_product)
         item['category'] = self.product_category(response)
@@ -107,28 +107,14 @@ class BaurdeCrawler(CrawlSpider):
     def product_url(self, response):
         return response.url
 
-    def product_brand(self, raw_product):
-        return raw_product['brandLinkName']
+    def product_name(self, raw_product):
+        return raw_product['name']
 
     def product_market(self, raw_product):
         return raw_product['country']
 
-    def product_gender(self, response, raw_product):
-        gender = 'unisex-adults'
-        css = 'div.nav-breadcrumb .display-name ::text'
-
-        sub_category = response.css(css).extract()
-        description = self.product_description(raw_product)
-        name = self.product_name(raw_product)
-
-        for key, value in self.GENDER_MAP.items():
-            if key in f'{name}{description}{sub_category[2]}':
-                return value
-
-        return gender
-
-    def product_name(self, raw_product):
-        return raw_product['name']
+    def product_brand(self, raw_product):
+        return raw_product['brandLinkName']
 
     def product_description(self, raw_product):
         return raw_product['longDescription']
@@ -147,6 +133,20 @@ class BaurdeCrawler(CrawlSpider):
     def raw_product(self, response):
         css = 'script:contains("axisTree") ::text'
         return json.loads(response.css(css).extract_first())
+
+    def product_gender(self, response, raw_product):
+        gender = 'unisex-adults'
+        css = 'div.nav-breadcrumb .display-name ::text'
+
+        sub_category = response.css(css).extract()
+        description = self.product_description(raw_product)
+        name = self.product_name(raw_product)
+
+        for key, value in self.GENDER_MAP.items():
+            if key in f'{name} {description} {sub_category[2]}':
+                return value
+
+        return gender
 
     def raw_sku(self, response):
         css = 'script:contains("axisTree") ::text'
