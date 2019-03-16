@@ -76,13 +76,13 @@ class VeromodaCrawler(CrawlSpider):
         raw_product = response.meta['raw_product']
 
         item['lang'] = 'zh'
-        item['market'] = 'cn'
+        item['market'] = 'CN'
+        item['gender'] = 'women'
         item['skus'] = self.skus(raw_sku)
         item['url'] = self.product_url(response)
         item['image_urls'] = self.image_urls(raw_sku)
         item['name'] = self.product_name(raw_product)
         item['brand'] = self.product_brand(raw_product)
-        item['gender'] = self.product_gender(raw_product)
         item['category'] = self.product_category(raw_product)
         item['description'] = self.product_description(raw_product)
         item['retailer_sku'] = self.product_retailer_sku(raw_product)
@@ -100,9 +100,6 @@ class VeromodaCrawler(CrawlSpider):
 
     def product_brand(self, raw_product):
         return raw_product['brandName']
-
-    def product_gender(self, raw_product):
-        return raw_product['categoryName']
 
     def product_category(self, raw_product):
         return raw_product['categoryName']
@@ -138,10 +135,9 @@ class VeromodaCrawler(CrawlSpider):
                 sku['colour'] = colour['color']
                 sku['size'] = size['sizeAlias']
 
-                if size['sellStock'] == 0:
+                if size['sellStock']:
                     sku['out_of_stock'] = True
 
                 skus[f'{sku_id}_{colour["color"]}_{size["size"]}'] = sku
 
         return skus
-
