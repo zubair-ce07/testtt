@@ -22,18 +22,18 @@ class ckCrawler(CrawlSpider):
         regex = re.compile('= ({.*});', re.DOTALL)
         raw_product = json.loads(response.css(css).re_first(regex))
 
-        for category in raw_product['navigation'][0]:
-            for sub_category in category['subMenu']:
-                for url in sub_category['subMenu']:
-                    yield Request(url=urljoin(self.url_t, url['url']), callback=self.parse_pagination)
+        for category in raw_product["navigation"][0]:
+            for sub_category in category["subMenu"]:
+                for url in sub_category["subMenu"]:
+                    yield Request(url=urljoin(self.url_t, url["url"]), callback=self.parse_pagination)
 
     def parse_pagination(self, response):
         css = """script:contains('window.app["productList"]') ::text"""
         regex = re.compile('= ({.*});', re.DOTALL)
         raw_product = json.loads(response.css(css).re_first(regex))
-        pages = raw_product['noOfPages']
+        pages = raw_product["noOfPages"]
 
-        for rel_url in [i['relatedCombis'][0]['pdp'] for i in raw_product['catalogEntryNavView']]:
+        for rel_url in [i["relatedCombis"][0]["pdp"] for i in raw_product["catalogEntryNavView"]]:
             yield Request(url=urljoin(self.url_t, rel_url), callback=self.parse_product)
 
         if 'scrollPage' not in response.url and pages > 1:
@@ -65,12 +65,12 @@ class ckCrawler(CrawlSpider):
     def product_name(self, raw_product):
         return raw_product['name']
 
-    def product_brand(self, raw_product):
-        return raw_product['brandName']
-
     def product_market(self, response):
         raw_sku = self.raw_sku(response)
         return raw_sku['countryCode']
+
+    def product_brand(self, raw_product):
+        return raw_product['brandName']
 
     def product_gender(self, raw_product):
         return raw_product['sizeGuideGender']
@@ -116,16 +116,17 @@ class ckCrawler(CrawlSpider):
     def skus(self, response, raw_product):
         skus = {}
         sku_id = self.product_retailer_sku(raw_product)
+        common_sku = self.product_pricing(response, raw_product)
 
         for colour in raw_product['details']['attributes']['PRODUCT_ATTR_PRODUCT_ATTR_COLOUR']['values'].values():
             for size in raw_product['details']['attributes']['PRODUCT_ATTR_SIZE_FR']['values'].values():
-                common_sku = self.product_pricing(response, raw_product)
-                common_sku['colour'] = colour['label']
+                sku = common_sku.copy()
+                sku['colour'] = colour['label']
 
                 if not size['selectableStock']:
-                    common_sku['out_of_stock'] = True
+                    sku['out_of_stock'] = True
 
-                common_sku['size'] = size['label']
-                skus[f'{sku_id}_{colour["label"]}_{size["label"]}'] = common_sku
+                sku['size'] = size['label']
+                skus[f'{sku_id}_{colour["label"]}_{size["label"]}'] = sku
 
         return skus
