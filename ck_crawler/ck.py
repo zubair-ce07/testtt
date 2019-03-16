@@ -8,7 +8,7 @@ from w3lib.url import add_or_replace_parameter
 from ck_crawler.items import CkCrawlerItem
 
 
-class ckCrawler(CrawlSpider):
+class CkCrawler(CrawlSpider):
 
     name = 'ck-fr-crawl'
     allowed_domains = ['calvinklein.fr']
