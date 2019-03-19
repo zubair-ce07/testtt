@@ -12,7 +12,6 @@ class BaurdeCrawler(CrawlSpider):
     GENDER_MAP = {
         'dam': 'men',
         'men': 'men',
-        'Men': 'men',
         'boy': 'boy',
         'girl': 'girl',
         'jungen': 'boy',
@@ -22,7 +21,6 @@ class BaurdeCrawler(CrawlSpider):
         'damen': 'women',
         'mädchen': 'girl',
         'kid': 'unisex-kids',
-        'Kid': 'unisex-kids',
         'barn': 'unisex-kids',
         'kinder': 'unisex-kids',
     }
@@ -34,18 +32,19 @@ class BaurdeCrawler(CrawlSpider):
     listings_css = ['#nav-main-list']
     products_css = ['.plp-area1']
 
-    rules = (Rule(LinkExtractor(restrict_css=listings_css), callback='parse_sub_category'),
+    rules = (Rule(LinkExtractor(restrict_css=listings_css), callback='parse_category'),
              Rule(LinkExtractor(restrict_css=products_css), callback='parse_product'))
 
-    next_url = 'https://www.baur.de/suche/mba/magellan'
+    product_url_t = 'https://www.baur.de/p/{}'
+    category_url = 'https://www.baur.de/suche/mba/magellan'
+
     headers = {
         'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 \
         (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36',
-        'authority': 'www.baur.de',
-        'accept': 'application/json',
         'x-requested-with': 'XMLHttpRequest',
         'origin': 'https://www.baur.de',
         'content-type': 'application/json; charset=UTF-8'}
+
     formdata = {
         'start': 0,
         'clientId': 'BaurDe',
@@ -55,33 +54,33 @@ class BaurdeCrawler(CrawlSpider):
         'count': 72,
         'personalization': '$$-2$$web$'}
 
-    def parse_sub_category(self, response):
+    def parse_category(self, response):
         css = '.layernavi-loading-cont ::attr(data-pagelet-url)'
-        pattern = 'CatalogCategoryID=(.*?)&'
+        category_r = 'CatalogCategoryID=(.*?)&'
 
         for category in response.css(css).extract():
-            category_id = re.findall(pattern, str(category))[0]
-            self.formdata['category'] = category_id
+            category_id = re.findall(category_r, str(category))[0]
+            formdata = self.formdata.copy()
+            formdata['category'] = category_id
 
-            yield Request(url=self.next_url, callback=self.parse_pagination,
-                          headers=self.headers, body=json.dumps(self.formdata),
-                          meta={'headers': self.headers, 'formdata': self.formdata}, method='POST')
+            yield Request(url=self.category_url, callback=self.parse_pagination,
+                          meta={'headers': self.headers, 'formdata': formdata},
+                          headers=self.headers, body=json.dumps(formdata), method='POST')
 
     def parse_pagination(self, response):
         page_size = 72
         headers = response.meta['headers']
         formdata = response.meta['formdata']
-        json_raw_product = json.loads(response.text)
-        products = json_raw_product['searchresult']['result']['count']
-        product_ids = [i['masterSku'] for i in json_raw_product['searchresult']['result']['styles']]
+        raw_product = json.loads(response.text)
+        products = raw_product['searchresult']['result']['count']
+        product_ids = [i['masterSku'] for i in raw_product['searchresult']['result']['styles']]
 
         for product_id in product_ids:
-            nex_url = f'https://www.baur.de/p/{product_id}'
-            yield Request(url=nex_url, callback=self.parse_product)
+            yield Request(url=self.product_url_t.format(product_id), callback=self.parse_product)
 
         if 'Page=P' not in response.url and products > page_size:
             for page, per_page_products in enumerate(range(0, int(products), page_size), start=1):
-                next_url = add_or_replace_parameter(self.next_url, 'Page', 'P'+str(page))
+                next_url = add_or_replace_parameter(self.category_url, 'Page', 'P'+str(page))
                 yield Request(url=next_url, callback=self.parse_pagination,
                               headers=headers, body=json.dumps(formdata),
                               meta={'headers': headers, 'formdata': formdata}, method='POST')
@@ -117,7 +116,7 @@ class BaurdeCrawler(CrawlSpider):
         return raw_product['brandLinkName']
 
     def product_description(self, raw_product):
-        return raw_product['longDescription']
+        return [raw_product['longDescription']]
 
     def product_retailer_sku(self, raw_product):
         return raw_product['sku']
@@ -138,12 +137,14 @@ class BaurdeCrawler(CrawlSpider):
         gender = 'unisex-adults'
         css = 'div.nav-breadcrumb .display-name ::text'
 
-        sub_category = response.css(css).extract()
+        category = response.css(css).extract()
         description = self.product_description(raw_product)
         name = self.product_name(raw_product)
 
+        raw_description = ' '.join([name] + description + [category[2]])
+
         for key, value in self.GENDER_MAP.items():
-            if key in f'{name} {description} {sub_category[2]}':
+            if key in raw_description.lower():
                 return value
 
         return gender
@@ -155,6 +156,8 @@ class BaurdeCrawler(CrawlSpider):
 
     def clean(self, raw_text):
         if raw_text:
+            if type(raw_text) is list:
+                return [i.replace('\r', '').replace('\t', '').replace('\n', '') for i in raw_text]
             return raw_text.replace('\r', '').replace('\t', '').replace('\n', '')
         return raw_text
 
@@ -162,14 +165,13 @@ class BaurdeCrawler(CrawlSpider):
         price_css = '.price-wrapper .price ::text'
         prev_price_css = '.price-wrapper .price-strike ::text'
 
-        price = self.clean(response.css(price_css).extract_first())
-        prev_price = response.css(prev_price_css).extract_first()
-
         raw_product = self.raw_product(response)
+        price = self.clean(response.css(price_css).extract_first())
+        prev_price = self.clean(response.css(prev_price_css).extract_first())
+
         pricing = {'price': price}
         key = list(raw_product['variations'].keys())[0]
         pricing['currency'] = raw_product['variations'][key]['currentPrice']['currency']
-        prev_price = self.clean(prev_price)
 
         if prev_price:
             pricing['previous_price'] = prev_price
