@@ -9,7 +9,6 @@ from veromoda_crawler.items import VeromodaCrawlerItem
 class VeromodaCrawler(CrawlSpider):
 
     custom_settings = {'DOWNLOAD_DELAY': 2,
-                       'RANDOMIZE_DOWNLOAD_DELAY': False,
                        'CONCURRENT_REQUESTS_PER_IP': 1}
 
     name = 'veromoda-cn-crawl'
@@ -27,25 +26,25 @@ class VeromodaCrawler(CrawlSpider):
         (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36',
     }
 
-    url_t = 'https://www.veromoda.com.cn/api/goods/goodsList?classifyIds={}&' \
-            'currentpage=1&sortDirection=desc&sortType=1'
+    image_url_t = 'https://www.veromoda.com.cn/{}'
+    product_url_t = 'https://cdn.bestseller.com.cn/detail/VEROMODA/{}.json'
+    category_url_t = 'https://www.veromoda.com.cn/api/goods/goodsList?classifyIds={}&' \
+                     'currentpage=1&sortDirection=desc&sortType=1'
 
     def parse_start_url(self, response):
         url = 'https://cdn.bestseller.com.cn/classify/h5/VEROMODA/h5_list.json'
         yield Request(url=url, callback=self.parse_category)
 
     def parse_category(self, response):
-        raw_category = json.loads(response.text)
-        category_ids = [i['classifyId'] for i in raw_category['data']]
+        raw_categories = json.loads(response.text)['data']
 
-        for category_id in category_ids:
-            yield Request(url=self.url_t.format(category_id), headers=self.headers,
-                          callback=self.parse_pagination)
+        for raw_category in raw_categories:
+            yield Request(url=self.category_url_t.format(raw_category['classifyId']),
+                          headers=self.headers, callback=self.parse_pagination)
 
     def parse_pagination(self, response):
         pages = json.loads(response.text)['totalPage']
-        yield Request(url=response.url, callback=self.parse_products,
-                      headers=self.headers)
+        yield Request(url=response.url, callback=self.parse_products, headers=self.headers)
 
         if pages > 1:
             for page in range(2, pages):
@@ -54,23 +53,19 @@ class VeromodaCrawler(CrawlSpider):
                               callback=self.parse_products)
 
     def parse_products(self, response):
-        headers = self.headers.copy()
+        headers = {}
         products = json.loads(response.text)['data']
-        next_url = 'https://cdn.bestseller.com.cn/detail/VEROMODA/{}.json'
 
-        if 'brand' in headers.keys():
-            del headers['brand']
-            del headers['token']
-            del headers['Accept-Language']
-            del headers['Accept-Encoding']
-            headers['Origin'] = 'https://www.veromoda.com.cn'
+        headers['Accept'] = self.headers['Accept']
+        headers['User-Agent'] = self.headers['User-Agent']
+        headers['Origin'] = 'https://www.veromoda.com.cn'
 
         for product in products:
             yield Request(
-                url=next_url.format(product['goodsCode']), headers=headers,
-                meta={'raw_product': product}, callback=self.parse_product_detail)
+                url=self.product_url_t.format(product['goodsCode']), headers=headers,
+                meta={'raw_product': product}, callback=self.parse_product)
 
-    def parse_product_detail(self, response):
+    def parse_product(self, response):
         item = VeromodaCrawlerItem()
         raw_sku = self.raw_sku(response)
         raw_product = response.meta['raw_product']
@@ -111,8 +106,7 @@ class VeromodaCrawler(CrawlSpider):
         return raw_product['goodsCode']
 
     def image_urls(self, raw_sku):
-        url_t = 'https://www.veromoda.com.cn/{}'
-        return [url_t.format(url) for i in raw_sku['data']['color'] for url in i['picurls']]
+        return [self.image_url_t.format(url) for i in raw_sku['data']['color'] for url in i['picurls']]
 
     def product_pricing(self, raw_sku):
         pricing = {'currency': 'YUAN'}
@@ -130,7 +124,6 @@ class VeromodaCrawler(CrawlSpider):
 
         for colour in raw_sku['data']['color']:
             for size in colour['sizes']:
-
                 sku = common_sku.copy()
                 sku['colour'] = colour['color']
                 sku['size'] = size['sizeAlias']
