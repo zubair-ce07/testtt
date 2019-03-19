@@ -2,168 +2,163 @@ import sys
 from sys import stdout
 from operator import attrgetter
 
-def print_bar(highest_temperature, lowest_temperature, day):
+def read_file(year, month):
+	""" open file """
+	path = './weatherfiles/Murree_weather_' + year + '_' + month + '.txt'
+	try:
+		file_object = open(path)
+		weather_list = []
+		if file_object:
+			line = file_object.readline()
+			line = file_object.readline()
+
+			while line:
+				weather_list.append(Weather(line))
+				line = file_object.readline()
+
+			file_object.close()
+		return weather_list
+	except IOError:
+		print('file ' + path  + ' does not exist')
+	
+def print_bar(max_temperature, min_temperature, day):
 	"display data of temperature length on bar in one colour"
-	stdout.write(str(day))
-	stdout.write('- ')
+	red_line_bar = str(day) + '- ' + '+' * max_temperature + str(max_temperature) + 'C'
+	stdout.write("\033[1;31;40m" + red_line_bar + '\n' )
+	blue_line_bar = str(day) + '- ' + '+' * min_temperature + str(min_temperature) + 'C'
+	stdout.write("\033[1;34;40m" + blue_line_bar + '\n')
 
-	for temp in range(0, highest_temperature):
-		stdout.write("\033[1;31;40m+")
-
-	stdout.write(str(highest_temperature) + 'C')
-	print(' ')
-	stdout.write(str(day))
-	stdout.write('- ')
-
-	for temp in range(0, lowest_temperature):
-		stdout.write("\033[1;34;40m+")
-
-	stdout.write(str(lowest_temperature) + 'C')
-	print(' ')
-
-def print_bar_single_row(highest_temperature, lowest_temperature, day):
+def print_bar_single_row(max_temperature, min_temperature, day):
 	"display data of temperature length on bar in two colours"
-	stdout.write(str(day))
-	stdout.write('- ')
-
-	for temp in range(0, highest_temperature):
-		if temp < lowest_temperature:
-			stdout.write("\033[1;34;40m+")
-		else:
-			stdout.write("\033[1;31;40m+")
-
-	stdout.write(str(lowest_temperature) + 'C - ' + str(highest_temperature) + 'C')
-	print(' ')
+	partial_blue_bar = str(day) + '- ' + '+' * min_temperature 
+	stdout.write("\033[1;34;40m" + partial_blue_bar)
+	max_min_difference = max_temperature - min_temperature 
+	max_min_range = str(min_temperature) + 'C - ' + str(max_temperature) + 'C'
+	partial_red_bar = '+' * max_min_difference + max_min_range
+	stdout.write("\033[1;31;40m" + partial_red_bar + '\n')
 
 class Weather:
 	weather_date = ''
-	maximum_temperature = 0
-	minimum_temperature = 0
-	maximum_humidity = 0
+	max_temperature = 0
+	min_temperature = 0
+	max_humidity = 0
 	def __init__(self, weather):
 		weather_attributes_list = weather.split(',')
 		self.weather_date = weather_attributes_list[0]
 		if weather_attributes_list[1]:
-			self.maximum_temperature = int(weather_attributes_list[1])
+			self.max_temperature = int(weather_attributes_list[1])
 		if weather_attributes_list[3]:
-			self.minimum_temperature = int(weather_attributes_list[3])
+			self.min_temperature = int(weather_attributes_list[3])
 		if weather_attributes_list[7]:
-			self.maximum_humidity = int(weather_attributes_list[7])
+			self.max_humidity = int(weather_attributes_list[7])
 	
-
-class WeatherCalculator:
+class Calculator:
 
 	months = ['Jan', 'Feb' , 'Mar', 'Apr', 'May', 'Jun',
 			'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
 	]
 	year = ''
 
+	def calculate_max_temperature(self, year):
+		"""maximum minimum temperature of given year"""		
+		self.year = year
+		weather_list_month = []
+		weather_list_year = []
 
-	def maximum_minimum_temperature_of_year(self, year):
-		"""Print maximum and minimum temperature of given year"""		
+		for month in self.months:
+			weather_list_month	= read_file(self.year, month)	
+			if weather_list_month :	
+				weather_list_year = weather_list_year + weather_list_month  
+		max_weather = max(weather_list_year, key=attrgetter('max_temperature'))
+		return max_weather.max_temperature, max_weather.weather_date
+
+	def calculate_min_temperature(self, year):
+		"""minimum temperature of given year"""		
+		self.year = year
+		weather_list_month = []
+		weather_list_year = []
+
+		for month in self.months:
+			weather_list_month	= read_file(self.year, month)	
+			if weather_list_month :	
+				weather_list_year = weather_list_year + weather_list_month  
+		min_weather = min(weather_list_year, key=attrgetter('min_temperature'))
+		return min_weather.min_temperature, min_weather.weather_date	
+
+	def calculate_max_humidity(self, year):
+		"""maximum humidity of given year"""		
+		self.year = year
+		weather_list_month = []
+		weather_list_year = []
+
+		for month in self.months:
+			weather_list_month	= read_file(self.year, month)	
+			if weather_list_month :	
+				weather_list_year = weather_list_year + weather_list_month  
+		max_humidity = max(weather_list_year, key=attrgetter('max_humidity'))
+		return max_humidity.max_humidity, max_humidity.weather_date
+
+	def calculate_average_max_temperature(self, year, month):
+		"""maximum average temperature of given month"""	
 		self.year = year
 		weather_list = []
+		weather_list = read_file(self.year, self.months[month])
+		avg_max = sum(i.max_temperature for i in weather_list)/len(weather_list)
+		return avg_max
 
-		try:
-			
-			for month in self.months:
-				path = './weatherfiles/Murree_weather_' +  self.year + '_' + month + '.txt'
-				try:
-					file_object = open(path)
-					line = file_object.readline()
-					line = file_object.readline()
-
-					while line:
-
-						weather_list.append(Weather(line))
-						line = file_object.readline()
-					file_object.close()		
-
-				except:
-					print('file ' + path  + ' does not exist')	
-	
-			weather_maximum = max(weather_list, key=attrgetter('maximum_temperature'))
-			weather_minimum = min(weather_list, key=attrgetter('minimum_temperature'))
-			weather_humidity = max(weather_list, key=attrgetter('maximum_humidity'))
-			print('Highest ' + str(weather_maximum.maximum_temperature) + 'C on '+ weather_maximum.weather_date)
-			print('Lowest ' + str(weather_minimum.minimum_temperature) + 'C on '+ weather_minimum.weather_date)
-			print('Humidity ' + str(weather_humidity.maximum_humidity) + ' on ' + weather_humidity.weather_date)
-
-		except:
-
-			print('file ' + path  + ' does not exist')	
-
-	def maximum_minimum_average_temperature_of_month(self, year, month):
-		"""Print maximum, minimum, average temperature of given month"""		
+	def calculate_average_min_temperature(self, year, month):
+		"""m average temperature of given month"""	
 		self.year = year
 		weather_list = []
+		weather_list = read_file(self.year, self.months[month])
+		avg_min = sum(i.min_temperature for i in weather_list)/len(weather_list)
+		return avg_min
 
-		try:
-			
-			path = './weatherfiles/Murree_weather_' +  self.year + '_' + self.months[month] + '.txt'
-			try:
-				file_object = open(path)
-				line = file_object.readline()
-				line = file_object.readline()
+	def calculate_average_max_humidity(self, year, month):
+		"""maximum average humidity of given month"""	
+		self.year = year
+		weather_list = []
+		weather_list = read_file(self.year, self.months[month])
+		avg_humidity = sum(i.max_humidity for i in weather_list)/len(weather_list)
+		return avg_humidity
 
-				while line:
-
-					weather_list.append(Weather(line))
-					line = file_object.readline()
-
-				file_object.close()		
-			except:
-				print('file ' + path  + ' does not exist')	
-
-			sum_maximum_temperature = sum(i.maximum_temperature for i in weather_list)
-			sum_minimum_temperature = sum(i.minimum_temperature for i in weather_list)
-			sum_maximum_humidity = sum(i.maximum_humidity for i in weather_list)
-			print('Highest Average ' + str(sum_maximum_temperature/len(weather_list)))
-			print('Lowest Average ' + str(sum_minimum_temperature/len(weather_list)))
-			print('Average Humidity ' + str(sum_maximum_humidity/len(weather_list)))
-			
-		except:
-			print('file ' + path  + ' does not exist')	
-		
-	def daily_report_of_month(self, year, month, option):
+	def calculate_daily_report(self, year, month, option):
 		"""Print the highest lowest of each day in bar"""		
 		self.year = year
 		weather_list = []
+		weather_list = read_file(self.year, self.months[month])
+		counter = 1
+		for day in weather_list:
+			if option == 3:
+				print_bar(day.max_temperature, day.min_temperature, counter)
+			elif option == 4:
+				print_bar_single_row(day.max_temperature, day.min_temperature, counter)
+			counter = counter + 1
 
-		try:
-			counter = 1
-			path = './weatherfiles/Murree_weather_' +  self.year + '_' + self.months[month] + '.txt'
-			
-			file_object = open(path)
-			line = file_object.readline()
-			line = file_object.readline()
+def main():
+	""" main function """
+	weather = Calculator()
 
-			while line: 
+	if int(sys.argv[1]) == 1:
+		max_temp, date = weather.calculate_max_temperature(sys.argv[2])
+		print(max_temp, date)
+		min_temp, date = weather.calculate_min_temperature('2004')
+		print(min_temp, date)	
+		max_humidity, date = weather.calculate_max_humidity('2004')
+		print(max_humidity, date)	
 
-				weather_list.append(Weather(line))
-				line = file_object.readline()
-			file_object.close()
+	elif int(sys.argv[1]) == 2:
+		avg_max = weather.calculate_average_max_temperature(sys.argv[2], int(sys.argv[3]))
+		print(avg_max)
+		avg_min = weather.calculate_average_min_temperature(sys.argv[2], int(sys.argv[3]))
+		print(avg_min)
+		avg_humdity = weather.calculate_average_max_humidity(sys.argv[2], int(sys.argv[3]))
+		print(avg_humdity)
 
-			for day in weather_list:
-				if option == 3:
-					print_bar(day.maximum_temperature , day.minimum_temperature , counter)
-				elif option == 4:
-					print_bar_single_row(day.maximum_temperature , day.minimum_temperature, counter)
-				counter = counter + 1
+	elif int(sys.argv[1]) == 3:
+		weather.calculate_daily_report(sys.argv[2], int(sys.argv[3]), int(sys.argv[1]))
 
-		except:
-			print('file ' + path  + ' does not exist')	
-
-weather_calculator = WeatherCalculator()
-
-if int(sys.argv[1]) == 1:
-	weather_calculator.maximum_minimum_temperature_of_year(sys.argv[2])
-
-elif int(sys.argv[1]) == 2:
-	weather_calculator.maximum_minimum_average_temperature_of_month(sys.argv[2], int(sys.argv[3]))
-
-elif int(sys.argv[1]) == 3:
-	weather_calculator.daily_report_of_month(sys.argv[2], int(sys.argv[3]), int(sys.argv[1]))
-
-elif int(sys.argv[1]) == 4:
-	weather_calculator.daily_report_of_month(sys.argv[2], int(sys.argv[3]), int(sys.argv[1]))
+	elif int(sys.argv[1]) == 4:
+		weather.calculate_daily_report(sys.argv[2], int(sys.argv[3]), int(sys.argv[1]))
+if __name__ == "__main__":
+	main()
