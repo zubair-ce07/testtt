@@ -56,13 +56,12 @@ class BaurdeCrawler(CrawlSpider):
         'personalization': '$$-2$$web$'}
 
     def parse_category(self, response):
-        css = '.layernavi-loading-cont ::attr(data-pagelet-url)'
         category_r = 'CatalogCategoryID=(.*?)&'
+        css = '.layernavi-loading-cont ::attr(data-pagelet-url)'
 
+        formdata = self.formdata.copy()
         for category in response.css(css).extract():
-            category_id = re.findall(category_r, str(category))[0]
-            formdata = self.formdata.copy()
-            formdata['category'] = category_id
+            formdata['category'] = re.findall(category_r, str(category))[0]
 
             yield Request(url=self.category_url, callback=self.parse_pagination,
                           meta={'headers': self.headers, 'formdata': formdata},
@@ -74,16 +73,14 @@ class BaurdeCrawler(CrawlSpider):
         formdata = response.meta['formdata']
         raw_product = json.loads(response.text)
         products = raw_product['searchresult']['result']['count']
-        product_ids = [i['masterSku'] for i in raw_product['searchresult']['result']['styles']]
 
-        for product_id in product_ids:
-            yield Request(url=self.product_url_t.format(product_id), callback=self.parse_product)
+        for product in raw_product['searchresult']['result']['styles']:
+            yield Request(url=self.product_url_t.format(product['masterSku']), callback=self.parse_product)
 
         if 'Page=P' not in response.url and products > page_size:
             for page, per_page_products in enumerate(range(0, int(products), page_size), start=1):
-                next_url = add_or_replace_parameter(self.category_url, 'Page', 'P'+str(page))
-                yield Request(url=next_url, callback=self.parse_pagination,
-                              headers=headers, body=json.dumps(formdata),
+                yield Request(url=add_or_replace_parameter(self.category_url, 'Page', 'P'+str(page)),
+                              callback=self.parse_pagination, headers=headers, body=json.dumps(formdata),
                               meta={'headers': headers, 'formdata': formdata}, method='POST')
 
     def parse_product(self, response):
@@ -92,7 +89,7 @@ class BaurdeCrawler(CrawlSpider):
 
         item['lang'] = 'de'
         item['market'] = 'DE'
-        item['skus'] = self.skus(response)
+        item['skus'] = self.skus(raw_product)
         item['url'] = self.product_url(response)
         item['name'] = self.product_name(raw_product)
         item['brand'] = self.product_brand(raw_product)
@@ -114,93 +111,73 @@ class BaurdeCrawler(CrawlSpider):
         return raw_product['country']
 
     def product_brand(self, raw_product):
-        return raw_product['brandLinkName']
-
-    def product_description(self, raw_product):
-        return [raw_product['longDescription']]
+        if 'brandLinkName' in raw_product.keys():
+            return raw_product['brandLinkName']
 
     def product_retailer_sku(self, raw_product):
         return raw_product['sku']
-
-    def product_category(self, response):
-        css = 'div.nav-breadcrumb .display-name ::text'
-        return response.css(css).extract()[1]
 
     def product_image_urls(self, response):
         css = '.product-gallery-item > img::attr(src)'
         return response.css(css).extract()
 
+    def product_category(self, response):
+        css = 'div.nav-breadcrumb .display-name ::text'
+        return [response.css(css).extract()[1]]
+
     def raw_product(self, response):
-        css = 'script:contains("axisTree") ::text'
+        css = 'script:contains("variations") ::text'
         return json.loads(response.css(css).extract_first())
 
-    def product_gender(self, response, raw_product):
-        gender = 'unisex-adults'
-        css = 'div.nav-breadcrumb .display-name ::text'
-
-        category = response.css(css).extract()
-        description = self.product_description(raw_product)
-        name = self.product_name(raw_product)
-
-        raw_description = ' '.join([name] + description + [category[2]])
-
-        for key, value in self.GENDER_MAP.items():
-            if key in raw_description.lower():
-                return value
-
-        return gender
-
-    def raw_sku(self, response):
-        css = 'script:contains("axisTree") ::text'
-        return json.loads(response.css(css).re_first('"axisTree":(.*?),"variations"'))
+    def product_description(self, raw_product):
+        if 'longDescription' in raw_product.keys():
+            return self.clean([raw_product['longDescription']])
 
     def clean(self, raw_text):
-        if raw_text:
-            if type(raw_text) is list:
-                return [i.replace('\r', '').replace('\t', '').replace('\n', '') for i in raw_text]
-            return raw_text.replace('\r', '').replace('\t', '').replace('\n', '')
-        return raw_text
+        if type(raw_text) is list:
+            return [re.sub('(\r*)(\t*)(\n*)', '', i) for i in raw_text]
+        return re.sub('(\r*)(\t*)(\n*)', '', raw_text)
 
-    def product_pricing(self, response):
-        price_css = '.price-wrapper .price ::text'
-        prev_price_css = '.price-wrapper .price-strike ::text'
+    def product_gender(self, response, raw_product):
+        css = 'div.nav-breadcrumb .display-name ::text'
+        gender_soup = ' '.join([self.product_name(raw_product)] +
+                               [response.css(css).extract()[2]]).lower()
 
-        raw_product = self.raw_product(response)['variations']
-        price = self.clean(response.css(price_css).extract_first())
-        prev_price = self.clean(response.css(prev_price_css).extract_first())
+        if self.product_description(raw_product):
+            gender_soup = gender_soup + self.product_description(raw_product).lower()
 
-        pricing = {'price': price}
-        pricing['currency'] = raw_product[list(raw_product.keys())[0]]['currentPrice']['currency']
+        for key, value in self.GENDER_MAP.items():
+            if key in gender_soup:
+                return value
 
-        if prev_price:
-            pricing['previous_price'] = prev_price
+        return 'unisex-adults'
 
-        return pricing
-
-    def skus(self, response):
+    def skus(self, raw_product):
         skus = {}
-        raw_sku = self.raw_sku(response)
-        common_sku = self.product_pricing(response)
-        colours = raw_sku['rootNode']['subTree'].keys()
+        raw_skus = raw_product['variations']
 
-        for colour in colours:
-            if raw_sku['rootNode']['subTree'][colour]['subTree']:
-                for size in raw_sku['rootNode']['subTree'][colour]['subTree'].keys():
-                    lengths = raw_sku['rootNode']['subTree'][colour]['subTree'][size]['subTree'].keys()
+        for key in raw_skus.keys():
+            sku = {'price': raw_skus[key]['currentPrice']['value']}
+            sku['currency'] = raw_skus[key]['currentPrice']['currency']
 
-                    if lengths and size:
-                        for length in lengths:
-                            sku = common_sku.copy()
-                            sku['colour'] = colour
-                            sku['size'] = size
-                            skus[f'{colour}_{size}/{length}'] = sku
-                    elif size:
-                        sku = common_sku.copy()
-                        sku['size'] = size
-                        skus[f'{colour}_{size}'] = sku
+            if 'Var_Size' in raw_skus[key]['variationValues'].keys():
+                sku['size'] = raw_skus[key]['variationValues']['Var_Size']
             else:
-                sku = common_sku.copy()
-                skus[f'{colour}'] = sku
+                sku['size'] = 'one_size'
+
+            if not raw_skus[key]['productRef']['available']:
+                sku['out_of_stock'] = True
+
+            if 'Var_Article' in raw_skus[key]['variationValues'].keys():
+                sku['colour'] = raw_skus[key]['variationValues']['Var_Article']
+
+            if 'oldPrice' in raw_skus.keys():
+                sku['previous_price'] = raw_skus[key]['oldPrice']['value']
+
+            if 'Var_Dimension3' in raw_skus[key]['variationValues'].keys():
+                length = raw_skus[key]['variationValues']['Var_Dimension3']
+                skus[f'{raw_skus[key]["sku"]}/{length}'] = sku
+            else:
+                skus[f'{raw_skus[key]["sku"]}'] = sku
 
         return skus
-
