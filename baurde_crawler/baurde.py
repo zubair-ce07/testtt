@@ -1,6 +1,7 @@
 import json
 import re
 
+from scrapy import FormRequest
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule, CrawlSpider, Request
 from w3lib.url import add_or_replace_parameter
@@ -144,7 +145,7 @@ class BaurdeCrawler(CrawlSpider):
                                [response.css(css).extract()[2]]).lower()
 
         if self.product_description(raw_product):
-            gender_soup = gender_soup + self.product_description(raw_product).lower()
+            gender_soup = gender_soup + ' '.join(self.product_description(raw_product)).lower()
 
         for key, value in self.GENDER_MAP.items():
             if key in gender_soup:
@@ -152,32 +153,36 @@ class BaurdeCrawler(CrawlSpider):
 
         return 'unisex-adults'
 
-    def skus(self, raw_product):
+    def product_pricing(self, key, raw_sku):
+        pricing = {'price': raw_sku[key]['currentPrice']['value']}
+        pricing['currency'] = raw_sku[key]['currentPrice']['currency']
+
+        if 'oldPrice' in raw_sku.keys():
+            pricing['previous_price'] = raw_sku[key]['oldPrice']['value']
+
+        return pricing
+
+    def skus(self, raw_skus):
         skus = {}
-        raw_skus = raw_product['variations']
 
-        for key in raw_skus.keys():
-            sku = {'price': raw_skus[key]['currentPrice']['value']}
-            sku['currency'] = raw_skus[key]['currentPrice']['currency']
+        for key in raw_skus['variations'].keys():
+            sku = self.product_pricing(key, raw_skus['variations'])
 
-            if 'Var_Size' in raw_skus[key]['variationValues'].keys():
-                sku['size'] = raw_skus[key]['variationValues']['Var_Size']
+            if not raw_skus['variations'][key]['productRef']['available']:
+                sku['out_of_stock'] = True
+
+            if 'Var_Size' in raw_skus['variations'][key]['variationValues'].keys():
+                sku['size'] = raw_skus['variations'][key]['variationValues']['Var_Size']
             else:
                 sku['size'] = 'one_size'
 
-            if not raw_skus[key]['productRef']['available']:
-                sku['out_of_stock'] = True
+            if 'Var_Article' in raw_skus['variations'][key]['variationValues'].keys():
+                sku['colour'] = raw_skus['variations'][key]['variationValues']['Var_Article']
 
-            if 'Var_Article' in raw_skus[key]['variationValues'].keys():
-                sku['colour'] = raw_skus[key]['variationValues']['Var_Article']
-
-            if 'oldPrice' in raw_skus.keys():
-                sku['previous_price'] = raw_skus[key]['oldPrice']['value']
-
-            if 'Var_Dimension3' in raw_skus[key]['variationValues'].keys():
-                length = raw_skus[key]['variationValues']['Var_Dimension3']
-                skus[f'{raw_skus[key]["sku"]}/{length}'] = sku
+            if 'Var_Dimension3' in raw_skus['variations'][key]['variationValues'].keys():
+                length = raw_skus['variations'][key]['variationValues']['Var_Dimension3']
+                skus[f'{raw_skus["variations"][key]["sku"]}/{length}'] = sku
             else:
-                skus[f'{raw_skus[key]["sku"]}'] = sku
+                skus[f'{raw_skus["variations"][key]["sku"]}'] = sku
 
         return skus
