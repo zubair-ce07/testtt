@@ -63,12 +63,11 @@ class BaurdeCrawler(CrawlSpider):
         for category in response.css(css).extract():
             formdata['category'] = re.findall(category_r, str(category))[0]
 
-            yield Request(url=self.category_url, callback=self.parse_pagination, meta={'formdata': formdata},
-                          headers=self.headers, body=json.dumps(formdata), method='POST')
+            yield Request(url=self.category_url, callback=self.parse_pagination, headers=self.headers,
+                          meta={'formdata': formdata}, body=json.dumps(formdata), method='POST')
 
     def parse_pagination(self, response):
         page_size = 72
-        # headers = response.meta['headers']
         formdata = response.meta['formdata']
         raw_product = json.loads(response.text)
         products = raw_product['searchresult']['result']['count']
@@ -79,8 +78,8 @@ class BaurdeCrawler(CrawlSpider):
         if 'Page=P' not in response.url and products > page_size:
             for page, per_page_products in enumerate(range(0, int(products), page_size), start=1):
                 yield Request(url=add_or_replace_parameter(self.category_url, 'Page', 'P'+str(page)),
-                              callback=self.parse_pagination, headers=self.headers, body=json.dumps(formdata),
-                              meta={'formdata': formdata}, method='POST')
+                              callback=self.parse_pagination, headers=self.headers, meta={'formdata': formdata},
+                              body=json.dumps(formdata), method='POST')
 
     def parse_product(self, response):
         item = BaurdeCrawlerItem()
@@ -123,13 +122,12 @@ class BaurdeCrawler(CrawlSpider):
     def product_brand(self, raw_product):
         return raw_product.get('brandLinkName') or 'BAUR'
 
+    def product_description(self, raw_product):
+        return [raw_product.get('longDescription')] or []
+
     def raw_product(self, response):
         css = 'script:contains("variations") ::text'
         return json.loads(response.css(css).extract_first())
-
-    def product_description(self, raw_product):
-        if 'longDescription' in raw_product.keys():
-            return self.clean([raw_product['longDescription']])
 
     def clean(self, raw_text):
         if type(raw_text) is list:
@@ -139,10 +137,8 @@ class BaurdeCrawler(CrawlSpider):
     def product_gender(self, response, raw_product):
         css = 'div.nav-breadcrumb .display-name ::text'
         gender_soup = ' '.join([self.product_name(raw_product)] +
-                               [response.css(css).extract()[2]]).lower()
-
-        if self.product_description(raw_product):
-            gender_soup = gender_soup + ' '.join(self.product_description(raw_product)).lower()
+                               self.product_description(raw_product) +
+                               [response.css(css).extract()[2]] or []).lower()
 
         for gender_str, gender in self.GENDER_MAP.items():
             if gender_str in gender_soup:
