@@ -1,7 +1,6 @@
 import json
 import re
 
-from scrapy import FormRequest
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule, CrawlSpider, Request
 from w3lib.url import add_or_replace_parameter
@@ -64,13 +63,12 @@ class BaurdeCrawler(CrawlSpider):
         for category in response.css(css).extract():
             formdata['category'] = re.findall(category_r, str(category))[0]
 
-            yield Request(url=self.category_url, callback=self.parse_pagination,
-                          meta={'headers': self.headers, 'formdata': formdata},
+            yield Request(url=self.category_url, callback=self.parse_pagination, meta={'formdata': formdata},
                           headers=self.headers, body=json.dumps(formdata), method='POST')
 
     def parse_pagination(self, response):
         page_size = 72
-        headers = response.meta['headers']
+        # headers = response.meta['headers']
         formdata = response.meta['formdata']
         raw_product = json.loads(response.text)
         products = raw_product['searchresult']['result']['count']
@@ -81,8 +79,8 @@ class BaurdeCrawler(CrawlSpider):
         if 'Page=P' not in response.url and products > page_size:
             for page, per_page_products in enumerate(range(0, int(products), page_size), start=1):
                 yield Request(url=add_or_replace_parameter(self.category_url, 'Page', 'P'+str(page)),
-                              callback=self.parse_pagination, headers=headers, body=json.dumps(formdata),
-                              meta={'headers': headers, 'formdata': formdata}, method='POST')
+                              callback=self.parse_pagination, headers=self.headers, body=json.dumps(formdata),
+                              meta={'formdata': formdata}, method='POST')
 
     def parse_product(self, response):
         item = BaurdeCrawlerItem()
@@ -111,10 +109,6 @@ class BaurdeCrawler(CrawlSpider):
     def product_market(self, raw_product):
         return raw_product['country']
 
-    def product_brand(self, raw_product):
-        if 'brandLinkName' in raw_product.keys():
-            return raw_product['brandLinkName']
-
     def product_retailer_sku(self, raw_product):
         return raw_product['sku']
 
@@ -125,6 +119,9 @@ class BaurdeCrawler(CrawlSpider):
     def product_category(self, response):
         css = 'div.nav-breadcrumb .display-name ::text'
         return [response.css(css).extract()[1]]
+
+    def product_brand(self, raw_product):
+        return raw_product.get('brandLinkName') or 'BAUR'
 
     def raw_product(self, response):
         css = 'script:contains("variations") ::text'
@@ -147,9 +144,9 @@ class BaurdeCrawler(CrawlSpider):
         if self.product_description(raw_product):
             gender_soup = gender_soup + ' '.join(self.product_description(raw_product)).lower()
 
-        for key, value in self.GENDER_MAP.items():
-            if key in gender_soup:
-                return value
+        for gender_str, gender in self.GENDER_MAP.items():
+            if gender_str in gender_soup:
+                return gender
 
         return 'unisex-adults'
 
