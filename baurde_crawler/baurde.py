@@ -103,7 +103,7 @@ class BaurdeCrawler(CrawlSpider):
         return response.url
 
     def product_name(self, raw_product):
-        return raw_product['name']
+        return raw_product.get('name', '')
 
     def product_market(self, raw_product):
         return raw_product['country']
@@ -120,7 +120,7 @@ class BaurdeCrawler(CrawlSpider):
         return [response.css(css).extract()[1]]
 
     def product_brand(self, raw_product):
-        return raw_product.get('brandLinkName') or 'BAUR'
+        return raw_product.get('brandLinkName', 'BAUR')
 
     def product_description(self, raw_product):
         return [raw_product.get('longDescription')] or []
@@ -135,10 +135,10 @@ class BaurdeCrawler(CrawlSpider):
         return re.sub('(\r*)(\t*)(\n*)', '', raw_text)
 
     def product_gender(self, response, raw_product):
-        css = 'div.nav-breadcrumb .display-name ::text'
+        css = 'div.nav-breadcrumb ul .display-name ::text'
         gender_soup = ' '.join([self.product_name(raw_product)] +
                                self.product_description(raw_product) +
-                               [response.css(css).extract()[2]] or []).lower()
+                               response.css(css).extract()).lower()
 
         for gender_str, gender in self.GENDER_MAP.items():
             if gender_str in gender_soup:
@@ -160,21 +160,19 @@ class BaurdeCrawler(CrawlSpider):
 
         for key in raw_skus['variations'].keys():
             sku = self.product_pricing(key, raw_skus['variations'])
+            size = raw_skus['variations'][key]['variationValues'].get('Var_Size')
+            colour = raw_skus['variations'][key]['variationValues'].get('Var_Article')
+            length = raw_skus['variations'][key]['variationValues'].get('Var_Dimension3')
+            sku['size'] = size or 'One Size'
+
+            if colour:
+                sku['colour'] = colour
 
             if not raw_skus['variations'][key]['productRef']['available']:
                 sku['out_of_stock'] = True
 
-            if 'Var_Size' in raw_skus['variations'][key]['variationValues'].keys():
-                sku['size'] = raw_skus['variations'][key]['variationValues']['Var_Size']
-            else:
-                sku['size'] = 'one_size'
-
-            if 'Var_Article' in raw_skus['variations'][key]['variationValues'].keys():
-                sku['colour'] = raw_skus['variations'][key]['variationValues']['Var_Article']
-
-            if 'Var_Dimension3' in raw_skus['variations'][key]['variationValues'].keys():
-                length = raw_skus['variations'][key]['variationValues']['Var_Dimension3']
-                skus[f'{raw_skus["variations"][key]["sku"]}/{length}'] = sku
+            if length:
+                skus[f'{raw_skus["variations"][key]["sku"]}_{length}'] = sku
             else:
                 skus[f'{raw_skus["variations"][key]["sku"]}'] = sku
 
