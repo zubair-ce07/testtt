@@ -33,7 +33,7 @@ class VeromodaCrawler(CrawlSpider):
                             callback=self.parse_pagination) for raw_category in json.loads(response.text)['data']]
 
     def parse_pagination(self, response):
-        pages = json.loads(response.text).get('totalPage')
+        pages = json.loads(response.text).get('totalPage', 0)
         yield Request(url=response.url, callback=self.parse_products, headers=self.headers)
 
         if pages > 1:
