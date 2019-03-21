@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import scrapy
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
@@ -18,7 +17,7 @@ class FashionSpider(scrapy.spiders.CrawlSpider):
 
     def parse_item(self, response):
         yield {
-            'ppid': self.product_id(response),
+            'pid': self.product_id(response),
             'gender': 'women',
             'category': self.product_category(response),
             'url': self.current_page_url(response),
@@ -35,22 +34,23 @@ class FashionSpider(scrapy.spiders.CrawlSpider):
         return response.css('input[name = "product_id[]"]::attr(value)').get()
 
     def product_name(self, response):
-        return response.css('h1.product-title.uppercase::text').get(),
+        return response.css('.product-title.uppercase::text').get(),
 
     def product_description(self, response):
-        return response.css('div.panel-body::text').get().strip().split('.')[0]
+        return response.css('.panel-body::text').get().strip().split('.')[0]
 
     def product_care(self, response):
-        return response.css('div.panel-body::text').get().strip().split('.')[1:]
+        return response.css('.panel-body::text').get().strip().split('.')[1:]
 
     def product_price(self, response):
-        return response.css('meta[itemprop="price"]::attr(content)').get()
+        price = response.css('.product-price > span::text').getall()
+        return f"Old {price[0]}, New {price[1]}" if len(price) > 1 else price[0]
 
     def product_category(self, response):
-        return response.css('ul.breadcrumb > li > a::text').getall()
+        return response.css('.breadcrumb > li > a::text').getall()
 
     def image_url(self, response):
-        return response.css('a.zoom ::attr(src)').getall()
+        return response.css('.zoom ::attr(src)').getall()
 
     def current_page_url(self, response):
         return response.css('link[rel = "canonical"]::attr(href)').get()
@@ -64,17 +64,17 @@ class FashionSpider(scrapy.spiders.CrawlSpider):
 
         price = self.product_price(response)
         currency = response.css('meta[itemprop="priceCurrency"]::attr(content)').get()
-        size_options = response.css('div.attribute_size > select > option[style="font-weight: bold"]::text').getall()
+        size_options = response.css('select[title="Size"] > option::text').getall()
         url = self.current_page_url(response)
         colour = url.split('_')[1].split('.')[0]
 
-        for sku_id in size_options:
+        for sku_id in size_options[1:]:
             size = sku_id.split('-')
+            product_detail.append(f"price: {price}, currency: {currency}, colour: {colour}, size: {size[0]}")
             if len(size) > 1 and size[1] == ' SOLD OUT':
-                product_detail.append(f"price: {price} currency: {currency} colour: {colour} out_of_stock = true "
-                                      f"size: {size[0]}  sku_id: {colour}_{size[0]}")
+                product_detail.append(f"out_of_stock = true,sku_id: {colour}_{size[0]}")
             else:
-                product_detail.append(f"price: {price} currency: {currency} colour: {colour} size: {size[0]}"
-                                      f"sku_id: {colour}_{sku_id}")
+                product_detail.append(f"sku_id: {colour}_{sku_id}")
 
         return product_detail
+
