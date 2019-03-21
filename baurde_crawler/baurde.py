@@ -120,10 +120,10 @@ class BaurdeCrawler(CrawlSpider):
         return [response.css(css).extract()[1]]
 
     def product_brand(self, raw_product):
-        return raw_product.get('brandLinkName', 'BAUR')
+        return raw_product.get('brandLinkName') or 'BAUR'
 
     def product_description(self, raw_product):
-        return [raw_product.get('longDescription')] or []
+        return [self.clean(raw_product.get('longDescription'))] or []
 
     def raw_product(self, response):
         css = 'script:contains("variations") ::text'
@@ -149,9 +149,10 @@ class BaurdeCrawler(CrawlSpider):
     def product_pricing(self, key, raw_sku):
         pricing = {'price': raw_sku[key]['currentPrice']['value']}
         pricing['currency'] = raw_sku[key]['currentPrice']['currency']
+        prev_price = raw_sku[key].get('oldPrice')
 
-        if 'oldPrice' in raw_sku.keys():
-            pricing['previous_price'] = raw_sku[key]['oldPrice']['value']
+        if prev_price:
+            pricing['previous_price'] = prev_price['value']
 
         return pricing
 
