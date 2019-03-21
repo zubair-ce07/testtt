@@ -8,12 +8,14 @@ from veromoda_crawler.items import VeromodaCrawlerItem
 
 class VeromodaCrawler(CrawlSpider):
 
-    custom_settings = {'DOWNLOAD_DELAY': 2,
-                       'CONCURRENT_REQUESTS_PER_IP': 1}
+    custom_settings = {
+        'DOWNLOAD_DELAY': 2,
+        'CONCURRENT_REQUESTS_PER_IP': 1
+    }
 
     name = 'veromoda-cn-crawl'
-    start_urls = ['https://www.veromoda.com.cn']
     allowed_domains = ['veromoda.com.cn', 'cdn.bestseller.com.cn']
+    start_urls = ['https://cdn.bestseller.com.cn/classify/h5/VEROMODA/h5_list.json']
 
     headers = {'token': 'eyJqdGkiOiJIUzgjV3dGY1daIiwiaWF0IjoxNTUyMzczNzYwLCJjaGFubmVs'
                         'IjoiNiJ9.Ur0x3yaIB3BFVZ6LeTzFvdCprK6VR-xUYo2X4EqaWTU'}
@@ -24,29 +26,24 @@ class VeromodaCrawler(CrawlSpider):
                      'currentpage=1&sortDirection=desc&sortType=1'
 
     def parse_start_url(self, response):
-        url = 'https://cdn.bestseller.com.cn/classify/h5/VEROMODA/h5_list.json'
-        yield Request(url=url, callback=self.parse_category)
+        yield Request(url=response.url, callback=self.parse_category)
 
     def parse_category(self, response):
-        for raw_category in json.loads(response.text)['data']:
-            yield Request(url=self.category_url_t.format(raw_category['classifyId']),
-                          headers=self.headers, callback=self.parse_pagination)
+        yield from [Request(url=self.category_url_t.format(raw_category['classifyId']), headers=self.headers,
+                            callback=self.parse_pagination) for raw_category in json.loads(response.text)['data']]
 
     def parse_pagination(self, response):
-        pages = json.loads(response.text)['totalPage']
-        yield Request(url=response.url, callback=self.parse_products,
-                      headers=self.headers)
+        pages = json.loads(response.text).get('totalPage')
+        yield Request(url=response.url, callback=self.parse_products, headers=self.headers)
 
         if pages > 1:
-            for page in range(2, pages):
-                yield Request(url=add_or_replace_parameter(response.url, 'Page', page),
-                              headers=self.headers, callback=self.parse_products)
+            yield from [Request(url=add_or_replace_parameter(response.url, 'Page', page), headers=self.headers,
+                                callback=self.parse_products) for page in range(2, pages)]
 
     def parse_products(self, response):
-        for product in json.loads(response.text)['data']:
-            yield Request(url=self.product_url_t.format(product['goodsCode']),
-                          headers={'Origin': 'https://www.veromoda.com.cn'},
-                          meta={'raw_product': product}, callback=self.parse_product)
+        yield from [Request(url=self.product_url_t.format(product['goodsCode']),
+                            headers={'Origin': 'https://www.veromoda.com.cn'}, callback=self.parse_product,
+                            meta={'raw_product': product}) for product in json.loads(response.text)['data']]
 
     def parse_product(self, response):
         item = VeromodaCrawlerItem()
@@ -107,7 +104,7 @@ class VeromodaCrawler(CrawlSpider):
                 if size['sellStock']:
                     sku['out_of_stock'] = True
 
-                skus[f'{raw_skus["data"]["projectCode"]}_{colour["color"]}_{size["size"]}'] = sku
+                skus[f'{colour["color"]}_{size["size"]}'] = sku
 
         return skus
 
