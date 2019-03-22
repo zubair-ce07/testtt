@@ -164,7 +164,9 @@ class BaurdeCrawler(CrawlSpider):
             size = raw_sku['variationValues'].get('Var_Size')
             colour = raw_sku['variationValues'].get('Var_Article')
             length = raw_sku['variationValues'].get('Var_Dimension3')
-            sku['size'] = size or 'One Size'
+
+            if length:
+                size += f'_{length}'
 
             if colour:
                 sku['colour'] = colour
@@ -172,9 +174,7 @@ class BaurdeCrawler(CrawlSpider):
             if not raw_sku['productRef']['available']:
                 sku['out_of_stock'] = True
 
-            if length:
-                skus[f'{raw_sku["sku"]}_{length}'] = sku
-            else:
-                skus[f'{raw_sku["sku"]}'] = sku
+            sku['size'] = size or 'One Size'
+            skus[f'{raw_sku["sku"]}'] = sku
 
         return skus
