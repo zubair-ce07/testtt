@@ -25,7 +25,7 @@ class FashionSpider(scrapy.spiders.CrawlSpider):
             'name': self.product_name(response),
             'description': self.product_description(response),
             'care': self.product_care(response),
-            'image_url': self.image_urls(response),
+            'image_urls': self.image_urls(response),
             'skus': self.parse_product_detail(response),
         }
 
@@ -59,6 +59,7 @@ class FashionSpider(scrapy.spiders.CrawlSpider):
 
     def parse_product_detail(self, response):
         product_detail = []
+        product = {}
         price = self.product_price(response)
         currency = response.css('meta[itemprop="priceCurrency"]::attr(content)').get()
         size_options = response.css('select[title="Size"] > option::text').getall()
@@ -69,22 +70,16 @@ class FashionSpider(scrapy.spiders.CrawlSpider):
             size = sku_id.split('-')
 
             if len(price) > 1:
-                product = {
-                    'price': price[0],
-                    'previous price': price[1],
-                    'currency': currency,
-                    'colour': colour,
-                    'size': size[0],
-                    'sku_id': colour + "_" + sku_id,
-                }
-            else:
-                product = {
-                    'price': price[0],
-                    'currency': currency,
-                    'colour': colour,
-                    'size': size[0],
-                    'sku_id': colour + "_" + sku_id,
-                }
+                product.update({'previous price': price[1]})
+
+            product.update({
+                'price': price[0],
+                'currency': currency,
+                'colour': colour,
+                'size': size[0],
+                'sku_id': colour + "_" + sku_id,
+            })
+
             if len(size) > 1 and size[1] == ' SOLD OUT':
                 product.update({'out_of_stock': 'true', 'sku_id': colour + "_" + size[0]})
 
