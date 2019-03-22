@@ -26,24 +26,21 @@ class VeromodaCrawler(CrawlSpider):
                      'currentpage=1&sortDirection=desc&sortType=1'
 
     def parse_start_url(self, response):
-        yield Request(url=response.url, callback=self.parse_category)
+        return Request(url=response.url, callback=self.parse_category)
 
     def parse_category(self, response):
-        yield from [Request(url=self.category_url_t.format(raw_category['classifyId']), headers=self.headers,
-                            callback=self.parse_pagination) for raw_category in json.loads(response.text)['data']]
+        return [Request(url=self.category_url_t.format(raw_category['classifyId']), headers=self.headers,
+                        callback=self.parse_pagination) for raw_category in json.loads(response.text)['data']]
 
     def parse_pagination(self, response):
-        pages = json.loads(response.text).get('totalPage', 0)
-        yield Request(url=response.url, callback=self.parse_products, headers=self.headers)
-
-        if pages > 1:
-            yield from [Request(url=add_or_replace_parameter(response.url, 'Page', page), headers=self.headers,
-                                callback=self.parse_products) for page in range(2, pages)]
+        pages = json.loads(response.text).get('totalPage', 1)
+        return [Request(url=add_or_replace_parameter(response.url, 'Page', page), headers=self.headers,
+                        callback=self.parse_products) for page in range(1, pages)]
 
     def parse_products(self, response):
-        yield from [Request(url=self.product_url_t.format(product['goodsCode']),
-                            headers={'Origin': 'https://www.veromoda.com.cn'}, callback=self.parse_product,
-                            meta={'raw_product': product}) for product in json.loads(response.text)['data']]
+        return [Request(url=self.product_url_t.format(product['goodsCode']),
+                        headers={'Origin': 'https://www.veromoda.com.cn'}, callback=self.parse_product,
+                        meta={'raw_product': product}) for product in json.loads(response.text)['data']]
 
     def parse_product(self, response):
         item = VeromodaCrawlerItem()
@@ -74,10 +71,10 @@ class VeromodaCrawler(CrawlSpider):
         return raw_product['brandName']
 
     def product_category(self, raw_product):
-        return raw_product['categoryName']
+        return [raw_product['categoryName']]
 
     def product_description(self, raw_product):
-        return raw_product['goodsInfo']
+        return [raw_product['goodsInfo']]
 
     def product_retailer_sku(self, raw_product):
         return raw_product['goodsCode']
