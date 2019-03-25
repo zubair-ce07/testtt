@@ -77,7 +77,7 @@ class FashionSpider(scrapy.spiders.CrawlSpider):
                 'currency': currency,
                 'colour': colour,
                 'size': size[0],
-                'sku_id': colour + "_" + size[0] if len(size) > 1 and size[1] == ' SOLD OUT' else colour + "_" + sku_id,
+                'sku_id': colour + "_" + sku_id,
             })
 
             if len(size) > 1 and size[1] == ' SOLD OUT':
