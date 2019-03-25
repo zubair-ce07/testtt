@@ -26,7 +26,7 @@ class FashionSpider(scrapy.spiders.CrawlSpider):
             'description': self.product_description(response),
             'care': self.product_care(response),
             'image_urls': self.image_urls(response),
-            'skus': self.parse_product_detail(response),
+            'skus': self.skus(response),
         }
 
     def product_id(self, response):
@@ -57,7 +57,7 @@ class FashionSpider(scrapy.spiders.CrawlSpider):
         now = datetime.datetime.now()
         return str(now)
 
-    def parse_product_detail(self, response):
+    def skus(self, response):
         product_detail = []
         product = {}
         price = self.product_price(response)
@@ -77,11 +77,11 @@ class FashionSpider(scrapy.spiders.CrawlSpider):
                 'currency': currency,
                 'colour': colour,
                 'size': size[0],
-                'sku_id': colour + "_" + sku_id,
+                'sku_id': colour + "_" + size[0] if len(size) > 1 and size[1] == ' SOLD OUT' else colour + "_" + sku_id,
             })
 
             if len(size) > 1 and size[1] == ' SOLD OUT':
-                product.update({'out_of_stock': 'true', 'sku_id': colour + "_" + size[0]})
+                product.update({'out_of_stock': 'true'})
 
             product_detail.append(product)
 
