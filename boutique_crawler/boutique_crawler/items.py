@@ -15,5 +15,8 @@ class BoutiqueCrawlerItem(scrapy.Item):
     date = scrapy.Field()
     name = scrapy.Field()
     description = scrapy.Field()
-    image_url = scrapy.Field()
+    care = scrapy.Field()
+    image_urls = scrapy.Field()
     skus = scrapy.Field()
+    category = scrapy.Field()
+

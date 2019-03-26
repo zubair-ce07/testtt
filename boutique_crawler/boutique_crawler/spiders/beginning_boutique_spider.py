@@ -5,11 +5,11 @@ import datetime
 import json
 from boutique_crawler.items import BoutiqueCrawlerItem
 from scrapy.loader import ItemLoader
-from scrapy.loader.processors import TakeFirst
+from scrapy.loader.processors import TakeFirst, MapCompose, Join
 
 
-class BoutiqueSpider(scrapy.spiders.CrawlSpider):
-    name = 'boutique_spider'
+class BeginningBoutiqueSpider(scrapy.spiders.CrawlSpider):
+    name = 'beginning_boutique_spider'
     start_urls = ['https://www.beginningboutique.com.au/']
 
     category_css = [
@@ -28,42 +28,38 @@ class BoutiqueSpider(scrapy.spiders.CrawlSpider):
     def parse_item(self, response):
         product = self.parse_info(response)
         url = product['url'] + '.json?'
-        return scrapy.Request(url, meta=product, callback=self.image_urls)
+        return scrapy.Request(url, meta={"product": product}, callback=self.image_urls)
 
     def parse_info(self, response):
         item = ItemLoader(item=BoutiqueCrawlerItem(), response=response)
         item.default_output_processor = TakeFirst()
+        item.description_in = MapCompose(str.strip)
         item.description_out = list
+        item.care_in = MapCompose(str.strip)
         item.skus_out = list
+        item.category_out = list
 
         item.add_css('pid', '.wishl-add-wrapper::attr(data-product-id)')
         item.add_value('gender', 'female')
         item.add_value('url', response.url)
         item.add_value('date', str(datetime.datetime.now()))
         item.add_css('name', '.product-heading__title.product-title::text')
-        item.add_value('description', self.product_description(response))
-        item.add_value('image_url', '')
+        item.add_xpath('description',
+                       '//ul[@class="product__specs-list"]/li[1]/div[@class="product__specs-detail"]/text()')
+        item.add_xpath('description',
+                       '//ul[@class="product__specs-list"]/li[1]/div[@class="product__specs-detail"]/p/text()')
+        item.add_xpath('care', '//ul[@class="product__specs-list"]/li[2]/div[@class="product__specs-detail"]/text()')
+        url = response.url
+        item.add_value('category', url.split('/')[3:])
         item.add_value('skus', self.skus(response))
         return item.load_item()
 
     def image_urls(self, response):
-        product = response.meta
-        src = []
-        data = json.loads(response.text)
+        product = response.meta['product']
+        response_details = json.loads(response.text)
 
-        for images in data['product']['images']:
-            src.append(images['src'])
-
-        product['image_url'] = src
+        product['image_urls'] = [image['src'] for image in response_details['product']['images']]
         return product
-
-    def product_description(self, response):
-        description = []
-        product_descriptions = response.css('.product__specs-detail *::text').getall()
-
-        for desc in product_descriptions:
-            description.append((desc.strip()))
-        return description
 
     def product_price(self, response):
         price_list = response.css('.product__price.product-price *::text').getall()
@@ -90,3 +86,4 @@ class BoutiqueSpider(scrapy.spiders.CrawlSpider):
 
             product_detail.append(product)
         return product_detail
+
