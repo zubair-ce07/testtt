@@ -62,7 +62,6 @@ class BaurdeCrawler(CrawlSpider):
         formdata = self.formdata.copy()
         for category in response.css(css).extract():
             formdata['category'] = re.findall(category_r, str(category))[0]
-
             yield Request(url=self.category_url, callback=self.parse_pagination, headers=self.headers,
                           meta={'formdata': formdata}, body=json.dumps(formdata), method='POST')
 
@@ -76,7 +75,7 @@ class BaurdeCrawler(CrawlSpider):
             yield Request(url=self.product_url_t.format(product['masterSku']), callback=self.parse_product)
 
         if 'Page=P' not in response.url and products > page_size:
-            for page, per_page_products in enumerate(range(0, int(products), page_size), start=1):
+            for page, _ in enumerate(range(0, int(products), page_size), start=1):
                 yield Request(url=add_or_replace_parameter(self.category_url, 'Page', 'P'+str(page)),
                               callback=self.parse_pagination, headers=self.headers, meta={'formdata': formdata},
                               body=json.dumps(formdata), method='POST')
@@ -175,6 +174,6 @@ class BaurdeCrawler(CrawlSpider):
                 sku['out_of_stock'] = True
 
             sku['size'] = size or 'One Size'
-            skus[f'{raw_sku["sku"]}'] = sku
+            skus[raw_sku["sku"]] = sku
 
         return skus
