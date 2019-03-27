@@ -6,6 +6,17 @@
 # https://doc.scrapy.org/en/latest/topics/items.html
 
 import scrapy
+from scrapy.loader import ItemLoader
+from scrapy.loader.processors import TakeFirst, MapCompose
+
+
+class ProductLoader(ItemLoader):
+    default_output_processor = TakeFirst()
+    description_in = MapCompose(str.strip)
+    description_out = list
+    care_in = MapCompose(str.strip)
+    skus_out = list
+    category_out = list
 
 
 class BoutiqueCrawlerItem(scrapy.Item):

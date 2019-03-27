@@ -3,9 +3,7 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
 import datetime
 import json
-from boutique_crawler.items import BoutiqueCrawlerItem
-from scrapy.loader import ItemLoader
-from scrapy.loader.processors import TakeFirst, MapCompose, Join
+from boutique_crawler.items import BoutiqueCrawlerItem, ProductLoader
 
 
 class BeginningBoutiqueSpider(scrapy.spiders.CrawlSpider):
@@ -31,28 +29,20 @@ class BeginningBoutiqueSpider(scrapy.spiders.CrawlSpider):
         return scrapy.Request(url, meta={"product": product}, callback=self.image_urls)
 
     def parse_info(self, response):
-        item = ItemLoader(item=BoutiqueCrawlerItem(), response=response)
-        item.default_output_processor = TakeFirst()
-        item.description_in = MapCompose(str.strip)
-        item.description_out = list
-        item.care_in = MapCompose(str.strip)
-        item.skus_out = list
-        item.category_out = list
-
-        item.add_css('pid', '.wishl-add-wrapper::attr(data-product-id)')
-        item.add_value('gender', 'female')
-        item.add_value('url', response.url)
-        item.add_value('date', str(datetime.datetime.now()))
-        item.add_css('name', '.product-heading__title.product-title::text')
-        item.add_xpath('description',
-                       '//ul[@class="product__specs-list"]/li[1]/div[@class="product__specs-detail"]/text()')
-        item.add_xpath('description',
-                       '//ul[@class="product__specs-list"]/li[1]/div[@class="product__specs-detail"]/p/text()')
-        item.add_xpath('care', '//ul[@class="product__specs-list"]/li[2]/div[@class="product__specs-detail"]/text()')
+        product = ProductLoader(item=BoutiqueCrawlerItem(), response=response)
+        product.add_css('pid', '.wishl-add-wrapper::attr(data-product-id)')
+        product.add_value('gender', 'female')
+        product.add_value('url', response.url)
+        product.add_value('date', str(datetime.datetime.now()))
+        product.add_css('name', '.product-heading__title.product-title::text')
+        product.add_css('description', '.product__specs-list li:contains(DESCRIPTION) > .product__specs-detail::text')
+        product.add_css('description',
+                        '.product__specs-list li:contains(DESCRIPTION) > .product__specs-detail > p::text')
+        product.add_css('care', '.product__specs-list li:contains(FABRICATION) > .product__specs-detail::text')
         url = response.url
-        item.add_value('category', url.split('/')[3:])
-        item.add_value('skus', self.skus(response))
-        return item.load_item()
+        product.add_value('category', url.split('/')[3:])
+        product.add_value('skus', self.skus(response))
+        return product.load_item()
 
     def image_urls(self, response):
         product = response.meta['product']
