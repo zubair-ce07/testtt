@@ -40,7 +40,7 @@ class SchwabCrawler(CrawlSpider):
 
     def parse_category(self, response):
         return [Request(url=url['url'], callback=self.parse_pagination)
-                for urls in json.loads(response.text) for url in urls["sCat"]]
+                for urls in json.loads(response.text) for url in urls['sCat']]
 
     def parse_pagination(self, response):
         raw_pages = response.css('.paging__info ::text').extract()
