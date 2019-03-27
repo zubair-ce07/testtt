@@ -11,6 +11,12 @@ from carhartt_crawler.items import CarharttCrawlerItem
 
 class HollisterCrawler(CrawlSpider):
 
+    formdata = {
+        'langId': 104,
+        'contentBeginIndex': 0,
+        'requesttype': 'ajax',
+    }
+
     name = 'carhartt-gb-crawl'
     allowed_domains = ['carhartt.com', 'scene7.com']
     start_urls = ['https://www.carhartt.com/gb/en-gb/']
@@ -21,17 +27,11 @@ class HollisterCrawler(CrawlSpider):
     rules = (
         Rule(LinkExtractor(restrict_css=listings_css), callback='parse_pagination'),
         Rule(LinkExtractor(restrict_css=products_css), callback='parse_product')
-    )
+        )
 
     product_image_url_t = 'https://s7d9.scene7.com/is/image/{}?fit=constrain,1&wid=64&hei=64&fmt=jpg&qlt=60'
     product_colour_url_t = 'https://www.carhartt.com/DefiningAttributesDesktopView?selectedAttribute=_{}&' \
-                           'langId=104&storeId={}&productId={}'
-
-    formdata = {
-        'langId': 104,
-        'contentBeginIndex': 0,
-        'requesttype': 'ajax',
-    }
+        'langId=104&storeId={}&productId={}'
 
     def parse_pagination(self, response):
         page_size = 12
