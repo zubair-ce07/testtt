@@ -31,7 +31,7 @@ class BeginningBoutiqueSpider(scrapy.spiders.CrawlSpider):
     def parse_info(self, response):
         product = ProductLoader(item=BoutiqueCrawlerItem(), response=response)
         product.add_css('pid', '.wishl-add-wrapper::attr(data-product-id)')
-        product.add_value('gender', 'female')
+        product.add_value('gender', 'women')
         product.add_value('url', response.url)
         product.add_value('date', str(datetime.datetime.now()))
         product.add_css('name', '.product-heading__title.product-title::text')
