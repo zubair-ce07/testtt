@@ -26,7 +26,7 @@ class BeginningBoutiqueSpider(scrapy.spiders.CrawlSpider):
     def parse_item(self, response):
         product = self.parse_info(response)
         url = product['url'] + '.json?'
-        return scrapy.Request(url, meta={"product": product}, callback=self.image_urls)
+        return scrapy.Request(url, meta={"product": product}, callback=self.parse_image_urls)
 
     def parse_info(self, response):
         product = ProductLoader(item=BoutiqueCrawlerItem(), response=response)
@@ -44,7 +44,7 @@ class BeginningBoutiqueSpider(scrapy.spiders.CrawlSpider):
         product.add_value('skus', self.skus(response))
         return product.load_item()
 
-    def image_urls(self, response):
+    def parse_image_urls(self, response):
         product = response.meta['product']
         response_details = json.loads(response.text)
 
