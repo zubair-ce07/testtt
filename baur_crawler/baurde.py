@@ -33,8 +33,14 @@ class BaurdeCrawler(CrawlSpider):
     listings_css = ['#nav-main-list']
     products_css = ['.plp-area1']
 
-    rules = (Rule(LinkExtractor(restrict_css=listings_css), callback='parse_category'),
-             Rule(LinkExtractor(restrict_css=products_css), callback='parse_product'))
+    formdata = {
+        'start': 0,
+        'clientId': 'BaurDe',
+        'version': 44,
+        'channel': 'web',
+        'locale': 'de_DE',
+        'count': 72,
+        'personalization': '$$-2$$web$'}
 
     product_url_t = 'https://www.baur.de/p/{}'
     category_url = 'https://www.baur.de/suche/mba/magellan'
@@ -46,14 +52,8 @@ class BaurdeCrawler(CrawlSpider):
         'origin': 'https://www.baur.de',
         'content-type': 'application/json; charset=UTF-8'}
 
-    formdata = {
-        'start': 0,
-        'clientId': 'BaurDe',
-        'version': 44,
-        'channel': 'web',
-        'locale': 'de_DE',
-        'count': 72,
-        'personalization': '$$-2$$web$'}
+    rules = (Rule(LinkExtractor(restrict_css=listings_css), callback='parse_category'),
+             Rule(LinkExtractor(restrict_css=products_css), callback='parse_product'))
 
     def parse_category(self, response):
         category_r = 'CatalogCategoryID=(.*?)&'
@@ -69,13 +69,13 @@ class BaurdeCrawler(CrawlSpider):
         page_size = 72
         formdata = response.meta['formdata']
         raw_product = json.loads(response.text)
-        products = raw_product['searchresult']['result']['count']
+        products = int(raw_product['searchresult']['result']['count'])
 
         for product in raw_product['searchresult']['result']['styles']:
             yield Request(url=self.product_url_t.format(product['masterSku']), callback=self.parse_product)
 
         if 'Page=P' not in response.url and products > page_size:
-            for page, _ in enumerate(range(0, int(products), page_size), start=1):
+            for page in range(1, int(products/page_size)):
                 yield Request(url=add_or_replace_parameter(self.category_url, 'Page', 'P'+str(page)),
                               callback=self.parse_pagination, headers=self.headers, meta={'formdata': formdata},
                               body=json.dumps(formdata), method='POST')
@@ -174,6 +174,6 @@ class BaurdeCrawler(CrawlSpider):
                 sku['out_of_stock'] = True
 
             sku['size'] = size or 'One Size'
-            skus[raw_sku["sku"]] = sku
+            skus[raw_sku['sku']] = sku
 
         return skus
