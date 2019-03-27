@@ -40,10 +40,10 @@ class HollisterCrawler(CrawlSpider):
 
         if products:
             formdata = self.formdata.copy()
-            formdata['storeId'] = url_query_parameter(response.url, "storeId")
-            formdata['catalogId'] = url_query_parameter(response.url, "catalogId")
+            formdata['storeId'] = url_query_parameter(response.url, 'storeId')
+            formdata['catalogId'] = url_query_parameter(response.url, 'catalogId')
 
-            for _, page in enumerate(range(0, int(products), page_size)):
+            for page in range(0, int(products), page_size):
                 formdata['beginIndex'], formdata['productBeginIndex'] = page, page
                 yield Request(url=add_or_replace_parameter(response.url, 'resultsPerPage', page_size),
                               method='POST', body=json.dumps(formdata), callback=self.parse)
