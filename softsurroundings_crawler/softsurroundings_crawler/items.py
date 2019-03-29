@@ -7,22 +7,19 @@
 
 import scrapy
 from scrapy.loader import ItemLoader
-from scrapy.loader.processors import TakeFirst, MapCompose
+from scrapy.loader.processors import TakeFirst
 
 
 class ProductLoader(ItemLoader):
     default_output_processor = TakeFirst()
-    # description_in = MapCompose(str.strip)
-    # description_out = list
-    # care_in = MapCompose(str.strip)
     skus_out = list
     category_out = list
     image_urls_out = list
     name_out = list
-    skus_out = list
     requests_out = list
 
-class SoftsurroundingsCrawlerItem(scrapy.Item):
+
+class SoftSurroundingsCrawlerItem(scrapy.Item):
     pid = scrapy.Field()
     gender = scrapy.Field()
     category = scrapy.Field()
@@ -34,5 +31,4 @@ class SoftsurroundingsCrawlerItem(scrapy.Item):
     image_urls = scrapy.Field()
     skus = scrapy.Field()
     requests = scrapy.Field()
-    # color = scrapy.Field()
 

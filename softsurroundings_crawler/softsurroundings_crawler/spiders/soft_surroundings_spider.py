@@ -3,7 +3,7 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule, CrawlSpider
 import datetime
 from urllib.parse import urljoin
-from softsurroundings_crawler.items import SoftsurroundingsCrawlerItem, ProductLoader
+from softsurroundings_crawler.items import SoftSurroundingsCrawlerItem, ProductLoader
 
 
 class SoftSurroundingSpider(CrawlSpider):
@@ -19,51 +19,61 @@ class SoftSurroundingSpider(CrawlSpider):
     )
 
     def parse_item(self, response):
-        request = []
         product = self.parse_info(response)
-        size_ids = self.category_size(response)
         product['skus'] = []
-
-        for size in size_ids:
-            page_request = scrapy.Request(urljoin(response.url, size), callback=self.parse_skus)
-            request.append(page_request)
-
-        product['requests'] = request
+        product['requests'] = self.size_requests(response)
 
         if product['requests']:
             request = product['requests'].pop()
             request.meta['product'] = product
             return request
+        else:
+            del product['requests']
 
         return product
 
     def parse_info(self, response):
-        item = ProductLoader(item=SoftsurroundingsCrawlerItem(), response=response)
-        item.add_css('pid', 'span[itemprop="productID"]::text')
-        item.add_value('gender', 'women')
-        item.add_css('category', '.pagingBreadCrumb > a::text')
-        item.add_value('brand', 'Soft Surroundings')
-        item.add_value('url', response.url)
-        item.add_css('name', 'span[itemprop="name"]::text')
-        item.add_css('description', '.productInfo::text')
-        item.add_css('description', '.productInfo > p::text')
-        item.add_css('care', '.tabContent.sel::text')
-        item.add_css('image_urls', '.alt_dtl::attr(href)')
-        return item.load_item()
+        product = ProductLoader(item=SoftSurroundingsCrawlerItem(), response=response)
+        product.add_css('pid', 'span[itemprop="productID"]::text')
+        product.add_value('gender', 'women')
+        product.add_css('category', '.pagingBreadCrumb > a::text')
+        product.add_value('brand', 'Soft Surroundings')
+        product.add_value('url', response.url)
+        product.add_css('name', 'span[itemprop="name"]::text')
+        product.add_css('description', '.productInfo::text')
+        product.add_css('description', '.productInfo > p::text')
+        product.add_css('care', '.tabContent.sel::text')
+        product.add_css('image_urls', '.alt_dtl::attr(href)')
+        return product.load_item()
 
     def category_size(self, response):
         size_ids = response.css('#sizecat > a::attr(id)').getall()
         size = [size.split('_')[1] for size in size_ids]
         return size
 
+    def size_requests(self, response):
+        request = []
+        size_ids = self.category_size(response)
+        for size in size_ids:
+            page_request = scrapy.Request(urljoin(response.url, size),
+                                          callback=self.parse_skus)
+            request.append(page_request)
+
+        return request
+
     def parse_skus(self, response):
         product = response.meta['product']
-        product['skus'].append(self.skus(response))
+        product_skus = self.skus(response)
+
+        if product_skus:
+            product['skus'].append(product_skus)
 
         if product['requests']:
             request = product['requests'].pop()
             request.meta['product'] = product
             return request
+        else:
+            del product['requests']
 
         return product
 
@@ -91,5 +101,5 @@ class SoftSurroundingSpider(CrawlSpider):
                     product.update({'previous price': previous_price.split(' ')[1]})
 
                 product_detail.append(product)
-
         return product_detail
+
