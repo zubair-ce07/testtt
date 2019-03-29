@@ -33,12 +33,14 @@ class ckCrawler(CrawlSpider):
         css = 'script:contains(\'window.app["productList"]\') ::text'
         raw_products = json.loads(response.css(css).re_first(products_r))
 
-        yield from [Request(url=urljoin(self.products_url, rel_url), callback=self.parse_product)
-                    for rel_url in [i['relatedCombis'][0]['pdp'] for i in raw_products['catalogEntryNavView']]]
+        return [Request(url=add_or_replace_parameter(response.url, 'scrollPage', page),
+                        meta={'raw_products': raw_products}, callback=self.parse_listings)
+                        for page in range(1, raw_products['noOfPages'])]
 
-        if 'scrollPage' not in response.url and raw_products['noOfPages'] > 1:
-            yield from [Request(url=add_or_replace_parameter(response.url, 'scrollPage', page),
-                                callback=self.parse_pagination) for page in range(2, raw_products['noOfPages'])]
+    def parse_listings(self, response):
+        raw_products = response.meta['raw_products']
+        return [Request(url=urljoin(self.products_url, url), callback=self.parse_product)
+                for url in [i['relatedCombis'][0]['pdp'] for i in raw_products['catalogEntryNavView']]]
 
     def parse_product(self, response):
         item = CkCrawlerItem()
@@ -108,8 +110,8 @@ class ckCrawler(CrawlSpider):
         raw_images = raw_product['details']['combis']['data']
 
         for colour_id in [i['colourCode'] for i in raw_images]:
-            for image in range(1, [i['imageCount'] for i in raw_images][0]):
-                image_urls.append(self.image_url_t.format(colour_id, 'alternate'+str(image)))
+            for image_id in range(1, [i['imageCount'] for i in raw_images][0]):
+                image_urls.append(self.image_url_t.format(colour_id, f'alternate{image_id}'))
             image_urls.append(self.image_url_t.format(colour_id, 'main'))
 
         return image_urls
