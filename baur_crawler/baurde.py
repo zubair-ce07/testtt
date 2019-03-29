@@ -67,17 +67,16 @@ class BaurdeCrawler(CrawlSpider):
                           meta={'formdata': formdata}, body=json.dumps(formdata), method='POST')
 
     def parse_pagination(self, response):
+        page_size = 72
         formdata = response.meta['formdata']
         raw_product = json.loads(response.text)['searchresult']['result']
-
-        page_size = 72
         total_pages = int(raw_product['count']/page_size)
 
         return [Request(url=add_or_replace_parameter(self.category_url, 'Page', f'P{page}'),
-                        headers=self.headers, callback=self.parse_products, body=json.dumps(formdata),
+                        headers=self.headers, callback=self.parse_listings, body=json.dumps(formdata),
                         meta={'raw_product': raw_product}, method='POST') for page in range(1, total_pages)]
 
-    def parse_products(self, response):
+    def parse_listings(self, response):
         return [Request(url=self.product_url_t.format(product['masterSku']), callback=self.parse_product)
                 for product in response.meta['raw_product']['styles']]
 
