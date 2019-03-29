@@ -35,9 +35,9 @@ class VeromodaCrawler(CrawlSpider):
     def parse_pagination(self, response):
         pages = json.loads(response.text).get('totalPage', 1)
         return [Request(url=add_or_replace_parameter(response.url, 'Page', page), headers=self.headers,
-                        callback=self.parse_products) for page in range(1, pages)]
+                        callback=self.parse_listings) for page in range(1, pages)]
 
-    def parse_products(self, response):
+    def parse_listings(self, response):
         return [Request(url=self.product_url_t.format(product['goodsCode']),
                         headers={'Origin': 'https://www.veromoda.com.cn'}, callback=self.parse_product,
                         meta={'raw_product': product}) for product in json.loads(response.text)['data']]
@@ -80,7 +80,7 @@ class VeromodaCrawler(CrawlSpider):
         return raw_product['goodsCode']
 
     def product_pricing(self, raw_sku):
-        pricing = {'currency': 'YUAN'}
+        pricing = {'currency': 'CNY'}
         pricing['price'] = raw_sku['data']['color'][0]['price']
 
         if raw_sku['data']['color'][0]['discount'] != 1:
