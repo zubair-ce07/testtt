@@ -10,9 +10,14 @@ from scrapy.loader import ItemLoader
 from scrapy.loader.processors import TakeFirst, MapCompose
 
 
+def filter_description(value):
+    if value is not "":
+        return value
+
+
 class ProductLoader(ItemLoader):
     default_output_processor = TakeFirst()
-    description_in = MapCompose(str.strip)
+    description_in = MapCompose(str.strip, filter_description)
     description_out = list
     care_in = MapCompose(str.strip)
     skus_out = list
