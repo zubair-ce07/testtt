@@ -46,8 +46,9 @@ class SchwabCrawler(CrawlSpider):
         raw_pages = response.css('.paging__info ::text').extract()
 
         if raw_pages:
-            return [Request(url=add_or_replace_parameter(response.url, 'pageNr', page), callback=self.parse)
-                    for page in range(1, int(re.search('(\d+)', raw_pages[2]).group(1) or 1))]
+            total_pages = int(re.search('(\d+)', raw_pages[2]).group(1) or 1)
+            return [Request(url=add_or_replace_parameter(response.url, 'pageNr', page),
+                            callback=self.parse) for page in range(1, total_pages)]
 
     def parse_product(self, response):
         item = SchwabCrawlerItem()
