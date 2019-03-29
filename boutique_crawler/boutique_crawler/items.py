@@ -11,13 +11,13 @@ from scrapy.loader.processors import TakeFirst, MapCompose
 
 
 def filter_description(value):
-    if value is not "":
+    if value:
         return value
 
 
 class ProductLoader(ItemLoader):
     default_output_processor = TakeFirst()
-    description_in = MapCompose(str.strip, filter_description)
+    description_in = MapCompose(str.strip)
     description_out = list
     care_in = MapCompose(str.strip)
     skus_out = list
