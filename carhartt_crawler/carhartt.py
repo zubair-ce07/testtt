@@ -9,7 +9,7 @@ from w3lib.url import add_or_replace_parameter, url_query_parameter
 from carhartt_crawler.items import CarharttCrawlerItem
 
 
-class HollisterCrawler(CrawlSpider):
+class CarharttCrawler(CrawlSpider):
 
     formdata = {
         'langId': 104,
@@ -31,11 +31,10 @@ class HollisterCrawler(CrawlSpider):
 
     product_image_url_t = 'https://s7d9.scene7.com/is/image/{}?fit=constrain,1&wid=64&hei=64&fmt=jpg&qlt=60'
     product_colour_url_t = 'https://www.carhartt.com/DefiningAttributesDesktopView?selectedAttribute=_{}&' \
-        'langId=104&storeId={}&productId={}'
+                           'langId=104&storeId={}&productId={}'
 
     def parse_pagination(self, response):
         page_size = 12
-        yield Request(url=response.url, callback=self.parse)
         products = response.css('#custom-product-count ::text').extract_first()
 
         if products:
@@ -133,8 +132,7 @@ class HollisterCrawler(CrawlSpider):
         colour_ids = response.css('.pdpRedesign a ::attr(data-attr-val-id)').extract()
 
         if colour_ids and colours:
-            return [Request(callback=self.parse_skus,
-                            meta={'colour': colour, 'item': item, 'product': response},
+            return [Request(callback=self.parse_skus, meta={'colour': colour, 'item': item, 'product': response},
                             url=self.product_colour_url_t.format(colour_id, raw_product['storeId'],
                             raw_product['productId'])) for colour_id, colour in zip(colour_ids, colours)]
 
