@@ -31,7 +31,7 @@ class BaurdeCrawler(CrawlSpider):
     start_urls = ['https://www.baur.de/']
 
     listings_css = ['#nav-main-list']
-    products_css = ['.plp-area1']
+    products_css = ['.plp-area1 a']
 
     formdata = {
         'start': 0,
@@ -40,7 +40,8 @@ class BaurdeCrawler(CrawlSpider):
         'channel': 'web',
         'locale': 'de_DE',
         'count': 72,
-        'personalization': '$$-2$$web$'}
+        'personalization': '$$-2$$web$'
+    }
 
     product_url_t = 'https://www.baur.de/p/{}'
     category_url = 'https://www.baur.de/suche/mba/magellan'
@@ -50,35 +51,35 @@ class BaurdeCrawler(CrawlSpider):
         (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36',
         'x-requested-with': 'XMLHttpRequest',
         'origin': 'https://www.baur.de',
-        'content-type': 'application/json; charset=UTF-8'}
+        'content-type': 'application/json; charset=UTF-8'
+    }
 
-    rules = (Rule(LinkExtractor(restrict_css=listings_css), callback='parse_category'),
-             Rule(LinkExtractor(restrict_css=products_css), callback='parse_product'))
+    rules = (Rule(LinkExtractor(restrict_css=listings_css), callback='parse_category'),)
 
     def parse_category(self, response):
+        formdata = self.formdata.copy()
         category_r = 'CatalogCategoryID=(.*?)&'
         css = '.layernavi-loading-cont ::attr(data-pagelet-url)'
 
-        formdata = self.formdata.copy()
         for category in response.css(css).extract():
             formdata['category'] = re.findall(category_r, str(category))[0]
             yield Request(url=self.category_url, callback=self.parse_pagination, headers=self.headers,
                           meta={'formdata': formdata}, body=json.dumps(formdata), method='POST')
 
     def parse_pagination(self, response):
-        page_size = 72
         formdata = response.meta['formdata']
-        raw_product = json.loads(response.text)
-        products = int(raw_product['searchresult']['result']['count'])
+        raw_product = json.loads(response.text)['searchresult']['result']
 
-        for product in raw_product['searchresult']['result']['styles']:
-            yield Request(url=self.product_url_t.format(product['masterSku']), callback=self.parse_product)
+        page_size = 72
+        total_pages = int(raw_product['count']/page_size)
 
-        if 'Page=P' not in response.url and products > page_size:
-            for page in range(1, int(products/page_size)):
-                yield Request(url=add_or_replace_parameter(self.category_url, 'Page', 'P'+str(page)),
-                              callback=self.parse_pagination, headers=self.headers, meta={'formdata': formdata},
-                              body=json.dumps(formdata), method='POST')
+        return [Request(url=add_or_replace_parameter(self.category_url, 'Page', f'P{page}'),
+                        headers=self.headers, callback=self.parse_products, body=json.dumps(formdata),
+                        meta={'raw_product': raw_product}, method='POST') for page in range(1, total_pages)]
+
+    def parse_products(self, response):
+        return [Request(url=self.product_url_t.format(product['masterSku']), callback=self.parse_product)
+                for product in response.meta['raw_product']['styles']]
 
     def parse_product(self, response):
         item = BaurdeCrawlerItem()
@@ -164,7 +165,7 @@ class BaurdeCrawler(CrawlSpider):
             colour = raw_sku['variationValues'].get('Var_Article')
             length = raw_sku['variationValues'].get('Var_Dimension3')
 
-            if length:
+            if length and size:
                 size += f'_{length}'
 
             if colour:
