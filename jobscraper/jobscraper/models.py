@@ -20,8 +20,8 @@ class Jobs(Base):
     __tablename__ = 'Jobs'
     job_id = Column(Integer, primary_key=True)
     crawl_id = Column(String)
-    crawl_time = Column(DateTime)
+    crawled_at = Column(DateTime)
     title = Column(String)
-    type = Column(String)
+    job_nature = Column(String)
     attribute = Column(String)
     job_count = Column(Integer)

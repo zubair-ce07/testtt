@@ -15,7 +15,7 @@ class JobsPipeline(object):
     def process_item(self, item, spider):
         session = self.Session()
         item['crawl_id'] = datetime.datetime.now().strftime('%s%f')
-        item['crawl_time'] = datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S.%f')
+        item['crawled_at'] = datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S.%f')
         job = Jobs(**item)
 
         try:

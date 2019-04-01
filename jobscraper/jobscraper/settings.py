@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Scrapy settings for Indeed project
+# Scrapy settings for jobscraper project
 #
 # For simplicity, this file contains only settings considered important or
 # commonly used. You can find more settings consulting the documentation:
@@ -9,14 +9,14 @@
 #     https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 
-BOT_NAME = 'Indeed'
+BOT_NAME = 'jobscraper'
 
-SPIDER_MODULES = ['Indeed.spiders']
-NEWSPIDER_MODULE = 'Indeed.spiders'
+SPIDER_MODULES = ['jobscraper.spiders']
+NEWSPIDER_MODULE = 'jobscraper.spiders'
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-#USER_AGENT = 'Indeed (+http://www.yourdomain.com)'
+#USER_AGENT = 'jobscraper (+http://www.yourdomain.com)'
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = True
@@ -47,13 +47,13 @@ ROBOTSTXT_OBEY = True
 # Enable or disable spider middlewares
 # See https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 #SPIDER_MIDDLEWARES = {
-#    'Indeed.middlewares.IndeedSpiderMiddleware': 543,
+#    'jobscraper.middlewares.JobscraperSpiderMiddleware': 543,
 #}
 
 # Enable or disable downloader middlewares
 # See https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
 #DOWNLOADER_MIDDLEWARES = {
-#    'Indeed.middlewares.IndeedDownloaderMiddleware': 543,
+#    'jobscraper.middlewares.JobscraperDownloaderMiddleware': 543,
 #}
 
 # Enable or disable extensions
@@ -65,7 +65,7 @@ ROBOTSTXT_OBEY = True
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 #ITEM_PIPELINES = {
-#    'Indeed.pipelines.IndeedPipeline': 300,
+#    'jobscraper.pipelines.JobscraperPipeline': 300,
 #}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
@@ -90,7 +90,7 @@ ROBOTSTXT_OBEY = True
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 
 ITEM_PIPELINES = {
-    'Indeed.pipelines.JobsPipeline': 300,
+    'jobscraper.pipelines.JobsPipeline': 300,
 }
 
 DATABASE = {
@@ -99,5 +99,5 @@ DATABASE = {
     'port': '5432',
     'username': 'postgres',
     'password': 'ghostrider456',
-    'database': 'indeed'
+    'database': 'jobscraper'
 }

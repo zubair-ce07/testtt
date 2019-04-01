@@ -42,7 +42,7 @@ class IndeedSpider(CrawlSpider):
     )
 
     def parse(self, response):
-        for request in list(super().parse(response)):
+        for request in super().parse(response):
             request.meta['category'] = response.meta.get('link_text', '')
             yield request
 
@@ -55,7 +55,7 @@ class IndeedSpider(CrawlSpider):
             for job_s in response.css(job_css):
                 job = JobItem()
                 job['title'] = response.meta.get("category", "") + '|' + title
-                job['type'] = heading
+                job['job_nature'] = heading
                 job['attribute'] = job_s.css('a::text').extract_first()
                 job['job_count'] = job_s.css('li::text').re_first(r'\((.*)\)')
                 yield job
