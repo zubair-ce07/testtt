@@ -70,7 +70,7 @@ class BaurdeCrawler(CrawlSpider):
         page_size = 72
         formdata = response.meta['formdata']
         raw_product = json.loads(response.text)['searchresult']['result']
-        total_pages = int(raw_product['count']/page_size)
+        total_pages = raw_product['count']//page_size
 
         return [Request(url=add_or_replace_parameter(self.category_url, 'Page', f'P{page}'),
                         headers=self.headers, callback=self.parse_listings, body=json.dumps(formdata),
@@ -130,8 +130,8 @@ class BaurdeCrawler(CrawlSpider):
 
     def clean(self, raw_text):
         if type(raw_text) is list:
-            return [re.sub('(\r*)(\t*)(\n*)[<>/](<span>)*(<li>)*', '', i) for i in raw_text]
-        return re.sub('(\r*)(\t*)(\n*)[<>/](<span>)*(<li>)*', '', raw_text)
+            return [re.sub('(\r*)(\t*)(\n*)', '', i) for i in raw_text]
+        return re.sub('(\r*)(\t*)(\n*)', '', raw_text)
 
     def product_gender(self, response, raw_product):
         css = 'div.nav-breadcrumb ul .display-name ::text'
