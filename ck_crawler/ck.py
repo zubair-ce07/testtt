@@ -1,10 +1,24 @@
-import json
 import re
+import json
+from urllib.parse import urljoin
 
-from scrapy.spiders import CrawlSpider, Request
+from scrapy.link import Link
 from w3lib.url import add_or_replace_parameter
+from scrapy.linkextractors import LinkExtractor
+from scrapy.spiders import CrawlSpider, Request, Rule
 
 from ck_crawler.items import CalvinkleinCrawlerItem
+
+
+class ProductLinkExtractor(LinkExtractor):
+
+    def extract_links(self, response):
+
+        if not response.meta.get('raw_products'):
+            return []
+
+        return [Link(urljoin(response.url, url)) for url in [i['relatedCombis'][0]['pdp']
+                for i in response.meta.get('raw_products')['catalogEntryNavView']]]
 
 
 class CalvinkleinCrawler(CrawlSpider):
@@ -13,6 +27,10 @@ class CalvinkleinCrawler(CrawlSpider):
     allowed_domains = ['calvinklein.fr']
     start_urls = ['https://www.calvinklein.fr/homme', 'https://www.calvinklein.fr/femme']
     image_url_t = 'https://calvinklein-eu.scene7.com/is/image/CalvinKleinEU/{}_{}?$main$'
+
+    rules = (
+        Rule(ProductLinkExtractor(), callback='parse_product'),
+    )
 
     def parse_start_url(self, response):
         category_r = re.compile('= ({.*});', re.DOTALL)
@@ -29,12 +47,8 @@ class CalvinkleinCrawler(CrawlSpider):
         raw_products = json.loads(response.css(css).re_first(products_r))
 
         return [Request(url=add_or_replace_parameter(response.url, 'scrollPage', page),
-                meta={'raw_products': raw_products}, callback=self.parse_listings) for
+                meta={'raw_products': raw_products}, callback=self.parse) for
                 page in range(1, raw_products['noOfPages'])]
-
-    def parse_listings(self, response):
-        return [response.follow(url, callback=self.parse_product) for url in [i['relatedCombis']
-                [0]['pdp'] for i in response.meta['raw_products']['catalogEntryNavView']]]
 
     def parse_product(self, response):
         item = CalvinkleinCrawlerItem()
