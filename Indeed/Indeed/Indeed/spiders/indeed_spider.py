@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from scrapy.spiders import CrawlSpider
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
@@ -8,20 +7,10 @@ from ..items import JobItem
 
 class IndeedSpider(CrawlSpider):
     name = 'indeed-us'
-    allowed_domains = ['indeed.com']
-    start_urls = ['https://www.indeed.com/find-jobs.jsp?from=HP2']
     custom_settings = {
         'DOWNLOAD_DELAY': 5.0,
         'COOKIES_ENABLED': False
     }
-
-    jobs_css = ['.job']
-    listings_css = ['#categories']
-
-    rules = (
-        Rule(LinkExtractor(restrict_css=listings_css), callback='parse'),
-        Rule(LinkExtractor(restrict_css=jobs_css), callback='parse_item')
-    )
 
     filter_map = {
         '#SALARY_rbo li': 'Salary Estimate',
@@ -30,6 +19,27 @@ class IndeedSpider(CrawlSpider):
         '#COMPANY_rbo li': 'Company',
         '#EXP_LVL_rbo li': 'Experience Level'
     }
+
+    allowed_domains = [
+        'indeed.com'
+    ]
+
+    start_urls = [
+        'https://www.indeed.com/find-jobs.jsp?from=HP2'
+    ]
+
+    jobs_css = [
+        '.job'
+    ]
+
+    listings_css = [
+        '#categories'
+    ]
+
+    rules = (
+        Rule(LinkExtractor(restrict_css=listings_css), callback='parse'),
+        Rule(LinkExtractor(restrict_css=jobs_css), callback='parse_item')
+    )
 
     def parse(self, response):
         for request in list(super().parse(response)):
