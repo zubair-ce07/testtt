@@ -1,20 +1,17 @@
 import json
 import re
-from urllib.parse import urljoin
 
 from scrapy.spiders import CrawlSpider, Request
 from w3lib.url import add_or_replace_parameter
 
-from ck_crawler.items import CkCrawlerItem
+from ck_crawler.items import CalvinkleinCrawlerItem
 
 
-class ckCrawler(CrawlSpider):
+class CalvinkleinCrawler(CrawlSpider):
 
-    name = 'ck-fr-crawl'
+    name = 'calvinklein-fr-crawl'
     allowed_domains = ['calvinklein.fr']
     start_urls = ['https://www.calvinklein.fr/homme', 'https://www.calvinklein.fr/femme']
-
-    products_url = 'https://www.calvinklein.fr/'
     image_url_t = 'https://calvinklein-eu.scene7.com/is/image/CalvinKleinEU/{}_{}?$main$'
 
     def parse_start_url(self, response):
@@ -22,11 +19,9 @@ class ckCrawler(CrawlSpider):
         css = 'script:contains(\'window.app["mainNavigation"]\') ::text'
         raw_category = json.loads(response.css(css).re_first(category_r))
 
-        for category in raw_category['navigation'][0]:
-            for sub_category in category['subMenu']:
-                for url in sub_category['subMenu']:
-                    yield Request(url=urljoin(self.products_url, url['url']),
-                                  callback=self.parse_pagination)
+        return [response.follow(url['url'], callback=self.parse_pagination) for category in
+                raw_category['navigation'][0] for sub_category in category['subMenu'] for url in
+                sub_category['subMenu']]
 
     def parse_pagination(self, response):
         products_r = re.compile('= ({.*});', re.DOTALL)
@@ -34,16 +29,15 @@ class ckCrawler(CrawlSpider):
         raw_products = json.loads(response.css(css).re_first(products_r))
 
         return [Request(url=add_or_replace_parameter(response.url, 'scrollPage', page),
-                        meta={'raw_products': raw_products}, callback=self.parse_listings)
-                        for page in range(1, raw_products['noOfPages'])]
+                meta={'raw_products': raw_products}, callback=self.parse_listings) for
+                page in range(1, raw_products['noOfPages'])]
 
     def parse_listings(self, response):
-        raw_products = response.meta['raw_products']
-        return [Request(url=urljoin(self.products_url, url), callback=self.parse_product)
-                for url in [i['relatedCombis'][0]['pdp'] for i in raw_products['catalogEntryNavView']]]
+        return [response.follow(url, callback=self.parse_product) for url in [i['relatedCombis']
+                [0]['pdp'] for i in response.meta['raw_products']['catalogEntryNavView']]]
 
     def parse_product(self, response):
-        item = CkCrawlerItem()
+        item = CalvinkleinCrawlerItem()
         raw_sku = self.raw_sku(response)
         raw_product = self.raw_product(response)
 
@@ -102,23 +96,11 @@ class ckCrawler(CrawlSpider):
 
     def clean(self, raw_text):
         if type(raw_text) is list:
-            return [re.sub('(\r)*(\t)*(\n)*(BR)*[<>/]', ' ', i) for i in raw_text]
-        return re.sub('(\r)*(\t)*(\n)*(BR)*[<>/]', ' ', raw_text)
-
-    def image_urls(self, raw_product):
-        image_urls = []
-        raw_images = raw_product['details']['combis']['data']
-
-        for colour_id in [i['colourCode'] for i in raw_images]:
-            for image_id in range(1, [i['imageCount'] for i in raw_images][0]):
-                image_urls.append(self.image_url_t.format(colour_id, f'alternate{image_id}'))
-            image_urls.append(self.image_url_t.format(colour_id, 'main'))
-
-        return image_urls
+            return [re.sub('(\r)*(\t)*(\n)*', '', i) for i in raw_text]
+        return re.sub('(\r)*(\t)*(\n)*', '', raw_text)
 
     def skus(self, raw_sku, raw_product):
         skus = {}
-        sku_id = self.product_retailer_sku(raw_product)
         common_sku = self.product_pricing(raw_sku, raw_product)
         raw_product = raw_product['details']['attributes']
 
@@ -131,6 +113,11 @@ class ckCrawler(CrawlSpider):
                     sku['out_of_stock'] = True
 
                 sku['size'] = size['label']
-                skus[f'{sku_id}_{colour["label"]}_{size["label"]}'] = sku
+                skus[f'{colour["label"]}_{size["label"]}'] = sku
 
         return skus
+
+    def image_urls(self, raw_product):
+        raw_images = raw_product['details']['combis']['data']
+        return [self.image_url_t.format(colour_id, f'alternate{image_id}') for colour_id in [i['colourCode']
+                for i in raw_images] for image_id in range(1, [i['imageCount'] for i in raw_images][0])]
