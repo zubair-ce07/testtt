@@ -1,5 +1,5 @@
-import json
 import re
+import json
 
 from scrapy import Selector
 from scrapy.linkextractors import LinkExtractor
@@ -17,12 +17,12 @@ class CarharttCrawler(CrawlSpider):
         'requesttype': 'ajax',
     }
 
+    listings_css = ['.central-nav > ul a']
+    products_css = ['#product-grid']
+
     name = 'carhartt-gb-crawl'
     allowed_domains = ['carhartt.com', 'scene7.com']
     start_urls = ['https://www.carhartt.com/gb/en-gb/']
-
-    listings_css = ['.central-nav > ul a']
-    products_css = ['#product-grid > div > div > div > div a']
 
     rules = (
         Rule(LinkExtractor(restrict_css=listings_css), callback='parse_pagination'),
@@ -34,18 +34,20 @@ class CarharttCrawler(CrawlSpider):
                            'langId=104&storeId={}&productId={}'
 
     def parse_pagination(self, response):
-        page_size = 12
+        page_size = 24
         products = response.css('#custom-product-count ::text').extract_first()
 
-        if products:
-            formdata = self.formdata.copy()
-            formdata['storeId'] = url_query_parameter(response.url, 'storeId')
-            formdata['catalogId'] = url_query_parameter(response.url, 'catalogId')
+        if not products:
+            return
 
-            for page in range(0, int(products), page_size):
-                formdata['beginIndex'], formdata['productBeginIndex'] = page, page
-                yield Request(url=add_or_replace_parameter(response.url, 'resultsPerPage', page_size),
-                              method='POST', body=json.dumps(formdata), callback=self.parse)
+        formdata = self.formdata.copy()
+        formdata['storeId'] = url_query_parameter(response.url, 'storeId')
+        formdata['catalogId'] = url_query_parameter(response.url, 'catalogId')
+
+        for page in range(0, int(products), page_size):
+            formdata['beginIndex'], formdata['productBeginIndex'] = page, page
+            yield Request(method='POST', body=json.dumps(formdata), callback=self.parse,
+                  url=add_or_replace_parameter(response.url, 'resultsPerPage', page_size))
 
     def parse_product(self, response):
         item = CarharttCrawlerItem()
@@ -69,8 +71,9 @@ class CarharttCrawler(CrawlSpider):
         return response.url
 
     def product_category(self, response):
-        css = '#breadcrumbs .small-12 a ::text'
-        return [response.css(css).extract()[1]]
+        css = '#breadcrumbs a ::text'
+        return [response.css(css).extract()[1],
+                response.css(css).extract()[2]]
 
     def product_name(self, response):
         css = '.title-top.t5 ::text'
@@ -111,9 +114,8 @@ class CarharttCrawler(CrawlSpider):
                 response.css(css).extract_first().split(',')]
 
     def product_retailer_sku(self, response):
-        sku_r = re.compile(r'\d+')
         css = '#product-details ::attr(data-inventory-url)'
-        return sku_r.findall(response.css(css).extract_first().split('&')[3])[0]
+        return response.css(css).extract_first().split('&')[3].split('=')[-1]
 
     def product_pricing(self, response):
         css = '#currencySelectionHidden ::attr(value)'
@@ -126,34 +128,31 @@ class CarharttCrawler(CrawlSpider):
 
         return pricing
 
+    def parse_skus(self, response):
+        skus = {}
+        colour = response.meta.get('colour')
+        common_sku = self.product_pricing(response.meta['product'])
+
+        for size_s in Selector(text=response.text).css('li a '):
+            size = self.clean(size_s.css(' ::text').extract_first())
+            sku = common_sku.copy()
+            sku['colour'] = colour
+            sku['size'] = size or 'One Size'
+
+            if size_s.css('.unavailable'):
+                sku['out_of_stock'] = True
+
+            skus[f'{colour}_{size}'] = sku
+
+        response.meta['item']['skus'].update(skus)
+        return self.next_request_or_item(response.meta['item'])
+
     def colour_requests(self, response, item):
         raw_product = self.raw_product(response)
         colours = response.css('.pdpRedesign a ::attr(title)').extract()
         colour_ids = response.css('.pdpRedesign a ::attr(data-attr-val-id)').extract()
 
         if colour_ids and colours:
-            return [Request(callback=self.parse_skus, meta={'colour': colour, 'item': item, 'product': response},
-                            url=self.product_colour_url_t.format(colour_id, raw_product['storeId'],
-                            raw_product['productId'])) for colour_id, colour in zip(colour_ids, colours)]
-
-    def parse_skus(self, response):
-        skus = {}
-        colour = response.meta['colour']
-        common_sku = self.product_pricing(response.meta['product'])
-
-        for size_s in Selector(text=response.text).css('li a '):
-            sku = common_sku.copy()
-            size = self.clean(size_s.css(' ::text').extract_first())
-            sku['size'] = size or 'One Size'
-
-            if colour:
-                size = f'{colour}_{size}'
-                sku['colour'] = colour
-
-            if size_s.css('.unavailable'):
-                sku['out_of_stock'] = True
-
-            skus[size] = sku
-
-        response.meta['item']['skus'].update(skus)
-        return self.next_request_or_item(response.meta['item'])
+            return [Request(url=self.product_colour_url_t.format(colour_id, raw_product['storeId'],
+                    raw_product['productId']), callback=self.parse_skus, meta={'colour': colour, 'item':
+                    item, 'product': response},) for colour_id, colour in zip(colour_ids, colours)]
