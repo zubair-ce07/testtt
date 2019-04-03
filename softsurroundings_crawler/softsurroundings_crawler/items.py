@@ -17,6 +17,7 @@ class ProductLoader(ItemLoader):
     image_urls_out = list
     name_out = list
     requests_out = list
+    care_out = list
 
 
 class SoftSurroundingsCrawlerItem(scrapy.Item):

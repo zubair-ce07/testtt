@@ -30,7 +30,7 @@ class SoftSurroundingSpider(CrawlSpider):
         product.add_css('name', 'span[itemprop="name"]::text')
         product.add_css('description', '.productInfo::text')
         product.add_css('description', '.productInfo > p::text')
-        product.add_css('care', '.tabContent.sel::text')
+        product.add_css('care', '.tabContent::text')
         product.add_css('image_urls', '.alt_dtl::attr(href)')
         product.add_value('skus', self.skus(response))
         return product.load_item()
@@ -68,7 +68,6 @@ class SoftSurroundingSpider(CrawlSpider):
 
         if colour_options and size_options:
             product_detail = self.color_skus(response, colour_options, size_options)
-
         elif size_options:
             product_detail = self.size_skus(response, size_options)
 
