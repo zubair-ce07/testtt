@@ -16,7 +16,6 @@ class SoftSurroundingSpider(CrawlSpider):
 
     def parse_item(self, response):
         product = self.parse_info(response)
-        product['skus'] = []
         product['requests'] = self.size_requests(response)
 
         return self.next_request_or_product(product)
@@ -33,6 +32,7 @@ class SoftSurroundingSpider(CrawlSpider):
         product.add_css('description', '.productInfo > p::text')
         product.add_css('care', '.tabContent.sel::text')
         product.add_css('image_urls', '.alt_dtl::attr(href)')
+        product.add_value('skus', self.skus(response))
         return product.load_item()
 
     def category_size(self, response):
@@ -63,27 +63,50 @@ class SoftSurroundingSpider(CrawlSpider):
 
     def skus(self, response):
         product_detail = []
+        colour_options = response.css('.swatchHover > span::text , .basesize::text').getall()
+        size_options = response.css('.box.size::text').getall()
 
-        previous_price = response.css('.ctntPrice::text').get()
-        price = response.css('span[itemprop="price"]::text').get()
-        currency = response.css('span[itemprop="priceCurrency"]::attr(content)').get()
+        if colour_options and size_options:
+            product_detail = self.color_skus(response, colour_options, size_options)
 
-        size_options = response.css('#size a::text ,#size >div > .basesize::text').getall()
-        colour_options = response.css('#color > .swatchlink > img::attr(alt) ,#color > div > .basesize::text').getall()
+        elif size_options:
+            product_detail = self.size_skus(response, size_options)
 
-        for size in size_options[1:]:
+        return product_detail
+
+    def color_skus(self, response, colour_options, size_options):
+        product_detail = []
+
+        for size in size_options:
             for color in colour_options:
-                product = {
-                    'color': color,
-                    'size': size,
-                    'sku_id': color + "_" + size,
-                    'currency': currency,
-                    'price': price,
-                }
-
-                if previous_price:
-                    product.update({'previous price': previous_price.split(' ')[1]})
+                product = self.product_price_detail(response)
+                product['color'] = color
+                product['size'] = size
+                product['sku_id'] = color + "_" + size
 
                 product_detail.append(product)
+
         return product_detail
+
+    def size_skus(self, response, size_options):
+        product_detail = []
+        for size in size_options:
+            product = self.product_price_detail(response)
+            product['size'] = size
+            product['sku_id'] = size
+
+            product_detail.append(product)
+        return product_detail
+
+    def product_price_detail(self, response):
+        product_price = {
+            'price': response.css('span[itemprop="price"]::text').get(),
+            'currency': response.css('span[itemprop="priceCurrency"]::attr(content)').get(),
+        }
+
+        previous_price = response.css('.ctntPrice::text').get()
+        if previous_price:
+            product_price['previous_price'] = previous_price
+
+        return product_price
 
