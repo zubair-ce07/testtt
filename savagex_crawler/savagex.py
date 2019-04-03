@@ -1,5 +1,5 @@
-import json
 import re
+import json
 
 from scrapy.spiders import CrawlSpider, Request
 from w3lib.url import add_or_replace_parameter
@@ -20,16 +20,13 @@ class SavagexCrawler(CrawlSpider):
     }
 
     headers = {
-        'accept-language': 'en-US,en;q=0.9',
-        'content-type': 'application/json',
-        'accept-encoding': 'gzip, deflate, br',
         'x-tfg-storedomain': 'www.savagex.com',
         'x-api-key': 'V0X9UnXkvO4vTk1gYHnpz7jQyAMO64Qp4ONV2ygu',
         'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 '
         '(KHTML, like Gecko) Chrome/73.0.3683.75 Safari/537.36',
         }
 
-    category_url_t = 'https://www.savagex.com/api/products?aggs=true&includeOutOfStock=true&' \
+    product_category_url_t = 'https://www.savagex.com/api/products?aggs=true&includeOutOfStock=true&' \
                      'page=1&size=28&defaultProductCategoryIds={}&categoryTagIds={}&excludeFpls=13506'
 
     def parse_start_url(self, response):
@@ -44,9 +41,9 @@ class SavagexCrawler(CrawlSpider):
                 category = raw_categories[category_k]['defaultProductCategoryIds']
                 sub_category = raw_categories[category_k]['subsections'][sub_category_k]['categoryTagIds']
 
-                yield Request(url=self.category_url_t.format(category, '+'.join([str(i) for i in sub_category])),
-                              headers=self.headers, cookies=self.cookies, callback=self.parse_pagination,
-                              meta={'category': [category_k, sub_category_k]})
+                yield Request(url=self.product_category_url_t.format(category, '+'.join([str(i)
+                              for i in sub_category])), headers=self.headers, cookies=self.cookies,
+                              callback=self.parse_pagination, meta={'category': [category_k, sub_category_k]})
 
     def parse_pagination(self, response):
         pages = json.loads(response.text).get('pages')
