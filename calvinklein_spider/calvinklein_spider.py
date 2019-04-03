@@ -3,21 +3,41 @@ import json
 from urllib.parse import urljoin
 
 from scrapy.link import Link
-from w3lib.url import add_or_replace_parameter
 from scrapy.linkextractors import LinkExtractor
-from scrapy.spiders import CrawlSpider, Request, Rule
+from scrapy.spiders import CrawlSpider, Rule
+from w3lib.url import add_or_replace_parameter
 
 from calvinklein_spider.items import CalvinkleinSpiderItem
 
 
-class ProductLE(LinkExtractor):
+class ProductsLE(LinkExtractor):
 
     def extract_links(self, response):
-        if not response.meta.get('raw_products'):
-            return []
+        products_r = re.compile('= ({.*});', re.DOTALL)
+        css = 'script:contains(\'window.app["productList"]\') ::text'
+
+        try:
+            raw_pages = json.loads(response.css(css).re_first(products_r))
+        except TypeError:
+            return
 
         return [Link(urljoin(response.url, url)) for url in [i['relatedCombis'][0]['pdp']
-                for i in response.meta.get('raw_products')['catalogEntryNavView']]]
+                for i in raw_pages['catalogEntryNavView']]]
+
+
+class PaginationLE(LinkExtractor):
+
+    def extract_links(self, response):
+        products_r = re.compile('= ({.*});', re.DOTALL)
+        css = 'script:contains(\'window.app["productList"]\') ::text'
+
+        try:
+            raw_pages = json.loads(response.css(css).re_first(products_r))
+        except TypeError:
+            return
+
+        return [Link(add_or_replace_parameter(response.url, 'scrollPage', page))
+                for page in range(1, raw_pages['noOfPages'])]
 
 
 class CalvinkleinCrawler(CrawlSpider):
@@ -28,7 +48,8 @@ class CalvinkleinCrawler(CrawlSpider):
     image_url_t = 'https://calvinklein-eu.scene7.com/is/image/CalvinKleinEU/{}_{}?$main$'
 
     rules = (
-        Rule(ProductLE(), callback='parse_product'),
+        Rule(PaginationLE(), callback='parse'),
+        Rule(ProductsLE(), callback='parse_product'),
     )
 
     def parse_start_url(self, response):
@@ -36,18 +57,9 @@ class CalvinkleinCrawler(CrawlSpider):
         css = 'script:contains(\'window.app["mainNavigation"]\') ::text'
         raw_category = json.loads(response.css(css).re_first(category_r))
 
-        return [response.follow(url['url'], callback=self.parse_pagination) for category in
-                raw_category['navigation'][0] for sub_category in category['subMenu'] for url in
-                sub_category['subMenu']]
-
-    def parse_pagination(self, response):
-        products_r = re.compile('= ({.*});', re.DOTALL)
-        css = 'script:contains(\'window.app["productList"]\') ::text'
-        raw_products = json.loads(response.css(css).re_first(products_r))
-
-        return [Request(url=add_or_replace_parameter(response.url, 'scrollPage', page),
-                meta={'raw_products': raw_products}, callback=self.parse) for
-                page in range(1, raw_products['noOfPages'])]
+        return [response.follow(url['url'], callback=self.parse) for category in
+                raw_category['navigation'][0] for sub_category in category['subMenu']
+                for url in sub_category['subMenu']]
 
     def parse_product(self, response):
         item = CalvinkleinSpiderItem()
