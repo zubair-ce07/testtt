@@ -17,16 +17,15 @@ class CarharttCrawler(CrawlSpider):
         'requesttype': 'ajax',
     }
 
-    listings_css = ['.central-nav > ul a']
-    products_css = ['#product-grid']
-
     name = 'carhartt-gb-crawl'
+    products_css = ['#product-grid']
+    listings_css = ['.central-nav > ul a']
     allowed_domains = ['carhartt.com', 'scene7.com']
     start_urls = ['https://www.carhartt.com/gb/en-gb/']
 
     rules = (
+        Rule(LinkExtractor(restrict_css=products_css), callback='parse_product'),
         Rule(LinkExtractor(restrict_css=listings_css), callback='parse_pagination'),
-        Rule(LinkExtractor(restrict_css=products_css), callback='parse_product')
         )
 
     product_image_url_t = 'https://s7d9.scene7.com/is/image/{}?fit=constrain,1&wid=64&hei=64&fmt=jpg&qlt=60'
@@ -56,28 +55,17 @@ class CarharttCrawler(CrawlSpider):
         item['lang'] = 'en'
         item['market'] = 'GB'
         item['brand'] = 'carhartt'
-        item['url'] = self.product_url(response)
+        item['url'] = response.url
         item['care'] = self.product_care(response)
         item['name'] = self.product_name(response)
         item['gender'] = self.product_gender(response)
+        item['retailer_sku'] = self.product_id(response)
         item['category'] = self.product_category(response)
         item['image_urls'] = self.product_image_urls(response)
         item['description'] = self.product_description(response)
-        item['retailer_sku'] = self.product_retailer_sku(response)
         item['meta'] = {'requests_queue': self.colour_requests(response, item)}
+
         return self.next_request_or_item(item)
-
-    def product_url(self, response):
-        return response.url
-
-    def product_category(self, response):
-        css = '#breadcrumbs a ::text'
-        return [response.css(css).extract()[1],
-                response.css(css).extract()[2]]
-
-    def product_name(self, response):
-        css = '.title-top.t5 ::text'
-        return response.css(css).extract_first()
 
     def next_request_or_item(self, item):
         requests = item['meta']['requests_queue']
@@ -88,11 +76,6 @@ class CarharttCrawler(CrawlSpider):
         item.pop('meta')
         return item
 
-    def raw_product(self, response):
-        css = '#product-details ::attr(data-inventory-url)'
-        return {i.split('=')[0]: i.split('=')[1] for i in
-                response.css(css).extract_first().split('&')}
-
     def product_description(self, response):
         return response.css('#desc li ::text').extract() or []
 
@@ -100,8 +83,18 @@ class CarharttCrawler(CrawlSpider):
         css = '#panel2-1 .bronze-text ::text'
         return response.css(css).extract_first().split(' ')[0]
 
+    def parse_skus(self, response):
+        response.meta['item']['skus'].update(self.skus(response))
+        return self.next_request_or_item(response.meta['item'])
+
+    def product_category(self, response):
+        return response.css('#breadcrumbs a ::text').extract()[1:]
+
     def product_care(self, response):
         return response.css('#panel2-3 li ::text').extract() or []
+
+    def product_name(self, response):
+        return response.css('.title-top.t5 ::text').extract_first()
 
     def clean(self, raw_text):
         if type(raw_text) is list:
@@ -113,22 +106,11 @@ class CarharttCrawler(CrawlSpider):
         return [self.product_image_url_t.format(i.split(';;')[0]) for i in
                 response.css(css).extract_first().split(',')]
 
-    def product_retailer_sku(self, response):
+    def product_id(self, response):
         css = '#product-details ::attr(data-inventory-url)'
         return response.css(css).extract_first().split('&')[3].split('=')[-1]
 
-    def product_pricing(self, response):
-        css = '#currencySelectionHidden ::attr(value)'
-        pricing = {'currency': response.css(css).extract_first()}
-        prev_price = response.css('.price.t16.not-bold del ::text').extract_first()
-        pricing['price'] = response.css('.price.t16.not-bold span ::text').extract_first()
-
-        if prev_price:
-            pricing['previous_price'] = prev_price
-
-        return pricing
-
-    def parse_skus(self, response):
+    def skus(self, response):
         skus = {}
         colour = response.meta.get('colour')
         common_sku = self.product_pricing(response.meta['product'])
@@ -144,13 +126,23 @@ class CarharttCrawler(CrawlSpider):
 
             skus[f'{colour}_{size}'] = sku
 
-        response.meta['item']['skus'].update(skus)
-        return self.next_request_or_item(response.meta['item'])
+        return skus
+
+    def product_pricing(self, response):
+        prev_price = response.css('.price.t16.not-bold del ::text').extract_first()
+        pricing = {'price': response.css('.price.t16.not-bold span ::text').extract_first()}
+        pricing['currency'] = response.css('#currencySelectionHidden ::attr(value)').extract_first()
+
+        if prev_price:
+            pricing['previous_price'] = prev_price
+
+        return pricing
 
     def colour_requests(self, response, item):
-        raw_product = self.raw_product(response)
+        css = '#product-details ::attr(data-inventory-url)'
         colours = response.css('.pdpRedesign a ::attr(title)').extract()
         colour_ids = response.css('.pdpRedesign a ::attr(data-attr-val-id)').extract()
+        raw_product = {i.split('=')[0]: i.split('=')[1] for i in response.css(css).extract_first().split('&')}
 
         if colour_ids and colours:
             return [Request(url=self.product_colour_url_t.format(colour_id, raw_product['storeId'],
