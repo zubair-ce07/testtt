@@ -10,7 +10,7 @@ from w3lib.url import add_or_replace_parameter
 from calvinklein_spider.items import CalvinkleinSpiderItem
 
 
-class ProductsLE(LinkExtractor):
+class ListingsLE(LinkExtractor):
 
     def extract_links(self, response):
         products_r = re.compile('= ({.*});', re.DOTALL)
@@ -49,7 +49,7 @@ class CalvinkleinCrawler(CrawlSpider):
 
     rules = (
         Rule(PaginationLE(), callback='parse'),
-        Rule(ProductsLE(), callback='parse_product'),
+        Rule(ListingsLE(), callback='parse_product'),
     )
 
     def parse_start_url(self, response):
