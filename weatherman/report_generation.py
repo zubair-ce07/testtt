@@ -1,49 +1,30 @@
-import calculations as cl
-import datetime
-
-def extracting_date(date):
-        x = date.split("-")
-        day = x[2]
-        return day
+import calculations as cal
+import statistics
 
 
-def date_splitter(dates_string): 
-    x = dates_string.split("-")
-    new_list = list(map(int, x))
-    temp_date = datetime.datetime(new_list[0], new_list[1], new_list[2])
-    final_date = temp_date.strftime("%b %d")
-    
-    return final_date
+def print_averges(max_temp, min_temp, mean_humd):
+    highest_temp_average = round(statistics.mean(max_temp)) 
+    lowest_temp_average = round(statistics.mean(min_temp))
+    mean_humd_average = round (statistics.mean(mean_humd))
+
+    print("\n---------------------------")   
+    print(f'Highest Average:  {highest_temp_average}C')
+    print(f'Lowest Average:   {lowest_temp_average}C')
+    print(f'Average Mean Humidity: {mean_humd_average}%') 
+    print("\n---------------------------")
 
 
-def print_averges(final_list):
-    averrage_highest = cl.calculating_average(final_list, 1)
-    averrage_lowest = cl.calculating_average(final_list, 3)
-    averrage_humidity = cl.calculating_average(final_list, 7)
-    #print(f"Average Highest: " + str(averrage_highest) + " C")
-    print(f"Average Highest: {averrage_highest} C")
-    
-    print(f"Average Lowst: {averrage_lowest}   C")
-    print(f"Average Humidit: {averrage_humidity} %")
-    
-    print("\n-----------------------")
+def print_graph(max_temp, min_temp):
+    for key in (max_temp):
+            cal.draw_graph(key, max_temp[key], min_temp[key])
+
+    print("\n---------------------------")
 
 
-def print_graph(all_days):
-    for i in range(len(all_days)-1):
-        if all_days[i][1] != '' or all_days[i][3] != '' or all_days[i][7] != '':
-                cl.draw_graph(extracting_date(all_days[i][0]), all_days[i][1], all_days[i][3])
-                print("\n")    
-
-
-def print_max(sorted_data):
-    print("\n-----------------------")
-
-    final_date = date_splitter(str(sorted_data[0][0]))
-    print(f"Max Temprature:  {sorted_data[0][1]}  C on {final_date}")         
-    final_date = date_splitter(str(sorted_data[1][0]))
-    print(f"Min temprature: {sorted_data[1][3]} C on {final_date}")
-    final_date = date_splitter(str(sorted_data[2][0]))
-    print(f"Max Humidity:  {sorted_data[2][7]} %   on  {final_date}")
-    print("\n-----------------------")
+def print_max(max_temp, min_temp, max_humd):
+    print("\n---------------------------")
+    print (f"Max temprature {max_temp['MaxTemp']}  on {max_temp['date']}")
+    print (f"Min temprature {min_temp['MinTemp']}  on {min_temp['date']}")
+    print (f"Max Humidity   {max_humd['MaxHumd']}  on {max_humd['date']}")             
+    print("\n---------------------------")
 
