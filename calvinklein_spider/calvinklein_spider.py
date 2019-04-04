@@ -15,11 +15,10 @@ class ListingsLE(LinkExtractor):
     def extract_links(self, response):
         products_r = re.compile('= ({.*});', re.DOTALL)
         css = 'script:contains(\'window.app["productList"]\') ::text'
-
         try:
             raw_pages = json.loads(response.css(css).re_first(products_r))
         except TypeError:
-            return
+            return []
 
         return [Link(urljoin(response.url, url)) for url in [i['relatedCombis'][0]['pdp']
                 for i in raw_pages['catalogEntryNavView']]]
@@ -30,11 +29,10 @@ class PaginationLE(LinkExtractor):
     def extract_links(self, response):
         products_r = re.compile('= ({.*});', re.DOTALL)
         css = 'script:contains(\'window.app["productList"]\') ::text'
-
         try:
             raw_pages = json.loads(response.css(css).re_first(products_r))
         except TypeError:
-            return
+            return []
 
         return [Link(add_or_replace_parameter(response.url, 'scrollPage', page))
                 for page in range(1, raw_pages['noOfPages'])]
@@ -131,6 +129,7 @@ class CalvinkleinCrawler(CrawlSpider):
         css = 'script:contains(\'window.app["app"]\') ::text'
         pricing = {'price': raw_product['price']['price']}
         pricing['currency'] = json.loads(response.css(css).re_first(currency_r))['currencyCode']
+
         return pricing
 
     def product_image_urls(self, raw_product):
