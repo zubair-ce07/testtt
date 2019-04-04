@@ -1,11 +1,10 @@
 import re
 import json
-from urllib.parse import urljoin
 
 from scrapy.link import Link
-from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 from w3lib.url import add_or_replace_parameter
+from scrapy.linkextractors import LinkExtractor
 
 from calvinklein_spider.items import CalvinkleinSpiderItem
 
@@ -15,13 +14,13 @@ class ListingsLE(LinkExtractor):
     def extract_links(self, response):
         products_r = re.compile('= ({.*});', re.DOTALL)
         css = 'script:contains(\'window.app["productList"]\') ::text'
-        try:
-            raw_pages = json.loads(response.css(css).re_first(products_r))
-        except TypeError:
+        raw_pages = response.css(css).re_first(products_r)
+
+        if not raw_pages:
             return []
 
-        return [Link(urljoin(response.url, url)) for url in [i['relatedCombis'][0]['pdp']
-                for i in raw_pages['catalogEntryNavView']]]
+        return [Link(response.urljoin(url)) for url in [i['relatedCombis'][0]['pdp']
+                for i in json.loads(raw_pages)['catalogEntryNavView']]]
 
 
 class PaginationLE(LinkExtractor):
@@ -29,13 +28,13 @@ class PaginationLE(LinkExtractor):
     def extract_links(self, response):
         products_r = re.compile('= ({.*});', re.DOTALL)
         css = 'script:contains(\'window.app["productList"]\') ::text'
-        try:
-            raw_pages = json.loads(response.css(css).re_first(products_r))
-        except TypeError:
+        raw_pages = response.css(css).re_first(products_r)
+
+        if not raw_pages:
             return []
 
         return [Link(add_or_replace_parameter(response.url, 'scrollPage', page))
-                for page in range(1, raw_pages['noOfPages'])]
+                for page in range(1, json.loads(raw_pages)['noOfPages'])]
 
 
 class CalvinkleinCrawler(CrawlSpider):
