@@ -26,7 +26,7 @@ class SavagexCrawler(CrawlSpider):
         '(KHTML, like Gecko) Chrome/73.0.3683.75 Safari/537.36',
         }
 
-    product_category_url_t = 'https://www.savagex.com/api/products?aggs=true&includeOutOfStock=true&' \
+    category_url_t = 'https://www.savagex.com/api/products?aggs=true&includeOutOfStock=true&' \
                      'page=1&size=28&defaultProductCategoryIds={}&categoryTagIds={}&excludeFpls=13506'
 
     def parse_start_url(self, response):
@@ -40,7 +40,7 @@ class SavagexCrawler(CrawlSpider):
                 category = raw_categories[category_k]['defaultProductCategoryIds']
                 sub_category = raw_categories[category_k]['subsections'][sub_category_k]['categoryTagIds']
 
-                yield Request(url=self.product_category_url_t.format(category, '+'.join([str(i)
+                yield Request(url=self.category_url_t.format(category, '+'.join([str(i)
                               for i in sub_category])), headers=self.headers, cookies=self.cookies,
                               callback=self.parse_pagination, meta={'category': [category_k, sub_category_k]})
 
