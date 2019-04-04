@@ -26,11 +26,12 @@ class PaginationLE(LinkExtractor):
     def extract_links(self, response):
         raw_pages = response.css('.paging__info ::text').extract()
 
-        if raw_pages:
-            total_pages = int(re.search('(\d+)', raw_pages[2]).group(1) or 1)
-            return [Link(url=add_or_replace_parameter(response.url, 'pageNr', page))
-                    for page in range(1, total_pages)]
-        return []
+        if not raw_pages:
+            return []
+
+        total_pages = int(re.search('(\d+)', raw_pages[2]).group(1) or 1)
+        return [Link(url=add_or_replace_parameter(response.url, 'pageNr', page))
+                for page in range(1, total_pages)]
 
 
 class SchwabCrawler(CrawlSpider):
@@ -56,7 +57,7 @@ class SchwabCrawler(CrawlSpider):
     start_urls = ['https://www.schwab.de/index.php?cl=oxwCategoryTree&jsonly=true&staticContent=true']
 
     products_css = ['div.c-productlist.c-productlist--4.at-product-list .product__top > a']
-    product_colour_url_t = 'https://www.schwab.de/index.php?varselid%5B1%5D={}&cl=oxwarticledetails&anid={}'
+    colour_url_t = 'https://www.schwab.de/index.php?varselid%5B1%5D={}&cl=oxwarticledetails&anid={}'
 
     rules = (
         Rule(CategoryLE(), callback='parse'),
@@ -156,22 +157,24 @@ class SchwabCrawler(CrawlSpider):
         return pricing
 
     def colour_requests(self, response, item):
+        colour_requests = []
         colour_css = '.c-colorspots.colorspots--inlist > a ::attr(title)'
         versel_ids_css = '.c-colorspots.colorspots--inlist > a ::attr(data-varselid)'
         size_css = '#variants .l-outsp-bot-5 > button ::text, #variants .variants > .at-dv-size-option ::text'
 
-        sizes = response.css(size_css).extract()
         colours = response.css(colour_css).extract()
+        colour_ids = response.css(size_css).extract()
         varsel_ids = response.css(versel_ids_css).extract()
-        raw_colours = [i.split('|') for i in self.raw_sku(response).split(';')]
+        colour_codes = [i.split('|') for i in self.raw_sku(response).split(';')]
 
-        if colours and sizes:
-            return [Request(callback=self.parse_skus, meta={'colour': colour, 'item': item},
-                    url=self.product_colour_url_t.format(varselid, f'{self.product_id(response)}-'
-                    f'{raw_colours[id][1]}-{raw_colours[id][3]}-{raw_colours[id][2]}')) for id,
-                    varselid, colour in zip(range(0, len(raw_colours), len(sizes)), varsel_ids, colours)]
+        if not (colours and colour_ids):
+            return self.parse_skus(response, item)
 
-        return self.parse_skus(response, item)
+        for id, varsel_id, colour in zip(range(0, len(colour_codes), len(colour_ids)), varsel_ids, colours):
+            colour_id = f'{self.product_id(response)}-{colour_codes[id][1]}-{colour_codes[id][3]}-{colour_codes[id][2]}'
+            colour_requests.append(Request(url=self.colour_url_t.format(varsel_id, colour_id), callback=self.parse_skus,
+                                           meta={'colour': colour, 'item': item}))
+        return colour_requests
 
     def skus(self, response, item=None):
         skus = {}
