@@ -28,8 +28,8 @@ class CarharttCrawler(CrawlSpider):
         Rule(LinkExtractor(restrict_css=listings_css), callback='parse_pagination'),
         )
 
-    product_image_url_t = 'https://s7d9.scene7.com/is/image/{}?fit=constrain,1&wid=64&hei=64&fmt=jpg&qlt=60'
-    product_colour_url_t = 'https://www.carhartt.com/DefiningAttributesDesktopView?selectedAttribute=_{}&' \
+    image_url_t = 'https://s7d9.scene7.com/is/image/{}?fit=constrain,1&wid=64&hei=64&fmt=jpg&qlt=60'
+    colour_url_t = 'https://www.carhartt.com/DefiningAttributesDesktopView?selectedAttribute=_{}&' \
                            'langId=104&storeId={}&productId={}'
 
     def parse_pagination(self, response):
@@ -103,7 +103,7 @@ class CarharttCrawler(CrawlSpider):
 
     def product_image_urls(self, response):
         css = '#pdp-s7-media-viewer-container ::attr(data-default-media-set)'
-        return [self.product_image_url_t.format(i.split(';;')[0]) for i in
+        return [self.image_url_t.format(i.split(';;')[0]) for i in
                 response.css(css).extract_first().split(',')]
 
     def product_id(self, response):
@@ -113,7 +113,7 @@ class CarharttCrawler(CrawlSpider):
     def skus(self, response):
         skus = {}
         colour = response.meta.get('colour')
-        common_sku = self.product_pricing(response.meta['product'])
+        common_sku = response.meta['pricing']
 
         for size_s in Selector(text=response.text).css('li a '):
             size = self.clean(size_s.css(' ::text').extract_first())
@@ -145,6 +145,6 @@ class CarharttCrawler(CrawlSpider):
         raw_product = {i.split('=')[0]: i.split('=')[1] for i in response.css(css).extract_first().split('&')}
 
         if colour_ids and colours:
-            return [Request(url=self.product_colour_url_t.format(colour_id, raw_product['storeId'],
+            return [Request(url=self.colour_url_t.format(colour_id, raw_product['storeId'],
                     raw_product['productId']), callback=self.parse_skus, meta={'colour': colour, 'item':
-                    item, 'product': response},) for colour_id, colour in zip(colour_ids, colours)]
+                    item, 'pricing': self.product_pricing(response)},) for colour_id, colour in zip(colour_ids, colours)]
