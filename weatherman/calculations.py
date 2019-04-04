@@ -1,6 +1,7 @@
 import datetime
 import statistics
 import csv
+import datetime
 import glob
 
 
@@ -69,8 +70,8 @@ def getting_max(files, final_max_temp, final_min_temp, final_max_humd, year):
 
 
 def calculating_averages(files, year_month, max_temp, min_temp, max_humd):
-     (year,month)=getting_year_month(str(year_month))
-     input_file=csv.DictReader(open (files))
+     (year, month) = getting_year_month(str(year_month))
+     input_file = csv.DictReader(open (files))
      for row in input_file:
             if "PKT" in row.keys():
                 if getting_year_month(row["PKT"]) == (year, month):
@@ -79,16 +80,16 @@ def calculating_averages(files, year_month, max_temp, min_temp, max_humd):
                              min_temp.append(row["Min TemperatureC"])
                              max_humd.append(row[" Mean Humidity"])
 
-     max_temp=[int(t) for t in max_temp if t]
-     min_temp=[int(t) for t in min_temp if t]
-     max_humd=[int(t) for t in max_humd if t]
+     max_temp = [int(t) for t in max_temp if t]
+     min_temp = [int(t) for t in min_temp if t]
+     max_humd = [int(t) for t in max_humd if t]
 
      return (max_temp, min_temp, max_humd)
 
 def getting_temperatures(files,year_month,max_temp,min_temp):
      
-     (year,month)=getting_year_month(str(year_month))
-     input_file=csv.DictReader(open (files))
+     (year,month) = getting_year_month(str(year_month))
+     input_file = csv.DictReader(open (files))
      for row in input_file:
             if "PKT" in row.keys():
                 if getting_year_month(row["PKT"]) == (year, month):
@@ -96,7 +97,7 @@ def getting_temperatures(files,year_month,max_temp,min_temp):
                              if row["Max TemperatureC"] != '' and row["Min TemperatureC"] != '':
                                 max_temp[getting_day(row["PKT"])] = row["Max TemperatureC"]
                                 min_temp[getting_day(row["PKT"])] = row["Min TemperatureC"]
-
+                                                  
      return (max_temp, min_temp)
 
 
@@ -108,3 +109,4 @@ def draw_graph(day, max_temp, min_temp):
         print("\033[1;31;40m+", end='')
     print("\033[1;37;40m" + str(min_temp) + "C", end=' ')
     print("\033[1;37;40m" + str(max_temp) + "C")
+
