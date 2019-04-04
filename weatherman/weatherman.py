@@ -34,7 +34,7 @@ def design_graph(basepath, year_month):
     files = cal.get_files(basepath) 
     for file in files:
         (max_temp, min_temp) = cal.getting_temperatures(str(file), year_month, max_temp, min_temp)
-    generator.print_graph(max_temp, min_temp)
+    generator.print_graph(max_temp, min_temp,year_month)
 
 
 def main():
@@ -57,3 +57,4 @@ def main():
     if args.graph:
             design_graph(args.basepath, args.graph)
 main()
+
