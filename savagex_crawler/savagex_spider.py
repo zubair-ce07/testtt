@@ -121,8 +121,8 @@ class SavagexCrawler(CrawlSpider):
          for i in json.loads(response.text)['image_view_list']]
 
     def raw_category(self, response):
-        sku_r = re.compile(r'"productBrowser":(.+),"collections"')
-        return json.loads(sku_r.search(response.text).group(1)+'}')
+        category_r = re.compile(r'"productBrowser":(.+),"collections"')
+        return json.loads(category_r.search(response.text).group(1)+'}')
 
     def clean(self, raw_text):
         if type(raw_text) is list:
