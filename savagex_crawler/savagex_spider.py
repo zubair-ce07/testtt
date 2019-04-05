@@ -1,8 +1,8 @@
 import re
 import json
 
-from scrapy.spiders import CrawlSpider, Request
 from w3lib.url import add_or_replace_parameter
+from scrapy.spiders import CrawlSpider, Request
 
 from savagex_crawler.items import SavagexCrawlerItem
 
@@ -26,6 +26,7 @@ class SavagexCrawler(CrawlSpider):
         '(KHTML, like Gecko) Chrome/73.0.3683.75 Safari/537.36',
         }
 
+    colour_url_t = 'https://www.savagex.com/api/products/{}'
     category_url_t = 'https://www.savagex.com/api/products?aggs=true&includeOutOfStock=true&' \
                      'page=1&size=28&defaultProductCategoryIds={}&categoryTagIds={}&excludeFpls=13506'
 
@@ -143,7 +144,7 @@ class SavagexCrawler(CrawlSpider):
 
             sku['colour'] = colour
             sku['size'] = raw_sku['size'] or 'One Size'
-            skus[f'{colour}_{raw_sku["size"]}'] = sku
+            skus[f'{colour}_{sku["size"]}'] = sku
 
         return skus
 
@@ -156,8 +157,7 @@ class SavagexCrawler(CrawlSpider):
 
     def colour_requests(self, response, item):
         css = '[property="og:price:currency"] ::attr(content)'
-        colour_url_t = 'https://www.savagex.com/api/products/{}'
         raw_colours = [i["related_product_id"] for i in self.raw_product(response)['related_product_id_object_list']]
 
         return [Request(callback=self.parse_skus, meta={'item': item, 'currency': response.css(css).extract_first()},
-                        url=colour_url_t.format(colour_id), headers=self.headers) for colour_id in raw_colours]
+                        url=self.colour_url_t.format(colour_id), headers=self.headers) for colour_id in raw_colours]
