@@ -34,7 +34,7 @@ def main():
     args = parser.parse_args()  
     
     r = Reader(args.basepath)
-    all_data = r.read_files(r.basepath)
+    all_data = r.read_files()
 
     if args.max_temp:
         find_max_values(all_data, args.max_temp)   
