@@ -1,23 +1,27 @@
 import datetime
 import argparse
 from report_generation import Printer
-from Files_reading import Reader
+from files_reading import file_reader
+from calculations import Calculator
 
-p=Printer()
+printer = Printer()
+reader = file_reader()
+calculator = Calculator()
 
 
-def find_max_values(all_data, inputt):
-    p.print_max(all_data, inputt)
+def find_max_values(all_data, input_date):
+    max_temp, min_temp, max_humidity = calculator.getting_temperatures(all_data, input_date)
+    printer.print_max(max_temp, min_temp, max_humidity)
 
 
 def find_avge_values(all_data, input_date):
-    
-    p.print_averges(all_data, input_date)
+    max_avg, min_avg, mean_humdity = calculator.calculating_averages(all_data, input_date)
+    printer.print_averges(max_avg, min_avg, mean_humdity)
 
 
 def design_graph(all_data, input_date):
-    
-    p.print_graph(all_data, input_date)
+    final_values = calculator.getting_min_max(all_data, input_date)
+    printer.print_graph(final_values, input_date)
     
 
 def main():        
@@ -33,9 +37,8 @@ def main():
     
     args = parser.parse_args()  
     
-    r = Reader(args.basepath)
-    all_data = r.read_files()
-
+    all_data = reader.read_files(args.basepath)
+    
     if args.max_temp:
         find_max_values(all_data, args.max_temp)   
     
@@ -45,5 +48,5 @@ def main():
     if args.graph:
         design_graph(all_data, args.graph)
     
-
-main()
+if __name__ == '__main__':
+    main()
