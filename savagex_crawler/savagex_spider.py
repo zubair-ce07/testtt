@@ -139,7 +139,7 @@ class SavagexCrawler(CrawlSpider):
         for raw_sku in raw_skus['product_id_object_list']:
             sku = common_sku.copy()
 
-            if raw_sku['availability']:
+            if 'out' in raw_sku['availability']:
                 sku['out_of_stock'] = True
 
             sku['colour'] = colour
