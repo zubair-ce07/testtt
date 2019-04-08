@@ -14,7 +14,7 @@ class CategoryLE(LinkExtractor):
     def extract_links(self, response):
         try:
             raw_category = json.loads(response.text)
-        except ValueError:
+        except:
             return []
         if raw_category[0].get('sCat'):
             return [Link(url['url']) for urls in raw_category for url in urls['sCat']]
@@ -80,8 +80,18 @@ class SchwabCrawler(CrawlSpider):
         item['category'] = self.product_category(response)
         item['image_urls'] = self.product_image_urls(response)
         item['description'] = self.product_description(response)
-        item['meta'] = {'requests_queue': self.colour_requests(response, item)}
+        requests_queue = self.colour_requests(response, item)
 
+        if not requests_queue:
+            item['skus'] = self.skus(response, item)
+            return item
+
+        item['meta'] = {'requests_queue': requests_queue}
+        return self.next_request_or_item(item)
+
+    def parse_colour(self, response):
+        item = response.meta['item']
+        item['skus'].update(self.skus(response))
         return self.next_request_or_item(item)
 
     def next_request_or_item(self, item):
@@ -103,14 +113,7 @@ class SchwabCrawler(CrawlSpider):
 
     def product_description(self, response):
         css = '.details__variation__hightlights ul > li ::text'
-        return response.css(css).extract() or []
-
-    def parse_skus(self, response, item=None):
-        if item:
-            return item['skus'].update(self.skus(response, item))
-        item = response.meta['item']
-        item['skus'].update(self.skus(response))
-        return self.next_request_or_item(item)
+        return response.css(css).extract()
 
     def product_id(self, response):
         css = 'script:contains("kalrequest.articlesString") ::text'
@@ -168,12 +171,13 @@ class SchwabCrawler(CrawlSpider):
         colour_codes = [i.split('|') for i in self.raw_sku(response).split(';')]
 
         if not (colours and colour_ids):
-            return self.parse_skus(response, item)
+            return
 
         for id, varsel_id, colour in zip(range(0, len(colour_codes), len(colour_ids)), varsel_ids, colours):
-            colour_id = f'{self.product_id(response)}-{colour_codes[id][1]}-{colour_codes[id][3]}-{colour_codes[id][2]}'
-            colour_requests.append(Request(url=self.colour_url_t.format(varsel_id, colour_id), callback=self.parse_skus,
-                                           meta={'colour': colour, 'item': item}))
+            colourid = f'{self.product_id(response)}-{colour_codes[id][1]}-{colour_codes[id][3]}-{colour_codes[id][2]}'
+            colour_requests.append(Request(callback=self.parse_colour, meta={'colour': colour, 'item': item},
+                                           url=self.colour_url_t.format(varsel_id, colourid)))
+
         return colour_requests
 
     def skus(self, response, item=None):
