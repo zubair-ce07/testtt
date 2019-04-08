@@ -112,7 +112,8 @@ class SavagexCrawler(CrawlSpider):
         css = '[property="og:title"] ::attr(content)'
         return response.css(css).extract_first().split('|')[-1]
 
-    def parse_skus(self, response):
+    def parse_colour(self, response):
+        self.product_image_urls(response)
         response.meta['item']['skus'].update(self.skus(response))
         return self.next_request_or_item(response.meta['item'])
 
@@ -131,7 +132,6 @@ class SavagexCrawler(CrawlSpider):
 
     def skus(self, response):
         skus = {}
-        self.product_image_urls(response)
         raw_skus = json.loads(response.text)
         common_sku = self.product_pricing(response, raw_skus['suggest']['payload'])
         colour = raw_skus['color']
@@ -159,5 +159,5 @@ class SavagexCrawler(CrawlSpider):
         css = '[property="og:price:currency"] ::attr(content)'
         raw_colours = [i["related_product_id"] for i in self.raw_product(response)['related_product_id_object_list']]
 
-        return [Request(callback=self.parse_skus, meta={'item': item, 'currency': response.css(css).extract_first()},
+        return [Request(callback=self.parse_colour, meta={'item': item, 'currency': response.css(css).extract_first()},
                         url=self.colour_url_t.format(colour_id), headers=self.headers) for colour_id in raw_colours]
