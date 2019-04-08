@@ -12,23 +12,23 @@ from calvinklein_spider.items import CalvinkleinSpiderItem
 class ListingsLE(LinkExtractor):
 
     def extract_links(self, response):
-        products_r = re.compile('= ({.*});', re.DOTALL)
+        listings_r = re.compile('= ({.*});', re.DOTALL)
         css = 'script:contains(\'window.app["productList"]\') ::text'
-        raw_pages = response.css(css).re_first(products_r)
+        raw_products = response.css(css).re_first(listings_r)
 
-        if not raw_pages:
+        if not raw_products:
             return []
 
         return [Link(response.urljoin(url)) for url in [i['relatedCombis'][0]['pdp']
-                for i in json.loads(raw_pages)['catalogEntryNavView']]]
+                for i in json.loads(raw_products)['catalogEntryNavView']]]
 
 
 class PaginationLE(LinkExtractor):
 
     def extract_links(self, response):
-        products_r = re.compile('= ({.*});', re.DOTALL)
+        pagination_r = re.compile('= ({.*});', re.DOTALL)
         css = 'script:contains(\'window.app["productList"]\') ::text'
-        raw_pages = response.css(css).re_first(products_r)
+        raw_pages = response.css(css).re_first(pagination_r)
 
         if not raw_pages:
             return []
@@ -54,9 +54,8 @@ class CalvinkleinCrawler(CrawlSpider):
         css = 'script:contains(\'window.app["mainNavigation"]\') ::text'
         raw_category = json.loads(response.css(css).re_first(category_r))
 
-        return [response.follow(url['url'], callback=self.parse) for category in
-                raw_category['navigation'][0] for sub_category in category['subMenu']
-                for url in sub_category['subMenu']]
+        return [response.follow(url['url'], callback=self.parse) for category in raw_category['navigation'][0]
+                for sub_category in category['subMenu'] for url in sub_category['subMenu']]
 
     def parse_product(self, response):
         item = CalvinkleinSpiderItem()
