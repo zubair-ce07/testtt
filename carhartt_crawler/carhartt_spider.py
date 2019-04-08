@@ -30,7 +30,7 @@ class CarharttCrawler(CrawlSpider):
 
     image_url_t = 'https://s7d9.scene7.com/is/image/{}?fit=constrain,1&wid=64&hei=64&fmt=jpg&qlt=60'
     colour_url_t = 'https://www.carhartt.com/DefiningAttributesDesktopView?selectedAttribute=_{}&' \
-                           'langId=104&storeId={}&productId={}'
+                   'langId=104&storeId={}&productId={}'
 
     def parse_pagination(self, response):
         page_size = 24
@@ -45,7 +45,7 @@ class CarharttCrawler(CrawlSpider):
 
         for page in range(0, int(products), page_size):
             formdata['beginIndex'], formdata['productBeginIndex'] = page, page
-            yield Request(method='POST', body=json.dumps(formdata), callback=self.parse,
+            yield Request(callback=self.parse, body=json.dumps(formdata), method='POST',
                   url=add_or_replace_parameter(response.url, 'resultsPerPage', page_size))
 
     def parse_product(self, response):
@@ -77,21 +77,21 @@ class CarharttCrawler(CrawlSpider):
         return item
 
     def product_description(self, response):
-        return response.css('#desc li ::text').extract() or []
+        return response.css('#desc li ::text').extract()
+
+    def product_care(self, response):
+        return response.css('#panel2-3 li ::text').extract()
 
     def product_gender(self, response):
         css = '#panel2-1 .bronze-text ::text'
         return response.css(css).extract_first().split(' ')[0]
 
-    def parse_skus(self, response):
+    def parse_colour(self, response):
         response.meta['item']['skus'].update(self.skus(response))
         return self.next_request_or_item(response.meta['item'])
 
     def product_category(self, response):
         return response.css('#breadcrumbs a ::text').extract()[1:]
-
-    def product_care(self, response):
-        return response.css('#panel2-3 li ::text').extract() or []
 
     def product_name(self, response):
         return response.css('.title-top.t5 ::text').extract_first()
@@ -146,5 +146,5 @@ class CarharttCrawler(CrawlSpider):
 
         if colour_ids and colours:
             return [Request(url=self.colour_url_t.format(colour_id, raw_product['storeId'],
-                    raw_product['productId']), callback=self.parse_skus, meta={'colour': colour, 'item': item,
-                    'pricing': self.product_pricing(response)},) for colour_id, colour in zip(colour_ids, colours)]
+                    raw_product['productId']), callback=self.parse_colour, meta={'colour': colour, 'item': item,
+                    'pricing': self.product_pricing(response)}) for colour_id, colour in zip(colour_ids, colours)]
