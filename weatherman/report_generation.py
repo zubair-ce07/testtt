@@ -1,47 +1,53 @@
-import calculations as cal
+from calculations import Calculator
 import statistics
 import datetime
 
-
-def date_splitter(date):
-    day = str(datetime.datetime.strptime(date, '%Y-%m-%d').day)
-    year = str(datetime.datetime.strptime(date, '%Y-%m-%d').year)
-    month = datetime.datetime.strptime(date, '%Y-%m-%d')
-    month = month.strftime("%B")
-    return (str(day), str(month), year)
+class  Printer:
 
 
-def print_averges(max_temp, min_temp, mean_humd):
-    highest_temp_average = round(statistics.mean(max_temp)) 
-    lowest_temp_average = round(statistics.mean(min_temp))
-    mean_humd_average = round (statistics.mean(mean_humd))
+    def print_averges(self, all_data, input_date):
+        c = Calculator()
+        max_avg, min_avg, mean_humdity = c.calculating_averages(all_data, input_date)
+        print("\n---------------------------")   
+        print(f'Highest Average:  {max_avg}C')
+        print(f'Lowest Average:   {min_avg}C')
+        print(f'Average Mean Humidity: {mean_humdity}%') 
+        print("\n---------------------------")
+            
 
-    print("\n---------------------------")   
-    print(f'Highest Average:  {highest_temp_average}C')
-    print(f'Lowest Average:   {lowest_temp_average}C')
-    print(f'Average Mean Humidity: {mean_humd_average}%') 
-    print("\n---------------------------")
-
-
-def print_graph(max_temp, min_temp,year_month):
-    (day, month, year) = date_splitter(str(year_month))
-    print (f'{month} {year}')    
-    print("\n")
-    for key in (max_temp):
-            cal.draw_graph(key, max_temp[key], min_temp[key])
-
-    print("\n---------------------------")
+    def print_graph(self, all_data, input_date):
+        c = Calculator()
+        final = c.getting_min_max(all_data, input_date)
+        date = datetime.datetime.strptime(str(input_date), '%Y-%m-%d').date()
+        print(f'{input_date:%B }{input_date:%Y}')
+        for key in final:
+            date = datetime.datetime.strptime(key[0], '%Y-%m-%d').day
+            self.draw_graph(date, key[1], key[2])
 
 
-def print_max(max_temp, min_temp, max_humd):
-    (day, month, year) = date_splitter(max_temp['date'])
-    print (f"Max temprature {max_temp['MaxTemp']}C  on {day} {month}")
+    def print_max(self, all_data, inputt):
+        c = Calculator()
+        max_temp, min_temp, max_humidity = c.getting_temperatures(all_data, inputt)
+        
+        print("\n---------------------------")   
+        date = datetime.datetime.strptime(max_temp[-1][0], '%Y-%m-%d').date()
+        print (f"Max temprature {max_temp[-1][1]}C on {date: %B} {date.day}")
+        
+        date = datetime.datetime.strptime(min_temp[0][0], '%Y-%m-%d').date()
+        print (f"Min temprature {min_temp[0][1]}C on {date: %B} {date.day}")
+        
+        date = datetime.datetime.strptime(max_humidity[-1][0], '%Y-%m-%d').date()
+        print (f"Max Humidity   {max_humidity[-1][1]}% on {date: %B} {date.day}")             
+        print("\n---------------------------")
+            
     
-    (day, month, year) = date_splitter(min_temp['date'])
-    print (f"Min temprature {min_temp['MinTemp']}C  on {day} {month}")
-    
-    (day, month, year) = date_splitter(max_humd['date'])
-    print (f"Max Humidity   {max_humd['MaxHumd']}%  on {day} {month}")             
-    print("\n---------------------------")
+    def draw_graph(self, day, max_temp, min_temp):
+        print(day, end=' ')
 
-
+        for i in range(int(min_temp)):
+            print("\033[1;34;40m+", end='')     
+        
+        for i in range(int(max_temp)):
+            print("\033[1;31;40m+", end='')
+        print(f'\033[1;37;40m {min_temp}C', end=' ')
+        print(f'\033[1;37;40m {max_temp}C')
