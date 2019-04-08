@@ -10,8 +10,8 @@ class Reader:
     def __init__(self, basepath):
         self.basepath = basepath
 
-    def read_files(self, basepath):
-        files = glob.glob(f'{basepath}{"/"}{"*.txt"}')
+    def read_files(self):
+        files = glob.glob(f'{self.basepath}{"/"}{"*.txt"}')
     
         for filee in files:
             input_file = csv.DictReader(open(str(filee)))
