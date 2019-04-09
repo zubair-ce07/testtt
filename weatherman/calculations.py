@@ -1,15 +1,7 @@
 import datetime
-import statistics
-import datetime
-
 
 class Calculator: 
     
-    def converting_into_datetime(self, date):
-        if date != '':
-            date2 = datetime.datetime.strptime(date, '%Y-%m-%d').date()
-            return date2
-
     def calculating_averages(self, all_data, input_date):
         temperature_values = [record for record in all_data if self.is_valid(record, input_date)]         
         avg_max_temp = sum([item.max_temp for item in temperature_values])//len(temperature_values)
