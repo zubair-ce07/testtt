@@ -1,20 +1,18 @@
 import glob
 import csv
-from weather_records import Weather_record
+from weather_records import WeatherRecord
 
-class file_reader:
+class FileReader:
 
     def read_files(self, basepath):
         all_content = []
         for f in glob.glob(f'{basepath}{"/"}{"*.txt"}'):
             for record in csv.DictReader(open(f)):
-                if (record.get("PKST") or record.get("PKT")) and self.is_valid(record):                    
-                    all_content.append(Weather_record(record))        
+                if self.is_valid(record):                    
+                    all_content.append(WeatherRecord(record))        
         return all_content
 
     def is_valid(self, record):
-        if record.get("Max TemperatureC") and record.get("Min TemperatureC") and \
-            record.get("Max Humidity") and record.get(" Mean Humidity"):
-            return True
-        else:
-            False
+        return (record.get("PKST") or record.get("PKT")) and record.get("Max TemperatureC") and \
+               record.get("Min TemperatureC") and record.get("Max Humidity") and record.get(" Mean Humidity")
+            
