@@ -1,7 +1,4 @@
 from calculations import Calculator
-import statistics
-import datetime
-
 
 class  Printer:
     color_blue="\033[1;34;40m+"
@@ -17,8 +14,8 @@ class  Printer:
         print("\n---------------------------")
             
 
-    def print_graph(self, final_values, input_date):        
-        
+    def print_graph(self, final_values, input_date):
+
         print(f'{input_date:%B }{input_date:%Y}')
         for value in final_values:
             self.draw_graph(value.date.day, value.max_temp, value.min_temp)
@@ -28,7 +25,7 @@ class  Printer:
         print("\n---------------------------")   
         print (f"Max temprature {max_temp.max_temp}C on {max_temp.date: %B} {max_temp.date.day}")
         print (f"Min temprature {min_temp.min_temp}C on {min_temp.date: %B} {min_temp.date.day}")
-        print (f"Max Humidity   {max_humidity.max_humidity}% on {max_humidity.date: %B} {max_humidity.date.day}")             
+        print (f"Max Humidity {max_humidity.max_humidity}% on {max_humidity.date: %B} {max_humidity.date.day}")             
         print("\n---------------------------")
            
     def draw_graph(self, day, max_temp, min_temp):
@@ -38,4 +35,3 @@ class  Printer:
         print(self.color_red*max_temp, end='')
         print(f'{self.color_white} {min_temp}C', end=' ')
         print(f'{self.color_white} {max_temp}C')
-
