@@ -2,7 +2,7 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule, CrawlSpider
 from whitestuff_crawler.items import WhitestuffCrawlerItem, ProductLoader
 import scrapy
-import json
+import js2py
 import re
 
 
@@ -55,11 +55,7 @@ class WhiteStuffSpider(CrawlSpider):
     def skus(self, response):
         product_detail = []
 
-        response_json = response.text.split('=')[1][:-1]
-        response_json = re.sub('\n | //this is temporary until the feature is supported in the backoffice', '',
-                               response_json)
-        response_json = re.sub(r"\\", "'", response_json)
-        response_json = json.loads(response_json)
+        response_json = self.parse_json_response(response)
         product_variations = response_json['productVariations']
 
         for skus_key in product_variations:
@@ -78,4 +74,11 @@ class WhiteStuffSpider(CrawlSpider):
             product_detail.append(product)
 
         return product_detail
+
+    def parse_json_response(self, response):
+        json_product_id = re.findall('(ProductJSON\[.*\])', response.text)[0]
+        response_json = response.text.replace(json_product_id, "var x")
+        response_json = js2py.eval_js(response_json)
+
+        return response_json
 
