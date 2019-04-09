@@ -3,6 +3,7 @@ from scrapy.spiders import Rule, CrawlSpider
 from whitestuff_crawler.items import WhitestuffCrawlerItem, ProductLoader
 import scrapy
 import json
+import re
 
 
 class WhiteStuffSpider(CrawlSpider):
@@ -47,21 +48,22 @@ class WhiteStuffSpider(CrawlSpider):
         return response.css('meta[itemprop="priceCurrency"]::attr(content)').get()
 
     def product_gender(self, response):
-        category_list = response.css('.breadcrumb-list__item > a::text').getall()
-        category = " ".join(category_list)
+        categories = response.css('.breadcrumb-list__item > a::text').getall()
+        category = " ".join(categories)
         return [gender for gender in self.gender if gender in category.lower()]
 
     def skus(self, response):
         product_detail = []
 
         response_json = response.text.split('=')[1][:-1]
-        response_json = response_json.replace("\n", '') \
-            .replace("//this is temporary until the feature is supported in the backoffice", '').replace("\\", '')
+        response_json = re.sub('\n | //this is temporary until the feature is supported in the backoffice', '',
+                               response_json)
+        response_json = re.sub(r"\\", "'", response_json)
         response_json = json.loads(response_json)
-        skus_dict = response_json['productVariations']
+        product_variations = response_json['productVariations']
 
-        for skus_key in skus_dict:
-            skus = skus_dict[skus_key]
+        for skus_key in product_variations:
+            skus = product_variations[skus_key]
             product = {
                 'color': skus['colour'],
                 'size': skus['size'],
@@ -76,3 +78,4 @@ class WhiteStuffSpider(CrawlSpider):
             product_detail.append(product)
 
         return product_detail
+
