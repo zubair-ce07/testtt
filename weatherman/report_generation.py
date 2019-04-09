@@ -1,9 +1,9 @@
 from calculations import Calculator
 
-class  Printer:
-    color_blue="\033[1;34;40m+"
-    color_red="\033[1;31;40m+"
-    color_white="\033[1;37;40m"        
+class  ReportGenerator:
+    COLOR_BLUE = "\033[1;34;40m+"
+    COLOR_RED = "\033[1;31;40m+"
+    COLOR_WHITE = "\033[1;37;40m"        
 
     def print_averges(self, max_avg, min_avg, mean_humdity):
         
@@ -17,6 +17,7 @@ class  Printer:
     def print_graph(self, final_values, input_date):
 
         print(f'{input_date:%B }{input_date:%Y}')
+        
         for value in final_values:
             self.draw_graph(value.date.day, value.max_temp, value.min_temp)
 
@@ -31,7 +32,8 @@ class  Printer:
     def draw_graph(self, day, max_temp, min_temp):
         
         print(day, end=' ')
-        print(self.color_blue*min_temp, end='')
-        print(self.color_red*max_temp, end='')
-        print(f'{self.color_white} {min_temp}C', end=' ')
-        print(f'{self.color_white} {max_temp}C')
+        print(self.COLOR_BLUE*min_temp, end='')
+        print(self.COLOR_RED*max_temp, end='')
+        print(f'{self.COLOR_WHITE} {min_temp}C', end=' ')
+        print(f'{self.COLOR_WHITE} {max_temp}C')
+
