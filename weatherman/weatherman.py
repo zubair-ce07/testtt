@@ -27,23 +27,23 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("basepath", help="directory path",
                         type=str)
-    parser.add_argument("-e", "--date_for_max", help="year to get max teprature",
+    parser.add_argument("-e", "--max_date", help="year to get max teprature",
                         type=lambda d: datetime.datetime.strptime(d, '%Y').date())
-    parser.add_argument("-a", "--date_for_avg", help="Year and month to get average temprature",
+    parser.add_argument("-a", "--avg_date", help="Year and month to get average temprature",
                         type=lambda d: datetime.datetime.strptime(d, '%Y/%m').date())
-    parser.add_argument("-c", "--date_for_graph", help="Year and month to Draw graphs",
+    parser.add_argument("-c", "--graph_date", help="Year and month to Draw graphs",
                         type=lambda d: datetime.datetime.strptime(d, '%Y/%m').date())
     args = parser.parse_args()  
     all_data = reader.read_files(args.basepath)
     
-    if args.date_for_max:
-        find_max_values(all_data, args.date_for_max, generator, calculator)   
+    if args.max_date:
+        find_max_values(all_data, args.max_date, generator, calculator)   
     
-    if args.date_for_avg:
-        find_avg_values(all_data, args.date_for_avg, generator, calculator)
+    if args.avg_date:
+        find_avg_values(all_data, args.avg_date, generator, calculator)
     
-    if args.date_for_graph:
-        generate_graph(all_data, args.date_for_graph, generator, calculator)
+    if args.graph_date:
+        generate_graph(all_data, args.graph_date, generator, calculator)
     
 if __name__ == '__main__':
     main()
