@@ -8,5 +8,4 @@ class WeatherRecord:
         self.max_temp = int(record.get("Max TemperatureC"))
         self.min_temp = int(record.get("Min TemperatureC"))
         self.max_humidity = int(record.get("Max Humidity"))
-        self.mean_humidity = int(record.get(" Mean Humidity"))
-        
+        self.mean_humidity = int(record.get(" Mean Humidity")) 
