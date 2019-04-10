@@ -5,21 +5,6 @@ from files_reading import FileReader
 from calculations import Calculator
 
 
-def find_max_values(all_data, input_date, generator, calculator):
-    max_temp, min_temp, max_humidity = calculator.getting_temperatures(all_data, input_date)
-    generator.generate_maximums(max_temp, min_temp, max_humidity)
-
-
-def find_avg_values(all_data, input_date, generator, calculator):
-    max_avg, min_avg, mean_humdity = calculator.calculating_averages(all_data, input_date)
-    generator.generate_averges(max_avg, min_avg, mean_humdity)
-
-
-def generate_graph(all_data, input_date, generator, calculator):
-    final_values = calculator.getting_records(all_data, input_date)
-    generator.generate_graph(final_values, input_date)
-    
-
 def main():
     generator = ReportGenerator()
     reader = FileReader()
@@ -37,14 +22,16 @@ def main():
     all_data = reader.read_files(args.basepath)
     
     if args.max_date:
-        find_max_values(all_data, args.max_date, generator, calculator)   
-    
+        max_temp, min_temp, max_humidity = calculator.get_temperatures(all_data, args.max_date)
+        generator.generate_maximums(max_temp, min_temp, max_humidity)
+
     if args.avg_date:
-        find_avg_values(all_data, args.avg_date, generator, calculator)
+        max_avg, min_avg, mean_humdity = calculator.calculate_averages(all_data, args.avg_date)
+        generator.generate_averges(max_avg, min_avg, mean_humdity)
     
     if args.graph_date:
-        generate_graph(all_data, args.graph_date, generator, calculator)
+        final_values = calculator.get_records(all_data, args.graph_date)
+        generator.generate_graph(final_values, args.graph_date)
     
 if __name__ == '__main__':
     main()
-
