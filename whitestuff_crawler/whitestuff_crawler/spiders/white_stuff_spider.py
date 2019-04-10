@@ -55,8 +55,8 @@ class WhiteStuffSpider(CrawlSpider):
     def skus(self, response):
         product_detail = []
 
-        response_json = self.parse_json_response(response)
-        product_variations = response_json['productVariations']
+        raw_product = self.parse_product_response(response)
+        product_variations = raw_product['productVariations']
 
         for skus_key in product_variations:
             skus = product_variations[skus_key]
@@ -75,10 +75,7 @@ class WhiteStuffSpider(CrawlSpider):
 
         return product_detail
 
-    def parse_json_response(self, response):
-        json_product_id = re.findall('(ProductJSON\[.*\])', response.text)[0]
-        response_json = response.text.replace(json_product_id, "var x")
-        response_json = js2py.eval_js(response_json)
-
-        return response_json
+    def parse_product_response(self, response):
+        raw_product = re.sub('ProductJSON\[.*\]', 'var x ', response.text)
+        return js2py.eval_js(raw_product)
 
