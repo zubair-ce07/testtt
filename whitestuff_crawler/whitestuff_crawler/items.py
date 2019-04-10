@@ -7,7 +7,7 @@
 
 import scrapy
 from scrapy.loader import ItemLoader
-from scrapy.loader.processors import TakeFirst
+from scrapy.loader.processors import TakeFirst, MapCompose
 
 
 class ProductLoader(ItemLoader):
@@ -15,6 +15,7 @@ class ProductLoader(ItemLoader):
     skus_out = list
     category_out = list
     image_urls_out = list
+    name_in = MapCompose(str.strip)
 
 
 class WhitestuffCrawlerItem(scrapy.Item):
@@ -28,3 +29,5 @@ class WhitestuffCrawlerItem(scrapy.Item):
     care = scrapy.Field()
     image_urls = scrapy.Field()
     skus = scrapy.Field()
+
+

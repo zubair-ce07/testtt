@@ -65,11 +65,13 @@ class WhiteStuffSpider(CrawlSpider):
                 'size': skus['size'],
                 'skus_id': skus['colour'] + "_" + skus["size"],
                 'currency': self.currency,
-                'out_of_stock': skus['inStock'],
                 'price': skus['salePrice']
             }
             if skus['salePrice'] != skus['listPrice']:
                 product.update({'previous_price': skus['listPrice']})
+
+            if not skus['inStock']:
+                product.update({'out_of_stock': 'True'})
 
             product_detail.append(product)
 
@@ -78,4 +80,5 @@ class WhiteStuffSpider(CrawlSpider):
     def parse_product_response(self, response):
         raw_product = re.sub('ProductJSON\[.*\]', 'var x ', response.text)
         return js2py.eval_js(raw_product)
+
 
