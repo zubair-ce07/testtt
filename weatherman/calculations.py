@@ -3,7 +3,7 @@ import datetime
 class Calculator: 
     
     def calculating_averages(self, all_data, input_date):
-        records = [record for record in all_data if self.is_valid(record, input_date)]         
+        records = [record for record in all_data if self.is_valid_record(record, input_date)]         
         avg_max_temp = sum([item.max_temp for item in records]) // len(records)
         avg_min_temp = sum([item.min_temp for item in records]) // len(records)
         avg_mean_humidity = sum([item.max_humidity for item in records]) // len(records)
@@ -18,9 +18,9 @@ class Calculator:
         
         return record_max_temp, record_min_temp, record_max_humd
         
-    def getting_min_max(self, all_data, input_date):
-        return [record for record in all_data if self.is_valid(record, input_date)]
+    def getting_records(self, all_data, input_date):
+        return [record for record in all_data if self.is_valid_record(record, input_date)]
 
-    def is_valid(self, record, input_date):
+    def is_valid_record(self, record, input_date):
         return record.date.year == input_date.year and record.date.month == input_date.month
-
+    
