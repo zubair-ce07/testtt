@@ -139,12 +139,13 @@ class CarharttCrawler(CrawlSpider):
         return pricing
 
     def colour_requests(self, response, item):
+        pricing = self.product_pricing(response)
         css = '#product-details ::attr(data-inventory-url)'
         colours = response.css('.pdpRedesign a ::attr(title)').extract()
         colour_ids = response.css('.pdpRedesign a ::attr(data-attr-val-id)').extract()
         raw_product = {i.split('=')[0]: i.split('=')[1] for i in response.css(css).extract_first().split('&')}
 
         if colour_ids and colours:
-            return [Request(url=self.colour_url_t.format(colour_id, raw_product['storeId'],
-                    raw_product['productId']), callback=self.parse_colour, meta={'colour': colour, 'item': item,
-                    'pricing': self.product_pricing(response)}) for colour_id, colour in zip(colour_ids, colours)]
+            return [Request(url=self.colour_url_t.format(colour_id, raw_product['storeId'], raw_product['productId']),
+                    callback=self.parse_colour, meta={'colour': colour, 'item': item, 'pricing': pricing})
+                    for colour_id, colour in zip(colour_ids, colours)]
