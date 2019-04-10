@@ -16,7 +16,7 @@ class  ReportGenerator:
         print(f'{input_date:%B }{input_date:%Y}')
         
         for value in final_values:
-            self.formatting_graph(value.date.day, value.max_temp, value.min_temp)
+            self.format_graph(value.date.day, value.max_temp, value.min_temp)
 
     def generate_maximums(self, max_temp, min_temp, max_humidity):
         print("\n---------------------------")   
@@ -25,10 +25,9 @@ class  ReportGenerator:
         print (f"Max Humidity {max_humidity.max_humidity}% on {max_humidity.date: %B} {max_humidity.date.day}")             
         print("\n---------------------------")
            
-    def formatting_graph(self, day, max_temp, min_temp):
+    def format_graph(self, day, max_temp, min_temp):
         print(day, end=' ')
-        print(self.COLOR_BLUE*min_temp, end='')
-        print(self.COLOR_RED*max_temp, end='')
+        print(self.COLOR_BLUE * min_temp, end='')
+        print(self.COLOR_RED * max_temp, end='')
         print(f'{self.COLOR_WHITE} {min_temp}C', end=' ')
         print(f'{self.COLOR_WHITE} {max_temp}C')
-
