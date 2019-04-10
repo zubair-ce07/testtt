@@ -156,8 +156,8 @@ class SavagexCrawler(CrawlSpider):
         return json.loads(sku_r.search(response.text).group(1))['initialProps']['pageProps']['product']
 
     def colour_requests(self, response, item):
-        css = '[property="og:price:currency"] ::attr(content)'
-        raw_colours = [i["related_product_id"] for i in self.raw_product(response)['related_product_id_object_list']]
+        currency = response.css('[property="og:price:currency"] ::attr(content)').extract_first()
+        colour_ids = [i["related_product_id"] for i in self.raw_product(response)['related_product_id_object_list']]
 
-        return [Request(callback=self.parse_colour, meta={'item': item, 'currency': response.css(css).extract_first()},
-                        url=self.colour_url_t.format(colour_id), headers=self.headers) for colour_id in raw_colours]
+        return [Request(url=self.colour_url_t.format(colour_id), callback=self.parse_colour, headers=self.headers,
+                        meta={'item': item, 'currency': currency}) for colour_id in colour_ids]
