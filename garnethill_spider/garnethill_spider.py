@@ -10,7 +10,6 @@ from garnethill_spider.items import GarnethillSpiderItem
 class GarnethillParseSpider(CrawlSpider):
 
     name = 'garnethill-us-parse'
-
     homeware_industries = ['rugs', 'decor', 'home', 'furniture', 'bed', 'bath']
     image_url_t = 'https://akamai-scene7.garnethill.com/is/image/{}?$ghpdp_hero2$'
     image_req_t = 'https://akamai-scene7.garnethill.com/is/image/garnethill/{}_is?req=imageset,json&id={}'
@@ -76,7 +75,7 @@ class GarnethillParseSpider(CrawlSpider):
         raw_care = raw_product[0].get('productAdditionalInfoTabs') or \
                    raw_product[0].get('pageProduct', {}).get('productAdditionalInfoTabs', [])
 
-        if raw_care[0].get('tabHtmlValue'):
+        if raw_care and raw_care[0].get('tabHtmlValue'):
             return raw_care[0]['tabHtmlValue'].split(';')[4::4]
 
         return []
