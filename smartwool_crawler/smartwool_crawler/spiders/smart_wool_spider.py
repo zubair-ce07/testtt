@@ -6,7 +6,7 @@ import json
 import re
 
 
-class WhiteStuffSpider(CrawlSpider):
+class SmartWoolSpider(CrawlSpider):
     name = 'smart_wool_spider'
     start_urls = ['https://www.smartwool.com/homepage.html']
     category_css = '.topnav-accordion-l3-dropdown'
@@ -51,6 +51,28 @@ class WhiteStuffSpider(CrawlSpider):
         product.add_value('image_urls', self.product_image_urls(response))
         return product.load_item()
 
+    def parse_product_page(self, response):
+        self.store_id = response.css('meta[name="storeId"]::attr(content)').get()
+        self.lang_id = response.css('meta[name="langId"]::attr(content)').get()
+        self.catalog_id = response.css('meta[name="catalogId"]::attr(content)').get()
+        self.category_id = response.css('meta[name="categoryId"]::attr(content)').get()
+
+        for size in self.page_size:
+            requested_url = self.page_request_url(response, size)
+            yield scrapy.Request(url=requested_url, callback=self.parse_product_request)
+
+    def parse_product_request(self, response):
+        urls = re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+',
+                          response.text)
+        if urls:
+            for url in urls[:-1]:
+                yield scrapy.Request(url=url, callback=self.parse_item)
+
+    def page_request_url(self, response, page_size):
+        url = f"{response.url}/VFAjaxGetFilteredSearchResultsView?categoryId={self.category_id}&searchSource=N&storeId={self.store_id}&" \
+            f"catalogId={self.catalog_id}&langId={self.lang_id}&beginIndex={page_size}&returnProductsOnly=true&requesttype=ajax"
+        return url
+
     def parse_skus(self, response):
         product = response.meta['product']
         product['skus'] = self.skus(response)
@@ -60,7 +82,6 @@ class WhiteStuffSpider(CrawlSpider):
     def skus(self, response):
         product = response.meta['product']
         product_detail = []
-        skus = {}
         raw_product = json.loads(response.text)
         stock = self.stock_detail(raw_product, product['size_key'])
 
@@ -69,14 +90,13 @@ class WhiteStuffSpider(CrawlSpider):
                 sku_id = str(sku_id)
                 stock, size = stock[sku_id]
 
-                sku = product['prices_detail']
-                sku['color'] = color['display']
-                sku['size'] = size
-
+                skus = product['prices_detail']
+                skus['color'] = color['display']
+                skus['size'] = size
+                skus['sku_id'] = color['display'] + "_" + size
                 if not stock:
-                    sku['out_of stock'] = True
+                    skus['out_of stock'] = True
 
-                skus['sku_id'] = sku
                 product_detail.append(skus)
 
         return product_detail
@@ -117,29 +137,8 @@ class WhiteStuffSpider(CrawlSpider):
 
         return product_price
 
-    def parse_product_page(self, response):
-        self.store_id = response.css('meta[name="storeId"]::attr(content)').get()
-        self.lang_id = response.css('meta[name="langId"]::attr(content)').get()
-        self.catalog_id = response.css('meta[name="catalogId"]::attr(content)').get()
-        self.category_id = response.css('meta[name="categoryId"]::attr(content)').get()
-
-        for size in self.page_size:
-            requested_url = self.page_request_url(response, size)
-            yield scrapy.Request(url=requested_url, callback=self.parse_product_request)
-
-    def parse_product_request(self, response):
-        urls = re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+',
-                          response.text)
-        if urls:
-            for url in urls[:-1]:
-                yield scrapy.Request(url=url, callback=self.parse_item)
-
-    def page_request_url(self, response, page_size):
-        url = f"{response.url}/VFAjaxGetFilteredSearchResultsView?categoryId={self.category_id}&searchSource=N&storeId={self.store_id}&" \
-            f"catalogId={self.catalog_id}&langId={self.lang_id}&beginIndex={page_size}&returnProductsOnly=true&requesttype=ajax"
-        return url
-
     def product_image_urls(self, response):
         image_urls = response.css(
             '.product-content-form-attr-container.attr-container.attr-container-js.collapsable-container-js.color-swatches-js img::attr(src)').getall()
         return ["https:" + image for image in image_urls]
+
