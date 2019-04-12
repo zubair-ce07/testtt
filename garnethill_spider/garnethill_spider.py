@@ -31,19 +31,17 @@ class GarnethillParseSpider(CrawlSpider):
         item['retailer_sku'] = self.product_id(raw_product)
         item['description'] = self.product_description(raw_product)
         item['meta'] = {'requests_queue': self.image_url_requests(raw_product, item)}
-        item['industry'] = self.is_home_ware(item)
+        item['industry'] = ''
+
+        if self.is_homeware(item):
+            item['gender'] = None
+            item['industry'] = 'homeware'
 
         return self.next_request_or_item(item)
 
-    def is_home_ware(self, item):
-
-        for category in item['category']:
-
-            if any(homeware in category.lower() for homeware in self.homeware_industries):
-                item['gender'] = None
-                return 'homeware'
-
-        return ''
+    def is_homeware(self, item):
+        return any(homeware in category.lower() for category in item['category']
+                   for homeware in self.homeware_industries)
 
     def next_request_or_item(self, item):
         requests = item['meta']['requests_queue']
