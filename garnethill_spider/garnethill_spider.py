@@ -1,8 +1,10 @@
 import re
 import json
 
-from w3lib.url import add_or_replace_parameter
-from scrapy.spiders import CrawlSpider, Request
+from scrapy.link import Link
+from w3lib.html import remove_tags
+from scrapy.linkextractors import LinkExtractor
+from scrapy.spiders import CrawlSpider, Request, Rule
 
 from garnethill_spider.items import GarnethillSpiderItem
 
@@ -20,7 +22,6 @@ class GarnethillParseSpider(CrawlSpider):
 
         item['lang'] = 'en'
         item['market'] = 'USA'
-        item['gender'] = 'women'
         item['image_urls'] = []
         item['url'] = response.url
         item['brand'] = 'Garnet Hill'
@@ -31,11 +32,19 @@ class GarnethillParseSpider(CrawlSpider):
         item['retailer_sku'] = self.product_id(raw_product)
         item['description'] = self.product_description(raw_product)
         item['meta'] = {'requests_queue': self.image_url_requests(raw_product, item)}
-        item['industry'] = ''
 
         if self.is_homeware(item):
-            item['gender'] = None
             item['industry'] = 'homeware'
+        else:
+            item['gender'] = 'women'
+            item['industry'] = ''
+
+        return self.next_request_or_item(item)
+
+    def parse_image_urls(self, response):
+        item = response.meta['item']
+        raw_urls = re.search(':"(.*)"}', response.text).group(1).split(',')
+        item['image_urls'] = [self.image_url_t.format(i) for url in raw_urls for i in url.split(';')]
 
         return self.next_request_or_item(item)
 
@@ -74,20 +83,9 @@ class GarnethillParseSpider(CrawlSpider):
                    raw_product[0].get('pageProduct', {}).get('productAdditionalInfoTabs', [])
 
         if raw_care and raw_care[0].get('tabHtmlValue'):
-            return raw_care[0]['tabHtmlValue'].split(';')[4::4]
+            return [remove_tags(i) for i in raw_care[0]['tabHtmlValue'].split(';')[4::4]]
 
         return []
-
-    def raw_pages(self, response):
-        css = 'script:contains("numberOfProducts") ::text'
-        return json.loads(response.css(css).re_first(re.compile('/\*(.*)\*/', re.DOTALL)))
-
-    def parse_image_urls(self, response):
-        item = response.meta['item']
-        raw_urls = re.search(':"(.*)"}', response.text).group(1).split(',')
-        item['image_urls'] = [self.image_url_t.format(i) for url in raw_urls for i in url.split(';')]
-
-        return self.next_request_or_item(item)
 
     def product_id(self, raw_product):
         return raw_product[0].get('prodId') or raw_product[0]['pageProduct']['prodId']
@@ -114,19 +112,19 @@ class GarnethillParseSpider(CrawlSpider):
                     if sku_id['optionItemKey'] == colour_id:
                         sku['colour'] = sku_id['displayName']
                     if sku_id['optionItemKey'] == size_id:
-                        sku['size'] = sku_id['displayName'] or 'One Size'
+                        sku['size'] = sku_id.get('displayName') or 'One Size'
 
                 skus[f'{sku["colour"]}_{sku["size"]}'] = sku
 
         return skus
 
     def product_description(self, raw_product):
-        description = raw_product[0].get('longDesc') or raw_product[0].get('pageProduct', [])
+        description = raw_product[0].get('longDesc')
 
-        if description and type(description) != str:
-            return [description.get('longDesc')] or []
-        elif description and type(description) == str:
-            return [description]
+        if description:
+            return [remove_tags(description)]
+        elif raw_product[0].get('pageProduct'):
+            return [remove_tags(raw_product[0]['pageProduct'].get('longDesc'))] or []
 
         return []
 
@@ -137,8 +135,8 @@ class GarnethillParseSpider(CrawlSpider):
                         callback=self.parse_image_urls)]
 
     def product_pricing(self, raw_product, raw_sku):
+        prev_price = raw_sku.get('minListPrice') or raw_sku.get('listPrice')
         pricing = {'price': raw_sku.get('minimumPrice') or raw_sku['contractPrice']}
-        prev_price = raw_sku.get('minListPrice') or raw_sku.get('listPrice', '')
         pricing['currency'] = raw_product[0].get('currencyCode') or \
                               raw_product[0]['pageProduct']['currencyCode']
 
@@ -152,48 +150,36 @@ class GarnethillParseSpider(CrawlSpider):
         return raw_ids[0]['optionItemKey'], raw_ids[1]['optionItemKey']
 
 
+class CategoryLE(LinkExtractor):
+
+    def extract_links(self, response):
+        raw_categories = response.css('.menuItem li a ::attr(href)').extract()
+        return [Link(response.urljoin(category)) for category in raw_categories]
+
+
 class GarnethillCrawlSpider(CrawlSpider):
 
     name = 'garnethill-us-crawl'
     allowed_domains = ['garnethill.com']
-    start_urls = ['https://www.garnethill.com/']
-
     cookies = {'INTL_SHIPPING_CTX': 'US|USD'}
-
-    headers = {
-        'authority': 'www.garnethill.com',
-        'accept-language': 'en-US,en;q=0.9',
-        'accept-encoding': 'gzip, deflate, br',
-        'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) '
-        'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.75 Safari/537.36',
-    }
-
+    start_urls = ['https://www.garnethill.com/']
     category_url_t = 'https://www.garnethill.com/UnbxdAPI?returnRespAsJSON=true&categoryId={}&rows=100'
+
+    rules = (
+        Rule(CategoryLE(), callback='parse_pagination'),
+    )
 
     parse_spider = GarnethillParseSpider()
 
-    def parse_start_url(self, response):
-        return Request(url=response.url, callback=self.parse_categories)
-
-    def parse_categories(self, response):
-        raw_categories = response.css('.menuItem li a ::attr(href)').extract()
-
-        return [Request(url=response.urljoin(category), callback=self.parse_pagination, headers=self.headers,
-                        cookies=self.cookies) for category in raw_categories]
-
     def parse_pagination(self, response):
-        raw_pages = self.parse_spider.raw_pages(response)
-
-        return Request(url=self.category_url_t.format(raw_pages.get('categoryId')), headers=self.headers,
-                       callback=self.parse_listings, cookies=self.cookies)
+        raw_pages = self.raw_pages(response)
+        return Request(url=self.category_url_t.format(raw_pages.get('categoryId')), callback=self.parse_listings,
+                       cookies=self.cookies)
 
     def parse_listings(self, response):
-        requests = []
+        return [Request(url=response.urljoin(product['productDetailTargetURL']), callback=self.parse_spider.parse,
+                        cookies=self.cookies) for product in json.loads(response.text)['products']]
 
-        for product in json.loads(response.text)['products']:
-            next_url = response.urljoin(product['productDetailTargetURL'])
-
-            requests.append(Request(url=add_or_replace_parameter(next_url, 'listIndex', product['listIndex']),
-                                    callback=self.parse_spider.parse, headers=self.headers, cookies=self.cookies))
-
-        return requests
+    def raw_pages(self, response):
+        css = 'script:contains("numberOfProducts") ::text'
+        return json.loads(response.css(css).re_first(re.compile('/\*(.*)\*/', re.DOTALL)))
