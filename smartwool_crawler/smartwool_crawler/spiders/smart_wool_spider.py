@@ -1,9 +1,11 @@
-from scrapy.linkextractors import LinkExtractor
-from scrapy.spiders import Rule, CrawlSpider
-from smartwool_crawler.items import SmartwoolCrawlerItem, ProductLoader
-import scrapy
 import json
 import re
+
+import scrapy
+from scrapy.linkextractors import LinkExtractor
+from scrapy.spiders import Rule, CrawlSpider
+
+from smartwool_crawler.items import SmartwoolCrawlerItem, ProductLoader
 
 
 class SmartWoolSpider(CrawlSpider):
@@ -14,10 +16,6 @@ class SmartWoolSpider(CrawlSpider):
 
     gender = ("womens", "mens", "kids")
     allow_links = ('/shop')
-    page_size = ['24', '48', '72', '96']
-    store_id = ''
-    category_id = ''
-    product_id = ''
 
     rules = (
         Rule(LinkExtractor(allow=allow_links, restrict_css=category_css), callback='parse_product_page'),
@@ -26,20 +24,22 @@ class SmartWoolSpider(CrawlSpider):
 
     def parse_item(self, response):
         product = self.parse_info(response)
-        product['size_key'] = response.css('.attr-size::attr(data-attribute-id)').get()
-        product['color_key'] = response.css('.attr-color-js::attr(data-attribute-id)').get()
-        product['prices_detail'] = self.product_price_detail(response)
-        product['size'] = self.product_size(response)
+        raw_product = {}
+        raw_product['size_key'] = response.css('.attr-size::attr(data-attribute-id)').get()
+        raw_product['color_key'] = response.css('.attr-color-js::attr(data-attribute-id)').get()
+        raw_product['prices_detail'] = self.product_price_detail(response)
+        raw_product['size'] = self.product_size(response)
+        store_id = response.css('meta[name="storeId"]::attr(content)').get()
 
         request_url = (f"https://www.smartwool.com/webapp/wcs/stores/servlet/VFAjaxProductAvailabilityView?"
-                       f"storeId={self.store_id}& &productId={self.product_id}")
+                       f"storeId={store_id}& &productId={self.product_id(response)}")
 
-        return scrapy.Request(request_url, meta={"product": product}, callback=self.parse_skus)
+        return scrapy.Request(request_url, meta={"product": product, "raw_product": raw_product},
+                              callback=self.parse_skus)
 
     def parse_info(self, response):
         product = ProductLoader(item=SmartwoolCrawlerItem(), response=response)
-        self.product_id = response.css('#product-imgs::attr(data-product-id)').get()
-        product.add_value('pid', self.product_id)
+        product.add_value('pid', self.product_id(response))
         product.add_value('gender', self.product_gender(response))
         product.add_value('category', self.product_category(response))
         product.add_value('brand', 'Smart Wool')
@@ -51,38 +51,44 @@ class SmartWoolSpider(CrawlSpider):
         return product.load_item()
 
     def parse_product_page(self, response):
-        self.store_id = response.css('meta[name="storeId"]::attr(content)').get()
-        self.category_id = response.css('meta[name="categoryId"]::attr(content)').get()
+        category_id = response.css('meta[name="categoryId"]::attr(content)').get()
+        start_index = 24
+        end_index = self.extarct_page_end_index(response)
 
-        for size in self.page_size:
-            requested_url = f"{response.url}/VFAjaxGetFilteredSearchResultsView?categoryId={self.category_id}&beginIndex={size}"
-            yield scrapy.Request(url=requested_url, callback=self.parse_product_request)
+        for size in range(start_index, end_index, 24):
+            url = self.extract_product_url(category_id, size)
+            yield scrapy.Request(url=url, callback=self.parse_product_request)
 
     def parse_product_request(self, response):
-        urls = re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),])+', response.text)
+        urls = re.findall('https://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),])+', response.text)
         if urls:
             for url in urls[:-1]:
                 yield scrapy.Request(url=url, callback=self.parse_item)
 
+    def extract_product_url(self, category_id, size):
+        return f"https://www.smartwool.com/shop/VFAjaxGetFilteredSearchResultsView?categoryId={category_id}&beginIndex={size}"
+
+    def extarct_page_end_index(self, response):
+        page = response.css('.header-result-counter::text').getall()
+        return int(page[1].split(' ')[1])
+
     def parse_skus(self, response):
         product = response.meta['product']
         product['skus'] = self.skus(response)
-
-        del product['prices_detail'], product['color_key'], product['size'], product['size_key']
         return product
 
     def skus(self, response):
-        product = response.meta['product']
+        raw_meta = response.meta['raw_product']
         product_detail = []
 
         raw_product = json.loads(response.text)
-        stock_detail = self.stock_detail(raw_product, product['size_key'])
+        stock_detail = self.stock_detail(raw_product, raw_meta['size_key'])
 
-        for color in raw_product['attributes'][product['color_key']]:
+        for color in raw_product['attributes'][raw_meta['color_key']]:
             for sku_id in color['catentryId']:
                 stock, size = stock_detail[str(sku_id)]
 
-                skus = product['prices_detail']
+                skus = raw_meta['prices_detail']
                 skus['color'] = color['display']
                 skus['size'] = size
                 skus['sku_id'] = color['display'] + "_" + size
@@ -96,7 +102,8 @@ class SmartWoolSpider(CrawlSpider):
         stock_detail = {}
 
         for sku_id, stock in raw_product['stock'].items():
-            size = [size['display'] for size in raw_product['attributes'][size_key] if sku_id in str(size['catentryId'])]
+            size = [size['display'] for size in raw_product['attributes'][size_key] if
+                    sku_id in str(size['catentryId'])]
             stock_detail[sku_id] = (stock, '/'.join(size))
 
         return stock_detail
@@ -129,4 +136,7 @@ class SmartWoolSpider(CrawlSpider):
     def product_image_urls(self, response):
         image_urls = response.css('.color-swatches-js img::attr(src)').getall()
         return ["https:" + image for image in image_urls]
+
+    def product_id(self, response):
+        return response.css('#product-imgs::attr(data-product-id)').get()
 
