@@ -21,8 +21,10 @@ class GarnethillParseSpider(CrawlSpider):
         raw_product = self.raw_product(response)
 
         item['lang'] = 'en'
+        item['industry'] = ''
         item['market'] = 'USA'
         item['image_urls'] = []
+        item['gender'] = 'women'
         item['url'] = response.url
         item['brand'] = 'Garnet Hill'
         item['skus'] = self.skus(raw_product)
@@ -34,10 +36,8 @@ class GarnethillParseSpider(CrawlSpider):
         item['meta'] = {'requests_queue': self.image_url_requests(raw_product, item)}
 
         if self.is_homeware(item):
+            item['gender'] = None
             item['industry'] = 'homeware'
-        else:
-            item['gender'] = 'women'
-            item['industry'] = ''
 
         return self.next_request_or_item(item)
 
@@ -173,8 +173,8 @@ class GarnethillCrawlSpider(CrawlSpider):
 
     def parse_pagination(self, response):
         raw_pages = self.raw_pages(response)
-        return Request(url=self.category_url_t.format(raw_pages.get('categoryId')), callback=self.parse_listings,
-                       cookies=self.cookies)
+        return Request(url=self.category_url_t.format(raw_pages.get('categoryId')),
+                       callback=self.parse_listings, cookies=self.cookies)
 
     def parse_listings(self, response):
         return [Request(url=response.urljoin(product['productDetailTargetURL']), callback=self.parse_spider.parse,
