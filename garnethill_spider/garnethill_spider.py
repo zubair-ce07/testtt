@@ -1,7 +1,6 @@
 import re
 import json
 
-from scrapy.link import Link
 from w3lib.html import remove_tags
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Request, Rule
@@ -14,7 +13,7 @@ class GarnethillParseSpider(CrawlSpider):
     name = 'garnethill-us-parse'
     homeware_industries = ['rugs', 'decor', 'home', 'furniture', 'bed', 'bath']
     image_url_t = 'https://akamai-scene7.garnethill.com/is/image/{}?$ghpdp_hero2$'
-    image_req_t = 'https://akamai-scene7.garnethill.com/is/image/garnethill/{}_is?req=imageset,json&id={}'
+    image_req_t = 'https://akamai-scene7.garnethill.com/is/image/garnethill/{0}_is?req=imageset,json&id={0}'
 
     def parse(self, response):
         item = GarnethillSpiderItem()
@@ -123,16 +122,12 @@ class GarnethillParseSpider(CrawlSpider):
 
         if description:
             return [remove_tags(description)]
-        elif raw_product[0].get('pageProduct'):
-            return [remove_tags(raw_product[0]['pageProduct'].get('longDesc'))] or []
 
-        return []
+        return [remove_tags(raw_product[0]['pageProduct'].get('longDesc'))] or []
 
     def image_url_requests(self, raw_product, item):
         product_id = raw_product[0].get('mfPartNumber') or raw_product[0]['pageProduct']['mfPartNumber']
-
-        return [Request(url=self.image_req_t.format(product_id, product_id), meta={'item': item},
-                        callback=self.parse_image_urls)]
+        return [Request(url=self.image_req_t.format(product_id), meta={'item': item}, callback=self.parse_image_urls)]
 
     def product_pricing(self, raw_product, raw_sku):
         prev_price = raw_sku.get('minListPrice') or raw_sku.get('listPrice')
@@ -150,13 +145,6 @@ class GarnethillParseSpider(CrawlSpider):
         return raw_ids[0]['optionItemKey'], raw_ids[1]['optionItemKey']
 
 
-class CategoryLE(LinkExtractor):
-
-    def extract_links(self, response):
-        raw_categories = response.css('.menuItem li a ::attr(href)').extract()
-        return [Link(response.urljoin(category)) for category in raw_categories]
-
-
 class GarnethillCrawlSpider(CrawlSpider):
 
     name = 'garnethill-us-crawl'
@@ -166,7 +154,7 @@ class GarnethillCrawlSpider(CrawlSpider):
     category_url_t = 'https://www.garnethill.com/UnbxdAPI?returnRespAsJSON=true&categoryId={}&rows=100'
 
     rules = (
-        Rule(CategoryLE(), callback='parse_pagination'),
+        Rule(LinkExtractor(restrict_css='.menuItem li'), callback='parse_pagination'),
     )
 
     parse_spider = GarnethillParseSpider()
