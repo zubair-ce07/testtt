@@ -127,7 +127,8 @@ class GarnethillParseSpider(CrawlSpider):
 
     def image_url_requests(self, raw_product, item):
         product_id = raw_product[0].get('mfPartNumber') or raw_product[0]['pageProduct']['mfPartNumber']
-        return [Request(url=self.image_req_t.format(product_id), meta={'item': item}, callback=self.parse_image_urls)]
+        return [Request(url=self.image_req_t.format(product_id), meta={'item': item},
+                        callback=self.parse_image_urls)]
 
     def product_pricing(self, raw_product, raw_sku):
         prev_price = raw_sku.get('minListPrice') or raw_sku.get('listPrice')
