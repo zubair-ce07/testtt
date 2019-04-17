@@ -1,15 +1,7 @@
-# -*- coding: utf-8 -*-
-
-# Define here the models for your scraped items
-#
-# See documentation in:
-# https://doc.scrapy.org/en/latest/topics/items.html
-
 import scrapy
 
 
 class DecimasCrawlerItem(scrapy.Item):
-   
     retailer_sku = scrapy.Field()
     trail = scrapy.Field()
     gender = scrapy.Field()
@@ -20,8 +12,8 @@ class DecimasCrawlerItem(scrapy.Item):
     name = scrapy.Field()
     description = scrapy.Field()
     care = scrapy.Field()
-    img_urls = scrapy.Field()
+    image_urls = scrapy.Field()
     skus = scrapy.Field()
-    final_price = scrapy.Field()
-    old_price = scrapy.Field()
+    price = scrapy.Field()
+    previous_price = scrapy.Field()
     currency = scrapy.Field()
