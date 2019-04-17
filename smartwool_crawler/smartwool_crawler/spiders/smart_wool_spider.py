@@ -53,7 +53,7 @@ class SmartWoolSpider(CrawlSpider):
     def parse_product_page(self, response):
         category_id = response.css('meta[name="categoryId"]::attr(content)').get()
         start_index = 24
-        end_index = self.extarct_page_end_index(response)
+        end_index = self.extract_page_end_index(response)
 
         for size in range(start_index, end_index, 24):
             url = self.extract_product_url(category_id, size)
@@ -68,7 +68,7 @@ class SmartWoolSpider(CrawlSpider):
     def extract_product_url(self, category_id, size):
         return f"https://www.smartwool.com/shop/VFAjaxGetFilteredSearchResultsView?categoryId={category_id}&beginIndex={size}"
 
-    def extarct_page_end_index(self, response):
+    def extract_page_end_index(self, response):
         page = response.css('.header-result-counter::text').getall()
         return int(page[1].split(' ')[1])
 
@@ -109,12 +109,12 @@ class SmartWoolSpider(CrawlSpider):
         return stock_detail
 
     def product_category(self, response):
-        category_list = response.css('.page-breadcrumb-list a::text,.page-breadcrumb-list span::text').getall()
-        return [categorry.strip() for categorry in category_list]
+        categories = response.css('.page-breadcrumb-list a::text,.page-breadcrumb-list span::text').getall()
+        return [category.strip() for category in categories]
 
     def product_gender(self, response):
-        category_list = self.product_category(response)
-        category = " ".join(category_list)
+        categories = self.product_category(response)
+        category = " ".join(categories)
         return [gender for gender in self.gender if gender in category.lower()]
 
     def product_size(self, response):
