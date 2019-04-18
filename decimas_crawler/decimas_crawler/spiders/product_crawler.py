@@ -32,7 +32,7 @@ class ProductCrawlerSpider(scrapy.spiders.CrawlSpider):
         item['currency'] = self.extract_currency(response)
         item['price'] = self.extract_final_price(response)
         yield item
-
+        
     def extract_retailer_sku(self, response):
         return response.css('div.price-box::attr(data-product-id)').extract_first()
         
@@ -123,6 +123,7 @@ class ProductCrawlerSpider(scrapy.spiders.CrawlSpider):
         return skus
 
     def raw_products(self, response):
-        script_text = response.css("script[type='text/x-magento-init']::text").extract()
-        json_object = json.loads(script_text[10])
+        script_text = response.xpath("//script[contains(text(),'[data-role=swatch-options]')]/text()").extract_first()
+        #script_text = response.css("script[type='text/x-magento-init']::text").extract()
+        json_object = json.loads(script_text)
         return json_object["[data-role=swatch-options]"]["Magento_Swatches/js/swatch-renderer"]["jsonConfig"]
