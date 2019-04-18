@@ -1,11 +1,11 @@
 
-from ..items import DecimasCrawlerItem
-from ..mappings import Mapping
+import json
 import scrapy
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
+from ..items import DecimasCrawlerItem
+from ..mappings import Mapping
 from ..utility_functions import get_price, gender_extractor
-import json
 
 
 class ProductCrawlerSpider(scrapy.spiders.CrawlSpider):
@@ -16,7 +16,7 @@ class ProductCrawlerSpider(scrapy.spiders.CrawlSpider):
         Rule(LinkExtractor(restrict_css=".clever-mega-menu"), callback='parse', follow=True),
         Rule(LinkExtractor(restrict_css="li.product-item"), callback='parse_item', follow=True),
     )
-
+        
     def parse_item(self, response): 
         item = DecimasCrawlerItem()
         item['retailer_sku'] = self.extract_retailer_sku(response)
@@ -78,7 +78,8 @@ class ProductCrawlerSpider(scrapy.spiders.CrawlSpider):
         return images_urls    
     
     def extract_skus(self, response):
-        skus =[]
+        skus = []
+        single_sku = {}
         data = self.raw_products(response)   
         currency = data['currencyFormat']
         currency = (currency.replace("%s",u' ')).strip()
@@ -88,9 +89,14 @@ class ProductCrawlerSpider(scrapy.spiders.CrawlSpider):
             for size in data['attributes']['154']['options']:
                 for k in color['products']:
                     for t in size['products']:
-                        if k==t:
-                            skus.append(self.make_sku(data['optionPrices'][t]['finalPrice']['amount'], \
-                            currency, color['label'], size['label'], k, previous_price))
+                        if k == t:
+                            single_sku['price'] = data['optionPrices'][t]['finalPrice']['amount']
+                            single_sku['currency'] = currency
+                            single_sku['size'] = size['label']
+                            single_sku['color'] = color['label']
+                            single_sku['sku_id'] = k
+                            single_sku['previous_price'] = previous_price
+                            skus.append(single_sku)
         return skus
 
     def extract_currency(self, response):
@@ -124,6 +130,5 @@ class ProductCrawlerSpider(scrapy.spiders.CrawlSpider):
 
     def raw_products(self, response):
         script_text = response.xpath("//script[contains(text(),'[data-role=swatch-options]')]/text()").extract_first()
-        #script_text = response.css("script[type='text/x-magento-init']::text").extract()
-        json_object = json.loads(script_text)
-        return json_object["[data-role=swatch-options]"]["Magento_Swatches/js/swatch-renderer"]["jsonConfig"]
+        mapped_data = json.loads(script_text)
+        return mapped_data["[data-role=swatch-options]"]["Magento_Swatches/js/swatch-renderer"]["jsonConfig"]
