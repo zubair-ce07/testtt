@@ -1,6 +1,6 @@
 from scrapy.spiders import Rule
 
-from .base import BaseParseSpider, BaseCrawlSpider, LinkExtractor, clean, Gender
+from .base import BaseParseSpider, BaseCrawlSpider, LinkExtractor, clean, soupify
 
 
 class Mixin:
@@ -8,8 +8,6 @@ class Mixin:
     retailer = 'vagabond'
     default_brand = 'Vagabond'
     allowed_domains = ['vagabond.com']
-
-    gender = Gender.WOMEN.value
 
 
 class MixinUK(Mixin):
@@ -34,6 +32,7 @@ class VagabondParseSpider(BaseParseSpider):
         self.boilerplate_normal(garment, response)
 
         garment['skus'] = self.skus(response)
+        garment["gender"] = self.product_gender(response)
         garment['image_urls'] = self.image_urls(response)
 
         return garment
@@ -41,6 +40,10 @@ class VagabondParseSpider(BaseParseSpider):
     def product_id(self, response):
         css = 'script:contains(\'ecommerce\')::text'
         return response.css(css).re_first('\'id\':\s*\'(.*)\',')
+
+    def product_gender(self, response):
+        soup = soupify([response.url] + self.product_category(response))
+        return self.gender_lookup(soup)
 
     def product_category(self, response):
         return [i[1] for i in response.meta['trail']][-1].split('/')[4:-1]
