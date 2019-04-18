@@ -118,16 +118,6 @@ class ProductCrawlerSpider(scrapy.spiders.CrawlSpider):
         current_price = [x.replace(u'\xa0€', u' ') for x in current_price if x]
         return get_price(current_price)    
 
-    def make_sku(self, price, currency, color, size, sku_id, previous_price):
-        skus = {}
-        skus['price'] = price
-        skus['currency'] = currency
-        skus['size'] = size
-        skus['color'] = color
-        skus['sku_id'] = sku_id
-        skus ['previous_price'] = previous_price
-        return skus
-
     def raw_products(self, response):
         script_text = response.xpath("//script[contains(text(),'[data-role=swatch-options]')]/text()").extract_first()
         mapped_data = json.loads(script_text)
