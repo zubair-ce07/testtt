@@ -35,7 +35,7 @@ class VagabondParseSpider(BaseParseSpider):
         return garment
 
     def product_category(self, response):
-        return [i[0] for i in response.meta['trail']]
+        return [clean(i[0]) for i in response.meta.get('trail')]
 
     def product_name(self, response):
         return soupify(clean(response.css('.product_name ::text')))
@@ -60,27 +60,26 @@ class VagabondParseSpider(BaseParseSpider):
         if colour:
             common_sku['colour'] = colour
 
-        if sizes_s:
-
-            for size_s in sizes_s:
-                sku = common_sku.copy()
-                sku['size'] = clean(size_s.css('::text')[0])
-
-                if size_s.css('.disabled'):
-                    sku['out_of_stock'] = True
-
-                skus[f'{colour}_{sku["size"]}' if colour else sku["size"]] = sku
-
-        else:
+        if not sizes_s:
             common_sku['size'] = self.one_size
             skus[f'{colour}_{self.one_size}' if colour else self.one_size] = common_sku
+            return skus
+
+        for size_s in sizes_s:
+            sku = common_sku.copy()
+            sku['size'] = clean(size_s.css('::text')[0])
+
+            if size_s.css('.disabled'):
+                sku['out_of_stock'] = True
+
+            skus[f'{colour}_{sku["size"]}' if colour else sku["size"]] = sku
 
         return skus
 
 
 class VagabondCrawlSpider(BaseCrawlSpider):
     listings_css = ['.header__main--nav .main li']
-    products_css = ['#ProductList a']
+    products_css = ['#ProductList']
 
     rules = (
         Rule(LinkExtractor(restrict_css=listings_css), process_request='process_request', callback='parse'),
