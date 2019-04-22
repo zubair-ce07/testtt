@@ -34,7 +34,7 @@ class VagabondParseSpider(BaseParseSpider):
         return garment
 
     def product_category(self, response):
-        return clean(t[0] for t in response.meta.get('trail') or [])
+        return clean([t[0] for t in response.meta.get('trail') or []])
 
     def product_name(self, response):
         return soupify(clean(response.css('.product_name ::text')))
