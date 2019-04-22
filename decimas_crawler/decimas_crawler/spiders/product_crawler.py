@@ -1,8 +1,7 @@
-
 import json
 import scrapy
 from scrapy.linkextractors import LinkExtractor
-from scrapy.spiders import Rule
+from scrapy.spiders import Rule, Request
 from ..items import DecimasCrawlerItem
 from ..mappings import Mapping
 from ..utility_functions import get_price, gender_extractor
@@ -16,9 +15,21 @@ class ProductCrawlerSpider(scrapy.spiders.CrawlSpider):
         Rule(LinkExtractor(restrict_css=".clever-mega-menu"), callback='parse', follow=True),
         Rule(LinkExtractor(restrict_css="li.product-item"), callback='parse_item', follow=True),
     )
+   
+    def parse(self, response): 
+        trail = []
+        url = response.url
+        title = response.css('title::text').extract_first() 
+        requests = super().parse(response)
+        for request in requests:
+            trail.append((title, url))
+            request.meta['trail'] = trail     
+            yield request
         
     def parse_item(self, response): 
         item = DecimasCrawlerItem()
+        item['trail'] = self.extract_trail(response)
+        item ['category'] = self.extract_category(response)
         item['retailer_sku'] = self.extract_retailer_sku(response)
         item['gender'] = self.extract_gender(response)
         item['brand'] = self.extract_brand(response)
@@ -31,8 +42,18 @@ class ProductCrawlerSpider(scrapy.spiders.CrawlSpider):
         item['skus'] = self.extract_skus(response)
         item['currency'] = self.extract_currency(response)
         item['price'] = self.extract_final_price(response)
+       
         yield item
-        
+    
+    def extract_category(self, response):
+        return response.css('title::text').extract_first()
+
+    def extract_trail(self, response):
+        trail = []
+        trail.append(("", "https://www.decimas.es"))
+        trail.append (response.meta['trail'][len(response.meta['trail'])-1])
+        return trail
+    
     def extract_retailer_sku(self, response):
         return response.css('div.price-box::attr(data-product-id)').extract_first()
         
@@ -43,11 +64,10 @@ class ProductCrawlerSpider(scrapy.spiders.CrawlSpider):
     def extract_brand(self, response):
         brand_names = response.css('a.brand img::attr(title)').extract()
         product_name = self.extract_name(response)
-
         for brand in brand_names:
             if brand.lower() in product_name.lower():
                 return brand
-    
+            
     def extract_url(self, response):
         return response.url
     
@@ -75,8 +95,11 @@ class ProductCrawlerSpider(scrapy.spiders.CrawlSpider):
                 product_images = image_sources[product]
                 for product_image in product_images:
                     images_urls.append(product_image['full'])       
-        return images_urls    
-    
+        return images_urls
+
+    def extract_title(self, response):
+        return response.css('title:text').extract_first()    
+             
     def extract_skus(self, response):
         skus = []
         single_sku = {}
@@ -90,7 +113,7 @@ class ProductCrawlerSpider(scrapy.spiders.CrawlSpider):
                 for k in color['products']:
                     for t in size['products']:
                         if k == t:
-                            single_sku['price'] = data['optionPrices'][t]['finalPrice']['amount']
+                            single_sku['price'] = 100 * (data['optionPrices'][t]['finalPrice']['amount'])
                             single_sku['currency'] = currency
                             single_sku['size'] = size['label']
                             single_sku['color'] = color['label']
