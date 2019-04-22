@@ -13,7 +13,6 @@ class MixinUK(Mixin):
     market = 'UK'
     retailer = Mixin.retailer + '-uk'
     start_urls = ['https://www.vagabond.com/']
-    image_url_t = 'https://www.vagabond.com{}'
 
 
 class VagabondParseSpider(BaseParseSpider):
@@ -35,7 +34,7 @@ class VagabondParseSpider(BaseParseSpider):
         return garment
 
     def product_category(self, response):
-        return [clean(i[0]) for i in response.meta.get('trail')]
+        return clean(t[0] for t in response.meta.get('trail') or [])
 
     def product_name(self, response):
         return soupify(clean(response.css('.product_name ::text')))
@@ -49,7 +48,7 @@ class VagabondParseSpider(BaseParseSpider):
 
     def product_image_urls(self, response):
         css = '.product-image-navigation.thumbs img ::attr(data-src)'
-        return [self.image_url_t.format(rel_url) for rel_url in clean(response.css(css))]
+        return [response.urljoin(url) for url in clean(response.css(css))]
 
     def skus(self, response):
         skus = {}
@@ -67,7 +66,7 @@ class VagabondParseSpider(BaseParseSpider):
 
         for size_s in sizes_s:
             sku = common_sku.copy()
-            sku['size'] = clean(size_s.css('::text')[0])
+            sku['size'] = clean(size_s.css('::text'))[0]
 
             if size_s.css('.disabled'):
                 sku['out_of_stock'] = True
