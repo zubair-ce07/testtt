@@ -1,31 +1,18 @@
 import argparse
 from urllib.parse import urljoin, urlparse
 from multiprocessing import Pool, Manager
-from lxml import html
 import time
 import logging
 
 import requests
+from lxml import html
 
 logging.basicConfig(level=logging.DEBUG, format='%(relativeCreated)6d %(threadName)s %(message)s')
 
 
-class Configuration:
-
-    def parse_config(self):
-        arg_parser = argparse.ArgumentParser()
-        arg_parser.add_argument('-u', '--url', type=validate_url,
-                                help='Enter site url --Input format: https://website.com/ ')
-        arg_parser.add_argument('-d', '--delay', type=int, help='Enter delay time ')
-        arg_parser.add_argument('-t', '--threads', type=int, help='Enter concurrent call requests')
-        arg_parser.add_argument('-l', '--limit', type=int, help='Total urls to visit limit')
-
-        return arg_parser.parse_args()
-
-
 class FetchResponse:
-    def __init__(self, base_url):
-        self.base_url = base_url
+    def __init__(self, start_url):
+        self.start_url = start_url
 
     def parse_url_response(self, url):
         raw_response = requests.get(url)
@@ -33,28 +20,22 @@ class FetchResponse:
 
     def parse_urls(self, raw_response_text):
         response = html.fromstring(raw_response_text)
-        return response.xpath('//a[contains(@href, "/")]/@href')
+        return response.xpath('//a[contains(@href, "/")]/@href')[0]
 
     def fetch_absolute_urls(self, relative_urls):
-        absoulte_urls = []
-        for url in relative_urls:
-            if 'http' not in url:
-                absoulte_urls.append(urljoin(self.base_url, url))
-            else:
-                absoulte_urls.append(url)
-        return absoulte_urls
+        return [urljoin(self.start_url, url) for url in relative_urls]
 
-    def fetch_domain_urls(self, absolute_urls):
-        return [url for url in absolute_urls if self.base_url in url]
+    def filter_urls(self, absolute_urls):
+        return [url for url in absolute_urls if self.start_url in url]
 
 
 class Scheduler:
-    def __init__(self, base_url, delay, threads, max_urls_limit):
-        self.base_url = base_url
+    def __init__(self, start_url, delay, threads, max_urls_limit):
+        self.start_url = start_url
         self.delay = delay
         self.threads = threads
         self.max_urls_limit = max_urls_limit
-        self.extracted_urls = Manager().list([base_url])
+        self.extracted_urls = Manager().list([start_url])
         self.visited_urls = Manager().list()
         self.total_bytes_downloaded = Manager().Value('value', 0)
         self.total_pages_crawled = Manager().Value('value', 0)
@@ -62,10 +43,10 @@ class Scheduler:
 
     def crawl_parallel(self):
         while len(self.visited_urls) < self.max_urls_limit:
-            p = Pool(self.threads)
-            p.apply(self.get_next_urls)
-            p.terminate()
-            p.join()
+            pool = Pool(self.threads)
+            pool.apply(self.get_next_urls)
+            pool.terminate()
+            pool.join()
 
         return self.total_bytes_downloaded.value, self.total_pages_crawled.value, self.total_errors.value
 
@@ -73,7 +54,7 @@ class Scheduler:
         url = self.extracted_urls.pop()
         self.visited_urls.append(url)
 
-        fetch = FetchResponse(self.base_url)
+        fetch = FetchResponse(self.start_url)
         raw_response_status_code, raw_response_text = fetch.parse_url_response(url)
         time.sleep(self.delay)
 
@@ -83,7 +64,7 @@ class Scheduler:
 
             relative_urls = fetch.parse_urls(raw_response_text)
             absolute_urls = fetch.fetch_absolute_urls(relative_urls)
-            domain_urls = fetch.fetch_domain_urls(absolute_urls)
+            domain_urls = fetch.filter_urls(absolute_urls)
 
             domain_urls = set(domain_urls)
             domain_urls = domain_urls - set(self.visited_urls)
@@ -97,6 +78,7 @@ class Scheduler:
         for url in domain_urls:
             if url not in self.extracted_urls:
                 self.extracted_urls.append(url)
+
 
 class CrawlerReport:
     def __init__(self, total_bytes_downloaded, total_pages_crawled, total_errors):
@@ -115,8 +97,7 @@ class CrawlerReport:
 
 def main():
     try:
-        config = Configuration()
-        args = config.parse_config()
+        args = parse_configuration()
         start_time = time.time()
 
         scheduler = Scheduler(args.url, args.delay, args.threads, args.limit)
@@ -133,8 +114,17 @@ def main():
 def validate_url(url):
     if urlparse(url).netloc and urlparse(url).scheme:
         return url
-    else:
-        raise argparse.ArgumentTypeError('{0} is not a valid url'.format(url))
+
+
+def parse_configuration():
+    arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument('-u', '--url', type=validate_url,
+                            help='Enter site url --Input format: https://website.com/ ')
+    arg_parser.add_argument('-d', '--delay', type=int, help='Enter delay time ')
+    arg_parser.add_argument('-t', '--threads', type=int, help='Enter concurrent call requests')
+    arg_parser.add_argument('-l', '--limit', type=int, help='Total urls to visit limit')
+
+    return arg_parser.parse_args()
 
 
 if __name__ == '__main__':
