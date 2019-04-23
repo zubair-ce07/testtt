@@ -20,26 +20,26 @@ def main():
 
 	if args.year_data:
 		max_temp, date = weather.calculate_max_temperature(date_arguments[0])
-		if max_temp is not None:
+		if max_temp:
 			print('Max Tempterature: ' +  str(max_temp) + ' Date: ' + date)
 		min_temp, date = weather.calculate_min_temperature()
-		if min_temp is not None:	
+		if min_temp:	
 			print('Min Tempterature: ' +  str(min_temp) + ' Date: ' + date)
 		max_humidity, date = weather.calculate_max_humidity()
-		if max_humidity is not None:	
+		if max_humidity:	
 			print('Max Humidity: ' +  str(max_humidity) + ' Date: ' + date)
 		else :
 			print ('The year list is empty')		
 		
 	elif args.month_data:
 		avg_max = weather.calculate_average_max_temperature(date_arguments[0], int(date_arguments[1]))
-		if avg_max is not None:
+		if avg_max:
 			print('Maximum average temperature: ' + str(avg_max))
 		avg_min = weather.calculate_average_min_temperature()
-		if avg_min is not None:	
+		if avg_min:	
 			print('Minimum average temperature: ' + str(avg_min))
 		avg_humdity = weather.calculate_average_max_humidity()
-		if avg_humdity is not None:
+		if avg_humdity:
 			print('Maximum average humidity: ' + str(avg_humdity))
 		else:
 			print('The month list is empty')
