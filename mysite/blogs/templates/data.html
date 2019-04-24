@@ -14,6 +14,9 @@
 
         <th>Delete</th>
 
+        <th>Edit</th>
+
+
 
     </tr>
     {% for item in list %}
@@ -34,6 +37,15 @@
             <td> <form method="post" action="{{delete_url}}">
                 {% csrf_token %}
                 <button type="submit">Delete</button>
+            </form></td>
+
+        {%endif%}
+
+        {% if item.user_id == id %}
+            {% url 'edit' item.id as edit_url%}
+            <td> <form method="post" action="{{edit_url}}">
+                {% csrf_token %}
+                <button type="submit">edit</button>
             </form></td>
 
         {%endif%}

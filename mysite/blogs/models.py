@@ -1,7 +1,7 @@
 from django.db import models
+from django.contrib.auth.models import User
 
-
-class Contents(models.Model):
+class Blog(models.Model):
 
     blog_text = models.CharField(max_length=100000)
     blog_date = models.DateTimeField('date of blog')
@@ -10,5 +10,7 @@ class Contents(models.Model):
     status = models.IntegerField(choices=((1, ("Public")),
                                           (2, ("Private"))),
                                  default=1)
+    #user = models.OneToOneField(User)
+
 
 
