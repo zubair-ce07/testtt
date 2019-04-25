@@ -8,9 +8,15 @@ import requests
 from lxml import html
 
 
-class HtmlParser:
-    def __init__(self, start_url):
+class Crawler:
+    def __init__(self, start_url, delay, threads, max_urls_limit):
         self.start_url = start_url
+        self.delay = delay
+        self.threads = threads
+        self.max_urls_limit = max_urls_limit
+        self.visited_urls = Manager().list()
+        self.crawler_stats = CrawlStats()
+        self.scheduler = Scheduler(self.start_url)
 
     def parse_url_response(self, url):
         raw_response = requests.get(url)
@@ -26,52 +32,56 @@ class HtmlParser:
     def filter_domain_urls(self, absolute_urls):
         return [url for url in absolute_urls if self.start_url in url]
 
-
-class Scheduler:
-    def __init__(self, start_url, delay, threads, max_urls_limit):
-        self.start_url = start_url
-        self.delay = delay
-        self.threads = threads
-        self.max_urls_limit = max_urls_limit
-        self.extracted_urls = Manager().list([start_url])
-        self.visited_urls = Manager().list()
-        self.crawler_stats = CrawlStats()
-
     def crawl_parallel(self):
         while len(self.visited_urls) < self.max_urls_limit:
             pool = Pool(self.threads)
-            pool.apply(self.get_url_response)
+            pool.apply(self.fetch_url_response)
             pool.terminate()
             pool.join()
 
         return self.crawler_stats
 
-    def get_url_response(self):
-        url = self.extracted_urls.pop()
+    def fetch_url_response(self):
+        url = self.scheduler.get_next_url()
         self.visited_urls.append(url)
 
-        fetch = HtmlParser(self.start_url)
-        raw_response_status_code, raw_response_text = fetch.parse_url_response(url)
-
+        raw_response_status_code, raw_response_text = self.parse_url_response(url)
         time.sleep(self.delay)
-        self.fetch_next_urls(fetch, raw_response_status_code, raw_response_text)
+        self.fetch_next_urls(raw_response_status_code, raw_response_text)
 
-    def fetch_next_urls(self, fetch, raw_response_status_code, raw_response_text):
+    def fetch_next_urls(self, raw_response_status_code, raw_response_text):
         if raw_response_status_code == 200:
-            self.crawler_stats.bytes_downloaded.value += len(raw_response_text)
-            self.crawler_stats.pages_crawled.value += 1
+            self.calculate_bytes_downloaded(raw_response_text)
+            self.calculate_pages_crawled()
 
-            relative_urls = fetch.parse_urls(raw_response_text)
-            absolute_urls = fetch.fetch_absolute_urls(relative_urls)
-            domain_urls = fetch.filter_domain_urls(absolute_urls)
+            relative_urls = self.parse_urls(raw_response_text)
+            absolute_urls = self.fetch_absolute_urls(relative_urls)
+            domain_urls = self.filter_domain_urls(absolute_urls)
 
             domain_urls = set(domain_urls)
             domain_urls = domain_urls - set(self.visited_urls)
 
-            self.add_next_urls(domain_urls)
+            self.scheduler.add_next_urls(domain_urls)
 
         else:
-            self.crawler_stats.errors += 1
+            self.calculate_errors()
+
+    def calculate_bytes_downloaded(self, raw_response_text):
+        self.crawler_stats.bytes_downloaded.value += len(raw_response_text)
+
+    def calculate_pages_crawled(self):
+        self.crawler_stats.pages_crawled.value += 1
+
+    def calculate_errors(self):
+        self.crawler_stats.errors.value += 1
+
+
+class Scheduler:
+    def __init__(self, start_url):
+        self.extracted_urls = Manager().list([start_url])
+
+    def get_next_url(self):
+        return self.extracted_urls.pop()
 
     def add_next_urls(self, domain_urls):
         [self.extracted_urls.append(url) for url in domain_urls if url not in self.extracted_urls]
@@ -97,10 +107,11 @@ def main():
     args = parse_arguments()
     start_time = time.time()
 
-    scheduler = Scheduler(args.url, args.delay, args.threads, args.limit)
-    scheduler.get_url_response()
-    crawl_stats = scheduler.crawl_parallel()
-    crawl_stats.print_crawler_report(start_time)
+    crawler = Crawler(args.url, args.delay, args.threads, args.limit)
+    crawler.fetch_url_response()
+
+    stats = crawler.crawl_parallel()
+    stats.print_crawler_report(start_time)
 
 
 def validate_url(url):
