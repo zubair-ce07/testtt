@@ -8,6 +8,19 @@ import requests
 from lxml import html
 
 
+class HtmlParser:
+    def __init__(self, start_url):
+        self.start_url = start_url
+
+    def parse_response(self, url):
+        raw_response = requests.get(url)
+        return raw_response.status_code, raw_response.text
+
+    def parse_urls(self, raw_response_text):
+        response = html.fromstring(raw_response_text)
+        return response.xpath('//a[contains(@href, "/")]/@href')
+
+
 class Crawler:
     def __init__(self, start_url, delay, threads, max_urls_limit):
         self.start_url = start_url
@@ -17,20 +30,6 @@ class Crawler:
         self.visited_urls = Manager().list()
         self.crawler_stats = CrawlStats()
         self.scheduler = Scheduler(self.start_url)
-
-    def parse_url_response(self, url):
-        raw_response = requests.get(url)
-        return raw_response.status_code, raw_response.text
-
-    def parse_urls(self, raw_response_text):
-        response = html.fromstring(raw_response_text)
-        return response.xpath('//a[contains(@href, "/")]/@href')
-
-    def fetch_absolute_urls(self, relative_urls):
-        return [urljoin(self.start_url, url) for url in relative_urls]
-
-    def filter_domain_urls(self, absolute_urls):
-        return [url for url in absolute_urls if self.start_url in url]
 
     def crawl_parallel(self):
         while len(self.visited_urls) < self.max_urls_limit:
@@ -45,26 +44,36 @@ class Crawler:
         url = self.scheduler.get_next_url()
         self.visited_urls.append(url)
 
-        raw_response_status_code, raw_response_text = self.parse_url_response(url)
-        time.sleep(self.delay)
-        self.fetch_next_urls(raw_response_status_code, raw_response_text)
+        html_parser = HtmlParser(self.start_url)
 
-    def fetch_next_urls(self, raw_response_status_code, raw_response_text):
+        raw_response_status_code, raw_response_text = html_parser.parse_response(url)
+        time.sleep(self.delay)
+        self.crawl_page(html_parser, raw_response_status_code, raw_response_text)
+
+    def crawl_page(self, html_parser, raw_response_status_code, raw_response_text):
         if raw_response_status_code == 200:
             self.calculate_bytes_downloaded(raw_response_text)
             self.calculate_pages_crawled()
 
-            relative_urls = self.parse_urls(raw_response_text)
-            absolute_urls = self.fetch_absolute_urls(relative_urls)
-            domain_urls = self.filter_domain_urls(absolute_urls)
-
-            domain_urls = set(domain_urls)
-            domain_urls = domain_urls - set(self.visited_urls)
-
+            domain_urls = self.fetch_next_urls(html_parser, raw_response_text)
             self.scheduler.add_next_urls(domain_urls)
 
         else:
-            self.calculate_errors()
+            self.calculate_crawled_pages_error()
+
+    def fetch_next_urls(self, html_parser, raw_response_text):
+        relative_urls = html_parser.parse_urls(raw_response_text)
+        absolute_urls = self.fetch_absolute_urls(relative_urls)
+        domain_urls = self.filter_domain_urls(absolute_urls)
+
+        domain_urls = set(domain_urls)
+        return domain_urls - set(self.visited_urls)
+
+    def fetch_absolute_urls(self, relative_urls):
+        return [urljoin(self.start_url, url) for url in relative_urls]
+
+    def filter_domain_urls(self, absolute_urls):
+        return [url for url in absolute_urls if self.start_url in url]
 
     def calculate_bytes_downloaded(self, raw_response_text):
         self.crawler_stats.bytes_downloaded.value += len(raw_response_text)
@@ -72,7 +81,7 @@ class Crawler:
     def calculate_pages_crawled(self):
         self.crawler_stats.pages_crawled.value += 1
 
-    def calculate_errors(self):
+    def calculate_crawled_pages_error(self):
         self.crawler_stats.errors.value += 1
 
 
