@@ -1,5 +1,4 @@
 from django.db import models
-from django.contrib.auth.models import User
 
 class Blog(models.Model):
 
@@ -10,7 +9,5 @@ class Blog(models.Model):
     status = models.IntegerField(choices=((1, ("Public")),
                                           (2, ("Private"))),
                                  default=1)
-    #user = models.OneToOneField(User)
-
 
 
