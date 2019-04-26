@@ -10,7 +10,8 @@ def main():
 	
 	if args.file_name:
 		obj = LifeGame(args.file_name)
-		for counter in range(int(args.iterations)):		
+		for counter in range(int(args.iterations)):
+			obj.populate_new_generation()	
 			obj.display_new_generation()
 			obj.change_transition()
 			print()
