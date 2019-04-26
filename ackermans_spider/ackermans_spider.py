@@ -1,3 +1,4 @@
+import re
 import json
 from urllib.parse import unquote
 
@@ -30,7 +31,7 @@ class MixinZA(Mixin):
                       '(KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36',
     }
 
-    product_url_t = 'https://www.ackermans.co.za/product/{}'
+    product_url_t = 'https://www.ackermans.co.za/product/{}/{}'
     image_url_t = 'https://cdn.ackermans.co.za/product-images/prod/1100_1100_{}.jpg'
     categories_url = 'https://magento.ackermans.co.za/rest/default/V1/pepkor/categoryapi/categories'
 
@@ -51,8 +52,8 @@ class MixinZA(Mixin):
 
 
 class AckermansParseSpider(BaseParseSpider):
-    sizes_map = []
-    colours_map = []
+    sizes_map = {}
+    colours_map = {}
 
     def parse(self, response):
         raw_product = self.raw_product(response)
@@ -67,11 +68,11 @@ class AckermansParseSpider(BaseParseSpider):
         garment['care'] = self.product_care(raw_product)
         garment['name'] = self.product_name(raw_product)
         garment['brand'] = self.product_brand(raw_product)
-        garment["gender"] = self.product_gender(raw_product)
         garment['category'] = self.product_category(raw_product)
         garment['image_urls'] = self.product_image_urls(raw_product)
         garment['description'] = self.product_description(raw_product)
-        garment['skus'] = self.skus(response, raw_product)
+        garment["gender"] = self.product_gender(garment)
+        garment['skus'] = self.skus(raw_product)
 
         if self.is_homeware(response):
             garment['industry'] = 'homeware'
@@ -92,54 +93,53 @@ class AckermansParseSpider(BaseParseSpider):
         return clean(raw_product['custom_attributes'].get('meta_title', ''))
 
     def product_description(self, raw_product):
-        return [raw_product['custom_attributes'].get('meta_description', '')]
+        return [raw_product['custom_attributes'].get('meta_description', [])]
 
     def product_url(self, raw_product):
-        return self.product_url_t.format(raw_product['url_key']+'/'+raw_product['sku'])
+        raw_product["url_key"] = raw_product["url_key"].replace('\n', '')
+
+        if not raw_product["sku"] in raw_product["url_key"]:
+            return self.product_url_t.format(raw_product["url_key"], raw_product["sku"])
+
+        url_key = '-'.join([i for i in raw_product["url_key"].split('-') if i != raw_product["sku"]])
+        return self.product_url_t.format(url_key, raw_product["sku"])
 
     def raw_description(self, raw_product):
-        return raw_product['custom_attributes'].get('meta_description', '').split('\.\s')
+        return re.split('\.\s', raw_product['custom_attributes'].get('meta_description', ''))
 
     def product_category(self, raw_product):
-        return clean(raw_product['custom_attributes'].get('meta_title', '')).split('|')[1:]
+        return clean(raw_product['custom_attributes'].get('meta_title', [])).split('|')[1:]
 
-    def product_gender(self, raw_product):
-        soup = soupify([self.product_name(raw_product)] + self.product_category(raw_product))
+    def product_gender(self, garment):
+        soup = soupify([garment['name']] + garment['category'])
         return self.gender_lookup(soup) or Gender.ADULTS.value
 
-    def skus(self, response, raw_product):
+    def skus(self, raw_product):
         skus = {}
         money_strs = [raw_product['prices']['minimal_price'], raw_product['prices']['price'], self.currency]
-        common_sku = self.product_pricing_common(response, money_strs=money_strs)
-        sizes, colours = self.sizes_and_colours(raw_product)
+        common_sku = self.product_pricing_common(None, money_strs=money_strs)
 
-        if not (colours and sizes):
+        if not (raw_product['color_ids'] and raw_product['size_ids']):
             common_sku['size'] = self.one_size
             skus[self.one_size] = common_sku
             return skus
 
-        for colour in colours:
-            for size in sizes:
+        for colour_code in raw_product['color_ids']:
+            for size_code in raw_product['size_ids']:
                 sku = common_sku.copy()
-                sku['colour'] = colour
-                sku['size'] = size
+                sku['colour'] = self.colours_map[str(colour_code)]
+                sku['size'] = self.sizes_map[str(size_code)]
 
                 if not raw_product['extension_attributes']['stock_item'].get('is_in_stock'):
                     sku['out_of_stock'] = True
 
-                skus[f'{colour}_{size}'] = sku
+                skus[f'{sku["colour"]}_{sku["size"]}'] = sku
 
         return skus
 
-    def sizes_and_colours(self, raw_product):
-        colours = [self.colours_map[str(colour_code)] for colour_code in raw_product['color_ids']]
-        sizes = [self.sizes_map[str(size_code)] for size_code in raw_product['size_ids']]
-        return sizes, colours
-
     def product_image_urls(self, raw_product):
-        if raw_product['custom_attributes'].get('image_name'):
-            return [self.image_url_t.format(raw_product['custom_attributes']['image_name'])]
-        return []
+        image_url = raw_product['custom_attributes'].get('image_name')
+        return [self.image_url_t.format(image_url)] if image_url else []
 
     def is_homeware(self, response):
         return any(homeware in response.meta['category_name'] for homeware in self.homeware_categories)
@@ -164,13 +164,14 @@ class AckermansCrawlSpider(BaseCrawlSpider):
 
     def parse_pagination(self, response):
         page_size = 20
-        products = json.loads(response.text)['product']['data']['total_count']
+        products_counts = json.loads(response.text)['product']['data']['total_count']
         response.meta['trail'] = self.add_trail(response)
-        pages = int(products)//page_size+2
+        pages = int(products_counts)//page_size+2
 
         for page in range(1, pages):
             next_url = add_or_replace_parameter(unquote(response.url), 'search_criteria[current_page]', page)
-            yield Request(url=next_url, headers=self.headers, meta=response.meta.copy(), callback=self.parse_listings)
+            yield Request(url=next_url, headers=self.headers, meta=response.meta.copy(),
+                          callback=self.parse_listings)
 
     def parse_listings(self, response):
         product_ids = [i['sku'] for i in json.loads(response.text)['product']['docs']]
@@ -190,14 +191,11 @@ class AckermansCrawlSpider(BaseCrawlSpider):
 
         for child_category in children_categories:
 
-            if category_trail:
-                categories = category_trail
-
             if child_category['level'] == 2:
                 category_trail = child_category['url_key']
 
             if child_category['level'] >= 3:
-                categories = categories + ' ' + child_category['url_key']
+                categories = category_trail + ' ' + child_category['url_key']
                 requests_ids.append({'category_name': categories, 'category_id': child_category['id']})
 
             self.get_category_ids(child_category['children_data'], requests_ids, category_trail)
