@@ -20,7 +20,7 @@ class MixinZA(Mixin):
     currency = 'ZAR'
     start_urls = ['https://www.ackermans.co.za/']
 
-    unwanted_items = ['toys', 'walkers']
+    unwanted_items = ['toys', 'airtime-and-data', 'amajoya-sweets-promotion']
     homeware_categories = ['homeware', 'furniture', 'decor', 'home', 'bed', 'bath']
 
     headers = {
@@ -67,11 +67,11 @@ class AckermansParseSpider(BaseParseSpider):
         garment['url_original'] = response.url
         garment['care'] = self.product_care(raw_product)
         garment['name'] = self.product_name(raw_product)
+        garment["gender"] = self.product_gender(garment)
         garment['brand'] = self.product_brand(raw_product)
         garment['category'] = self.product_category(raw_product)
         garment['image_urls'] = self.product_image_urls(raw_product)
         garment['description'] = self.product_description(raw_product)
-        garment["gender"] = self.product_gender(garment)
         garment['skus'] = self.skus(raw_product)
 
         if self.is_homeware(response):
@@ -151,7 +151,7 @@ class AckermansCrawlSpider(BaseCrawlSpider):
 
     def parse_categories(self, response):
         response.meta['trail'] = self.add_trail(response)
-        yield Request(url=self.size_and_colour_url, headers=self.headers, callback=self.parse_size_and_colour)
+        yield Request(url=self.size_and_colour_url, headers=self.headers, callback=self.parse_sizes_and_colours)
 
         for url in self.category_ids(response):
             response.meta['category_name'] = url['category_name'].lower()
@@ -200,15 +200,21 @@ class AckermansCrawlSpider(BaseCrawlSpider):
 
             self.get_category_ids(child_category['children_data'], requests_ids, category_trail)
 
-    def parse_size_and_colour(self, response):
-        raw_colours_sizes_maps = json.loads(response.text)['items']
+    def parse_sizes_and_colours(self, response):
 
-        for map in raw_colours_sizes_maps:
-            if map['attribute_code'] == 'color':
-                self.parse_spider.colours_map = {i['value']: i['label'] for i in map['options']}
+        if response:
+            raw_colours_sizes_maps = json.loads(response.text)['items']
 
-            if map['attribute_code'] == 'size':
-                self.parse_spider.sizes_map = {i['value']: i['label'] for i in map['options']}
+            for map in raw_colours_sizes_maps:
+
+                if map['attribute_code'] == 'color':
+                    self.parse_spider.colours_map = {i['value']: i['label'] for i in map['options']}
+
+                if map['attribute_code'] == 'size':
+                    self.parse_spider.sizes_map = {i['value']: i['label'] for i in map['options']}
+
+        else:
+            yield Request(url=self.size_and_colour_url, headers=self.headers, callback=self.parse_sizes_and_colours)
 
 
 class AckermansZAParseSpider(MixinZA, AckermansParseSpider):
