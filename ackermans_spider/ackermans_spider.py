@@ -1,5 +1,6 @@
 import re
 import json
+import itertools
 from urllib.parse import unquote
 
 from scrapy.spiders import Request
@@ -67,11 +68,11 @@ class AckermansParseSpider(BaseParseSpider):
         garment['url_original'] = response.url
         garment['care'] = self.product_care(raw_product)
         garment['name'] = self.product_name(raw_product)
-        garment["gender"] = self.product_gender(garment)
         garment['brand'] = self.product_brand(raw_product)
         garment['category'] = self.product_category(raw_product)
         garment['image_urls'] = self.product_image_urls(raw_product)
         garment['description'] = self.product_description(raw_product)
+        garment["gender"] = self.product_gender(garment)
         garment['skus'] = self.skus(raw_product)
 
         if self.is_homeware(response):
@@ -124,16 +125,15 @@ class AckermansParseSpider(BaseParseSpider):
             skus[self.one_size] = common_sku
             return skus
 
-        for colour_code in raw_product['color_ids']:
-            for size_code in raw_product['size_ids']:
-                sku = common_sku.copy()
-                sku['colour'] = self.colours_map[str(colour_code)]
-                sku['size'] = self.sizes_map[str(size_code)]
+        for colour_code, size_code in itertools.product(raw_product['color_ids'], raw_product['size_ids']):
+            sku = common_sku.copy()
+            sku['colour'] = self.colours_map[str(colour_code)]
+            sku['size'] = self.sizes_map[str(size_code)]
 
-                if not raw_product['extension_attributes']['stock_item'].get('is_in_stock'):
-                    sku['out_of_stock'] = True
+            if not raw_product['extension_attributes']['stock_item'].get('is_in_stock'):
+                sku['out_of_stock'] = True
 
-                skus[f'{sku["colour"]}_{sku["size"]}'] = sku
+            skus[f'{sku["colour"]}_{sku["size"]}'] = sku
 
         return skus
 
@@ -150,23 +150,24 @@ class AckermansCrawlSpider(BaseCrawlSpider):
         yield Request(url=self.categories_url, headers=self.headers, callback=self.parse_categories)
 
     def parse_categories(self, response):
-        response.meta['trail'] = self.add_trail(response)
+        meta = response.meta.copy()
+        meta['trail'] = self.add_trail(response)
         yield Request(url=self.size_and_colour_url, headers=self.headers, callback=self.parse_sizes_and_colours)
 
         for url in self.category_ids(response):
-            response.meta['category_name'] = url['category_name'].lower()
+            meta['category_name'] = url['category_name'].lower()
 
-            if any(unwanted in response.meta['category_name'] for unwanted in self.unwanted_items):
+            if any(unwanted in meta['category_name'] for unwanted in self.unwanted_items):
                 continue
 
-            yield Request(url=self.category_url_t.format(url['category_id']), meta=response.meta.copy(),
+            yield Request(url=self.category_url_t.format(url['category_id']), meta=meta.copy(),
                           headers=self.headers, callback=self.parse_pagination)
 
     def parse_pagination(self, response):
         page_size = 20
-        products_counts = json.loads(response.text)['product']['data']['total_count']
+        products_count = json.loads(response.text)['product']['data']['total_count']
         response.meta['trail'] = self.add_trail(response)
-        pages = int(products_counts)//page_size+2
+        pages = int(products_count)//page_size+2
 
         for page in range(1, pages):
             next_url = add_or_replace_parameter(unquote(response.url), 'search_criteria[current_page]', page)
