@@ -8,7 +8,6 @@ from oltre_crawler.items import OltreCrawlerItem
 
 
 class ParseSpider(scrapy.Spider):
-    start_url = 'https://www.oltre.com/it/'
     name = "parse_spider"
 
     def parse(self, response):
@@ -31,16 +30,16 @@ class ParseSpider(scrapy.Spider):
 
         return self.next_request_or_product(product)
 
-    def color_requests(self, response):
-        color_urls = response.xpath(
-            '(//ul[@class="swatches color"])[1]/li[not(contains(@class,"selectable selected"))]/a/@href').getall()
-        return [response.follow(color, callback=self.parse_skus) for color in color_urls]
-
     def parse_skus(self, response):
         product = response.meta['product']
         product['skus'].append(self.skus(response))
 
         return self.next_request_or_product(product)
+
+    def color_requests(self, response):
+        xpath = '(//ul[@class="swatches color"])[1]/li[not(contains(@class,"selectable selected"))]/a/@href'
+        color_urls = response.xpath(xpath).getall()
+        return [response.follow(color, callback=self.parse_skus) for color in color_urls]
 
     def next_request_or_product(self, product):
         if not product['requests']:
@@ -62,13 +61,11 @@ class ParseSpider(scrapy.Spider):
 
     def product_description(self, response):
         raw_description = response.xpath('//div[@id="description"]/div/text()').getall()
-        description = [description.strip() for description in raw_description]
-        return list(filter(None, description))
+        return [description.strip() for description in raw_description if description.strip()]
 
     def product_care(self, response):
         raw_care = response.css('#wash > div::text').getall()
-        care = [care.strip() for care in raw_care]
-        return list(filter(None, care))
+        return [care.strip() for care in raw_care if care.strip()]
 
     def product_image_urls(self, response):
         image_urls = response.css('.product-thumbnails ::attr(href)').getall()
@@ -79,9 +76,9 @@ class ParseSpider(scrapy.Spider):
             'price': response.css('.price-sales.gtm-sale::text').get().strip().split('€')[1],
             'currency': 'EUR',
         }
-        previous_price = response.xpath('(//span[@class="price-standard"])[1]/text()').getall()
-        if previous_price:
-            product_price['previous_price'] = list(map(str.strip, previous_price))
+        previous_prices = response.xpath('(//span[@class="price-standard"])[1]/text()').getall()
+        if previous_prices:
+            product_price['previous_prices'] = [previous_price.strip() for previous_price in previous_prices]
 
         return product_price
 
@@ -91,18 +88,17 @@ class ParseSpider(scrapy.Spider):
 
     def skus(self, response):
         product_detail = []
-        common_sku = {}
         retailer_sku = self.retailer_sku(response)
         color = response.css('.selected-value::text,.title-variation-color::text ').get()
+        common_sku = self.product_price_detail(response)
+        if color:
+            common_sku['color'] = color.strip()
 
         for size in self.size_options(response):
-            common_sku.update(self.product_price_detail(response))
             common_sku['size'] = size
             common_sku['sku_id'] = retailer_sku + size
-            if color:
-                common_sku['color'] = color.strip()
 
-            product_detail.append(common_sku)
+            product_detail.append(common_sku.copy())
         return product_detail
 
 
@@ -113,12 +109,16 @@ class OltreSpider(CrawlSpider):
     allowed_domains = ['oltre.com']
     parser = ParseSpider()
 
-    category_css = ['.main-menu']
-    product_css = ['.product-name',
-                   '.page-next'
-                   ]
+    category_css = [
+        '.main-menu',
+        '.page-next'
+    ]
+    product_css = [
+        '.product-name'
+    ]
     rules = (
         Rule(LinkExtractor(restrict_css=category_css)),
         Rule(LinkExtractor(restrict_css=product_css), callback=parser.parse)
     )
+
 
