@@ -1,3 +1,7 @@
+"""
+	 driver class by which we initiate all the 
+	 process of generating next generation 
+"""
 import argparse
 from life_game import LifeGame
 
