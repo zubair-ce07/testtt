@@ -1,0 +1,56 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %} Homepage {% endblock %}
+
+{% block content %}
+    {% if user.is_authenticated %}
+        <p>Hi {{ user.username }} | <a href="{% url 'logout' %}">Logout</a></p>
+        <h3>
+            <a href="{% url 'add_blog' %}">Add New Blog</a>
+        </h3>
+
+    {% else %}
+        <p>
+           <a href="{% url 'login' %}">Login/</a>
+           <a href="{% url 'signup' %}">Signup</a>
+        </p>
+    {% endif %}
+
+    <h1>Blogs</h1>
+    <ul>
+        {% for blog in blogs %}
+            <li id="blog_{{blog.id}}">
+                <h3>
+                    {{ blog.blog_title }}
+                    {% if user == blog.user_id %}
+                        <a href="{% url 'edit_blog' blog.id %}">Edit|</a>
+                        <a href="#" class="delete_blog" id="{{blog.id}}">Delete</a>
+                    {% endif %}
+                </h3>
+                {{ blog.blog_description }}
+            </li>
+            <br><br>
+        {% endfor %}
+    </ul>
+
+{% endblock %}
+
+{% block javascript %}
+    <script type="text/javascript">
+        $(document).ready(function(){
+            $('.delete_blog').click(function(event){
+                var blg_id = $(this).attr("id");
+                $.ajax({
+                    method: "GET",
+                    url: "/blogs/delete_blog/",
+                    data: {blog_id: blg_id},
+                    success: function( result ) {
+                        alert('Your blog is successfully deleted');
+                        blog_id = '#blog_' + blg_id;
+                        $(blog_id).remove();
+                    }
+                });
+            });
+        });
+    </script>
+{% endblock %}
