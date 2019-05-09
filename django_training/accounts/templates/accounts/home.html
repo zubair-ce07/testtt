@@ -16,28 +16,65 @@
         </p>
     {% endif %}
 
-    <h1>Blogs</h1>
-    <ul>
-        {% for blog in blogs %}
-            <li id="blog_{{blog.id}}">
-                <h3>
-                    {{ blog.blog_title }}
-                    {% if user == blog.user_id %}
-                        <a href="{% url 'edit_blog' blog.id %}">Edit|</a>
-                        <a href="#" class="delete_blog" id="{{blog.id}}">Delete</a>
-                    {% endif %}
-                </h3>
-                {{ blog.blog_description }}
-            </li>
-            <br><br>
-        {% endfor %}
-    </ul>
+
+    <h1>Blogs List</h1>
+    <div class="panel-group" id="accordion"></div>
+    <!--<ul id="blogs" class="list-group" id="list-tab" role="tablist"></ul>-->
+
+    <!--<ul id="blogs">-->
+        <!--{% for blog in blogs %}-->
+            <!--<li id="blog_{{blog.id}}">-->
+                <!--<h3>-->
+                    <!--{{ blog.blog_title }}-->
+                    <!--{% if user == blog.user_id %}-->
+                        <!--<a href="{% url 'edit_blog' blog.id %}">Edit|</a>-->
+                        <!--<a href="#" class="delete_blog" id="{{blog.id}}">Delete</a>-->
+                    <!--{% endif %}-->
+                <!--</h3>-->
+                <!--{{ blog.blog_description }}-->
+            <!--</li>-->
+            <!--<br><br>-->
+        <!--{% endfor %}-->
+    <!--</ul>-->
 
 {% endblock %}
 
 {% block javascript %}
     <script type="text/javascript">
         $(document).ready(function(){
+            $.ajax({
+                    method: "GET",
+                    url: "/apis/blogs/?format=json",
+                    success: function( blogs ) {
+                        blogs.forEach(function(element){
+                            li = `
+                                <li class="list-group-item">
+                                    <a href="/apis/blog/${element["id"]}/?format=json">${element["blog_title"]}</a>
+                                    <a href="">Edit</a>
+                                    <a href="">Delete</a>
+                                    <p>${element["blog_description"]}</p>
+                                </li>'
+                            `
+
+                            li2 = `
+                                <div class="panel panel-default">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title">
+                                        <a data-toggle="collapse" data-parent="#accordion" href="#blog_${element["id"]}"> ${element["blog_title"]}</a>
+                                        <small>(<a href="#">Edit</a> | <a href="#">Delete</a>)</small>
+                                      </h4>
+                                    </div>
+                                    <div id="blog_${element["id"]}" class="panel-collapse collapse in">
+                                      <div class="panel-body">${element["blog_description"]}</div>
+                                    </div>
+                                </div>
+                            `
+
+                            $(".panel-group").append(li2)
+                        });
+                    }
+            });
+
             $('.delete_blog').click(function(event){
                 var blg_id = $(this).attr("id");
                 $.ajax({

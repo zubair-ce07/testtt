@@ -25,7 +25,7 @@ SECRET_KEY = '(8e(zq&v_5n+wt@+urj9fk5q#5j=*07#5%r3!^ewvg^w%flm@m'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['172.16.10.105']
+ALLOWED_HOSTS = ['172.16.10.105', '127.0.0.1']
 
 
 # Application definition
@@ -37,9 +37,25 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'accounts.apps.AccountsConfig',
+
+    'rest_framework',
+
+    'apis.apps.ApisConfig',
     'blogs.apps.BlogsConfig',
+    'accounts.apps.AccountsConfig',
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',
+    ],
+    # 'DEFAULT_RENDERER_CLASSES': (
+    #     'rest_framework.renderers.JSONRenderer',
+    # ),
+    # 'DEFAULT_PARSER_CLASSES': (
+    #     'rest_framework.parsers.JSONParser',
+    # )
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
