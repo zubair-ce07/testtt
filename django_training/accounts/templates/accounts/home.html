@@ -47,21 +47,20 @@
                     url: "/apis/blogs/?format=json",
                     success: function( blogs ) {
                         blogs.forEach(function(element){
-                            li = `
-                                <li class="list-group-item">
-                                    <a href="/apis/blog/${element["id"]}/?format=json">${element["blog_title"]}</a>
-                                    <a href="">Edit</a>
-                                    <a href="">Delete</a>
-                                    <p>${element["blog_description"]}</p>
-                                </li>'
-                            `
+                            edit = ""
+                            if (element["is_owner"] == true)
+                                edit = `
+                                    <small>(
+                                        <a href="/blogs/edit_blog/${element["id"]}"}>Edit</a>
+                                        | <a href="/blogs/delete_blog/${element["id"]}">Delete</a>)</small>`
+
 
                             li2 = `
                                 <div class="panel panel-default">
                                     <div class="panel-heading">
                                       <h4 class="panel-title">
                                         <a data-toggle="collapse" data-parent="#accordion" href="#blog_${element["id"]}"> ${element["blog_title"]}</a>
-                                        <small>(<a href="#">Edit</a> | <a href="#">Delete</a>)</small>
+                                        ${edit}
                                       </h4>
                                     </div>
                                     <div id="blog_${element["id"]}" class="panel-collapse collapse in">
