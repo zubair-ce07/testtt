@@ -41,7 +41,7 @@ class CabournParseSpider(Mixin, BaseParseSpider):
         return clean(response.css('.product-name ::text'))[0]
 
     def image_urls(self, response):
-        css = '.MagicToolboxSelectorsContainer ::attr(href),.MagicToolboxContainer ::attr(href)'
+        css = '[data-magic-slide-id="zoom"]::attr(href)'
         return clean(response.css(css))
 
     def product_category(self, response):
