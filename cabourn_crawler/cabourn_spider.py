@@ -53,12 +53,9 @@ class CabournParseSpider(Mixin, BaseParseSpider):
         return self.gender_lookup(soup) or Gender.ADULTS.value
 
     def variants(self, response):
-        variant_r = '({"attributes.*}})'
-        script_text = clean(response.xpath('//script[contains(., "Product.ConfigDefaultText")]/text()'))
-        raw_text = re.findall(variant_r, script_text[0])
-        raw_json = json.loads(raw_text[0])
-
-        return raw_json
+        xpath = '//script[contains(., "Product.ConfigDefaultText")]/text()'
+        script = response.xpath(xpath).re_first('\(({.+})\)')
+        return json.loads(script)
 
     def skus(self, response):
         retailer_sku = self.product_id(response)
