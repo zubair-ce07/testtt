@@ -16,6 +16,18 @@ class Mixin:
         'TA.customer': '3a17fee6-217d-4452-b999-a35f1f0be574'
     }
 
+    spider_gender_map = {
+        'girls': Gender.WOMEN.value,
+        'womens': Gender.WOMEN.value,
+        'licks': Gender.WOMEN.value,
+        '2': Gender.WOMEN.value,
+        'guys': Gender.MEN.value,
+        'mens': Gender.MEN.value,
+        'z': Gender.MEN.value,
+        'black': Gender.MEN.value,
+        'new': Gender.MEN.value
+    }
+
 
 class LeeJeansParseSpider(Mixin, BaseParseSpider):
     name = Mixin.retailer + '-parse'
@@ -45,22 +57,16 @@ class LeeJeansParseSpider(Mixin, BaseParseSpider):
         return clean(response.css('.product-title ::text'))[0]
 
     def image_urls(self, response):
-        raw_image = response.css('.cloudzoom-gallery::attr(data-cloudzoom)')
-        return [image_url.re_first('image:(.*?jpg)') for image_url in raw_image]
+        images_s = response.css('.cloudzoom-gallery::attr(data-cloudzoom)')
+        return [image_s.re_first('image:(.*?jpg)') for image_s in images_s]
 
     def product_category(self, response):
         return clean([t[0] for t in response.meta.get('trail', [])])
 
     def product_gender(self, response):
         trail = response.meta['trail'][1][1]
-        category = trail.split('/')[4]
-
-        if category in ('girls', 'womens', 'licks-series', 'black-denim-2', 'new-in-2'):
-            return Gender.WOMEN.value
-        elif category in ('guys', 'mens', 'z-series', 'black-denim', 'new-in'):
-            return Gender.MEN.value
-        else:
-            return Gender.ADULTS.value
+        soup = trail.split('/')[4]
+        return self.gender_lookup(soup.lower()) or Gender.ADULTS.value
 
     def skus(self, response):
         common_sku = self.product_pricing_common(response)
@@ -74,19 +80,21 @@ class LeeJeansParseSpider(Mixin, BaseParseSpider):
             sku = common_sku.copy()
             sku['size'] = size = clean(size_s.css('li ::text'))[0]
 
-            size_type = size_s.css('.size-list + dl .fit-list')
-
-            if size_type:
-                for size_type_s in size_type:
-                    sku['size'] = f'{size}_{clean(size_type_s.css("li ::text"))[0]}'
-
-                    if size_type_s.css('[data-stock="0"]'):
-                        sku['out_of_stock'] = True
-
-            elif size_s.css('[data-stock="0"]'):
+            if size_s.css('[data-stock="0"]'):
                 sku['out_of_stock'] = True
 
-            skus[f'{sku["size"]}_{colour}'] = sku
+            size_type = size_s.css('.size-list + dl .fit-list')
+            for size_type_s in size_type:
+                sku_type = sku.copy()
+                sku_type['size'] = f'{size}_{clean(size_type_s.css("li ::text"))[0]}'
+
+                if size_type_s.css('[data-stock="0"]'):
+                    sku_type['out_of_stock'] = True
+
+                skus[f'{sku_type["size"]}_{colour}'] = sku_type
+
+            if not size_type:
+                skus[f'{sku["size"]}_{colour}'] = sku
 
         return skus
 
@@ -114,3 +122,4 @@ class LeaJeansCrawlSpider(Mixin, BaseCrawlSpider):
 
     def start_requests(self):
         yield Request(self.start_urls[0], callback=self.parse, cookies=self.cookies)
+
