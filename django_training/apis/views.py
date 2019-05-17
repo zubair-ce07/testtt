@@ -12,23 +12,12 @@ class BlogList(generics.ListAPIView):
     serializer_class = BlogSerializer
 
     def list(self, request, *args, **kwargs):
-        pprint(kwargs)
         response = super(BlogList, self).list(request, *args, **kwargs)
 
         for d in response.data:
             d['is_owner'] = d['user_id'] == request.user.id
 
-        pprint(response.data)
-
         return response
-    # def get_serializer_context(self):
-    #     context = super().get_serializer_context()
-    #     context['can_edit'] = True
-    #
-    #     pprint(context)
-    #     # for v in context['view']:
-    #     #     pprint(v)
-    #     return context
 
 
 class CreateBlog(generics.CreateAPIView):

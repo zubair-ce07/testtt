@@ -4,9 +4,33 @@
 
 {% block content %}
     <h2>Add New Blog</h2>
-    <form method="post" action="{% url 'add_blog' %}">
+    <form method="post" id="add_blog" action="{% url 'create_blog_api' %}">
         {% csrf_token %}
         {{ form.as_p}}
         <input type="submit" value="Add Blog">
     </form>
+
+
+    {% block javascript %}
+        <script type="text/javascript">
+            $(document).ready(function(){
+
+                $('#add_blog').submit(function(){
+                    $.ajax({
+                        headers: { "X-CSRFToken": '{{csrf_token}}'},
+                        method: $(this).attr("method"),
+                        url: $(this).attr("action"),
+                        data: $(this).serialize(),
+                        success: function(result){
+                            alert("Successfully added");
+                            window.location.href = "http://172.16.10.105:8080/";
+                        }
+                    });
+
+                    return false;
+                });
+            });
+        </script>
+    {% endblock %}
+
 {% endblock %}
