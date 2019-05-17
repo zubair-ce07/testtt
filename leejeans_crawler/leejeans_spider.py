@@ -1,6 +1,6 @@
 from scrapy.spiders import Rule, Request
 
-from .base import BaseParseSpider, BaseCrawlSpider, LinkExtractor, clean, Gender
+from .base import BaseParseSpider, BaseCrawlSpider, LinkExtractor, clean, Gender, soupify
 
 
 class Mixin:
@@ -64,9 +64,8 @@ class LeeJeansParseSpider(Mixin, BaseParseSpider):
         return clean([t[0] for t in response.meta.get('trail', [])])
 
     def product_gender(self, response):
-        trail = response.meta['trail'][1][1]
-        soup = trail.split('/')[4]
-        return self.gender_lookup(soup.lower()) or Gender.ADULTS.value
+        soup = soupify(clean([t[1] for t in response.meta.get('trail', [])]))
+        return self.gender_lookup(soup) or Gender.ADULTS.value
 
     def skus(self, response):
         common_sku = self.product_pricing_common(response)
