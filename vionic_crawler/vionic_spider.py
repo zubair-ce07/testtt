@@ -64,7 +64,7 @@ class VionicParseSpider(Mixin, BaseParseSpider):
 
         price = variants[0]['price']
         previous_price = variants[0]['compare_at_price']
-        currency = clean(response.css('#in-context-paypal-metadata::attr(data-currency)'))
+        currency = clean(response.css('#in-context-paypal-metadata::attr(data-currency)'))[0]
 
         common_sku = self.product_pricing_common(None, money_strs=[price, previous_price, currency])
 
