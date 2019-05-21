@@ -52,8 +52,7 @@ class VionicParseSpider(Mixin, BaseParseSpider):
     def variants(self, response):
         xpath = '//script[contains(., "window.products.")]/text()'
         script = response.xpath(xpath).re_first('({.*})')
-        raw_variants = json.loads(script)
-        return raw_variants
+        return json.loads(script)
 
     def product_gender(self, raw_variants):
         soup = raw_variants['type']
@@ -65,7 +64,7 @@ class VionicParseSpider(Mixin, BaseParseSpider):
 
         price = variants[0]['price']
         previous_price = variants[0]['compare_at_price']
-        currency = response.css('#in-context-paypal-metadata::attr(data-currency)').get()
+        currency = clean(response.css('#in-context-paypal-metadata::attr(data-currency)'))
 
         common_sku = self.product_pricing_common(None, money_strs=[price, previous_price, currency])
 
@@ -74,7 +73,7 @@ class VionicParseSpider(Mixin, BaseParseSpider):
             sku['colour'] = variant['option1']
             sku['size'] = variant['option2']
 
-            skus[f"{variant['sku']}"] = sku
+            skus[variant['sku']] = sku
 
         return skus
 
