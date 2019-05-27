@@ -25,6 +25,7 @@ class Mixin:
 
 class NnnowParseSpider(Mixin, BaseParseSpider):
     name = Mixin.retailer + '-parse'
+    deny_care = ['The model is']
 
     def parse(self, response):
         raw_variants = self.variants(response)['PdpData']['mainStyle']
@@ -74,17 +75,14 @@ class NnnowParseSpider(Mixin, BaseParseSpider):
     def product_category(self, response):
         return clean(response.css('.nw-breadcrumb-listitem::text'))
 
-    def product_description(self, raw_variant):
+    def raw_description(self, raw_variant):
         description = raw_variant['finerDetails']['specs']['list'] if raw_variant['finerDetails']['specs'] else (
             raw_variant['finerDetails']['whatItDoes']['list'])
 
-        return [desc for desc in clean(description) if not self.care_criteria(desc)]
-
-    def product_care(self, raw_variant):
-        raw_care = raw_variant['finerDetails']['compositionAndCare']['list'] if raw_variant['finerDetails'][
+        care = raw_variant['finerDetails']['compositionAndCare']['list'] if raw_variant['finerDetails'][
             'compositionAndCare'] else []
 
-        return [care for care in clean(raw_care) if self.care_criteria(care)]
+        return description + care
 
     def product_gender(self, raw_variant):
         gender = clean(raw_variant['gender'])
