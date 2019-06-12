@@ -3,7 +3,7 @@ import re
 import csv
 
 from day_weather import DayWeather
-
+from constant import Constant
 
 class WeatherAnalyzer:
     def __init__(self):
@@ -95,6 +95,9 @@ class WeatherAnalyzer:
             if day_data.max_humidity:
                 humidity_avg += int(day_data.max_humidity)
                 count_humidty += 1
+        if count_max_temp == 0:
+
+            return Constant.NULL_VALUE.value, Constant.NULL_VALUE.value, Constant.NULL_VALUE.value
         return (max_temp_avg / count_max_temp,
                 min_temp_avg / count_min_temp,
                 humidity_avg / count_humidty)
