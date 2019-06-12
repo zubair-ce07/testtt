@@ -31,6 +31,7 @@ class WeatherAnalyzer:
             exit()
 
     def read_files(self, files_path):
+        """collects all the data set of and saves in data structure"""
         list_of_files = self.collect_files(files_path)
         for file in list_of_files:
             file_data = self.read_file_data(file)

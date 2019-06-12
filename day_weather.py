@@ -1,4 +1,7 @@
 class DayWeather:
+    """
+        Data structure for weather record
+    """
 
     def __init__(
             self, pkt, max_temperature, mean_temperature, min_temperature,
@@ -8,7 +11,6 @@ class DayWeather:
             mean_visibility, min_visibility, max_wind_speed, mean_wind_speed,
             max_gust_speed, precipitation, cloud_cover, events,
             wind_dir_degrees):
-
         self.pkt = pkt
         self.max_temperature = max_temperature
         self.mean_temperature = mean_temperature
