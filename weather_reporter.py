@@ -52,10 +52,6 @@ class WeatherReporter:
         barchart_data_list = []
         day_num = 1
         for day_data in month_data_list:
-            barchart_min_temp = ""
-            barchart_max_temp = ""
-            temp_max = 0
-            temp_min = 0
             if day_data.max_temperature:
                 temp_max = int(day_data.max_temperature)
                 barchart_max_temp = ColorCode.RED.value + ('+' * temp_max)
