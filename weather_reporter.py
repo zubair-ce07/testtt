@@ -103,6 +103,7 @@ class WeatherReporter:
         print("Humid: " + max_humid_obj.max_humidity +
               "% on " + calendar.month_name[int(max_humidity_date[1])] +
               " " + str(max_humidity_date[2]))
+        print("")
 
     def print_month_temp_report(self, max_temp_avg, min_temp_avg,
                                 humidity_avg):
@@ -115,3 +116,4 @@ class WeatherReporter:
         print("Average Humidity: " +
               str(round(humidity_avg)) +
               "%")
+        print("")

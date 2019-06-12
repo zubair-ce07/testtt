@@ -24,29 +24,17 @@ def read_cmd_arg():
 
     args = parser.parse_args()
     ArgumentValidator.check_number_arguments(args, parser)
+    weather_reporter = WeatherReporter()
+    if args.c:
+        weather_reporter.generate_barchart_report(args.c, args.dir_path)
     if args.e:
-        arg_type = '-e'
-        arg_input = args.e
-    elif args.a:
-        arg_type = '-a'
-        arg_input = args.a
-    elif args.c:
-        arg_type = '-c'
-        arg_input = args.c
+        weather_reporter.generate_year_report(args.e, args.dir_path)
+    if args.a:
+        weather_reporter.generate_month_report(args.a, args.dir_path)
     else:
         print("Invalid Arguments provided")
         return
-    return arg_type, arg_input, args.dir_path
 
 
 if __name__ == "__main__":
-    weather_reporter = WeatherReporter()
-    report_type, report_year, dir_path = read_cmd_arg()
-    if report_type == '-e':
-        weather_reporter.generate_year_report(report_year, dir_path)
-    elif report_type == '-a':
-        weather_reporter.generate_month_report(report_year, dir_path)
-    elif report_type == '-c':
-        weather_reporter.generate_barchart_report(report_year, dir_path)
-    else:
-        print("Invalid Argument")
+    read_cmd_arg()

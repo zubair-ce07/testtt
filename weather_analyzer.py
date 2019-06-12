@@ -71,7 +71,7 @@ class WeatherAnalyzer:
                            key=lambda day_data: int(day_data.max_temperature))
         temp_min_obj = min(year_data_list,
                            key=lambda day_data: int(day_data.min_temperature))
-        max_humid_obj = min(year_data_list,
+        max_humid_obj = max(year_data_list,
                             key=lambda day_data: int(day_data.max_humidity))
         return temp_max_obj, temp_min_obj, max_humid_obj
 
