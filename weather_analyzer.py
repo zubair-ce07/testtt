@@ -5,6 +5,7 @@ import csv
 from day_weather import DayWeather
 from constant import Constant
 
+
 class WeatherAnalyzer:
     def __init__(self):
         self.day_weather_list = []
@@ -37,8 +38,8 @@ class WeatherAnalyzer:
             file_data = self.read_file_data(file)
             for day_data in file_data:
                 if len(day_data) > 2:
-                    if day_data[0] != "PKT" and day_data[0] != "PKST" and day_data[1] and day_data[3] \
-                            and day_data[8]:
+                    if day_data[0] != "PKT" and day_data[0] != "PKST" and \
+                            day_data[1] and day_data[3] and day_data[8]:
                         self.day_weather_list.append(DayWeather(
                             day_data[0], day_data[1],
                             day_data[2], day_data[3],
@@ -96,8 +97,8 @@ class WeatherAnalyzer:
                 humidity_avg += int(day_data.max_humidity)
                 count_humidty += 1
         if count_max_temp == 0:
-
-            return Constant.NULL_VALUE.value, Constant.NULL_VALUE.value, Constant.NULL_VALUE.value
+            return Constant.NULL_VALUE.value, Constant.NULL_VALUE.value, \
+                   Constant.NULL_VALUE.value
         return (max_temp_avg / count_max_temp,
                 min_temp_avg / count_min_temp,
                 humidity_avg / count_humidty)
