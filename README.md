@@ -1,18 +1,40 @@
-the-lab
-=======
+This project is Created using [python](https://www.python.org/download/releases/3.0/).
 
-The purpose of this repo is to help the team lead and his team member in training and evaluating newly hired developers especially fresh grads. Code written by newbies for training/practice will be checked in here and reviewed by their respective team leads. All feedback must be in written on github.
+# Weather Man App
+
+
+A simple app that allows user to generate different report about the weather of Murree
+
+* `Yearly Report` Generate Certain Year Weather Report
+* `Monthly Report` Generate Certain Month Weather Report
+* `Barchart` Populate Certain Month Weather Barchart
+
 
 ## Getting Started
 
-1. Clone this repo on your local machine.
-1. Create a new branch with your name like *alisufian-master* (lower case).
-1. Push this empty branch.
-1. For every assigned task create a new branch e.g. alisufian-borjanspider.
-1. When the task is complete make sure the code confirms to [pep8](https://www.python.org/dev/peps/pep-0008/).
-1. Push the code and create a pull request against your *name-master* branch.
-1. Specify the title of the PR as *name-task* e.g. *Ali Sufian - Weatherman* so its easy to find in the list.
-1. In case you [mess](http://ohshitgit.com/) up the repo.
+These instructions will get you a copy of the project up and running on your local machine for development.
 
-Do not add log files, temp files, data files etc.
-**Do not merge/push anything into master branch**.
+### Prerequisites
+
+Need to have Python installed.
+
+### Installing
+
+First of all clone the project and change to that directory.
+
+```
+git clone https://github.com/arbisoft/the-lab.git
+```
+
+No external modules required
+
+
+### Starting
+
+You've got project all setup, now all you need to do is start the development server, that will run on port 5000 by default.
+
+```
+ python driver.py /path/to/files-dir -e 2002 (for year report)
+ python driver.py /path/to/files-dir -a 2002/1 (for month report)
+ python driver.py /path/to/files-dir -c 2002/1 (for month barchart + bonus barchart)
+```
