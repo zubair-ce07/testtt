@@ -31,9 +31,7 @@ def read_cmd_arg():
         weather_reporter.generate_year_report(args.e, args.dir_path)
     if args.a:
         weather_reporter.generate_month_report(args.a, args.dir_path)
-    else:
-        print("Invalid Arguments provided")
-        return
+    return
 
 
 if __name__ == "__main__":

@@ -23,7 +23,7 @@ class WeatherAnalyzer:
         try:
             file_data = []
             with open(file_path) as csv_file:
-                csv_reader = csv.reader(csv_file, delimiter=',')
+                csv_reader = csv.DictReader(csv_file, delimiter=',')
                 for row in csv_reader:
                     file_data.append(row)
             return file_data
@@ -38,21 +38,32 @@ class WeatherAnalyzer:
             file_data = self.read_file_data(file)
             for day_data in file_data:
                 if len(day_data) > 2:
-                    if day_data[0] != "PKT" and day_data[0] != "PKST" and \
-                            day_data[1] and day_data[3] and day_data[8]:
+                    if self.check_valid_record_row(day_data) and \
+                            day_data["Max TemperatureC"] and \
+                            day_data["Min TemperatureC"] and \
+                            day_data["Max Humidity"]:
                         self.day_weather_list.append(DayWeather(
-                            day_data[0], day_data[1],
-                            day_data[2], day_data[3],
-                            day_data[4], day_data[5],
-                            day_data[6], day_data[7],
-                            day_data[8], day_data[9],
-                            day_data[10], day_data[11],
-                            day_data[12], day_data[13],
-                            day_data[14], day_data[15],
-                            day_data[16], day_data[17],
-                            day_data[18], day_data[19],
-                            day_data[20], day_data[21],
-                            day_data[22]
+                            self.get_day_date(day_data),
+                            day_data["Max TemperatureC"],
+                            day_data["Mean TemperatureC"],
+                            day_data["Min TemperatureC"],
+                            day_data["Dew PointC"], day_data["MeanDew PointC"],
+                            day_data["Min DewpointC"],
+                            day_data["Max Humidity"],
+                            day_data[" Mean Humidity"],
+                            day_data[" Min Humidity"],
+                            day_data[" Max Sea Level PressurehPa"],
+                            day_data[" Mean Sea Level PressurehPa"],
+                            day_data[" Min Sea Level PressurehPa"],
+                            day_data[" Max VisibilityKm"],
+                            day_data[" Mean VisibilityKm"],
+                            day_data[" Min VisibilitykM"],
+                            day_data[" Max Wind SpeedKm/h"],
+                            day_data[" Mean Wind SpeedKm/h"],
+                            day_data[" Max Gust SpeedKm/h"],
+                            day_data["Precipitationmm"],
+                            day_data[" CloudCover"], day_data[" Events"],
+                            day_data["WindDirDegrees"]
                         ))
 
     def collect_month_data(self, year_month):
@@ -110,4 +121,14 @@ class WeatherAnalyzer:
             year_month_list = year_month.split("/")
             return day_date_list[0] == year_month_list[0] and day_date_list[
                 1] == year_month_list[1]
+        return False
+
+    def get_day_date(self, day_obj):
+        if day_obj.get("PKT"):
+            return day_obj["PKT"]
+        return day_obj["PKST"]
+
+    def check_valid_record_row(self, day_obj):
+        if day_obj.get("PKT") != "PKT" or day_obj.get("PKST") != "PKST":
+            return True
         return False

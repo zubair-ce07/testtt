@@ -2,4 +2,4 @@ import enum
 
 
 class Constant(enum.Enum):
-    NULL_VALUE = 0
+    NULL_VALUE = -1

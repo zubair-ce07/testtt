@@ -3,7 +3,7 @@ This project is Created using [python](https://www.python.org/download/releases/
 # Weather Man App
 
 
-A simple app that allows user to generate different report about the weather of Murree
+A simple app that allows user to generate different reports about the weather of Murree
 
 * `Yearly Report` Generate Certain Year Weather Report
 * `Monthly Report` Generate Certain Month Weather Report
@@ -35,8 +35,8 @@ No external modules required
 You've got project all setup, now all you need to do is start the development server, that will run on port 5000 by default.
 
 ```
- python driver.py /path/to/files-dir -e 2002 (for year report)
- python driver.py /path/to/files-dir -a 2002/1 (for month report)
- python driver.py /path/to/files-dir -c 2002/1 (for month barchart + bonus barchart)
- weatherman.py /path/to/files-dir -c 2011/03 -a 2011/3 -e 2011 (Multiple reports) 
+ python driver.py /path/to/files-dir/ -e 2002 (for year report)
+ python driver.py /path/to/files-dir/ -a 2002/1 (for month report)
+ python driver.py /path/to/files-dir/ -c 2002/1 (for month barchart + bonus barchart)
+ weatherman.py /path/to/files-dir/ -c 2011/03 -a 2011/3 -e 2011 (Multiple reports) 
 ```

@@ -23,7 +23,8 @@ class WeatherReporter:
         max_temp_avg, min_temp_avg, \
             humidity_avg = self.weather_analyzer.compute_month_data_average(
                 month_data_list)
-        self.print_month_temp_report(max_temp_avg, min_temp_avg, humidity_avg)
+        self.print_month_temp_report(round(max_temp_avg), round(min_temp_avg),
+                                     round(humidity_avg))
 
     def generate_barchart_report(self, report_year, dir_path):
         self.weather_analyzer.read_files(dir_path)
@@ -77,43 +78,35 @@ class WeatherReporter:
     def draw_barchart(self, temp, temp_color_code, day_num):
         """ draw bar chart """
         barchart_month = '+' * temp
-        print(ColorCode.GREY.value + (str(day_num)) +
-              " " + (temp_color_code + barchart_month) +
-              " " + (ColorCode.GREY.value + str(temp) + "C"))
+        print(f"{ColorCode.GREY.value}{day_num}{temp_color_code} "
+              f"{barchart_month}{ColorCode.GREY.value }{temp}C")
 
     def draw_bonus_barchart(self, day_num, barchart_min_temp,
                             barchart_max_temp,
                             temp_min, temp_max):
-        print((ColorCode.GREY.value + str(day_num)) +
-              " " + barchart_min_temp + barchart_max_temp +
-              " " + (ColorCode.GREY.value + str(temp_min) + "C-") +
-              (ColorCode.GREY.value + str(temp_max) + "C"))
+        print(f"{ColorCode.GREY.value}{day_num}{barchart_min_temp}"
+              f"{barchart_max_temp}{ColorCode.GREY.value}"
+              f"{temp_min}C-{ColorCode.GREY.value}{temp_max}C")
 
     def print_year_temp_report(self, temp_max_obj, temp_min_obj,
                                max_humid_obj):
         max_temp_date = temp_max_obj.pkt.split("-")
         min_temp_date = temp_min_obj.pkt.split("-")
         max_humidity_date = max_humid_obj.pkt.split("-")
-        print("Highest: " + temp_max_obj.max_temperature +
-              "C on " + calendar.month_name[int(max_temp_date[1])] +
-              " " + str(max_temp_date[2]))
-        print("Lowest: " + temp_min_obj.min_temperature +
-              "C on " + calendar.month_name[int(min_temp_date[1])] +
-              " " + str(min_temp_date[2]))
-        print("Humid: " + max_humid_obj.max_humidity +
-              "% on " + calendar.month_name[int(max_humidity_date[1])] +
-              " " + str(max_humidity_date[2]))
+        print(f"Highest: {temp_max_obj.max_temperature}C on "
+              f"{calendar.month_name[int(max_temp_date[1])]} "
+              f"{max_temp_date[2]}")
+        print(f"Lowest: {temp_min_obj.min_temperature}C on "
+              f"{calendar.month_name[int(min_temp_date[1])]} "
+              f"{min_temp_date[2]}")
+        print(f"Humid: {max_humid_obj.max_humidity}% on "
+              f"{calendar.month_name[int(max_humidity_date[1])]} "
+              f"{max_humidity_date[2]}")
         print("")
 
     def print_month_temp_report(self, max_temp_avg, min_temp_avg,
                                 humidity_avg):
-        print("Highest Average: " +
-              str(round(max_temp_avg)) +
-              "C")
-        print("Lowest Average: " +
-              str(round(min_temp_avg)) +
-              "C")
-        print("Average Humidity: " +
-              str(round(humidity_avg)) +
-              "%")
+        print(f"Highest Average: {max_temp_avg}C")
+        print(f"Lowest Average: {min_temp_avg}C")
+        print(f"Average Mean Humidity: {humidity_avg}%")
         print("")
