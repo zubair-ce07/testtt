@@ -107,11 +107,11 @@ class WeatherReporter:
     def print_month_temp_report(self, max_temp_avg, min_temp_avg,
                                 humidity_avg):
         print("Highest Average: " +
-              str(max_temp_avg) +
+              str(round(max_temp_avg)) +
               "C")
         print("Lowest Average: " +
-              str(min_temp_avg) +
+              str(round(min_temp_avg)) +
               "C")
         print("Average Humidity: " +
-              str(humidity_avg) +
+              str(round(humidity_avg)) +
               "%")
