@@ -3,20 +3,31 @@
 
 """
 import sys
-from weatherHolder import weatherHolder
+from weatherReader import weatherReader
+from weatherReader import results
+# from weatherReader import calculate
 
 mypath = sys.argv[1]
+option = sys.argv[2]
+req = sys.argv[3]
 
-# print(mypath)
+instance = weatherReader(mypath, req)
+print(instance.data[0].weatherDataForTheDay)
+print(len(instance.data))
 
-instance = weatherHolder(mypath)
-# retrievedData = instance.get_month_data("2009_Feb")
-retrievedData = (instance.data['2007']['Mar'])
-# print(retrievedData)
-if retrievedData:
-    for i in range(len(retrievedData)):
-        print(retrievedData[i].wea)
-else:
-    print("There is no value for the given date available")
-# print(instance.total_files())
-# print(instance.data[])
+# ca = calculate(instance.data, option)
+
+res = results()
+res.addResult({'type': 'Highest', 'value': 321, 'day': '2014-3-2'})
+res.addResult({'type': 'Average Humidity', 'value': 32, 'day': '2014-5-12'})
+print(res.printResult())
+# elif option == '-a'
+ 
+
+# elif option == '-c'
+
+
+# print(instance.data[0].weatherDataForTheDay)
+# print(instance.data[1].weatherDataForTheDay)
+# print(instance.data[2].weatherDataForTheDay)
+
