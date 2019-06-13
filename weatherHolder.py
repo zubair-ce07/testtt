@@ -12,7 +12,7 @@ class weatherReading:
     def __init__(self, header, oneReading):
         for attribute, value in zip(header, oneReading):
             self.weatherDataForTheDay[attribute.strip()] = value
-        
+
 
 class weatherHolder:
     data = {}
@@ -34,16 +34,13 @@ class weatherHolder:
 
                 if year not in self.data:
                     self.data[year] = {}
-                # yearDict = self.data[year]
 
                 if month not in self.data[year]:
                     self.data[year][month] = []
 
-                index = 0
-                while index < len(monthData):
-                    self.data[year][month].append(weatherReading(header, monthData[index]))
-                    # print(self.data[year][month][-1].weatherDataForTheDay)
-                    index += 1
+                for eachDay in monthData:
+                    self.data[year][month].append(weatherReading(header, eachDay))
+                    print(self.data[year][month][-1].weatherDataForTheDay)
 
                 # for dayValue in monthData:
                 #     # print(temp.weatherDataForTheDay)
