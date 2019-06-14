@@ -18,6 +18,7 @@ if not len(instance.data):
     exit()
 
 calc = calculate()
-resultt = calc.compute(instance.data, option)
+resultt = calc.compute(instance.data, option, req)
 
-print(resultt.printResult())
+if resultt:
+    print(resultt.printResult())

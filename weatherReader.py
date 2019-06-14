@@ -86,17 +86,44 @@ class calculate:
         return self.result
 
     def calculateAverage(self, weatherData):
-        print("")
+        avgHighestTemp = 0
+        avgLowestTemp =  0
+        avgMeanHumidity =  0
+        
+        for singleDay in weatherData:
+            avgHighestTemp += makeINT(singleDay.weatherDataForTheDay.get('MaxTemp'), 'max')
+            avgLowestTemp += makeINT(singleDay.weatherDataForTheDay.get('MinTemp'), 'min')
+            avgMeanHumidity += makeINT(singleDay.weatherDataForTheDay.get('MeanHumidity'), 'max')
+
+        avgHighestTemp /= len(weatherData)
+        avgLowestTemp /= len(weatherData)
+        avgMeanHumidity /= len(weatherData)
+
+        self.result.clearResults()
+        self.result.addResult('Highest Average', int(avgHighestTemp), '')
+        self.result.addResult('Lowest Average', int(avgLowestTemp), '')
+        self.result.addResult('Average Mean Humidity', int(avgMeanHumidity), '')
+
+        return self.result
 
     def calculateBarCharts(self, weatherData):
         print("")
 
-    def compute(self, weatherData, calculationType):
+    def compute(self, weatherData, calculationType, req):
         if calculationType == '-e':
+            if len(req.split('/')) != 1:
+                print("Wrong format. Exiting!")
+                exit() 
             return self.calculateHighest(weatherData)
         elif calculationType == '-a':
+            if len(req.split('/')) != 2:
+                print("Wrong format. Exiting!")
+                exit()
             return self.calculateAverage(weatherData)
         elif calculationType == '-c':
+            if len(req.split('/')) != 2:
+                print("Wrong format. Exiting!")
+                exit()
             self.calculateBarCharts(weatherData)
 
 
