@@ -1,7 +1,4 @@
-class DayWeather:
-    """
-        Data structure for weather record
-    """
+class WeatherRecord:
 
     def __init__(
             self, pkt, max_temperature, mean_temperature, min_temperature,

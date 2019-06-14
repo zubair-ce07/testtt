@@ -1,92 +1,96 @@
 import calendar
 
-from color_codes import ColorCode
 from weather_analyzer import WeatherAnalyzer
 
 
 class WeatherReporter:
 
     def __init__(self):
+        self.red_color_code = '\033[31m'
+        self.blue_color_code = '\033[34m'
+        self.grey_color_code = '\033[37m'
         self.weather_analyzer = WeatherAnalyzer()
 
     def generate_year_report(self, report_year, dir_path):
-        self.weather_analyzer.read_files(dir_path)
+        self.weather_analyzer.collect_data_set(dir_path)
         temp_max_obj, temp_min_obj, \
             max_humid_obj = self.weather_analyzer.extract_year_data(
-                report_year)
+             report_year)
         self.print_year_temp_report(temp_max_obj, temp_min_obj, max_humid_obj)
 
     def generate_month_report(self, report_year, dir_path):
-        self.weather_analyzer.read_files(dir_path)
-        month_data_list = self.weather_analyzer.collect_month_data(
+        self.weather_analyzer.collect_data_set(dir_path)
+        month_weather_record = self.weather_analyzer.collect_month_data(
             report_year)
         max_temp_avg, min_temp_avg, \
             humidity_avg = self.weather_analyzer.compute_month_data_average(
-                month_data_list)
+                month_weather_record)
         self.print_month_temp_report(round(max_temp_avg), round(min_temp_avg),
                                      round(humidity_avg))
 
     def generate_barchart_report(self, report_year, dir_path):
-        self.weather_analyzer.read_files(dir_path)
-        month_data_list = self.weather_analyzer.collect_month_data(
+        self.weather_analyzer.collect_data_set(dir_path)
+        month_data_record = self.weather_analyzer.collect_month_data(
             report_year)
-        barchart_data_list = self.calc_month_chart(month_data_list)
-        self.print_month_chart(barchart_data_list)
+        barchart_data = self.calc_month_chart(month_data_record)
+        self.print_month_chart(barchart_data)
         print("\nBonus\n")
-        bonus_barchart_data_list = self.calc_bonus_chart(month_data_list)
-        self.print_bonus_chart(bonus_barchart_data_list)
+        bonus_barchart_data = self.calc_bonus_chart(month_data_record)
+        self.print_bonus_chart(bonus_barchart_data)
 
-    def calc_month_chart(self, month_data_list):
-        barchart_data_list = []
+    def calc_month_chart(self, month_data_record):
+        barchart_data = []
         day_num = 1
-        for day_data in month_data_list:
+        for day_data in month_data_record:
             if day_data.max_temperature:
-                barchart_data_list.append([int(day_data.max_temperature),
-                                           ColorCode.RED.value, day_num])
+                barchart_data.append([int(day_data.max_temperature),
+                                      self.red_color_code, day_num])
             if day_data.min_temperature:
-                barchart_data_list.append([int(day_data.min_temperature),
-                                           ColorCode.BLUE.value, day_num])
+                barchart_data.append([int(day_data.min_temperature),
+                                      self.blue_color_code, day_num])
                 day_num += 1
-        return barchart_data_list
+        return barchart_data
 
-    def calc_bonus_chart(self, month_data_list):
-        barchart_data_list = []
+    def calc_bonus_chart(self, month_data_record):
+        bonus_barchart_data = []
         day_num = 1
-        for day_data in month_data_list:
+        for day_data in month_data_record:
             if day_data.max_temperature:
                 temp_max = int(day_data.max_temperature)
-                barchart_max_temp = ColorCode.RED.value + ('+' * temp_max)
+                barchart_max_temp = self.red_color_code + ('+' * temp_max)
             if day_data.min_temperature:
                 temp_min = int(day_data.min_temperature)
-                barchart_min_temp = ColorCode.BLUE.value + ('+' * temp_min)
-                barchart_data_list.append([day_num, barchart_min_temp,
-                                           barchart_max_temp,
-                                           temp_min, temp_max])
+                barchart_min_temp = self.blue_color_code + ('+' * temp_min)
+                bonus_barchart_data.append([day_num, barchart_min_temp,
+                                            barchart_max_temp,
+                                            temp_min, temp_max])
             day_num += 1
-        return barchart_data_list
+        return bonus_barchart_data
 
-    def print_bonus_chart(self, barchart_data_list):
-        for data_list in barchart_data_list:
-            self.draw_bonus_barchart(data_list[0], data_list[1], data_list[2],
-                                     data_list[3], data_list[4])
+    def print_bonus_chart(self, bonus_barchart_data):
+        for barchart_row in bonus_barchart_data:
+            self.draw_bonus_barchart(barchart_row[0], barchart_row[1],
+                                     barchart_row[2],
+                                     barchart_row[3], barchart_row[4])
             print("")
 
-    def print_month_chart(self, barchart_data_list):
-        for data_list in barchart_data_list:
-            self.draw_barchart(data_list[0], data_list[1], data_list[2])
+    def print_month_chart(self, barchart_data):
+        for barchart_row in barchart_data:
+            self.draw_barchart(barchart_row[0], barchart_row[1],
+                               barchart_row[2])
 
     def draw_barchart(self, temp, temp_color_code, day_num):
         """ draw bar chart """
         barchart_month = '+' * temp
-        print(f"{ColorCode.GREY.value}{day_num}{temp_color_code} "
-              f"{barchart_month}{ColorCode.GREY.value }{temp}C")
+        print(f"{self.grey_color_code}{day_num}{temp_color_code} "
+              f"{barchart_month}{self.grey_color_code}{temp}C")
 
     def draw_bonus_barchart(self, day_num, barchart_min_temp,
                             barchart_max_temp,
                             temp_min, temp_max):
-        print(f"{ColorCode.GREY.value}{day_num}{barchart_min_temp}"
-              f"{barchart_max_temp}{ColorCode.GREY.value}"
-              f"{temp_min}C-{ColorCode.GREY.value}{temp_max}C")
+        print(f"{self.grey_color_code}{day_num}{barchart_min_temp}"
+              f"{barchart_max_temp}{self.grey_color_code}"
+              f"{temp_min}C-{self.grey_color_code}{temp_max}C")
 
     def print_year_temp_report(self, temp_max_obj, temp_min_obj,
                                max_humid_obj):
