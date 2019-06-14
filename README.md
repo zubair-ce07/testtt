@@ -1,18 +1,29 @@
-the-lab
-=======
+### What is weatherman?
+**weatherman** generates the weather reports as specified by:
 
-The purpose of this repo is to help the team lead and his team member in training and evaluating newly hired developers especially fresh grads. Code written by newbies for training/practice will be checked in here and reviewed by their respective team leads. All feedback must be in written on github.
+1. command line argument describing the directory name for the data files
+2. command line argument specifying the time frame for reports.
 
-## Getting Started
+Given these, **weatherman**  can generate following reports:
 
-1. Clone this repo on your local machine.
-1. Create a new branch with your name like *alisufian-master* (lower case).
-1. Push this empty branch.
-1. For every assigned task create a new branch e.g. alisufian-borjanspider.
-1. When the task is complete make sure the code confirms to [pep8](https://www.python.org/dev/peps/pep-0008/).
-1. Push the code and create a pull request against your *name-master* branch.
-1. Specify the title of the PR as *name-task* e.g. *Ali Sufian - Weatherman* so its easy to find in the list.
-1. In case you [mess](http://ohshitgit.com/) up the repo.
+- [-e] For a given year display the highest temperature and day, lowest temperature and day, most humid day and humidity.
 
-Do not add log files, temp files, data files etc.
-**Do not merge/push anything into master branch**.
+- [-a] For a given month display the average highest temperature, average lowest temperature, average mean humidity.
+
+- [-c] For a given month draw two horizontal bar charts on the console for the highest and lowest temperature on each day. Highest in red and lowest in blue.
+
+- Multiple Reports as given above, in one run.
+
+### How to call weatherman?
+You can invoke the main "weatherman.py" file using `python3` with the following arguments:
+
+
+> `> python3 weatherman.py weatherfiles -a 2004/3 ...`
+
+### Known limitations
+
+- If empty strings are passed as arguments, or wrong string (e.g. 13 as month, or 20001 as year), the program may work in unexpected ways. Mostly, that just results in a indexing error at some point during execution.
+  
+### What do different files do?
+  - **weatherman.py**: File to be executed with arguments. Imports multiple classes from **weatherReader.py** to be used in generating reports.
+  - **weatherReader.py**: This file contains the weatherReader, calculator and result classes, which are used to store data, calculate results, and store those results respectively
