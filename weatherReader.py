@@ -25,6 +25,10 @@ def makeINT(s, t):
         return int(s)
     # return int(s) if s else sys.maxsize if t == 'min' else (-sys.maxsize - 1) if t == "max"
 
+def makeINTZero(s):
+    s = s.strip()
+    return int(s) if s else 0
+
 def dateTranslation(date):
     if date:
         dateObject = datetime.strptime(date, '%Y-%m-%d')
@@ -107,7 +111,22 @@ class calculate:
         return self.result
 
     def calculateBarCharts(self, weatherData):
-        print("")
+
+        self.result.clearResults()
+
+        for day in weatherData:
+            maxTempForTheDay = day.weatherDataForTheDay.get('MaxTemp')
+            minTempForTheDay = day.weatherDataForTheDay.get('MinTemp')
+            date = day.weatherDataForTheDay.get('PKT')
+            maxString = datetime.strftime(datetime.strptime(date, '%Y-%m-%d'),'%d') + ' '
+            maxString += ''.join(["\033[0;31;40m+" for x in range(abs(makeINTZero(maxTempForTheDay)))])
+            maxString += ' '+ "\033[0;35;40m" + maxTempForTheDay + 'C'
+
+            minString = datetime.strftime(datetime.strptime(date, '%Y-%m-%d'),'%d') + ' '
+            minString += ''.join(["\033[0;34;40m+" for x in range(abs(makeINTZero(minTempForTheDay)))])
+            minString += ' '+ "\033[0;35;40m" + minTempForTheDay + 'C'
+            print(maxString)
+            print(minString)
 
     def compute(self, weatherData, calculationType, req):
         if calculationType == '-e':
@@ -124,7 +143,8 @@ class calculate:
             if len(req.split('/')) != 2:
                 print("Wrong format. Exiting!")
                 exit()
-            self.calculateBarCharts(weatherData)
+            print(datetime.strftime(datetime.strptime(req, '%Y/%m'),'%B %Y'))
+            return self.calculateBarCharts(weatherData)
 
 
 
