@@ -53,7 +53,15 @@ else:
                 calculator_instance = Calculator()
 
                 # Check if data is available against the given time frame
-                if not len(data_store.data):
+                if data_store.data == ['year_error']:
+                    print("Year value should be in full format e.g. 2014")
+                    print('\n')
+                    continue
+                elif data_store.data == ['month_error']:
+                    print("Please enter a valid (1<month<13) value for month")
+                    print('\n')
+                    continue
+                elif not len(data_store.data):
                     print("No values are available for the given time period!")
                     print('\n')
                     continue

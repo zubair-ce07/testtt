@@ -202,22 +202,22 @@ class Calculator:
             day_min_temp = day.data.get('MinTemp')
 
             date = day.data.get('PKT')
-            date = datetime.strptime(date, '%Y-%m-%d')
-            date = datetime.strftime(date, '%d') + ' '
+            if date:
+                date = datetime.strptime(date, '%Y-%m-%d')
+                date = datetime.strftime(date, '%d') + ' '
 
-            range_max_temp = range(abs(mk_int_zero(day_max_temp)))
-            range_min_temp = range(abs(mk_int_zero(day_min_temp)))
+                range_max_temp = range(abs(mk_int_zero(day_max_temp)))
+                range_min_temp = range(abs(mk_int_zero(day_min_temp)))
 
-            max_string = purple + date
-            max_string += ''.join([red for x in range_max_temp])
-            max_string += ' ' + purple + day_max_temp + 'C'
+                final_string = ''
+                final_string = purple + date
+                final_string += ''.join([blue for x in range_min_temp])
+                final_string += ''.join([red for x in range_max_temp])
+                final_string += ' ' + purple + day_min_temp + 'C'
+                final_string += ' - ' + purple + day_max_temp + 'C'
 
-            min_string = date
-            min_string += ''.join([blue for x in range_min_temp])
-            min_string += ' ' + purple + day_min_temp + 'C'
-
-            print(max_string)
-            print(min_string)
+                print(final_string.replace(purple + 'C', 'No Value Available'))
+            # print(min_string)
 
         print("\033[0;0;40m")
 
@@ -281,16 +281,23 @@ class WeatherReader:
         year = request.split('/')[0]
         month = 0
         month_files = []
-        files = [x for x in all_files if year in x]
+        if int(year) > 1000 and int(year) < 9999:
+            files = [x for x in all_files if year in x]
+        else:
+            self.data.append('year_error')
+            return None
 
         if len(year_month) > 1:
             if request.split('/')[1]:
                 month = int(request.split('/')[1])
 
-        if month:
+        if month and month > 0 and month < 13:
             month_files = [x for x in files
                            if month_trans_dict.get(month) in x]
             files = month_files
+        else:
+            self.data.append('month_error')
+            return None
 
         for file in files:
             with open(directory + '/' + file) as csvfile:
