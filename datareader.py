@@ -7,8 +7,6 @@
 
 import csv
 from os import listdir
-from os.path import isfile, join, exists
-from datetime import datetime
 
 month_trans_dict = {1: 'Jan', 2: 'Feb', 3: 'Mar',
                     4: 'Apr', 5: 'May', 6: 'Jun',
@@ -34,35 +32,15 @@ class OneDayWeather:
 class WeatherReader:
     data = []
 
-    def __init__(self, directory, request):
+    def __init__(self, directory, year, month):
         self.data = []
-        if exists(directory):
-            all_files = [f for f in listdir(directory)]
-        else:
-            print("Directory does not exists!")
-            return None
+        all_files = [f for f in listdir(directory)]
+        files = [x for x in all_files if year in x]
 
-        year_month = request.split('/')
-        year = request.split('/')[0]
-        month = 0
-        month_files = []
-        if int(year) > 1000 and int(year) < 9999:
-            files = [x for x in all_files if year in x]
-        else:
-            self.data.append('year_error')
-            return None
-
-        if len(year_month) > 1:
-            if request.split('/')[1]:
-                month = int(request.split('/')[1])
-
-        if month and month > 0 and month < 13:
+        if month:
             month_files = [x for x in files
-                           if month_trans_dict.get(month) in x]
+                           if month_trans_dict.get(int(month)) in x]
             files = month_files
-        else:
-            self.data.append('month_error')
-            return None
 
         for file in files:
             with open(directory + '/' + file) as csvfile:

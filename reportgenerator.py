@@ -156,26 +156,14 @@ class ReportGenerator:
         color_reset = "\033[0;37;40m"
         dialouge = 'Report for ' + req + ' for option ' + calculation_type
         if calculation_type == '-e':
-            if len(req.split('/')) != 1:
-                print("Wrong format. Exiting!")
-                exit()
-
             print(color + dialouge + color_reset)
             return self.generate_report_yearly_highest(weather_data)
 
         elif calculation_type == '-a':
-            if len(req.split('/')) != 2:
-                print("Wrong format. Exiting!")
-                exit()
-
             print(color + dialouge + color_reset)
             return self.generate_report_monthly_average(weather_data)
 
         elif calculation_type == '-c':
-            if len(req.split('/')) != 2:
-                print("Wrong format. Exiting!")
-                exit()
-
             print(color + dialouge + color_reset)
             print(datetime.strftime(datetime.strptime(req, '%Y/%m'), '%B %Y'))
             return self.generate_report_monthly_bar_charts(weather_data)

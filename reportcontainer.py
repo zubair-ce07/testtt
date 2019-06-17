@@ -6,6 +6,8 @@
     Owner: Muhammad Abdullah Zafar -- Arbisoft
 """
 
+from datetime import datetime
+
 
 def date_translation(date):
     if date:

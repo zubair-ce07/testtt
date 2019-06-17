@@ -9,6 +9,7 @@
 
 import sys
 import argparse
+from os.path import exists
 from datareader import WeatherReader
 from reportgenerator import ReportGenerator
 
@@ -27,6 +28,9 @@ args = parser.parse_args()
 if not args.a and not args.c and not args.e:
     print('Please specify one of [-a] [-e] [-c] to generate reports')
     exit()
+elif not exists(args.dir_path):
+    print("Directory does not exists!")
+    exit()
 else:
     options = {}
     if args.a:
@@ -36,28 +40,42 @@ else:
     if args.e:
         options.update({'e': x for x in [args.e] if x is not None})
 
-    for key in options:
-        for time_period_list in options.get(key).split():
+    for report_type in options:
+        for time_period_list in options.get(report_type).split():
             for one_time_period in time_period_list.split(','):
+                year_month = one_time_period.split('/')
+                year = year_month[0]
+                month = ''
+                if len(year_month) > 1:
+                    if year_month[1]:
+                        month = year_month[1]
 
-                my_weather_data = WeatherReader(args.dir_path, one_time_period)
-                my_generator = ReportGenerator()
-
-                if my_weather_data.data == ['year_error']:
+                if int(year) < 1000 or int(year) > 9999:
                     print("Year value should be in full format e.g. 2014")
                     print('\n')
                     continue
-                elif my_weather_data.data == ['month_error']:
-                    print("Please enter a valid (1<month<13) value for month")
-                    print('\n')
-                    continue
-                elif not len(my_weather_data.data):
+
+                if report_type != 'e':
+                    if not month or int(month) < 1 or int(month) > 13:
+                        print("Please enter a valid (1<month<13) value for month")
+                        print('\n')
+                        continue
+                else:
+                    if month:
+                        print("You can't specify month value for -c")
+                        print('\n')
+                        continue
+
+                my_weather_data = WeatherReader(args.dir_path, year, month)
+
+                if not len(my_weather_data.data):
                     print("No values are available for the given time period!")
                     print('\n')
                     continue
 
+                my_generator = ReportGenerator()
                 report = my_generator.generate_report(my_weather_data.data,
-                                                      '-' + key,
+                                                      '-' + report_type,
                                                       one_time_period)
 
                 if report:
