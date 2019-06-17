@@ -8,57 +8,64 @@
 """
 
 import sys
+import argparse
 from weatherReader import WeatherReader
 from weatherReader import Calculator
 
-dir_path = sys.argv[1]
-option = sys.argv[2]
-request = sys.argv[3]
+# ArgumentParser object is being used to specify
+# arguments types and reading from console
+parser = argparse.ArgumentParser(description='Generate Weather Reports')
 
-# If more than one report is to be generated
-if len(sys.argv) > 4:
-    for index in range(2, len(sys.argv), 2):
-        # Get command line arguments
-        option = sys.argv[index]
-        request = sys.argv[index+1]
+parser.add_argument('directory_path',
+                    type=str, nargs='?', default='weatherfiles',
+                    help='path to weather files directory' +
+                         ' (default=weatherfiles)')
+parser.add_argument('-a', type=str, help='-a argument')
+parser.add_argument('-c', type=str, help='-c argument')
+parser.add_argument('-e', type=str, help='-e argument')
 
-        # Create reader and calculator instances
-        # Reader insatance reads the data at creation
-        data_store = WeatherReader(dir_path, request)
-        calculator_instance = Calculator()
+args = parser.parse_args()
 
-        # Check if data is available against the given time frame
-        if not len(data_store.data):
-            print("No values are available for the given time period!")
-            print('\n')
-            continue
-
-        # Compute the results by passing request and data
-        # as well as the required report type to the calculator
-        result = calculator_instance.compute(data_store.data, option, request)
-
-        # Calculator might return empty list as a result.
-        if result:
-            print(result.print_results())
-
-        print('\n')
-
-# If there is only one report to be generated
+# If some option is specified, make a dict of all the
+# specified time periods against that option [-a, -c, -e]
+# as a key, fetch data against each time period and invoke
+# the compute method from the Calculator instance to
+# generate the required report
+if not args.a and not args.c and not args.e:
+    print('Please specify one of [-a] [-e] [-c] to generate reports')
+    exit()
 else:
-    # Create reader and calculator instances
-    # Reader insatance reads the data at creation
-    data_store = WeatherReader(dir_path, request)
-    calculator_instance = Calculator()
+    options = {}
+    if args.a:
+        options.update({'a': x for x in [args.a] if x is not None})
+    if args.c:
+        options.update({'c': x for x in [args.c] if x is not None})
+    if args.e:
+        options.update({'e': x for x in [args.e] if x is not None})
 
-    # Check if data is available against the given time frame
-    if not len(data_store.data):
-        print("No values are available for the given time period!")
-        exit()
+    for key in options:
+        for period_list in options.get(key).split():
+            for each_period in period_list.split(','):
 
-    # Compute the results by passing request and data
-    # as well as the required report type to the calculator
-    result = calculator_instance.compute(data_store.data, option, request)
+                # Create reader and calculator instances
+                # Reader insatance reads the data at creation
+                data_store = WeatherReader(args.directory_path, each_period)
+                calculator_instance = Calculator()
 
-    # Calculator might return empty list as a result.
-    if result:
-        print(result.print_results())
+                # Check if data is available against the given time frame
+                if not len(data_store.data):
+                    print("No values are available for the given time period!")
+                    print('\n')
+                    continue
+
+                # Compute the results by passing request and data
+                # as well as the required report type to the calculator
+                result = calculator_instance.compute(data_store.data,
+                                                     '-' + key,
+                                                     each_period)
+
+                # Calculator might return empty list as a result.
+                if result:
+                    print(result.print_results())
+
+                print('\n')

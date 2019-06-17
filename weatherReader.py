@@ -40,7 +40,7 @@ def mk_int_zero(string_int):
     return int(string_int) if string_int else 0
 
 
-# This methos translates a date from %Y-%m-%d format to %B %d
+# This method translates a date from %Y-%m-%d format to %B %d
 def date_translation(date):
     if date:
         date_object = datetime.strptime(date, '%Y-%m-%d')
@@ -223,11 +223,15 @@ class Calculator:
 
     # Method called from the main multiple times, given the request and data
     def compute(self, weather_data, calculation_type, req):
+        color = "\033[1;30;47m"
+        color_reset = "\033[0;37;40m"
+        dialouge = 'Report for ' + req + ' for option ' + calculation_type
         if calculation_type == '-e':
             if len(req.split('/')) != 1:
                 print("Wrong format. Exiting!")
                 exit()
 
+            print(color + dialouge + color_reset)
             return self.calculate_highest(weather_data)
 
         elif calculation_type == '-a':
@@ -235,6 +239,7 @@ class Calculator:
                 print("Wrong format. Exiting!")
                 exit()
 
+            print(color + dialouge + color_reset)
             return self.calculate_average(weather_data)
 
         elif calculation_type == '-c':
@@ -242,6 +247,7 @@ class Calculator:
                 print("Wrong format. Exiting!")
                 exit()
 
+            print(color + dialouge + color_reset)
             print(datetime.strftime(datetime.strptime(req, '%Y/%m'), '%B %Y'))
             return self.calculate_bar_charts(weather_data)
 
@@ -264,6 +270,7 @@ class WeatherReader:
     data = []
 
     def __init__(self, directory, request):
+        self.data = []
         if exists(directory):
             all_files = [f for f in listdir(directory)]
         else:
