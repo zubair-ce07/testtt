@@ -1,14 +1,15 @@
 This project is Created using [python](https://www.python.org/download/releases/3.0/).
 
-# Weather Man App
+# Taxi Meter App
 
 
-A simple app that allows user to generate different reports about the weather of Murree
+A simple app that demonstrate the working of Taxi Meter
 
-* `Yearly Report` Generate Certain Year Weather Report
-* `Monthly Report` Generate Certain Month Weather Report
-* `Barchart` Populate Certain Month Weather Bar chart
-* `Multiple Reports` Generate above three reports at once
+* `Ride` Ride Time during Ride
+* `Distance` Distance Travelled during Ride
+* `Speed` Speed of Taxi car
+* `Fare` Total Fair Calculate during the ride
+* `Wait Time` Wait time of taxi during after ride started
 
 
 ## Getting Started
@@ -25,18 +26,33 @@ First of all clone the project and change to that directory.
 
 ```
 git clone https://github.com/arbisoft/the-lab.git
+
+Then to install the required modules
+
 ```
-
-No external modules required 
-
+pip install -r requirements.txt
+```
 
 ### Starting
 
-You've got project all setup, now all you need to do is start the development server, that will run on port 5000 by default.
+You've got project all setup, now all you need to do run the script.
+
+If you are root user run
 
 ```
- python driver.py /path/to/files-dir/ -e 2002 (for year report)
- python driver.py /path/to/files-dir/ -a 2002/1 (for month report)
- python driver.py /path/to/files-dir/ -c 2002/1 (for month barchart + bonus barchart)
- weatherman.py /path/to/files-dir/ -c 2011/03 -a 2011/3 -e 2011 (Multiple reports) 
+ python main.py 
 ```
+otherwise you need to use sudo to access required library
+
+```
+ sudo python main.py 
+```
+
+```
+ Instructions
+```
+* `UP Arrow` Increase Speed
+* `Down Arrow` Decrease Speed
+* `E / e` End ride
+* `P / p` Pause Ride
+* `E / e` Time` End Ride
