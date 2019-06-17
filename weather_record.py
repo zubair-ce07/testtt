@@ -1,33 +1,34 @@
+from datetime import datetime
+
+
 class WeatherRecord:
 
-    def __init__(
-            self, pkt, max_temperature, mean_temperature, min_temperature,
-            dew_point, mean_dew_point, min_dew_point, max_humidity,
-            mean_humidity, min_humidity, max_sea_level_pressure,
-            mean_sea_level_pressure, min_sea_level_pressure, max_visibility,
-            mean_visibility, min_visibility, max_wind_speed, mean_wind_speed,
-            max_gust_speed, precipitation, cloud_cover, events,
-            wind_dir_degrees):
-        self.pkt = pkt
-        self.max_temperature = max_temperature
-        self.mean_temperature = mean_temperature
-        self.min_temperature = min_temperature
-        self.dew_point = dew_point
-        self.mean_dew_point = mean_dew_point
-        self.min_dew_point = min_dew_point
-        self.max_humidity = max_humidity
-        self.mean_humidity = mean_humidity
-        self.min_humidity = min_humidity
-        self.max_sea_level_pressure = max_sea_level_pressure
-        self.mean_sea_level_pressure = mean_sea_level_pressure
-        self.min_sea_level_pressure = min_sea_level_pressure
-        self.max_visibility = max_visibility
-        self.mean_visibility = mean_visibility
-        self.min_visibility = min_visibility
-        self.max_wind_speed = max_wind_speed
-        self.mean_wind_speed = mean_wind_speed
-        self.max_gust_speed = max_gust_speed
-        self.precipitation = precipitation
-        self.cloud_cover = cloud_cover
-        self.events = events
-        self.wind_dir_degrees = wind_dir_degrees
+    def __init__(self, day_weather_record):
+        self.pkt = datetime.strptime(
+            day_weather_record.get("PKT", day_weather_record.get('PKST')),
+            "%Y-%m-%d")
+        self.max_temperature = day_weather_record["Max TemperatureC"]
+        self.mean_temperature = day_weather_record["Mean TemperatureC"]
+        self.min_temperature = day_weather_record["Min TemperatureC"]
+        self.dew_point = day_weather_record["Dew PointC"]
+        self.mean_dew_point = day_weather_record["MeanDew PointC"]
+        self.min_dew_point = day_weather_record["Min DewpointC"]
+        self.max_humidity = day_weather_record["Max Humidity"]
+        self.mean_humidity = day_weather_record[" Mean Humidity"]
+        self.min_humidity = day_weather_record[" Min Humidity"]
+        self.max_sea_level_pressure = \
+            day_weather_record[" Max Sea Level PressurehPa"]
+        self.mean_sea_level_pressure = \
+            day_weather_record[" Mean Sea Level PressurehPa"]
+        self.min_sea_level_pressure = \
+            day_weather_record[" Min Sea Level PressurehPa"]
+        self.max_visibility = day_weather_record[" Max VisibilityKm"]
+        self.mean_visibility = day_weather_record[" Mean VisibilityKm"]
+        self.min_visibility = day_weather_record[" Min VisibilitykM"]
+        self.max_wind_speed = day_weather_record[" Max Wind SpeedKm/h"]
+        self.mean_wind_speed = day_weather_record[" Mean Wind SpeedKm/h"]
+        self.max_gust_speed = day_weather_record[" Max Gust SpeedKm/h"]
+        self.precipitation = day_weather_record["Precipitationmm"]
+        self.cloud_cover = day_weather_record[" CloudCover"]
+        self.events = day_weather_record[" Events"]
+        self.wind_dir_degrees = day_weather_record["WindDirDegrees"]
