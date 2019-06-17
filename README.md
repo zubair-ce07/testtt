@@ -5,11 +5,11 @@ This project is Created using [python](https://www.python.org/download/releases/
 
 A simple app that demonstrate the working of Taxi Meter
 
-* `Ride` Ride Time during Ride
-* `Distance` Distance Travelled during Ride
+* `Ride Time` Ride Time during Ride
+* `Distance` Distance Traveled during Ride
 * `Speed` Speed of Taxi car
 * `Fare` Total Fair Calculate during the ride
-* `Wait Time` Wait time of taxi during after ride started
+* `Wait Time` Wait time of taxi after ride started
 
 
 ## Getting Started
