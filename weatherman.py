@@ -12,8 +12,6 @@ import argparse
 from weatherReader import WeatherReader
 from weatherReader import Calculator
 
-# ArgumentParser object is being used to specify
-# arguments types and reading from console
 parser = argparse.ArgumentParser(description='Generate Weather Reports')
 
 parser.add_argument('directory_path',
@@ -26,11 +24,6 @@ parser.add_argument('-e', type=str, help='-e argument')
 
 args = parser.parse_args()
 
-# If some option is specified, make a dict of all the
-# specified time periods against that option [-a, -c, -e]
-# as a key, fetch data against each time period and invoke
-# the compute method from the Calculator instance to
-# generate the required report
 if not args.a and not args.c and not args.e:
     print('Please specify one of [-a] [-e] [-c] to generate reports')
     exit()
@@ -47,12 +40,9 @@ else:
         for period_list in options.get(key).split():
             for each_period in period_list.split(','):
 
-                # Create reader and calculator instances
-                # Reader insatance reads the data at creation
                 data_store = WeatherReader(args.directory_path, each_period)
                 calculator_instance = Calculator()
 
-                # Check if data is available against the given time frame
                 if data_store.data == ['year_error']:
                     print("Year value should be in full format e.g. 2014")
                     print('\n')
@@ -66,13 +56,10 @@ else:
                     print('\n')
                     continue
 
-                # Compute the results by passing request and data
-                # as well as the required report type to the calculator
                 result = calculator_instance.compute(data_store.data,
                                                      '-' + key,
                                                      each_period)
 
-                # Calculator might return empty list as a result.
                 if result:
                     print(result.print_results())
 

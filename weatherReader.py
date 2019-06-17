@@ -11,17 +11,12 @@ from os import listdir
 from os.path import isfile, join, exists
 from datetime import datetime
 
-# This dictionary is used to translate numbered months
-# to respective names. Method used to optimize performance
 month_trans_dict = {1: 'Jan', 2: 'Feb', 3: 'Mar',
                     4: 'Apr', 5: 'May', 6: 'Jun',
                     7: 'Jul', 8: 'Aug', 9: 'Sep',
                     10: 'Oct', 11: 'Nov', 12: 'Dec'}
 
 
-# Customized function created to deal with empty strings.
-# Returns max size or min size depending on the comparison
-# the value is going to be used in.
 def mk_int(string_int, t):
     string_int = string_int.strip()
 
@@ -33,14 +28,11 @@ def mk_int(string_int, t):
         return int(string_int)
 
 
-# Customized function created to deal with empty strings.
-# Returns zero 0 in case of empty string
 def mk_int_zero(string_int):
     string_int = string_int.strip()
     return int(string_int) if string_int else 0
 
 
-# This method translates a date from %Y-%m-%d format to %B %d
 def date_translation(date):
     if date:
         date_object = datetime.strptime(date, '%Y-%m-%d')
@@ -52,24 +44,17 @@ def date_translation(date):
         return None
 
 
-# Results container class with methods to add result in the
-# available memeber list, clear the list in case same object
-# is being used multiple times, and print the results
 class ResultContainer:
-    # Member list to store multiple results
     result_list = []
 
-    # Appends a result in the list
     def add_result(self, result_type, value, date):
         self.result_list.append({'type': result_type,
                                  'value': value,
                                  'date': date})
 
-    # Clears the list of all the results
     def clear_results(self):
         self.result_list.clear()
 
-    # Prints the results
     def print_results(self):
         for result in self.result_list:
             character = 'C'
@@ -87,14 +72,9 @@ class ResultContainer:
                       sep='')
 
 
-# This class generates the calculations using the given data
-# and resturns the ResultContainer object with the results in it
 class Calculator:
-    # ResultContainer object to store results
     result = ResultContainer()
 
-    # Report 1: calculates highest temperature and day, lowest
-    # temperature and day, most humid day and humidity.
     def calculate_highest(self, weather_data):
         highest_temp = {'value': (-sys.maxsize - 1), 'date': ''}
         lowest_temp = {'value': (sys.maxsize), 'date': ''}
@@ -146,8 +126,6 @@ class Calculator:
 
         return self.result
 
-    # Report 2: For a given month display the average highest temperature,
-    # average lowest temperature, average mean humidity.
     def calculate_average(self, weather_data):
         avg_highest_temp = 0
         avg_lowest_temp = 0
@@ -187,9 +165,6 @@ class Calculator:
 
         return self.result
 
-    # For a given month draw two horizontal bar charts on the
-    # console for the highest and lowest temperature on each day.
-    # Highest in red and lowest in blue.
     def calculate_bar_charts(self, weather_data):
 
         self.result.clear_results()
@@ -217,11 +192,9 @@ class Calculator:
                 final_string += ' - ' + purple + day_max_temp + 'C'
 
                 print(final_string.replace(purple + 'C', 'No Value Available'))
-            # print(min_string)
 
         print("\033[0;0;40m")
 
-    # Method called from the main multiple times, given the request and data
     def compute(self, weather_data, calculation_type, req):
         color = "\033[1;30;47m"
         color_reset = "\033[0;37;40m"
@@ -252,7 +225,6 @@ class Calculator:
             return self.calculate_bar_charts(weather_data)
 
 
-# Class for storing a single day weather value in a dict
 class SingleReading:
     data = {}
 
@@ -264,8 +236,6 @@ class SingleReading:
                      'MeanHumidity': reading.get('Mean Humidity')}
 
 
-# Class that stores required data in a member variable of the
-# object, as specified by the given option
 class WeatherReader:
     data = []
 
