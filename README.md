@@ -30,24 +30,22 @@ git clone https://github.com/arbisoft/the-lab.git
 Then to install the required modules
 
 ```
-pip install -r requirements.txt
+Install Requirements
 ```
+pip install -r requirements.txt
 
+```
 ### Starting
 
 You've got project all setup, now all you need to do run the script.
-
 If you are root user run
-
 ```
  python main.py 
+
 ```
 otherwise you need to use sudo to access required library
-
 ```
  sudo python main.py 
-```
-
 ```
  Instructions
 ```
