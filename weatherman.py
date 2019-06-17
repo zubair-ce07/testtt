@@ -1,5 +1,5 @@
 """ This is the driver program for the weatherman task.
-    Having imported WeatherReader, results and calculate
+    Having imported WeatherReader, reports and calculate
     classes from the WeatherReader.py file, it makes
     instances of those objects to achieve the tasks as
     specified by the command line arguments
@@ -9,12 +9,12 @@
 
 import sys
 import argparse
-from weather_reader import WeatherReader
-from weather_reader import Calculator
+from datareader import WeatherReader
+from reportgenerator import ReportGenerator
 
 parser = argparse.ArgumentParser(description='Generate Weather Reports')
 
-parser.add_argument('directory_path',
+parser.add_argument('dir_path',
                     type=str, nargs='?', default='weatherfiles',
                     help='path to weather files directory' +
                          ' (default=weatherfiles)')
@@ -37,30 +37,30 @@ else:
         options.update({'e': x for x in [args.e] if x is not None})
 
     for key in options:
-        for period_list in options.get(key).split():
-            for each_period in period_list.split(','):
+        for time_period_list in options.get(key).split():
+            for one_time_period in time_period_list.split(','):
 
-                data_store = WeatherReader(args.directory_path, each_period)
-                calculator_instance = Calculator()
+                my_weather_data = WeatherReader(args.dir_path, one_time_period)
+                my_generator = ReportGenerator()
 
-                if data_store.data == ['year_error']:
+                if my_weather_data.data == ['year_error']:
                     print("Year value should be in full format e.g. 2014")
                     print('\n')
                     continue
-                elif data_store.data == ['month_error']:
+                elif my_weather_data.data == ['month_error']:
                     print("Please enter a valid (1<month<13) value for month")
                     print('\n')
                     continue
-                elif not len(data_store.data):
+                elif not len(my_weather_data.data):
                     print("No values are available for the given time period!")
                     print('\n')
                     continue
 
-                result = calculator_instance.compute(data_store.data,
-                                                     '-' + key,
-                                                     each_period)
+                report = my_generator.generate_report(my_weather_data.data,
+                                                      '-' + key,
+                                                      one_time_period)
 
-                if result:
-                    print(result.print_results())
+                if report:
+                    print(report.print_reports())
 
                 print('\n')
