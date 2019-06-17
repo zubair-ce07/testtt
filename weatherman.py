@@ -57,7 +57,7 @@ else:
 
                 if report_type != 'e':
                     if not month or int(month) < 1 or int(month) > 13:
-                        print("Please enter a valid (1<month<13) value for month")
+                        print("Enter a valid (1<month<13) value for month")
                         print('\n')
                         continue
                 else:
