@@ -9,8 +9,8 @@
 
 import sys
 import argparse
-from weatherReader import WeatherReader
-from weatherReader import Calculator
+from weather_reader import WeatherReader
+from weather_reader import Calculator
 
 parser = argparse.ArgumentParser(description='Generate Weather Reports')
 
