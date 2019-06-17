@@ -25,15 +25,15 @@ class ComputeTaxiMeter:
                 taxi_speed_increment_factor
 
     def display_taxi_meter(self):
-        self.utils.show_formatted_ride_time("Ride Time",
-                                            self.taxi_meter_record.ride_time)
-        self.utils.show_formatted_ride_distance(self.taxi_meter_record
-                                                .ride_distance)
+        self.utils.show_scalled_ride_time("Ride Time",
+                                          self.taxi_meter_record.ride_time)
+        self.utils.show_scalled_ride_distance(self.taxi_meter_record
+                                              .ride_distance)
         print(f"Speed: {self.taxi_meter_record.taxi_speed} Meter per Second")
         print(f"Fare: {self.taxi_meter_record.ride_fare} Rs")
-        self.utils.show_formatted_ride_time("Wait Time",
-                                            self.taxi_meter_record
-                                            .ride_wait_time)
+        self.utils.show_scalled_ride_time("Wait Time",
+                                          self.taxi_meter_record
+                                          .ride_wait_time)
         print("")
 
     def increment_ride_time(self):
