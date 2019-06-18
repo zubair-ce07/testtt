@@ -1,34 +1,12 @@
 import argparse
 import calendar
-from os.path import isfile, join
+import csv
+from os.path import isfile
+from os.path import join
 from os import listdir
-import sys
 
 
-def populate_year_dic_temp(HoldForYearDic, HoldForMonthDic, Month):
-    HoldForYearDic.update({int(Month): HoldForMonthDic})
-    HoldForMonthDic.clear()
-
-
-def populate_year_dic(HoldForYearDic, HoldForMonthDic,
-                      WeatherReport, Month, HoldYear):
-    HoldForYearDic.update({Month: HoldForMonthDic})
-    HoldForMonthDic.clear
-    WeatherReport.dic.update({int(HoldYear): HoldForYearDic})
-    HoldForYearDic.clear
-
-
-def extract_month_weather_report(WeatherLine, HoldForMonthDic):
-    WeatherLine = WeatherLine.split(',')
-    WeatherLine[-1] = WeatherLine[-1].split('\n')[0]
-    Date = int(WeatherLine[0].split('-')[-1])
-    HoldForMonthDic.update({Date: WeatherLine})
-
-
-class DataFromFiles:
-    """
-        Class for holding all the data from the Files
-    """
+class WeatherFilesRecord:
 
     def __init__(self):
         self.dic = {}
@@ -36,234 +14,184 @@ class DataFromFiles:
 
 # Parsing the data read from the file
 class WeatherReportParse:
-    """
-        This class the parsing the data
-        and populate it ir the object of
-        DataFromFiles
-    """
+    _instance = None
 
-    def __init__(self, WeatherReport, WeatherFileNames):
-        """
-        This constructor is taking the extracted
-        file names and the Data object and populate
-        the Data.dic with the data in the files
-        """
+    def __new__(self):
+        if not self._instance:
+            self._instance = super(WeatherReportParse, self).__new__(self)
+        return self._instance
 
-        HoldYear = 0
-        HoldForMonthDic = {}
-        HoldForYearDic = {}
+    def __init__(self):
+        self.month_to_number = {v: k for k, v in enumerate(
+            calendar.month_abbr)}
 
-        for File in WeatherFileNames:
+    def parse_year_data(self, weather_report):
 
-            Year = File.split('_')[2]
+        file_names = [f for f in listdir("weatherfiles/weatherfiles/") if
+                      isfile(join("weatherfiles/weatherfiles/", f)) and f[
+                          0] != '.' and f.split('_')[2] == str(args.year)]
+        file_names.sort()
 
-            if HoldYear == 0:
-                HoldYear = Year
+        for file in file_names:
+            month = self.month_to_number[file.split('_')[-1].split('.')[0]]
+            weather_report.update({month: csv.DictReader(open(join("weatherfiles/weatherfiles/", file)))})
 
-            elif HoldYear == Year:
-                populate_year_dic_temp(HoldForYearDic, HoldForMonthDic, Month)
+    def parse_month_data(self, weather_report, year_month):
+        a = dict((v, k) for k, v in enumerate(calendar.month_abbr))
+        file_names = [f for f in listdir("weatherfiles/weatherfiles/") if
+                      isfile(join("weatherfiles/weatherfiles/", f)) and f[
+                          0] != '.' and
+                      f.split('_')[-1].split('.')[0] == calendar.month_name[int(year_month.split('/')[1])][:3] and
+                      f.split('_')[2] == str(int(year_month.split('/')[0]))]
 
-            else:
-                populate_year_dic(HoldForYearDic, HoldForMonthDic, WeatherReport, Month, HoldYear)
-
-                if Year == "0000":
-                    break
-                HoldYear = Year
-
-            Month = MonthToNumber[File.split('_')[-1].split('.')[0]]
-            FileHandler = open("weatherfiles/weatherfiles/" + File)
-            FileHandler.readline()
-
-            for WeatherLine in FileHandler:
-                extract_month_weather_report(WeatherLine, HoldForMonthDic)
+        for file in file_names:
+            month = self.month_to_number[file.split('_')[-1].split('.')[0]]
+            weather_report.update({month: csv.DictReader(open(join("weatherfiles/weatherfiles/", file)))})
 
 
 class DataResults:
-    """
-        This class is holding the data analysis results
-    """
+    _instance = None
 
-    def __init__(self):
-        self.HighestTemp = 0
-        self.LowestTemp = 0
-        self.MaxHumidity = 0
-        self.HighestTempDate = 0
-        self.LowestTempDate = 0
-        self.MaxHumidityDate = 0
-        self.AverageHighestTemp = 0
-        self.AverageLowestTemp = 0
-        self.AverageHumidity = 0
+    def __new__(self):
+        if not self._instance:
+            self._instance = super(DataResults, self).__new__(self)
+        return self._instance
 
-    def year_report(self, DataObj, Year):
-        """
-        This method is calculating the yearly result and populate the answers in the above variables
-        """
-        if Year not in DataObj.dic:
-            return 0
-        YearDic = DataObj.dic[Year]
-        HighestTemp = -9999
-        LowestTemp = 9999
-        MaxHumidity = -9999
-        HighestTempDate = 0
-        LowestTempDate = 0
-        MaxHumidityDate = 0
+    def year_report(self, weather_report):
 
-        for Month in YearDic:
+        highest_temp = -9999
+        lowest_temp = 9999
+        max_humidity = -9999
+        highest_temp_date = 0
+        lowest_temp_date = 0
+        max_humidity_date = 0
 
-            for Date in YearDic[Month]:
+        for month in weather_report:
 
-                if YearDic[Month][Date][1] != '' and int(YearDic[Month][Date][1]) > int(HighestTemp):
-                    HighestTemp = YearDic[Month][Date][1]
-                    HighestTempDate = YearDic[Month][Date][0]
+            for date in weather_report[month]:
+                if date['Max TemperatureC'] != '' and int(date['Max TemperatureC']) > int(highest_temp):
+                    highest_temp = date['Max TemperatureC']
+                    highest_temp_date = date['PKT']
 
-                if YearDic[Month][Date][3] != '' and int(YearDic[Month][Date][3]) < int(LowestTemp):
-                    LowestTemp = YearDic[Month][Date][3]
-                    LowestTempDate = YearDic[Month][Date][0]
+                if date['Min TemperatureC'] != '' and int(date['Min TemperatureC']) < int(lowest_temp):
+                    lowest_temp = date['Min TemperatureC']
+                    lowest_temp_date = date['PKT']
 
-                if YearDic[Month][Date][7] != '' and int(YearDic[Month][Date][7]) > int(MaxHumidity):
-                    MaxHumidity = YearDic[Month][Date][7]
-                    MaxHumidityDate = YearDic[Month][Date][0]
+                if date['Max Humidity'] != '' and int(date['Max Humidity']) > int(max_humidity):
+                    max_humidity = date['Max Humidity']
+                    max_humidity_date = date['PKT']
 
-        self.HighestTemp = HighestTemp
-        self.LowestTemp = LowestTemp
-        self.MaxHumidity = MaxHumidity
-        self.HighestTempDate = HighestTempDate
-        self.LowestTempDate = LowestTempDate
-        self.MaxHumidityDate = MaxHumidityDate
-        return 1
+        return highest_temp, lowest_temp, max_humidity, highest_temp_date, lowest_temp_date, max_humidity_date
 
-    def month_report(self, WeatherReport, Year, Month):
+    def month_report(self, weather_report):
 
-        """
-                This method is calculating the second result and populate the answers in the above variables
-        """
-        if Year not in WeatherReport.dic or Month not in WeatherReport.dic[Year]:
-            return 0
+        temp_count = [0, 0, 0]
+        temp_sum = [0, 0, 0]
 
-        MonthDic = WeatherReport.dic[Year][Month]
-        count = [0, 0, 0]
-        sum = [0, 0, 0]
+        for month in weather_report:
 
-        for Date in MonthDic:
+            for date in weather_report[month]:
 
-            if MonthDic[Date][1] != '':
-                count[0] += 1
-                sum[0] += int(MonthDic[Date][1])
+                if date['Max TemperatureC'] != '':
+                    temp_count[0] += 1
+                    temp_sum[0] += int(date['Max TemperatureC'])
 
-            if MonthDic[Date][3] != '':
-                count[1] += 1
-                sum[1] += int(MonthDic[Date][3])
+                if date['Min TemperatureC'] != '':
+                    temp_count[1] += 1
+                    temp_sum[1] += int(date['Min TemperatureC'])
 
-            if MonthDic[Date][7] != '':
-                count[2] += 1
-                sum[2] += int(MonthDic[Date][7])
+                if date['Max Humidity'] != '':
+                    temp_count[2] += 1
+                    temp_sum[2] += int(date['Max Humidity'])
 
-        self.AverageHighestTemp = sum[0] / count[0]
-        self.AverageLowestTemp = sum[1] / count[1]
-        self.AverageHumidity = sum[2] / count[2]
+            return temp_sum[0] / temp_count[0], temp_sum[1] / temp_count[1], temp_sum[2] / temp_count[2]
 
-        return 1
+    def show_year_result(self, highest_temp, lowest_temp, max_humidity, highest_temp_date, lowest_temp_date,
+                         max_humidity_date):
 
-    def show_year_result(self):
-        """
-                This method is showing the first result
-        """
-        print("Highest:", self.HighestTemp + "C on ",
-              calendar.month_name[int(self.HighestTempDate.split('-')[1])],
-              self.HighestTempDate.split('-')[2])
+        print("Highest:", highest_temp + "C on ",
+              calendar.month_name[int(highest_temp_date.split('-')[1])],
+              highest_temp_date.split('-')[2])
 
-        print("Lowest:", self.LowestTemp + "C on ",
-              calendar.month_name[int(self.LowestTempDate.split('-')[1])],
-              self.LowestTempDate.split('-')[2])
+        print("Lowest:", lowest_temp + "C on ",
+              calendar.month_name[int(lowest_temp_date.split('-')[1])],
+              lowest_temp_date.split('-')[2])
 
-        print("Humidity:", self.MaxHumidity + "% on ",
-              calendar.month_name[int(self.MaxHumidityDate.split('-')[1])],
-              self.MaxHumidityDate.split('-')[2], "\n\n\n")
+        print("Humidity:", max_humidity + "% on ",
+              calendar.month_name[int(max_humidity_date.split('-')[1])],
+              max_humidity_date.split('-')[2], "\n\n\n")
 
-    def show_month_result(self):
-        """
-                    This method is showing the second result
-        """
-        print("Highest Average:", str(self.AverageHighestTemp) + "C")
-        print("Lowest Average:", str(self.AverageLowestTemp) + "C")
-        print("Humidity Average:", str(self.AverageHumidity) + "% \n\n\n")
+    def show_month_result(self, avg_high_temp, avg_low_temp, avg_hum):
+
+        print("Highest Average:", str(avg_high_temp) + "C")
+        print("Lowest Average:", str(avg_low_temp) + "C")
+        print("Humidity Average:", str(avg_hum) + "% \n\n\n")
 
 
 class DataReport:
-    """
-        This class is generating reports from the data
-    """
+    _instance = None
 
-    @staticmethod
-    def show_seprate_graph(DataObj, Year, Month):
-        """
-                    This method is showing reports of the DataObj individually
-        """
-        if Year not in DataObj.dic or Month not in DataObj.dic[Year]:
-            print("NA")
-            return
-        MonthDic = DataObj.dic[Year][Month]
+    def __new__(self):
+        if not self._instance:
+            self._instance = super(DataReport, self).__new__(self)
+        return self._instance
 
-        for Date in MonthDic:
-            sys.stdout.write(MonthDic[Date][0].split('-')[-1])
+    def show_seprate_graph(self, weather_report):
 
-            if MonthDic[Date][1] != '':
+        for key in weather_report:
+            for date in weather_report[key]:
 
-                for i in range(0, int(MonthDic[Date][1])):
-                    sys.stdout.write(' + ')
-                print(MonthDic[Date][1] + "C")
+                print(date["PKT"].split('-')[-1], end='')
 
-            else:
-                print(" NA")
-            sys.stdout.write(MonthDic[Date][0].split('-')[-1])
+                if date['Max TemperatureC'] != '':
 
-            if MonthDic[Date][3] != '':
+                    for i in range(0, int(date['Max TemperatureC'])):
+                        print(' + ', end='')
+                    print(date['Max TemperatureC'] + "C")
 
-                for i in range(0, int(MonthDic[Date][3])):
-                    sys.stdout.write(' + ')
-                print(MonthDic[Date][3] + "C")
+                else:
+                    print(" NA")
 
-            else:
-                print(" NA")
+                print(date['PKT'].split('-')[-1], end='')
+
+                if date['Min TemperatureC'] != '':
+
+                    for j in range(0, int(date['Min TemperatureC'])):
+                        print(' - ', end='')
+                    print(date['Min TemperatureC'] + "C")
+
+                else:
+                    print(" NA")
 
         print("\n\n\n")
 
-    @staticmethod
-    def show_merge_graph(DataObj, Year, Month):
-        """
-                    This method is showing reports of the DataObj combinely
-        """
+    def show_merge_graph(self, weather_report):
 
-        if Year not in DataObj.dic or Month not in DataObj.dic[Year]:
-            print("NA")
-            return
+        for key in weather_report:
+            for date in weather_report[key]:
+                low = 0
+                high = 0
+                print(date["PKT"].split('-')[-1], end='')
 
-        MonthDic = DataObj.dic[Year][Month]
+                if date['Max TemperatureC'] != '':
 
-        for Date in MonthDic:
-            low = 0
-            high = 0
-            sys.stdout.write(MonthDic[Date][0].split('-')[-1])
+                    for i in range(0, int(date['Max TemperatureC'])):
+                        print(' + ', end='')
+                    high = date['Max TemperatureC'] + "C"
 
-            if MonthDic[Date][1] != '':
+                else:
+                    print(" NA")
 
-                for i in range(0, int(MonthDic[Date][1])):
-                    sys.stdout.write(' + ')
-                high = MonthDic[Date][1] + "C"
+                if date['Min TemperatureC'] != '':
 
-            else:
-                high = " NA"
+                    for i in range(0, int(date['Min TemperatureC'])):
+                        print(' + ', end='')
+                    low = (date['Min TemperatureC'] + "C")
 
-            if MonthDic[Date][3] != '':
+                else:
+                    print(" NA")
 
-                for i in range(0, int(MonthDic[Date][3])):
-                    sys.stdout.write(' * ')
-                low = MonthDic[Date][3] + "C"
-
-            else:
-                low = " NA"
-
-            print(high, "-", low)
+                print(high, "-", low)
 
         print("\n\n\n")
 
@@ -277,36 +205,45 @@ parser.add_argument("-c", "--graphsingle", type=str, help="Show single graph")
 parser.add_argument("-m", "--graphmerged", type=str, help="Show merged graph")
 args = parser.parse_args()
 
-Data = DataFromFiles()
-MonthToNumber = {v: k for k, v in enumerate(
-    calendar.month_abbr)}  # Creating a dictionary for converting the Month name to the Month Number
-FileNames = [f for f in listdir("weatherfiles/weatherfiles/") if isfile(join("weatherfiles/weatherfiles/", f)) and f[
-    0] != '.']  # Fetching all file names from the directory
-FileNames.sort()
-
-WeatherReportParse(Data, FileNames)
-Results = DataResults()
+weather_report = WeatherFilesRecord()
+parser = WeatherReportParse()
+results = DataResults()
 
 if args.year:
-
-    if Results.year_report(Data, args.year):
-        Results.show_year_result()
-
+    weather_report = WeatherFilesRecord()
+    parser.parse_year_data(weather_report.dic)
+    if weather_report.dic:
+        highest_temp, lowest_temp, max_humidity, highest_tempDate, lowest_temp_date, max_humidity_date = results.year_report(
+            weather_report.dic)
+        results.show_year_result(highest_temp, lowest_temp, max_humidity, highest_tempDate, lowest_temp_date,
+                                 max_humidity_date)
     else:
-        print(args.year," doesn't exist in the data")
+        print(args.year, " is not in the record")
 
 if args.month:
-    if Results.month_report(Data, int(args.month.split('/')[0]), int(args.month.split('/')[1])):
-        Results.show_month_result()
-
+    weather_report = WeatherFilesRecord()
+    parser.parse_month_data(weather_report.dic, args.month)
+    if weather_report.dic:
+        avg_high_temp, avg_low_temp, avg_hum = results.month_report(weather_report.dic)
+        results.show_month_result(avg_high_temp, avg_low_temp, avg_hum)
     else:
-        print(args.year," doesn't exist in the data")
+        print(args.month, " is not in the record")
 
 if args.graphsingle:
-    Report = DataReport()
-    Report.show_seprate_graph(Data, int(args.graphsingle.split('/')[0]), int(args.graphsingle.split('/')[1]))
+    weather_report = WeatherFilesRecord()
+    parser.parse_month_data(weather_report.dic, args.graphsingle)
+    if weather_report.dic:
+        Report = DataReport()
+        Report.show_seprate_graph(weather_report.dic)
+    else:
+        print(args.graphsingle, " is not in the record")
 
 if args.graphmerged:
-    Report = DataReport()
-    Report.show_merge_graph(Data, int(args.graphmerged.split('/')[0]), int(args.graphmerged.split('/')[1]))
+    weather_report = WeatherFilesRecord()
+    parser.parse_month_data(weather_report.dic, args.graphmerged)
+    if weather_report.dic:
+        Report = DataReport()
+        Report.show_merge_graph(weather_report.dic)
+    else:
+        print(args.graphmerged, " is not in the record")
 
