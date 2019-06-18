@@ -9,6 +9,7 @@
 """
 
 import sys
+from statistics import mean
 from datetime import datetime
 from reportcontainer import ReportContainer
 
@@ -32,92 +33,62 @@ class ReportGenerator:
     report = ReportContainer()
 
     def generate_report_yearly_highest(self, weather_data):
-        highest_temp = {'value': (-sys.maxsize - 1), 'date': ''}
-        lowest_temp = {'value': (sys.maxsize), 'date': ''}
-        highest_humid = {'value': (-sys.maxsize - 1), 'date': ''}
 
-        for day in weather_data:
-            date = day.timestamp
+        highest_temp = str(max([int(x.max_temp)
+                                for x in weather_data
+                                if x.max_temp != '']))
 
-            day_max_temp = {'date': date,
-                            'value': mk_int(day.max_temp,
-                                            'max')
-                            }
+        lowest_temp = str(min([int(x.min_temp)
+                               for x in weather_data
+                               if x.min_temp != '']))
 
-            day_min_temp = {'date': date,
-                            'value': mk_int(day.min_temp,
-                                            'min')
-                            }
+        highest_humid = str(max([int(x.max_humidity)
+                                 for x in weather_data
+                                 if x.max_humidity != '']))
 
-            day_max_humid = {'date': date,
-                             'value': mk_int(day.mean_humidity,
-                                             'max')
-                             }
+        final_highest = [[d.max_temp, d.timestamp]
+                         for d in weather_data
+                         if d.max_temp == highest_temp]
 
-            if day_max_temp['value'] > highest_temp['value']:
-                highest_temp['value'] = day_max_temp['value']
-                highest_temp['date'] = date
+        final_lowest = [[d.min_temp, d.timestamp]
+                        for d in weather_data
+                        if d.min_temp == lowest_temp]
 
-            if day_min_temp['value'] < lowest_temp['value']:
-                lowest_temp['value'] = day_min_temp['value']
-                lowest_temp['date'] = date
-
-            if day_max_humid['value'] > highest_humid['value']:
-                highest_humid['value'] = day_max_humid['value']
-                highest_humid['date'] = date
+        final_humid = [[d.max_humidity, d.timestamp]
+                       for d in weather_data
+                       if d.max_humidity == highest_humid]
 
         self.report.clear_reports()
 
         self.report.add_report('Highest',
-                               highest_temp['value'],
-                               highest_temp['date'])
+                               final_highest[0][0],
+                               final_highest[0][1])
 
         self.report.add_report('Lowest',
-                               lowest_temp['value'],
-                               lowest_temp['date'])
+                               final_lowest[0][0],
+                               final_lowest[0][1])
 
         self.report.add_report('Humidity',
-                               highest_humid['value'],
-                               highest_humid['date'])
+                               final_humid[0][0],
+                               final_humid[0][1])
 
         return self.report
 
     def generate_report_monthly_average(self, weather_data):
-        avg_highest_temp = 0
-        avg_lowest_temp = 0
-        avg_mean_humid = 0
-        skip_days_min = 0
-        skip_days_max = 0
-        skip_days_mean = 0
+        max_temps = [int(x.max_temp) for x in weather_data if x.max_temp != '']
+        min_temps = [int(x.min_temp) for x in weather_data if x.min_temp != '']
+        max_humid = [int(x.max_humidity)
+                     for x in weather_data
+                     if x.max_humidity != '']
 
-        for day in weather_data:
-            init_max_temp = mk_int_zero(day.max_temp)
-            init_min_temp = mk_int_zero(day.min_temp)
-            init_mean_humid = mk_int_zero(day.mean_humidity)
-
-            if not init_max_temp:
-                skip_days_max += 1
-            else:
-                avg_highest_temp += init_max_temp
-
-            if not init_min_temp:
-                skip_days_min += 1
-            else:
-                avg_lowest_temp += init_min_temp
-
-            if not init_mean_humid:
-                skip_days_mean += 1
-            else:
-                avg_mean_humid += init_mean_humid
-
-        avg_highest_temp /= len(weather_data) - skip_days_max
-        avg_lowest_temp /= len(weather_data) - skip_days_min
-        avg_mean_humid /= len(weather_data) - skip_days_mean
+        avg_max_temp = mean(max_temps)
+        avg_min_temp = mean(min_temps)
+        avg_max_humid = mean(max_humid)
 
         self.report.clear_reports()
-        self.report.add_report('Highest Average', int(avg_highest_temp), '')
-        self.report.add_report('Lowest Average', int(avg_lowest_temp), '')
-        self.report.add_report('Avg Mean Humidity', int(avg_mean_humid), '')
+        self.report.add_report('Highest Average', int(avg_max_temp), '')
+        self.report.add_report('Lowest Average', int(avg_min_temp), '')
+        self.report.add_report('Avg Mean Humidity', int(avg_max_humid), '')
 
         return self.report
 
