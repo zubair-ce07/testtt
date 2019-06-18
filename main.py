@@ -1,43 +1,46 @@
-
 import keyboard
 
-from compute_taxi_meter import ComputeTaxiMeter
-from keys_constants import KeyConstant
+from calculate_taxi_meter import TaxiMeterCalculator
+from ride_keys_controller import RideKeyController
 
 
-class Main:
+class TaxiDrive:
 
     def __init__(self):
-        self.compute_taxi_meter = ComputeTaxiMeter()
+        self.taxi_meter_calculator = TaxiMeterCalculator()
         self.driving_state = True
         self.ride_end = False
 
     def on_key_press_action(self, event):
-        if event.name == KeyConstant.UP.value:
+        if event.name == RideKeyController.UP.value:
             print("Increasing Speed")
-            self.compute_taxi_meter.increase_taxi_speed()
+            self.taxi_meter_calculator.increase_taxi_speed()
             self.driving_state = True
-        elif event.name == KeyConstant.DOWN.value:
+        elif event.name == RideKeyController.DOWN.value:
             print("Decreasing Speed")
-            self.compute_taxi_meter.decrease_taxi_speed()
-        elif event.name == KeyConstant.END.value:
+            self.taxi_meter_calculator.decrease_taxi_speed()
+        elif event.name == RideKeyController.END.value:
             print("\nRide Ended")
             self.ride_end = True
-        elif event.name == KeyConstant.RESUME.value:
+        elif event.name == RideKeyController.RESUME.value:
             print("Ride Resumed")
             self.driving_state = True
-        elif event.name == KeyConstant.PAUSE.value:
+        elif event.name == RideKeyController.PAUSE.value:
             self.driving_state = False
             print("Ride Paused")
-        self.compute_taxi_meter.display_taxi_meter()
+
+        self.taxi_meter_calculator.display_taxi_meter()
 
 
 if __name__ == "__main__":
-    main_obj = Main()
-    main_obj.compute_taxi_meter.display_taxi_meter()
-    keyboard.on_press(main_obj.on_key_press_action)
-    while not main_obj.ride_end:
-        if main_obj.driving_state:
-            main_obj.compute_taxi_meter.increment_ride_time()
+    taxi_drive = TaxiDrive()
+    taxi_drive.taxi_meter_calculator.display_taxi_meter()
+    keyboard.on_press(taxi_drive.on_key_press_action)
+    while not taxi_drive.ride_end:
+        taxi_drive.taxi_meter_calculator.increment_ride_time(
+            taxi_drive.driving_state)
+        taxi_drive.taxi_meter_calculator.calculate_ride_fair()
+        if taxi_drive.driving_state:
+            taxi_drive.taxi_meter_calculator.calculate_ride_distance()
         else:
-            main_obj.compute_taxi_meter.increment_wait_time()
+            taxi_drive.taxi_meter_calculator.set_taxi_state_idle()

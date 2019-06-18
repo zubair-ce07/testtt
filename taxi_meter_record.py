@@ -1,8 +1,4 @@
-class TaxiMeterRecord(object):
-    """
-            Data structure for ride record
-    """
-
+class TaxiMeterRecord:
     def __init__(self):
         self.ride_distance = 0  # Meters
         self.ride_fare = 0  # RS
