@@ -43,10 +43,13 @@ class WeatherReader:
             files = month_files
 
         for file in files:
-            with open(directory + '/' + file) as csvfile:
-                file_read_as_csv = csv.DictReader(csvfile,
+            with open(directory + '/' + file, 'r+') as csv_file:
+                header = [h.strip() for h in csv_file.readline().split(',')]
+                file_read_as_csv = csv.DictReader(csv_file,
                                                   delimiter=',',
-                                                  skipinitialspace=True)
+                                                  skipinitialspace=True,
+                                                  fieldnames=header)
+
                 for each_day in file_read_as_csv:
                     req_attr = {'PKT': each_day.get('PKT'),
                                 'MaxTemp': each_day.get('Max TemperatureC'),
