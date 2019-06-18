@@ -1,21 +1,19 @@
-from computed_weather_results import WeatherResult
+from weather_results import WeatherResult
 from weather_record_parser import WeatherDataParser
 
 
 class WeatherAnalyzer:
     def __init__(self):
-        self.weather_data_set_records = []
+        self.weather_records = []
 
     def collect_weather_data_set(self, files_path):
         weather_data_parser = WeatherDataParser()
-        self.weather_data_set_records = weather_data_parser.parse(files_path)
+        self.weather_records = weather_data_parser.parse(files_path)
 
     def get_filtered_records(self, year, month=None):
-        filtered__weather_record = []
-        [filtered__weather_record.append(day_weather_record) for day_weather_record in
-         self.weather_data_set_records if (day_weather_record.pkt.month == month if month else
-                                           True) and day_weather_record.pkt.year == year]
-        return filtered__weather_record
+        return [day_weather_record for day_weather_record in
+                self.weather_records if (day_weather_record.pkt.month == month if month else
+                                         True) and day_weather_record.pkt.year == year]
 
     def get_weather_results(self, weather_records):
         computed_weather_results = WeatherResult()

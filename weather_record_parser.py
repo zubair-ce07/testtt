@@ -1,4 +1,5 @@
 import csv
+import glob
 import os
 
 from weather_record import WeatherRecord
@@ -8,9 +9,8 @@ class WeatherDataParser:
 
     def collect_files(self, files_path):
         weather_files_record = []
-        for file_name in os.listdir(files_path):
-            if not file_name.startswith('.'):
-                weather_files_record.append(files_path + file_name)
+        for file_name in glob.iglob(os.path.join(files_path, '*.txt')):
+            weather_files_record.append(file_name)
         return weather_files_record
 
     def read_file_data(self, file_path):
@@ -23,8 +23,9 @@ class WeatherDataParser:
 
     def parse(self, files_path):
         weather_records = []
-        for file in self.collect_files(files_path):
-            [weather_records.append(WeatherRecord(day_weather_record))
-             for day_weather_record in self.read_file_data(file) if
-             day_weather_record["Max TemperatureC"]]
+        for file_name in self.collect_files(files_path):
+            for day_weather_record in self.read_file_data(file_name):
+                if day_weather_record["Max TemperatureC"] and day_weather_record["Min TemperatureC"]\
+                        and day_weather_record["Max Humidity"]:
+                    weather_records.append(WeatherRecord(day_weather_record))
         return weather_records

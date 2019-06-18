@@ -16,12 +16,9 @@ class WeatherRecord:
         self.max_humidity = day_weather_record["Max Humidity"]
         self.mean_humidity = day_weather_record[" Mean Humidity"]
         self.min_humidity = day_weather_record[" Min Humidity"]
-        self.max_sea_level_pressure = \
-            day_weather_record[" Max Sea Level PressurehPa"]
-        self.mean_sea_level_pressure = \
-            day_weather_record[" Mean Sea Level PressurehPa"]
-        self.min_sea_level_pressure = \
-            day_weather_record[" Min Sea Level PressurehPa"]
+        self.max_sea_level_pressure = day_weather_record[" Max Sea Level PressurehPa"]
+        self.mean_sea_level_pressure = day_weather_record[" Mean Sea Level PressurehPa"]
+        self.min_sea_level_pressure = day_weather_record[" Min Sea Level PressurehPa"]
         self.max_visibility = day_weather_record[" Max VisibilityKm"]
         self.mean_visibility = day_weather_record[" Mean VisibilityKm"]
         self.min_visibility = day_weather_record[" Min VisibilitykM"]
