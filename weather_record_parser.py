@@ -23,14 +23,8 @@ class WeatherDataParser:
 
     def parse(self, files_path):
         weather_records = []
-        weather_files_record = self.collect_files(files_path)
-        for file in weather_files_record:
-            file_data = self.read_file_data(file)
-            for day_weather_record in file_data:
-                if len(day_weather_record) > 2:
-                    if day_weather_record["Max TemperatureC"] and \
-                            day_weather_record["Min TemperatureC"] and \
-                            day_weather_record["Max Humidity"]:
-                        weather_records.append(WeatherRecord(
-                            day_weather_record))
+        for file in self.collect_files(files_path):
+            [weather_records.append(WeatherRecord(day_weather_record))
+             for day_weather_record in self.read_file_data(file) if
+             day_weather_record["Max TemperatureC"]]
         return weather_records

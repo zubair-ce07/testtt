@@ -16,8 +16,8 @@ class ArgumentValidator:
     @staticmethod
     def validate_month_year(arg_report):
         try:
-            datetime.strptime(arg_report, '%Y/%m')
-            return arg_report
+            date = datetime.strptime(arg_report, '%Y/%m')
         except AttributeError:
             raise argparse.ArgumentTypeError(
                 'Please enter the valid year/month e.g. 2006/7')
+        return date
