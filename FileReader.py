@@ -1,33 +1,54 @@
 import os
 import WeatherReadings
+import csv
 
 class FileReader:
 
     allDataObjects = [] #all the data in objects is stored in this array
 
     def readAllFiles(self):
-
         for i in os.listdir("weatherfiles"):
             try:
-                file = open("weatherfiles/%s"%i, "r")
-                fileDataArray = file.readlines()
-                FileReader.splitData(fileDataArray[1:]) #reading the file per line
-                file.close()
+                csvFile = csv.DictReader(open("weatherfiles/%s" % i))
+                for row in csvFile:
+                    try:
+                        pkt = row['PKT']
+                    except:
+                        continue
+                    try:
+                        maxTemp = row["Max TemperatureC"]
+                    except:
+                        maxTemp = None
+                    try:
+                        minTemp = row["Min TemperatureC"]
+                    except:
+                        minTemp = None
+                    try:
+                        avgTemp = row["Mean TemperatureC"]
+                    except:
+                        avgTemp = None
+                    try:
+                        maxHumidity = row["Max Humidity"]
+                    except:
+                        maxHumidity = None
+                    try:
+                        minHumidity = row["Min Humidity"]
+                    except:
+                        minHumidity = None
+                    try:
+                        avgHumidity = row["Mean Humidity"]
+                    except:
+                        avgHumidity = None
+
+                    FileReader.storeData(pkt,maxTemp,minTemp,avgTemp,maxHumidity,minHumidity,avgHumidity)
             except:
                 continue
-        print(FileReader.allDataObjects)
-
-    def splitData(fileDataArray): # spliting each line in array format
-        for i in fileDataArray:
-            perDayData = i.split(",")
-            FileReader.storeData(perDayData)
 
 
-    def storeData(perDayData):
-        obj = WeatherReadings.WeatherReading(perDayData) #storing those values in the form of an object
-        FileReader.allDataObjects.append(obj)
-        print(obj.maxTemperature)
+    def storeData(pkt,maxTemp,minTemp,avgTemp,maxHumidity,minHumidity,avgHumidity):
+        weatherDataObject = WeatherReadings.WeatherReadings(pkt,maxTemp,avgTemp,minTemp,maxHumidity,avgHumidity,minHumidity)
+        FileReader.allDataObjects.append(weatherDataObject)
 
 
-check = FileReader()
-check.readAllFiles()
+    def getAllData(self):
+        return self.allDataObjects
