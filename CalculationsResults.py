@@ -5,6 +5,7 @@ import ResultStorage
 class CalculationsResults:
 
     weatherDataObj = FileReader.FileReader()
+    weatherDataObj.readAllFiles()
     weatherData = weatherDataObj.getAllData()
 
 
@@ -19,7 +20,7 @@ class CalculationsResults:
     def monthsOfYear(self,year):
         requiredMonths = []
         for month in range(len(CalculationsResults.weatherData)): # reference of all the months of the required year are returned in an array
-            if ((CalculationsResults.weatherData[month].pkt != None) and (CalculationsResults.weatherData[month].pkt[:4] == year)):
+            if (CalculationsResults.weatherData[month].pkt[:4] == year):
                 requiredMonths.append(month)
         return requiredMonths
 

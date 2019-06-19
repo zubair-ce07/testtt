@@ -1,8 +1,7 @@
 import FileReader, CalculationsResults, ReportGenerator, ResultStorage, WeatherReadings
-
+import sys
 check = CalculationsResults.CalculationsResults()
 requiredDays = check.monthsOfYear("2007")
-
 result = check.calculateForGivenDays(requiredDays)
 report = ReportGenerator.ReportGenerator()
 report.yearReport(result)
@@ -16,3 +15,5 @@ report.monthReport(monthHighestNLowest) #change
 
 report.drawBarCharts(daysofMonth,check.weatherData)
 report.drawSingleChart(daysofMonth,check.weatherData)
+
+print(sys.argv)

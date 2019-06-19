@@ -2,6 +2,7 @@ import os
 import WeatherReadings
 import csv
 
+
 class FileReader:
 
     allDataObjects = [] #all the data in objects is stored in this array
@@ -44,7 +45,6 @@ class FileReader:
             except:
                 continue
 
-
     def storeData(pkt,maxTemp,minTemp,avgTemp,maxHumidity,minHumidity,avgHumidity):
         weatherDataObject = WeatherReadings.WeatherReadings(pkt,maxTemp,avgTemp,minTemp,maxHumidity,avgHumidity,minHumidity)
         FileReader.allDataObjects.append(weatherDataObject)
@@ -52,3 +52,4 @@ class FileReader:
 
     def getAllData(self):
         return self.allDataObjects
+
