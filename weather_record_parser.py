@@ -6,12 +6,8 @@ from weather_record import WeatherRecord
 
 
 class WeatherDataParser:
-
-    def collect_files(self, files_path):
-        weather_files_record = []
-        for file_name in glob.iglob(os.path.join(files_path, '*.txt')):
-            weather_files_record.append(file_name)
-        return weather_files_record
+    required_fields = ["Max TemperatureC", "Min TemperatureC",
+                       "Max Humidity", " Mean Humidity"]
 
     def read_file_data(self, file_path):
         file_data = []
@@ -23,9 +19,8 @@ class WeatherDataParser:
 
     def parse(self, files_path):
         weather_records = []
-        for file_name in self.collect_files(files_path):
+        for file_name in glob.iglob(os.path.join(files_path, '*.txt')):
             for day_weather_record in self.read_file_data(file_name):
-                if day_weather_record["Max TemperatureC"] and day_weather_record["Min TemperatureC"]\
-                        and day_weather_record["Max Humidity"]:
+                if all(day_weather_record.get(field) for field in WeatherDataParser.required_fields):
                     weather_records.append(WeatherRecord(day_weather_record))
         return weather_records

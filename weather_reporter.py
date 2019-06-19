@@ -14,18 +14,16 @@ class WeatherReporter:
     def generate_annual_report(self, report_year, dir_path):
         self.weather_analyzer.collect_weather_data_set(dir_path)
         year_weather_record = self.weather_analyzer.get_filtered_records(int(report_year))
-        computed_weather_results = self.weather_analyzer \
-            .get_weather_results(year_weather_record)
-        self.print_annual_report(computed_weather_results)
+        weather_results = self.weather_analyzer.get_weather_results(year_weather_record)
+        self.print_annual_report(weather_results)
 
     def generate_monthly_report(self, report_year, report_month, dir_path):
         self.weather_analyzer.collect_weather_data_set(dir_path)
         month_weather_record = self.weather_analyzer.get_filtered_records(report_year, report_month)
-        computed_weather_results = self.weather_analyzer \
-            .get_weather_results(month_weather_record)
-        self.print_monthly_report(computed_weather_results)
+        weather_results = self.weather_analyzer.get_weather_results(month_weather_record)
+        self.print_monthly_report(weather_results)
 
-    def generate_bar_chart_report(self, report_year, report_month, dir_path):
+    def generate_bar_chart(self, report_year, report_month, dir_path):
         self.weather_analyzer.collect_weather_data_set(dir_path)
         month_weather_record = self.weather_analyzer.get_filtered_records(report_year, report_month)
         bar_chart_data = self.calculate_bar_chart(month_weather_record)
@@ -41,8 +39,7 @@ class WeatherReporter:
             if day_data.max_temperature:
                 bar_chart_data.append([int(day_data.max_temperature), self.red_color_code, day_num])
             if day_data.min_temperature:
-                bar_chart_data.append([int(day_data.min_temperature),
-                                       self.blue_color_code, day_num])
+                bar_chart_data.append([int(day_data.min_temperature), self.blue_color_code, day_num])
                 day_num += 1
         return bar_chart_data
 
@@ -56,8 +53,8 @@ class WeatherReporter:
             if day_weather_record.min_temperature:
                 temp_min = int(day_weather_record.min_temperature)
                 bar_chart_min_temp = self.blue_color_code + ('+' * temp_min)
-                bonus_bar_chart_data.append(
-                    [day_num, bar_chart_min_temp, bar_chart_max_temp, temp_min, temp_max])
+                bonus_bar_chart_data.append([day_num, bar_chart_min_temp, bar_chart_max_temp,
+                                             temp_min, temp_max])
             day_num += 1
         return bonus_bar_chart_data
 
@@ -81,18 +78,18 @@ class WeatherReporter:
               f"{bar_chart_max_temp}{self.grey_color_code}"
               f"{temp_min}C-{self.grey_color_code}{temp_max}C")
 
-    def print_annual_report(self, computed_weather_results):
-        print(f"Highest: {computed_weather_results.max_humidity_record.max_temperature}C on "
-              f"{calendar.month_name[computed_weather_results.max_humidity_record.pkt.month]} "
-              f"{computed_weather_results.max_humidity_record.pkt.day}")
-        print(f"Lowest: {computed_weather_results.min_temperature_record.min_temperature}C on "
-              f"{calendar.month_name[computed_weather_results.min_temperature_record.pkt.month]} "
-              f"{computed_weather_results.min_temperature_record.pkt.day}")
-        print(f"Humid: {computed_weather_results.max_humidity_record.max_humidity}% on "
-              f"{calendar.month_name[computed_weather_results.max_humidity_record.pkt.month]} "
-              f"{computed_weather_results.max_humidity_record.pkt.day}")
+    def print_annual_report(self, weather_results):
+        print(f"Highest: {weather_results.max_humidity_record.max_temperature}C on "
+              f"{calendar.month_name[weather_results.max_humidity_record.pkt.month]} "
+              f"{weather_results.max_humidity_record.pkt.day}")
+        print(f"Lowest: {weather_results.min_temp_record.min_temperature}C on "
+              f"{calendar.month_name[weather_results.min_temp_record.pkt.month]} "
+              f"{weather_results.min_temp_record.pkt.day}")
+        print(f"Humid: {weather_results.max_humidity_record.max_humidity}% on "
+              f"{calendar.month_name[weather_results.max_humidity_record.pkt.month]} "
+              f"{weather_results.max_humidity_record.pkt.day}")
 
-    def print_monthly_report(self, computed_weather_results):
-        print(f"Highest Average: {round(computed_weather_results.avg_max_temperature)}C")
-        print(f"Lowest Average: {round(computed_weather_results.avg_min_temperature)}C")
-        print(f"Average Mean Humidity: {round(computed_weather_results.mean_humidity_avg)}%")
+    def print_monthly_report(self, weather_results):
+        print(f"Highest Average: {round(weather_results.avg_max_temp)}C")
+        print(f"Lowest Average: {round(weather_results.avg_min_temp)}C")
+        print(f"Average Mean Humidity: {round(weather_results.mean_humidity_avg)}%")

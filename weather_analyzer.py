@@ -16,22 +16,17 @@ class WeatherAnalyzer:
                                          True) and day_weather_record.pkt.year == year]
 
     def get_weather_results(self, weather_records):
-        computed_weather_results = WeatherResult()
-        computed_weather_results.max_temperature_record = max(weather_records,
-                                                              key=lambda day_data: int(
-                                                                  day_data.max_temperature))
-        computed_weather_results.min_temperature_record = min(weather_records,
-                                                              key=lambda day_data: int(
-                                                                  day_data.min_temperature))
-        computed_weather_results.max_humidity_record = max(weather_records,
-                                                           key=lambda day_data: int(
-                                                               day_data.max_humidity))
-        computed_weather_results.mean_humidity_avg = sum(
-            int(day_record.mean_humidity) for day_record in weather_records) / len(weather_records)
-        computed_weather_results.avg_min_temperature = sum(
-            int(day_record.min_temperature) for day_record in weather_records) / len(
-            weather_records)
-        computed_weather_results.avg_max_temperature = sum(
-            int(day_record.max_temperature) for day_record in weather_records) / len(
-            weather_records)
-        return computed_weather_results
+        weather_results = WeatherResult()
+        weather_results.max_temp_record = max(weather_records,
+                                              key=lambda day_data: int(day_data.max_temperature))
+        weather_results.min_temp_record = min(weather_records,
+                                              key=lambda day_data: int(day_data.min_temperature))
+        weather_results.max_humidity_record = max(weather_records,
+                                                  key=lambda day_data: int(day_data.max_humidity))
+        weather_results.mean_humidity_avg = sum(int(day_record.mean_humidity)
+                                                for day_record in weather_records) / len(weather_records)
+        weather_results.avg_min_temp = sum(int(day_record.min_temperature)
+                                           for day_record in weather_records) / len(weather_records)
+        weather_results.avg_max_temp = sum(int(day_record.max_temperature)
+                                           for day_record in weather_records) / len(weather_records)
+        return weather_results

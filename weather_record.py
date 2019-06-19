@@ -4,9 +4,8 @@ from datetime import datetime
 class WeatherRecord:
 
     def __init__(self, day_weather_record):
-        self.pkt = datetime.strptime(
-            day_weather_record.get("PKT", day_weather_record.get('PKST')),
-            "%Y-%m-%d")
+        self.pkt = datetime.strptime(day_weather_record.get("PKT", day_weather_record.get('PKST')),
+                                     "%Y-%m-%d")
         self.max_temperature = day_weather_record["Max TemperatureC"]
         self.mean_temperature = day_weather_record["Mean TemperatureC"]
         self.min_temperature = day_weather_record["Min TemperatureC"]

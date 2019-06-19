@@ -20,19 +20,14 @@ def parse_cmd_arguments():
     return parser.parse_args()
 
 
-def generate_weather_reports(commandline_arguments):
+def generate_weather_reports(cli_args):
     weather_reporter = WeatherReporter()
-    if commandline_arguments.c:
-        weather_reporter.generate_bar_chart_report(commandline_arguments.c.year,
-                                                   commandline_arguments.c.month,
-                                                   commandline_arguments.dir_path)
-    if commandline_arguments.e:
-        weather_reporter.generate_annual_report(commandline_arguments.e,
-                                                commandline_arguments.dir_path)
-    if commandline_arguments.a:
-        weather_reporter.generate_monthly_report(commandline_arguments.a.year,
-                                                 commandline_arguments.a.month,
-                                                 commandline_arguments.dir_path)
+    if cli_args.c:
+        weather_reporter.generate_bar_chart(cli_args.c.year, cli_args.c.month, cli_args.dir_path)
+    if cli_args.e:
+        weather_reporter.generate_annual_report(cli_args.e, cli_args.dir_path)
+    if cli_args.a:
+        weather_reporter.generate_monthly_report(cli_args.a.year, cli_args.a.month, cli_args.dir_path)
 
 
 if __name__ == "__main__":
