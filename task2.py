@@ -2,48 +2,44 @@ import keyboard
 from os import system
 
 
-
 class TaxiMeter:
-    def __init__(self):
-        self.TotalFare = 0
-        self.Speed = 0
-        self.FareRunning = 0.0005
-        self.CumulativeIdealTime = 0.0
+    total_fare = 0
+    speed = 0
+    moving_car_fare = 0.0005
+    cumulative_ideal_time = 0.0
 
     def calculate_fare(self):
         if keyboard.is_pressed('1'):  # if key 'q' is pressed
-            self.Speed += 0.01
-            self.TotalFare += (self.FareRunning * self.Speed)
+            self.speed += 0.01
+            self.total_fare += (self.moving_car_fare * self.speed)
 
-        elif keyboard.is_pressed('0') and self.Speed != 0:
-            if self.Speed <= 0.01:
-                self.Speed = 0
+        elif keyboard.is_pressed('0') and self.speed != 0:
+            if self.speed <= 0.01:
+                self.speed = 0
             else:
-                self.Speed -= 0.01
-                self.TotalFare += (self.FareRunning * self.Speed)
+                self.speed -= 0.01
+                self.total_fare += (self.moving_car_fare * self.speed)
 
         else:
+            if self.speed == 0:
+                self.cumulative_ideal_time += 0.01
 
-            if self.Speed == 0:
-                self.CumulativeIdealTime += 0.01
-                if self.CumulativeIdealTime > 15:
-                    self.CumulativeIdealTime = 0.0
-                    self.TotalFare += 0.5
-
+                if self.cumulative_ideal_time > 15:
+                    self.cumulative_ideal_time = 0.0
+                    self.total_fare += 0.5
             else:
-                self.TotalFare += (self.FareRunning * self.Speed)
-
-            pass
+                self.total_fare += (self.moving_car_fare * self.speed)
 
     def display_fare(self):
-        print("Speed:", '%.2f' % self.Speed)
-        print("Total fare ", '%.2f' % self.TotalFare)
-        print("Idle Time", '%.2f' % self.CumulativeIdealTime)
+        print("Speed: %.2f" % self.speed)
+        print("Total fare: %.2f" % self.total_fare)
+        print("Idle Time: %.2f" % self.cumulative_ideal_time)
 
 
-meter = TaxiMeter()
+taxi_meter = TaxiMeter()
 
 while True:
-    meter.calculate_fare()
-    meter.display_fare()
+    taxi_meter.calculate_fare()
+    taxi_meter.display_fare()
     system('clear')
+
