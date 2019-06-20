@@ -4,11 +4,13 @@ import sys
 calculationObject = CalculationsResults.CalculationsResults()
 report = ReportGenerator.ReportGenerator()
 
+# generated year report
 def yearReport(year):
     requiredDays = calculationObject.monthsOfYear(year)
     result = calculationObject.calculateForGivenDays(requiredDays)
     report.yearReport(result)
 
+#generate month's report
 def monthReport(yearMonth):
     year = yearMonth[:4]
     month = yearMonth[5:]
@@ -16,6 +18,7 @@ def monthReport(yearMonth):
     resultMonthavg = calculationObject.avgCalculation(daysofMonth)
     report.monthReport(resultMonthavg)
 
+#draw charts
 def barChart(yearMonth):
     year = yearMonth[:4]
     month = yearMonth[5:]
@@ -23,6 +26,7 @@ def barChart(yearMonth):
     report.drawBarCharts(daysofMonth, calculationObject.weatherData,month,year)
     report.drawSingleChart(daysofMonth, calculationObject.weatherData,month,year)
 
+#read arguments from comand line and taking appropriate actions
 i = 1
 while (i < len(sys.argv)):
     if (sys.argv[i] == "-e"):

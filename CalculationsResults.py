@@ -1,22 +1,20 @@
 import FileReader
 import ResultStorage
 
-
 class CalculationsResults:
-
+#making an object that contains all the data in the form of an array
     weatherDataObj = FileReader.FileReader()
     weatherDataObj.readAllFiles()
     weatherData = weatherDataObj.getAllData()
 
-
-    def calculateForGivenDays(self,requiredDays): #find highest, lowest and most humid day for specified objects/days
+# find highest, lowest and most humid day for specified objects/days
+    def calculateForGivenDays(self,requiredDays):
         lowestTemp, ltd = self.lowestTempInYear(requiredDays)
         highestTemp, htd = self.highestTempInYear(requiredDays)
         humidity, hd = self.mostHumidDayOfYear(requiredDays)
-
         return ResultStorage.ResultStorage(highestTemp,lowestTemp,humidity,htd,ltd,hd)
 
-
+#return all days of all months of the given year whose data is available
     def monthsOfYear(self,year):
         requiredMonths = []
         for month in range(len(CalculationsResults.weatherData)): # reference of all the months of the required year are returned in an array
@@ -24,6 +22,7 @@ class CalculationsResults:
                 requiredMonths.append(month)
         return requiredMonths
 
+#return all days of all months whose data is available
     def daysOfMonth(self,month, year):
         requiredDays = []
         for days in range(len(CalculationsResults.weatherData)): # reference of all the months of the required year are returned in an array
@@ -33,14 +32,14 @@ class CalculationsResults:
                 requiredDays.append(days)
         return requiredDays
 
-
+#calculate average highest lowest temperature and mean humidity
     def avgCalculation(self,requiredDays):
         avgLowestTemp = CalculationsResults.avgLowestTemp(requiredDays)
         avgHighestTemp = CalculationsResults.avgHighestTemp(requiredDays)
         avgHumidity = CalculationsResults.avgMeanHumidity(requiredDays)
         return ResultStorage.ResultStorage(avgHighestTemp, avgLowestTemp, avgHumidity, None, None, None)
 
-
+#return lowest temperature for given days
     def lowestTempInYear(self,requiredDays):
         if (requiredDays == []):
             return None
@@ -55,7 +54,7 @@ class CalculationsResults:
                 continue
         return minTemp, self.toDate(minTempDay)
 
-
+#return highest temperature for given days
     def highestTempInYear(self,requiredDays):
         if (requiredDays == []):
             return None
@@ -70,7 +69,7 @@ class CalculationsResults:
                 continue
         return (maxTemp, self.toDate(maxTempDay))
 
-
+#returns most humid day for given days
     def mostHumidDayOfYear(self,requiredDays):
         if (requiredDays == []):
             return None
@@ -90,7 +89,7 @@ class CalculationsResults:
                 mostHumidDay = self.weatherData[i].pkt
         return (humiditiLevel, self.toDate(mostHumidDay))
 
-
+# Return average lowest temperature for given days
     def avgLowestTemp(requiredDays):
         if (requiredDays == []):
             return None
@@ -102,7 +101,7 @@ class CalculationsResults:
                 continue
         return (sum/len(requiredDays))
 
-
+# Return average highest temperature for given days
     def avgHighestTemp(requiredDays):
         if (requiredDays == []):
             return None
@@ -114,7 +113,7 @@ class CalculationsResults:
                 continue
         return (sum / len(requiredDays))
 
-
+# Return average mean humidity for given days
     def avgMeanHumidity(requiredDays):
         if (requiredDays == []):
             return None
@@ -127,7 +126,7 @@ class CalculationsResults:
                 continue
         return (sum / len(requiredDays))
 
-
+# Convert date in the form that include month name
     def toDate(self,pkt):
         month = ""
         day = ""
