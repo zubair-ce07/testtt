@@ -9,18 +9,11 @@ class WeatherDataParser:
     required_fields = ["Max TemperatureC", "Min TemperatureC",
                        "Max Humidity", " Mean Humidity"]
 
-    def read_file_data(self, file_path):
-        file_data = []
-        with open(file_path) as csv_file:
-            csv_reader = csv.DictReader(csv_file, delimiter=',')
-            for row in csv_reader:
-                file_data.append(row)
-        return file_data
-
     def parse(self, files_path):
         weather_records = []
-        for file_name in glob.iglob(os.path.join(files_path, '*.txt')):
-            for day_weather_record in self.read_file_data(file_name):
-                if all(day_weather_record.get(field) for field in WeatherDataParser.required_fields):
-                    weather_records.append(WeatherRecord(day_weather_record))
+        for files_path in glob.iglob(os.path.join(files_path, '*.txt')):
+            with open(files_path) as weather_file:
+                for weather_record in csv.DictReader(weather_file, delimiter=","):
+                    if all(weather_record.get(field) for field in WeatherDataParser.required_fields):
+                        weather_records.append(WeatherRecord(weather_record))
         return weather_records

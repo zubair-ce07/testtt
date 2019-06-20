@@ -12,60 +12,55 @@ class WeatherReporter:
         self.weather_analyzer = WeatherAnalyzer()
 
     def generate_annual_report(self, report_year, dir_path):
-        self.weather_analyzer.collect_weather_data_set(dir_path)
-        year_weather_record = self.weather_analyzer.get_filtered_records(int(report_year))
-        weather_results = self.weather_analyzer.get_weather_results(year_weather_record)
+        weather_results = self.weather_analyzer.get_weather_results(dir_path, int(report_year))
         self.print_annual_report(weather_results)
 
     def generate_monthly_report(self, report_year, report_month, dir_path):
-        self.weather_analyzer.collect_weather_data_set(dir_path)
-        month_weather_record = self.weather_analyzer.get_filtered_records(report_year, report_month)
-        weather_results = self.weather_analyzer.get_weather_results(month_weather_record)
+        weather_results = self.weather_analyzer.get_weather_results(dir_path, report_year, report_month)
         self.print_monthly_report(weather_results)
 
     def generate_bar_chart(self, report_year, report_month, dir_path):
-        self.weather_analyzer.collect_weather_data_set(dir_path)
-        month_weather_record = self.weather_analyzer.get_filtered_records(report_year, report_month)
-        bar_chart_data = self.calculate_bar_chart(month_weather_record)
-        self.print_monthly_bar_chart(bar_chart_data)
+        weather_results = self.weather_analyzer.get_weather_results(dir_path, report_year, report_month)
+        bar_chart = self.calculate_bar_chart(weather_results)
+        self.print_monthly_bar_chart(bar_chart)
         print("\nBonus\n")
-        bonus_bar_chart_data = self.calculate_bonus_chart(month_weather_record)
-        self.print_bonus_chart(bonus_bar_chart_data)
+        bonus_bar_chart = self.calculate_bonus_chart(weather_results)
+        self.print_bonus_chart(bonus_bar_chart)
 
     def calculate_bar_chart(self, month_weather_record):
-        bar_chart_data = []
+        bar_chart = []
         day_num = 1
-        for day_data in month_weather_record:
-            if day_data.max_temperature:
-                bar_chart_data.append([int(day_data.max_temperature), self.red_color_code, day_num])
-            if day_data.min_temperature:
-                bar_chart_data.append([int(day_data.min_temperature), self.blue_color_code, day_num])
+        for daily_reading in month_weather_record.daily_reading:
+            if daily_reading.max_temperature:
+                bar_chart.append([int(daily_reading.max_temperature), self.red_color_code, day_num])
+            if daily_reading.min_temperature:
+                bar_chart.append([int(daily_reading.min_temperature), self.blue_color_code, day_num])
                 day_num += 1
-        return bar_chart_data
+        return bar_chart
 
     def calculate_bonus_chart(self, month_weather_record):
-        bonus_bar_chart_data = []
+        bonus_bar_chart = []
         day_num = 1
-        for day_weather_record in month_weather_record:
+        for day_weather_record in month_weather_record.daily_reading:
             if day_weather_record.max_temperature:
                 temp_max = int(day_weather_record.max_temperature)
                 bar_chart_max_temp = self.red_color_code + ('+' * temp_max)
             if day_weather_record.min_temperature:
                 temp_min = int(day_weather_record.min_temperature)
                 bar_chart_min_temp = self.blue_color_code + ('+' * temp_min)
-                bonus_bar_chart_data.append([day_num, bar_chart_min_temp, bar_chart_max_temp,
-                                             temp_min, temp_max])
+                bonus_bar_chart.append([day_num, bar_chart_min_temp, bar_chart_max_temp,
+                                       temp_min, temp_max])
             day_num += 1
-        return bonus_bar_chart_data
+        return bonus_bar_chart
 
-    def print_bonus_chart(self, bonus_bar_chart_data):
-        for bar_chart_row in bonus_bar_chart_data:
+    def print_bonus_chart(self, bonus_bar_chart):
+        for bar_chart_row in bonus_bar_chart:
             self.draw_bonus_bar_chart(bar_chart_row[0], bar_chart_row[1], bar_chart_row[2],
                                       bar_chart_row[3], bar_chart_row[4])
 
-    def print_monthly_bar_chart(self, bar_chart_data):
-        for bar_chart_data in bar_chart_data:
-            self.draw_bar_chart(bar_chart_data[0], bar_chart_data[1], bar_chart_data[2])
+    def print_monthly_bar_chart(self, bar_chart):
+        for bar_chart_row_ in bar_chart:
+            self.draw_bar_chart(bar_chart_row_[0], bar_chart_row_[1], bar_chart_row_[2])
 
     def draw_bar_chart(self, temp, temp_color_code, day_num):
         bar_chart_month = '+' * temp

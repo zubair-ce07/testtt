@@ -8,3 +8,4 @@ class WeatherResult:
         self.avg_max_temp = avg_max_temperature
         self.avg_min_temp = avg_min_temperature
         self.mean_humidity_avg = mean_humidity_avg
+        self.daily_reading = []
