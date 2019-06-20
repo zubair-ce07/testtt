@@ -15,7 +15,7 @@ class WeatherAnalyzer:
                 if (day_weather_record.pkt.month == month if month else True)
                 and day_weather_record.pkt.year == year]
 
-    def get_weather_results(self, dir_path, year, month=None):
+    def get_results(self, dir_path, year, month=None):
         weather_results = WeatherResult()
         self.collect_weather_data_set(dir_path)
         filtered_records = self.get_filtered_records(year, month)
