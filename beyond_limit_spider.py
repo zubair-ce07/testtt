@@ -75,6 +75,7 @@ class BeyondLimitSpider(Spider):
             raw_care = response.css("div#description ul > li.MsoNormal span::text").extract()
         if raw_care:
             raw_care.pop(0)
+
         return raw_care
 
     def extract_image_urls(self, response):
@@ -84,6 +85,7 @@ class BeyondLimitSpider(Spider):
         raw_description = response.css("div#description p::text").extract_first()
         if not raw_description:
             raw_description = response.css("div#description::text").extract_first()
+
         return [description.rstrip() for description in raw_description.split(".") if description]
 
     def extract_color(self, response):
@@ -91,7 +93,9 @@ class BeyondLimitSpider(Spider):
         if not raw_color:
             raw_color = response.css("div#description li.MsoNormal span::text").extract_first()
         if raw_color:
-            return raw_color.split(":")[1].strip().rstrip()
+            raw_color = raw_color.split(":")[1].strip().rstrip()
+
+        return raw_color
 
     def extract_currency(self, response):
         return response.css("[itemprop=priceCurrency]::attr(content)").extract_first()
@@ -117,4 +121,5 @@ class BeyondLimitSpider(Spider):
                 "sku_id": f"{self.extract_color(response)}_{item_size}"
             }
             skus.append(sku)
+
         return skus
