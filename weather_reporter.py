@@ -46,9 +46,11 @@ class WeatherReporter:
         print(f"Highest: {weather_results.max_humidity_record.max_temperature}C on "
               f"{calendar.month_name[weather_results.max_humidity_record.pkt.month]} "
               f"{weather_results.max_humidity_record.pkt.day}")
+
         print(f"Lowest: {weather_results.min_temp_record.min_temperature}C on "
               f"{calendar.month_name[weather_results.min_temp_record.pkt.month]} "
               f"{weather_results.min_temp_record.pkt.day}")
+
         print(f"Humid: {weather_results.max_humidity_record.max_humidity}% on "
               f"{calendar.month_name[weather_results.max_humidity_record.pkt.month]} "
               f"{weather_results.max_humidity_record.pkt.day}")

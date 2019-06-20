@@ -19,6 +19,7 @@ class WeatherAnalyzer:
         weather_results = WeatherResult()
         self.collect_weather_data_set(dir_path)
         filtered_records = self.get_filtered_records(year, month)
+
         weather_results.max_temp_record = WeatherAnalyzer.get_max_temperature(filtered_records)
         weather_results.min_temp_record = WeatherAnalyzer.get_min_temperature(filtered_records)
         weather_results.max_humidity_record = WeatherAnalyzer.get_max_humidity(filtered_records)
@@ -26,6 +27,7 @@ class WeatherAnalyzer:
         weather_results.avg_min_temp = WeatherAnalyzer.get_avg_min_temp(filtered_records)
         weather_results.avg_max_temp = WeatherAnalyzer.get_avg_max_temp(filtered_records)
         weather_results.daily_reading = filtered_records
+
         return weather_results
 
     @staticmethod

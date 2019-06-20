@@ -10,6 +10,7 @@ class ArgumentValidator:
             date = datetime.strptime(arg_report, '%Y')
         except AttributeError:
             raise argparse.ArgumentTypeError('Please enter the valid year e.g. 2006')
+
         return date
 
     @staticmethod
@@ -18,4 +19,5 @@ class ArgumentValidator:
             date = datetime.strptime(arg_report, '%Y/%m')
         except AttributeError:
             raise argparse.ArgumentTypeError('Please enter the valid year/month e.g. 2006/7')
+
         return date

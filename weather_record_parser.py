@@ -16,4 +16,5 @@ class WeatherDataParser:
                 for weather_record in csv.DictReader(weather_file, delimiter=","):
                     if all(weather_record.get(field) for field in WeatherDataParser.required_fields):
                         weather_records.append(WeatherRecord(weather_record))
+
         return weather_records
