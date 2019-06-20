@@ -33,13 +33,14 @@ class FileReader:
                     except:
                         maxHumidity = None
                     try:
-                        minHumidity = row["Min Humidity"]
+                        minHumidity = row[" Min Humidity"]
                     except:
                         minHumidity = None
                     try:
-                        avgHumidity = row["Mean Humidity"]
+                        avgHumidity = row[" Mean Humidity"]
                     except:
                         avgHumidity = None
+
 
                     FileReader.storeData(pkt,maxTemp,minTemp,avgTemp,maxHumidity,minHumidity,avgHumidity)
             except:

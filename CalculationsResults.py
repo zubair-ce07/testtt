@@ -47,9 +47,12 @@ class CalculationsResults:
         minTemp = int(self.weatherData[requiredDays[0]].minTemperature)
         minTempDay = self.weatherData[requiredDays[0]].pkt
         for i in requiredDays:
-            if (int(self.weatherData[i].minTemperature) < minTemp):
-                minTemp = int(self.weatherData[i].minTemperature)
-                minTempDay = self.weatherData[i].pkt
+            try:
+                if (int(self.weatherData[i].minTemperature) < minTemp):
+                    minTemp = int(self.weatherData[i].minTemperature)
+                    minTempDay = self.weatherData[i].pkt
+            except:
+                continue
         return minTemp, self.toDate(minTempDay)
 
 
@@ -59,9 +62,12 @@ class CalculationsResults:
         maxTemp = int(self.weatherData[requiredDays[0]].maxTemperature)
         maxTempDay = self.weatherData[requiredDays[0]].pkt
         for i in requiredDays:
-            if (int(self.weatherData[i].maxTemperature) > maxTemp):
-                maxTemp = int(self.weatherData[i].maxTemperature)
-                maxTempDay = self.weatherData[i].pkt
+            try:
+                if (int(self.weatherData[i].maxTemperature) > maxTemp):
+                    maxTemp = int(self.weatherData[i].maxTemperature)
+                    maxTempDay = self.weatherData[i].pkt
+            except:
+                continue
         return (maxTemp, self.toDate(maxTempDay))
 
 
@@ -90,7 +96,10 @@ class CalculationsResults:
             return None
         sum = 0
         for i in requiredDays:
-            sum += int(CalculationsResults.weatherData[i].minTemperature)
+            try:
+                sum += int(CalculationsResults.weatherData[i].minTemperature)
+            except:
+                continue
         return (sum/len(requiredDays))
 
 
@@ -99,7 +108,10 @@ class CalculationsResults:
             return None
         sum = 0
         for i in requiredDays:
-            sum += int(CalculationsResults.weatherData[i].maxTemperature)
+            try:
+                sum += int(CalculationsResults.weatherData[i].maxTemperature)
+            except:
+                continue
         return (sum / len(requiredDays))
 
 
@@ -107,6 +119,7 @@ class CalculationsResults:
         if (requiredDays == []):
             return None
         sum = 0
+
         for i in requiredDays:
             try:
                 sum += int(CalculationsResults.weatherData[i].meanHumidity)

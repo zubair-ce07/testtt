@@ -1,19 +1,36 @@
 import FileReader, CalculationsResults, ReportGenerator, ResultStorage, WeatherReadings
 import sys
-check = CalculationsResults.CalculationsResults()
-requiredDays = check.monthsOfYear("2007")
-result = check.calculateForGivenDays(requiredDays)
+
+calculationObject = CalculationsResults.CalculationsResults()
 report = ReportGenerator.ReportGenerator()
-report.yearReport(result)
 
-daysofMonth = check.daysOfMonth("6","2007")
-resultMonthavg = check.avgCalculation(daysofMonth)
-report.monthReport(resultMonthavg)
+def yearReport(year):
+    requiredDays = calculationObject.monthsOfYear(year)
+    result = calculationObject.calculateForGivenDays(requiredDays)
+    report.yearReport(result)
 
-monthHighestNLowest = check.calculateForGivenDays(daysofMonth)
-report.monthReport(monthHighestNLowest) #change
+def monthReport(yearMonth):
+    year = yearMonth[:4]
+    month = yearMonth[5:]
+    daysofMonth = calculationObject.daysOfMonth(month, year)
+    resultMonthavg = calculationObject.avgCalculation(daysofMonth)
+    report.monthReport(resultMonthavg)
 
-report.drawBarCharts(daysofMonth,check.weatherData)
-report.drawSingleChart(daysofMonth,check.weatherData)
+def barChart(yearMonth):
+    year = yearMonth[:4]
+    month = yearMonth[5:]
+    daysofMonth = calculationObject.daysOfMonth(month, year)
+    report.drawBarCharts(daysofMonth, calculationObject.weatherData,month,year)
+    report.drawSingleChart(daysofMonth, calculationObject.weatherData,month,year)
 
-print(sys.argv)
+i = 1
+while (i < len(sys.argv)):
+    if (sys.argv[i] == "-e"):
+        yearReport(sys.argv[i+1])
+    elif (sys.argv[i] == "-a"):
+        monthReport(sys.argv[i+1])
+    elif (sys.argv[i] == "-c"):
+        barChart(sys.argv[i+1])
+    else:
+        print("Invalid Command")
+    i += 2
