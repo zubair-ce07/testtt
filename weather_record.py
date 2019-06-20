@@ -6,14 +6,14 @@ class WeatherRecord:
     def __init__(self, weather_record):
         self.pkt = datetime.strptime(weather_record.get("PKT", weather_record.get('PKST')),
                                      "%Y-%m-%d")
-        self.max_temperature = weather_record["Max TemperatureC"]
+        self.max_temperature = int(weather_record["Max TemperatureC"])
         self.mean_temperature = weather_record["Mean TemperatureC"]
-        self.min_temperature = weather_record["Min TemperatureC"]
+        self.min_temperature = int(weather_record["Min TemperatureC"])
         self.dew_point = weather_record["Dew PointC"]
         self.mean_dew_point = weather_record["MeanDew PointC"]
         self.min_dew_point = weather_record["Min DewpointC"]
-        self.max_humidity = weather_record["Max Humidity"]
-        self.mean_humidity = weather_record[" Mean Humidity"]
+        self.max_humidity = int(weather_record["Max Humidity"])
+        self.mean_humidity = int(weather_record[" Mean Humidity"])
         self.min_humidity = weather_record[" Min Humidity"]
         self.max_sea_level_pressure = weather_record[" Max Sea Level PressurehPa"]
         self.mean_sea_level_pressure = weather_record[" Mean Sea Level PressurehPa"]

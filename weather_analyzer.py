@@ -11,9 +11,9 @@ class WeatherAnalyzer:
         self.weather_records = weather_data_parser.parse(files_path)
 
     def get_filtered_records(self, year, month):
-        return [day_weather_record for day_weather_record in
-                self.weather_records if (day_weather_record.pkt.month == month if month else
-                                         True) and day_weather_record.pkt.year == year]
+        return [day_weather_record for day_weather_record in self.weather_records
+                if (day_weather_record.pkt.month == month if month else True)
+                and day_weather_record.pkt.year == year]
 
     def get_weather_results(self, dir_path, year, month=None):
         weather_results = WeatherResult()
@@ -30,24 +30,27 @@ class WeatherAnalyzer:
 
     @staticmethod
     def get_max_temperature(weather_records):
-        return max(weather_records, key=lambda daily_reading: int(daily_reading.max_temperature))
+        return max(weather_records, key=lambda daily_reading: daily_reading.max_temperature)
 
     @staticmethod
     def get_min_temperature(weather_records):
-        return min(weather_records, key=lambda daily_reading: int(daily_reading.min_temperature))
+        return min(weather_records, key=lambda daily_reading: daily_reading.min_temperature)
 
     @staticmethod
     def get_max_humidity(weather_records):
-        return max(weather_records, key=lambda daily_reading: int(daily_reading.max_humidity))
+        return max(weather_records, key=lambda daily_reading: daily_reading.max_humidity)
 
     @staticmethod
     def get_mean_humidity(weather_records):
-        return sum(int(daily_reading.mean_humidity)for daily_reading in weather_records) / len(weather_records)
+        mean_humidity_sum = sum(daily_reading.mean_humidity for daily_reading in weather_records)
+        return mean_humidity_sum/ len(weather_records)
 
     @staticmethod
     def get_avg_min_temp(weather_records):
-        return sum(int(daily_reading.min_temperature) for daily_reading in weather_records) / len(weather_records)
+        min_temp_sum = sum(daily_reading.min_temperature for daily_reading in weather_records)
+        return min_temp_sum / len(weather_records)
 
     @staticmethod
     def get_avg_max_temp(weather_records):
-        return sum(int(daily_reading.max_temperature) for daily_reading in weather_records) / len(weather_records)
+        max_temp_sum = sum(daily_reading.max_temperature for daily_reading in weather_records)
+        return max_temp_sum / len(weather_records)
