@@ -13,42 +13,41 @@ class DayReading:
         self.mean_humidity = mean_humidity
 
 class MonthReading:
-    def __init__(self, path_to_file):
+    def __init__(self, path):
         self.days = []
-        self.filepath = path_to_file
         try:
-            self.file_to_read = open(self.filepath)
+            with open(path, 'r') as file_to_read:
+                reader = csv.DictReader(file_to_read)
+                for row in reader:
+                    day = DayReading(
+                    row['PKT'], 
+                    row['Max TemperatureC'],
+                    row['Mean TemperatureC'], 
+                    row['Min TemperatureC'],
+                    row['Max Humidity'], 
+                    row[' Mean Humidity']
+                    )
+                    self.days.append(day)
+                size = len(path)
+                self.month_name = f"{path[size-7]}{path[size-6]}{path[size-5]}"
+                self.year = f"{path[size-12]}{path[size-11]}{path[size-10]}{path[size-9]}"
+                
         except FileNotFoundError:
             print("Data for this month does not exist")
             sys.exit()
-        reader = csv.DictReader(self.file_to_read)
-        for row in reader:
-            day = DayReading(
-                row['PKT'], 
-                row['Max TemperatureC'],
-                row['Mean TemperatureC'], 
-                row['Min TemperatureC'],
-                row['Max Humidity'], 
-                row[' Mean Humidity']
-            )
-            self.days.append(day)
-        self.month_name = path_to_file[len(path_to_file)-7] + path_to_file[len(path_to_file)-6] + path_to_file[len(path_to_file)-5]
-        self.month_num = list(calendar.month_abbr).index(self.month_name)
-        self.year = path_to_file[len(path_to_file)-12] + path_to_file[len(path_to_file)-11] + path_to_file[len(path_to_file)-10] + path_to_file[len(path_to_file)-9]
-        
 
 class YearReading:
     def __init__(self, dir_path, year):
         self.year = int(year)
-        self.full_path = dir_path + "/Murree_weather_" + year + "_*.txt"
-        filenames = glob.glob(self.full_path)
+        filenames = glob.glob(f"{dir_path}/Murree_weather_{year}_*.txt")
         self.months = []
-        for i in range(len(filenames)):
-            month = MonthReading(filenames[i])
+        for filename in filenames:
+            month = MonthReading(filename)
             self.months.append(month)
 
 class YearResults:
-    def __init__(self, max_temp, max_temp_date, min_temp, min_temp_date, max_humidity, max_humidity_date):
+    def __init__(self, max_temp, max_temp_date, min_temp, min_temp_date, 
+                 max_humidity, max_humidity_date):
         self.max_temp = max_temp
         self.max_temp_date = max_temp_date
         self.min_temp = min_temp
