@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 
+weatherfiles/
 # C extensions
 *.so
 
