@@ -1,49 +1,54 @@
 import time
 
-from ride_fair_constants import FairConstants
+from ride_fair import RideFair
 from taxi_meter_record import TaxiMeterRecord
-from utils import Utils
 
 
 class TaxiMeterCalculator:
-
     def __init__(self):
-        self.taxi_meter_record = TaxiMeterRecord()
-        self.taxi_speed_increment_factor = 5
-        self.ride_time_increment_factor = 1
+        self.taxi_meter = TaxiMeterRecord()
+        self.speed_increment_factor = 5
+        self.time_increment_factor = 1
 
     def increase_taxi_speed(self):
-        self.taxi_meter_record.taxi_speed += self.taxi_speed_increment_factor
+        self.taxi_meter.taxi_speed += self.speed_increment_factor
 
     def decrease_taxi_speed(self):
-        if self.taxi_meter_record.taxi_speed > 0:
-            self.taxi_meter_record.taxi_speed -= self.taxi_speed_increment_factor
+        self.taxi_meter.taxi_speed = max(0, self.taxi_meter.taxi_speed - self.speed_increment_factor)
 
     def display_taxi_meter(self):
-        Utils.show_scaled_ride_time("Ride Time", self.taxi_meter_record.ride_time)
-        Utils.show_scaled_ride_distance(self.taxi_meter_record.ride_distance)
-        print(f"Speed: {self.taxi_meter_record.taxi_speed} Meter per Second")
-        print(f"Fare: {self.taxi_meter_record.ride_fare} Rs")
-        Utils.show_scaled_ride_time("Wait Time", self.taxi_meter_record.ride_wait_time)
+        print(f'Ride Time: {self.taxi_meter.ride_time // 60} '
+              f'Minutes {self.taxi_meter.ride_time % 60} Seconds')
+
+        print(f'Distance: {self.taxi_meter.ride_distance // 1000} KM '
+              f'{self.taxi_meter.ride_distance % 1000} Meters')
+
+        print(f'Speed: {self.taxi_meter.taxi_speed} Meter per Second')
+        print(f'Fare: {self.taxi_meter.ride_fare} Rs')
+
+        print(f'Wait Time: {self.taxi_meter.ride_wait_time // 60} '
+              f'Minutes {self.taxi_meter.ride_wait_time % 60} Seconds')
 
     def increment_ride_time(self, driving_status):
         if driving_status:
-            time.sleep(self.ride_time_increment_factor)
-            self.taxi_meter_record.ride_time += self.ride_time_increment_factor
+            self.taxi_meter.ride_time += self.time_increment_factor
         else:
-            time.sleep(self.ride_time_increment_factor)
-            self.taxi_meter_record.ride_wait_time += self.ride_time_increment_factor
+            self.taxi_meter.ride_wait_time += self.time_increment_factor
+            self.set_taxi_state_idle()
+
+        time.sleep(self.time_increment_factor)
 
     def set_taxi_state_idle(self):
-        self.taxi_meter_record.taxi_speed = 0
+        self.taxi_meter.taxi_speed = 0
 
     def calculate_ride_distance(self):
-        self.taxi_meter_record.ride_distance += self.taxi_meter_record.taxi_speed * \
-                                                self.ride_time_increment_factor
+        self.taxi_meter.ride_distance += self.taxi_meter.taxi_speed * self.time_increment_factor
 
     def calculate_ride_fair(self):
-        ride_distance_fair = Utils.convert_meters_into_km(
-            self.taxi_meter_record.ride_distance) * FairConstants.DISTANCE_TRAVELLED_FAIR.value
-        ride_wait_time_fair = Utils.convert_seconds_into_minutes(
-            self.taxi_meter_record.ride_wait_time) * FairConstants.WAITING_TIME_FAIR.value
-        self.taxi_meter_record.ride_fare = round(ride_distance_fair + ride_wait_time_fair)
+        ride_distance_in_km = self.taxi_meter.ride_distance / 1000
+        ride_distance_fair = ride_distance_in_km * RideFair.DISTANCE_TRAVELLED_FAIR.value
+
+        ride_time_in_minutes = self.taxi_meter.ride_wait_time / 60
+        ride_wait_time_fair = ride_time_in_minutes * RideFair.WAITING_TIME_FAIR.value
+
+        self.taxi_meter.ride_fare = ride_distance_fair + ride_wait_time_fair
