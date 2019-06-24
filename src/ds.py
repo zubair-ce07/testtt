@@ -32,9 +32,8 @@ class MonthReading:
                 row[' Mean Humidity']
                 )
                 self.days.append(day)
-            size = len(path)
-            self.month_name = f"{path[size-7]}{path[size-6]}{path[size-5]}"
-            self.year = f"{path[size-12]}{path[size-11]}{path[size-10]}{path[size-9]}"
+            self.month_name = f"{path[-7]}{path[-6]}{path[-5]}"
+            self.year = f"{path[-12]}{path[-11]}{path[-10]}{path[-9]}"
             
 class YearReading:
     def __init__(self, dir_path, year):
