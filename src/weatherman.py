@@ -10,35 +10,42 @@ from ds import YearReading, MonthReading, YearResults, MonthResults, ChartResult
 arguments_list = list(sys.argv)
 arguments = iter(sys.argv)
 
-if tf.validateArguments(arguments_list) == False:
-    tf.printUsage()
-    sys.exit(1)
+if tf.validate_arguments(arguments_list) == True:
+    next(arguments)
+    next(arguments)
+    report_count = int((len(arguments_list)/2) - 1)
 
-next(arguments)
-next(arguments)
-report_count = int((len(arguments_list)/2) - 1)
-
-for i in range(report_count):
+    for i in range(report_count):
+        print()
+        flag = str(next(arguments))
+        value = str(next(arguments))
+        if flag == "-e":
+            year = YearReading(arguments_list[1], value)
+            if year.check != -1:
+                year_results = calc.yearly_calc(year)
+                rg.year_report(year_results)
+            else:
+                print("Invalid path")
+                tf.print_usage
+        else:
+            split_date = value.split('/')
+            month_num = int(split_date[1])
+            month_name = calendar.month_abbr[month_num]
+            file_path = f"{str(arguments_list[1])}/Murree_weather_{split_date[0]}_{month_name}.txt"
+            month = MonthReading(file_path)
+            if month.check != -1:
+                if flag == "-a":
+                    month_results = calc.monthly_calc(month)
+                    rg.month_report(month_results)
+                if flag == "-c":
+                    chart_results = calc.bar_chart(month)
+                    rg.chart_report(chart_results)
+                if flag == "-b":
+                    bonus_results = calc.bar_chart(month)
+                    rg.chart_bonus_report(bonus_results)
+            else:
+                print("Invalid path")
+                tf.print_usage
     print()
-    flag = str(next(arguments))
-    value = str(next(arguments))
-    if flag == "-e":
-        year = YearReading(arguments_list[1], value)
-        yresults = calc.yearly_calc(year)
-        rg.year_report(yresults)
-    else:
-        ym_split = value.split('/')
-        m = int(ym_split[1])
-        month = calendar.month_abbr[m]
-        file_path = f"{str(arguments_list[1])}/Murree_weather_{ym_split[0]}_{month}.txt"
-        month = MonthReading(file_path)
-        if flag == "-a":
-            mresults = calc.monthly_calc(month)
-            rg.month_report(mresults)
-        if flag == "-c":
-            mcresults = calc.bar_chart(month)
-            rg.chart_report(mcresults)
-        if flag == "-b":
-            mcbresults = calc.bar_chart(month)
-            rg.chart_bonus_report(mcbresults)
-print()
+else:
+    tf.print_usage()

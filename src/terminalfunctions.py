@@ -1,16 +1,12 @@
 import re
-import os
 
-def validateArguments(args):
+def validate_arguments(args):
     size = len(args)
-    if size%2 != 0:
+    if size % 2 != 0:
         return False
     if size < 4:
         return False
-    if not os.path.exists(args[1]):
-        print("Invalid path!")
-        return False
-    for i in range(2, size-1, 2):
+    for i in range(2, size - 1, 2):
         args[i]= str(args[i])
         if args[i] != '-e' and args[i] != '-a' and args[i] != '-c' and args[i] != '-b':
             return False
@@ -21,7 +17,7 @@ def validateArguments(args):
                 return False
         if args[i] == "-a" or args[i] == "-c" or args[i] == "-b":
             data = str(value_passed)
-            if re.match("\\d{4}/\\d{2}", data) != None or re.match("\\d{4}/\\d{1}", data) != None:
+            if re.match("\\d{4}/\\d{2}", data) or re.match("\\d{4}/\\d{1}", data):
                 combined = data.split('/')
                 split_year = int(combined[0])
                 split_month = int(combined[1])
@@ -33,6 +29,6 @@ def validateArguments(args):
                 return False
     return True
 
-def printUsage():
+def print_usage():
     print("Wrong usage!")
     print("Usage: weatherman.py path/to/files-dir [-e YYYY] [-a YYYY/MM] [-c YYYY/MM] [-b YYYY/MM]")

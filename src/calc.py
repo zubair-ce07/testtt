@@ -1,29 +1,26 @@
 from ds import YearResults, MonthResults, ChartResults
 
 def yearly_calc(year):
-    max_temp = year.months[0].days[0].max_temp
-    max_temp_date = year.months[0].days[0].date
-    for month in year.months:
-        for temp_max_day in [day for day in month.days if day.max_temp]:
-            if int(temp_max_day.max_temp) > int(max_temp):
-                max_temp = temp_max_day.max_temp
-                max_temp_date = temp_max_day.date
+    max_temp = year.days[0].max_temp
+    max_temp_date = year.days[0].date
+    for temp_max_day in [day for day in year.days if day.max_temp]:
+        if int(temp_max_day.max_temp) > int(max_temp):
+            max_temp = temp_max_day.max_temp
+            max_temp_date = temp_max_day.date
 
-    min_temp = year.months[0].days[0].min_temp
-    min_temp_date = year.months[0].days[0].date
-    for month in year.months:
-        for temp_min_day in [day for day in month.days if day.min_temp]:
-            if int(temp_min_day.min_temp) < int(min_temp):
-                min_temp = temp_min_day.min_temp
-                min_temp_date = temp_min_day.date
+    min_temp = year.days[0].min_temp
+    min_temp_date = year.days[0].date
+    for temp_min_day in [day for day in year.days if day.min_temp]:
+        if int(temp_min_day.min_temp) < int(min_temp):
+            min_temp = temp_min_day.min_temp
+            min_temp_date = temp_min_day.date
 
-    max_humid = year.months[0].days[0].max_humidity
-    max_humid_date = year.months[0].days[0].date
-    for month in year.months:
-        for humid_max_day in [day for day in month.days if day.max_humidity]:
-            if int(humid_max_day.max_humidity) > int(max_humid):
-                max_humid = humid_max_day.max_humidity
-                max_humid_date = humid_max_day.date
+    max_humid = year.days[0].max_humidity
+    max_humid_date = year.days[0].date
+    for humid_max_day in [day for day in year.days if day.max_humidity]:
+        if int(humid_max_day.max_humidity) > int(max_humid):
+            max_humid = humid_max_day.max_humidity
+            max_humid_date = humid_max_day.date
     
     return YearResults(max_temp, max_temp_date, min_temp, min_temp_date, max_humid, max_humid_date, year.year)
 
@@ -46,7 +43,6 @@ def bar_chart(month):
     results = []
     days = [day for day in month.days if day.max_temp and day.min_temp]
     for day in days:
-        day_data = tuple((day.date, int(day.max_temp), int(day.min_temp)))
-        results.append(day_data)
+        results.append(tuple((day.date, int(day.max_temp), int(day.min_temp))))
 
     return ChartResults(results, month.month_name, month.year)
