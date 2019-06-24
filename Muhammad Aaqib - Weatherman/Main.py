@@ -2,8 +2,7 @@ import Weather as t
 import argparse
 
 
-def main():
-    data = t.parse_file()
+def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("date", help="""Year/Month to find weather's
                          calculations""")
@@ -14,8 +13,13 @@ def main():
     parser.add_argument("-c", "--graphically", help="""Plot the bar chart of
                          weather stats of a month""", action="store_true")
     args = parser.parse_args()
-    date = args.date
+    return args
 
+
+def main():
+    args = parse_arguments()
+    date = args.date
+    data = t.parse_file()
     if args.yearly:
         year_data = t.get_year_reading(data, date)
         max_temp_data = year_data.get("max temp")
@@ -47,6 +51,7 @@ def main():
         month_index = chart_data.get("month index")
         result_print = t.ResultPrinter()
         result_print.plot_month_barchart(data, year_index, month_index)
+        result_print.plot_component_barchart(data, year_index, month_index)
 
 
 if __name__ == '__main__':

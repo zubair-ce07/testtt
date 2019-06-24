@@ -37,32 +37,55 @@ class ResultPrinter:
         avg_mean_humidity = round(avg_mean_humidity, 2)
         print(f"Average Mean Humidity: {avg_mean_humidity}%")
 
-    def plot_month_barchart(self, data, year_index, month_index):
+    def plot_bar(self, limit, color):
+        for i in range(limit):
+            print("{}+".format(color), end="")
+
+    def print_month_year(self, data, year_index, month_index):
         time = data[year_index][month_index][0].date
         time = str_to_date(time)
         month_name = time.strftime("%B")
         year = time.strftime("%Y")
         print(f"{month_name} {year}")
+
+    def plot_month_barchart(self, data, year_index, month_index):
+        self.print_month_year(data, year_index, month_index)
         for i in range(0, len(data[year_index][month_index])):
-            if i + 1 < 10:
-                print(u"\u001b[35m0", end="")
-            print(u"\u001b[35m{}".format(i + 1), end=" ")
-            if data[year_index][month_index][i].max_temp != "":
-                for j in range(0, int(data[year_index][month_index][i]
-                               .max_temp)):
-                    print(u"\u001b[31m+", end="")
-            print(u"\u001b[35m {}C".format(data[year_index][month_index][i]
-                  .max_temp))
-            if i + 1 < 10:
-                print(u"\u001b[35m0", end="")
-            print(u"\u001b[35m{}".format(i + 1), end=" ")
-            if data[year_index][month_index][i].min_temp != "":
-                for j in range(0, int(data[year_index][month_index][i]
-                               .min_temp)):
-                    print(u"\u001b[36m+", end="")
-            print(u"\u001b[35m {}C".format(data[year_index][month_index][i]
-                                           .min_temp))
+            if data[year_index][month_index][i].max_temp:
+                if i + 1 < 10:
+                    print(u"\u001b[35m0", end="")
+                print(u"\u001b[35m{}".format(i + 1), end=" ")
+                self.plot_bar(int(data[year_index][month_index][i].max_temp),
+                              u"\u001b[31m")
+                print(u"\u001b[35m {}C".format(data[year_index][month_index][i]
+                      .max_temp))
+
+            if data[year_index][month_index][i].min_temp:
+                if i + 1 < 10:
+                    print(u"\u001b[35m0", end="")
+                print(u"\u001b[35m{}".format(i + 1), end=" ")
+                self.plot_bar(int(data[year_index][month_index][i].min_temp),
+                              u"\u001b[36m")
+                print(u"\u001b[35m {}C".format(data[year_index][month_index][i]
+                                               .min_temp))
             print()
+
+    def plot_component_barchart(self, data, year_index, month_index):
+        self.print_month_year(data, year_index, month_index)
+        for i in range(0, len(data[year_index][month_index])):
+            if data[year_index][month_index][i].min_temp:
+                if i + 1 < 10:
+                    print(u"\u001b[35m0", end="")
+                print(u"\u001b[35m{}".format(i + 1), end="")
+                self.plot_bar(int(data[year_index][month_index][i].min_temp),
+                              u"\u001b[36m")
+            if data[year_index][month_index][i].max_temp:
+                self.plot_bar(int(data[year_index][month_index][i].max_temp),
+                              u"\u001b[31m")
+                print(u"\u001b[35m {}C".format(data[year_index][month_index][i]
+                      .min_temp), end="-")
+                print(u"\u001b[35m{}C".format(data[year_index][month_index][i]
+                                              .max_temp))
 
 
 class WeatherAnalysis:
