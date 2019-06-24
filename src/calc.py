@@ -4,66 +4,49 @@ def yearly_calc(year):
     max_temp = year.months[0].days[0].max_temp
     max_temp_date = year.months[0].days[0].date
     for month in year.months:
-        temp_max_days = [day for day in month.days if day.max_temp]
-        for day in temp_max_days:
-            if int(day.max_temp) > int(max_temp):
-                max_temp = day.max_temp
-                max_temp_date = day.date
+        for temp_max_day in [day for day in month.days if day.max_temp]:
+            if int(temp_max_day.max_temp) > int(max_temp):
+                max_temp = temp_max_day.max_temp
+                max_temp_date = temp_max_day.date
 
     min_temp = year.months[0].days[0].min_temp
     min_temp_date = year.months[0].days[0].date
     for month in year.months:
-        temp_min_days = [day for day in month.days if day.min_temp]
-        for day in temp_min_days:
-            if int(day.min_temp) < int(min_temp):
-                min_temp = day.min_temp
-                min_temp_date = day.date
+        for temp_min_day in [day for day in month.days if day.min_temp]:
+            if int(temp_min_day.min_temp) < int(min_temp):
+                min_temp = temp_min_day.min_temp
+                min_temp_date = temp_min_day.date
 
     max_humid = year.months[0].days[0].max_humidity
     max_humid_date = year.months[0].days[0].date
     for month in year.months:
-        humid_max_days = [day for day in month.days if day.max_humidity]
-        for day in humid_max_days:
-            if int(day.max_humidity) > int(max_humid):
-                max_humid = day.max_humidity
-                max_humid_date = day.date
+        for humid_max_day in [day for day in month.days if day.max_humidity]:
+            if int(humid_max_day.max_humidity) > int(max_humid):
+                max_humid = humid_max_day.max_humidity
+                max_humid_date = humid_max_day.date
     
-    return YearResults(max_temp, max_temp_date, min_temp, min_temp_date, max_humid, max_humid_date)
+    return YearResults(max_temp, max_temp_date, min_temp, min_temp_date, max_humid, max_humid_date, year.year)
 
 def monthly_calc(month):
-    sum_high_t = 0
-    high_temp_days = [day for day in month.days if day.max_temp]
-    for day in high_temp_days:
-        sum_high_t = sum_high_t + int(day.max_temp)
-    avg_high_t = round(sum_high_t/len(high_temp_days))
+    high_temp_days = [int(day.max_temp) for day in month.days if day.max_temp]
+    sum_high_temp = sum(high_temp_days)
+    avg_high_temp = round(sum_high_temp/len(high_temp_days))
 
-    sum_low_t = 0
-    low_temp_days = [day for day in month.days if day.min_temp]
-    for day in low_temp_days:
-        sum_low_t = sum_low_t + int(day.min_temp)
-    avg_low_t = round(sum_low_t/len(low_temp_days))
+    low_temp_days = [int(day.min_temp) for day in month.days if day.min_temp]
+    sum_low_temp = sum(low_temp_days)
+    avg_low_temp = round(sum_low_temp/len(low_temp_days))
 
-    sum_mean_h = 0
-    mean_humid_days = [day for day in month.days if day.mean_humidity]
-    for day in mean_humid_days:
-        sum_mean_h = sum_mean_h + int(day.mean_humidity)
-    avg_mean_h = round(sum_mean_h/len(mean_humid_days))
+    mean_humid_days = [int(day.mean_humidity) for day in month.days if day.mean_humidity]
+    sum_mean_humid = sum(mean_humid_days)
+    avg_mean_humid = round(sum_mean_humid/len(mean_humid_days))
 
-    return MonthResults(avg_high_t, avg_low_t, avg_mean_h)
+    return MonthResults(avg_high_temp, avg_low_temp, avg_mean_humid, month.month_name, month.year)
 
 def bar_chart(month):
-    high_t = []
-    high_d = []
-    high_temp_days = [day for day in month.days if day.max_temp]
-    for day in high_temp_days:
-        high_t.append(day.max_temp)
-        high_d.append(day.date)
-    
-    low_t = []
-    low_d = []
-    low_temp_days = [day for day in month.days if day.min_temp]
-    for day in low_temp_days:
-        low_t.append(day.min_temp)
-        low_d.append(day.date)
+    results = []
+    days = [day for day in month.days if day.max_temp and day.min_temp]
+    for day in days:
+        day_data = tuple((day.date, int(day.max_temp), int(day.min_temp)))
+        results.append(day_data)
 
-    return ChartResults(high_t, low_t, high_d, low_d, month.month_name, month.year)
+    return ChartResults(results, month.month_name, month.year)

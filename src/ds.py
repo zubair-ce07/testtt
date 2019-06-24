@@ -47,25 +47,25 @@ class YearReading:
 
 class YearResults:
     def __init__(self, max_temp, max_temp_date, min_temp, min_temp_date, 
-                 max_humidity, max_humidity_date):
+                 max_humidity, max_humidity_date, year):
         self.max_temp = max_temp
         self.max_temp_date = max_temp_date
         self.min_temp = min_temp
         self.min_temp_date = min_temp_date
         self.max_humidity = max_humidity
         self.max_humidity_date = max_humidity_date
+        self.year = year
     
 class MonthResults:
-    def __init__(self, avg_high_temp, avg_low_temp, avg_mean_humidity):
+    def __init__(self, avg_high_temp, avg_low_temp, avg_mean_humidity, month, year):
         self.avg_high_temp = avg_high_temp
         self.avg_low_temp = avg_low_temp
         self.avg_mean_humidity = avg_mean_humidity
+        self.month = month
+        self.year = year
 
 class ChartResults:
-    def __init__(self, high_temps, low_temps, high_dates, low_dates, month, year):
-        self.high_temps = high_temps
-        self.low_temps = low_temps
-        self.high_dates = high_dates
-        self.low_dates = low_dates
+    def __init__(self, results, month, year):
+        self.results = results
         self.month = month
         self.year = year
