@@ -1,6 +1,9 @@
+import copy
+
 import scrapy
-from scrapy import Spider, Request
 from scrapy.item import Item
+from scrapy.linkextractors import LinkExtractor
+from scrapy.spiders import CrawlSpider, Rule
 
 
 class Product(Item):
@@ -16,32 +19,26 @@ class Product(Item):
     skus = scrapy.Field()
 
 
-class BeyondLimitSpider(Spider):
+class BeyondLimitSpider(CrawlSpider):
     name = 'beyond_limit'
     allowed_domains = ['beyondlimits.com']
     start_urls = ['https://www.beyondlimits.com']
     default_brand = 'BeyondLimits'
+    default_gender = 'unknown'
     gender_terms = [
-        'men',
         'women',
+        'men',
     ]
     care_terms = [
         'Care tips',
         'Material',
     ]
-
-    def parse(self, response):
-        css = '.ft_cloned--inner .bb_mainmenu--item ::attr(data-bbfwhref)'
-        base_category_links = response.css(css).getall()
-        yield from [Request(url=u, callback=self.parse_category) for u in base_category_links]
-
-    def parse_category(self, response):
-        sub_category_links = response.css('.bb_subcat--list ::attr(href)').getall()
-        yield from [Request(url=u, callback=self.parse_sub_category) for u in sub_category_links]
-
-    def parse_sub_category(self, response):
-        item_links = response.css('.bb_product--link::attr(href)').getall()
-        yield from [Request(item_link, callback=self.parse_item) for item_link in item_links]
+    category_css = '.bb_mega--subitem > .bb_mega--link'
+    product_css = '.bb_product--link'
+    rules = (
+        Rule(LinkExtractor(restrict_css=category_css)),
+        Rule(LinkExtractor(restrict_css=product_css), callback='parse_item')
+    )
 
     def parse_item(self, response):
         item = Product()
@@ -69,11 +66,15 @@ class BeyondLimitSpider(Spider):
 
     def extract_gender(self, response):
         raw_genders = response.css('[itemprop=title]::text').getall()
-        return next((gn for gn in clean(raw_genders) if gn.lower() in self.gender_terms), "unknown")
+        for gender in clean(raw_genders):
+            if gender.lower() in self.gender_terms:
+                return gender
+
+        return self.default_gender
 
     def extract_category(self, response):
         raw_category = response.css('[itemprop=title]::text').getall()
-        return [raw_category_item for raw_category_item in clean(raw_category)]
+        return clean(raw_category)
 
     def extract_care(self, response):
         css = '#description li::text, #description .MsoNormal span::text'
@@ -102,15 +103,16 @@ class BeyondLimitSpider(Spider):
     def extract_skus(self, response):
         skus = []
         colour = self.extract_colour(response)
-        sku = {
+        common_sku = {
             'colour': colour,
             'price': self.extract_current_price(response),
             'currency': self.extract_currency(response),
             'previous_prices': self.extract_previous_prices(response)
         }
         for item_size in response.css('.bb_form--select [value!=""]::text').getall():
-            sku['size'] = item_size
-            sku['sku_id'] = f'{colour}_{item_size}'
+            common_sku['size'] = item_size
+            common_sku['sku_id'] = f'{colour}_{item_size}'
+            sku = copy.deepcopy(common_sku)
             skus.append(sku)
 
         return skus
