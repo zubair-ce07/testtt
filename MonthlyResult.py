@@ -14,5 +14,5 @@ class MonthlyResult:
         self.mean_humidity_avg = humidity
 
     def __str__(self):
-        return 'Highest Average: ' + str(self.highest_avg) + '\nLowest Average: ' + str(self.lowest_avg) +\
-               '\nAverage Mean Humidity: ' + str(self.mean_humidity_avg)
+        return 'Highest Average: ' + str(int(self.highest_avg)) + 'C' + '\nLowest Average: ' + str(int(self.lowest_avg)) + 'C' +\
+               '\nAverage Mean Humidity: ' + str(int(self.mean_humidity_avg)) + 'C'
