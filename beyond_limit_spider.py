@@ -86,7 +86,7 @@ class BeyondLimitSpider(CrawlSpider):
 
     def extract_description(self, response):
         raw_description = response.css('#description p::text, #description:not(li)::text').getall()
-        return [desc for sublist in clean(raw_description) for desc in sublist.split(".") if desc]
+        return [desc for sublist in clean(raw_description) for desc in sublist.split('.') if desc]
 
     def extract_colour(self, response):
         return response.css('#description li::text, .MsoNormal span::text').re_first(r'\s{1}\w+')
