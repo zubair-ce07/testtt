@@ -1,5 +1,3 @@
-import calendar
-import sys
 import glob
 import csv
 
