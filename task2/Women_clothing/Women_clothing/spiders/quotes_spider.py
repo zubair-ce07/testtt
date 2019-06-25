@@ -3,7 +3,10 @@ import scrapy
 import json
 
 
+
+
 class QuotesSpiderSpider(scrapy.Spider):
+
     name = "women_clothing"
     web_details = []
     allowed_domains = ['beginningboutique.com.au']
@@ -57,7 +60,6 @@ class QuotesSpiderSpider(scrapy.Spider):
             fabric = response.xpath(
                 "//div[@class='product__specs']/ul[@class='product__specs-list']/"
                 "li[2]/div[@class='product__specs-detail']/text()").getall()
-
         measurements = response.xpath(
             "//div[@class='product__specs']/ul[@class='product__specs-list']/"
             "li[3]/div[@class='product__specs-detail']/ul/div/li/text()").getall()
@@ -82,7 +84,21 @@ class QuotesSpiderSpider(scrapy.Spider):
         market = domain[url_len+1:]
         trail = response.request.headers.get('referer', None)
         start_time = self.crawler.stats.get_stats()['start_time']
-
+        meta = response.xpath("//head/script[contains(., 'window.ShopifyAnalytics.meta.currency')]/text()").getall()
+        script_data = meta[0].split(';\n')
+        meta_data = ''
+        for i in script_data:
+            if i[:8] == 'var meta':
+                meta_data = i[22:-1]
+        string_meta = str(meta_data)
+        start = 0
+        end = 0
+        for i in range(len(string_meta)):
+            if string_meta[i:i+8] == 'variants':
+                start = i+10
+            if string_meta[i:i+3] == '}]}':
+                end = i+2
+        skus = string_meta[start:end]
         page_deatils = {
             'retailer_sku': retailer_sku,
             'gender': "women",
@@ -98,15 +114,13 @@ class QuotesSpiderSpider(scrapy.Spider):
             'description': product_details+detail_list,
             'care': fabric,
             'image_urls': image_url,
-
+            'skus': skus,
             'price': money,
             'currence': currency,
             'spider_name': 'women_clothing',
             'crawl_start_time': str(start_time),
             'measurements': measurements,
-            'size': size,
-        }
-
+            'size': size}
         self.web_details.append(page_deatils)
         with open('websiteData.json', 'w') as file:
             json.dump(self.web_details, file)
