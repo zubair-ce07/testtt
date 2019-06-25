@@ -22,24 +22,23 @@ def main():
     directory_path = args.path
     date = args.date
     parser = weather.FileParser()
+    weather_stats = weather.WeatherAnalysis()
+    result_printer = weather.ResultPrinter()
     weather_record = parser.parse_file(directory_path)
 
     if weather_record:
         if args.year:
-            annual_stats = weather.WeatherAnalysis.get_annual_stats(
-                           weather_record, date)
-            weather.ResultPrinter.print_annual_report(annual_stats)
+            annual_stats = weather_stats.get_annual_stats(weather_record, date)
+            result_printer.print_annual_report(annual_stats)
 
         if args.month:
-            month_stats = weather.WeatherAnalysis.get_month_stats(
-                          weather_record, date)
-            weather.ResultPrinter.print_monthly_report(month_stats)
+            month_stats = weather_stats.get_month_stats(weather_record, date)
+            result_printer.print_monthly_report(month_stats)
 
         if args.chart:
-            chart_data = weather.WeatherAnalysis.get_chart_data(
-                         weather_record, date)
-            weather.ResultPrinter.plot_month_barchart(chart_data)
-            weather.ResultPrinter.plot_component_barchart(chart_data)
+            chart_data = weather_stats.get_chart_data(weather_record, date)
+            result_printer.plot_month_barchart(chart_data)
+            result_printer.plot_component_barchart(chart_data)
 
 
 if __name__ == '__main__':

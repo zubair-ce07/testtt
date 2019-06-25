@@ -13,10 +13,9 @@ class WeatherReading:
 
 
 class ResultPrinter:
-    @staticmethod
-    def print_annual_report(annual_stats):
+    def print_annual_report(self, annual_stats):
         if not annual_stats:
-            ResultPrinter.print_record_not_found_message()
+            self.print_record_not_found_message()
             return
         max_temp_obj = annual_stats["max temp"]
         min_temp_obj = annual_stats["min temp"]
@@ -31,10 +30,9 @@ class ResultPrinter:
         print(f"Lowest: {min_temp}C on {min_temp_date}")
         print(f"Humidity: {max_humidity}% on {max_humidity_date}")
 
-    @staticmethod
-    def print_monthly_report(month_stats):
+    def print_monthly_report(self, month_stats):
         if not month_stats:
-            ResultPrinter.print_record_not_found_message()
+            self.print_record_not_found_message()
             return
         avg_max_temp = month_stats["avg max temp"]
         avg_min_temp = month_stats["avg min temp"]
@@ -46,10 +44,9 @@ class ResultPrinter:
         print(f"Lowest Average: {avg_min_temp}C")
         print(f"Average Mean Humidity: {avg_mean_humidity}%")
 
-    @staticmethod
-    def plot_month_barchart(chart_data):
+    def plot_month_barchart(self, chart_data):
         if not chart_data:
-            ResultPrinter.print_record_not_found_message()
+            self.print_record_not_found_message()
             return
         chart_month = chart_data[0].date.strftime("%B %Y")
         print(chart_month)
@@ -64,8 +61,7 @@ class ResultPrinter:
             print(u"\u001b[36m+" * int(day_reading.min_temp), end=" ")
             print(u"\u001b[35m{}C".format(day_reading.min_temp), end="\n\n")
 
-    @staticmethod
-    def plot_component_barchart(chart_data):
+    def plot_component_barchart(self, chart_data):
         if not chart_data:
             return
         chart_month = chart_data[0].date.strftime("%B %Y")
@@ -185,35 +181,32 @@ class WeatherAnalysis:
 
         return month_record
 
-    @staticmethod
-    def get_annual_stats(weather_record, year):
-        annual_record = WeatherAnalysis.find_annual_record(weather_record,
+    def get_annual_stats(self, weather_record, year):
+        annual_record = self.find_annual_record(weather_record,
                                                            year)
         if not annual_record:
             return
-        max_temp_data = WeatherAnalysis.find_year_max_temp(annual_record)
-        min_temp_data = WeatherAnalysis.find_year_min_temp(annual_record)
-        max_humidity_data = WeatherAnalysis.find_year_max_humidity(
-                            annual_record)
+        max_temp_data = self.find_year_max_temp(annual_record)
+        min_temp_data = self.find_year_min_temp(annual_record)
+        max_humidity_data = self.find_year_max_humidity(annual_record)
         annual_stats = {"max temp": max_temp_data,
                         "min temp": min_temp_data,
                         "max humidity": max_humidity_data}
 
         return annual_stats
 
-    @staticmethod
-    def get_month_stats(weather_record, date):
+    def get_month_stats(self, weather_record, date):
         year, month = date.split("/")
-        annual_record = WeatherAnalysis.find_annual_record(weather_record,
+        annual_record = self.find_annual_record(weather_record,
                                                            year)
         if not annual_record:
             return
-        month_record = WeatherAnalysis.find_month_record(annual_record, month)
+        month_record = self.find_month_record(annual_record, month)
         if not month_record:
             return
-        avg_max_temp = WeatherAnalysis.find_month_avg_max_temp(month_record)
-        avg_min_temp = WeatherAnalysis.find_month_avg_min_temp(month_record)
-        avg_mean_hum = WeatherAnalysis.find_month_avg_mean_humidity(
+        avg_max_temp = self.find_month_avg_max_temp(month_record)
+        avg_min_temp = self.find_month_avg_min_temp(month_record)
+        avg_mean_hum = self.find_month_avg_mean_humidity(
                        month_record)
         month_stats = {"avg max temp": avg_max_temp,
                        "avg min temp": avg_min_temp,
@@ -221,14 +214,13 @@ class WeatherAnalysis:
 
         return month_stats
 
-    @staticmethod
-    def get_chart_data(weather_record, date):
+    def get_chart_data(self, weather_record, date):
         year, month = date.split("/")
-        annual_record = WeatherAnalysis.find_annual_record(weather_record,
+        annual_record = self.find_annual_record(weather_record,
                                                            year)
         if not annual_record:
             return
-        month_record = WeatherAnalysis.find_month_record(annual_record, month)
+        month_record = self.find_month_record(annual_record, month)
         if not month_record:
             return
 
