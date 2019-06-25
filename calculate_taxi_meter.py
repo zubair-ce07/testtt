@@ -1,3 +1,4 @@
+import os
 import time
 
 from ride_fair import RideFair
@@ -15,28 +16,37 @@ class TaxiMeterCalculator:
 
     def decrease_taxi_speed(self):
         self.taxi_meter.taxi_speed = max(0, self.taxi_meter.taxi_speed - self.speed_increment_factor)
+        if self.taxi_meter.taxi_speed > 0:
+            return True
+
+        return False
+
+    def clear_screen(self):
+        os.system('clear')
 
     def display_taxi_meter(self):
-        print(f'Ride Time: {self.taxi_meter.ride_time // 60} '
+        self.clear_screen()
+        print(f'Ride Time: {self.taxi_meter.ride_time//60} '
               f'Minutes {self.taxi_meter.ride_time % 60} Seconds')
 
-        print(f'Distance: {self.taxi_meter.ride_distance // 1000} KM '
+        print(f'Distance: {self.taxi_meter.ride_distance//1000} KM '
               f'{self.taxi_meter.ride_distance % 1000} Meters')
 
         print(f'Speed: {self.taxi_meter.taxi_speed} Meter per Second')
         print(f'Fare: {self.taxi_meter.ride_fare} Rs')
 
-        print(f'Wait Time: {self.taxi_meter.ride_wait_time // 60} '
+        print(f'Wait Time: {self.taxi_meter.ride_wait_time//60} '
               f'Minutes {self.taxi_meter.ride_wait_time % 60} Seconds')
 
-    def increment_ride_time(self, driving_status):
-        if driving_status:
+    def increment_ride_time(self, ride_state):
+        self.display_taxi_meter()
+        time.sleep(self.time_increment_factor)
+
+        if ride_state:
             self.taxi_meter.ride_time += self.time_increment_factor
         else:
             self.taxi_meter.ride_wait_time += self.time_increment_factor
             self.set_taxi_state_idle()
-
-        time.sleep(self.time_increment_factor)
 
     def set_taxi_state_idle(self):
         self.taxi_meter.taxi_speed = 0
