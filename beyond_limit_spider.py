@@ -24,7 +24,7 @@ class BeyondLimitSpider(CrawlSpider):
     allowed_domains = ['beyondlimits.com']
     start_urls = ['https://www.beyondlimits.com']
     default_brand = 'BeyondLimits'
-    default_gender = 'unknown'
+    default_gender = 'unisex'
     gender_terms = [
         'women',
         'men',
@@ -66,6 +66,7 @@ class BeyondLimitSpider(CrawlSpider):
 
     def extract_gender(self, response):
         raw_genders = response.css('[itemprop=title]::text').getall()
+
         for gender in clean(raw_genders):
             if gender.lower() in self.gender_terms:
                 return gender
@@ -109,10 +110,11 @@ class BeyondLimitSpider(CrawlSpider):
             'currency': self.extract_currency(response),
             'previous_prices': self.extract_previous_prices(response)
         }
+
         for item_size in response.css('.bb_form--select [value!=""]::text').getall():
-            common_sku['size'] = item_size
-            common_sku['sku_id'] = f'{colour}_{item_size}'
             sku = copy.deepcopy(common_sku)
+            sku['size'] = item_size
+            sku['sku_id'] = f'{colour}_{item_size}'
             skus.append(sku)
 
         return skus
