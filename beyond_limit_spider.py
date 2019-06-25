@@ -1,5 +1,3 @@
-import copy
-
 import scrapy
 from scrapy.item import Item
 from scrapy.linkextractors import LinkExtractor
@@ -112,7 +110,7 @@ class BeyondLimitSpider(CrawlSpider):
         }
 
         for item_size in response.css('.bb_form--select [value!=""]::text').getall():
-            sku = copy.deepcopy(common_sku)
+            sku = common_sku.copy()
             sku['size'] = item_size
             sku['sku_id'] = f'{colour}_{item_size}'
             skus.append(sku)
