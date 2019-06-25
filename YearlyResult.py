@@ -1,9 +1,5 @@
 """
-This class hold Yearly Report obj with these fields required for Task1:
-    high,
-    low,
-    max_humidity
-
+This class hold Yearly Report obj with these fields required for Task1: high, low, max_humidity
 """
 import calendar
 from _datetime import datetime
