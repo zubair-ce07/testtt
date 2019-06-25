@@ -25,6 +25,8 @@ def read_file(path):
                 lst.append(reading)
     except IOError:
         logging.warning(path + ' Not found')
+    except TypeError as e:
+        print(e)
     return lst
 
 
