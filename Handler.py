@@ -11,7 +11,7 @@ def read_file(path):
     """This function will receive a pth+filename and returns a list of weather obj of that file
     if the file isn't found, it will log a warning.
     """
-    lst = list()
+    reading_list = list()
     try:
         with open(path) as csv_file:
             csv_reader = csv.DictReader(csv_file)
@@ -22,12 +22,12 @@ def read_file(path):
                     int(0 if not row['Min TemperatureC'] else row['Min TemperatureC']),
                     int(0 if not row['Max Humidity'] else row['Max Humidity']),
                     int(0 if not row[' Mean Humidity'] else row[' Mean Humidity']))
-                lst.append(reading)
+                reading_list.append(reading)
     except IOError:
         logging.warning(path + ' Not found')
     except TypeError as e:
         print(e)
-    return lst
+    return reading_list
 
 
 def calculate_monthly_report(reading_list):
