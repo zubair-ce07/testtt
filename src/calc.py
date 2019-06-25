@@ -22,7 +22,8 @@ def yearly_calc(year):
             max_humid = humid_max_day.max_humidity
             max_humid_date = humid_max_day.date
     
-    return YearResults(max_temp, max_temp_date, min_temp, min_temp_date, max_humid, max_humid_date, year.year)
+    return YearResults(max_temp, max_temp_date, min_temp, min_temp_date, 
+                       max_humid, max_humid_date, year.year)
 
 def monthly_calc(month):
     high_temp_days = [int(day.max_temp) for day in month.days if day.max_temp]
@@ -37,7 +38,8 @@ def monthly_calc(month):
     sum_mean_humid = sum(mean_humid_days)
     avg_mean_humid = round(sum_mean_humid/len(mean_humid_days))
 
-    return MonthResults(avg_high_temp, avg_low_temp, avg_mean_humid, month.month_name, month.year)
+    return MonthResults(avg_high_temp, avg_low_temp, avg_mean_humid, 
+                        month.month_name, month.year)
 
 def bar_chart(month):
     results = []

@@ -10,10 +10,14 @@ from ds import YearReading, MonthReading, YearResults, MonthResults, ChartResult
 
 parser = argparse.ArgumentParser("Display weather reports")
 parser.add_argument('dir', type = str, help = "Path to Files directory")
-parser.add_argument('-e', nargs = '*', action = 'store', dest = 'year', type = int, help = "YYYY")
-parser.add_argument('-a', nargs = '*', action = 'store', dest = 'year_month', type = str, help = "YYYY/MM")
-parser.add_argument('-c', nargs = '*', action = 'store', dest = 'chart', type = str, help = "YYYY/MM")
-parser.add_argument('-b', nargs = '*', action = 'store', dest = 'bonus', type = str, help = "YYYY/MM")
+parser.add_argument('-e', nargs = '*', action = 'store', dest = 'year', 
+                    type = int, help = "YYYY")
+parser.add_argument('-a', nargs = '*', action = 'store', dest = 'year_month', 
+                    type = str, help = "YYYY/MM")
+parser.add_argument('-c', nargs = '*', action = 'store', dest = 'chart', 
+                    type = str, help = "YYYY/MM")
+parser.add_argument('-b', nargs = '*', action = 'store', dest = 'bonus', 
+                    type = str, help = "YYYY/MM")
 args = parser.parse_args()
 
 if os.path.exists(args.dir):
