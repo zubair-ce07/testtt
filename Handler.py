@@ -1,61 +1,59 @@
 import logging
 import os
-
 from ChartResult import ChartResult
-from WeatherDS import WeatherDS
+from WeatherReading import WeatherReading
 from MonthlyResult import MonthlyResult
 from YearlyResult import YearlyResult
 import csv
 
 
-"""This function will receive a pth+filename and returns a list of weather obj of that file
-    if the file isn't found, it will log a warning. """
-
-
-def read_file(pth):
+def read_file(path):
+    """This function will receive a pth+filename and returns a list of weather obj of that file
+    if the file isn't found, it will log a warning.
+    """
     lst = list()
     try:
-        with open(pth) as csv_file:
-            csv_reader = csv.reader(csv_file, delimiter=',')
-            csv_reader.__next__()  # Skip 1st row (Column Names)
+        with open(path) as csv_file:
+            csv_reader = csv.DictReader(csv_file)
             for row in csv_reader:
-                # row[0] = Date, row[1] = highest, row[3] = Lowest, row[7] = max_humidity, row[8] = mean_humidity
-                ds = WeatherDS((row[0]), int(0 if not row[1] else row[1]), int(0 if not row[3] else row[3]),
-                               int(0 if not row[7] else row[7]), int(0 if not row[8] else row[8]))
-                lst.append(ds)
+                reading = WeatherReading(
+                    (row['PKST' if 'PKST' in row.keys() else 'PKT']),
+                    int(0 if not row['Max TemperatureC'] else row['Max TemperatureC']),
+                    int(0 if not row['Min TemperatureC'] else row['Min TemperatureC']),
+                    int(0 if not row['Max Humidity'] else row['Max Humidity']),
+                    int(0 if not row[' Mean Humidity'] else row[' Mean Humidity']))
+                lst.append(reading)
     except IOError:
-        logging.warning(pth + ' Not found')
+        logging.warning(path + ' Not found')
     return lst
 
 
-"""This function will receive a list of weather obj of a month and returns the DS for monthly report. """
-
-
-def calculate_monthly_report(wlst):
-    if wlst is None:
+def calculate_monthly_report(reading_list):
+    """This function will receive a list of weather obj of a month and returns the DS for monthly report. """
+    if not reading_list:
         return None
     highest_avg = 0
     lowest_avg = 0
     humidity_avg = 0
-    for item in wlst:
+    for item in reading_list:
         highest_avg += item.highest
         lowest_avg += item.lowest
         humidity_avg += item.mean_humidity
-    highest_avg /= len(wlst)
-    lowest_avg /= len(wlst)
-    humidity_avg /= len(wlst)
+    highest_avg /= len(reading_list)
+    lowest_avg /= len(reading_list)
+    humidity_avg /= len(reading_list)
     return MonthlyResult(highest_avg, lowest_avg, humidity_avg)
 
 
-"""This function will receive a list of weather obj of a year and returns the DS for Yearly report. """
+def calculate_yearly_report(reading_list):
+    """This function will receive a list of weather obj of a year and returns the DS for Yearly report. """
+    if not reading_list:
+        return None
+    highest = reading_list[0]
+    lowest = reading_list[0]
+    humidity = reading_list[0]
 
-
-def calculate_yearly_report(wlst):
-    highest = wlst[0]
-    lowest = wlst[0]
-    humidity = wlst[0]
-
-    for item in wlst:
+    for item in reading_list:
         if item.highest > highest.highest:
             highest = item
         if item.lowest < lowest.lowest:
@@ -65,13 +63,13 @@ def calculate_yearly_report(wlst):
     return YearlyResult(highest, lowest, humidity)
 
 
-"""This function will receive a list of weather obj of a month and returns the DS for Chart report. """
-
-
-def calculate_chart_report(wlst):
-    highest = wlst[0]
-    lowest = wlst[0]
-    for item in wlst:
+def calculate_chart_report(reading_list):
+    """This function will receive a list of weather obj of a month and returns the DS for Chart report. """
+    if not reading_list:
+        return None
+    highest = reading_list[0]
+    lowest = reading_list[0]
+    for item in reading_list:
         if item.highest > highest.highest:
             highest = item
         if item.lowest < lowest.lowest:
@@ -79,14 +77,12 @@ def calculate_chart_report(wlst):
     return ChartResult(highest, lowest)
 
 
-""" This function will recieve sys.argv and checks if user has entered:
-    Minimum  no of valid arg,
-    correct path
-    If either of the condition isn't satisfied, it will return false.
-"""
-
-
 def validate_arg(arg):
+    """ This function will receive sys.argv and checks if user has entered:
+        Minimum  no of valid arg,
+        correct path
+        If either of the condition isn't satisfied, it will return false.
+    """
     if len(arg) < 4:
         return False
     if not os.path.exists(arg[1]):
