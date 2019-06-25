@@ -73,30 +73,40 @@ class QuotesSpiderSpider(scrapy.Spider):
         related_items = response.xpath(
             "//div[@id='shopify-section-related-collections']/"
             "div/div/div/p/a[contains(@href, '')]/text()").getall()
+        retailer_sku = response.xpath(
+            "//div[@class='product__heart']/div/@data-product-id").get()
+        domain = url.split('/')[2]
+        url_len = len(domain)-1
+        while domain[url_len] != ".":
+            url_len -= 1
+        market = domain[url_len+1:]
+        trail = response.request.headers.get('referer', None)
+        start_time = self.crawler.stats.get_stats()['start_time']
 
         page_deatils = {
-            'productName': product,
-            'price': money,
-            'productDetail': product_details,
-            'detail_list': detail_list,
-            'retailer': retailer,
-            'fabric': fabric,
-            'measurements': measurements,
-            'image': image_url,
+            'retailer_sku': retailer_sku,
+            'gender': "women",
+            'trail': trail,
+            'category': related_items,
+            'industry': 'null',
+            'brand': retailer,
             'url': url,
-            'size': size,
+            'market': market,
+            'retailer_url': retailer_url,
+            'url_original': url,
+            'name': product,
+            'description': product_details+detail_list,
+            'care': fabric,
+            'image_urls': image_url,
+
+            'price': money,
             'currence': currency,
-            'related_items': related_items,
-            'retailer_url': retailer_url
+            'spider_name': 'women_clothing',
+            'crawl_start_time': str(start_time),
+            'measurements': measurements,
+            'size': size,
         }
 
         self.web_details.append(page_deatils)
         with open('websiteData.json', 'w') as file:
             json.dump(self.web_details, file)
-
-
-with open('websiteData.json') as json_file:
-    data = json.load(json_file)
-    for i in range(len(data)):
-        print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ", data[i]['productName'])
-    print(data[0])
