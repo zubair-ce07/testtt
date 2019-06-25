@@ -1,124 +1,98 @@
-import WeatherDataExtractor
-import ResultStorage
 import calendar
 
 
 class CalculationsResults:
 
-    #weatherDataObj = WeatherDataExtractor.WeatherDataExtractor("2006", 4)
-    #weatherData = weatherDataObj.read_all_files()
-
-# find highest, lowest and most humid day for specified objects/days
-    '''def calculateForGivenDays(self):
-        lowestTemp, ltd = self.lowestTempInYear()
-        highestTemp, htd = self.highestTempInYear()
-        humidity, hd = self.mostHumidDayOfYear()
-        return ResultStorage.ResultStorage(highestTemp,lowestTemp,humidity,htd,ltd,hd)
-
-    def avgCalculation(self):
-        avgLowestTemp = self.avgLowestTemp()
-        avgHighestTemp = self.avgHighestTemp()
-        avgHumidity = self.avgMeanHumidity()
-        return ResultStorage.ResultStorage(avgHighestTemp, avgLowestTemp, avgHumidity, None, None, None)'''
-
-#return lowest temperature for given days
-    def lowestTempInYear(self,weatherData):
+    def lowest_temp_in_year(self, weather_data):
         try:
-            minTemp = int(weatherData[0].minTemperature)
-            minTempDay = weatherData[0].pk
+            min_temp = int(weather_data[0].min_temperature)
+            min_temp_day = weather_data[0].pk
         except:
-            minTemp = None
-            minTempDay = None
-        for i in weatherData:
+            min_temp = None
+            min_temp_day = None
+        for i in weather_data:
             try:
-                if (int(i.minTemperature) < minTemp or (minTemp == None)):
-                    minTemp = int(i.minTemperature)
-                    minTempDay = i.pkt
+                if int(i.min_temperature) < min_temp or (not min_temp):
+                    min_temp = int(i.min_temperature)
+                    min_temp_day = i.pkt
             except:
                 continue
-        return minTemp, self.toDate(minTempDay)
+        return min_temp, self.to_date(min_temp_day)
 
-#return highest temperature for given days
-    def highestTempInYear(self,weatherData):
+    def highest_temp_in_year(self, weather_data):
         try:
-            maxTemp = int(weatherData[0].maxTemperature)
-            maxTempDay = weatherData[0].pkt
+            max_temp = int(weather_data[0].max_temperature)
+            max_temp_day = weather_data[0].pkt
         except:
-            maxTemp = None
-            maxTempDay = None
-        for i in weatherData:
+            max_temp = None
+            max_temp_day = None
+        for i in weather_data:
             try:
-                if (int(i.maxTemperature) > maxTemp or maxTemp == None):
-                    maxTemp = int(i.maxTemperature)
-                    maxTempDay = i.pkt
+                if int(i.max_temperature) > max_temp or (not max_temp):
+                    max_temp = int(i.max_temperature)
+                    max_temp_day = i.pkt
             except:
                 continue
-        return (maxTemp, self.toDate(maxTempDay))
+        return max_temp, self.to_date(max_temp_day)
 
-#returns most humid day for given days
-    def mostHumidDayOfYear(self,weatherData):
+    def most_humid_day_of_year(self, weather_data):
         try:
-            humiditiLevel = int(weatherData[0].meanHumidity)
-            mostHumidDay = weatherData[0].pkt
+            humidity_level = int(weather_data[0].mean_humidity)
+            most_humid_day = weather_data[0].pkt
         except:
-            humiditiLevel = None
-            mostHumidDay = None
-        for i in weatherData:
+            humidity_level = None
+            most_humid_day = None
+        for i in weather_data:
             try:
-                if ((int(i.meanHumidity) > humiditiLevel) or (humiditiLevel == None)):
-                    humiditiLevel = int(i.meanHumidity)
-                    mostHumidDay = i.pkt
+                if (int(i.mean_humidity) > humidity_level)or(not humidity_level):
+                    humidity_level = int(i.mean_humidity)
+                    most_humid_day = i.pkt
             except:
                 continue
-        return (humiditiLevel, self.toDate(mostHumidDay))
+        return humidity_level, self.to_date(most_humid_day)
 
-# Return average lowest temperature for given days
-    def avgLowestTemp(self,weatherData):
-        sum = 0
+    def avg_lowest_temp(self, weather_data):
+        sum_temp = 0
         count = 0
-        for i in weatherData:
+        for i in weather_data:
             try:
-                sum += int(i.minTemperature)
+                sum_temp += int(i.min_temperature)
                 count += 1
             except:
                 continue
-        return (sum/count)
+        return (sum_temp/count)
 
-# Return average highest temperature for given days
-    def avgHighestTemp(self,weatherData):
+    def avg_highest_temp(self, weather_data):
         count = 0
-        sum = 0
-        for i in weatherData:
+        sum_temp = 0
+        for i in weather_data:
             try:
-                sum += int(i.maxTemperature)
+                sum_temp += int(i.max_temperature)
                 count += 1
             except:
                 continue
 
-        return (sum / count)
+        return sum_temp / count
 
-# Return average mean humidity for given days
-    def avgMeanHumidity(self,weatherData):
+    def avg_mean_humidity(self, weather_data):
         count = 0
-        sum = 0
+        sum_humidity = 0
 
-        for i in weatherData:
+        for i in weather_data:
             try:
-                sum += int(i.meanHumidity)
+                sum_humidity += int(i.mean_humidity)
                 count += 1
             except:
                 continue
-        return (sum / count)
+        return sum_humidity/count
 
-# Convert date in the form that include month name
-    def toDate(self,pkt):
-        if pkt == None:
+    def to_date(self, pkt):
+        if not pkt:
             return None
-        if (pkt[6] != "-"):
-            month =  calendar.month_name[int(pkt[5:7])]
+        if pkt[6] != "-":
+            month = calendar.month_name[int(pkt[5:7])]
             day = pkt[8:]
         else:
             month = calendar.month_name[int(pkt[5])]
             day = pkt[7:]
-        return (month[:3] + " " + day)
-
+        return month[:3] + " " + day

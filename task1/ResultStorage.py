@@ -1,9 +1,9 @@
 class ResultStorage:
 
-    def __init__(self,highestTemp,lowestTemp,humidity,highestTempDay,lowestTempDay,humidityDay):
-        self.highestTemp = highestTemp
-        self.lowestTemp = lowestTemp
+    def __init__(self, highest_temp, lowest_temp, humidity, highest_temp_day, lowest_temp_day, humidity_day):
+        self.highest_temp = highest_temp
+        self.lowest_temp = lowest_temp
         self.humidity = humidity
-        self.highestTempDay = highestTempDay
-        self.lowestTempDay = lowestTempDay
-        self.humidityDay = humidityDay
+        self.highest_temp_day = highest_temp_day
+        self.lowest_temp_day = lowest_temp_day
+        self.humidity_day = humidity_day

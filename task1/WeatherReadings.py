@@ -4,28 +4,26 @@ class WeatherReadings: # Class to store data
     def __init__(self, weather_reading):
         self.pkt = weather_reading['PKT']
         try:
-            self.maxTemperature = weather_reading["Max TemperatureC"]
+            self.max_temperature = weather_reading["Max TemperatureC"]
         except:
-            self.maxTemperature = None
+            self.max_temperature = None
         try:
-            self.minTemperature = weather_reading["Min TemperatureC"]
+            self.min_temperature = weather_reading["Min TemperatureC"]
         except:
-            self.minTemperature = None
+            self.min_temperature = None
         try:
-            self.meanTemperature = weather_reading["Mean TemperatureC"]
+            self.mean_temperature = weather_reading["Mean TemperatureC"]
         except:
-            self.meanTemperature = None
+            self.mean_temperature = None
         try:
-            self.maxHumidity = weather_reading["Max Humidity"]
+            self.max_humidity = weather_reading["Max Humidity"]
         except:
-            self.maxHumidity = None
+            self.max_humidity = None
         try:
-            self.minHumidity = weather_reading[" Min Humidity"]
+            self.min_humidity = weather_reading[" Min Humidity"]
         except:
-            self.minHumidity = None
+            self.min_humidity = None
         try:
-            self.meanHumidity = weather_reading[" Mean Humidity"]
+            self.mean_humidity = weather_reading[" Mean Humidity"]
         except:
-            self.meanHumidity = None
-
-
+            self.mean_humidity = None

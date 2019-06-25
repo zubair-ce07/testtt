@@ -12,7 +12,7 @@ class WeatherDataExtractor:
         self.year = year
 
     def read_all_files(self):
-        if self.month == None:
+        if not self.month:
             for i in range(1, 13):
                 local_month = calendar.month_name[i]
                 try:
@@ -21,16 +21,17 @@ class WeatherDataExtractor:
                         if row['PKT']:
                             reading = WeatherReadings.WeatherReadings(row)
                             self.all_data_objects.append(reading)
-                except:
+                except :
                     continue
         else:
             local_month = calendar.month_name[self.month]
             try:
-                csv_file = csv.DictReader(open("weatherfiles/Murree_weather_" + self.year + "_" + local_month[:3] + ".txt"))
-            except:
-                raise ("Data not available")
+                csv_file = csv.DictReader(open("weatherfiles/Murree_weather_"+self.year+"_"+local_month[:3]+".txt"))
+            except ValueError:
+                print("Data not available")
+                return
             for row in csv_file:
-                if row.has_key('PKT'):
+                if 'PKT' in row:
                     reading = WeatherReadings.WeatherReadings(row)
                     self.all_data_objects.append(reading)
         return self.all_data_objects
