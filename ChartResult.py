@@ -1,14 +1,6 @@
-""" This is class will receive the WeatherDS Obj of
-    high,
-    low
-    and stores it as a Dictionary obj as
-    highest,
-    lowest,
-    date
-    for high and low WeatherDS obj obj
-
+""" This is class will receive the WeatherReading Obj of
+    high, low and stores it as a Dictionary obj as highest, lowest, date for high and low WeatherReading obj
 """
-
 import calendar
 from _datetime import datetime
 
