@@ -1,3 +1,4 @@
+import os
 import sys
 import calendar
 
@@ -20,32 +21,36 @@ if tf.validate_arguments(arguments_list) == True:
         flag = str(next(arguments))
         value = str(next(arguments))
         if flag == "-e":
-            year = YearReading(arguments_list[1], value)
-            if year.check != -1:
-                year_results = calc.yearly_calc(year)
-                rg.year_report(year_results)
+            if value.isdigit():
+                if not int(value) < 2004 and not int(value) > 2016:
+                    year = YearReading(arguments_list[1], value)
+                    year_results = calc.yearly_calc(year)
+                    rg.year_report(year_results)
+                else:
+                    print(f"Data for the year {value} does not exist")
             else:
-                print("Invalid path")
-                tf.print_usage
+                print(f"Invalid value of year: {value}")
         else:
             split_date = value.split('/')
             month_num = int(split_date[1])
-            month_name = calendar.month_abbr[month_num]
-            file_path = f"{str(arguments_list[1])}/Murree_weather_{split_date[0]}_{month_name}.txt"
-            month = MonthReading(file_path)
-            if month.check != -1:
-                if flag == "-a":
-                    month_results = calc.monthly_calc(month)
-                    rg.month_report(month_results)
-                if flag == "-c":
-                    chart_results = calc.bar_chart(month)
-                    rg.chart_report(chart_results)
-                if flag == "-b":
-                    bonus_results = calc.bar_chart(month)
-                    rg.chart_bonus_report(bonus_results)
+            if not month_num < 1 and not month_num > 12:
+                month_name = calendar.month_abbr[month_num]
+                file_path = f"{str(arguments_list[1])}/Murree_weather_{split_date[0]}_{month_name}.txt"
+                if os.path.exists(file_path):
+                    month = MonthReading(file_path, split_date[0])
+                    if flag == "-a":
+                        month_results = calc.monthly_calc(month)
+                        rg.month_report(month_results)
+                    if flag == "-c":
+                        chart_results = calc.bar_chart(month)
+                        rg.chart_report(chart_results)
+                    if flag == "-b":
+                        bonus_results = calc.bar_chart(month)
+                        rg.chart_bonus_report(bonus_results)
+                else:
+                    print(f"Data for {month_name} {split_date[0]} does not exist")
             else:
-                print("Invalid path")
-                tf.print_usage
+                print(f"Invalid value of month: {month_num}")
     print()
 else:
     tf.print_usage()
