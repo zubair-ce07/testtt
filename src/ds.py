@@ -2,7 +2,6 @@ import calendar
 import sys
 import glob
 import csv
-import os
 
 class DayReading:
     def __init__(self, date, max_temp, mean_temp, min_temp, max_humidity, mean_humidity):
@@ -14,38 +13,30 @@ class DayReading:
         self.mean_humidity = mean_humidity
 
 class MonthReading:
-    def __init__(self, path):
-        if not os.path.exists(path):
-            self.check = -1
-            return
-        self.check = 0
+    def __init__(self, path, year):
         self.days = []
         with open(path, 'r') as file_to_read:
             reader = csv.DictReader(file_to_read)
             for row in reader:
                 day = DayReading(
-                row['PKT'], 
-                row['Max TemperatureC'],
-                row['Mean TemperatureC'], 
-                row['Min TemperatureC'],
-                row['Max Humidity'], 
-                row[' Mean Humidity']
+                    row['PKT'], 
+                    row['Max TemperatureC'],
+                    row['Mean TemperatureC'], 
+                    row['Min TemperatureC'],
+                    row['Max Humidity'], 
+                    row[' Mean Humidity']
                 )
                 self.days.append(day)
-            self.month_name = f"{path[-7]}{path[-6]}{path[-5]}"
-            self.year = f"{path[-12]}{path[-11]}{path[-10]}{path[-9]}"
+            self.month_name = path.partition(year+"_")[2].partition(".txt")[0]
+            self.year = year
             
 class YearReading:
     def __init__(self, dir_path, year):
-        if not os.path.exists(dir_path):
-            self.check = -1
-            return
-        self.check = 0
         self.year = int(year)
         filenames = glob.glob(f"{dir_path}/Murree_weather_{year}_*.txt")
         self.days = []
         for filename in filenames:
-            self.days.extend(MonthReading(filename).days)
+            self.days.extend(MonthReading(filename, year).days)
 
 class YearResults:
     def __init__(self, max_temp, max_temp_date, min_temp, min_temp_date, 
