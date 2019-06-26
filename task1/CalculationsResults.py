@@ -44,7 +44,8 @@ class CalculationsResults:
             most_humid_day = None
         for i in weather_data:
             try:
-                if (int(i.mean_humidity) > humidity_level)or(not humidity_level):
+                if (int(i.mean_humidity) > humidity_level)\
+                        or(not humidity_level):
                     humidity_level = int(i.mean_humidity)
                     most_humid_day = i.pkt
             except:
@@ -90,5 +91,8 @@ class CalculationsResults:
         if not pkt:
             return None
         pkt = pkt.split("-")
-        date_time_obj = datetime(int(pkt[0]), int(pkt[1]), int(pkt[2]))
-        return date_time_obj.strftime("%b") + " " + date_time_obj.strftime("%Y")
+        date_time_obj = datetime(int(pkt[0]),
+                                 int(pkt[1]), int(pkt[2]))
+        return \
+            date_time_obj.strftime("%b") +\
+            " " + date_time_obj.strftime("%Y")
