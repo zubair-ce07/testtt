@@ -26,8 +26,10 @@ class JeanWestSpider(CrawlSpider):
     name = 'jeans_west'
     allowed_domains = ['jeanswest.com.au']
     start_urls = ['https://www.jeanswest.com.au/en-au/']
+
     default_brand = 'JeansWest'
     default_gender = 'unisex'
+    default_size = 'M'
 
     gender_terms = [
         'women',
@@ -167,8 +169,10 @@ class JeanWestSpider(CrawlSpider):
 
         if colour:
             common_sku['colour'] = colour
+
         if not item_sizes:
-            common_sku['sku_id'] = f'{colour}'
+            common_sku['sku_id'] = f'{self.default_size}'
+            common_sku['size'] = self.default_size
             return skus.append(common_sku)
 
         for item_size in item_sizes:
