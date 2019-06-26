@@ -34,6 +34,28 @@ class HighLowReportGenerator(ReportGenerator):
                                 ))
 
 
+class AvgTemperatureReportGenerator(ReportGenerator):
+
+    def __init__(self, weather_data):
+        self.weather_data = weather_data
+
+    def _mean(self, arr):
+        return int(sum(arr)/len(arr))
+
+    def generate(self):
+        max_temps= [data.max_temp for data in self.weather_data if data.max_temp is not None]
+        min_temps = [data.min_temp for data in self.weather_data if data.min_temp is not None]
+        mean_humidities = [data.mean_humidity for data in self.weather_data if data.mean_humidity is not None]
+
+        avg_max_temp = self._mean(max_temps)
+        avg_min_temp = self._mean(min_temps)
+        avg_mean_humidity = self._mean(mean_humidities)
+
+        format_str = 'Highest Average: {}C\nLowest Average: {}C\n' \
+                     'Average Mean Humidity: {}%'
+        print(format_str.format(avg_max_temp, avg_min_temp, avg_mean_humidity))
+
+
 class HighLowReport:
     def __init__(self, max_temp_record, max_humidity_record, min_temp_record):
         self.max_temp_recod = max_temp_record
