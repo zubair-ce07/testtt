@@ -16,18 +16,23 @@ class Beginningboutique(scrapy.Spider):
 
     def parse(self, response):
         categories = response.xpath("//div[@class='header-nav-wrapper']/"
-                                    "/div[@class='dropdown-wrapper']/a[contains(@href, '')]/@href").getall()
+                                    "/div[@class='dropdown-wrapper']/"
+                                    "a[contains(@href, '')]/@href").getall()
         for url in categories:
-            yield scrapy.Request(url=('https://www.beginningboutique.com.au'+url),
-                                 callback=self.parse_products_urls, dont_filter=True)
+            yield scrapy.Request(
+                url=('https://www.beginningboutique.com.au'+url),
+                callback=self.parse_products_urls,
+                dont_filter=True)
 
     def parse_products_urls(self, response):
-        product_urls = response.xpath("//div[@id='shopify-section-collection']/"
-                                      "/a[contains(@href, '')]/@href").getall()
+        product_urls = response.xpath(
+            "//div[@id='shopify-section-collection']/"
+            "/a[contains(@href, '')]/@href").getall()
         for product_url in product_urls:
-            yield scrapy.Request(url=('https://www.beginningboutique.com.au' + product_url),
-                                 callback=self.product_parse,
-                                 dont_filter=True)
+            yield scrapy.Request(
+                url=('https://www.beginningboutique.com.au' + product_url),
+                callback=self.product_parse,
+                dont_filter=True)
 
     def product_parse(self, response):
         page_deatils = WebData(
@@ -66,46 +71,59 @@ class Beginningboutique(scrapy.Spider):
             "div/div/div/p/a[contains(@href, '')]/text()").getall()
 
     def brand(self, response):
-        return response.xpath('//div[@class="product-heading"]/p/a/text()').get()
+        return response.xpath(
+            '//div[@class="product-heading"]/p/a/text()').get()
 
     def url(self, response):
         return response.request.url
 
     def retailer(self, response):
-        return response.xpath('//div[@class="product-heading"]/p/a/@href').getall()
+        return response.xpath(
+            '//div[@class="product-heading"]/p/a/@href').getall()
 
     def description(self, response):
         product_details = response.xpath(
-            "//div[@class='product__specs']/ul[@class='product__specs-list']/"
-            "li[1]/div[@class='product__specs-detail']/p/text()").getall()
-        if len(product_details) == 0:
-            product_details = response.xpath(""
-                                             "//div[@class='product__specs']/ul[@class='product__specs-list']/"
-                                             "li[1]/div[@class='product__specs-detail']/text()").getall()
+            "//div[@class='product__specs']/"
+            "ul[@class='product__specs-list']/li[1]/"
+            "div[@class='product__specs-detail']/p/text()").getall()
+        if not product_details:
+            product_details = response.xpath(
+                "//div[@class='product__specs']/"
+                "ul[@class='product__specs-list']/li[1]/"
+                "div[@class='product__specs-detail']/text()").getall()
             detail_reference = response.xpath(
-                "//div[@class='product__specs-detail']/a[contains(@href, '')]/text()").getall()
+                "//div[@class='product__specs-detail']"
+                "/a[contains(@href, '')]/text()").getall()
             for j in range(len(product_details), -1, -1):
                 if len(detail_reference) > j:
                     product_details.insert(j + 1, detail_reference[j])
 
-        detail_list = response.xpath('//div[@class="product__specs-detail"]/ul/li/text()').getall()
+        detail_list = response.xpath(
+            '//div[@class="product__specs-detail"]/'
+            'ul/li/text()').getall()
         return product_details + detail_list
 
     def care(self, response):
         fabric = response.xpath(
             "//div[@class='product__specs']/ul[@class='product__specs-list']/"
-            "li[2]/div[@class='product__specs-detail']/ul/div/li/text()").getall()
-        if len(fabric) == 0:
+            "li[2]/div[@class='product__specs-detail']/ul"
+            "//li/text()").getall()
+        if not fabric:
             fabric = response.xpath(
-                "//div[@class='product__specs']/ul[@class='product__specs-list']/"
+                "//div[@class='product__specs']/"
+                "ul[@class='product__specs-list']/"
                 "li[2]/div[@class='product__specs-detail']/text()").getall()
         return fabric
 
     def image_url(self, response):
-        return response.xpath("//div[@class='product-images-wrapper']/div/div/img/@src").getall()
+        return response.xpath(
+            "//div[@class='product-images-wrapper']/div/div/img/@src").getall()
 
     def skus(self, response):
-        meta = response.xpath("//head/script[contains(., 'window.ShopifyAnalytics.meta.currency')]/text()").getall()
+        meta = response.xpath(
+            "//head/script[contains"
+            "(., 'window.ShopifyAnalytics.meta.currency')]"
+            "/text()").getall()
         script_data = meta[0].split(';\n')
         meta_data = ''
         for i in script_data:
