@@ -24,7 +24,7 @@ def main():
     parser = weather.FileParser()
     weather_stats = weather.WeatherAnalysis()
     result_printer = weather.ResultPrinter()
-    weather_record = parser.parse_file(directory_path)
+    weather_record = parser.parse_files(directory_path)
 
     if weather_record:
         if args.year:
