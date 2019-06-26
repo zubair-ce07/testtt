@@ -19,13 +19,11 @@ class Beginningboutique(scrapy.Spider):
                                     "/div[@class='dropdown-wrapper']/a[contains(@href, '')]/@href").getall()
         for url in categories:
             yield scrapy.Request(url=('https://www.beginningboutique.com.au'+url),
-                                 callback=self.parse_products_urls,dont_filter=True)
-
+                                 callback=self.parse_products_urls, dont_filter=True)
 
     def parse_products_urls(self, response):
         product_urls = response.xpath("//div[@id='shopify-section-collection']/"
                                       "/a[contains(@href, '')]/@href").getall()
-        print("LEN",len(product_urls))
         for product_url in product_urls:
             yield scrapy.Request(url=('https://www.beginningboutique.com.au' + product_url),
                                  callback=self.product_parse,
