@@ -1,4 +1,4 @@
-import calendar
+from datetime import datetime
 
 
 class CalculationsResults:
@@ -55,21 +55,21 @@ class CalculationsResults:
         sum_temp = 0
         count = 0
         for i in weather_data:
-            try:
+            if i.min_temperature:
                 sum_temp += int(i.min_temperature)
                 count += 1
-            except:
+            else:
                 continue
-        return (sum_temp/count)
+        return sum_temp/count
 
     def avg_highest_temp(self, weather_data):
         count = 0
         sum_temp = 0
         for i in weather_data:
-            try:
+            if i.max_temperature:
                 sum_temp += int(i.max_temperature)
                 count += 1
-            except:
+            else:
                 continue
 
         return sum_temp / count
@@ -79,20 +79,16 @@ class CalculationsResults:
         sum_humidity = 0
 
         for i in weather_data:
-            try:
+            if i.mean_humidity:
                 sum_humidity += int(i.mean_humidity)
                 count += 1
-            except:
+            else:
                 continue
         return sum_humidity/count
 
     def to_date(self, pkt):
         if not pkt:
             return None
-        if pkt[6] != "-":
-            month = calendar.month_name[int(pkt[5:7])]
-            day = pkt[8:]
-        else:
-            month = calendar.month_name[int(pkt[5])]
-            day = pkt[7:]
-        return month[:3] + " " + day
+        pkt = pkt.split("-")
+        date_time_obj = datetime(int(pkt[0]), int(pkt[1]), int(pkt[2]))
+        return date_time_obj.strftime("%b") + " " + date_time_obj.strftime("%Y")

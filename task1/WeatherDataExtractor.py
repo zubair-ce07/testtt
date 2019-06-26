@@ -1,37 +1,29 @@
-import os
-import WeatherReadings
 import csv
-import calendar
+import glob
+from WeatherReading import WeatherReading
 
 
 class WeatherDataExtractor:
 
-    def __init__(self, year, month=0):
+    def __init__(self):
         self.all_data_objects = []
-        self.month = month
-        self.year = year
 
-    def read_all_files(self):
-        if not self.month:
-            for i in range(1, 13):
-                local_month = calendar.month_name[i]
-                try:
-                    csv_file = csv.DictReader(open("weatherfiles/Murree_weather_"+self.year+"_"+local_month[:3]+".txt"))
-                    for row in csv_file:
-                        if row['PKT']:
-                            reading = WeatherReadings.WeatherReadings(row)
-                            self.all_data_objects.append(reading)
-                except :
-                    continue
+    def read_all_files(self, year, month=0):
+        if not month:
+            for name in glob.glob("weatherfiles/Murree_weather_"+year+"_*.txt"):
+                csv_file = csv.DictReader(open(name))
+                for row in csv_file:
+                    if row['PKT']:
+                        reading = WeatherReading(row)
+                        self.all_data_objects.append(reading)
         else:
-            local_month = calendar.month_name[self.month]
             try:
-                csv_file = csv.DictReader(open("weatherfiles/Murree_weather_"+self.year+"_"+local_month[:3]+".txt"))
+                csv_file = csv.DictReader(open("weatherfiles/Murree_weather_"+year+"_"+month+".txt"))
             except ValueError:
                 print("Data not available")
                 return
             for row in csv_file:
                 if 'PKT' in row:
-                    reading = WeatherReadings.WeatherReadings(row)
+                    reading = WeatherReading(row)
                     self.all_data_objects.append(reading)
         return self.all_data_objects

@@ -3,10 +3,7 @@ class WeatherReadings: # Class to store data
 
     def __init__(self, weather_reading):
         self.pkt = weather_reading['PKT']
-        try:
-            self.max_temperature = weather_reading["Max TemperatureC"]
-        except:
-            self.max_temperature = None
+        self.max_temperature = weather_reading.get("Max TemperatureC")
         try:
             self.min_temperature = weather_reading["Min TemperatureC"]
         except:
