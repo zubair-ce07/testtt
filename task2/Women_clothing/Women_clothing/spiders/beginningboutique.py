@@ -1,104 +1,82 @@
 # -*- coding: utf-8 -*-
 import scrapy
+from WebData import WebData
 
 
-class QuotesSpiderSpider(scrapy.Spider):
+class Beginningboutique(scrapy.Spider):
 
-    name = "women_clothing"
+    name = "beginningboutique"
     web_details = []
     allowed_domains = ['beginningboutique.com.au']
 
     def start_requests(self):
-        urls = [
-            'https://www.beginningboutique.com.au/collections/new',
-            'https://www.beginningboutique.com.au/collections/dresses',
-            'https://www.beginningboutique.com.au/collections/festival-outfits',
-            'https://www.beginningboutique.com.au/collections/all',
-            'https://www.beginningboutique.com.au/collections/accessories',
-            'https://www.beginningboutique.com.au/collections/womens-shoes',
-            'https://www.beginningboutique.com.au/collections/brands',
-            'https://www.beginningboutique.com.au/collections/sale',
-        ]
-        for url in urls:
-            yield scrapy.Request(url=url,
-                                 callback=self.parse)
+        start_url = 'https://www.beginningboutique.com.au'
+        yield scrapy.Request(url=start_url,
+                             callback=self.parse)
 
     def parse(self, response):
-        print("url:   ", response.request.url)
-        collections = response.xpath("//div[@id='shopify-section-collection']/"
-                                     "div/div/div/div/div/a[contains(@href, '')]/@href").getall()
-        for product_url in collections:
+        categories = response.xpath("//div[@class='header-nav-wrapper']/"
+                                    "/div[@class='dropdown-wrapper']/a[contains(@href, '')]/@href").getall()
+        for url in categories:
+            yield scrapy.Request(url=('https://www.beginningboutique.com.au'+url),
+                                 callback=self.parse_products_urls,dont_filter=True)
+
+
+    def parse_products_urls(self, response):
+        product_urls = response.xpath("//div[@id='shopify-section-collection']/"
+                                      "/a[contains(@href, '')]/@href").getall()
+        print("LEN",len(product_urls))
+        for product_url in product_urls:
             yield scrapy.Request(url=('https://www.beginningboutique.com.au' + product_url),
                                  callback=self.product_parse,
                                  dont_filter=True)
 
     def product_parse(self, response):
-        page_deatils = {
-            'retailer_sku': self.retailer_sku(response),
-            'gender': "women",
-            'trail': self.trail(response),
-            'category': self.related_items(response),
-            'industry': 'null',
-            'brand': self.retailer(response),
-            'url': self.url(response),
-            'market': self.market(response),
-            'retailer_url': self.retailer_url(response),
-            'url_original': self.url(response),
-            'product_name': self.product_name(response),
-            'description': self.product_details(response),
-            'care': self.fabric(response),
-            'image_urls': self.image_url(response),
-            'skus': self.skus(response),
-            'price': self.money(response),
-            'currence': self.currency(response),
-            'spider_name': 'women_clothing',
-            'crawl_start_time': self.start_time()
-        }
+        page_deatils = WebData(
+            retailer_sku=self.retailer_sku(response),
+            trail=self.trail(response),
+            category=self.category(response),
+            brand=self.brand(response),
+            url=self.url(response),
+            retailer=self.retailer(response),
+            url_original=self.url(response),
+            product_name=self.product_name(response),
+            description=self.description(response),
+            care=self.care(response),
+            image_url=self.image_url(response),
+            skus=self.skus(response),
+            price=self.price(response),
+            currence=self.currency(response),
+            spider_name='beginningboutique',
+            crawl_start_time=self.start_time()
+        )
         return page_deatils
 
-    @staticmethod
-    def product_name(response):
+    def product_name(self, response):
         return response.css('.product-heading__title::text').extract_first()
 
-    @staticmethod
-    def retailer_sku(response):
+    def retailer_sku(self, response):
         return response.xpath(
             "//div[@class='product__heart']/div/@data-product-id").get()
 
-    @staticmethod
-    def trail(response):
+    def trail(self, response):
         return response.request.headers.get('referer', None)
 
-    @staticmethod
-    def related_items(response):
+    def category(self, response):
         return response.xpath(
             "//div[@id='shopify-section-related-collections']/"
             "div/div/div/p/a[contains(@href, '')]/text()").getall()
 
-    @staticmethod
-    def retailer(response):
-        return response.xpath('//div[@class="product-heading"]/p/a/text()').getall()
+    def brand(self, response):
+        return response.xpath('//div[@class="product-heading"]/p/a/text()').get()
 
-    @staticmethod
-    def url(response):
+    def url(self, response):
         return response.request.url
 
-    @staticmethod
-    def market(response):
-        url = response.request.url
-        domain = url.split('/')[2]
-        url_len = len(domain) - 1
-        while domain[url_len] != ".":
-            url_len -= 1
-        market = domain[url_len + 1:]
-        return market
-
-    @staticmethod
-    def retailer_url(response):
+    def retailer(self, response):
         return response.xpath('//div[@class="product-heading"]/p/a/@href').getall()
 
-    @staticmethod
-    def product_details(response):
+    def description(self, response):
         product_details = response.xpath(
             "//div[@class='product__specs']/ul[@class='product__specs-list']/"
             "li[1]/div[@class='product__specs-detail']/p/text()").getall()
@@ -115,8 +93,7 @@ class QuotesSpiderSpider(scrapy.Spider):
         detail_list = response.xpath('//div[@class="product__specs-detail"]/ul/li/text()').getall()
         return product_details + detail_list
 
-    @staticmethod
-    def fabric(response):
+    def care(self, response):
         fabric = response.xpath(
             "//div[@class='product__specs']/ul[@class='product__specs-list']/"
             "li[2]/div[@class='product__specs-detail']/ul/div/li/text()").getall()
@@ -126,12 +103,10 @@ class QuotesSpiderSpider(scrapy.Spider):
                 "li[2]/div[@class='product__specs-detail']/text()").getall()
         return fabric
 
-    @staticmethod
-    def image_url(response):
+    def image_url(self, response):
         return response.xpath("//div[@class='product-images-wrapper']/div/div/img/@src").getall()
 
-    @staticmethod
-    def skus(response):
+    def skus(self, response):
         meta = response.xpath("//head/script[contains(., 'window.ShopifyAnalytics.meta.currency')]/text()").getall()
         script_data = meta[0].split(';\n')
         meta_data = ''
@@ -149,12 +124,14 @@ class QuotesSpiderSpider(scrapy.Spider):
         skus = string_meta[start:end]
         return skus
 
-    @staticmethod
-    def money(response):
+    def price(self, response):
         return response.css('.money::text').extract_first()
 
     def currency(self, response):
-        return self.money(response)[0]
+        if self.price(response)[0] == "$":
+            return "AUD"
+        else:
+            return self.price(response)[0]
 
     def start_time(self):
         return self.crawler.stats.get_stats()['start_time']
