@@ -31,17 +31,18 @@ class WeatherReportParse:
             files_names = glob.glob("{}/Murree_weather_{}_*.txt".format(
                 path, date_object))
 
-        return [x[18:] for x in files_names]
+        return [x for x in files_names]
 
-    def read_files_record(self, weather_file_names, path):
+    def read_files_record(self, weather_file_names):
         clean_data = []
         for weather_file in weather_file_names:
-            weather_data = csv.DictReader(open(os.path.join(path, weather_file)))
+            weather_data = csv.DictReader(open(weather_file))
 
             for weather_record in weather_data:
+                key_index = list(weather_record)[0]
 
                 if all(weather_record[y] for y in ["Max TemperatureC", "Min TemperatureC", "Max Humidity"]):
-                    clean_data.append(WeatherRecord(weather_record["PKT"], int(weather_record["Max TemperatureC"]),
+                    clean_data.append(WeatherRecord(weather_record[key_index], int(weather_record["Max TemperatureC"]),
                                                     int(weather_record["Min TemperatureC"]),
                                                     int(weather_record["Max Humidity"])))
 
@@ -49,7 +50,7 @@ class WeatherReportParse:
 
     def parse_weather_data(self, path, year_month):
         weather_file_names = self.get_file_names(path, year_month)
-        return self.read_files_record(weather_file_names, path)
+        return self.read_files_record(weather_file_names)
 
 
 class ProcessWeatherReports():
