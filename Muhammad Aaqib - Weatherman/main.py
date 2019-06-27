@@ -49,7 +49,7 @@ def main():
                 chart_data = weather_stats.get_chart_data(weather_record,
                                                             month)
                 result_printer.plot_month_barchart(chart_data)
-                result_printer.plot_component_barchart(chart_data)
+                result_printer.plot_month_horizontal_barchart(chart_data)
 
 
 if __name__ == '__main__':

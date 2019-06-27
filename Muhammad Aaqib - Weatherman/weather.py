@@ -19,16 +19,9 @@ class WeatherReading:
 
 
 class ResultPrinter:
-    def __init__(self):
-        self.message = {
-            "record_not_found": "Record of given date not found in system",
-            "file_not_found": "Related files not found in the directory",
-            "path_not_found": "Path to directory not found",
-        }
-
     def print_annual_report(self, annual_stats):
         if not annual_stats:
-            self.print_record_not_found_message()
+            print("Record of given date not found in system")
             return
         years_max_temp = annual_stats["max temp"]
         years_min_temp = annual_stats["min temp"]
@@ -43,19 +36,18 @@ class ResultPrinter:
 
     def print_monthly_report(self, month_stats, month):
         if not month_stats:
-            self.print_record_not_found_message()
+            print("Record of given date not found in system")
             return
-        avg_max_temp = month_stats["avg max temp"]
-        avg_min_temp = month_stats["avg min temp"]
-        avg_mean_humid = month_stats["avg mean humidity"]
+
         print(f"\n{month}")
-        print(f"Highest Average: {round(avg_max_temp, 2)}C")
-        print(f"Lowest Average: {round(avg_min_temp, 2)}C")
-        print(f"Average Mean Humidity: {round(avg_mean_humid, 2)}%")
+        print(f"Highest Average: {round(month_stats['avg max temp'], 2)}C")
+        print(f"Lowest Average: {round(month_stats['avg min temp'], 2)}C")
+        print("Average Mean Humidity: "
+              f"{round(month_stats['avg mean humidity'], 2)}%")
 
     def plot_month_barchart(self, chart_data):
         if not chart_data:
-            self.print_record_not_found_message()
+            print("Record of given date not found in system")
             return
         chart_month = chart_data[0].date.strftime("%B %Y")
         print(f"\n{chart_month}")
@@ -68,7 +60,7 @@ class ResultPrinter:
             print(f"\u001b[36m+" * day_reading.min_temp, end=" ")
             print(f"\u001b[35m{day_reading.min_temp}C", end="\n\n")
 
-    def plot_component_barchart(self, chart_data):
+    def plot_month_horizontal_barchart(self, chart_data):
         if not chart_data:
             return
         chart_month = chart_data[0].date.strftime("%B %Y")
@@ -80,15 +72,6 @@ class ResultPrinter:
             print(f"\u001b[31m+" * day_reading.max_temp, end=" ")
             print(f"\u001b[35m{day_reading.min_temp}C", end='-')
             print(f"\u001b[35m{day_reading.max_temp}C")
-
-    def print_record_not_found_message(self):
-        print(self.message["record_not_found"])
-
-    def print_file_not_found_message(self):
-        print(self.message["file_not_found"])
-
-    def print_path_not_found_message(self):
-        print(self.message["path_not_found"])
 
 
 class WeatherAnalysis:
@@ -195,9 +178,8 @@ class FileParser:
             return (weather_record)
 
     def parse_files(self, path):
-        result_printer = ResultPrinter()
         if not os.path.exists(path):
-            result_printer.print_path_not_found_message()
+            print("Path not found")
             return
         weather_record = []
         files = FileParser.read_file_names(path)
@@ -205,7 +187,7 @@ class FileParser:
             weather_record += self.read_file(weather_file)
 
         if not weather_record:
-            result_printer.print_file_not_found_message()
+            print("Related files not found in the directory")
             return
 
         return weather_record
