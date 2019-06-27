@@ -19,18 +19,6 @@ class DocumentDetail(scrapy.Item):
     documents = scrapy.Field()
 
 
-# class Document(scrapy.Item):
-#     title = scrapy.Field()
-#     link = scrapy.Field()
-#     type = scrapy.Field()
-#     date = scrapy.Field()
-
-
-class File(scrapy.Item):
-    file_urls = scrapy.Field()
-    files = scrapy.Field()
-
-
 class ProceedingDetail(scrapy.Item):
     title = Field()
     filing_parties = Field()
