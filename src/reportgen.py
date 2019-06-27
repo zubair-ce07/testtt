@@ -26,13 +26,15 @@ def chart_report(chart_results):
         date = day[0]
         
         print('\x1b[3;35m', date.strftime("%d"), '\x1b[0m', sep="", end = " ")
-        for _ in range(day[1]):
-            print('\x1b[0;31m', "+", '\x1b[0m', sep="", end="")
+        for _ in range(abs(day[1])):
+            sign = '+' if day[1] >=0 else '-'
+            print('\x1b[0;31m', sign, '\x1b[0m', sep="", end="")
         print(" ", '\x1b[3;35m', day[1], "C", '\x1b[0m', sep="")
 
         print('\x1b[3;35m', date.strftime("%d"), '\x1b[0m', sep="", end = " ")
-        for _ in range(day[2]):
-            print('\x1b[0;34m', "+", '\x1b[0m', sep="", end="")
+        for _ in range(abs(day[2])):
+            sign = '+' if day[2] >=0 else '-'
+            print('\x1b[0;34m', sign, '\x1b[0m', sep="", end="")
         print(" ", '\x1b[3;35m', day[2], "C", '\x1b[0m', sep="")
 
 def chart_bonus_report(chart_results):
@@ -40,8 +42,10 @@ def chart_bonus_report(chart_results):
     for day in chart_results.results:
         date = day[0]
         print('\x1b[3;35m', date.strftime("%d"), '\x1b[0m', sep="", end = " ")
-        for _ in range(day[2]):
-            print('\x1b[0;34m', "+", '\x1b[0m', sep="", end="")
-        for _ in range(day[1]):
-            print('\x1b[0;31m', "+", '\x1b[0m', sep="", end="")
+        for _ in range(abs(day[2])):
+            sign = '+' if day[2] >=0 else '-'
+            print('\x1b[0;34m', sign, '\x1b[0m', sep="", end="")
+        for _ in range(abs(day[1])):
+            sign = '+' if day[1] >=0 else '-'
+            print('\x1b[0;31m', sign, '\x1b[0m', sep="", end="")
         print(" ", '\x1b[3;35m', day[2], "C - ", day[1], "C", '\x1b[0m', sep="")
