@@ -5,30 +5,41 @@ import datetime
 
 class WeatherReading:
     def __init__(self, reading):
-        self.date = Reading.str_to_date(reading.get("PKT") or
-                                        reading.get("PKST"))
+        self.date = self.str_to_date(reading.get("PKT") or
+                                     reading.get("PKST"))
         self.max_temp = int(reading["Max TemperatureC"])
         self.min_temp = int(reading["Min TemperatureC"])
-        self.max_humidity = int(reading["Max Humidity"])
-        self.mean_humidity = int(reading[" Mean Humidity"])
+        self.max_humid = int(reading["Max Humidity"])
+        self.mean_humid = int(reading[" Mean Humidity"])
+
+    @staticmethod
+    def str_to_date(date):
+        date = datetime.datetime.strptime(date, "%Y-%m-%d")
+        return date
 
 
 class ResultPrinter:
+    def __init__(self):
+        self.message = {
+            "record_not_found": "Record of given date not found in system",
+            "file_not_found": "Related files not found in the directory",
+            "path_not_found": "Path to directory not found",
+        }
+
     def print_annual_report(self, annual_stats):
         if not annual_stats:
             self.print_record_not_found_message()
             return
-        max_temp_reading = annual_stats["max temp"]
-        min_temp_reading = annual_stats["min temp"]
-        max_humidity_reading = annual_stats["max humidity"]
-        max_temp_date = max_temp_reading.date.strftime("%B %d")
-        min_temp_date = min_temp_reading.date.strftime("%B %d")
-        max_humidity_date = max_humidity_reading.date.strftime("%B %d")
-        print(f"\n{max_temp_reading.date.year}")
-        print(f"Highest: {max_temp_reading.max_temp}C on {max_temp_date}")
-        print(f"Lowest: {min_temp_reading.min_temp}C on {min_temp_date}")
-        print("Humidity: {}% on {}".format(max_humidity_reading.max_humidity,
-              max_humidity_date))
+        years_max_temp = annual_stats["max temp"]
+        years_min_temp = annual_stats["min temp"]
+        years_max_humid = annual_stats["max humidity"]
+        max_temp_date = years_max_temp.date.strftime("%B %d")
+        min_temp_date = years_min_temp.date.strftime("%B %d")
+        max_humid_date = years_max_humid.date.strftime("%B %d")
+        print(f"\n{years_max_temp.date.year}")
+        print(f"Highest: {years_max_temp.max_temp}C on {max_temp_date}")
+        print(f"Lowest: {years_min_temp.min_temp}C on {min_temp_date}")
+        print(f"Humidity: {years_max_humid.max_humid}% on {max_humid_date}")
 
     def print_monthly_report(self, month_stats, month):
         if not month_stats:
@@ -36,11 +47,11 @@ class ResultPrinter:
             return
         avg_max_temp = month_stats["avg max temp"]
         avg_min_temp = month_stats["avg min temp"]
-        avg_mean_humidity = month_stats["avg mean humidity"]
+        avg_mean_humid = month_stats["avg mean humidity"]
         print(f"\n{month}")
         print(f"Highest Average: {round(avg_max_temp, 2)}C")
         print(f"Lowest Average: {round(avg_min_temp, 2)}C")
-        print(f"Average Mean Humidity: {round(avg_mean_humidity, 2)}%")
+        print(f"Average Mean Humidity: {round(avg_mean_humid, 2)}%")
 
     def plot_month_barchart(self, chart_data):
         if not chart_data:
@@ -50,12 +61,12 @@ class ResultPrinter:
         print(f"\n{chart_month}")
         for day_reading in chart_data:
             day = day_reading.date.strftime("%d")
-            print(u"\u001b[35m{}".format(day), end=" ")
-            print(u"\u001b[31m+" * day_reading.max_temp, end=" ")
-            print(u"\u001b[35m{}C".format(day_reading.max_temp))
-            print(u"\u001b[35m{}".format(day), end=" ")
-            print(u"\u001b[36m+" * day_reading.min_temp, end=" ")
-            print(u"\u001b[35m{}C".format(day_reading.min_temp), end="\n\n")
+            print(f"\u001b[35m{day}", end=" ")
+            print(f"\u001b[31m+" * day_reading.max_temp, end=" ")
+            print(f"\u001b[35m{day_reading.max_temp}C")
+            print(f"\u001b[35m{day}", end=" ")
+            print(f"\u001b[36m+" * day_reading.min_temp, end=" ")
+            print(f"\u001b[35m{day_reading.min_temp}C", end="\n\n")
 
     def plot_component_barchart(self, chart_data):
         if not chart_data:
@@ -64,27 +75,20 @@ class ResultPrinter:
         print(f"\n{chart_month}")
         for day_reading in chart_data:
             day = day_reading.date.strftime("%d")
-            print(u"\u001b[35m{}".format(day), end=" ")
-            print(u"\u001b[36m+" * day_reading.min_temp, end="")
-            print(u"\u001b[31m+" * day_reading.max_temp, end=" ")
-            print(u"\u001b[35m{}C".format(day_reading.min_temp), end='-')
-            print(u"\u001b[35m{}C".format(day_reading.max_temp))
+            print(f"\u001b[35m{day}", end=" ")
+            print(f"\u001b[36m+" * day_reading.min_temp, end="")
+            print(f"\u001b[31m+" * day_reading.max_temp, end=" ")
+            print(f"\u001b[35m{day_reading.min_temp}C", end='-')
+            print(f"\u001b[35m{day_reading.max_temp}C")
 
-    @staticmethod
-    def print_record_not_found_message():
-        print("Record of given year/month does not exists in the system")
+    def print_record_not_found_message(self):
+        print(self.message["record_not_found"])
 
-    @staticmethod
-    def print_file_not_found_message():
-        print("Related files not found in the given directory")
+    def print_file_not_found_message(self):
+        print(self.message["file_not_found"])
 
-    @staticmethod
-    def print_path_not_found_message():
-        print("Path to directory not found")
-
-    @staticmethod
-    def print_invalid_month_message():
-        print("Invalid month format. Use yyyy/mm")
+    def print_path_not_found_message(self):
+        print(self.message["path_not_found"])
 
 
 class WeatherAnalysis:
@@ -97,8 +101,8 @@ class WeatherAnalysis:
         return min(annual_record, key=lambda r: r.min_temp)
 
     @staticmethod
-    def find_year_max_humidity(annual_record):
-        return max(annual_record, key=lambda r: r.max_humidity)
+    def find_year_max_humid(annual_record):
+        return max(annual_record, key=lambda r: r.max_humid)
 
     @staticmethod
     def find_month_avg_max_temp(month_record):
@@ -109,8 +113,8 @@ class WeatherAnalysis:
         return sum(r.min_temp for r in month_record) / len(month_record)
 
     @staticmethod
-    def find_month_avg_mean_humidity(month_record):
-        return sum(r.mean_humidity for r in month_record) / len(month_record)
+    def find_month_avg_mean_humid(month_record):
+        return sum(r.mean_humid for r in month_record) / len(month_record)
 
     @staticmethod
     def find_annual_record(weather_record, year):
@@ -126,12 +130,12 @@ class WeatherAnalysis:
         annual_record = self.find_annual_record(weather_record, year)
         if not annual_record:
             return
-        max_temp_data = self.find_year_max_temp(annual_record)
-        min_temp_data = self.find_year_min_temp(annual_record)
-        max_humidity_data = self.find_year_max_humidity(annual_record)
-        annual_stats = {"max temp": max_temp_data,
-                        "min temp": min_temp_data,
-                        "max humidity": max_humidity_data}
+        max_temp_record = self.find_year_max_temp(annual_record)
+        min_temp_record = self.find_year_min_temp(annual_record)
+        max_humid_record = self.find_year_max_humid(annual_record)
+        annual_stats = {"max temp": max_temp_record,
+                        "min temp": min_temp_record,
+                        "max humidity": max_humid_record}
 
         return annual_stats
 
@@ -145,7 +149,7 @@ class WeatherAnalysis:
             return
         avg_max_temp = self.find_month_avg_max_temp(month_record)
         avg_min_temp = self.find_month_avg_min_temp(month_record)
-        avg_mean_hum = self.find_month_avg_mean_humidity(month_record)
+        avg_mean_hum = self.find_month_avg_mean_humid(month_record)
         month_stats = {"avg max temp": avg_max_temp,
                        "avg min temp": avg_min_temp,
                        "avg mean humidity": avg_mean_hum}
@@ -191,8 +195,9 @@ class FileParser:
             return (weather_record)
 
     def parse_files(self, path):
+        result_printer = ResultPrinter()
         if not os.path.exists(path):
-            ResultPrinter.print_path_not_found_message()
+            result_printer.print_path_not_found_message()
             return
         weather_record = []
         files = FileParser.read_file_names(path)
@@ -200,15 +205,7 @@ class FileParser:
             weather_record += self.read_file(weather_file)
 
         if not weather_record:
-            ResultPrinter.print_file_not_found_message()
+            result_printer.print_file_not_found_message()
             return
 
         return weather_record
-
-
-class Reading:
-    @staticmethod
-    def str_to_date(date):
-        year, month, day = date.split("-")
-        date = datetime.date(int(year), int(month), int(day))
-        return date
