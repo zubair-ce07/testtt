@@ -1,0 +1,592 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<!-- ************* BEGIN HEADER ************* -->
+<html>
+	<head>
+		<title>California Public Utilities Commission</title>
+		<meta content="text/html; charset=iso-8859-1" http-equiv="content-type" />
+        <style type="text/css"> body { margin:0; padding:0; font-family:Arial, Helvetica, sans-serif; font-size:0.8em; }
+	h2 { font-family: Georgia, "Times New Roman", Times, serif; font-weight: bold; font-size: 1.38em; color: #253b5a; border-bottom:2px dotted #999; margin:14px 0; width:99%;}
+	h3 { font-size:1.2em; text-transform:uppercase; margin-bottom:6px; }
+	h4 { font-size:1em; font-weight:bold; }
+	hr { color: #bc3e06; background-color: #bc3e06; height: 2px; border: 0; }
+	</style>
+	</head>
+	<body>
+		<div align="left"><a name="top"></a>
+			<table border="0" cellpadding="0" cellspacing="0" width="100%"  summary="this is a layout table">
+				<tr bgcolor="#088110"><td height="4"></td></tr></table>
+			<table border="0" cellpadding="0" cellspacing="0" width="100%" summary="this is a layout table">
+				<tr>
+					<td width="12%"><a href="http://www.ca.gov"><img border="0" alt="Go to CA.Gov" src="http://www.cpuc.ca.gov/images/calogo.gif" width="118" height="77" /></a></td>
+					<!--<td width="520"><a href="http://www.cpuc.ca.gov/puc/"><img border="0" alt="CPUC Logo" src="http://www.cpuc.ca.gov/puc/images/ca_department/heading_title_v10.jpg" /></a></td>-->
+					<td width="520"><a href="http://www.cpuc.ca.gov/puc/"><img border="0" alt="CPUC Logo" src="http://www.cpuc.ca.gov/uploadedImages/CPUC_Public_Website/cpuc_logo_0.gif" /></a></td>
+					<td id="skipto_container" width="42%" align="center" ><font color="#90897d" size="2">Skip to: <a href="#content">
+							Content</a> | <a href="#footer">Footer</a> | <a href="http://www.cpuc.ca.gov/PUC/aboutsite/accessibility.htm">
+							Accessibility</a></font></td>
+				</tr>
+			</table>
+			<table border="0" cellpadding="0" cellspacing="0" width="100%" summary="this is a layout table">
+				<tr bgcolor="#088110">
+				<td height="24">&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://www.cpuc.ca.gov/puc"><font color="#ffffff" size="2"><b>CPUC Home</b></font></a></td>
+				<td height="24"align=right><a href="http://www.cpuc.ca.gov/documents/"><font color="#ffffff" size=2><b>Online Documents</b></font></a></td>
+				</tr></table>
+		</div>
+        
+        
+    </body>
+</html>
+<!-- ************* END HEADER *************** -->
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <!-- <script type="text/javascript" src="Scripts/jquery-1.6.4.min.js"></script> -->
+    <script type="text/javascript">
+
+        window.onload = function () {
+
+            // Check to see if this is an old IE.
+            var dataString = navigator.userAgent;
+            var index = dataString.indexOf("MSIE");
+            if (index != -1) {
+                var version = parseFloat(dataString.substring(index + 5));
+                if (version < 8) {
+                    alert("Results cannot be displayed.\n\nThe version of Internet Explorer you are using is unsupported. Please upgrade to at least version 8, and ensure that compatibility mode is disabled.");
+                    return;
+                }
+
+            }
+
+
+
+            // Set the page title.
+            document.title = " Results";
+
+            // Precache the sort images.
+            precacheDown = new Image()
+            precacheDown.src = "Images/down.gif";
+            precacheUp = new Image()
+            precacheUp.src = "Images/up.gif";
+
+            // Change the look of the current page number
+            currentPage = document.getElementById("rptPages_btnPage_");
+            if (currentPage) {
+                currentPage.onclick = null;
+                currentPage.style.color = "black";
+                currentPage.style.fontWeight = "bold";
+                currentPage.style.textDecoration = "none";
+                currentPage.style.cursor = "default";
+                currentPage.href = "javascript: void(0)";
+            }
+
+            // Determine what to show on the page based on the number of results
+            // and if this is suppsed to download automatically or not.
+            var numResults = "0";
+            var noAppendix = "False"
+            var pageTable = document.getElementById("Pages");
+
+            if (numResults == "0") {
+                pageTable.style.display = "none";
+                document.getElementById("NoResults").style.display = "table";
+            }
+            else if ((numResults == "1") && (noAppendix.toLowerCase() == "true")) {
+                document.getElementById("Pages").style.display = "none";
+                document.getElementById("FileResult").style.display = "table";
+                window.location = "";
+            }
+            else {
+                document.getElementById("Pages").style.display = "table";
+                document.getElementById("ResultTable").style.display = "table";
+            }
+
+            // Setup the sort column display.
+            var sortCol = ""
+
+            if (sortCol != "") {
+                sortCol += "Dir";
+                sortDir = "";
+
+                targetCol = document.getElementById(sortCol);
+
+                if (targetCol != null) {
+                    if (sortDir.toLowerCase() == "asc") {
+                        targetCol.innerHTML = "&nbsp&nbsp<img src='Images/down.gif'>";
+                    }
+                    else {
+                        targetCol.innerHTML = "&nbsp&nbsp<img src='Images/up.gif'>";
+                    }
+                }
+            }
+
+            // Display over limit message if it applies.
+            var alertMsg = "";
+            if (alertMsg != "") {
+                alert(alertMsg);
+            }
+        }
+    
+    </script>
+
+    <title>
+
+</title></head>
+
+<body>
+    <form method="post" action="./SearchRes.aspx" id="frmResultList">
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="/wEPDwUKLTk4MTE4OTkyNQ9kFgICBQ9kFhACAQ8PFgIeB1Zpc2libGVoZGQCAg8PFgIfAGhkZAIDDw8WAh8AaGRkAgQPFgIeC18hSXRlbUNvdW50AgIWBGYPZBYEAgEPDxYCHg9Db21tYW5kQXJndW1lbnQFATFkFgJmDxUBATFkAgIPFQEBIGQCAQ9kFgQCAQ8PFgIfAgUBMmQWAmYPFQEBMmQCAg8VAQEgZAIFDw8WAh8AaGRkAgYPDxYCHwBoZGQCBw8PFgIfAGhkZAIIDxYCHwECFBYoAgEPZBYCZg8VBV5Nb3Rpb24gZmlsZWQgYnkgQ294IENhbGlmb3JuaWEgVGVsY29tLCBMTEMgb24gMDYvMjEvMjAxOSBDb25mIyAxMzU5NjMgKENlcnRpZmljYXRlIE9mIFNlcnZpY2UpFFByb2NlZWRpbmc6IEMwODA4MDA2D0UtRmlsZWQ6IE1vdGlvblA8YSBocmVmPScvUHVibGlzaGVkRG9jcy9FZmlsZS9HMDAwL00zMDYvSzAzNi8zMDYwMzYyODcuUERGJz5QREY8L2E+ICgyNTcgS0IpPGJyPgowNi8yNS8yMDE5ZAIDD2QWAmYPFQVFTW90aW9uIGZpbGVkIGJ5IENveCBDYWxpZm9ybmlhIFRlbGNvbSwgTExDIG9uIDA2LzIxLzIwMTkgQ29uZiMgMTM1OTYzFFByb2NlZWRpbmc6IEMwODA4MDA2D0UtRmlsZWQ6IE1vdGlvblA8YSBocmVmPScvUHVibGlzaGVkRG9jcy9FZmlsZS9HMDAwL00zMDIvSzI0MC8zMDIyNDA5MDQuUERGJz5QREY8L2E+ICgzMTMgS0IpPGJyPgowNi8yNS8yMDE5ZAIFD2QWAmYPFQVeTW90aW9uIGZpbGVkIGJ5IENveCBDYWxpZm9ybmlhIFRlbGNvbSwgTExDIG9uIDA2LzIxLzIwMTkgQ29uZiMgMTM1OTY1IChDZXJ0aWZpY2F0ZSBPZiBTZXJ2aWNlKRRQcm9jZWVkaW5nOiBDMDgwODAwNg9FLUZpbGVkOiBNb3Rpb25QPGEgaHJlZj0nL1B1Ymxpc2hlZERvY3MvRWZpbGUvRzAwMC9NMzAyL0syNDAvMzAyMjQwOTA2LlBERic+UERGPC9hPiAoMjYwIEtCKTxicj4KMDYvMjUvMjAxOWQCBw9kFgJmDxUFRU1vdGlvbiBmaWxlZCBieSBDb3ggQ2FsaWZvcm5pYSBUZWxjb20sIExMQyBvbiAwNi8yMS8yMDE5IENvbmYjIDEzNTk2NRRQcm9jZWVkaW5nOiBDMDgwODAwNg9FLUZpbGVkOiBNb3Rpb25QPGEgaHJlZj0nL1B1Ymxpc2hlZERvY3MvRWZpbGUvRzAwMC9NMzA0L0s4NjMvMzA0ODYzODIzLlBERic+UERGPC9hPiAoMjEwIEtCKTxicj4KMDYvMjUvMjAxOWQCCQ9kFgJmDxUFUlJ1bGluZyBmaWxlZCBieSBBTEovTUlMRVMvQ1BVQyBvbiAwNi8yMS8yMDE5IENvbmYjIDEzNjAwNCAoQ2VydGlmaWNhdGUgT2YgU2VydmljZSkUUHJvY2VlZGluZzogQTE4MDcwMTkPRS1GaWxlZDogUnVsaW5nTzxhIGhyZWY9Jy9QdWJsaXNoZWREb2NzL0VmaWxlL0cwMDAvTTMwMi9LMjQwLzMwMjI0MDgwNy5QREYnPlBERjwvYT4gKDc2IEtCKTxicj4KMDYvMjUvMjAxOWQCCw9kFgJmDxUFOVJ1bGluZyBmaWxlZCBieSBBTEovTUlMRVMvQ1BVQyBvbiAwNi8yMS8yMDE5IENvbmYjIDEzNjAwNBRQcm9jZWVkaW5nOiBBMTgwNzAxOQ9FLUZpbGVkOiBSdWxpbmdQPGEgaHJlZj0nL1B1Ymxpc2hlZERvY3MvRWZpbGUvRzAwMC9NMzAyL0syOTgvMzAyMjk4MDk1LlBERic+UERGPC9hPiAoMTM0IEtCKTxicj4KMDYvMjUvMjAxOWQCDQ9kFgJmDxUFVE1vdGlvbiBmaWxlZCBieSBPU0EvU0hBUFNPTi9DUFVDIG9uIDA2LzIxLzIwMTkgQ29uZiMgMTM1OTE0IChDZXJ0aWZpY2F0ZSBPZiBTZXJ2aWNlKRRQcm9jZWVkaW5nOiBBMTgwNzAxOQ9FLUZpbGVkOiBNb3Rpb25QPGEgaHJlZj0nL1B1Ymxpc2hlZERvY3MvRWZpbGUvRzAwMC9NMzA2L0sxMDEvMzA2MTAxNDk1LlBERic+UERGPC9hPiAoMTk4IEtCKTxicj4KMDYvMjUvMjAxOWQCDw9kFgJmDxUFO01vdGlvbiBmaWxlZCBieSBPU0EvU0hBUFNPTi9DUFVDIG9uIDA2LzIxLzIwMTkgQ29uZiMgMTM1OTE0FFByb2NlZWRpbmc6IEExODA3MDE5D0UtRmlsZWQ6IE1vdGlvblA8YSBocmVmPScvUHVibGlzaGVkRG9jcy9FZmlsZS9HMDAwL00zMDYvSzEwMS8zMDYxMDE0OTQuUERGJz5QREY8L2E+ICgxNjcgS0IpPGJyPgowNi8yNS8yMDE5ZAIRD2QWAmYPFQVkUmVxdWVzdCBmaWxlZCBieSBUSEUgTkFUVVJBTCBSRVNPVVJDRVMgREVGRU5TRSBDT1VOQ0lMLCBJTkMgb24gMDYvMjAvMjAxOSBDb25mIyAxMzU4NTUgKEF0dGFjaG1lbnQyKRRQcm9jZWVkaW5nOiBSMTYwMjAwNxBFLUZpbGVkOiBSZXF1ZXN0UDxhIGhyZWY9Jy9QdWJsaXNoZWREb2NzL0VmaWxlL0cwMDAvTTMwMi9LMjQwLzMwMjI0MDc4OC5QREYnPlBERjwvYT4gKDExNCBLQik8YnI+CjA2LzI0LzIwMTlkAhMPZBYCZg8VBW9SZXF1ZXN0IGZpbGVkIGJ5IFRIRSBOQVRVUkFMIFJFU09VUkNFUyBERUZFTlNFIENPVU5DSUwsIElOQyBvbiAwNi8yMC8yMDE5IENvbmYjIDEzNTg1NSAoQ2VydGlmaWNhdGUgT2YgU2VydmljZSkUUHJvY2VlZGluZzogUjE2MDIwMDcQRS1GaWxlZDogUmVxdWVzdFA8YSBocmVmPScvUHVibGlzaGVkRG9jcy9FZmlsZS9HMDAwL00zMDIvSzI0MC8zMDIyNDA4ODUuUERGJz5QREY8L2E+ICgzODkgS0IpPGJyPgowNi8yNC8yMDE5ZAIVD2QWAmYPFQVWUmVxdWVzdCBmaWxlZCBieSBUSEUgTkFUVVJBTCBSRVNPVVJDRVMgREVGRU5TRSBDT1VOQ0lMLCBJTkMgb24gMDYvMjAvMjAxOSBDb25mIyAxMzU4NTUUUHJvY2VlZGluZzogUjE2MDIwMDcQRS1GaWxlZDogUmVxdWVzdFA8YSBocmVmPScvUHVibGlzaGVkRG9jcy9FZmlsZS9HMDAwL00zMDEvSzk0Ni8zMDE5NDYwMzYuUERGJz5QREY8L2E+ICgzMjcgS0IpPGJyPgowNi8yNC8yMDE5ZAIXD2QWAmYPFQVUTW90aW9uIGZpbGVkIGJ5IE9mZmljZSBvZiB0aGUgQ2l0eSBBdHRvcm5leSBvbiAwNi8yMC8yMDE5IENvbmYjIDEzNTg1OSAoQXR0YWNobWVudDIpFFByb2NlZWRpbmc6IFIxMjEyMDExD0UtRmlsZWQ6IE1vdGlvblA8YSBocmVmPScvUHVibGlzaGVkRG9jcy9FZmlsZS9HMDAwL00zMDIvSzI0MC8zMDIyNDA3NzYuUERGJz5QREY8L2E+ICgyNzggS0IpPGJyPgowNi8yNC8yMDE5ZAIZD2QWAmYPFQVfTW90aW9uIGZpbGVkIGJ5IE9mZmljZSBvZiB0aGUgQ2l0eSBBdHRvcm5leSBvbiAwNi8yMC8yMDE5IENvbmYjIDEzNTg1OSAoQ2VydGlmaWNhdGUgT2YgU2VydmljZSkUUHJvY2VlZGluZzogUjEyMTIwMTEPRS1GaWxlZDogTW90aW9uUDxhIGhyZWY9Jy9QdWJsaXNoZWREb2NzL0VmaWxlL0cwMDAvTTMwMS9LOTI1LzMwMTkyNTAyOC5QREYnPlBERjwvYT4gKDEwOSBLQik8YnI+CjA2LzI0LzIwMTlkAhsPZBYCZg8VBUZNb3Rpb24gZmlsZWQgYnkgT2ZmaWNlIG9mIHRoZSBDaXR5IEF0dG9ybmV5IG9uIDA2LzIwLzIwMTkgQ29uZiMgMTM1ODU5FFByb2NlZWRpbmc6IFIxMjEyMDExD0UtRmlsZWQ6IE1vdGlvblA8YSBocmVmPScvUHVibGlzaGVkRG9jcy9FZmlsZS9HMDAwL00zMDIvSzI0MC8zMDIyNDA4NzkuUERGJz5QREY8L2E+ICgyNzEgS0IpPGJyPgowNi8yNC8yMDE5ZAIdD2QWAmYPFQV2UmVxdWVzdCBmaWxlZCBieSBMZWFkZXJzaGlwIENvdW5zZWwgZm9yIEp1c3RpY2UgYW5kIEFjY291bnRhYmlsaXR5IG9uIDA2LzIxLzIwMTkgQ29uZiMgMTM1OTgxIChDZXJ0aWZpY2F0ZSBPZiBTZXJ2aWNlKRRQcm9jZWVkaW5nOiBSMTcwNjAxNRBFLUZpbGVkOiBSZXF1ZXN0UDxhIGhyZWY9Jy9QdWJsaXNoZWREb2NzL0VmaWxlL0cwMDAvTTMwMy9LMDc0LzMwMzA3NDIzOC5QREYnPlBERjwvYT4gKDE2OCBLQik8YnI+CjA2LzIyLzIwMTlkAh8PZBYCZg8VBV1SZXF1ZXN0IGZpbGVkIGJ5IExlYWRlcnNoaXAgQ291bnNlbCBmb3IgSnVzdGljZSBhbmQgQWNjb3VudGFiaWxpdHkgb24gMDYvMjEvMjAxOSBDb25mIyAxMzU5ODEUUHJvY2VlZGluZzogUjE3MDYwMTUQRS1GaWxlZDogUmVxdWVzdFA8YSBocmVmPScvUHVibGlzaGVkRG9jcy9FZmlsZS9HMDAwL00zMDIvSzI0MC8zMDIyNDA4NzguUERGJz5QREY8L2E+ICgxNzYgS0IpPGJyPgowNi8yMi8yMDE5ZAIhD2QWAmYPFQVeUmVoZWFyaW5nIFJlcXVlc3QgZmlsZWQgYnkgQWNjZXNzIE9uZSwgSW5jIG9uIDA2LzIwLzIwMTkgQ29uZiMgMTM1ODQ3IChDZXJ0aWZpY2F0ZSBPZiBTZXJ2aWNlKRRQcm9jZWVkaW5nOiBDMDgwODAwNhpFLUZpbGVkOiBSZWhlYXJpbmcgUmVxdWVzdFA8YSBocmVmPScvUHVibGlzaGVkRG9jcy9FZmlsZS9HMDAwL00zMDIvSzk0Mi8zMDI5NDIzNDguUERGJz5QREY8L2E+ICgyNDMgS0IpPGJyPgowNi8yMS8yMDE5ZAIjD2QWAmYPFQVFUmVoZWFyaW5nIFJlcXVlc3QgZmlsZWQgYnkgQWNjZXNzIE9uZSwgSW5jIG9uIDA2LzIwLzIwMTkgQ29uZiMgMTM1ODQ3FFByb2NlZWRpbmc6IEMwODA4MDA2GkUtRmlsZWQ6IFJlaGVhcmluZyBSZXF1ZXN0UDxhIGhyZWY9Jy9QdWJsaXNoZWREb2NzL0VmaWxlL0cwMDAvTTMwMi9LMjk4LzMwMjI5ODA3OC5QREYnPlBERjwvYT4gKDM5MCBLQik8YnI+CjA2LzIxLzIwMTlkAiUPZBYCZg8VBUdSdWxpbmcgZmlsZWQgYnkgQUxKL0hPVUNLL0NQVUMgb24gMDYvMjEvMjAxOSBDb25mIyAxMzU5MTIgKEF0dGFjaG1lbnQyKRRQcm9jZWVkaW5nOiBSMTcwNjAyNA9FLUZpbGVkOiBSdWxpbmdQPGEgaHJlZj0nL1B1Ymxpc2hlZERvY3MvRWZpbGUvRzAwMC9NMzAyL0s5NDIvMzAyOTQyMzQ3LlBERic+UERGPC9hPiAoMjI0IEtCKTxicj4KMDYvMjEvMjAxOWQCJw9kFgJmDxUFUlJ1bGluZyBmaWxlZCBieSBBTEovSE9VQ0svQ1BVQyBvbiAwNi8yMS8yMDE5IENvbmYjIDEzNTkxMiAoQ2VydGlmaWNhdGUgT2YgU2VydmljZSkUUHJvY2VlZGluZzogUjE3MDYwMjQPRS1GaWxlZDogUnVsaW5nUDxhIGhyZWY9Jy9QdWJsaXNoZWREb2NzL0VmaWxlL0cwMDAvTTMwMi9LMjQwLzMwMjI0MDg3Ny5QREYnPlBERjwvYT4gKDQyNiBLQik8YnI+CjA2LzIxLzIwMTlkZBWoPoO512IkiKmV8FFq8+1QJR1QW1xHr5LTDdYsWjn5" />
+
+<input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="F8727AE4" />
+<input type="hidden" name="__EVENTVALIDATION" id="__EVENTVALIDATION" value="/wEdAAf5ULbMYGQNzKihZgEnmIP3+KzX0FwelcUOhBan/b5uzOgvnuFPcTGgEjLUkdWZc9Q3HyTnWxBPDserVE5AdOKMmv0yapKsrpZbSLIZIEM7f7P7DCfoFkvhUelNTxPOLznrGeGnCxIZAFJhJ8XV1Yc9+MNRbLbGLCz5iAIjq7uxwcUY4OaOepJ+2durUaumzjY=" />
+
+    <div class="MainDiv">
+        <div class="Title">
+             Results
+        </div>
+
+        <br />
+        <span id="addcontent" class="AddContent"></span>
+        <input type="submit" name="butSubscribe" value="Document Subscriptions" id="butSubscribe" class="SubscribeButton" />
+        <br />
+        <br />
+        <table id="Pages" class="PageTable">
+            <tr>
+                <td valign="top">
+                    Pages:
+                    
+                    
+                    
+                </td>
+                <td>                             
+                    
+                            <a id="rptPages_btnPage_0" href="javascript:__doPostBack(&#39;rptPages$ctl00$btnPage&#39;,&#39;&#39;)">1</a> 
+                        
+                            <a id="rptPages_btnPage_1" href="javascript:__doPostBack(&#39;rptPages$ctl01$btnPage&#39;,&#39;&#39;)">2</a> 
+                        
+                </td>
+                <td valign="bottom">
+                    
+                    
+                    
+                </td>
+            </tr>
+        </table>
+
+        <table id="ResultTable" class="ResultTable">                
+            
+                
+                    <thead>
+                        <tr style="background-color:#006699; color: white; font-weight: bold;">
+                            <td><a id="rptPubRepeater_DocTitle" class="SortLink" href="javascript:__doPostBack(&#39;rptPubRepeater$ctl00$DocTitle&#39;,&#39;&#39;)">Title</a><span id="DocTitleDir"></span></td>
+                            <td><a id="rptPubRepeater_DocTypeDesc" class="SortLink" href="javascript:__doPostBack(&#39;rptPubRepeater$ctl00$DocTypeDesc&#39;,&#39;&#39;)">Doc Type</a><span id="DocTypeDescDir"></span></td>
+                            <td><span id="rptPubRepeater_Label1">Doc Links</span></td>
+                            <td><a id="rptPubRepeater_PubDate" class="SortLink" href="javascript:__doPostBack(&#39;rptPubRepeater$ctl00$PubDate&#39;,&#39;&#39;)">Published Date</a><span id="PubDateDir"></span></td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                
+                        <tr>
+                            <td class='ResultTitleTD'>Motion filed by Cox California Telcom, LLC on 06/21/2019 Conf# 135963 (Certificate Of Service)<br /><br />Proceeding: C0808006</td>
+                            <td class='ResultTypeTD'>E-Filed: Motion</td>
+                            <td class='ResultLinkTD'><a href='/PublishedDocs/Efile/G000/M306/K036/306036287.PDF'>PDF</a> (257 KB)<br></td>
+                            <td class='ResultDateTD'>06/25/2019</td>
+                        </tr>
+                
+                    <tr style="height:1px">
+                        <td colspan="5">
+                            <hr style="height:1px;border:0px;color:#006699;background-color:#006699" />
+                        </td>
+                    </tr>
+                
+                        <tr>
+                            <td class='ResultTitleTD'>Motion filed by Cox California Telcom, LLC on 06/21/2019 Conf# 135963<br /><br />Proceeding: C0808006</td>
+                            <td class='ResultTypeTD'>E-Filed: Motion</td>
+                            <td class='ResultLinkTD'><a href='/PublishedDocs/Efile/G000/M302/K240/302240904.PDF'>PDF</a> (313 KB)<br></td>
+                            <td class='ResultDateTD'>06/25/2019</td>
+                        </tr>
+                
+                    <tr style="height:1px">
+                        <td colspan="5">
+                            <hr style="height:1px;border:0px;color:#006699;background-color:#006699" />
+                        </td>
+                    </tr>
+                
+                        <tr>
+                            <td class='ResultTitleTD'>Motion filed by Cox California Telcom, LLC on 06/21/2019 Conf# 135965 (Certificate Of Service)<br /><br />Proceeding: C0808006</td>
+                            <td class='ResultTypeTD'>E-Filed: Motion</td>
+                            <td class='ResultLinkTD'><a href='/PublishedDocs/Efile/G000/M302/K240/302240906.PDF'>PDF</a> (260 KB)<br></td>
+                            <td class='ResultDateTD'>06/25/2019</td>
+                        </tr>
+                
+                    <tr style="height:1px">
+                        <td colspan="5">
+                            <hr style="height:1px;border:0px;color:#006699;background-color:#006699" />
+                        </td>
+                    </tr>
+                
+                        <tr>
+                            <td class='ResultTitleTD'>Motion filed by Cox California Telcom, LLC on 06/21/2019 Conf# 135965<br /><br />Proceeding: C0808006</td>
+                            <td class='ResultTypeTD'>E-Filed: Motion</td>
+                            <td class='ResultLinkTD'><a href='/PublishedDocs/Efile/G000/M304/K863/304863823.PDF'>PDF</a> (210 KB)<br></td>
+                            <td class='ResultDateTD'>06/25/2019</td>
+                        </tr>
+                
+                    <tr style="height:1px">
+                        <td colspan="5">
+                            <hr style="height:1px;border:0px;color:#006699;background-color:#006699" />
+                        </td>
+                    </tr>
+                
+                        <tr>
+                            <td class='ResultTitleTD'>Ruling filed by ALJ/MILES/CPUC on 06/21/2019 Conf# 136004 (Certificate Of Service)<br /><br />Proceeding: A1807019</td>
+                            <td class='ResultTypeTD'>E-Filed: Ruling</td>
+                            <td class='ResultLinkTD'><a href='/PublishedDocs/Efile/G000/M302/K240/302240807.PDF'>PDF</a> (76 KB)<br></td>
+                            <td class='ResultDateTD'>06/25/2019</td>
+                        </tr>
+                
+                    <tr style="height:1px">
+                        <td colspan="5">
+                            <hr style="height:1px;border:0px;color:#006699;background-color:#006699" />
+                        </td>
+                    </tr>
+                
+                        <tr>
+                            <td class='ResultTitleTD'>Ruling filed by ALJ/MILES/CPUC on 06/21/2019 Conf# 136004<br /><br />Proceeding: A1807019</td>
+                            <td class='ResultTypeTD'>E-Filed: Ruling</td>
+                            <td class='ResultLinkTD'><a href='/PublishedDocs/Efile/G000/M302/K298/302298095.PDF'>PDF</a> (134 KB)<br></td>
+                            <td class='ResultDateTD'>06/25/2019</td>
+                        </tr>
+                
+                    <tr style="height:1px">
+                        <td colspan="5">
+                            <hr style="height:1px;border:0px;color:#006699;background-color:#006699" />
+                        </td>
+                    </tr>
+                
+                        <tr>
+                            <td class='ResultTitleTD'>Motion filed by OSA/SHAPSON/CPUC on 06/21/2019 Conf# 135914 (Certificate Of Service)<br /><br />Proceeding: A1807019</td>
+                            <td class='ResultTypeTD'>E-Filed: Motion</td>
+                            <td class='ResultLinkTD'><a href='/PublishedDocs/Efile/G000/M306/K101/306101495.PDF'>PDF</a> (198 KB)<br></td>
+                            <td class='ResultDateTD'>06/25/2019</td>
+                        </tr>
+                
+                    <tr style="height:1px">
+                        <td colspan="5">
+                            <hr style="height:1px;border:0px;color:#006699;background-color:#006699" />
+                        </td>
+                    </tr>
+                
+                        <tr>
+                            <td class='ResultTitleTD'>Motion filed by OSA/SHAPSON/CPUC on 06/21/2019 Conf# 135914<br /><br />Proceeding: A1807019</td>
+                            <td class='ResultTypeTD'>E-Filed: Motion</td>
+                            <td class='ResultLinkTD'><a href='/PublishedDocs/Efile/G000/M306/K101/306101494.PDF'>PDF</a> (167 KB)<br></td>
+                            <td class='ResultDateTD'>06/25/2019</td>
+                        </tr>
+                
+                    <tr style="height:1px">
+                        <td colspan="5">
+                            <hr style="height:1px;border:0px;color:#006699;background-color:#006699" />
+                        </td>
+                    </tr>
+                
+                        <tr>
+                            <td class='ResultTitleTD'>Request filed by THE NATURAL RESOURCES DEFENSE COUNCIL, INC on 06/20/2019 Conf# 135855 (Attachment2)<br /><br />Proceeding: R1602007</td>
+                            <td class='ResultTypeTD'>E-Filed: Request</td>
+                            <td class='ResultLinkTD'><a href='/PublishedDocs/Efile/G000/M302/K240/302240788.PDF'>PDF</a> (114 KB)<br></td>
+                            <td class='ResultDateTD'>06/24/2019</td>
+                        </tr>
+                
+                    <tr style="height:1px">
+                        <td colspan="5">
+                            <hr style="height:1px;border:0px;color:#006699;background-color:#006699" />
+                        </td>
+                    </tr>
+                
+                        <tr>
+                            <td class='ResultTitleTD'>Request filed by THE NATURAL RESOURCES DEFENSE COUNCIL, INC on 06/20/2019 Conf# 135855 (Certificate Of Service)<br /><br />Proceeding: R1602007</td>
+                            <td class='ResultTypeTD'>E-Filed: Request</td>
+                            <td class='ResultLinkTD'><a href='/PublishedDocs/Efile/G000/M302/K240/302240885.PDF'>PDF</a> (389 KB)<br></td>
+                            <td class='ResultDateTD'>06/24/2019</td>
+                        </tr>
+                
+                    <tr style="height:1px">
+                        <td colspan="5">
+                            <hr style="height:1px;border:0px;color:#006699;background-color:#006699" />
+                        </td>
+                    </tr>
+                
+                        <tr>
+                            <td class='ResultTitleTD'>Request filed by THE NATURAL RESOURCES DEFENSE COUNCIL, INC on 06/20/2019 Conf# 135855<br /><br />Proceeding: R1602007</td>
+                            <td class='ResultTypeTD'>E-Filed: Request</td>
+                            <td class='ResultLinkTD'><a href='/PublishedDocs/Efile/G000/M301/K946/301946036.PDF'>PDF</a> (327 KB)<br></td>
+                            <td class='ResultDateTD'>06/24/2019</td>
+                        </tr>
+                
+                    <tr style="height:1px">
+                        <td colspan="5">
+                            <hr style="height:1px;border:0px;color:#006699;background-color:#006699" />
+                        </td>
+                    </tr>
+                
+                        <tr>
+                            <td class='ResultTitleTD'>Motion filed by Office of the City Attorney on 06/20/2019 Conf# 135859 (Attachment2)<br /><br />Proceeding: R1212011</td>
+                            <td class='ResultTypeTD'>E-Filed: Motion</td>
+                            <td class='ResultLinkTD'><a href='/PublishedDocs/Efile/G000/M302/K240/302240776.PDF'>PDF</a> (278 KB)<br></td>
+                            <td class='ResultDateTD'>06/24/2019</td>
+                        </tr>
+                
+                    <tr style="height:1px">
+                        <td colspan="5">
+                            <hr style="height:1px;border:0px;color:#006699;background-color:#006699" />
+                        </td>
+                    </tr>
+                
+                        <tr>
+                            <td class='ResultTitleTD'>Motion filed by Office of the City Attorney on 06/20/2019 Conf# 135859 (Certificate Of Service)<br /><br />Proceeding: R1212011</td>
+                            <td class='ResultTypeTD'>E-Filed: Motion</td>
+                            <td class='ResultLinkTD'><a href='/PublishedDocs/Efile/G000/M301/K925/301925028.PDF'>PDF</a> (109 KB)<br></td>
+                            <td class='ResultDateTD'>06/24/2019</td>
+                        </tr>
+                
+                    <tr style="height:1px">
+                        <td colspan="5">
+                            <hr style="height:1px;border:0px;color:#006699;background-color:#006699" />
+                        </td>
+                    </tr>
+                
+                        <tr>
+                            <td class='ResultTitleTD'>Motion filed by Office of the City Attorney on 06/20/2019 Conf# 135859<br /><br />Proceeding: R1212011</td>
+                            <td class='ResultTypeTD'>E-Filed: Motion</td>
+                            <td class='ResultLinkTD'><a href='/PublishedDocs/Efile/G000/M302/K240/302240879.PDF'>PDF</a> (271 KB)<br></td>
+                            <td class='ResultDateTD'>06/24/2019</td>
+                        </tr>
+                
+                    <tr style="height:1px">
+                        <td colspan="5">
+                            <hr style="height:1px;border:0px;color:#006699;background-color:#006699" />
+                        </td>
+                    </tr>
+                
+                        <tr>
+                            <td class='ResultTitleTD'>Request filed by Leadership Counsel for Justice and Accountability on 06/21/2019 Conf# 135981 (Certificate Of Service)<br /><br />Proceeding: R1706015</td>
+                            <td class='ResultTypeTD'>E-Filed: Request</td>
+                            <td class='ResultLinkTD'><a href='/PublishedDocs/Efile/G000/M303/K074/303074238.PDF'>PDF</a> (168 KB)<br></td>
+                            <td class='ResultDateTD'>06/22/2019</td>
+                        </tr>
+                
+                    <tr style="height:1px">
+                        <td colspan="5">
+                            <hr style="height:1px;border:0px;color:#006699;background-color:#006699" />
+                        </td>
+                    </tr>
+                
+                        <tr>
+                            <td class='ResultTitleTD'>Request filed by Leadership Counsel for Justice and Accountability on 06/21/2019 Conf# 135981<br /><br />Proceeding: R1706015</td>
+                            <td class='ResultTypeTD'>E-Filed: Request</td>
+                            <td class='ResultLinkTD'><a href='/PublishedDocs/Efile/G000/M302/K240/302240878.PDF'>PDF</a> (176 KB)<br></td>
+                            <td class='ResultDateTD'>06/22/2019</td>
+                        </tr>
+                
+                    <tr style="height:1px">
+                        <td colspan="5">
+                            <hr style="height:1px;border:0px;color:#006699;background-color:#006699" />
+                        </td>
+                    </tr>
+                
+                        <tr>
+                            <td class='ResultTitleTD'>Rehearing Request filed by Access One, Inc on 06/20/2019 Conf# 135847 (Certificate Of Service)<br /><br />Proceeding: C0808006</td>
+                            <td class='ResultTypeTD'>E-Filed: Rehearing Request</td>
+                            <td class='ResultLinkTD'><a href='/PublishedDocs/Efile/G000/M302/K942/302942348.PDF'>PDF</a> (243 KB)<br></td>
+                            <td class='ResultDateTD'>06/21/2019</td>
+                        </tr>
+                
+                    <tr style="height:1px">
+                        <td colspan="5">
+                            <hr style="height:1px;border:0px;color:#006699;background-color:#006699" />
+                        </td>
+                    </tr>
+                
+                        <tr>
+                            <td class='ResultTitleTD'>Rehearing Request filed by Access One, Inc on 06/20/2019 Conf# 135847<br /><br />Proceeding: C0808006</td>
+                            <td class='ResultTypeTD'>E-Filed: Rehearing Request</td>
+                            <td class='ResultLinkTD'><a href='/PublishedDocs/Efile/G000/M302/K298/302298078.PDF'>PDF</a> (390 KB)<br></td>
+                            <td class='ResultDateTD'>06/21/2019</td>
+                        </tr>
+                
+                    <tr style="height:1px">
+                        <td colspan="5">
+                            <hr style="height:1px;border:0px;color:#006699;background-color:#006699" />
+                        </td>
+                    </tr>
+                
+                        <tr>
+                            <td class='ResultTitleTD'>Ruling filed by ALJ/HOUCK/CPUC on 06/21/2019 Conf# 135912 (Attachment2)<br /><br />Proceeding: R1706024</td>
+                            <td class='ResultTypeTD'>E-Filed: Ruling</td>
+                            <td class='ResultLinkTD'><a href='/PublishedDocs/Efile/G000/M302/K942/302942347.PDF'>PDF</a> (224 KB)<br></td>
+                            <td class='ResultDateTD'>06/21/2019</td>
+                        </tr>
+                
+                    <tr style="height:1px">
+                        <td colspan="5">
+                            <hr style="height:1px;border:0px;color:#006699;background-color:#006699" />
+                        </td>
+                    </tr>
+                
+                        <tr>
+                            <td class='ResultTitleTD'>Ruling filed by ALJ/HOUCK/CPUC on 06/21/2019 Conf# 135912 (Certificate Of Service)<br /><br />Proceeding: R1706024</td>
+                            <td class='ResultTypeTD'>E-Filed: Ruling</td>
+                            <td class='ResultLinkTD'><a href='/PublishedDocs/Efile/G000/M302/K240/302240877.PDF'>PDF</a> (426 KB)<br></td>
+                            <td class='ResultDateTD'>06/21/2019</td>
+                        </tr>
+                
+                    <tr style="height:1px">
+                        <td colspan="5">
+                            <hr style="height:1px;border:0px;color:#006699;background-color:#006699" />
+                        </td>
+                    </tr>
+                    </tbody>
+                
+        </table>
+        <table id="NoResults" class="NoResultTable">
+        <tr><td>Your search returned no results.</td></tr>
+        </table>
+        <table id="FileResult" class="FileResultTable">
+        <tr><td>Click <a href="">here</a> if your file does not automatically begin downloading.</td></tr>
+        </table>
+
+
+    </div>
+    </form>
+    <br />
+    <br />
+</body>
+</html>
+
+<!-- ************* BEGIN FOOTER ************* -->
+<html>
+	<head>
+		<title>California Public Utilities Commission</title>
+		<meta content="text/html; charset=iso-8859-1" http-equiv="content-type" />
+        <style type="text/css"> body { margin:0; padding:0; font-family:Arial, Helvetica, sans-serif; font-size:0.8em; }
+	h2 { font-family: Georgia, "Times New Roman", Times, serif; font-weight: bold; font-size: 1.38em; color: #253b5a; border-bottom:2px dotted #999; margin:14px 0; width:99%;}
+	h3 { font-size:1.2em; text-transform:uppercase; margin-bottom:6px; }
+	h4 { font-size:1em; font-weight:bold; }
+	hr { color: #bc3e06; background-color: #bc3e06; height: 2px; border: 0; }
+	</style>
+	</head>
+    <body>
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" summary="This is a layout table">
+        <tr><a name="footer">
+            <td colspan="4" height="10" align="center" width="927" bgcolor="#088110">
+              <p align="center"><a href="#top"><font color="#FFFFFF" size=2>Back to Top</a> | </font><a href="mailto:webmaster@cpuc.ca.gov"><font color="#FFFFFF" size=2>Help</a> | </font><a href="http://www.cpuc.ca.gov/PUC/contactus/"><font color="#FFFFFF" size=2>Contact Us</a> | </font>
+              <a href="http://www.cpuc.ca.gov/puc/sitemap.htm"><font color="#FFFFFF" size=2>Site Map</a></font></p>
+            </td></a>
+        </tr><!-- END BACK TO TOP -->
+        
+        <!-- FOOTER -->
+        <tr>
+            <td colspan="4" height="2" align="center" width="927">
+              <p align="center"><a href="http://www.cpuc.ca.gov/PUC/aboutsite/use.htm"><font size=2>Conditions of Use</A></font>&nbsp;|&nbsp;<A class=footer href="http://www.cpuc.ca.gov/PUC/aboutsite/privacy.htm"><font size=2>Privacy Policy</font></a></p></td>
+        </tr>
+        <tr>
+            <td colspan="4" height="2" align="center" width="927">
+              <p align="center" ><font size="2">Copyright © 2007 State of California</font></p>
+            </td>
+        </tr><!-- END FOOTER -->
+
+    </table>
+    </body>
+</html>
+		
+
+<!-- ************* END FOOTER ************* -->
+<html>
+<head>
+    <style type="text/css">
+        .SortLink
+        {
+            color: #FFFFFF;
+        }
+        .ControlLink
+        {
+            font-weight:bold;
+            text-decoration:none;
+        }
+        .PageTable
+        {
+            margin:auto;
+            display:none;
+        }
+        .ResultTable
+        {
+            margin: auto;
+            width: 90%;
+            display:none;
+        }
+        .ResultTitleTD
+        {
+            text-align:left;
+            padding-left:10px;
+        }
+	    .ResultLinkTD
+	    {
+            min-width:125px;
+            width:auto;
+            text-align:left;
+            padding-left:15px;
+        }
+        .ResultTypeTD, .ResultDateTD
+        {
+            min-width:80px;
+        }
+        .FileResultTable
+        {
+            margin: auto;
+            width: 650px;
+            display:none;
+            font-weight:bold;
+            font-size:larger;
+        }
+        .NoResultTable
+        {
+            margin: auto;
+            width: 650px;
+            display:none;
+            font-weight:bold;
+            font-size:larger;
+        }
+        .AddContent
+        {
+            max-width:50%;
+            float:left;            
+        }
+        
+        .SubscribeButton
+        {
+            float:right;
+            margin-right:30px;
+        }
+        .MainDiv
+        {
+            text-align: center;
+            width:90%;
+            margin:auto;
+            min-width:900px;            
+        }
+        .TitleBar
+        {
+            background-color:#088110;
+            height:20px;
+
+        }
+        .Title
+        {
+            text-align:left;
+            font-weight:bold;
+            font-size:x-large;            
+        }            
+        
+    </style>
+</head>
+</html>
