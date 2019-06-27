@@ -1,59 +1,43 @@
 # -*- coding: utf-8 -*-
 import scrapy
-from WebData import WebData
+from scrapy.spiders import CrawlSpider, Rule
+from scrapy.linkextractors import LinkExtractor
+from Women_clothing.items import BeginningboutiqueItem
 
 
-class Beginningboutique(scrapy.Spider):
-
+class MySpider(CrawlSpider):
     name = "beginningboutique"
-    web_details = []
     allowed_domains = ['beginningboutique.com.au']
+    start_urls = ['https://www.beginningboutique.com.au/']
 
-    def start_requests(self):
-        start_url = 'https://www.beginningboutique.com.au'
-        yield scrapy.Request(url=start_url,
-                             callback=self.parse)
+    rules = (
+        Rule(LinkExtractor(
+            allow=('beginningboutique.com.au', ),
+            restrict_xpaths=("//div[@class='header-nav-wrapper']"))),
 
-    def parse(self, response):
-        categories = response.xpath("//div[@class='header-nav-wrapper']/"
-                                    "/div[@class='dropdown-wrapper']/"
-                                    "a[contains(@href, '')]/@href").getall()
-        for url in categories:
-            yield scrapy.Request(
-                url=('https://www.beginningboutique.com.au'+url),
-                callback=self.parse_products_urls,
-                dont_filter=True)
-
-    def parse_products_urls(self, response):
-        product_urls = response.xpath(
-            "//div[@id='shopify-section-collection']/"
-            "/a[contains(@href, '')]/@href").getall()
-        for product_url in product_urls:
-            yield scrapy.Request(
-                url=('https://www.beginningboutique.com.au' + product_url),
-                callback=self.product_parse,
-                dont_filter=True)
+        Rule(LinkExtractor(
+            allow=('beginningboutique.com.au/products', ),
+            restrict_xpaths="//div[@id='shopify-section-collection']"),
+             callback='product_parse'),
+    )
 
     def product_parse(self, response):
-        page_deatils = WebData(
+        return BeginningboutiqueItem(
             retailer_sku=self.retailer_sku(response),
             trail=self.trail(response),
             category=self.category(response),
             brand=self.brand(response),
             url=self.url(response),
-            retailer=self.retailer(response),
             url_original=self.url(response),
             product_name=self.product_name(response),
             description=self.description(response),
             care=self.care(response),
-            image_url=self.image_url(response),
+            image_urls=self.image_urls(response),
             skus=self.skus(response),
             price=self.price(response),
-            currence=self.currency(response),
-            spider_name='beginningboutique',
+            currency=self.currency(response),
             crawl_start_time=self.start_time()
         )
-        return page_deatils
 
     def product_name(self, response):
         return response.css('.product-heading__title::text').extract_first()
@@ -68,32 +52,25 @@ class Beginningboutique(scrapy.Spider):
     def category(self, response):
         return response.xpath(
             "//div[@id='shopify-section-related-collections']/"
-            "div/div/div/p/a[contains(@href, '')]/text()").getall()
+            "/a[@href]/text()").getall()
 
     def brand(self, response):
         return response.xpath(
-            '//div[@class="product-heading"]/p/a/text()').get()
+            '//div[@class="product-heading"]//a/text()').get()
 
     def url(self, response):
         return response.request.url
 
-    def retailer(self, response):
-        return response.xpath(
-            '//div[@class="product-heading"]/p/a/@href').getall()
-
     def description(self, response):
         product_details = response.xpath(
-            "//div[@class='product__specs']/"
-            "ul[@class='product__specs-list']/li[1]/"
-            "div[@class='product__specs-detail']/p/text()").getall()
+            "//div[@class='product__specs']//li[1]//p/text()").getall()
         if not product_details:
             product_details = response.xpath(
-                "//div[@class='product__specs']/"
-                "ul[@class='product__specs-list']/li[1]/"
-                "div[@class='product__specs-detail']/text()").getall()
+                "//div[@class='product__specs']//li[1]/"
+                "div/text()").getall()
             detail_reference = response.xpath(
                 "//div[@class='product__specs-detail']"
-                "/a[contains(@href, '')]/text()").getall()
+                "/a[@href]/text()").getall()
             for j in range(len(product_details), -1, -1):
                 if len(detail_reference) > j:
                     product_details.insert(j + 1, detail_reference[j])
@@ -104,20 +81,16 @@ class Beginningboutique(scrapy.Spider):
         return product_details + detail_list
 
     def care(self, response):
-        fabric = response.xpath(
-            "//div[@class='product__specs']/ul[@class='product__specs-list']/"
-            "li[2]/div[@class='product__specs-detail']/ul"
-            "//li/text()").getall()
-        if not fabric:
-            fabric = response.xpath(
-                "//div[@class='product__specs']/"
-                "ul[@class='product__specs-list']/"
-                "li[2]/div[@class='product__specs-detail']/text()").getall()
-        return fabric
+        care = response.xpath(
+            "//ul[@class='product__specs-list']/li[2]//li/text()").getall()
+        if not care:
+            care = response.xpath(
+                "//div[@class='product__specs']//div/text()").getall()
+        return care
 
-    def image_url(self, response):
+    def image_urls(self, response):
         return response.xpath(
-            "//div[@class='product-images-wrapper']/div/div/img/@src").getall()
+            "//div[@class='product-images-wrapper']//img/@src").getall()
 
     def skus(self, response):
         meta = response.xpath(
