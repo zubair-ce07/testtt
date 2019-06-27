@@ -1,11 +1,13 @@
 import time
 
 from ride_fair import RideFair
+from taxi_meter_record import TaxiMeterRecord
 
 
 class TaxiMeterCalculator:
     def __init__(self):
         self.time_increment_factor = 1
+        self.taxi_meter = TaxiMeterRecord()
 
     def calculate_ride_time(self, is_ride_paused, taxi_meter):
         time.sleep(self.time_increment_factor)
