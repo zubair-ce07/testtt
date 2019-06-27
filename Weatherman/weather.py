@@ -5,8 +5,7 @@ import datetime
 
 class WeatherReading:
     def __init__(self, reading):
-        self.date = self.str_to_date(reading.get("PKT") or
-                                     reading.get("PKST"))
+        self.date = self.str_to_date(reading.get("PKT", reading.get("PKST")))
         self.max_temp = int(reading["Max TemperatureC"])
         self.min_temp = int(reading["Min TemperatureC"])
         self.max_humid = int(reading["Max Humidity"])
