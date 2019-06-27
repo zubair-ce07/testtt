@@ -42,11 +42,7 @@ class ReportGenerator:
         """This function will receive a list of weather obj of a month and returns the DS for Chart report. """
         if not reading_list:
             return None
-        highest = reading_list[0]
-        lowest = reading_list[0]
+        month_chart = ''
         for item in reading_list:
-            if item.highest > highest.highest:
-                highest = item
-            if item.lowest < lowest.lowest:
-                lowest = item
-        return ChartResult(highest, lowest)
+            month_chart += str(ChartResult(item)) + '\n'
+        return month_chart

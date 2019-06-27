@@ -13,13 +13,10 @@ class MonthlyResult:
 
 
 class ChartResult:
-    def __init__(self, high, low):
-        self.highest = {"highest": high.highest,
-                        "lowest": high.lowest,
-                        "date": datetime.strptime(high.date, "%Y-%m-%d").date()}
-        self.lowest = {"highest": low.highest,
-                       "lowest": low.lowest,
-                       "date": datetime.strptime(low.date, "%Y-%m-%d").date()}
+    def __init__(self, day_reading):
+        self.day_reading = {"highest": day_reading.highest,
+                            "lowest": day_reading.lowest,
+                            "date": datetime.strptime(day_reading.date, "%Y-%m-%d").date()}
 
     @staticmethod
     def print_chart(model):
@@ -28,9 +25,7 @@ class ChartResult:
                '\033[00m ' + '\033[95m' + str(model["lowest"]) + 'C - ' + str(model["highest"]) + 'C\033[00m\n'
 
     def __str__(self):
-        return \
-            self.print_chart(self.lowest) +\
-            self.print_chart(self.highest)
+        return self.print_chart(self.day_reading)
 
 
 class YearlyResult:
