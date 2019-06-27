@@ -47,7 +47,7 @@ class ResultPrinter:
     def plot_month_barchart(self, chart_data):
         if not chart_data:
             print("Record of given date not found in system")
-            return {}
+            return
         chart_month = chart_data[0].date.strftime("%B %Y")
         print(f"\n{chart_month}")
         for day_reading in chart_data:
@@ -61,7 +61,7 @@ class ResultPrinter:
 
     def plot_month_horizontal_barchart(self, chart_data):
         if not chart_data:
-            return {}
+            return
         chart_month = chart_data[0].date.strftime("%B %Y")
         print(f"\n{chart_month}")
         for day_reading in chart_data:
@@ -111,7 +111,7 @@ class WeatherAnalysis:
     def get_annual_stats(self, weather_record, year):
         annual_record = self.find_annual_record(weather_record, year)
         if not annual_record:
-            return{}
+            return {}
         max_temp_record = self.find_year_max_temp(annual_record)
         min_temp_record = self.find_year_min_temp(annual_record)
         max_humid_record = self.find_year_max_humid(annual_record)
@@ -142,10 +142,10 @@ class WeatherAnalysis:
         year, month = date.split("/")
         annual_record = self.find_annual_record(weather_record, year)
         if not annual_record:
-            return {}
+            return
         month_record = self.find_month_record(annual_record, month)
         if not month_record:
-            return {}
+            return
 
         return month_record
 
@@ -179,7 +179,7 @@ class FileParser:
     def parse_files(self, path):
         if not os.path.exists(path):
             print("Path not found")
-            return {}
+            return
         weather_record = []
         files = FileParser.read_file_names(path)
         for weather_file in files:
@@ -187,6 +187,6 @@ class FileParser:
 
         if not weather_record:
             print("Related files not found in the directory")
-            return {}
+            return
 
         return weather_record
