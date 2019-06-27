@@ -3,8 +3,8 @@ import argparse
 import re
 
 
-def month_regex_type(input_month):
-    month_format = re.compile("\\d{4}(-|/)\\d{1,2}$")
+def validate_month(input_month):
+    month_format = re.compile(r"\d{4}(-|/)\d{1,2}$")
     if not month_format.match(input_month):
         raise argparse.ArgumentTypeError
         
@@ -17,10 +17,10 @@ def parse_arguments():
     parser.add_argument("-e", "--year", help="""Displays annual statistics of
                          weather""", action="append", type=int)
     parser.add_argument("-a", "--month", help="""Displays month's statistics
-                        of weather""", action="append", type=month_regex_type)
+                        of weather""", action="append", type=validate_month)
     parser.add_argument("-c", "--chart", help="""Plots bar chart against the
                         month's statistics of weather""", action="append",
-                        type=month_regex_type)
+                        type=validate_month)
     args = parser.parse_args()
     return args
 
