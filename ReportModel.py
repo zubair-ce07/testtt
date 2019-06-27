@@ -24,8 +24,8 @@ class ChartResult:
     @staticmethod
     def print_chart(model):
         return '\033[00m' + '\033[95m' + str(model["date"].day) + ' \033[00m' +\
-               '\033[94m' '+' * abs(model["lowest"]) + '\033[00m' + '\033[91m' '+' * model["highest"] + '\033[00m ' + \
-               '\033[95m' + str(model["lowest"]) + 'C - ' + str(model["highest"]) + 'C\033[00m\n'
+               '\033[94m' '+' * abs(model["lowest"]) + '\033[00m' + '\033[91m' '+' * abs(model["highest"]) +\
+               '\033[00m ' + '\033[95m' + str(model["lowest"]) + 'C - ' + str(model["highest"]) + 'C\033[00m\n'
 
     def __str__(self):
         return \
