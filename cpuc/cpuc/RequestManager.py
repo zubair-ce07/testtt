@@ -1,3 +1,3 @@
 class RequestManager:
-    Filing_request = []
+    filing_requests = []
     next_page = None

@@ -1,3 +1,5 @@
+import logging
+import re
 
 import scrapy
 from scrapy import FormRequest
@@ -35,7 +37,7 @@ class CpucSpider(scrapy.Spider):
                                         formdata=formdata,
                                         method='POST',
                                         callback=self.parse_all_proceeding_number,
-                                        meta={'proceeding_num': set(), 'page_no': 0})
+                                        meta={'proceeding_set': set(), 'page_no': 0})
 
     def parse_all_proceeding_number(self, response):
         current_page = int(response.meta['page_no'])
@@ -48,20 +50,16 @@ class CpucSpider(scrapy.Spider):
         total_pages = int(response.xpath("//table[@id='Pages']//tr/td[position()=2]/a[last()]/text()").get())
 
         if current_page < total_pages:
-            proceeding_num = response.meta['proceeding_num']
-            table_rows = response.xpath("//table[@id='ResultTable']/tbody/tr")
-            skip = False
+            proceeding_set = response.meta['proceeding_set']
+            table_rows = response.xpath("//table[@id='ResultTable']/tbody/tr[not(@style)]")
             for row in table_rows:
-                if not skip:
-                    proceeding_number = row.xpath("td[@class='ResultTitleTD']/text()")[1].get()
-                    len_str = len(proceeding_number)
-                    proceeding_number = proceeding_number[12: len_str]
-                    if len(proceeding_number) > 8:
-                        proceeding_number = proceeding_number[0:8]
-                    proceeding_num.add(proceeding_number)
-                    skip = True
-                else:
-                    skip = False
+                proceeding_numbers = row.xpath("td[@class='ResultTitleTD']/text()")[1].get()
+                proceeding_numbers = re.findall(r'[A-Z][0-9]{7}', proceeding_numbers)
+
+                for proceeding_number in proceeding_numbers:
+                    proceeding_set.add(proceeding_number)
+
+
             formdata = {
                 '__EVENTTARGET': __EVENT_TARGET,
                 '__VIEWSTATEGENERATOR': response.xpath("//input[@id='__VIEWSTATEGENERATOR']/@value").get(),
@@ -72,11 +70,11 @@ class CpucSpider(scrapy.Spider):
                 url='http://docs.cpuc.ca.gov/SearchRes.aspx',
                 formdata=formdata,
                 callback=self.parse_all_proceeding_number,
-                meta={'page_no': current_page+1, 'proceeding_num': response.meta['proceeding_num']}
+                meta={'page_no': current_page+1, 'proceeding_set': proceeding_set}
             )
 
         else:
-            proceeding_num = response.meta['proceeding_num']
+            proceeding_num = response.meta['proceeding_set']
             print("PROCEEDING # {}".format(proceeding_num))
             while proceeding_num:
                 num = proceeding_num.pop()
@@ -122,18 +120,17 @@ class CpucSpider(scrapy.Spider):
         )
 
     def error_back(self, failure):
-        print(failure)
+        logging.exception(failure)
 
     def save_document(self, response):
         item = response.meta['item']
         filings = Filing()
-        table = response.xpath("//div[@id='apexir_DATA_PANEL']//table[@class='apexir_WORKSHEET_DATA']")
-        table_rows = table.xpath("//tr[@class='even'] | //tr[@class='odd']")
+        table_rows = response.xpath("//div[@id='apexir_DATA_PANEL']//table[@class='apexir_WORKSHEET_DATA']//"
+                                    "tr[@class='even'] | //tr[@class='odd']")
         for row in table_rows:
             filings['description'] = row.xpath("td[@headers='DESCRIPTION']/text()").get()
             filings['filled_on'] = row.xpath("td[@headers='FILING_DATE']/text()").get()
-            filings['types'] = list()
-            filings['types'].append(row.xpath("td[@headers='DOCUMENT_TYPE']//u/text()").get())
+            filings['types'] = row.xpath("td[@headers='DOCUMENT_TYPE']//u/text()").get()
             filings['filing_parties'] = list()
             filings['filing_parties'].append(row.xpath("td[@headers='FILED_BY']/text()").get())
 
@@ -144,7 +141,7 @@ class CpucSpider(scrapy.Spider):
                                       callback=self.parse_document_page,
                                       meta={'item': response.meta['item'],
                                             'dont_merge_cookies': True})
-            self.request_manager.Filing_request.append(request)
+            self.request_manager.filing_requests.append(request)
 
         next_btn = response.xpath("//div[@id='apexir_DATA_PANEL']//span[@class='fielddata']/a/@href").get()
         if next_btn:
@@ -165,34 +162,29 @@ class CpucSpider(scrapy.Spider):
         else:
             self.request_manager.next_page = None
 
-        if len(self.request_manager.Filing_request) > 0:
-            yield self.request_manager.Filing_request.pop()
+        if self.request_manager.filing_requests:
+            yield self.request_manager.filing_requests.pop()
         else:
             yield {'docket': item}
 
     def parse_document_page(self, response):
         item = response.meta['item']
-        table_rows = response.xpath("//table[@id='ResultTable']/tbody/tr")
-        skip = False
+        table_rows = response.xpath("//table[@id='ResultTable']/tbody/tr[not(@style)]")
         document_list = list()
         for row in table_rows:
-            if not skip:
-                document = Document()
-                document['title'] = row.xpath("td[@class='ResultTitleTD']/text()").get()
-                document['source_url'] = "http://docs.cpuc.ca.gov{}".format(row.xpath("td[@class="
-                                                                                      "'ResultLinkTD']/a/@href").get())
-                document['extension'] = row.xpath("td[@class='ResultLinkTD']/a/text()").get()
-                document_list.append(document)
-                skip = True
-            else:
-                skip = False
+            document = Document()
+            document['title'] = row.xpath("td[@class='ResultTitleTD']/text()").get()
+            document['source_url'] = "http://docs.cpuc.ca.gov{}".format(row.xpath("td[@class="
+                                                                                  "'ResultLinkTD']/a/@href").get())
+            document['extension'] = row.xpath("td[@class='ResultLinkTD']/a/text()").get()
+            document_list.append(document)
 
         item['filings'][len(item['filings'])-1]['documents'] = document_list
 
-        if len(self.request_manager.Filing_request) > 0:
-            yield self.request_manager.Filing_request.pop()
+        if self.request_manager.filing_requests:
+            yield self.request_manager.filing_requests.pop()
 
-        elif len(self.request_manager.Filing_request) == 0:
+        else:
             yield FormRequest.from_response(self.request_manager.next_page['url'],
                                             formdata=self.request_manager.next_page['formdata'],
                                             method=self.request_manager.next_page['method'],
