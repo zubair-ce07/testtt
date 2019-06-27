@@ -1,18 +1,16 @@
 import weather
 import argparse
-
+import re as regex
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("path", help="Path to the files directory")
-    parser.add_argument("date", help="""Year/Month to find weather's
-                         calculations""")
     parser.add_argument("-e", "--year", help="""Displays annual statistics of
-                         weather""", action="store_true")
+                         weather""", action="append", type=int)
     parser.add_argument("-a", "--month", help="""Displays month's statistics
-                        of weather""", action="store_true")
-    parser.add_argument("-c", "--chart", help="""Plots bar chart against the month's
-                        statistics of weather""", action="store_true")
+                        of weather""", action="append")
+    parser.add_argument("-c", "--chart", help="""Plots bar chart against the
+                         month's statistics of weather""", action="append")
     args = parser.parse_args()
     return args
 
@@ -20,25 +18,41 @@ def parse_arguments():
 def main():
     args = parse_arguments()
     directory_path = args.path
-    date = args.date
     parser = weather.FileParser()
     weather_stats = weather.WeatherAnalysis()
     result_printer = weather.ResultPrinter()
     weather_record = parser.parse_files(directory_path)
-
     if weather_record:
         if args.year:
-            annual_stats = weather_stats.get_annual_stats(weather_record, date)
-            result_printer.print_annual_report(annual_stats)
+            for year in args.year:
+                annual_stats = weather_stats.get_annual_stats(weather_record,
+                                                              year)
+                result_printer.print_annual_report(annual_stats)
 
         if args.month:
-            month_stats = weather_stats.get_month_stats(weather_record, date)
-            result_printer.print_monthly_report(month_stats)
-
+            for month in args.month:
+                if (not regex.search
+                ("^(19[5-9][0-9]|20[0-4][0-9]|2050)[-/](0?[1-9]|1[0-2])$",
+                 month)):
+                    result_printer.print_invalid_month_message()
+                    continue
+   
+                month_stats = weather_stats.get_month_stats(weather_record,
+                                                            month)
+                result_printer.print_monthly_report(month_stats, month)
+        
         if args.chart:
-            chart_data = weather_stats.get_chart_data(weather_record, date)
-            result_printer.plot_month_barchart(chart_data)
-            result_printer.plot_component_barchart(chart_data)
+            for month in args.chart:
+                if (not regex.search
+                ("^(19[5-9][0-9]|20[0-4][0-9]|2050)[-/](0?[1-9]|1[0-2])$",
+                 month)):
+                    result_printer.print_invalid_month_message()
+                    continue
+   
+                chart_data = weather_stats.get_chart_data(weather_record,
+                                                            month)
+                result_printer.plot_month_barchart(chart_data)
+                result_printer.plot_component_barchart(chart_data)
 
 
 if __name__ == '__main__':

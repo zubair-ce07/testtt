@@ -24,18 +24,20 @@ class ResultPrinter:
         max_temp_date = max_temp_reading.date.strftime("%B %d")
         min_temp_date = min_temp_reading.date.strftime("%B %d")
         max_humidity_date = max_humidity_reading.date.strftime("%B %d")
+        print(f"\n{max_temp_reading.date.year}")
         print(f"Highest: {max_temp_reading.max_temp}C on {max_temp_date}")
         print(f"Lowest: {min_temp_reading.min_temp}C on {min_temp_date}")
         print("Humidity: {}% on {}".format(max_humidity_reading.max_humidity,
               max_humidity_date))
 
-    def print_monthly_report(self, month_stats):
+    def print_monthly_report(self, month_stats, month):
         if not month_stats:
             self.print_record_not_found_message()
             return
         avg_max_temp = month_stats["avg max temp"]
         avg_min_temp = month_stats["avg min temp"]
         avg_mean_humidity = month_stats["avg mean humidity"]
+        print(f"\n{month}")
         print(f"Highest Average: {round(avg_max_temp, 2)}C")
         print(f"Lowest Average: {round(avg_min_temp, 2)}C")
         print(f"Average Mean Humidity: {round(avg_mean_humidity, 2)}%")
@@ -45,7 +47,7 @@ class ResultPrinter:
             self.print_record_not_found_message()
             return
         chart_month = chart_data[0].date.strftime("%B %Y")
-        print(chart_month)
+        print(f"\n{chart_month}")
         for day_reading in chart_data:
             day = day_reading.date.strftime("%d")
             print(u"\u001b[35m{}".format(day), end=" ")
@@ -59,7 +61,7 @@ class ResultPrinter:
         if not chart_data:
             return
         chart_month = chart_data[0].date.strftime("%B %Y")
-        print(chart_month)
+        print(f"\n{chart_month}")
         for day_reading in chart_data:
             day = day_reading.date.strftime("%d")
             print(u"\u001b[35m{}".format(day), end=" ")
@@ -79,6 +81,10 @@ class ResultPrinter:
     @staticmethod
     def print_path_not_found_message():
         print("Path to directory not found")
+
+    @staticmethod
+    def print_invalid_month_message():
+        print("Invalid month format. Use yyyy/mm")
 
 
 class WeatherAnalysis:
@@ -159,18 +165,11 @@ class WeatherAnalysis:
 
 
 class FileParser:
-    def __init__(self):
-        self.file_found = False
-
-    def is_valid_reading(self, reading):
-        if(reading.get('Max TemperatureC') and reading
-           .get('Min TemperatureC') and reading.get('Max Humidity') and
-            reading.get(' Mean Humidity') and (reading.get("PKT") or
-                                               reading.get("PKST"))):
-            self.file_found = True
-            return True
-
-        return False
+    @staticmethod
+    def is_valid_reading(reading):
+        required_fields = ['Max TemperatureC', 'Min TemperatureC',
+                           'Max Humidity',' Mean Humidity', ("PKT" or "PKST")]
+        return all(reading.get(field) for field in required_fields)
 
     @staticmethod
     def read_file_names(path):
@@ -200,7 +199,7 @@ class FileParser:
         for weather_file in files:
             weather_record += self.read_file(weather_file)
 
-        if not self.file_found:
+        if not weather_record:
             ResultPrinter.print_file_not_found_message()
             return
 
