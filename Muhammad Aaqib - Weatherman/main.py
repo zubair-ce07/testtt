@@ -1,6 +1,15 @@
 import weather
 import argparse
-import re as regex
+import re
+
+
+def month_regex_type(input_month):
+    month_format = re.compile("\\d{4}(-|/)\\d{1,2}$")
+    if not month_format.match(input_month):
+        raise argparse.ArgumentTypeError
+        
+    return input_month
+
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
@@ -8,9 +17,10 @@ def parse_arguments():
     parser.add_argument("-e", "--year", help="""Displays annual statistics of
                          weather""", action="append", type=int)
     parser.add_argument("-a", "--month", help="""Displays month's statistics
-                        of weather""", action="append")
+                        of weather""", action="append", type=month_regex_type)
     parser.add_argument("-c", "--chart", help="""Plots bar chart against the
-                         month's statistics of weather""", action="append")
+                        month's statistics of weather""", action="append",
+                        type=month_regex_type)
     args = parser.parse_args()
     return args
 
@@ -31,24 +41,11 @@ def main():
 
         if args.month:
             for month in args.month:
-                if (not regex.search
-                ("^(19[5-9][0-9]|20[0-4][0-9]|2050)[-/](0?[1-9]|1[0-2])$",
-                 month)):
-                    result_printer.print_invalid_month_message()
-                    continue
-   
-                month_stats = weather_stats.get_month_stats(weather_record,
-                                                            month)
+                month_stats = weather_stats.get_month_stats(weather_record, month)
                 result_printer.print_monthly_report(month_stats, month)
         
         if args.chart:
             for month in args.chart:
-                if (not regex.search
-                ("^(19[5-9][0-9]|20[0-4][0-9]|2050)[-/](0?[1-9]|1[0-2])$",
-                 month)):
-                    result_printer.print_invalid_month_message()
-                    continue
-   
                 chart_data = weather_stats.get_chart_data(weather_record,
                                                             month)
                 result_printer.plot_month_barchart(chart_data)
