@@ -1,0 +1,58 @@
+<html>
+<head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
+
+    <style>
+        .center {
+            width:fit-content;
+            padding: 40px;
+            border: 3px dotted rgb(55, 0, 128); 
+            margin: 7% auto;
+        }
+    </style>
+</head>
+<body>
+    <div class='jumbotron center m-5'>
+        <h1 id = 'number'> 100 </h1>
+        <button class = 'btn-increment btn btn-danger btn-lg btn-block'> Increment </button>
+        <button class = 'btn-decrement btn btn-danger btn-lg btn-block'> Decrement </button>
+        <button class = 'btn-auto btn btn-danger btn-lg btn-block'> Auto-Increment </button>
+    </div>
+
+    
+
+    <div class='jumbotron center m-5'>
+        <h3> Previous Value </h3>
+        <h1 id = 'previous'> - </h1>
+    </div>
+    
+
+    <script>
+        $(document).ready(function() {
+            $('.btn-increment').click(function() {
+                let current = $('#number')
+                let previous = $('#previous')
+                previous.html(current.html())
+                current.html(Number(current.html()) + 100)
+            })
+
+            $('.btn-decrement').click(function() {
+                let current = $('#number')
+                let previous = $('#previous')
+                previous.html(current.html())
+                current.html(Number(current.html()) - 100)
+            })
+
+            $('.btn-auto').click(function() {
+                for(let i = 0; i < 10; i++){
+                    setTimeout(() => {
+                        $('#previous').html($('#number').html())
+                        $('#number').html(Number($('#number').html()) + 500)
+                    }, i*1000)
+                }
+            })
+        })
+    </script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<html>
+<head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
+
+    <style>
+        .center {
+            width:fit-content;
+            padding: 5px;
+            border: 3px dotted rgb(55, 0, 128); 
+            margin: 10% auto;
+        }
+    </style>
+</head>
+<body>
+    <div class='jumbotron center m-5'>
+        <h1> I am a reversing sentence </h1>
+        <button class = 'btn btn-danger btn-lg btn-block'> Let's Reverse it! </button>
+    </div>
+    
+
+    <script>
+        $(document).ready(function() {
+            $('.btn').click(function() {
+                let deal = $('h1')
+                deal.hide('slow', () => {
+                        deal.html(deal.html().split(' ').reverse().join(' ')).promise().done(function () {
+                            deal.show('slow')
+                        });
+                        
+                })
+                })
+            })
+    </script>
+</body>
+</html>
