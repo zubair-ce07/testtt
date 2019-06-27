@@ -23,7 +23,21 @@ class Parser:
                         row[' Mean Humidity'])
                     reading_list.append(reading)
         except IOError:
-            logging.warning(path + ' Not found')
+            logging.error(path + ' Not found')
         except TypeError as e:
             print(e)
         return reading_list
+
+    @staticmethod
+    def date_tokenizer(date):
+        tokenize_date = date.split('/')
+        if len(tokenize_date) < 2:
+            logging.error('few Arguments\nProper format is year/month')
+            exit(0)
+        if int(tokenize_date[0]) not in range(2004, 2017):
+            logging.error('Year must between 2004 - 2016')
+            exit(0)
+        if int(tokenize_date[1]) not in range(1, 13):
+            logging.error('Month must between 1 - 12')
+            exit(0)
+        return tokenize_date[0], tokenize_date[1]
