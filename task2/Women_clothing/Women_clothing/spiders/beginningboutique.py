@@ -5,7 +5,7 @@ from scrapy.linkextractors import LinkExtractor
 from Women_clothing.items import BeginningboutiqueItem
 
 
-class MySpider(CrawlSpider):
+class Beginningboutique(CrawlSpider):
     name = "beginningboutique"
     allowed_domains = ['beginningboutique.com.au']
     start_urls = ['https://www.beginningboutique.com.au/']
