@@ -3,6 +3,7 @@ import json
 import scrapy
 from scrapy.item import Item
 from scrapy.linkextractors import LinkExtractor
+from scrapy.selector import SelectorList
 from scrapy.spiders import CrawlSpider, Rule, Request
 
 
@@ -92,9 +93,7 @@ class JeanWestSpider(CrawlSpider):
         return response.css('.gr_title .head em::text').get()
 
     def extract_gender(self, response):
-        raw_genders = response.css('.crumb-list a::text').getall()
-
-        for gender in clean(raw_genders):
+        for gender in self.raw_category(response):
             if gender.lower() in self.gender_terms:
                 return gender.lower()
 
@@ -110,15 +109,18 @@ class JeanWestSpider(CrawlSpider):
 
     def raw_description(self, response):
         css = '.accord-content p:nth-child(1)::text, .accord-content span::text'
-        raw_description = response.css(css).getall()
+        raw_description = clean(response.css(css))
 
-        return [desc for sublist in clean(raw_description) for desc in sublist.split('.') if desc]
+        return [desc for sublist in raw_description for desc in sublist.split('.') if desc]
+
+    def raw_category(self, response):
+        return clean(response.css('.crumb-list a::text'))
 
     def extract_category(self, response):
-        return response.css('.crumb-list a::text').getall()
+        return self.raw_category(response)
 
     def extract_image_urls(self, response):
-        return response.css('.show-scroll-list ::attr(src)').getall()
+        return clean(response.css('.show-scroll-list ::attr(src)'))
 
     def extract_colour(self, response):
         return response.css('.pro-color .head span::text').get()
@@ -144,7 +146,7 @@ class JeanWestSpider(CrawlSpider):
         return request
 
     def construct_sku_requests(self, response):
-        sku_urls = response.css('.pro-color ::attr(href)').getall()
+        sku_urls = clean(response.css('.pro-color ::attr(href)'))
         return [response.follow(url=url, callback=self.parse_colour) for url in sku_urls]
 
     def extract_skus(self, response):
@@ -159,14 +161,10 @@ class JeanWestSpider(CrawlSpider):
         if colour:
             common_sku['colour'] = colour
 
-        size_css = '.pro-size-con [data-title="IN STOCK"]::text'
-        item_sizes = response.css(size_css).getall()
-        item_sizes = item_sizes if item_sizes else self.default_size
-
-        for item_size in item_sizes:
+        for size in clean(response.css('.pro-size-con [data-title="IN STOCK"]::text')) or [self.default_size]:
             sku = common_sku.copy()
-            sku['size'] = item_size
-            sku['sku_id'] = f'{colour}_{item_size}' if colour else item_size
+            sku['size'] = size
+            sku['sku_id'] = f'{colour}_{size}' if colour else size
 
             skus.append(sku)
 
@@ -176,5 +174,7 @@ class JeanWestSpider(CrawlSpider):
 def clean(raw_item):
     if isinstance(raw_item, str):
         return raw_item.strip()
+    elif isinstance(raw_item, SelectorList):
+        return [r.strip() for r in raw_item.getall() if r.strip()]
 
     return [r.strip() for r in raw_item if r.strip()]
