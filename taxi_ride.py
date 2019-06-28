@@ -1,12 +1,12 @@
 import os
 
-from calculate_taxi_meter import TaxiMeterCalculator
+from taxi_meter import TaxiMeter
 from ride_keys_control import RideKeyControl
 
 
 class TaxiRide:
     def __init__(self):
-        self.taxi_meter_calc = TaxiMeterCalculator()
+        self.taxi_meter_calc = TaxiMeter()
 
         self.is_ride_resumed = False
         self.is_ride_ended = False

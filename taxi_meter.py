@@ -3,7 +3,7 @@ import time
 from ride_fair import RideFair
 
 
-class TaxiMeterCalculator:
+class TaxiMeter:
     def __init__(self):
         self.time_increment_factor = 1  # second
         self.ride_distance = 0  # Meters
@@ -12,10 +12,10 @@ class TaxiMeterCalculator:
         self.taxi_speed = 0  # m/s
         self.ride_wait_time = 0  # Seconds - Minutes
 
-    def calculate_ride_time(self, is_ride_paused):
+    def calculate_ride_time(self, is_ride_resumed):
         time.sleep(self.time_increment_factor)
 
-        if is_ride_paused:
+        if is_ride_resumed:
             self.ride_time += self.time_increment_factor
         else:
             self.ride_wait_time += self.time_increment_factor
