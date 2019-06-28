@@ -8,8 +8,8 @@ class MonthlyResult:
         self.mean_humidity_avg = humidity
 
     def __str__(self):
-        return 'Highest Average: ' + str(int(self.highest_avg)) + 'C' + '\nLowest Average: ' + \
-               str(int(self.lowest_avg)) + 'C' + '\nAverage Mean Humidity: ' + str(int(self.mean_humidity_avg)) + 'C'
+        return f'Highest Average: {int(self.highest_avg)}C\n' \
+               f'Lowest Average: {int(self.lowest_avg)}C\nAverage Mean Humidity: {int(self.mean_humidity_avg)}%'
 
 
 class ChartResult:
@@ -47,6 +47,6 @@ class YearlyResult:
             f' {self.lowest["date"].strftime("%B")}' \
             f' {self.lowest["date"].day}' + \
             f'\nHumidity:'\
-            f' {self.max_humidity["max_humidity"]} on' \
+            f' {self.max_humidity["max_humidity"]}% on' \
             f' {self.max_humidity["date"].strftime("%B")}' \
             f' {self.max_humidity["date"].day}\n'
