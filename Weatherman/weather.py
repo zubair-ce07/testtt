@@ -152,8 +152,8 @@ class WeatherAnalysis:
 class FileParser:
     @staticmethod
     def is_valid_reading(reading):
-        required_fields = ['Max TemperatureC', 'Min TemperatureC',
-                           'Max Humidity', ' Mean Humidity', ('PKT' or 'PKST')]
+        required_fields = ["Max TemperatureC", "Min TemperatureC",
+                           "Max Humidity", " Mean Humidity", ("PKT" or "PKST")]
         return all(reading.get(field) for field in required_fields)
 
     @staticmethod
@@ -161,14 +161,14 @@ class FileParser:
         files = []
         for file in os.listdir(path):
             file = os.path.join(path, file)
-            if os.path.isfile(file) and 'txt' in file:
+            if os.path.isfile(file) and "txt" in file:
                 files.append(file)
 
         return files
 
     def read_file(self, weather_file):
         weather_record = []
-        with open(weather_file, newline='') as csvfile:
+        with open(weather_file, newline="") as csvfile:
             reading = csv.DictReader(csvfile)
             weather_record += [WeatherReading(row) for row in reading
                                if self.is_valid_reading(row)]

@@ -25,13 +25,9 @@ def parse_arguments():
     return args
 
 
-def main():
-    args = parse_arguments()
-    directory_path = args.path
-    parser = weather.FileParser()
+def display_stats(weather_record, args):
     weather_stats = weather.WeatherAnalysis()
     result_printer = weather.ResultPrinter()
-    weather_record = parser.parse_files(directory_path)
     if weather_record:
         for year in args.year or []:
             annual_stats = weather_stats.get_annual_stats(weather_record, year)
@@ -45,6 +41,14 @@ def main():
             chart_data = weather_stats.get_chart_data(weather_record, month)
             result_printer.plot_month_barchart(chart_data)
             result_printer.plot_month_horizontal_barchart(chart_data)
+
+
+def main():
+    args = parse_arguments()
+    directory_path = args.path
+    parser = weather.FileParser()
+    weather_record = parser.parse_files(directory_path)
+    display_stats(weather_record, args)
 
 
 if __name__ == '__main__':
