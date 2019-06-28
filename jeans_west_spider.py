@@ -50,8 +50,8 @@ class JeanWestSpider(CrawlSpider):
 
     def parse_pagination(self, response):
         total_items = int(response.css('script::text').re_first(r'var totalItem  = \"(.+)\"'))
-        items_per_page = int(response.css('script::text').re_first(r'var itemPerPage = \"(.+)\"'))
-        total_pages = total_items//items_per_page + 1
+        page_size = int(response.css('script::text').re_first(r'var itemPerPage = \"(.+)\"'))
+        total_pages = total_items//page_size + 1
 
         category_id = response.css('.f-filter ::attr(data-id)').get()
 
@@ -75,7 +75,7 @@ class JeanWestSpider(CrawlSpider):
 
         return self.get_item_or_next_request(item)
 
-    def parse_skus(self, response):
+    def parse_colour(self, response):
         item = response.meta['item']
         item['image_urls'] += self.extract_image_urls(response)
         item['skus'] += self.extract_skus(response)
@@ -83,8 +83,7 @@ class JeanWestSpider(CrawlSpider):
         return self.get_item_or_next_request(item)
 
     def extract_item_name(self, response):
-        raw_item = self.extract_raw_item(response)
-        return raw_item['site_section']
+        return clean(response.css('.gr_title .head ::text').get())
 
     def extract_brand_name(self, response):
         return self.default_brand
@@ -107,11 +106,13 @@ class JeanWestSpider(CrawlSpider):
 
     def extract_description(self, response):
         raw_description = self.raw_description(response)
-        return [desc for sublist in clean(raw_description) for desc in sublist.split('.') if desc]
+        return [desc for desc in raw_description if all(c not in desc for c in self.care_terms)]
 
     def raw_description(self, response):
         css = '.accord-content p:nth-child(1)::text, .accord-content span::text'
-        return response.css(css).getall()
+        raw_description = response.css(css).getall()
+
+        return [desc for sublist in clean(raw_description) for desc in sublist.split('.') if desc]
 
     def extract_category(self, response):
         return response.css('.crumb-list a::text').getall()
@@ -129,11 +130,8 @@ class JeanWestSpider(CrawlSpider):
         return response.css('.now .markdown::text, .now .number::text').re_first(r'(\d+\.\d+)')
 
     def extract_currency(self, response):
-        raw_item = self.extract_raw_item(response)
-        return raw_item['site_currency']
-
-    def extract_raw_item(self, response):
-        return json.loads(response.css('script::text').re_first(r'utag_data = (.*);'))
+        raw_currency = json.loads(response.css('script::text').re_first(r'utag_data = (.*);'))
+        return raw_currency.get('site_currency')
 
     def get_item_or_next_request(self, item):
         if not item['requests_queue']:
@@ -147,13 +145,11 @@ class JeanWestSpider(CrawlSpider):
 
     def construct_sku_requests(self, response):
         sku_urls = response.css('.pro-color ::attr(href)').getall()
-        return [response.follow(url=url, callback=self.parse_skus) for url in sku_urls]
+        return [response.follow(url=url, callback=self.parse_colour) for url in sku_urls]
 
     def extract_skus(self, response):
         skus = []
         colour = self.extract_colour(response)
-        size_css = '.pro-size-con [data-title="IN STOCK"]::text'
-        item_sizes = response.css(size_css).getall() or self.default_size
         common_sku = {
             'price': self.extract_current_price(response),
             'currency': self.extract_currency(response),
@@ -163,15 +159,22 @@ class JeanWestSpider(CrawlSpider):
         if colour:
             common_sku['colour'] = colour
 
+        size_css = '.pro-size-con [data-title="IN STOCK"]::text'
+        item_sizes = response.css(size_css).getall()
+        item_sizes = item_sizes if item_sizes else self.default_size
+
         for item_size in item_sizes:
             sku = common_sku.copy()
             sku['size'] = item_size
-            sku['sku_id'] = f'{colour}_{item_size}' if colour else f'{item_size}'
+            sku['sku_id'] = f'{colour}_{item_size}' if colour else item_size
 
             skus.append(sku)
 
         return skus
 
 
-def clean(raw_list):
-    return [list_item.strip() for list_item in raw_list if list_item.strip()]
+def clean(raw_item):
+    if isinstance(raw_item, str):
+        return raw_item.strip()
+
+    return [r.strip() for r in raw_item if r.strip()]
