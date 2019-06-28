@@ -54,7 +54,7 @@ class JeanWestSpider(CrawlSpider):
         page_size = int(response.css('script::text').re_first(r'var itemPerPage = \"(.+)\"'))
         total_pages = total_items//page_size + 1
 
-        category_id = response.css('.f-filter ::attr(data-id)').get()
+        category_id = clean(response.css('.f-filter ::attr(data-id)'))[0]
 
         for page_number in range(0, total_pages):
             url = self.pagination_url_t.format(page_number, category_id)
@@ -84,13 +84,13 @@ class JeanWestSpider(CrawlSpider):
         return self.get_item_or_next_request(item)
 
     def extract_item_name(self, response):
-        return clean(response.css('.gr_title .head ::text').get())
+        return clean(response.css('.gr_title .head ::text'))[0]
 
     def extract_brand_name(self, response):
         return self.default_brand
 
     def extract_retailer_sku(self, response):
-        return response.css('.gr_title .head em::text').get()
+        return clean(response.css('.gr_title .head em::text'))[0]
 
     def extract_gender(self, response):
         for gender in self.raw_category(response):
@@ -123,7 +123,11 @@ class JeanWestSpider(CrawlSpider):
         return clean(response.css('.show-scroll-list ::attr(src)'))
 
     def extract_colour(self, response):
-        return response.css('.pro-color .head span::text').get()
+        raw_color = clean(response.css('.pro-color .head span::text'))
+        if raw_color:
+            return raw_color[0]
+
+        return None
 
     def extract_previous_prices(self, response):
         return response.css('.past ::text').re(r'(\d+\.\d+)')
