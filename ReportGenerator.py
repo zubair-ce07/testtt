@@ -7,9 +7,7 @@ class ReportGenerator:
         """This function will receive a list of weather obj of a month and returns the DS for monthly report. """
         if not reading_list:
             return None
-        highest_avg = 0
-        lowest_avg = 0
-        humidity_avg = 0
+        highest_avg, lowest_avg, humidity_avg = 0, 0, 0
         for item in reading_list:
             highest_avg += item.highest
             lowest_avg += item.lowest
@@ -24,17 +22,9 @@ class ReportGenerator:
         """This function will receive a list of weather obj of a year and returns the DS for Yearly report. """
         if not reading_list:
             return None
-        highest = reading_list[0]
-        lowest = reading_list[0]
-        humidity = reading_list[0]
-
-        for item in reading_list:
-            if item.highest > highest.highest:
-                highest = item
-            if item.lowest < lowest.lowest:
-                lowest = item
-            if item.max_humidity > humidity.max_humidity:
-                humidity = item
+        highest = max(reading_list, key=lambda x: x.highest)
+        lowest = min(reading_list, key=lambda x: x.lowest)
+        humidity = max(reading_list, key=lambda x: x.max_humidity)
         return YearlyResult(highest, lowest, humidity)
 
     @staticmethod
