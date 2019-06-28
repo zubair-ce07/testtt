@@ -153,7 +153,7 @@ class FileParser:
     @staticmethod
     def is_valid_reading(reading):
         required_fields = ['Max TemperatureC', 'Min TemperatureC',
-                           'Max Humidity',' Mean Humidity', ('PKT' or 'PKST')]
+                           'Max Humidity', ' Mean Humidity', ('PKT' or 'PKST')]
         return all(reading.get(field) for field in required_fields)
 
     @staticmethod
