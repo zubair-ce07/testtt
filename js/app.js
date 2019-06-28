@@ -2,18 +2,17 @@ let tileWidth = 101;
 let tileHeight = 85;
 
 var randomPosition = function (max, min) {
-    // from: https://stackoverflow.com/questions/4550505/getting-a-random-value-from-a-javascript-array
+    // https://stackoverflow.com/questions/4550505/getting-a-random-value-from-a-javascript-array
     return (Math.floor(Math.random() * (+max - +min)) + +min);
 }
 
+function between(x, min, max) {
+    // https://stackoverflow.com/questions/6454198/check-if-a-value-is-within-a-range-of-numbers
+    return x >= min && x <= max;
+  }
+
 // Enemies our player must avoid
 var Enemy = function() {
-    // Variables applied to each of our instances go here,
-    // we've provided one for you to get started
-
-    // The image/sprite for our enemies, this uses
-    // a helper we've provided to easily load images
-    this.numTicks = 0;
     this.sprite = 'images/enemy-bug.png';
     this.x = -tileWidth*randomPosition(3,1)
     this.y = tileHeight*randomPosition(6,1) - 30
@@ -28,9 +27,6 @@ Enemy.prototype.update = function(dt) {
     } else {
         this.x += tileWidth*dt
     }
-    // You should multiply any movement by the dt parameter
-    // which will ensure the game runs at the same speed for
-    // all computers.
 };
 
 // Draw the enemy on the screen, required method for game
@@ -38,9 +34,6 @@ Enemy.prototype.render = function() {
     ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
 };
 
-// Now write your own player class
-// This class requires an update(), render() and
-// a handleInput() method.
 
 var Player = function() {
     this.sprite = 'images/char-boy.png';
@@ -52,6 +45,7 @@ Player.prototype.update = function(key_pressed) {
     if(key_pressed == 'up') {
         this.y -= tileHeight
         if(this.y <= 0){
+            this.x = tileWidth*2;
             this.y = tileHeight*5 - 30
         }
     } else if (key_pressed == 'down') {
@@ -68,6 +62,14 @@ Player.prototype.update = function(key_pressed) {
         this.x += tileWidth
         if(this.x >= tileWidth*4){
             this.x = tileWidth*4
+        }
+    }
+    
+    for (let i = 0; i < allEnemies.length; i++){
+        if(between(this.x, allEnemies[i].x - 51, allEnemies[i].x + 51) &&
+           between(this.y, allEnemies[i].y - 51, allEnemies[i].y + 51)) {
+            this.x = tileWidth*2;
+            this.y = tileHeight*5 - 30
         }
     }
 };
