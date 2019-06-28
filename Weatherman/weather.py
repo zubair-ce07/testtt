@@ -13,8 +13,7 @@ class WeatherReading:
 
     @staticmethod
     def str_to_date(date):
-        date = datetime.datetime.strptime(date, "%Y-%m-%d")
-        return date
+        return datetime.datetime.strptime(date, "%Y-%m-%d")
 
 
 class ResultPrinter:
@@ -154,7 +153,7 @@ class FileParser:
     @staticmethod
     def is_valid_reading(reading):
         required_fields = ['Max TemperatureC', 'Min TemperatureC',
-                           'Max Humidity',' Mean Humidity', ("PKT" or "PKST")]
+                           'Max Humidity',' Mean Humidity', ('PKT' or 'PKST')]
         return all(reading.get(field) for field in required_fields)
 
     @staticmethod
@@ -181,7 +180,7 @@ class FileParser:
             print("Path not found")
             return
         weather_record = []
-        files = FileParser.read_file_names(path)
+        files = self.read_file_names(path)
         for weather_file in files:
             weather_record += self.read_file(weather_file)
 
