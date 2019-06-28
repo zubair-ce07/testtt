@@ -10,7 +10,8 @@ class ProductsSpider(CrawlSpider):
     rules = (
         Rule(LinkExtractor(restrict_css="#primary > ul:nth-child(3) > li")),
         Rule(LinkExtractor(restrict_css=".pagination-item--next")),
-        Rule(LinkExtractor(restrict_css="#product-listing-container .product article figure"), callback = "parse_item")
+        Rule(LinkExtractor(restrict_css="#product-listing-container .product article figure"), 
+                            callback = "parse_item")
     )
 
     def parse_item(self, response):
