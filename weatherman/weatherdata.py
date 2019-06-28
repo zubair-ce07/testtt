@@ -11,8 +11,6 @@ class WeatherData:
                  max_humidity=0, mean_humidity=0, min_humidity=0):
 
         """
-        Constructor function
-
         Arguments:
             pkt (str): Date in string format
             max_temp (int): Maximum Temperature

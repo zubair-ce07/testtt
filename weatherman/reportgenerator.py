@@ -24,7 +24,7 @@ class ReportGenerator(ABC):
         Arguments:
             weather_data (list): List of WeatherData type
         """
-        pass
+        raise NotImplementedError()
 
 
 class HighLowReportGenerator(ReportGenerator):

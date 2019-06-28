@@ -26,7 +26,7 @@ def main():
     dataset_path = args.path
 
     # argparse holds a separate list for each argument flag/name type
-    # e.g -e will have arguments like ['2009', '2008]
+    # e.g -e will have arguments like ['2009', '2008']
     #
     # So a for loop for each flag arguments works best here
     # also it does not return an empty list but it return a None

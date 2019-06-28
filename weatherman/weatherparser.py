@@ -24,7 +24,7 @@ class WeatherParser(ABC):
             (list): List of WeatherMan type
         """
 
-        pass
+        raise NotImplementedError()
 
 
 class YearlyWeatherParser(WeatherParser):
@@ -34,8 +34,6 @@ class YearlyWeatherParser(WeatherParser):
 
     def __init__(self, path, year):
         """
-        Constructor function
-
         Arguments:
             path (str): path to the weatherman dataset
             year (int): year for which the data needs to be filtered
