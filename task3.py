@@ -26,7 +26,7 @@ class AsicsSpider(scrapy.Spider):
     def parse(self, response):
 
         for major_catg in response.css('li.nav-item > a')[0:3]:
-            item = shoe_info()
+            item = ShoeInfo()
             item['gender'] = major_catg.css('::text').extract_first()
             major_catg_url = major_catg.css('::attr(href)').extract_first()
             major_catg_url = response.urljoin(major_catg_url)
