@@ -1,26 +1,25 @@
 import scrapy
+from scrapy.spiders import CrawlSpider, Rule
+from scrapy.linkextractors import LinkExtractor
 
-class ProductsSpider(scrapy.Spider):
+class ProductsSpider(CrawlSpider):
     name = "products"
     start_urls = [
         'https://www.woolrich.com/'
     ]
-
-    def parse(self, response):
-        for link in response.css('#primary > ul:nth-child(3) > li'):
-            yield response.follow(link.css('a::attr(href)').get(), self.parse_category)
-    def parse_category(self, response):
-        for link in response.css('#product-listing-container > form > ul > li'):
-            yield response.follow(link.css('article figure a::attr(href)').get(), self.parse_item)
-        next_page_css = (
-            '#product-listing-container > div > ul > '
-            'li.pagination-item.pagination-item--next a::attr(href)'
-        )
-        next_page = response.css(next_page_css).get()
-        if next_page is not None:
-            yield response.follow(next_page, self.parse_category)
+    rules = (
+        Rule(LinkExtractor(restrict_css="#primary > ul:nth-child(3) > li")),
+        Rule(LinkExtractor(restrict_css=".pagination-item--next")),
+        Rule(LinkExtractor(restrict_css="#product-listing-container .product article figure"), callback = "parse_item")
+    )
 
     def parse_item(self, response):
         yield {
-            'href': response.url
+            'sku': response.css(".parent-sku::text").get(),
+            'name': response.css(".productView-title::text").get(),
+            'url': response.url,
+            'description': response.css("#details-content::text").get(),
+            'categories': response.css(".breadcrumb-label::text").getall(),
+            'price': response.css(".price.price--withoutTax.bfx-price::text").get(),
+            'image-urls': response.css("#zoom-modal img::attr(src)").getall()
         }
