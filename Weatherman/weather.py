@@ -68,7 +68,7 @@ class ResultPrinter:
             print(f"\u001b[35m{day}", end=" ")
             print(f"\u001b[36m+" * day_reading.min_temp, end="")
             print(f"\u001b[31m+" * day_reading.max_temp, end=" ")
-            print(f"\u001b[35m{day_reading.min_temp}C", end='-')
+            print(f"\u001b[35m{day_reading.min_temp}C", end="-")
             print(f"\u001b[35m{day_reading.max_temp}C")
 
 

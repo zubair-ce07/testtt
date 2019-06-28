@@ -14,12 +14,12 @@ def validate_month(input_month):
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("path", help="Path to the files directory")
-    parser.add_argument("-e", "--year", help="Displays annual statistics of \
-                         weather", action="append", type=int)
-    parser.add_argument("-a", "--month", help="Displays month's statistics \
-                        of weather", action="append", type=validate_month)
-    parser.add_argument("-c", "--chart", help="Plots bar chart against the \
-                        month's statistics of weather", action="append",
+    parser.add_argument("-e", "--year", help="Displays annual statistics of " \
+                         "weather", action="append", type=int)
+    parser.add_argument("-a", "--month", help="Displays month's statistics " \
+                        "of weather", action="append", type=validate_month)
+    parser.add_argument("-c", "--chart", help="Plots bar chart against the " \
+                        "month's statistics of weather", action="append",
                         type=validate_month)
     args = parser.parse_args()
     return args
@@ -39,7 +39,6 @@ def main():
             result_printer.print_annual_report(annual_stats)
 
         for month in args.month or []:
-            print("Bewaja")
             month_stats = weather_stats.get_month_stats(weather_record, month)
             result_printer.print_monthly_report(month_stats, month)
     
