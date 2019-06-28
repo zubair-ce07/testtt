@@ -4,8 +4,9 @@ import re
 
 
 def validate_month(input_month):
-    month_format = re.compile(r"\d{4}(-|/)\d{1,2}$")
+    month_format = re.compile(r"\d{4}(/)\d{1,2}$")
     if not month_format.match(input_month):
+        print("Month input format is: (YYYY/MM)")
         raise argparse.ArgumentTypeError
 
     return input_month
