@@ -1,29 +1,34 @@
+// Globals
 let tileWidth = 101;
 let tileHeight = 85;
+var finished = 0;
+var deaths = 0;
 
+// Helper function
+// https://stackoverflow.com/questions/4550505/getting-a-random-value-from-a-javascript-array
 var randomPosition = function (max, min) {
-    // https://stackoverflow.com/questions/4550505/getting-a-random-value-from-a-javascript-array
     return (Math.floor(Math.random() * (+max - +min)) + +min);
 }
 
+// Helper function
+// https://stackoverflow.com/questions/6454198/check-if-a-value-is-within-a-range-of-numbers
 function between(x, min, max) {
-    // https://stackoverflow.com/questions/6454198/check-if-a-value-is-within-a-range-of-numbers
     return x >= min && x <= max;
-  }
+}
 
 // Enemies our player must avoid
 var Enemy = function() {
     this.sprite = 'images/enemy-bug.png';
-    this.x = -tileWidth*randomPosition(3,1)
-    this.y = tileHeight*randomPosition(6,1) - 30
+    this.x = -tileWidth*randomPosition(10,1)
+    this.y = tileHeight*randomPosition(5,1) - 30
 };
 
 // Update the enemy's position, required method for game
 // Parameter: dt, a time delta between ticks
 Enemy.prototype.update = function(dt) {
     if(this.x + tileWidth*dt > 101*5){
-        this.x = -tileWidth*randomPosition(3,1)
-        this.y = tileHeight*randomPosition(6,1) - 30
+        this.x = -tileWidth*randomPosition(6,1)
+        this.y = tileHeight*randomPosition(5,1) - 30
     } else {
         this.x += tileWidth*dt
     }
@@ -47,6 +52,7 @@ Player.prototype.update = function(key_pressed) {
         if(this.y <= 0){
             this.x = tileWidth*2;
             this.y = tileHeight*5 - 30
+            finished += 1
         }
     } else if (key_pressed == 'down') {
         this.y += tileHeight
@@ -66,12 +72,17 @@ Player.prototype.update = function(key_pressed) {
     }
     
     for (let i = 0; i < allEnemies.length; i++){
-        if(between(this.x, allEnemies[i].x - 51, allEnemies[i].x + 51) &&
+        if(between(this.x, allEnemies[i].x - 70, allEnemies[i].x + 70) &&
            between(this.y, allEnemies[i].y - 51, allEnemies[i].y + 51)) {
             this.x = tileWidth*2;
             this.y = tileHeight*5 - 30
+            deaths += 1;
+            break;
         }
     }
+
+    document.getElementById("finished").innerHTML = `Finished: ${finished}`;
+    document.getElementById("deaths").innerHTML = `Deaths: ${deaths}`;
 };
 
 Player.prototype.render = function() {
@@ -85,7 +96,7 @@ Player.prototype.handleInput = function(key_pressed) {
 // Now instantiate your objects.
 // Place all enemy objects in an array called allEnemies
 // Place the player object in a variable called player
-var allEnemies = [new Enemy(), new Enemy(), new Enemy()]
+var allEnemies = [new Enemy(), new Enemy(), new Enemy(), new Enemy(), new Enemy(), new Enemy(), new Enemy()]
 var player = new Player();
 
 
