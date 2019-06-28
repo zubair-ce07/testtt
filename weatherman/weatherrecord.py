@@ -1,7 +1,7 @@
 import calendar
 
 
-class WeatherData:
+class WeatherRecord:
 
     def __init__(self, pkt='', max_temp=0, mean_temp=0, min_temp=0,
                  max_humidity=0, mean_humidity=0, min_humidity=0):

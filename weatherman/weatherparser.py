@@ -1,7 +1,7 @@
 import os
 from abc import ABC, abstractmethod
 
-from weatherdata import WeatherData
+from weatherrecord import WeatherRecord
 
 
 class WeatherParser(ABC):
@@ -39,7 +39,7 @@ class YearlyWeatherParser(WeatherParser):
                     for record in records:
                         record = record.split(',')
 
-                        self.weather_data.append(WeatherData(
+                        self.weather_data.append(WeatherRecord(
                             pkt=record[0],
                             max_temp=int(record[1]) if record[1] is not '' else None,
                             min_temp=int(record[3]) if record[3] is not '' else None,
@@ -80,7 +80,7 @@ class MonthlyWeatherParser(WeatherParser):
 
                     for record in records:
                         record = record.split(',')
-                        self.weather_data.append(WeatherData(
+                        self.weather_data.append(WeatherRecord(
                             pkt=record[0],
                             max_temp=int(record[1]) if record[1] is not '' else None,
                             min_temp=int(record[3]) if record[3] is not '' else None,
