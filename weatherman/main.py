@@ -1,62 +1,50 @@
 import argparse
 
-from weatherparser import YearlyWeatherParser, MonthlyWeatherParser
-from reportgenerator import HighLowReportGenerator, \
-                            AverageTemperatureReportGenerator, \
-                            HighLowTemperatureGraphReportGenerator, \
-                            HighLowTemperatureSingleGraphReportGenerator
+from weatherparser import WeatherParser
+from reportgenerator import ReportGenerator
+
+
+def _monthly_parser_helper(arg_str, weather_parser):
+    year, month = arg_str[0].split('/')
+    return weather_parser.monthly_weather_parser(month=int(month), year=int(year))
 
 
 def main():
-
     parser = argparse.ArgumentParser()
-    parser.add_argument('path', help='relative path to the dataset')
-    parser.add_argument('-e', nargs=1, required=False, action='append')
-    parser.add_argument('-a', nargs=1, required=False, action='append')
-    parser.add_argument('-c', nargs=1, required=False, action='append')
-    parser.add_argument('-b', nargs=1, required=False, action='append')
+    parser.add_argument('path')
+
+    # the first argument will be used as the property name and
+    # rest of the positional arguments can be used in terminals
+    # as flags
+    parser.add_argument('-high_low_report', '-e', nargs=1, required=False, action='append')
+    parser.add_argument('-avg_report', '-a', nargs=1, required=False, action='append')
+    parser.add_argument('-dual_graph_report', '-c', nargs=1, required=False, action='append')
+    parser.add_argument('-single_graph_report', '-b', nargs=1, required=False, action='append')
     args = parser.parse_args()
     dataset_path = args.path
 
-    if args.e is not None:
-        for arg in args.e:
+    weather_parser = WeatherParser(dataset_path)
+    report_generator = ReportGenerator()
 
-            yearly_parser = YearlyWeatherParser(path=dataset_path,
-                                                year=int(arg[0]))
-            weather_data = yearly_parser.parse()
+    if args.high_low_report is not None:
+        for arg in args.high_low_report:
+            weather_records = weather_parser.yearly_weather_parser(year=int(arg[0]))
+            report_generator.high_low_temperature(weather_records)
 
-            report_generator = HighLowReportGenerator()
-            report_generator.generate(weather_data)
+    if args.avg_report is not None:
+        for arg in args.avg_report:
+            weather_records = _monthly_parser_helper(arg, weather_parser)
+            report_generator.avg_temperature(weather_records)
 
-    if args.a is not None:
-        for arg in args.a:
-            year, month = arg[0].split('/')
-            monthly_parser = MonthlyWeatherParser(path=dataset_path,
-                                                  month=int(month),
-                                                  year=int(year))
-            weather_data = monthly_parser.parse()
-            report_generator = AverageTemperatureReportGenerator()
-            report_generator.generate(weather_data)
+    if args.dual_graph_report is not None:
+        for arg in args.dual_graph_report:
+            weather_records = _monthly_parser_helper(arg, weather_parser)
+            report_generator.high_low_temperature_dual_graph(weather_records)
 
-    if args.c is not None:
-        for arg in args.c:
-            year, month = arg[0].split('/')
-            monthly_parser = MonthlyWeatherParser(path=dataset_path,
-                                                  month=int(month),
-                                                  year=int(year))
-            weather_data = monthly_parser.parse()
-            report_generator = HighLowTemperatureGraphReportGenerator()
-            report_generator.generate(weather_data)
-
-    if args.b is not None:
-        for arg in args.b:
-            year, month = arg[0].split('/')
-            monthly_parser = MonthlyWeatherParser(path=dataset_path,
-                                                  month=int(month),
-                                                  year=int(year))
-            weather_data = monthly_parser.parse()
-            report_generator = HighLowTemperatureSingleGraphReportGenerator()
-            report_generator.generate(weather_data)
+    if args.single_graph_report is not None:
+        for arg in args.single_graph_report:
+            weather_records = _monthly_parser_helper(arg, weather_parser)
+            report_generator.high_low_temperature_single_graph(weather_records)
 
 
 if __name__ == '__main__':
