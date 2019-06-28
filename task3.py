@@ -1,7 +1,7 @@
 import scrapy
 
 
-class shoe_info(scrapy.Item):
+class ShoeInfo(scrapy.Item):
     gender = scrapy.Field()
     name = scrapy.Field()
     category = scrapy.Field()
@@ -71,4 +71,3 @@ class AsicsSpider(scrapy.Spider):
 
         item['skus'] = skus
         yield item
-
