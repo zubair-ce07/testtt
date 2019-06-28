@@ -124,10 +124,7 @@ class JeanWestSpider(CrawlSpider):
 
     def extract_colour(self, response):
         raw_color = clean(response.css('.pro-color .head span::text'))
-        if raw_color:
-            return raw_color[0]
-
-        return None
+        return raw_color[0] if raw_color else None
 
     def extract_previous_prices(self, response):
         return response.css('.past ::text').re(r'(\d+\.\d+)')
