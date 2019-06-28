@@ -1,8 +1,8 @@
 let tileWidth = 101;
-let tileHeight = 75;
-
+let tileHeight = 85;
 
 var randomPosition = function (max, min) {
+    // from: https://stackoverflow.com/questions/4550505/getting-a-random-value-from-a-javascript-array
     return (Math.floor(Math.random() * (+max - +min)) + +min);
 }
 
@@ -16,7 +16,7 @@ var Enemy = function() {
     this.numTicks = 0;
     this.sprite = 'images/enemy-bug.png';
     this.x = -tileWidth*randomPosition(3,1)
-    this.y = tileHeight*randomPosition(6,1)
+    this.y = tileHeight*randomPosition(6,1) - 30
 };
 
 // Update the enemy's position, required method for game
@@ -24,7 +24,7 @@ var Enemy = function() {
 Enemy.prototype.update = function(dt) {
     if(this.x + tileWidth*dt > 101*5){
         this.x = -tileWidth*randomPosition(3,1)
-        this.y = tileHeight*randomPosition(6,1)
+        this.y = tileHeight*randomPosition(6,1) - 30
     } else {
         this.x += tileWidth*dt
     }
@@ -44,12 +44,32 @@ Enemy.prototype.render = function() {
 
 var Player = function() {
     this.sprite = 'images/char-boy.png';
-    this.x = tileWidth*4;
-    this.y = tileHeight*3;
+    this.x = tileWidth*2;
+    this.y = tileHeight*5 - 30;
 };
 
-Player.prototype.update = function(dt) {
-    // console.log('Player dt: ', dt)
+Player.prototype.update = function(key_pressed) {
+    if(key_pressed == 'up') {
+        this.y -= tileHeight
+        if(this.y <= 0){
+            this.y = tileHeight*5 - 30
+        }
+    } else if (key_pressed == 'down') {
+        this.y += tileHeight
+        if(this.y >= tileHeight*5 - 30){
+            this.y = tileHeight*5 - 30
+        }
+    } else if (key_pressed == 'left') {
+        this.x -= tileWidth
+        if(this.x <= -tileWidth){
+            this.x = 0
+        }
+    } else if (key_pressed == 'right') {
+        this.x += tileWidth
+        if(this.x >= tileWidth*4){
+            this.x = tileWidth*4
+        }
+    }
 };
 
 Player.prototype.render = function() {
@@ -57,7 +77,7 @@ Player.prototype.render = function() {
 };
 
 Player.prototype.handleInput = function(key_pressed) {
-    console.log(key_pressed)
+    this.update(key_pressed)
 };
 
 // Now instantiate your objects.
