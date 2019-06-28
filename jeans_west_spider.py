@@ -1,11 +1,9 @@
 import json
-import math
 
 import scrapy
-from scrapy import Request
 from scrapy.item import Item
 from scrapy.linkextractors import LinkExtractor
-from scrapy.spiders import CrawlSpider, Rule
+from scrapy.spiders import CrawlSpider, Rule, Request
 
 
 class Product(Item):
@@ -29,7 +27,7 @@ class JeanWestSpider(CrawlSpider):
 
     default_brand = 'JeansWest'
     default_gender = 'unisex'
-    default_size = 'M'
+    default_size = 'One_Size'
 
     gender_terms = [
         'women',
@@ -44,21 +42,22 @@ class JeanWestSpider(CrawlSpider):
 
     pagination_url_t = 'https://www.jeanswest.com.au/en-au/category_filter?p={}&category_id={}'
     category_css = '.list-li:not(.head)'
+    product_css = '.item .pic-detail'
     rules = (
         Rule(LinkExtractor(restrict_css=category_css), callback='parse_pagination'),
+        Rule(LinkExtractor(restrict_css=product_css), callback='parse_item'),
     )
 
     def parse_pagination(self, response):
-        pagination_pages = self.get_pagination_pages(response)
+        total_items = int(response.css('script::text').re_first(r'var totalItem  = \"(.+)\"'))
+        items_per_page = int(response.css('script::text').re_first(r'var itemPerPage = \"(.+)\"'))
+        total_pages = total_items//items_per_page + 1
+
         category_id = response.css('.f-filter ::attr(data-id)').get()
 
-        for page_number in range(0, pagination_pages):
+        for page_number in range(0, total_pages):
             url = self.pagination_url_t.format(page_number, category_id)
-            yield Request(url=url, callback=self.parse_category)
-
-    def parse_category(self, response):
-        item_links = response.css('.item .pic-detail ::attr(href)').getall()
-        yield from [Request(item_link, callback=self.parse_item) for item_link in item_links]
+            yield Request(url=url, callback=self.parse)
 
     def parse_item(self, response):
         item = Product()
@@ -70,20 +69,22 @@ class JeanWestSpider(CrawlSpider):
         item['category'] = self.extract_category(response)
         item['care'] = self.extract_care(response)
         item['description'] = self.extract_description(response)
+        item['image_urls'] = self.extract_image_urls(response)
+        item['skus'] = self.extract_skus(response)
         item['requests_queue'] = self.construct_sku_requests(response)
-        item['skus'] = []
-        item['image_urls'] = []
 
-        if not self.has_color_skus(response):
-            item['image_urls'] = self.extract_image_urls(response)
-            item['skus'] = self.extract_skus(response)
-            del item['requests_queue']
-            return item
+        return self.get_item_or_next_request(item)
 
-        return self.get_item_or_parse_request(item)
+    def parse_skus(self, response):
+        item = response.meta['item']
+        item['image_urls'] += self.extract_image_urls(response)
+        item['skus'] += self.extract_skus(response)
+
+        return self.get_item_or_next_request(item)
 
     def extract_item_name(self, response):
-        return response.css('.gr_title .head ::text').get().strip()
+        raw_item = self.extract_raw_item(response)
+        return raw_item['site_section']
 
     def extract_brand_name(self, response):
         return self.default_brand
@@ -101,19 +102,19 @@ class JeanWestSpider(CrawlSpider):
         return self.default_gender
 
     def extract_care(self, response):
-        css = '.accord-content p:nth-child(1)::text, .accord-content span::text'
-        raw_cares = response.css(css).getall()
-
+        raw_cares = self.raw_description(response)
         return [care for care in raw_cares if any(care_t in care for care_t in self.care_terms)]
+
+    def extract_description(self, response):
+        raw_description = self.raw_description(response)
+        return [desc for sublist in clean(raw_description) for desc in sublist.split('.') if desc]
+
+    def raw_description(self, response):
+        css = '.accord-content p:nth-child(1)::text, .accord-content span::text'
+        return response.css(css).getall()
 
     def extract_category(self, response):
         return response.css('.crumb-list a::text').getall()
-
-    def extract_description(self, response):
-        css = '.accord-content p:nth-child(1)::text, .accord-content span::text'
-        raw_description = response.css(css).getall()
-
-        return [desc for sublist in clean(raw_description) for desc in sublist.split('.') if desc]
 
     def extract_image_urls(self, response):
         return response.css('.show-scroll-list ::attr(src)').getall()
@@ -128,13 +129,13 @@ class JeanWestSpider(CrawlSpider):
         return response.css('.now .markdown::text, .now .number::text').re_first(r'(\d+\.\d+)')
 
     def extract_currency(self, response):
-        raw_currency = json.loads(response.css('script::text').re_first(r'utag_data = (.*);'))
-        return raw_currency.get('site_currency')
+        raw_item = self.extract_raw_item(response)
+        return raw_item['site_currency']
 
-    def has_color_skus(self, response):
-        return response.css('.pro-color ::attr(href)').getall()
+    def extract_raw_item(self, response):
+        return json.loads(response.css('script::text').re_first(r'utag_data = (.*);'))
 
-    def get_item_or_parse_request(self, item):
+    def get_item_or_next_request(self, item):
         if not item['requests_queue']:
             del item['requests_queue']
             return item
@@ -146,21 +147,13 @@ class JeanWestSpider(CrawlSpider):
 
     def construct_sku_requests(self, response):
         sku_urls = response.css('.pro-color ::attr(href)').getall()
-        return [response.follow(url=url, callback=self.parse_sku) for url in sku_urls]
-
-    def parse_sku(self, response):
-        item = response.meta['item']
-        item['image_urls'].extend(self.extract_image_urls(response))
-
-        if self.extract_skus(response):
-            item['skus'].extend(self.extract_skus(response))
-
-        return self.get_item_or_parse_request(item)
+        return [response.follow(url=url, callback=self.parse_skus) for url in sku_urls]
 
     def extract_skus(self, response):
         skus = []
         colour = self.extract_colour(response)
-        item_sizes = response.css('.pro-size-con [data-title="IN STOCK"]::text').getall()
+        size_css = '.pro-size-con [data-title="IN STOCK"]::text'
+        item_sizes = response.css(size_css).getall() or self.default_size
         common_sku = {
             'price': self.extract_current_price(response),
             'currency': self.extract_currency(response),
@@ -170,28 +163,14 @@ class JeanWestSpider(CrawlSpider):
         if colour:
             common_sku['colour'] = colour
 
-        if not item_sizes:
-            common_sku['sku_id'] = f'{self.default_size}'
-            common_sku['size'] = self.default_size
-            return skus.append(common_sku)
-
         for item_size in item_sizes:
             sku = common_sku.copy()
             sku['size'] = item_size
-            if colour:
-                sku['sku_id'] = f'{colour}_{item_size}'
-            else:
-                sku['sku_id'] = f'{item_size}'
+            sku['sku_id'] = f'{colour}_{item_size}' if colour else f'{item_size}'
 
             skus.append(sku)
 
         return skus
-
-    def get_pagination_pages(self, response):
-        total_items = int(response.css('script::text').re_first(r'var totalItem  = \"(.+)\"'))
-        items_per_page = int(response.css('script::text').re_first(r'var itemPerPage = \"(.+)\"'))
-
-        return math.ceil(total_items / items_per_page)
 
 
 def clean(raw_list):
