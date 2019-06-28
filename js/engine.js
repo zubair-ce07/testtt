@@ -22,11 +22,30 @@ var Engine = (function(global) {
         win = global.window,
         canvas = doc.createElement('canvas'),
         ctx = canvas.getContext('2d'),
-        lastTime;
+        lastTime,
+        h1 = doc.createElement("h1"),
+        footer = doc.createElement("div"),
+        footerText = document.createTextNode("By: Muhammad Abdullah Zafar - Arbisoft"),
+        finishedText = doc.createElement('h3'),
+        deathsText = doc.createElement('h3')
 
     canvas.width = 505;
     canvas.height = 606;
+    h1.id = 'heading'
+    finishedText.id = 'finished'
+    deathsText.id = 'deaths'
+    footer.className = 'footer'
+    footerText.className = 'footerText'
+    h1.textContent = "Frogger - The Game";
+    finishedText.textContent = `Finished: ${finished}`;
+    deathsText.textContent = `Deaths: ${deaths}`;
+    doc.body.appendChild(h1);
     doc.body.appendChild(canvas);
+    footer.appendChild(footerText)
+    doc.body.appendChild(footer);
+    doc.body.appendChild(finishedText);
+    doc.body.appendChild(deathsText);
+    
 
     /* This function serves as the kickoff point for the game loop itself
      * and handles properly calling the update and render methods.
