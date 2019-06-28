@@ -32,12 +32,10 @@ class Parser:
     def date_tokenizer(date):
         tokenize_date = date.split('/')
         if len(tokenize_date) < 2:
-            logging.error('few Arguments\nProper format is year/month')
-            exit(0)
-        if int(tokenize_date[0]) not in range(2004, 2017):
-            logging.error('Year must between 2004 - 2016')
-            exit(0)
-        if int(tokenize_date[1]) not in range(1, 13):
-            logging.error('Month must between 1 - 12')
-            exit(0)
-        return tokenize_date[0], tokenize_date[1]
+            logging.error('Invalid command format : Proper format is Year/Month')
+            exit()
+        try:
+            return int(tokenize_date[0]), int(tokenize_date[1])
+        except ValueError:
+            logging.error('Invalid format: Proper format is Year/Month')
+            exit()
