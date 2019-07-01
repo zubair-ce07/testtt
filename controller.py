@@ -1,54 +1,51 @@
+import argparse
 import sys
-from input_handler import ArgumentExtractor
-from file_locator import FileDetector
 from data_calculator import CalculatingData
+from input_handler import ArgumentExtractor
+from input_handler import FileHandler
 from report_generator import ReportGenerator
-
-"""Importing the necessary modules from other files"""
-
-date = str(sys.argv[3])
-calc_mode = sys.argv[2]
-"""Initializing the date and mode for first command"""
 
 total_arguments = len(sys.argv)
 loop_iterator = 1
-multiple_counter = total_arguments - 2
-"""loop_iterator provides a stop condition for loop to exit when
-all arguments are attended for
+multiple_counter = 0
 
-multiple_counter provides a count for the controller so it can pass the
-system arguments of multiple commands to other modules"""
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('file_path', help='The file path of weather files')
+    parser.add_argument('calc_mode', type=str,
+                        help='Mode of selecting which action to perform')
+    parser.add_argument('date', help='Date of the command to be executed')
+    parser.add_argument('multiple_options', nargs='*',
+                        help='Multiple arguments')
+    args = parser.parse_args()
+    date = args.date
+    calc_mode = args.calc_mode
 
-while loop_iterator == 1:
+    while loop_iterator == 1:
 
-    arguments = ArgumentExtractor
-    arguments.initialization(arguments, date, calc_mode)
-    file_handler = FileDetector(arguments)
-    file_handler.locate_file()
-    data = CalculatingData(file_handler)
-    report = ReportGenerator(data)
-    """All modules are initialized and an instance made"""
+        arguments = ArgumentExtractor()
+        arguments.initialization(date, calc_mode)
+        file_handler = FileHandler(arguments)
+        file_handler.file_extraction(arguments)
+        file_handler.locate_file(arguments)
+        data = CalculatingData(file_handler)
+        report = ReportGenerator(data)
 
-    if calc_mode == '-e':
-        """Yearly analysis"""
-        data.yearly_analysis()
-        report.generate_yearly_report(data)
+        if calc_mode == 'e':
+            data.yearly_analysis()
+            report.generate_yearly_report(data)
 
-    elif calc_mode == '-b':
-        """Monthly bonus analysis"""
-        data.monthly_bonus()
+        elif calc_mode == 'b':
+            data.monthly_bonus()
 
-    elif calc_mode == '-a':
-        """Monthly average analysis"""
-        data.monthly_analysis()
-        report.generate_monthly_report(data)
+        elif calc_mode == 'a':
+            data.monthly_analysis()
+            report.generate_monthly_report(data)
 
-    if total_arguments > 4:
-        """This is the main module which makes sure all arguments are 
-        attended for"""
-        calc_mode = sys.argv[multiple_counter]
-        date = str(sys.argv[multiple_counter+1])
-        total_arguments -= 2
-        multiple_counter -= 2
-    else:
-        loop_iterator = 0
+        if total_arguments > 4:
+            calc_mode = args.multiple_options[multiple_counter]
+            date = str(args.multiple_options[multiple_counter + 1])
+            total_arguments -= 2
+            multiple_counter += 2
+        else:
+            loop_iterator = 0

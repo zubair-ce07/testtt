@@ -1,9 +1,10 @@
+import calendar
+import glob
 import sys
 
 
 class ArgumentExtractor:
-    """This class is responsible for handling all the arguments provided at the
-    command line"""
+
     total_arguments = len(sys.argv)
 
     def __init__(self):
@@ -12,10 +13,9 @@ class ArgumentExtractor:
         self.year = 0
         self.month = 0
         self.mode = ''
+        self.location_dict = {}
 
     def initialization(self, date, mode):
-        """This method checks and then saves the argument passed by  the
-        main controller. Same module also handles multiple arguments"""
 
         if ArgumentExtractor.total_arguments < 4:
             print("The number of arguments provided is invalid. Exiting")
@@ -42,3 +42,46 @@ class ArgumentExtractor:
             self.mode = mode
             if self.month is '':
                 self.month = 0
+
+
+class FileHandler(ArgumentExtractor):
+
+    def __init__(self, argument_handler):
+
+        self.file_path = argument_handler.file_directory
+        self.year = argument_handler.year
+        self.month = calendar.month_abbr[int(argument_handler.month)]
+        self.location_dict = {}
+        self.name = 0
+        self.global_directory = []
+
+    def file_extraction(self, argument_handler):
+        file_path = argument_handler.file_directory
+        file_path += 'Murree_weather_' + "*"
+        iteration = 0
+        for self.name in glob.glob(file_path):
+            self.global_directory.append(self.name)
+            iteration += 1
+
+    def locate_file(self, argument_handler):
+        iteration = 1
+        file_path = argument_handler.file_directory
+        if self.month == '':
+            self.month = str(0)
+        if self.month != '0':
+            file_path += 'Murree_weather_' + str(self.year) + "_" + \
+                         self.month
+        else:
+            file_path += 'Murree_weather_' + str(self.year)
+
+        for name in self.global_directory:
+
+            if file_path in name:
+                argument_handler.location_dict[iteration] = name
+                self.location_dict[iteration] = name
+                iteration += 1
+
+        if iteration == 0:
+            print("The specific weather file was not found."
+                  "Exiting the application.")
+            sys.exit()

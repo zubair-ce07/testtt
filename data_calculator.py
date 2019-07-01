@@ -1,8 +1,10 @@
 import csv
-from file_locator import FileDetector
+import operator
+import statistics
+from input_handler import FileHandler
 
 
-class CalculatingData(FileDetector):
+class CalculatingData(FileHandler):
 
     def __init__(self, file_obtainer):
         self.single_path = file_obtainer.location_dict
@@ -17,130 +19,57 @@ class CalculatingData(FileDetector):
         self.yearly_most_humid_day = 0
         self.yearly_most_humid_value = 0
         self.month_date = file_obtainer.month
-        """These are variables which will be made use of by other modules
-        when the calculations are done and saved"""
-
-    def reading_file(self):
-        """This is a file reading module which will be called by
-        preceding calculators"""
-        open_file = open(self.single_path[1])
-        reading = csv.reader(open_file)
-        self.file_closer = open_file
-        return reading
-
-    def calculate_monthly_max_avg(self):
-        """This is the module for calculating monthly maximum average"""
-        total_max_temperature = 0
-        iterations = 0
-        blank_record = 0
-        opened_file = self.reading_file()
-        next(opened_file)
-        for row in opened_file:
-            iterations += 1
-
-            if row[1] == '':
-                blank_record += 1
-            else:
-                total_max_temperature += int(row[1])
-            self.month_date = row[0]
-        self.file_closer.close()
-        monthly_average = total_max_temperature / (iterations -
-                                                   blank_record)
-        return monthly_average
-
-    def calculate_monthly_low_avg(self):
-        """This is the module for calculating monthly minimum average"""
-        total_min_temperature = 0
-        iterations = 0
-        blank_record = 0
-        opened_file = self.reading_file()
-        next(opened_file)
-        for row in opened_file:
-            iterations += 1
-
-            if row[3] == '':
-                blank_record += 1
-            else:
-                total_min_temperature += int(row[3])
-        self.file_closer.close()
-        monthly_average = total_min_temperature / (iterations -
-                                                   blank_record)
-        return monthly_average
-
-    def calculate_avg_humidity(self):
-        """This is the module to calculate the monthly average humidity"""
-        total_avg_humidity = 0
-        iterations = 0
-        blank_record = 0
-        opened_file = self.reading_file()
-        next(opened_file)
-        for row in opened_file:
-            iterations += 1
-
-            if row[8] == '':
-                blank_record += 1
-            else:
-                total_avg_humidity += int(row[8])
-        self.file_closer.close()
-        monthly_average = total_avg_humidity / (iterations -
-                                                blank_record)
-        return monthly_average
 
     def monthly_analysis(self):
-        """This method invokes and calls all the above monthly methods
-        for consistent modularity"""
-        self.average_high_temp = self.calculate_monthly_max_avg()
-        self.average_min_temp = self.calculate_monthly_low_avg()
-        self.average_mean_humidity = self.calculate_avg_humidity()
+        total_max_temp = {}
+        total_min_temp = {}
+        total_avg_humidity = {}
+        iterator = 1
+        with open(self.single_path[iterator]) as open_file:
+            opened_file = csv.reader(open_file)
+            next(opened_file)
+            for row in opened_file:
+                total_max_temp[iterator] = int(row[1])
+                total_min_temp[iterator] = int(row[3])
+                total_avg_humidity[iterator] = int(row[8])
+                iterator += 1
+                self.month_date = row[0]
+            self.average_high_temp = statistics.mean(total_max_temp.values())
+            self.average_min_temp = statistics.mean(total_min_temp.values())
+            self.average_mean_humidity = statistics.\
+                mean(total_avg_humidity.values())
 
     def yearly_analysis(self):
-        """This module does the yearly analysis for maximum and minimum
-        temperatures with dates"""
-        iterations = 0
-        blank_record = 0
+        highest_temp = {}
+        lowest_temp = {}
+        most_humid = {}
         for key, value in self.single_path.items():
-            file_open = open(value, 'r')
-            reader = csv.reader(file_open)
-            next(reader)
-            for row in reader:
-                iterations += 1
-                if row[1] == '':
-                    blank_record += 1
-                else:
-                    if int(row[1]) > self.yearly_highest_temp:
-                        self.yearly_highest_temp = int(row[1])
-                        self.yearly_highest_temp_date = row[0]
-                if row[3] == '':
-                    blank_record += 1
-                else:
-                    if int(row[3]) < self.yearly_lowest_temp:
-                        self.yearly_lowest_temp = int(row[3])
-                        self.yearly_lowest_temp_date = row[0]
+            with open(value) as open_file:
+                reader = csv.reader(open_file)
+                next(reader)
+                for row in reader:
+                    highest_temp.update({row[0]: int(row[1])})
+                    lowest_temp.update({row[0]: int(row[3])})
+                    most_humid.update({row[0]: int(row[7])})
 
-                if row[7] == '':
-                    blank_record += 1
-                else:
-                    if int(row[7]) > int(self.yearly_most_humid_value):
-                        self.yearly_most_humid_value = row[7]
-                        self.yearly_most_humid_day = row[0]
-
-            file_open.close()
+        self.yearly_highest_temp_date = max(
+            highest_temp.items(), key=operator.itemgetter(1))[0]
+        self.yearly_lowest_temp_date = min(
+            lowest_temp.items(), key=operator.itemgetter(1))[0]
+        self.yearly_most_humid_day = max(
+            most_humid.items(), key=operator.itemgetter(1))[0]
+        self.yearly_highest_temp = max(highest_temp.values())
+        self.yearly_lowest_temp = min(lowest_temp.values())
+        self.yearly_most_humid_value = max(most_humid.values())
 
     def monthly_bonus(self):
-        """Monthly bonus task is implemented here instead of normal bars,
-        colored bars will be shown"""
-        print('Calculating monthly averages for {}'.format
-              (self.month_date))
+        print(f"Calculating monthly averages for {self.month_date}")
         iterations = 0
-        blank_record = 0
-        file_reader = self.reading_file()
-        next(file_reader)
-        for row in file_reader:
-            iterations += 1
-
-            if row[1] == '':
-                blank_record += 1
-            else:
+        with open(self.single_path[1]) as open_file:
+            file_reader = csv.reader(open_file)
+            next(file_reader)
+            for row in file_reader:
+                iterations += 1
                 maximum = int(row[1])
                 minimum = int(row[3])
                 difference = maximum - minimum
@@ -150,4 +79,3 @@ class CalculatingData(FileDetector):
                 for values in range(difference):
                     print('\033[1;31m*\033[1;m', end='')
                 print(" ", minimum, "C - ", maximum, "C\n")
-        self.file_closer.close()

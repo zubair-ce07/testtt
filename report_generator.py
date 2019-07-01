@@ -1,42 +1,38 @@
-from data_calculator import CalculatingData
 import calendar
+from data_calculator import CalculatingData
 
 
 class ReportGenerator(CalculatingData):
-    """This is the main report generator module which takes input
-    from other modules and then generates the reports accordingly."""
 
     def __init__(self, calculating_data):
-        self.max = calculating_data.yearly_most_humid_value
+        self.max_temp = calculating_data.yearly_most_humid_value
 
     def generate_monthly_report(self, calculating_data):
-        print('Calculating monthly averages for {} month of {}'.format
-              (calculating_data.month_date[5],
-               calculating_data.month_date[0:4]))
-        print('Highest Average: {}'.format
-              (round(calculating_data.average_high_temp)))
-        print('Lowest Average: {}'.format
-              (round(calculating_data.average_min_temp)))
-        print('Average Mean Humidity: {}%\n'.format
-              (round(calculating_data.average_mean_humidity)))
+        print(f"Calculating monthly averages for "
+              f"{calculating_data.month_date[5]} month of "
+              f"{calculating_data.month_date[0:4]}")
+        print(f"Highest Average: {round(calculating_data.average_high_temp)}")
+        print(f"Lowest Average: {round(calculating_data.average_min_temp)}")
+        print(f"Average Mean Humidity: "
+              f"{round(calculating_data.average_mean_humidity)}%\n")
 
     def generate_yearly_report(self, calculating_data):
-        print('Calculating Yearly report for {}'.format
-              ((calculating_data.yearly_highest_temp_date[0:4])))
-        print('Highest: {}C on {} {}'.format
-              (calculating_data.yearly_highest_temp,
-               calendar.month_abbr
-               [int(calculating_data.yearly_highest_temp_date[5:6])],
-               calculating_data.yearly_highest_temp_date[7:]))
 
-        print('Lowest: {}C on {} {}'.format
-              (calculating_data.yearly_lowest_temp,
-               calendar.month_abbr
-               [int(calculating_data.yearly_lowest_temp_date[5:6])],
-               calculating_data.yearly_lowest_temp_date[7:]))
+        highest_month = calendar.month_abbr\
+        [int(calculating_data.yearly_highest_temp_date[5:6])]
+        lowest_month = calendar.month_abbr\
+        [int(calculating_data.yearly_lowest_temp_date[5:6])]
+        humid_month = calendar.month_abbr\
+        [int(calculating_data.yearly_most_humid_day[5:6])]
 
-        print('Humidity: {}% on {} {}\n'.format
-              (calculating_data.yearly_most_humid_value,
-               calendar.month_abbr
-               [int(calculating_data.yearly_most_humid_day[5:6])],
-               calculating_data.yearly_most_humid_day[7:]))
+        print(f"Calculating Yearly report for "
+              f"{calculating_data.yearly_highest_temp_date[0:4]}")
+        print(f"Highest: {calculating_data.yearly_highest_temp}C on "
+              f"{highest_month} "
+              f"{calculating_data.yearly_highest_temp_date[7:]}")
+        print(f"Lowest: {calculating_data.yearly_lowest_temp}C on "
+              f"{lowest_month} "
+              f"{ calculating_data.yearly_lowest_temp_date[7:]}")
+        print(f"Humidity: {calculating_data.yearly_most_humid_value}% on"
+              f" {humid_month} "
+              f"{calculating_data.yearly_most_humid_day[7:]}\n")
