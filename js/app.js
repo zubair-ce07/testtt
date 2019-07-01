@@ -3,6 +3,7 @@ let tileWidth = 101;
 let tileHeight = 85;
 var finished = 0;
 var deaths = 0;
+var topScore = 0;
 var pause = false;
 var started = false;
 
@@ -114,7 +115,10 @@ document.addEventListener('keyup', function(e) {
         40: 'down'
     };
 
-    player.handleInput(allowedKeys[e.keyCode]);
+    if(started && !pause){
+        player.handleInput(allowedKeys[e.keyCode]);
+    }
+    
 });
 
 window.onload = () => {
@@ -125,7 +129,7 @@ window.onload = () => {
         if (started){
             pause = !pause
         }
-        
+
         if(pause) {
             console.log ('PAUSED')
             var pauseID = setTimeout(() => {

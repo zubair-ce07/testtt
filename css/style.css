@@ -5,14 +5,11 @@ body {
 
 #heading {
     position: fixed;
-    top: 0;
-    left: 0;
     width: 100%;
-    margin: 0 auto;
-    background-color: rgb(175, 228, 253);
+    background-color: #6a88bb;
     font-family: 'Permanent Marker', cursive;
     font-size: 45px;
-    color: rgb(60, 211, 18);
+    color: rgb(84, 233, 42);
 }
 
 #finished {
@@ -29,14 +26,22 @@ body {
     color: rgb(211, 40, 18);
 }
 
+#top {
+    margin: 0 auto;
+    margin-top: 20px;
+    font-family: 'Permanent Marker', cursive;
+    font-size: 35px;
+    color: #6a88bb;
+}
+
 .footer {
     position: fixed;
     left: 0;
     bottom: 0;
     width: 100%;
     height: 6%;
-    background-color: rgb(175, 228, 253);
-    color: rgb(60, 211, 18);
+    background-color: #6a88bb;
+    color: rgb(84, 233, 42);
     text-align: center;
     font-family: 'Permanent Marker', cursive;
     font-size: 35px;
@@ -64,4 +69,13 @@ canvas {
 
 #pause {
     margin: 40px;
+	box-shadow: 0px 3px 15px 3px #23395e;
+	background:linear-gradient(to bottom, #6a88bb 5%, #4e6fb3 100%);
+	background-color:#5a76a7;
+	border-radius:11px;
+	border:1px solid #1f2f47;
+	color:#ffffff;
+	font-family: 'Permanent Marker', cursive;
+	font-size:35px;
+	padding:8px 24px;
 }

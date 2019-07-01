@@ -31,6 +31,7 @@ var Engine = (function(global) {
         footerText = document.createTextNode("By: Muhammad Abdullah Zafar - Arbisoft"),
         finishedText = doc.createElement('h3'),
         deathsText = doc.createElement('h3'),
+        top = doc.createElement('h3'),
         button = doc.createElement('button')
 
     canvas.width = 505;
@@ -41,6 +42,7 @@ var Engine = (function(global) {
     container.id = 'container'
     finishedText.id = 'finished'
     deathsText.id = 'deaths'
+    top.id = 'top'
     footer.className = 'footer'
     footerText.className = 'footerText'
     h1.textContent = "Frogger - The Game";
@@ -49,6 +51,7 @@ var Engine = (function(global) {
     button.id = "pause";
     finishedText.textContent = `Finished: ${finished}`;
     deathsText.textContent = `Deaths: ${deaths}`;
+    top.textContent = `Top Score: ${topScore}`;
     doc.body.appendChild(h1);
     doc.body.appendChild(container)
     container.appendChild(left)
@@ -58,6 +61,7 @@ var Engine = (function(global) {
     doc.body.appendChild(footer);
     right.appendChild(finishedText);
     right.appendChild(deathsText);
+    right.appendChild(top);
     right.appendChild(button);
     
 
@@ -112,6 +116,7 @@ var Engine = (function(global) {
      */
     function update(dt) {
         if(!pause && started){
+            // console.log('in')
             updateEntities(dt);
         }
         // checkCollisions();
