@@ -143,7 +143,7 @@ class UllaPoPkenSpider(CrawlSpider):
         return request
 
     def extract_pricing(self, raw_price):
-        pricing = dict()
+        pricing = {}
         price = raw_price['reducedPrice'] or raw_price['originalPrice']
         pricing['currency'] = price['currencyIso']
         pricing['previous_prices'] = [raw_price['crossedOutPrice']['value']] \
