@@ -59,4 +59,5 @@ target/
 # VSCode
 .vscode
 
-weatherfiles/
+weatherman/weatherfiles/
+weatherman/.gitignore

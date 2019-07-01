@@ -1,66 +1,52 @@
-import os
-import calendar
+import csv
+import datetime
+import glob
 
 from weatherrecord import WeatherRecord
 
 
-class WeatherParser:
+class WeatherParserPro:
 
     def __init__(self, path):
+
         self.path = path
+        self.weather_records = self._parse_weather_records()
 
-    def yearly_weather_parser(self, year):
-        weather_records = []
-        file_names = os.listdir(path=self.path)
+    def _parse_weather_records(self):
 
-        for file_name in file_names:
+        file_paths = glob.glob(r'{}Murree_weather_*.txt'.format(self.path, ''))
+        weather_records = {}
 
-            current_file_year = int(file_name.split('_')[2])
+        for file_path in file_paths:
 
-            if current_file_year == year:
-                current_file_path = os.path.join(self.path, file_name)
+            with open(file_path, mode='r') as csv_file:
 
-                with open(current_file_path, mode='r') as file_data:
-                    file_contents = file_data.read()
-                    records = file_contents.split('\n')
-                    records = records[1:-1]
+                csv_reader = csv.reader(csv_file, delimiter=',')
+                line_count = 0
 
-                    for record in records:
-                        record = record.split(',')
+                for row in csv_reader:
 
-                        weather_records.append(WeatherRecord(
-                            pkt=record[0],
-                            max_temp=int(record[1]) if record[1] else None,
-                            min_temp=int(record[3]) if record[3] else None,
-                            max_humidity=int(record[7]) if record[7] else None
-                        ))
+                    if line_count != 0:
+                        date_and_time = datetime.datetime.strptime(row[0], '%Y-%m-%d').date()
 
-        return weather_records
+                        if date_and_time.year not in weather_records.keys():
+                            weather_records[date_and_time.year] = {}
 
-    def monthly_weather_parser(self, month, year):
-        weather_records = []
-        file_names = os.listdir(path=self.path)
+                        if date_and_time.month not in weather_records[date_and_time.year].keys():
+                            weather_records[date_and_time.year][date_and_time.month] = []
 
-        for file_name in file_names:
-            months_map = dict((v,k) for k,v in enumerate(calendar.month_abbr))
-            current_file_month = months_map[file_name.split('_')[3][:3]]
-            current_file_year = int(file_name.split('_')[2])
+                        weather_records[date_and_time.year][date_and_time.month].append(
+                            WeatherRecord(
+                                pkt=date_and_time,
+                                max_temp=int(row[1]) if row[1] else None,
+                                min_temp=int(row[3]) if row[3] else None,
+                                max_humidity=int(row[7]) if row[7] else None,
+                                mean_humidity=int(row[8]) if row[8] else None,
+                                # %B fullname %b shortname
+                                month_name=date_and_time.strftime('%B')
+                            )
+                        )
 
-            if current_file_month == month and current_file_year == year:
-                current_file_path = os.path.join(self.path, file_name)
-
-                with open(current_file_path, mode='r') as file_data:
-                    file_contents = file_data.read()
-                    records = file_contents.split('\n')
-                    records = records[1:-1]
-
-                    for record in records:
-                        record = record.split(',')
-                        weather_records.append(WeatherRecord(
-                            pkt=record[0],
-                            max_temp=int(record[1]) if record[1] else None,
-                            min_temp=int(record[3]) if record[3] else None,
-                            mean_humidity=int(record[8]) if record[8] else None
-                        ))
+                    line_count += 1
 
         return weather_records
