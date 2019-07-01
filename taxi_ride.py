@@ -72,3 +72,8 @@ class TaxiRide:
         max_speed = max(0, self.taxi_meter_calc.taxi_speed - self.speed_increment_factor)
         self.taxi_meter_calc.taxi_speed = max_speed
         return self.taxi_meter_calc.taxi_speed > 0
+
+    def calculate_ride_essentials(self):
+        self.taxi_meter_calc.calculate_ride_time(self.is_ride_resumed)
+        self.taxi_meter_calc.calculate_ride_fair()
+        self.taxi_meter_calc.calculate_ride_distance()
