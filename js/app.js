@@ -3,6 +3,7 @@ let tileWidth = 101;
 let tileHeight = 85;
 var finished = 0;
 var deaths = 0;
+var pause = false;
 
 // Helper function
 // https://stackoverflow.com/questions/4550505/getting-a-random-value-from-a-javascript-array
@@ -96,7 +97,9 @@ Player.prototype.handleInput = function(key_pressed) {
 // Now instantiate your objects.
 // Place all enemy objects in an array called allEnemies
 // Place the player object in a variable called player
-var allEnemies = [new Enemy(), new Enemy(), new Enemy(), new Enemy(), new Enemy(), new Enemy(), new Enemy()]
+var allEnemies = new Array(new Enemy(), new Enemy(), new Enemy(), 
+                           new Enemy(), new Enemy(), new Enemy(), 
+                           new Enemy())
 var player = new Player();
 
 
@@ -112,3 +115,19 @@ document.addEventListener('keyup', function(e) {
 
     player.handleInput(allowedKeys[e.keyCode]);
 });
+
+window.onload = () => {
+    document.getElementById("pause").addEventListener("click", () => {
+        console.log ('pause', pause)
+        pause = !pause
+        if(pause) {
+            var pauseID = setTimeout(() => {
+                
+            }, 2147483647);
+            document.getElementById("pause").textContent = "Resume";
+        } else {
+            clearTimeout(pauseID);
+            document.getElementById("pause").textContent = "Pause";
+        }
+    });
+}
