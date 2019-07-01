@@ -98,7 +98,7 @@ class UllaPoPkenSpider(CrawlSpider):
 
         return self.get_item_or_parse_request(item)
 
-    def parse_color_dependent_values(self, response):
+    def parse_colour_dependent_values(self, response):
         item = response.meta['item']
         raw_item = json.loads(response.text)
         item['name'] = self.extract_item_name(raw_item)
@@ -127,10 +127,10 @@ class UllaPoPkenSpider(CrawlSpider):
 
     def construct_item_requests(self, response):
         response_json = json.loads(response.text)
-        color_codes = [data['articleCode'] for data in response_json]
+        colour_codes = [data['articleCode'] for data in response_json]
 
-        return [Request(url=self.sku_url_t.format(c), callback=self.parse_color_dependent_values)
-                for c in color_codes]
+        return [Request(url=self.sku_url_t.format(c), callback=self.parse_colour_dependent_values)
+                for c in colour_codes]
 
     def get_item_or_parse_request(self, item):
         if not item['requests_queue']:
