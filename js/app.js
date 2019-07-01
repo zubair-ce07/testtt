@@ -4,6 +4,7 @@ let tileHeight = 85;
 var finished = 0;
 var deaths = 0;
 var pause = false;
+var started = false;
 
 // Helper function
 // https://stackoverflow.com/questions/4550505/getting-a-random-value-from-a-javascript-array
@@ -117,15 +118,27 @@ document.addEventListener('keyup', function(e) {
 });
 
 window.onload = () => {
+    var startID = setTimeout(() => {
+                
+    }, 2147483647);
     document.getElementById("pause").addEventListener("click", () => {
-        console.log ('pause', pause)
-        pause = !pause
+        if (started){
+            pause = !pause
+        }
+        
         if(pause) {
+            console.log ('PAUSED')
             var pauseID = setTimeout(() => {
                 
             }, 2147483647);
             document.getElementById("pause").textContent = "Resume";
+        } else if (!started) {
+            console.log ('Started')
+            started = true
+            clearTimeout(startID)
+            document.getElementById("pause").textContent = "Pause";
         } else {
+            console.log ('Resumed')
             clearTimeout(pauseID);
             document.getElementById("pause").textContent = "Pause";
         }

@@ -44,7 +44,7 @@ var Engine = (function(global) {
     footer.className = 'footer'
     footerText.className = 'footerText'
     h1.textContent = "Frogger - The Game";
-    button.textContent = "Pause";
+    button.textContent = "Start";
     button.className = "btn btn-primary";
     button.id = "pause";
     finishedText.textContent = `Finished: ${finished}`;
@@ -111,7 +111,7 @@ var Engine = (function(global) {
      * on the entities themselves within your app.js file).
      */
     function update(dt) {
-        if(!pause){
+        if(!pause && started){
             updateEntities(dt);
         }
         // checkCollisions();
