@@ -20,6 +20,9 @@ var Engine = (function(global) {
      */
     var doc = global.document,
         win = global.window,
+        left = doc.createElement('div'),
+        right = doc.createElement('div'),
+        container = doc.createElement('div'),
         canvas = doc.createElement('canvas'),
         ctx = canvas.getContext('2d'),
         lastTime,
@@ -27,24 +30,35 @@ var Engine = (function(global) {
         footer = doc.createElement("div"),
         footerText = document.createTextNode("By: Muhammad Abdullah Zafar - Arbisoft"),
         finishedText = doc.createElement('h3'),
-        deathsText = doc.createElement('h3')
+        deathsText = doc.createElement('h3'),
+        button = doc.createElement('button')
 
     canvas.width = 505;
     canvas.height = 606;
     h1.id = 'heading'
+    left.id = 'left'
+    right.id = 'right'
+    container.id = 'container'
     finishedText.id = 'finished'
     deathsText.id = 'deaths'
     footer.className = 'footer'
     footerText.className = 'footerText'
     h1.textContent = "Frogger - The Game";
+    button.textContent = "Pause";
+    button.className = "btn btn-primary";
+    button.id = "pause";
     finishedText.textContent = `Finished: ${finished}`;
     deathsText.textContent = `Deaths: ${deaths}`;
     doc.body.appendChild(h1);
-    doc.body.appendChild(canvas);
+    doc.body.appendChild(container)
+    container.appendChild(left)
+    container.appendChild(right)
+    left.appendChild(canvas);
     footer.appendChild(footerText)
     doc.body.appendChild(footer);
-    doc.body.appendChild(finishedText);
-    doc.body.appendChild(deathsText);
+    right.appendChild(finishedText);
+    right.appendChild(deathsText);
+    right.appendChild(button);
     
 
     /* This function serves as the kickoff point for the game loop itself
@@ -97,7 +111,9 @@ var Engine = (function(global) {
      * on the entities themselves within your app.js file).
      */
     function update(dt) {
-        updateEntities(dt);
+        if(!pause){
+            updateEntities(dt);
+        }
         // checkCollisions();
     }
 
