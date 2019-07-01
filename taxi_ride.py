@@ -1,7 +1,7 @@
 import os
 
-from taxi_meter import TaxiMeter
 from ride_keys_control import RideKeyControl
+from taxi_meter import TaxiMeter
 
 
 class TaxiRide:

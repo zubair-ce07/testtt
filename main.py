@@ -8,6 +8,4 @@ if __name__ == '__main__':
 
     while not taxi_ride.is_ride_ended:
         taxi_ride.display_taxi_meter()
-        taxi_ride.taxi_meter_calc.calculate_ride_time(taxi_ride.is_ride_resumed)
-        taxi_ride.taxi_meter_calc.calculate_ride_fair()
-        taxi_ride.taxi_meter_calc.calculate_ride_distance()
+        taxi_ride.taxi_meter_calc.calculate_ride_essentials(taxi_ride.is_ride_resumed)
