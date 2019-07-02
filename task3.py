@@ -1,7 +1,9 @@
+import re
 import scrapy
 
 
-class ShoeInfo(scrapy.Item):
+class ProductDetails(scrapy.Item):
+    retailer_sku = scrapy.Field()
     gender = scrapy.Field()
     name = scrapy.Field()
     category = scrapy.Field()
@@ -19,55 +21,114 @@ class ShoeInfo(scrapy.Item):
 
 class AsicsSpider(scrapy.Spider):
     name = "asics"
+    allowed_domains = ['asics.com']
     start_urls = [
         'https://www.asics.com/us/en-us/',
     ]
 
     def parse(self, response):
+        home_page = self.get_home_page_data(response)
 
-        for major_catg in response.css('li.nav-item > a')[0:3]:
-            item = ShoeInfo()
-            item['gender'] = major_catg.css('::text').extract_first()
-            major_catg_url = major_catg.css('::attr(href)').extract_first()
-            major_catg_url = response.urljoin(major_catg_url)
+        for major_category in home_page:
+            category_url = response.urljoin(major_category)
 
-            yield scrapy.Request(url=major_catg_url, callback=self.extract_shoes, meta={'item': item})
+            yield scrapy.Request(url=category_url, callback=self.extract_products)
 
-    def extract_shoes(self, response):
-        item = response.meta.get('item')
+    def extract_products(self, response):
+        page_products = self.get_page_products(response)
 
-        for shoe in response.css('div.col-sm-4.col-xs-6.gridProduct.product.port'):
-            item['name'] = shoe.css('p.prod-name::text').extract_first()
-            item['category'] = [shoe.css('p.prod-classification-reference::text').extract_first()]
-            item['url'] = shoe.css('a.productMainLink::attr(href)').extract_first()
-            item['brand'] = "ASICS"
+        for product in page_products:
+            product_url = response.urljoin(product)
+            yield scrapy.Request(url=product_url, callback=self.extract_product_details)
+        next_page = self.get_next_page_url(response)
+        print(next_page)
+        if next_page:
+            next_page_url = response.urljoin(next_page)
+            yield scrapy.Request(url=next_page_url, callback=self.extract_products)
 
-            shoe_url = shoe.css('a.productMainLink::attr(href)').extract_first()
-            shoe_url = response.urljoin(shoe_url)
-            yield scrapy.Request(url=shoe_url, callback=self.extract_shoe_info, meta={'item': item})
+    def extract_product_details(self, response):
 
-    def extract_shoe_info(self, response):
-        item = response.meta.get('item')
+        item = ProductDetails()
+        item['retailer_sku'] = self.get_product_sku(response)
+        item['name'] = self.get_name(response)
+        item['gender'] = self.get_gender(response)
+        item['category'] = self.get_category(response)
+        item['url'] = self.get_product_url(response)
+        item['description'] = self.get_description(response)
+        item['image_urls'] = self.get_image_urls(response)
+        currency = self.get_currency(response)
+        price = self.get_price(response)
+        color = self.get_color(response)
 
-        item['description'] = response.css('div.tabInfoChildContent.panel-collapse.collapse'
-                                           '::text')[6:].extract_first()
         item['care'] = []
-        item['image_urls'] = response.css('div.owl-carousel > img::attr(data-big)').extract()
+        item['brand'] = "ASICS"
 
-        color = response.css('title::text').extract_first().split('|')[2]
-        skus = {}
-        for sku in response.css('div.size-select-list.clearfix > div.SizeOption.inStock'):
-            one_sku = {
+        skus = []
+        sku_records = self.get_sku_record(response)
+
+        for sku in sku_records:
+            single_sku = {
                 sku.css('::attr(data-value)').extract_first():
                     {
                         'color': color,
-                        'currency': sku.css('meta::attr(content)')[2].extract(),
-                        'price': sku.css('meta::attr(content)')[3].extract()
+                        'currency': currency,
+                        'price': price,
+                        'size': self.get_size(sku)
 
                     }
 
             }
-            skus.update(one_sku)
+            skus.append(single_sku)
 
         item['skus'] = skus
         yield item
+
+    def get_home_page_data(self,response):
+        return response.css('div.childlink-wrapper > a ::attr(href)').extract()
+
+    def get_next_page_url(self, response):
+        return response.css('div.rightArrow ::attr(href)').extract_first()
+
+    def get_page_products(self,response):
+        return response.css('div.gridProduct > div > a ::attr(href)').extract()
+
+    def get_size(self,response):
+        return response.css('a.SizeOption::text').extract()
+
+    def get_name(self,response):
+        return response.css('title::text').extract_first().split('|')[0].strip()
+
+    def get_gender(self,response):
+        return response.css('title::text').extract_first().split('|')[1].strip()
+
+    def get_category(self,response):
+        return response.css('div.breadcrumb > a ::text ').extract()
+
+    def get_product_url(self,response):
+        return response.url
+
+    def get_description(self,response):
+        raw_descriptions = response.css('div.tabInfoChild > div.tabInfoChildContent::text').extract()
+        for descption in raw_descriptions:
+            if re.sub('\s+', '', descption):
+                return re.sub('\s+', '', descption)
+
+    def get_image_urls(self,response):
+        return response.css('div.owl-carousel > img::attr(data-big)').extract()
+
+    def get_currency(self,response):
+        return response.css('div.clearfix > div.inStock > meta ::attr(content)')[2].extract()
+
+    def get_price(self,response):
+        return response.css('div.clearfix > div.inStock > meta ::attr(content)')[3].extract()
+
+    def get_product_sku(self,response):
+        print("AHMAD: ",response)
+        return response.css('div.clearfix > div.inStock > meta ::attr(content)')[0].extract()
+
+    def get_color(self,response):
+        return response.css('title::text').extract_first().split('|')[2]
+
+    def get_sku_record(self,response):
+        return response.css('div.size-select-list')[2].css('div.inStock')
+
