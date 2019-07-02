@@ -165,7 +165,7 @@ class OnlySpider(CrawlSpider):
 
         for length in lengths:
             sku = common_sku.copy()
-            size_length = f'{size}_{length}'
+            size_length = f'{size}/{length}'
             sku['size'] = size_length
             sku['sku_id'] = f'{size_length}_{colour[0]}' if colour else size_length
 
