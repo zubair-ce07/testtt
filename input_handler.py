@@ -1,87 +1,52 @@
-import calendar
+import argparse
+import csv
 import glob
-import sys
+
+from datetime import datetime
+
+from weather_container import RecordHolder
 
 
-class ArgumentExtractor:
-
-    total_arguments = len(sys.argv)
+class Parser:
 
     def __init__(self):
         self.file_directory = ''
-        self.date = 0
-        self.year = 0
-        self.month = 0
-        self.mode = ''
-        self.location_dict = {}
 
-    def initialization(self, date, mode):
+    def initialization(self):
 
-        if ArgumentExtractor.total_arguments < 4:
-            print("The number of arguments provided is invalid. Exiting")
-            sys.exit()
-        else:
-            self.file_directory = sys.argv[1]
-            self.date = str(sys.argv[3])
-            self.year = self.date[:4]
-            self.month = self.date[5:]
-            self.mode = sys.argv[2]
+        parser = argparse.ArgumentParser()
+        parser.add_argument('file_path',
+                            help='The file path of weather files')
+        parser.add_argument('-e', '-yearly',
+                            type=lambda arg: datetime.strptime(
+                                arg, '%Y'), nargs="*")
+        parser.add_argument('-a', '-monthly',
+                            type=lambda arg: datetime.strptime(
+                                arg, '%Y/%m'), nargs="*")
+        parser.add_argument('-b', '-bonus',
+                            type=lambda arg: datetime.strptime(
+                                arg, '%Y/%m'), nargs="*")
+        parsed_data = parser.parse_args()
+        return parsed_data
 
-            if self.month is '':
-                self.month = 0
-            else:
-                if int(self.month) < 1 or int(self.month) > 12:
-                    print("The month provided is out of bound. Exiting")
-                    sys.exit()
+    def record_validity(self, data):
+        if data["Max TemperatureC"] == '' or \
+                data["Min TemperatureC"] == '' or \
+                data[" Mean Humidity"] == '':
+            return False
 
-        if date == 0:
-            sys.exit()
-        else:
-            self.year = date[:4]
-            self.month = date[5:]
-            self.mode = mode
-            if self.month is '':
-                self.month = 0
+    def data_extractor(self, directory_file):
 
+        compiled_records = []
+        file_path = directory_file + 'Murree_weather_' + '*'
+        for files in glob.glob(file_path):
+            with open(files, "r") as single_file:
+                read_record = csv.DictReader(single_file)
+                for records in read_record:
 
-class FileHandler(ArgumentExtractor):
+                    if self.record_validity(records,records) == False:
+                        continue
 
-    def __init__(self, argument_handler):
-
-        self.file_path = argument_handler.file_directory
-        self.year = argument_handler.year
-        self.month = calendar.month_abbr[int(argument_handler.month)]
-        self.location_dict = {}
-        self.name = 0
-        self.global_directory = []
-
-    def file_extraction(self, argument_handler):
-        file_path = argument_handler.file_directory
-        file_path += 'Murree_weather_' + "*"
-        iteration = 0
-        for self.name in glob.glob(file_path):
-            self.global_directory.append(self.name)
-            iteration += 1
-
-    def locate_file(self, argument_handler):
-        iteration = 1
-        file_path = argument_handler.file_directory
-        if self.month == '':
-            self.month = str(0)
-        if self.month != '0':
-            file_path += 'Murree_weather_' + str(self.year) + "_" + \
-                         self.month
-        else:
-            file_path += 'Murree_weather_' + str(self.year)
-
-        for name in self.global_directory:
-
-            if file_path in name:
-                argument_handler.location_dict[iteration] = name
-                self.location_dict[iteration] = name
-                iteration += 1
-
-        if iteration == 0:
-            print("The specific weather file was not found."
-                  "Exiting the application.")
-            sys.exit()
+                    else:
+                        compiled_records.append((RecordHolder(records)))
+        return compiled_records
