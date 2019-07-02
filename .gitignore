@@ -60,4 +60,3 @@ target/
 .vscode
 
 weatherman/weatherfiles/
-weatherman/.gitignore

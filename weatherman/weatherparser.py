@@ -5,7 +5,7 @@ import glob
 from weatherrecord import WeatherRecord
 
 
-class WeatherParserPro:
+class WeatherParser:
 
     def __init__(self, path):
 
@@ -14,7 +14,7 @@ class WeatherParserPro:
 
     def _parse_weather_records(self):
 
-        file_paths = glob.glob(r'{}Murree_weather_*.txt'.format(self.path, ''))
+        file_paths = glob.glob(f'{self.path}Murree_weather_*.txt')
         weather_records = {}
 
         for file_path in file_paths:
@@ -26,7 +26,7 @@ class WeatherParserPro:
 
                 for row in csv_reader:
 
-                    if line_count != 0:
+                    if line_count:
                         date_and_time = datetime.datetime.strptime(row[0], '%Y-%m-%d').date()
 
                         if date_and_time.year not in weather_records.keys():

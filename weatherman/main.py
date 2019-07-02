@@ -1,6 +1,6 @@
 import argparse
 
-from weatherparser import WeatherParserPro
+from weatherparser import WeatherParser
 from reportgenerator import ReportGenerator
 
 
@@ -19,7 +19,7 @@ def main():
     args = parser.parse_args()
 
     dataset_path = args.path
-    weather_parser = WeatherParserPro(dataset_path)
+    weather_parser = WeatherParser(dataset_path)
     report_generator = ReportGenerator(weather_parser.weather_records)
 
     if args.high_low_report:
