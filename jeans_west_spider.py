@@ -44,6 +44,7 @@ class JeanWestSpider(CrawlSpider):
     pagination_url_t = 'https://www.jeanswest.com.au/en-au/category_filter?p={}&category_id={}'
     category_css = '.list-li:not(.head)'
     product_css = '.item .pic-detail'
+
     rules = (
         Rule(LinkExtractor(restrict_css=category_css), callback='parse_pagination'),
         Rule(LinkExtractor(restrict_css=product_css), callback='parse_item'),
@@ -120,8 +121,7 @@ class JeanWestSpider(CrawlSpider):
         return clean(response.css('.show-scroll-list ::attr(src)'))
 
     def extract_colour(self, response):
-        raw_color = clean(response.css('.pro-color .head span::text'))
-        return raw_color
+        return clean(response.css('.pro-color .head span::text'))
 
     def extract_previous_prices(self, response):
         return response.css('.past ::text').re(r'(\d+\.\d+)')
@@ -162,7 +162,7 @@ class JeanWestSpider(CrawlSpider):
         for size in clean(response.css('.pro-size-con [data-title="IN STOCK"]::text')) or [self.default_size]:
             sku = common_sku.copy()
             sku['size'] = size
-            sku['sku_id'] = f'{colour}_{size}' if colour else size
+            sku['sku_id'] = f'{colour[0]}_{size}' if colour else size
 
             skus.append(sku)
 
@@ -176,3 +176,4 @@ def clean(raw_item):
         return [r.strip() for r in raw_item.getall() if r.strip()]
 
     return [r.strip() for r in raw_item if r.strip()]
+
