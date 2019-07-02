@@ -1,7 +1,8 @@
 import argparse
+from datetime import datetime
 
-from weatherparser import WeatherParser
 from reportgenerator import ReportGenerator
+from weatherparser import WeatherParser
 
 
 def main():
@@ -20,26 +21,32 @@ def main():
 
     dataset_path = args.path
     weather_parser = WeatherParser(dataset_path)
-    report_generator = ReportGenerator(weather_parser.weather_records)
+    report_generator = ReportGenerator(weather_parser)
+
+    monthly_date_format = '%Y/%m'
 
     if args.high_low_report:
         for arg in args.high_low_report:
-            report_generator.high_low_temperature(year=int(arg[0]))
+            input_date = datetime.strptime(arg[0], '%Y').date()
+            report_generator.high_low_temperature(year=input_date.year)
 
     if args.avg_report:
         for arg in args.avg_report:
-            year, month = arg[0].split('/')
-            report_generator.avg_temperature(year=int(year), month=int(month))
+            input_date = datetime.strptime(arg[0], monthly_date_format).date()
+            report_generator.avg_temperature(year=input_date.year,
+                                             month=input_date.month)
 
     if args.dual_graph_report:
         for arg in args.dual_graph_report:
-            year, month = arg[0].split('/')
-            report_generator.high_low_temperature_dual_graph(year=int(year), month=int(month))
+            input_date = datetime.strptime(arg[0], monthly_date_format).date()
+            report_generator.high_low_temperature_dual_graph(year=input_date.year,
+                                                             month=input_date.month)
 
     if args.single_graph_report:
         for arg in args.single_graph_report:
-            year, month = arg[0].split('/')
-            report_generator.high_low_temperature_single_graph(year=int(year), month=int(month))
+            input_date = datetime.strptime(arg[0], monthly_date_format).date()
+            report_generator.high_low_temperature_single_graph(year=input_date.year,
+                                                               month=input_date.month)
 
 
 if __name__ == '__main__':
