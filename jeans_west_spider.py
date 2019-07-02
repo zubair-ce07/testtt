@@ -93,7 +93,7 @@ class JeanWestSpider(CrawlSpider):
         return clean(response.css('.gr_title .head em::text'))[0]
 
     def extract_gender(self, response):
-        for gender in self.raw_category(response):
+        for gender in self.extract_category(response):
             if gender.lower() in self.gender_terms:
                 return gender.lower()
 
@@ -113,18 +113,15 @@ class JeanWestSpider(CrawlSpider):
 
         return [desc for sublist in raw_description for desc in sublist.split('.') if desc]
 
-    def raw_category(self, response):
-        return clean(response.css('.crumb-list a::text'))
-
     def extract_category(self, response):
-        return self.raw_category(response)
+        return clean(response.css('.crumb-list a::text'))
 
     def extract_image_urls(self, response):
         return clean(response.css('.show-scroll-list ::attr(src)'))
 
     def extract_colour(self, response):
         raw_color = clean(response.css('.pro-color .head span::text'))
-        return raw_color[0] if raw_color else None
+        return raw_color
 
     def extract_previous_prices(self, response):
         return response.css('.past ::text').re(r'(\d+\.\d+)')
@@ -134,7 +131,7 @@ class JeanWestSpider(CrawlSpider):
 
     def extract_currency(self, response):
         raw_currency = json.loads(response.css('script::text').re_first(r'utag_data = (.*);'))
-        return raw_currency.get('site_currency')
+        return raw_currency['site_currency']
 
     def get_item_or_next_request(self, item):
         if not item['requests_queue']:
@@ -160,7 +157,7 @@ class JeanWestSpider(CrawlSpider):
         }
 
         if colour:
-            common_sku['colour'] = colour
+            common_sku['colour'] = colour[0]
 
         for size in clean(response.css('.pro-size-con [data-title="IN STOCK"]::text')) or [self.default_size]:
             sku = common_sku.copy()
