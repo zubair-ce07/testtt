@@ -55,6 +55,7 @@ class Skill(models.Model):
 
 class Hobby(models.Model):
     hobby = models.CharField(max_length=30)
+    person = models.ForeignKey(BasicInformation, on_delete=models.CASCADE)
     description = models.CharField(max_length=30, null=True)
 
     def __str__(self):
@@ -63,6 +64,18 @@ class Hobby(models.Model):
 
 class Reference(models.Model):
     reference = models.CharField(max_length=30)
+    person = models.ForeignKey(BasicInformation, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.reference
+
+
+'''
+from cv_maker_app.models import Skill
+from cv_maker_app.models import Hobby
+from cv_maker_app.models import Reference
+import datetime
+from cv_maker_app.models import Experience
+from cv_maker_app.models import BasicInformation
+from cv_maker_app.models import Education
+'''
