@@ -93,7 +93,7 @@ class ProductsSpider(CrawlSpider):
                     'availability': obj['data']['instock']
                 }
         response.meta['main_object']['variants'].append(new_type)
-        print(self.data_to_yield)
+        print(response.meta['main_object'])
         if response.meta['combs']:
             url_new = f"https://www.woolrich.com/remote/v1/product-attributes/{response.meta['itemid']}"
             temp_color = response.meta['combs'][0][0]
