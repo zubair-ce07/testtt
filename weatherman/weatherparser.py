@@ -10,7 +10,6 @@ class WeatherParser:
     def __init__(self, path):
 
         self.path = path
-
         self._weather_records = self._parse_weather_records()
 
     _PKT = 'PKT'
@@ -43,10 +42,10 @@ class WeatherParser:
 
         return True
 
-    def of(self, year=None, month=None):
+    def weather_records_of(self, year=None, month=None):
+
         if month:
-            return [x for x in self._weather_records if x.pkt.year == year
-                    if month if month == x.pkt.month]
+            return [x for x in self._weather_records if x.pkt.year == year and x.pkt.month == month]
         else:
             return [x for x in self._weather_records if x.pkt.year == year]
 
