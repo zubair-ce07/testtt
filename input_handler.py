@@ -29,10 +29,10 @@ class Parser:
         parsed_data = parser.parse_args()
         return parsed_data
 
-    def record_validity(self, data):
-        if data["Max TemperatureC"] == '' or \
-                data["Min TemperatureC"] == '' or \
-                data[" Mean Humidity"] == '':
+    def record_validity(self, single_record):
+        if single_record["Max TemperatureC"] == '' or \
+                single_record["Min TemperatureC"] == '' or \
+                single_record[" Mean Humidity"] == '':
             return False
 
     def data_extractor(self, directory_file):
@@ -46,7 +46,7 @@ class Parser:
 
                     if self.record_validity(records,records) == False:
                         continue
-
                     else:
                         compiled_records.append((RecordHolder(records)))
+
         return compiled_records

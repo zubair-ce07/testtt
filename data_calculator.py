@@ -20,14 +20,14 @@ class DataCalculator:
         total_max_temp = {}
         total_min_temp = {}
         total_avg_humidity = {}
-        iterator = 1
+        record_count = 1
         for entry in weather_files:
             if entry.date.year == date.year and \
                     entry.date.month == date.month:
-                total_max_temp[iterator] = entry.maximum_temp
-                total_min_temp[iterator] = entry.minimum_temp
-                total_avg_humidity[iterator] = entry.average_humidity
-                iterator += 1
+                total_max_temp[record_count] = entry.maximum_temp
+                total_min_temp[record_count] = entry.minimum_temp
+                total_avg_humidity[record_count] = entry.average_humidity
+                record_count += 1
         self.average_high_temp = mean(total_max_temp.values())
         self.average_min_temp = mean(total_min_temp.values())
         self.average_mean_humidity = mean(total_avg_humidity.values())

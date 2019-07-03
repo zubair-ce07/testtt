@@ -31,15 +31,15 @@ class ReportGenerator(DataCalculator):
 
     def generate_bonus_report(self, weather_files, date):
 
-        iterations = 0
+        row_count = 0
         for entry in weather_files:
             if entry.date.year == date.year and \
                     entry.date.month == date.month:
-                iterations += 1
+                row_count += 1
                 maximum = entry.maximum_temp
                 minimum = entry.minimum_temp
                 difference = maximum - minimum
-                print(iterations, " ", end='')
+                print(row_count, " ", end='')
                 for values in range(minimum):
                     print('\033[1;34m*\033[1;m', end='')
                 for values in range(difference):
