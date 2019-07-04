@@ -103,6 +103,7 @@ class AsicsSpider(scrapy.Spider):
             single_sku = {
                 sku.css('::attr(data-value)').get():
                     {
+                        'sku_id': f'{color} _ {self.size(sku)}',
                         'color': color,
                         'currency': currency,
                         'price': price,
