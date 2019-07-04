@@ -123,6 +123,7 @@ var Engine = (function(global) {
             document.getElementById('finished').className = 'hide'
             document.getElementById('lives').className = 'hide'
             document.getElementById('pause').textContent = 'Try Again'
+            document.getElementById('verdict').textContent = 'Game Over!'
             document.getElementById('verdict').className = 'show verdictOver'
             tryAgain = true
             pause = false;
@@ -151,6 +152,7 @@ var Engine = (function(global) {
             allEnemies = new Array(new Enemy(), new Enemy(), new Enemy(), 
                            new Enemy(), new Enemy(), new Enemy(), 
                            new Enemy())
+            playerList = []
             lives = 5
             finished = 0
             started = false
