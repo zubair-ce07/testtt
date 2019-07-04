@@ -13,16 +13,12 @@ class ProductsSpider(CrawlSpider):
     ]
     attr_url = "https://www.woolrich.com/remote/v1/product-attributes/"
     rules = (
-        Rule(
-            LinkExtractor(
-                restrict_css = ["#primary > ul > li", ".pagination-item--next"]
-            )
-        ),
+        Rule(LinkExtractor(restrict_css = ["#primary > ul > li", ".pagination-item--next"])),
         Rule(LinkExtractor(restrict_css = ".card-figure"), callback = "parse_item")
     )
 
     def parse_item(self, response):
-        categories = response.css(".jrb-product-view::attr(data-product-category)").get()
+        categories = response.css("a.breadcrumb-label::text").getall()
         item_id = response.css(".jrb-product-view::attr(data-entity-id)").get()
         attr_for_color = response.css(".form-field input.form-radio::attr(name)").get()
         attr_for_size = response.css(".product-size input.form-radio::attr(name)").get()
