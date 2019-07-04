@@ -1,17 +1,20 @@
 import scrapy
 from scrapy.spiders import CrawlSpider
-
+import json
 from asics_spider.items import ProductItem
 
 
 class AsicsSpider(CrawlSpider):
     name = 'asics_spider'
+    item = ProductItem()
 
     def start_requests(self):
+        self.item["skus"] = dict()
         urls = ['https://www.asics.com/us/en-us/']
-
+        # urls = ['https://www.asics.com/us/en-us/gel-cool-sleeveless-top/p/0020007977.605']
         for url in urls:
             yield scrapy.Request(url=url, callback=self.parse_category)
+            # yield scrapy.Request(url=url, callback=self.skus)
 
     def parse_category(self, response):
         categories_url = \
@@ -35,17 +38,18 @@ class AsicsSpider(CrawlSpider):
         current_price = self.get_price(response)
         gender = self.get_gender(response)
         product_id = self.get_product_id(response)
+        sku = self.skus(response)
 
-        item = ProductItem()
-        item["name"] = product_name
-        item["category"] = category
-        item["description"] = description
-        item["image_urls"] = images
-        item["previous_price"] = previous_price
-        item["price"] = current_price
-        item["gender"] = gender
-        item["product_id"] = product_id
-        yield item
+        self.item["name"] = product_name
+        self.item["category"] = category
+        self.item["description"] = description
+        self.item["image_urls"] = images
+        self.item["previous_price"] = previous_price
+        self.item["price"] = current_price
+        self.item["gender"] = gender
+        self.item["product_id"] = product_id
+        self.item["skus"] = sku
+        yield self.item
 
     def get_name(self, response):
         return response.xpath('//h1[@class="single-prod-title"]/text()').extract_first()
@@ -73,16 +77,41 @@ class AsicsSpider(CrawlSpider):
     def get_product_id(self, response):
         return response.xpath('//span[contains(@itemprop,"model")]//text()').extract_first()
 
-    def get_skus(self, response):
+    def skus(self, response):
+        sku_dict = dict()
+        self.item["request"] = list()
         products_urls = response.xpath('//div[@id="variant-choices"]//a/@href').getall()
         for urls in products_urls:
             url = response.urljoin(urls)
-            yield scrapy.Request(url=url, callback=self.skus)
+            self.item["request"].append(url)
+        for url in self.item["request"]:
+            scrapy.Request(url=url, callback=self.skus)
+        size_list = self.get_available_sizes(response)
+        if not size_list:
+            sku_dict.update([(self.get_color(response) + "_" + response.url.split('/')[-1].split('.')[-1], "Not any size available ")])
+        for size in size_list:
+            tmp = {
+                "Color": self.get_color(response),
+                "Price": self.get_price(response)
+            }
+            sku_dict.update([(self.get_color(response) + "_" + self.extract_size(size), tmp)])
+        return sku_dict
+        # return json.dumps(list(sku_dict.values()))
+        # return str(sku_dict)
 
-    def skus(self, response):
-        pass
 
     def get_color(self, response):
-        return response.xpath('//a[@class="colorVariant"]/img/@alt').get()
+        return response.xpath('//div[@id="colour-label"]//span[@class="color-label"]/text()').get()
 
+    def get_available_sizes(self, response):
+        form_selector = response.xpath('//form[@class="desktop-style"]')[0]
+        return form_selector.css('div.SizeOption.inStock::attr(data-value)').getall()
 
+    def extract_size(self, raw_string):
+        token = raw_string.split('.')[3:]
+        if len(token) > 1:
+            size = '.'.join(token)
+            return size
+        elif 'H' in token[0]:
+            return token[0].replace('H', '.5')
+        return token[0]
