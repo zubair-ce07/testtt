@@ -4,95 +4,43 @@ from datetime import datetime
 class CalculationsResults:
 
     def lowest_temp_in_year(self, weather_data):
-        try:
-            min_temp = int(weather_data[0].min_temperature)
-            min_temp_day = weather_data[0].pk
-        except:
-            min_temp = None
-            min_temp_day = None
-        for i in weather_data:
-            try:
-                if int(i.min_temperature) < min_temp or (not min_temp):
-                    min_temp = int(i.min_temperature)
-                    min_temp_day = i.pkt
-            except:
-                continue
-        return min_temp, self.to_date(min_temp_day)
+        min_temp_obj = min(weather_data.all_data_obj,
+                           key=lambda day: day.min_temperature if day.min_temperature is not None else 99999999)
+        date = datetime.strptime(min_temp_obj.pkt, '%Y-%m-%d')
+        return min_temp_obj.min_temperature, date.strftime("%d")+" "+date.strftime("%b")
 
     def highest_temp_in_year(self, weather_data):
-        try:
-            max_temp = int(weather_data[0].max_temperature)
-            max_temp_day = weather_data[0].pkt
-        except:
-            max_temp = None
-            max_temp_day = None
-        for i in weather_data:
-            try:
-                if int(i.max_temperature) > max_temp or (not max_temp):
-                    max_temp = int(i.max_temperature)
-                    max_temp_day = i.pkt
-            except:
-                continue
-        return max_temp, self.to_date(max_temp_day)
+        max_temp_obj = max(weather_data.all_data_obj,
+                           key=lambda day: day.max_temperature if day.min_temperature is not None else -99999999)
+        date = datetime.strptime(max_temp_obj.pkt, '%Y-%m-%d')
+        return max_temp_obj.max_temperature, date.strftime("%d") + " " + date.strftime("%b")
 
     def most_humid_day_of_year(self, weather_data):
-        try:
-            humidity_level = int(weather_data[0].mean_humidity)
-            most_humid_day = weather_data[0].pkt
-        except:
-            humidity_level = None
-            most_humid_day = None
-        for i in weather_data:
-            try:
-                if (int(i.mean_humidity) > humidity_level)\
-                        or(not humidity_level):
-                    humidity_level = int(i.mean_humidity)
-                    most_humid_day = i.pkt
-            except:
-                continue
-        return humidity_level, self.to_date(most_humid_day)
-
+        max_humidity_obj = max(weather_data.all_data_obj,
+                           key=lambda day: day.max_humidity if day.min_temperature is not None else -99999999)
+        date = datetime.strptime(max_humidity_obj.pkt, '%Y-%m-%d')
+        return max_humidity_obj.max_humidity, date.strftime("%d") + " " + date.strftime("%b")
     def avg_lowest_temp(self, weather_data):
-        sum_temp = 0
-        count = 0
-        for i in weather_data:
-            if i.min_temperature:
-                sum_temp += int(i.min_temperature)
-                count += 1
-            else:
-                continue
-        return sum_temp/count
+        sum_temp = sum(i.min_temperature for i in weather_data.all_data_obj)
+        length = len(filter(
+            lambda x: x.min_temperature is not None,
+            weather_data.all_data_obj
+        ))
+        return sum_temp/length
 
     def avg_highest_temp(self, weather_data):
-        count = 0
-        sum_temp = 0
-        for i in weather_data:
-            if i.max_temperature:
-                sum_temp += int(i.max_temperature)
-                count += 1
-            else:
-                continue
+        sum_temp = sum(i.max_temperature for i in weather_data.all_data_obj)
+        length = len(filter(
+            lambda x: x.max_temperature is not None,
+            weather_data.all_data_obj
+        ))
+        return sum_temp / length
 
-        return sum_temp / count
 
     def avg_mean_humidity(self, weather_data):
-        count = 0
-        sum_humidity = 0
-
-        for i in weather_data:
-            if i.mean_humidity:
-                sum_humidity += int(i.mean_humidity)
-                count += 1
-            else:
-                continue
-        return sum_humidity/count
-
-    def to_date(self, pkt):
-        if not pkt:
-            return None
-        pkt = pkt.split("-")
-        date_time_obj = datetime(int(pkt[0]),
-                                 int(pkt[1]), int(pkt[2]))
-        return \
-            date_time_obj.strftime("%b") +\
-            " " + date_time_obj.strftime("%Y")
+        sum_temp = sum(i.mean_humidity for i in weather_data.all_data_obj)
+        length = len(filter(
+            lambda x: x.mean_humidity is not None,
+            weather_data.all_data_obj
+        ))
+        return sum_temp / length

@@ -9,8 +9,7 @@ def extract_month_year(year_month):
     try:
         date_time_obj = datetime(
             int(year_month[0]), int(year_month[1]), 1)
-        month = date_time_obj.strftime("%b")
-        return month, year_month[0]
+        return date_time_obj.strftime("%b"), year_month[0]
     except ValueError:
         print("Invalid month or year")
         return None, None
