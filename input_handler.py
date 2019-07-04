@@ -27,11 +27,9 @@ class FileParser:
         for files in glob.glob(file_path):
             with open(files, "r") as single_file:
                 read_record = csv.DictReader(single_file)
-                for records in read_record:
 
-                    if self.record_validity(self, records) == False:
-                        continue
-                    else:
-                        compiled_records.append((RecordHolder(records)))
-
+                compiled_records += [RecordHolder(record) for 
+                record in read_record 
+                if self.record_validity(self, record) is True]
+                
         return compiled_records
