@@ -1,3 +1,3 @@
 from reportgenerator.reportresult import HighLowResult, AvgTemperatureResult
 from reportgenerator.reportprinter import ReportPrinter
-from reportgenerator.reportgenerator import ReportGenerator
+from reportgenerator.reportcalculator import ReportCalculator

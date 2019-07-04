@@ -1,52 +1,53 @@
 import argparse
 from datetime import datetime
 
-from reportgenerator import ReportGenerator
+from reportgenerator import ReportCalculator, ReportPrinter
 from weatherparser import WeatherParser
 
 
 def main():
-
     parser = argparse.ArgumentParser()
-    parser.add_argument('path')
+    parser.add_argument('path', type=str)
 
-    # the first argument will be used as the property name and
-    # rest of the positional arguments can be used in terminals
-    # as flags
-    parser.add_argument('-high_low_report', '-e', nargs=1, action='append')
-    parser.add_argument('-avg_report', '-a', nargs=1, action='append')
-    parser.add_argument('-dual_graph_report', '-c', nargs=1, action='append')
-    parser.add_argument('-single_graph_report', '-b', nargs=1, action='append')
+    parser.add_argument('-high_low_report', '-e', nargs=1, action='append',
+                        type=lambda s: datetime.strptime(s, '%Y'))
+
+    parser.add_argument('-avg_report', '-a', nargs=1, action='append',
+                        type=lambda s: datetime.strptime(s, '%Y/%m'))
+
+    parser.add_argument('-dual_graph_report', '-c', nargs=1, action='append',
+                        type=lambda s: datetime.strptime(s, '%Y/%m'))
+
+    parser.add_argument('-single_graph_report', '-b', nargs=1, action='append',
+                        type=lambda s: datetime.strptime(s, '%Y/%m'))
+
     args = parser.parse_args()
 
     dataset_path = args.path
     weather_parser = WeatherParser(dataset_path)
-    report_generator = ReportGenerator(weather_parser)
-
-    monthly_date_format = '%Y/%m'
+    report_calculator = ReportCalculator(weather_parser)
+    report_printer = ReportPrinter()
 
     if args.high_low_report:
         for arg in args.high_low_report:
-            input_date = datetime.strptime(arg[0], '%Y').date()
-            report_generator.high_low_temperature(year=input_date.year)
+            result = report_calculator.high_low_temperature(
+                weather_records=weather_parser.filtered_records(date=arg[0]))
+            report_printer.high_low_temperature_printer(result)
 
     if args.avg_report:
         for arg in args.avg_report:
-            input_date = datetime.strptime(arg[0], monthly_date_format).date()
-            report_generator.avg_temperature(year=input_date.year,
-                                             month=input_date.month)
+            result = report_calculator.avg_temperature(
+                weather_records=weather_parser.filtered_records(date=arg[0])
+            )
+            report_printer.avg_temperature_printer(result)
 
     if args.dual_graph_report:
         for arg in args.dual_graph_report:
-            input_date = datetime.strptime(arg[0], monthly_date_format).date()
-            report_generator.high_low_temperature_dual_graph(year=input_date.year,
-                                                             month=input_date.month)
+            report_printer.dual_graph_printer(weather_parser.filtered_records(date=arg[0]))
 
     if args.single_graph_report:
         for arg in args.single_graph_report:
-            input_date = datetime.strptime(arg[0], monthly_date_format).date()
-            report_generator.high_low_temperature_single_graph(year=input_date.year,
-                                                               month=input_date.month)
+            report_printer.single_graph_printer(weather_parser.filtered_records(date=arg[0]))
 
 
 if __name__ == '__main__':
