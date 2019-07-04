@@ -45,7 +45,6 @@ var Engine = (function(global) {
     container.id = 'container'
     finishedText.id = 'finished'
     lifeText.id = 'lives'
-    // top.id = 'top'
     footer.className = 'footer'
     footerText.className = 'footerText'
     headingText.textContent = "Frogger - The Game";
@@ -141,6 +140,7 @@ var Engine = (function(global) {
                            new Enemy(), new Enemy(), new Enemy(), 
                            new Enemy())
             lives = 5
+            finished = 0
             started = false
             tryAgain = false
             // tryAgain = false
