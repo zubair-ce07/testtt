@@ -4,7 +4,7 @@ import scrapy
 from scrapy.item import Item
 from scrapy.linkextractors import LinkExtractor
 from scrapy.selector import SelectorList
-from scrapy.spiders import CrawlSpider, Rule
+from scrapy.spiders import CrawlSpider, Rule, Request, Spider
 
 
 class Product(Item):
@@ -21,48 +21,37 @@ class Product(Item):
     requests_queue = scrapy.Field()
 
 
-class OnlySpider(CrawlSpider):
-    name = 'only'
-    allowed_domains = ['only.com']
-    start_urls = ['https://www.only.com/fr/fr/home']
+class OnlyParser(Spider):
+    name = 'onlyparser'
 
     default_brand = 'Only'
-    default_gender = 'unisex'
     default_size = 'One_Size'
 
-    gender_terms = {
+    default_gender = 'unisex'
+    gender_map = {
         'kids': 'kids',
         'femmes': 'women',
     }
 
-    category_css = '.category-navigation__group--level-2 .category-navigation__' \
-                   'item:not(.category-navigation__item--see-all)'
-    pagination_css = '.paging-controls__page-numbers-boxes'
-    product_css = '.plp__products__item .product-tile__image'
-
-    rules = (
-        Rule(LinkExtractor(restrict_css=category_css)),
-        Rule(LinkExtractor(restrict_css=pagination_css, attrs='data-href')),
-        Rule(LinkExtractor(restrict_css=product_css), callback='parse_item'),
-    )
-
-    def parse_item(self, response):
+    def parse(self, response):
         item = Product()
+        raw_item = self.extract_raw_item(response)
+
         item['url'] = response.url
         item['brand'] = self.extract_brand_name(response)
         item['name'] = self.extract_item_name(response)
         item['retailer_sku'] = self.extract_retailer_sku(response)
         item['care'] = self.extract_care(response)
-        item['category'] = self.extract_category(response)
-        item['gender'] = self.extract_gender(response)
-        item['description'] = self.extract_description(response)
-        item['requests_queue'] = self.construct_sku_requests(response)
-        item['image_urls'] = self.extract_image_urls(response)
+        item['category'] = self.extract_category(raw_item)
+        item['gender'] = self.extract_gender(raw_item)
+        item['description'] = self.extract_description(raw_item)
+        item['requests_queue'] = self.construct_sku_requests(raw_item)
+        item['image_urls'] = self.extract_image_urls(raw_item)
         item['skus'] = []
 
         return self.get_item_or_next_request(item)
 
-    def parse_colour(self, response):
+    def parse_sku(self, response):
         item = response.meta['item']
         item['skus'] += self.extract_skus(response)
 
@@ -72,20 +61,18 @@ class OnlySpider(CrawlSpider):
         pricing = {}
         price_css = '.value__price--discounted ::text, .value__price ::text'
         previous_price_css = '.nonsticky-price__container--visible .value__price--discounted ::text'
+        currency_css = '[property="og:price:currency"] ::attr(content)'
 
         pricing['price'] = clean(response.css(price_css))[0]
         pricing['previous_prices'] = clean(response.css(previous_price_css))
-
-        raw_json = self.extract_json(response)
-        pricing['currency'] = raw_json['@graph'][0]['offers']['priceCurrency']
+        pricing['currency'] = clean(response.css(currency_css))[0]
 
         return pricing
 
-    def extract_gender(self, response):
-
-        for gender in self.gender_terms.keys():
-            if gender in self.extract_json(response)['@graph'][0]['description'].lower():
-                return self.gender_terms[gender]
+    def extract_gender(self, raw_item):
+        for gender in self.gender_map.keys():
+            if gender in raw_item['@graph'][0]['description'].lower():
+                return self.gender_map[gender]
 
         return self.default_gender
 
@@ -100,9 +87,8 @@ class OnlySpider(CrawlSpider):
         size_css = '.size .swatch__item--selected .swatch__item-inner-text__text-container ::text'
         return clean(response.css(size_css))
 
-    def extract_image_urls(self, response):
-        raw_json = self.extract_json(response)
-        return [item['image'] for item in raw_json['@graph'] if item.get('image')]
+    def extract_image_urls(self, raw_item):
+        return [item['image'] for item in raw_item['@graph'] if item.get('image')]
 
     def extract_item_name(self, response):
         return clean(response.css('.product-name--visible ::text'))[0]
@@ -118,15 +104,14 @@ class OnlySpider(CrawlSpider):
               ':not(.pdp-description__text__value--ean) ::text'
         return clean(response.css(css))
 
-    def extract_json(self, response):
+    def extract_raw_item(self, response):
         return json.loads(clean(response.css('script[class="js-structuredData"]::text'))[0])
 
-    def extract_category(self, response):
-        raw_json = self.extract_json(response)
-        return clean(raw_json['@graph'][0]['category'])
+    def extract_category(self, raw_item):
+        return clean(raw_item['@graph'][0]['category'])
 
-    def extract_description(self, response):
-        raw_description = clean(self.extract_json(response)['@graph'][0]['description'])
+    def extract_description(self, raw_item):
+        raw_description = clean(raw_item['@graph'][0]['description'])
         return [desc for sublist in raw_description for desc in sublist.split('.') if desc]
 
     def get_item_or_next_request(self, item):
@@ -139,9 +124,8 @@ class OnlySpider(CrawlSpider):
 
         return request
 
-    def construct_sku_requests(self, response):
-        raw_json = self.extract_json(response)
-        return [response.follow(item['url'], callback=self.parse_colour) for item in raw_json['@graph']]
+    def construct_sku_requests(self, raw_item):
+        return [Request(item['url'], callback=self.parse_sku) for item in raw_item['@graph']]
 
     def extract_skus(self, response):
         skus = []
@@ -151,17 +135,8 @@ class OnlySpider(CrawlSpider):
         if colour:
             common_sku['colour'] = colour[0]
 
-        size = self.extract_size(response)
-        size = size[0] if size else self.default_size
-
+        size = (self.extract_size(response) or [self.default_size])[0]
         lengths = self.extract_lengths(response)
-
-        if not lengths:
-            common_sku['size'] = size
-            common_sku['sku_id'] = f'{size}_{colour[0]}' if colour else size
-            skus.append(common_sku)
-
-            return skus
 
         for length in lengths:
             sku = common_sku.copy()
@@ -170,6 +145,11 @@ class OnlySpider(CrawlSpider):
             sku['sku_id'] = f'{size_length}_{colour[0]}' if colour else size_length
 
             skus.append(sku)
+
+        if not skus:
+            common_sku['size'] = size
+            common_sku['sku_id'] = f'{size}_{colour[0]}' if colour else size
+            skus.append(common_sku)
 
         return skus
 
@@ -181,3 +161,21 @@ def clean(raw_item):
         return [r.strip() for r in raw_item.getall() if r.strip()]
 
     return [r.strip() for r in raw_item if r.strip()]
+
+
+class OnlyCrawler(CrawlSpider, OnlyParser):
+    name = 'only'
+    allowed_domains = ['only.com']
+    start_urls = ['https://www.only.com/fr/fr/home']
+
+    category_css = '.category-navigation__item:not(.category-navigation__item--see-all)'
+    pagination_css = '.paging-controls__page-numbers-boxes'
+    product_css = '.plp__products__item .product-tile__image'
+
+    parser = OnlyParser()
+
+    rules = (
+        Rule(LinkExtractor(restrict_css=(category_css, pagination_css),
+                           attrs=('data-href', 'href'))),
+        Rule(LinkExtractor(restrict_css=product_css), callback=parser.parse),
+    )
