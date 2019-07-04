@@ -22,25 +22,23 @@ class CeaItem(scrapy.Item):
 
 
 class CeaSpider(scrapy.Spider):
-    name = "cea"
+    name = 'cea'
     allowed_domains = ['cea.com.br']
     start_urls = [
         'https://www.cea.com.br',
     ]
 
     def parse(self, response):
-        home_page = self.get_home_page_data(response)
+        major_categories_url = self.get_home_page_data(response)
+        yield from [response.follow(url=url, callback=self.generate_page_links)
+                    for url in major_categories_url]
 
-        for category in home_page:
-            category_url = response.urljoin(category)
-            yield scrapy.Request(url=category_url, callback=self.generate_page_requests)
-
-    def generate_page_requests(self, response):
+    def generate_page_links(self, response):
         raw_json_url = 'https://www.cea.com.br/' + \
-                       re.findall("\).load\(\'(.+?)\' +", response.body.decode("utf-8"), re.S)[0]
+                       re.findall("\).load\(\'(.+?)\' +", response.body.decode('utf-8'), re.S)[0]
 
         for page_number in range(1, 100):
-            if scrapy.Request(url=raw_json_url + str(page_number), callback=self.extract_products):
+            if response.folow(url=raw_json_url + str(page_number), callback=self.extract_products):
                 break
 
     def extract_products(self, response):
@@ -49,8 +47,8 @@ class CeaSpider(scrapy.Spider):
             return 0
 
         page_products_url = response.css('.product-details_name ::attr(href)').getall()
-        for product_url in page_products_url:
-            yield scrapy.Request(url=product_url, callback=self.parse_item)
+        yield from [response.follow(url=url, callback=self.parse_item)
+                    for url in page_products_url]
 
     def parse_item(self, response):
 
@@ -59,7 +57,7 @@ class CeaSpider(scrapy.Spider):
         item['name'] = self.product_name(response)
         item['category'] = self.product_category(response)
         item['url'] = self.product_url(response)
-        item['brand'] = "C&A"
+        item['brand'] = self.product_brand()
         item['description'] = self.product_description(response)
         item['care'] = []
         item['color'] = self.product_color(response)
@@ -68,12 +66,15 @@ class CeaSpider(scrapy.Spider):
 
         yield item
 
+    def product_brand(self):
+        return 'C&A'
+
     def retailer_sku(self, response):
-        raw_json = re.findall("var skuJson_0 = (.+?);", response.body.decode("utf-8"), re.S)
+        raw_json = re.findall("var skuJson_0 = (.+?);", response.body.decode('utf-8'), re.S)
         return json.loads(raw_json[0]).get('productId')
 
     def product_skus(self, response):
-        return re.findall("var skuJson_0 =(.+?);\n", response.body.decode("utf-8"), re.S)
+        return re.findall("var skuJson_0 =(.+?);\n", response.body.decode('utf-8'), re.S)
 
     def product_color(self, response):
         return response.url.split('-')[-1].split('/')[0]
@@ -97,19 +98,19 @@ class CeaSpider(scrapy.Spider):
 
     def get_home_page_data(self, response):
 
-        for category in response.css('.header_submenu_item'):
-            if category.css('::text').get()[1:] in 'er tudo':
-                yield category.css('::attr(href)').get()
+        yield from [category.css('::attr(href)').get()
+                    for category in response.css('.header_submenu_item')
+                    if category.css('::text').get()[1:] in 'er tudo']
 
     def get_last_page(self, response):
         return int(response.css('.navigation-pages_link--last ::text').get()) + 1
 
     def images_url(self, response):
-        raw_json = re.findall("var skuJson_0 = (.+?);", response.body.decode("utf-8"), re.S)
+        raw_json = re.findall("var skuJson_0 = (.+?);", response.body.decode('utf-8'), re.S)
         product_id = json.loads(raw_json[0]).get('productId')
         raw_images_url = f'https://www.cea.com.br/api/catalog_system/pub/products/search?fq=' \
             f'productId:{product_id}&sc=1'
-        images_id = yield scrapy.Request(url=raw_images_url, callback=self.get_imagesid)
+        images_id = yield response.follow(url=raw_images_url, callback=self.get_imagesid)
 
         images_url = []
         for id in images_id:
