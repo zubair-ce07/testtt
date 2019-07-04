@@ -87,11 +87,11 @@ class AsicsSpider(CrawlSpider):
         if not size_list:
             sku_dict.update([(self.get_color(response) + "_" + response.url.split('/')[-1].split('.')[-1], "Not any size available ")])
         for size in size_list:
-            tmp = {
+            sku_data = {
                 "Color": self.get_color(response),
                 "Price": self.get_price(response)
             }
-            sku_dict.update([(self.get_color(response) + "_" + self.extract_size(size), tmp)])
+            sku_dict.update([(self.get_color(response) + "_" + self.extract_size(size), sku_data)])
         return sku_dict
 
     def get_color(self, response):
