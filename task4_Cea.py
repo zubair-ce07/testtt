@@ -116,3 +116,4 @@ class CeaSpider(scrapy.Spider):
             images_url.append(f'https://cea.vteximg.com.br/arquivos/ids/{id}.jpg')
 
         return images_url
+
