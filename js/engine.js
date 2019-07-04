@@ -26,33 +26,37 @@ var Engine = (function(global) {
         canvas = doc.createElement('canvas'),
         ctx = canvas.getContext('2d'),
         lastTime,
-        h1 = doc.createElement("h1"),
+        headingText = doc.createElement("h1"),
+        verdictText = doc.createElement("h1"),
         footer = doc.createElement("div"),
         footerText = document.createTextNode("By: Muhammad Abdullah Zafar - Arbisoft"),
         finishedText = doc.createElement('h3'),
-        deathsText = doc.createElement('h3'),
-        top = doc.createElement('h3'),
+        lifeText = doc.createElement('h3'),
+        // top = doc.createElement('h3'),
         button = doc.createElement('button')
 
     canvas.width = 505;
     canvas.height = 606;
-    h1.id = 'heading'
+    headingText.id = 'heading'
+    verdictText.id = 'verdict'
+    verdictText.className = 'hide'
     left.id = 'left'
     right.id = 'right'
     container.id = 'container'
     finishedText.id = 'finished'
-    deathsText.id = 'deaths'
-    top.id = 'top'
+    lifeText.id = 'lives'
+    // top.id = 'top'
     footer.className = 'footer'
     footerText.className = 'footerText'
-    h1.textContent = "Frogger - The Game";
+    headingText.textContent = "Frogger - The Game";
+    verdictText.textContent = "GAME OVER!";
     button.textContent = "Start";
     button.className = "btn btn-primary";
     button.id = "pause";
     finishedText.textContent = `Finished: ${finished}`;
-    deathsText.textContent = `Deaths: ${deaths}`;
-    top.textContent = `Top Score: ${topScore}`;
-    doc.body.appendChild(h1);
+    lifeText.textContent = `Lives: ${lives}`;
+    // top.textContent = `Top Score: ${topScore}`;
+    doc.body.appendChild(headingText);
     doc.body.appendChild(container)
     container.appendChild(left)
     container.appendChild(right)
@@ -60,8 +64,9 @@ var Engine = (function(global) {
     footer.appendChild(footerText)
     doc.body.appendChild(footer);
     right.appendChild(finishedText);
-    right.appendChild(deathsText);
-    right.appendChild(top);
+    right.appendChild(lifeText);
+    right.appendChild(verdictText);
+    // right.appendChild(top);
     right.appendChild(button);
     
 
@@ -115,11 +120,31 @@ var Engine = (function(global) {
      * on the entities themselves within your app.js file).
      */
     function update(dt) {
-        if(!pause && started){
-            // console.log('in')
+        if(lives < 1) {
+            document.getElementById('finished').className = 'hide'
+            document.getElementById('lives').className = 'hide'
+            document.getElementById('pause').textContent = 'Try Again'
+            document.getElementById('verdict').className = 'show verdictOver'
+            tryAgain = true
+            pause = false;
+            started = false;
+        }
+
+        // console.log(pause, started, tryAgain)
+        if(!pause && started && !tryAgain){
             updateEntities(dt);
         }
-        // checkCollisions();
+        
+        if (tryAgain) {
+            player = new Player();
+            allEnemies = new Array(new Enemy(), new Enemy(), new Enemy(), 
+                           new Enemy(), new Enemy(), new Enemy(), 
+                           new Enemy())
+            lives = 5
+            started = false
+            tryAgain = false
+            // tryAgain = false
+        }
     }
 
     /* This is called by the update function and loops through all of the

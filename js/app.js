@@ -2,8 +2,8 @@
 let tileWidth = 101;
 let tileHeight = 85;
 var finished = 0;
-var deaths = 0;
-var topScore = 0;
+var lives = 5;
+var tryAgain = false;
 var pause = false;
 var started = false;
 
@@ -79,13 +79,13 @@ Player.prototype.update = function(key_pressed) {
            between(this.y, allEnemies[i].y - 51, allEnemies[i].y + 51)) {
             this.x = tileWidth*2;
             this.y = tileHeight*5 - 30
-            deaths += 1;
+            lives -= 1;
             break;
         }
     }
 
     document.getElementById("finished").innerHTML = `Finished: ${finished}`;
-    document.getElementById("deaths").innerHTML = `Deaths: ${deaths}`;
+    document.getElementById("lives").innerHTML = `Lives: ${lives}`;
 };
 
 Player.prototype.render = function() {
@@ -125,6 +125,7 @@ window.onload = () => {
     var startID = setTimeout(() => {
                 
     }, 2147483647);
+
     document.getElementById("pause").addEventListener("click", () => {
         if (started){
             pause = !pause
@@ -136,11 +137,14 @@ window.onload = () => {
                 
             }, 2147483647);
             document.getElementById("pause").textContent = "Resume";
-        } else if (!started) {
+        } else if (!started && !tryAgain) {
             console.log ('Started')
             started = true
             clearTimeout(startID)
             document.getElementById("pause").textContent = "Pause";
+            document.getElementById('finished').className = 'show'
+            document.getElementById('lives').className = 'show'
+            document.getElementById('verdict').className = 'hide'
         } else {
             console.log ('Resumed')
             clearTimeout(pauseID);
