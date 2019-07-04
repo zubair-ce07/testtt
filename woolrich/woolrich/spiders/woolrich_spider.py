@@ -1,3 +1,4 @@
+import re
 import time
 import json
 import scrapy
@@ -36,19 +37,24 @@ class ProductsSpider(CrawlSpider):
                                         " span.form-option-variant::text")).getall()
         
         gender = "Male" if "Men" in categories else "Female" if "Women" in categories else "Unisex"
-        variants = []
+        price = response.css(".price.price--withoutTax.bfx-price::text").get()
+        separated_price = re.split(r'([0-9]*[.][0-9]*)', price)
+        variants = {}
         item = {
-            'sku': response.css(".parent-sku::text").get(),
-            'name': response.css(".productView-title::text").get(),
+            'retailer_sku': response.css(".parent-sku::text").get(),
+            'lang': response.css("html::attr(lang)").get(),
+            'gender': gender,
+            'category': categories,
             'url': response.url,
             'date': time.time(),
-            'description': response.css("#details-content::text").get(),
-            'categories': categories,
-            'price': response.css(".price.price--withoutTax.bfx-price::text").get(),
-            'gender': gender,
-            'image-urls': response.css("#zoom-modal img::attr(src)").getall(),
-            'id': item_id,
-            'variants': variants
+            'market': response.css(".navPages-item--location img::attr(alt)").get(),
+            'name': response.css(".productView-title::text").get(),
+            'description': response.css("#details-content::text").getall(),
+            'care': response.css("ul#features-content li::text").getall(),
+            'image_urls': response.css("#zoom-modal img::attr(src)").getall(),
+            'skus': variants,
+            'price': float(separated_price[1]),
+            'currency': separated_price[0]
         }
 
         sku_url = f"{self.attr_url}{item_id}"
@@ -87,14 +93,25 @@ class ProductsSpider(CrawlSpider):
     
     def parse_skus(self, response):
         obj = json.loads(response.text)
+        price = obj['data']['price']['without_tax']['formatted']
+        price_separated = re.split(r'([0-9]*[.][0-9]*)', price)
+        if 'non_sale_price_without_tax' in obj['data']['price']:
+            previous_price = obj['data']['price']['non_sale_price_without_tax']['formatted']
+            previous_price_separated = re.split(r'([0-9]*[.][0-9]*)', previous_price)
+        else:
+            previous_price = "Not available"
         new_variant = {
-                    'sku': obj['data']['sku'],
-                    'price': obj['data']['price']['without_tax']['formatted'],
-                    'color': response.meta['color'],
-                    'size': response.meta['size'],
-                    'availability': obj['data']['instock']
+                    obj['data']['sku']: {
+                        'price': float(price_separated[1]),
+                        'currency': price_separated[0],
+                        'previous_prices': float(previous_price_separated[1]),
+                        'color': response.meta['color'],
+                        'size': response.meta['size'],
+                        'availability': obj['data']['instock']
+                    }
+                    
                 }
-        response.meta['item']['variants'].append(new_variant)
+        response.meta['item']['skus'].update(new_variant)
         if response.meta['pairs']:
             sku_url = f"{self.attr_url}{response.meta['item_id']}"
             temp_color = response.meta['pairs'][0][0]
