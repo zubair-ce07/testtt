@@ -1,6 +1,5 @@
 import scrapy
 from scrapy.spiders import CrawlSpider
-import json
 from asics_spider.items import ProductItem
 
 
@@ -11,10 +10,8 @@ class AsicsSpider(CrawlSpider):
     def start_requests(self):
         self.item["skus"] = dict()
         urls = ['https://www.asics.com/us/en-us/']
-        # urls = ['https://www.asics.com/us/en-us/gel-cool-sleeveless-top/p/0020007977.605']
         for url in urls:
             yield scrapy.Request(url=url, callback=self.parse_category)
-            # yield scrapy.Request(url=url, callback=self.skus)
 
     def parse_category(self, response):
         categories_url = \
@@ -38,7 +35,7 @@ class AsicsSpider(CrawlSpider):
         current_price = self.get_price(response)
         gender = self.get_gender(response)
         product_id = self.get_product_id(response)
-        sku = self.skus(response)
+        product_sku = self.get_product_skus(response)
 
         self.item["name"] = product_name
         self.item["category"] = category
@@ -48,7 +45,7 @@ class AsicsSpider(CrawlSpider):
         self.item["price"] = current_price
         self.item["gender"] = gender
         self.item["product_id"] = product_id
-        self.item["skus"] = sku
+        self.item["skus"] = product_sku
         yield self.item
 
     def get_name(self, response):
@@ -77,7 +74,7 @@ class AsicsSpider(CrawlSpider):
     def get_product_id(self, response):
         return response.xpath('//span[contains(@itemprop,"model")]//text()').extract_first()
 
-    def skus(self, response):
+    def get_product_skus(self, response):
         sku_dict = dict()
         self.item["request"] = list()
         products_urls = response.xpath('//div[@id="variant-choices"]//a/@href').getall()
@@ -85,7 +82,7 @@ class AsicsSpider(CrawlSpider):
             url = response.urljoin(urls)
             self.item["request"].append(url)
         for url in self.item["request"]:
-            scrapy.Request(url=url, callback=self.skus)
+            scrapy.Request(url=url, callback=self.get_product_skus)
         size_list = self.get_available_sizes(response)
         if not size_list:
             sku_dict.update([(self.get_color(response) + "_" + response.url.split('/')[-1].split('.')[-1], "Not any size available ")])
@@ -96,9 +93,6 @@ class AsicsSpider(CrawlSpider):
             }
             sku_dict.update([(self.get_color(response) + "_" + self.extract_size(size), tmp)])
         return sku_dict
-        # return json.dumps(list(sku_dict.values()))
-        # return str(sku_dict)
-
 
     def get_color(self, response):
         return response.xpath('//div[@id="colour-label"]//span[@class="color-label"]/text()').get()
@@ -110,8 +104,8 @@ class AsicsSpider(CrawlSpider):
     def extract_size(self, raw_string):
         token = raw_string.split('.')[3:]
         if len(token) > 1:
-            size = '.'.join(token)
-            return size
+            product_size = '.'.join(token)
+            return product_size
         elif 'H' in token[0]:
             return token[0].replace('H', '.5')
         return token[0]
