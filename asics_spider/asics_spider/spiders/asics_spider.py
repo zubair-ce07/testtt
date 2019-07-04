@@ -73,8 +73,16 @@ class AsicsSpider(CrawlSpider):
     def get_product_id(self, response):
         return response.xpath('//span[contains(@itemprop,"model")]//text()').extract_first()
 
+    def get_skus(self, response):
+        products_urls = response.xpath('//div[@id="variant-choices"]//a/@href').getall()
+        for urls in products_urls:
+            url = response.urljoin(urls)
+            yield scrapy.Request(url=url, callback=self.skus)
+
     def skus(self, response):
         pass
 
+    def get_color(self, response):
+        return response.xpath('//a[@class="colorVariant"]/img/@alt').get()
 
 
