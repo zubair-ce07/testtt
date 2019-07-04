@@ -6,6 +6,7 @@ from asics_spider.items import ProductItem
 class AsicsSpider(CrawlSpider):
     name = 'asics_spider'
     item = ProductItem()
+    allowed_domains = ["asics.com"]
 
     def start_requests(self):
         self.item["skus"] = dict()
