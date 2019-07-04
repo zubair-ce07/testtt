@@ -19,7 +19,30 @@ body {
     color: rgb(60, 211, 18);
 }
 
-#deaths {
+
+.verdictOver {
+    margin: 0 auto;
+    font-family: 'Permanent Marker', cursive;
+    font-size: 55px;
+    color: rgb(211, 40, 18);
+}
+
+.verdictWon {
+    margin: 0 auto;
+    font-family: 'Permanent Marker', cursive;
+    font-size: 55px;
+    color: rgb(60, 211, 18);
+}
+
+.hide {
+    visibility: hidden;
+}
+
+.show {
+    visibility: visible;
+}
+
+#lives {
     margin: 0 auto;
     font-family: 'Permanent Marker', cursive;
     font-size: 35px;
