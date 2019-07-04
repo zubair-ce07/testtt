@@ -129,7 +129,19 @@ var Engine = (function(global) {
             started = false;
         }
 
-        // console.log(pause, started, tryAgain)
+        if(playerList.length > 4) {
+            console.log('Length to much')
+            document.getElementById('finished').className = 'hide'
+            document.getElementById('lives').className = 'hide'
+            document.getElementById('pause').textContent = 'Play Again'
+            document.getElementById('verdict').textContent = 'Well Done!'
+            document.getElementById('verdict').className = 'show verdictWon'
+            tryAgain = true
+            pause = false;
+            started = false;
+            playerList = []
+        }
+
         if(!pause && started && !tryAgain){
             updateEntities(dt);
         }
@@ -143,7 +155,6 @@ var Engine = (function(global) {
             finished = 0
             started = false
             tryAgain = false
-            // tryAgain = false
         }
     }
 

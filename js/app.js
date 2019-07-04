@@ -52,10 +52,17 @@ var Player = function() {
 Player.prototype.update = function(key_pressed) {
     if(key_pressed == 'up') {
         this.y -= tileHeight
+        for(let i = 0; i<playerList.length; i++){
+            current = playerList[i]
+            if(this.x == current.x && this.y == current.y){
+                this.y += tileHeight;
+                break;
+            }
+        }
         if(this.y <= 0){
-            this.x = tileWidth*2;
-            this.y = tileHeight*5 - 30
             finished += 1
+            playerList.push(player)
+            player = new Player()
         }
     } else if (key_pressed == 'down') {
         this.y += tileHeight
@@ -90,6 +97,10 @@ Player.prototype.update = function(key_pressed) {
 
 Player.prototype.render = function() {
     ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
+    for(let i = 0; i<playerList.length; i++){
+        current = playerList[i]
+        ctx.drawImage(Resources.get(current.sprite), current.x, current.y);
+    }
 };
 
 Player.prototype.handleInput = function(key_pressed) {
@@ -103,6 +114,7 @@ var allEnemies = new Array(new Enemy(), new Enemy(), new Enemy(),
                            new Enemy(), new Enemy(), new Enemy(), 
                            new Enemy())
 var player = new Player();
+var playerList = []
 
 
 // This listens for key presses and sends the keys to your
