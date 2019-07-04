@@ -1,14 +1,10 @@
 
 def minimum_value(weather_data, key):
-    min_temp_obj = min(weather_data,
-                       key=key)
-    return min_temp_obj
+    return min(weather_data, key=key)
 
 
 def maximum_value(weather_data, key):
-    max_temp_obj = max(weather_data,
-                       key=key)
-    return max_temp_obj
+    return max(weather_data, key=key)
 
 
 def mean_value(weather_data, key):

@@ -23,20 +23,17 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.e:
-        weather_data = WeatherDataExtractor(args.e)
-        weather_data.read_all_files()
+        weather_data = WeatherDataExtractor(year=args.e)
         report = ReportGenerator(weather_data)
         report.year_report()
     if args.a:
         month, year = extract_month_year(args.a)
         weather_data = WeatherDataExtractor(year, month)
-        weather_data.read_all_files()
         report = ReportGenerator(weather_data)
         report.month_report()
     if args.c:
         month, year = extract_month_year(args.c)
-        weather_data = WeatherDataExtractor(year, month)
-        weather_data.read_all_files()
+        weather_data = WeatherDataExtractor(year=year, month=month)
         report = ReportGenerator(weather_data)
         report.draw_bar_charts()
         report.draw_single_chart()
