@@ -1,37 +1,45 @@
 from datetime import datetime
-from CalculationsResults import CalculationsResults
+import Calculator
 
 
 class ReportGenerator:
-    calculations_object = CalculationsResults()
 
     def __init__(self, weather_data_obj):
         self.weather_data_obj = weather_data_obj
 
     def year_report(self):
-        high_temp, high_temp_day = self.calculations_object.highest_temp_in_year(
-            self.weather_data_obj
+        high_temp = Calculator.maximum_value(
+            (i for i in self.weather_data_obj.all_data_obj if i.max_temperature),
+            key=lambda j: j.max_temperature
         )
-        low_temp, low_temp_day = self.calculations_object.lowest_temp_in_year(
-            self.weather_data_obj
+        low_temp = Calculator.minimum_value(
+            (i for i in self.weather_data_obj.all_data_obj if i.min_temperature),
+            key=lambda j: j.min_temperature
         )
-        humidity, humid_day = self.calculations_object.most_humid_day_of_year(
-            self.weather_data_obj
+        humidity = Calculator.maximum_value(
+            (i for i in self.weather_data_obj.all_data_obj if i.max_humidity),
+            key=lambda j: j.max_humidity
         )
-        print("Highest: "+str(high_temp)+"C on "+high_temp_day)
-        print("Lowest: "+str(low_temp)+"C on "+low_temp_day)
-        print("Humidity: "+str(humidity)+"% on "+humid_day)
+        print("Highest: "+str(high_temp.max_temperature)+"C on " +
+              datetime.strptime(high_temp.pkt, '%Y-%m-%d').strftime("%d %b"))
+        print("Lowest: "+str(low_temp.min_temperature)+"C on " +
+              datetime.strptime(low_temp.pkt, '%Y-%m-%d').strftime("%d %b"))
+        print("Humidity: "+str(humidity.max_humidity)+"% on " +
+              datetime.strptime(humidity.pkt, '%Y-%m-%d').strftime("%d %b"))
         print("\n")
 
     def month_report(self):
-        high_temp = self.calculations_object.avg_highest_temp(
-            self.weather_data_obj
+        high_temp = Calculator.mean_value(
+            self.weather_data_obj.all_data_obj,
+            key=lambda j: j.max_temperature
         )
-        low_temp = self.calculations_object.avg_lowest_temp(
-            self.weather_data_obj
+        low_temp = Calculator.mean_value(
+            self.weather_data_obj.all_data_obj,
+            key=lambda j: j.min_temperature
         )
-        humidity = self.calculations_object.avg_mean_humidity(
-            self.weather_data_obj
+        humidity = Calculator.mean_value(
+            self.weather_data_obj.all_data_obj,
+            key=lambda j: j.mean_humidity
         )
         print("Highest Average: "+str(high_temp)+"C")
         print("Lowest Average: "+str(low_temp)+"C")
@@ -59,7 +67,6 @@ class ReportGenerator:
                 lowest = "\033[0;31;50m"+"+" * i.min_temperature
                 print("\033[0;30;50m"+day+" "+lowest+highest+"\033[0;30;50m" +
                       str(i.min_temperature)+"C"+" "+str(i.max_temperature)+"C")
-
         print("\n")
 
     def change_weather_data(self, weather_data_obj):
