@@ -1,3 +1,8 @@
+@font-face {
+    font-family: Permanent Marker;
+    src: url(PermanentMarker-Regular.ttf);
+}
+
 body {
     text-align: center;
     background-color: lightgrey;
