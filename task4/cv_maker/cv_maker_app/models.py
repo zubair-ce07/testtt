@@ -20,11 +20,16 @@ class BasicInformation(models.Model):
                    (4, "Advance"),
                    (5, "Expert")
                    )
-    skill1 = models.CharField(max_length=30, null=True, choices=skill_level)
-    skill2 = models.CharField(max_length=30, null=True, choices=skill_level)
-    skill3 = models.CharField(max_length=30, null=True, choices=skill_level)
-    skill4 = models.CharField(max_length=30, null=True, choices=skill_level)
-    skill5 = models.CharField(max_length=30, null=True, choices=skill_level)
+    skill1 = models.CharField(max_length=30, null=True)
+    skill2 = models.CharField(max_length=30, null=True)
+    skill3 = models.CharField(max_length=30, null=True)
+    skill4 = models.CharField(max_length=30, null=True)
+    skill5 = models.CharField(max_length=30, null=True)
+    skill1_level = models.CharField(max_length=30, null=True, choices=skill_level)
+    skill2_level = models.CharField(max_length=30, null=True, choices=skill_level)
+    skill3_level = models.CharField(max_length=30, null=True, choices=skill_level)
+    skill4_level = models.CharField(max_length=30, null=True, choices=skill_level)
+    skill5_level = models.CharField(max_length=30, null=True, choices=skill_level)
     hobby1 = models.CharField(max_length=30, null=True)
     hobby2 = models.CharField(max_length=30, null=True)
     hobby3 = models.CharField(max_length=30, null=True)
@@ -66,4 +71,6 @@ import datetime
 from cv_maker_app.models import Experience
 from cv_maker_app.models import BasicInformation
 from cv_maker_app.models import Education
+
+yus = BasicInformation(user_name="ich_bin_yusra", name="Yusra Khalid", date_of_birth=datetime.datetime(1998,11,2),contact_number=3229773430, address="p-56 st no 1, fsd", email="ykhalid.bese16seecs@seecs.edu.pk",skill1="python",skill2="management",skill1_level=1,skill2_level=4, hobby1="Gaming",reference1="facebook.com/yusrakhalid.35")
 '''

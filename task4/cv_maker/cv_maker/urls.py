@@ -22,5 +22,6 @@ urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^basic_information/', views.basic_information, name='basic_information'),
     url(r'^experience/', views.experience, name='experience'),
-    url(r'^education/', views.education, name='education')
+    url(r'^education/', views.education, name='education'),
+    url(r'^submit_basic_information/', views.submit_basic_information, name='submit_basic_information'),
 ]
