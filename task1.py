@@ -23,118 +23,124 @@ class WeatherReportParse:
 
         return self._instance
 
-    def required_files(self, path, date_object):
+    def get_required_files(self, path, date_object):
         if isinstance(date_object, datetime):
-            files_names = glob.glob("{}/Murree_weather_{}.txt".format(
-                path, date_object.strftime("%Y_%b")))
-        else:
-            files_names = glob.glob("{}/Murree_weather_{}_*.txt".format(
-                path, date_object))
+            return glob.glob(f"{path}/Murree_weather_"
+                             f"{date_object.strftime('%Y_%b')}.txt")
 
-        return [x for x in files_names]
+        return glob.glob(f"{path}/Murree_weather_{date_object}_*.txt")
 
-    def read_files_record(self, weather_files):
-        clean_record = []
+    def read_files_records(self, files):
+        records = []
         required_fields = ["Max TemperatureC",
                            "Min TemperatureC", "Max Humidity"]
-        for weather_file in weather_files:
-            with open(weather_file) as f:
-                weather_records = csv.DictReader(f)
+        for file in files:
+            with open(file) as f:
 
-                for weather_record in weather_records:
-                    key_index = list(weather_record)[0]
+                for record in csv.DictReader(f):
 
-                    if all(weather_record.get(y) for y in required_fields):
+                    key_index = self.get_key(record)
 
-                        weather_record = WeatherRecord(weather_record[key_index],
-                                                       int(weather_record["Max TemperatureC"]),
-                                                       int(weather_record["Min TemperatureC"]),
-                                                       int(weather_record["Max Humidity"]))
+                    if all(record.get(y) for y in required_fields):
+                        record = WeatherRecord(record[key_index],
+                                               int(record["Max TemperatureC"]),
+                                               int(record["Min TemperatureC"]),
+                                               int(record["Max Humidity"]))
 
-                        clean_record.append(weather_record)
+                        records.append(record)
 
-        return clean_record
+        return records
+
+    def get_key(self, record):
+
+        if 'PKT' in record:
+            return 'PKT'
+        return 'PKST'
 
     def parse_weather_records(self, path, year_month):
-        weather_files = self.required_files(path, year_month)
-        return self.read_files_record(weather_files)
+        files = self.get_required_files(path, year_month)
+        return self.read_files_records(files)
 
 
-class ProcessWeatherReports():
+class WeatherReportsProcess():
     _instance = None
 
     def __new__(self):
         if not self._instance:
-            self._instance = super(ProcessWeatherReports, self).__new__(self)
+            self._instance = super(WeatherReportsProcess, self).__new__(self)
 
         return self._instance
 
     def __init__(self):
-        self.record_calculations = CalculateWeatherResults()
+        self.reports_calculator = CalculateWeatherResults()
 
     def show_extreme_results(self, report_result, extreme_report_type):
         date_object = datetime.strptime(report_result.date, "%Y-%m-%d")
         print(f"{extreme_report_type}: {report_result.max_temp} C on "
               f"{date_object.strftime('%b %d')}")
 
-    def process_extreme_result(self, weather_record):
+    def process_extreme_result(self, records):
 
-        if weather_record:
-            highest_temp, lowest_temp, max_humidity = self. \
-                record_calculations.calculate_extreme_report(weather_record)
-
-            self.show_extreme_results(highest_temp, "Highest")
-            self.show_extreme_results(lowest_temp, "Lowest")
-            self.show_extreme_results(max_humidity, "Max Humidity")
-        else:
+        if not records:
             print("Invalid Input, Files doesn't exists")
+            return
 
-    def process_average_result(self, weather_record):
+        highest_temp, lowest_temp, max_humidity = self. \
+            reports_calculator.calculate_extreme_report(records)
 
-        if weather_record:
-            avg_high_temp, avg_low_temp, avg_hum = self. \
-                record_calculations.calculate_month_report(weather_record)
+        self.show_extreme_results(highest_temp, "Highest")
+        self.show_extreme_results(lowest_temp, "Lowest")
+        self.show_extreme_results(max_humidity, "Max Humidity")
 
-            print(f"Highest Average: {avg_high_temp} C")
-            print(f"Lowest Average: {avg_low_temp} C")
-            print(f"Humidity Average: {avg_hum} per")
-        else:
+    def process_average_result(self, records):
+
+        if not records:
             print("Invalid Input, Files doesn't exists")
+            return
 
-    def show_seprate_chart(self, clean_record):
-        if clean_record:
-            for weather_record in clean_record:
-                date_object = datetime.strptime(weather_record.date, "%Y-%m-%d")
-                print(date_object.strftime("%d"), end="")
+        avg_high_temp, avg_low_temp, avg_hum = self. \
+            reports_calculator.calculate_month_report(records)
 
-                for plus_counter in range(0, int(weather_record.max_temp)):
-                    print("\033[1;31;40m + ", end="")
+        print(f"Highest Average: {avg_high_temp} C")
+        print(f"Lowest Average: {avg_low_temp} C")
+        print(f"Humidity Average: {avg_hum} per")
 
-                print(f"{weather_record.max_temp} C")
-                print(date_object.strftime("%d"), end="")
-
-                for plus_counter in range(0, int(weather_record.min_temp)):
-                    print("\033[1;34;40m - ", end="")
-                print(f"{weather_record.min_temp} C")
-        else:
+    def show_seprate_chart(self, records):
+        if not records:
             print("Invalid Input, Files doesn't exists")
+            return
 
-    def show_merge_chart(self, clean_record):
-        if clean_record:
-            for weather_record in clean_record:
-                date_object = datetime.strptime(weather_record.date, "%Y-%m-%d")
-                print(f"\033[1;31;40m {date_object.strftime('%d')}", end="\t")
-                print(f"\033[1;31;40m {weather_record.max_temp} C", end="")
+        for record in records:
+            date_object = datetime.strptime(record.date, "%Y-%m-%d")
+            print(date_object.strftime("%d"), end="")
 
-                for plus_counter in range(0, int(weather_record.max_temp)):
-                    print("\033[1;31;40m + ", end="")
+            for plus_counter in range(0, int(record.max_temp)):
+                print(f"\033[1;31;40m + ", end="")
 
-                for plus_counter in range(0, int(weather_record.min_temp)):
-                    print("\033[1;34;40m + ", end="")
+            print(f"{record.max_temp} C")
+            print(date_object.strftime("%d"), end="")
 
-                print(f"\033[1;34;40m {weather_record.min_temp} C")
-        else:
+            for plus_counter in range(0, int(record.min_temp)):
+                print(f"\033[1;34;40m - ", end="")
+            print(f"{record.min_temp} C")
+
+    def show_merge_chart(self, records):
+        if not records:
             print("Invalid Input, Files doesn't exists")
+            return
+
+        for record in records:
+            date_object = datetime.strptime(record.date, "%Y-%m-%d")
+            print(f"\033[1;31;40m {date_object.strftime('%d')}", end="\t")
+            print(f"\033[1;31;40m {record.max_temp} C", end="")
+
+            for plus_counter in range(0, int(record.max_temp)):
+                print("\033[1;31;40m + ", end="")
+
+            for plus_counter in range(0, int(record.min_temp)):
+                print("\033[1;34;40m + ", end="")
+
+            print(f"\033[1;34;40m {record.min_temp} C")
 
 
 class CalculateWeatherResults:
@@ -146,17 +152,17 @@ class CalculateWeatherResults:
 
         return self._instance
 
-    def calculate_extreme_report(self, weather_record):
-        highest_temp = max(weather_record, key=lambda x: int(x.max_temp))
-        lowest_temp = min(weather_record, key=lambda x: int(x.min_temp))
-        max_humidity = max(weather_record, key=lambda x: int(x.max_humidity))
+    def calculate_extreme_report(self, records):
+        highest_temp = max(records, key=lambda x: int(x.max_temp))
+        lowest_temp = min(records, key=lambda x: int(x.min_temp))
+        max_humidity = max(records, key=lambda x: int(x.max_humidity))
 
         return highest_temp, lowest_temp, max_humidity
 
-    def calculate_month_report(self, clean_record):
-        max_temps_avg = sum([int(x.max_temp) for x in clean_record]) / len(clean_record)
-        min_temps_avg = sum([int(x.min_temp) for x in clean_record]) / len(clean_record)
-        max_humidities_avg = sum([int(x.max_humidity) for x in clean_record]) / len(clean_record)
+    def calculate_month_report(self, records):
+        max_temps_avg = sum([int(x.max_temp) for x in records]) / len(records)
+        min_temps_avg = sum([int(x.min_temp) for x in records]) / len(records)
+        max_humidities_avg = sum([int(x.max_humidity) for x in records]) / len(records)
 
         return max_temps_avg, min_temps_avg, max_humidities_avg
 
@@ -185,23 +191,23 @@ def main():
     args = parser.parse_args()
 
     parser = WeatherReportParse()
-    process_results = ProcessWeatherReports()
+    process_results = WeatherReportsProcess()
 
     if args.year:
-        weather_record = parser.parse_weather_records(args.path, args.year)
-        process_results.process_extreme_result(weather_record)
+        records = parser.parse_weather_records(args.path, args.year)
+        process_results.process_extreme_result(records)
 
     if args.month:
-        weather_record = parser.parse_weather_records(args.path, args.month)
-        process_results.process_average_result(weather_record)
+        records = parser.parse_weather_records(args.path, args.month)
+        process_results.process_average_result(records)
 
     if args.graphsingle:
-        weather_record = parser.parse_weather_records(args.path, args.graphsingle)
-        process_results.show_seprate_chart(weather_record)
+        records = parser.parse_weather_records(args.path, args.graphsingle)
+        process_results.show_seprate_chart(records)
 
     if args.graphmerged:
-        weather_record = parser.parse_weather_records(args.path, args.graphmerged)
-        process_results.show_merge_chart(weather_record)
+        records = parser.parse_weather_records(args.path, args.graphmerged)
+        process_results.show_merge_chart(records)
 
 
 if __name__ == "__main__":
