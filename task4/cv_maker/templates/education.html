@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <head>
+        <meta charset="utf-8">
+        <title>CV Maker</title>
+        <script>
+            $(document).ready(function(){
+                $("button.education").click(function(){
+                var $education = $("div.edu").html();
+                $("div.edu").append($education);
+                });
+            });
+        </script>
+    </head>
+    <body>
+        <form>
+            <div class="edu">
+                <h3>Education</h3>
+                <p>Degree: <input type="text" name="edu_degree"></p>
+                <p>Institute: <input type="text" name="edu_institute"></p>
+                <p>Starting Date: <input type="date" name="edu_starting_date"></p>
+                <p>Ending Date: <input type="date" name="edu_ending_date"></p>
+                <p>City: <input type="text" name="edu_city"></p>
+                <p>Description: <input type="text" name="edu_description"></p>
+            </div>
+            <button type="submit">Submit</button>
+        </form>
+        <button class="experience" align="center">Add Experience</button> <br>
+        <a href="http://127.0.0.1:8000">Go to home</a>
+    </body>
+</html>
+

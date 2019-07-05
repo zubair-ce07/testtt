@@ -8,11 +8,28 @@ from django.contrib.auth.models import User
 
 
 class BasicInformation(models.Model):
+    user_name = models.CharField(max_length=30, unique=True)
     name = models.CharField(max_length=30)
     date_of_birth = models.DateTimeField()
     contact_number = models.IntegerField()
     address = models.CharField(max_length=255)
-    email = models.CharField(max_length=30)
+    email = models.CharField(max_length=30, unique=True)
+    skill_level = ((1, "Beginner"),
+                   (2, "Little Knowledge"),
+                   (3, "Intermediate"),
+                   (4, "Advance"),
+                   (5, "Expert")
+                   )
+    skill1 = models.CharField(max_length=30, choices=skill_level)
+    skill2 = models.CharField(max_length=30, null=True, choices=skill_level)
+    skill3 = models.CharField(max_length=30, null=True, choices=skill_level)
+    skill4 = models.CharField(max_length=30, null=True, choices=skill_level)
+    skill5 = models.CharField(max_length=30, null=True, choices=skill_level)
+    hobby1 = models.CharField(max_length=30, null=True)
+    hobby2 = models.CharField(max_length=30, null=True)
+    hobby3 = models.CharField(max_length=30, null=True)
+    reference1 = models.CharField(max_length=30, null=True)
+    reference2 = models.CharField(max_length=30, null=True)
 
     def __str__(self):
         return self.name
@@ -42,32 +59,6 @@ class Education(models.Model):
 
     def __str__(self):
         return self.degree
-
-
-class Skill(models.Model):
-    name = models.CharField(max_length=30)
-    description = models.CharField(max_length=100)
-    person = models.ForeignKey(BasicInformation, on_delete=models.CASCADE)
-
-    def __str__(self):
-        return self.name
-
-
-class Hobby(models.Model):
-    hobby = models.CharField(max_length=30)
-    person = models.ForeignKey(BasicInformation, on_delete=models.CASCADE)
-    description = models.CharField(max_length=30, null=True)
-
-    def __str__(self):
-        return self.hobby
-
-
-class Reference(models.Model):
-    reference = models.CharField(max_length=30)
-    person = models.ForeignKey(BasicInformation, on_delete=models.CASCADE)
-
-    def __str__(self):
-        return self.reference
 
 
 '''
