@@ -26,6 +26,10 @@ class AsicsSpider(CrawlSpider):
         for urls in products_url:
             url = response.urljoin(urls)
             yield scrapy.Request(url=url, callback=self.parse_items)
+        next_page = response.xpath('//div[@id="nextPageLink"]/a/@href').extract_first()
+        if next_page is not None:
+            next_page = response.urljoin(next_page)
+            yield scrapy.Request(url=next_page, callback=self.parse_products)
 
     def parse_items(self, response):
         product_name = self.get_name(response)
