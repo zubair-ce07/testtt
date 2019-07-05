@@ -10,7 +10,11 @@ class ProductSpider(scrapy.Spider):
         yield scrapy.Request(url=url, callback=self.parse)
 
     def parse(self, response):
-        for url in response.css(".item a::attr(href)").getall():
+        for url in response.css(".toggle_promo_collection::attr(href)")\
+         .getall():
+            yield response.follow(url, callback=self.parse)
+
+        for url in response.css(".item-33 a::attr(href)").getall():
             yield response.follow(url, callback=self.parse)
 
         for url in response.css(".item::attr(href)").getall():
@@ -19,8 +23,8 @@ class ProductSpider(scrapy.Spider):
         for url in response.css(".justify-center a::attr(href)").getall():
             yield response.follow(url, callback=self.parse)
 
-        new_urls = response.css(".colorama-product-link-wrapper::attr(href)")
-        for url in new_urls.getall():
+        for url in response.css(".colorama-product-link-wrapper::attr(href)")\
+         .getall():
             yield response.follow(url, callback=self.fetch)
 
     def fetch(self, response):
@@ -33,7 +37,8 @@ class ProductSpider(scrapy.Spider):
             "brand":  self.get_brand(response),
             "retailer_sku": self.get_retailer_sku(product),
             "url": self.get_url(response),
-            "gender": self.get_gender(product)
+            "gender": self.get_gender(product),
+            "skus": self.get_skus(response, product)
         }
         yield product_attr
 
@@ -44,7 +49,11 @@ class ProductSpider(scrapy.Spider):
         return response.css(".breadcrumbs a::text").getall()
 
     def get_description(self, response):
-        return response.css(".description p::text").get()
+        return response.css(".description i::text").get() or \
+               response.css(".description p::text").get() or \
+               response.css(".description span::text").get() or \
+               response.css(".description .ellipsis::text").get() or \
+               response.css(".description::text").get()
 
     def get_image_urls(self, response):
         return response.css(".swiper-slide img::attr(src)").getall()
@@ -64,5 +73,28 @@ class ProductSpider(scrapy.Spider):
 
     def get_gender(self, product):
         for attribute in product.get("tags"):
-            if attribute.find("Gender:") == 0:
-                return attribute
+            if attribute.find("Gender:") != -1:
+                return attribute.replace("Gender:", "")
+
+    def get_skus(self, response, product):
+        skus = []
+        for variant in product.get("variants"):
+            skus.append({
+                "sku_id": variant.get("id"),
+                "color": variant.get("option1"),
+                "currency": self.get_currency(response),
+                "size": variant.get("option2"),
+                "out_of_stock": str(not variant.get("available")).lower(),
+                "price": variant.get("price"),
+                "previous_price": variant.get("compare_at_price"),
+            })
+        return skus
+
+    def get_currency(self, response):
+        currency = ""
+        product_attr = response.css("script.analytics").get()
+        for i in range(product_attr.find("\"currency"), len(product_attr)):
+            if product_attr[i] == ",":
+                break
+            currency += product_attr[i]
+        return currency.replace("\"currency\":\"", "")

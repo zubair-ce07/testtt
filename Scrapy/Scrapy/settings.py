@@ -14,7 +14,7 @@ BOT_NAME = 'Scrapy'
 SPIDER_MODULES = ['Scrapy.spiders']
 NEWSPIDER_MODULE = 'Scrapy.spiders'
 
-DUPEFILTER_DEBUG = True
+# DUPEFILTER_DEBUG = True
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 # USER_AGENT = 'Scrapy (+http://www.yourdomain.com)'
 
