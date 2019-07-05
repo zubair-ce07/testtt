@@ -66,44 +66,33 @@ class CeaSpider(scrapy.Spider):
 
         yield item
 
-    def product_brand(self):
-        return 'C&A'
-
-    def retailer_sku(self, response):
-        raw_json = re.findall("var skuJson_0 = (.+?);", response.body.decode('utf-8'), re.S)
-        return json.loads(raw_json[0]).get('productId')
-
-    def product_skus(self, response):
-        return re.findall("var skuJson_0 =(.+?);\n", response.body.decode('utf-8'), re.S)
-
-    def product_color(self, response):
-        return response.url.split('-')[-1].split('/')[0]
-
-    def product_description(self, response):
-        return response.css('.productDescription::text').get()
-
-    def product_url(self, response):
-        return response.url
-
-    def product_category(self, response):
-        return response.css('a[property = "v:title"] ::text').getall()
-
-    def product_name(self, response):
-        return response.css('title::text').get()
-
-    def get_imagesid(self, response):
-        raw_images_json = json.loads(response.text)
-        return [raw_images_json[0]['items'][0]['images'][image_number]['imageId']
-                for image_number in range(0, 4)]
-
     def get_home_page_data(self, response):
 
         yield from [category.css('::attr(href)').get()
                     for category in response.css('.header_submenu_item')
                     if category.css('::text').get()[1:] in 'er tudo']
 
-    def get_last_page(self, response):
-        return int(response.css('.navigation-pages_link--last ::text').get()) + 1
+    def retailer_sku(self, response):
+        raw_json = re.findall("var skuJson_0 = (.+?);", response.body.decode('utf-8'), re.S)
+        return json.loads(raw_json[0]).get('productId')
+
+    def product_name(self, response):
+        return response.css('title::text').get()
+
+    def product_category(self, response):
+        return response.css('a[property = "v:title"] ::text').getall()
+
+    def product_url(self, response):
+        return response.url
+
+    def product_brand(self):
+        return 'C&A'
+
+    def product_description(self, response):
+        return response.css('.productDescription::text').get()
+
+    def product_color(self, response):
+        return response.url.split('-')[-1].split('/')[0]
 
     def images_url(self, response):
         raw_json = re.findall("var skuJson_0 = (.+?);", response.body.decode('utf-8'), re.S)
@@ -117,4 +106,12 @@ class CeaSpider(scrapy.Spider):
             images_url.append(f'https://cea.vteximg.com.br/arquivos/ids/{id}.jpg')
 
         return images_url
+
+    def product_skus(self, response):
+        return re.findall("var skuJson_0 =(.+?);\n", response.body.decode('utf-8'), re.S)
+
+    def get_imagesid(self, response):
+        raw_images_json = json.loads(response.text)
+        return [raw_images_json[0]['items'][0]['images'][image_number]['imageId']
+                for image_number in range(0, 4)]
 
