@@ -1,4 +1,4 @@
-from Calculator import *
+from calculator import *
 
 
 class ReportGenerator:

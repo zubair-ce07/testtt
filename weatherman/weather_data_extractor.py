@@ -1,6 +1,6 @@
 import csv
 import glob
-from WeatherReading import WeatherReading
+from weather_reading import WeatherReading
 
 
 class WeatherDataExtractor:

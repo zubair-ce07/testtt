@@ -1,7 +1,7 @@
 from datetime import datetime
 import argparse
-from WeatherDataExtractor import WeatherDataExtractor
-from ReportGenerator import ReportGenerator
+from weather_data_extractor import WeatherDataExtractor
+from report_generator import ReportGenerator
 
 
 def extract_month_year(year_month):
