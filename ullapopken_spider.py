@@ -136,7 +136,7 @@ def clean(raw_item):
     return [r.strip() for r in raw_item if r.strip()]
 
 
-class UllaPopKenCrawler(CrawlSpider, UllaPopKenParser):
+class UllaPopKenCrawler(CrawlSpider):
     name = 'ullapopken'
     allowed_domains = ['ullapopken.com']
     start_urls = ['https://www.ullapopken.com/']
@@ -163,7 +163,7 @@ class UllaPopKenCrawler(CrawlSpider, UllaPopKenParser):
         pagination_request = Request(url=pagination_url, callback=self.parse_pagination)
         pagination_request.meta['category'] = category
         pagination_request.meta['grouping'] = grouping
-        pagination_request.meta['item_category'] = self.extract_category(response)
+        pagination_request.meta['item_category'] = self.parser.extract_category(response)
 
         yield pagination_request
 
