@@ -163,7 +163,7 @@ def clean(raw_item):
     return [r.strip() for r in raw_item if r.strip()]
 
 
-class OnlyCrawler(CrawlSpider, OnlyParser):
+class OnlyCrawler(CrawlSpider):
     name = 'only'
     allowed_domains = ['only.com']
     start_urls = ['https://www.only.com/fr/fr/home']
