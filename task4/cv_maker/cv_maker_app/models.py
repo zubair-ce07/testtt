@@ -20,7 +20,7 @@ class BasicInformation(models.Model):
                    (4, "Advance"),
                    (5, "Expert")
                    )
-    skill1 = models.CharField(max_length=30, choices=skill_level)
+    skill1 = models.CharField(max_length=30, null=True, choices=skill_level)
     skill2 = models.CharField(max_length=30, null=True, choices=skill_level)
     skill3 = models.CharField(max_length=30, null=True, choices=skill_level)
     skill4 = models.CharField(max_length=30, null=True, choices=skill_level)
@@ -62,9 +62,6 @@ class Education(models.Model):
 
 
 '''
-from cv_maker_app.models import Skill
-from cv_maker_app.models import Hobby
-from cv_maker_app.models import Reference
 import datetime
 from cv_maker_app.models import Experience
 from cv_maker_app.models import BasicInformation
