@@ -9,12 +9,10 @@ class WeatherParser:
         self.path = path
         self._weather_records = self._parse_weather_records()
 
-    def filtered_records(self, date):
-        year, month = date.year, date.month
+    def filtered_records(self, year=None, month=None):
         if month:
             return [x for x in self._weather_records if x.pkt.year == year and x.pkt.month == month]
-        else:
-            return [x for x in self._weather_records if x.pkt.year == year]
+        return [x for x in self._weather_records if x.pkt.year == year]
 
     def _parse_weather_records(self):
         file_names = glob.glob(f'{self.path}Murree_weather_*.txt')
@@ -26,7 +24,7 @@ class WeatherParser:
                 next(csv_reader)
 
                 for row in csv_reader:
-                    weather_record = WeatherRecord.from_map(row)
+                    weather_record = WeatherRecord.is_valid_record(row)
                     if weather_record:
                         weather_records.append(weather_record)
 
