@@ -21,9 +21,11 @@ class ProductsSpider(CrawlSpider):
     def parse_item(self, response):
         attr_for_size = response.css(".productView-details .product-size"
                                     " .form-radio::attr(name)").get()
-        color_attr = response.css(".productView-details [data-swatch-id]"
-                                    "::attr(data-swatch-id)").get()
-        attr_for_color = f"attribute[{color_attr}]"
+        attr_for_color = (
+            f"attribute["
+            f"{response.css('.productView-details [data-swatch-id]::attr(data-swatch-id)').get()}"
+            f"]"
+        )
         size_ids = response.css(".productView-options .product-size .form-radio"
                                     "::attr(value)").getall()
         color_ids = response.css(".productView-options [aria-checked]::attr(value)").getall()
@@ -52,19 +54,16 @@ class ProductsSpider(CrawlSpider):
             'currency': separated_price[0]
         }
         sku_url = f"{self.attr_url}{item_id}"
-        sparse_combinations = list(product(color_ids, size_ids))
-        combinations = [pair for pair in sparse_combinations if pair[0] and pair[1]]
+        combinations = list(product(color_ids, size_ids))
         if combinations:
-            color = combinations[0][0]
-            size = combinations[0][1]
+            (color, size) = combinations.pop()
             form_data = {
                 'action': 'add',
-                f"attribute[{attr_for_color}]": color,
+                attr_for_color: color,
                 attr_for_size: size,
                 'product_id': item_id,
                 'qty[]': '1'
             }
-            del combinations[0]
             meta_data = {
                 'pairs': combinations,
                 'color_attr': attr_for_color,
@@ -94,7 +93,7 @@ class ProductsSpider(CrawlSpider):
             previous_price = float(self.split_price(previous_price_formatted)[1].replace(',', ''))
         else:
             previous_price = None
-        new_variant = {
+        sku = {
                     obj['data']['sku']: {
                         'price': float(price_separated[1].replace(',', '')),
                         'currency': price_separated[0],
@@ -104,11 +103,10 @@ class ProductsSpider(CrawlSpider):
                         'availability': obj['data']['instock']
                     }   
                 }
-        response.meta['item']['skus'].update(new_variant)
+        response.meta['item']['skus'].update(sku)
         if response.meta['pairs']:
             sku_url = f"{self.attr_url}{response.meta['item_id']}"
-            color = response.meta['pairs'][0][0]
-            size = response.meta['pairs'][0][1]
+            (color, size) = response.meta['pairs'].pop()
             form_data = {
                 'action': 'add',
                 response.meta['color_attr']: color,
@@ -116,7 +114,6 @@ class ProductsSpider(CrawlSpider):
                 'product_id': response.meta['item_id'],
                 'qty[]': '1'
             }
-            del response.meta['pairs'][0]
             meta_data = response.meta
             meta_data['color'] = meta_data['color_names'][meta_data['color_ids'].index(color)]
             meta_data['size'] = meta_data['size_names'][meta_data['size_ids'].index(size)]
