@@ -28,7 +28,7 @@ if __name__ == '__main__':
         report.year_report()
     if args.a:
         month, year = extract_month_year(args.a)
-        weather_data = WeatherDataExtractor(year, month)
+        weather_data = WeatherDataExtractor(year=year, month=month)
         report = ReportGenerator(weather_data)
         report.month_report()
     if args.c:

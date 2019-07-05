@@ -40,29 +40,23 @@ class ReportGenerator:
         print(f"Highest Average: {mean_max_temperature}C")
         print(f"Lowest Average: {mean_min_temperature}C")
         print(f"Average Mean Humidity: {mean_humidity}%")
-        print("\n")
 
     def draw_bar_charts(self):
-        print(self.weather_data_obj.month+" "+self.weather_data_obj.year)
+        print(f"{self.weather_data_obj.month} {self.weather_data_obj.year}")
         for row in self.weather_data_obj.weather_readings:
             if row.max_temperature and row.min_temperature:
                 day = row.pkt.strftime("%d")
-                highest = "\033[0;34;50m" + ("+" * row.max_temperature)
-                lowest = "\033[0;31;50m" + ("+" * row.min_temperature)
+                highest = f"\033[0;34;50m{'+' * row.max_temperature if row.max_temperature > 0 else '-' * row.max_temperature}"
+                lowest = f"\033[0;31;50m{'+' * row.min_temperature if row.min_temperature > 0 else '-' * row.min_temperature}"
                 print(f"\033[0;30;50m{day} {highest}\033[0;30;50m{row.max_temperature}C")
                 print(f"\033[0;30;50m{day} {lowest}\033[0;30;50m{row.min_temperature}C")
 
-        print("\n")
-
     def draw_single_chart(self):
-        print(self.weather_data_obj.month+" "+self.weather_data_obj.year)
+        print(f"{self.weather_data_obj.month} {self.weather_data_obj.year}")
         for row in self.weather_data_obj.weather_readings:
             if row.max_temperature and row.min_temperature:
                 day = row.pkt.strftime("%d")
-                highest = "\033[0;34;50m"+("+" * row.max_temperature if row.max_temperature > 0
-                                           else "-" * row.max_temperature)
-                lowest = "\033[0;31;50m"+("+" * row.min_temperature if row.min_temperature > 0
-                                          else "-" * row.min_temperature)
+                highest = f"\033[0;34;50m{'+' * row.max_temperature if row.max_temperature > 0 else '-' * row.max_temperature}"
+                lowest = f"\033[0;31;50m{'+' * row.min_temperature if row.min_temperature > 0 else '-' * row.min_temperature}"
                 print(f"\033[0;30;50m{day} {lowest}{highest}\033[0;30;50m"
                       f"{row.min_temperature}C {row.max_temperature}C")
-        print("\n")
