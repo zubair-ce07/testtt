@@ -56,13 +56,8 @@ class AsicsSpider(scrapy.Spider):
 
         yield item
 
-    def product_brand(self):
-        return 'ASICS'
-
-    def size(self, response):
-        if response.css('.SizeOption::text').getall():
-            return response.css('.SizeOption::text').getall()
-        return 'One Size'
+    def product_id(self, response):
+        return response.css('.inStock   meta[itemprop="sku"] ::attr(content)').get()
 
     def product_name(self, response):
         return self.clean_text(response.css('title::text').get().split('|')[0])
@@ -86,8 +81,8 @@ class AsicsSpider(scrapy.Spider):
     def image_urls(self, response):
         return response.css('.owl-carousel   ::attr(data-big)').getall()
 
-    def product_id(self, response):
-        return response.css('.inStock   meta[itemprop="sku"] ::attr(content)').get()
+    def product_brand(self):
+        return 'ASICS'
 
     def product_skus(self, response):
         currency = response.css('.inStock   meta[itemprop="priceCurrency"] '
@@ -114,6 +109,11 @@ class AsicsSpider(scrapy.Spider):
             skus.append(single_sku)
 
         return skus
+
+    def size(self, response):
+        if response.css('.SizeOption::text').getall():
+            return response.css('.SizeOption::text').getall()
+        return 'One Size'
 
     def clean_text(self, text):
         clean_text = re.sub('\s+', '', text)
