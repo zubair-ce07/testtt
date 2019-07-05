@@ -19,12 +19,9 @@ class ReportGenerator:
             self.weather_data_obj.weather_readings,
             key=lambda row: row.max_humidity
         )
-        print("Highest: "+str(max_temperature.max_temperature)+"C on " +
-              max_temperature.pkt.strftime("%d %b"))
-        print("Lowest: "+str(min_temperature.min_temperature)+"C on " +
-              min_temperature.pkt.strftime("%d %b"))
-        print("Humidity: "+str(max_humidity.max_humidity)+"% on " +
-              max_humidity.pkt.strftime("%d %b"))
+        print(f"Highest: {max_temperature.max_temperature}C on {max_temperature.pkt.strftime('%d %b')}")
+        print(f"Lowest: {min_temperature.min_temperature}C on {min_temperature.pkt.strftime('%d %b')}")
+        print(f"Humidity: {max_humidity.max_humidity}% on {max_humidity.pkt.strftime('%d %b')}")
         print("\n")
 
     def month_report(self):
@@ -40,9 +37,9 @@ class ReportGenerator:
             self.weather_data_obj.weather_readings,
             key=lambda row: row.mean_humidity
         )
-        print("Highest Average: "+str(mean_max_temperature)+"C")
-        print("Lowest Average: "+str(mean_min_temperature)+"C")
-        print("Average Mean Humidity: "+str(mean_humidity)+"%")
+        print(f"Highest Average: {mean_max_temperature}C")
+        print(f"Lowest Average: {mean_min_temperature}C")
+        print(f"Average Mean Humidity: {mean_humidity}%")
         print("\n")
 
     def draw_bar_charts(self):
