@@ -53,33 +53,33 @@ class AsicsSpider(CrawlSpider):
         self.item["skus"] = product_sku
         yield self.item
 
-    def get_name(self, response):
+    def extract_name(self, response):
         return response.xpath('//h1[@class="single-prod-title"]/text()').extract_first()
 
-    def get_category(self, response):
+    def extract_category(self, response):
         return response.xpath('//div[@id="breadcrumb"]/a/text()').extract_first()
 
-    def get_image_url(self, response):
+    def extract_image_url(self, response):
         return response.xpath('//img[@class="product-img"]/@data-owl-thumb').extract()
 
-    def get_previous_price(self, response):
+    def extract_previous_price(self, response):
         return response.xpath('//del/text()').extract_first()
 
-    def get_price(self, response):
+    def extract_price(self, response):
         return '$' + response.xpath('//meta[@content="PRICE"]/following-sibling::meta/@content').extract_first()
 
-    def get_description(self, response):
+    def extract_description(self, response):
         # This also works
         # return response.xpath('//meta[@name="description"]/@content').extract_first()
         return response.xpath('//h2[contains(text(), "Product Details")]/preceding-sibling::div/parent::div/text()').extract()
 
-    def get_gender(self, response):
+    def extract_gender(self, response):
         return response.xpath('//div[@id="unisex-tab"]/@class').extract_first()
 
-    def get_product_id(self, response):
+    def extract_product_id(self, response):
         return response.xpath('//span[contains(@itemprop,"model")]//text()').extract_first()
 
-    def get_product_skus(self, response):
+    def extract_product_skus(self, response):
         sku_dict = dict()
         self.item["request"] = list()
         products_urls = response.xpath('//div[@id="variant-choices"]//a/@href').getall()
@@ -99,12 +99,12 @@ class AsicsSpider(CrawlSpider):
             sku_dict.update([(self.get_color(response) + "_" + self.extract_size(size), sku_data)])
         return sku_dict
 
-    def get_color(self, response):
-        return response.xpath('//div[@id="colour-label"]//span[@class="color-label"]/text()').get()
+    def extract_color(self, response):
+        return response.xpath('//div[@id="colour-label"]//span[@class="color-label"]/text()').extract_first()
 
-    def get_available_sizes(self, response):
+    def extract_available_sizes(self, response):
         form_selector = response.xpath('//form[@class="desktop-style"]')[0]
-        return form_selector.css('div.SizeOption.inStock::attr(data-value)').getall()
+        return form_selector.css('div.SizeOption.inStock::attr(data-value)').extract()
 
     def extract_size(self, raw_string):
         token = raw_string.split('.')[3:]
