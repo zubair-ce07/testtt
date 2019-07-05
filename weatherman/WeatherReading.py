@@ -4,7 +4,7 @@ from datetime import datetime
 class WeatherReading:
 
     def __init__(self, weather_reading):
-        self.pkt = datetime.strptime(weather_reading['PKT'], '%Y-%m-%d')
+        self.pkt = datetime.strptime(weather_reading.get('PKT') or weather_reading['PKST'], '%Y-%m-%d')
         self.max_temperature = int(weather_reading["Max TemperatureC"]) if weather_reading["Max TemperatureC"] else None
         self.min_temperature = int(weather_reading["Min TemperatureC"]) if weather_reading["Min TemperatureC"] else None
         self.mean_temperature = int(weather_reading["Mean TemperatureC"]) if weather_reading["Mean TemperatureC"] else None
