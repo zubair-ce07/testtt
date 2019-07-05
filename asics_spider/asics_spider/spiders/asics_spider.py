@@ -32,14 +32,14 @@ class AsicsSpider(CrawlSpider):
             yield scrapy.Request(url=next_page, callback=self.parse_products)
 
     def parse_items(self, response):
-        product_name = self.get_name(response)
-        category = self.get_category(response)
-        description = self.get_description(response)
-        images = self.get_image_url(response)
-        previous_price = self.get_previous_price(response)
-        current_price = self.get_price(response)
-        gender = self.get_gender(response)
-        product_id = self.get_product_id(response)
+        product_name = self.extract_name(response)
+        category = self.extract_category(response)
+        description = self.extract_description(response)
+        images = self.extract_image_url(response)
+        previous_price = self.extract_previous_price(response)
+        current_price = self.extract_price(response)
+        gender = self.extract_gender(response)
+        product_id = self.extract_product_id(response)
         product_sku = self.get_product_skus(response)
 
         self.item["name"] = product_name
@@ -79,7 +79,7 @@ class AsicsSpider(CrawlSpider):
     def extract_product_id(self, response):
         return response.xpath('//span[contains(@itemprop,"model")]//text()').extract_first()
 
-    def extract_product_skus(self, response):
+    def get_product_skus(self, response):
         sku_dict = dict()
         self.item["request"] = list()
         products_urls = response.xpath('//div[@id="variant-choices"]//a/@href').getall()
@@ -88,15 +88,15 @@ class AsicsSpider(CrawlSpider):
             self.item["request"].append(url)
         for url in self.item["request"]:
             scrapy.Request(url=url, callback=self.get_product_skus)
-        size_list = self.get_available_sizes(response)
+        size_list = self.extract_available_sizes(response)
         if not size_list:
-            sku_dict.update([(self.get_color(response) + "_" + response.url.split('/')[-1].split('.')[-1], "Not any size available ")])
+            sku_dict.update([(self.extract_color(response) + "_" + response.url.split('/')[-1].split('.')[-1], "Not any size available ")])
         for size in size_list:
             sku_data = {
-                "Color": self.get_color(response),
-                "Price": self.get_price(response)
+                "Color": self.extract_color(response),
+                "Price": self.extract_price(response)
             }
-            sku_dict.update([(self.get_color(response) + "_" + self.extract_size(size), sku_data)])
+            sku_dict.update([(self.extract_color(response) + "_" + self.extract_size(size), sku_data)])
         return sku_dict
 
     def extract_color(self, response):
