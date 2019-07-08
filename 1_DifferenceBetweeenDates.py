@@ -9,10 +9,10 @@
 from datetime import date
 
 
-def daysBetweenDates(year1, month1, day1, year2, month2, day2):
-    bday = date(year1, month1, day1)
-    cday = date(year2, month2, day2)
-    return (cday - bday).days
+def days_between_dates(year1, month1, day1, year2, month2, day2):
+    birth_day = date(year1, month1, day1)
+    current_day = date(year2, month2, day2)
+    return (current_day - birth_day).days
 
 
 # Test routine
@@ -24,7 +24,7 @@ def test():
                   ((2011, 1, 1, 2012, 8, 8), 585),
                   ((1900, 1, 1, 1999, 12, 31), 36523)]
     for (args, answer) in test_cases:
-        result = daysBetweenDates(*args)
+        result = days_between_dates(*args)
         if result != answer:
             print("Test with data:", args, "failed")
         else:
