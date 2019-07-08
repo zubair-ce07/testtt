@@ -9,34 +9,26 @@ from scrapy.linkextractors import LinkExtractor
 
 class ProductsSpider(CrawlSpider):
     name = "woolrich"
-    start_urls = [
-        'https://www.woolrich.com/'
-    ]
+    start_urls = ['https://www.woolrich.com/']
     attr_url = "https://www.woolrich.com/remote/v1/product-attributes/"
     rules = (
-        Rule(LinkExtractor(restrict_css = ["#primary > ul > li", ".pagination-item--next"])),
-        Rule(LinkExtractor(restrict_css = ".card-figure"), callback = "parse_item")
+        Rule(LinkExtractor(restrict_css=["#primary > ul > li", ".pagination-item--next"])),
+        Rule(LinkExtractor(restrict_css=".card-figure"), callback="parse_item")
     )
 
     def parse_item(self, response):
-        attr_for_size = response.css(".productView-details .product-size"
-                                    " .form-radio::attr(name)").get()
-        attr_for_color = (
-            f"attribute["
-            f"{response.css('.productView-details [data-swatch-id]::attr(data-swatch-id)').get()}"
-            f"]"
-        )
-        size_ids = response.css(".productView-options .product-size .form-radio"
-                                    "::attr(value)").getall()
+        color_attr_unformatted = response.css('.productView-details [data-swatch-id]::attr(data-swatch-id)').get()
+        attr_for_size = response.css(".productView-details .product-size .form-radio::attr(name)").get()
+        attr_for_color = f"attribute[{color_attr_unformatted}]"
+        size_ids = response.css(".productView-options .product-size .form-radio::attr(value)").getall()
         color_ids = response.css(".productView-options [aria-checked]::attr(value)").getall()
         color_names = response.css(".productView-options [data-swatch-id]::attr(title)").getall()
-        size_names = response.css(".productView-options .product-size .form-option span"
-                                    "::text").getall()
+        size_names = response.css(".productView-options .product-size .form-option span::text").getall()
         categories = response.css(".breadcrumb-label::text").getall()
         item_id = response.css(".jrb-product-view::attr(data-entity-id)").get()
         gender = "Men" if "Men" in categories else "Women" if "Women" in categories else "Unisex"
         price_formatted = response.css(".productView-details .price::text").get()
-        (currency, price) = self.split_price(price_formatted)
+        currency, price = self.split_price(price_formatted)
         item = {
             'retailer_sku': response.css(".parent-sku::text").get(),
             'lang': response.css("html::attr(lang)").get(),
@@ -56,7 +48,7 @@ class ProductsSpider(CrawlSpider):
         sku_url = f"{self.attr_url}{item_id}"
         combinations = list(product(color_ids, size_ids))
         if combinations:
-            (color, size) = combinations.pop()
+            color, size = combinations.pop()
             form_data = {
                 'action': 'add',
                 attr_for_color: color,
@@ -86,27 +78,27 @@ class ProductsSpider(CrawlSpider):
     
     def parse_skus(self, response):
         obj = json.loads(response.text)
-        (currency, price) = self.split_price(obj['data']['price']['without_tax']['formatted'])
+        currency, price = self.split_price(obj['data']['price']['without_tax']['formatted'])
         if 'rrp_without_tax' in obj['data']['price']:
             previous_price_formatted = obj['data']['price']['rrp_without_tax']['formatted']
-            (previous_currency, previous_price) = self.split_price(previous_price_formatted)
+            previous_currency, previous_price = self.split_price(previous_price_formatted)
             previous_price = float(previous_price.replace(',', ''))
         else:
             previous_price = None
         sku = {
-                    obj['data']['sku']: {
-                        'price': float(price.replace(',', '')),
-                        'currency': currency,
-                        'previous_price':  previous_price,
-                        'color': response.meta['color'],
-                        'size': response.meta['size'],
-                        'availability': obj['data']['instock']
-                    }   
-                }
+            obj['data']['sku']: {
+                'price': float(price.replace(',', '')),
+                'currency': currency,
+                'previous_price':  previous_price,
+                'color': response.meta['color'],
+                'size': response.meta['size'],
+                'availability': obj['data']['instock']
+            }
+        }
         response.meta['item']['skus'].update(sku)
         if response.meta['pairs']:
             sku_url = f"{self.attr_url}{response.meta['item_id']}"
-            (color, size) = response.meta['pairs'].pop()
+            color, size = response.meta['pairs'].pop()
             form_data = {
                 'action': 'add',
                 response.meta['color_attr']: color,
