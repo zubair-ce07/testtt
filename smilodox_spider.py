@@ -26,7 +26,7 @@ class Product(Item):
 
 
 class SmiloDoxParser(Spider):
-    name = "smilodox_parser"
+    name = 'smilodox_parser'
     default_brand = 'Smilo'
     default_size = 'One_Size'
 
