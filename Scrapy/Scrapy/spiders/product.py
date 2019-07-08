@@ -91,10 +91,5 @@ class ProductSpider(scrapy.Spider):
         return skus
 
     def get_currency(self, response):
-        currency = ""
-        product_attr = response.css("script.analytics").get()
-        for i in range(product_attr.find("\"currency"), len(product_attr)):
-            if product_attr[i] == ",":
-                break
-            currency += product_attr[i]
-        return currency.replace("\"currency\":\"", "")
+        return response.css(
+            "#in-context-paypal-metadata::attr(data-currency)").get()
