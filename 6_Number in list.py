@@ -14,23 +14,24 @@
 
 
 def numbers_in_lists(str_rec):
-    num_list = [int(str_rec[0])]
+    num_list = [int(str_rec[i]) for i in range(len(str_rec))]
+    nums_list = [num_list[0]]
     i = 0
     j = 1
     while j < len(str_rec):
-        if str_rec[i] >= str_rec[j]:
-            sublist = [int(str_rec[j])]
+        if num_list[i] >= num_list[j]:
+            sublist = [num_list[j]]
             k = j + 1
-            while k < len(str_rec) and str_rec[k] <= str_rec[j]:
-                sublist.append(int(str_rec[k]))
+            while k < len(str_rec) and num_list[k] <= num_list[j]:
+                sublist.append(num_list[k])
                 k += 1
-            num_list.append(sublist)
+            nums_list.append(sublist)
             j += k - j
         else:
-            num_list.append(int(str_rec[j]))
+            nums_list.append(num_list[j])
             i = j
             j += 1
-    return num_list
+    return nums_list
 
 
 # testcases
