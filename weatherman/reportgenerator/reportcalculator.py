@@ -4,9 +4,6 @@ from reportgenerator import HighLowResult, AvgTemperatureResult
 
 
 class ReportCalculator:
-    def __init__(self, weather_records):
-        self.weather_parser = weather_records
-
     def high_low_temperature(self, weather_records):
         max_temp_record = max(weather_records, key=lambda x: x.max_temp)
         max_humidity_record = max(weather_records, key=lambda x: x.max_humidity)

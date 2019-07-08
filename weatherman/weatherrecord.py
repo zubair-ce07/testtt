@@ -18,8 +18,3 @@ class WeatherRecord:
                 row.get(' Mean Humidity')]):
             return WeatherRecord(row)
         return False
-
-    def filtered_records(self, year=None, month=None):
-        if month:
-            return [x for x in self._weather_records if x.pkt.year == year and x.pkt.month == month]
-        return [x for x in self._weather_records if x.pkt.year == year]
