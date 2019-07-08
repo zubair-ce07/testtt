@@ -9,8 +9,10 @@
 <body>
     <div style='text-align: center; border: 2px solid; padding: 5px;'>
         <h1>Select a demo</h1>
+        <button class="btn-index" value="ajax-hello">ajax-hello</button>
         <button class="btn-index" value="ajax-simple">ajax-simple</button>
         <button class="btn-index" value="ajax-form">ajax-form</button>
+        <button class="btn-index" value="ajax-dropdown">ajax-dropdown</button>
     </div>
     
     <div id="disp-index"></div>
@@ -23,7 +25,7 @@
                 let file = ele.value
                 let xhr1 = new XMLHttpRequest()
 
-                xhr1.open('GET', file + '.html', true)
+                xhr1.open('GET', 'html/' + file + '.html', true)
 
                 xhr1.onload = function () {
                     if (xhr1.readyState == 4 && xhr1.status == 200) {
@@ -32,13 +34,13 @@
                         if (!document.getElementById(file + '.js')){
                             let script = document.createElement('script');
                             script.id = file + '.js'
-                            script.setAttribute('src', file + '.js');
+                            script.setAttribute('src', 'js/' + file + '.js');
                             document.head.appendChild(script);
                         } else {
                             document.head.removeChild(document.getElementById(file + '.js'))
                             let script = document.createElement('script');
                             script.id = file + '.js'
-                            script.setAttribute('src', file + '.js');
+                            script.setAttribute('src', 'js/' + file + '.js');
                             document.head.appendChild(script);
                         }
                     }
