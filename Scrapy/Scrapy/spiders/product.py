@@ -10,8 +10,7 @@ class ProductSpider(scrapy.Spider):
         yield scrapy.Request(url=url, callback=self.parse)
 
     def parse(self, response):
-        for url in response.css(".toggle_promo_collection::attr(href)")\
-         .getall():
+        for url in response.css(".toggle_promo_collection::attr(href)").getall():
             yield response.follow(url, callback=self.parse)
 
         for url in response.css(".item-33 a::attr(href)").getall():
@@ -23,8 +22,7 @@ class ProductSpider(scrapy.Spider):
         for url in response.css(".justify-center a::attr(href)").getall():
             yield response.follow(url, callback=self.parse)
 
-        for url in response.css(".colorama-product-link-wrapper::attr(href)")\
-         .getall():
+        for url in response.css(".colorama-product-link-wrapper::attr(href)").getall():
             yield response.follow(url, callback=self.fetch)
 
     def fetch(self, response):
@@ -49,10 +47,8 @@ class ProductSpider(scrapy.Spider):
         return response.css(".breadcrumbs a::text").getall()
 
     def get_description(self, response):
-        return response.css(".description i::text").get() or \
-               response.css(".description p::text").get() or \
-               response.css(".description span::text").get() or \
-               response.css(".description .ellipsis::text").get() or \
+        return response.css(".description i::text").get() or response.css(".description p::text").get() or \
+               response.css(".description span::text").get() or response.css(".description .ellipsis::text").get() or \
                response.css(".description::text").get()
 
     def get_image_urls(self, response):
@@ -68,8 +64,7 @@ class ProductSpider(scrapy.Spider):
         return response.url
 
     def get_script_json(self, response):
-        return json.loads(response.css("script[data-product-json]::text")
-                          .get())
+        return json.loads(response.css("script[data-product-json]::text").get())
 
     def get_gender(self, product):
         for attribute in product.get("tags"):
@@ -91,5 +86,4 @@ class ProductSpider(scrapy.Spider):
         return skus
 
     def get_currency(self, response):
-        return response.css(
-            "#in-context-paypal-metadata::attr(data-currency)").get()
+        return response.css("#in-context-paypal-metadata::attr(data-currency)").get()
