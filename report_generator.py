@@ -3,65 +3,48 @@ import calendar
 
 class ReportGenerator:
 
-    Blue = '\033[1;34m*\033[1;m'
-    Red = '\033[1;31m*\033[1;m'
+    blue_stars = '\033[1;34m*\033[1;m'
+    red_stars = '\033[1;31m*\033[1;m'
 
     def generate_monthly_report(self, avg_high_temp,
                                 avg_min_temp, avg_mean_humid):
-
         print(f"Highest Average: {round(avg_high_temp)}")
         print(f"Lowest Average: {round(avg_min_temp)}")
         print(f"Average Mean Humidity: "
               f"{round(avg_mean_humid)}%\n")
 
-    def generate_yearly_report(self, yearly_highest_temp_date,
-                               yearly_highest_temp, yearly_lowest_temp_date,
-                               yearly_lowest_temp, yearly_most_humid_day,
-                               yearly_most_humid_value):
+    def generate_yearly_report(self, yearly_list):
+        print(f"Highest: {yearly_list[0].maximum_temp}C on "
+              f"{yearly_list[0].date.day}"
+              f" {calendar.month_abbr[yearly_list[0].date.month]}")
+        print(f"Lowest: {yearly_list[1].minimum_temp}C on "
+              f"{ yearly_list[1].date.day}"
+              f" {calendar.month_abbr[yearly_list[1].date.month]}")
+        print(f"Humidity: {yearly_list[2].maximum_humidity}% on "
+              f"{yearly_list[2].date.day}"
+              f" {calendar.month_abbr[yearly_list[2].date.month]}\n")
 
-        print(f"Highest: {yearly_highest_temp}C on "
-              f"{yearly_highest_temp_date.day}"
-              f" {calendar.month_abbr[yearly_highest_temp_date.month]}")
+    def generate_bonus_report(self, bonus_records):
+        for record in bonus_records:
+            maximum_temp = record.maximum_temp
+            minimum_temp = record.minimum_temp
+            difference = maximum_temp - minimum_temp
+            print(" ", end='')
+            for values in range(minimum_temp):
+                print(self.blue_stars, end='')
+            for values in range(difference):
+                print(self.red_stars, end='')
+            print(" ", minimum_temp, "C - ", maximum_temp, "C\n")
 
-        print(f"Lowest: {yearly_lowest_temp}C on "
-              f"{ yearly_lowest_temp_date.day}"
-              f" {calendar.month_abbr[yearly_lowest_temp_date.month]}")
-
-        print(f"Humidity: {yearly_most_humid_value}% on "
-              f"{yearly_most_humid_day.day}"
-              f" {calendar.month_abbr[yearly_most_humid_day.month]}")
-
-    def generate_bonus_report(self, weather_files, date):
-
-        row_count = 0
-        for entry in weather_files:
-            if entry.date.year == date.year and \
-                    entry.date.month == date.month:
-                row_count += 1
-                maximum = entry.maximum_temp
-                minimum = entry.minimum_temp
-                difference = maximum - minimum
-                print(row_count, " ", end='')
-                for values in range(minimum):
-                    print(self.Blue, end='')
-                for values in range(difference):
-                    print(self.Red, end='')
-                print(" ", minimum, "C - ", maximum, "C\n")
-
-    def generate_chart_report(self, weather_files, date):
-
-        row_count = 0
-        for entry in weather_files:
-            if entry.date.year == date.year and \
-                    entry.date.month == date.month:
-                row_count += 1
-                maximum = entry.maximum_temp
-                minimum = entry.minimum_temp
-                print(row_count, " ", end='')
-                for values in range(minimum):
-                    print(self.Blue, end='')
-                print(f" {minimum} C")
-                print(row_count, " ", end='')
-                for values in range(maximum):
-                    print(self.Red, end='')
-                print(f" {maximum} C")
+    def generate_chart_report(self, chart_records):
+        for record in chart_records:
+            maximum_temp = record.maximum_temp
+            minimum_temp = record.minimum_temp
+            print(" ", end='')
+            for values in range(minimum_temp):
+                print(self.blue_stars, end='')
+            print(f" {minimum_temp} C")
+            print(" ", end='')
+            for values in range(maximum_temp):
+                print(self.red_stars, end='')
+            print(f" {maximum_temp} C\n")

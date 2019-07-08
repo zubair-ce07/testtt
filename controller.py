@@ -1,4 +1,5 @@
 import argparse
+import os.path
 
 from datetime import datetime
 
@@ -25,6 +26,9 @@ def arg_parser():
                         type=lambda arg: datetime.strptime(
                             arg, '%Y/%m'), nargs="*")
     parsed_data = parser.parse_args()
+
+    if os.path.exists(parsed_data.file_path) is False:
+        exit("Path not valid")
     return parsed_data
 
 
@@ -41,7 +45,7 @@ if __name__ == "__main__":
         for arguments in input_arguments.e:
             result = (calculator.yearly_analysis(
                 data_extracted, arguments.date()))
-            report.generate_yearly_report(*iter(result))
+            report.generate_yearly_report(result)
 
     if input_arguments.a:
         for arguments in input_arguments.a:
@@ -51,8 +55,12 @@ if __name__ == "__main__":
 
     if input_arguments.b:
         for arguments in input_arguments.b:
-            report.generate_bonus_report(data_extracted, arguments.date())
+            result = calculator.bonus_analysis(
+                data_extracted, arguments.date())
+            report.generate_bonus_report(result)
 
     if input_arguments.c:
         for arguments in input_arguments.c:
-            report.generate_chart_report(data_extracted, arguments.date())
+            result = calculator.bonus_analysis(
+                data_extracted, arguments.date())
+            report.generate_chart_report(result)

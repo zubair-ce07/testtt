@@ -4,45 +4,41 @@ from statistics import mean
 class DataCalculator:
 
     def monthly_analysis(self, weather_files, date):
-        total_max_temp = []
-        total_min_temp = []
-        total_avg_humidity = []
-        for entry in weather_files:
-            if entry.date.year == date.year and \
-                    entry.date.month == date.month:
-
-                total_max_temp.append(entry.maximum_temp)
-                total_min_temp.append(entry.minimum_temp)
-                total_avg_humidity.append(entry.average_humidity)
-
-        average_high_temp = mean(total_max_temp)
-        average_min_temp = mean(total_min_temp)
-        average_mean_humidity = mean(total_avg_humidity)
+        matched_records = []
+        matched_records += (records for records in weather_files if
+                            records.date.year == date.year and
+                            records.date.month == date.month)
+        average_high_temp = mean(records.maximum_temp for
+                                 records in matched_records)
+        average_min_temp = mean(records.minimum_temp for
+                                records in matched_records)
+        average_mean_humidity = mean(records.average_humidity for
+                                     records in matched_records)
 
         return average_high_temp, average_min_temp, average_mean_humidity
 
     def yearly_analysis(self, weatherfiles, date):
-        highest_temp = {}
-        lowest_temp = {}
-        most_humid = {}
-        for entry in weatherfiles:
-            if entry.date.year == date.year:
-                highest_temp.update({entry.date: entry.maximum_temp})
-                lowest_temp.update({entry.date: entry.minimum_temp})
-                most_humid.update({entry.date: entry.maximum_humidity})
+        yearly_records = [record for record in weatherfiles if
+                          record.date.year == date.year]
+        yearly_maximum_temp = max(yearly_records, key=lambda
+            single_record: single_record.maximum_temp)
+        yearly_minimum_temp = max(yearly_records, key=lambda
+            single_record: single_record.minimum_temp)
+        yearly_maximum_humidity = max(yearly_records, key=lambda
+            single_record: single_record.maximum_humidity)
 
-        maximum_temp = max(highest_temp, key=highest_temp.get)
-        yearly_highest_temp_date = maximum_temp
-        yearly_highest_temp = highest_temp[maximum_temp]
+        yearly_list = [yearly_maximum_temp, yearly_minimum_temp,
+                       yearly_maximum_humidity]
+        return yearly_list
 
-        minimum_temp = min(lowest_temp, key=lowest_temp.get)
-        yearly_lowest_temp_date = minimum_temp
-        yearly_lowest_temp = lowest_temp[minimum_temp]
+    def bonus_analysis(self, weatherfiles, date):
+        bonus_records = [record for record in weatherfiles if
+                         record.date.year == date.year and
+                         record.date.month == date.month]
+        return bonus_records
 
-        maximum_humidity = max(most_humid, key=most_humid.get)
-        yearly_most_humid_day = maximum_humidity
-        yearly_most_humid_value = most_humid[maximum_humidity]
-
-        return yearly_highest_temp_date, yearly_highest_temp,\
-               yearly_lowest_temp_date, yearly_lowest_temp,\
-               yearly_most_humid_day, yearly_most_humid_value
+    def chart_analysis(self, weatherfiles, date):
+        chart_records = [record for record in weatherfiles if
+                         record.date.year == date.year and
+                         record.date.month == date.month]
+        return chart_records
