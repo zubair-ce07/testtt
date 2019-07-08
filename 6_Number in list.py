@@ -4,33 +4,31 @@
 # define a procedure that takes in a string of numbers from 1-9 and
 # outputs a list with the following parameters:
 # Every number in the string should be inserted into the list.
-# If the first number in the string is greater than or equal 
-# to the proceeding number, the proceeding number should be inserted 
-# into a sublist. Continue adding to the sublist until the proceeding number 
-# is greater than the first number before the sublist. 
+# If the first number in the string is greater than or equal
+# to the proceeding number, the proceeding number should be inserted
+# into a sublist. Continue adding to the sublist until the proceeding number
+# is greater than the first number before the sublist.
 # Then add this bigger number to the normal list.
 
 # Hint - "int()" turns a string's element into a number
 
 
 def numbers_in_lists(str_rec):
-    num_list = [int(str_rec[i]) for i in range(len(str_rec))]
+    num_list = [int(ch) for ch in str_rec]
     nums_list = [num_list[0]]
-    i = 0
-    j = 1
-    while j < len(str_rec):
-        if num_list[i] >= num_list[j]:
-            sublist = [num_list[j]]
-            k = j + 1
-            while k < len(str_rec) and num_list[k] <= num_list[j]:
-                sublist.append(num_list[k])
-                k += 1
-            nums_list.append(sublist)
-            j += k - j
+    temp = []
+    j = 0
+    for i in range(1, len(num_list)):
+        if num_list[i] > num_list[j]:
+            if len(temp) > 0:
+                nums_list.append(temp)
+            nums_list.append(num_list[i])
+            temp = []
+            j = i
         else:
-            nums_list.append(num_list[j])
-            i = j
-            j += 1
+            temp.append(num_list[i])
+    if len(temp) > 0:
+        nums_list.append(temp)
     return nums_list
 
 
