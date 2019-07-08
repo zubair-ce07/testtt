@@ -1,5 +1,6 @@
 import scrapy
 import json
+import re
 
 
 class ProductSpider(scrapy.Spider):
@@ -10,22 +11,16 @@ class ProductSpider(scrapy.Spider):
         yield scrapy.Request(url=url, callback=self.parse)
 
     def parse(self, response):
-        for url in response.css(".toggle_promo_collection::attr(href)").getall():
-            yield response.follow(url, callback=self.parse)
-
-        for url in response.css(".item-33 a::attr(href)").getall():
+        for url in response.css(".item .go_page::attr(href)").getall():
             yield response.follow(url, callback=self.parse)
 
         for url in response.css(".item::attr(href)").getall():
-            yield response.follow(url, callback=self.fetch)
+            yield response.follow(url, callback=self.fetch_item_details)
 
-        for url in response.css(".justify-center a::attr(href)").getall():
+        for url in response.css(".pagination a::attr(href)").getall():
             yield response.follow(url, callback=self.parse)
 
-        for url in response.css(".colorama-product-link-wrapper::attr(href)").getall():
-            yield response.follow(url, callback=self.fetch)
-
-    def fetch(self, response):
+    def fetch_item_details(self, response):
         product = self.get_script_json(response)
         product_attr = {
             "name": self.get_name(product),
@@ -41,7 +36,7 @@ class ProductSpider(scrapy.Spider):
         yield product_attr
 
     def get_name(self, product):
-        return product.get("title")
+        return product["title"]
 
     def get_category(self, response):
         return response.css(".breadcrumbs a::text").getall()
@@ -51,14 +46,21 @@ class ProductSpider(scrapy.Spider):
                response.css(".description span::text").get() or response.css(".description .ellipsis::text").get() or \
                response.css(".description::text").get()
 
+    def make_img_url(self, response):
+        for img_url in response.css("::attr(data-zoom-img)").getall():
+            yield response.follow(img_url, None).url
+
     def get_image_urls(self, response):
-        return response.css(".swiper-slide img::attr(src)").getall()
+        image_urls = []
+        for url in self.make_img_url(response):
+            image_urls.append(url)
+        return image_urls
 
     def get_brand(self, response):
-        return "".join(response.css(".logo span::text").getall())
+        return "A.P.C"
 
     def get_retailer_sku(self, product):
-        return product.get("id")
+        return product["id"]
 
     def get_url(self, response):
         return response.url
@@ -67,23 +69,30 @@ class ProductSpider(scrapy.Spider):
         return json.loads(response.css("script[data-product-json]::text").get())
 
     def get_gender(self, product):
-        for attribute in product.get("tags"):
-            if attribute.find("Gender:") != -1:
-                return attribute.replace("Gender:", "")
+        gender_attribute = [attribute for attribute in product["tags"] if "Gender" in attribute]
+        if gender_attribute:
+            return re.split('\\bGender:\\b', gender_attribute[0])[-1]
 
     def get_skus(self, response, product):
         skus = []
-        for variant in product.get("variants"):
+        for variant in product["variants"]:
             skus.append({
-                "sku_id": variant.get("id"),
-                "color": variant.get("option1"),
+                "sku_id": variant["id"],
+                "color": variant["option1"],
                 "currency": self.get_currency(response),
-                "size": variant.get("option2"),
-                "out_of_stock": str(not variant.get("available")).lower(),
-                "price": variant.get("price"),
-                "previous_price": variant.get("compare_at_price"),
+                "size": variant["option2"],
+                "out_of_stock": not variant["available"],
+                "price": variant["price"],
+                "previous_price": self.get_prev_price(variant)
             })
         return skus
 
+    def get_prev_price(self, variant):
+        if isinstance(variant["compare_at_price"], list):
+            return variant["compare_at_price"]
+        prev_price = []
+        prev_price.append(variant["compare_at_price"])
+        return prev_price
+
     def get_currency(self, response):
-        return response.css("#in-context-paypal-metadata::attr(data-currency)").get()
+        return response.css("::attr(data-currency)").get()
