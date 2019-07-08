@@ -5,7 +5,7 @@ import scrapy
 from scrapy.item import Item
 from scrapy.linkextractors import LinkExtractor
 from scrapy.selector import SelectorList
-from scrapy.spiders import CrawlSpider, Rule, Spider, Request
+from scrapy.spiders import CrawlSpider, Rule, Spider
 
 
 class Product(Item):
@@ -21,13 +21,12 @@ class Product(Item):
     skus = scrapy.Field()
     currency = scrapy.Field()
     requests_queue = scrapy.Field()
-    variant_json = scrapy.Field()
-    colour_map = scrapy.Field()
-    size_map = scrapy.Field()
+    raw_colour = scrapy.Field()
+    raw_size = scrapy.Field()
 
 
 class SmiloDoxParser(Spider):
-    name = "smilodpx_parser"
+    name = "smilodox_parser"
     default_brand = 'Smilo'
     default_size = 'One_Size'
 
@@ -41,9 +40,6 @@ class SmiloDoxParser(Spider):
         'machine wash',
         'polyester'
     ]
-
-    size_map_t = 'https://www.smilodox.com/tpl/item/attribute_check/attribute/en/c8{}'
-    colour_map_t = 'https://www.smilodox.com/tpl/item/attribute_check/attribute/en/ec{}'
 
     def parse(self, response):
         item = Product()
@@ -61,13 +57,69 @@ class SmiloDoxParser(Spider):
 
         return self.get_item_or_next_request(item)
 
+    def parse_variants(self, response):
+        item = response.meta['item']
+        raw_variants = json.loads(re.findall(r'variations+\s=\s([^;]*);}', response.text)[0])
+        skus = []
+        common_sku = {
+            'currency': item['currency']
+        }
+
+        for key in raw_variants.keys():
+            sku = common_sku.copy()
+
+            if raw_variants[key].get('valueIds'):
+                colour_size_code = raw_variants[key]['valueIds']
+                sku['colour'] = colour_size_code[0]
+                sku['size'] = colour_size_code[1]
+
+            sku['price'] = raw_variants[key]['variationPrice']
+
+            skus.append(sku)
+
+        item['skus'] = skus
+
+        colour_url = re.findall(r'([/a-z_]*/ec/[a-z0-9_.]*)', response.text)
+        size_url = re.findall(r'([/a-z_]*/c8/[a-z0-9_.]*)', response.text)
+
+        item['requests_queue'] += [response.follow(url=colour_url[0], callback=self.parse_colours)] \
+            if colour_url else []
+        item['requests_queue'] += [response.follow(url=size_url[0], callback=self.parse_sizes)] \
+            if size_url else []
+
+        return self.get_item_or_next_request(item)
+
+    def parse_colours(self, response):
+        item = response.meta['item']
+        item['raw_colour'] = json.loads(re.findall(r'"values":(.*)};}', response.text)[0])
+        item['skus'] = self.extract_skus(item)
+
+        return self.get_item_or_next_request(item)
+
+    def parse_sizes(self, response):
+        item = response.meta['item']
+        item['raw_size'] = json.loads(re.findall(r'"values":(.*)};}', response.text)[0])
+        item['skus'] = self.extract_skus(item)
+
+        return self.get_item_or_next_request(item)
+
+    def extract_skus(self, item):
+        skus = item['skus']
+        for sku in skus:
+            sku['size'] = self.extract_size(sku['size'], item['raw_size']) \
+                if item.get('raw_size') else self.default_size
+            sku['sku_id'] = sku['size']
+
+            if item.get('raw_colour'):
+                sku['colour'] = self.extract_colour(sku['colour'], item['raw_colour'])
+                sku['sku_id'] += f'_{sku["colour"]}'
+
+        return skus
+
     def get_item_or_next_request(self, item):
         if not item['requests_queue']:
-            item['skus'] = self.extract_skus(item)
-
-            del item['variant_json']
-            del item['colour_map']
-            del item['size_map']
+            del item['raw_colour']
+            del item['raw_size']
             del item['currency']
             del item['requests_queue']
 
@@ -79,67 +131,17 @@ class SmiloDoxParser(Spider):
         return request
 
     def construct_variant_requests(self, response):
-        return [response.follow(url=self.extract_variant_url(response)[0], callback=self.extract_variants)]
+        return [response.follow(url=self.extract_variant_url(response)[0], callback=self.parse_variants)]
 
-    def extract_variants(self, response):
-        item = response.meta['item']
-        item['variant_json'] = json.loads(re.findall(r'variations+\s=\s([^;]*);}', response.text)[0])
-
-        colour_url = re.findall(r'/en/ec([/a-zA-z0-9_.]*)', response.text)
-        size_url = re.findall(r'/en/c8([/a-zA-z0-9_.]*)', response.text)
-
-        item['requests_queue'] += [Request(url=self.colour_map_t.format(colour_url[0]),
-                                           callback=self.extract_colour_map)] if colour_url else []
-        item['requests_queue'] += [Request(url=self.size_map_t.format(size_url[0]),
-                                           callback=self.extract_size_map)] if size_url else []
-
-        return self.get_item_or_next_request(item)
-
-    def extract_colour_map(self, response):
-        item = response.meta['item']
-        item['colour_map'] = json.loads(re.findall(r'"values":(.*)};}', response.text)[0])
-
-        return self.get_item_or_next_request(item)
-
-    def extract_size_map(self, response):
-        item = response.meta['item']
-        item['size_map'] = json.loads(re.findall(r'"values":(.*)};}', response.text)[0])
-
-        return self.get_item_or_next_request(item)
-
-    def extract_skus(self, item):
-        skus = []
-        common_sku = {
-            'currency': item['currency']
-        }
-
-        for key in item['variant_json'].keys():
-            sku = common_sku.copy()
-            colour_size_code = item['variant_json'][key]['valueIds']
-
-            sku['size'] = self.extract_size(colour_size_code[1], item['size_map']) \
-                if item.get('size_map') else self.default_size
-            sku['sku_id'] = sku['size']
-
-            if item.get('colour_map'):
-                sku['colour'] = self.extract_colour(colour_size_code[0], item['colour_map'])
-                sku['sku_id'] += f'_{sku["colour"]}'
-
-            sku['price'] = item['variant_json'][key]['variationPrice']
-
-            skus.append(sku)
-
-        return skus
-
-    def extract_colour(self, colour_code, colour_json):
-        return colour_json[str(colour_code)]['name']
+    def extract_colour(self, colour_code, colours):
+        return colours[str(colour_code)]['name']
 
     def extract_currency(self, response):
         raw_currency = json.loads(response.css('script::text').re_first(r'\d\,\s+\d,\s(.+)\);'))
         return raw_currency['currency']['name']
 
-    def extract_size(self, size_code, size_json):
-        return size_json[str(size_code)]['name']
+    def extract_size(self, size_code, sizes):
+        return sizes[str(size_code)]['name'] if sizes.get(str(size_code)) else self.default_size
 
     def extract_variant_url(self, response):
         return clean(response.css('.div_plenty_attribute_selection script ::attr(src)'))
@@ -195,15 +197,13 @@ class SmiloDoxCrawler(CrawlSpider):
 
     allowed_domains = ['smilodox.com']
     start_urls = ['https://www.smilodox.com/']
-
-    category_css = '.dropdown-menu .menu-level3'
-    pagination_css = '[rel="next"]'
+    listings_css = ['.dropdown-menu .menu-level3', '[rel="next"]']
     product_css = '.thumb'
 
     parser = SmiloDoxParser()
 
     rules = (
-        Rule(LinkExtractor(restrict_css=(category_css, pagination_css))),
+        Rule(LinkExtractor(restrict_css=listings_css)),
         Rule(LinkExtractor(restrict_css=product_css, attrs='data-href', tags='article'),
              callback=parser.parse)
     )
