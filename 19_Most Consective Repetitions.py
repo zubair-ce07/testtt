@@ -9,27 +9,25 @@
 # have the same number of longest repetitions, the result should
 # be the one that appears first. If the input list is empty,
 # it should return None.
-from collections import OrderedDict
-import heapq
 
 
 def longest_repetition(li):
     if len(li) == 0:
         return None
-    consec_occurences = OrderedDict()
-    pos = 0
+    occurrences = 1
+    occurrent = li[0]
     i = 0
     while i < len(li):
-        consec_occurences[li[i]] = [1, pos]
         j = i + 1
+        latest_count = 0
         while j < len(li) and li[i] == li[j]:
-            consec_occurences[li[i]][0] += 1
-            consec_occurences[li[i]][1] = pos
+            latest_count += 1
             j += 1
+        if latest_count + 1 > occurrences:
+            occurrences = latest_count + 1
+            occurrent = li[i]
         i += j - i
-        pos += 1
-    return sorted(consec_occurences.items(), key=lambda x: x[1][0],
-                  reverse=True)[0][0]
+    return occurrent
 
 
 # For example,
