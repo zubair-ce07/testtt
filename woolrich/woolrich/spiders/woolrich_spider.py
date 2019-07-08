@@ -35,8 +35,8 @@ class ProductsSpider(CrawlSpider):
         categories = response.css(".breadcrumb-label::text").getall()
         item_id = response.css(".jrb-product-view::attr(data-entity-id)").get()
         gender = "Men" if "Men" in categories else "Women" if "Women" in categories else "Unisex"
-        price = response.css(".productView-details .price::text").get()
-        separated_price = self.split_price(price)
+        price_formatted = response.css(".productView-details .price::text").get()
+        (currency, price) = self.split_price(price_formatted)
         item = {
             'retailer_sku': response.css(".parent-sku::text").get(),
             'lang': response.css("html::attr(lang)").get(),
@@ -50,8 +50,8 @@ class ProductsSpider(CrawlSpider):
             'care': response.css("ul#features-content li::text").getall(),
             'image_urls': response.css("#zoom-modal img::attr(src)").getall(),
             'skus': {},
-            'price': float(separated_price[1]),
-            'currency': separated_price[0]
+            'price': float(price.replace(',', '')),
+            'currency': currency
         }
         sku_url = f"{self.attr_url}{item_id}"
         combinations = list(product(color_ids, size_ids))
@@ -86,18 +86,18 @@ class ProductsSpider(CrawlSpider):
     
     def parse_skus(self, response):
         obj = json.loads(response.text)
-        price = obj['data']['price']['without_tax']['formatted']
-        price_separated = self.split_price(price)
+        (currency, price) = self.split_price(obj['data']['price']['without_tax']['formatted'])
         if 'rrp_without_tax' in obj['data']['price']:
             previous_price_formatted = obj['data']['price']['rrp_without_tax']['formatted']
-            previous_price = float(self.split_price(previous_price_formatted)[1].replace(',', ''))
+            (previous_currency, previous_price) = self.split_price(previous_price_formatted)
+            previous_price = float(previous_price.replace(',', ''))
         else:
             previous_price = None
         sku = {
                     obj['data']['sku']: {
-                        'price': float(price_separated[1].replace(',', '')),
-                        'currency': price_separated[0],
-                        'previous_prices': previous_price,
+                        'price': float(price.replace(',', '')),
+                        'currency': currency,
+                        'previous_price':  previous_price,
                         'color': response.meta['color'],
                         'size': response.meta['size'],
                         'availability': obj['data']['instock']
@@ -127,4 +127,4 @@ class ProductsSpider(CrawlSpider):
             yield response.meta['item']
 
     def split_price(self, price):
-        return re.split(r'([0-9]*[,]*[0-9]*[.][0-9]*)', price)
+        return re.match(r'(\W+)(\d*[,]*\d*[.]*\d*)', price).groups()
