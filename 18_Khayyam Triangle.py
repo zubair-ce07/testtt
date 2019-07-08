@@ -30,8 +30,7 @@
 def triangle(n):
     tri = []
     for i in range(n):
-        tri.append([])
-        tri[i].append(1)
+        tri.append([1])
         for j in range(1, i):
             tri[i].append(tri[i - 1][j - 1] + tri[i - 1][j])
         if i > 0:
