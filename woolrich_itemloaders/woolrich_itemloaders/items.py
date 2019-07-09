@@ -2,13 +2,17 @@ import re
 import scrapy
 
 from scrapy.loader import ItemLoader
-from scrapy.loader.processors import MapCompose, TakeFirst
+from scrapy.loader.processors import Identity, MapCompose, TakeFirst
 
 def split_price(price):
     return float(re.match(r'(\W+)(\d*[,]*\d*[.]*\d*)', price).group(2).replace(',', ''))
 
 def split_currency(price):
     return re.match(r'(\W+)(\d*[,]*\d*[.]*\d*)', price).group(1)
+
+def get_gender(categories):
+    gender = "Men" if "Men" in categories else "Women" if "Women" in categories else "Unisex"
+    return gender
 
 class Product(scrapy.Item):
     retailer_sku = scrapy.Field()
@@ -36,28 +40,17 @@ class Sku(scrapy.Item):
     
 class ProductLoader(ItemLoader):
     default_item_class = Product
-    
-    retailer_sku_out = TakeFirst()
-    lang_out = TakeFirst()
-    gender_out = TakeFirst()
-    url_out = TakeFirst()
-    date_out = TakeFirst()
-    market_out = TakeFirst()
-    name_out = TakeFirst()
-    skus_out = TakeFirst()
-    price_out = TakeFirst()
+    default_output_processor = TakeFirst()
+    category_out = Identity()
+    desc_out = Identity()
+    care_out = Identity()
+    image_urls_out = Identity()
+    gender_in = MapCompose(get_gender)
     price_in = MapCompose(split_price)
-    currency_out = TakeFirst()
     currency_in = MapCompose(split_currency)
 
 class SkuLoader(ItemLoader):
     default_item_class = Sku
-
-    price_out = TakeFirst()
+    default_output_processor = TakeFirst()
     price_in = MapCompose(split_price)
-    currency_out = TakeFirst()
     currency_in = MapCompose(split_currency)
-    previous_price_out = TakeFirst()
-    color_out = TakeFirst()
-    size_out = TakeFirst()
-    availability_out = TakeFirst()
