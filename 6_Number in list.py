@@ -15,18 +15,21 @@
 
 def numbers_in_lists(str_rec):
     num_list = [int(ch) for ch in str_rec]
-    nums_list = [num_list[0]]
+    nums_list = []
     temp = []
-    j = 0
-    for i in range(1, len(num_list)):
-        if num_list[i] > num_list[j]:
+    prev = None
+    for i in num_list:
+        if prev is None:
+            nums_list.append(i)
+            prev = i
+        elif i > prev:
             if len(temp) > 0:
                 nums_list.append(temp)
-            nums_list.append(num_list[i])
+            nums_list.append(i)
             temp = []
-            j = i
+            prev = i
         else:
-            temp.append(num_list[i])
+            temp.append(i)
     if len(temp) > 0:
         nums_list.append(temp)
     return nums_list
