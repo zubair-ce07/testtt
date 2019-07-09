@@ -1,33 +1,22 @@
-<!DOCTYPE html>
-<html>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-    <head>
-        <meta charset="utf-8">
-        <title>CV Maker</title>
-        <script>
-            $(document).ready(function(){
-                $("button.experience").click(function(){
-                var $experience = $('.exp').html();
-                $("div.exp").append($experience);
-                });
-            });
-        </script>
-    </head>
-    <body>
-        <form>
+{% extends 'base.html' %}
+{% load static %}
+    {% block body %}
+    <div class="container">
+        <form method="post" class="form-control">
+            {% csrf_token %}
             <div class="exp" >
                 <h3>Experience</h3>
-                <p>Organization: <input type="text" name="exp_organization"></p>
-                <p>Position: <input type="text" name="exp_position"></p>
-                <p>Starting Date: <input type="date" name="exp_starting_date"></p>
-                <p>Ending Date: <input type="date" name="exp_ending_date"></p>
-                <p>City: <input type="text" name="exp_city"></p>
-                <p>Job Description: <input type="text" name="exp_job_description"></p>
+                <input type="hidden" name="user_id" value="{{user.id}}">
+                <p>Organization: <input type="text" name="organization"></p>
+                <p>Position: <input type="text" name="position"></p>
+                <p>Starting Date: <input type="date" name="starting_date"></p>
+                <p>Ending Date: <input type="date" name="ending_date"></p>
+                <p>City: <input type="text" name="city"></p>
+                <p>Job Description: <input type="text" name="job_description"></p>
             </div>
             <button type="submit">Submit</button>
         </form>
-        <button class="experience" align="center">Add Experience</button> <br>
-    <a href="http://127.0.0.1:8000/education">Next</a>
-    </body>
-</html>
-
+        <button class="experience">
+            <a href="../education">Add Education</a></button>
+    </div>
+    {% endblock %}

@@ -1,66 +1,81 @@
-<!DOCTYPE html>
-<html>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-    <head>
-        <meta charset="utf-8">
-        <title>CV Maker</title>
-    </head>
-    <body>
-        <form action="http://127.0.0.1:8000/submit_basic_information">
-            <div>
-                <h3>Basic Information</h3>
-                <p>Name: <input type="text" name="name" placeholder="name"></p>
-                <p>Date of Birth: <input type="date" name="date_of_birth"></p>
-                <p>Contact Number: <input type="number" name="contact_number"></p>
-                <p>Address: <input type="text" name="address"></p>
-                <p>Email: <input type="email" name="email"></p>
-                <h4>Skills</h4>
-                <p>Skill 1: <input type="text" name="skill1">
-                    <input type="radio" name="skill1_level" value="1">Beginner
-                    <input type="radio" name="skill1_level" value="2">Little knowledge
-                    <input type="radio" name="skill1_level" value="3">Intermediate
-                    <input type="radio" name="skill1_level" value="4">Advance
-                    <input type="radio" name="skill1_level" value="5">Expert
-                </p>
-                <p>Skill 2: <input type="text" name="skill2" placeholder="Optional">
-                    <input type="radio" name="skill2_level" value="1">Beginner
-                    <input type="radio" name="skill2_level" value="2">Little knowledge
-                    <input type="radio" name="skill2_level" value="3">Intermediate
-                    <input type="radio" name="skill2_level" value="4">Advance
-                    <input type="radio" name="skill2_level" value="5">Expert
-                </p>
-                <p>Skill 3: <input type="text" name="skill3" placeholder="Optional">
-                    <input type="radio" name="skill3_level" value="1">Beginner
-                    <input type="radio" name="skill3_level" value="2">Little knowledge
-                    <input type="radio" name="skill3_level" value="3">Intermediate
-                    <input type="radio" name="skill3_level" value="4">Advance
-                    <input type="radio" name="skill3_level" value="5">Expert
-                </p>
-                <p>Skill 4: <input type="text" name="skill4" placeholder="Optional">
-                    <input type="radio" name="skill4_level" value="1">Beginner
-                    <input type="radio" name="skill4_level" value="2">Little knowledge
-                    <input type="radio" name="skill4_level" value="3">Intermediate
-                    <input type="radio" name="skill4_level" value="4">Advance
-                    <input type="radio" name="skill4_level" value="5">Expert
-                </p>
-                <p>Skill 5: <input type="text" name="skill5" placeholder="Optional">
-                    <input type="radio" name="skill5_level" value="1">Beginner
-                    <input type="radio" name="skill5_level" value="2">Little knowledge
-                    <input type="radio" name="skill5_level" value="3">Intermediate
-                    <input type="radio" name="skill5_level" value="4">Advance
-                    <input type="radio" name="skill5_level" value="5">Expert
-                </p>
-                <h4>Hobbies</h4>
-                <p>Hobby 1: <input type="text" name="hobby1"></p>
-                <p>Hobby 2: <input type="text" name="hobby2" placeholder="Optional"></p>
-                <p>Hobby 3: <input type="text" name="hobby3" placeholder="Optional"></p>
-                <h4>Reference</h4>
-                <p>Reference 1: <input type="text" name="reference1"></p>
-                <p>Reference 2: <input type="text" name="reference2" placeholder="Optional"></p>
+{% extends 'base.html' %}
+{% load static %}
+{% block body %}
+
+<div class="container" >
+    <form id ="basic_information" method="post" class="form-control">
+        {% csrf_token %}
+        <div>
+            <h3>Basic Information</h3>
+            <input type="hidden" name="user_id" value="{{user.id}}">
+            <p>Image: <input type="image" id="image" class="form-control form-control-file"></p>
+            <div class="form-row">
+            <div class="form-group col-md-4">
+                <p>Name: <input class="form-control" type="text" id="name" name="name" placeholder="name"></p></div>
+            <div class="form-group col-md-2">
+                <p>Date of Birth: <input class="form-control" type="date" name="date_of_birth"></p></div></div>
+            <div class="form-row">
+            <div class="form-group col-md-4">
+                <p>Contact Number: <input class="form-control" type="number" name="contact_number"></p></div>
+            <div class="form-group col-md-4">
+                <p>Email: <input class="form-control" type="email" name="email"></p></div></div>
+            <div class="form-row">
+            <div class="form-group col-md-6">
+                <p>Address: <input class="form-control" type="text" name="address"></p></div></div>
             </div>
-            <button type="submit">Submit</button>
-        </form>
-        <a href="http://127.0.0.1:8000/experience">Add Experience</a>
-    </body>
-</html>
+            <div>
+            <h4>Skills</h4>
+            Skill 1: <input type="text" name="skill1"><br>
+                <div class="form-check">
+                <input type="radio" class="radio" name="skill1_level" value=1>Beginner<br>
+                <input type="radio" class="radio" name="skill1_level" value=2>Little knowledge<br>
+                <input type="radio" class="radio" name="skill1_level" value=3>Intermediate<br>
+                <input type="radio" class="radio" name="skill1_level" value=4>Advance<br>
+                <input type="radio" class="radio" name="skill1_level" value=5>Expert<br>
+                </div>
+            Skill 2: <input type="text" name="skill2" placeholder="Optional"><br>
+                <div class="form-check">
+                <input type="radio" class="radio" name="skill2_level" value=1>Beginner<br>
+                <input type="radio" class="radio" name="skill2_level" value=2>Little knowledge<br>
+                <input type="radio" class="radio" name="skill2_level" value=3>Intermediate<br>
+                <input type="radio" class="radio" name="skill2_level" value=4>Advance<br>
+                <input type="radio" class="radio" name="skill2_level" value=5>Expert<br>
+            </div>
+            <p>Skill 3: <input type="text" name="skill3" placeholder="Optional"><br>
+                <div class="form-check">
+                <input type="radio" class="radio" name="skill3_level" value=1>Beginner<br>
+                <input type="radio" class="radio" name="skill3_level" value=2>Little knowledge<br>
+                <input type="radio" class="radio" name="skill3_level" value=3>Intermediate<br>
+                <input type="radio" class="radio" name="skill3_level" value=4>Advance<br>
+                <input type="radio" class="radio" name="skill3_level" value=5>Expert<br>
+                </div>
+            Skill 4: <input type="text" name="skill4" placeholder="Optional"><br>
+                <div class="form-check">
+                <input type="radio" class="radio" name="skill4_level" value=1>Beginner<br>
+                <input type="radio" class="radio" name="skill4_level" value=2>Little knowledge<br>
+                <input type="radio" class="radio" name="skill4_level" value=3>Intermediate<br>
+                <input type="radio" class="radio" name="skill4_level" value=4>Advance<br>
+                <input type="radio" class="radio" name="skill4_level" value=5>Expert<br>
+                </div>
+            Skill 5: <input type="text" name="skill5" placeholder="Optional"><br>
+                <div class="form-check">
+                <input type="radio" class="radio" name="skill5_level" value=1>Beginner<br>
+                <input type="radio" class="radio" name="skill5_level" value=2>Little knowledge<br>
+                <input type="radio" class="radio" name="skill5_level" value=3>Intermediate<br>
+                <input type="radio" class="radio" name="skill5_level" value=4>Advance<br>
+                <input type="radio" class="radio" name="skill5_level" value=5>Expert<br>
+                </div>
+            </div>
+            <h4>Hobbies</h4>
+            <p>Hobby 1: <input type="text" name="hobby1"></p>
+            <p>Hobby 2: <input type="text" name="hobby2" placeholder="Optional"></p>
+            <p>Hobby 3: <input type="text" name="hobby3" placeholder="Optional"></p>
+            <h4>Reference</h4>
+            <p>Reference 1: <input type="text" name="reference1"></p>
+            <p>Reference 2: <input type="text" name="reference2" placeholder="Optional"></p>
+        <button id="submit" type="submit">Submit</button>
+    </form>
+    <a href="../experience">Add Experience</a>
+</div>
+{% endblock %}
 

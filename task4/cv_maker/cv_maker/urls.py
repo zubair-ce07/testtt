@@ -16,6 +16,8 @@ Including another URLconf
 from django.conf.urls import url
 from django.contrib import admin
 from cv_maker_app import views
+from accounts import views as accounts_views
+from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     url(r'^$', views.home, name='home'),
@@ -23,5 +25,8 @@ urlpatterns = [
     url(r'^basic_information/', views.basic_information, name='basic_information'),
     url(r'^experience/', views.experience, name='experience'),
     url(r'^education/', views.education, name='education'),
-    url(r'^submit_basic_information/', views.submit_basic_information, name='submit_basic_information'),
+    url(r'^signup/$', accounts_views.signup, name='signup'),
+    url(r'^logout/$', auth_views.LogoutView.as_view(), name='logout'),
+    url(r'^login/$', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
+
 ]
