@@ -14,37 +14,16 @@
 # splitlist.
 
 
-def insert(list1, index, list2):
-    while '' in list2:
-        list2.remove('')
-    before_index = list1[:index]
-    before_index += list2
-    before_index += list1[index + 1:]
-    return before_index
-
-
 def split_string(source, splitlist):
-    separators = list(splitlist)
     words = []
-    found = 0
+    if len(splitlist) == 1:
+        splitted = source.split(splitlist[0])
+        while '' in splitted:
+            splitted.remove('')
+        return splitted
+    for word in source.split(splitlist[0]):
+        words += split_string(word, splitlist[1:])
 
-    words += source.split(separators[0])
-    while '' in words:
-        words.remove('')
-
-    separators = separators[1:]
-    while len(separators) > 0:
-        for index, word in enumerate(words):
-            split_word = str(word).split(separators[0])
-            found = 0
-            if len(split_word) > 1:
-                words = insert(words, index, split_word)
-                found = 1
-                break
-        if found == 0:
-            separators = separators[1:]
-    if '' in words:
-        words.remove('')
     return words
 
 
