@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <title>Ajax Demo</title>
+</head>
+<body>
+    <div style='text-align: center; border: 2px solid; padding: 5px;'>
+        <h1>Select a demo</h1>
+        <button class="btn-index btn btn-primary" value="ajax-hello">ajax-GET-hello</button>
+        <button class="btn-index btn btn-primary" value="ajax-simple">ajax-GET-simple</button>
+        <button class="btn-index btn btn-primary" value="ajax-form">ajax-GET-form</button>
+        <button class="btn-index btn btn-primary" value="ajax-dropdown">ajax-GET-dropdown</button>
+        <br>
+        <br>
+        <button class="btn-index btn btn-success" value="ajax-POST-hello">ajax-POST-hello</button>
+        <button class="btn-index btn btn-success" value="ajax-POST-simple">ajax-POST-simple</button>
+        <button class="btn-index btn btn-success" value="ajax-POST-form">ajax-POST-form</button>
+        <button class="btn-index btn btn-success" value="ajax-POST-dropdown">ajax-POST-dropdown</button>
+    </div>
+    
+    <div id="disp-index"></div>
+
+    <script>
+        let elementsArray = document.getElementsByClassName('btn-index')
+        for (i = 0; i < elementsArray.length; i++) {
+            let ele = elementsArray[i]
+            elementsArray[i].addEventListener('click', () => {
+                let file = ele.value
+                let xhr1 = new XMLHttpRequest()
+
+                xhr1.open('GET', 'html/' + file + '.html', true)
+
+                xhr1.onload = function () {
+                    if (xhr1.status == 200) {
+                        document.getElementById('disp-index').innerHTML = xhr1.responseText
+
+                        if (!document.getElementById(file + '.js')){
+                            let script = document.createElement('script');
+                            script.id = file + '.js'
+                            script.setAttribute('src', 'js/' + file + '.js');
+                            document.head.appendChild(script);
+                        } else {
+                            document.head.removeChild(document.getElementById(file + '.js'))
+                            let script = document.createElement('script');
+                            script.id = file + '.js'
+                            script.setAttribute('src', 'js/' + file + '.js');
+                            document.head.appendChild(script);
+                        }
+                    }
+                }
+                xhr1.send()
+            })
+        }
+        
+        
+    </script>
+
+    <script id="loadedScript"></script>
+</body>
+</html>
