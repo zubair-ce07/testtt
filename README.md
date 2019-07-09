@@ -5,6 +5,7 @@ The purpose of this repo is to help the team lead and his team member in trainin
 
 ## Getting Started
 
+<<<<<<< HEAD
 1. Clone this repo on your local machine.
 1. Create a new branch with your name like *alisufian-master* (lower case).
 1. Push this empty branch.
@@ -16,3 +17,12 @@ The purpose of this repo is to help the team lead and his team member in trainin
 
 Do not add log files, temp files, data files etc.
 **Do not merge/push anything into master branch**.
+=======
+developed while getting started to work with *AJAX* requests using the `XMLHttpRequest()` method. The aim of this repo is to self-track the learning goals and later get feedback on it.
+
+## How to run?
+
+1. Clone/download the repository.
+2. Execute `node server.js` in the root directory to get the server running
+3. Open `index.html` file from the root directory in your browser
+>>>>>>> EOF fixed

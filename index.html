@@ -8,7 +8,7 @@
     <title>Ajax Demo</title>
 </head>
 <body>
-    <div style='text-align: center; border: 2px solid; padding: 5px;'>
+    <div style='text-align: center; border: 2px solid; padding: 5px;' id='listenerDiv'>
         <h1>Select a demo</h1>
         <button class="btn-index btn btn-primary" value="ajax-hello">ajax-GET-hello</button>
         <button class="btn-index btn btn-primary" value="ajax-simple">ajax-GET-simple</button>
@@ -25,40 +25,33 @@
     <div id="disp-index"></div>
 
     <script>
-        let elementsArray = document.getElementsByClassName('btn-index')
-        for (i = 0; i < elementsArray.length; i++) {
-            let ele = elementsArray[i]
-            elementsArray[i].addEventListener('click', () => {
-                let file = ele.value
-                let xhr1 = new XMLHttpRequest()
+        document.getElementById('listenerDiv').addEventListener('click', (event) => {
+            let file = event.target.value
+            let client = new XMLHttpRequest()
 
-                xhr1.open('GET', 'html/' + file + '.html', true)
+            client.open('GET', 'html/' + file + '.html', true)
 
-                xhr1.onload = function () {
-                    if (xhr1.status == 200) {
-                        document.getElementById('disp-index').innerHTML = xhr1.responseText
+            client.onload = function () {
+                if (client.status == 200) {
+                    document.getElementById('disp-index').innerHTML = client.responseText
 
-                        if (!document.getElementById(file + '.js')){
-                            let script = document.createElement('script');
-                            script.id = file + '.js'
-                            script.setAttribute('src', 'js/' + file + '.js');
-                            document.head.appendChild(script);
-                        } else {
-                            document.head.removeChild(document.getElementById(file + '.js'))
-                            let script = document.createElement('script');
-                            script.id = file + '.js'
-                            script.setAttribute('src', 'js/' + file + '.js');
-                            document.head.appendChild(script);
-                        }
+                    if(!document.getElementById(file + '.js')){
+                        let script = document.createElement('script');
+                        script.id = file + '.js'
+                        script.setAttribute('src', 'js/' + file + '.js');
+                        document.head.appendChild(script);
+                    } else {
+                        document.head.removeChild(document.getElementById(file + '.js'))
+                        let script = document.createElement('script');
+                        script.id = file + '.js'
+                        script.setAttribute('src', 'js/' + file + '.js');
+                        document.head.appendChild(script);
                     }
                 }
-                xhr1.send()
-            })
-        }
-        
-        
-    </script>
+            }
+            client.send()
+        })
 
-    <script id="loadedScript"></script>
+    </script>
 </body>
 </html>
