@@ -5,7 +5,7 @@
     xhr.open('GET', '/?listfiles=1', true);
 
     xhr.onload = () => {
-        if(xhr.readyState == 4 && xhr.status == 200) {
+        if(xhr.status == 200) {
             fileNames = xhr.responseText;
             fileNames = fileNames.split(',');
             for(let i in fileNames){
@@ -21,7 +21,7 @@
                 let xhr_inner = new XMLHttpRequest();
                 xhr_inner.open('GET', 'files/' + document.getElementById('dropdown-menu').value, true);
                 xhr_inner.onload = () =>  {
-                    if (xhr_inner.readyState == 4 && xhr_inner.status == 200) {
+                    if (xhr_inner.status == 200) {
                         document.getElementById('disp-dropdown').innerText = xhr_inner.responseText;
                     }
                 }
