@@ -1,7 +1,8 @@
 import re
 import scrapy
 
-from scrapy.loader.processors import Join, MapCompose, TakeFirst
+from scrapy.loader import ItemLoader
+from scrapy.loader.processors import MapCompose, TakeFirst
 
 def split_price(price):
     return float(re.match(r'(\W+)(\d*[,]*\d*[.]*\d*)', price).group(2).replace(',', ''))
@@ -10,62 +11,53 @@ def split_currency(price):
     return re.match(r'(\W+)(\d*[,]*\d*[.]*\d*)', price).group(1)
 
 class Product(scrapy.Item):
-    retailer_sku = scrapy.Field(
-        output_processor = Join()
-    )
-    lang = scrapy.Field(
-        output_processor = Join()
-    )
-    gender = scrapy.Field(
-        output_processor = Join()
-    )
+    retailer_sku = scrapy.Field()
+    lang = scrapy.Field()
+    gender = scrapy.Field()
     category = scrapy.Field()
-    url = scrapy.Field(
-        output_processor = Join()
-    )
-    date = scrapy.Field(
-        output_processor = TakeFirst()
-    )
-    market = scrapy.Field(
-        output_processor = TakeFirst()
-    )
-    name = scrapy.Field(
-        output_processor = Join()
-    )
+    url = scrapy.Field()
+    date = scrapy.Field()
+    market = scrapy.Field()
+    name = scrapy.Field()
     desc = scrapy.Field()
     care = scrapy.Field()
     image_urls = scrapy.Field()
-    skus = scrapy.Field(
-        output_processor = TakeFirst()
-    )
-    price = scrapy.Field(
-        input_processor = MapCompose(split_price),
-        output_processor = TakeFirst()
-    )
-    currency = scrapy.Field(
-        input_processor = MapCompose(split_currency),
-        output_processor = TakeFirst()
-    )
+    skus = scrapy.Field()
+    price = scrapy.Field()
+    currency = scrapy.Field()
 
 class Sku(scrapy.Item):
-    price = scrapy.Field(
-        input_processor = MapCompose(split_price),
-        output_processor = TakeFirst()
-    )
-    currency = scrapy.Field(
-        input_processor = MapCompose(split_currency),
-        output_processor = TakeFirst()
-    )
-    previous_price = scrapy.Field(
-        output_processor = TakeFirst()
-    )
-    color = scrapy.Field(
-        output_processor = Join()
-    )
-    size = scrapy.Field(
-        output_processor = Join()
-    )
-    availability = scrapy.Field(
-        output_processor = TakeFirst()
-    )
+    price = scrapy.Field()
+    currency = scrapy.Field()
+    previous_price = scrapy.Field()
+    color = scrapy.Field()
+    size = scrapy.Field()
+    availability = scrapy.Field()
     
+class ProductLoader(ItemLoader):
+    default_item_class = Product
+    
+    retailer_sku_out = TakeFirst()
+    lang_out = TakeFirst()
+    gender_out = TakeFirst()
+    url_out = TakeFirst()
+    date_out = TakeFirst()
+    market_out = TakeFirst()
+    name_out = TakeFirst()
+    skus_out = TakeFirst()
+    price_out = TakeFirst()
+    price_in = MapCompose(split_price)
+    currency_out = TakeFirst()
+    currency_in = MapCompose(split_currency)
+
+class SkuLoader(ItemLoader):
+    default_item_class = Sku
+
+    price_out = TakeFirst()
+    price_in = MapCompose(split_price)
+    currency_out = TakeFirst()
+    currency_in = MapCompose(split_currency)
+    previous_price_out = TakeFirst()
+    color_out = TakeFirst()
+    size_out = TakeFirst()
+    availability_out = TakeFirst()

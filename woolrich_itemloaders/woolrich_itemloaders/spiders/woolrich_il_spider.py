@@ -4,11 +4,10 @@ import json
 import scrapy
 
 from itertools import product
-from scrapy.loader import ItemLoader
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 
-from woolrich_itemloaders.items import Product, Sku, split_price
+from woolrich_itemloaders.items import ProductLoader, SkuLoader,split_price
 
 class ProductsSpider(CrawlSpider):
     name = "woolrich_itemloader"
@@ -30,7 +29,7 @@ class ProductsSpider(CrawlSpider):
         categories = response.css(".breadcrumb-label::text").getall()
         item_id = response.css(".jrb-product-view::attr(data-entity-id)").get()
         gender = "Men" if "Men" in categories else "Women" if "Women" in categories else "Unisex"
-        product_loader = ItemLoader(item=Product(), response=response)
+        product_loader = ProductLoader(response=response)
         product_loader.add_css("retailer_sku", ".parent-sku::text")
         product_loader.add_css("lang", "html::attr(lang)")
         product_loader.add_value("gender", gender)
@@ -83,7 +82,7 @@ class ProductsSpider(CrawlSpider):
             previous_price = split_price(obj['data']['price']['rrp_without_tax']['formatted'])
         else:
             previous_price = None
-        sku_loader = ItemLoader(item=Sku(), response=response)
+        sku_loader = SkuLoader(response=response)
         sku_loader.add_value("price", obj['data']['price']['without_tax']['formatted'])
         sku_loader.add_value("currency", obj['data']['price']['without_tax']['formatted'])
         sku_loader.add_value("previous_price", previous_price)
