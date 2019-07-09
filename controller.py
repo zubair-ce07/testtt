@@ -1,66 +1,52 @@
 import argparse
-import os.path
 
 from datetime import datetime
+from os.path import exists
 
 from data_calculator import DataCalculator
 from input_handler import FileParser
 from report_generator import ReportGenerator
 
 
+def file_path_check(directory):
+    if exists(directory) is False:
+        exit("Path is not valid")
+    return directory
+
+
 def arg_parser():
-
     parser = argparse.ArgumentParser()
-    parser.add_argument('file_path',
-                        help='The file path of weather files')
-    parser.add_argument('-e', '-yearly',
-                        type=lambda arg: datetime.strptime(
-                            arg, '%Y'), nargs="*")
-    parser.add_argument('-a', '-monthly',
-                        type=lambda arg: datetime.strptime(
-                            arg, '%Y/%m'), nargs="*")
-    parser.add_argument('-b', '-bonus',
-                        type=lambda arg: datetime.strptime(
-                            arg, '%Y/%m'), nargs="*")
-    parser.add_argument('-c', '-chart',
-                        type=lambda arg: datetime.strptime(
-                            arg, '%Y/%m'), nargs="*")
-    parsed_data = parser.parse_args()
-
-    if os.path.exists(parsed_data.file_path) is False:
-        exit("Path not valid")
-    return parsed_data
+    parser.add_argument('file_path', type=file_path_check, help='The local file path of weather files')
+    parser.add_argument('-e', '-yearly', type=lambda arg: datetime.strptime(arg, '%Y'), nargs="*")
+    parser.add_argument('-a', '-monthly', type=lambda arg: datetime.strptime(arg, '%Y/%m'), nargs="*")
+    parser.add_argument('-b', '-bonus', type=lambda arg: datetime.strptime(arg, '%Y/%m'), nargs="*")
+    parser.add_argument('-c', '-chart', type=lambda arg: datetime.strptime(arg, '%Y/%m'), nargs="*")
+    return parser.parse_args()
 
 
 if __name__ == "__main__":
     input_arguments = arg_parser()
-    path = input_arguments.file_path
-    file_extraction = FileParser
-
-    data_extracted = file_extraction.data_extractor(file_extraction, path)
+    files_path = input_arguments.file_path
+    extracted_data = FileParser.data_extractor(FileParser, files_path)
     calculator = DataCalculator()
-    report = ReportGenerator()
+    report_gen = ReportGenerator()
 
     if input_arguments.e:
         for arguments in input_arguments.e:
-            result = (calculator.yearly_analysis(
-                data_extracted, arguments.date()))
-            report.generate_yearly_report(result)
+            results = calculator.yearly_analysis(extracted_data, arguments.date())
+            report_gen.generate_yearly_report(results)
 
     if input_arguments.a:
         for arguments in input_arguments.a:
-            result = (calculator.monthly_analysis(
-                data_extracted, arguments.date()))
-            report.generate_monthly_report(*iter(result))
+            results = calculator.monthly_analysis(extracted_data, arguments.date())
+            report_gen.generate_monthly_report(results)
 
     if input_arguments.b:
         for arguments in input_arguments.b:
-            result = calculator.bonus_analysis(
-                data_extracted, arguments.date())
-            report.generate_bonus_report(result)
+            records = calculator.monthly_records(extracted_data, arguments.date())
+            report_gen.generate_chart_report(records, 'bonus')
 
     if input_arguments.c:
         for arguments in input_arguments.c:
-            result = calculator.bonus_analysis(
-                data_extracted, arguments.date())
-            report.generate_chart_report(result)
+            records = calculator.monthly_records(extracted_data, arguments.date())
+            report_gen.generate_chart_report(records)

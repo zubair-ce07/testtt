@@ -1,50 +1,29 @@
-import calendar
-
-
 class ReportGenerator:
 
     blue_stars = '\033[1;34m*\033[1;m'
     red_stars = '\033[1;31m*\033[1;m'
 
-    def generate_monthly_report(self, avg_high_temp,
-                                avg_min_temp, avg_mean_humid):
-        print(f"Highest Average: {round(avg_high_temp)}")
-        print(f"Lowest Average: {round(avg_min_temp)}")
-        print(f"Average Mean Humidity: "
-              f"{round(avg_mean_humid)}%\n")
+    def generate_monthly_report(self, results):
+        print(f"Highest Average: {round(results[0])}")
+        print(f"Lowest Average: {round(results[1])}")
+        print(f"Average Mean Humidity:{round(results[2])}%\n")
 
-    def generate_yearly_report(self, yearly_list):
-        print(f"Highest: {yearly_list[0].maximum_temp}C on "
-              f"{yearly_list[0].date.day}"
-              f" {calendar.month_abbr[yearly_list[0].date.month]}")
-        print(f"Lowest: {yearly_list[1].minimum_temp}C on "
-              f"{ yearly_list[1].date.day}"
-              f" {calendar.month_abbr[yearly_list[1].date.month]}")
-        print(f"Humidity: {yearly_list[2].maximum_humidity}% on "
-              f"{yearly_list[2].date.day}"
-              f" {calendar.month_abbr[yearly_list[2].date.month]}\n")
+    def generate_yearly_report(self, results):
+        print(f"Highest: {results[0].max_temp}C on {results[0].date.day}"
+              f" {results[0].date.strftime('%b')}")
+        print(f"Lowest: {results[1].min_temp}C on {results[1].date.day}"
+              f" {results[2].date.strftime('%b')}")
+        print(f"Humidity: {results[2].max_humidity}% on {results[2].date.day}"
+              f" {results[2].date.strftime('%b')}\n")
 
-    def generate_bonus_report(self, bonus_records):
-        for record in bonus_records:
-            maximum_temp = record.maximum_temp
-            minimum_temp = record.minimum_temp
-            difference = maximum_temp - minimum_temp
-            print(" ", end='')
-            for values in range(minimum_temp):
-                print(self.blue_stars, end='')
-            for values in range(difference):
-                print(self.red_stars, end='')
-            print(" ", minimum_temp, "C - ", maximum_temp, "C\n")
+    def generate_chart_report(self, records, bonus=None):
+        for record in records:
+            print(f"{self.blue_stars * record.min_temp}", end='')
 
-    def generate_chart_report(self, chart_records):
-        for record in chart_records:
-            maximum_temp = record.maximum_temp
-            minimum_temp = record.minimum_temp
-            print(" ", end='')
-            for values in range(minimum_temp):
-                print(self.blue_stars, end='')
-            print(f" {minimum_temp} C")
-            print(" ", end='')
-            for values in range(maximum_temp):
-                print(self.red_stars, end='')
-            print(f" {maximum_temp} C\n")
+            if bonus:
+                print(f"{self.red_stars * (record.max_temp - record.min_temp)}"
+                      f" {record.min_temp} C - {record.max_temp} C\n")
+            else:
+                print(f" {record.min_temp} C \n"
+                      f"{self.red_stars * record.max_temp}"
+                      f" {record.max_temp} C\n")
