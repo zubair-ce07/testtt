@@ -1,0 +1,13 @@
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: rgb(106, 248, 62);
+  background: linear-gradient(to right, rgb(38, 161, 0), rgb(0, 167, 64));
+}
+
+main > .container {
+  padding: 60px 15px 0;
+}
