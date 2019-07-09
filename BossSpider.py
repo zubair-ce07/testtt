@@ -1,7 +1,9 @@
 import re
 
-import json
 import scrapy
+from scrapy.linkextractors import LinkExtractor
+from scrapy.spiders import CrawlSpider
+from scrapy.spiders import Rule
 
 
 class BossItem(scrapy.Item):
@@ -20,27 +22,20 @@ class BossItem(scrapy.Item):
     skus = scrapy.Field()
 
 
-class BossSpider(scrapy.Spider):
+class BossSpider(CrawlSpider):
     name = 'hugoboss'
     allowed_domains = ['hugoboss.com']
     start_urls = [
         'https://www.hugoboss.com/uk/home',
     ]
 
-    def parse(self, response):
-        major_categories_url = self.get_home_page_catg(response)
-
-        for url in major_categories_url:
-            yield response.follow(url=url, callback=self.extract_products)
-
-    def extract_products(self, response):
-        page_products_url = response.css('.product-tile__link ::attr(href)').getall()
-
-        for url in page_products_url:
-            yield response.follow(url=url, callback=self.parse_item)
+    rules = (
+        Rule(LinkExtractor(allow=('https://www.hugoboss.com/uk/'), restrict_css=('.main-header'))),
+        Rule(LinkExtractor(allow=('\/uk\/(.+?)\?cgid=\d+'), restrict_css=('.search-result-items')),
+             callback='parse_item'),
+    )
 
     def parse_item(self, response):
-
         item = BossItem()
         item['retailer_sku'] = self.retailer_sku(response)
         item['gender'] = self.product_gender(response)
@@ -55,14 +50,11 @@ class BossSpider(scrapy.Spider):
 
         yield item
 
-    def get_home_page_catg(self, response):
-        return response.css('.font__copy ::attr(href)').getall()
-
     def retailer_sku(self, response):
-        return re.findall("productSku\":\"(.+?)\"", response.body.decode('utf-8'), re.S)[0]
+        return response.css('script[type="text/javascript"]').re("productSku\":\"(.+?)\"")[0]
 
     def product_gender(self, response):
-        return re.findall("productGender\":\"(.+?)\"", response.body.decode('utf-8'), re.S)[0]
+        return response.css('script[type="text/javascript"]').re("productGender\":\"(.+?)\"")[0]
 
     def product_name(self, response):
         return response.css('.font__h2 ::text').get()
@@ -77,7 +69,7 @@ class BossSpider(scrapy.Spider):
         return response.css('meta[itemprop= "brand"] ::attr(content)').get()
 
     def product_description(self, response):
-        return self.clean_text(response.css('.description div ::text').get())
+        return self.clean(response.css('.description div ::text').get())
 
     def product_care(self, response):
         return response.css('.accordion__item__icon ::text').getall()
@@ -86,16 +78,37 @@ class BossSpider(scrapy.Spider):
         return response.css('.slider-item--thumbnail-image ::attr(src)').getall()
 
     def product_skus(self, response):
-        previous_price = {'prev_price': response.css('s ::text').get()}
-        sku_json = json.loads(re.findall("dataLayer.push\((.+?)\);", response.body.decode('utf-8'), re.S)[0])
-        sku_json.update(previous_price)
 
-        return sku_json
+        for colors in response.css('.swatch-list__image--is-large ::attr(data-colorcode)').getall():
+            size_url = pattern = re.sub(r'_\d+\.html', '_' + colors.split('_')[0] + '.html', response.url)
 
-    def clean_text(self, text):
-        clean_text = re.sub('\s+', '', text)
+            yield response.follow(url=size_url + "&Quantity=1&origin=&format=ajax",
+                                  callback=self.parse_size_price, meta={'color': colors.split('_')[1]})
 
-        if clean_text:
-            return clean_text
+    def clean(self, raw_data):
+        description = []
 
-        return 0
+        if isinstance(raw_data, list):
+            for string in raw_data:
+                if re.sub('\s+', '', string):
+                    description.append(re.sub('\s+', '', string))
+
+            return description
+
+        if re.sub('\s+', '', raw_data):
+            return re.sub('\s+', '', raw_data)
+
+    def parse_size_price(self, response):
+        color = response.meta['color']
+        price = self.clean(response.css('.product-price--price-sales ::text').get())
+        previous_price = self.clean(response.css('.product-price--price-standard s ::text').getall())
+
+        for size in response.css('.product-stage__choose-size--container '
+                                 '[disabled!="disabled"] ::attr(title)').getall():
+            yield {
+                'color': color,
+                'price': price,
+                'previous_price': previous_price,
+                'size': size
+            }
+
