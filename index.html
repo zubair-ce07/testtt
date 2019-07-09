@@ -9,10 +9,10 @@
 <body>
     <div style='text-align: center; border: 2px solid; padding: 5px;'>
         <h1>Select a demo</h1>
-        <button class="btn-index" value="ajax-hello">ajax-hello</button>
-        <button class="btn-index" value="ajax-simple">ajax-simple</button>
-        <button class="btn-index" value="ajax-form">ajax-form</button>
-        <button class="btn-index" value="ajax-dropdown">ajax-dropdown</button>
+        <button class="btn-index" value="ajax-hello">ajax-GET-hello</button>
+        <button class="btn-index" value="ajax-simple">ajax-GET-simple</button>
+        <button class="btn-index" value="ajax-form">ajax-GET-form</button>
+        <button class="btn-index" value="ajax-dropdown">ajax-GET-dropdown</button>
     </div>
     
     <div id="disp-index"></div>
@@ -28,7 +28,7 @@
                 xhr1.open('GET', 'html/' + file + '.html', true)
 
                 xhr1.onload = function () {
-                    if (xhr1.readyState == 4 && xhr1.status == 200) {
+                    if (xhr1.status == 200) {
                         document.getElementById('disp-index').innerHTML = xhr1.responseText
 
                         if (!document.getElementById(file + '.js')){

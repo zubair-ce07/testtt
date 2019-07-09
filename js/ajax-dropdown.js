@@ -22,8 +22,18 @@
                 xhr_inner.open('GET', 'files/' + document.getElementById('dropdown-menu').value, true);
                 xhr_inner.onload = () =>  {
                     if (xhr_inner.status == 200) {
-                        document.getElementById('disp-dropdown').innerText = xhr_inner.responseText;
+                        if(document.getElementById('dropdown-menu').value.split('.')[1] == 'json') {
+                            document.getElementById('disp-dropdown').innerText = ""
+                            document.getElementById('disp-json').innerHTML = JSON.stringify(xhr_inner.response, undefined, 2)
+                        } else {
+                            document.getElementById('disp-json').innerHTML = ""
+                            document.getElementById('disp-dropdown').innerText = xhr_inner.responseText;
+                        }
+                        
                     }
+                }
+                if(document.getElementById('dropdown-menu').value.split('.')[1] == 'json'){
+                    xhr_inner.responseType = 'json'
                 }
                 xhr_inner.send()
             } else {

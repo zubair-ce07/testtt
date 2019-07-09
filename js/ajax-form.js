@@ -4,9 +4,18 @@ document.getElementById('submit').addEventListener('click', () => {
     xhr.open('GET', 'files/' + file, true)
     xhr.onload = function () {
         if (xhr.status == 200) {
-            document.getElementById('disp-form').innerText = xhr.responseText
-            // document.getElementById('btn-form').style.visibility = "hidden"
+            if(file.split('.')[1] == 'json') {
+                document.getElementById('disp-form-json').innerHTML = JSON.stringify(xhr.response, undefined, 2)
+                document.getElementById('disp-form').innerText = ""
+            } else {
+                document.getElementById('disp-form').innerText = xhr.responseText
+                document.getElementById('disp-form-json').innerHTML = ""
+            }
+            
         }
+    }
+    if(file.split('.')[1] == 'json') {
+        xhr.responseType = 'json'
     }
     xhr.send()
 })
