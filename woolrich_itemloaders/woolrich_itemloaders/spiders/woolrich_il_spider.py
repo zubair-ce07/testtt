@@ -7,7 +7,7 @@ from itertools import product
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 
-from woolrich_itemloaders.items import ProductLoader, SkuLoader,split_price
+from woolrich_itemloaders.items import ProductLoader, SkuLoader, split_price
 
 class ProductsSpider(CrawlSpider):
     name = "woolrich_itemloader"
