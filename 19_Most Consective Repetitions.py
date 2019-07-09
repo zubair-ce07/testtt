@@ -16,18 +16,21 @@ def longest_repetition(li):
         return None
     occurrences = 1
     occurrent = li[0]
+    comparisons = 0
     i = 0
     while i < len(li):
         j = i + 1
         latest_count = 0
+        comparisons += 1
         while j < len(li) and li[i] == li[j]:
             latest_count += 1
+            comparisons += 1
             j += 1
         if latest_count + 1 > occurrences:
             occurrences = latest_count + 1
             occurrent = li[i]
         i += j - i
-    return occurrent
+    return occurrent, comparisons, len(li)
 
 
 # For example,
@@ -43,3 +46,7 @@ print(longest_repetition([1, 2, 3, 4, 5]))
 
 print(longest_repetition([]))
 # None
+
+print(longest_repetition(list(range(10))))
+print(longest_repetition(list(range(50))))
+print(longest_repetition(list(range(100))))
