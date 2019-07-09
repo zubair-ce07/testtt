@@ -66,9 +66,13 @@ DOWNLOAD_DELAY = 1
 
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
-#ITEM_PIPELINES = {
-#    'cpuc.pipelines.CpucPipeline': 300,
-#}
+MONGODB_SERVER = "localhost"
+MONGODB_PORT = 27017
+MONGODB_DB = "cpuc_db"
+MONGODB_COLLECTION = "proceeding_details"
+ITEM_PIPELINES = {
+   'cpuc.pipelines.MongoDBPipeline': 300,
+}
 # ITEM_PIPELINES = {'scrapy.pipelines.files.FilesPipeline': 1}
 # FILES_STORE = 'files'
 # Enable and configure the AutoThrottle extension (disabled by default)
