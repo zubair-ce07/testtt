@@ -3,7 +3,7 @@ document.getElementById('btn-hello').addEventListener('click', () => {
     xhr.open('GET', 'files/hello.txt', true)
     xhr.onload = function () {
         if (xhr.status == 200) {
-            document.getElementById('disp-hello').innerText = xhr.responseText
+            document.getElementById('disp-hello').innerText = xhr.response
             document.getElementById('btn-hello').style.visibility = "hidden"
         }
     }

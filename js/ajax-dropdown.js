@@ -6,7 +6,7 @@
 
     xhr.onload = () => {
         if(xhr.status == 200) {
-            fileNames = xhr.responseText;
+            fileNames = xhr.response;
             fileNames = fileNames.split(',');
             for(let i in fileNames){
                 let option = document.createElement('option');
@@ -27,7 +27,7 @@
                             document.getElementById('disp-json').innerHTML = JSON.stringify(xhr_inner.response, undefined, 2)
                         } else {
                             document.getElementById('disp-json').innerHTML = ""
-                            document.getElementById('disp-dropdown').innerText = xhr_inner.responseText;
+                            document.getElementById('disp-dropdown').innerText = xhr_inner.response;
                         }
                         
                     }

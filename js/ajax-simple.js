@@ -3,7 +3,7 @@ document.getElementById('btn-simple').addEventListener('click', () => {
     xhr.open('GET', 'files/lorem1.txt', true)
     xhr.onload = function () {
         if (xhr.status == 200) {
-            document.getElementById('disp-simple').innerText = xhr.responseText
+            document.getElementById('disp-simple').innerText = xhr.response
             document.getElementById('btn-simple').style.visibility = "hidden"
         }
     }

@@ -8,7 +8,7 @@ document.getElementById('submit').addEventListener('click', () => {
                 document.getElementById('disp-form-json').innerHTML = JSON.stringify(xhr.response, undefined, 2)
                 document.getElementById('disp-form').innerText = ""
             } else {
-                document.getElementById('disp-form').innerText = xhr.responseText
+                document.getElementById('disp-form').innerText = xhr.response
                 document.getElementById('disp-form-json').innerHTML = ""
             }
             
