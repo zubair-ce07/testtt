@@ -30,7 +30,7 @@ class BossSpider(CrawlSpider):
     ]
 
     rules = (
-        Rule(LinkExtractor(allow=('https://www.hugoboss.com/uk/'), restrict_css=('.main-header'))),
+        Rule(LinkExtractor(restrict_css=('.main-header'))),
         Rule(LinkExtractor(allow=('\/uk\/(.+?)\?cgid=\d+'), restrict_css=('.search-result-items')),
              callback='parse_item'),
     )
@@ -46,9 +46,12 @@ class BossSpider(CrawlSpider):
         item['description'] = self.product_description(response)
         item['care'] = self.product_care(response)
         item['image_urls'] = self.images_url(response)
-        item['skus'] = self.product_skus(response)
 
-        yield item
+        for colors in response.css('.swatch-list__image--is-large ::attr(data-colorcode)').getall():
+            size_url = re.sub(r'_\d+\.html', '_' + colors.split('_')[0] + '.html', response.url)
+
+            yield response.follow(url=size_url + "&Quantity=1&origin=&format=ajax",
+                                  callback=self.parse_size_price, meta={'color': colors.split('_')[1], 'item': item})
 
     def retailer_sku(self, response):
         return response.css('script[type="text/javascript"]').re("productSku\":\"(.+?)\"")[0]
@@ -77,14 +80,6 @@ class BossSpider(CrawlSpider):
     def images_url(self, response):
         return response.css('.slider-item--thumbnail-image ::attr(src)').getall()
 
-    def product_skus(self, response):
-
-        for colors in response.css('.swatch-list__image--is-large ::attr(data-colorcode)').getall():
-            size_url = pattern = re.sub(r'_\d+\.html', '_' + colors.split('_')[0] + '.html', response.url)
-
-            yield response.follow(url=size_url + "&Quantity=1&origin=&format=ajax",
-                                  callback=self.parse_size_price, meta={'color': colors.split('_')[1]})
-
     def clean(self, raw_data):
         description = []
 
@@ -99,16 +94,20 @@ class BossSpider(CrawlSpider):
             return re.sub('\s+', '', raw_data)
 
     def parse_size_price(self, response):
+
+        item = response.meta['item']
         color = response.meta['color']
         price = self.clean(response.css('.product-price--price-sales ::text').get())
         previous_price = self.clean(response.css('.product-price--price-standard s ::text').getall())
-
+        raw_skus = {}
         for size in response.css('.product-stage__choose-size--container '
                                  '[disabled!="disabled"] ::attr(title)').getall():
-            yield {
+            raw_skus.update({f'{color}_{size}': {
                 'color': color,
                 'price': price,
                 'previous_price': previous_price,
                 'size': size
-            }
+            }})
+        item['skus'] = raw_skus
+        yield item
 
