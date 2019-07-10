@@ -7,12 +7,12 @@ class DerekRose(CrawlSpider):
 
     name = 'Derekrose'
     start_urls = ['https://www.derek-rose.com/']
-    listing_css_first = '.global-nav .global-nav__item[data-nav="mens"]'
-    listing_css_second = '.category-products'
+    listing_css = '.global-nav .global-nav__item[data-nav="mens"]'
+    product_css = '.category-products'
 
     rules = (
-        Rule(LinkExtractor(allow=(), deny=(), restrict_css=listing_css_first)),
-        Rule(LinkExtractor(allow=(), deny=(), restrict_css=listing_css_second), callback='parse_item')
+        Rule(LinkExtractor(restrict_css=listing_css_first)),
+        Rule(LinkExtractor(restrict_css=listing_css_second), callback='parse_item')
     )
 
     def parse_item(self, response):
@@ -32,7 +32,7 @@ class DerekRose(CrawlSpider):
 
     def get_price(self, response):
         price = response.css('span.price::text').get()
-        raw_prices = price_digits = [str(elem) for elem in price if elem.isdigit()]
+        raw_prices = [str(elem) for elem in price if elem.isdigit()]
         return int(''.join(raw_prices)) * 100
 
     def get_product_name(self, response):
