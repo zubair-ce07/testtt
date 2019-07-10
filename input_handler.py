@@ -6,7 +6,7 @@ from weather_container import RecordHolder
 
 class FileParser:
 
-    def record_validity(self, record):
+    def is_valid_record(self, record):
         valid_record = [record["Max TemperatureC"], record["Min TemperatureC"],
                         record[" Mean Humidity"], record.get("PKT", record.get("PKST"))]
         if all(valid_record):
@@ -18,7 +18,7 @@ class FileParser:
         for files in glob(files_path):
 
             with open(files, "r") as single_file:
-                read_record = DictReader(single_file)
-                compiled_records += [RecordHolder(record) for record in read_record if
-                                     self.record_validity(record) is True]
+                record_reader = DictReader(single_file)
+                compiled_records += [RecordHolder(record) for record in record_reader if
+                                     self.is_valid_record(self, record)]
         return compiled_records
