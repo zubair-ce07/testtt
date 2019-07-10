@@ -35,18 +35,18 @@ class OnlyParser(Spider):
 
     def parse(self, response):
         item = Product()
-        raw_item = self.extract_raw_item(response)
+        raw_product = self.extract_raw_product(response)
 
         item['url'] = response.url
         item['brand'] = self.extract_brand_name(response)
         item['name'] = self.extract_item_name(response)
         item['retailer_sku'] = self.extract_retailer_sku(response)
         item['care'] = self.extract_care(response)
-        item['category'] = self.extract_category(raw_item)
-        item['gender'] = self.extract_gender(raw_item)
-        item['description'] = self.extract_description(raw_item)
-        item['requests_queue'] = self.construct_sku_requests(raw_item)
-        item['image_urls'] = self.extract_image_urls(raw_item)
+        item['category'] = self.extract_category(raw_product)
+        item['gender'] = self.extract_gender(raw_product)
+        item['description'] = self.extract_description(raw_product)
+        item['requests_queue'] = self.construct_sku_requests(response, raw_product)
+        item['image_urls'] = self.extract_image_urls(raw_product)
         item['skus'] = []
 
         return self.get_item_or_next_request(item)
@@ -69,26 +69,45 @@ class OnlyParser(Spider):
 
         return pricing
 
-    def extract_gender(self, raw_item):
-        for gender in self.gender_map.keys():
-            if gender in raw_item['@graph'][0]['description'].lower():
-                return self.gender_map[gender]
+    def extract_gender(self, raw_product):
+        for gender_key, gender in self.gender_map.items():
+            if gender_key in raw_product['@graph'][0]['description'].lower():
+                return gender
 
         return self.default_gender
 
     def extract_lengths(self, response):
-        length_css = '.length .swatch__item-inner-text__text-container ::text'
+        length_css = '.length .swatch__item--selectable:not(.swatch__item--unavailable) ::text,' \
+                     '.length .swatch__item--selected:not(.swatch__item--unavailable) ::text'
+
         return clean(response.css(length_css))
 
     def extract_colour(self, response):
         return clean(response.css('.color-combination ::text'))
 
+    def has_length(self, response):
+        length_css = '.length .swatch__item--selectable:not(.swatch__item--unavailable),' \
+                     '.length .swatch__item--selected:not(.swatch__item--unavailable)'
+
+        if not clean(response.css('.length')):
+            return True
+        elif clean(response.css(length_css)):
+            return True
+
+        return False
+
+    def has_skus(self, response):
+        size_css = '.size .swatch__item--selectable:not(.swatch__item--unavailable) ::text,' \
+                   '.size .swatch__item--selected:not(.swatch__item--unavailable) ::text'
+
+        return clean(response.css(size_css))
+
     def extract_size(self, response):
         size_css = '.size .swatch__item--selected .swatch__item-inner-text__text-container ::text'
         return clean(response.css(size_css))
 
-    def extract_image_urls(self, raw_item):
-        return [item['image'] for item in raw_item['@graph'] if item.get('image')]
+    def extract_image_urls(self, raw_product):
+        return [product['image'] for product in raw_product['@graph'] if product.get('image')]
 
     def extract_item_name(self, response):
         return clean(response.css('.product-name--visible ::text'))[0]
@@ -104,14 +123,14 @@ class OnlyParser(Spider):
               ':not(.pdp-description__text__value--ean) ::text'
         return clean(response.css(css))
 
-    def extract_raw_item(self, response):
+    def extract_raw_product(self, response):
         return json.loads(clean(response.css('script[class="js-structuredData"]::text'))[0])
 
-    def extract_category(self, raw_item):
-        return clean(raw_item['@graph'][0]['category'])
+    def extract_category(self, raw_product):
+        return clean(raw_product['@graph'][0]['category'])
 
-    def extract_description(self, raw_item):
-        raw_description = clean(raw_item['@graph'][0]['description'])
+    def extract_description(self, raw_product):
+        raw_description = clean(raw_product['@graph'][0]['description'])
         return [desc for sublist in raw_description for desc in sublist.split('.') if desc]
 
     def get_item_or_next_request(self, item):
@@ -124,11 +143,18 @@ class OnlyParser(Spider):
 
         return request
 
-    def construct_sku_requests(self, raw_item):
-        return [Request(item['url'], callback=self.parse_sku) for item in raw_item['@graph']]
+    def construct_sku_requests(self, response, raw_product):
+        if not self.has_skus(response):
+            return []
+
+        return [Request(item['url'], callback=self.parse_sku) for item in raw_product['@graph']]
 
     def extract_skus(self, response):
         skus = []
+
+        if not self.has_length(response):
+            return skus
+
         common_sku = self.extract_pricing(response)
         colour = self.extract_colour(response)
 
@@ -154,13 +180,13 @@ class OnlyParser(Spider):
         return skus
 
 
-def clean(raw_item):
-    if isinstance(raw_item, str):
-        return raw_item.strip().split(' > ')
-    elif isinstance(raw_item, SelectorList):
-        return [r.strip() for r in raw_item.getall() if r.strip()]
+def clean(raw_product):
+    if isinstance(raw_product, str):
+        return raw_product.strip().split(' > ')
+    elif isinstance(raw_product, SelectorList):
+        return [r.strip() for r in raw_product.getall() if r.strip()]
 
-    return [r.strip() for r in raw_item if r.strip()]
+    return [r.strip() for r in raw_product if r.strip()]
 
 
 class OnlyCrawler(CrawlSpider):
@@ -179,3 +205,12 @@ class OnlyCrawler(CrawlSpider):
                            attrs=('data-href', 'href'))),
         Rule(LinkExtractor(restrict_css=product_css), callback=parser.parse),
     )
+
+
+from scrapy.crawler import CrawlerProcess
+from scrapy.utils.project import get_project_settings
+
+process = CrawlerProcess(get_project_settings())
+
+process.crawl('only')
+process.start()
