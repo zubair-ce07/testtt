@@ -51,12 +51,6 @@ courses = {
 # example, this procedure returns a list of all the courses
 # offered in the givenhexamester:
 
-def courses_offered(courses, hexamester):
-    res = []
-    for c in courses[hexamester]:
-        res.append(c)
-    return res
-
 
 # Define a procedure, when_offered(courses, course), that takes a courses data
 # structure and a string representing a class, and returns a list of strings
@@ -64,9 +58,8 @@ def courses_offered(courses, hexamester):
 
 def when_offered(courses, course):
     hexamesters = []
-    for hexamester in courses:
-        coursess = courses_offered(courses, hexamester)
-        if course in coursess:
+    for hexamester, course_list in courses.items():
+        if course in course_list:
             hexamesters.append(hexamester)
     return hexamesters
 
