@@ -8,19 +8,18 @@ class BognerUK(CrawlSpider):
 
     name = 'Bognerspider'
     start_urls = ['https://www.bogner.com/en-gb/']
-    listing_css_one = '.level0 .level0 a[href*="/en-gb/men"]'
-    listing_css_two = '.category-products'
+    listing_css = '.level0 .level0 a[href*="/en-gb/men"]'
+    product_css= '.category-products'
 
     rules = (
-        Rule(LinkExtractor(allow=(), deny=(), restrict_css=listing_css_one)),
-        Rule(LinkExtractor(allow=(), deny=(), restrict_css=listing_css_two), callback='parse_item')
+        Rule(LinkExtractor(restrict_css=listing_css)),
+        Rule(LinkExtractor(restrict_css=product_css), callback='parse_item')
     )
 
     def parse_item(self, response):
         item = BognerRecord()
 
         item['product_name'] = self.get_product_name(response)
-        item['product_colors'] = self.get_product_colors(response)
         item['product_skus'] = self.get_product_skus(response)
         item['product_size'] = self.get_product_size(response)
         item['product_description'] = self.get_product_description(response)
@@ -39,15 +38,12 @@ class BognerUK(CrawlSpider):
     def get_product_name(self,response):
         return response.css('.product-name-text::text').get()
 
-    def get_product_colors(self,response):
-        return response.css('.color-name::text').getall()
-
     def get_product_skus(self,response):
         return response.css('.sku::text').get()
 
     def get_product_price(self, response):
         price = response.css('.product-sizes .size-box::attr(data-size-label)').get()
-        raw_prices = price_digits = [str(elem) for elem in price if elem.isdigit()]
+        raw_prices = [str(elem) for elem in price if elem.isdigit()]
 
         return int(''.join(raw_prices)) * 100
 
@@ -88,7 +84,6 @@ class BognerUK(CrawlSpider):
 class BognerRecord(scrapy.Item):
 
     product_name = scrapy.Field()
-    product_colors = scrapy.Field()
     product_skus = scrapy.Field()
     product_size = scrapy.Field()
     product_description = scrapy.Field()
