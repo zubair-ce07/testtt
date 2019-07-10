@@ -205,12 +205,3 @@ class OnlyCrawler(CrawlSpider):
                            attrs=('data-href', 'href'))),
         Rule(LinkExtractor(restrict_css=product_css), callback=parser.parse),
     )
-
-
-from scrapy.crawler import CrawlerProcess
-from scrapy.utils.project import get_project_settings
-
-process = CrawlerProcess(get_project_settings())
-
-process.crawl('only')
-process.start()
