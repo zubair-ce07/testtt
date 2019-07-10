@@ -23,10 +23,10 @@ def is_list(p):
 # input is a List, and returns False otherwise.
 
 def deep_count(input):
-    count = len(input)
     if input is None:
-        return count
+        return 0
     else:
+        count = len(input)
         for elem in input:
             if is_list(elem):
                 count += deep_count(elem)
