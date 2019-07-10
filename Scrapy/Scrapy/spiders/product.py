@@ -5,23 +5,20 @@ import re
 
 class ProductSpider(scrapy.Spider):
     name = 'product'
-
-    def start_requests(self):
-        url = 'https://www.apc-us.com/'
-        yield scrapy.Request(url=url, callback=self.parse)
+    start_urls = ['https://www.apc-us.com/']
 
     def parse(self, response):
-        listing_css = response.css('.item .go_page::attr(href)')
-        product_css = response.css('.item::attr(href)')
-        pagination_css = response.css('.pagination a::attr(href)')
+        listing_css = '.item .go_page::attr(href)'
+        product_css = '.item::attr(href)'
+        pagination_css = '.pagination a::attr(href)'
 
-        for url in listing_css.getall():
+        for url in response.css(listing_css).getall():
             yield response.follow(url, callback=self.parse)
 
-        for url in product_css.getall():
+        for url in response.css(product_css).getall():
             yield response.follow(url, callback=self.fetch_item_details)
 
-        for url in pagination_css.getall():
+        for url in response.css(pagination_css).getall():
             yield response.follow(url, callback=self.parse)
 
     def fetch_item_details(self, response):
@@ -42,7 +39,8 @@ class ProductSpider(scrapy.Spider):
         return response.css('.breadcrumbs a::text').getall()
 
     def get_description(self, product):
-        return re.sub('<.*?>', '', product['description']).split('. ')
+        response = scrapy.selector.Selector(text=product["description"])
+        return response.css("p::text").getall()
 
     def get_image_urls(self, response):
         return ['https:{}'.format(img) for img in response.css('.desktop-product-img::attr(data-zoom-img)').getall()]
@@ -53,7 +51,7 @@ class ProductSpider(scrapy.Spider):
     def get_gender(self, product):
         gender_attr = [attribute for attribute in product['tags'] if 'Gender' in attribute]
         if gender_attr:
-            return re.findall(r'(?<=Gender:)(?s)(.*$)', gender_attr[0])[0]
+            return re.findall(r'(?<=Gender:)(.*$)', gender_attr[0])[0]
 
     def get_skus(self, response, product):
         skus = []
