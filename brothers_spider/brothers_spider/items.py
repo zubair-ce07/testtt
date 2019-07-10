@@ -5,10 +5,17 @@
 # See documentation in:
 # https://doc.scrapy.org/en/latest/topics/items.html
 
-import scrapy
+from scrapy.item import Item, Field
 
 
-class BrothersSpiderItem(scrapy.Item):
-    # define the fields for your item here like:
-    # name = scrapy.Field()
-    pass
+class ProductItem(Item):
+    name = Field()
+    category = Field()
+    description = Field()
+    gender = Field()
+    image_urls = Field()
+    price = Field()
+    previous_price = Field()
+    skus = Field()
+    product_id = Field()
+    request = Field()
