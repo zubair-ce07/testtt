@@ -1,11 +1,12 @@
 html,
 body {
   height: 100%;
+  font-family: 'Literata', serif;
 }
 
 body {
   background: rgb(106, 248, 62);
-  background: linear-gradient(to right, rgb(38, 161, 0), rgb(0, 167, 64));
+  background: linear-gradient(to right, rgb(70, 218, 25), rgb(10, 129, 56));
 }
 
 main > .container {
