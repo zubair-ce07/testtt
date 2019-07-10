@@ -39,13 +39,8 @@ class ProductsSpider(CrawlSpider):
         sku_requests = self.get_sku_requests(response, item)
         if sku_requests:
             sku_request = sku_requests.pop()
-            sku_request['metadata']['sku_requests'] = sku_requests
-            yield scrapy.FormRequest(
-                url = sku_request['url'],
-                formdata = sku_request['formdata'],
-                meta = sku_request['metadata'],
-                callback = self.parse_skus
-            )
+            sku_request.meta['sku_requests'] = sku_requests
+            yield sku_request
     
     def parse_skus(self, response):
         obj = json.loads(response.text)
@@ -66,12 +61,8 @@ class ProductsSpider(CrawlSpider):
         
         if response.meta['sku_requests']:
             sku_request = response.meta['sku_requests'].pop()
-            yield scrapy.FormRequest(
-                url = sku_request['url'],
-                formdata = sku_request['formdata'],
-                meta = sku_request['metadata'],
-                callback = self.parse_skus
-            )
+            sku_request.meta['sku_requests'] = response.meta['sku_requests']
+            yield sku_request
         else:
             yield response.meta['item']
         
@@ -104,16 +95,17 @@ class ProductsSpider(CrawlSpider):
             color, size = combination
             meta['color'] = color_names[color_ids.index(color)]
             meta['size'] = size_names[size_ids.index(size)]
-            sku_request = {
-                'url': f"{self.attr_url}{meta['item_id']}",
-                'formdata': {
+            sku_request = scrapy.FormRequest(
+                url = f"{self.attr_url}{meta['item_id']}",
+                formdata = {
                     'action': 'add',
                     meta['color_attr']: color,
                     meta['size_attr']: size,
                     'product_id': meta['item_id'],
                     'qty[]': '1'
                 },
-                'metadata': meta
-            }
+                meta = meta,
+                callback = self.parse_skus
+            )
             requests.append(sku_request)
         return requests
