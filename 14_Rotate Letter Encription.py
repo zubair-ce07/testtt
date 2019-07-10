@@ -9,37 +9,18 @@
 # Note that n can be positive, negative or zero.
 
 
-def shift_n_letters(letter, n):
-    alpha = ord(letter)
-    if n > 0:
-        count = 0
-        while n is not 0:
-            if chr(alpha + 1) > 'z':
-                alpha = ord('a') + count
-                count += 1
-            else:
-                alpha += 1
-            n -= 1
+def shift_char(char, step):
+    if char is ' ':
+        return char
     else:
-        count = 0
-        while n is not 0:
-            if chr(alpha - 1) < 'a':
-                alpha = ord('z') - count
-                count += 1
-            else:
-                alpha -= 1
-            n += 1
-    return chr(alpha)
+        return chr(ord('a') + (ord(char) - ord('a') + step) % 26)
 
 
 def rotate(string, number):
-    new_str = ''
+    new = ''
     for char in string:
-        if char is not ' ':
-            new_str += shift_n_letters(char, number)
-        else:
-            new_str += char
-    return new_str
+        new += shift_char(char, number)
+    return new
 
 
 print(rotate('sarah', 13))
