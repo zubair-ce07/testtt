@@ -61,7 +61,8 @@ class AsicsSpider(CrawlSpider):
     def extract_description(self, response):
         # This also works
         # return response.xpath('//meta[@name="description"]/@content').extract_first()
-        return response.xpath('//h2[contains(text(), "Product Details")]/preceding-sibling::div/parent::div/text()').extract()
+        return ' '.join(response.xpath(
+            '//h2[contains(text(), "Product Details")]/preceding-sibling::div/parent::div/text()').extract()).strip()
 
     def extract_gender(self, response):
         return response.xpath('//div[@id="unisex-tab"]/@class').extract_first()
@@ -72,7 +73,7 @@ class AsicsSpider(CrawlSpider):
     def extract_requests(self, response):
         products_urls = response.xpath(
             '//div[@id="variant-choices"]/div[not(contains(@class,"active"))]/a/@href').extract()
-        return [response.follow(url=url, callback=self.update_skus) for url in products_urls]
+        return [response.follow(url=url, callback=self.update_skus, dont_filter=True) for url in products_urls]
 
     def update_skus(self, response):
         self.item['skus'].append(self.extract_product_skus(response))
@@ -90,7 +91,7 @@ class AsicsSpider(CrawlSpider):
         size_list = self.extract_available_sizes(response)
         sku['price'] = self.extract_price(response),
         sku['previous_prices'] = self.extract_previous_price(response)
-        sku['size'] = [self.extract_size(size) for size in size_list]
+        sku['Available size'] = ', '.join([self.extract_size(size) for size in size_list])
         sku['Color'] = self.extract_color(response)
         skus.append(sku)
 
