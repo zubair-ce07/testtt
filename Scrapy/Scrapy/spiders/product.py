@@ -53,7 +53,7 @@ class ProductSpider(scrapy.Spider):
     def get_gender(self, product):
         gender_attr = [attribute for attribute in product['tags'] if 'Gender' in attribute]
         if gender_attr:
-            return re.findall(r"(?<=Gender:)(?s)(.*$)", gender_attr[0])[0]
+            return re.findall(r'(?<=Gender:)(?s)(.*$)', gender_attr[0])[0]
 
     def get_skus(self, response, product):
         skus = []
