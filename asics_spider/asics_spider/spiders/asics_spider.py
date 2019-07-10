@@ -1,6 +1,6 @@
 import scrapy
-from scrapy.spiders import CrawlSpider
 from asics_spider.items import ProductItem
+from scrapy.spiders import CrawlSpider
 
 
 class AsicsSpider(CrawlSpider):
@@ -9,8 +9,7 @@ class AsicsSpider(CrawlSpider):
     allowed_domains = ["asics.com"]
 
     def start_requests(self):
-        self.item["skus"] = dict()
-        urls = ['https://www.asics.com/us/en-us/']
+        urls = ['https://www.asics.com/us/en-us']
         for url in urls:
             yield scrapy.Request(url=url, callback=self.parse_category)
 
@@ -32,26 +31,17 @@ class AsicsSpider(CrawlSpider):
             yield scrapy.Request(url=next_page, callback=self.parse_products)
 
     def parse_items(self, response):
-        product_name = self.extract_name(response)
-        category = self.extract_category(response)
-        description = self.extract_description(response)
-        images = self.extract_image_url(response)
-        previous_price = self.extract_previous_price(response)
-        current_price = self.extract_price(response)
-        gender = self.extract_gender(response)
-        product_id = self.extract_product_id(response)
-        product_sku = self.get_product_skus(response)
-
-        self.item["name"] = product_name
-        self.item["category"] = category
-        self.item["description"] = description
-        self.item["image_urls"] = images
-        self.item["previous_price"] = previous_price
-        self.item["price"] = current_price
-        self.item["gender"] = gender
-        self.item["product_id"] = product_id
-        self.item["skus"] = product_sku
-        yield self.item
+        self.item["name"] = self.extract_name(response)
+        self.item["category"] = self.extract_category(response)
+        self.item["description"] = self.extract_description(response)
+        self.item["image_urls"] = self.extract_image_url(response)
+        self.item["previous_price"] = self.extract_previous_price(response)
+        self.item["price"] = self.extract_price(response)
+        self.item["gender"] = self.extract_gender(response)
+        self.item["product_id"] = self.extract_product_id(response)
+        self.item["request"] = self.extract_requests(response)
+        self.item["skus"] = self.extract_product_skus(response)
+        return self.parse_result(self.item)
 
     def extract_name(self, response):
         return response.xpath('//h1[@class="single-prod-title"]/text()').extract_first()
@@ -79,25 +69,32 @@ class AsicsSpider(CrawlSpider):
     def extract_product_id(self, response):
         return response.xpath('//span[contains(@itemprop,"model")]//text()').extract_first()
 
-    def get_product_skus(self, response):
-        sku_dict = dict()
-        self.item["request"] = list()
-        products_urls = response.xpath('//div[@id="variant-choices"]//a/@href').getall()
-        for urls in products_urls:
-            url = response.urljoin(urls)
-            self.item["request"].append(url)
-        for url in self.item["request"]:
-            scrapy.Request(url=url, callback=self.get_product_skus)
+    def extract_requests(self, response):
+        products_urls = response.xpath(
+            '//div[@id="variant-choices"]/div[not(contains(@class,"active"))]/a/@href').extract()
+        return [response.follow(url=url, callback=self.update_skus) for url in products_urls]
+
+    def update_skus(self, response):
+        self.item['skus'].append(self.extract_product_skus(response))
+        return self.parse_result(self.item)
+
+    def parse_result(self, item):
+        if item['request']:
+            return item['request'].pop()
+
+        return item
+
+    def extract_product_skus(self, response):
+        skus = []
+        sku = dict()
         size_list = self.extract_available_sizes(response)
-        if not size_list:
-            sku_dict.update([(self.extract_color(response) + "_" + response.url.split('/')[-1].split('.')[-1], "Not any size available ")])
-        for size in size_list:
-            sku_data = {
-                "Color": self.extract_color(response),
-                "Price": self.extract_price(response)
-            }
-            sku_dict.update([(self.extract_color(response) + "_" + self.extract_size(size), sku_data)])
-        return sku_dict
+        sku['price'] = self.extract_price(response),
+        sku['previous_prices'] = self.extract_previous_price(response)
+        sku['size'] = [self.extract_size(size) for size in size_list]
+        sku['Color'] = self.extract_color(response)
+        skus.append(sku)
+
+        return skus
 
     def extract_color(self, response):
         return response.xpath('//div[@id="colour-label"]//span[@class="color-label"]/text()').extract_first()
