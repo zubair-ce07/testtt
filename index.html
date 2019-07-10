@@ -8,7 +8,7 @@
 
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css?family=Literata|Roboto&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Quicksand:500&display=swap" rel="stylesheet">
 </head>
 
 <body class="d-flex flex-column h-100">
@@ -23,11 +23,11 @@
             <form id='argumentHandler'>
                 <div class="form-row">
                     <div class="col-md-4 mb-3">
-                        <label for="validationServer01">Country</label>
+                        <label for="validationServer01" class="text-white">Country</label>
                         <input type="text" class="form-control" id="countrySelector" placeholder="Country" value="Pakistan" required>
                     </div>
                     <div class="col-md-4 mb-3">
-                        <label for="validationServer01">Language</label>
+                        <label for="validationServer01" class="text-white">Language</label>
                         <select class="form-control" id="languageSelector">
                             <option value='None'>Choose..</option>
                             <option value='JavaScript'>JavaScript</option>
@@ -43,7 +43,7 @@
                         </select>
                     </div>
                     <div class="col-md-4 mb-3">
-                        <label for="exampleFormControlSelect1">Criteria</label>
+                        <label for="exampleFormControlSelect1" class="text-white">Criteria</label>
                         <select class="form-control" id="criteriaSelector">
                             <option value='None'>Choose..</option>
                             <option value=''>Best Match</option>
@@ -55,7 +55,7 @@
                 </div>
             </form>
 
-            <div class="jumbotron" id="disp"> </div>
+            <div class="jumbotron" id="disp" style="visibility: hidden"> </div>
         </div>
     </main>
 
