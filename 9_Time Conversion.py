@@ -12,22 +12,24 @@
 # Note that English uses the plural when talking about 0 items, so
 # it should be "0 minutes".
 #
+import time
 
 
 def convert_seconds(number):
-    secs = number % 60
-    mins = int(number / 60) % 60
-    hours = int(number / 3600) % 60
-    hour_str = str(hours) + " hour"
-    if hours > 1:
+    t = time.gmtime(number)
+    hour_str = time.strftime("%H", t) + " hour"
+    if t.tm_hour > 1:
         hour_str += 's'
 
-    min_str = str(mins) + " minute"
-    if mins > 1:
+    min_str = time.strftime("%M", t) + " minute"
+    if t.tm_min > 1:
         min_str += 's'
 
-    sec_str = str(secs) + " second"
-    if secs > 1:
+    if type(number) is float:
+        sec_str = str(number % 60) + " second"
+    else:
+        sec_str = time.strftime("%S", t) + " second"
+    if t.tm_sec > 1:
         sec_str += 's'
     return hour_str + ' ' + min_str + ' ' + sec_str
 
