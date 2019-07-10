@@ -8,16 +8,16 @@ class ReportGenerator:
         print(f"Lowest Average: {round(results[1])}")
         print(f"Average Mean Humidity:{round(results[2])}%\n")
 
-    def generate_yearly_report(self, results):
-        print(f"Highest: {results[0].max_temp}C on {results[0].date.day}"
-              f" {results[0].date.strftime('%b')}")
-        print(f"Lowest: {results[1].min_temp}C on {results[1].date.day}"
-              f" {results[2].date.strftime('%b')}")
-        print(f"Humidity: {results[2].max_humidity}% on {results[2].date.day}"
-              f" {results[2].date.strftime('%b')}\n")
+    def generate_yearly_report(self, filtered_records):
+        print(f"Highest: {filtered_records[0].max_temp}C on {filtered_records[0].date.day}"
+              f" {filtered_records[0].date.strftime('%b')}")
+        print(f"Lowest: {filtered_records[1].min_temp}C on {filtered_records[1].date.day}"
+              f" {filtered_records[2].date.strftime('%b')}")
+        print(f"Humidity: {filtered_records[2].max_humidity}% on {filtered_records[2].date.day}"
+              f" {filtered_records[2].date.strftime('%b')}\n")
 
-    def generate_chart_report(self, records, *bonus):
-        for record in records:
+    def generate_chart_report(self, filtered_records, *bonus):
+        for record in filtered_records:
             print(f"{self.blue_stars * record.min_temp}", end='')
 
             if bool(bonus):
