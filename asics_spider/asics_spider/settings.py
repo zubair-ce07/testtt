@@ -14,7 +14,6 @@ BOT_NAME = 'asics_spider'
 SPIDER_MODULES = ['asics_spider.spiders']
 NEWSPIDER_MODULE = 'asics_spider.spiders'
 
-DUPEFILTER_CLASS = 'scrapy.dupefilters.BaseDupeFilter'
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'asics_spider (+http://www.yourdomain.com)'
 
