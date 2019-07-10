@@ -45,16 +45,15 @@ class ProductSpider(scrapy.Spider):
         return re.sub('<.*?>', '', product['description']).split('. ')
 
     def get_image_urls(self, response):
-        return ['https:{}'.format(re.sub(r"^\s+", "", img.split(",")[-1])) for img in response.css
-                ('[data-zoom-img]::attr(srcset)').getall()]
+        return ['https:{}'.format(img) for img in response.css('.desktop-product-img::attr(data-zoom-img)').getall()]
 
     def get_script_json(self, response):
         return json.loads(response.css('script[data-product-json]::text').get())
 
     def get_gender(self, product):
-        gender_attribute = [attribute for attribute in product['tags'] if 'Gender' in attribute]
-        if gender_attribute:
-            return re.split('\\bGender:\\b', gender_attribute[0])[-1]
+        gender_attr = [attribute for attribute in product['tags'] if 'Gender' in attribute]
+        if gender_attr:
+            return re.findall(r"(?<=Gender:)(?s)(.*$)", gender_attr[0])[0]
 
     def get_skus(self, response, product):
         skus = []
