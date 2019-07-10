@@ -20,6 +20,7 @@ class BognerUK(CrawlSpider):
         item = BognerRecord()
 
         item['name'] = self.get_product_name(response)
+        item['color'] = self.get_product_colors(response)
         item['retailer_skus'] = self.get_product_skus(response)
         item['size'] = self.get_product_size(response)
         item['description'] = self.get_product_description(response)
@@ -36,6 +37,9 @@ class BognerUK(CrawlSpider):
 
     def get_product_name(self,response):
         return response.css('.product-name-text::text').get()
+
+    def get_product_colors(self,response):
+        return response.css('.color-name::text').getall()
 
     def get_product_skus(self,response):
         return response.css('.sku::text').get()
@@ -83,6 +87,7 @@ class BognerUK(CrawlSpider):
 class BognerRecord(scrapy.Item):
 
     name = scrapy.Field()
+    color = scrapy.Field()
     retailer_skus = scrapy.Field()
     size = scrapy.Field()
     description = scrapy.Field()
