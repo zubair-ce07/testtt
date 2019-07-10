@@ -22,16 +22,14 @@ def is_list(p):
 # It is not necessary to understand how is_list works. It returns True if the
 # input is a List, and returns False otherwise.
 
-def deep_count(p):
-    count = 0
-    if p is None:
+def deep_count(input):
+    count = len(input)
+    if input is None:
         return count
     else:
-        for elem in p:
+        for elem in input:
             if is_list(elem):
-                count += 1 + deep_count(elem)
-            else:
-                count += 1
+                count += deep_count(elem)
         return count
 
 
