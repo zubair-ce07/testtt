@@ -10,6 +10,7 @@
 #      ... }
 
 # For example,
+from collections import defaultdict
 
 courses = {
     'feb2012': {'cs101': {'name': 'Building a Search Engine',
@@ -69,16 +70,14 @@ def courses_offered(courses, hexamester):
 # can be in any order).
 
 def involved(courses, person):
-    persons = {}
+    persons = defaultdict(list)
     for hexamester in courses:
         for course in courses[hexamester]:
             for course_info in courses[hexamester][course]:
                 if person is courses[hexamester][course][course_info]:
-                    if hexamester in persons:
-                        persons[hexamester].append(course)
-                    else:
-                        persons[hexamester] = [course]
+                    persons[hexamester].append(course)
     return persons
+
 
 # For example:
 
