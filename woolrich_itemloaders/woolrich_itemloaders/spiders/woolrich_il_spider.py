@@ -36,27 +36,14 @@ class ProductsSpider(CrawlSpider):
         product_loader.add_css("currency", ".productView-details .price::text")
         item = product_loader.load_item()
 
-        item_info = self.get_info(response)
-        combinations = list(product(item_info['color_ids'], item_info['size_ids']))
-        if combinations:
-            meta_data = {
-                'pairs': combinations,
-                'color_attr': item_info['attr_for_color'],
-                'size_attr': item_info['attr_for_size'],
-                'item_id': item_info['item_id'],
-                'color': '',
-                'size': '',
-                'color_names': item_info['color_names'],
-                'size_names': item_info['size_names'],
-                'color_ids': item_info['color_ids'],
-                'size_ids': item_info['size_ids'],
-                'item': item
-            }
-            request = self.form_request(meta_data)
+        sku_requests = self.get_sku_requests(response, item)
+        if sku_requests:
+            sku_request = sku_requests.pop()
+            sku_request['metadata']['sku_requests'] = sku_requests
             yield scrapy.FormRequest(
-                url = request['url'],
-                formdata = request['formdata'],
-                meta = request['metadata'],
+                url = sku_request['url'],
+                formdata = sku_request['formdata'],
+                meta = sku_request['metadata'],
                 callback = self.parse_skus
             )
     
@@ -77,41 +64,56 @@ class ProductsSpider(CrawlSpider):
         sku = sku_loader.load_item()
         response.meta['item']['skus'].update({obj['data']['sku']: sku})
         
-        if response.meta['pairs']:
-            request = self.form_request(response.meta)
+        if response.meta['sku_requests']:
+            sku_request = response.meta['sku_requests'].pop()
             yield scrapy.FormRequest(
-                url = request['url'],
-                formdata = request['formdata'],
-                meta = request['metadata'],
+                url = sku_request['url'],
+                formdata = sku_request['formdata'],
+                meta = sku_request['metadata'],
                 callback = self.parse_skus
             )
         else:
             yield response.meta['item']
-    
-    def form_request(self, meta):
-        color, size = meta['pairs'].pop()
-        meta['color'] = meta['color_names'][meta['color_ids'].index(color)]
-        meta['size'] = meta['size_names'][meta['size_ids'].index(size)]
-        return {
-            'url': f"{self.attr_url}{meta['item_id']}",
-            'formdata': {
-                'action': 'add',
-                meta['color_attr']: color,
-                meta['size_attr']: size,
-                'product_id': meta['item_id'],
-                'qty[]': '1'
-            },
-            'metadata': meta
-        }
-
-    def get_info(self, response):
+        
+    def get_sku_requests(self, response, item):
         color_attr_unformatted = response.css('.productView-details [data-swatch-id]::attr(data-swatch-id)').get()
-        return {
-            'attr_for_size': response.css(".productView-details .product-size .form-radio::attr(name)").get(),
-            'attr_for_color': f"attribute[{color_attr_unformatted}]",
-            'size_ids': response.css(".productView-options .product-size .form-radio::attr(value)").getall(),
-            'color_ids': response.css(".productView-options [aria-checked]::attr(value)").getall(),
-            'color_names': response.css(".productView-options [data-swatch-id]::attr(title)").getall(),
-            'size_names': response.css(".productView-options .product-size .form-option span::text").getall(),
-            'item_id': response.css(".jrb-product-view::attr(data-entity-id)").get()
+        attr_for_size = response.css(".productView-details .product-size .form-radio::attr(name)").get()
+        attr_for_color = f"attribute[{color_attr_unformatted}]"
+        size_ids = response.css(".productView-options .product-size .form-radio::attr(value)").getall()
+        color_ids = response.css(".productView-options [aria-checked]::attr(value)").getall()
+        color_names = response.css(".productView-options [data-swatch-id]::attr(title)").getall()
+        size_names = response.css(".productView-options .product-size .form-option span::text").getall()
+        item_id = response.css(".jrb-product-view::attr(data-entity-id)").get()
+
+        combinations = list(product(color_ids, size_ids))
+        meta = {
+                'color_attr': attr_for_color,
+                'size_attr': attr_for_size,
+                'item_id': item_id,
+                'color': '',
+                'size': '',
+                'color_names': color_names,
+                'size_names': size_names,
+                'color_ids': color_ids,
+                'size_ids': size_ids,
+                'item': item,
+                'sku_requests': []
         }
+        requests = []
+        for combination in combinations:
+            color, size = combination
+            meta['color'] = color_names[color_ids.index(color)]
+            meta['size'] = size_names[size_ids.index(size)]
+            sku_request = {
+                'url': f"{self.attr_url}{meta['item_id']}",
+                'formdata': {
+                    'action': 'add',
+                    meta['color_attr']: color,
+                    meta['size_attr']: size,
+                    'product_id': meta['item_id'],
+                    'qty[]': '1'
+                },
+                'metadata': meta
+            }
+            requests.append(sku_request)
+        return requests

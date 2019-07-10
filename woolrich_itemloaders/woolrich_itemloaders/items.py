@@ -11,8 +11,7 @@ def split_currency(price):
     return re.match(r'(\W+)(\d*[,]*\d*[.]*\d*)', price).group(1)
 
 def get_gender(categories):
-    gender = "Men" if "Men" in categories else "Women" if "Women" in categories else "Unisex"
-    return gender
+    return "Men" if "Men" in categories else "Women" if "Women" in categories else "Unisex"
 
 class Product(scrapy.Item):
     retailer_sku = scrapy.Field()
