@@ -18,15 +18,15 @@ class DerekRose(CrawlSpider):
     def parse_item(self, response):
         item = DerekRecord()
 
-        item['product_name'] = self.get_product_name(response)
-        item['brand_name'] = self.get_brand_name(response)
+        item['name'] = self.get_product_name(response)
+        item['brand'] = self.get_brand_name(response)
         item['price'] = self.get_price(response)
-        item['details_and_care'] = self.get_details_and_care(response)
-        item['skus'] = self.get_skus(response)
+        item['care'] = self.get_details_and_care(response)
+        item['retailer_sku'] = self.get_skus(response)
         item['image_urls'] = self.get_image_urls(response)
         item['gender'] = self.get_gender(response)
         item['description'] = self.get_description(response)
-        item['product_url'] = self.get_product_url(response)
+        item['url'] = self.get_product_url(response)
 
         return item
 
@@ -76,12 +76,13 @@ class DerekRose(CrawlSpider):
 
 class DerekRecord(scrapy.Item):
 
-    product_name = scrapy.Field()
-    brand_name = scrapy.Field()
+    name = scrapy.Field()
+    brand = scrapy.Field()
     image_urls = scrapy.Field()
-    details_and_care = scrapy.Field()
+    care = scrapy.Field()
     price = scrapy.Field()
-    skus = scrapy.Field()
+    retailer_sku = scrapy.Field()
     gender = scrapy.Field()
     description = scrapy.Field()
-    product_url = scrapy.Field()
+    url = scrapy.Field()
+
