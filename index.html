@@ -20,7 +20,42 @@
 
     <main role="main" class="flex-shrink-0">
         <div class="container">
-                <div class="jumbotron" id="disp"> </div>
+            <form id='argumentHandler'>
+                <div class="form-row">
+                    <div class="col-md-4 mb-3">
+                        <label for="validationServer01">Country</label>
+                        <input type="text" class="form-control" id="countrySelector" placeholder="Country" value="Pakistan" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="validationServer01">Language</label>
+                        <select class="form-control" id="languageSelector">
+                            <option value='None'>Choose..</option>
+                            <option value='JavaScript'>JavaScript</option>
+                            <option value='Java'>Java</option>
+                            <option value='HTML'>HTML</option>
+                            <option value='PHP'>PHP</option>
+                            <option value='Python'>Python</option>
+                            <option value='C%23'>C#</option>
+                            <option value='C%2B%2B'>C++</option>
+                            <option value='CSS'>CSS</option>
+                            <option value='Ruby'>Ruby</option>
+                            <option value='C'>C</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="exampleFormControlSelect1">Criteria</label>
+                        <select class="form-control" id="criteriaSelector">
+                            <option value='None'>Choose..</option>
+                            <option value=''>Best Match</option>
+                            <option value='followers'>Most Followers</option>
+                            <option value='joined'>Most Recently Joined</option>
+                            <option value='repositories'>Most Repositpries</option>
+                        </select>
+                    </div>
+                </div>
+            </form>
+
+            <div class="jumbotron" id="disp"> </div>
         </div>
     </main>
 
