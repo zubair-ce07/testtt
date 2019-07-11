@@ -144,10 +144,8 @@ class OnlyParser(Spider):
         return request
 
     def construct_sku_requests(self, response, raw_product):
-        if not self.has_skus(response):
-            return []
-
-        return [Request(item['url'], callback=self.parse_sku) for item in raw_product['@graph']]
+        return [Request(item['url'], callback=self.parse_sku) for item in raw_product['@graph']] \
+            if self.has_skus(response) else []
 
     def extract_skus(self, response):
         skus = []
