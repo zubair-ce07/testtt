@@ -7,12 +7,12 @@ from scrapy.spiders import Rule
 
 
 def clean(raw_data):
-    raw_info = []
+    raw_info = ''
 
     if isinstance(raw_data, list):
         for string in raw_data:
             if re.sub('\s+', '', string):
-                raw_info.append(re.sub('\s+', '', string))
+                raw_info += (re.sub('\s+', '', string))
 
         return raw_info
 
@@ -34,23 +34,20 @@ class BossItem(scrapy.Item):
     color = scrapy.Field()
     price = scrapy.Field()
     skus = scrapy.Field()
-    color_queue = scrapy.Field()
-    size_queue = scrapy.Field()
+    requests = scrapy.Field()
 
 
 class BossSpider(CrawlSpider):
     name = 'boss'
     allowed_domains = ['hugoboss.com']
-    start_urls = [
-        'https://www.hugoboss.com/uk/home',
-    ]
+    start_urls = ['https://www.hugoboss.com/uk/home']
 
     rules = (
         Rule(LinkExtractor(restrict_css=('.main-header'))),
-        Rule(LinkExtractor(restrict_css=('.product-tile__link')),callback='parse_item'),
+        Rule(LinkExtractor(restrict_css=('.product-tile__link')), callback='parse'),
     )
 
-    def parse_item(self, response):
+    def parse(self, response):
         item = BossItem()
 
         item['retailer_sku'] = self.retailer_sku(response)
@@ -63,11 +60,15 @@ class BossSpider(CrawlSpider):
         item['care'] = self.product_care(response)
         item['image_urls'] = self.images_url(response)
         item['skus'] = {}
-        color_urls = response.css('.swatch-list__image--is-large ::attr(href)').getall()
+        item['requests'] = []
 
-        for color_url,flag in zip(color_urls,range(len(color_urls),0,-1)):
-            yield response.follow(url= color_url, callback=self.parse_size,
-                                  meta={'item': item,'color_flag' : flag})
+        color_queue = response.css('.swatch-list__image--is-large ::attr(href)').getall()
+
+        for color_url in color_queue:
+            item['requests'].append(response.follow(color_url, callback=self.parse_size,
+                                                    meta={'item': item}.copy()))
+
+        yield item['requests'].pop()
 
     def retailer_sku(self, response):
         return response.css('script[type="text/javascript"]').re("productSku\":\"(.+?)\"")[0]
@@ -97,23 +98,25 @@ class BossSpider(CrawlSpider):
         return response.css('.slider-item--thumbnail-image ::attr(src)').getall()
 
     def parse_size(self, response):
+
         item = response.meta['item']
-        color_flag = response.meta['color_flag']
+        size_queue = response.css('.product-stage__choose-size--container '
+                                  '[disabled!="disabled"]::attr(href)').getall()
 
+        for size_url in size_queue:
+            item['requests'].append(response.follow(size_url, callback=self.parse_sku,
+                                                    meta={'item': item}.copy()))
 
-        size_urls = response.css('.product-stage__choose-size--container [disabled!="disabled"] '
-                                 '::attr(href)').getall()
+        if item['requests']:
+            yield item['requests'].pop()
+        else:
+            yield item
 
-        for size_url , flag in zip(size_urls, range(len(size_urls), 0, -1)):
-            yield response.follow(url=size_url, callback=self.parse_sku,
-                                  meta={'item': item,'color_flag' : color_flag,'size_flag':flag})
+    def parse_sku(self, response):
 
-    def parse_sku(self,response):
         item = response.meta['item']
-        color_flag = response.meta['color_flag']
-        size_flag = response.meta['size_flag']
-
-        color = clean(response.css('.product-stage__control-item__label--variations ::text').getall()[2])
+        color = clean(response.css('.product-stage__control-item__label--variations '
+                                   '::text').getall()[2])
         price = clean(response.css('.product-price--price-sales ::text').get())
         previous_price = clean(response.css('.product-price--price-standard s ::text').getall())
         size = clean(response.css('.product-stage__control-item__selcted-size ::text').get())
@@ -127,6 +130,8 @@ class BossSpider(CrawlSpider):
         }})
         item['skus'] = raw_sku
 
-        if color_flag == 1 and size_flag == 1:
+        if item['requests']:
+            yield item['requests'].pop()
+        else:
             yield item
 
