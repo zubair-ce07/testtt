@@ -6,16 +6,16 @@
             <div class="edu">
                 <h3>Education</h3>
                 <input type="hidden" name="user_id" value="{{user.id}}">
-                <p>Degree: <input type="text" name="degree"></p>
-                <p>Institute: <input type="text" name="institute"></p>
-                <p>Starting Date: <input type="date" name="starting_date"></p>
-                <p>Ending Date: <input type="date" name="ending_date"></p>
-                <p>City: <input type="text" name="city"></p>
-                <p>Description: <input type="text" name="description"></p>
+                <p>Degree: <input type="text" name="degree"></p>  <div class="alert-danger"> {{form.degree.errors}} </div>
+                <p>Institute: <input type="text" name="institute"></p>  <div class="alert-danger"> {{form.institute.errors}} </div>
+                <p>Starting Date: <input type="date" name="starting_date"></p>  <div class="alert-danger"> {{form.starting_date.errors}} </div>
+                <p>Ending Date: <input type="date" name="ending_date"></p>  <div class="alert-danger"> {{form.ending_date.errors}} </div>
+                <p>City: <input type="text" name="city"></p>  <div class="alert-danger"> {{form.city.errors}} </div>
+                <p>Description: <input type="text" name="description"></p>  <div class="alert-danger"> {{form.description.errors}} </div>
             </div>
             <button type="submit">Submit</button>
         </form>
-        <button>
+        <button class="experience">
             <a href="../">Go to home</a></button>
     </div>
     {% endblock %}

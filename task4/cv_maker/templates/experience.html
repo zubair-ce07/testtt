@@ -1,5 +1,26 @@
 {% extends 'base.html' %}
 {% load static %}
+    {% block stylesheet %}
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script>
+        $(document).ready(function(){
+            var $doc = $(".exp")
+                if ($form.errors){
+                $doc.append("check1")
+                    for (field in form){
+                    $doc.append("check2")
+                        for (error in field.errors){
+                        $doc.append("check3")
+                                var $this_field = $("{{field.name}}")
+                                $this_field.append("{{ error|escape }}");
+                        };
+                    };
+                };
+
+        });
+    </script>
+    {% endblock %}
+
     {% block body %}
     <div class="container">
         <form method="post" class="form-control">
@@ -7,16 +28,17 @@
             <div class="exp" >
                 <h3>Experience</h3>
                 <input type="hidden" name="user_id" value="{{user.id}}">
-                <p>Organization: <input type="text" name="organization"></p>
-                <p>Position: <input type="text" name="position"></p>
-                <p>Starting Date: <input type="date" name="starting_date"></p>
-                <p>Ending Date: <input type="date" name="ending_date"></p>
-                <p>City: <input type="text" name="city"></p>
-                <p>Job Description: <input type="text" name="job_description"></p>
+                <p>Organization: <input type="text" name="organization"></p> <div class="alert-danger"> {{form.organization.errors}} </div>
+                <p>Position: <input type="text" name="position"></p> <div class="alert-danger"> {{form.position.errors}} </div>
+                <p>Starting Date: <input type="date" name="starting_date"></p> <div class="alert-danger"> {{form.starting_date.errors}} </div>
+                <p>Ending Date: <input type="date" name="ending_date"></p> <div class="alert-danger"> {{form.ending_date.errors}} </div>
+                <p>City: <input type="text" name="city"> </p> <div class="alert-danger"> {{form.city.errors}} </div>
+                <p>Job Description: <input type="text" name="job_description"></p> <div class="alert-danger"> {{form.job_description.errors}} </div>
             </div>
-            <button type="submit">Submit</button>
+            <button id="submit" type="submit">Submit</button>
         </form>
         <button>
             <a href="../education">Add Education</a></button>
     </div>
     {% endblock %}
+
