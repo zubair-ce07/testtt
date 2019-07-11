@@ -40,7 +40,9 @@ class BossItem(scrapy.Item):
 class BossSpider(CrawlSpider):
     name = 'boss'
     allowed_domains = ['hugoboss.com']
-    start_urls = ['https://www.hugoboss.com/uk/home']
+    start_urls = [
+        'https://www.hugoboss.com/uk/home'
+    ]
 
     rules = (
         Rule(LinkExtractor(restrict_css=('.main-header'))),
@@ -65,10 +67,9 @@ class BossSpider(CrawlSpider):
         color_queue = response.css('.swatch-list__image--is-large ::attr(href)').getall()
 
         for color_url in color_queue:
-            item['requests'].append(response.follow(color_url, callback=self.parse_size,
-                                                    meta={'item': item}.copy()))
+            item['requests'].append(response.follow(color_url, callback=self.parse_size))
 
-        yield item['requests'].pop()
+        yield from self.request_or_yield(item)
 
     def retailer_sku(self, response):
         return response.css('script[type="text/javascript"]').re("productSku\":\"(.+?)\"")[0]
@@ -104,16 +105,11 @@ class BossSpider(CrawlSpider):
                                   '[disabled!="disabled"]::attr(href)').getall()
 
         for size_url in size_queue:
-            item['requests'].append(response.follow(size_url, callback=self.parse_sku,
-                                                    meta={'item': item}.copy()))
+            item['requests'].append(response.follow(size_url, callback=self.parse_sku))
 
-        if item['requests']:
-            yield item['requests'].pop()
-        else:
-            yield item
+        yield from self.request_or_yield(item)
 
     def parse_sku(self, response):
-
         item = response.meta['item']
         color = clean(response.css('.product-stage__control-item__label--variations '
                                    '::text').getall()[2])
@@ -129,9 +125,14 @@ class BossSpider(CrawlSpider):
             'size': size
         }})
         item['skus'] = raw_sku
+        yield from self.request_or_yield(item)
 
+    def request_or_yield(self, item):
         if item['requests']:
-            yield item['requests'].pop()
+            request = item['requests'].pop()
+            request.meta.update({'item': item})
+            yield request
         else:
+            item.pop('requests', None)
             yield item
 
