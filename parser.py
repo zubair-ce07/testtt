@@ -1,7 +1,7 @@
 from csv import DictReader
 from datetime import datetime
 from glob import glob
-from weather_data import WeatherData
+from weather_reading import WeatherReading
 from reporter import ReportGenerator
 import argparse
 import os
@@ -27,7 +27,7 @@ class Parser:
 
             with open(files, "r") as single_file:
                 record_reader = DictReader(single_file)
-                complete_rec += [WeatherData(record) for record in record_reader if
+                complete_rec += [WeatherReading(record) for record in record_reader if
                                      self.validity_check(self, record)]
         return complete_rec
 
