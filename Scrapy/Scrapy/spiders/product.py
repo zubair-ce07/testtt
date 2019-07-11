@@ -40,7 +40,7 @@ class ProductSpider(scrapy.Spider):
 
     def get_description(self, product):
         description = scrapy.selector.Selector(text=product["description"])
-        return [desc for desc in description.css("::text").getall() if desc != "\n"]
+        return [desc.strip() for desc in description.css("::text").getall() if desc.strip()]
 
     def get_image_urls(self, response):
         return ['https:{}'.format(img) for img in response.css('.desktop-product-img::attr(data-zoom-img)').getall()]
