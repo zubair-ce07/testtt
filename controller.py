@@ -44,7 +44,7 @@ if __name__ == "__main__":
     if input_arguments.b:
         for arguments in input_arguments.b:
             records = calculator.monthly_records(weather_records, arguments.date())
-            report_gen.generate_chart_report(records, 'bonus')
+            report_gen.generate_chart_report(records, True)
 
     if input_arguments.c:
         for arguments in input_arguments.c:

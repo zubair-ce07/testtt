@@ -1,7 +1,7 @@
 class ReportGenerator:
 
-    blue_stars = '\033[1;34m*\033[1;m'
-    red_stars = '\033[1;31m*\033[1;m'
+    blue_stars = '\033[1;34m+\033[1;m'
+    red_stars = '\033[1;31m+\033[1;m'
 
     def generate_monthly_report(self, results):
         print(f"Highest Average: {round(results[0])}")
@@ -16,11 +16,11 @@ class ReportGenerator:
         print(f"Humidity: {filtered_records[2].max_humidity}% on {filtered_records[2].date.day}"
               f" {filtered_records[2].date.strftime('%b')}\n")
 
-    def generate_chart_report(self, filtered_records, *bonus):
+    def generate_chart_report(self, filtered_records, horizontal_chart=False):
         for record in filtered_records:
             print(f"{self.blue_stars * record.min_temp}", end='')
 
-            if bool(bonus):
+            if horizontal_chart:
                 print(f"{self.red_stars * (record.max_temp - record.min_temp)}"
                       f" {record.min_temp} C - {record.max_temp} C\n")
             else:
