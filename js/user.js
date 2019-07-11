@@ -1,12 +1,13 @@
-var username = new URL(window.location).searchParams.get("login")
-document.getElementById("username").innerText = username
 var per_page = 8
 
+// fetch the user as specified by the URL argument
+var username = new URL(window.location).searchParams.get("login")
+document.getElementById("username").innerText = username
 if(username != null){
     fetchUser(username)
 }
 
-
+// event listener for different tabs
 document.getElementById('user-profile-page').addEventListener('click', (event) => {
     if(event.target.getAttribute('href') == '#home') {
         fetchUser(username)
@@ -19,7 +20,7 @@ document.getElementById('user-profile-page').addEventListener('click', (event) =
     }
 })
 
-
+// fetches a single user
 function fetchUser(username){
     let query = `https://api.github.com/users/${username}`
     let clientRequest = new XMLHttpRequest()
@@ -47,6 +48,7 @@ function fetchUser(username){
     clientRequest.send()
 }
 
+// fetches followers of a specified user
 function fetchFollowers(username) {
     let query = `https://api.github.com/users/${username}/followers?per_page=${per_page}`
     let clientRequest = new XMLHttpRequest()
@@ -64,6 +66,7 @@ function fetchFollowers(username) {
     clientRequest.send()
 }
 
+// fetches following of a specified user
 function fetchFollowing(username) {
     let query = `https://api.github.com/users/${username}/following?per_page=${per_page}`
     let clientRequest = new XMLHttpRequest()
@@ -83,7 +86,7 @@ function fetchFollowing(username) {
     clientRequest.send()
 }
 
-
+// fetches repositories of a specified user
 function fetchRepos(username) {
     let query = `https://api.github.com/users/${username}/repos?per_page=${per_page}`
     let clientRequest = new XMLHttpRequest()
@@ -94,23 +97,23 @@ function fetchRepos(username) {
             let displayNode = document.getElementById("display-repositories");
             let cards = []
 
-            for (let oneRepo in clientRequest.response) {
-                let repoName = clientRequest.response[oneRepo]['name'],
-                    repoFullName = clientRequest.response[oneRepo]['full_name'],
-                    repoURL = clientRequest.response[oneRepo]['html_url'],
-                    repoDescription = clientRequest.response[oneRepo]['description'] ? clientRequest.response[oneRepo]['description'] : '<span class="text-warning text-center"> No Description Available </span>',
-                    repoCreated = new Date(clientRequest.response[oneRepo]['created_at']).toDateString(),
-                    repoUpdated = new Date(clientRequest.response[oneRepo]['updated_at']).toDateString(),
-                    repoWatchers = clientRequest.response[oneRepo]['watchers_count'],
-                    repoLanguage = clientRequest.response[oneRepo]['language'],
-                    repoForks = clientRequest.response[oneRepo]['forks_count']
-                    repoIssuesCount = clientRequest.response[oneRepo]['open_issues_count']
-                    repoLicense = clientRequest.response[oneRepo]["license"] ? clientRequest.response[oneRepo]["license"]['name'] : "unknown"
+            clientRequest.response.forEach((repo) => {
+                let repoName = repo['name'],
+                    repoFullName = repo['full_name'],
+                    repoURL = repo['html_url'],
+                    repoDescription = repo['description'] ? repo['description'] : '<span class="text-warning text-center"> No Description Available </span>',
+                    repoCreated = new Date(repo['created_at']).toDateString(),
+                    repoUpdated = new Date(repo['updated_at']).toDateString(),
+                    repoWatchers = repo['watchers_count'],
+                    repoLanguage = repo['language'] ? repo['language'] : `<span class="bg-danger">unknown </span>`,
+                    repoForks = repo['forks_count']
+                    repoIssuesCount = repo['open_issues_count']
+                    repoLicense = repo["license"] ? repo["license"]['name'] : `<span class="bg-danger">unknown </span>`
                 
                 let userCard = document.createElement('div');
                 userCard.innerHTML = createRepoCard(repoName, repoDescription, repoCreated, repoUpdated, repoWatchers, repoLanguage, repoForks, repoIssuesCount, repoLicense, repoURL);
                 cards.push(userCard)
-            }
+            })
 
             for(let i = 0; i < cards.length - cards.length % 2; i = i + 2) {
                 let cardDeck = document.createElement('div');
@@ -137,20 +140,21 @@ function fetchRepos(username) {
     clientRequest.send()
 }
 
+// displays followers/following profiles in cards
 function displayUsers(displayNode, username, api_call_result) {
     let cards = []
 
-    for (let singleUser in api_call_result) {
-        let login = api_call_result[singleUser]['login'],
-            id = api_call_result[singleUser]['id'],
-            avatar_url = api_call_result[singleUser]['avatar_url'],
-            github_url = api_call_result[singleUser]['html_url'],
-            api_url = api_call_result[singleUser]['url']
+    api_call_result.forEach((singleUser, index) => {
+        let login = singleUser['login'],
+            id = singleUser['id'],
+            avatar_url = singleUser['avatar_url'],
+            github_url = singleUser['html_url'],
+            api_url = singleUser['url']
         
         let userCard = document.createElement('div');
-        userCard.innerHTML = createCard(+singleUser+1, login, id, avatar_url, github_url, api_url);
+        userCard.innerHTML = createUserCard(index + 1, login, id, avatar_url, github_url, api_url);
         cards.push(userCard)
-    }
+    })
 
     for(let i = 0; i < cards.length - cards.length % 4; i = i + 4) {
         let cardDeck = document.createElement('div');
@@ -177,7 +181,8 @@ function displayUsers(displayNode, username, api_call_result) {
     displayNode.appendChild(lastDeck)
 }
 
-function createCard(number, login, id, avatar_url, github_url) {
+// returns a single user card
+function createUserCard(number, login, id, avatar_url, github_url) {
     return `<div class="card text-white bg-secondary mb-3 border-success" style="width: 18rem;">
             <div class="card-header text-bold">${number}</div>
             <img class="card-img-top" src="${avatar_url}" alt="Card image cap">
@@ -190,6 +195,7 @@ function createCard(number, login, id, avatar_url, github_url) {
             </div>`
 }
 
+// returns a single repo card
 function createRepoCard(repoName, repoDescription, repoCreated, repoUpdated, repoWatchers, repoLanguage, repoForks, repoIssuesCount, repoLicense, repoURL){
     return `<div class="card text-white bg-secondary mb-3 border-success" style="width: 18rem;">
 

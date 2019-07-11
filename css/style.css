@@ -1284,7 +1284,7 @@ main > .container {
 }
 
 .nav-tabs>li>a .badge {
-    padding: 1px 5px;
+    /* padding: 1px 5px; */
     line-height: 15px;
     opacity: .75;
     vertical-align: initial

@@ -23,8 +23,8 @@
             <form id='argumentHandler'>
                 <div class="form-row">
                     <div class="col-md-4 mb-3">
-                        <label for="validationServer01" class="text-white">Country</label>
-                        <input type="text" class="form-control" id="countrySelector" placeholder="Country" value="Pakistan" required>
+                        <label class="text-white">Country</label>
+                        <input type="text" class="form-control" id="countrySelector" value="Pakistan" onsubmit="return false">
                     </div>
                     <div class="col-md-4 mb-3">
                         <label for="validationServer01" class="text-white" required>Language</label>
@@ -46,7 +46,7 @@
                         <label for="exampleFormControlSelect1" class="text-white" required>Criteria</label>
                         <select class="form-control" id="criteriaSelector">
                             <option value='None'>Choose..</option>
-                            <option value=''>Best Match</option>
+                            <option value='Best Match'>Best Match</option>
                             <option value='followers'>Most Followers</option>
                             <option value='joined'>Most Recently Joined</option>
                             <option value='repositories'>Most Repositpries</option>
@@ -55,7 +55,12 @@
                 </div>
             </form>
 
-            <div class="jumbotron" id="disp" style="visibility: hidden"> </div>
+            <div class="jumbotron" id="disp" style="background-color: transparent"> 
+                <h2 id="welcome" class="display-3 text-center mt-5">
+                    Search Millions of Github Users based on their Country
+                </h2>
+            </div>
+            
         </div>
     </main>
 
