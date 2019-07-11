@@ -1,11 +1,9 @@
 from statistics import mean
-import os
-import re
-import datetime
 
 class Calculations:
 
-    def rec_monthly(self, weather_data, date):
+
+    def rec_monthly(self,weather_data,date):
         return [
             record for record in weather_data if
             record.date.year == date.year and

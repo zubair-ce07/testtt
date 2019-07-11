@@ -4,8 +4,6 @@ from glob import glob
 from weather_reading import WeatherReading
 from reporter import ReportGenerator
 import argparse
-import os
-import re
 from calculations import Calculations
 
 class Parser:
