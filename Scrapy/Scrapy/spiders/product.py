@@ -68,7 +68,8 @@ class ProductSpider(scrapy.Spider):
         return skus
 
     def get_prev_price(self, variant):
-        return variant['compare_at_price'] if variant['compare_at_price'] is list else [variant['compare_at_price']]
+        return variant['compare_at_price'] if type(variant['compare_at_price']) is list \
+            else [variant['compare_at_price']]
 
     def get_currency(self, response):
         return response.css('[data-currency]::attr(data-currency)').get()
