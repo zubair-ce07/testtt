@@ -9,41 +9,49 @@ document.getElementById('argumentHandler').addEventListener('change', (event) =>
     }
 })
 
+
 function fetchUsers(country, language, criteria) {
     let clientRequest = new XMLHttpRequest()
-    let query = `https://api.github.com/search/users?q=language%3A${encodeURIComponent(language)}+location%3A${country}&s=${criteria}&type=users&per_page=${per_page}`
-    // console.log(query)
+    let query = `https://api.github.com/search/users?o=desc&q=language%3A${encodeURIComponent(language)}+location%3A${country}&sort=${criteria}&type=users&per_page=${per_page}`
+
     clientRequest.open('GET', query, true)
     clientRequest.responseType = 'json'
+
     clientRequest.onload = function () {
         if (clientRequest.status == 200) {
 
+            // remove nodes from last request
             var displayNode = document.getElementById("disp");
             displayNode.style.visibility = 'visible'
             while (displayNode.firstChild) {
                 displayNode.removeChild(displayNode.firstChild);
             }
+            displayNode.style = ""
 
+            // create heading to show on top on cards jumbotron
             let heading = document.createElement('h2');
             heading.style.textAlign = 'center'
             heading.style.paddingBottom = '50px'
-            heading.innerText = `Top ${per_page} users in ${country.toUpperCase()}, who work in ${language.toUpperCase()}`
+            heading.innerHTML = `By ${criteria.toUpperCase()}: Top ${per_page}/${clientRequest.response['total_count']} users in <u>${country.toUpperCase()}</u>, who work in <i>${language.toUpperCase()}</i>`
             displayNode.appendChild(heading)
 
-            let cards = []
 
-            for (let singleUser in clientRequest.response['items']){
-                let login = clientRequest.response['items'][singleUser]['login'],
-                    id = clientRequest.response['items'][singleUser]['id'],
-                    avatar_url = clientRequest.response['items'][singleUser]['avatar_url'],
-                    github_url = clientRequest.response['items'][singleUser]['html_url'],
-                    api_url = clientRequest.response['items'][singleUser]['url']
+            // make all the cards from received JSON
+            let cards = []
+            clientRequest.response['items'].forEach((singleUser, index) => {
+                let login = singleUser['login'],
+                    id = singleUser['id'],
+                    avatar_url = singleUser['avatar_url'],
+                    github_url = singleUser['html_url'],
+                    api_url = singleUser['url']
                 
                 let userCard = document.createElement('div');
-                userCard.innerHTML = createCard(+singleUser+1, login, id, avatar_url, github_url, api_url);
+                userCard.innerHTML = createCard(index + 1, login, id, avatar_url, github_url, api_url);
                 cards.push(userCard)
-            }
+            })
 
+
+            // make rows of 4 cards each and siplay on screen
             for(let i = 0; i < cards.length - cards.length % 4; i = i + 4) {
                 let cardDeck = document.createElement('div');
                 cardDeck.className = 'card-deck'
@@ -51,9 +59,9 @@ function fetchUsers(country, language, criteria) {
                 displayNode.appendChild(cardDeck)
             }
             
+            // handle the remaining less than 4 cards for last row
             var lastDeck = document.createElement('div');
             lastDeck.className = 'card-deck'
-
             switch(cards.length % 4) {
                 case 1:
                     lastDeck.innerHTML = cards[cards.length - cards.length % 4].innerHTML
@@ -67,21 +75,21 @@ function fetchUsers(country, language, criteria) {
                 default:
                     console.log(cards.length % 4)
             }
-
             displayNode.appendChild(lastDeck)
 
+            
+            // end of results marker
             let endText = document.createElement('h4');
             endText.style.textAlign = 'center'
-            // endText.style.paddingBottom = '20px'
             endText.innerText = `... End of Results ...`
             endText.style.marginTop = '50px'
             displayNode.appendChild(endText)
         }
     }
-
     clientRequest.send()
 }
 
+// returns a single card
 function createCard(number, login, id, avatar_url, github_url) {
     return `<div class="card text-white bg-secondary mb-3 border-success" style="width: 18rem;">
             <div class="card-header text-bold">${number}</div>
