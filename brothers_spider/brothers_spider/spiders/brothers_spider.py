@@ -4,7 +4,7 @@ from scrapy.spiders import CrawlSpider, Rule
 
 
 class BrothersSpider(CrawlSpider):
-    name = 'bro'
+    name = 'brothers_spider'
     item = ProductItem()
     allowed_domains = ["brothers.se"]
     start_urls = ['https://www.brothers.se']
