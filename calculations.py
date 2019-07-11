@@ -17,7 +17,7 @@ def weather_calculations(years, months, data):
                 monthly = [m]
                 
 
-                max_temps = data[y + '_' + m]['Max TemperatureC']
+                max_temps = data[y + '_' + m]['MaxTemperatureC']
 
                 max_temp_month = max(
                     x for x in max_temps if x is not None)
@@ -35,8 +35,7 @@ def weather_calculations(years, months, data):
                 monthly.append(max_temps)
 
 
-                min_temps = data[y + '_' + m]['Min TemperatureC']
-                
+                min_temps = data[y + '_' + m]['MinTemperatureC']
                 min_temp_month = min(
                     x for x in min_temps if x is not None)
                 
@@ -46,7 +45,7 @@ def weather_calculations(years, months, data):
                 min_temp_day = min_temps.index(min_temp_month) + 1
                 
                 min_temps = [math.inf if x is None else x for x in min_temps]
-                
+
 
                 monthly.append(min_temp_month)
                 monthly.append(avg_min_temp)
@@ -54,7 +53,7 @@ def weather_calculations(years, months, data):
                 monthly.append(min_temps)
 
 
-                max_humids = data[y + '_' + m]['Max Humidity']
+                max_humids = data[y + '_' + m]['MaxHumidity']
                 
                 max_humid_month = max(
                     x for x in max_humids if x is not None)
@@ -66,7 +65,7 @@ def weather_calculations(years, months, data):
                 monthly.append(max_humid_day)
                 
 
-                mean_humids = data[y + '_' + m][' Mean Humidity']
+                mean_humids = data[y + '_' + m]['MeanHumidity']
                 avg_mean_humid = statistics.mean(x for x in mean_humids if x is not None)
                 
 
@@ -102,11 +101,11 @@ def calculate_yearly(years, months, years_monthly_records):
                 
                         max_temp = each_month[1]
                         max_temp_day = each_month[0] + ' ' + str(each_month[3])
-                    elif each_month[9] > max_humid:
+                    if each_month[9] > max_humid:
                 
                         max_humid = each_month[9]
                         max_humid_day = each_month[0] + ' ' + str(each_month[10])
-                    elif each_month[5] < min_temp:
+                    if each_month[5] < min_temp:
                 
                         min_temp = each_month[5]
                         min_temp_day = each_month[0] + ' ' + str(each_month[7])

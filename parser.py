@@ -30,7 +30,7 @@ def file_parser(month):
     
     monthly_readings = defaultdict(lambda: [])
     f = open(month)
-    data_header = f.readline().replace('\n', '').split(',')
+    data_header = f.readline().replace('\n', '').replace(" ",'').split(',')
 
     for reading in f:
 
@@ -39,14 +39,14 @@ def file_parser(month):
         for header_val, value in zip(data_header, reading):
 
             if value:
-                if header_val in ['PKST', 'PKT', ' Events']:
+                if header_val in ['PKST', 'PKT', 'Events']:
 
                     monthly_readings[header_val].append(value)
 
                 elif header_val in [
-                    ' Max VisibilityKm', ' Mean VisibilityKm',
-                    ' Min VisibilitykM', 'Precipitationmm',
-                    ' Mean Sea Level PressurehPa'
+                    'MaxVisibilityKm', 'MeanVisibilityKm',
+                    'MinVisibilitykM', 'Precipitationmm',
+                    'MeanSeaLevelPressurehPa'
                     ]:
 
                     monthly_readings[header_val].append(float(value))
