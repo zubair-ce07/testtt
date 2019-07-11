@@ -11,14 +11,18 @@ from calculations import Calculations
 class Parser:
 
     def validity_check(self, record):
-        valid_record = [record["Max TemperatureC"], record["Min TemperatureC"],
-                        record[" Mean Humidity"], record.get("PKT", record.get("PKST"))]
+        valid_record = [record["Max TemperatureC"],
+                        record["Min TemperatureC"],
+                        record[" Mean Humidity"],
+                        record.get("PKT",
+                        record.get("PKST"))
+                        ]
         if all(valid_record):
             return True
 
     def readfile(self, files_path):
         complete_rec = []
-        files_path += f"Murree_weather_*"
+        files_path += "Murree_weather_*"
         for files in glob(files_path):
 
             with open(files, "r") as single_file:
@@ -29,7 +33,7 @@ class Parser:
 
 def arg_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument('file_path', help='The local file path of weather files')
+    parser.add_argument('file_path', help='Local File Path on Your Machine')
     parser.add_argument('-e', '-yearly', type=lambda arg: datetime.strptime(arg, '%Y'), nargs="*")
     parser.add_argument('-a', '-monthly', type=lambda arg: datetime.strptime(arg, '%Y/%m'), nargs="*")
     return parser.parse_args()
@@ -45,10 +49,10 @@ if __name__ == "__main__":
 
     if input_arguments.e:
         for arguments in input_arguments.e:
-            results = calculator.yearly_analysis(weather_records, arguments.date().year)
-            generate_rep.generate_yearly_report(results)
+            results = calculator.report_yearly(weather_records, arguments.date().year)
+            generate_rep.yearly(results)
 
     if input_arguments.a:
         for arguments in input_arguments.a:
-            results = calculator.monthly_analysis(weather_records, arguments.date())
-            generate_rep.generate_monthly_report(results)
+            results = calculator.report_monthly(weather_records, arguments.date())
+            generate_rep.monthly(results)

@@ -5,20 +5,20 @@ import datetime
 
 class Calculations:
 
-    def monthly_records(self, weather_records, date):
+    def rec_monthly(self, weather_records, date):
         return [record for record in weather_records if
                 record.date.year == date.year and
                 record.date.month == date.month]
 
-    def monthly_analysis(self, weather_records, date):
-        records = self.monthly_records(weather_records, date)
+    def report_monthly(self, weather_records, date):
+        records = self.rec_monthly(weather_records, date)
         high_temp = mean(records.highest_temp for records in records)
         min_temp = mean(records.lowest_temp for records in records)
         mean_humidity = mean(records.avg_humidity for records in records)
 
         return [high_temp, min_temp, mean_humidity]
 
-    def yearly_analysis(self, weather_records, year):
+    def report_yearly(self, weather_records, year):
         records = [record for record in weather_records if record.date.year == year]
         max_temp_record = max(records, key=lambda record: record.highest_temp)
         min_temp_record = max(records, key=lambda record: record.lowest_temp)
