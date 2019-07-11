@@ -1,0 +1,280 @@
+{% load static %}
+<html>
+<head>
+    <title>{{person.basic_information.name}}</title>
+     <link href="https://fonts.googleapis.com/css?family=EB+Garamond|Fjalla+One|Roboto&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=EB+Garamond&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+    <style>
+        .outer {
+            width: 70%;
+            border: 1px solid black;
+            margin-left: 15%;
+        }
+        .image{
+            display: block;
+            margin-left: 30px;
+            margin-top: 30px;
+        }
+        .block{
+            margin-top: 10%
+            margin-bottom: 10%
+            margin-left: 10%
+            margin-right: 10%
+        }
+    </style>
+</head>
+<body>
+        <div align="center" class="outer">
+        <table class="table">
+            <tr>
+                <th width="10%" align="center" height="30px">
+                    <hr>
+                    <div  class="image">
+                        <img src="../../media/{{person.basic_information.image}}" width="130" height="130">
+                    </div>
+                </th>
+                <td  width="55%">
+                    <hr>
+                    <div class="heading">
+                        <br>
+                    <p>{{person.basic_information.name}}<br>
+                    {{person.basic_information.date_of_birth}}<br>
+                    0{{person.basic_information.contact_number}}<br>
+                    {{person.basic_information.email}}<br>
+                    {{person.basic_information.address}}</p>
+                    </div>
+                </td>
+                <th  width="25%">
+                    <hr>
+                </th>
+            </tr>
+            <tr>
+                <td width="20%">
+                    <span class="heading">Experience</span>
+                </td>
+                <td width="20%">
+                    {% for experience in person.experience_list %}
+                    <div class="block">
+                        <p><span class="heading">{{experience.organization}} / {{experience.position}}</span> <br>
+                        <span style="color: grey; font-size:12px">{{experience.starting_date}} {% if experience.ending_date %}
+                            - {{experience.ending_date}}
+                            {% endif %}
+                        </span> <br>
+                            {{experience.city}} <br></p>
+                        <p class="description">{{experience.job_description}}</p>
+                    </div>
+                    {% endfor %}
+                </td>
+                <td width="20%" rowspan="2">
+                    <div class="description">
+                    <span class="heading">
+                        Skills
+                    </span>
+                    <br> <br> <br>
+                    <p>
+                        {{person.basic_information.skill1}} <br>
+                        {% if person.basic_information.skill1_level == "1" %}
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                        {% endif %}
+                        {% if person.basic_information.skill1_level == "2" %}
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                        {% endif %}
+                        {% if person.basic_information.skill1_level == "3" %}
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                        {% endif %}
+                        {% if person.basic_information.skill1_level == "4" %}
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                        {% endif %}
+                        {% if person.basic_information.skill1_level == "5" %}
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                        {% endif %}
+                    </p>
+                    <br>
+                    <p>
+                        {{person.basic_information.skill2}} <br>
+                        {% if person.basic_information.skill2_level == "1" %}
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                        {% endif %}
+                        {% if person.basic_information.skill2_level == "2" %}
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                        {% endif %}
+                        {% if person.basic_information.skill2_level == "3" %}
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                        {% endif %}
+                        {% if person.basic_information.skill2_level == "4" %}
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                        {% endif %}
+                        {% if person.basic_information.skill2_level == "5" %}
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                        {% endif %}
+                    </p>
+                    <br>
+                    <p>
+                        {{person.basic_information.skill3}} <br>
+                        {% if person.basic_information.skill3_level == "1" %}
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                        {% endif %}
+                        {% if person.basic_information.skill3_level == "2" %}
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                        {% endif %}
+                        {% if person.basic_information.skill3_level == "3" %}
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                        {% endif %}
+                        {% if person.basic_information.skill3_level == "4" %}
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                        {% endif %}
+                        {% if person.basic_information.skill3_level == "5" %}
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                        {% endif %}
+                    </p>
+                    <br>
+                    <p>
+                        {{person.basic_information.skill4}} <br>
+                        {% if person.basic_information.skill4_level == "1" %}
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                        {% endif %}
+                        {% if person.basic_information.skill4_level == "2" %}
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                        {% endif %}
+                        {% if person.basic_information.skill4_level == "3" %}
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                        {% endif %}
+                        {% if person.basic_information.skill4_level == "4" %}
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                        {% endif %}
+                        {% if person.basic_information.skill4_level == "5" %}
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                        {% endif %}
+                    </p>
+                    <br>
+                    <p>
+                        {{person.basic_information.skill5}} <br>
+                        {% if person.basic_information.skill5_level == "1" %}
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                        {% endif %}
+                        {% if person.basic_information.skill5_level == "2" %}
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                        {% endif %}
+                        {% if person.basic_information.skill5_level == "3" %}
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                        {% endif %}
+                        {% if person.basic_information.skill5_level == "4" %}
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                        {% endif %}
+                        {% if person.basic_information.skill5_level == "5" %}
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                            <img  width="25" height="25" src="http://clipart-library.com/newimages/star-clip-art-40.jpg">
+                        {% endif %}
+                    </p></div>
+                    <div style="margin-top: 30px" class="description">
+                        <span class="heading">
+                            Hobbies
+                        </span>
+                        <br>
+                    <ul type="circle">
+                        {% if person.basic_information.hobby1 %}
+                        <li>
+                            {{person.basic_information.hobby1}}
+                        </li>
+                        {% endif %}
+                        {% if person.basic_information.hobby2 %}
+                        <li>
+                            {{person.basic_information.hobby2}}
+                        </li>
+                        {% endif %}
+                        {% if person.basic_information.hobby3 %}
+                        <li>
+                            {{person.basic_information.hobby3}}
+                        </li>
+                        {% endif %}
+                    </ul>
+                    </div>
+                    <br>
+                    <div style="margin-top: 10px" class="description">
+                        <span class="heading">
+                            References
+                        </span>
+                        <br>
+                    <ul type="none">
+                        <li>
+                            {{person.basic_information.reference1}}
+                        </li>
+                        <li>
+                            {{person.basic_information.reference2}}
+                        </li>
+                    </ul>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <span class="heading">Education</span>
+                </td>
+                <td>
+                    {% for education in person.education_list %}
+                    <div class="block">
+                        <p><span class="heading">{{education.degree}} / {{education.institute}}</span> <br>
+                        <span style="color:grey; font-size:12px">{{education.starting_date}}{% if experience.ending_date %}
+                            - {{education.ending_date}}
+                            {% endif %} </span> <br>
+                        {{education.city}}<br> </p>
+                        <p class="description">{{education.description}}</p>
+                    </div>
+                    {% endfor %}
+                </td>
+            </tr>
+        </table>
+        </div>
+</body>
+</html>

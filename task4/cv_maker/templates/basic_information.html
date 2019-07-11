@@ -1,14 +1,14 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block body %}
+{% block body %}<!DOCTYPE html>
 
 <div class="container" >
-    <form id ="basic_information" method="post" class="form-control">
+    <form id ="basic_information" method="post" class="form-control" enctype="multipart/form-data">
         {% csrf_token %}
         <div>
             <h3>Basic Information</h3>
             <input type="hidden" name="user_id" value="{{user.id}}">
-            <p>Image: <input type="image" id="image" class="form-control form-control-file"></p>
+            <p>Image: <input type="file" class="form-control form-control-file" name="image"></p>
             <div class="form-row">
             <div class="form-group col-md-4">
                 <p>Name: <input class="form-control" type="text" id="name" name="name" placeholder="name"></p></div>
@@ -75,7 +75,8 @@
             <p>Reference 2: <input type="text" name="reference2" placeholder="Optional"></p>
         <button id="submit" type="submit">Submit</button>
     </form>
-    <a href="../experience">Add Experience</a>
+    <button>
+        <a href="../experience">Add Experience</a></button>
 </div>
 {% endblock %}
 

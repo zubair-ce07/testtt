@@ -54,6 +54,7 @@ class BasicInformationForm(forms.ModelForm):
                   'hobby3',
                   'reference1',
                   'reference2',
+                  'image',
                   ]
 
 

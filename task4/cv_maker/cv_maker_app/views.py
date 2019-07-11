@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from django.shortcuts import render
 from .forms import BasicInformationForm, EducationForm, ExperienceForm
 from .models import BasicInformation, Experience, Education
+from django.core.files.storage import FileSystemStorage
 
 
 def home(request):
@@ -10,9 +11,13 @@ def home(request):
 
 
 def basic_information(request):
-    if request.method == "POST":
-        form = BasicInformationForm(request.POST)
+    if request.method == "POST" and request.FILES['image']:
+        form = BasicInformationForm(request.POST, request.FILES)
         if form.is_valid():
+            form.save()
+            image = request.FILES['image']
+            fs = FileSystemStorage()
+            image_name = fs.save(image.name, image)
             user_id = request.POST.get('user_id') or render(request, 'login.html')
             name = request.POST['name'] or ""
             email = request.POST["email"]or ''
@@ -37,6 +42,7 @@ def basic_information(request):
 
             BasicInformation.objects.create(
                 user_id=user_id,
+                image=image_name,
                 name=name,
                 date_of_birth=date_of_birth,
                 contact_number=contact_number,
@@ -72,7 +78,7 @@ def experience(request):
             organization = request.POST['organization']
             position = request.POST["position"]
             starting_date = request.POST['starting_date']
-            ending_date = request.POST['ending_date']
+            ending_date = request.POST['ending_date'] or None
             city = request.POST["city"]
             job_description = request.POST["job_description"]
 
@@ -100,7 +106,7 @@ def education(request):
             degree = request.POST['degree']
             institute = request.POST["institute"]
             starting_date = request.POST['starting_date']
-            ending_date = request.POST['ending_date']
+            ending_date = request.POST['ending_date'] or None
             city = request.POST["city"]
             description = request.POST["description"]
 
@@ -118,3 +124,12 @@ def education(request):
             print(form.errors)
 
     return render(request, 'education.html')
+
+
+def retrieve_cv(request, user_id):
+    person = {'basic_information': BasicInformation.objects.get(user_id=user_id),
+              'education_list': Education.objects.filter(user_id=user_id),
+              'experience_list': Experience.objects.filter(user_id=user_id)}
+    return render(request,
+                  'cv.html',
+                  {'person': person})

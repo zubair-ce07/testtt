@@ -5,11 +5,12 @@ from django.db import models
 
 class BasicInformation(models.Model):
     user_id = models.IntegerField(unique=True)
+    image = models.FileField(upload_to='documents/')
     name = models.CharField(max_length=30)
-    date_of_birth = models.DateTimeField()
+    date_of_birth = models.DateField()
     contact_number = models.IntegerField()
     address = models.CharField(max_length=255)
-    email = models.CharField(max_length=30, unique=True)
+    email = models.CharField(max_length=50)
     skill_level = (('1', "Beginner"),
                    ('2', "Little Knowledge"),
                    ('3', "Intermediate"),
@@ -40,8 +41,8 @@ class Experience(models.Model):
     user_id = models.IntegerField()
     organization = models.CharField(max_length=30)
     position = models.CharField(max_length=30)
-    starting_date = models.DateTimeField()
-    ending_date = models.DateTimeField(null=True)
+    starting_date = models.DateField()
+    ending_date = models.DateField(null=True)
     job_description = models.CharField(max_length=255)
     city = models.CharField(max_length=30)
     person = models.ForeignKey(BasicInformation, on_delete=models.CASCADE)
@@ -54,8 +55,8 @@ class Education(models.Model):
     user_id = models.IntegerField()
     degree = models.CharField(max_length=30)
     institute = models.CharField(max_length=100)
-    starting_date = models.DateTimeField()
-    ending_date = models.DateTimeField(null=True)
+    starting_date = models.DateField()
+    ending_date = models.DateField(null=True)
     city = models.CharField(max_length=30)
     description = models.CharField(max_length=255)
     person = models.ForeignKey(BasicInformation, on_delete=models.CASCADE)
