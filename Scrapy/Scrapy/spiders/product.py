@@ -16,13 +16,13 @@ class ProductSpider(scrapy.Spider):
             yield response.follow(url, callback=self.parse)
 
         for url in response.css(product_css).getall():
-            yield response.follow(url, callback=self.fetch_item_details)
+            yield response.follow(url, callback=self.parse_product)
 
         for url in response.css(pagination_css).getall():
             yield response.follow(url, callback=self.parse)
 
-    def fetch_item_details(self, response):
-        product = self.get_script_json(response)
+    def parse_product(self, response):
+        product = self.get_raw_product(response)
         return {
             'name': product['title'],
             'category': self.get_category(response),
@@ -39,19 +39,19 @@ class ProductSpider(scrapy.Spider):
         return response.css('.breadcrumbs a::text').getall()
 
     def get_description(self, product):
-        response = scrapy.selector.Selector(text=product["description"])
-        return response.css("p::text").getall()
+        description = scrapy.selector.Selector(text=product["description"])
+        return [desc for desc in description.css("::text").getall() if desc != "\n"]
 
     def get_image_urls(self, response):
         return ['https:{}'.format(img) for img in response.css('.desktop-product-img::attr(data-zoom-img)').getall()]
 
-    def get_script_json(self, response):
+    def get_raw_product(self, response):
         return json.loads(response.css('script[data-product-json]::text').get())
 
     def get_gender(self, product):
         gender_attr = [attribute for attribute in product['tags'] if 'Gender' in attribute]
         if gender_attr:
-            return re.findall(r'(?<=Gender:)(.*$)', gender_attr[0])[0]
+            return re.findall(r'(?<=Gender:)([A-z]*$)', gender_attr[0])[0]
 
     def get_skus(self, response, product):
         skus = []
