@@ -15,22 +15,22 @@ Including another URLconf
 """
 from django.conf.urls import url
 from django.contrib import admin
-from cv_maker_app import views
-from accounts import views as accounts_views
+from cv_maker_app.views import HomeView, BasicInformationView, EducationView, ExperienceView, RetrieveCvView
+from accounts.views import Signup
 from django.contrib.auth import views as auth_views
 from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    url(r'^$', views.home, name='home'),
+    url(r'^$', HomeView.as_view(), name='home'),
     url(r'^admin/', admin.site.urls),
-    url(r'^basic_information/', views.basic_information, name='basic_information'),
-    url(r'^experience/', views.experience, name='experience'),
-    url(r'^education/', views.education, name='education'),
-    url(r'^signup/$', accounts_views.signup, name='signup'),
+    url(r'^basic_information/', BasicInformationView.as_view(), name='basic_information'),
+    url(r'^experience/', ExperienceView.as_view(), name='experience'),
+    url(r'^education/', EducationView.as_view(), name='education'),
+    url(r'^signup/$', Signup.as_view(), name='signup'),
     url(r'^logout/$', auth_views.LogoutView.as_view(), name='logout'),
     url(r'^login/$', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
-    url(r'^cv/(?P<user_id>\d+)/$', views.retrieve_cv, name='retrieve_cv'),
+    url(r'^cv/(?P<user_id>\d+)/$', RetrieveCvView.as_view(), name='retrieve_cv'),
 
 ]
 if settings.DEBUG:

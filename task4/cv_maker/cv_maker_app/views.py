@@ -4,16 +4,18 @@ from django.shortcuts import render
 from .forms import BasicInformationForm, EducationForm, ExperienceForm
 from .models import BasicInformation, Experience, Education
 from django.core.files.storage import FileSystemStorage
+from django.views import View
 
 
-def home(request):
-    return render(request, 'home.html')
+class HomeView(View):
+    def get(self, request):
+        return render(request, 'home.html')
 
 
-def basic_information(request):
-    if request.method == "POST" and request.FILES['image']:
+class BasicInformationView(View):
+    def post(self, request):
         form = BasicInformationForm(request.POST, request.FILES)
-        if form.is_valid():
+        if form.is_valid() and request.FILES['image']:
             form.save()
             image = request.FILES['image']
             fs = FileSystemStorage()
@@ -66,12 +68,14 @@ def basic_information(request):
                 )
         else:
             print(form.errors)
+        return render(request, 'basic_information.html', {'form': form})
 
-    return render(request, 'basic_information.html')
+    def get(self, request):
+        return render(request, 'basic_information.html')
 
 
-def experience(request):
-    if request.method == "POST":
+class ExperienceView(View):
+    def post(self, request):
         form = ExperienceForm(request.POST)
         if form.is_valid():
             user_id = request.POST.get('user_id') or render(request, 'login.html')
@@ -94,12 +98,14 @@ def experience(request):
             )
         else:
             print(form.errors)
+        return render(request, 'experience.html', {'form': form})
 
-    return render(request, 'experience.html')
+    def get(self, request):
+        return render(request, 'experience.html')
 
 
-def education(request):
-    if request.method == "POST":
+class EducationView(View):
+    def post(self, request):
         form = EducationForm(request.POST)
         if form.is_valid():
             user_id = request.POST.get('user_id') or render(request, 'login.html')
@@ -122,14 +128,17 @@ def education(request):
             )
         else:
             print(form.errors)
+        return render(request, 'education.html', {'form': form})
 
-    return render(request, 'education.html')
+    def get(self, request):
+        return render(request, 'education.html')
 
 
-def retrieve_cv(request, user_id):
-    person = {'basic_information': BasicInformation.objects.get(user_id=user_id),
-              'education_list': Education.objects.filter(user_id=user_id),
-              'experience_list': Experience.objects.filter(user_id=user_id)}
-    return render(request,
-                  'cv.html',
-                  {'person': person})
+class RetrieveCvView(View):
+    def get(self, request, user_id):
+        person = {'basic_information': BasicInformation.objects.get(user_id=user_id),
+                  'education_list': Education.objects.filter(user_id=user_id),
+                  'experience_list': Experience.objects.filter(user_id=user_id)}
+        return render(request,
+                      'cv.html',
+                      {'person': person})
