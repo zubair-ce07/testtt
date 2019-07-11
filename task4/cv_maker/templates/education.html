@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
     {% block body %}
     <div class="container">
-        <form method="post" class="form-control">
+        <form method="post" class="form-control" style="background-color: #d8fefd;">
             {% csrf_token %}
             <div class="edu">
                 <h3>Education</h3>
@@ -15,7 +15,13 @@
             </div>
             <button type="submit">Submit</button>
         </form>
-        <button class="experience">
-            <a href="../">Go to home</a></button>
+        <div align="right">
+        <button>
+            <a href="../experience" class="navbar-brand">Add Experience</a></button> &nbsp &nbsp
+        <button>
+            <a href="../" class="navbar-brand">Go Home</a></button> &nbsp &nbsp
+        <button>
+            <a href="../cv" class="navbar-brand">Print CV</a></button>
+        </div>
     </div>
     {% endblock %}

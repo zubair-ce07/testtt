@@ -135,10 +135,10 @@ class EducationView(View):
 
 
 class RetrieveCvView(View):
-    def get(self, request, user_id):
-        person = {'basic_information': BasicInformation.objects.get(user_id=user_id),
-                  'education_list': Education.objects.filter(user_id=user_id),
-                  'experience_list': Experience.objects.filter(user_id=user_id)}
+    def get(self, request):
+        person = {'basic_information': BasicInformation.objects.get(user_id=request.user.id),
+                  'education_list': Education.objects.filter(user_id=request.user.id),
+                  'experience_list': Experience.objects.filter(user_id=request.user.id)}
         return render(request,
                       'cv.html',
                       {'person': person})

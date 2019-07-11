@@ -3,15 +3,17 @@
 {% block body %}<!DOCTYPE html>
 
 <div class="container" >
-    <form id ="basic_information" method="post" class="form-control" enctype="multipart/form-data">
+    <form id ="basic_information" method="post" class="form-control" enctype="multipart/form-data" style="background-color: #d8fefd;">
         {% csrf_token %}
         <div>
             <h3>Basic Information</h3>
             <input type="hidden" name="user_id" value="{{user.id}}">
-            <p>Image: <input type="file" class="form-control form-control-file" name="image"></p> <div class="alert-danger"> {{form.image.errors}} </div>
+            <div class="form-group col-md-2">
+            <p>Image: <input type="file" class="form-control form-control-file" name="image" accept="image/*"></p> <div class="alert-danger"> {{form.image.errors}} </div>
+            </div>
             <div class="form-row">
             <div class="form-group col-md-4">
-                <p>Name: <input class="form-control" type="text" id="name" name="name" placeholder="Full Name"></p></div>
+                <p> Name: <input class="form-control" type="text" id="name" name="name" placeholder="Full Name"></p></div>
                 <div class="alert-danger"> {{form.name.errors}} </div>
             <div class="form-group col-md-2">
                 <p>Date of Birth: <input class="form-control" type="date" name="date_of_birth"></p></div></div>
@@ -79,8 +81,15 @@
             <p>Reference 2: <input type="text" name="reference2" placeholder="Optional"></p> <div class="alert-danger"> {{form.reference2.errors}} </div>
         <button id="submit" type="submit">Submit</button>
     </form>
-    <button>
-        <a href="../experience">Add Experience</a></button>
+    <div align="right">
+        <button>
+            <a href="../" class="navbar-brand">Go Home</a></button> &nbsp &nbsp
+        <button>
+            <a href="../experience" class="navbar-brand">Add Experience</a></button> &nbsp &nbsp
+        <button>
+            <a href="../education" class="navbar-brand">Add Education</a></button>
+    </div>
+    <br> <br>
 </div>
 {% endblock %}
 

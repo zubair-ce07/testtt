@@ -4,10 +4,13 @@
         <br><br>
         <div align="center">
         {% if user.is_authenticated %}
-            <a href='basic_information'>Start CV Making</a> <br>
-            <a href='cv/{{user.id}}'>Print already made CV</a>
+            <button><a href='basic_information' class="navbar-brand">Start CV Making</a></button>
+            <br> <br>
+            <button><a href='cv' class="navbar-brand">Print already made CV</a></button> &nbsp &nbsp
+            <button><a href='experience' class="navbar-brand">Add Experience</a></button> &nbsp &nbsp
+            <button><a href='education' class="navbar-brand">Add Education</a></button>
         {% else %}
-            <a href='login'>Start CV Making</a>
+            <button><a href='basic_information' class="navbar-brand">Start CV Making</a></button>
         {% endif %}
         </div>
 

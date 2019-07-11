@@ -23,7 +23,7 @@
 
     {% block body %}
     <div class="container">
-        <form method="post" class="form-control">
+        <form method="post" class="form-control" style="background-color: #d8fefd;">
             {% csrf_token %}
             <div class="exp" >
                 <h3>Experience</h3>
@@ -37,8 +37,14 @@
             </div>
             <button id="submit" type="submit">Submit</button>
         </form>
-        <button>
-            <a href="../education">Add Education</a></button>
+        <div align="right">
+            <button>
+                <a href="../education" class="navbar-brand">Add Education</a></button> &nbsp &nbsp
+            <button>
+                <a href="../" class="navbar-brand">Go Home</a></button> &nbsp &nbsp
+            <button>
+                <a href="../cv" class="navbar-brand">Print CV</a></button>
+        </div>
     </div>
     {% endblock %}
 

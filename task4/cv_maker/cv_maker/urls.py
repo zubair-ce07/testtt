@@ -30,7 +30,7 @@ urlpatterns = [
     url(r'^signup/$', Signup.as_view(), name='signup'),
     url(r'^logout/$', auth_views.LogoutView.as_view(), name='logout'),
     url(r'^login/$', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
-    url(r'^cv/(?P<user_id>\d+)/$', RetrieveCvView.as_view(), name='retrieve_cv'),
+    url(r'^cv/$', RetrieveCvView.as_view(), name='retrieve_cv'),
 
 ]
 if settings.DEBUG:
