@@ -11,7 +11,7 @@ document.getElementById('argumentHandler').addEventListener('change', (event) =>
 
 function fetchUsers(country, language, criteria) {
     let clientRequest = new XMLHttpRequest()
-    let query = `https://api.github.com/search/users?q=language%3A${language}+location%3A${country}&s=${criteria}&type=users&per_page=${per_page}`
+    let query = `https://api.github.com/search/users?q=language%3A${encodeURIComponent(language)}+location%3A${country}&s=${criteria}&type=users&per_page=${per_page}`
     // console.log(query)
     clientRequest.open('GET', query, true)
     clientRequest.responseType = 'json'

@@ -1,23 +1,25 @@
-html,
-body {
-  height: 100%;
-  font-family: 'Quicksand', sans-serif;
+html {
+    height: 100%;
 }
 
 body {
-  background: rgb(106, 248, 62);
-  background: linear-gradient(to right, rgb(70, 218, 25), rgb(10, 129, 56));
+    margin-top:20px;
+    background: rgb(106, 248, 62);
+    background: linear-gradient(to right, rgb(70, 218, 25), rgb(10, 129, 56));
+    font-family: 'Quicksand', sans-serif;
 }
 
 main > .container {
-  padding: 60px 15px 0;
+    padding: 60px 15px 0;
 }
 
 
 /* .................................... */
 /* https://codepen.io/jasondavis/pen/vyMJPp?editors=0100 */
 
-body{margin-top:20px;}
+.img-responsive {
+    width: 100%;
+}
 
 .align-center, .center {
     text-align: center!important;

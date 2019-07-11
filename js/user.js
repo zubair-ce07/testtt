@@ -1,5 +1,30 @@
 var username = new URL(window.location).searchParams.get("login")
-console.log(username)
+document.getElementById("username").innerText = username
+let clientRequest = new XMLHttpRequest()
+let query = `https://api.github.com/users/${username}`
+
+clientRequest.open('GET', query, true)
+clientRequest.responseType = 'json'
+clientRequest.onload = function () {
+    if (clientRequest.status == 200) {
+
+        document.getElementById("avatar").src = clientRequest.response['avatar_url']
+        document.getElementById("github-url").href = clientRequest.response['html_url']
+        document.getElementById("github-url").target = '__blank'
+        document.getElementById("real-name").innerText = clientRequest.response['name']
+        document.getElementById("user-location").innerText = clientRequest.response['location'] ? clientRequest.response['location'] : "-"
+        document.getElementById("user-company").innerText = clientRequest.response['company'] ? clientRequest.response['company'] : "-"
+        document.getElementById("user-bio").innerText = clientRequest.response['bio'] ? clientRequest.response['bio'] : ""
+        var date = new Date(clientRequest.response['created_at']);
+        document.getElementById("user-joined").innerText = `${date.getDay()}/${date.getMonth()}/${date.getFullYear()}`
+        document.getElementById("user-blog").innerHTML = clientRequest.response['blog'] ? `<a target="__blank" href=${clientRequest.response['blog']}> ${clientRequest.response['blog']} </a>` : "-"
+        document.getElementById("user-followers-badge").innerText = clientRequest.response['followers']
+        document.getElementById("user-following-badge").innerText = clientRequest.response['following']
+        document.getElementById("user-repos-badge").innerText = clientRequest.response['public_repos']
+    }
+}
+
+clientRequest.send()
 
 
 
