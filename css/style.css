@@ -17,6 +17,13 @@ main > .container {
 /* .................................... */
 /* https://codepen.io/jasondavis/pen/vyMJPp?editors=0100 */
 
+.nav-tabs > li {
+    margin-right: 5px;
+    margin-left: 5px;
+    /* padding */
+}
+
+
 .img-responsive {
     width: 100%;
 }
