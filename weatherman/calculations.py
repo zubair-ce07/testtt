@@ -2,116 +2,189 @@ import math
 import statistics
 
 
-def weather_calculations(years, months, data):
-    """This function will perform all the calculations on the weather data"""
+class weather_calculator:
+    def __init__(self, years, months):
+        self.years = years
+        self.months = months
 
+    def total(self, list_):
 
-    all_years_data = []
+        count = 0
+        for element in list_:
+            if element is not None:
+                count += 1
 
-    for y in years:
-        yearly = [y]
+        return count
 
-        for m in months:
+    def max_(self, list_):
 
-            if y + '_' + m in data.keys():
-                monthly = [m]
-                
+        m = -math.inf
+        for element in list_:
+            if element is not None and element > m:
+                m = element
+        return m
 
-                max_temps = data[y + '_' + m]['MaxTemperatureC']
+    def min_(self, list_):
 
-                max_temp_month = max(
-                    x for x in max_temps if x is not None)
-                
-                avg_max_temp = statistics.mean(
-                    x for x in max_temps if x is not None)
-                
-                max_temp_day = max_temps.index(max_temp_month) + 1
-                max_temps = [-math.inf if x is None else x for x in max_temps]
-                
+        m = math.inf
+        for element in list_:
+            if element is not None and element < m:
+                m = element
+        return m
 
-                monthly.append(max_temp_month)
-                monthly.append(avg_max_temp)
-                monthly.append(max_temp_day)
-                monthly.append(max_temps)
+    def avg(self, list_):
 
+        sum_ = 0
+        count = 0
+        for element in list_:
+            if element is not None:
+                sum_ += element
+                count += 1
+        return (sum_/count)
 
-                min_temps = data[y + '_' + m]['MinTemperatureC']
-                min_temp_month = min(
-                    x for x in min_temps if x is not None)
-                
-                avg_min_temp = statistics.mean(
-                    x for x in min_temps if x is not None)
-                
-                min_temp_day = min_temps.index(min_temp_month) + 1
-                
-                min_temps = [math.inf if x is None else x for x in min_temps]
+    def max_temp_stats(self, year, month, data):
 
+        max_temps = data[year + '_' + month]['MaxTemperatureC']
 
-                monthly.append(min_temp_month)
-                monthly.append(avg_min_temp)
-                monthly.append(min_temp_day)
-                monthly.append(min_temps)
+        max_temp_month = self.max_(max_temps)
+        avg_max_temp = self.avg(max_temps)
+        max_temp_day = max_temps.index(max_temp_month) + 1
+        max_temps = [
+            -math.inf if mt is None else mt for mt in max_temps
+            ]
 
+        return (max_temp_month, avg_max_temp, max_temp_day, max_temps)
 
-                max_humids = data[y + '_' + m]['MaxHumidity']
-                
-                max_humid_month = max(
-                    x for x in max_humids if x is not None)
-                
-                max_humid_day = max_humids.index(max_humid_month) + 1
-                
+    def min_temp_stats(self, year, month, data):
 
-                monthly.append(max_humid_month)
-                monthly.append(max_humid_day)
-                
+        min_temps = data[year + '_' + month]['MinTemperatureC']
 
-                mean_humids = data[y + '_' + m]['MeanHumidity']
-                avg_mean_humid = statistics.mean(x for x in mean_humids if x is not None)
-                
+        min_temp_month = self.min_(min_temps)
+        avg_min_temp = self.avg(min_temps)
+        min_temp_day = min_temps.index(min_temp_month) + 1
+        min_temps = [
+            math.inf if mt is None else mt for mt in min_temps
+            ]
 
-                monthly.append(avg_mean_humid)
-                
-                
-                yearly.append(monthly)
+        return (min_temp_month, avg_min_temp, min_temp_day, min_temps)
 
-        all_years_data.append(yearly)
-    return all_years_data
+    def humidity_stats(self, year, month, data):
 
+        max_humids = data[year + '_' + month]['MaxHumidity']
 
-def calculate_yearly(years, months, years_monthly_records):
-    """This calculates yearly maximums and minimums."""
+        max_humid_month = self.max_(max_humids)
+        max_humid_day = max_humids.index(max_humid_month) + 1
 
+        mean_humids = data[year + '_' + month]['MeanHumidity']
+        avg_mean_humid = self.avg(mean_humids)
 
-    yearly_record = {}
+        return (max_humid_month, max_humid_day, avg_mean_humid)
 
-    for y in years:
-        
-        for an_year in years_monthly_records:
-            if an_year[0] == y:
+    def weather_calculations(self, data):
+        """This function will perform all the calculations
+        on the weather data
+        """
 
-                max_temp = -math.inf
-                max_humid = -math.inf
-                min_temp = math.inf
-                max_temp_day = -1
-                max_humid_day = -1
-                min_temp_day = -1
-                
-                for each_month in an_year[1:]:
-                    if each_month[1] > max_temp:
-                
-                        max_temp = each_month[1]
-                        max_temp_day = each_month[0] + ' ' + str(each_month[3])
-                    if each_month[9] > max_humid:
-                
-                        max_humid = each_month[9]
-                        max_humid_day = each_month[0] + ' ' + str(each_month[10])
-                    if each_month[5] < min_temp:
-                
-                        min_temp = each_month[5]
-                        min_temp_day = each_month[0] + ' ' + str(each_month[7])
-                yearly_record[y] = {
-                    "Highest: ": str(max_temp) + 'C ' + max_temp_day,
-                    "Lowest: ": str(min_temp) + 'C ' + min_temp_day,
-                    "Humidity: ": str(max_humid) + "% " + max_humid_day
-                    }
-    return yearly_record
+        all_years_data = []
+        for year in self.years:
+            yearly = [year]
+            for month in self.months:
+                if (year + '_' + month) in data.keys():
+
+                    monthly = [month]
+
+                    # Find max temperature stats
+                    (max_temp_month, avg_max_temp,
+                        max_temp_day, max_temps) = self.max_temp_stats(
+                        year, month, data
+                        )
+                    monthly.extend(
+                        [
+                            max_temp_month, avg_max_temp,
+                            max_temp_day, max_temps
+                        ]
+                        )
+
+                    # Min temperature stats
+                    (min_temp_month, avg_min_temp,
+                        min_temp_day, min_temps) = self.min_temp_stats(
+                        year, month, data
+                        )
+                    monthly.extend(
+                        [
+                            min_temp_month, avg_min_temp,
+                            min_temp_day, min_temps
+                        ]
+                        )
+
+                    # Humidity stats
+                    (max_humid_month, max_humid_day,
+                        avg_mean_humid) = self.humidity_stats(
+                            year, month, data
+                            )
+
+                    monthly.extend(
+                        [max_humid_month, max_humid_day, avg_mean_humid]
+                        )
+                    yearly.append(monthly)
+
+            all_years_data.append(yearly)
+        return all_years_data
+
+    def max_temp_of_year(self, year_data):
+
+        max_temp = -math.inf
+        max_temp_day = -1
+        for month in year_data[1:]:
+            if month[1] > max_temp:
+
+                max_temp = month[1]
+                max_temp_day = month[0] + ' ' + str(month[3])
+
+        return (max_temp, max_temp_day)
+
+    def max_humidity_of_year(self, year_data):
+
+        max_humid = -math.inf
+        max_humid_day = -1
+        for month in year_data[1:]:
+            if month[9] > max_humid:
+                max_humid = month[9]
+                max_humid_day = month[0] + ' ' + str(month[10])
+
+        return (max_humid, max_humid_day)
+
+    def min_temp_of_year(self, year_data):
+
+        min_temp = math.inf
+        min_temp_day = -1
+        for month in year_data[1:]:
+            if month[5] < min_temp:
+                min_temp = month[5]
+                min_temp_day = month[0] + ' ' + str(month[7])
+
+        return (min_temp, min_temp_day)
+
+    def calculate_yearly(self, years_monthly_records):
+        """This calculates yearly maximums and minimums."""
+
+        yearly_record = {}
+
+        for year in self.years:
+            for year_rec in years_monthly_records:
+                if year_rec[0] == year:
+
+                    (max_temp, max_temp_day) = self.max_temp_of_year(year_rec)
+                    (max_humid, max_humid_day) = self.max_humidity_of_year(
+                        year_rec
+                        )
+                    (min_temp, min_temp_day) = self.min_temp_of_year(year_rec)
+
+                    yearly_record[year] = {
+                        "Highest: ": str(max_temp) + 'C ' + str(max_temp_day),
+                        "Lowest: ": str(min_temp) + 'C ' + str(min_temp_day),
+                        "Humidity: ": (str(max_humid)
+                                       + "% " + str(max_humid_day))
+                        }
+
+        return yearly_record

@@ -1,54 +1,46 @@
 """Weather insights"""
-
 import sys
 import math
-import parser
-import calculations
-import reporter
+import argparse
+from parser import Parser
+from calculations import weather_calculator
+from reporter import Reporter
 
-# Command Line arguments.
-data_path = sys.argv[1]
-task = sys.argv[2]
 
-# Following years are present in the data.
-years = [
-    "2004", "2005", "2006",
-    "2007", "2008", "2009",
-    "2010", "2011", "2012",
-    "2013", "2014", "2015", "2016"
-]
-months = [
-    "Jan", "Feb", "Mar",
-    "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep",
-    "Oct", "Nov", "Dec", 
-]
+def main():
 
-# Read data by using the parser.
-data = parser.read_files(years, months, data_path)
+    # Command Line arguments.
+    parser = argparse.ArgumentParser()
+    parser.add_argument("data_path")
+    parser.add_argument('-e', action='store', dest='year_to_report')
+    parser.add_argument('-a', action='store', dest='month_to_report')
+    parser.add_argument('-c', action='store', dest='month_to_plot')
+    args = parser.parse_args()
 
-# Do calculations using the data.
-years_monthly_records = calculations.weather_calculations(
-    years, months, data)
-per_year_records = calculations.calculate_yearly(
-    years, months, 
-    years_monthly_records)
+    # Read data by using the parser.
+    data, years, months = Parser().read_files(args.data_path)
 
-# For Multiple reports
-i = 2
-while i < len(sys.argv):
-    
-    task = sys.argv[i]
-    input_data = sys.argv[i+1]
-    i += 2
+    # Do calculations using the data.
+    years_monthly_records = weather_calculator(
+        years, months
+        ).weather_calculations(data)
+    per_year_records = weather_calculator(
+        years, months
+        ).calculate_yearly(
+        years_monthly_records
+        )
 
     # Report as the user commanded.
-    if task == '-e':
-        reporter.yearly_report(per_year_records, input_data)
-    elif task == '-a':
-        reporter.monthly_report(years_monthly_records, input_data, months)
-    elif task == '-c':
-        reporter.monthly_bar_chart(years_monthly_records, input_data, months)
-        reporter.horizontal_barchart(years_monthly_records, input_data, months)
-    else:
-        print ("Sorry... There is no such report....")
+    if args.year_to_report:
+        Reporter().yearly_report(per_year_records, args.year_to_report)
+    if args.month_to_report:
+        Reporter().monthly_report(years_monthly_records, args.month_to_report)
+    if args.month_to_plot:
+        Reporter().monthly_bar_chart(years_monthly_records, args.month_to_plot)
+        Reporter().horizontal_barchart(
+            years_monthly_records, args.month_to_plot
+            )
+    return
+
+
+main()
