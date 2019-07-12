@@ -23,42 +23,35 @@ class WeatherReportParse:
 
         return self._instance
 
-    def get_required_files(self, path, date_object):
-        if isinstance(date_object, datetime):
-            return glob.glob(f"{path}/Murree_weather_"
-                             f"{date_object.strftime('%Y_%b')}.txt")
-
-        return glob.glob(f"{path}/Murree_weather_{date_object}_*.txt")
-
     def read_files_records(self, files):
         records = []
         required_fields = ["Max TemperatureC",
                            "Min TemperatureC", "Max Humidity"]
-        for file in files:
-            with open(file) as f:
+        for weather_file in files:
+            with open(weather_file) as f:
 
-                for record in csv.DictReader(f):
+                for weather_record in csv.DictReader(f):
 
-                    key_index = self.get_key(record)
+                    key_index = self.get_key(weather_record)
 
-                    if all(record.get(y) for y in required_fields):
-                        record = WeatherRecord(record[key_index],
-                                               int(record["Max TemperatureC"]),
-                                               int(record["Min TemperatureC"]),
-                                               int(record["Max Humidity"]))
+                    if all(weather_record.get(y) for y in required_fields):
+                        weather_record = WeatherRecord(weather_record[key_index],
+                                                       int(weather_record["Max TemperatureC"]),
+                                                       int(weather_record["Min TemperatureC"]),
+                                                       int(weather_record["Max Humidity"]))
 
-                        records.append(record)
+                        records.append(weather_record)
 
         return records
 
     def get_key(self, record):
 
-        if 'PKT' in record:
+        if record.get('PKT'):
             return 'PKT'
         return 'PKST'
 
     def parse_weather_records(self, path, year_month):
-        files = self.get_required_files(path, year_month)
+        files = glob.glob(f"{path}/{year_month}")
         return self.read_files_records(files)
 
 
@@ -110,37 +103,37 @@ class WeatherReportsProcess():
             print("Invalid Input, Files doesn't exists")
             return
 
-        for record in records:
-            date_object = datetime.strptime(record.date, "%Y-%m-%d")
+        for weather_record in records:
+            date_object = datetime.strptime(weather_record.date, "%Y-%m-%d")
             print(date_object.strftime("%d"), end="")
 
-            for plus_counter in range(0, int(record.max_temp)):
+            for plus_counter in range(0, int(weather_record.max_temp)):
                 print(f"\033[1;31;40m + ", end="")
 
-            print(f"{record.max_temp} C")
+            print(f"{weather_record.max_temp} C")
             print(date_object.strftime("%d"), end="")
 
-            for plus_counter in range(0, int(record.min_temp)):
+            for plus_counter in range(0, int(weather_record.min_temp)):
                 print(f"\033[1;34;40m - ", end="")
-            print(f"{record.min_temp} C")
+            print(f"{weather_record.min_temp} C")
 
     def show_merge_chart(self, records):
         if not records:
             print("Invalid Input, Files doesn't exists")
             return
 
-        for record in records:
-            date_object = datetime.strptime(record.date, "%Y-%m-%d")
+        for weather_record in records:
+            date_object = datetime.strptime(weather_record.date, "%Y-%m-%d")
             print(f"\033[1;31;40m {date_object.strftime('%d')}", end="\t")
-            print(f"\033[1;31;40m {record.max_temp} C", end="")
+            print(f"\033[1;31;40m {weather_record.max_temp} C", end="")
 
-            for plus_counter in range(0, int(record.max_temp)):
+            for plus_counter in range(0, int(weather_record.max_temp)):
                 print("\033[1;31;40m + ", end="")
 
-            for plus_counter in range(0, int(record.min_temp)):
+            for plus_counter in range(0, int(weather_record.min_temp)):
                 print("\033[1;34;40m + ", end="")
 
-            print(f"\033[1;34;40m {record.min_temp} C")
+            print(f"\033[1;34;40m {weather_record.min_temp} C")
 
 
 class CalculateWeatherResults:
@@ -176,15 +169,19 @@ def check_dir_path(string):
 
 
 def seprate_year_month(year_month):
-    date_object = datetime.strptime(year_month, "%Y/%m")
-    return date_object
+    date = datetime.strptime(year_month, "%Y/%m")
+    return f'Murree_weather_{date.strftime("%Y")}_{date.strftime("%b")}*'
+
+
+def year_pattren(year):
+    return f'Murree_weather_{year}*'
 
 
 def main():
     parser = argparse.ArgumentParser(description="Calculating and showing "
                                                  "weather reports fetched from the data files")
     parser.add_argument("path", type=check_dir_path, help="Directory Destinantion")
-    parser.add_argument("-e", "--year", type=str, help="Year Parameter")
+    parser.add_argument("-e", "--year", type=year_pattren, help="Year Parameter")
     parser.add_argument("-a", "--month", type=seprate_year_month, help="Month Parameter")
     parser.add_argument("-c", "--graphsingle", type=seprate_year_month, help="Show single graph")
     parser.add_argument("-m", "--graphmerged", type=seprate_year_month, help="Show merged graph")
