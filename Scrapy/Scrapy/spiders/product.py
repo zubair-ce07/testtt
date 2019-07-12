@@ -1,6 +1,7 @@
 import scrapy
 import json
 import re
+from scrapy.selector import Selector
 
 
 class ProductSpider(scrapy.Spider):
@@ -39,7 +40,7 @@ class ProductSpider(scrapy.Spider):
         return response.css('.breadcrumbs a::text').getall()
 
     def get_description(self, product):
-        description = scrapy.selector.Selector(text=product["description"])
+        description = Selector(text=product["description"])
         return [desc.strip() for desc in description.css("::text").getall() if desc.strip()]
 
     def get_image_urls(self, response):
