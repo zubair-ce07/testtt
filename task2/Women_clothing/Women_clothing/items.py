@@ -9,14 +9,14 @@ from scrapy.item import Item, Field
 
 class BeginningboutiqueItem(Item):
     retailer_sku = Field()
-    gender = Field(default="women")
+    gender = Field()
     trail = Field()
     category = Field()
     industry = None
     brand = Field()
     url = Field()
-    market = Field(default='AUS')
-    retailer = Field(default = 'beginningboutique-au')
+    market = Field()
+    retailer = Field()
     url_original = Field()
     product_name = Field()
     description = Field()
@@ -25,5 +25,5 @@ class BeginningboutiqueItem(Item):
     skus = Field()
     price = Field()
     currency = Field()
-    spider_name = Field(default='beginningboutique')
+    spider_name = Field()
     crawl_start_time = Field()
