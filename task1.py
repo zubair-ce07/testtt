@@ -31,11 +31,11 @@ class WeatherReportParse:
             with open(weather_file) as f:
 
                 for weather_record in csv.DictReader(f):
+                    date = weather_record.get('PKT', weather_record.get('PKST'))
 
-                    key_index = self.get_key(weather_record)
 
                     if all(weather_record.get(y) for y in required_fields):
-                        weather_record = WeatherRecord(weather_record[key_index],
+                        weather_record = WeatherRecord(date,
                                                        int(weather_record["Max TemperatureC"]),
                                                        int(weather_record["Min TemperatureC"]),
                                                        int(weather_record["Max Humidity"]))
@@ -44,14 +44,8 @@ class WeatherReportParse:
 
         return records
 
-    def get_key(self, record):
-
-        if record.get('PKT'):
-            return 'PKT'
-        return 'PKST'
-
     def parse_weather_records(self, path, year_month):
-        files = glob.glob(f"{path}/{year_month}")
+        files = glob.glob(f"{path}/Murree_weather_{year_month}")
         return self.read_files_records(files)
 
 
@@ -170,11 +164,11 @@ def check_dir_path(string):
 
 def seprate_year_month(year_month):
     date = datetime.strptime(year_month, "%Y/%m")
-    return f'Murree_weather_{date.strftime("%Y")}_{date.strftime("%b")}*'
+    return f'{date.strftime("%Y")}_{date.strftime("%b")}*'
 
 
 def year_pattren(year):
-    return f'Murree_weather_{year}*'
+    return f'{year}*'
 
 
 def main():
