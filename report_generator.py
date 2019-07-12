@@ -16,14 +16,17 @@ class ReportGenerator:
         print(f"Humidity: {filtered_records[2].max_humidity}% on {filtered_records[2].date.day}"
               f" {filtered_records[2].date.strftime('%b')}\n")
 
-    def generate_chart_report(self, filtered_records, horizontal_chart=False):
+    def generate_horizontal_chart(self, filtered_records):
         for record in filtered_records:
-            print(f"{self.blue_stars * record.min_temp}", end='')
+            print(f"{self.blue_stars * record.min_temp}", end=''
+                  f"{self.red_stars * (record.max_temp - record.min_temp)}"
+                  f" {record.min_temp} C - {record.max_temp} C\n")
 
-            if horizontal_chart:
-                print(f"{self.red_stars * (record.max_temp - record.min_temp)}"
-                      f" {record.min_temp} C - {record.max_temp} C\n")
-            else:
-                print(f" {record.min_temp} C \n"
-                      f"{self.red_stars * record.max_temp}"
+    def generate_chart_report(self, filtered_records, horizontal_chart=False):
+        if horizontal_chart:
+            self.generate_horizontal_chart(filtered_records)
+        else:
+            for record in filtered_records:
+                print(f"{self.blue_stars * record.min_temp}", end=''
+                      f" {record.min_temp} C \n {self.red_stars * record.max_temp}"
                       f" {record.max_temp} C\n")
