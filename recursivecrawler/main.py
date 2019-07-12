@@ -25,7 +25,7 @@ def url_validator(url: str) -> str:
     if url.startswith('//'):
         url = f'https:{url}'
     elif not(url.startswith('http://') or url.startswith('https://')):
-        return f'https://{url}'
+        url = f'https://{url}'
     return url
 
 
