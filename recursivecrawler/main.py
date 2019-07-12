@@ -11,7 +11,7 @@ from crawlrecord import CrawlerRecord
 final_record = CrawlerRecord(total_bytes_read=0, total_requests=0)
 
 
-def request_and_increase_count(url: str):
+def request_and_increase_count(url: str) -> requests.Request or None:
     try:
         response = requests.get(url)
         final_record.total_requests += 1
@@ -21,9 +21,11 @@ def request_and_increase_count(url: str):
         return None
 
 
-def url_validator(url: str):
-    if not(url.startswith('http:') or url.startswith('https:')):
-        return f'https:{url}'
+def url_validator(url: str) -> str:
+    if url.startswith('//'):
+        url = f'https:{url}'
+    elif not(url.startswith('http://') or url.startswith('https://')):
+        return f'https://{url}'
     return url
 
 
@@ -65,13 +67,13 @@ def parallel_url_worker(args: tuple) -> int:
     return len(response.content) if response else 0
 
 
-async def main():
+async def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument('-url', '-u', type=str)
+    parser.add_argument('-url', '-u', type=str, required=True)
     parser.add_argument('--parallel', action='store_true')
-    parser.add_argument('-concurrent_requests', '-ccr', type=int, required=False, default=5)
-    parser.add_argument('-max_urls_count', '-uc', type=int, required=False, default=500)
-    parser.add_argument('-download_delay', '-d', type=int, required=False, default=0)
+    parser.add_argument('-concurrent_requests', '-ccr', type=int, default=5)
+    parser.add_argument('-max_urls_count', '-uc', type=int, default=500)
+    parser.add_argument('-download_delay', '-d', type=int, default=0)
 
     args = parser.parse_args()
     urls = fetch_urls(url=args.url, max_count=args.max_urls_count)
