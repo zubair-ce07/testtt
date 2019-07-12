@@ -46,44 +46,20 @@ def convert_seconds(number):
     return hour_str + ' ' + min_str + ' ' + sec_str
 
 
-def download_time(filesize, fileUnit, BandWidth, BandWiddthUnit):
-    if fileUnit is 'kb':
-        filesize *= 2 ** 10
-    elif fileUnit is 'kB':
-        filesize *= 2 ** 13
-    elif fileUnit is 'Mb':
-        filesize *= 2 ** 20
-    elif fileUnit is 'MB':
-        filesize *= 2 ** 23
-    elif fileUnit is 'Gb':
-        filesize *= 2 ** 30
-    elif fileUnit is 'GB':
-        filesize *= 2 ** 33
-    elif fileUnit is 'Tb':
-        filesize *= 2 ** 40
-    elif fileUnit is 'TB':
-        filesize *= 2 ** 43
-
-    if BandWiddthUnit is 'kb':
-        BandWidth *= 2 ** 10
-    elif BandWiddthUnit is 'kB':
-        BandWidth *= 2 ** 13
-    elif BandWiddthUnit is 'Mb':
-        BandWidth *= 2 ** 20
-    elif BandWiddthUnit is 'MB':
-        BandWidth *= 2 ** 23
-    elif fileUnit is 'Gb':
-        filesize *= 2 ** 30
-    elif fileUnit is 'GB':
-        filesize *= 2 ** 33
-    elif fileUnit is 'Tb':
-        filesize *= 2 ** 40
-    elif fileUnit is 'TB':
-        filesize *= 2 ** 43
-
-    print(filesize, BandWidth)
-    print(fileUnit, BandWiddthUnit)
-    time = filesize / BandWidth
+def download_time(file_size, file_unit, bandwidth, bandwidth_unit):
+    units = {
+        'kb': 2 ** 10,
+        'kB': 2 ** 13,
+        'Mb': 2 ** 20,
+        'MB': 2 ** 23,
+        'Gb': 2 ** 30,
+        'GB': 2 ** 33,
+        'Tb': 2 ** 40,
+        'TB': 2 ** 43,
+    }
+    file_size *= units[file_unit]
+    bandwidth *= units[bandwidth_unit]
+    time = file_size / bandwidth
     return convert_seconds(time)
 
 
