@@ -3,6 +3,7 @@ import calendar
 low = "\033[1;34m+"
 high = "\033[1;31m+"
 
+
 def get_extreme_weather(csvfile):
 
     highest_temp = max([n for n in csvfile.records if isinstance(

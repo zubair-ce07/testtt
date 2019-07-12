@@ -5,8 +5,6 @@ import calendar
 
 
 class FileReader:
-    '''creates a single CSV for all the required files'''
-
     def __init__(self, file_path, year, month=None):
 
         try:

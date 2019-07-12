@@ -2,8 +2,9 @@ import argparse
 from weather_data import FileReader
 from reporter import *
 
+
 def check_args():
-    '''check if arguments are in valid format'''
+
     parser = argparse.ArgumentParser()
     parser.add_argument('-e', nargs='*',
                         help='Full Year Report')
@@ -27,12 +28,7 @@ def check_args():
                 FileReader(args.file_path, year_month.split(
                     '/')[0], year_month.split('/')[1]))
 
-
-
-
-
 def main():
-    '''generate weather reports'''
     check_args()
 
 
