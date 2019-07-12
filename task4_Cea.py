@@ -144,7 +144,6 @@ class CeaSpider(scrapy.Spider):
             }})
 
         item['skus'] = raw_sku
-        print(item['skus'], "\n\n\n\n\n\n")
         yield from self.request_or_yield(item)
 
     def available_sizes(self, response):
