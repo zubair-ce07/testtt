@@ -18,4 +18,4 @@ class ProductItem(Item):
     previous_price = Field()
     skus = Field()
     product_id = Field()
-    request = Field()
+    requests = Field()
