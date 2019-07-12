@@ -1,9 +1,6 @@
 class Reports:
 
-    def report_monthly(self, montly_results):
-        print(f"Highest Average: {(montly_results[0])}")
-        print(f"Lowest Average: {(montly_results[1])}")
-        print(f"Average Mean Humidity:{(montly_results[2])}%\n")
+
 
     def report_yearly(self, yearly_records):
         print(f"Highest: {yearly_records[0].highest_temp}'C on"
@@ -17,6 +14,11 @@ class Reports:
         print(f"Humidity: {yearly_records[2].highest_humidity}% on"
               f" {yearly_records[2].date.day}"
               f" {yearly_records[2].date.strftime('%b')}\n")
+
+    def report_monthly(self, montly_results):
+        print(f"Highest Average: {(montly_results[0])}")
+        print(f"Lowest Average: {(montly_results[1])}")
+        print(f"Average Mean Humidity:{(montly_results[2])}%\n")
 
     def double_chart(self, records):
         for record in records:

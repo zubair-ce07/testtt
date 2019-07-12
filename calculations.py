@@ -1,5 +1,5 @@
 from statistics import mean
-
+from datetime import datetime
 
 class Calculations:
 
@@ -7,7 +7,7 @@ class Calculations:
 
         records = [record for record in total_records if record.date.year == year]
         highest = max(records, key=lambda record: record.highest_temp)
-        lowest = max(records, key=lambda record: record.lowest_temp)
+        lowest = min(records, key=lambda record: record.lowest_temp)
         humidity = max(records, key=lambda record: record.highest_humidity)
 
         return [highest, lowest, humidity]

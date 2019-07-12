@@ -13,16 +13,15 @@ class FileParser:
         valid_record = [record["Max TemperatureC"],
                         record["Min TemperatureC"],
                         record[" Mean Humidity"],
-                        record.get("PKT",
-                        record.get("PKST"))
+                        record.get("PKT")
                         ]
         if all(valid_record):
             return True
 
-    def readfile(self, files_path):
+    def extract_data(self, path):
         complete_rec = []
-        files_path += "Murree_weather_*"
-        for files in glob(files_path):
+        path += f"Murree_weather_*"
+        for files in glob(path):
 
             with open(files, "r") as single_file:
                 record_reader = DictReader(single_file)
@@ -35,8 +34,8 @@ if __name__ == "__main__":
     calculator = Calculations()
     generate_rep = Reports()
     args = argument_parse()
-    files_path = args.file_path
-    total_records = FileParser.readfile(FileParser, files_path)
+    path = args.file_path
+    total_records = FileParser.extract_data(FileParser, path)
 
     if args.e:
             for arguments in args.e:
