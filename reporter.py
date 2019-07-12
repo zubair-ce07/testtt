@@ -1,6 +1,7 @@
 import calendar
-from termcolor import colored
 
+low = "\033[1;34m+"
+high = "\033[1;31m+"
 
 def get_extreme_weather(csvfile):
 
@@ -64,16 +65,16 @@ def print_weather_graph(csvfile):
           csvfile.records[0].date.year)
     for i in csvfile.records:
         if isinstance(i.highest_temp, int):
-            print('{:02d} '.format(i.date.day) + colored('+', 'red') * i.highest_temp
+            print('{:02d} '.format(i.date.day) + low * i.highest_temp
                   + ' {:02d}C\n{:02d} '.format(i.highest_temp, i.date.day) +
-                  colored('+', 'blue') * i.lowest_temp
+                  high * i.lowest_temp
                   + ' {:02d}C'.format(i.lowest_temp))
     print()
     print(calendar.month_name[csvfile.records[0].date.month],
           csvfile.records[0].date.year)
     for i in csvfile.records:
         if isinstance(i.highest_temp, int):
-            print('{:02d} '.format(i.date.day) + colored('+', 'blue') * i.lowest_temp
-                  + colored('+', 'red') * i.highest_temp
+            print('{:02d} '.format(i.date.day) + low * i.lowest_temp
+                  + high * i.highest_temp
                   + ' {:02d}C - {:02d}C'.format(i.lowest_temp, i.highest_temp))
     print()
