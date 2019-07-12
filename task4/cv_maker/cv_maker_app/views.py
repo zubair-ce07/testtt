@@ -5,6 +5,7 @@ from .forms import BasicInformationForm, EducationForm, ExperienceForm
 from .models import BasicInformation, Experience, Education
 from django.core.files.storage import FileSystemStorage
 from django.views import View
+from django.http import HttpResponse
 
 
 class HomeView(View):
@@ -136,9 +137,12 @@ class EducationView(View):
 
 class RetrieveCvView(View):
     def get(self, request):
-        person = {'basic_information': BasicInformation.objects.get(user_id=request.user.id),
-                  'education_list': Education.objects.filter(user_id=request.user.id),
-                  'experience_list': Experience.objects.filter(user_id=request.user.id)}
-        return render(request,
-                      'cv.html',
-                      {'person': person})
+        if BasicInformation.objects.filter(user_id=request.user.id):
+            person = {'basic_information': BasicInformation.objects.get(user_id=request.user.id),
+                      'education_list': Education.objects.filter(user_id=request.user.id),
+                      'experience_list': Experience.objects.filter(user_id=request.user.id)}
+            return render(request,
+                          'cv.html',
+                          {'person': person})
+        else:
+            return HttpResponse("<h1 align='center'> Please enter your information first </h1>")

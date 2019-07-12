@@ -4,7 +4,7 @@ from django.db import models
 
 
 class BasicInformation(models.Model):
-    user_id = models.IntegerField(unique=True)
+    user_id = models.IntegerField()
     image = models.FileField(upload_to='documents/')
     name = models.CharField(max_length=30)
     date_of_birth = models.DateField()

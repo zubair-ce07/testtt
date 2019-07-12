@@ -7,6 +7,10 @@ from django.views import View
 
 class Signup(View):
     def get(self, request):
+        form = SignUpForm()
+        return render(request, 'signup.html', {'form': form})
+
+    def post(self, request):
         form = SignUpForm(request.POST)
         if form.is_valid():
             user = form.save()
