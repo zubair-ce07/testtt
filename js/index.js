@@ -4,7 +4,7 @@ var country_element = document.getElementById('countrySelector'),
     per_page = 20
 
 document.getElementById('argumentHandler').addEventListener('change', (event) => {
-    if(language_element.value != 'None' && criteria_element.value != 'None') {
+    if(language_element.value != '' && criteria_element.value != '') {
         fetchUsers(country_element.value, language_element.value, criteria_element.value)
     }
 })
