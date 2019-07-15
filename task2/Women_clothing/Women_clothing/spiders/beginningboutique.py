@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import scrapy
 import re
+import json
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 from Women_clothing.items import BeginningboutiqueItem
@@ -13,44 +14,60 @@ class Beginningboutique(CrawlSpider):
 
     rules = (
         Rule(LinkExtractor(
-            restrict_xpaths="//div[@class='header-nav-wrapper']")),
+            deny='/products',
+            restrict_xpaths=["//div[@class='header-nav-wrapper']",
+                             "//ul[@class='pagination']"]),
+             callback='parse'),
 
         Rule(LinkExtractor(
             allow='/products',
             restrict_xpaths="//div[@id='shopify-section-collection']"),
-            callback='product_parse'),
+            callback='product_parse')
     )
 
+    def parse(self, response):
+        for request in super(Beginningboutique, self).parse(response):
+            meta = response.meta.get('trail') if response.meta.get('trail') else []
+            request.meta['trail'] = meta + [response.request.url]
+            yield request
+
     def product_parse(self, response):
-        return BeginningboutiqueItem(
-            retailer_sku=self.retailer_sku(response),
-            trail=self.trail(response),
-            category=self.category(response),
-            brand=self.brand(response),
-            url=self.url(response),
-            url_original=self.url(response),
-            product_name=self.product_name(response),
-            description=self.description(response),
-            care=self.care(response),
-            image_urls=self.image_urls(response),
-            skus=self.skus(response),
-            price=self.price(response),
-            currency=self.currency(response),
-            crawl_start_time=self.start_time(),
-            market="AU",
-            retailer='beginningboutique-au',
-            spider_name='beginningboutique',
-            gender="women"
-        )
+        product = BeginningboutiqueItem()
+        product = self.boilerplate(product)
+        product['retailer_sku'] = self.retailer_sku(response)
+        product['trail'] = self.trail(response)
+        product['category'] = self.category(response)
+        product['brand'] = self.brand(response)
+        product['url'] = self.url(response)
+        product['url_original'] = self.url(response)
+        product['product_name'] = self.product_name(response)
+        product['description'] = self.description(response)
+        product['care'] = self.care(response)
+        product['image_urls'] = self.image_urls(response)
+        product['skus'] = self.skus(response)
+        product['price'] = self.price(response)
+        product['currency'] = self.currency(response)
+        product['crawl_start_time'] = self.start_time()
+        return product
+
+    def boilerplate(self, product):
+        product['market'] = "AU"
+        product['retailer'] = 'beginningboutique-au'
+        product['spider_name'] = 'beginningboutique'
+        product['gender'] = "women"
+        return product
 
     def product_name(self, response):
         return response.css('.product-heading__title::text').get()
 
     def retailer_sku(self, response):
-        return response.xpath("//div[@class='product__heart']/div/@data-product-id").get()
+        try:
+            return int(response.xpath("//div[@class='product__heart']/div/@data-product-id").get())
+        except:
+            return response.xpath("//div[@class='product__heart']/div/@data-product-id").get()
 
     def trail(self, response):
-        return response.request.headers.get('referer', None)
+        return response.meta.get('trail')
 
     def category(self, response):
         return response.xpath("//div[@id='shopify-section-related-collections']//a[@href]/text()").getall()
@@ -85,13 +102,25 @@ class Beginningboutique(CrawlSpider):
     def skus(self, response):
         path = "//head/script[contains(., 'window.ShopifyAnalytics.meta.currency')]/text()"
         meta = response.xpath(path).get()
-        return re.findall(r'"variants.*"}]', meta)[0][11:]
+        meta_json = json.loads(re.findall(r'"variants.*"}]', meta)[0][11:])
+        for variants in meta_json:
+            variants.pop('name')
+            variants.pop('id')
+            sku_in_meta = variants.pop('sku')
+            variants['color'] = re.findall(r'-[A-Z|a-z]+', sku_in_meta)
+            variants['color'] = variants['color'][0][1:] if variants['color'] else None
+            variants['size'] = variants.pop('public_title')
+            variants['currency'] = self.currency(response)
+        return meta_json
 
     def price(self, response):
-        return response.css('.money::text').get()
+        try:
+            return float(response.css('.money::text').get()[1:])
+        except:
+            return float(response.css('.money::text').get()[1:])
 
     def currency(self, response):
-        return self.price(response)[0]
+        return response.css('.money::text').get()[0]
 
     def start_time(self):
-        return self.crawler.stats.get_stats()['start_time']
+        return self.crawler.stats.get_stats()['start_time'].strftime("%Y-%m-%dT%H:%M:%s")
