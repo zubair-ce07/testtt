@@ -4,12 +4,19 @@ import datetime
 
 
 class WeatherReading:
-    def __init__(self, pkt, max_tempc, mean_tempc, min_tempc, dewpointc, mean_dewpointc, min_dewpointc, max_humidity,
-                 mean_humidity, min_humidity, max_sealevelpressurehpa, mean_sealevelpressurehpa,
-                 min_sealevelpressurehpa,
-                 max_visibilitykm, mean_visibilitykm, min_visibilitykm, max_windspeedkmh, mean_windspeedkmh,
-                 max_gustspeedkmh, precipitationcm, cloudcover, events, windirdegrees):
-        self.pkt = pkt
+    """
+    Data structure for storing weather readings that have been read and parsed by the parser
+
+    """
+
+    def __init__(self, pakistan_time="", max_tempc=0, mean_tempc=0, min_tempc=0, dewpointc=0, mean_dewpointc=0.0,
+                 min_dewpointc=0, max_humidity=0,
+                 mean_humidity=0.0, min_humidity=0, max_sealevelpressurehpa=0, mean_sealevelpressurehpa=0.0,
+                 min_sealevelpressurehpa=0,
+                 max_visibilitykm=0, mean_visibilitykm=0.0, min_visibilitykm=0, max_windspeedkmh=0,
+                 mean_windspeedkmh=0.0,
+                 max_gustspeedkmh=0, precipitationcm=0, cloudcover=0, events="", windirdegrees=0.0):
+        self.pakistan_time = pakistan_time
         self.max_tempc = max_tempc
         self.mean_tempc = mean_tempc
         self.min_tempc = min_tempc
@@ -34,8 +41,14 @@ class WeatherReading:
         self.windirdegrees = windirdegrees
 
 
-class WeatherCalculations:
-    def __init__(self, max_temp, max_temp_day, min_temp, min_temp_day, humidity, humidity_day):
+class WeatherReportData:
+    """
+    Data structure for storing report type specific calculations calculated by the weather report calculator on
+    weather readings
+
+    """
+
+    def __init__(self, max_temp=0, max_temp_day="", min_temp=0, min_temp_day="", humidity=0, humidity_day=""):
         self.max_temp = max_temp
         self.max_temp_day = max_temp_day
         self.min_temp = min_temp
@@ -44,72 +57,127 @@ class WeatherCalculations:
         self.humidity_day = humidity_day
 
 
-class ParseAndPopulate:
-    def read_file(self, filename):
+class WeatherDataParser:
+    """
+    Receives year and weather data directory path as input and returns weather data of that whole year in a nested
+    dictionary. First level of nesting contains month data and second level of nesting contains day wise data each in
+    a separate WeatherReading data structure.
+
+    """
+
+    def read_file_from_weather_data(self, filename):
+        """
+        Receives filename of a weather data file and returns a dictionary of WeatherReading data structures for
+        each line in the file (which represents a single day)
+
+        :param filename:
+        :return: weather data of that file
+        """
         file_data = {}
-        with open("weatherdata/" + filename, 'r') as fp:
-            temp_line = fp.readline()
+        with open("weatherdata/{}".format(filename), 'r') as file_cursor:
+            temp_line = file_cursor.readline()
             while temp_line == "\n":
-                temp_line = fp.readline()
-            for line in fp.readlines():
-                reading = self.create_weather_reading(line)
-                if reading is not None:
-                    file_data[reading.pkt] = reading
+                temp_line = file_cursor.readline()
+            for line in file_cursor.readlines():
+                reading = self.create_weather_reading_from_data(line)
+                if reading:
+                    file_data[reading.pakistan_time] = reading
         return file_data
 
-    def create_weather_reading(self, data):
+    def create_weather_reading_from_data(self, data):
         data = data.strip().split(',')
         if len(data) is 23:
-            return WeatherReading(data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8],
-                                  data[9],
-                                  data[10], data[11], data[12], data[13], data[14], data[15], data[16], data[17],
-                                  data[18],
-                                  data[19], data[20], data[21], data[22])
+            return WeatherReading(pakistan_time=data[0], max_tempc=data[1], mean_tempc=data[2], min_tempc=data[3],
+                                  dewpointc=data[4], mean_dewpointc=data[5], min_dewpointc=data[6],
+                                  max_humidity=data[7], mean_humidity=data[8],
+                                  min_humidity=data[9],
+                                  max_sealevelpressurehpa=data[10], mean_sealevelpressurehpa=data[11],
+                                  min_sealevelpressurehpa=data[12], max_visibilitykm=data[13],
+                                  mean_visibilitykm=data[14], min_visibilitykm=data[15], max_windspeedkmh=data[16],
+                                  mean_windspeedkmh=data[17],
+                                  max_gustspeedkmh=data[18],
+                                  precipitationcm=data[19], cloudcover=data[20], events=data[21],
+                                  windirdegrees=data[22])
 
-    def read_data(self, year, directory_name):
+    def read_data_year_wise(self, year, directory_name):
+        """
+        Takes year and the directory path of the weather data directory as input and returns data of that year
+
+        :param year:
+        :param directory_name:
+        :return: year data
+        """
         year_data = {}
-        files = os.listdir(directory_name)
-        for file in files:
+        files_in_directory = os.listdir(directory_name)
+        for file in files_in_directory:
             if str(year) in file:
-                year_data[file] = self.read_file(file)
+                year_data[file] = self.read_file_from_weather_data(file)
         return year_data
 
 
-class Calculate:
-    def get_day(self, date):
+class WeatherReportCalculator:
+    """
+    Receives weather data readings, report type, year and month and calculates required report related
+    calculations of the given year and month
+
+    """
+
+    def get_day_from_date(self, date):
+        """
+        Returns day and month from given date. Month will be the full name of that month
+        :param date:
+        :return: a string in 'day(in digits) Month(full name)
+        """
         date_splitted = date.split('-')
         months = (
             "January", "February", "March", "April", "May", "June", "July", "August", "September", "October",
             "November", "December")
-        month = months[int(date_splitted[1]) - 1] + ' ' + date_splitted[2]
+        month = "{} {}".format(months[int(date_splitted[1]) - 1], date_splitted[2])
         return month
 
-    def case_generic(self, readings):
-        # highest and lowest temprature and day, most humid day and its humidity
+    def generate_readings(self):
+        pass
+
+    def is_given(self, reading):
+        return reading is not ''
+
+    def report_type_generic(self, readings):
+        """
+        Calculates highest temperature, lowest temperature and the days these temperatures were recorded as well as
+        the most humid day in the given data and the humidity on that day
+        :param readings:
+        :returns: WeatherCalculation data structure populated with calculated values
+        """
         max_temp = 0
         max_temp_day = ""
         min_temp = 1000
         min_temp_day = ""
         humidity = 0
         humidity_day = ""
-        for reading in readings:
-            for date in readings[reading]:
-                if readings[reading][date].max_tempc != '' and int(readings[reading][date].max_tempc) > max_temp:
-                    max_temp = int(readings[reading][date].max_tempc)
-                    max_temp_day = self.get_day(date)
-                if readings[reading][date].min_tempc != '' and int(readings[reading][date].min_tempc) < min_temp:
-                    min_temp = int(readings[reading][date].min_tempc)
-                    min_temp_day = self.get_day(date)
-                if readings[reading][date].max_humidity != '' and int(readings[reading][date].max_humidity) > humidity:
-                    humidity = int(readings[reading][date].max_humidity)
-                    humidity_day = self.get_day(date)
+        for key_month_data, month_data in readings.items():
+            for key_day_data, day_data in month_data.items():
+                if self.is_given(day_data.max_tempc) and int(day_data.max_tempc) > max_temp:
+                    max_temp = int(day_data.max_tempc)
+                    max_temp_day = self.get_day_from_date(key_day_data)
+                if self.is_given(day_data.min_tempc) and int(day_data.min_tempc) < min_temp:
+                    min_temp = int(day_data.min_tempc)
+                    min_temp_day = self.get_day_from_date(key_day_data)
+                if self.is_given(day_data.max_humidity) and int(day_data.max_humidity) > humidity:
+                    humidity = int(day_data.max_humidity)
+                    humidity_day = self.get_day_from_date(key_day_data)
 
-        return WeatherCalculations(max_temp, max_temp_day, min_temp, min_temp_day, humidity, humidity_day)
+        return WeatherReportData(max_temp=max_temp, max_temp_day=max_temp_day, min_temp=min_temp,
+                                 min_temp_day=min_temp_day, humidity=humidity, humidity_day=humidity_day)
 
-    def case_average(self, readings, year, month):
-        # average highest and lowest temprature and day, average mean humid day and its humidity
-        file_name = "lahore_weather_" + year + "_" + datetime.date(year=int(year), month=int(month), day=1).strftime(
-            '%b') + ".txt"
+    def report_type_average(self, readings, filename):
+        """
+        Calculates the highest average temperature, lowest average temperature and the mean humidity recorded in the
+        weather readings
+
+        :param filename:
+        :param readings:
+        :returns: WeatherCalculation data structure populated with calculated values
+        """
         max_temp = 0
         max_temp_mean = 0
         min_temp = 1000
@@ -117,102 +185,138 @@ class Calculate:
         humidity = 0
         count = 0
         mean = 0
-        for date in readings[file_name]:
-            if readings[file_name][date].mean_tempc != '' and int(readings[file_name][date].mean_tempc) > max_temp:
-                max_temp_mean += int(readings[file_name][date].max_tempc)
-            if readings[file_name][date].mean_tempc != '' and int(readings[file_name][date].mean_tempc) < min_temp:
-                min_temp_mean += int(readings[file_name][date].min_tempc)
-            if readings[file_name][date].mean_humidity != '' and int(
-                    readings[file_name][date].mean_humidity) > humidity:
-                    mean += int(readings[file_name][date].max_humidity)
-                    count += 1
+        for key_day_data, day_data in readings[filename].items():
+            if self.is_given(day_data.mean_tempc) and int(day_data.mean_tempc) > max_temp:
+                max_temp_mean += int(day_data.max_tempc)
+            if self.is_given(day_data.mean_tempc) and int(day_data.mean_tempc) < min_temp:
+                min_temp_mean += int(day_data.min_tempc)
+            if self.is_given(day_data.mean_humidity) and int(day_data.mean_humidity) > humidity:
+                mean += int(day_data.max_humidity)
+                count += 1
         max_temp = int(max_temp_mean / count)
         min_temp = int(min_temp_mean / count)
         humidity = int(mean / count)
 
-        return WeatherCalculations(max_temp, "", min_temp, "", humidity, "")
+        return WeatherReportData(max_temp=max_temp, min_temp=min_temp, humidity=humidity)
 
-    def case_bar_charts(self, readings, year, month):
-        file_name = "lahore_weather_" + year + "_" + datetime.date(year=int(year), month=int(month), day=1).strftime(
-            '%b') + ".txt"
+    def report_type_bar_charts(self, readings, year, month, filename):
+        """
+        Prints horizontal bar charts on console for the highest and temperature of each day in a given month and
+        year
+
+        :param filename:
+        :param readings:
+        :param year:
+        :param month:
+        :return:
+        """
+
         day = 1
         print(datetime.date(month=int(month), year=int(year), day=1).strftime('%B'), year)
         print()
-        for date in readings[file_name]:
-            if readings[file_name][date].max_tempc != '':
+        for date in readings[filename]:
+            if readings[filename][date].max_tempc != '':
                 print(day, sep=' ', end='', flush=True)
-                for i in range(int(readings[file_name][date].max_tempc)):
+                for i in range(int(readings[filename][date].max_tempc)):
                     print("\033[01;31;40m +", sep=' ', end='', flush=True)
-                print(' ' + readings[file_name][date].max_tempc + 'C', sep=' ', end='', flush=True)
+                print(' ' + readings[filename][date].max_tempc + 'C', sep=' ', end='', flush=True)
                 print()
-            if readings[file_name][date].min_tempc != '':
+            if readings[filename][date].min_tempc != '':
                 print(day, sep=' ', end='', flush=True)
-                for i in range(int(readings[file_name][date].min_tempc)):
+                for i in range(int(readings[filename][date].min_tempc)):
                     print("\033[1;34;40m +", sep=' ', end='', flush=True)
-                print(' ' + readings[file_name][date].min_tempc + 'C', sep=' ', end='', flush=True)
+                print(' ' + readings[filename][date].min_tempc + 'C', sep=' ', end='', flush=True)
                 print()
                 print()
             day += 1
         print("\033[0;34;39m", sep=' ', end='', flush=True)
+        return 0
 
-    def calculate_report(self, readings, case, year, month):
-        if case == '-e':
-            return self.case_generic(readings)
-        elif case == '-a':
-            return self.case_average(readings, year, month)
-        elif case == '-c':
-            self.case_bar_charts(readings, year, month)
-            return 0
+    def generate_required_report(self, readings, report_type, year, month):
+        """
+        Calculates required report from given year and month
+
+        :param readings:
+        :param report_type:
+        :param year:
+        :param month:
+        :returns: Calculations or response code (0 for bar chart report and -1 for unknown report type
+        """
+
+        file_name = "lahore_weather_{}_{}.txt".format(year,
+                                                      datetime.date(year=int(year), month=int(month), day=1).strftime(
+                                                          '%b'))
+        if report_type == '-e':
+            return self.report_type_generic(readings)
+        elif report_type == '-a':
+            return self.report_type_average(readings, file_name)
+        elif report_type == '-c':
+            return self.report_type_bar_charts(readings=readings, year=year, month=month, filename=file_name)
         else:
             return -1
 
 
-class ReportGeneration:
-    def case_generic(self, calculations):
+class WeatherReportGenerator:
+    """
+    Prints required report type
+
+    """
+
+    def report_type_generic(self, calculations):
         print("Highest:", calculations.max_temp, "C on", calculations.max_temp_day)
         print("Lowest:", calculations.min_temp, "C on", calculations.min_temp_day)
         print("Humidity:", calculations.humidity, "% on", calculations.humidity_day)
 
-    def case_average(self, calculations):
+    def report_type_average(self, calculations):
         print("Highest Average:", calculations.max_temp, "C")
         print("Lowest Average:", calculations.min_temp, "C")
         print("Mean Humidity:", calculations.humidity, "%")
 
-    def print_report(self, calculations, case):
-        if case == '-e':
-            self.case_generic(calculations)
-        elif case == '-a':
-            self.case_average(calculations)
-        elif case == '-c':
+    def print_report(self, calculations, report_type):
+        """
+        Prints required report type
+
+
+        :param calculations:
+        :param report_type:
+        :return:
+        """
+        if report_type == '-e':
+            self.report_type_generic(calculations)
+        elif report_type == '-a':
+            self.report_type_average(calculations)
+        elif report_type == '-c':
             print("No report to be generated")
         else:
             print("Invalid case provided!")
 
 
 def main():
-    dir_path = sys.argv[1]
+    """
+    Driver function
+
+    """
+    directory_path = sys.argv[1]
     i = 2
     report = 1
     while i < len(sys.argv):
         print("REPORT ", report)
-        case = sys.argv[i]
-        year = 0
-        month = 0
-        if case == '-e':
+        report_type = sys.argv[i]
+        year = 1
+        month = 1
+        if report_type == '-e':
             year = int(sys.argv[i + 1])
-        elif case == '-c' or case == '-a':
+        elif report_type == '-c' or report_type == '-a':
             year = sys.argv[i + 1].split('/')[0]
             month = sys.argv[i + 1].split('/')[1]
 
-        # multiple reports as well
-
-        parser = ParseAndPopulate()
-        data = parser.read_data(year, dir_path)
-        calculator = Calculate()
-        calculations = calculator.calculate_report(data, case, year, month)
+        parser = WeatherDataParser()
+        data = parser.read_data_year_wise(year, directory_path)
+        calculator = WeatherReportCalculator()
+        calculations = calculator.generate_required_report(data, report_type, year, month)
         if calculations != -1:
-            reportgen = ReportGeneration()
-            reportgen.print_report(calculations, case)
+            report_generator = WeatherReportGenerator()
+            report_generator.print_report(calculations, report_type)
         else:
             print("Invalid case was provided!")
         i += 2
