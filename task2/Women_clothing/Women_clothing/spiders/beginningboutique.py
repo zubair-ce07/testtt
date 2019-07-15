@@ -27,8 +27,8 @@ class Beginningboutique(CrawlSpider):
 
     def parse(self, response):
         for request in super(Beginningboutique, self).parse(response):
-            meta = response.meta.get('trail') if response.meta.get('trail') else []
-            request.meta['trail'] = meta + [response.request.url]
+            trail = response.meta.get('trail') if response.meta.get('trail') else []
+            request.meta['trail'] = trail + [response.request.url]
             yield request
 
     def product_parse(self, response):
