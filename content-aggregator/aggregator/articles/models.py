@@ -37,10 +37,10 @@ class Article(models.Model):
             (ENTERTAINMENT, ENTERTAINMENT),
             (LIFESTYLE, LIFESTYLE),
             (MISC, MISC)
-        ]
+        ],
         default=MISC
     )
-    authors = models.ManyToManyField(Author, related_name='authors', on_delete=models.CASCADE)
+    authors = models.ManyToManyField(Author, related_name='authors')
     website = models.ForeignKey(Website, related_name='website', on_delete=models.CASCADE)
     content = models.TextField()
     publish_time = models.DateTimeField()
