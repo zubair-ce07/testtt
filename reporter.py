@@ -54,3 +54,4 @@ def bonus_task(data):
             print('{} '.format(i.date.day) + low * i.lowest_temp
                   + high * i.highest_temp + ' {}C - {}C'.format(i.lowest_temp, i.highest_temp))
     print()
+
