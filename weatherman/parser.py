@@ -1,74 +1,68 @@
-import os
 import csv
-from collections import defaultdict
 from os import listdir
 from os.path import isfile, join
+from calculations import WeatherCalculator
 
 
 class Parser:
     """Parser class to extract data and parse it."""
 
-    years = []
-    months = []
+    months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
-    def extract_years_months(self, data_path):
+    def files_to_read(self, data_path=None, year=None, month=None):
+        """This function will return the filenames that we had to read for a given month or year."""
 
-        files = [f for f in listdir(data_path) if isfile(join(data_path, f))]
-        for file_ in files:
-            if not file_.startswith('.'):
-                file_ = file_.split("_")
-                if file_[2] not in self.years:
-                    self.years.append(file_[2])
-                if file_[3].split('.')[0] not in self.months:
-                    self.months.append(file_[3].split('.')[0])
-        return
+        if year is not None:
+            files = [f for f in listdir(data_path) if isfile(join(data_path, f))]
+            year_files = []
+            for file_name in files:
+                if not file_name.startswith('.') and year in file_name:
+                    year_files.append(f"{data_path}{file_name}")
+            return year_files
+        elif month is not None:
+            year_month = month.split("/")
+            month_file = f"{data_path}Murree_weather_{year_month[0]}_{self.months[int(year_month[1])-1]}.txt"
+            return month_file
 
-    def read_files(self, data_path):
+    def read_files(self, data_path=None, year=None, month=None):
         """This function will read all the weather data."""
 
-        self.extract_years_months(data_path)
-        # Dictionary to store all the data
-        data_for_all_months = {}
+        if year is not None:
+            files_to_read = self.files_to_read(data_path=data_path, year=year)
+            data = [[], [], [], [], []]
+            for file_ in files_to_read:
+                data = self.file_parser(file_, data)
+            return data
+        elif month is not None:
+            data = [[], [], [], [], []]
+            file_to_read = self.files_to_read(data_path=data_path, month=month)
+            data = self.file_parser(file_to_read, data)
+            return data
 
-        # Read all files
-        for year in self.years:
-            for month in self.months:
-
-                file_ = f'{data_path}Murree_weather_{year}_{month}.txt'
-
-                if os.path.exists(file_):
-
-                    monthly_readings = self.file_parser(file_)
-                    data_for_all_months[year + "_" + month] = monthly_readings
-
-        return data_for_all_months, self.years, self.months
-
-    def file_parser(self, month_file):
+    def file_parser(self, month_file, data):
         """This function will read a File in a dictionary object."""
 
-        monthly_readings = defaultdict(lambda: [])
-        with open(month_file, newline='\n') as f:
-            reader = csv.DictReader(f)
-            for reading in reader:
-                for header_val, value in reading.items():
-                    if value:
-
-                        header_val = header_val.replace(" ", '')
-                        if header_val in ['PKST', 'PKT', 'Events']:
-
-                            monthly_readings[header_val].append(value)
-                        elif header_val.replace(" ", '') in [
-                            'MaxVisibilityKm', 'MeanVisibilityKm',
-                            'MinVisibilitykM', 'Precipitationmm',
-                            'MeanSeaLevelPressurehPa'
-                        ]:
-
-                            monthly_readings[header_val].append(float(value))
-                        else:
-
-                            monthly_readings[header_val].append(int(value))
-                    else:
-
-                        monthly_readings[header_val].append(None)
-
-        return monthly_readings
+        with open(month_file, newline='\n') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                if 'PKT' in reader.fieldnames:
+                    data[0].append(row['PKT'])
+                elif 'PKST' in reader.fieldnames:
+                    data[0].append(row['PKST'])
+                if row['Max TemperatureC']:
+                    data[1].append(int(row['Max TemperatureC']))
+                else:
+                    data[1].append(None)
+                if row['Min TemperatureC']:
+                    data[2].append(int(row['Min TemperatureC']))
+                else:
+                    data[2].append(None)
+                if row['Max Humidity']:
+                    data[3].append(int(row['Max Humidity']))
+                else:
+                    data[3].append(None)
+                if row[' Mean Humidity']:
+                    data[4].append(int(row[' Mean Humidity']))
+                else:
+                    data[4].append(None)
+            return data

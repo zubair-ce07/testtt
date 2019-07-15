@@ -1,6 +1,3 @@
-import math
-
-
 class Reporter:
 
     months = [
@@ -13,110 +10,70 @@ class Reporter:
     CEND = '\033[0m'
     CBLUE = '\33[34m'
 
-    def yearly_report(self, per_year_records, input_data):
+    def yearly_report(self, yearly_calculations):
         """This function will print max temperature, max humidity
         and minimum temperature in
         in the year details.
         """
 
         try:
-            print("\nIn Year: ", input_data)
-            print("Highest: " + per_year_records[input_data]['Highest: '])
-            print("Lowest: " + per_year_records[input_data]['Lowest: '])
-            print("Humidity: " + per_year_records[input_data]['Humidity: '])
+            date = yearly_calculations['Max Temp Day']
+            date = date.split('-')
+            month = self.months[int(date[1])-1]
+            day = date[2]
+            max_temp = yearly_calculations['Max Temperature']
+            print(f'Highest: {max_temp}C on {month} {day}')
+
+            date = yearly_calculations['Min Temp Day']
+            date = date.split('-')
+            month = self.months[int(date[1])-1]
+            day = date[2]
+            min_temp = yearly_calculations['Min Temperature']
+            print(f'Lowest: {min_temp}C on {month} {day}')
+
+            date = yearly_calculations['Max Humidity Day']
+            date = date.split('-')
+            month = self.months[int(date[1])-1]
+            day = date[2]
+            max_humid = yearly_calculations['Max Humidity']
+            print(f'Humidity: {max_humid}% on {month} {day}')
         except KeyError:
             print("Invalid Input....")
         return
 
-    def monthly_report(self, years_monthly_records, input_data):
+    def monthly_report(self, monthly_calculations):
         """This will report highest average temperature, lowest average
         temperature and average mean humidity.
         """
 
-        input_data = input_data.split('/')
-        month = self.months[int(input_data[1])-1]
+        avg_max_temp = monthly_calculations['Avg Max Temp']
+        print(f'Highest Average: {int(avg_max_temp)}C')
 
-        for year in years_monthly_records:
-            if year[0] == input_data[0]:
-                for month_ in year:
-                    if month_[0] == month:
+        avg_min_temp = monthly_calculations['Avg Min Temp']
+        print(f'Lowest Average: {int(avg_min_temp)}C')
 
-                        print("\nMonth to report: ", month)
-                        print(
-                            "Highest Average: "
-                            + str(int(month_[2])) + "C")
-                        print(
-                            "Lowest Average: "
-                            + str(int(month_[6])) + "C")
-                        print(
-                            "Average Mean Humidity: "
-                            + str(int(month_[11])) + "%\n")
+        avg_mean_humid = monthly_calculations['Avg Mean Humidity']
+        print(f'Average Mean Humidity: {int(avg_mean_humid)}%')
+
         return
 
-    def monthly_bar_chart(self, years_monthly_records, input_data):
+    def monthly_bar_chart(self, data):
         """This will print the bar chart."""
 
-        input_data = input_data.split('/')
-        month = self.months[int(input_data[1])-1]
-
-        for year in years_monthly_records:
-            if year[0] == input_data[0]:
-                for month_ in year:
-                    if month_[0] == month:
-
-                        highest_temps = month_[4]
-                        lowest_temps = month_[8]
-                        print("\nMonth to Plot: ", month, ' ', input_data[0])
-
-                        for a, b in zip(
-                                range(len(highest_temps)),
-                                range(len(lowest_temps))):
-
-                            if highest_temps[a] != -math.inf:
-
-                                s = highest_temps[a] * "+"
-                                print(
-                                    str(a+1) + ' ' + self.CRED
-                                    + s + self.CEND + " "
-                                    + str(highest_temps[a]) + 'C')
-
-                            if lowest_temps[b] != math.inf:
-
-                                s = lowest_temps[b] * "+"
-                                print(
-                                    str(b+1) + ' ' + self.CBLUE + s + self.CEND
-                                    + ' ' + str(lowest_temps[b]) + 'C')
-                        break
+        for i in range(len(data[1])):
+            if data[1][i] is not None and data[2][i] is not None:
+                high = data[1][i] * '+'
+                low = data[2][i] * '+'
+                print(f'{i} {self.CRED}{high}{self.CEND} {data[1][i]}C')
+                print(f'{i} {self.CBLUE}{low}{self.CEND} {data[2][i]}C')
         return
 
-    def horizontal_barchart(self, years_monthly_records, input_data):
+    def horizontal_barchart(self, data):
         """This will print horizontal bar chart."""
 
-        input_data = input_data.split('/')
-        month = self.months[int(input_data[1])-1]
-
-        for year in years_monthly_records:
-            if year[0] == input_data[0]:
-                for month_ in year:
-                    if month_[0] == month:
-
-                        highest_temps = month_[4]
-                        lowest_temps = month_[8]
-                        print("Month to plot: ", month, ' ', input_data[0])
-
-                        for a, b in zip(
-                                range(len(highest_temps)),
-                                range(len(lowest_temps))):
-
-                            if ((highest_temps[a] != -math.inf)
-                                    and (lowest_temps[b] != math.inf)):
-
-                                s = highest_temps[a] * "+"
-                                s2 = lowest_temps[b] * '+'
-                                print(
-                                    str(a+1) + ' ' + self.CBLUE
-                                    + s2 + self.CEND + self.CRED + s
-                                    + self.CEND + " " + str(lowest_temps[b])
-                                    + 'C-' + str(highest_temps[a]) + 'C')
-                        break
+        for i in range(len(data[1])):
+            if data[1][i] is not None and data[2][i] is not None:
+                high = data[1][i] * '+'
+                low = data[2][i] * '+'
+                print(f'{i} {self.CRED}{high}{self.CEND}{self.CBLUE}{low}{self.CEND} {data[1][i]}C-{data[2][i]}C')
         return

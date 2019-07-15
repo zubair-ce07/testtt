@@ -1,13 +1,10 @@
 """Weather insights"""
-import sys
-import math
 import argparse
 from parser import Parser
-from calculations import weather_calculator
+from calculations import WeatherCalculator
 from reporter import Reporter
 
-
-def main():
+if __name__ == "__main__":
 
     # Command Line arguments.
     parser = argparse.ArgumentParser()
@@ -17,30 +14,27 @@ def main():
     parser.add_argument('-c', action='store', dest='month_to_plot')
     args = parser.parse_args()
 
-    # Read data by using the parser.
-    data, years, months = Parser().read_files(args.data_path)
-
-    # Do calculations using the data.
-    years_monthly_records = weather_calculator(
-        years, months
-        ).weather_calculations(data)
-    per_year_records = weather_calculator(
-        years, months
-        ).calculate_yearly(
-        years_monthly_records
-        )
-
     # Report as the user commanded.
     if args.year_to_report:
-        Reporter().yearly_report(per_year_records, args.year_to_report)
+        data = Parser().read_files(args.data_path, year=args.year_to_report)
+        yearly_calculations = WeatherCalculator().calculate_weather(data)
+        print('\n')
+        Reporter().yearly_report(yearly_calculations)
+        print('\n')
+        print("Input Error....")
+
     if args.month_to_report:
-        Reporter().monthly_report(years_monthly_records, args.month_to_report)
+        # Read data by using the parser.
+        data = Parser().read_files(args.data_path, month=args.month_to_report)
+        monthly_calculations = WeatherCalculator().calculate_weather(data)
+        print('\n')
+        Reporter().monthly_report(monthly_calculations)
+        print('\n')
+
     if args.month_to_plot:
-        Reporter().monthly_bar_chart(years_monthly_records, args.month_to_plot)
-        Reporter().horizontal_barchart(
-            years_monthly_records, args.month_to_plot
-            )
-    return
-
-
-main()
+        data = Parser().read_files(args.data_path, month=args.month_to_plot)
+        print('\n')
+        Reporter().monthly_bar_chart(data)
+        print('\n')
+        Reporter().horizontal_barchart(data)
+        print('\n')
