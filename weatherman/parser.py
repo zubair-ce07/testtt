@@ -1,4 +1,6 @@
 import csv
+from datetime import datetime
+import calendar
 from os import listdir
 from os.path import isfile, join
 from calculations import WeatherCalculator
@@ -6,8 +8,6 @@ from calculations import WeatherCalculator
 
 class Parser:
     """Parser class to extract data and parse it."""
-
-    months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
     def files_to_read(self, data_path=None, year=None, month=None):
         """This function will return the filenames that we had to read for a given month or year."""
@@ -20,8 +20,10 @@ class Parser:
                     year_files.append(f"{data_path}{file_name}")
             return year_files
         elif month is not None:
-            year_month = month.split("/")
-            month_file = f"{data_path}Murree_weather_{year_month[0]}_{self.months[int(year_month[1])-1]}.txt"
+            year_num = month.split('/')[0]
+            month_num = int(month.split('/')[1])
+            month_name = calendar.month_abbr[month_num]
+            month_file = f"{data_path}Murree_weather_{year_num}_{month_name}.txt"
             return month_file
 
     def read_files(self, data_path=None, year=None, month=None):

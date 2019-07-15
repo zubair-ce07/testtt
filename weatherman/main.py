@@ -21,7 +21,6 @@ if __name__ == "__main__":
         print('\n')
         Reporter().yearly_report(yearly_calculations)
         print('\n')
-        print("Input Error....")
 
     if args.month_to_report:
         # Read data by using the parser.

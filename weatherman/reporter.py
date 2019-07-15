@@ -1,11 +1,8 @@
+from datetime import datetime
+
+
 class Reporter:
 
-    months = [
-        "Jan", "Feb", "Mar",
-        "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep",
-        "Oct", "Nov", "Dec",
-    ]
     CRED = '\033[91m'
     CEND = '\033[0m'
     CBLUE = '\33[34m'
@@ -18,23 +15,23 @@ class Reporter:
 
         try:
             date = yearly_calculations['Max Temp Day']
-            date = date.split('-')
-            month = self.months[int(date[1])-1]
-            day = date[2]
+            date = datetime.strptime(date, '%Y-%m-%d')
+            month = date.strftime("%b")
+            day = date.strftime("%d")
             max_temp = yearly_calculations['Max Temperature']
             print(f'Highest: {max_temp}C on {month} {day}')
 
             date = yearly_calculations['Min Temp Day']
-            date = date.split('-')
-            month = self.months[int(date[1])-1]
-            day = date[2]
+            date = datetime.strptime(date, '%Y-%m-%d')
+            month = date.strftime("%b")
+            day = date.strftime("%d")
             min_temp = yearly_calculations['Min Temperature']
             print(f'Lowest: {min_temp}C on {month} {day}')
 
             date = yearly_calculations['Max Humidity Day']
-            date = date.split('-')
-            month = self.months[int(date[1])-1]
-            day = date[2]
+            date = datetime.strptime(date, '%Y-%m-%d')
+            month = date.strftime("%b")
+            day = date.strftime("%d")
             max_humid = yearly_calculations['Max Humidity']
             print(f'Humidity: {max_humid}% on {month} {day}')
         except KeyError:
