@@ -1,4 +1,4 @@
-var per_page = 8
+var usersToShow = 8
 
 // fetch the user as specified by the URL argument
 var username = new URL(window.location).searchParams.get("login")
@@ -50,7 +50,7 @@ function fetchUser(username){
 
 // fetches followers of a specified user
 function fetchFollowers(username) {
-    let query = `https://api.github.com/users/${username}/followers?per_page=${per_page}`
+    let query = `https://api.github.com/users/${username}/followers?usersToShow=${usersToShow}`
     let clientRequest = new XMLHttpRequest()
     clientRequest.open('GET', query, true)
     clientRequest.responseType = 'json'
@@ -68,7 +68,7 @@ function fetchFollowers(username) {
 
 // fetches following of a specified user
 function fetchFollowing(username) {
-    let query = `https://api.github.com/users/${username}/following?per_page=${per_page}`
+    let query = `https://api.github.com/users/${username}/following?usersToShow=${usersToShow}`
     let clientRequest = new XMLHttpRequest()
     clientRequest.open('GET', query, true)
     clientRequest.responseType = 'json'
@@ -88,7 +88,7 @@ function fetchFollowing(username) {
 
 // fetches repositories of a specified user
 function fetchRepos(username) {
-    let query = `https://api.github.com/users/${username}/repos?per_page=${per_page}`
+    let query = `https://api.github.com/users/${username}/repos?usersToShow=${usersToShow}`
     let clientRequest = new XMLHttpRequest()
     clientRequest.open('GET', query, true)
     clientRequest.responseType = 'json'
@@ -141,18 +141,18 @@ function fetchRepos(username) {
 }
 
 // displays followers/following profiles in cards
-function displayUsers(displayNode, username, api_call_result) {
+function displayUsers(displayNode, username, apiCallResult) {
     let cards = []
 
-    api_call_result.forEach((singleUser, index) => {
+    apiCallResult.forEach((singleUser, index) => {
         let login = singleUser['login'],
             id = singleUser['id'],
-            avatar_url = singleUser['avatar_url'],
-            github_url = singleUser['html_url'],
-            api_url = singleUser['url']
+            avatarURL = singleUser['avatar_url'],
+            githubURL = singleUser['html_url'],
+            apiURL = singleUser['url']
         
         let userCard = document.createElement('div');
-        userCard.innerHTML = createUserCard(index + 1, login, id, avatar_url, github_url, api_url);
+        userCard.innerHTML = createUserCard(index + 1, login, id, avatarURL, githubURL, apiURL);
         cards.push(userCard)
     })
 
@@ -182,10 +182,10 @@ function displayUsers(displayNode, username, api_call_result) {
 }
 
 // returns a single user card
-function createUserCard(number, login, id, avatar_url, github_url) {
+function createUserCard(number, login, id, avatarURL, githubURL) {
     return `<div class="card text-white bg-secondary mb-3 border-success" style="width: 18rem;">
             <div class="card-header text-bold">${number}</div>
-            <img class="card-img-top" src="${avatar_url}" alt="Card image cap">
+            <img class="card-img-top" src="${avatarURL}" alt="Card image cap">
             <div class="card-body">
                 <h5 class="card-title text-center">${login}</h5>
             </div>
