@@ -1,5 +1,5 @@
 import os
-from record import Record
+from record import *
 import csv
 import calendar
 
@@ -23,9 +23,9 @@ class FileReader:
                 else:
                     years.append(file_name)
         for file_name in years:
-            with open(file_path + os.path.sep + file_name) as records:
-                filereader = csv.DictReader(records)
-                for row in filereader:
+            with open(file_path + file_name) as records:
+                file_reader = csv.DictReader(records)
+                for row in file_reader:
                     new_record = Record(
                         row['PKT'], row['Max TemperatureC'],
                         row['Min TemperatureC'], row['Max Humidity'], row[' Mean Humidity'])

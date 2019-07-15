@@ -14,13 +14,13 @@ def check_args():
     args = parser.parse_args()
     if args.e:
         for year in args.e:
-            get_extreme_weather(FileReader(args.file_path, year))
+            get_max_min(FileReader(args.file_path, year))
     if args.a:
         for year_month in args.a:
-            get_month_average(FileReader(args.file_path, year_month.split('/')[0], year_month.split('/')[1]))
+            month_average(FileReader(args.file_path, year_month.split('/')[0], year_month.split('/')[1]))
     if args.c:
         for year_month in args.c:
-            print_weather_graph(FileReader(args.file_path, year_month.split('/')[0], year_month.split('/')[1]))
+            print_chart(FileReader(args.file_path, year_month.split('/')[0], year_month.split('/')[1]))
     if args.b:
         for year_month in args.b:
             bonus_task(FileReader(args.file_path, year_month.split('/')[0], year_month.split('/')[1]))
