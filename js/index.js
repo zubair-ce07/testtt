@@ -4,11 +4,14 @@ var countryElement = document.getElementById("countrySelector"),
     usersToShow = 20
 
 document.getElementById("argumentHandler").addEventListener("change", (event) => {
-    if(languageElement.value != "" && criteriaElement.value != "") {
+    if(checkAllFieldsAreFilled()) {
         fetchUsers(countryElement.value, languageElement.value, criteriaElement.value)
     }
 })
 
+function checkAllFieldsAreFilled() {
+    return (languageElement.value != "" && criteriaElement.value != "" && countryElement.value != "") ? true : false;
+}
 
 function fetchUsers(country, language, criteria) {
     let clientRequest = new XMLHttpRequest()
