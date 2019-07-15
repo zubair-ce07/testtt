@@ -3,24 +3,8 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 
 
-class BrothersSpider(CrawlSpider):
-    name = 'brothers_spider'
+class ParseProducts:
     item = ProductItem()
-    allowed_domains = ["brothers.se"]
-    start_urls = ['https://www.brothers.se']
-    listings_x = [
-        '//ol[@class="nav-primary"]',
-        '//a[@class="next"]',
-    ]
-    products_x = [
-        '//div[@class="product-image"]',
-    ]
-    rules = (
-        Rule(LinkExtractor(restrict_xpaths=listings_x)),
-        Rule(LinkExtractor(restrict_xpaths=products_x),
-             callback='parse_items', follow=True)
-    )
-
 
     def parse_items(self, response):
         self.item["name"] = self.product_name(response)
@@ -45,14 +29,13 @@ class BrothersSpider(CrawlSpider):
         return response.xpath('//div[@class="more-views"]//img/@src').extract()
 
     def previous_price(self, response):
-        price = response.xpath('//p[@class="old-price"]/span[@class="price"]/text()').extract_first()
-        if price:
-            return price.strip().replace('\xa0', '')
-        return None
+        return ' '.join(response.xpath('//p[@class="old-price"]/span[@class="price"]//text()')
+                        .extract()).strip().replace('\xa0', '')
 
     def price(self, response):
-        return response.xpath('//span[@class="price"]//text()').extract_first() + "Kr"
-        # extract_first().strip().replace('\xa0', '')
+        return response.css(
+            '.price-info p.special-price .price::text, .price-info span.regular-price .price::text').extract_first().strip().replace(
+            '\xa0', '')
 
     def description(self, response):
         return ' '.join(response.xpath('//div[@class="description"]//text()').extract()).strip()
@@ -75,7 +58,7 @@ class BrothersSpider(CrawlSpider):
                     'Color': color,
                     'Size': size,
                     'Price': self.price(response),
-                    'Previous_prices': self.previous_price(response)
+                    'Previous_prices': self.previous_price(response) if self.previous_price(response) else None
                 }
             }
             skus.append(sku)
@@ -96,3 +79,22 @@ class BrothersSpider(CrawlSpider):
 
     def size(self, raw_size):
         return raw_size.split('_')[-1]
+
+
+class BrothersSpider(CrawlSpider, ParseProducts):  # crawl
+    name = 'brothers_spider'
+
+    allowed_domains = ["brothers.se"]
+    start_urls = ['https://www.brothers.se']
+    listings_x = [
+        '//ol[@class="nav-primary"]',
+        '//a[@class="next"]',
+    ]
+    products_x = [
+        '//div[@class="product-image"]',
+    ]
+    rules = (
+        Rule(LinkExtractor(restrict_xpaths=listings_x)),  # callback parse
+        Rule(LinkExtractor(restrict_xpaths=products_x),
+             callback='parse_items', follow=True)
+    )
