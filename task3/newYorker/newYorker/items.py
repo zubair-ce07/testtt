@@ -1,13 +1,21 @@
-import scrapy
+from scrapy.item import Item, Field
 
 
-class NewyorkerItem(scrapy.Item):
-    id = scrapy.Field()
-    country = scrapy.Field()
-    maintenance_group = scrapy.Field()
-    web_category_id = scrapy.Field()
-    web_category = scrapy.Field()
-    brand = scrapy.Field()
-    sales_unit = scrapy.Field()
-    customer_group = scrapy.Field()
-    variants = scrapy.Field()
+class NewyorkerItem(Item):
+    sales_unit = Field()
+    retailer_sku = Field()
+    gender = Field()
+    trail = Field()
+    category = Field()
+    industry = Field()
+    brand = Field()
+    url = Field()
+    market = Field()
+    url_original = Field()
+    description = Field()
+    image_urls = Field()
+    skus = Field()
+    price = Field()
+    currency = Field()
+    spider_name = Field()
+    crawl_start_time = Field()
