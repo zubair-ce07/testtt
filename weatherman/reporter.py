@@ -26,8 +26,7 @@ class Reporter:
     def monthly_bar_chart(self, data):
         for reading in data:
             if reading['Max TemperatureC'] is not None and reading['Min TemperatureC'] is not None:
-                date = (datetime.strptime(reading['PKT'], '%Y-%m-%d')
-                        if 'PKT' in reading.keys() else datetime.strptime(reading['PKST'], '%Y-%m-%d'))
+                date = (datetime.strptime(reading.get('PKT', reading.get('PKST')), '%Y-%m-%d'))
 
                 print(
                     f"{date.strftime('%d')}"
@@ -43,8 +42,7 @@ class Reporter:
     def horizontal_barchart(self, data):
         for reading in data:
             if reading['Max TemperatureC'] is not None and reading['Min TemperatureC'] is not None:
-                date = (datetime.strptime(reading['PKT'], '%Y-%m-%d') 
-                        if 'PKT' in reading.keys() else datetime.strptime(reading['PKST'], '%Y-%m-%d'))
+                date = (datetime.strptime(reading.get('PKT', reading.get('PKST')), '%Y-%m-%d'))
                 print(
                     f"{date.strftime('%d')} "
                     f"{self.CBLUE}{reading['Min TemperatureC'] * '+'}{self.CEND}"
