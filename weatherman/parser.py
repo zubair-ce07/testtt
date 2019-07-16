@@ -1,9 +1,9 @@
 import csv
+import math
 from datetime import datetime
 import calendar
 from os import listdir
 from os.path import isfile, join
-from calculations import WeatherCalculator
 
 
 class Parser:
@@ -20,10 +20,11 @@ class Parser:
                     year_files.append(f"{data_path}{file_name}")
             return year_files
         elif month is not None:
+            month_file = []
             year_num = month.split('/')[0]
             month_num = int(month.split('/')[1])
             month_name = calendar.month_abbr[month_num]
-            month_file = f"{data_path}Murree_weather_{year_num}_{month_name}.txt"
+            month_file.append(f"{data_path}Murree_weather_{year_num}_{month_name}.txt")
             return month_file
 
     def read_files(self, data_path=None, year=None, month=None):
@@ -31,40 +32,36 @@ class Parser:
 
         if year is not None:
             files_to_read = self.files_to_read(data_path=data_path, year=year)
-            data = [[], [], [], [], []]
-            for file_ in files_to_read:
-                data = self.file_parser(file_, data)
+            data = []
+            for f in files_to_read:
+                data.extend(self.file_parser(f))
             return data
         elif month is not None:
-            data = [[], [], [], [], []]
             file_to_read = self.files_to_read(data_path=data_path, month=month)
-            data = self.file_parser(file_to_read, data)
+            data = self.file_parser(file_to_read[0])
             return data
 
-    def file_parser(self, month_file, data):
+    def file_parser(self, month_file):
         """This function will read a File in a dictionary object."""
 
         with open(month_file, newline='\n') as csvfile:
             reader = csv.DictReader(csvfile)
+            reader = list(reader)
             for row in reader:
-                if 'PKT' in reader.fieldnames:
-                    data[0].append(row['PKT'])
-                elif 'PKST' in reader.fieldnames:
-                    data[0].append(row['PKST'])
                 if row['Max TemperatureC']:
-                    data[1].append(int(row['Max TemperatureC']))
+                    row['Max TemperatureC'] = int(row['Max TemperatureC'])
                 else:
-                    data[1].append(None)
+                    row['Max TemperatureC'] = -math.inf
                 if row['Min TemperatureC']:
-                    data[2].append(int(row['Min TemperatureC']))
+                    row['Min TemperatureC'] = int(row['Min TemperatureC'])
                 else:
-                    data[2].append(None)
+                    row['Min TemperatureC'] = math.inf
                 if row['Max Humidity']:
-                    data[3].append(int(row['Max Humidity']))
+                    row['Max Humidity'] = int(row['Max Humidity'])
                 else:
-                    data[3].append(None)
+                    row['Max Humidity'] = -math.inf
                 if row[' Mean Humidity']:
-                    data[4].append(int(row[' Mean Humidity']))
+                    row[' Mean Humidity'] = int(row[' Mean Humidity'])
                 else:
-                    data[4].append(None)
-            return data
+                    row[' Mean Humidity'] = math.inf
+            return reader

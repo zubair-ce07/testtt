@@ -4,7 +4,8 @@ from parser import Parser
 from calculations import WeatherCalculator
 from reporter import Reporter
 
-if __name__ == "__main__":
+
+def main():
 
     # Command Line arguments.
     parser = argparse.ArgumentParser()
@@ -37,3 +38,7 @@ if __name__ == "__main__":
         print('\n')
         Reporter().horizontal_barchart(data)
         print('\n')
+
+
+if __name__ == "__main__":
+    main()
