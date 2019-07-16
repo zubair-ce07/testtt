@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block page_content %}
-    <form method="POST" class="post-form" action="/tasks/task/{{ task.id }}/update">
+    <form method="POST" class="post-form" action="/tasks/task/{{ task.id }}/edit">
         {% csrf_token %}
         <div class="container">
             <br>

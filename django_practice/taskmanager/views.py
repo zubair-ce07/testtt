@@ -40,25 +40,29 @@ def create_task(request):
 
 def edit_task(request, pk):
     task = Task.objects.get(id=pk)
+    if request.method == 'POST':
+        form = TaskForm(request.POST)
+        if form.is_valid():
+            Task(
+                id=pk,
+                title=form.cleaned_data["title"],
+                description=form.cleaned_data["description"],
+                assignee=form.cleaned_data["assignee"],
+                due_date=form.cleaned_data["due_date"],
+            ).save()
+            return HttpResponseRedirect("/tasks")
+        return render(request, 'edit_task.html', {'task': task})
     return render(request, 'edit_task.html', {'task': task})
 
 
 def delete_task(request, pk):
     task = Task.objects.get(id=pk)
-    task.delete()
-    return HttpResponseRedirect('/tasks')
+    if request.method == 'POST':
+        task.delete()
+        return HttpResponseRedirect('/tasks')
+    return render(request, 'delete_task.html', {'task': task})
 
 
-def update_task(request, pk):
-    task = Task.objects.get(id=pk)
-    form = TaskForm(request.POST)
-    if form.is_valid():
-        Task(
-            id=pk,
-            title=form.cleaned_data["title"],
-            description=form.cleaned_data["description"],
-            assignee=form.cleaned_data["assignee"],
-            due_date=form.cleaned_data["due_date"],
-        ).save()
-        return HttpResponseRedirect("/tasks")
-    return render(request, 'edit_task.html', {'task': task})
+
+def redirect_task_index(request):
+    return HttpResponseRedirect("/tasks")
