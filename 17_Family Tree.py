@@ -12,17 +12,17 @@
 #    {<person>: [<father>, <mother>], … }
 #
 
-ada_family = {'Judith Blunt-Lytton': ['Anne Isabella Blunt',
-                                      'Wilfrid Scawen Blunt'],
-              'Ada King-Milbanke': ['Ralph King-Milbanke', 'Fanny Heriot'],
-              'Ralph King-Milbanke': ['Augusta Ada King', 'William King-Noel'],
-              'Anne Isabella Blunt': ['Augusta Ada King', 'William King-Noel'],
-              'Byron King-Noel': ['Augusta Ada King', 'William King-Noel'],
-              'Augusta Ada King': ['Anne Isabella Milbanke',
-                                   'George Gordon Byron'],
-              'George Gordon Byron': ['Catherine Gordon',
-                                      'Captain John Byron'],
-              'John Byron': ['Vice-Admiral John Byron', 'Sophia Trevannion']}
+ada_family = {'Judith Blunt-Lytton': ('Anne Isabella Blunt',
+                                      'Wilfrid Scawen Blunt'),
+              'Ada King-Milbanke': ('Ralph King-Milbanke', 'Fanny Heriot'),
+              'Ralph King-Milbanke': ('Augusta Ada King', 'William King-Noel'),
+              'Anne Isabella Blunt': ('Augusta Ada King', 'William King-Noel'),
+              'Byron King-Noel': ('Augusta Ada King', 'William King-Noel'),
+              'Augusta Ada King': ('Anne Isabella Milbanke',
+                                   'George Gordon Byron'),
+              'George Gordon Byron': ('Catherine Gordon',
+                                      'Captain John Byron'),
+              'John Byron': ('Vice-Admiral John Byron', 'Sophia Trevannion')}
 
 
 # Define a procedure, ancestors(genealogy, person), that takes as its first
@@ -32,16 +32,15 @@ ada_family = {'Judith Blunt-Lytton': ['Anne Isabella Blunt',
 # of the list does not matter and duplicates will be ignored.
 
 def ancestors(genealogy, person):
+    list_ancestors = []
     if person not in genealogy:
-        return []
-    list_ancestors = genealogy[person]
-    for ancestor in list_ancestors:
-        if ancestor in genealogy:
-            list_ancestors += genealogy[ancestor]
-    merged_ancestors = set()
-    for ancestor in list_ancestors:
-        merged_ancestors.add(ancestor)
-    return merged_ancestors
+        return list_ancestors
+    else:
+        list_ancestors = [anc for anc in genealogy[person]]
+        for ancestor in genealogy[person]:
+            if ancestor in genealogy:
+                list_ancestors.extend(ancestors(genealogy, ancestor))
+        return list_ancestors
 
 
 # Here are some examples:
