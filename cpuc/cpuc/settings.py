@@ -66,10 +66,6 @@ DOWNLOAD_DELAY = 1
 
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
-MONGODB_SERVER = "localhost"
-MONGODB_PORT = 27017
-MONGODB_DB = "cpuc_db"
-MONGODB_COLLECTION = "proceeding_details"
 ITEM_PIPELINES = {
    'cpuc.pipelines.MongoDBPipeline': 300,
 }
@@ -95,3 +91,8 @@ ITEM_PIPELINES = {
 #HTTPCACHE_DIR = 'httpcache'
 #HTTPCACHE_IGNORE_HTTP_CODES = []
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
+# MONGODB configuration
+MONGODB_SERVER = "localhost"
+MONGODB_PORT = 27017
+MONGODB_DB = "cpuc_db"
+MONGODB_COLLECTION = "proceeding_details"
