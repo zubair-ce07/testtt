@@ -46,10 +46,10 @@ class TaxiMeterApp:
         print("Wait Time: %.2f" % self.wait_time)
 
 
-t1 = TaxiMeterApp()
-
+taxi_meter_app = TaxiMeterApp()
 
 while True:
-    t1.ride_fare_calculation()
-    t1.output()
+
+    taxi_meter_app.ride_fare_calculation()
+    taxi_meter_app.output()
     system('clear')
