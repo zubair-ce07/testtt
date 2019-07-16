@@ -33,14 +33,12 @@ ada_family = {'Judith Blunt-Lytton': ('Anne Isabella Blunt',
 
 def ancestors(genealogy, person):
     list_ancestors = []
-    if person not in genealogy:
-        return list_ancestors
-    else:
+    if person in genealogy:
         list_ancestors = [anc for anc in genealogy[person]]
         for ancestor in genealogy[person]:
             if ancestor in genealogy:
                 list_ancestors.extend(ancestors(genealogy, ancestor))
-        return list_ancestors
+    return list_ancestors
 
 
 # Here are some examples:
