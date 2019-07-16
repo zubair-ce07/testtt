@@ -135,9 +135,6 @@ class WeatherReportCalculator:
         month = "{} {}".format(months[int(date_splitted[1]) - 1], date_splitted[2])
         return month
 
-    def generate_readings(self):
-        pass
-
     def is_given(self, reading):
         return reading is not ''
 
