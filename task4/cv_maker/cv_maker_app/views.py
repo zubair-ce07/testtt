@@ -2,10 +2,12 @@
 from __future__ import unicode_literals
 from django.shortcuts import render
 from .forms import BasicInformationForm, EducationForm, ExperienceForm
-from .models import BasicInformation, Experience, Education
+from .models import BasicInformation, Experience, Education, Job
 from django.core.files.storage import FileSystemStorage
 from django.views import View
 from django.http import HttpResponse
+from rest_framework import viewsets
+from .serializers import JobSerializer
 
 
 class HomeView(View):
@@ -146,3 +148,11 @@ class RetrieveCvView(View):
                           {'person': person})
         else:
             return HttpResponse("<h1 align='center'> Please enter your information first </h1>")
+
+
+class JobViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows groups to be viewed or edited.
+    """
+    queryset = Job.objects.all()
+    serializer_class = JobSerializer

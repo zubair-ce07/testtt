@@ -63,3 +63,15 @@ class Education(models.Model):
 
     def __str__(self):
         return self.degree
+
+class Job(models.Model):
+    title = models.CharField(max_length=100)
+    city = models.CharField(max_length=30)
+    experience = models.IntegerField()
+    description = models.CharField(max_length=1024)
+    skill1 = models.CharField(max_length=30)
+    skill2 = models.CharField(max_length=30)
+    skill3 = models.CharField(max_length=30)
+
+    def __str__(self):
+        return self.title
