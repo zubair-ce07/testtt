@@ -1,0 +1,55 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" type="text/css" href="{% static 'articles/css/materialize.min.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'articles/css/style.css' %}">
+    <script src="{% static 'articles/js/materialize.min.js' %}"></script>
+    <title>Readers Haven</title>
+</head>
+
+<body>
+    <nav id="navbar"">
+        <div class=" nav-wrapper">
+        <a id="heading-text" href="#!" class="brand-logo center">Readers Haven</a>
+        <ul class="right hide-on-med-and-down">
+            <li><a href="/articles/add-post" class="waves-effect waves-light btn">Add Post</a></li>
+        </ul>
+        </div>
+    </nav>
+    <div class="container">
+        <h3 id="heading-text" class="center">All your interests in one place!</h3>
+        {% if recent_articles %}
+        {% for article in recent_articles %}
+        <br><br>
+        <div class="col s12 m7">
+            <div class="card horizontal">
+                <div class="card-image">
+                    <img src="{{ article.image_url }}">
+                </div>
+                <div class="card-stacked">
+                    <div class="card-content">
+                        <h5><a id="heading-text" href="{% url 'articles:detail' article.id %}">{{ article.title }}</a>
+                        </h5>
+                    </div>
+                    <div class="card-action">
+                        <h6 class="right">Category: {{ article.category }}</h6>
+                        <h6>
+                            {% for author in article.authors.all %}
+                            <span id="author-name">{{ author.full_name }} &nbsp;&nbsp;&nbsp;</span>
+                            {% endfor %}
+                        </h6>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% endif %}
+    </div>
+</body>
+
+</html>

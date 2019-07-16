@@ -42,6 +42,7 @@ class Article(models.Model):
     )
     authors = models.ManyToManyField(Author, related_name='authors')
     website = models.ForeignKey(Website, related_name='website', on_delete=models.CASCADE)
+    image_url = models.URLField(max_length=600)
     content = models.TextField()
     publish_time = models.DateTimeField()
     url = models.URLField(max_length=400, unique=True)

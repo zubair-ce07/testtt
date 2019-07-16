@@ -1,0 +1,35 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" type="text/css" href="{% static 'articles/css/materialize.min.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'articles/css/style.css' %}">
+    <script src="{% static 'articles/js/materialize.min.js' %}"></script>
+    <title>Readers Haven</title>
+</head>
+
+<body>
+    <nav id="navbar"">
+                <div class=" nav-wrapper">
+        <a id="heading-text" href="/articles" class="brand-logo center">Readers Haven</a>
+        <ul class="right hide-on-med-and-down">
+            <li><a href="/articles" class="waves-effect waves-light btn">Back to Home</a></li>
+        </ul>
+        </div>
+    </nav>
+    <div class="container">
+        <br><br>
+        <h4>Add a new post to the collection</h4>
+        <form method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="btn btn-success">Post</button>
+        </form>
+    </div>
+</body>
+
+</html>
