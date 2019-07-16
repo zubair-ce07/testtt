@@ -6,10 +6,11 @@ from scrapy.spiders import CrawlSpider, Rule
 
 
 def clean(raw_data):
-
     if isinstance(raw_data, list):
-        return [re.sub('\s+', ' ', raw_data[i]).strip() for i in range(len(raw_data))]
-    return re.sub('\s+', ' ', raw_data).strip()
+        return [re.sub('\s+', ' ', data).strip() for data in raw_data
+                if re.sub('\s+', ' ', data).strip()]
+    elif isinstance(raw_data, str):
+        return re.sub('\s+', ' ', raw_data).strip()
 
 
 class WeItem(scrapy.Item):
@@ -33,18 +34,16 @@ class WeSpider(CrawlSpider):
         'https://www.wefashion.de/',
     ]
 
-    major_categories_url = '.level-top-1'
-    category_products_urls = '.refinement-link'
-    product_url = '.name-link'
+    listings_css = '.level-top-1'
+    category_css = '.refinement-link'
+    product_css = '.name-link'
     rules = (
-        Rule(LinkExtractor(restrict_css=major_categories_url), callback=super().parse),
-        Rule(LinkExtractor(restrict_css=category_products_urls), callback=super().parse),
-        Rule(LinkExtractor(restrict_css=product_url), callback='parse_item'),
+        Rule(LinkExtractor(restrict_css=[listings_css,category_css]), callback='parse'),
+        Rule(LinkExtractor(restrict_css=product_css), callback='parse_item'),
     )
 
     def parse_item(self, response):
         item = WeItem()
-
         item['retailer_sku'] = self.retailer_sku(response)
         item['gender'] = self.product_gender(response)
         item['name'] = self.product_name(response)
@@ -58,10 +57,21 @@ class WeSpider(CrawlSpider):
         item['requests'] = []
 
         colour_urls = response.css('.emptyswatch ::attr(href)').getall()
-
         for color_url in colour_urls:
             item['requests'].append(response.follow(color_url, callback=self.parse_sku))
 
+        yield from self.return_request_or_yield(item)
+
+    def parse_sku(self, response):
+        item = response.meta['item']
+        color = clean(response.css('.variant-attribute--list.variant-attribute--color span ::text').get())
+        price = response.css('.pdp-price .price-sales ::attr(data-price)').get()
+        sizes = clean(response.css('.swatches .swatchanchor ::text ').getall())
+        common_sku = {'color': color,
+                      'price': price}
+
+        for size in sizes:
+            item['skus'].update({f'{color}_{size}': common_sku.update({'size': size})})
         yield from self.return_request_or_yield(item)
 
     def retailer_sku(self, response):
@@ -90,18 +100,6 @@ class WeSpider(CrawlSpider):
 
     def images_url(self, response):
         return response.css('.pdp-figure__image ::attr(data-image-replacement)').getall()
-
-    def parse_sku(self, response):
-        item = response.meta['item']
-        color = clean(response.css('.variant-attribute--list.variant-attribute--color span ::text').get())
-        price = response.css('.pdp-price .price-sales ::attr(data-price)').get()
-        sizes = clean(response.css('.swatches .swatchanchor ::text ').getall())
-        common_sku = {'color': color,
-                      'price': price}
-
-        for size in sizes:
-            item['skus'].update({f'{color}_{size}': common_sku.update({'size': size})})
-        yield from self.return_request_or_yield(item)
 
     def return_request_or_yield(self, item):
         if item['requests']:
