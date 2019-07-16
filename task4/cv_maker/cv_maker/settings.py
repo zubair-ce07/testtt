@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'accounts',
-    'cv_maker_app'
+    'cv_maker_app',
 ]
 
 MIDDLEWARE = [
