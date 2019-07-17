@@ -11,6 +11,9 @@ class Beginningboutique(CrawlSpider):
     name = "beginningboutique"
     allowed_domains = ['beginningboutique.com.au']
     start_urls = ['https://www.beginningboutique.com.au/']
+    market = "AU"
+    retailer = 'beginningboutique-au'
+    gender = "women"
 
     rules = (
         Rule(LinkExtractor(
@@ -47,24 +50,21 @@ class Beginningboutique(CrawlSpider):
         product['skus'] = self.skus(response)
         product['price'] = self.price(response)
         product['currency'] = self.currency(response)
-        product['crawl_start_time'] = self.start_time()
         return product
 
     def boilerplate(self, product):
-        product['market'] = "AU"
-        product['retailer'] = 'beginningboutique-au'
-        product['spider_name'] = 'beginningboutique'
-        product['gender'] = "women"
+        product['market'] = self.market
+        product['retailer'] = self.retailer
+        product['spider_name'] = self.name
+        product['gender'] = self.gender
+        product['crawl_start_time'] = self.crawler.stats.get_stats()['start_time'].strftime("%Y-%m-%dT%H:%M:%s")
         return product
 
     def product_name(self, response):
         return response.css('.product-heading__title::text').get()
 
     def retailer_sku(self, response):
-        try:
-            return int(response.xpath("//div[@class='product__heart']/div/@data-product-id").get())
-        except:
-            return response.xpath("//div[@class='product__heart']/div/@data-product-id").get()
+        return response.xpath("//div[@class='product__heart']/div/@data-product-id").get()
 
     def trail(self, response):
         return response.meta.get('trail')
@@ -76,7 +76,7 @@ class Beginningboutique(CrawlSpider):
         return response.xpath('//div[@class="product-heading"]//a/text()').get()
 
     def url(self, response):
-        return response.request.url
+        return response.url
 
     def description(self, response):
         product_details = response.xpath("//div[@class='product__specs']//li[1]//p/text()").getall()
@@ -86,15 +86,11 @@ class Beginningboutique(CrawlSpider):
             for details in range(len(product_details), -1, -1):
                 if len(detail_reference) > details:
                     product_details.insert(details + 1, detail_reference[details])
-
-        detail_list = response.xpath('//div[@class="product__specs-detail"]/ul/li/text()').getall()
-        return product_details + detail_list
+        return product_details+response.xpath('//div[@class="product__specs-detail"]/ul/li/text()').getall()
 
     def care(self, response):
         care = response.xpath("//ul[@class='product__specs-list']/li[2]//li/text()").getall()
-        if not care:
-            care = response.xpath("//div[@class='product__specs']//div/text()").getall()
-        return care
+        return care or response.xpath("//div[@class='product__specs']//div/text()").getall()
 
     def image_urls(self, response):
         return response.xpath("//div[@class='product-images-wrapper']//img/@src").getall()
@@ -117,10 +113,7 @@ class Beginningboutique(CrawlSpider):
         try:
             return float(response.css('.money::text').get()[1:])
         except:
-            return float(response.css('.money::text').get()[1:])
+            return response.css('.money::text').get()[1:]
 
     def currency(self, response):
         return response.css('.money::text').get()[0]
-
-    def start_time(self):
-        return self.crawler.stats.get_stats()['start_time'].strftime("%Y-%m-%dT%H:%M:%s")
