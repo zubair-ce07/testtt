@@ -17,13 +17,37 @@
         <div class="navbar-header">
             <a class="navbar-brand" href="#">Task Manager</a>
         </div>
-        <ul class="nav navbar-nav">
-            <li class="active"><a href="{% url 'task_index' %}">Tasks</a></li>
+        <ul class="nav nav-pills navbar-nav">
+
+            <li class="nav-item"><a class="nav-link active" href="{% url 'task_index' %}">Tasks</a></li>
+
+            {% if user.is_authenticated %}
+
+                <li class="nav-item"><a class="nav-link auth-link" href="{% url 'logout' %}" >Logout</a></li>
+
+            {% else %}
+
+                <li class="nav-item"><a class="nav-link auth-link" href="{% url 'login' %}">Login</a></li>
+                <li class="nav-item"><a class="nav-link auth-link" href="{% url 'register' %}">Register</a></li>
+
+            {% endif %}
         </ul>
     </div>
 </nav>
-<div class="container main-content">
-    {% block page_content %}
-    {% endblock %}
+<div class="container">
+
+        {% if user.is_authenticated %}
+
+            {% block page_content %}
+            {% endblock %}
+
+        {% else %}
+            <h3>Please sign in or register!</h3>
+             {% block content %}
+             {% endblock %}
+
+        {% endif %}
+
 </div>
 </body>
+

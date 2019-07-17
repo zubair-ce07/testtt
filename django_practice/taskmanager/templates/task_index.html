@@ -16,7 +16,8 @@
                             <h3 class="card-title">{{ task.title }}</h3>
                             <p class="card-title" style="font-size: small">
                                 <strong>Assignee: </strong> {{ task.assignee }}</p>
-                            <p class="card-title" style="font-size: small"><strong>Due: </strong> {{ task.due_date }}
+                            <p class="card-title" style="font-size: small">
+                                <strong>Due: </strong> {{ task.due_date }}
                             </p>
                             <p class="card-text">{{ task.description }}</p>
                             <a href="{% url 'edit_task' task.id %}"

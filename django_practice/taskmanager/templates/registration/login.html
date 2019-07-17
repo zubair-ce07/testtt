@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+    <h2>Login</h2>
+
+    <div class="container">
+
+        <form method="POST" action="{% url 'login' %}">
+            {% csrf_token %}
+
+            {% if form.errors %}
+                <h5 class="text-danger">Username or password incorrect!</h5>
+            {% endif %}
+
+            <p>Username:</p>
+            <div class="form-group">
+                {{ form.username }}
+            </div>
+
+            <p>Password:</p>
+            <div class="form-group">
+                {{ form.password }}
+            </div>
+
+            <br>
+
+            <input type="submit" value="Login" class="btn btn-info"/>
+        </form>
+
+    </div>
+
+{% endblock %}

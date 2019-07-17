@@ -1,7 +1,10 @@
-from django.http import HttpResponseRedirect
-from django.shortcuts import render
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
+from django.shortcuts import render, redirect
+
+from .forms import TaskForm, UserRegistrationForm
 from .models import Task
-from .forms import TaskForm
 
 
 def task_index(request):
@@ -31,15 +34,17 @@ def create_task(request):
                 assignee=form.cleaned_data["assignee"],
                 due_date=form.cleaned_data["due_date"],
             ).save()
-            return HttpResponseRedirect('/tasks')
+            return redirect('task_index')
     context = {
-        'form': form,
+        'form': form
     }
     return render(request, 'create_task.html', context)
 
 
 def edit_task(request, pk):
     task = Task.objects.get(id=pk)
+    users = [user.username for user in User.objects.all()]
+
     if request.method == 'POST':
         form = TaskForm(request.POST)
         if form.is_valid():
@@ -50,18 +55,41 @@ def edit_task(request, pk):
                 assignee=form.cleaned_data["assignee"],
                 due_date=form.cleaned_data["due_date"],
             ).save()
-            return HttpResponseRedirect("/tasks")
+            return redirect('task_index')
         return render(request, 'edit_task.html', {'task': task})
-    return render(request, 'edit_task.html', {'task': task})
+    context = {
+        'task': task,
+        'users': users
+    }
+    return render(request, 'edit_task.html', context)
 
 
 def delete_task(request, pk):
     task = Task.objects.get(id=pk)
     if request.method == 'POST':
         task.delete()
-        return HttpResponseRedirect('/tasks')
+        return redirect('task_index')
     return render(request, 'delete_task.html', {'task': task})
 
 
 def redirect_task_index(request):
-    return HttpResponseRedirect("/tasks")
+    return redirect('task_index')
+
+
+def register(request):
+    if request.method == "POST":
+        form = UserRegistrationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            username = form.cleaned_data['username']
+            # email = form.cleaned_data['email']
+            # first_name = form.cleaned_data['first_name']
+            # last_name = form.cleaned_data['last_name']
+            password = form.cleaned_data['password1']
+            user = authenticate(username=username, password=password)
+            login(request, user)
+            return redirect('task_index')
+    else:
+        form = UserRegistrationForm()
+        context = {'form': form}
+        return render(request, 'registration/register.html', context)
