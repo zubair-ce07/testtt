@@ -166,7 +166,7 @@ class GlobusCrawlSpider(Mixin, BaseCrawlSpider):
 
             for page in range(total_pages):
                 payload['page'] = str(page + 1)
-                yield Request(self.pagination_url, self.parse_category, method="POST", body=json.dumps([payload]))
+                yield Request(self.pagination_url, self.parse_category, method='POST', body=json.dumps([payload]))
 
     def parse_category(self, response):
         raw_category = json.loads(response.text)
