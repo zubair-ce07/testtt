@@ -39,7 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'accounts',
     'cv_maker_app',
-    'rest_framework'
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
