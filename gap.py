@@ -13,7 +13,7 @@ def clean(raw_data):
         return re.sub('\s+', ' ', raw_data).strip()
 
 
-class WeItem(scrapy.Item):
+class GapItem(scrapy.Item):
     retailer_sku = scrapy.Field()
     gender = scrapy.Field()
     name = scrapy.Field()
@@ -26,7 +26,7 @@ class WeItem(scrapy.Item):
     skus = scrapy.Field()
 
 
-class Gap(CrawlSpider):
+class GapSpider(CrawlSpider):
     name = 'gap'
     allowed_domains = ['gap.cn']
     start_urls = [
@@ -62,7 +62,7 @@ class Gap(CrawlSpider):
     def parse_item(self, response):
         raw_json = json.loads(response.text)
 
-        item = WeItem()
+        item = GapItem()
         item['retailer_sku'] = self.retailer_sku(raw_json)
         item['gender'] = self.product_gender(raw_json)
         item['name'] = self.product_name(raw_json)
