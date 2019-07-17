@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block page_content %}
+    <form method="POST" class="post-form" action="/tasks/task/{{ task.id }}/edit">
+        {% csrf_token %}
+        <div class="container">
+            <br>
+            <div class="form-group row">
+                <div class="col-sm-4">
+                    <h3>Update Task Details</h3>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label class="col-sm-2 col-form-label" for="id_title">Task title:</label>
+                <div class="col-sm-4">
+                    <input type="text" name="title" id="id_title" required maxlength="50"
+                           value="{{ task.title }}"/>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label class="col-sm-2 col-form-label" for="id_description">Task description:</label>
+                <div class="col-sm-4">
+                    <textarea name="description" id="id_description" required>{{ task.description }}</textarea>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label class="col-sm-2 col-form-label" for="id_assignee">Task assignee:</label>
+                <div class="col-sm-4">
+                    <input type="text" name="assignee" id="id_assignee" required maxlength="50"
+                           value="{{ task.assignee }}"/>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label class="col-sm-2 col-form-label" for="id_due_date">Due date:</label>
+                <div class="col-sm-4">
+                    <input type="date" name="due_date" id="id_due_date" required
+                           value="{{ task.due_date|date:"Y-m-d" }}"/>
+                </div>
+            </div>
+            <br>
+            <div class="form-group row">
+                <div class="col-sm-4">
+                    <button type="submit" class="btn btn-success">Update</button>
+                    <a class="btn btn-primary" href="{% url 'task_index' %}">Back</a>
+                </div>
+            </div>
+        </div>
+    </form>
+
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block page_content %}
+    <div class="container">
+        <h4>Create a task:</h4>
+        <form action="" method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                {{ form.title }}
+            </div>
+            <div class="form-group">
+                {{ form.description }}
+            </div>
+            <div class="form-group">
+                {{ form.assignee }}
+            </div>
+            <h6>Enter due date:</h6>
+            <div class="input-group date">
+                {{ form.due_date }}
+            </div>
+            <br/>
+            <button type="submit" class="btn btn-primary">Create task</button> &nbsp;
+
+            <a class="btn btn-primary" href="{% url 'task_index' %}">Back</a>
+        </form>
+    </div>
+{% endblock %}
