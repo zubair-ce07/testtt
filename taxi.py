@@ -47,7 +47,7 @@ class TaxiMeterApp:
         print("Ride Time: %d Seconds" % self.ride_time)
         print("Distance : %d KM %d Meters" % (self.kilometer, self.total_distance))
         print("Speed: %.2f KPH" % self.total_speed)
-        print("Fare: %.2f" % self.total_fare)
+        print("Fare: %d Rs" % self.total_fare)
         print("Wait Time: %.2f" % self.wait_time)
 
 
