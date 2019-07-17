@@ -63,6 +63,5 @@ def delete_task(request, pk):
     return render(request, 'delete_task.html', {'task': task})
 
 
-
 def redirect_task_index(request):
     return HttpResponseRedirect("/tasks")
