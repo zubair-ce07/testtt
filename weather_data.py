@@ -26,7 +26,7 @@ class FileReader:
             with open(file_path + file_name) as records:
                 file_reader = csv.DictReader(records)
                 for row in file_reader:
-                    new_record = Record(
+                    new_record = WeatherData(
                         row['PKT'], row['Max TemperatureC'],
                         row['Min TemperatureC'], row['Max Humidity'], row[' Mean Humidity'])
                     self.records.append(new_record)
