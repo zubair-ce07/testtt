@@ -61,23 +61,22 @@ class FilaParseSpider(Mixin, BaseParseSpider):
         stock_info = self.available_stock_info(response)
         product_stock = self.magento_product_data(response, 'spConfig', 'spConfig":\s({.*})')
 
-        raw_skus = product_stock['attributes']['135']['options']
-        raw_prices = clean(response.css('[itemprop="priceCurrency"]::attr(content)'))
+        raw_currency = clean(response.css('[itemprop="priceCurrency"]::attr(content)'))
 
-        raw_prices += [price.get('amount') for price in product_stock['prices'].values() if price]
-        common_sku = self.product_pricing_common(None, money_strs=raw_prices)
+        for sku_id, raw_sku in self.magento_product_map(product_stock).items():
+            raw_prices = raw_currency.copy()
+            raw_prices += [price.get('amount') for price in raw_sku[0]['prices'].values() if price]
 
-        for raw_sku in raw_skus:
-            sku = common_sku.copy()
-            sku['size'] = raw_sku['label']
+            sku = self.product_pricing_common(None, money_strs=raw_prices)
+            sku['size'] = clean(raw_sku[0]['label'])
 
-            if not stock_info.get(raw_sku['id'], {}).get('is_in_stock'):
+            if not stock_info.get(raw_sku[0]['id'], {}).get('is_in_stock'):
                 sku['out_of_stock'] = True
 
-
-            skus[raw_sku['id']] = sku
+            skus[sku_id] = sku
 
         return skus
+
 
     def available_stock_info(self, response):
         css = 'script:contains("amstockstatusRenderer")::text'
