@@ -1,0 +1,42 @@
+{% extends "reservation/base.html" %}
+{% block content %}
+{% load static %}
+<link href="{% static 'reservation/table.css' %}" rel="stylesheet">
+<div class="container col-sm-12">
+    <a href="/admin/reservation/room/" target="_blank">
+      <button class="btn btn-success">Update Record</button>
+    </a>
+</div>
+
+<div class="container col-sm-12 table-responsive">
+  <input type="text" class="live-search-box form-control search" placeholder="Search here">
+  <font id="rows">Total Rows: 3</font>
+  <table class="table table-striped live-search-list table-condensed">
+    <tbody>
+
+      <tr>
+        <th>Room #</th>
+        <th>Min rent</th>
+        <th>Max rent</th>
+        <th>Capacity</th>
+        <th>Category</th>
+        <th>Floor</th>
+      </tr>
+
+      {% for room in rooms %}
+        <tr>
+          <td>{{ room.room_no }}</td>
+          <td>{{ room.min_rent }}</td>
+          <td>{{ room.max_rent }}</td>
+          <td>{{ room.capacity }}</td>
+          <td>{{ room.category }}</td>
+          <td>{{ room.floor }}</td>
+        </tr>
+      {% endfor %}
+
+    </tbody>
+  </table>
+</div>
+
+<script src="{% static 'reservation/table-script.js' %}"></script>
+{% endblock content %}
