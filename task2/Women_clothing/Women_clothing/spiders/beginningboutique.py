@@ -36,9 +36,8 @@ class Beginningboutique(CrawlSpider):
 
     def product_parse(self, response):
         product = BeginningboutiqueItem()
-        product = self.boilerplate(product)
+        product = self.boilerplate(product, response)
         product['retailer_sku'] = self.retailer_sku(response)
-        product['trail'] = self.trail(response)
         product['category'] = self.category(response)
         product['brand'] = self.brand(response)
         product['url'] = self.url(response)
@@ -52,12 +51,13 @@ class Beginningboutique(CrawlSpider):
         product['currency'] = self.currency(response)
         return product
 
-    def boilerplate(self, product):
+    def boilerplate(self, product, response):
         product['market'] = self.market
         product['retailer'] = self.retailer
         product['spider_name'] = self.name
         product['gender'] = self.gender
         product['crawl_start_time'] = self.crawler.stats.get_stats()['start_time'].strftime("%Y-%m-%dT%H:%M:%s")
+        product['trail'] = response.meta.get('trail')
         return product
 
     def product_name(self, response):
@@ -65,9 +65,6 @@ class Beginningboutique(CrawlSpider):
 
     def retailer_sku(self, response):
         return response.xpath("//div[@class='product__heart']/div/@data-product-id").get()
-
-    def trail(self, response):
-        return response.meta.get('trail')
 
     def category(self, response):
         return response.xpath("//div[@id='shopify-section-related-collections']//a[@href]/text()").getall()
