@@ -1,7 +1,7 @@
 from datetime import datetime
 
 
-class Record:
+class WeatherData:
 
     def __init__(self, date, highest_temp, lowest_temp, highest_humidity, avg_humidity):
 
