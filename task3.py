@@ -13,11 +13,15 @@ class AsicsItem(scrapy.Item):
     description = scrapy.Field()
     care = scrapy.Field()
     image_urls = scrapy.Field()
-    stock = scrapy.Field()
-    color = scrapy.Field()
-    currency = scrapy.Field()
-    price = scrapy.Field()
     skus = scrapy.Field()
+
+
+def clean(raw_data):
+    if isinstance(raw_data, list):
+        return [re.sub('\s+', ' ', data).strip() for data in raw_data
+                if re.sub('\s+', ' ', data).strip()]
+    elif isinstance(raw_data, str):
+        return re.sub('\s+', ' ', raw_data).strip()
 
 
 class AsicsSpider(scrapy.Spider):
@@ -28,18 +32,18 @@ class AsicsSpider(scrapy.Spider):
     ]
 
     def parse(self, response):
-        major_categories = response.css('.childlink-wrapper   ::attr(href)').getall()
-        yield from [response.follow(url=url, callback=self.extract_page_products)
-                    for url in major_categories]
+        listing_urls = response.css('.childlink-wrapper ::attr(href)').getall()
+        yield from [response.follow(url=url, callback=self.parse_category)
+                    for url in listing_urls]
 
-    def extract_page_products(self, response):
-        page_products_url = response.css('.prod-wrap    ::attr(href)').getall()
+    def parse_category(self, response):
+        product_urls = response.css('.prod-wrap ::attr(href)').getall()
         yield from [response.follow(url=url, callback=self.parse_item)
-                    for url in page_products_url]
+                    for url in product_urls]
 
         next_page = response.css('rightArrow ::attr(href)').get()
         if next_page:
-            yield response.follow(url=next_page, callback=self.extract_page_products)
+            yield response.follow(url=next_page, callback=self.parse_category)
 
     def parse_item(self, response):
         item = AsicsItem()
@@ -54,43 +58,38 @@ class AsicsSpider(scrapy.Spider):
         item['brand'] = self.product_brand()
         item['skus'] = self.product_skus(response)
 
-        yield item
-
     def product_id(self, response):
-        return response.css('.inStock   meta[itemprop="sku"] ::attr(content)').get()
+        return response.css('.inStock meta[itemprop="sku"] ::attr(content)').get()
 
     def product_name(self, response):
-        return self.clean_text(response.css('title::text').get().split('|')[0])
+        return self.clean_text(response.css('title ::text').get().split('|')[0])
 
     def product_gender(self, response):
-        return self.clean_text(response.css('title::text').get().split('|')[1])
+        return response.css('script[type="text/javascript"]').re('\"gender\":\"(.+?)\"')[0]
 
     def product_category(self, response):
-        return response.css('.breadcrumb   ::text ').getall()
+        return response.css('.breadcrumb ::text').getall()
 
     def product_url(self, response):
         return response.url
 
     def product_description(self, response):
-        raw_descriptions = response.css('.tabInfoChildContent::text').getall()
-
-        for description in raw_descriptions:
-            if self.clean_text(description):
-                return self.clean_text(description)
+        raw_descriptions = response.css('.tabInfoChildContent ::text').getall()
+        return clean(raw_descriptions)
 
     def image_urls(self, response):
-        return response.css('.owl-carousel   ::attr(data-big)').getall()
+        return response.css('.owl-carousel ::attr(data-big)').getall()
 
     def product_brand(self):
         return 'ASICS'
 
     def product_skus(self, response):
-        currency = response.css('.inStock   meta[itemprop="priceCurrency"] '
+        currency = response.css('.inStock meta[itemprop="priceCurrency"]'
                                 '::attr(content)').get()
-        price = response.css('.inStock   meta[itemprop="price"] '
+        price = response.css('.inStock meta[itemprop="price"]'
                              '::attr(content)').get()
-        color = response.css('title::text').get().split('|')[2]
-        prev_price = response.css('.pull-right del::text').getall()
+        color = response.css('title ::text').get().split('|')[2]
+        prev_price = response.css('.pull-right del ::text').getall()
 
         skus = []
 
@@ -112,14 +111,11 @@ class AsicsSpider(scrapy.Spider):
 
     def size(self, response):
         if response.css('.SizeOption::text').getall():
-            return response.css('.SizeOption::text').getall()
-        return 'One Size'
+            return response.css('.SizeOption::text').getall() or ['One_Size']
 
     def clean_text(self, text):
         clean_text = re.sub('\s+', '', text)
 
         if clean_text:
             return clean_text
-
-        return 0
 
