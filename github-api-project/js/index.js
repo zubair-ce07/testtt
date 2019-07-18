@@ -41,16 +41,21 @@ document.getElementById("argumentHandler").addEventListener("change", (event) =>
 
 
 function createCard(number, login, id, avatar_url, github_url) {
-    return `<div class="card text-white bg-secondary mb-3 border-success" style="width: 18rem;">
-            <div class="card-header text-bold">${number}</div>
-            <img class="card-img-top" src="${avatar_url}" alt="Card image cap">
-            <div class="card-body">
-                <h5 class="card-title text-center">${login}</h5>
-            </div>
-            <div class="card-footer bg-secondary text-center">
-                <a href="user.html?login=${login}" class="btn btn-success">View Profile</a>
-            </div>
-            </div>`
+    let userCard = document.createElement('div')
+    userCard.className= "card text-white bg-secondary mb-3 border-success"
+    userCard.style = "width: 18rem;"
+    userCard.innerHTML = `<div class="card-header text-bold">${number}</div>
+                            <img class="card-img-top" src="${avatar_url}" alt="Card image cap">
+
+                            <div class="card-body">
+                                <h5 class="card-title text-center">${login}</h5>
+                            </div>
+
+                            <div class="card-footer bg-secondary text-center">
+                                <a href="user.html?login=${login}" class="btn btn-success">View Profile</a>
+                            </div>
+                        </div>`
+    return userCard
 }
 
 
@@ -94,10 +99,8 @@ function onloadFunc() {
                 avatarURL = singleUser["avatar_url"],
                 githubURL = singleUser["html_url"],
                 apiURL = singleUser["url"]
-            
-            let userCard = document.createElement("div");
-            userCard.innerHTML = createCard(index + 1, login, id, avatarURL, githubURL, apiURL);
-            cards.push(userCard)
+
+            cards.push(createCard(index + 1, login, id, avatarURL, githubURL, apiURL))
         })
 
 
@@ -105,9 +108,11 @@ function onloadFunc() {
         for(let i = 0; i < cards.length; i = i + USER_CARDS_PER_ROW) {
             let cardDeck = document.createElement("div");
             cardDeck.className = "card-deck"
+            
             let remainingCards = i + USER_CARDS_PER_ROW <= cards.length ? USER_CARDS_PER_ROW : cards.length % USER_CARDS_PER_ROW
+
             for(let j = i; j < i + remainingCards; j++) {
-                cardDeck.innerHTML += cards[j].innerHTML
+                cardDeck.appendChild(cards[j])
             }
             mainDisplayElement.appendChild(cardDeck)
         }

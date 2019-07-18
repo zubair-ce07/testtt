@@ -7,7 +7,7 @@ const NUMBER_OF_USERS_DISPLAYED = 12,
       USER_CARDS_PER_ROW = 4,
       REPO_CARDS_PER_ROW = 2
       
-
+let previousTab = null
 
 
 function fixButtonHref(buttonID, githubPage) {
@@ -22,17 +22,30 @@ if(USERNAME != null){
 }
 
 
-// event listener for different tabs
+function emptyTab(tabID) {
+    var tabElement = document.getElementById('display-' + tabID);
+
+    while (tabElement.firstChild) {
+        tabElement.removeChild(tabElement.firstChild);
+    }
+}
+
+
 document.getElementById("user-profile-page").addEventListener("click", (event) => {
-    if(event.target.getAttribute("href") == "#home") {
+    if(event.target.getAttribute("href") == "#home" && previousTab != "#home") {
+        emptyTab("home")
         fetchUser()
-    } else if(event.target.getAttribute("href") == "#followers") {
+    } else if(event.target.getAttribute("href") == "#followers" && previousTab != "#followers") {
+        emptyTab("followers")
         fetchFollowers()
-    } else if(event.target.getAttribute("href") == "#following") {
+    } else if(event.target.getAttribute("href") == "#following" && previousTab != "#following") {
+        emptyTab("following")
         fetchFollowing()
-    } else if(event.target.getAttribute("href") == "#repositories") {
+    } else if(event.target.getAttribute("href") == "#repositories" && previousTab != "#repositories") {
+        emptyTab("repositories")
         fetchRepos()
     }
+    previousTab = event.target.getAttribute("href")
 })
 
 function modifyHTMLElement(elementID, elementAttribute, newValue) {
@@ -88,18 +101,18 @@ function onloadUserRepos() {
         let repoCardsList = []
 
         this.response.forEach((repo) => {
-            let userCard = document.createElement("div");
-            userCard.innerHTML = createRepoCard(repo["name"],
-                                                repo["description"] ? repo["description"] : "<span class='text-warning text-center'> No Description Available </span>",
-                                                new Date(repo["created_at"]).toDateString(),
-                                                new Date(repo["updated_at"]).toDateString(),
-                                                repo["watchers_count"],
-                                                repo["language"] ? repo["language"] : `<span class="bg-danger"> unknown </span>`,
-                                                repo["forks_count"],
-                                                repo["open_issues_count"],
-                                                repo["license"] ? repo["license"]["name"] : `<span class="bg-danger"> unknown </span>`,
-                                                repo["html_url"]);
-                                                repoCardsList.push(userCard)
+            userCard = createRepoCard(repo["name"],
+                                      repo["description"] ? repo["description"] : "<span class='text-warning text-center'> No Description Available </span>",
+                                      new Date(repo["created_at"]).toDateString(),
+                                      new Date(repo["updated_at"]).toDateString(),
+                                      repo["watchers_count"],
+                                      repo["language"] ? repo["language"] : `<span class="bg-danger"> unknown </span>`,
+                                      repo["forks_count"],
+                                      repo["open_issues_count"],
+                                      repo["license"] ? repo["license"]["name"] : `<span class="bg-danger"> unknown </span>`,
+                                      repo["html_url"]);
+
+            repoCardsList.push(userCard)
         })
 
 
@@ -108,7 +121,7 @@ function onloadUserRepos() {
             cardDeck.className = "card-deck"
             let remainingCards = i + REPO_CARDS_PER_ROW <= repoCardsList.length ? REPO_CARDS_PER_ROW : repoCardsList.length % REPO_CARDS_PER_ROW
             for(let j = i; j < i + remainingCards; j++) {
-                cardDeck.innerHTML += repoCardsList[j].innerHTML
+                cardDeck.appendChild(repoCardsList[j])
             }
             mainDisplayElement.appendChild(cardDeck)
         }
@@ -171,7 +184,6 @@ function fetchRepos() {
 }
 
 
-// displays followers/following profiles in cards
 function displayUsers(mainDisplayElement, apiCallResult) {
     let cards = []
 
@@ -181,10 +193,8 @@ function displayUsers(mainDisplayElement, apiCallResult) {
             avatarURL = singleUser["avatar_url"],
             githubURL = singleUser["html_url"],
             apiURL = singleUser["url"]
-        
-        let userCard = document.createElement("div");
-        userCard.innerHTML = createUserCard(index + 1, login, id, avatarURL, githubURL, apiURL);
-        cards.push(userCard)
+
+        cards.push(createUserCard(index + 1, login, id, avatarURL, githubURL, apiURL))
     })
 
     for(let i = 0; i < cards.length; i = i + USER_CARDS_PER_ROW) {
@@ -192,67 +202,72 @@ function displayUsers(mainDisplayElement, apiCallResult) {
         cardDeck.className = "card-deck"
         let remainingCards = i + USER_CARDS_PER_ROW <= cards.length ? USER_CARDS_PER_ROW : cards.length % USER_CARDS_PER_ROW
         for(let j = i; j < i + remainingCards; j++) {
-            cardDeck.innerHTML += cards[j].innerHTML
+            cardDeck.appendChild(cards[j])
         }
         mainDisplayElement.appendChild(cardDeck)
     }
 }
 
 
-function createUserCard(number, login, id, avatarURL, githubURL) {
-    return `<div class="card text-white bg-secondary mb-3 border-success" style="width: 18rem;">
-                <div class="card-header text-bold">${number}</div>
+function createUserCard(number, login, id, avatar_url, github_url) {
+    let userCard = document.createElement('div')
+    userCard.className= "card text-white bg-secondary mb-3 border-success"
+    userCard.style = "width: 18rem;"
+    userCard.innerHTML = `<div class="card-header text-bold">${number}</div>
+                            <img class="card-img-top" src="${avatar_url}" alt="Card image cap">
 
-                <img class="card-img-top" src="${avatarURL}" alt="Card image cap">
+                            <div class="card-body">
+                                <h5 class="card-title text-center">${login}</h5>
+                            </div>
 
-                <div class="card-body">
-                    <h5 class="card-title text-center">${login}</h5>
-                </div>
-
-                <div class="card-footer bg-secondary text-center">
-                    <a href="user.html?login=${login}" class="btn btn-success">View Profile</a>
-                </div>
-            </div>`
+                            <div class="card-footer bg-secondary text-center">
+                                <a href="user.html?login=${login}" class="btn btn-success">View Profile</a>
+                            </div>
+                        </div>`
+    return userCard
 }
 
 
 function createRepoCard(repoName, repoDescription, repoCreated, repoUpdated, repoWatchers, repoLanguage, repoForks, repoIssuesCount, repoLicense, repoURL){
-    return `<div class="card text-white bg-secondary mb-3 border-success" style="width: 18rem;">
-                <div class="card-header text-center">
-                    <div class="row">
-                        <div class="col-sm">
-                            <p class="text-center font-weight-bold"> ${repoName} </p> 
+    let repoCard = document.createElement('div')
+    repoCard.className= "card text-white bg-secondary mb-3 border-success"
+    repoCard.style = "width: 18rem;"
+    
+    repoCard.innerHTML =    `<div class="card-header text-center">
+                            <div class="row">
+                                <div class="col-sm">
+                                    <p class="text-center font-weight-bold"> ${repoName} </p> 
+                                </div>
+
+                                <div class="col-sm text-right my-auto">
+                                    <a href="${repoURL}" target="__blank" class="btn btn-primary">View on Github</a>
+                                </div>
+                            </div>
+                            <p> Language: ${repoLanguage} </p> 
+                            <p> License: ${repoLicense} </p>
                         </div>
 
-                        <div class="col-sm text-right my-auto">
-                            <a href="${repoURL}" target="__blank" class="btn btn-primary">View on Github</a>
+                        <div class="card-body">
+                            <p> ${repoDescription} </p>
                         </div>
-                    </div>
-                    <p> Language: ${repoLanguage} </p> 
-                    <p> License: ${repoLicense} </p>
-                </div>
 
-                <div class="card-body">
-                    <p> ${repoDescription} </p>
-                </div>
-
-                <div class="card-footer bg-secondary text-center">
-                    <p class="bg-danger p-1 medium"> Created at: ${repoCreated} </p>
-                    <p class="bg-info p-1"> Last Updated: <br> ${repoUpdated} </p>
-                </div>
-                
-                <div class="card-footer bg-secondary medium">
-                    <div class="row text-center">
-                        <div class="col-sm bg-primary">
-                            Watchers: ${repoWatchers}
+                        <div class="card-footer bg-secondary text-center">
+                            <p class="bg-danger p-1 medium"> Created at: ${repoCreated} </p>
+                            <p class="bg-info p-1"> Last Updated: <br> ${repoUpdated} </p>
                         </div>
-                        <div class="col-sm bg-warning">
-                            Forks: ${repoForks}
-                        </div>
-                        <div class="col-sm bg-danger">
-                            Issues: ${repoIssuesCount}
-                        </div>
-                    </div>
-                </div>
-            </div>`
+                        
+                        <div class="card-footer bg-secondary medium">
+                            <div class="row text-center">
+                                <div class="col-sm bg-primary">
+                                    Watchers: ${repoWatchers}
+                                </div>
+                                <div class="col-sm bg-warning">
+                                    Forks: ${repoForks}
+                                </div>
+                                <div class="col-sm bg-danger">
+                                    Issues: ${repoIssuesCount}
+                                </div>
+                            </div>
+                        </div>`
+    return repoCard
 }
