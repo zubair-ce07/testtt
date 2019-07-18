@@ -91,5 +91,5 @@ def register(request):
             return redirect('task_index')
     else:
         form = UserRegistrationForm()
-        context = {'form': form}
-        return render(request, 'registration/register.html', context)
+    context = {'form': form}
+    return render(request, 'registration/register.html', context)

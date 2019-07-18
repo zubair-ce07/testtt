@@ -28,6 +28,7 @@ class TaskForm(forms.Form):
 
 
 class UserRegistrationForm(UserCreationForm):
+    field_order = ['email', 'first_name', 'last_name', 'username', 'password1', 'password2']
     username = forms.CharField(
         max_length=50,
         label='Username:',
@@ -63,6 +64,8 @@ class UserRegistrationForm(UserCreationForm):
 
     password1 = forms.CharField(
         label="Password:",
+        help_text="150 characters or fewer. Atleast 8 characters, Not too common, Letters, digits and @/./-/+/_ "
+                  "allowed. ",
         widget=forms.TextInput(attrs={
             "class": "form-control",
             "placeholder": "Password",
@@ -72,6 +75,7 @@ class UserRegistrationForm(UserCreationForm):
 
     password2 = forms.CharField(
         label="Confirm Password:",
+        help_text="Enter the same password as before.",
         widget=forms.TextInput(attrs={
             "class": "form-control",
             "placeholder": "Confirm Password",

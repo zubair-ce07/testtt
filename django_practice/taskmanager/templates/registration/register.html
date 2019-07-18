@@ -8,39 +8,18 @@
         <form method="POST" action="{% url 'register' %}">
             {% csrf_token %}
 
-            <strong><p>{{ form.username.label }}</p></strong>
-            {{ form.username }}
-
-            <br>
-
-            <strong><p>{{ form.first_name.label }}</p></strong>
-            {{ form.first_name }}
-
-            <br>
-
-            <strong><p>{{ form.last_name.label }}</p></strong>
-            {{ form.last_name }}
-
-            <br>
-
-            <strong><p>{{ form.email.label }}</p></strong>
-            {{ form.email }}
-
-            <br>
-
-            <strong><p>{{ form.password1.label }}</p></strong>
-            {{ form.password1 }}
-
-            <br>
-
-            <strong><p>{{ form.password2.label }}</p></strong>
-            {{ form.password2 }}
-
-            {% if form.errors %}
-
-                <h5 class="error">Error!</h5>
-
-            {% endif %}
+            {% for field in form %}
+                <p>
+                    {{ field.label_tag }}<br>
+                    {{ field }}
+                    {% if field.help_text %}
+                        <small style="color: grey">{{ field.help_text }}</small>
+                    {% endif %}
+                    {% for error in field.errors %}
+                        <p style="color: red">{{ error }}</p>
+                    {% endfor %}
+                </p>
+            {% endfor %}
             <br>
 
             <input class="btn btn-primary" type="submit" value="Register"/>
