@@ -69,7 +69,7 @@ class UniqloSpider(CrawlSpider):
         item['retailer_sku'] = self.retailer_sku(raw_product)
         item['gender'] = self.product_gender(raw_product)
         item['name'] = self.product_name(raw_product)
-        # item['category'] = response.meta["catg"]
+        item['category'] = response.meta["catg"]
         item['url'] = self.product_url(response)
         item['brand'] = self.product_brand(raw_product)
         item['description'] = self.product_description(raw_product)
