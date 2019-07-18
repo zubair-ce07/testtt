@@ -24,13 +24,7 @@ class NewYorkerSpider(scrapy.Spider):
     retailer = 'newyorker.de'
 
     def parse(self, response):
-        for item in json.loads(response.text)['items']:
-            yield scrapy.Request(
-                url=f'https://api.newyorker.de/csp/products/public/product'
-                f'/matchingProducts?country=de&id={str(item["id"])}&variantId=001&limit=3',
-                meta={'trail': response.url},
-                callback=self.parse_product
-            )
+        yield self.parse_pagination(response)
         for i in range(0, json.loads(response.text)['totalCount'], 24):
             yield scrapy.Request(
                 url=w3lib.url.add_or_replace_parameter(response.url, "offset", str(i)),
