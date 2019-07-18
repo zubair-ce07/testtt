@@ -100,15 +100,15 @@
         <ul class="nav sidebar-nav" id="main-menu"><!-- sidebar-nav-->
           <br><br><br><br>
           <li>
-              <a href="/"><i class = "fas fa-home"></i>Home</a>
+              <a href="{% url 'reservation-home' %}"><i class = "fas fa-home"></i>Home</a>
           </li>
 
           <li>
-              <a href="#"><i class="fa fa-users"></i>Customers</a>
+              <a href="{% url 'reservation-customers' %}"><i class="fa fa-users"></i>Customers</a>
           </li>
 
           <li>
-            <a href="/rooms"><i class="fas fa-bed"></i>Rooms</a>
+            <a href="{% url 'reservation-rooms' %}"><i class="fas fa-bed"></i>Rooms</a>
           </li>
           
           <li>
@@ -116,7 +116,7 @@
           </li>
 
           <li>
-            <a href="#"><i class="fa fa-money"></i>Reservations</a>
+            <a href="{% url 'reservation-reservations' %}"><i class="fa fa-money"></i>Reservations</a>
           </li>
 
           <li>

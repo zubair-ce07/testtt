@@ -1,0 +1,10 @@
+HOTEL RESERVATION SYSTEM REQUIREMENTS
+
+1) Admin should be able to manage rooms (add, update, remove, view).
+2) Admin should be able to manage employees (add, update, remove, view).
+3) Admin should be able to view monthly report (expenditures, earnings).
+4) Receptionist should be able to check room's availability.
+5) Receptionist should be able to reserve room for the customer.
+6) Receptionist should be able to view customers, rooms and reservations
+7) Receptionist should not be able to view reports.
+8) Receptionist should not be able to view staff information.

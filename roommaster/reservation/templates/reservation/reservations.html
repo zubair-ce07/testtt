@@ -1,0 +1,28 @@
+{% extends "reservation/basetable.html" %}
+{% block link %}
+  <a href="/admin/reservation/reservation" target="_blank">
+    <button class="btn btn-success">Update Record</button>
+  </a>
+{% endblock %}
+
+{% block view %}
+  <tr>
+    <th>Room</th>
+    <th>Name</th>
+    <th>CNIC</th>
+    <th>Rent</th>
+    <th>Check-in</th>
+    <th>Check-out</th>
+  </tr>
+
+  {% for reservation in reservations %}
+    <tr>
+      <td>{{ reservation.room }}</td>
+      <td>{{ reservation.customer.name }}</td>
+      <td>{{ reservation.customer }}</td>
+      <td>{{ reservation.rent }}</td>
+      <td>{{ reservation.checkin }}</td>
+      <td>{{ reservation.checkout }}</td>
+    </tr>
+  {% endfor %}
+{% endblock view %}

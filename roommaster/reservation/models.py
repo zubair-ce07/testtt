@@ -9,6 +9,9 @@ class Customer(models.Model):
     vehicle_no = models.CharField(max_length=15)
     address = models.TextField()
 
+    def __str__(self):
+        return self.cnic
+
 
 class Room(models.Model):
     room_no = models.PositiveIntegerField()
@@ -19,7 +22,7 @@ class Room(models.Model):
     floor = models.PositiveIntegerField()
 
     def __str__(self):
-        return f"Room {str(self.room_no)}"
+        return str(self.room_no)
 
 
 class Reservation(models.Model):
