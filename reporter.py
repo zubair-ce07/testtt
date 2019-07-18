@@ -55,7 +55,6 @@ def print_chart(data):
                   + ' {}C\n '.format(i.highest_temp) +
                   low * i.lowest_temp
                   + ' {}C'.format(i.lowest_temp))
-    print()
 
 
 def bonus_task(data):
@@ -63,4 +62,4 @@ def bonus_task(data):
         if isinstance(i.highest_temp, int):
             print('{} '.format(i.date.day) + low * i.lowest_temp
                   + high * i.highest_temp + ' {}C - {}C'.format(i.lowest_temp, i.highest_temp))
-    print()
+ 
