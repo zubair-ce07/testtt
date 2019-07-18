@@ -19,10 +19,10 @@ class FilaParseSpider(Mixin, BaseParseSpider):
     name = Mixin.retailer + '-parse'
 
     raw_description_css = '.product_desc_div ::text'
+    price_css = '[itemprop="priceCurrency"]::attr(content)'
 
     def parse(self, response):
-        sku_id = self.product_id(response)
-        garment = self.new_unique_garment(sku_id)
+        garment = self.new_unique_garment(self.product_id(response))
 
         if not garment:
             return
@@ -31,7 +31,7 @@ class FilaParseSpider(Mixin, BaseParseSpider):
 
         garment['image_urls'] = self.image_urls(response)
         garment['gender'] = self.product_gender(response)
-        garment["skus"] = self.skus(response)
+        garment['skus'] = self.skus(response)
 
         return garment
 
@@ -46,31 +46,26 @@ class FilaParseSpider(Mixin, BaseParseSpider):
         return clean(response.css('.gallery_zoom_full_view img::attr(src)'))
 
     def product_gender(self, response):
-        crawl_trail = response.meta.get('trail') or []
-        trail = soupify([f'{cat} {url}' for cat, url in crawl_trail])
+        trail = soupify([f'{cat} {url}' for cat, url in response.meta.get('trail', [])])
 
         return self.gender_lookup(trail) or Gender.ADULTS.value
 
     def product_category(self, response):
-        crawl_trail = response.meta.get('trail') or []
-        return clean([category for category, _ in crawl_trail])
+        return clean([category for category, _ in response.meta.get('trail') or []])
 
     def skus(self, response):
         skus = {}
 
-        stock_info = self.available_stock_info(response)
-        product_stock = self.magento_product_data(response, 'spConfig', 'spConfig":\s({.*})')
+        raw_stock = self.available_raw_stock(response)
+        raw_products = self.magento_product_data(response, 'spConfig', 'spConfig":\s({.*})')
 
-        raw_currency = clean(response.css('[itemprop="priceCurrency"]::attr(content)'))
+        for sku_id, raw_sku in self.magento_product_map(raw_products).items():
+            raw_prices = [price.get('amount') for price in raw_sku[0]['prices'].values() if price]
 
-        for sku_id, raw_sku in self.magento_product_map(product_stock).items():
-            raw_prices = raw_currency.copy()
-            raw_prices += [price.get('amount') for price in raw_sku[0]['prices'].values() if price]
-
-            sku = self.product_pricing_common(None, money_strs=raw_prices)
+            sku = self.product_pricing_common(response, money_strs=raw_prices)
             sku['size'] = clean(raw_sku[0]['label'])
 
-            if not stock_info.get(raw_sku[0]['id'], {}).get('is_in_stock'):
+            if not raw_stock.get(raw_sku[0]['id'], {}).get('is_in_stock'):
                 sku['out_of_stock'] = True
 
             skus[sku_id] = sku
@@ -78,7 +73,7 @@ class FilaParseSpider(Mixin, BaseParseSpider):
         return skus
 
 
-    def available_stock_info(self, response):
+    def available_raw_stock(self, response):
         css = 'script:contains("amstockstatusRenderer")::text'
         stock_info = json.loads(response.css(css).re_first('.*?(\{.*\})'))
 
@@ -89,10 +84,10 @@ class FilaCrawlSpider(Mixin, BaseCrawlSpider):
     name = Mixin.retailer + '-crawl'
     parse_spider = FilaParseSpider()
 
-    listing_css = ['.subnav-column:not(.heading)']
-    product_css = '.product-item-name'
+    listings_css = ['.subnav-column:not(.heading)']
+    products_css = ['.product-item-name']
 
     rules = (
-        Rule(LinkExtractor(restrict_css=listing_css), callback='parse'),
-        Rule(LinkExtractor(restrict_css=product_css), callback='parse_item'),
+        Rule(LinkExtractor(restrict_css=listings_css), callback='parse'),
+        Rule(LinkExtractor(restrict_css=products_css), callback='parse_item'),
     )
