@@ -6,7 +6,8 @@ const COUNTRY_ELEMENT = document.getElementById("countrySelector"),
       ASYNC_API_CALL = true,
       API_REQUEST_SUCCESSFUL = 200,
       REQ_METHOD = "GET",
-      RES_TYPE = "json"
+      RES_TYPE = "json",
+      USER_CARDS_PER_ROW = 4
 
 
 function validateGithubAPIArgs() {
@@ -70,24 +71,22 @@ function fetchUsers(country, language, criteria) {
 function onloadFunc() {
     if (this.status == API_REQUEST_SUCCESSFUL) {
 
-        // remove nodes from last request
-        var displayNode = document.getElementById("disp");
-        while (displayNode.firstChild) {
-            displayNode.removeChild(displayNode.firstChild);
+        var mainDisplayElement = document.getElementById("disp");
+
+        while (mainDisplayElement.firstChild) {
+            mainDisplayElement.removeChild(mainDisplayElement.firstChild);
         }
 
-        makeElementVisible(displayNode);
+        makeElementVisible(mainDisplayElement);
         
-        // create heading to show on top on cards jumbotron
         let heading = createHTMLElement("h2", 
                                         {"textAlign": "center", "paddingBottom": "50px"}, 
                                         `By ${CRITERIA_ELEMENT.value.toUpperCase()}: Top 
                                          ${NUMBER_OF_USERS_DISPLAYED}/${this.response["total_count"]} 
                                          users in <u>${COUNTRY_ELEMENT.value.toUpperCase()}</u>, who work in 
                                          <i>${LANGUAGE_ELEMENT.value.toUpperCase()}</i>`)
-        displayNode.appendChild(heading)
+        mainDisplayElement.appendChild(heading)
 
-        // make all the cards from received JSON
         let cards = []
         this.response["items"].forEach((singleUser, index) => {
             let login = singleUser["login"],
@@ -102,35 +101,20 @@ function onloadFunc() {
         })
 
 
-        // make rows of 4 cards each and siplay on screen
-        for(let i = 0; i < cards.length - cards.length % 4; i = i + 4) {
+        // make rows of USER_CARDS_PER_ROW cards each and siplay on screen
+        for(let i = 0; i < cards.length; i = i + USER_CARDS_PER_ROW) {
             let cardDeck = document.createElement("div");
             cardDeck.className = "card-deck"
-            cardDeck.innerHTML = cards[i].innerHTML + cards[i+1].innerHTML + cards[i+2].innerHTML + cards[i+3].innerHTML
-            displayNode.appendChild(cardDeck)
+            let remainingCards = i + USER_CARDS_PER_ROW <= cards.length ? USER_CARDS_PER_ROW : cards.length % USER_CARDS_PER_ROW
+            for(let j = i; j < i + remainingCards; j++) {
+                cardDeck.innerHTML += cards[j].innerHTML
+            }
+            mainDisplayElement.appendChild(cardDeck)
         }
-        
-        // handle the remaining less than 4 cards for last row
-        var lastDeck = document.createElement("div");
-        lastDeck.className = "card-deck"
-        switch(cards.length % 4) {
-            case 1:
-                lastDeck.innerHTML = cards[cards.length - cards.length % 4].innerHTML
-                break;
-            case 2:
-                lastDeck.innerHTML = cards[cards.length - cards.length % 4].innerHTML + cards[cards.length - cards.length % 4 + 1].innerHTML
-                break;
-            case 3:
-                lastDeck.innerHTML = cards[cards.length - cards.length % 4].innerHTML + cards[cards.length - cards.length % 4 + 1].innerHTML + cards[cards.length - cards.length % 4 + 2].innerHTML
-                break;
-            default:
-                console.log(cards.length % 4)
-        }
-        displayNode.appendChild(lastDeck)
 
         let endText = createHTMLElement("h4", 
                                         {"textAlign": "center", "marginTop": "50px"},
                                         `... End of Results ...`)
-        displayNode.appendChild(endText)
+        mainDisplayElement.appendChild(endText)
     }
 }

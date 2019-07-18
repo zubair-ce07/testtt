@@ -1,9 +1,11 @@
-const NUMBER_OF_USERS_DISPLAYED = 8,
+const NUMBER_OF_USERS_DISPLAYED = 12,
       API_BASE_URL = "https://api.github.com/",
       ASYNC_API_CALL = true,
       API_REQUEST_SUCCESSFUL = 200,
       REQ_METHOD = "GET",
-      USERNAME = new URL(window.location).searchParams.get("login");
+      USERNAME = new URL(window.location).searchParams.get("login"),
+      USER_CARDS_PER_ROW = 4,
+      REPO_CARDS_PER_ROW = 2
       
 
 
@@ -60,8 +62,8 @@ function onloadUserInfo() {
 
 function onloadUserFollowers() {
     if (this.status == API_REQUEST_SUCCESSFUL) {
-        let displayNode = document.getElementById("display-followers");
-        displayUsers(displayNode, this.response)
+        let mainDisplayElement = document.getElementById("display-followers");
+        displayUsers(mainDisplayElement, this.response)
     }
 
     fixButtonHref("display-followers-button", "followers")
@@ -71,8 +73,8 @@ function onloadUserFollowers() {
 function onloadUserFollowing() {
     if (this.status == API_REQUEST_SUCCESSFUL) {
 
-        let displayNode = document.getElementById("display-following");
-        displayUsers(displayNode, this.response)
+        let mainDisplayElement = document.getElementById("display-following");
+        displayUsers(mainDisplayElement, this.response)
     }
 
     fixButtonHref("display-following-button", "following")
@@ -82,7 +84,7 @@ function onloadUserFollowing() {
 function onloadUserRepos() {
     if (this.status == API_REQUEST_SUCCESSFUL) {
 
-        let displayNode = document.getElementById("display-repositories");
+        let mainDisplayElement = document.getElementById("display-repositories");
         let repoCardsList = []
 
         this.response.forEach((repo) => {
@@ -100,23 +102,16 @@ function onloadUserRepos() {
                                                 repoCardsList.push(userCard)
         })
 
-        for(let i = 0; i < repoCardsList.length - repoCardsList.length % 2; i = i + 2) {
+
+        for(let i = 0; i < repoCardsList.length; i = i + REPO_CARDS_PER_ROW) {
             let cardDeck = document.createElement("div");
             cardDeck.className = "card-deck"
-            cardDeck.innerHTML = repoCardsList[i].innerHTML + repoCardsList[i+1].innerHTML
-            displayNode.appendChild(cardDeck)
+            let remainingCards = i + REPO_CARDS_PER_ROW <= repoCardsList.length ? REPO_CARDS_PER_ROW : repoCardsList.length % REPO_CARDS_PER_ROW
+            for(let j = i; j < i + remainingCards; j++) {
+                cardDeck.innerHTML += repoCardsList[j].innerHTML
+            }
+            mainDisplayElement.appendChild(cardDeck)
         }
-        
-        var lastDeck = document.createElement("div");
-        lastDeck.className = "card-deck"
-
-        switch(repoCardsList.length % 2) {
-            case 1:
-                lastDeck.innerHTML = repoCardsList[repoCardsList.length - repoCardsList.length % 2].innerHTML
-                break;
-        }    
-
-        displayNode.appendChild(lastDeck)
     }
 
     fixButtonHref("display-repositories-button", "")
@@ -177,7 +172,7 @@ function fetchRepos() {
 
 
 // displays followers/following profiles in cards
-function displayUsers(displayNode, apiCallResult) {
+function displayUsers(mainDisplayElement, apiCallResult) {
     let cards = []
 
     apiCallResult.forEach((singleUser, index) => {
@@ -192,29 +187,15 @@ function displayUsers(displayNode, apiCallResult) {
         cards.push(userCard)
     })
 
-    for(let i = 0; i < cards.length - cards.length % 4; i = i + 4) {
+    for(let i = 0; i < cards.length; i = i + USER_CARDS_PER_ROW) {
         let cardDeck = document.createElement("div");
         cardDeck.className = "card-deck"
-        cardDeck.innerHTML = cards[i].innerHTML + cards[i+1].innerHTML + cards[i+2].innerHTML + cards[i+3].innerHTML
-        displayNode.appendChild(cardDeck)
+        let remainingCards = i + USER_CARDS_PER_ROW <= cards.length ? USER_CARDS_PER_ROW : cards.length % USER_CARDS_PER_ROW
+        for(let j = i; j < i + remainingCards; j++) {
+            cardDeck.innerHTML += cards[j].innerHTML
+        }
+        mainDisplayElement.appendChild(cardDeck)
     }
-    
-    var lastDeck = document.createElement("div");
-    lastDeck.className = "card-deck"
-
-    switch(cards.length % 4) {
-        case 1:
-            lastDeck.innerHTML = cards[cards.length - cards.length % 4].innerHTML
-            break;
-        case 2:
-            lastDeck.innerHTML = cards[cards.length - cards.length % 4].innerHTML + cards[cards.length - cards.length % 4 + 1].innerHTML
-            break;
-        case 3:
-            lastDeck.innerHTML = cards[cards.length - cards.length % 4].innerHTML + cards[cards.length - cards.length % 4 + 1].innerHTML + cards[cards.length - cards.length % 4 + 2].innerHTML
-            break;
-    }    
-
-    displayNode.appendChild(lastDeck)
 }
 
 
