@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-from .models import Room, Customer, Employee, Reservation
+from reservation.models import Room, Customer, Employee, Reservation
 
 
 def home(request):
@@ -8,32 +8,16 @@ def home(request):
 
 
 def rooms(request):
-    rooms = {
-        'rooms': Room.objects.all(),
-        'length': len(Room.objects.all())
-    }
-    return render(request, 'reservation/rooms.html', rooms)
+    return render(request, 'reservation/rooms.html', {'rooms': Room.objects.all()})
 
 
 def customers(request):
-    customers = {
-        'customers': Customer.objects.all(),
-        'length': len(Customer.objects.all())
-    }
-    return render(request, 'reservation/customers.html', customers)
+    return render(request, 'reservation/customers.html',  {'customers': Customer.objects.all()})
 
 
 def employees(request):
-    employees = {
-        'employees': Employee.objects.all(),
-        'length': len(Employee.objects.all())
-    }
-    return render(request, 'reservation/employees.html', employees)
+    return render(request, 'reservation/employees.html', {'employees': Employee.objects.all()})
 
 
 def reservations(request):
-    reservations = {
-        'reservations': Reservation.objects.all(),
-        'length': len(Reservation.objects.all())
-    }
-    return render(request, "reservation/reservations.html", reservations)
+    return render(request, "reservation/reservations.html", {'reservations': Reservation.objects.all()})

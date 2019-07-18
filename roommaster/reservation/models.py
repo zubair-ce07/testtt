@@ -1,4 +1,12 @@
 from django.db import models
+from django.core.validators import MinValueValidator
+
+
+categories = (
+    ("General", "General"),
+    ("Family", "Family"),
+    ("Suite", "Suite")
+)
 
 
 class Customer(models.Model):
@@ -17,8 +25,8 @@ class Room(models.Model):
     room_no = models.PositiveIntegerField()
     min_rent = models.DecimalField(decimal_places=2, max_digits=15)
     max_rent = models.DecimalField(decimal_places=2, max_digits=15)
-    capacity = models.PositiveSmallIntegerField()
-    category = models.CharField(max_length=50)
+    capacity = models.PositiveSmallIntegerField(validators=[MinValueValidator(1)])
+    category = models.CharField(max_length=10, choices=categories, default="General")
     floor = models.PositiveIntegerField()
 
     def __str__(self):

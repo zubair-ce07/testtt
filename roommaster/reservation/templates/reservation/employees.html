@@ -1,0 +1,30 @@
+{% extends "reservation/basetable.html" %}
+{% block link %}
+  <a href="/admin/reservation/employee" target="_blank">
+    <button class="btn btn-success">Update Record</button>
+  </a>
+{% endblock %}
+
+{% block view %}
+  <tr>
+    <th>Name</th>
+    <th>CNIC</th>
+    <th>Designation</th>
+    <th>DOB</th>
+    <th>Email</th>
+    <th>Phone no</th>
+    <th>Salary</th>
+  </tr>
+
+  {% for employee in employees %}
+    <tr>
+      <td>{{ employee.name }}</td>
+      <td>{{ employee.cnic }}</td>
+      <td>{{ employee.designation }}</td>
+      <td>{{ employee.dob }}</td>
+      <td>{{ employee.email }}</td>
+      <td>{{ employee.phone_no }}</td>
+      <td>{{ employee.salary }}</td>
+    </tr>
+  {% endfor %}
+{% endblock view %}
