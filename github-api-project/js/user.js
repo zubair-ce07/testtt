@@ -5,8 +5,16 @@ const NUMBER_OF_USERS_DISPLAYED = 12,
       REQ_METHOD = "GET",
       USERNAME = new URL(window.location).searchParams.get("login"),
       USER_CARDS_PER_ROW = 4,
-      REPO_CARDS_PER_ROW = 2
-      
+      REPO_CARDS_PER_ROW = 2,
+      TABBED_PROFILE_ELEMENT = document.getElementById("user-profile-page"),
+      HOME_TAB = "#home",
+      FOLLOWERS_TAB = "#followers",
+      FOLLOWING_TAB = "#following",
+      REPOS_TAB = "#repositories",
+      JSON_NULL = "-",
+      EMPTY_STRING = "",
+      RES_TYPE = "json"
+
 let previousTab = null
 
 
@@ -23,34 +31,46 @@ if(USERNAME != null){
 
 
 function emptyTab(tabID) {
-    var tabElement = document.getElementById('display-' + tabID);
+    if(tabID != 'home') {
+        var tabElement = document.getElementById('display-' + tabID);
 
-    while (tabElement.firstChild) {
-        tabElement.removeChild(tabElement.firstChild);
+        while (tabElement.firstChild) {
+            tabElement.removeChild(tabElement.firstChild);
+        }
     }
 }
 
 
-document.getElementById("user-profile-page").addEventListener("click", (event) => {
-    if(event.target.getAttribute("href") == "#home" && previousTab != "#home") {
-        emptyTab("home")
-        fetchUser()
-    } else if(event.target.getAttribute("href") == "#followers" && previousTab != "#followers") {
-        emptyTab("followers")
-        fetchFollowers()
-    } else if(event.target.getAttribute("href") == "#following" && previousTab != "#following") {
-        emptyTab("following")
-        fetchFollowing()
-    } else if(event.target.getAttribute("href") == "#repositories" && previousTab != "#repositories") {
-        emptyTab("repositories")
-        fetchRepos()
+TABBED_PROFILE_ELEMENT.addEventListener("click", (event) => {
+    const targetTab = event.target.getAttribute("href")
+
+    if(previousTab != targetTab && targetTab != null) {
+        let tabIdWithoutHashTag = targetTab.split('#')[1]
+        emptyTab(tabIdWithoutHashTag)
+        previousTab = targetTab
+
+        if(targetTab == HOME_TAB) {
+            fetchUser()
+        } else if(targetTab == FOLLOWERS_TAB) {
+            fetchFollowers()
+        } else if(targetTab == FOLLOWING_TAB) {
+            fetchFollowing()
+        } else if(targetTab == REPOS_TAB) {
+            fetchRepos()
+        }
     }
-    previousTab = event.target.getAttribute("href")
 })
+
 
 function modifyHTMLElement(elementID, elementAttribute, newValue) {
     document.getElementById(elementID)[elementAttribute] = newValue
 }
+
+
+function formatUserBlogInfo(userBlog){
+    return `<a target="__blank" href=${userBlog}> ${userBlog} </a>`
+}
+
 
 function onloadUserInfo() {
     let userInfo = this.response,
@@ -61,11 +81,11 @@ function onloadUserInfo() {
         modifyHTMLElement("github-url", "href", userInfo["html_url"])
         modifyHTMLElement("github-url", "target", "__blank")
         modifyHTMLElement("real-name", "innerText", userInfo["name"])
-        modifyHTMLElement("user-location", "innerText", userInfo["location"] ? userInfo["location"] : "-")
-        modifyHTMLElement("user-company", "innerText", userInfo["company"] ? userInfo["company"] : "-")
-        modifyHTMLElement("user-bio", "innerText", userInfo["bio"] ? userInfo["bio"] : "")
+        modifyHTMLElement("user-location", "innerText", userInfo["location"] ? userInfo["location"] : JSON_NULL)
+        modifyHTMLElement("user-company", "innerText", userInfo["company"] ? userInfo["company"] : JSON_NULL)
+        modifyHTMLElement("user-bio", "innerText", userInfo["bio"] ? userInfo["bio"] : EMPTY_STRING)
         modifyHTMLElement("user-joined", "innerText", `${userJoinedDate.getDay()}/${userJoinedDate.getMonth()}/${userJoinedDate.getFullYear()}`)
-        modifyHTMLElement("user-blog", "innerHTML", userInfo["blog"] ? `<a target="__blank" href=${userInfo["blog"]}> ${userInfo["blog"]} </a>` : "-")
+        modifyHTMLElement("user-blog", "innerHTML", userInfo["blog"] ? formatUserBlogInfo(userInfo["blog"]) : JSON_NULL)
         modifyHTMLElement("user-followers-badge", "innerText", userInfo["followers"])
         modifyHTMLElement("user-following-badge", "innerText", userInfo["following"])
         modifyHTMLElement("user-repos-badge", "innerText", userInfo["public_repos"])
@@ -101,7 +121,7 @@ function onloadUserRepos() {
         let repoCardsList = []
 
         this.response.forEach((repo) => {
-            userCard = createRepoCard(repo["name"],
+            userCard = createOneRepoCard(repo["name"],
                                       repo["description"] ? repo["description"] : "<span class='text-warning text-center'> No Description Available </span>",
                                       new Date(repo["created_at"]).toDateString(),
                                       new Date(repo["updated_at"]).toDateString(),
@@ -127,108 +147,92 @@ function onloadUserRepos() {
         }
     }
 
-    fixButtonHref("display-repositories-button", "")
+    fixButtonHref("display-repositories-button", EMPTY_STRING)
+}
+
+
+function githubAPICaller(query, onloadFunction) {
+    let clientRequest = new XMLHttpRequest()
+
+    clientRequest.open(REQ_METHOD, query, ASYNC_API_CALL)
+    clientRequest.responseType = RES_TYPE
+    clientRequest.onload = onloadFunction;
+    clientRequest.send()
 }
 
 
 function fetchUser(){
     const QUERY = `${API_BASE_URL}users/${USERNAME}`
-    console.log(QUERY)
-
-    let clientRequest = new XMLHttpRequest()
-
-    clientRequest.open(REQ_METHOD, QUERY, ASYNC_API_CALL)
-    clientRequest.responseType = "json"
-    clientRequest.onload = onloadUserInfo;
-
-    clientRequest.send()
+    githubAPICaller(QUERY, onloadUserInfo)
 }
 
 
 function fetchFollowers() {
     let QUERY = `${API_BASE_URL}users/${USERNAME}/followers?per_page=${NUMBER_OF_USERS_DISPLAYED}`
-
-    let clientRequest = new XMLHttpRequest()
-
-    clientRequest.responseType = "json"
-    clientRequest.onload = onloadUserFollowers
-
-    clientRequest.open(REQ_METHOD, QUERY, ASYNC_API_CALL)
-    clientRequest.send()
+    githubAPICaller(QUERY, onloadUserFollowers)
 }
 
 
 function fetchFollowing() {
     let QUERY = `${API_BASE_URL}users/${USERNAME}/following?per_page=${NUMBER_OF_USERS_DISPLAYED}`
-
-    let clientRequest = new XMLHttpRequest()
-
-    clientRequest.responseType = "json"
-    clientRequest.onload = onloadUserFollowing
-    
-    clientRequest.open(REQ_METHOD, QUERY, ASYNC_API_CALL)
-    clientRequest.send()
+    githubAPICaller(QUERY, onloadUserFollowing)
 }
 
 
 function fetchRepos() {
     let QUERY = `${API_BASE_URL}users/${USERNAME}/repos?per_page=${NUMBER_OF_USERS_DISPLAYED}`
-    
-    let clientRequest = new XMLHttpRequest()
-
-    clientRequest.responseType = "json"
-    clientRequest.onload = onloadUserRepos
-
-    clientRequest.open(REQ_METHOD, QUERY, ASYNC_API_CALL)
-    clientRequest.send()
+    githubAPICaller(QUERY, onloadUserRepos)
 }
 
 
 function displayUsers(mainDisplayElement, apiCallResult) {
-    let cards = []
+    let userCards = []
 
     apiCallResult.forEach((singleUser, index) => {
-        let login = singleUser["login"],
+        let username = singleUser["login"],
             id = singleUser["id"],
             avatarURL = singleUser["avatar_url"],
             githubURL = singleUser["html_url"],
             apiURL = singleUser["url"]
 
-        cards.push(createUserCard(index + 1, login, id, avatarURL, githubURL, apiURL))
+            userCards.push(createOneUserCard(index + 1, username, id, avatarURL, githubURL, apiURL))
     })
 
-    for(let i = 0; i < cards.length; i = i + USER_CARDS_PER_ROW) {
+    for(let i = 0; i < userCards.length; i = i + USER_CARDS_PER_ROW) {
         let cardDeck = document.createElement("div");
+        let remainingCards = i + USER_CARDS_PER_ROW <= userCards.length ? USER_CARDS_PER_ROW : userCards.length % USER_CARDS_PER_ROW
         cardDeck.className = "card-deck"
-        let remainingCards = i + USER_CARDS_PER_ROW <= cards.length ? USER_CARDS_PER_ROW : cards.length % USER_CARDS_PER_ROW
+
         for(let j = i; j < i + remainingCards; j++) {
-            cardDeck.appendChild(cards[j])
+            cardDeck.appendChild(userCards[j])
         }
+
         mainDisplayElement.appendChild(cardDeck)
     }
 }
 
 
-function createUserCard(number, login, id, avatar_url, github_url) {
+function createOneUserCard(number, username, id, avatar_url, github_url) {
     let userCard = document.createElement('div')
     userCard.className= "card text-white bg-secondary mb-3 border-success"
     userCard.style = "width: 18rem;"
+
     userCard.innerHTML = `<div class="card-header text-bold">${number}</div>
                             <img class="card-img-top" src="${avatar_url}" alt="Card image cap">
 
                             <div class="card-body">
-                                <h5 class="card-title text-center">${login}</h5>
+                                <h5 class="card-title text-center">${username}</h5>
                             </div>
 
                             <div class="card-footer bg-secondary text-center">
-                                <a href="user.html?login=${login}" class="btn btn-success">View Profile</a>
+                                <a href="user.html?login=${username}" class="btn btn-success">View Profile</a>
                             </div>
                         </div>`
     return userCard
 }
 
 
-function createRepoCard(repoName, repoDescription, repoCreated, repoUpdated, repoWatchers, repoLanguage, repoForks, repoIssuesCount, repoLicense, repoURL){
+function createOneRepoCard(repoName, repoDescription, repoCreated, repoUpdated, repoWatchers, repoLanguage, repoForks, repoIssuesCount, repoLicense, repoURL){
     let repoCard = document.createElement('div')
     repoCard.className= "card text-white bg-secondary mb-3 border-success"
     repoCard.style = "width: 18rem;"
