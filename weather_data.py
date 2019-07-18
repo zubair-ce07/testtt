@@ -2,7 +2,7 @@ import os
 from record import *
 import csv
 import calendar
-
+from datetime import datetime
 
 class FileReader:
     def __init__(self, file_path, year, month=None):
@@ -28,3 +28,4 @@ class FileReader:
                 for row in file_reader:
                     new_record = WeatherData(row)
                     self.records.append(new_record)
+
