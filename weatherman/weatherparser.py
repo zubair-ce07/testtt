@@ -11,8 +11,8 @@ class WeatherParser:
 
     def filtered_records(self, year=None, month=None):
         if month:
-            return [x for x in self._weather_records if x.pkt.year == year and x.pkt.month == month]
-        return [x for x in self._weather_records if x.pkt.year == year]
+            return [r for r in self._weather_records if r.pkt.year == year and r.pkt.month == month]
+        return [r for r in self._weather_records if r.pkt.year == year]
 
     def _parse_weather_records(self):
         file_names = glob.glob(f'{self.path}Murree_weather_*.txt')
