@@ -91,12 +91,12 @@ function onloadFunc() {
         this.response["items"].forEach((singleUser, index) => {
             let login = singleUser["login"],
                 id = singleUser["id"],
-                avatar_url = singleUser["avatar_url"],
-                github_url = singleUser["html_url"],
-                api_url = singleUser["url"]
+                avatarURL = singleUser["avatar_url"],
+                githubURL = singleUser["html_url"],
+                apiURL = singleUser["url"]
             
             let userCard = document.createElement("div");
-            userCard.innerHTML = createCard(index + 1, login, id, avatar_url, github_url, api_url);
+            userCard.innerHTML = createCard(index + 1, login, id, avatarURL, githubURL, apiURL);
             cards.push(userCard)
         })
 
