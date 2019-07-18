@@ -8,7 +8,22 @@ const COUNTRY_ELEMENT = document.getElementById("countrySelector"),
       REQ_METHOD = "GET",
       RES_TYPE = "json",
       USER_CARDS_PER_ROW = 4,
-      EMPTY_STRING = ""
+      EMPTY_STRING = "",
+      USER_API_RESP_STRUCT = {
+        username: "login",
+        githubID: "id",
+        avatarURL: "avatar_url",
+        githubURL: "html_url",
+        fullName: "name",
+        location: "location",
+        company: "company",
+        bio: "bio",
+        blogURL: "blog",
+        followersURL: "followers",
+        followingURL: "following",
+        reposURL: "public_repos",
+        joinedAt: "created_at"
+      }
 
 
 document.getElementById("argumentHandler").addEventListener("change", (event) => {
@@ -47,7 +62,7 @@ function userInfoOnLoad() {
         var mainDisplayElement = document.getElementById("disp");
 
         removeAllChildren("disp")
-        removeCustomStyle("disp");
+        removeCustomStyle(mainDisplayElement);
         
         let heading = createHTMLElement("h2", 
                                         {"textAlign": "center", "paddingBottom": "50px"}, 
@@ -58,13 +73,7 @@ function userInfoOnLoad() {
         mainDisplayElement.appendChild(heading)
         
         API_RESPONSE["items"].forEach((singleUser, index) => {
-            let username = singleUser["login"],
-                id = singleUser["id"],
-                avatarURL = singleUser["avatar_url"],
-                githubURL = singleUser["html_url"],
-                apiURL = singleUser["url"]
-
-            userCards.push(createOneUserCard(index + 1, username, id, avatarURL, githubURL, apiURL))
+            userCards.push(createOneUserCard(index + 1, singleUser[USER_API_RESP_STRUCT.username], singleUser[USER_API_RESP_STRUCT.githubID], singleUser[USER_API_RESP_STRUCT.avatarURL], singleUser[USER_API_RESP_STRUCT.githubURL]))
         })
 
         for(let i = 0; i < userCards.length; i = i + USER_CARDS_PER_ROW) {

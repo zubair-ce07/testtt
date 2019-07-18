@@ -13,7 +13,34 @@ const NUMBER_OF_USERS_DISPLAYED = 12,
       REPOS_TAB = "#repositories",
       JSON_NULL = "-",
       EMPTY_STRING = "",
-      RES_TYPE = "json"
+      RES_TYPE = "json",
+      USER_API_RESP_STRUCT = {
+        username: "login",
+        githubID: "id",
+        avatarURL: "avatar_url",
+        githubURL: "html_url",
+        fullName: "name",
+        location: "location",
+        company: "company",
+        bio: "bio",
+        blogURL: "blog",
+        followersURL: "followers",
+        followingURL: "following",
+        reposURL: "public_repos",
+        joinedAt: "created_at"
+      },
+      REPO_API_RESP_STRUCT = {
+        fullName: "name",
+        description: "description",
+        created: "created_at",
+        updated: "updated_at",
+        watchers: "watchers_count",
+        language: "language",
+        forks: "forks_count",
+        issues: "open_issues_count",
+        license: "license",
+        directURL: "html_url",
+      }
 
 let previousTab = null
 
@@ -80,21 +107,21 @@ function fetchRepos() {
 
 function onloadUserInfo() {
     let userInfo = this.response,
-        userJoinedDate = new Date(userInfo["created_at"]);
+        userJoinedDate = new Date(userInfo[USER_API_RESP_STRUCT.joinedAt]);
 
     if (this.status == API_REQUEST_SUCCESSFUL) {
-        modifyHTMLElement("avatar", "src", userInfo["avatar_url"])
-        modifyHTMLElement("github-url", "href", userInfo["html_url"])
+        modifyHTMLElement("avatar", "src", userInfo[USER_API_RESP_STRUCT.avatarURL])
+        modifyHTMLElement("github-url", "href", userInfo[USER_API_RESP_STRUCT.githubURL])
         modifyHTMLElement("github-url", "target", "__blank")
-        modifyHTMLElement("real-name", "innerText", userInfo["name"])
-        modifyHTMLElement("user-location", "innerText", userInfo["location"] ? userInfo["location"] : JSON_NULL)
-        modifyHTMLElement("user-company", "innerText", userInfo["company"] ? userInfo["company"] : JSON_NULL)
-        modifyHTMLElement("user-bio", "innerText", userInfo["bio"] ? userInfo["bio"] : EMPTY_STRING)
+        modifyHTMLElement("real-name", "innerText", userInfo[USER_API_RESP_STRUCT.fullName])
+        modifyHTMLElement("user-location", "innerText", userInfo[USER_API_RESP_STRUCT.location] ? userInfo[USER_API_RESP_STRUCT.location] : JSON_NULL)
+        modifyHTMLElement("user-company", "innerText", userInfo[USER_API_RESP_STRUCT.company] ? userInfo[USER_API_RESP_STRUCT.company] : JSON_NULL)
+        modifyHTMLElement("user-bio", "innerText", userInfo[USER_API_RESP_STRUCT.bio] ? userInfo[USER_API_RESP_STRUCT.bio] : EMPTY_STRING)
         modifyHTMLElement("user-joined", "innerText", `${userJoinedDate.getDay()}/${userJoinedDate.getMonth()}/${userJoinedDate.getFullYear()}`)
-        modifyHTMLElement("user-blog", "innerHTML", userInfo["blog"] ? formatUserBlogInfo(userInfo["blog"]) : JSON_NULL)
-        modifyHTMLElement("user-followers-badge", "innerText", userInfo["followers"])
-        modifyHTMLElement("user-following-badge", "innerText", userInfo["following"])
-        modifyHTMLElement("user-repos-badge", "innerText", userInfo["public_repos"])
+        modifyHTMLElement("user-blog", "innerHTML", userInfo[USER_API_RESP_STRUCT.blogURL] ? formatUserBlogInfo(userInfo[USER_API_RESP_STRUCT.blogURL]) : JSON_NULL)
+        modifyHTMLElement("user-followers-badge", "innerText", userInfo[USER_API_RESP_STRUCT.followersURL])
+        modifyHTMLElement("user-following-badge", "innerText", userInfo[USER_API_RESP_STRUCT.followingURL])
+        modifyHTMLElement("user-repos-badge", "innerText", userInfo[USER_API_RESP_STRUCT.reposURL])
     }
 }
 
@@ -127,16 +154,16 @@ function onloadUserRepos() {
         let repoCardsList = []
 
         this.response.forEach((repo) => {
-            userCard = createOneRepoCard(repo["name"],
-                                      repo["description"] ? repo["description"] : spanNullValue("No Description Available", "warning"),
-                                      new Date(repo["created_at"]).toDateString(),
-                                      new Date(repo["updated_at"]).toDateString(),
-                                      repo["watchers_count"],
-                                      repo["language"] ? repo["language"] : spanNullValue("Unknown", "danger"),
-                                      repo["forks_count"],
-                                      repo["open_issues_count"],
-                                      repo["license"] ? repo["license"]["name"] : spanNullValue("Unknown", "danger"),
-                                      repo["html_url"]);
+            userCard = createOneRepoCard(repo[REPO_API_RESP_STRUCT.fullName],
+                                      repo[REPO_API_RESP_STRUCT.description] ? repo[REPO_API_RESP_STRUCT.description] : spanNullValue("No Description Available", "warning"),
+                                      new Date(repo[REPO_API_RESP_STRUCT.created]).toDateString(),
+                                      new Date(repo[REPO_API_RESP_STRUCT.updated]).toDateString(),
+                                      repo[REPO_API_RESP_STRUCT.watchers],
+                                      repo[REPO_API_RESP_STRUCT.language] ? repo[REPO_API_RESP_STRUCT.language] : spanNullValue("Unknown", "danger"),
+                                      repo[REPO_API_RESP_STRUCT.forks],
+                                      repo[REPO_API_RESP_STRUCT.issues],
+                                      repo[REPO_API_RESP_STRUCT.license] ? repo[REPO_API_RESP_STRUCT.license]["name"] : spanNullValue("Unknown", "danger"),
+                                      repo[REPO_API_RESP_STRUCT.directURL]);
 
             repoCardsList.push(userCard)
         })
@@ -193,13 +220,7 @@ function displayUsers(mainDisplayElement, apiCallResult) {
     let userCards = []
 
     apiCallResult.forEach((singleUser, index) => {
-        let username = singleUser["login"],
-            id = singleUser["id"],
-            avatarURL = singleUser["avatar_url"],
-            githubURL = singleUser["html_url"],
-            apiURL = singleUser["url"]
-
-            userCards.push(createOneUserCard(index + 1, username, id, avatarURL, githubURL, apiURL))
+        userCards.push(createOneUserCard(index + 1, singleUser[USER_API_RESP_STRUCT.username], singleUser[USER_API_RESP_STRUCT.githubID], singleUser[USER_API_RESP_STRUCT.avatarURL], singleUser[USER_API_RESP_STRUCT.githubURL]))
     })
 
     for(let i = 0; i < userCards.length; i = i + USER_CARDS_PER_ROW) {
