@@ -9,7 +9,7 @@ class BeyondlimitsSpider(scrapy.Spider):
                   'https://www.beyondlimits.com/Sales/Women/']
 
     def get_product_name(self, response):
-        return response.css('header > h1::text').getall()
+        return response.css('header > h1::text').extract_first()
 
     def get_product_size(self, response):
         product_size = response.css('option::text').getall()
@@ -18,23 +18,32 @@ class BeyondlimitsSpider(scrapy.Spider):
         return product_size
 
     def get_product_gender(self, response):
-        return response.css('a > strong::text').getall()
+        return response.css('a > strong::text').extract_first()
 
     def get_product_description(self, response):
-        return response.css(' header > p::text').getall()
+        return response.css(' header > p::text').extract_first()
 
     def get_retailer_sku(self, response):
-        return response.css('header > small > span::text').getall()
+        return response.css('header > small > span::text').extract_first()
 
     def get_image_urls(self, response):
         product_images = response.css('ul a::attr(href)').extract()
         return [image for image in product_images if 'jpg' in image]
 
     def get_product_care(self, response):
-        return response.css('#description > ul > li::text').extract()
+        product_care = response.css('#description > ul > li::text').extract()
+        if product_care:
+            del[product_care[0]]
+        return product_care
+
+    def get_product_color(self, response):
+        product_color = response.css('#description > ul > li::text').extract_first()
+        if product_color:
+            filtered_color = product_color.split()
+            return filtered_color[1]
 
     def get_product_url(self, response):
-        return response.css('div > a.flag.en.selected::attr(href)').extract()
+        return response.css('div > a.flag.en.selected::attr(href)').extract_first()
 
     def get_language(self, response):
         return response.css('a.flag.en.selected::attr(title)').extract_first()
@@ -85,12 +94,13 @@ class BeyondlimitsSpider(scrapy.Spider):
             gender=self.get_product_gender(response),
             description=self.get_product_description(response),
             retailer_sku=self.get_retailer_sku(response),
-            image=self.get_image_urls(response),
+            image_urls=self.get_image_urls(response),
             care=self.get_product_care(response),
             lang=self.get_language(response),
             brand=self.get_product_brand(response),
-            category = self.get_product_category(response),
+            category=self.get_product_category(response),
             url=self.get_product_url(response),
+            color=self.get_product_color(response)
         )
 
         links = response.css('div.pictureBox.gridPicture.bb_product--imgwrap > a::attr(href)').getall()
