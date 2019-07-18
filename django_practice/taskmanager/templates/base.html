@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-{% load static from staticfiles %}
+{% load static %}
 <html lang="en">
 <head>
     <title>Task manager</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
-    {#    <link rel="stylesheet" type="text/css" href="{% static 'taskmanager/css/styles.css' %}">#}
+        <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
     {#    <script src="{% static 'taskmanager/js/scripts.js' %}"></script>#}
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
@@ -24,6 +24,7 @@
             {% if user.is_authenticated %}
 
                 <li class="nav-item"><a class="nav-link auth-link" href="{% url 'logout' %}">Logout</a></li>
+                <li class="nav-item"><a class="nav-link float-left" >Logged in: {{ user.username }}</a></li>
 
             {% else %}
 

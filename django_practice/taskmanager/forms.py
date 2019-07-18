@@ -4,7 +4,6 @@ from django.contrib.auth.models import User
 
 
 class TaskForm(forms.Form):
-    users = [(user.username, user.id) for user in User.objects.all()]
     title = forms.CharField(
         max_length=50,
         widget=forms.TextInput(attrs={
@@ -19,16 +18,14 @@ class TaskForm(forms.Form):
                 "placeholder": "Enter description!"
             })
     )
-    assignee = forms.CharField(
-        widget=forms.Select(choices=users)
-    )
+    assignee = forms.ModelChoiceField(queryset=User.objects.all())
     due_date = forms.DateField(
         widget=forms.SelectDateWidget()
     )
 
 
 class UserRegistrationForm(UserCreationForm):
-    field_order = ['email', 'first_name', 'last_name', 'username', 'password1', 'password2']
+    field_order = ['username', 'email', 'first_name', 'last_name', 'password1', 'password2']
     username = forms.CharField(
         max_length=50,
         label='Username:',
@@ -82,3 +79,9 @@ class UserRegistrationForm(UserCreationForm):
             "type": "password"
         })
     )
+
+    def clean(self):
+        cleaned_data = self.cleaned_data
+        email = cleaned_data.get("email")
+        if User.objects.get(email=email):
+            self.add_error(field='email', error='This email address already exists')

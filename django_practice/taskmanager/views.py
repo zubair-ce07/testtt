@@ -2,9 +2,7 @@ from __future__ import absolute_import
 
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
-from django.forms import forms
 from django.shortcuts import render, redirect
-
 from taskmanager.forms import TaskForm, UserRegistrationForm
 from taskmanager.models import Task
 
@@ -45,8 +43,8 @@ def create_task(request):
 
 def edit_task(request, pk):
     task = Task.objects.get(id=pk)
-    users = [user.username for user in User.objects.all()]
-
+    form = TaskForm(initial={'title': task.title, 'description': task.description, 'assignee': task.assignee,
+                             'due_date': task.due_date})
     if request.method == 'POST':
         form = TaskForm(request.POST)
         if form.is_valid():
@@ -60,8 +58,7 @@ def edit_task(request, pk):
             return redirect('task_index')
         return render(request, 'edit_task.html', {'task': task})
     context = {
-        'task': task,
-        'users': users
+        'form': form
     }
     return render(request, 'edit_task.html', context)
 
@@ -82,12 +79,18 @@ def register(request):
     if request.method == "POST":
         form = UserRegistrationForm(request.POST)
         if form.is_valid():
-            form.save()
             username = form.cleaned_data['username']
-            email = form.cleaned_data['email']
-            if User.objects.filter(email=email).exists():
-                raise forms.ValidationError("This email already used")
             password = form.cleaned_data['password1']
+            email = form.cleaned_data['email']
+            first_name = form.cleaned_data['first_name']
+            last_name = form.cleaned_data['last_name']
+            User(
+                username=username,
+                email=email,
+                first_name=first_name,
+                last_name=last_name,
+                password=password
+            ).save()
             user = authenticate(username=username, password=password)
             login(request, user)
             return redirect('task_index')
