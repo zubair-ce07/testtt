@@ -4,7 +4,9 @@ from . import views
 
 app_name = 'articles'
 urlpatterns = [
-    path('', views.index, name='index'),
-    path('add-post', views.PostForm.as_view(), name='add_post'),
-    path('<int:article_id>/', views.detail, name='detail')
+    path('', views.IndexView.as_view(), name='index'),
+    path('<int:pk>/', views.DetailView.as_view(), name='detail'),
+    path('add-post', views.ArticleForm.as_view(), name='add_article'),
+    path('add-author', views.AuthorForm.as_view(), name='add_author'),
+    path('add-website', views.WebsiteForm.as_view(), name='add_website'),
 ]

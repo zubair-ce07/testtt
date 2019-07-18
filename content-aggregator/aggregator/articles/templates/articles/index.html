@@ -8,19 +8,31 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel="stylesheet" type="text/css" href="{% static 'articles/css/materialize.min.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static 'articles/css/style.css' %}">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="{% static 'articles/js/jquery-3.4.1.js' %}"></script>
     <script src="{% static 'articles/js/materialize.min.js' %}"></script>
+    <script src="{% static 'articles/js/script.js' %}"></script>
     <title>Readers Haven</title>
 </head>
 
 <body>
-    <nav id="navbar"">
-        <div class=" nav-wrapper">
-        <a id="heading-text" href="#!" class="brand-logo center">Readers Haven</a>
-        <ul class="right hide-on-med-and-down">
-            <li><a href="/articles/add-post" class="waves-effect waves-light btn">Add Post</a></li>
-        </ul>
-        </div>
+    <ul id="dropdown1" class="dropdown-content">
+        <li><a href="/articles/add-post">Article</a></li>
+        <li><a href="/articles/add-author">Author</a></li>
+        <li><a href="/articles/add-website">Website</a></li>
+    </ul>
+    <div class="navbar-fixed">
+
+        <nav id="navbar"">
+            <div class=" nav-wrapper">
+            <a id="heading-text" href="#!" class="brand-logo center">Readers Haven</a>
+            <ul class="right hide-on-med-and-down">
+                <li><a id="heading-text" class="dropdown-trigger" href="#!" data-target="dropdown1">Add New<i
+                            class="material-icons right">arrow_drop_down</i></a></li>
+            </ul>
+    </div>
     </nav>
+    </div>
     <div class="container">
         <h3 id="heading-text" class="center">All your interests in one place!</h3>
         {% if recent_articles %}

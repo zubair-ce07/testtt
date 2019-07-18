@@ -12,3 +12,8 @@ document.addEventListener('DOMContentLoaded', function() {
     var elems = document.querySelectorAll('.timepicker');
     var instances = M.Timepicker.init(elems);
   });
+
+  $(document).ready(function(){
+    $(".dropdown-trigger").dropdown();
+  })
+  

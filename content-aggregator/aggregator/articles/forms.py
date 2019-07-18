@@ -1,9 +1,18 @@
 from django import forms
 
-from .models import Article
+from articles.models import Article, Author, Website
 
 class NewArticleForm(forms.ModelForm):
     class Meta:
         model = Article
-        fields = ['title', 'category', 'authors', 'website', 'image_url', 'content', 'publish_time', 'url']
+        fields = '__all__'
         
+class NewAuthorForm(forms.ModelForm):
+    class Meta:
+        model = Author
+        fields = '__all__'
+
+class NewWebsiteForm(forms.ModelForm):
+    class Meta:
+        model = Website
+        fields = '__all__'
