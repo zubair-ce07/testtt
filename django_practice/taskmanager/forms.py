@@ -1,3 +1,5 @@
+import datetime
+
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
@@ -20,7 +22,12 @@ class TaskForm(forms.Form):
     )
     assignee = forms.ModelChoiceField(queryset=User.objects.all())
     due_date = forms.DateField(
-        widget=forms.SelectDateWidget()
+        widget=forms.TextInput(attrs={
+            "class": "form-control",
+            "type": 'date',
+            "min": datetime.date.today(),
+            "value": datetime.date.today() + datetime.timedelta(days=7)
+        })
     )
 
 
@@ -55,7 +62,8 @@ class UserRegistrationForm(UserCreationForm):
         label="Email",
         widget=forms.TextInput(attrs={
             "class": "form-control",
-            "placeholder": "Email"
+            "placeholder": "Email",
+            "type": "email"
         })
     )
 
