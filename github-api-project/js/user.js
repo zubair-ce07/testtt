@@ -17,27 +17,9 @@ const NUMBER_OF_USERS_DISPLAYED = 12,
 
 let previousTab = null
 
-
-function fixButtonHref(buttonID, githubPage) {
-    document.getElementById(buttonID).href = `https://github.com/${USERNAME}/${githubPage}`;
-    document.getElementById(buttonID).target = "__blank";
-}
-
-
 if(USERNAME != null){
     document.getElementById("username").innerText = USERNAME
     fetchUser()
-}
-
-
-function emptyTab(tabID) {
-    if(tabID != 'home') {
-        var tabElement = document.getElementById('display-' + tabID);
-
-        while (tabElement.firstChild) {
-            tabElement.removeChild(tabElement.firstChild);
-        }
-    }
 }
 
 
@@ -45,7 +27,7 @@ TABBED_PROFILE_ELEMENT.addEventListener("click", (event) => {
     const targetTab = event.target.getAttribute("href")
 
     if(previousTab != targetTab && targetTab != null) {
-        let tabIdWithoutHashTag = targetTab.split('#')[1]
+        let tabIdWithoutHashTag = targetTab.split("#")[1]
         emptyTab(tabIdWithoutHashTag)
         previousTab = targetTab
 
@@ -62,13 +44,37 @@ TABBED_PROFILE_ELEMENT.addEventListener("click", (event) => {
 })
 
 
-function modifyHTMLElement(elementID, elementAttribute, newValue) {
-    document.getElementById(elementID)[elementAttribute] = newValue
+function githubAPICaller(query, onloadFunction) {
+    let clientRequest = new XMLHttpRequest()
+
+    clientRequest.open(REQ_METHOD, query, ASYNC_API_CALL)
+    clientRequest.responseType = RES_TYPE
+    clientRequest.onload = onloadFunction;
+    clientRequest.send()
 }
 
 
-function formatUserBlogInfo(userBlog){
-    return `<a target="__blank" href=${userBlog}> ${userBlog} </a>`
+function fetchUser(){
+    const QUERY = `${API_BASE_URL}users/${USERNAME}`
+    githubAPICaller(QUERY, onloadUserInfo)
+}
+
+
+function fetchFollowers() {
+    let QUERY = `${API_BASE_URL}users/${USERNAME}/followers?per_page=${NUMBER_OF_USERS_DISPLAYED}`
+    githubAPICaller(QUERY, onloadUserFollowers)
+}
+
+
+function fetchFollowing() {
+    let QUERY = `${API_BASE_URL}users/${USERNAME}/following?per_page=${NUMBER_OF_USERS_DISPLAYED}`
+    githubAPICaller(QUERY, onloadUserFollowing)
+}
+
+
+function fetchRepos() {
+    let QUERY = `${API_BASE_URL}users/${USERNAME}/repos?per_page=${NUMBER_OF_USERS_DISPLAYED}`
+    githubAPICaller(QUERY, onloadUserRepos)
 }
 
 
@@ -122,14 +128,14 @@ function onloadUserRepos() {
 
         this.response.forEach((repo) => {
             userCard = createOneRepoCard(repo["name"],
-                                      repo["description"] ? repo["description"] : "<span class='text-warning text-center'> No Description Available </span>",
+                                      repo["description"] ? repo["description"] : spanNullValue("No Description Available", "warning"),
                                       new Date(repo["created_at"]).toDateString(),
                                       new Date(repo["updated_at"]).toDateString(),
                                       repo["watchers_count"],
-                                      repo["language"] ? repo["language"] : `<span class="bg-danger"> unknown </span>`,
+                                      repo["language"] ? repo["language"] : spanNullValue("Unknown", "danger"),
                                       repo["forks_count"],
                                       repo["open_issues_count"],
-                                      repo["license"] ? repo["license"]["name"] : `<span class="bg-danger"> unknown </span>`,
+                                      repo["license"] ? repo["license"]["name"] : spanNullValue("Unknown", "danger"),
                                       repo["html_url"]);
 
             repoCardsList.push(userCard)
@@ -151,37 +157,35 @@ function onloadUserRepos() {
 }
 
 
-function githubAPICaller(query, onloadFunction) {
-    let clientRequest = new XMLHttpRequest()
-
-    clientRequest.open(REQ_METHOD, query, ASYNC_API_CALL)
-    clientRequest.responseType = RES_TYPE
-    clientRequest.onload = onloadFunction;
-    clientRequest.send()
+function fixButtonHref(buttonID, githubPage) {
+    document.getElementById(buttonID).href = `https://github.com/${USERNAME}/${githubPage}`;
+    document.getElementById(buttonID).target = "__blank";
 }
 
 
-function fetchUser(){
-    const QUERY = `${API_BASE_URL}users/${USERNAME}`
-    githubAPICaller(QUERY, onloadUserInfo)
+function emptyTab(tabID) {
+    if(tabID != "home") {
+        var tabElement = document.getElementById("display-" + tabID);
+
+        while (tabElement.firstChild) {
+            tabElement.removeChild(tabElement.firstChild);
+        }
+    }
 }
 
 
-function fetchFollowers() {
-    let QUERY = `${API_BASE_URL}users/${USERNAME}/followers?per_page=${NUMBER_OF_USERS_DISPLAYED}`
-    githubAPICaller(QUERY, onloadUserFollowers)
+function modifyHTMLElement(elementID, elementAttribute, newValue) {
+    document.getElementById(elementID)[elementAttribute] = newValue
 }
 
 
-function fetchFollowing() {
-    let QUERY = `${API_BASE_URL}users/${USERNAME}/following?per_page=${NUMBER_OF_USERS_DISPLAYED}`
-    githubAPICaller(QUERY, onloadUserFollowing)
+function formatUserBlogInfo(userBlog){
+    return `<a target="__blank" href=${userBlog}> ${userBlog} </a>`
 }
 
 
-function fetchRepos() {
-    let QUERY = `${API_BASE_URL}users/${USERNAME}/repos?per_page=${NUMBER_OF_USERS_DISPLAYED}`
-    githubAPICaller(QUERY, onloadUserRepos)
+function spanNullValue(nullReplacer, className) {
+    return `<span class="bg-${className} text-center"> ${nullReplacer} </span>`
 }
 
 
@@ -213,7 +217,7 @@ function displayUsers(mainDisplayElement, apiCallResult) {
 
 
 function createOneUserCard(number, username, id, avatar_url, github_url) {
-    let userCard = document.createElement('div')
+    let userCard = document.createElement("div")
     userCard.className= "card text-white bg-secondary mb-3 border-success"
     userCard.style = "width: 18rem;"
 
@@ -233,7 +237,7 @@ function createOneUserCard(number, username, id, avatar_url, github_url) {
 
 
 function createOneRepoCard(repoName, repoDescription, repoCreated, repoUpdated, repoWatchers, repoLanguage, repoForks, repoIssuesCount, repoLicense, repoURL){
-    let repoCard = document.createElement('div')
+    let repoCard = document.createElement("div")
     repoCard.className= "card text-white bg-secondary mb-3 border-success"
     repoCard.style = "width: 18rem;"
     

@@ -11,54 +11,11 @@ const COUNTRY_ELEMENT = document.getElementById("countrySelector"),
       EMPTY_STRING = ""
 
 
-function validateGithubAPIArgs() {
-    return (LANGUAGE_ELEMENT.value != EMPTY_STRING && CRITERIA_ELEMENT.value != EMPTY_STRING && COUNTRY_ELEMENT.value != EMPTY_STRING) ? ASYNC_API_CALL : false;
-}
-
-
-function createHTMLElement(elementType, elementStyleInfo, elementInnerHTML) {
-    let newElement = document.createElement(elementType);
-
-    for(eachAttribute in elementStyleInfo){
-        let attributeValue = elementStyleInfo[eachAttribute]
-        newElement.style[eachAttribute] = attributeValue;
-    }
-
-    newElement.innerHTML = elementInnerHTML;
-
-    return newElement;
-}
-
-
-function removeCustomStyle(displayElement) {
-    displayElement.style = EMPTY_STRING;
-}
-
-
 document.getElementById("argumentHandler").addEventListener("change", (event) => {
     if(validateGithubAPIArgs()) {
         fetchUsers(COUNTRY_ELEMENT.value, LANGUAGE_ELEMENT.value, CRITERIA_ELEMENT.value)
     }
 })
-
-
-function createOneUserCard(number, username, id, avatar_url, github_url) {
-    let userCard = document.createElement('div')
-    userCard.className= "card text-white bg-secondary mb-3 border-success"
-    userCard.style = "width: 18rem;"
-    userCard.innerHTML = `<div class="card-header text-bold">${number}</div>
-                            <img class="card-img-top" src="${avatar_url}" alt="Card image cap">
-
-                            <div class="card-body">
-                                <h5 class="card-title text-center">${username}</h5>
-                            </div>
-
-                            <div class="card-footer bg-secondary text-center">
-                                <a href="user.html?login=${username}" class="btn btn-success">View Profile</a>
-                            </div>
-                        </div>`
-    return userCard
-}
 
 
 function githubAPICaller(query, onloadFunction) {
@@ -77,11 +34,9 @@ function fetchUsers(country, language, criteria) {
     githubAPICaller(QUERY, userInfoOnLoad)
 }
 
-function removeAllChildren(elementID) {
-    var mainDisplayElement = document.getElementById(elementID);
-    while (mainDisplayElement.firstChild) {
-        mainDisplayElement.removeChild(mainDisplayElement.firstChild);
-    }
+
+function validateGithubAPIArgs() {
+    return (LANGUAGE_ELEMENT.value != EMPTY_STRING && CRITERIA_ELEMENT.value != EMPTY_STRING && COUNTRY_ELEMENT.value != EMPTY_STRING) ? ASYNC_API_CALL : false;
 }
 
 
@@ -89,9 +44,10 @@ function userInfoOnLoad() {
     if (this.status == API_REQUEST_SUCCESSFUL) {
         const API_RESPONSE = this.response
         let userCards = []
+        var mainDisplayElement = document.getElementById("disp");
 
         removeAllChildren("disp")
-        removeCustomStyle(mainDisplayElement);
+        removeCustomStyle("disp");
         
         let heading = createHTMLElement("h2", 
                                         {"textAlign": "center", "paddingBottom": "50px"}, 
@@ -127,5 +83,51 @@ function userInfoOnLoad() {
                                         {"textAlign": "center", "marginTop": "50px"},
                                         `... End of Results ...`)
         mainDisplayElement.appendChild(endText)
+    }
+}
+
+
+function createHTMLElement(elementType, elementStyleInfo, elementInnerHTML) {
+    let newElement = document.createElement(elementType);
+
+    for(eachAttribute in elementStyleInfo){
+        let attributeValue = elementStyleInfo[eachAttribute]
+        newElement.style[eachAttribute] = attributeValue;
+    }
+
+    newElement.innerHTML = elementInnerHTML;
+
+    return newElement;
+}
+
+
+function removeCustomStyle(mainDisplayElement) {
+    mainDisplayElement.style = EMPTY_STRING;
+}
+
+
+function createOneUserCard(number, username, id, avatar_url, github_url) {
+    let userCard = document.createElement('div')
+    userCard.className= "card text-white bg-secondary mb-3 border-success"
+    userCard.style = "width: 18rem;"
+    userCard.innerHTML = `<div class="card-header text-bold">${number}</div>
+                            <img class="card-img-top" src="${avatar_url}" alt="Card image cap">
+
+                            <div class="card-body">
+                                <h5 class="card-title text-center">${username}</h5>
+                            </div>
+
+                            <div class="card-footer bg-secondary text-center">
+                                <a href="user.html?login=${username}" class="btn btn-success">View Profile</a>
+                            </div>
+                        </div>`
+    return userCard
+}
+
+
+function removeAllChildren(elementID) {
+    var mainDisplayElement = document.getElementById(elementID);
+    while (mainDisplayElement.firstChild) {
+        mainDisplayElement.removeChild(mainDisplayElement.firstChild);
     }
 }
