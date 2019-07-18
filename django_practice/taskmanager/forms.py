@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 
 
 class TaskForm(forms.Form):
-    users = [(user.username, user.username) for user in User.objects.all()]
+    users = [(user.username, user.id) for user in User.objects.all()]
     title = forms.CharField(
         max_length=50,
         widget=forms.TextInput(attrs={

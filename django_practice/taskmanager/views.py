@@ -1,10 +1,12 @@
+from __future__ import absolute_import
+
 from django.contrib.auth import authenticate, login
-from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+from django.forms import forms
 from django.shortcuts import render, redirect
 
-from .forms import TaskForm, UserRegistrationForm
-from .models import Task
+from taskmanager.forms import TaskForm, UserRegistrationForm
+from taskmanager.models import Task
 
 
 def task_index(request):
@@ -82,9 +84,9 @@ def register(request):
         if form.is_valid():
             form.save()
             username = form.cleaned_data['username']
-            # email = form.cleaned_data['email']
-            # first_name = form.cleaned_data['first_name']
-            # last_name = form.cleaned_data['last_name']
+            email = form.cleaned_data['email']
+            if User.objects.filter(email=email).exists():
+                raise forms.ValidationError("This email already used")
             password = form.cleaned_data['password1']
             user = authenticate(username=username, password=password)
             login(request, user)

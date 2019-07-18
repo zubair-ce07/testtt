@@ -58,3 +58,6 @@ target/
 
 # VSCode
 .vscode
+
+# db stuff
+.sqlite
