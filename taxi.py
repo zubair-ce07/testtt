@@ -5,10 +5,14 @@ import psutil
 
 
 class TaxiMeterApp:
-    total_speed = wait_time = ride_time = total_distance = 0
+    total_speed = 0
+    wait_time = 0
+    ride_time = 0
+    total_distance = 0
     base_fare = 80
     total_fare = base_fare
     kilometer = 0
+
     def ride_fare_calculation(self):
         self.ride_time += 0.002
 
