@@ -22,12 +22,12 @@ if __name__ == "__main__":
     args = check_args()
     if args.e:
         for arguments in args.e:
-            outcome = DataCalculator().month_average(FileParser.file_reader(FileParser, args.file_path),arguments.date().year)
+            outcome = DataCalculator().get_max_min(FileParser.file_reader(FileParser, args.file_path),arguments.date().year)
             ReportGenerator().print_max_min(outcome)
 
     if args.a:
         for arguments in args.a:
-            outcome = DataCalculator().get_max_min(FileParser.file_reader(FileParser, args.file_path),arguments.date())
+            outcome = DataCalculator().month_average(FileParser.file_reader(FileParser, args.file_path),arguments.date())
             ReportGenerator().monthly_average(outcome)
 
     if args.c:
