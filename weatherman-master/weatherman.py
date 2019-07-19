@@ -225,5 +225,4 @@ def main():
         elif args.mode == '4':
                 part_four(args.year_date_str)
 
-
 main()
