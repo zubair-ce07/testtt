@@ -1,142 +1,123 @@
+{% extends 'articles/base.html' %}
 {% load static %}
 {% load materializecss %}
-<!DOCTYPE html>
-<html lang="en">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-rc.1/css/materialize.min.css"
+{% block imports %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-rc.1/css/materialize.min.css"
         integrity="sha256-qj3p6P1fJIV+Ndv7RW1ovZI2UhOuboj9GcODzcNFIN8=" crossorigin="anonymous" />
-
-    <link rel="stylesheet" type="text/css" href="{% static 'articles/css/style.css' %}">
-    <script src="https://code.jquery.com/jquery-3.3.1.min.js"
-        integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
-    <script src="{% static 'articles/js/materialize.min.js' %}"></script>
-
-    <link rel="stylesheet"
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"
+integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+<link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/jquery-datetimepicker/2.5.20/jquery.datetimepicker.min.css"
         integrity="sha256-DOS9W6NR+NFe1fUhEE0PGKY/fubbUCnOfTje2JMDw3Y=" crossorigin="anonymous" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-datetimepicker/2.5.20/jquery.datetimepicker.full.min.js"
-        integrity="sha256-FEqEelWI3WouFOo2VWP/uJfs1y8KJ++FLh2Lbqc8SJk=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-datetimepicker/2.5.20/jquery.datetimepicker.full.min.js"
+    integrity="sha256-FEqEelWI3WouFOo2VWP/uJfs1y8KJ++FLh2Lbqc8SJk=" crossorigin="anonymous"></script>
+{% endblock %}
 
-    <title>Add Article | Readers Haven</title>
-</head>
+{% block title %}
+Add Article | 
+{% endblock %}
 
-<body>
+{% block navbarbutton %}
+<li><a href="/" class="waves-effect waves-light btn">Back to Home</a></li>
+{% endblock %}
 
-    {% block javascript %}
+{% block javascript %}
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-rc.1/js/materialize.min.js"
-        integrity="sha256-SrBfGi+Zp2LhAvy9M1bWOCXztRU9Ztztxmu5BcYPcPE=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-rc.1/js/materialize.min.js"
+    integrity="sha256-SrBfGi+Zp2LhAvy9M1bWOCXztRU9Ztztxmu5BcYPcPE=" crossorigin="anonymous"></script>
+<script>
+    $(document).ready(function () {
 
-    <script>
-        $(document).ready(function () {
-
-            $('select').formSelect();
-            $(function () {
-                $("#id_publish_time").datetimepicker({
-                    format: 'Y-m-d H:i',
-                });
-                $("#id_publish_time").attr("autocomplete", "off")
+        $('select').formSelect();
+        $(function () {
+            $("#id_publish_time").datetimepicker({
+                format: 'Y-m-d H:i',
             });
+            $("#id_publish_time").attr("autocomplete", "off")
         });
-    </script>
+    });
+</script>
 
-    {% endblock javascript %}
+{% endblock javascript %}
 
-    <div class="navbar-fixed">
-        <nav id="navbar"">
-            <div class=" nav-wrapper">
-                <a id="heading-text" href="/" class="brand-logo center">Readers Haven</a>
-                <ul class="right hide-on-med-and-down">
-                    <li><a href="/" class="waves-effect waves-light btn">Back to Home</a></li>
-                </ul>
-            </div>
-        </nav>
-    </div>
-    <div class="container">
-        <br><br>
-        <h4>Add a new article to the collection</h4>
+{% block container %}
+<br><br>
+<h4>Add a new article to the collection</h4>
+<div class="row">
+    <form class="col s12" method="post">
+        {% csrf_token %}
         <div class="row">
-            <form class="col s12" method="post">
-                {% csrf_token %}
-                <div class="row">
-                    <div class="input-field col s6">
-                        {{ form.title|materializecss }}
-                        {% if form.title.errors %}
-                        {{ form.title.errors }}
-                        {% endif %}
-                    </div>
-                    <div class="input-field col s6">
-                        {{ form.category|materializecss }}
-                        {% if form.category.errors %}
-                        {{ form.category.errors }}
-                        {% endif %}
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="input-field col s4">
-                        {{ form.authors|materializecss }}
-                        {% if form.authors.errors %}
-                        {{ form.authors.errors }}
-                        {% endif %}
-                    </div>
-                    <div class="col s2">
-                        <br><br>
-                        <a href="/articles/add-author" class="btn waves-effect waves-light center">New author</a>
-                    </div>
-                    <div class="input-field col s4">
-                        {{ form.website|materializecss }}
-                        {% if form.website.errors %}
-                        {{ form.website.errors }}
-                        {% endif %}
-                    </div>
-                    <div class="col s2">
-                        <br><br>
-                        <a href="/articles/add-website" class="btn waves-effect waves-light center">New website</a>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="input-field col s6">
-                        {{ form.url|materializecss }}
-                        {% if form.url.errors %}
-                        {{ form.url.errors }}
-                        {% endif %}
-                    </div>
-                    <div class="input-field col s6">
-                        {{ form.image_url|materializecss }}
-                        {% if form.image_url.errors %}
-                        {{ form.image_url.errors }}
-                        {% endif %}
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="input-field col s12">
-                        {{ form.content|materializecss }}
-                        {% if form.content.errors %}
-                        {{ form.content.errors }}
-                        {% endif %}
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="input-field col s4">
-                        <label class="control-label">Publish date and time</label>
-                        {{ form.publish_time }}
-                        {% if form.publish_time.errors %}
-                        {{ form.publish_time.errors }}
-                        {% endif %}
-                    </div>
-                </div>
-                <center>
-                    <button type="submit" class="btn waves-effect btn-large btn-success">Submit</button>
-                </center>
-            </form>
-            <br>
+            <div class="input-field col s6">
+                {{ form.title|materializecss }}
+                {% if form.title.errors %}
+                {{ form.title.errors }}
+                {% endif %}
+            </div>
+            <div class="input-field col s6">
+                {{ form.category|materializecss }}
+                {% if form.category.errors %}
+                {{ form.category.errors }}
+                {% endif %}
+            </div>
         </div>
-    </div>
-</body>
-
-</html>
+        <div class="row">
+            <div class="input-field col s4">
+                {{ form.authors|materializecss }}
+                {% if form.authors.errors %}
+                {{ form.authors.errors }}
+                {% endif %}
+            </div>
+            <div class="col s2">
+                <br><br>
+                <a href="/articles/add-author" class="btn waves-effect waves-light center">New author</a>
+            </div>
+            <div class="input-field col s4">
+                {{ form.website|materializecss }}
+                {% if form.website.errors %}
+                {{ form.website.errors }}
+                {% endif %}
+            </div>
+            <div class="col s2">
+                <br><br>
+                <a href="/articles/add-website" class="btn waves-effect waves-light center">New website</a>
+            </div>
+        </div>
+        <div class="row">
+            <div class="input-field col s6">
+                {{ form.url|materializecss }}
+                {% if form.url.errors %}
+                {{ form.url.errors }}
+                {% endif %}
+            </div>
+            <div class="input-field col s6">
+                {{ form.image_url|materializecss }}
+                {% if form.image_url.errors %}
+                {{ form.image_url.errors }}
+                {% endif %}
+            </div>
+        </div>
+        <div class="row">
+            <div class="input-field col s12">
+                {{ form.content|materializecss }}
+                {% if form.content.errors %}
+                {{ form.content.errors }}
+                {% endif %}
+            </div>
+        </div>
+        <div class="row">
+            <div class="input-field col s4">
+                <label class="control-label">Publish date and time</label>
+                {{ form.publish_time }}
+                {% if form.publish_time.errors %}
+                {{ form.publish_time.errors }}
+                {% endif %}
+            </div>
+        </div>
+        <center>
+            <button type="submit" class="btn waves-effect btn-large btn-success">Submit</button>
+        </center>
+    </form>
+    <br>
+</div>
+{% endblock %}
