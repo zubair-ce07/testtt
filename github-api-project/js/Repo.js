@@ -12,6 +12,13 @@ class Repo {
         this.repoURL = repoURL;
     }
 
+    /**
+     * Creates a repo card given the data stored at creation time of the object
+     *
+     * @author: mabdullahz
+     * @this {Repo}
+     * @returns {object} REpo card as an HTML element
+     */
     getCard() {
         let repoCard = document.createElement("div");
         repoCard.className = CARD_CLASS_NAMES

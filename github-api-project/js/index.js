@@ -42,7 +42,13 @@ document.getElementById("argumentHandler").addEventListener("change", (event) =>
     }
 })
 
-
+/**
+ * Makes a new Github API request based on the given query
+ *
+ * @author: mabdullahz
+ * @param {string} query API query to send
+ * @returns {Promise} A promise that returns the requested data on resolve
+ */
 function githubAPICaller(query) {
     return new Promise(function(resolve, reject) {;
         let clientRequest = new XMLHttpRequest()
@@ -60,7 +66,14 @@ function githubAPICaller(query) {
     })
 }
 
-
+/**
+ * Generates the query and show the results when promise is resolved/rejected
+ *
+ * @author: mabdullahz
+ * @param {string} country The country to search users in
+ * @param {string} language The language used by the users
+ * @param {string} criteria The criteria used to sort the users
+ */
 function fetchUsers(country, language, criteria) {
     const QUERY = `${API_BASE_URL}search/users?o=desc&q=language%3A${encodeURIComponent(language)}+location%3A${country}&sort=${criteria}&type=users&per_page=${NUMBER_OF_USERS_DISPLAYED}`;
 
@@ -77,62 +90,115 @@ function fetchUsers(country, language, criteria) {
     })
 }
 
-
+/**
+ * Makes the spinner loader visible
+ *
+ * @author: mabdullahz
+ */
 function showSpinner() {
     SPINNER_LOADER.style.visibility = "visible";
 }
 
-
+/**
+ * Hides the spinner loader
+ *
+ * @author: mabdullahz
+ */
 function hideSpinner() {
     SPINNER_LOADER.style.visibility = "hidden";
 }
 
-
+/**
+ * Checks the country field
+ *
+ * @author: mabdullahz
+ * @returns {boolean} Specifying whether the field is empty or filled
+ */
 function emptyCountryArg() {
     return (COUNTRY_ELEMENT.value == EMPTY_STRING);
 }
 
-
+/**
+ * Checks the criteria field
+ *
+ * @author: mabdullahz
+ * @returns {boolean} Specifying whether a criteria has been selected or not
+ */
 function emptyCriteriaArg() {
     return (CRITERIA_ELEMENT.value == EMPTY_STRING);
 }
 
-
+/**
+ * Checks the language field
+ *
+ * @author: mabdullahz
+ * @returns {boolean} Specifying whether a language has been selected or not
+ */
 function emptyLanguageArg() {
     return (LANGUAGE_ELEMENT.value == EMPTY_STRING);
 }
 
-
+/**
+ * Appends warning text in country field
+ *
+ * @author: mabdullahz
+ */
 function showCountryWarning() {
     COUNTRY_WARNING_DIV.innerText = COUNTRY_WARNING;
 }
 
-
+/**
+ * Appends warning text in language field
+ *
+ * @author: mabdullahz
+ */
 function showLanguageWarning() {
     LANGUAGE_WARNING_DIV.innerText = LANGUAGE_WARNING;
 }
 
-
+/**
+ * Appends warning text in criteria field
+ *
+ * @author: mabdullahz
+ */
 function showCriteriaWarning() {
     CRITERIA_WARNING_DIV.innerText = CRITERIA_WARNING;
 }
 
-
+/**
+ * Deletes warning text from country field
+ *
+ * @author: mabdullahz
+ */
 function hideCountryWarning() {
     COUNTRY_WARNING_DIV.innerText = EMPTY_STRING;
 }
 
 
+/**
+ * Deletes warning text from language field
+ *
+ * @author: mabdullahz
+ */
 function hideLanguageWarning() {
     LANGUAGE_WARNING_DIV.innerText = EMPTY_STRING;
 }
 
-
+/**
+ * Deletes warning text from criteria field
+ *
+ * @author: mabdullahz
+ */
 function hideCriteriaWarning() {
     CRITERIA_WARNING_DIV.innerText = EMPTY_STRING;
 }
 
-
+/**
+ * Checks whether all required fields are filled and shows warnings
+ *
+ * @author: mabdullahz
+ * @returns {boolean} Specifying whether all fields are filled or not
+ */
 function validateGithubAPIArgs() {
     emptyCountryArg() ? showCountryWarning() : hideCountryWarning();
     emptyLanguageArg() ? showLanguageWarning() : hideLanguageWarning();
@@ -141,14 +207,19 @@ function validateGithubAPIArgs() {
     return (!emptyCountryArg() && !emptyCriteriaArg() && !emptyLanguageArg());
 }
 
-
+/**
+ * Displays the users given the data from the API
+ *
+ * @author: mabdullahz
+ * @param {object} returnedJsonData JSON data sent from the API
+ */
 function userInfoOnLoad(returnedJsonData) {
     const API_RESPONSE = returnedJsonData;
     let userCards = [];
     var mainDisplayElement = document.getElementById("disp");
 
     removeAllChildren("disp");
-    removeCustomStyle(mainDisplayElement);
+    removeCustomStyle("disp");
     
     let heading = createHTMLElement("h2", 
                                     {"textAlign": "center", "paddingBottom": "50px"}, 
@@ -181,7 +252,15 @@ function userInfoOnLoad(returnedJsonData) {
     mainDisplayElement.appendChild(endText);
 }
 
-
+/**
+ * Creates a new HTML element
+ *
+ * @author: mabdullahz
+ * @param {string} elementType Type of element to create e.g. h1, div 
+ * @param {object} elementStyleInfo Key/value paired object specifying design
+ * @param {string} elementInnerHTML Inner HTML of the element, if any
+ * @returns {object} Newly created HTML element
+ */
 function createHTMLElement(elementType, elementStyleInfo, elementInnerHTML) {
     let newElement = document.createElement(elementType);
 
@@ -195,34 +274,26 @@ function createHTMLElement(elementType, elementStyleInfo, elementInnerHTML) {
     return newElement;
 }
 
-
-function removeCustomStyle(mainDisplayElement) {
-    mainDisplayElement.style = EMPTY_STRING;
+/**
+ * Removes all styling applied to the specified element
+ *
+ * @author: mabdullahz
+ * @param {string} elementID HTML ID of the element
+ */
+function removeCustomStyle(elementID) {
+    var selectedElement = document.getElementById(elementID);
+    selectedElement.style = EMPTY_STRING;
 }
 
-
-// function createOneUserCard(number, username, id, avatar_url, github_url) {
-//     let userCard = document.createElement('div');
-//     userCard.className = CARD_CLASS_NAMES;
-//     userCard.style = CARD_STYLE;
-//     userCard.innerHTML = `<div class="card-header text-bold">${number}</div>
-//                             <img class="card-img-top" src="${avatar_url}" alt="Card image cap">
-
-//                             <div class="card-body">
-//                                 <h5 class="card-title text-center">${username}</h5>
-//                             </div>
-
-//                             <div class="card-footer bg-secondary text-center">
-//                                 <a href="profile.html?username=${username}" class="btn btn-success">View Profile</a>
-//                             </div>
-//                         </div>`;
-//     return userCard;
-// }
-
-
+/**
+ * Removes all children of the specified element
+ *
+ * @author: mabdullahz
+ * @param {string} elementID HTML ID of the element
+ */
 function removeAllChildren(elementID) {
-    var mainDisplayElement = document.getElementById(elementID);
-    while (mainDisplayElement.firstChild) {
-        mainDisplayElement.removeChild(mainDisplayElement.firstChild);
+    var selectedElement = document.getElementById(elementID);
+    while (selectedElement.firstChild) {
+        selectedElement.removeChild(selectedElement.firstChild);
     }
 }

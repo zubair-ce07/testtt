@@ -54,17 +54,29 @@ if(USERNAME != null){
     fetchUser();
 }
 
-
+/**
+ * Makes the spinner loader visible
+ *
+ * @author: mabdullahz
+ */
 function showSpinner() {
     SPINNER_LOADER.style.visibility = "visible";
 }
 
-
+/**
+ * Hides the spinner loader
+ *
+ * @author: mabdullahz
+ */
 function hideSpinner() {
     SPINNER_LOADER.style.visibility = "hidden";
 }
 
-
+/**
+ * Adds event listener to the tabbed profile div, listening for clicks
+ *
+ * @author: mabdullahz
+ */
 TABBED_PROFILE_ELEMENT.addEventListener("click", (event) => {
     const targetTab = event.target.getAttribute("href");
 
@@ -85,7 +97,13 @@ TABBED_PROFILE_ELEMENT.addEventListener("click", (event) => {
     }
 })
 
-
+/**
+ * Makes a new Github API request based on the given query
+ *
+ * @author: mabdullahz
+ * @param {string} query API query to send
+ * @returns {Promise} A promise that returns the requested data on resolve
+ */
 function githubAPICaller(query) {
     return new Promise(function(resolve, reject){
         let clientRequest = new XMLHttpRequest();
@@ -103,7 +121,11 @@ function githubAPICaller(query) {
     })
 }
 
-
+/**
+ * Generates the query and show the user info when promise is resolved/rejected
+ *
+ * @author: mabdullahz
+ */
 function fetchUser(){
     const QUERY = `${API_BASE_URL}users/${USERNAME}`;
 
@@ -120,7 +142,11 @@ function fetchUser(){
     })
 }
 
-
+/**
+ * Generates the query and show the followers when promise is resolved/rejected
+ *
+ * @author: mabdullahz
+ */
 function fetchFollowers() {
     let QUERY = `${API_BASE_URL}users/${USERNAME}/followers?per_page=${NUMBER_OF_USERS_DISPLAYED}`;
 
@@ -137,7 +163,11 @@ function fetchFollowers() {
     })
 }
 
-
+/**
+ * Generates the query and show the following when promise is resolved/rejected
+ *
+ * @author: mabdullahz
+ */
 function fetchFollowing() {
     let QUERY = `${API_BASE_URL}users/${USERNAME}/following?per_page=${NUMBER_OF_USERS_DISPLAYED}`;
 
@@ -154,7 +184,11 @@ function fetchFollowing() {
     })
 }
 
-
+/**
+ * Generates the query and show the repos when promise is resolved/rejected
+ *
+ * @author: mabdullahz
+ */
 function fetchRepos() {
     let QUERY = `${API_BASE_URL}users/${USERNAME}/repos?per_page=${NUMBER_OF_USERS_DISPLAYED}`;
 
@@ -171,7 +205,12 @@ function fetchRepos() {
     })
 }
 
-
+/**
+ * Displays the given user's data from the API
+ *
+ * @author: mabdullahz
+ * @param {object} userInfo JSON data sent from the API
+ */
 function onloadUserInfo(userInfo) {
     let userJoinedDate = new Date(userInfo[USER_API_RESP_STRUCT.joinedAt]);
 
@@ -189,7 +228,12 @@ function onloadUserInfo(userInfo) {
     modifyHTMLElement("user-repos-badge", "innerText", userInfo[USER_API_RESP_STRUCT.reposURL]);
 }
 
-
+/**
+ * Displays the given user's followers from the API
+ *
+ * @author: mabdullahz
+ * @param {object} returnedJsonData JSON data sent from the API
+ */
 function onloadUserFollowers(returnedJsonData) {
     let mainDisplayElement = document.getElementById("display-followers");
     displayUsers(mainDisplayElement, returnedJsonData);
@@ -197,7 +241,12 @@ function onloadUserFollowers(returnedJsonData) {
     fixButtonHref("display-followers-button", "followers");
 }
 
-
+/**
+ * Displays the given user's following from the API
+ *
+ * @author: mabdullahz
+ * @param {object} returnedJsonData JSON data sent from the API
+ */
 function onloadUserFollowing(returnedJsonData) {
     let mainDisplayElement = document.getElementById("display-following");
     displayUsers(mainDisplayElement, returnedJsonData);
@@ -205,7 +254,12 @@ function onloadUserFollowing(returnedJsonData) {
     fixButtonHref("display-following-button", "following");
 }
 
-
+/**
+ * Displays the given user's repos from the API
+ *
+ * @author: mabdullahz
+ * @param {object} returnedJsonData JSON data sent from the API
+ */
 function onloadUserRepos(returnedJsonData) {
     let mainDisplayElement = document.getElementById("display-repositories");
     let repoCardsList = [];
@@ -236,13 +290,24 @@ function onloadUserRepos(returnedJsonData) {
     fixButtonHref("display-repositories-button", EMPTY_STRING);
 }
 
-
+/**
+ * Sets the button href in the various tabs
+ *
+ * @author: mabdullahz
+ * @param {string} buttonID HTML ID of the button to select
+ * @param {string} githubPage GitHub page to go to [followers, following]
+ */
 function fixButtonHref(buttonID, githubPage) {
     document.getElementById(buttonID).href = `https://github.com/${USERNAME}/${githubPage}`;
     document.getElementById(buttonID).target = "__blank";
 }
 
-
+/**
+ * Deletes all children node from the specified tab
+ *
+ * @author: mabdullahz
+ * @param {string} tabID HTML ID of the tab to select
+ */
 function emptyTab(tabID) {
     if(tabID != "home") {
         var tabElement = document.getElementById("display-" + tabID);
@@ -253,22 +318,48 @@ function emptyTab(tabID) {
     }
 }
 
-
+/**
+ * Modifies the given HTML `element` with new `value` for the `attribute`
+ *
+ * @author: mabdullahz
+ * @param {string} elementID HTML ID of the element to select
+ * @param {string} elementAttribute Attribute to modify
+ * @param {string} newValue New value of the attribute
+ */
 function modifyHTMLElement(elementID, elementAttribute, newValue) {
     document.getElementById(elementID)[elementAttribute] = newValue;
 }
 
-
+/**
+ * Format the given string URL by placing in an anchor tag
+ *
+ * @author: mabdullahz
+ * @param {string} userBlog URl as a string
+ * @returns {string} Specifying a formatted anchor tag
+ */
 function formatUserBlogInfo(userBlog){
     return `<a target="__blank" href=${userBlog}> ${userBlog} </a>`;
 }
 
-
+/**
+ * Create a span element to show in place to empty data
+ *
+ * @author: mabdullahz
+ * @param {string} nullReplacer Text value to use inside the span
+ * @param {string} className Bootstrap class name to use inside the span
+ * @returns {string} Specifying a formatted span tag
+ */
 function spanNullValue(nullReplacer, className) {
     return `<span class="bg-${className} text-center"> ${nullReplacer} </span>`;
 }
 
-
+/**
+ * Displays the users given the API response data in form of rowed cards
+ *
+ * @author: mabdullahz
+ * @param {object} mainDisplayElement HTML element to display the results inside of
+ * @param {object} apiCallResult JSON data sent from the API
+ */
 function displayUsers(mainDisplayElement, apiCallResult) {
     let userCards = [];
 

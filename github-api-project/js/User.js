@@ -6,7 +6,14 @@ class User {
         this.avatar_url = avatar_url;
         this.github_url = github_url;
     }
-
+    
+    /**
+     * Creates a user card given the data stored at creation time of the object
+     *
+     * @author: mabdullahz
+     * @this {User}
+     * @returns {object} User card as an HTML element
+     */
     getCard() {
         let userCard = document.createElement("div");
         userCard.className = CARD_CLASS_NAMES;
