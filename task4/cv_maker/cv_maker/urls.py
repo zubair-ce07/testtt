@@ -15,13 +15,15 @@ Including another URLconf
 """
 from django.conf.urls import url
 from django.contrib import admin
-from cv_maker_app.views import HomeView, BasicInformationView, EducationView, ExperienceView, RetrieveCvView, JobViewSet
-from accounts.views import Signup
-from django.contrib.auth import views as auth_views
 from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import include, path
 from rest_framework import routers
+
+from cv_maker_app.views import HomeView, BasicInformationView, EducationView, ExperienceView, RetrieveCvView, JobViewSet
+from django.contrib.auth import views as auth_views
+from accounts.views import Signup
+
 
 router = routers.DefaultRouter()
 router.register(r'job', JobViewSet)

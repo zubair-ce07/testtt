@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 from django.shortcuts import render
-from .forms import BasicInformationForm, EducationForm, ExperienceForm
-from .models import BasicInformation, Experience, Education, Job
 from django.core.files.storage import FileSystemStorage
 from django.views import View
 from django.http import HttpResponse
 from rest_framework import viewsets
+
+from .forms import BasicInformationForm, EducationForm, ExperienceForm
+from .models import BasicInformation, Experience, Education, Job
 from .serializers import JobSerializer
 
 
@@ -151,8 +152,5 @@ class RetrieveCvView(View):
 
 
 class JobViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows groups to be viewed or edited.
-    """
     queryset = Job.objects.all()
     serializer_class = JobSerializer

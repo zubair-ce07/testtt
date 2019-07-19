@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 from django.contrib.auth import login as auth_login
 from django.shortcuts import render, redirect
-from .forms import SignUpForm
 from django.views import View
+
+from .forms import SignUpForm
 
 
 class Signup(View):
