@@ -213,7 +213,7 @@ function createOneUserCard(number, username, id, avatar_url, github_url) {
                             </div>
 
                             <div class="card-footer bg-secondary text-center">
-                                <a href="user.html?login=${username}" class="btn btn-success">View Profile</a>
+                                <a href="profile.html?username=${username}" class="btn btn-success">View Profile</a>
                             </div>
                         </div>`;
     return userCard;

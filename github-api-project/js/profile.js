@@ -4,7 +4,7 @@ const SPINNER_LOADER = document.getElementById("spinnerLoader");
 const ASYNC_API_CALL = true;
 const API_REQUEST_SUCCESSFUL = 200;
 const REQ_METHOD = "GET";
-const USERNAME = new URL(window.location).searchParams.get("login");
+const USERNAME = new URL(window.location).searchParams.get("username");
 const USER_CARDS_PER_ROW = 4;
 const REPO_CARDS_PER_ROW = 2;
 const TABBED_PROFILE_ELEMENT = document.getElementById("user-profile-page");
@@ -305,7 +305,7 @@ function createOneUserCard(number, username, id, avatar_url, github_url) {
                             </div>
 
                             <div class="card-footer bg-secondary text-center">
-                                <a href="user.html?login=${username}" class="btn btn-success">View Profile</a>
+                                <a href="profile.html?username=${username}" class="btn btn-success">View Profile</a>
                             </div>
                         </div>`;
     return userCard;
