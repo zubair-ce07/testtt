@@ -6,26 +6,26 @@ from column_attribute_association import associations
 class WeatherParser():
     """Parses weather readings from CSV file to WeatherReading objects"""
 
-    def __get_parameters(self, raw_weather_readings):
+    def __get_parameters(self, weather_reading_row):
         """Returns class attributes with which WeatherReading object is initialized with"""
         parameters = {}
         for key in associations:
             index = associations[key]["column_position"]
-            parameters[key] = raw_weather_readings[index]
+            parameters[key] = weather_reading_row[index]
         return parameters
 
     def parse_weather_file(self, file):
         """Returns WeatherReading objects after parsing the weather reading CSV file"""
         with open(file, 'r') as weather_file:
-            raw_weather_readings = csv.reader(weather_file)
+            weather_reading_rows = csv.reader(weather_file)
 
             # skip the headers
-            next(raw_weather_readings)  
-            next(raw_weather_readings)  
+            next(weather_reading_rows)  
+            next(weather_reading_rows)  
 
             objects = []
 
-            for row in raw_weather_readings:
+            for row in weather_reading_rows:
                 if(row):
                     if row[0][0:4] == "<!--":
                         continue

@@ -11,22 +11,22 @@ class WeatherReporter():
 
     def report_year_extremes(self, highest_temperature_day, lowest_temperature_day, most_humid_day):
         """Print year extremes to the console"""
-        report_hottest = "Highest: {}C on {} {}".format(
+        report_hottest_day = "Highest: {}C on {} {}".format(
             highest_temperature_day.max_temperature,
             calendar.month_name[highest_temperature_day.date.month],
             highest_temperature_day.date.day)
 
-        report_coldest = "Lowest: {}C on {} {}".format(
+        report_coldest_day = "Lowest: {}C on {} {}".format(
             lowest_temperature_day.min_temperature,
             calendar.month_name[lowest_temperature_day.date.month],
             lowest_temperature_day.date.day)
 
-        report_humid = "Humidity: {}% on {} {}".format(
+        report_humid_day = "Humidity: {}% on {} {}".format(
             most_humid_day.max_humidity,
             calendar.month_name[most_humid_day.date.month],
             most_humid_day.date.day)
-        print(report_hottest, report_coldest,
-              report_humid, sep="\n", end="\n\n")
+        print(report_hottest_day, report_coldest_day,
+              report_humid_day, sep="\n", end="\n\n")
 
     def report_month_averages(self, avg_highest_temperature, avg_lowest_temperature, avg_mean_humidity):
         """Print month averages to the console"""
@@ -66,8 +66,8 @@ class WeatherReporter():
     def __get_colored_plus(self, times, color):
         """Print colored +++ to the console"""
         if color == "blue":
-            xxx = self.blue
+            selected_color = self.blue
         elif color == "red":
-            xxx = self.red
-        xxx = xxx + "+" * times + self.white
-        return xxx
+            selected_color = self.red
+        selected_color = selected_color + "+" * times + self.white
+        return selected_color

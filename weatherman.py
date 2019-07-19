@@ -30,34 +30,34 @@ reporter = WeatherReporter()
 
 def get_yearly_reports(readings, year):
     """Report the hottest, coldest and the most humid day in a year"""
-    hottest = analyzer.get_max_temperature_year(readings, year)
-    coldest = analyzer.get_min_temperature_year(readings, year)
-    most_humid = analyzer.get_max_humidity_year(readings, year)
-    reporter.report_year_extremes(hottest, coldest, most_humid)
+    hottest_day = analyzer.get_day_with_max_temperature_from_year(readings, year)
+    coldest_day = analyzer.get_day_with_min_temperature_from_year(readings, year)
+    most_humid_day = analyzer.get_day_with_max_humidity_from_year(readings, year)
+    reporter.report_year_extremes(hottest_day, coldest_day, most_humid_day)
 
 
 def get_monthly_reports(readings, year, month):
     """Report the average highest temperature, average lowest temperature and average mean humidity for a month"""
-    avg_hottest = analyzer.get_avg_max_temperature_month(readings, year, month)
-    avg_coldest = analyzer.get_avg_min_temperature_month(readings, year, month)
-    avg_humidity = analyzer.get_avg_mean_humidity_month(readings, year, month)
-    reporter.report_month_averages(avg_hottest, avg_coldest, avg_humidity)
+    avg_hottest_temperature = analyzer.get_avg_max_temperature_from_month(readings, year, month)
+    avg_coldest_temperature = analyzer.get_avg_min_temperature_from_month(readings, year, month)
+    avg_humidity = analyzer.get_avg_mean_humidity_from_month(readings, year, month)
+    reporter.report_month_averages(avg_hottest_temperature, avg_coldest_temperature, avg_humidity)
 
 
 def get_monthly_bar_charts(readings, year, month):
     """Print bar charts for the highest and lowest temperatures in a month"""
-    max_temperatures = analyzer.get_max_temperatures_month(
+    max_temperatures = analyzer.get_list_of_max_temperatures_from_month(
         readings, year, month)
-    min_temperatures = analyzer.get_min_temperatures_month(
+    min_temperatures = analyzer.get_list_of_min_temperatures_from_month(
         readings, year, month)
     reporter.report_month_temperatures(max_temperatures, min_temperatures)
 
 
 def get_monthly_single_bar_chart(readings, year, month):
     """Print single lined bar charts for the highest and lowest temperatures in a month"""
-    max_temperatures = analyzer.get_max_temperatures_month(
+    max_temperatures = analyzer.get_list_of_max_temperatures_from_month(
         readings, year, month)
-    min_temperatures = analyzer.get_min_temperatures_month(
+    min_temperatures = analyzer.get_list_of_min_temperatures_from_month(
         readings, year, month)
     reporter.report_month_temperatures(
         max_temperatures, min_temperatures, True)
