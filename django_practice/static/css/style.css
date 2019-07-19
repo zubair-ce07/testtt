@@ -12,3 +12,11 @@ hr {
 .card-title {
     font-size: small;
 }
+
+.error-field {
+    color: red;
+}
+
+.help-text {
+    color: grey;
+}

@@ -1,5 +1,4 @@
 from __future__ import absolute_import
-
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.shortcuts import render, redirect
@@ -43,8 +42,10 @@ def create_task(request):
 
 def edit_task(request, pk):
     task = Task.objects.get(id=pk)
-    form = TaskForm(initial={'title': task.title, 'description': task.description, 'assignee': task.assignee,
-                             'due_date': task.due_date})
+    form = TaskForm(initial={
+        'title': task.title, 'description': task.description, 'assignee': task.assignee,
+        'due_date': task.due_date
+    })
     if request.method == 'POST':
         form = TaskForm(request.POST)
         if form.is_valid():

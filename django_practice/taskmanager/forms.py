@@ -1,5 +1,4 @@
 import datetime
-
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
@@ -13,6 +12,7 @@ class TaskForm(forms.Form):
             "placeholder": "Task title"
         })
     )
+
     description = forms.CharField(
         widget=forms.Textarea(
             attrs={
@@ -20,7 +20,9 @@ class TaskForm(forms.Form):
                 "placeholder": "Enter description!"
             })
     )
+
     assignee = forms.ModelChoiceField(queryset=User.objects.all())
+
     due_date = forms.DateField(
         widget=forms.TextInput(attrs={
             "class": "form-control",
@@ -33,6 +35,7 @@ class TaskForm(forms.Form):
 
 class UserRegistrationForm(UserCreationForm):
     field_order = ['username', 'email', 'first_name', 'last_name', 'password1', 'password2']
+
     username = forms.CharField(
         max_length=50,
         label='Username:',
@@ -41,6 +44,7 @@ class UserRegistrationForm(UserCreationForm):
             "placeholder": "Username"
         })
     )
+
     first_name = forms.CharField(
         max_length=50,
         label="First Name:",
@@ -49,6 +53,7 @@ class UserRegistrationForm(UserCreationForm):
             "placeholder": "First Name"
         })
     )
+
     last_name = forms.CharField(
         max_length=50,
         label="Last Name:",
@@ -57,6 +62,7 @@ class UserRegistrationForm(UserCreationForm):
             "placeholder": "Last Name"
         })
     )
+
     email = forms.CharField(
         max_length=50,
         label="Email",

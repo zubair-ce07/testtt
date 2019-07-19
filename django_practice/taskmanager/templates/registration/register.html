@@ -1,5 +1,10 @@
 {% extends 'base.html' %}
 
+{% block extra_head %}
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
+{% endblock %}
+
 {% block content %}
 
     <h2>Register</h2>
@@ -9,16 +14,20 @@
             {% csrf_token %}
 
             {% for field in form %}
-                <p>
-                    {{ field.label_tag }}<br>
+
+                    {{ field.label_tag }}
+                    <br>
                     {{ field }}
+
                     {% if field.help_text %}
-                        <small style="color: grey">{{ field.help_text }}</small>
+                        <small class="help-text">{{ field.help_text }}</small>
                     {% endif %}
+
                     {% for error in field.errors %}
-                        <p style="color: red">{{ error }}</p>
+                        <p class="error-field">{{ error }}</p>
                     {% endfor %}
-                </p>
+
+                <br>
             {% endfor %}
             <br>
 

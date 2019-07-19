@@ -1,13 +1,23 @@
 {% extends "base.html" %}
+
+{% block extra_head %}
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
+{% endblock %}
+
 {% block page_content %}
 
     <a href="{% url 'create_task' %}" class="btn btn-primary"> Create a Task </a>
 
-    <h2 class="tasks-heading" >Tasks</h2>
+    <h2 class="tasks-heading">Tasks</h2>
     <hr>
+
     {% if not tasks %}
+
         <h4>No tasks exist</h4>
+
     {% else %}
+
         <div class="row">
             {% for task in tasks %}
                 <div class="col-md-4">
@@ -37,6 +47,7 @@
                 </div>
             {% endfor %}
         </div>
+
     {% endif %}
 
 {% endblock %}

@@ -60,4 +60,4 @@ target/
 .vscode
 
 # db stuff
-.sqlite
+.sqlite3
