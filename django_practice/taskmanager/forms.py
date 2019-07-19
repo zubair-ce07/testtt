@@ -97,5 +97,8 @@ class UserRegistrationForm(UserCreationForm):
     def clean(self):
         cleaned_data = self.cleaned_data
         email = cleaned_data.get("email")
-        if User.objects.get(email=email):
-            self.add_error(field='email', error='This email address already exists')
+        username = cleaned_data.get("username")
+        if User.objects.filter(email=email).exists():
+            self.add_error(field='email', error='This email address already exists!')
+        if User.objects.filter(username=username).exists():
+            self.add_error(field='username', error='This username already exists!')

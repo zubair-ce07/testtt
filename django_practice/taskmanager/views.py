@@ -85,15 +85,18 @@ def register(request):
             email = form.cleaned_data['email']
             first_name = form.cleaned_data['first_name']
             last_name = form.cleaned_data['last_name']
-            User(
-                username=username,
-                email=email,
-                first_name=first_name,
-                last_name=last_name,
-                password=password
-            ).save()
+            to_save = form.save(commit=False)
+            to_save.username = username
+            to_save.first_name = first_name
+            to_save.last_name = last_name
+            to_save.email = email
+            to_save.password1 = password
+            to_save.save()
             user = authenticate(username=username, password=password)
-            login(request, user)
+            if user:
+                login(request, user)
+            else:
+                raise ValueError('user was not authenticated')
             return redirect('task_index')
     else:
         form = UserRegistrationForm()
