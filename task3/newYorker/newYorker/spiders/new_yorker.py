@@ -34,8 +34,8 @@ class NewYorkerSpider(scrapy.Spider):
     def parse_product(self, raw_product, response):
         product = self.boilerplate(NewyorkerItem(), response)
         product['retailer_sku'] = raw_product['id']
-        product['name'] = raw_product['maintenance_group']
-        product['category'] = raw_product['web_category']
+        product['name'] = self.name(raw_product)
+        product['category'] = raw_product['maintenance_group']
         product['description'] = raw_product['descriptions']
         product['brand'] = raw_product['brand']
         product['gender'] = raw_product['customer_group']
@@ -75,10 +75,13 @@ class NewYorkerSpider(scrapy.Spider):
         currency = raw_product['variants'][0].get('currency')
         price = raw_product['variants'][0].get('current_price')
         for size in raw_product['variants'][0]['sizes']:
-            skus[f'{raw_product["maintenance_group"]} - {size.get("size_name")} - {color}'] = {
+            skus[f'{self.name(raw_product)} - {size.get("size_name")} - {color}'] = {
                 'colour': color,
                 'currency': currency,
                 'price': price,
                 'size': size.get('size_name')
             }
         return skus
+
+    def name(self, raw_product):
+        return raw_product['maintenance_group'].split()[0]
