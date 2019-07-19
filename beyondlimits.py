@@ -1,8 +1,11 @@
 import scrapy
+
+from scrapy import Spider
 from scrapy_spider.items import BeyondLimitItem
+from datetime import datetime
 
 
-class BeyondlimitsSpider(scrapy.Spider):
+class CrawlSpider(Spider):
     name = 'beyondlimitspider'
     allowed_domains = ['beyondlimits.com']
     start_urls = ['https://www.beyondlimits.com/Sales/Men/#bb_artlist',
@@ -10,12 +13,6 @@ class BeyondlimitsSpider(scrapy.Spider):
 
     def get_product_name(self, response):
         return response.css('header > h1::text').extract_first()
-
-    def get_product_size(self, response):
-        product_size = response.css('option::text').getall()
-        if product_size:
-            del[product_size[0]]
-        return product_size
 
     def get_product_gender(self, response):
         return response.css('a > strong::text').extract_first()
@@ -54,73 +51,56 @@ class BeyondlimitsSpider(scrapy.Spider):
     def get_product_category(self, response):
         return response.css('a > strong::text').extract_first()
 
-    def parse_size(self, response):
+    def get_crawl_start_time(self):
+        return datetime.now()
 
-        complete_product = response.meta["complete_product"]
-        skus = response.meta.get("skus", [])
-        current_sku = {}
-        price_currency = response.css('div.bb_art--pricecontent > div > span::text').extract_first()
-        price_currency_data = price_currency.split(" ")
-        current_sku["price"] = price_currency_data[0]
-        current_sku["currency"] = price_currency_data[1]
-        current_sku["sku"] = response.css('#bb-variants--0 > option[selected]::text').extract_first()
-        current_sku["sku_id"] = response.css('header > small > span::text').extract_first()
+    def get_unix_time(self):
+        return datetime.timestamp(datetime.now())
 
-        skus.append(current_sku)
+    def get_product_sku(self, response):
+        size_id = {'S': 1, 'M': 2, 'L': 3, 'XL': 4, 'XXL': 5}
+        sku = []
+        product_size = response.css('option::text').getall()
+        if product_size:
+            del[product_size[0]]
+            product_price_currency = response.css('.price span::text').get()
+            price_currency = product_price_currency.split(" ")
+            product_sku = response.css('small > span::text').get()
+            for sizes in product_size:
+                sku_num = int(product_sku[3:]) + size_id[sizes]
+                current_sku = {"price": price_currency[0], "currency": price_currency[1],
+                               "sku": sizes, "skuid": str(product_sku[:3]) + str(sku_num)}
+                sku.append(current_sku)
+        return sku
 
-        next_size = response.xpath('//select[@name="varselid[0]"]/option[@selected]/following-sibling::option[1]/@value').get()
-        if next_size:
-            yield scrapy.FormRequest.from_response(
-                response=response,
-                formxpath='//form[@class="js-oxWidgetReload"]',
-                formdata={
-                    'varselid[0]': response.xpath('//select[@name="varselid[0]"]/option[@selected]/following-sibling::option[1]/@value').get()
-                },
-                callback=self.parse_size,
-                meta={'complete_product': complete_product, 'skus': skus},
-                dont_filter=True,
-                headers={
-                    'X-Requested-With': "XMLHttpRequest",
-                },
-            )
-        else:
-            complete_product["skus"] = skus
-            yield complete_product
+    def get_crawl_id(self, response):
+        return f"{self.name}-{self.get_language(response)}-{datetime.now().replace(second=0, microsecond=0)}" \
+               f"-{datetime.timestamp(datetime.now().replace(second=0, microsecond=0))}"
 
     def parse(self, response):
-        complete_product = BeyondLimitItem(
-            name=self.get_product_name(response),
-            size=self.get_product_size(response),
-            gender=self.get_product_gender(response),
-            description=self.get_product_description(response),
-            retailer_sku=self.get_retailer_sku(response),
-            image_urls=self.get_image_urls(response),
-            care=self.get_product_care(response),
-            lang=self.get_language(response),
-            brand=self.get_product_brand(response),
-            category=self.get_product_category(response),
-            url=self.get_product_url(response),
-            color=self.get_product_color(response)
-        )
-
         links = response.css('div.pictureBox.gridPicture.bb_product--imgwrap > a::attr(href)').getall()
         for link in links:
-            yield scrapy.Request(link, callback=self.parse)
-
+            yield scrapy.Request(link, callback=self.parse_of_clothing_item)
         next_page = response.css('a.bb_pagination--item::attr(href)').getall()
+
         for link in next_page:
             yield scrapy.Request(link, callback=self.parse)
 
-        yield scrapy.FormRequest.from_response(
-            response=response,
-            formxpath='//form[@class="js-oxWidgetReload"]',
-            formdata={
-                'varselid[0]': response.xpath('//select[@name="varselid[0]"]/option[position() > 1]/@value').get()
-            },
-            callback=self.parse_size,
-            meta={'complete_product': complete_product},
-            dont_filter=True,
-            headers={
-                'X-Requested-With': "XMLHttpRequest",
-            }
-        )
+    def parse_of_clothing_item(self, response):
+        complete_product = BeyondLimitItem()
+        complete_product["name"] = self.get_product_name(response)
+        complete_product["sku"] = self.get_product_sku(response)
+        complete_product["gender"] = self.get_product_gender(response)
+        complete_product["description"] = self.get_product_description(response)
+        complete_product["retailer_sku"] = self.get_retailer_sku(response)
+        complete_product["image_urls"] = self.get_image_urls(response)
+        complete_product["care"] = self.get_product_care(response)
+        complete_product["lang"] = self.get_language(response)
+        complete_product["brand"] = self.get_product_brand(response)
+        complete_product["category"] = self.get_product_category(response)
+        complete_product["url"] = self.get_product_url(response)
+        complete_product["color"] = self.get_product_color(response)
+        complete_product["crawl_start_time"] = self.get_crawl_start_time()
+        complete_product["time"] = self.get_unix_time()
+        complete_product["crawl_id"] = self.get_crawl_id(response)
+        yield complete_product
