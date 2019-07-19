@@ -58,3 +58,7 @@ target/
 
 # VSCode
 .vscode
+
+weatherman/weatherfiles/
+weatherman/decors.py
+
