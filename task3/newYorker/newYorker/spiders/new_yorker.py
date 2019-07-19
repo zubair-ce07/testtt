@@ -10,14 +10,10 @@ from newYorker.items import NewyorkerItem
 class NewYorkerSpider(scrapy.Spider):
     name = 'new_yorker'
     allowed_domains = ['newyorker.de']
-    start_urls = \
-        [
-          "https://api.newyorker.de/csp/products/public/query?filters[country]=pt"
-          "&filters[gender]=MALE&limit=24&offset=0",
-
-          "https://api.newyorker.de/csp/products/public/query?filters[country]=pt"
-          "&filters[gender]=FEMALE&limit=24&offset=0",
-        ]
+    basic_url = "https://api.newyorker.de/csp/products/public/query?filters[country]=pt&limit=24&offset=0"
+    start_urls = [w3lib.url.add_or_replace_parameter(basic_url, "gender", 'MALE'),
+                  w3lib.url.add_or_replace_parameter(basic_url, "gender", 'FEMALE'),
+                  ]
     industry = None
     market = "PT"
     care = None
