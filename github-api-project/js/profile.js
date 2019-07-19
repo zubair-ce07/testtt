@@ -211,18 +211,16 @@ function onloadUserRepos(returnedJsonData) {
     let repoCardsList = [];
 
     returnedJsonData.forEach((repo) => {
-        userCard = createOneRepoCard(repo[REPO_API_RESP_STRUCT.fullName],
-                                    repo[REPO_API_RESP_STRUCT.description] ? repo[REPO_API_RESP_STRUCT.description] : spanNullValue("No Description Available", "warning"),
-                                    new Date(repo[REPO_API_RESP_STRUCT.created]).toDateString(),
-                                    new Date(repo[REPO_API_RESP_STRUCT.updated]).toDateString(),
-                                    repo[REPO_API_RESP_STRUCT.watchers],
-                                    repo[REPO_API_RESP_STRUCT.language] ? repo[REPO_API_RESP_STRUCT.language] : spanNullValue("Unknown", "danger"),
-                                    repo[REPO_API_RESP_STRUCT.forks],
-                                    repo[REPO_API_RESP_STRUCT.issues],
-                                    repo[REPO_API_RESP_STRUCT.license] ? repo[REPO_API_RESP_STRUCT.license]["name"] : spanNullValue("Unknown", "danger"),
-                                    repo[REPO_API_RESP_STRUCT.directURL]);
-
-        repoCardsList.push(userCard);
+        repoCardsList.push(new Repo(repo[REPO_API_RESP_STRUCT.fullName],
+                           repo[REPO_API_RESP_STRUCT.description] ? repo[REPO_API_RESP_STRUCT.description] : spanNullValue("No Description Available", "warning"),
+                           new Date(repo[REPO_API_RESP_STRUCT.created]).toDateString(),
+                           new Date(repo[REPO_API_RESP_STRUCT.updated]).toDateString(),
+                           repo[REPO_API_RESP_STRUCT.watchers],
+                           repo[REPO_API_RESP_STRUCT.language] ? repo[REPO_API_RESP_STRUCT.language] : spanNullValue("Unknown", "danger"),
+                           repo[REPO_API_RESP_STRUCT.forks],
+                           repo[REPO_API_RESP_STRUCT.issues],
+                           repo[REPO_API_RESP_STRUCT.license] ? repo[REPO_API_RESP_STRUCT.license]["name"] : spanNullValue("Unknown", "danger"),
+                           repo[REPO_API_RESP_STRUCT.directURL]))
     })
 
     for(let i = 0; i < repoCardsList.length; i = i + REPO_CARDS_PER_ROW) {
@@ -230,7 +228,7 @@ function onloadUserRepos(returnedJsonData) {
         cardDeck.className = "card-deck";
         let remainingCards = i + REPO_CARDS_PER_ROW <= repoCardsList.length ? REPO_CARDS_PER_ROW : repoCardsList.length % REPO_CARDS_PER_ROW;
         for(let j = i; j < i + remainingCards; j++) {
-            cardDeck.appendChild(repoCardsList[j]);
+            cardDeck.appendChild(repoCardsList[j].getCard());
         }
         mainDisplayElement.appendChild(cardDeck);
     }
@@ -275,7 +273,7 @@ function displayUsers(mainDisplayElement, apiCallResult) {
     let userCards = [];
 
     apiCallResult.forEach((singleUser, index) => {
-        userCards.push(createOneUserCard(index + 1, singleUser[USER_API_RESP_STRUCT.username], singleUser[USER_API_RESP_STRUCT.githubID], singleUser[USER_API_RESP_STRUCT.avatarURL], singleUser[USER_API_RESP_STRUCT.githubURL]));
+        userCards.push(new User(index + 1, singleUser[USER_API_RESP_STRUCT.username], singleUser[USER_API_RESP_STRUCT.githubID], singleUser[USER_API_RESP_STRUCT.avatarURL], singleUser[USER_API_RESP_STRUCT.githubURL]));
     })
 
     for(let i = 0; i < userCards.length; i = i + USER_CARDS_PER_ROW) {
@@ -284,74 +282,9 @@ function displayUsers(mainDisplayElement, apiCallResult) {
         cardDeck.className = "card-deck";
 
         for(let j = i; j < i + remainingCards; j++) {
-            cardDeck.appendChild(userCards[j]);
+            cardDeck.appendChild(userCards[j].getCard());
         }
 
         mainDisplayElement.appendChild(cardDeck);
     }
-}
-
-
-function createOneUserCard(number, username, id, avatar_url, github_url) {
-    let userCard = document.createElement("div");
-    userCard.className = CARD_CLASS_NAMES;
-    userCard.style = CARD_STYLE;
-
-    userCard.innerHTML = `<div class="card-header text-bold">${number}</div>
-                            <img class="card-img-top" src="${avatar_url}" alt="Card image cap">
-
-                            <div class="card-body">
-                                <h5 class="card-title text-center">${username}</h5>
-                            </div>
-
-                            <div class="card-footer bg-secondary text-center">
-                                <a href="profile.html?username=${username}" class="btn btn-success">View Profile</a>
-                            </div>
-                        </div>`;
-    return userCard;
-}
-
-
-function createOneRepoCard(repoName, repoDescription, repoCreated, repoUpdated, repoWatchers, repoLanguage, repoForks, repoIssuesCount, repoLicense, repoURL){
-    let repoCard = document.createElement("div");
-    repoCard.className = CARD_CLASS_NAMES
-    repoCard.style = CARD_STYLE;
-    
-    repoCard.innerHTML =    `<div class="card-header text-center">
-                            <div class="row">
-                                <div class="col-sm">
-                                    <p class="text-center font-weight-bold"> ${repoName} </p> 
-                                </div>
-
-                                <div class="col-sm text-right my-auto">
-                                    <a href="${repoURL}" target="__blank" class="btn btn-primary">View on Github</a>
-                                </div>
-                            </div>
-                            <p> Language: ${repoLanguage} </p> 
-                            <p> License: ${repoLicense} </p>
-                        </div>
-
-                        <div class="card-body">
-                            <p> ${repoDescription} </p>
-                        </div>
-
-                        <div class="card-footer bg-secondary text-center">
-                            <p class="bg-danger p-1 medium"> Created at: ${repoCreated} </p>
-                            <p class="bg-info p-1"> Last Updated: <br> ${repoUpdated} </p>
-                        </div>
-                        
-                        <div class="card-footer bg-secondary medium">
-                            <div class="row text-center">
-                                <div class="col-sm bg-primary">
-                                    Watchers: ${repoWatchers}
-                                </div>
-                                <div class="col-sm bg-warning">
-                                    Forks: ${repoForks}
-                                </div>
-                                <div class="col-sm bg-danger">
-                                    Issues: ${repoIssuesCount}
-                                </div>
-                            </div>
-                        </div>`;
-    return repoCard;
 }

@@ -160,7 +160,7 @@ function userInfoOnLoad(returnedJsonData) {
     mainDisplayElement.appendChild(heading);
     
     API_RESPONSE["items"].forEach((singleUser, index) => {
-        userCards.push(createOneUserCard(index + 1, singleUser[USER_API_RESP_STRUCT.username], singleUser[USER_API_RESP_STRUCT.githubID], singleUser[USER_API_RESP_STRUCT.avatarURL], singleUser[USER_API_RESP_STRUCT.githubURL]));
+        userCards.push(new User(index + 1, singleUser[USER_API_RESP_STRUCT.username], singleUser[USER_API_RESP_STRUCT.githubID], singleUser[USER_API_RESP_STRUCT.avatarURL], singleUser[USER_API_RESP_STRUCT.githubURL]));
     })
 
     for(let i = 0; i < userCards.length; i = i + USER_CARDS_PER_ROW) {
@@ -170,7 +170,7 @@ function userInfoOnLoad(returnedJsonData) {
         let remainingCards = i + USER_CARDS_PER_ROW <= userCards.length ? USER_CARDS_PER_ROW : userCards.length % USER_CARDS_PER_ROW;
 
         for(let j = i; j < i + remainingCards; j++) {
-            cardDeck.appendChild(userCards[j]);
+            cardDeck.appendChild(userCards[j].getCard());
         }
         mainDisplayElement.appendChild(cardDeck);
     }
@@ -201,23 +201,23 @@ function removeCustomStyle(mainDisplayElement) {
 }
 
 
-function createOneUserCard(number, username, id, avatar_url, github_url) {
-    let userCard = document.createElement('div');
-    userCard.className = CARD_CLASS_NAMES;
-    userCard.style = CARD_STYLE;
-    userCard.innerHTML = `<div class="card-header text-bold">${number}</div>
-                            <img class="card-img-top" src="${avatar_url}" alt="Card image cap">
+// function createOneUserCard(number, username, id, avatar_url, github_url) {
+//     let userCard = document.createElement('div');
+//     userCard.className = CARD_CLASS_NAMES;
+//     userCard.style = CARD_STYLE;
+//     userCard.innerHTML = `<div class="card-header text-bold">${number}</div>
+//                             <img class="card-img-top" src="${avatar_url}" alt="Card image cap">
 
-                            <div class="card-body">
-                                <h5 class="card-title text-center">${username}</h5>
-                            </div>
+//                             <div class="card-body">
+//                                 <h5 class="card-title text-center">${username}</h5>
+//                             </div>
 
-                            <div class="card-footer bg-secondary text-center">
-                                <a href="profile.html?username=${username}" class="btn btn-success">View Profile</a>
-                            </div>
-                        </div>`;
-    return userCard;
-}
+//                             <div class="card-footer bg-secondary text-center">
+//                                 <a href="profile.html?username=${username}" class="btn btn-success">View Profile</a>
+//                             </div>
+//                         </div>`;
+//     return userCard;
+// }
 
 
 function removeAllChildren(elementID) {
