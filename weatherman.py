@@ -1,34 +1,27 @@
 import sys
 import os
 import glob
+import argparse
 
 from parser import WeatherParser
 from analyzer import WeatherAnalyzer
 from reporter import WeatherReporter
 
+arg_parser = argparse.ArgumentParser(description="Program to parse, analyze and report weather readings")
+arg_parser.add_argument('readings_dir', help="Path to weather readings directory")
+arg_parser.add_argument('-e', help="Display the highest temperature and day, lowest temperature and day, most humid day and humidity for a given year (e.g. 2002)")
+arg_parser.add_argument("-a", help="Display the average highest temperature, average lowest temperature, average mean humidity for a given month (e.g. 2005/6)")
+arg_parser.add_argument("-c", help="Draw two horizontal bar charts on the console for the highest and lowest temperature on each day. Highest in red and lowest in blue for a given month")
+arg_parser.add_argument("-o", help="Draw one horizontal bar chart on the console for the highest and lowest temperature on each day. Highest in red and lowest in blue for a given month")
 
-program_name = sys.argv[0]
 
-help_message = """Usage: {} 
-           -e Display the highest temperature and day, lowest temperature and day, most humid day and humidity for a given year (e.g. 2002).
-           -a Display the average highest temperature, average lowest temperature, average mean humidity for a given month (e.g. 2005/6).
-           -c Draw two horizontal bar charts on the console for the highest and lowest temperature on each day. Highest in red and lowest in blue for a given month.
-           -o Draw one horizontal bar chart on the console for the highest and lowest temperature on each day. Highest in red and lowest in blue for a given month.""".format(program_name)
-
-if len(sys.argv) < 2:
-    print("{}: Please pass path to weather readings directory".format(program_name))
-    exit(1)
-elif not os.path.exists(sys.argv[1]):
-    print("{}: Weather readings directory path is invalid".format(program_name))
-    exit(1)
-elif len(sys.argv) < 3:
-    print(help_message)
-    exit(1)
+arguments = arg_parser.parse_args()
 
 parser = WeatherParser()
+
 readings = []
-readings_dir = sys.argv[1]
-file_paths = glob.glob(readings_dir + "/*.csv")
+file_paths = glob.glob(arguments.readings_dir + "/*.csv")
+
 for file_path in file_paths:
     readings = readings + parser.parse_weather_file(file_path)
 
@@ -72,48 +65,39 @@ def get_monthly_single_bar_chart(readings, year, month):
 
 if __name__ == "__main__":
     """Parse the arguments passed to the program"""
-    arguments = sys.argv[2:]
-    i = 0
-    while i < len(arguments):
-        if arguments[i] == "-e":
-            try:
-                year = arguments[i+1]
-                year = int(year)
-            except IndexError:
-                print("Please pass year with argument -e e.g. 2002")
-                exit(1)
-            except ValueError:
-                print("-e argument only accepts year e.g. 2002")
-                exit(1)
-            get_yearly_reports(readings, year)
-        elif arguments[i] == "-a":
-            try:
-                year, month = arguments[i+1].split("/")
-            except IndexError:
-                print("Please pass year and month with argument -a e.g. 2005/6")
-                exit(1)
-            except ValueError:
-                print("Please pass month with year with argument -e .g. 2005/6")
-                exit(1)
-            get_monthly_reports(readings, int(year), int(month))
-        elif arguments[i] == "-c":
-            try:
-                year, month = arguments[i+1].split("/")
-            except IndexError:
-                print("Please pass year and month with argument -c e.g. 2005/6")
-                exit(1)
-            except ValueError:
-                print("Please pass month with year with argument -c e.g. 2005/6")
-                exit(1)
-            get_monthly_bar_charts(readings, int(year), int(month))
-        elif arguments[i] == "-o":
-            try:
-                year, month = arguments[i+1].split("/")
-            except IndexError:
-                print("Please pass year and month with argument -o e.g. 2005/6")
-                exit(1)
-            except ValueError:
-                print("Please pass month with year with argument -o e.g. 2005/6")
-                exit(1)
-            get_monthly_single_bar_chart(readings, int(year), int(month))
-        i = i + 2
+
+    if arguments.e:
+        try:
+            year = arguments.e
+            year = int(year)
+        except ValueError:
+            print("-e argument only accepts year e.g. 2002")
+            exit(1)
+        get_yearly_reports(readings, year)
+
+    if arguments.a:
+        try:
+            year, month = arguments.a.split("/")
+        except ValueError:
+            print("Please pass month with year with argument -e .g. 2005/6")
+            exit(1)
+        get_monthly_reports(readings, int(year), int(month))
+
+    if arguments.c:
+        try:
+            year, month = arguments.c.split("/")
+        except ValueError:
+            print("Please pass month with year with argument -c e.g. 2005/6")
+            exit(1)
+        get_monthly_bar_charts(readings, int(year), int(month))
+
+    if arguments.o:
+        try:
+            year, month = arguments.o.split("/")
+        except IndexError:
+            print("Please pass year and month with argument -o e.g. 2005/6")
+            exit(1)
+        except ValueError:
+            print("Please pass month with year with argument -o e.g. 2005/6")
+            exit(1)
+        get_monthly_single_bar_chart(readings, int(year), int(month))
