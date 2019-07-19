@@ -16,41 +16,31 @@ class DetailView(generic.DetailView):
     model = Article
     template_name = 'articles/detail.html'
 
-class ArticleForm(FormView):
+class ArticleCreateView(FormView):
     template_name = 'articles/add_article.html'
     form_class = NewArticleForm
-    success_url = '/articles'
+    success_url = '/'
 
     def form_valid(self, form):
-        print(form)
-        article = Article.objects.create(
-            title=form.cleaned_data['title'],
-            category=form.cleaned_data['category'],
-            website=form.cleaned_data['website'],
-            image_url=form.cleaned_data['image_url'],
-            content=form.cleaned_data['content'],
-            publish_time=form.cleaned_data['publish_time'],
-            url=form.cleaned_data['url'],
-        )
-        article.authors.add(*form.cleaned_data['authors'])
-        return super(ArticleForm, self).form_valid(form)
+        authors = form.cleaned_data.pop("authors")
+        article = Article.objects.create(**form.cleaned_data)
+        article.authors.add(*authors)
+        return super(ArticleCreateView, self).form_valid(form)
 
-class AuthorForm(FormView):
+class AuthorCreateView(FormView):
     template_name = 'articles/add_author.html'
     form_class = NewAuthorForm
-    success_url = '/articles'
+    success_url = '/'
 
     def form_valid(self, form):
-        print("Valid form")
-        author = Author.objects.create(full_name=form.cleaned_data['full_name'])
-        return super(AuthorForm, self).form_valid(form)
+        Author.objects.create(**form.cleaned_data)
+        return super(AuthorCreateView, self).form_valid(form)
 
-class WebsiteForm(FormView):
+class WebsiteCreateView(FormView):
     template_name = 'articles/add_website.html'
     form_class = NewWebsiteForm
-    success_url = '/articles'
+    success_url = '/'
 
     def form_valid(self, form):
-        print("Valid form")
-        website = Website.objects.create(name=form.cleaned_data['name'], url=form.cleaned_data['url'])
-        return super(WebsiteForm, self).form_valid(form)
+        Website.objects.create(**form.cleaned_data)
+        return super(WebsiteCreateView, self).form_valid(form)
