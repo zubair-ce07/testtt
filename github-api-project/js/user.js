@@ -71,113 +71,117 @@ TABBED_PROFILE_ELEMENT.addEventListener("click", (event) => {
 })
 
 
-function githubAPICaller(query, onloadFunction) {
-    let clientRequest = new XMLHttpRequest()
+function githubAPICaller(query) {
+    return new Promise(function(resolve, reject){
+        let clientRequest = new XMLHttpRequest()
 
-    clientRequest.open(REQ_METHOD, query, ASYNC_API_CALL)
-    clientRequest.responseType = RES_TYPE
-    clientRequest.onload = onloadFunction;
-    clientRequest.send()
+        clientRequest.open(REQ_METHOD, query, ASYNC_API_CALL)
+        clientRequest.responseType = RES_TYPE
+        clientRequest.onload = function() {
+            if (clientRequest.status == API_REQUEST_SUCCESSFUL) {
+                resolve(clientRequest.response)
+            } else {
+                reject(new Error('Failed 200 OK => API Request was not Successful!'))
+            }
+        };
+        clientRequest.send()
+    })
 }
 
 
 function fetchUser(){
     const QUERY = `${API_BASE_URL}users/${USERNAME}`
-    githubAPICaller(QUERY, onloadUserInfo)
+    githubAPICaller(QUERY).then((returnedJsonData)=> {
+        onloadUserInfo(returnedJsonData)
+    })
 }
 
 
 function fetchFollowers() {
     let QUERY = `${API_BASE_URL}users/${USERNAME}/followers?per_page=${NUMBER_OF_USERS_DISPLAYED}`
-    githubAPICaller(QUERY, onloadUserFollowers)
+    githubAPICaller(QUERY).then((returnedJsonData)=> {
+        onloadUserFollowers(returnedJsonData)
+    })
 }
 
 
 function fetchFollowing() {
     let QUERY = `${API_BASE_URL}users/${USERNAME}/following?per_page=${NUMBER_OF_USERS_DISPLAYED}`
-    githubAPICaller(QUERY, onloadUserFollowing)
+    githubAPICaller(QUERY).then((returnedJsonData)=> {
+        onloadUserFollowing(returnedJsonData)
+    })
 }
 
 
 function fetchRepos() {
     let QUERY = `${API_BASE_URL}users/${USERNAME}/repos?per_page=${NUMBER_OF_USERS_DISPLAYED}`
-    githubAPICaller(QUERY, onloadUserRepos)
+    githubAPICaller(QUERY).then((returnedJsonData)=> {
+        onloadUserRepos(returnedJsonData)
+    })
 }
 
 
-function onloadUserInfo() {
-    let userInfo = this.response,
-        userJoinedDate = new Date(userInfo[USER_API_RESP_STRUCT.joinedAt]);
+function onloadUserInfo(userInfo) {
+    let userJoinedDate = new Date(userInfo[USER_API_RESP_STRUCT.joinedAt]);
 
-    if (this.status == API_REQUEST_SUCCESSFUL) {
-        modifyHTMLElement("avatar", "src", userInfo[USER_API_RESP_STRUCT.avatarURL])
-        modifyHTMLElement("github-url", "href", userInfo[USER_API_RESP_STRUCT.githubURL])
-        modifyHTMLElement("github-url", "target", "__blank")
-        modifyHTMLElement("real-name", "innerText", userInfo[USER_API_RESP_STRUCT.fullName])
-        modifyHTMLElement("user-location", "innerText", userInfo[USER_API_RESP_STRUCT.location] ? userInfo[USER_API_RESP_STRUCT.location] : JSON_NULL)
-        modifyHTMLElement("user-company", "innerText", userInfo[USER_API_RESP_STRUCT.company] ? userInfo[USER_API_RESP_STRUCT.company] : JSON_NULL)
-        modifyHTMLElement("user-bio", "innerText", userInfo[USER_API_RESP_STRUCT.bio] ? userInfo[USER_API_RESP_STRUCT.bio] : EMPTY_STRING)
-        modifyHTMLElement("user-joined", "innerText", `${userJoinedDate.getDay()}/${userJoinedDate.getMonth()}/${userJoinedDate.getFullYear()}`)
-        modifyHTMLElement("user-blog", "innerHTML", userInfo[USER_API_RESP_STRUCT.blogURL] ? formatUserBlogInfo(userInfo[USER_API_RESP_STRUCT.blogURL]) : JSON_NULL)
-        modifyHTMLElement("user-followers-badge", "innerText", userInfo[USER_API_RESP_STRUCT.followersURL])
-        modifyHTMLElement("user-following-badge", "innerText", userInfo[USER_API_RESP_STRUCT.followingURL])
-        modifyHTMLElement("user-repos-badge", "innerText", userInfo[USER_API_RESP_STRUCT.reposURL])
-    }
+    modifyHTMLElement("avatar", "src", userInfo[USER_API_RESP_STRUCT.avatarURL])
+    modifyHTMLElement("github-url", "href", userInfo[USER_API_RESP_STRUCT.githubURL])
+    modifyHTMLElement("github-url", "target", "__blank")
+    modifyHTMLElement("real-name", "innerText", userInfo[USER_API_RESP_STRUCT.fullName])
+    modifyHTMLElement("user-location", "innerText", userInfo[USER_API_RESP_STRUCT.location] ? userInfo[USER_API_RESP_STRUCT.location] : JSON_NULL)
+    modifyHTMLElement("user-company", "innerText", userInfo[USER_API_RESP_STRUCT.company] ? userInfo[USER_API_RESP_STRUCT.company] : JSON_NULL)
+    modifyHTMLElement("user-bio", "innerText", userInfo[USER_API_RESP_STRUCT.bio] ? userInfo[USER_API_RESP_STRUCT.bio] : EMPTY_STRING)
+    modifyHTMLElement("user-joined", "innerText", `${userJoinedDate.getDay()}/${userJoinedDate.getMonth()}/${userJoinedDate.getFullYear()}`)
+    modifyHTMLElement("user-blog", "innerHTML", userInfo[USER_API_RESP_STRUCT.blogURL] ? formatUserBlogInfo(userInfo[USER_API_RESP_STRUCT.blogURL]) : JSON_NULL)
+    modifyHTMLElement("user-followers-badge", "innerText", userInfo[USER_API_RESP_STRUCT.followersURL])
+    modifyHTMLElement("user-following-badge", "innerText", userInfo[USER_API_RESP_STRUCT.followingURL])
+    modifyHTMLElement("user-repos-badge", "innerText", userInfo[USER_API_RESP_STRUCT.reposURL])
 }
 
 
-function onloadUserFollowers() {
-    if (this.status == API_REQUEST_SUCCESSFUL) {
-        let mainDisplayElement = document.getElementById("display-followers");
-        displayUsers(mainDisplayElement, this.response)
-    }
+function onloadUserFollowers(returnedJsonData) {
+    let mainDisplayElement = document.getElementById("display-followers");
+    displayUsers(mainDisplayElement, returnedJsonData)
 
     fixButtonHref("display-followers-button", "followers")
 }
 
 
-function onloadUserFollowing() {
-    if (this.status == API_REQUEST_SUCCESSFUL) {
-
-        let mainDisplayElement = document.getElementById("display-following");
-        displayUsers(mainDisplayElement, this.response)
-    }
+function onloadUserFollowing(returnedJsonData) {
+    let mainDisplayElement = document.getElementById("display-following");
+    displayUsers(mainDisplayElement, returnedJsonData)
 
     fixButtonHref("display-following-button", "following")
 }
 
 
-function onloadUserRepos() {
-    if (this.status == API_REQUEST_SUCCESSFUL) {
+function onloadUserRepos(returnedJsonData) {
+    let mainDisplayElement = document.getElementById("display-repositories");
+    let repoCardsList = []
 
-        let mainDisplayElement = document.getElementById("display-repositories");
-        let repoCardsList = []
+    returnedJsonData.forEach((repo) => {
+        userCard = createOneRepoCard(repo[REPO_API_RESP_STRUCT.fullName],
+                                    repo[REPO_API_RESP_STRUCT.description] ? repo[REPO_API_RESP_STRUCT.description] : spanNullValue("No Description Available", "warning"),
+                                    new Date(repo[REPO_API_RESP_STRUCT.created]).toDateString(),
+                                    new Date(repo[REPO_API_RESP_STRUCT.updated]).toDateString(),
+                                    repo[REPO_API_RESP_STRUCT.watchers],
+                                    repo[REPO_API_RESP_STRUCT.language] ? repo[REPO_API_RESP_STRUCT.language] : spanNullValue("Unknown", "danger"),
+                                    repo[REPO_API_RESP_STRUCT.forks],
+                                    repo[REPO_API_RESP_STRUCT.issues],
+                                    repo[REPO_API_RESP_STRUCT.license] ? repo[REPO_API_RESP_STRUCT.license]["name"] : spanNullValue("Unknown", "danger"),
+                                    repo[REPO_API_RESP_STRUCT.directURL]);
 
-        this.response.forEach((repo) => {
-            userCard = createOneRepoCard(repo[REPO_API_RESP_STRUCT.fullName],
-                                      repo[REPO_API_RESP_STRUCT.description] ? repo[REPO_API_RESP_STRUCT.description] : spanNullValue("No Description Available", "warning"),
-                                      new Date(repo[REPO_API_RESP_STRUCT.created]).toDateString(),
-                                      new Date(repo[REPO_API_RESP_STRUCT.updated]).toDateString(),
-                                      repo[REPO_API_RESP_STRUCT.watchers],
-                                      repo[REPO_API_RESP_STRUCT.language] ? repo[REPO_API_RESP_STRUCT.language] : spanNullValue("Unknown", "danger"),
-                                      repo[REPO_API_RESP_STRUCT.forks],
-                                      repo[REPO_API_RESP_STRUCT.issues],
-                                      repo[REPO_API_RESP_STRUCT.license] ? repo[REPO_API_RESP_STRUCT.license]["name"] : spanNullValue("Unknown", "danger"),
-                                      repo[REPO_API_RESP_STRUCT.directURL]);
+        repoCardsList.push(userCard)
+    })
 
-            repoCardsList.push(userCard)
-        })
-
-
-        for(let i = 0; i < repoCardsList.length; i = i + REPO_CARDS_PER_ROW) {
-            let cardDeck = document.createElement("div");
-            cardDeck.className = "card-deck"
-            let remainingCards = i + REPO_CARDS_PER_ROW <= repoCardsList.length ? REPO_CARDS_PER_ROW : repoCardsList.length % REPO_CARDS_PER_ROW
-            for(let j = i; j < i + remainingCards; j++) {
-                cardDeck.appendChild(repoCardsList[j])
-            }
-            mainDisplayElement.appendChild(cardDeck)
+    for(let i = 0; i < repoCardsList.length; i = i + REPO_CARDS_PER_ROW) {
+        let cardDeck = document.createElement("div");
+        cardDeck.className = "card-deck"
+        let remainingCards = i + REPO_CARDS_PER_ROW <= repoCardsList.length ? REPO_CARDS_PER_ROW : repoCardsList.length % REPO_CARDS_PER_ROW
+        for(let j = i; j < i + remainingCards; j++) {
+            cardDeck.appendChild(repoCardsList[j])
         }
+        mainDisplayElement.appendChild(cardDeck)
     }
 
     fixButtonHref("display-repositories-button", EMPTY_STRING)

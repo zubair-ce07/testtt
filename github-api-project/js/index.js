@@ -33,20 +33,30 @@ document.getElementById("argumentHandler").addEventListener("change", (event) =>
 })
 
 
-function githubAPICaller(query, onloadFunction) {
-    let clientRequest = new XMLHttpRequest()
+function githubAPICaller(query) {
+    return new Promise(function(resolve, reject) {
+        let clientRequest = new XMLHttpRequest()
 
-    clientRequest.open(REQ_METHOD, query, ASYNC_API_CALL)
-    clientRequest.responseType = RES_TYPE
-    clientRequest.onload = onloadFunction;
-    clientRequest.send()
+        clientRequest.open(REQ_METHOD, query, ASYNC_API_CALL)
+        clientRequest.responseType = RES_TYPE
+        clientRequest.onload = function() {
+            if (clientRequest.status == API_REQUEST_SUCCESSFUL) {
+                resolve(clientRequest.response)
+            } else {
+                reject(new Error('Failed 200 OK => API Request was not Successful!'))
+            }
+        };
+        clientRequest.send()
+    })
 }
 
 
 function fetchUsers(country, language, criteria) {
     const QUERY = `${API_BASE_URL}search/users?o=desc&q=language%3A${encodeURIComponent(language)}+location%3A${country}&sort=${criteria}&type=users&per_page=${NUMBER_OF_USERS_DISPLAYED}`
 
-    githubAPICaller(QUERY, userInfoOnLoad)
+    githubAPICaller(QUERY).then((returnedJsonData) => {
+        userInfoOnLoad(returnedJsonData)
+    })
 }
 
 
@@ -55,44 +65,42 @@ function validateGithubAPIArgs() {
 }
 
 
-function userInfoOnLoad() {
-    if (this.status == API_REQUEST_SUCCESSFUL) {
-        const API_RESPONSE = this.response
-        let userCards = []
-        var mainDisplayElement = document.getElementById("disp");
+function userInfoOnLoad(returnedJsonData) {
+    const API_RESPONSE = returnedJsonData
+    let userCards = []
+    var mainDisplayElement = document.getElementById("disp");
 
-        removeAllChildren("disp")
-        removeCustomStyle(mainDisplayElement);
-        
-        let heading = createHTMLElement("h2", 
-                                        {"textAlign": "center", "paddingBottom": "50px"}, 
-                                        `By ${CRITERIA_ELEMENT.value.toUpperCase()}: Top 
-                                         ${NUMBER_OF_USERS_DISPLAYED}/${API_RESPONSE["total_count"]} 
-                                         users in <u>${COUNTRY_ELEMENT.value.toUpperCase()}</u>, who work in 
-                                         <i>${LANGUAGE_ELEMENT.value.toUpperCase()}</i>`)
-        mainDisplayElement.appendChild(heading)
-        
-        API_RESPONSE["items"].forEach((singleUser, index) => {
-            userCards.push(createOneUserCard(index + 1, singleUser[USER_API_RESP_STRUCT.username], singleUser[USER_API_RESP_STRUCT.githubID], singleUser[USER_API_RESP_STRUCT.avatarURL], singleUser[USER_API_RESP_STRUCT.githubURL]))
-        })
+    removeAllChildren("disp")
+    removeCustomStyle(mainDisplayElement);
+    
+    let heading = createHTMLElement("h2", 
+                                    {"textAlign": "center", "paddingBottom": "50px"}, 
+                                    `By ${CRITERIA_ELEMENT.value.toUpperCase()}: Top 
+                                        ${NUMBER_OF_USERS_DISPLAYED}/${API_RESPONSE["total_count"]} 
+                                        users in <u>${COUNTRY_ELEMENT.value.toUpperCase()}</u>, who work in 
+                                        <i>${LANGUAGE_ELEMENT.value.toUpperCase()}</i>`)
+    mainDisplayElement.appendChild(heading)
+    
+    API_RESPONSE["items"].forEach((singleUser, index) => {
+        userCards.push(createOneUserCard(index + 1, singleUser[USER_API_RESP_STRUCT.username], singleUser[USER_API_RESP_STRUCT.githubID], singleUser[USER_API_RESP_STRUCT.avatarURL], singleUser[USER_API_RESP_STRUCT.githubURL]))
+    })
 
-        for(let i = 0; i < userCards.length; i = i + USER_CARDS_PER_ROW) {
-            let cardDeck = document.createElement("div");
-            cardDeck.className = "card-deck"
+    for(let i = 0; i < userCards.length; i = i + USER_CARDS_PER_ROW) {
+        let cardDeck = document.createElement("div");
+        cardDeck.className = "card-deck"
 
-            let remainingCards = i + USER_CARDS_PER_ROW <= userCards.length ? USER_CARDS_PER_ROW : userCards.length % USER_CARDS_PER_ROW
+        let remainingCards = i + USER_CARDS_PER_ROW <= userCards.length ? USER_CARDS_PER_ROW : userCards.length % USER_CARDS_PER_ROW
 
-            for(let j = i; j < i + remainingCards; j++) {
-                cardDeck.appendChild(userCards[j])
-            }
-            mainDisplayElement.appendChild(cardDeck)
+        for(let j = i; j < i + remainingCards; j++) {
+            cardDeck.appendChild(userCards[j])
         }
-
-        let endText = createHTMLElement("h4", 
-                                        {"textAlign": "center", "marginTop": "50px"},
-                                        `... End of Results ...`)
-        mainDisplayElement.appendChild(endText)
+        mainDisplayElement.appendChild(cardDeck)
     }
+
+    let endText = createHTMLElement("h4", 
+                                    {"textAlign": "center", "marginTop": "50px"},
+                                    `... End of Results ...`)
+    mainDisplayElement.appendChild(endText)
 }
 
 
