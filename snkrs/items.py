@@ -17,7 +17,6 @@ class SnkrsItem(scrapy.Item):
     category = scrapy.Field()
     brand = scrapy.Field()
     url = scrapy.Field()
-    market = scrapy.Field()
     retailer = scrapy.Field()
     url_original = scrapy.Field()
     description = scrapy.Field()
@@ -33,4 +32,5 @@ class SnkrsSkuItem(scrapy.Item):
     price = scrapy.Field()
     currency = scrapy.Field()
     size = scrapy.Field()
+    size_type = scrapy.Field()
     sku_id = scrapy.Field()
