@@ -4,33 +4,7 @@ import re
 import requests
 
 from parsel import Selector
-from statistics import mean
 from urllib.parse import urlparse, urljoin
-
-
-def is_valid_url(url):
-    regex = re.compile(r'^(?:http(s)?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&\(\)\*\+,;=.]+$')
-    if re.match(regex, url):
-        return url
-    else:
-        exit('Website of incorrect format')
-
-
-def is_valid_concurrent_req(concurrent_reqs):
-    if int(concurrent_reqs) > 0:
-        return int(concurrent_reqs)
-    else:
-        return 1
-
-
-def parse_arguments():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('start_url', type=is_valid_url, help='Enter the starting URL')
-    parser.add_argument('max_urls', type=int, help='Enter the maximum number of URLs to be visited')
-    parser.add_argument('concurrent_reqs', type=is_valid_concurrent_req,
-                        help='Enter the maximum number of concurrent requests')
-    parser.add_argument('download_delay', type=float, help='Enter the maximum download delay for each requests')
-    return parser.parse_args()
 
 
 class AsyncCrawler:
@@ -40,14 +14,13 @@ class AsyncCrawler:
         self.max_urls = max_urls
         self.concurrent_reqs = concurrent_reqs
         self.download_delay = download_delay
-        self.site_sizes = []
+        self.bytes_downloaded = 0
         self.bounded_semaphore = asyncio.BoundedSemaphore(concurrent_reqs)
         self.visited_sites = set()
 
     async def download_page(self, url, loop):
         async with self.bounded_semaphore:
             downloaded_content = None
-            print(f"Downloading the URL {url}")
             try:
                 await asyncio.sleep(self.download_delay)
                 future_response = loop.run_in_executor(None, requests.get, url)
@@ -55,39 +28,34 @@ class AsyncCrawler:
             except Exception as error:
                 print(error)
             if downloaded_content:
-                self.site_sizes.append(len(downloaded_content.content))
+                self.bytes_downloaded += len(downloaded_content.text)
             return downloaded_content.text
 
     async def get_anchor_urls(self, url, loop):
         filtered_links = []
         parsed_url = urlparse(url)
         base_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
-        raw_html = await self.download_page(url, loop)
-        html_selector = Selector(raw_html)
-        href_links = html_selector.xpath('//a/@href').getall()
-        for href in href_links:
-            filtered_links.append(urljoin(base_url, href))
+        html_selector = Selector(text=await self.download_page(url, loop))
+        filtered_links += map(lambda href_links: urljoin(base_url, href_links), html_selector.xpath('//a/@href').getall())
         return filtered_links
 
-    async def extract_collective_urls(self, url_list, loop):
+    async def extract_collective_urls(self, href_urls, loop):
         future_results = []
-        for url in url_list:
-            if url not in self.visited_sites and len(self.visited_sites) < self.max_urls:
+        for url in href_urls:
+            if len(self.visited_sites) == self.max_urls:
+                break
+            elif url not in self.visited_sites:
                 future_results.append(asyncio.ensure_future(self.get_anchor_urls(url, loop)))
                 self.visited_sites.add(url)
         urls_extracted = await asyncio.gather(*future_results)
         return urls_extracted
 
     async def concurrent_processing(self, loop):
-        url_list = []
-        url_list.append(self.start_url)
-        while True:
-            if len(self.visited_sites) < self.max_urls:
-                urls_extracted = await self.extract_collective_urls(url_list, loop)
-                for urls in urls_extracted:
-                    url_list.extend(urls)
-            else:
-                break
+        href_urls = [self.start_url]
+        while len(self.visited_sites) < self.max_urls:
+            urls_extracted = await self.extract_collective_urls(href_urls, loop)
+            for urls in urls_extracted:
+                href_urls.extend(urls)
 
     def execute_async_spider(self):
         event_loop = asyncio.get_event_loop()
@@ -95,9 +63,29 @@ class AsyncCrawler:
         event_loop.close()
 
     def generate_report(self):
-        print(f"Total number of website visits are: {len(self.site_sizes)}")
-        print(f"Total bytes downloaded are: {sum(self.site_sizes)} Bytes / {sum(self.site_sizes) / 1000} Kilobytes")
-        print(f"Average size of page is :{round(mean(self.site_sizes), 2)} Bytes/ {round(mean(self.site_sizes) / 1000,2)} Kilobytes")
+        print(f"Total number of website visits are: {len(self.visited_sites)}")
+        print(f"Total bytes downloaded are: {self.bytes_downloaded} Bytes / {self.bytes_downloaded / 1000} Kilobytes")
+        print(f"Average size of page is : {self.bytes_downloaded/len(self.visited_sites)} Bytes /"
+              f"{(round(self.bytes_downloaded/len(self.visited_sites))/1000)} Kilobytes")
+
+
+def is_valid_url(url):
+    regex = re.compile(r'^(https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}()?(\/.*)?')
+    if re.match(regex, url):
+        return url
+    else:
+        raise argparse.ArgumentTypeError('Website is of incorrect format')
+
+
+def parse_arguments():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('start_url', type=is_valid_url, help='Enter the starting URL')
+    parser.add_argument('max_urls', type=int, help='Enter the maximum number of URLs to be visited')
+    parser.add_argument('concurrent_reqs',
+                        type=lambda concurrent_reqs: int(concurrent_reqs) if int(concurrent_reqs) > 0 else 1,
+                        help='Enter the maximum number of concurrent requests')
+    parser.add_argument('download_delay', type=float, help='Enter the maximum download delay for each requests')
+    return parser.parse_args()
 
 
 if __name__ == "__main__":
