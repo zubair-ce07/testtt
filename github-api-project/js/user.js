@@ -1,5 +1,6 @@
 const NUMBER_OF_USERS_DISPLAYED = 12,
       API_BASE_URL = "https://api.github.com/",
+      SPINNER_LOADER = document.getElementById("spinnerLoader"),
       ASYNC_API_CALL = true,
       API_REQUEST_SUCCESSFUL = 200,
       REQ_METHOD = "GET",
@@ -50,6 +51,16 @@ if(USERNAME != null){
 }
 
 
+function showSpinner() {
+    SPINNER_LOADER.style.visibility = "visible"
+}
+
+
+function hideSpinner() {
+    SPINNER_LOADER.style.visibility = "hidden"
+}
+
+
 TABBED_PROFILE_ELEMENT.addEventListener("click", (event) => {
     const targetTab = event.target.getAttribute("href")
 
@@ -91,32 +102,68 @@ function githubAPICaller(query) {
 
 function fetchUser(){
     const QUERY = `${API_BASE_URL}users/${USERNAME}`
-    githubAPICaller(QUERY).then((returnedJsonData)=> {
+
+    showSpinner()
+    githubAPICaller(QUERY)
+    .then((returnedJsonData)=> {
         onloadUserInfo(returnedJsonData)
+    })
+    .catch((e) => {
+        console.log(e)
+    })
+    .finally(() => {
+        hideSpinner()
     })
 }
 
 
 function fetchFollowers() {
     let QUERY = `${API_BASE_URL}users/${USERNAME}/followers?per_page=${NUMBER_OF_USERS_DISPLAYED}`
-    githubAPICaller(QUERY).then((returnedJsonData)=> {
+
+    showSpinner()
+    githubAPICaller(QUERY)
+    .then((returnedJsonData)=> {
         onloadUserFollowers(returnedJsonData)
+    })
+    .catch((e) => {
+        console.log(e)
+    })
+    .finally(() => {
+        hideSpinner()
     })
 }
 
 
 function fetchFollowing() {
     let QUERY = `${API_BASE_URL}users/${USERNAME}/following?per_page=${NUMBER_OF_USERS_DISPLAYED}`
-    githubAPICaller(QUERY).then((returnedJsonData)=> {
+
+    showSpinner()
+    githubAPICaller(QUERY)
+    .then((returnedJsonData)=> {
         onloadUserFollowing(returnedJsonData)
+    })
+    .catch((e) => {
+        console.log(e)
+    })
+    .finally(() => {
+        hideSpinner()
     })
 }
 
 
 function fetchRepos() {
     let QUERY = `${API_BASE_URL}users/${USERNAME}/repos?per_page=${NUMBER_OF_USERS_DISPLAYED}`
-    githubAPICaller(QUERY).then((returnedJsonData)=> {
+
+    showSpinner()
+    githubAPICaller(QUERY)
+    .then((returnedJsonData)=> {
         onloadUserRepos(returnedJsonData)
+    })
+    .catch((e) => {
+        console.log(e)
+    })
+    .finally(() => {
+        hideSpinner()
     })
 }
 

@@ -1,6 +1,13 @@
 const COUNTRY_ELEMENT = document.getElementById("countrySelector"),
       LANGUAGE_ELEMENT = document.getElementById("languageSelector"),
       CRITERIA_ELEMENT = document.getElementById("criteriaSelector"),
+      COUNTRY_WARNING_DIV = document.getElementById("emptyCountry"),
+      LANGUAGE_WARNING_DIV = document.getElementById("emptyLang"),
+      CRITERIA_WARNING_DIV = document.getElementById("emptyCriteria"),
+      SPINNER_LOADER = document.getElementById("spinnerLoader"),
+      COUNTRY_WARNING = "You must type in a Country"
+      LANGUAGE_WARNING = "Please select a language!"
+      CRITERIA_WARNING = "Please select a criteria!"
       NUMBER_OF_USERS_DISPLAYED = 20,
       API_BASE_URL = "https://api.github.com/",
       ASYNC_API_CALL = true,
@@ -54,14 +61,71 @@ function githubAPICaller(query) {
 function fetchUsers(country, language, criteria) {
     const QUERY = `${API_BASE_URL}search/users?o=desc&q=language%3A${encodeURIComponent(language)}+location%3A${country}&sort=${criteria}&type=users&per_page=${NUMBER_OF_USERS_DISPLAYED}`
 
-    githubAPICaller(QUERY).then((returnedJsonData) => {
+    showSpinner()
+    githubAPICaller(QUERY)
+    .then((returnedJsonData) => {
         userInfoOnLoad(returnedJsonData)
+    })
+    .catch((e) => {
+        console.log(e)
+    })
+    .finally(() => {
+        hideSpinner()
     })
 }
 
 
+function showSpinner() {
+    SPINNER_LOADER.style.visibility = "visible"
+}
+
+function hideSpinner() {
+    SPINNER_LOADER.style.visibility = "hidden"
+}
+
+
+function emptyCountryArg() {
+    return (COUNTRY_ELEMENT.value == EMPTY_STRING)
+}
+
+function emptyCriteriaArg() {
+    return (CRITERIA_ELEMENT.value == EMPTY_STRING)
+}
+
+function emptyLanguageArg() {
+    return (LANGUAGE_ELEMENT.value == EMPTY_STRING)
+}
+
+function showCountryWarning() {
+    COUNTRY_WARNING_DIV.innerText = COUNTRY_WARNING
+}
+
+function showLanguageWarning() {
+    LANGUAGE_WARNING_DIV.innerText = LANGUAGE_WARNING
+}
+
+function showCriteriaWarning() {
+    CRITERIA_WARNING_DIV.innerText = CRITERIA_WARNING
+}
+
+function hideCountryWarning() {
+    COUNTRY_WARNING_DIV.innerText = EMPTY_STRING
+}
+
+function hideLanguageWarning() {
+    LANGUAGE_WARNING_DIV.innerText = EMPTY_STRING
+}
+
+function hideCriteriaWarning() {
+    CRITERIA_WARNING_DIV.innerText = EMPTY_STRING
+}
+
 function validateGithubAPIArgs() {
-    return (LANGUAGE_ELEMENT.value != EMPTY_STRING && CRITERIA_ELEMENT.value != EMPTY_STRING && COUNTRY_ELEMENT.value != EMPTY_STRING) ? ASYNC_API_CALL : false;
+    emptyCountryArg() ? showCountryWarning() : hideCountryWarning();
+    emptyLanguageArg() ? showLanguageWarning() : hideLanguageWarning();
+    emptyCriteriaArg() ? showCriteriaWarning() : hideCriteriaWarning();
+    
+    return (!emptyCountryArg() && !emptyCriteriaArg() && !emptyLanguageArg())
 }
 
 

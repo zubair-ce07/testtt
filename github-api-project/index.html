@@ -15,10 +15,10 @@
     <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
         <div class="container-fluid">
             <div class="navbar-header">
-            <a class="navbar-brand" href="#">Github Users API</a>
+                <a class="navbar-brand" href="#">Github Users API</a>
             </div>
             <ul class="nav navbar-nav navbar-right">
-                <li><a href="login.html"> </span> Login</a></li>
+                <img id="spinnerLoader" src="octocat-spinner-128.gif" width="50" height="50" style="visibility: hidden;">
             </ul>
         </div>
     </nav>
@@ -30,6 +30,7 @@
                     <div class="col-md-4 mb-3">
                         <label class="text-white">Country</label>
                         <input type="text" class="form-control" id="countrySelector" value="Pakistan" onsubmit="return false">
+                        <label class="text-light bg-danger" id="emptyCountry"></label>
                     </div>
                     <div class="col-md-4 mb-3">
                         <label class="text-white">Language</label>
@@ -46,6 +47,7 @@
                             <option value='Ruby'>Ruby</option>
                             <option value='C'>C</option>
                         </select>
+                        <label class="text-light bg-danger" id="emptyLang"></label>
                     </div>
                     <div class="col-md-4 mb-3">
                         <label class="text-white">Criteria</label>
@@ -56,6 +58,7 @@
                             <option value='joined'>Most Recently Joined</option>
                             <option value='repositories'>Most Repositpries</option>
                         </select>
+                        <label class="text-light bg-danger" id="emptyCriteria"></label>
                     </div>
                 </div>
             </form>
