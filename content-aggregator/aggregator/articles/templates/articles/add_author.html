@@ -1,13 +1,50 @@
 {% load static %}
+{% load materializecss %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Document</title>
+    <link rel="stylesheet" href="{% static 'articles/css/materialize.min.css' %}">
+    <link rel="stylesheet" href="{% static 'articles/css/style.css' %}">
+    <script src="{% static 'articles/js/jquery-3.4.1.js' %}"></script>
+    <script src="{% static 'articles/js/materialize.min.js' %}"></script>
+    <script src="{% static 'articles/js/script.js' %}"></script>
+    <title>Add Author | Readers Haven</title>
 </head>
 <body>
-    {{ form.as_p }}
+    <div class="navbar-fixed">
+        <nav id="navbar"">
+            <div class=" nav-wrapper">
+                <a id="heading-text" href="/articles" class="brand-logo center">Readers Haven</a>
+                <ul class="right hide-on-med-and-down">
+                    <li><a href="/articles" class="waves-effect waves-light btn">Back to Home</a></li>
+                </ul>
+            </div>
+        </nav>
+    </div>
+    <div class="container">
+        <br><br>
+        <h4>Add a new author</h4>
+        <div class="row">
+            <form class="col s12" method="post">
+                {% csrf_token %}
+                <br><br><br>
+                <div class="row">
+                    <div class="col s2"></div>
+                    <div class="input-field col s8">
+                        {{ form.full_name|materializecss }}
+                        {% if form.full_name.errors %}
+                        {{ form.full_name.errors }}
+                        {% endif %}
+                    </div>
+                </div>
+                <br>
+                <center>
+                    <button type="submit" class="btn waves-effect btn-large btn-success">Submit</button>
+                </center>
+            </form>
+    </div>
 </body>
 </html>

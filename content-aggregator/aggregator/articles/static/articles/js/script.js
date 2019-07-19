@@ -17,3 +17,14 @@ document.addEventListener('DOMContentLoaded', function() {
     $(".dropdown-trigger").dropdown();
   })
   
+  $(document).ready(function () {
+
+            
+    $('select').formSelect();
+    $(function () {
+        $("#id_publish_time").datetimepicker({
+            format: 'Y-m-d H:i',
+        });
+        $("#id_publish_time").attr("autocomplete", "off")
+    });
+});

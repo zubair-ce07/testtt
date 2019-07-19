@@ -6,11 +6,11 @@ from articles.models import Article, Author, Website
 from articles.forms import NewArticleForm, NewAuthorForm, NewWebsiteForm
 
 class IndexView(generic.ListView):
+    model = Article
     template_name = 'articles/index.html'
     context_object_name = 'recent_articles'
-
-    def get_queryset(self):
-        return Article.objects.order_by('-publish_time')[:20]
+    paginate_by = 10
+    queryset = Article.objects.order_by('-publish_time')
 
 class DetailView(generic.DetailView):
     model = Article
@@ -37,10 +37,20 @@ class ArticleForm(FormView):
 
 class AuthorForm(FormView):
     template_name = 'articles/add_author.html'
-    form_class = Author
+    form_class = NewAuthorForm
     success_url = '/articles'
+
+    def form_valid(self, form):
+        print("Valid form")
+        author = Author.objects.create(full_name=form.cleaned_data['full_name'])
+        return super(AuthorForm, self).form_valid(form)
 
 class WebsiteForm(FormView):
     template_name = 'articles/add_website.html'
-    form_class = Website
+    form_class = NewWebsiteForm
     success_url = '/articles'
+
+    def form_valid(self, form):
+        print("Valid form")
+        website = Website.objects.create(name=form.cleaned_data['name'], url=form.cleaned_data['url'])
+        return super(WebsiteForm, self).form_valid(form)

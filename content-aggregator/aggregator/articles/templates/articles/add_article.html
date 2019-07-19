@@ -22,7 +22,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-datetimepicker/2.5.20/jquery.datetimepicker.full.min.js"
         integrity="sha256-FEqEelWI3WouFOo2VWP/uJfs1y8KJ++FLh2Lbqc8SJk=" crossorigin="anonymous"></script>
 
-    <title>Readers Haven</title>
+    <title>Add Article | Readers Haven</title>
 </head>
 
 <body>
@@ -35,10 +35,6 @@
     <script>
         $(document).ready(function () {
 
-            // Initialize materialize date picker
-            $('.datepicker').datepicker({
-                'format': 'yyyy-mm-dd'
-            });
             $('select').formSelect();
             $(function () {
                 $("#id_publish_time").datetimepicker({
@@ -53,17 +49,17 @@
 
     <div class="navbar-fixed">
         <nav id="navbar"">
-                <div class=" nav-wrapper">
-            <a id="heading-text" href="/articles" class="brand-logo center">Readers Haven</a>
-            <ul class="right hide-on-med-and-down">
-                <li><a href="/articles" class="waves-effect waves-light btn">Back to Home</a></li>
-            </ul>
-    </div>
-    </nav>
+            <div class=" nav-wrapper">
+                <a id="heading-text" href="/articles" class="brand-logo center">Readers Haven</a>
+                <ul class="right hide-on-med-and-down">
+                    <li><a href="/articles" class="waves-effect waves-light btn">Back to Home</a></li>
+                </ul>
+            </div>
+        </nav>
     </div>
     <div class="container">
         <br><br>
-        <h4>Add a new post to the collection</h4>
+        <h4>Add a new article to the collection</h4>
         <div class="row">
             <form class="col s12" method="post">
                 {% csrf_token %}
