@@ -241,7 +241,7 @@ function userInfoOnLoad(returnedJsonData) {
         let remainingCards = i + USER_CARDS_PER_ROW <= userCards.length ? USER_CARDS_PER_ROW : userCards.length % USER_CARDS_PER_ROW;
 
         for(let j = i; j < i + remainingCards; j++) {
-            cardDeck.appendChild(userCards[j].getCard());
+            cardDeck.appendChild(userCards[j].generateUserCard());
         }
         mainDisplayElement.appendChild(cardDeck);
     }

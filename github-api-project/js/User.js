@@ -14,22 +14,34 @@ class User {
      * @this {User}
      * @returns {object} User card as an HTML element
      */
-    getCard() {
+    generateUserCard() {
         let userCard = document.createElement("div");
+
         userCard.className = CARD_CLASS_NAMES;
         userCard.style = CARD_STYLE;
+        userCard.innerHTML = generateCardHTML();
 
-        userCard.innerHTML = `<div class="card-header text-bold">${this.number}</div>
-                                <img class="card-img-top" src="${this.avatar_url}" alt="Card image cap">
-
-                                <div class="card-body">
-                                    <h5 class="card-title text-center">${this.username}</h5>
-                                </div>
-
-                                <div class="card-footer bg-secondary text-center">
-                                    <a href="profile.html?username=${this.username}" class="btn btn-success">View Profile</a>
-                                </div>
-                            </div>`;
         return userCard;
+    }
+
+    /**
+     * Generates User card's internal HTML to be used by getCard()
+     *
+     * @author: mabdullahz
+     * @this {User}
+     * @returns {string} User card's internal HTML
+     */
+    generateCardHTML() {
+        return `<div class="card-header text-bold">${this.number}</div>
+                    <img class="card-img-top" src="${this.avatar_url}" alt="Card image cap">
+
+                    <div class="card-body">
+                        <h5 class="card-title text-center">${this.username}</h5>
+                    </div>
+
+                    <div class="card-footer bg-secondary text-center">
+                        <a href="profile.html?username=${this.username}" class="btn btn-success">View Profile</a>
+                    </div>
+                </div>`;
     }
 }
