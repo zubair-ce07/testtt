@@ -1,6 +1,8 @@
 import re
 
 import scrapy
+from scrapy.linkextractors import LinkExtractor
+from scrapy.spiders import Rule
 
 
 class AsicsItem(scrapy.Item):
@@ -14,6 +16,7 @@ class AsicsItem(scrapy.Item):
     care = scrapy.Field()
     image_urls = scrapy.Field()
     skus = scrapy.Field()
+    requests = scrapy.Field()
 
 
 def clean(raw_data):
@@ -28,10 +31,13 @@ class AsicsSpider(scrapy.Spider):
     name = 'asics'
     allowed_domains = ['asics.com']
     start_urls = [
-        'https://www.asics.com/us/en-us/',
+        # 'https://www.asics.com/us/en-us/',
+        'https://www.asics.com/us/en-us/court-ff-novak/p/0020013180.100'
+
     ]
 
-    def parse(self, response):
+
+    def aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaparse(self, response):
         listing_urls = response.css('.childlink-wrapper ::attr(href)').getall()
         yield from [response.follow(url=url, callback=self.parse_category)
                     for url in listing_urls]
@@ -41,11 +47,11 @@ class AsicsSpider(scrapy.Spider):
         yield from [response.follow(url=url, callback=self.parse_item)
                     for url in product_urls]
 
-        next_page = response.css('rightArrow ::attr(href)').get()
-        if next_page:
-            yield response.follow(url=next_page, callback=self.parse_category)
+        next_page_url = response.css('rightArrow ::attr(href)').get()
+        if next_page_url:
+            yield response.follow(url=next_page_url, callback=self.parse_category)
 
-    def parse_item(self, response):
+    def parse(self, response):
         item = AsicsItem()
         item['retailer_sku'] = self.product_id(response)
         item['name'] = self.product_name(response)
@@ -55,67 +61,86 @@ class AsicsSpider(scrapy.Spider):
         item['description'] = self.product_description(response)
         item['image_urls'] = self.image_urls(response)
         item['care'] = []
-        item['brand'] = self.product_brand()
-        item['skus'] = self.product_skus(response)
+        item['brand'] = self.product_brand(response)
+        item['skus'] = {}
+        item['requests'] = self.product_colors(response)
+
+        yield from self.next_request_or_item(item)
+
 
     def product_id(self, response):
-        return response.css('.inStock meta[itemprop="sku"] ::attr(content)').get()
+        return response.css('[itemprop="productID"] ::attr(content)').get()
 
     def product_name(self, response):
-        return self.clean_text(response.css('title ::text').get().split('|')[0])
+        return response.css('.single-prod-title ::text').get()
 
     def product_gender(self, response):
         return response.css('script[type="text/javascript"]').re('\"gender\":\"(.+?)\"')[0]
 
     def product_category(self, response):
-        return response.css('.breadcrumb ::text').getall()
+        return response.css('.breadcrumb ::text').getall()[1]
 
     def product_url(self, response):
         return response.url
 
     def product_description(self, response):
         raw_descriptions = response.css('.tabInfoChildContent ::text').getall()
-        return clean(raw_descriptions)
+        return clean(raw_descriptions)[1:]
 
     def image_urls(self, response):
         return response.css('.owl-carousel ::attr(data-big)').getall()
 
-    def product_brand(self):
-        return 'ASICS'
+    def product_brand(self, response):
+        return response.css('html ::attr(data-brand)').get()
+
+    def product_colors(self,response):
+        color_urls = response.css('.colorVariant ::attr(href)').getall()
+        return [response.follow(color_url, callback=self.product_skus)
+                for color_url in color_urls]
 
     def product_skus(self, response):
-        currency = response.css('.inStock meta[itemprop="priceCurrency"]'
-                                '::attr(content)').get()
-        price = response.css('.inStock meta[itemprop="price"]'
-                             '::attr(content)').get()
-        color = response.css('title ::text').get().split('|')[2]
+        print('\n\n\n\n\n\nAAAAAAAAAAAAAAAAAAAAAA')
+
+        item = response.meta['item']
         prev_price = response.css('.pull-right del ::text').getall()
+        color = response.css('[itemprop="color"] ::text').get()
+        raw_skus = item['skus']
+        print('\n\n\n\n\n\n\n\n Color: ', color)
+        for sku_sel in response.css('#sizes-options .SizeOption.inStock :first-of-type'):
+            print('\n\n\n\n\n',sku_sel.css('::attr(data-value)').get())
+            print(sku_sel.css('[itemprop="priceCurrency"]::attr(content)').get())
+            print(sku_sel.css('[itemprop="price"]::attr(content)').get())
+            print('Size:',clean(sku_sel.css('a.SizeOption ::text').get()))
 
-        skus = []
 
-        for sku_sel in response.css('.size-box-select-container .size-select-list'):
-            single_sku = {
-                sku_sel.css('::attr(data-value)').get():
-                    {
-                        'sku_id': f'{color} _ {self.size(sku_sel)}',
-                        'color': color,
-                        'currency': currency,
-                        'price': price,
-                        'size': self.size(sku_sel),
-                        'previous_price': prev_price
-                    }
-            }
-            skus.append(single_sku)
+            # print('\n\n\n\n\n\n\n\n SIZE: ', clean(sku_sel.css('.SizeOption ::text').get()))
+            # single_sku = {
+            #     sku_sel.css('::attr(data-value)').get():
+            #         {
+            #
+            #             'color': color,
+            #             'currency': sku_sel.css('[itemprop="priceCurrency"]::attr(content)').get(),
+            #             'price': sku_sel.css('[itemprop="price"]::attr(content)').get(),
+            #             'size': clean(sku_sel.css('.SizeOption ::text').get()),
+            #             'previous_price': prev_price
+            #         }
+            # }
+            # raw_skus.update(single_sku)
 
-        return skus
+        item['skus'] = raw_skus
+        yield from self.next_request_or_item(item)
 
-    def size(self, response):
-        if response.css('.SizeOption::text').getall():
-            return response.css('.SizeOption::text').getall() or ['One_Size']
+    def next_request_or_item(self, item):
 
-    def clean_text(self, text):
-        clean_text = re.sub('\s+', '', text)
+        print('\n\n\n\n\n',item['requests'])
 
-        if clean_text:
-            return clean_text
+        if item['requests']:
+            request = item['requests'].pop()
+            request.meta.update({'item': item})
+            print('QQQQQQQQQQQQQQQQQQQQ',request.callback)
+            yield request
+            return
 
+        item.pop('requests', None)
+        # yield item
+#ARSH
