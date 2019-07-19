@@ -42,7 +42,7 @@ function changeLoaderSpinnerState(option) {
  *
  * @author: mabdullahz
  */
-TABBED_PROFILE_ELEMENT.addEventListener(EVENT_TO_LISTEN, (event) => {
+TABBED_PROFILE_ELEMENT.addEventListener("click", (event) => {
     const targetTab = event.target.getAttribute("href");
 
     if(previousTab != targetTab && targetTab != null) {
@@ -223,8 +223,7 @@ function onloadUserInfo(userInfo) {
  * @param {object} returnedJsonData JSON data sent from the API
  */
 function onloadUserFollowers(returnedJsonData) {
-    let mainDisplayElement = document.getElementById(FOLLOWERS_CARDS_DIV);
-    displayUsers(mainDisplayElement, returnedJsonData);
+    displayUsers(FOLLOWERS_CARDS_DIV, returnedJsonData);
 
     fixButtonHref("display-followers-button", "followers");
 }
@@ -236,8 +235,7 @@ function onloadUserFollowers(returnedJsonData) {
  * @param {object} returnedJsonData JSON data sent from the API
  */
 function onloadUserFollowing(returnedJsonData) {
-    let mainDisplayElement = document.getElementById(FOLLOWING_CARDS_DIV);
-    displayUsers(mainDisplayElement, returnedJsonData);
+    displayUsers(FOLLOWING_CARDS_DIV, returnedJsonData);
 
     fixButtonHref("display-following-button", "following");
 }
@@ -249,7 +247,6 @@ function onloadUserFollowing(returnedJsonData) {
  * @param {object} returnedJsonData JSON data sent from the API
  */
 function onloadUserRepos(returnedJsonData) {
-    let mainDisplayElement = document.getElementById(REPOS_CARDS_DIV);
     let repoCardsList = [];
 
     returnedJsonData.forEach((repo) => {
@@ -272,7 +269,7 @@ function onloadUserRepos(returnedJsonData) {
         for(let j = i; j < i + remainingCards; j++) {
             cardDeck.appendChild(repoCardsList[j].generateRepoCard());
         }
-        mainDisplayElement.appendChild(cardDeck);
+        REPOS_CARDS_DIV.appendChild(cardDeck);
     }
 
     fixButtonHref("display-repositories-button", EMPTY_STRING);
