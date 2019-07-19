@@ -1,3 +1,5 @@
+import calendar
+
 class WeatherReporter():
     """Pretty prints weather information on the console"""
 
@@ -6,35 +8,22 @@ class WeatherReporter():
         self.blue = '\033[94m'
         self.red = '\033[91m'
         self.white = '\033[00m'
-        self.months = ["",
-                       "January",
-                       "February",
-                       "March",
-                       "April",
-                       "May",
-                       "June",
-                       "July",
-                       "August",
-                       "September",
-                       "October",
-                       "November",
-                       "December"]
 
     def report_year_extremes(self, highest_temperature_day, lowest_temperature_day, most_humid_day):
         """Print year extremes to the console"""
         report_hottest = "Highest: {}C on {} {}".format(
             highest_temperature_day.max_temperature,
-            self.months[highest_temperature_day.date.month],
+            calendar.month_name[highest_temperature_day.date.month],
             highest_temperature_day.date.day)
 
         report_coldest = "Lowest: {}C on {} {}".format(
             lowest_temperature_day.min_temperature,
-            self.months[lowest_temperature_day.date.month],
+            calendar.month_name[lowest_temperature_day.date.month],
             lowest_temperature_day.date.day)
 
         report_humid = "Humidity: {}% on {} {}".format(
             most_humid_day.max_humidity,
-            self.months[most_humid_day.date.month],
+            calendar.month_name[most_humid_day.date.month],
             most_humid_day.date.day)
         print(report_hottest, report_coldest,
               report_humid, sep="\n", end="\n\n")
