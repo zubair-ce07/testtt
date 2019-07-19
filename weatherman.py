@@ -20,7 +20,7 @@ arguments = arg_parser.parse_args()
 parser = WeatherParser()
 
 readings = []
-file_paths = glob.glob(arguments.readings_dir + "/*.csv")
+file_paths = glob.glob(arguments.readings_dir + "/*")
 
 for file_path in file_paths:
     readings = readings + parser.parse_weather_file(file_path)
