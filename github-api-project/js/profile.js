@@ -1,51 +1,22 @@
-const NUMBER_OF_USERS_DISPLAYED = 12;
-const API_BASE_URL = "https://api.github.com/";
-const SPINNER_LOADER = document.getElementById("spinnerLoader");
-const ASYNC_API_CALL = true;
-const API_REQUEST_SUCCESSFUL = 200;
-const REQ_METHOD = "GET";
 const USERNAME = new URL(window.location).searchParams.get("username");
-const USER_CARDS_PER_ROW = 4;
-const REPO_CARDS_PER_ROW = 2;
 const TABBED_PROFILE_ELEMENT = document.getElementById("user-profile-page");
 const HOME_TAB = "#home";
 const FOLLOWERS_TAB = "#followers";
 const FOLLOWING_TAB = "#following";
 const REPOS_TAB = "#repositories";
+const FOLLOWERS_CARDS_DIV = document.getElementById("display-followers");
+const FOLLOWING_CARDS_DIV = document.getElementById("display-following");
+const REPOS_CARDS_DIV = document.getElementById("display-repositories");
+
+const PROFILE_QUERY_OPTION = "profile";
+const FOLLOWERS_QUERY_OPTION = "followers";
+const FOLLOWING_QUERY_OPTION = "following";
+const REPOS_QUERY_OPTION = "repos";
+
+const REPO_CARDS_PER_ROW = 2;
 const JSON_NULL = "-";
-const EMPTY_STRING = "";
-const RES_TYPE = "json";
 const CARD_CLASS_NAMES = "card text-white bg-secondary mb-3 border-success";
 const CARD_STYLE = "width: 18rem;";
-
-const USER_API_RESP_STRUCT = {
-        username: "login",
-        githubID: "id",
-        avatarURL: "avatar_url",
-        githubURL: "html_url",
-        fullName: "name",
-        location: "location",
-        company: "company",
-        bio: "bio",
-        blogURL: "blog",
-        followersURL: "followers",
-        followingURL: "following",
-        reposURL: "public_repos",
-        joinedAt: "created_at"
-};
-
-const REPO_API_RESP_STRUCT = {
-        fullName: "name",
-        description: "description",
-        created: "created_at",
-        updated: "updated_at",
-        watchers: "watchers_count",
-        language: "language",
-        forks: "forks_count",
-        issues: "open_issues_count",
-        license: "license",
-        directURL: "html_url",
-};
 
 let previousTab = null;
 
@@ -54,30 +25,24 @@ if(USERNAME != null){
     fetchUser();
 }
 
-/**
- * Makes the spinner loader visible
- *
- * @author: mabdullahz
- */
-function showSpinner() {
-    SPINNER_LOADER.style.visibility = "visible";
-}
 
 /**
- * Hides the spinner loader
+ * Changes the spinner state based on the given argument
  *
  * @author: mabdullahz
+ * @param {string} Specifies the state of spinner to change to
  */
-function hideSpinner() {
-    SPINNER_LOADER.style.visibility = "hidden";
+function changeLoaderSpinnerState(option) {
+    SPINNER_LOADER.style.visibility = option;
 }
+
 
 /**
  * Adds event listener to the tabbed profile div, listening for clicks
  *
  * @author: mabdullahz
  */
-TABBED_PROFILE_ELEMENT.addEventListener("click", (event) => {
+TABBED_PROFILE_ELEMENT.addEventListener(EVENT_TO_LISTEN, (event) => {
     const targetTab = event.target.getAttribute("href");
 
     if(previousTab != targetTab && targetTab != null) {
@@ -97,6 +62,7 @@ TABBED_PROFILE_ELEMENT.addEventListener("click", (event) => {
     }
 })
 
+
 /**
  * Makes a new Github API request based on the given query
  *
@@ -114,12 +80,34 @@ function githubAPICaller(query) {
             if (clientRequest.status == API_REQUEST_SUCCESSFUL) {
                 resolve(clientRequest.response);
             } else {
-                reject(new Error('Failed 200 OK => API Request was not Successful!'));
+                reject(new Error(REQUEST_FAILED_MESSAGE));
             }
         }
         clientRequest.send();
     })
 }
+
+
+/**
+ * Generates the search user query
+ *
+ * @author: mabdullahz
+ * @param {string} option Specifies which query to generate
+ * @returns {string} formatted query for API
+ */
+function generateQuery(option) {
+    switch(option){
+        case PROFILE_QUERY_OPTION:
+            return `${API_BASE_URL}users/${USERNAME}`;
+        case FOLLOWERS_QUERY_OPTION:
+            return `${API_BASE_URL}users/${USERNAME}/followers?per_page=${NUMBER_OF_USERS_DISPLAYED}`;
+        case FOLLOWING_QUERY_OPTION:
+            return `${API_BASE_URL}users/${USERNAME}/following?per_page=${NUMBER_OF_USERS_DISPLAYED}`;
+        case REPOS_QUERY_OPTION:
+            return `${API_BASE_URL}users/${USERNAME}/repos?per_page=${NUMBER_OF_USERS_DISPLAYED}`;
+    }
+}
+
 
 /**
  * Generates the query and show the user info when promise is resolved/rejected
@@ -127,9 +115,9 @@ function githubAPICaller(query) {
  * @author: mabdullahz
  */
 function fetchUser(){
-    const QUERY = `${API_BASE_URL}users/${USERNAME}`;
+    const QUERY = generateQuery(PROFILE_QUERY_OPTION);
 
-    showSpinner();
+    changeLoaderSpinnerState(VISIBILITY_OPTION_ON);
     githubAPICaller(QUERY)
     .then((returnedJsonData)=> {
         onloadUserInfo(returnedJsonData);
@@ -138,7 +126,7 @@ function fetchUser(){
         console.log(e);
     })
     .finally(() => {
-        hideSpinner();
+        changeLoaderSpinnerState(VISIBILITY_OPTION_OFF);
     })
 }
 
@@ -148,9 +136,9 @@ function fetchUser(){
  * @author: mabdullahz
  */
 function fetchFollowers() {
-    let QUERY = `${API_BASE_URL}users/${USERNAME}/followers?per_page=${NUMBER_OF_USERS_DISPLAYED}`;
+    let QUERY = generateQuery(FOLLOWERS_QUERY_OPTION);
 
-    showSpinner();
+    changeLoaderSpinnerState(VISIBILITY_OPTION_ON);
     githubAPICaller(QUERY)
     .then((returnedJsonData)=> {
         onloadUserFollowers(returnedJsonData);
@@ -159,7 +147,7 @@ function fetchFollowers() {
         console.log(e);
     })
     .finally(() => {
-        hideSpinner();
+        changeLoaderSpinnerState(VISIBILITY_OPTION_OFF);
     })
 }
 
@@ -169,9 +157,9 @@ function fetchFollowers() {
  * @author: mabdullahz
  */
 function fetchFollowing() {
-    let QUERY = `${API_BASE_URL}users/${USERNAME}/following?per_page=${NUMBER_OF_USERS_DISPLAYED}`;
+    let QUERY = generateQuery(FOLLOWING_QUERY_OPTION);
 
-    showSpinner();
+    changeLoaderSpinnerState(VISIBILITY_OPTION_ON);
     githubAPICaller(QUERY)
     .then((returnedJsonData)=> {
         onloadUserFollowing(returnedJsonData);
@@ -180,7 +168,7 @@ function fetchFollowing() {
         console.log(e);
     })
     .finally(() => {
-        hideSpinner();
+        changeLoaderSpinnerState(VISIBILITY_OPTION_OFF);
     })
 }
 
@@ -190,9 +178,9 @@ function fetchFollowing() {
  * @author: mabdullahz
  */
 function fetchRepos() {
-    let QUERY = `${API_BASE_URL}users/${USERNAME}/repos?per_page=${NUMBER_OF_USERS_DISPLAYED}`;
+    let QUERY = generateQuery(REPOS_QUERY_OPTION);
 
-    showSpinner();
+    changeLoaderSpinnerState(VISIBILITY_OPTION_ON);
     githubAPICaller(QUERY)
     .then((returnedJsonData)=> {
         onloadUserRepos(returnedJsonData);
@@ -201,7 +189,7 @@ function fetchRepos() {
         console.log(e);
     })
     .finally(() => {
-        hideSpinner();
+        changeLoaderSpinnerState(VISIBILITY_OPTION_OFF);
     })
 }
 
@@ -235,7 +223,7 @@ function onloadUserInfo(userInfo) {
  * @param {object} returnedJsonData JSON data sent from the API
  */
 function onloadUserFollowers(returnedJsonData) {
-    let mainDisplayElement = document.getElementById("display-followers");
+    let mainDisplayElement = document.getElementById(FOLLOWERS_CARDS_DIV);
     displayUsers(mainDisplayElement, returnedJsonData);
 
     fixButtonHref("display-followers-button", "followers");
@@ -248,7 +236,7 @@ function onloadUserFollowers(returnedJsonData) {
  * @param {object} returnedJsonData JSON data sent from the API
  */
 function onloadUserFollowing(returnedJsonData) {
-    let mainDisplayElement = document.getElementById("display-following");
+    let mainDisplayElement = document.getElementById(FOLLOWING_CARDS_DIV);
     displayUsers(mainDisplayElement, returnedJsonData);
 
     fixButtonHref("display-following-button", "following");
@@ -261,7 +249,7 @@ function onloadUserFollowing(returnedJsonData) {
  * @param {object} returnedJsonData JSON data sent from the API
  */
 function onloadUserRepos(returnedJsonData) {
-    let mainDisplayElement = document.getElementById("display-repositories");
+    let mainDisplayElement = document.getElementById(REPOS_CARDS_DIV);
     let repoCardsList = [];
 
     returnedJsonData.forEach((repo) => {
@@ -282,7 +270,7 @@ function onloadUserRepos(returnedJsonData) {
         cardDeck.className = "card-deck";
         let remainingCards = i + REPO_CARDS_PER_ROW <= repoCardsList.length ? REPO_CARDS_PER_ROW : repoCardsList.length % REPO_CARDS_PER_ROW;
         for(let j = i; j < i + remainingCards; j++) {
-            cardDeck.appendChild(repoCardsList[j].getCard());
+            cardDeck.appendChild(repoCardsList[j].generateRepoCard());
         }
         mainDisplayElement.appendChild(cardDeck);
     }
@@ -373,7 +361,7 @@ function displayUsers(mainDisplayElement, apiCallResult) {
         cardDeck.className = "card-deck";
 
         for(let j = i; j < i + remainingCards; j++) {
-            cardDeck.appendChild(userCards[j].getCard());
+            cardDeck.appendChild(userCards[j].generateUserCard());
         }
 
         mainDisplayElement.appendChild(cardDeck);

@@ -19,7 +19,7 @@ class User {
 
         userCard.className = CARD_CLASS_NAMES;
         userCard.style = CARD_STYLE;
-        userCard.innerHTML = generateCardHTML();
+        userCard.innerHTML = this.generateUserCardInnerHtml();
 
         return userCard;
     }
@@ -31,7 +31,7 @@ class User {
      * @this {User}
      * @returns {string} User card's internal HTML
      */
-    generateCardHTML() {
+    generateUserCardInnerHtml() {
         return `<div class="card-header text-bold">${this.number}</div>
                     <img class="card-img-top" src="${this.avatar_url}" alt="Card image cap">
 

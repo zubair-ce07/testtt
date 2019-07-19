@@ -1,46 +1,24 @@
 const COUNTRY_ELEMENT = document.getElementById("countrySelector");
 const LANGUAGE_ELEMENT = document.getElementById("languageSelector");
 const CRITERIA_ELEMENT = document.getElementById("criteriaSelector");
-const COUNTRY_WARNING_DIV = document.getElementById("emptyCountry");
-const LANGUAGE_WARNING_DIV = document.getElementById("emptyLang");
-const CRITERIA_WARNING_DIV = document.getElementById("emptyCriteria");
-const SPINNER_LOADER = document.getElementById("spinnerLoader");
-const COUNTRY_WARNING = "You must type in a Country";
-const LANGUAGE_WARNING = "Please select a language!";
-const CRITERIA_WARNING = "Please select a criteria!";
-const NUMBER_OF_USERS_DISPLAYED = 20;
-const API_BASE_URL = "https://api.github.com/";
-const ASYNC_API_CALL = true;
-const API_REQUEST_SUCCESSFUL = 200;
-const REQ_METHOD = "GET";
-const RES_TYPE = "json";
-const USER_CARDS_PER_ROW = 4;
-const EMPTY_STRING = "";
+const API_ARGS_FORM = document.getElementById("argumentHandler");
+const CARDS_DISPLAY_DIV = document.getElementById("disp");
+
+const LANGUAGE_WARNING = {div: document.getElementById("emptyLang"), text: "Please select a language!"}
+const COUNTRY_WARNING = {div: document.getElementById("emptyCountry"), text: "You must type in a Country"}
+const CRITERIA_WARNING = {div: document.getElementById("emptyCriteria"), text: "Please select a criteria!"}
+
 const CARD_CLASS_NAMES = "card text-white bg-secondary mb-3 border-success";
 const CARD_STYLE = "width: 18rem;";
 
-const USER_API_RESP_STRUCT = {
-        username: "login",
-        githubID: "id",
-        avatarURL: "avatar_url",
-        githubURL: "html_url",
-        fullName: "name",
-        location: "location",
-        company: "company",
-        bio: "bio",
-        blogURL: "blog",
-        followersURL: "followers",
-        followingURL: "following",
-        reposURL: "public_repos",
-        joinedAt: "created_at"
-};
+validateGithubAPIArgs();
 
-
-document.getElementById("argumentHandler").addEventListener("change", (event) => {
+API_ARGS_FORM.addEventListener(EVENT_TO_LISTEN, (event) => {
     if(validateGithubAPIArgs()) {
         fetchUsers(COUNTRY_ELEMENT.value, LANGUAGE_ELEMENT.value, CRITERIA_ELEMENT.value);
     }
 })
+
 
 /**
  * Makes a new Github API request based on the given query
@@ -59,15 +37,30 @@ function githubAPICaller(query) {
             if (clientRequest.status == API_REQUEST_SUCCESSFUL) {
                 resolve(clientRequest.response);
             } else {
-                reject(new Error('Failed 200 OK => API Request was not Successful!'));
+                reject(new Error(REQUEST_FAILED_MESSAGE));
             }
         }
         clientRequest.send();
     })
 }
 
+
 /**
- * Generates the query and show the results when promise is resolved/rejected
+ * Generates the search user query
+ *
+ * @author: mabdullahz
+ * @param {string} country The country to search users in
+ * @param {string} language The language used by the users
+ * @param {string} criteria The criteria used to sort the users
+ * @returns {string} formatted query for API
+ */
+function generateFetchUsersQuery(country, language, criteria) {
+    return `${API_BASE_URL}search/users?o=desc&q=language%3A${encodeURIComponent(language)}+location%3A${country}&sort=${criteria}&type=users&per_page=${NUMBER_OF_USERS_DISPLAYED}`;
+}
+
+
+/**
+ * Fetches the users to display
  *
  * @author: mabdullahz
  * @param {string} country The country to search users in
@@ -75,9 +68,9 @@ function githubAPICaller(query) {
  * @param {string} criteria The criteria used to sort the users
  */
 function fetchUsers(country, language, criteria) {
-    const QUERY = `${API_BASE_URL}search/users?o=desc&q=language%3A${encodeURIComponent(language)}+location%3A${country}&sort=${criteria}&type=users&per_page=${NUMBER_OF_USERS_DISPLAYED}`;
+    const QUERY = generateFetchUsersQuery(country, language, criteria);
 
-    showSpinner();
+    changeLoaderSpinnerState(VISIBILITY_OPTION_ON);
     githubAPICaller(QUERY)
     .then((returnedJsonData) => {
         userInfoOnLoad(returnedJsonData);
@@ -86,112 +79,55 @@ function fetchUsers(country, language, criteria) {
         console.log(e);
     })
     .finally(() => {
-        hideSpinner();
+        changeLoaderSpinnerState(VISIBILITY_OPTION_OFF);
     })
 }
 
-/**
- * Makes the spinner loader visible
- *
- * @author: mabdullahz
- */
-function showSpinner() {
-    SPINNER_LOADER.style.visibility = "visible";
-}
 
 /**
- * Hides the spinner loader
+ * Changes the spinner state based on the given argument
  *
  * @author: mabdullahz
+ * @param {string} Specifies the state of spinner to change to
  */
-function hideSpinner() {
-    SPINNER_LOADER.style.visibility = "hidden";
+function changeLoaderSpinnerState(option) {
+    SPINNER_LOADER.style.visibility = option;
 }
 
+
 /**
- * Checks the country field
+ * Checks if the specified arg field is empty
  *
  * @author: mabdullahz
+ * @param {object} HTML object to check whether it is empty
  * @returns {boolean} Specifying whether the field is empty or filled
  */
-function emptyCountryArg() {
-    return (COUNTRY_ELEMENT.value == EMPTY_STRING);
+function isArgFormFieldEmpty(argFormField) {
+    return (argFormField.value == EMPTY_STRING);
 }
 
-/**
- * Checks the criteria field
- *
- * @author: mabdullahz
- * @returns {boolean} Specifying whether a criteria has been selected or not
- */
-function emptyCriteriaArg() {
-    return (CRITERIA_ELEMENT.value == EMPTY_STRING);
-}
-
-/**
- * Checks the language field
- *
- * @author: mabdullahz
- * @returns {boolean} Specifying whether a language has been selected or not
- */
-function emptyLanguageArg() {
-    return (LANGUAGE_ELEMENT.value == EMPTY_STRING);
-}
 
 /**
  * Appends warning text in country field
  *
  * @author: mabdullahz
+ * @param {object} Key-value paired object specifying warning div and text 
  */
-function showCountryWarning() {
-    COUNTRY_WARNING_DIV.innerText = COUNTRY_WARNING;
+function showWarningTextDiv(warningObject) {
+    warningObject.div.innerText = warningObject.text;
 }
 
-/**
- * Appends warning text in language field
- *
- * @author: mabdullahz
- */
-function showLanguageWarning() {
-    LANGUAGE_WARNING_DIV.innerText = LANGUAGE_WARNING;
-}
-
-/**
- * Appends warning text in criteria field
- *
- * @author: mabdullahz
- */
-function showCriteriaWarning() {
-    CRITERIA_WARNING_DIV.innerText = CRITERIA_WARNING;
-}
 
 /**
  * Deletes warning text from country field
  *
  * @author: mabdullahz
+ * @param {object} Key-value paired object specifying warning div and text 
  */
-function hideCountryWarning() {
-    COUNTRY_WARNING_DIV.innerText = EMPTY_STRING;
+function hideWarningTextDiv(warningObject) {
+    warningObject.div.innerText = EMPTY_STRING;
 }
 
-
-/**
- * Deletes warning text from language field
- *
- * @author: mabdullahz
- */
-function hideLanguageWarning() {
-    LANGUAGE_WARNING_DIV.innerText = EMPTY_STRING;
-}
-
-/**
- * Deletes warning text from criteria field
- *
- * @author: mabdullahz
- */
-function hideCriteriaWarning() {
-    CRITERIA_WARNING_DIV.innerText = EMPTY_STRING;
-}
 
 /**
  * Checks whether all required fields are filled and shows warnings
@@ -200,12 +136,15 @@ function hideCriteriaWarning() {
  * @returns {boolean} Specifying whether all fields are filled or not
  */
 function validateGithubAPIArgs() {
-    emptyCountryArg() ? showCountryWarning() : hideCountryWarning();
-    emptyLanguageArg() ? showLanguageWarning() : hideLanguageWarning();
-    emptyCriteriaArg() ? showCriteriaWarning() : hideCriteriaWarning();
+    isArgFormFieldEmpty(COUNTRY_ELEMENT) ? showWarningTextDiv(COUNTRY_WARNING) : hideWarningTextDiv(COUNTRY_WARNING);
+    isArgFormFieldEmpty(LANGUAGE_ELEMENT) ? showWarningTextDiv(LANGUAGE_WARNING) : hideWarningTextDiv(LANGUAGE_WARNING);
+    isArgFormFieldEmpty(CRITERIA_ELEMENT) ? showWarningTextDiv(CRITERIA_WARNING) : hideWarningTextDiv(CRITERIA_WARNING);
     
-    return (!emptyCountryArg() && !emptyCriteriaArg() && !emptyLanguageArg());
+    return (!isArgFormFieldEmpty(COUNTRY_ELEMENT) && 
+            !isArgFormFieldEmpty(LANGUAGE_ELEMENT) && 
+            !isArgFormFieldEmpty(CRITERIA_ELEMENT));
 }
+
 
 /**
  * Displays the users given the data from the API
@@ -216,10 +155,9 @@ function validateGithubAPIArgs() {
 function userInfoOnLoad(returnedJsonData) {
     const API_RESPONSE = returnedJsonData;
     let userCards = [];
-    var mainDisplayElement = document.getElementById("disp");
-
-    removeAllChildren("disp");
-    removeCustomStyle("disp");
+    
+    removeAllChildren(CARDS_DISPLAY_DIV);
+    removeCustomStyle(CARDS_DISPLAY_DIV);
     
     let heading = createHTMLElement("h2", 
                                     {"textAlign": "center", "paddingBottom": "50px"}, 
@@ -228,7 +166,7 @@ function userInfoOnLoad(returnedJsonData) {
                                         users in <u>${COUNTRY_ELEMENT.value.toUpperCase()}</u>, who work in 
                                         <i>${LANGUAGE_ELEMENT.value.toUpperCase()}</i>`);
 
-    mainDisplayElement.appendChild(heading);
+    CARDS_DISPLAY_DIV.appendChild(heading);
     
     API_RESPONSE["items"].forEach((singleUser, index) => {
         userCards.push(new User(index + 1, singleUser[USER_API_RESP_STRUCT.username], singleUser[USER_API_RESP_STRUCT.githubID], singleUser[USER_API_RESP_STRUCT.avatarURL], singleUser[USER_API_RESP_STRUCT.githubURL]));
@@ -243,13 +181,13 @@ function userInfoOnLoad(returnedJsonData) {
         for(let j = i; j < i + remainingCards; j++) {
             cardDeck.appendChild(userCards[j].generateUserCard());
         }
-        mainDisplayElement.appendChild(cardDeck);
+        CARDS_DISPLAY_DIV.appendChild(cardDeck);
     }
 
     let endText = createHTMLElement("h4", 
                                     {"textAlign": "center", "marginTop": "50px"},
                                     `... End of Results ...`);
-    mainDisplayElement.appendChild(endText);
+    CARDS_DISPLAY_DIV.appendChild(endText);
 }
 
 /**
@@ -278,22 +216,20 @@ function createHTMLElement(elementType, elementStyleInfo, elementInnerHTML) {
  * Removes all styling applied to the specified element
  *
  * @author: mabdullahz
- * @param {string} elementID HTML ID of the element
+ * @param {object} HTML element
  */
-function removeCustomStyle(elementID) {
-    var selectedElement = document.getElementById(elementID);
-    selectedElement.style = EMPTY_STRING;
+function removeCustomStyle(html_element) {
+    html_element.style = EMPTY_STRING;
 }
 
 /**
  * Removes all children of the specified element
  *
  * @author: mabdullahz
- * @param {string} elementID HTML ID of the element
+ * @param {object} HTML element
  */
-function removeAllChildren(elementID) {
-    var selectedElement = document.getElementById(elementID);
-    while (selectedElement.firstChild) {
-        selectedElement.removeChild(selectedElement.firstChild);
+function removeAllChildren(html_element) {
+    while (html_element.firstChild) {
+        html_element.removeChild(html_element.firstChild);
     }
 }
