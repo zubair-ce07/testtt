@@ -87,7 +87,7 @@ class Dictionary:
         self.indices[index] = len(self.entries)
         self.entries.append(entry)
         self.len = self.len + 1
-    
+
     def retrieve(self, index):
         """Returns value at the index (Index should not point to None)"""
         entry_index = self.indices[index]
@@ -115,7 +115,7 @@ class Dictionary:
         entry = Entry(digest, key, value)
         self.insert(index, entry)
         self.resize()
-    
+
     def __iter__(self):
         for entry in self.entries:
             if entry is not None:
