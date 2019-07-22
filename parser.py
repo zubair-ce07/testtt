@@ -1,6 +1,5 @@
 import csv
 from weather import WeatherReading
-from column_attribute_association import associations
 
 
 class WeatherParser():
@@ -17,22 +16,16 @@ class WeatherParser():
     def parse_weather_file(self, file):
         """Returns WeatherReading objects after parsing the weather reading CSV file"""
         with open(file, 'r') as weather_file:
-            weather_reading_rows = csv.reader(weather_file)
-
-            # skip the headers
-            next(weather_reading_rows)  
-            next(weather_reading_rows)  
+            next(weather_file) # discard empty line at top
+            weather_reading_rows = csv.DictReader(weather_file)
 
             objects = []
 
             for row in weather_reading_rows:
-                if(row):
-                    if row[0][0:4] == "<!--":
+                    try:
+                        if row['PKT'][0:4] != "<!--":  # check if row is valid
+                            raw_weather_readings_object = WeatherReading(**row)
+                            objects.append(raw_weather_readings_object)
+                    except KeyError:
                         continue
-
-                    parameters = self.__get_parameters(row)
-                    raw_weather_readings_object = WeatherReading(**parameters)
-                    objects.append(raw_weather_readings_object)
-
-
         return objects
