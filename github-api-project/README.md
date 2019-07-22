@@ -1,7 +1,7 @@
 ## Directions
 
 1. Clone/download the repository
-2. Open the index.html file in a browser
+2. Open the `search.html` file in a browser
 3. Make a search and follow pretty self-explanatory UI
 
 ## Known Limitations
