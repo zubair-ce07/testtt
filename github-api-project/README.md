@@ -1,5 +1,5 @@
 ## Live Demo
-Please check out the (live demo)[https://warm-thicket-58875.herokuapp.com/]!
+Please check out the [live demo](https://warm-thicket-58875.herokuapp.com/)
 
 
 ## Running Locally
