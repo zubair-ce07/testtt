@@ -11,36 +11,36 @@ class WeatherReporter():
 
     def report_year_extremes(self, highest_temperature_day, lowest_temperature_day, most_humid_day):
         """Print year extremes to the console"""
-        report_hottest_day = "Highest: {}C on {} {}".format(
+        hottest_day_report = "Highest: {}C on {} {}".format(
             highest_temperature_day.max_temperature,
             calendar.month_name[highest_temperature_day.date.month],
             highest_temperature_day.date.day)
 
-        report_coldest_day = "Lowest: {}C on {} {}".format(
+        coldest_day_report = "Lowest: {}C on {} {}".format(
             lowest_temperature_day.min_temperature,
             calendar.month_name[lowest_temperature_day.date.month],
             lowest_temperature_day.date.day)
 
-        report_humid_day = "Humidity: {}% on {} {}".format(
+        humid_day_report = "Humidity: {}% on {} {}".format(
             most_humid_day.max_humidity,
             calendar.month_name[most_humid_day.date.month],
             most_humid_day.date.day)
-        print(report_hottest_day, report_coldest_day,
-              report_humid_day, sep="\n", end="\n\n")
+        print(hottest_day_report, coldest_day_report,
+              humid_day_report, sep="\n", end="\n\n")
 
     def report_month_averages(self, avg_highest_temperature, avg_lowest_temperature, avg_mean_humidity):
         """Print month averages to the console"""
-        report_avg_highest_temp = "Highest Average: {}C".format(
+        avg_highest_temp_report = "Highest Average: {}C".format(
             avg_highest_temperature)
 
-        report_avg_lowest_temp = "Lowest Average: {}C".format(
+        avg_lowest_temp_report = "Lowest Average: {}C".format(
             avg_lowest_temperature)
 
-        report_avg_mean_humidity = "Average Mean Humidity: {}%".format(
+        avg_mean_humidity_report = "Average Mean Humidity: {}%".format(
             avg_mean_humidity)
 
-        print(report_avg_highest_temp, report_avg_lowest_temp,
-              report_avg_mean_humidity, sep="\n", end="\n\n")
+        print(avg_highest_temp_report, avg_lowest_temp_report,
+              avg_mean_humidity_report, sep="\n", end="\n\n")
 
     def report_month_temperatures(self, max_temperatures, min_temperatures, single_line=False):
         """Print bar chart for highest and lowest temperatures for a month. Optionally on a single line"""
