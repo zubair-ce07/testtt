@@ -226,35 +226,3 @@ function onloadUserRepos(returnedJsonData) {
 
     fixButtonHref("display-repositories-button", EMPTY_STRING);
 }
-
-
-/**
- * Displays the users given the API response data in form of rowed cards
- *
- * @author: mabdullahz
- * @param {object} mainDisplayElement HTML element to display the results inside of
- * @param {object} apiCallResult JSON data sent from the API
- */
-function displayUsers(mainDisplayElement, apiCallResult) {
-    let userCards = [];
-
-    apiCallResult.forEach((singleUser, index) => {
-        userCards.push(new User(index + 1,
-                                singleUser[USER_RESP_KEYS.username],
-                                singleUser[USER_RESP_KEYS.githubID],
-                                singleUser[USER_RESP_KEYS.avatarURL],
-                                singleUser[USER_RESP_KEYS.githubURL]));
-    })
-
-    for(let i = 0; i < userCards.length; i = i + USER_CARDS_PER_ROW) {
-        let cardDeck = document.createElement("div");
-        let remainingCards = i + USER_CARDS_PER_ROW <= userCards.length ? USER_CARDS_PER_ROW : userCards.length % USER_CARDS_PER_ROW;
-        cardDeck.className = CARD_CLASS_NAME;
-
-        for(let j = i; j < i + remainingCards; j++) {
-            cardDeck.appendChild(userCards[j].generateUserCard());
-        }
-
-        mainDisplayElement.appendChild(cardDeck);
-    }
-}
