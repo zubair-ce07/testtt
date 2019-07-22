@@ -21,14 +21,16 @@ def main():
         print('\n')
 
     if args.month_to_report:
-        data = Parser(args.data_path, args.month_to_report).read_files()
+        year, month = args.month_to_report.split('/')
+        data = Parser(args.data_path, year, month).read_files()
         monthly_calculations = WeatherCalculator(data).calculate_weather()
         print('\n')
         Reporter().monthly_report(monthly_calculations)
         print('\n')
 
     if args.month_to_plot:
-        data = Parser(args.data_path, args.month_to_plot).read_files()
+        year, month = args.month_to_report.split('/')
+        data = Parser(args.data_path, year, month).read_files()
         print('\n')
         Reporter().monthly_bar_chart(data)
         print('\n')

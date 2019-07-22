@@ -8,18 +8,18 @@ from os.path import isfile, join
 
 
 class Parser:
-    def __init__(self, data_path, year_month):
+    def __init__(self, data_path, year=None, month=None):
         self.data_path = data_path
-        self.year_month = year_month
+        self.year = year
+        self.month = month
 
     def _files_to_read(self):
         regex = ""
-        if '/' in self.year_month:
-            year, month = self.year_month.split('/')
-            month_name = calendar.month_abbr[int(month)]
-            regex = f'Murree_weather_{year}_{month_name}.txt'
+        if self.year and self.month:
+            month_name = calendar.month_abbr[int(self.month)]
+            regex = f'Murree_weather_{self.year}_{month_name}.txt'
         else:
-            regex = f'Murree_weather_{self.year_month}_*.txt'
+            regex = f'Murree_weather_{self.year}_*.txt'
         file_names = [f for f in listdir(self.data_path) if isfile(join(self.data_path, f))]
         for file_name in file_names:
             if fnmatch.fnmatch(file_name, regex):
