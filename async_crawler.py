@@ -18,30 +18,23 @@ class AsyncCrawler:
         self.bounded_semaphore = asyncio.BoundedSemaphore(concurrent_reqs)
         self.visited_sites = set()
 
-    async def download_page(self, url, loop):
+    async def parse(self, url, loop):
         async with self.bounded_semaphore:
-            downloaded_content = None
-            try:
-                await asyncio.sleep(self.download_delay)
-                future_response = loop.run_in_executor(None, requests.get, url)
-                downloaded_content = await future_response
-            except Exception as error:
-                print(error)
-            if downloaded_content:
-                self.bytes_downloaded += len(downloaded_content.text)
+            await asyncio.sleep(self.download_delay)
+            future_response = loop.run_in_executor(None, requests.get, url)
+            downloaded_content = await future_response
+            self.bytes_downloaded += len(downloaded_content.text)
             return downloaded_content.text
 
     async def get_anchor_urls(self, url, loop):
-        filtered_links = []
         parsed_url = urlparse(url)
         base_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
-        html_selector = Selector(text=await self.download_page(url, loop))
-        filtered_links += map(lambda href_links: urljoin(base_url, href_links), html_selector.xpath('//a/@href').getall())
-        return filtered_links
+        html_selector = Selector(text=await self.parse(url, loop))
+        return list(map(lambda anchor_urls: urljoin(base_url, anchor_urls), html_selector.xpath('//a/@href').getall()))
 
-    async def extract_collective_urls(self, href_urls, loop):
+    async def extract_collective_urls(self, anchor_urls, loop):
         future_results = []
-        for url in href_urls:
+        for url in anchor_urls:
             if len(self.visited_sites) == self.max_urls:
                 break
             elif url not in self.visited_sites:
@@ -50,16 +43,15 @@ class AsyncCrawler:
         urls_extracted = await asyncio.gather(*future_results)
         return urls_extracted
 
-    async def concurrent_processing(self, loop):
-        href_urls = [self.start_url]
+    async def crawl(self, loop):
+        anchor_urls = [self.start_url]
         while len(self.visited_sites) < self.max_urls:
-            urls_extracted = await self.extract_collective_urls(href_urls, loop)
-            for urls in urls_extracted:
-                href_urls.extend(urls)
+            urls_extracted = await self.extract_collective_urls(anchor_urls, loop)
+            anchor_urls = sum(urls_extracted, [])
 
     def execute_async_spider(self):
         event_loop = asyncio.get_event_loop()
-        event_loop.run_until_complete(self.concurrent_processing(event_loop))
+        event_loop.run_until_complete(self.crawl(event_loop))
         event_loop.close()
 
     def generate_report(self):
