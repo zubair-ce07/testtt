@@ -75,6 +75,30 @@ function fetchUser(){
 
 
 /**
+ * Displays the given user's data from the API
+ *
+ * @author: mabdullahz
+ * @param {object} userInfo JSON data sent from the API
+ */
+function onloadUserInfo(userInfo) {
+    let userJoinedDate = new Date(userInfo[USER_RESP_KEYS.joinedAt]);
+
+    modifyHTMLElement("avatar", "src", userInfo[USER_RESP_KEYS.avatarURL]);
+    modifyHTMLElement("github-url", "href", userInfo[USER_RESP_KEYS.githubURL]);
+    modifyHTMLElement("github-url", "target", "__blank");
+    modifyHTMLElement("real-name", "innerText", userInfo[USER_RESP_KEYS.fullName]);
+    modifyHTMLElement("user-location", "innerText", userInfo[USER_RESP_KEYS.location] ? userInfo[USER_RESP_KEYS.location] : JSON_NULL);
+    modifyHTMLElement("user-company", "innerText", userInfo[USER_RESP_KEYS.company] ? userInfo[USER_RESP_KEYS.company] : JSON_NULL);
+    modifyHTMLElement("user-bio", "innerText", userInfo[USER_RESP_KEYS.bio] ? userInfo[USER_RESP_KEYS.bio] : EMPTY_STRING);
+    modifyHTMLElement("user-joined", "innerText", `${userJoinedDate.getDay()}/${userJoinedDate.getMonth()}/${userJoinedDate.getFullYear()}`);
+    modifyHTMLElement("user-blog", "innerHTML", userInfo[USER_RESP_KEYS.blogURL] ? formatUserBlogInfo(userInfo[USER_RESP_KEYS.blogURL]) : JSON_NULL);
+    modifyHTMLElement("user-followers-badge", "innerText", userInfo[USER_RESP_KEYS.followersURL]);
+    modifyHTMLElement("user-following-badge", "innerText", userInfo[USER_RESP_KEYS.followingURL]);
+    modifyHTMLElement("user-repos-badge", "innerText", userInfo[USER_RESP_KEYS.reposURL]);
+}
+
+
+/**
  * Generates the query and show the followers when promise is resolved/rejected
  *
  * @author: mabdullahz
@@ -93,6 +117,19 @@ function fetchFollowers() {
     .finally(() => {
         changeLoaderSpinnerState(VISIBILITY_OPTION_OFF);
     })
+}
+
+
+/**
+ * Displays the given user's followers from the API
+ *
+ * @author: mabdullahz
+ * @param {object} returnedJsonData JSON data sent from the API
+ */
+function onloadUserFollowers(returnedJsonData) {
+    displayUsers(FOLLOWERS_CARDS_DIV, returnedJsonData);
+
+    fixButtonHref("display-followers-button", "followers");
 }
 
 
@@ -119,6 +156,19 @@ function fetchFollowing() {
 
 
 /**
+ * Displays the given user's following from the API
+ *
+ * @author: mabdullahz
+ * @param {object} returnedJsonData JSON data sent from the API
+ */
+function onloadUserFollowing(returnedJsonData) {
+    displayUsers(FOLLOWING_CARDS_DIV, returnedJsonData);
+
+    fixButtonHref("display-following-button", "following");
+}
+
+
+/**
  * Generates the query and show the repos when promise is resolved/rejected
  *
  * @author: mabdullahz
@@ -137,32 +187,6 @@ function fetchRepos() {
     .finally(() => {
         changeLoaderSpinnerState(VISIBILITY_OPTION_OFF);
     })
-}
-
-
-/**
- * Displays the given user's followers from the API
- *
- * @author: mabdullahz
- * @param {object} returnedJsonData JSON data sent from the API
- */
-function onloadUserFollowers(returnedJsonData) {
-    displayUsers(FOLLOWERS_CARDS_DIV, returnedJsonData);
-
-    fixButtonHref("display-followers-button", "followers");
-}
-
-
-/**
- * Displays the given user's following from the API
- *
- * @author: mabdullahz
- * @param {object} returnedJsonData JSON data sent from the API
- */
-function onloadUserFollowing(returnedJsonData) {
-    displayUsers(FOLLOWING_CARDS_DIV, returnedJsonData);
-
-    fixButtonHref("display-following-button", "following");
 }
 
 
