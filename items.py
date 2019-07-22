@@ -1,20 +1,19 @@
 from scrapy import Field, Item
 
 
-class BeyondLimitItem(Item):
-    name = Field()
-    gender = Field()
-    description = Field()
-    retailer_sku = Field()
-    image_urls = Field()
-    care = Field()
-    url = Field()
-    lang = Field()
-    brand = Field()
-    category = Field()
-    sku = Field()
-    crawl_start_time = Field()
-    date = Field()
+class BeyondLimitItem(Field):
+    name = Field(),
+    gender = Field(),
+    description = Field(),
+    retailer_sku = Field(),
+    image_urls = Field(),
+    care = Field(),
+    url = Field(),
+    lang = Field(),
+    brand = Field(),
+    category = Field(),
+    color = Field(),
+    skus = Field(),
+    crawl_start_time = Field(),
+    time = Field(),
     crawl_id = Field()
-    market = Field()
-    retailer = Field()
