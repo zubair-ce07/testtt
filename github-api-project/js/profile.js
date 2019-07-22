@@ -200,20 +200,20 @@ function fetchRepos() {
  * @param {object} userInfo JSON data sent from the API
  */
 function onloadUserInfo(userInfo) {
-    let userJoinedDate = new Date(userInfo[USER_API_RESP_STRUCT.joinedAt]);
+    let userJoinedDate = new Date(userInfo[USER_RESP_KEYS.joinedAt]);
 
-    modifyHTMLElement("avatar", "src", userInfo[USER_API_RESP_STRUCT.avatarURL]);
-    modifyHTMLElement("github-url", "href", userInfo[USER_API_RESP_STRUCT.githubURL]);
+    modifyHTMLElement("avatar", "src", userInfo[USER_RESP_KEYS.avatarURL]);
+    modifyHTMLElement("github-url", "href", userInfo[USER_RESP_KEYS.githubURL]);
     modifyHTMLElement("github-url", "target", "__blank");
-    modifyHTMLElement("real-name", "innerText", userInfo[USER_API_RESP_STRUCT.fullName]);
-    modifyHTMLElement("user-location", "innerText", userInfo[USER_API_RESP_STRUCT.location] ? userInfo[USER_API_RESP_STRUCT.location] : JSON_NULL);
-    modifyHTMLElement("user-company", "innerText", userInfo[USER_API_RESP_STRUCT.company] ? userInfo[USER_API_RESP_STRUCT.company] : JSON_NULL);
-    modifyHTMLElement("user-bio", "innerText", userInfo[USER_API_RESP_STRUCT.bio] ? userInfo[USER_API_RESP_STRUCT.bio] : EMPTY_STRING);
+    modifyHTMLElement("real-name", "innerText", userInfo[USER_RESP_KEYS.fullName]);
+    modifyHTMLElement("user-location", "innerText", userInfo[USER_RESP_KEYS.location] ? userInfo[USER_RESP_KEYS.location] : JSON_NULL);
+    modifyHTMLElement("user-company", "innerText", userInfo[USER_RESP_KEYS.company] ? userInfo[USER_RESP_KEYS.company] : JSON_NULL);
+    modifyHTMLElement("user-bio", "innerText", userInfo[USER_RESP_KEYS.bio] ? userInfo[USER_RESP_KEYS.bio] : EMPTY_STRING);
     modifyHTMLElement("user-joined", "innerText", `${userJoinedDate.getDay()}/${userJoinedDate.getMonth()}/${userJoinedDate.getFullYear()}`);
-    modifyHTMLElement("user-blog", "innerHTML", userInfo[USER_API_RESP_STRUCT.blogURL] ? formatUserBlogInfo(userInfo[USER_API_RESP_STRUCT.blogURL]) : JSON_NULL);
-    modifyHTMLElement("user-followers-badge", "innerText", userInfo[USER_API_RESP_STRUCT.followersURL]);
-    modifyHTMLElement("user-following-badge", "innerText", userInfo[USER_API_RESP_STRUCT.followingURL]);
-    modifyHTMLElement("user-repos-badge", "innerText", userInfo[USER_API_RESP_STRUCT.reposURL]);
+    modifyHTMLElement("user-blog", "innerHTML", userInfo[USER_RESP_KEYS.blogURL] ? formatUserBlogInfo(userInfo[USER_RESP_KEYS.blogURL]) : JSON_NULL);
+    modifyHTMLElement("user-followers-badge", "innerText", userInfo[USER_RESP_KEYS.followersURL]);
+    modifyHTMLElement("user-following-badge", "innerText", userInfo[USER_RESP_KEYS.followingURL]);
+    modifyHTMLElement("user-repos-badge", "innerText", userInfo[USER_RESP_KEYS.reposURL]);
 }
 
 /**
@@ -250,16 +250,16 @@ function onloadUserRepos(returnedJsonData) {
     let repoCardsList = [];
 
     returnedJsonData.forEach((repo) => {
-        repoCardsList.push(new Repository(repo[REPO_API_RESP_STRUCT.fullName],
-                           repo[REPO_API_RESP_STRUCT.description] ? repo[REPO_API_RESP_STRUCT.description] : spanNullValue("No Description Available", "warning"),
-                           new Date(repo[REPO_API_RESP_STRUCT.created]).toDateString(),
-                           new Date(repo[REPO_API_RESP_STRUCT.updated]).toDateString(),
-                           repo[REPO_API_RESP_STRUCT.watchers],
-                           repo[REPO_API_RESP_STRUCT.language] ? repo[REPO_API_RESP_STRUCT.language] : spanNullValue("Unknown", "danger"),
-                           repo[REPO_API_RESP_STRUCT.forks],
-                           repo[REPO_API_RESP_STRUCT.issues],
-                           repo[REPO_API_RESP_STRUCT.license] ? repo[REPO_API_RESP_STRUCT.license]["name"] : spanNullValue("Unknown", "danger"),
-                           repo[REPO_API_RESP_STRUCT.directURL]))
+        repoCardsList.push(new Repository(repo[REPO_RESP_KEYS.fullName],
+                           repo[REPO_RESP_KEYS.description] ? repo[REPO_RESP_KEYS.description] : spanNullValue("No Description Available", "warning"),
+                           new Date(repo[REPO_RESP_KEYS.created]).toDateString(),
+                           new Date(repo[REPO_RESP_KEYS.updated]).toDateString(),
+                           repo[REPO_RESP_KEYS.watchers],
+                           repo[REPO_RESP_KEYS.language] ? repo[REPO_RESP_KEYS.language] : spanNullValue("Unknown", "danger"),
+                           repo[REPO_RESP_KEYS.forks],
+                           repo[REPO_RESP_KEYS.issues],
+                           repo[REPO_RESP_KEYS.license] ? repo[REPO_RESP_KEYS.license]["name"] : spanNullValue("Unknown", "danger"),
+                           repo[REPO_RESP_KEYS.directURL]))
     })
 
     for(let i = 0; i < repoCardsList.length; i = i + REPO_CARDS_PER_ROW) {
@@ -366,7 +366,7 @@ function displayUsers(mainDisplayElement, apiCallResult) {
     let userCards = [];
 
     apiCallResult.forEach((singleUser, index) => {
-        userCards.push(new User(index + 1, singleUser[USER_API_RESP_STRUCT.username], singleUser[USER_API_RESP_STRUCT.githubID], singleUser[USER_API_RESP_STRUCT.avatarURL], singleUser[USER_API_RESP_STRUCT.githubURL]));
+        userCards.push(new User(index + 1, singleUser[USER_RESP_KEYS.username], singleUser[USER_RESP_KEYS.githubID], singleUser[USER_RESP_KEYS.avatarURL], singleUser[USER_RESP_KEYS.githubURL]));
     })
 
     for(let i = 0; i < userCards.length; i = i + USER_CARDS_PER_ROW) {

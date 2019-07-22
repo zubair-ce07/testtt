@@ -13,7 +13,7 @@ const VISIBILITY_OPTION_OFF = "hidden";
 const EVENT_TO_LISTEN = "change";
 const CARD_CLASS_NAME = "card-deck";
 
-const USER_API_RESP_STRUCT = {
+const USER_RESP_KEYS = {
         username: "login",
         githubID: "id",
         avatarURL: "avatar_url",
@@ -29,7 +29,7 @@ const USER_API_RESP_STRUCT = {
         joinedAt: "created_at"
 };
 
-const REPO_API_RESP_STRUCT = {
+const REPO_RESP_KEYS = {
         fullName: "name",
         description: "description",
         created: "created_at",

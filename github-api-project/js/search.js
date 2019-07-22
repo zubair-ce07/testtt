@@ -174,10 +174,10 @@ function userInfoOnLoad(returnedJsonData) {
     
     API_RESPONSE["items"].forEach((singleUser, index) => {
         userCards.push(new User(index + 1, 
-                                singleUser[USER_API_RESP_STRUCT.username], 
-                                singleUser[USER_API_RESP_STRUCT.githubID], 
-                                singleUser[USER_API_RESP_STRUCT.avatarURL], 
-                                singleUser[USER_API_RESP_STRUCT.githubURL]));
+                                singleUser[USER_RESP_KEYS.username], 
+                                singleUser[USER_RESP_KEYS.githubID], 
+                                singleUser[USER_RESP_KEYS.avatarURL], 
+                                singleUser[USER_RESP_KEYS.githubURL]));
     })
 
     for(let i = 0; i < userCards.length; i = i + USER_CARDS_PER_ROW) {
