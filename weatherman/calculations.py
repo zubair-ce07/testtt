@@ -8,14 +8,14 @@ class WeatherCalculator:
     def _mean(self, feature):
         values = [wr[feature] for wr in self.weather_readings if wr[feature] is not None]
         return (sum(values) / len(values))
-    
+
     def _min(self, feature):
         reading = min(self.weather_readings, key=lambda wr: wr[feature] if wr[feature] is not None else math.inf)
-        return (reading[feature], reading.get('PKT', reading.get('PKST')))
+        return (reading[feature], reading.get('PKT', 'PKST'))
 
     def _max(self, feature):
         reading = max(self.weather_readings, key=lambda wr: wr[feature] if wr[feature] is not None else -math.inf)
-        return (reading[feature], reading.get('PKT', reading.get('PKST')))
+        return (reading[feature], reading.get('PKT', 'PKST'))
 
     def calculate_weather(self):
         stats = {}
