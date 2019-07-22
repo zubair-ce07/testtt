@@ -51,7 +51,7 @@ class SnkrsSpider(Spider):
     def _parse_page_title(self, response):
         return response.css('head title::text').extract()[0], response.url
 
-    def _parse_name(self, response):
+    def _parse_name(self, response):    
         return response.css('.pb-center-column h1::text').extract()[0]
 
     def _parse_retailer_sku(self, response):
@@ -61,7 +61,7 @@ class SnkrsSpider(Spider):
         return response.css('#header_logo a::attr(title)').extract()[0]
 
     def _parse_category(self, response):
-        return response.css('ol.breadcrumb li a::text').extract()[1:]
+        return response.css('ol.breadcrumb li a::text').extract()[1:-1]
 
     def _parse_care(self, response):
         return [c.replace('-', '').strip() for c in
