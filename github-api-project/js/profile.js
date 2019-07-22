@@ -250,7 +250,7 @@ function onloadUserRepos(returnedJsonData) {
     let repoCardsList = [];
 
     returnedJsonData.forEach((repo) => {
-        repoCardsList.push(new Repo(repo[REPO_API_RESP_STRUCT.fullName],
+        repoCardsList.push(new Repository(repo[REPO_API_RESP_STRUCT.fullName],
                            repo[REPO_API_RESP_STRUCT.description] ? repo[REPO_API_RESP_STRUCT.description] : spanNullValue("No Description Available", "warning"),
                            new Date(repo[REPO_API_RESP_STRUCT.created]).toDateString(),
                            new Date(repo[REPO_API_RESP_STRUCT.updated]).toDateString(),
