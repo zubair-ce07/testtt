@@ -1,7 +1,11 @@
 import argparse
-from classes import *
-from bs4 import BeautifulSoup
 import requests
+
+from bs4 import BeautifulSoup
+
+from classes import *
+
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument('website', help="the website url you want to crawl", type=str)
