@@ -7,17 +7,12 @@ from scrapy.spiders import Rule
 
 
 def clean(raw_data):
-    raw_info = ''
-
     if isinstance(raw_data, list):
-        for string in raw_data:
-            if re.sub('\s+', '', string):
-                raw_info += (re.sub('\s+', '', string))
-
-        return raw_info
-
-    if re.sub('\s+', '', raw_data):
-        return re.sub('\s+', '', raw_data)
+        return [re.sub('\s+', ' ', data).strip() for data in raw_data
+                if re.sub('\s+', ' ', data).strip()]
+    elif isinstance(raw_data, str):
+        return re.sub('\s+', ' ', raw_data).strip()
+    return ''
 
 
 class BossItem(scrapy.Item):
@@ -42,14 +37,19 @@ class BossSpider(CrawlSpider):
     allowed_domains = ['hugoboss.com']
     start_urls = [
         'https://www.hugoboss.com/uk/home'
-    ]
+        ]
+
+    listing_css = '.main-header'
+    product_css = '.product-tile__link'
+    next_page_css = '.pagingbar__next'
 
     rules = (
-        Rule(LinkExtractor(restrict_css=('.main-header'))),
-        Rule(LinkExtractor(restrict_css=('.product-tile__link')), callback='parse'),
+        Rule(LinkExtractor(restrict_css=listing_css), callback='parse'),
+        Rule(LinkExtractor(restrict_css=next_page_css), callback='parse'),
+        Rule(LinkExtractor(restrict_css=product_css), callback='parse_item'),
     )
 
-    def parse(self, response):
+    def parse_item(self, response):
         item = BossItem()
 
         item['retailer_sku'] = self.retailer_sku(response)
@@ -62,14 +62,9 @@ class BossSpider(CrawlSpider):
         item['care'] = self.product_care(response)
         item['image_urls'] = self.images_url(response)
         item['skus'] = {}
-        item['requests'] = []
+        item['requests'] = self.colors_queues(response)
 
-        color_queue = response.css('.swatch-list__image--is-large ::attr(href)').getall()
-
-        for color_url in color_queue:
-            item['requests'].append(response.follow(color_url, callback=self.parse_size))
-
-        yield from self.request_or_yield(item)
+        yield from self.next_request_or_item(item)
 
     def retailer_sku(self, response):
         return response.css('script[type="text/javascript"]').re("productSku\":\"(.+?)\"")[0]
@@ -87,7 +82,7 @@ class BossSpider(CrawlSpider):
         return response.url
 
     def product_brand(self, response):
-        return response.css('meta[itemprop= "brand"] ::attr(content)').get()
+        return response.css('meta[itemprop= "brand"] ::attr(content)').get() or "BOSS"
 
     def product_description(self, response):
         return clean(response.css('.description div ::text').get())
@@ -98,16 +93,23 @@ class BossSpider(CrawlSpider):
     def images_url(self, response):
         return response.css('.slider-item--thumbnail-image ::attr(src)').getall()
 
+    def colors_queues(self, response):
+        color_queue = response.css('.swatch-list__image--is-large ::attr(href)').getall()
+        return [response.follow(color_url, callback=self.parse_size)
+                for color_url in color_queue]
+
     def parse_size(self, response):
 
         item = response.meta['item']
-        size_queue = response.css('.product-stage__choose-size--container '
-                                  '[disabled!="disabled"]::attr(href)').getall()
+        size_queue = response.css('.product-stage__choose-size--container ::attr(href)').getall()
 
-        for size_url in size_queue:
-            item['requests'].append(response.follow(size_url, callback=self.parse_sku))
+        if size_queue:
+            for size_url in size_queue:
+                item['requests'].append(response.follow(size_url, callback=self.parse_sku))
+        else:
+            item['requests'].append(response.follow(response.url + '/#', callback=self.parse_sku))
 
-        yield from self.request_or_yield(item)
+        yield from self.next_request_or_item(item)
 
     def parse_sku(self, response):
         item = response.meta['item']
@@ -115,19 +117,24 @@ class BossSpider(CrawlSpider):
                                    '::text').getall()[2])
         price = clean(response.css('.product-price--price-sales ::text').get())
         previous_price = clean(response.css('.product-price--price-standard s ::text').getall())
-        size = clean(response.css('.product-stage__control-item__selcted-size ::text').get())
+        size = self.product_size(response)
 
-        raw_sku = item['skus']
-        raw_sku.update({f'{color}_{size}': {
+        item['skus'].update({f'{color}_{size}': {
             'color': color,
             'price': price,
             'previous_price': previous_price,
             'size': size
         }})
-        item['skus'] = raw_sku
-        yield from self.request_or_yield(item)
 
-    def request_or_yield(self, item):
+        yield from self.next_request_or_item(item)
+
+    def product_size(self, response):
+        size = clean(response.css('.product-stage__control-item__selcted-size ::text').get())
+        if size:
+            return size
+        return 'One Size'
+
+    def next_request_or_item(self, item):
         if item['requests']:
             request = item['requests'].pop()
             request.meta.update({'item': item})
