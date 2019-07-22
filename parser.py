@@ -5,14 +5,6 @@ from weather import WeatherReading
 class WeatherParser():
     """Parses weather readings from CSV file to WeatherReading objects"""
 
-    def __get_parameters(self, weather_reading_row):
-        """Returns class attributes with which WeatherReading object is initialized with"""
-        parameters = {}
-        for key in associations:
-            index = associations[key]["column_position"]
-            parameters[key] = weather_reading_row[index]
-        return parameters
-
     def parse_weather_file(self, file):
         """Returns WeatherReading objects after parsing the weather reading CSV file"""
         with open(file, 'r') as weather_file:
