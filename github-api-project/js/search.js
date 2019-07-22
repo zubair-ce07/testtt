@@ -13,6 +13,16 @@ const CARD_STYLE = "width: 18rem;";
 
 validateGithubAPIArgs();
 
+API_ARGS_FORM.addEventListener('keypress', (e) => {
+    if(e.keyCode == 13) {
+        e.preventDefault()
+        if(validateGithubAPIArgs()) {
+            fetchUsers(COUNTRY_ELEMENT.value, LANGUAGE_ELEMENT.value, CRITERIA_ELEMENT.value);
+        }
+    }
+})
+
+
 API_ARGS_FORM.addEventListener(EVENT_TO_LISTEN, (event) => {
     if(validateGithubAPIArgs()) {
         fetchUsers(COUNTRY_ELEMENT.value, LANGUAGE_ELEMENT.value, CRITERIA_ELEMENT.value);
