@@ -14,52 +14,50 @@ class WeatherRecord:
 
 
 class WeatherReportParse:
-    _instance = None
-
-    def __new__(self):
-
-        if not self._instance:
-            self._instance = super(WeatherReportParse, self).__new__(self)
-
-        return self._instance
+    required_fields = ['Max TemperatureC', 'Min TemperatureC',
+                       'Max Humidity']
 
     def read_files_records(self, file_names_template):
 
         files = glob.glob(file_names_template, )
-        required_fields = ['Max TemperatureC', 'Min TemperatureC',
-                           'Max Humidity']
-        records = []
+        return sum([self.get_records(weather_file)
+                    for weather_file in files], [])
 
-        for weather_file in files:
-            with open(weather_file) as f:
-                self.get_records(f, required_fields, records)
+    def get_records(self, weather_file):
+        records = []
+        with open(weather_file) as f:
+            for weather_record in csv.DictReader(f):
+                if all(weather_record.get(y) for y in self.required_fields):
+                    date = weather_record.get('PKT', weather_record.get('PKST'))
+                    weather_record = WeatherRecord(date,
+                                                   int(weather_record['Max TemperatureC']),
+                                                   int(weather_record['Min TemperatureC']),
+                                                   int(weather_record['Max Humidity']))
+
+                    records.append(weather_record)
 
         return records
 
-    def get_records(self, f, required_fields, records):
 
-        for weather_record in csv.DictReader(f):
-            if all(weather_record.get(y) for y in required_fields):
-                date = weather_record.get('PKT', weather_record.get('PKST'))
-                weather_record = WeatherRecord(date,
-                                               int(weather_record['Max TemperatureC']),
-                                               int(weather_record['Min TemperatureC']),
-                                               int(weather_record['Max Humidity']))
+class CalculateWeatherResults:
 
-                records.append(weather_record)
+    def calculate_extreme_report(self, records):
+        highest_temp = max(records, key=lambda x: int(x.max_temp))
+        lowest_temp = min(records, key=lambda x: int(x.min_temp))
+        max_humidity = max(records, key=lambda x: int(x.max_humidity))
+
+        return highest_temp, lowest_temp, max_humidity
+
+    def calculate_month_report(self, records):
+        max_temps_avg = sum([int(x.max_temp) for x in records]) / len(records)
+        min_temps_avg = sum([int(x.min_temp) for x in records]) / len(records)
+        max_humidities_avg = sum([int(x.max_humidity) for x in records]) / len(records)
+
+        return max_temps_avg, min_temps_avg, max_humidities_avg
 
 
 class WeatherReportsProcess():
-    _instance = None
-
-    def __new__(self):
-        if not self._instance:
-            self._instance = super(WeatherReportsProcess, self).__new__(self)
-
-        return self._instance
-
-    def __init__(self):
-        self.reports_calculator = CalculateWeatherResults()
+    reports_calculator = CalculateWeatherResults()
 
     def show_extreme_results(self, report_result, extreme_report_type):
         date_object = datetime.strptime(report_result.date, '%Y-%m-%d')
@@ -71,8 +69,7 @@ class WeatherReportsProcess():
             print('Invalid Input, Files doesnot exists')
             return
 
-        highest_temp, lowest_temp, max_humidity = self. \
-            reports_calculator.calculate_extreme_report(records)
+        highest_temp, lowest_temp, max_humidity = self.reports_calculator.calculate_extreme_report(records)
 
         self.show_extreme_results(highest_temp, 'Highest')
         self.show_extreme_results(lowest_temp, 'Lowest')
@@ -126,30 +123,6 @@ class WeatherReportsProcess():
                 print('\033[1;34;40m + ', end='')
 
             print(f'\033[1;34;40m {weather_record.min_temp} C')
-
-
-class CalculateWeatherResults:
-    _instance = None
-
-    def __new__(self):
-        if not self._instance:
-            self._instance = super(CalculateWeatherResults, self).__new__(self)
-
-        return self._instance
-
-    def calculate_extreme_report(self, records):
-        highest_temp = max(records, key=lambda x: int(x.max_temp))
-        lowest_temp = min(records, key=lambda x: int(x.min_temp))
-        max_humidity = max(records, key=lambda x: int(x.max_humidity))
-
-        return highest_temp, lowest_temp, max_humidity
-
-    def calculate_month_report(self, records):
-        max_temps_avg = sum([int(x.max_temp) for x in records]) / len(records)
-        min_temps_avg = sum([int(x.min_temp) for x in records]) / len(records)
-        max_humidities_avg = sum([int(x.max_humidity) for x in records]) / len(records)
-
-        return max_temps_avg, min_temps_avg, max_humidities_avg
 
 
 def check_dir_path(string):
