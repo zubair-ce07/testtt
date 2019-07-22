@@ -7,12 +7,37 @@ from parser import WeatherParser
 from analyzer import WeatherAnalyzer
 from reporter import WeatherReporter
 
+def is_year(year):
+    try:
+        year = int(year)
+    except ValueError:
+        message = "{} is not a valid year.".format(year)
+        raise argparse.ArgumentTypeError(message)
+    return year
+
+def is_month(month):
+        try:
+            year, month = month.split("/")
+        except ValueError:
+            message = "Please pass month with year in the format YYYY/MM e.g. 2005/6"
+            raise argparse.ArgumentTypeError(message)
+        year = is_year(year)
+        try:
+            month = int(month)
+            if month < 1 or month > 12:
+                raise ValueError
+        except ValueError:
+            message = "{} is not a valid month.".format(month)
+            raise argparse.ArgumentTypeError(message)
+        return [year, month]
+
+
 arg_parser = argparse.ArgumentParser(description="Program to parse, analyze and report weather readings")
 arg_parser.add_argument('readings_dir', help="Path to weather readings directory")
-arg_parser.add_argument('-e', help="Display the highest temperature and day, lowest temperature and day, most humid day and humidity for a given year (e.g. 2002)")
-arg_parser.add_argument("-a", help="Display the average highest temperature, average lowest temperature, average mean humidity for a given month (e.g. 2005/6)")
-arg_parser.add_argument("-c", help="Draw two horizontal bar charts on the console for the highest and lowest temperature on each day. Highest in red and lowest in blue for a given month")
-arg_parser.add_argument("-o", help="Draw one horizontal bar chart on the console for the highest and lowest temperature on each day. Highest in red and lowest in blue for a given month")
+arg_parser.add_argument('-e', type=is_year, help="Display the highest temperature and day, lowest temperature and day, most humid day and humidity for a given year (e.g. 2002)")
+arg_parser.add_argument("-a", type=is_month, help="Display the average highest temperature, average lowest temperature, average mean humidity for a given month (e.g. 2005/6)")
+arg_parser.add_argument("-c", type=is_month, help="Draw two horizontal bar charts on the console for the highest and lowest temperature on each day. Highest in red and lowest in blue for a given month")
+arg_parser.add_argument("-o", type=is_month, help="Draw one horizontal bar chart on the console for the highest and lowest temperature on each day. Highest in red and lowest in blue for a given month")
 
 
 arguments = arg_parser.parse_args()
@@ -67,37 +92,13 @@ if __name__ == "__main__":
     """Parse the arguments passed to the program"""
 
     if arguments.e:
-        try:
-            year = arguments.e
-            year = int(year)
-        except ValueError:
-            print("-e argument only accepts year e.g. 2002")
-            exit(1)
-        get_yearly_reports(readings, year)
+        get_yearly_reports(readings, arguments.e)
 
     if arguments.a:
-        try:
-            year, month = arguments.a.split("/")
-        except ValueError:
-            print("Please pass month with year with argument -e .g. 2005/6")
-            exit(1)
-        get_monthly_reports(readings, int(year), int(month))
+        get_monthly_reports(readings, arguments.a[0], arguments.a[1])
 
     if arguments.c:
-        try:
-            year, month = arguments.c.split("/")
-        except ValueError:
-            print("Please pass month with year with argument -c e.g. 2005/6")
-            exit(1)
-        get_monthly_bar_charts(readings, int(year), int(month))
+        get_monthly_bar_charts(readings, arguments.c[0], arguments.c[1])
 
     if arguments.o:
-        try:
-            year, month = arguments.o.split("/")
-        except IndexError:
-            print("Please pass year and month with argument -o e.g. 2005/6")
-            exit(1)
-        except ValueError:
-            print("Please pass month with year with argument -o e.g. 2005/6")
-            exit(1)
-        get_monthly_single_bar_chart(readings, int(year), int(month))
+        get_monthly_single_bar_chart(readings, arguments.o[0], arguments.o[1])
