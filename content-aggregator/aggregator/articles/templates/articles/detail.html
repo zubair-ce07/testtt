@@ -1,0 +1,39 @@
+{% extends 'articles/base.html' %}
+{% load static %}
+{% load materializecss %}
+
+{% block imports %}
+<link rel="stylesheet" href="{% static 'articles/css/materialize.min.css' %}">
+<script src="{% static 'articles/js/jquery-3.4.1.js' %}"></script>
+{% endblock %}
+
+{% block title %}
+{{ article.title }} | 
+{% endblock %}
+
+{% block navbarbutton %}
+<ul id="dropdown1" class="dropdown-content">
+    <li><a href="/articles/add-post">Article</a></li>
+    <li><a href="/articles/add-author">Author</a></li>
+    <li><a href="/articles/add-website">Website</a></li>
+</ul>
+<li><a id="heading-text" class="dropdown-trigger" href="#!" data-target="dropdown1">Add New<i
+            class="material-icons right">arrow_drop_down</i></a></li>
+{% endblock %}
+
+{% block container %}
+<br><br>
+<center>
+    <img width="400" class="materialboxed" src="{{ article.image_url }}" alt="Image">
+</center>
+<br><br>
+<h3>{{ article.title }}</h3>
+<h6>By
+    {% for author in article.authors.all %}
+    <span id="author-name">{{ author.full_name }} &nbsp;&nbsp;&nbsp;</span>
+    {% endfor %}
+</h6>
+<h6>{{ article.publish_time }}</h6>
+<p>{{ article.content }}</p>
+<br><br>
+{% endblock %}

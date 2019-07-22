@@ -1,0 +1,40 @@
+{% extends 'articles/base.html' %}
+{% load static %}
+{% load materializecss %}
+
+{% block imports %}
+<link rel="stylesheet" href="{% static 'articles/css/materialize.min.css' %}">
+<script src="{% static 'articles/js/jquery-3.4.1.js' %}"></script>
+{% endblock %}
+
+{% block title %}
+Add Author | 
+{% endblock %}
+
+{% block navbarbutton %}
+<li><a href="/" class="waves-effect waves-light btn">Back to Home</a></li>
+{% endblock %}
+
+{% block container %}
+<br><br>
+<h4>Add a new author</h4>
+<div class="row">
+    <form class="col s12" method="post">
+        {% csrf_token %}
+        <br><br><br>
+        <div class="row">
+            <div class="col s2"></div>
+            <div class="input-field col s8">
+                {{ form.full_name|materializecss }}
+                {% if form.full_name.errors %}
+                {{ form.full_name.errors }}
+                {% endif %}
+            </div>
+        </div>
+        <br>
+        <center>
+            <button type="submit" class="btn waves-effect btn-large btn-success">Submit</button>
+        </center>
+    </form>
+</div>
+{% endblock %}
