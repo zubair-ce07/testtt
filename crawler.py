@@ -1,11 +1,15 @@
 import argparse
-from classes import *
-from bs4 import BeautifulSoup
 import requests
+
+from bs4 import BeautifulSoup
+
+from classes import *
+
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument('website', help="the website url you want to crawl", type=str)
-parser.add_argument('max_urls',help='maximum urls to visit')
+parser.add_argument('max_urls', help='maximum urls to visit')
 parser.add_argument('concurrent_requests', help='total number of concurrent requests')
 parser.add_argument('download_delay', help='download delay')
 args = parser.parse_args()
