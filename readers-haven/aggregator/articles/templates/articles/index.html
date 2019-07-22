@@ -1,0 +1,74 @@
+{% extends 'articles/base.html' %}
+{% load static %}
+{% load materializecss %}
+
+{% block imports %}
+<link rel="stylesheet" href="{% static 'articles/css/materialize.min.css' %}">
+<script src="{% static 'articles/js/jquery-3.4.1.js' %}"></script>
+{% endblock %}
+
+{% block navbarbutton %}
+
+{% endblock %}
+
+{% block container %}
+<h3 id="heading-text" class="center">All your interests in one place!</h3>
+{% if recent_articles %}
+{% for article in recent_articles %}
+<br><br>
+<div class="col s12 m7">
+    <div class="card horizontal">
+        <div class="card-image">
+            <img style="width:150px;height:180px" src="{{ article.image_url }}">
+        </div>
+        <div class="card-stacked">
+            <div class="card-content">
+                <h5><a id="heading-text" href="{% url 'articles:detail' article.id %}">{{ article.title }}</a>
+                </h5>
+            </div>
+            <div class="card-action">
+                <h6 class="right">Category: {{ article.category }}</h6>
+                <h6>
+                    {% for author in article.authors.all %}
+                    <span id="author-name">{{ author.full_name }} &nbsp;&nbsp;&nbsp;</span>
+                    {% endfor %}
+                </h6>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endif %}
+<br><br>
+<div class="fixed-action-btn">
+  <a title="Add New" class="btn-floating btn-large red">
+    <i class="large material-icons">add</i>
+  </a>
+  <ul>
+    <li><a class="btn-floating red" href="/articles/add-article" title="Add Article"><i class="material-icons">description</i></a></li>
+    <li><a class="btn-floating yellow darken-1" href="/articles/add-author" title="Add Author"><i class="material-icons">account_circle</i></a></li>
+    <li><a class="btn-floating green" href="/articles/add-website" title="Add Website"><i class="material-icons">language</i></a></li>
+  </ul>
+</div>
+{% if is_paginated %}
+<ul class="pagination right">
+    {% if page_obj.has_previous %}
+    <li class="waves-effect"><a href="?page={{ page_obj.previous_page_number }}"><i class="material-icons">chevron_left</i></a></li>
+    {% else %}
+    <li class="disabled"><a href="#!"><i class="material-icons">chevron_left</i></a></li>
+    {% endif %}
+    {% for i in paginator.page_range %}
+    {% if page_obj.number == i %}
+    <li class="active"><a href="#!">{{ i }}</a></li>
+    {% else %}
+    <li class="waves-effect"><a href="?page={{ i }}">{{ i }}</a></li>
+    {% endif %}
+    {% endfor %}
+    {% if page_obj.has_next %}
+    <li class="waves-effect"><a href="?page={{ page_obj.next_page_number }}"><i class="material-icons">chevron_right</i></a></li>
+    {% else %}
+    <li class="disabled"><a href="#!"><i class="material-icons">chevron_right</i></a></li>
+    {% endif %}
+</ul>
+{% endif %}
+{% endblock %}

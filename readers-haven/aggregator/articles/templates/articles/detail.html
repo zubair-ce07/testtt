@@ -1,0 +1,32 @@
+{% extends 'articles/base.html' %}
+{% load static %}
+{% load materializecss %}
+
+{% block imports %}
+<link rel="stylesheet" href="{% static 'articles/css/materialize.min.css' %}">
+<script src="{% static 'articles/js/jquery-3.4.1.js' %}"></script>
+{% endblock %}
+
+{% block title %}
+{{ article.title }} | 
+{% endblock %}
+
+{% block navbarbutton %}
+
+{% endblock %}
+
+{% block container %}
+<img style="width:1050px;height:500px" class="materialboxed" src="{{ article.image_url }}" alt="Image">
+
+<br><br>
+<h3>{{ article.title }}</h3>
+<h6>By
+    {% for author in article.authors.all %}
+    <span id="author-name">{{ author.full_name }} &nbsp;&nbsp;&nbsp;</span>
+    {% endfor %}
+</h6>
+<h6>{{ article.publish_time }}</h6>
+<p style="text-align:justify">{{ article.content }}</p>
+<br><br>
+
+{% endblock %}
