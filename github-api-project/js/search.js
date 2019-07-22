@@ -85,17 +85,6 @@ function fetchUsers(country, language, criteria) {
 
 
 /**
- * Changes the spinner state based on the given argument
- *
- * @author: mabdullahz
- * @param {string} Specifies the state of spinner to change to
- */
-function changeLoaderSpinnerState(option) {
-    SPINNER_LOADER.style.visibility = option;
-}
-
-
-/**
  * Checks if the specified arg field is empty
  *
  * @author: mabdullahz
@@ -173,10 +162,10 @@ function userInfoOnLoad(returnedJsonData) {
     CARDS_DISPLAY_DIV.appendChild(heading);
     
     API_RESPONSE["items"].forEach((singleUser, index) => {
-        userCards.push(new User(index + 1, 
-                                singleUser[USER_RESP_KEYS.username], 
-                                singleUser[USER_RESP_KEYS.githubID], 
-                                singleUser[USER_RESP_KEYS.avatarURL], 
+        userCards.push(new User(index + 1,
+                                singleUser[USER_RESP_KEYS.username],
+                                singleUser[USER_RESP_KEYS.githubID],
+                                singleUser[USER_RESP_KEYS.avatarURL],
                                 singleUser[USER_RESP_KEYS.githubURL]));
     })
 

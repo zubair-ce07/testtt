@@ -41,3 +41,14 @@ const REPO_RESP_KEYS = {
         license: "license",
         directURL: "html_url",
 };
+
+
+/**
+ * Changes the spinner state based on the given argument
+ *
+ * @author: mabdullahz
+ * @param {string} Specifies the state of spinner to change to
+ */
+function changeLoaderSpinnerState(option) {
+        SPINNER_LOADER.style.visibility = option;
+}
