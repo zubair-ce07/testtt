@@ -1,8 +1,10 @@
 import os
 import datetime
 import argparse
+import csv
+import glob
 
-def short_to_long_date(arg):
+def convert_short_to_long_date(arg):
     date = arg.split("/")
     year, month = date[0], datetime.date(int(date[0]), int(date[1]), 1).strftime('%B')[:3]
     return year, month
@@ -15,12 +17,13 @@ class WeathermanEntries(object):
     def set_entries(self, key, entries):
         self.entries[key] = entries
 
-    def highest_temp(self, by=None):
+    def calculate_highest_temp(self, by=None):
+
         _highest_temp = 0.0
         _highest_temp_pkt = ''
         found = False
-        desired_wmentries = list(filter(lambda x: by in x, self.entries.keys()))
-        for entry in desired_wmentries:
+        desired_weatherman_entries = list(filter(lambda x: by in x, self.entries.keys()))
+        for entry in desired_weatherman_entries:
             for record in self.entries[entry]:
                 max_temp = record.get('Max TemperatureC')
                 if max_temp and max_temp.isalnum() and float(max_temp) > _highest_temp:
@@ -31,12 +34,12 @@ class WeathermanEntries(object):
             return _highest_temp, _highest_temp_pkt
         return None, None
 
-    def lowest_temp(self, by=None):
+    def calculate_lowest_temp(self, by=None):
         _lowest_temp = 100
         _lowest_temp_pkt = ''
         found = False
-        desired_wmentries = list(filter(lambda x: by in x, self.entries.keys()))
-        for entry in desired_wmentries:
+        desired_weathermanentries = list(filter(lambda x: by in x, self.entries.keys()))
+        for entry in desired_weathermanentries:
             for record in self.entries[entry]:
                 min_temp = record.get('Min TemperatureC')
                 if min_temp and min_temp.isalnum() and float(min_temp) < _lowest_temp:
@@ -47,12 +50,12 @@ class WeathermanEntries(object):
             return _lowest_temp, _lowest_temp_pkt
         return None, None
 
-    def most_humid(self, by=None):
+    def calculate_most_humid(self, by=None):
         _most_humid = 0
         _most_humid_pkt = ''
         found = False
-        desired_wmentries = list(filter(lambda x: by in x, self.entries.keys()))
-        for entry in desired_wmentries:
+        desired_weathermanentries = list(filter(lambda x: by in x, self.entries.keys()))
+        for entry in desired_weathermanentries:
             for record in self.entries[entry]:
                 most_humid = record.get('Max Humidity')
                 if most_humid and most_humid.isalnum() and float(most_humid) > _most_humid:
@@ -64,13 +67,13 @@ class WeathermanEntries(object):
             return _most_humid, _most_humid_pkt
         return None, None
 
-    def highest_avg_temp(self, by=None):
+    def calculate_highest_avg_temp(self, by=None):
         _highest_temp_avg = 0.0
         found = False
         n = 0
-        year, month = short_to_long_date(by)
-        desired_wmentries = list(filter(lambda x: by and year in x and month in x, self.entries.keys()))
-        for entry in desired_wmentries:
+        year, month = convert_short_to_long_date(by)
+        desired_weathermanentries = list(filter(lambda x: by and year in x and month in x, self.entries.keys()))
+        for entry in desired_weathermanentries:
             for record in self.entries[entry]:
                 max_temp = record.get('Max TemperatureC')
                 if max_temp and max_temp.isalnum():
@@ -81,13 +84,13 @@ class WeathermanEntries(object):
             return float(_highest_temp_avg / float(n))
         return None
 
-    def lowest_avg_temp(self, by=None):
+    def calculate_lowest_avg_temp(self, by=None):
         _lowest_temp_avg = 0.0
         found = False
         n = 0
-        year, month = short_to_long_date(by)
-        desired_wmentries = list(filter(lambda x: by and year in x and month in x, self.entries.keys()))
-        for entry in desired_wmentries:
+        year, month = convert_short_to_long_date(by)
+        desired_weatherman_entries = list(filter(lambda x: by and year in x and month in x, self.entries.keys()))
+        for entry in desired_weatherman_entries:
             for record in self.entries[entry]:
                 min_temp = record.get('Min TemperatureC')
                 if min_temp and min_temp.isalnum():
@@ -98,13 +101,13 @@ class WeathermanEntries(object):
             return float(_lowest_temp_avg / float(n))
         return None
 
-    def avg_mean_humid(self, by=None):
+    def calculate_avg_mean_humid(self, by=None):
         _mean_humid_avg = 0
         found = False
         n = 0
-        year, month = short_to_long_date(by)
-        desired_wmentries = list(filter(lambda x: by and year in x and month in x, self.entries.keys()))
-        for entry in desired_wmentries:
+        year, month = convert_short_to_long_date(by)
+        desired_weatherman_entries = list(filter(lambda x: by and year in x and month in x, self.entries.keys()))
+        for entry in desired_weatherman_entries:
             for record in self.entries[entry]:
                 mean_humid = record.get('Mean Humidity')
                 if mean_humid and mean_humid.isalnum():
@@ -117,9 +120,9 @@ class WeathermanEntries(object):
         return None
 
     def draw_chart_for_max_min_temp(self, by=None):
-        year, month = short_to_long_date(by)
-        desired_wmentries = list(filter(lambda x: by and year in x and month in x, self.entries.keys()))
-        for entry in desired_wmentries:
+        year, month = convert_short_to_long_date(by)
+        desired_weatherman_entries = list(filter(lambda x: by and year in x and month in x, self.entries.keys()))
+        for entry in desired_weatherman_entries:
             print("{}, {}".format(month, year))
             for record in self.entries[entry]:
                 max_temp = record.get('Max TemperatureC')
@@ -130,10 +133,9 @@ class WeathermanEntries(object):
                     print(pkt + " \033[34m" + "+" * int(min_temp) + "\033[0m" + " " + min_temp + "C")
 
     def draw_bonus_chart_for_max_min_temp(self, by=None):
-        """ Draw maximum and minimum temperature char for a given year/month"""
-        year, month = short_to_long_date(by)
-        desired_wmentries = list(filter(lambda x: by and year in x and month in x, self.entries.keys()))
-        for entry in desired_wmentries:
+        year, month = convert_short_to_long_date(by)
+        desired_weatherman_entries = list(filter(lambda x: by and year in x and month in x, self.entries.keys()))
+        for entry in desired_weatherman_entries:
             print("{}, {}".format(month, year))
             for record in self.entries[entry]:
                 max_temp = record.get('Max TemperatureC')
@@ -142,7 +144,7 @@ class WeathermanEntries(object):
                     pkt = record.get("PKT") or record.get("PKST")
                     print(pkt + " \033[34m" + "+" * int(min_temp) + "\033[0m" + "\033[91m" + "+" * int(max_temp) + "\033[0m" + " " + min_temp + "C-" + max_temp + "C")
 
-wmentries = WeathermanEntries()
+weatherman_entries = WeathermanEntries()
 
 
 class WeathermanRecord(object):
@@ -161,68 +163,71 @@ def read_to_weatherman_entry(meta, line):
     return WeathermanRecord(dict(zip(meta, line)))
 
 
-def read_parse_file(file):
-    f = open(file, "r")
-    blank = f.readline()
-    meta = f.readline().strip("\n").replace(", ", ",").split(",")
-    entries = []
-    for line in f.readlines():
-        if "<!--" in line:  # skips "<!-- something -->" that occurs at the end of file
-            continue
-        formatted_line = line.strip("\n").split(",")
-        entries.append(read_to_weatherman_entry(meta, formatted_line))
-    wmentries.set_entries(file, entries)
+def read_parse_file(csv_path):
+    with open(csv_path) as input_file:
+        weather_reader = csv.DictReader(input_file)
+        weather_reader_list = list(weather_reader)
+        return weather_reader_list
 
+def calculate_highest_and_lowest_temperature_and_humidity_of_given_year(year):
+    highest_temp = weatherman_entries.calculate_highest_temp(year)
+    lowest_temp = weatherman_entries.calculate_lowest_temp(year)
+    most_humid = weatherman_entries.calculate_most_humid(year)
+    return highest_temp, lowest_temp, most_humid
 
-def part_one(year):
-    highest_temp = wmentries.highest_temp(year)
-    lowest_temp = wmentries.lowest_temp(year)
-    most_humid = wmentries.most_humid(year)
+def report_highest_and_lowest_temperature_and_humidity_of_given_year(highest_temp, lowest_temp, most_humid):
     print("Highest: {} on {}".format(highest_temp[0], highest_temp[1]))
     print("Lowest: {} on {}".format(lowest_temp[0], lowest_temp[1]))
     print("Humidity: {} on {}".format(most_humid[0], most_humid[1]))
 
+def calculate_highest_and_lowest_temperature_and_humidity_of_given_month_of_year(date):
+    highest_avg_temp = weatherman_entries.calculate_highest_avg_temp(date)
+    lowest_avg_temp = weatherman_entries.calculate_lowest_avg_temp(date)
+    avg_mean_humid = weatherman_entries.calculate_avg_mean_humid(date)
+    return highest_avg_temp, lowest_avg_temp, avg_mean_humid
 
-def part_two(date):
-    highest_avg_temp = wmentries.highest_avg_temp(date)
-    lowest_avg_temp = wmentries.lowest_avg_temp(date)
-    avg_mean_humid = wmentries.avg_mean_humid(date)
+def report_highest_and_lowest_temperature_and_humidity_of_given_month_of_year(highest_avg_temp, lowest_avg_temp, avg_mean_humid):
+
     print("Highest Average: {}".format(highest_avg_temp) + "C")
     print("Lowest Average: {}".format(lowest_avg_temp) + "C")
     print("Average Mean Humidity: {}".format(avg_mean_humid))
 
 
-def part_three(date):
-    wmentries.draw_chart_for_max_min_temp(date)
+def draw_two_line_horizontal_bar_chart(date):
+    weatherman_entries.draw_chart_for_max_min_temp(date)
 
 
-def part_four(date):
-    wmentries.draw_bonus_chart_for_max_min_temp(date)
+def draw_one_line_horizontal_bar_chart(date):
+    weatherman_entries.draw_bonus_chart_for_max_min_temp(date)
 
 def main():
+
     parser = argparse.ArgumentParser()
-    parser.add_argument('-p', '--path', help='path of directory', type=str)
-    parser.add_argument('-m', '--mode', help='path of directory', type=str)
-    parser.add_argument('-y', '--year_date_str', type=str, help='path of directory')
+    parser.add_argument('path', help='path of directory')
+    parser.add_argument('-e', dest='year_to_report', action='store')
+    parser.add_argument('-a', dest='month_to_report', action='store')
+    parser.add_argument('-c', dest='plot_graph', action='store')
+    parser.add_argument('year_date', help='path of directory')
+
     args = parser.parse_args()
-    v = vars(args)
-    n_args = sum([1 for a in v.values() if a])
+    arguments = vars(args)
+    no_of_args = sum([1 for a in arguments.values() if a])
 
-    weatherfiles = os.listdir(args.path)
-    for file in weatherfiles:
-        read_parse_file(os.path.join(args.path, file))
+    for file in glob.glob("*" + args.path + "/*.txt"):
+        read_parse_file(file)
 
-    for i in range(2, ((n_args) + 1), 2):
-        if args.mode == '1':
-            part_one(args.year_date_str)
+    for i in range(2, ((no_of_args) + 1), 2):
+        if  args.year_to_report:
+                highest_temp, lowest_temp, most_humid= calculate_highest_and_lowest_temperature_and_humidity_of_given_year(args.year_date)
+                report_highest_and_lowest_temperature_and_humidity_of_given_year(highest_temp, lowest_temp, most_humid)
 
-        elif args.mode == '2':
-                part_two(args.year_date_str)
+        elif args.month_to_report:
+                avg_highest_temp, avg_lowest_temp, avg_most_humid= calculate_highest_and_lowest_temperature_and_humidity_of_given_month_of_year(args.year_date)
+                report_highest_and_lowest_temperature_and_humidity_of_given_month_of_year(avg_highest_temp, avg_lowest_temp, avg_most_humid)
+        elif args.plot_graph:
+                draw_two_line_horizontal_bar_chart(args.year_date)
+                draw_one_line_horizontal_bar_chart(args.year_date)
 
-        elif args.mode == '3':
-                part_three(args.year_date_str)
+if __name__ == "__main__":
+    main()
 
-        elif args.mode == '4':
-                part_four(args.year_date_str)
-
-main()
