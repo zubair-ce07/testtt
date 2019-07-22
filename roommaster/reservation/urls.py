@@ -1,11 +1,12 @@
 from django.urls import path
-from reservation import views
+from reservation.views import HomeView, RoomsView, CustomersView, ReservationsView, EmployeesView, Availability
 
 urlpatterns = [
-    path('', views.home, name='reservation-home'),
-    path('home/', views.home, name='reservation-home'),
-    path('rooms/', views.rooms, name='reservation-rooms'),
-    path('customers/', views.customers, name='reservation-customers'),
-    path('reservations/', views.reservations, name='reservation-reservations'),
-    path('employees/', views.employees, name='reservation-employees'),
+    path('', HomeView.as_view(), name='reservation-home'),
+    path('home/', HomeView.as_view(), name='reservation-home'),
+    path('rooms/', RoomsView.as_view(), name='reservation-rooms'),
+    path('customers/', CustomersView.as_view(), name='reservation-customers'),
+    path('reservations/', ReservationsView.as_view(), name='reservation-reservations'),
+    path('employees/', EmployeesView.as_view(), name='reservation-employees'),
+    path('availability/', Availability.as_view(), name='reservation-availability')
 ]

@@ -1,0 +1,40 @@
+{% extends "reservation/basetable.html" %}
+{% block link %}
+<form action="/" method="POST">
+  <div class="row col-12">
+    <label class="control-label col-sm-2">Check-in</label>
+    <div class="col-sm-6">
+      <input type="date" name="busNo" placeholder="Check-In Date" class="form-control" required="">
+    </div>
+  </div>
+  <div class="row col-12">
+    <label class="control-label col-sm-2">Check-out</label>
+    <div class="col-sm-6">
+      <input type="date" name="dateOfPurchase" placeholder="Check-Out Date" class="form-control" required="">
+    </div>
+  </div>
+</form>
+<br>
+{% endblock %}
+    
+{% block view %}
+  <tr>
+    <th>Room #</th>
+    <th>Min rent</th>
+    <th>Max rent</th>
+    <th>Capacity</th>
+    <th>Category</th>
+    <th>Floor</th>
+  </tr>
+
+  {% for room in rooms %}
+    <tr>
+      <td>{{ room.room_no }}</td>
+      <td>{{ room.min_rent }}</td>
+      <td>{{ room.max_rent }}</td>
+      <td>{{ room.capacity }}</td>
+      <td>{{ room.category }}</td>
+      <td>{{ room.floor }}</td>
+    </tr>
+  {% endfor %}
+{% endblock view %}
