@@ -264,8 +264,10 @@ function onloadUserRepos(returnedJsonData) {
 
     for(let i = 0; i < repoCardsList.length; i = i + REPO_CARDS_PER_ROW) {
         let cardDeck = document.createElement("div");
-        cardDeck.className = "card-deck";
-        let remainingCards = i + REPO_CARDS_PER_ROW <= repoCardsList.length ? REPO_CARDS_PER_ROW : repoCardsList.length % REPO_CARDS_PER_ROW;
+        cardDeck.className = CARD_CLASS_NAME;
+
+        let remainingCards = countRemainingCards(i, repoCardsList.length)
+
         for(let j = i; j < i + remainingCards; j++) {
             cardDeck.appendChild(repoCardsList[j].generateRepoCard());
         }
@@ -274,6 +276,21 @@ function onloadUserRepos(returnedJsonData) {
 
     fixButtonHref("display-repositories-button", EMPTY_STRING);
 }
+
+/**
+ * Decides number of cards to be accomodated in each row
+ *
+ * @author: mabdullahz
+ * @param {number} rowNumber Row number of cards
+ * @param {number} repoCardsListLength Length of the repo card list
+ * @returns {number} Number of cards in the specified row
+ */
+function countRemainingCards(rowNumber, repoCardsListLength) {
+    return rowNumber + REPO_CARDS_PER_ROW <= repoCardsListLength
+           ? REPO_CARDS_PER_ROW 
+           : repoCardsListLength % REPO_CARDS_PER_ROW;
+}
+
 
 /**
  * Sets the button href in the various tabs
@@ -355,7 +372,7 @@ function displayUsers(mainDisplayElement, apiCallResult) {
     for(let i = 0; i < userCards.length; i = i + USER_CARDS_PER_ROW) {
         let cardDeck = document.createElement("div");
         let remainingCards = i + USER_CARDS_PER_ROW <= userCards.length ? USER_CARDS_PER_ROW : userCards.length % USER_CARDS_PER_ROW;
-        cardDeck.className = "card-deck";
+        cardDeck.className = CARD_CLASS_NAME;
 
         for(let j = i; j < i + remainingCards; j++) {
             cardDeck.appendChild(userCards[j].generateUserCard());

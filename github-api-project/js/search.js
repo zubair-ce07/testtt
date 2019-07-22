@@ -28,8 +28,8 @@ API_ARGS_FORM.addEventListener(EVENT_TO_LISTEN, (event) => {
  * @returns {Promise} A promise that returns the requested data on resolve
  */
 function githubAPICaller(query) {
-    return new Promise(function(resolve, reject) {;
-        let clientRequest = new XMLHttpRequest()
+    return new Promise(function(resolve, reject) {
+        let clientRequest = new XMLHttpRequest();
 
         clientRequest.open(REQ_METHOD, query, ASYNC_API_CALL);
         clientRequest.responseType = RES_TYPE;
@@ -136,13 +136,17 @@ function hideWarningTextDiv(warningObject) {
  * @returns {boolean} Specifying whether all fields are filled or not
  */
 function validateGithubAPIArgs() {
-    isArgFormFieldEmpty(COUNTRY_ELEMENT) ? showWarningTextDiv(COUNTRY_WARNING) : hideWarningTextDiv(COUNTRY_WARNING);
-    isArgFormFieldEmpty(LANGUAGE_ELEMENT) ? showWarningTextDiv(LANGUAGE_WARNING) : hideWarningTextDiv(LANGUAGE_WARNING);
-    isArgFormFieldEmpty(CRITERIA_ELEMENT) ? showWarningTextDiv(CRITERIA_WARNING) : hideWarningTextDiv(CRITERIA_WARNING);
+    let countryFillStatus = isArgFormFieldEmpty(COUNTRY_ELEMENT);
+    let languageFillStatus = isArgFormFieldEmpty(LANGUAGE_ELEMENT);
+    let criteriaFillStatus = isArgFormFieldEmpty(CRITERIA_ELEMENT);
+
+    countryFillStatus ? showWarningTextDiv(COUNTRY_WARNING) : hideWarningTextDiv(COUNTRY_WARNING);
+    languageFillStatus ? showWarningTextDiv(LANGUAGE_WARNING) : hideWarningTextDiv(LANGUAGE_WARNING);
+    criteriaFillStatus ? showWarningTextDiv(CRITERIA_WARNING) : hideWarningTextDiv(CRITERIA_WARNING);
     
-    return (!isArgFormFieldEmpty(COUNTRY_ELEMENT) && 
-            !isArgFormFieldEmpty(LANGUAGE_ELEMENT) && 
-            !isArgFormFieldEmpty(CRITERIA_ELEMENT));
+    return (!countryFillStatus &&
+            !languageFillStatus &&
+            !criteriaFillStatus);
 }
 
 
@@ -169,12 +173,16 @@ function userInfoOnLoad(returnedJsonData) {
     CARDS_DISPLAY_DIV.appendChild(heading);
     
     API_RESPONSE["items"].forEach((singleUser, index) => {
-        userCards.push(new User(index + 1, singleUser[USER_API_RESP_STRUCT.username], singleUser[USER_API_RESP_STRUCT.githubID], singleUser[USER_API_RESP_STRUCT.avatarURL], singleUser[USER_API_RESP_STRUCT.githubURL]));
+        userCards.push(new User(index + 1, 
+                                singleUser[USER_API_RESP_STRUCT.username], 
+                                singleUser[USER_API_RESP_STRUCT.githubID], 
+                                singleUser[USER_API_RESP_STRUCT.avatarURL], 
+                                singleUser[USER_API_RESP_STRUCT.githubURL]));
     })
 
     for(let i = 0; i < userCards.length; i = i + USER_CARDS_PER_ROW) {
         let cardDeck = document.createElement("div");
-        cardDeck.className = "card-deck";
+        cardDeck.className = CARD_CLASS_NAME;
 
         let remainingCards = i + USER_CARDS_PER_ROW <= userCards.length ? USER_CARDS_PER_ROW : userCards.length % USER_CARDS_PER_ROW;
 

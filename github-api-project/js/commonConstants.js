@@ -11,6 +11,7 @@ const REQUEST_FAILED_MESSAGE = "Failed 200 OK => API Request was not successful!
 const VISIBILITY_OPTION_ON = "visible";
 const VISIBILITY_OPTION_OFF = "hidden";
 const EVENT_TO_LISTEN = "change";
+const CARD_CLASS_NAME = "card-deck";
 
 const USER_API_RESP_STRUCT = {
         username: "login",

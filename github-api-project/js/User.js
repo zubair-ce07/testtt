@@ -1,10 +1,10 @@
 class User {
-    constructor(number, username, id, avatar_url, github_url) {
+    constructor(number, username, id, avatarURL, githubURL) {
         this.number = number;
         this.username = username;
         this.id = id;
-        this.avatar_url = avatar_url;
-        this.github_url = github_url;
+        this.avatarURL = avatarURL;
+        this.githubURL = githubURL;
     }
     
     /**
@@ -33,7 +33,7 @@ class User {
      */
     generateUserCardInnerHtml() {
         return `<div class="card-header text-bold">${this.number}</div>
-                    <img class="card-img-top" src="${this.avatar_url}" alt="Card image cap">
+                    <img class="card-img-top" src="${this.avatarURL}" alt="Card image cap">
 
                     <div class="card-body">
                         <h5 class="card-title text-center">${this.username}</h5>
