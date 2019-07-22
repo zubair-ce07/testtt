@@ -23,30 +23,30 @@ class WeatherReportParse:
 
         return self._instance
 
-    def read_files_records(self, files):
+    def read_files_records(self, file_names_template):
+
+        files = glob.glob(file_names_template, )
+        required_fields = ['Max TemperatureC', 'Min TemperatureC',
+                           'Max Humidity']
         records = []
-        required_fields = ['Max TemperatureC',
-                           'Min TemperatureC', 'Max Humidity']
 
         for weather_file in files:
             with open(weather_file) as f:
-
-                for weather_record in csv.DictReader(f):
-                    date = weather_record.get('PKT', weather_record.get('PKST'))
-
-                    if all(weather_record.get(y) for y in required_fields):
-                        weather_record = WeatherRecord(date,
-                                                       int(weather_record['Max TemperatureC']),
-                                                       int(weather_record['Min TemperatureC']),
-                                                       int(weather_record['Max Humidity']))
-
-                        records.append(weather_record)
+                self.get_records(f, required_fields, records)
 
         return records
 
-    def parse_weather_records(self, file_names_template):
-        files = glob.glob(file_names_template)
-        return self.read_files_records(files)
+    def get_records(self, f, required_fields, records):
+
+        for weather_record in csv.DictReader(f):
+            if all(weather_record.get(y) for y in required_fields):
+                date = weather_record.get('PKT', weather_record.get('PKST'))
+                weather_record = WeatherRecord(date,
+                                               int(weather_record['Max TemperatureC']),
+                                               int(weather_record['Min TemperatureC']),
+                                               int(weather_record['Max Humidity']))
+
+                records.append(weather_record)
 
 
 class WeatherReportsProcess():
@@ -153,7 +153,6 @@ class CalculateWeatherResults:
 
 
 def check_dir_path(string):
-
     if not os.path.exists(string):
         error_message = 'given path is invalid'
         raise argparse.ArgumentTypeError(error_message)
@@ -182,25 +181,25 @@ def main():
 
     parser = WeatherReportParse()
     process_results = WeatherReportsProcess()
-    file_names_template = args.path+'/Murree_weather_{}*'
+    file_names_template = args.path + '/Murree_weather_{}*'
 
     if args.year:
-        records = parser.parse_weather_records(file_names_template.format(args.year))
+        records = parser.read_files_records(file_names_template.format(args.year))
         process_results.process_extreme_result(records)
 
     if args.month:
-        records = parser.parse_weather_records(file_names_template.format(args.month))
+        records = parser.read_files_records(file_names_template.format(args.month))
         process_results.process_average_result(records)
 
     if args.graphsingle:
-        records = parser.parse_weather_records(file_names_template.format(args.graphsingle))
+        records = parser.read_files_records(file_names_template.format(args.graphsingle))
         process_results.show_seprate_chart(records)
 
     if args.graphmerged:
-        records = parser.parse_weather_records(file_names_template.format(args.graphmerged))
+        records = parser.read_files_records(file_names_template.format(args.graphmerged))
         process_results.show_merge_chart(records)
 
 
 if __name__ == '__main__':
-    main() 
+    main()
 
