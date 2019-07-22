@@ -35,7 +35,7 @@ class RecursiveCrawler:
                 await self.get_results(current_url, thread_id)
                 await asyncio.sleep(self.download_delay)
 
-            except Exception as e:
+            except Exception:
                 await asyncio.sleep(self.download_delay)
 
     async def get_results(self, url, thread_id):
