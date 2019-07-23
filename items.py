@@ -12,7 +12,7 @@ class BeyondLimitItem(Item):
     lang = Field()
     brand = Field()
     category = Field()
-    sku = Field()
+    skus = Field()
     crawl_start_time = Field()
     date = Field()
     crawl_id = Field()
