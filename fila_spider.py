@@ -47,7 +47,6 @@ class FilaParseSpider(Mixin, BaseParseSpider):
 
     def product_gender(self, response):
         trail = soupify([f'{cat} {url}' for cat, url in response.meta.get('trail', [])])
-
         return self.gender_lookup(trail) or Gender.ADULTS.value
 
     def product_category(self, response):
@@ -56,7 +55,7 @@ class FilaParseSpider(Mixin, BaseParseSpider):
     def skus(self, response):
         skus = {}
 
-        raw_stock = self.available_raw_stock(response)
+        raw_stock = self.stock_map(response)
         raw_products = self.magento_product_data(response, 'spConfig', 'spConfig":\s({.*})')
 
         for sku_id, raw_sku in self.magento_product_map(raw_products).items():
@@ -73,7 +72,7 @@ class FilaParseSpider(Mixin, BaseParseSpider):
         return skus
 
 
-    def available_raw_stock(self, response):
+    def stock_map(self, response):
         css = 'script:contains("amstockstatusRenderer")::text'
         stock_info = json.loads(response.css(css).re_first('.*?(\{.*\})'))
 
