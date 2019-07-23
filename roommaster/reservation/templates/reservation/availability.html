@@ -1,31 +1,31 @@
 {% extends "reservation/basetable.html" %}
 {% block link %}
-<form action="/" method="POST">
-  <div class="row col-12">
-    <label class="control-label col-sm-2">Check-in</label>
-    <div class="col-sm-6">
-      <input type="date" name="busNo" placeholder="Check-In Date" class="form-control" required="">
+<form action="" method="POST">
+  {% csrf_token %}
+  {% for field in form %}
+    <div class="form-group">
+      <label>{{ field.label_tag }}</label><br>
+      {{field}}
     </div>
-  </div>
-  <div class="row col-12">
-    <label class="control-label col-sm-2">Check-out</label>
-    <div class="col-sm-6">
-      <input type="date" name="dateOfPurchase" placeholder="Check-Out Date" class="form-control" required="">
-    </div>
-  </div>
+  {% endfor %}
+
+  <div class="form-group">
+        <button class="btn btn-success" type="submit">Check Availability</button>
+  </div> 
 </form>
-<br>
 {% endblock %}
-    
+
 {% block view %}
-  <tr>
-    <th>Room #</th>
-    <th>Min rent</th>
-    <th>Max rent</th>
-    <th>Capacity</th>
-    <th>Category</th>
-    <th>Floor</th>
-  </tr>
+  {% if rooms %}
+    <tr>
+      <th>Room #</th>
+      <th>Min rent</th>
+      <th>Max rent</th>
+      <th>Capacity</th>
+      <th>Category</th>
+      <th>Floor</th>
+    </tr>
+  {% endif %}
 
   {% for room in rooms %}
     <tr>

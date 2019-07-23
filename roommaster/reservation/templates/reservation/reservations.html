@@ -3,10 +3,14 @@
   <a href="/admin/reservation/reservation" target="_blank">
     <button class="btn btn-success">Update Record</button>
   </a>
+  <a href="{% url 'reservation-availability' %}">
+    <button class="btn btn-primary">Make Reservation</button>
+  </a>
 {% endblock %}
 
 {% block view %}
   <tr>
+    <th>ID</th>
     <th>Room</th>
     <th>Name</th>
     <th>CNIC</th>
@@ -17,9 +21,10 @@
 
   {% for reservation in reservations %}
     <tr>
+      <td>{{ reservation.id }}</td>
       <td>{{ reservation.room }}</td>
       <td>{{ reservation.customer.name }}</td>
-      <td>{{ reservation.customer }}</td>
+      <td>{{ reservation.customer.cnic }}</td>
       <td>{{ reservation.rent }}</td>
       <td>{{ reservation.checkin }}</td>
       <td>{{ reservation.checkout }}</td>

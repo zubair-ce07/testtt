@@ -1,4 +1,117 @@
 {% extends "reservation/base.html" %}
 {% block content %}
-  <h1>Home</h1>
+  
+  <!-- Start of page -->
+<div class="row">
+    <div class="col-md-4 col-sm-12 col-xs-12">
+      <div class="panel panel-primary text-center no-boder bg-color-red">
+        <div class="panel-body">
+          <i class="fa fa-users fa-4x"></i>
+          <h3><br>
+            <a href="{% url 'reservation-customers' %}" style="text-decoration: none;color: white">
+              <div class="panel-footer back-footer-red">
+                <strong>Customers</strong>
+              </div>
+            </a>
+          </h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4 col-sm-12 col-xs-12">
+      <div class="panel panel-primary text-center no-boder bg-color-blue">
+        <div class="panel-body">
+          <i class="fa fa-bed fa-4x"></i>
+          <h3><br>
+            <a href="{% url 'reservation-rooms' %}" style="text-decoration: none;color: white">
+              <div class="panel-footer back-footer-blue">
+                <strong>Rooms</strong>
+              </div>
+            </a>
+          </h3>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="col-md-4 col-sm-12 col-xs-12">
+      <div class="panel panel-primary text-center no-boder bg-color-green">
+        <div class="panel-body">
+          <i class="fa fa-people-carry fa-4x"></i>
+          <h3><br>
+            <a href="{% url 'reservation-employees' %}" style="text-decoration: none;color: white">
+              <div class="panel-footer back-footer-green">
+                <strong>Employees</strong>
+              </div>
+            </a>
+          </h3>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-4 col-sm-12 col-xs-12">
+      <div class="panel panel-primary text-center no-boder bg-color-brown">
+        <div class="panel-body">
+          <i class="fa fa-money fa-4x"></i>
+          <h3><br>
+            <a href="{% url 'reservation-reservations' %}" style="text-decoration: none;color: white">
+              <div class="panel-footer back-footer-brown">
+                <strong>Reservation</strong>
+              </div>
+            </a>
+          </h3>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4 col-sm-12 col-xs-12">
+      <div class="panel panel-primary text-center no-boder bg-color-red">
+        <div class="panel-body">
+          <i class="fa fa-check-circle fa-4x"></i>
+          <h3><br>
+            <a href="{% url 'reservation-availability' %}" style="text-decoration: none;color: white">
+              <div class="panel-footer back-footer-red">
+                <strong>Availability</strong>
+              </div>
+            </a>
+          </h3>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="col-md-4 col-sm-12 col-xs-12">
+      <div class="panel panel-primary text-center no-boder bg-color-blue">
+        <div class="panel-body">
+          <i class="fa fa-file-alt fa-4x"></i>
+          <h3><br>
+            <a href="#" style="text-decoration: none;color: white">
+              <div class="panel-footer back-footer-blue">
+                <strong>Report</strong>
+              </div>
+            </a>
+          </h3>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+      <div class="col-md-4 col-sm-12 col-xs-12">
+        <div class="panel panel-primary text-center no-boder bg-color-green">
+          <div class="panel-body">
+            <i class="fa fa-coins fa-4x"></i>
+            <h3><br>
+              <a href="{% url 'reservation-availability' %}" style="text-decoration: none;color: white">
+                <div class="panel-footer back-footer-green">
+                  <strong>Make Reservation</strong>
+                </div>
+              </a>
+            </h3>
+          </div>
+        </div>
+      </div>
+    </div>
+
 {% endblock content %}
