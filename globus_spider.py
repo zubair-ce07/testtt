@@ -25,7 +25,7 @@ class GlobusParseSpider(Mixin, BaseParseSpider):
     raw_description_css = '.mzg-catalogue-detail-info span::text'
     price_css = '.mzg-catalogue-detail__product-summary__productPrice *::text'
 
-    image_url_t = 'https://www.globus.ch{}.webp?v=gallery&width=500'
+    image_url_t = 'https://www.globus.ch{}.webp?v=gallery&width=1000'
 
     def parse(self, response):
         raw_product = self.raw_product(response)
@@ -69,19 +69,17 @@ class GlobusParseSpider(Mixin, BaseParseSpider):
     def skus(self, response, raw_product):
         colour_css = '.mzg-catalogue-detail__product-summary__variant-select ' \
                      '.mzg-component-title_type-small ::text'
-
         skus = {}
 
         raw_colour = clean(response.css(colour_css))
         common_sku = {'colour': raw_colour[0].split(': ')[1]} if raw_colour else {}
-
+        common_sku.update(self.product_pricing_common(response))
         raw_skus = raw_product['props']['initialStoreState']['detail']['product']['summary']['sizes']
 
         for raw_sku in raw_skus:
             sku = common_sku.copy()
 
-            sku['size'] = raw_sku['value'] if sku.get('value') else self.one_size
-            sku.update(self.product_pricing_common(response))
+            sku['size'] = raw_sku.get('value', self.one_size)
 
             if not raw_sku['available']:
                 sku['out_of_stock'] = True
@@ -109,11 +107,9 @@ class GlobusParseSpider(Mixin, BaseParseSpider):
 
     def image_urls(self, raw_product):
         raw_images = raw_product['props']['initialStoreState']['detail']['product']
-
         image_urls = []
 
         for raw_image in raw_images['galleryImages']:
-            self.image_url_t.format(raw_image['uri'])
             image_urls.append(self.image_url_t.format(raw_image['uri']))
 
         return image_urls
