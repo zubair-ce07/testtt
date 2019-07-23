@@ -2,20 +2,22 @@ import math
 
 
 class WeatherCalculator:
-    def __init__(self, weather_readings):
-        self.weather_readings = weather_readings
+    def __init__(self, weather_records):
+        self.weather_records = weather_records
 
     def _mean(self, feature):
-        values = [wr[feature] for wr in self.weather_readings if wr[feature] is not None]
-        return (sum(values) / len(values))
+        readings = [wr[feature] for wr in self.weather_records if wr[feature]]
+        return ((sum(readings)) / len(readings) if len(readings) > 0 else None)
 
     def _min(self, feature):
-        reading = min(self.weather_readings, key=lambda wr: wr[feature] if wr[feature] is not None else math.inf)
-        return (reading[feature], reading.get('PKT', 'PKST'))
+        reading = min(self.weather_records, key=lambda wr: wr[feature] if wr[feature] else math.inf)
+        return (reading[feature], reading.get('PKT', reading.get('PKST'))
+                if reading[feature] is not math.inf else (None, None))
 
     def _max(self, feature):
-        reading = max(self.weather_readings, key=lambda wr: wr[feature] if wr[feature] is not None else -math.inf)
-        return (reading[feature], reading.get('PKT', 'PKST'))
+        reading = max(self.weather_records, key=lambda wr: wr[feature] if wr[feature] else -math.inf)
+        return (reading[feature], reading.get('PKT', reading.get('PKST'))
+                if reading[feature] is not -math.inf else (None, None))
 
     def calculate_weather(self):
         stats = {}

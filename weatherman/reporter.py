@@ -1,32 +1,42 @@
-from datetime import datetime
 import math
+from datetime import datetime
 
 
-class Reporter:
+class Reports:
 
     CRED = '\033[91m'
     CEND = '\033[0m'
     CBLUE = '\33[34m'
 
-    def yearly_report(self, yearly_calculations):
-        date = datetime.strptime(yearly_calculations['Max Temp Day'], '%Y-%m-%d')
-        print(f"Highest: {yearly_calculations['Max Temperature']}C on {date.strftime('%b')} {date.strftime('%d')}")
+    def report_year(self, calculations):
 
-        date = datetime.strptime(yearly_calculations['Min Temp Day'], '%Y-%m-%d')
-        print(f"Lowest: {yearly_calculations['Min Temperature']}C on {date.strftime('%b')} {date.strftime('%d')}")
+        date = (datetime.strptime(calculations['Max Temp Day'], '%Y-%m-%d')
+                if calculations['Max Temp Day'] else None)
+        print(f"Highest: {calculations['Max Temperature']}C on {date.strftime('%b')} {date.strftime('%d')}"
+              if date else f"Highest: None")
 
-        date = datetime.strptime(yearly_calculations['Max Humidity Day'], '%Y-%m-%d')
-        print(f"Humidity: {yearly_calculations['Max Humidity']}% on {date.strftime('%b')} {date.strftime('%d')}")
+        date = (datetime.strptime(calculations['Min Temp Day'], '%Y-%m-%d')
+                if calculations['Min Temp Day'] else None)
+        print(f"Lowest: {calculations['Min Temperature']}C on {date.strftime('%b')} {date.strftime('%d')}"
+              if date else f"Lowest: None")
 
-    def monthly_report(self, monthly_calculations):
-        print(f"Highest Average: {int(monthly_calculations['Avg Max Temp'])}C")
-        print(f"Lowest Average: {int(monthly_calculations['Avg Min Temp'])}C")
-        print(f"Average Mean Humidity: {int(monthly_calculations['Avg Mean Humidity'])}%")
+        date = (datetime.strptime(calculations['Max Humidity Day'], '%Y-%m-%d')
+                if calculations['Max Humidity Day'] else None)
+        print(f"Humidity: {calculations['Max Humidity']}% on {date.strftime('%b')} {date.strftime('%d')}"
+              if date else f"Humidity: None")
 
-    def monthly_bar_chart(self, data):
-        for reading in data:
-            if reading['Max TemperatureC'] is not None and reading['Min TemperatureC'] is not None:
-                date = (datetime.strptime(reading.get('PKT', 'PKST'), '%Y-%m-%d'))
+    def report_month(self, calculations):
+        print(f"Highest Average: {int(calculations['Avg Max Temp'])}C"
+              if calculations['Avg Max Temp'] else f"Highest Average: None")
+        print(f"Lowest Average: {int(calculations['Avg Min Temp'])}C"
+              if calculations['Avg Min Temp'] else f"Lowest Average: None")
+        print(f"Average Mean Humidity: {int(calculations['Avg Mean Humidity'])}%"
+              if calculations['Avg Mean Humidity'] else f"Average Mean Humidity: None")
+
+    def plot_month(self, records):
+        for reading in records:
+            if reading['Max TemperatureC'] and reading['Min TemperatureC']:
+                date = (datetime.strptime(reading.get('PKT', reading.get('PKST')), '%Y-%m-%d'))
 
                 print(
                     f"{date.strftime('%d')}"
@@ -39,10 +49,10 @@ class Reporter:
                     f" {reading['Min TemperatureC']}C"
                     )
 
-    def horizontal_barchart(self, data):
-        for reading in data:
-            if reading['Max TemperatureC'] is not None and reading['Min TemperatureC'] is not None:
-                date = (datetime.strptime(reading.get('PKT', 'PKST'), '%Y-%m-%d'))
+    def plot_month_horizontal(self, records):
+        for reading in records:
+            if reading['Max TemperatureC'] and reading['Min TemperatureC']:
+                date = (datetime.strptime(reading.get('PKT', reading.get('PKST')), '%Y-%m-%d'))
                 print(
                     f"{date.strftime('%d')} "
                     f"{self.CBLUE}{reading['Min TemperatureC'] * '+'}{self.CEND}"
