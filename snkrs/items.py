@@ -17,12 +17,3 @@ class SnkrsItem(scrapy.Item):
     skus = scrapy.Field()
     price = scrapy.Field()
     currency = scrapy.Field()
-
-
-class SnkrsSkuItem(scrapy.Item):
-    color = scrapy.Field()
-    price = scrapy.Field()
-    currency = scrapy.Field()
-    size = scrapy.Field()
-    previous_prices = scrapy.Field()
-    sku_id = scrapy.Field()
