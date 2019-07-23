@@ -36,5 +36,28 @@
 <h6>{{ article.publish_time }}</h6>
 <p style="text-align:justify">{{ article.content }}</p>
 <br><br>
-
+<hr>
+<h4>Comments</h4>
+<br>
+{% for comment in article.comment_set.all %}
+<div class="row">
+    <div style="border: groove" class="col s12">
+        <div class="row">
+            <div class="col s1"></div>
+            <div class="col s6">
+                <h6 style="color: rgb(8, 125, 235)">{{ comment.user }} <span style="font-size: 15px; font-style: italic; opacity: 0.7; color: black" class="right">{{ comment.publish_time }}</span> </h6>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col s1"></div>
+            <div class="col s6">
+                <p>{{ comment.comment_text }}</p>
+            </div>
+        </div>
+    </div>
+    
+</div>
+{% endfor %}
+<br>
+<br>
 {% endblock %}
