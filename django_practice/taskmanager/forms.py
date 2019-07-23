@@ -1,13 +1,9 @@
 import datetime
-
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from taskmanager.models import Task
-from taskmanager.validators import validate_username_unique, validate_email_unique
-
+from taskmanager.models import Task, CustomUser
 from taskmanager.validators import validate_user_profile_picture
-
-from taskmanager.models import CustomUser
+from django.utils.safestring import mark_safe
 
 
 class TaskForm(forms.ModelForm):
@@ -17,7 +13,6 @@ class TaskForm(forms.ModelForm):
 
     due_date = forms.DateField(
         widget=forms.TextInput(attrs={
-            "class": "form-control",
             "type": 'date',
             "min": datetime.date.today(),
             "value": datetime.date.today() + datetime.timedelta(days=7)
@@ -31,58 +26,22 @@ class UserRegistrationForm(UserCreationForm):
         fields = ['profile_picture', 'username', 'email', 'first_name', 'last_name', 'birthday', 'address',
                   'password1', 'password2']
 
-    # field_order = ['profile_picture', 'username', 'email', 'first_name', 'last_name', 'birthday', 'address',
-    #                'password1', 'password2']
-
-    username = forms.CharField(
-        max_length=50,
-        label='Username:',
-        widget=forms.TextInput(attrs={
-            "class": "form-control",
-            "placeholder": "Username"
-        })
-    )
-
-    email = forms.CharField(
-        max_length=50,
-        label="Email",
-        widget=forms.TextInput(attrs={
-            "class": "form-control",
-            "placeholder": "Email",
-            "type": "email"
-        })
-    )
-    first_name = forms.CharField(
-        max_length=50,
-        label="First Name",
-        widget=forms.TextInput(attrs={
-            "class": "form-control",
-            "placeholder": "First Name"
-        })
-    )
-
-    last_name = forms.CharField(
-        max_length=50,
-        label="Last Name",
-        widget=forms.TextInput(attrs={
-            "class": "form-control",
-            "placeholder": "Last Name"
-        })
-    )
-
-    address = forms.Textarea()
-
     birthday = forms.DateField(
+
         widget=forms.TextInput(attrs={
-            "class": "form-control",
             "type": 'date',
-            "max": datetime.date.today(),
-            "value": datetime.date.today()
+            "max": datetime.date.today()
         })
     )
 
     profile_picture = forms.ImageField(
-        validators=[validate_user_profile_picture]
+        validators=[validate_user_profile_picture],
+        help_text=mark_safe("<div> "
+                            "<ul>"
+                            "<li> Image should not be more than 500x500 pixels </li>"
+                            "<li> Image should be of valid image type(jpeg, png, gif) </li>"
+                            "<li> Image size not more than 20KB </li> "
+                            "</div>")
     )
 
     def save(self, commit=True):
@@ -98,26 +57,7 @@ class UserRegistrationForm(UserCreationForm):
         return user
 
 
-class UpdateProfileForm(forms.ModelForm):
+class UpdateProfileForm(UserRegistrationForm):
     class Meta:
         model = CustomUser
         fields = ['profile_picture', 'username', 'email', 'first_name', 'last_name', 'birthday', 'address', ]
-
-    username = forms.CharField(
-        max_length=50,
-        label='Username:',
-        widget=forms.TextInput(attrs={
-            "class": "form-control",
-            "placeholder": "Username"
-        })
-    )
-
-    email = forms.CharField(
-        max_length=50,
-        label="Email",
-        widget=forms.TextInput(attrs={
-            "class": "form-control",
-            "placeholder": "Email",
-            "type": "email"
-        })
-    )

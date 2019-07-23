@@ -6,23 +6,28 @@
 
         <form action="" method="POST">
             {% csrf_token %}
-            <div class="form-group">
-                {{ form.title }}
-            </div>
-            <div class="form-group">
-                {{ form.description }}
-            </div>
-            <div class="form-group">
-                {{ form.assignee }}
-            </div>
-            <h6>Enter due date:</h6>
-            <div class="input-group date">
-                {{ form.due_date }}
-            </div>
-            <br/>
-            <button type="submit" class="btn btn-primary">Create task</button> &nbsp;
 
+            {% for field in form %}
+
+                {{ field.label_tag }}
+                <br>
+                {{ field }}
+                {% if field.help_text %}
+                    <br>
+                    <small class="text-muted">{{ field.help_text }}</small>
+                {% endif %}
+
+                {% for error in field.errors %}
+                    <p class="text-danger">{{ error }}</p>
+                {% endfor %}
+
+                <br>
+                <br>
+            {% endfor %}
+
+            <button type="submit" class="btn btn-primary">Create task</button> &nbsp;
             <a class="btn btn-primary" href="{% url 'task_index' %}">Back</a>
+
         </form>
 
     </div>

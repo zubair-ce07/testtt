@@ -1,13 +1,12 @@
 from __future__ import absolute_import
+from django.contrib import messages
 from django.contrib.auth import authenticate, login, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
+from django.http import Http404
 from django.shortcuts import render, redirect
 from django.contrib.auth.forms import PasswordChangeForm
-from taskmanager.forms import TaskForm, UserRegistrationForm
-from taskmanager.models import Task
-from taskmanager.models import CustomUser
-
-from taskmanager.forms import UpdateProfileForm
+from taskmanager.forms import TaskForm, UserRegistrationForm, UpdateProfileForm
+from taskmanager.models import Task, CustomUser
 
 
 def task_index(request):
@@ -27,41 +26,45 @@ def task_detail(request, pk):
 
 
 def user_detail(request, pk):
-    user = CustomUser.objects.get(id=pk)
+    try:
+        user = CustomUser.objects.get(id=pk)
+    except CustomUser.DoesNotExist:
+        raise Http404
     context = {
         'user': user
     }
     return render(request, 'user_detail.html', context)
 
 
+@login_required
 def create_task(request):
     form = TaskForm()
     if request.method == 'POST':
         form = TaskForm(request.POST)
         if form.is_valid():
-            Task(
-                title=form.cleaned_data["title"],
-                description=form.cleaned_data["description"],
-                assignee=form.cleaned_data["assignee"],
-                due_date=form.cleaned_data["due_date"],
-            ).save()
-            return redirect('task_index')
+            form.save()
+            messages.success(request, 'Task created, an email will be sent to you soon!')
+        return redirect('task_index')
+
     context = {
         'form': form
     }
     return render(request, 'create_task.html', context)
 
 
+@login_required
 def edit_task(request, pk):
     task = Task.objects.get(id=pk)
-    form = TaskForm(initial={
-        'title': task.title, 'description': task.description, 'assignee': task.assignee,
-        'due_date': task.due_date
-    }, instance=task)
+    form = TaskForm(instance=task)
     if request.method == 'POST':
         form = TaskForm(request.POST, instance=task)
         if form.is_valid():
-            form.save()
+            if request.user.username == form.cleaned_data['assignee'].username \
+                    or request.user == form.cleaned_data['assigned_by'].username:
+                form.save()
+                messages.success(request, 'Task updated!')
+                return redirect('task_index')
+            messages.error(request, 'Not authorized')
             return redirect('task_index')
         return render(request, 'edit_task.html', {'task': task})
     context = {
@@ -73,11 +76,7 @@ def edit_task(request, pk):
 @login_required
 def edit_user(request, pk):
     user = CustomUser.objects.get(id=pk)
-    form = UpdateProfileForm(initial={
-        'first_name': user.first_name, 'last_name': user.last_name, 'email': user.email,
-        'username': user.username, 'address': user.address, 'birthday': user.birthday,
-        'profile_picture': user.profile_picture,
-    }, instance=user)
+    form = UpdateProfileForm(instance=user)
     if request.method == 'POST':
         form = UpdateProfileForm(request.POST, request.FILES, instance=user)
         if form.is_valid():
@@ -107,10 +106,12 @@ def change_password(request, pk):
     })
 
 
+@login_required
 def delete_task(request, pk):
     task = Task.objects.get(id=pk)
     if request.method == 'POST':
         task.delete()
+        messages.success(request, 'Task deleted!')
         return redirect('task_index')
     return render(request, 'delete_task.html', {'task': task})
 

@@ -24,7 +24,9 @@
 
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'user_detail' user.id %}">
-                        <img src="{{ user.profile_picture.url }}" alt="Image not available" width="25" height="25">
+                        {% if user.profile_picture %}
+                            <img src="{{ user.profile_picture.url }}" alt="Image not available" width="25" height="25">
+                        {% endif %}
                         <span>{{ user.get_full_name }}</span>
                     </a>
                 </li>

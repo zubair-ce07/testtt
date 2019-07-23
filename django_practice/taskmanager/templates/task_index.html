@@ -3,6 +3,7 @@
 {% block extra_head %}
     {% load static %}
     <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
+    <script type="text/javascript" src="{% static 'js/scripts.js' %}"></script>
 {% endblock %}
 
 {% block page_content %}
@@ -11,6 +12,27 @@
 
     <h2 class="tasks-heading">Tasks</h2>
     <hr>
+
+    {% if messages %}
+        <div class="row messages">
+            <div class="col-sm-6">
+
+                {% for message in messages %}
+                    {% if message.tags == 'success' %}
+                        <p class="alert alert-success">
+                            {{ message }}
+                        </p>
+                    {% endif %}
+                    {% if message.tags == 'error' %}
+                        <p class="alert alert-danger">
+                            {{ message }}
+                        </p>
+                    {% endif %}
+                {% endfor %}
+
+            </div>
+        </div>
+    {% endif %}
 
     {% if not tasks %}
 
@@ -21,23 +43,28 @@
         <div class="row">
             {% for task in tasks %}
                 <div class="col-md-4">
-                    <div class="card mb-2">
+                    <div class="card mb-2 ">
                         <div class="card-body">
                             <h3 class="card-title">{{ task.title }}</h3>
                             <p class="card-title">
                                 <strong>Assignee: </strong> {{ task.assignee }}</p>
                             <p class="card-title">
+                                <strong>Assigned By: </strong> {{ task.assigned_by }}</p>
+                            <p class="card-title">
                                 <strong>Due: </strong> {{ task.due_date }}
                             </p>
                             <p class="card-text">{{ task.description }}</p>
-                            <a href="{% url 'edit_task' task.id %}"
-                               class="btn btn-warning">
-                                Edit
-                            </a>&nbsp;
-                            <a href="{% url 'delete_task' task.id %}"
-                               class="btn btn-danger">
-                                Delete
-                            </a>&nbsp;
+                            <hr>
+                            {% if task.assignee == user or task.assigned_by == user %}
+                                <a href="{% url 'edit_task' task.id %}"
+                                   class="btn btn-warning">
+                                    Edit
+                                </a>&nbsp;
+                                <a href="{% url 'delete_task' task.id %}"
+                                   class="btn btn-danger">
+                                    Delete
+                                </a>
+                            {% endif %}&nbsp;
                             <a href="{% url 'task_detail' task.id %}"
                                class="btn btn-primary">
                                 Details
