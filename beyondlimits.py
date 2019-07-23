@@ -1,60 +1,54 @@
 from datetime import datetime
 
-from scrapy import Request, Spider
+from scrapy.spiders import CrawlSpider
+from scrapy import Request
 from scrapy_spider.items import BeyondLimitItem
 
 
-class CrawlSpider(Spider):
+class BeyondLimitsSpider(CrawlSpider):
     name = 'beyondlimitspider'
     allowed_domains = ['beyondlimits.com']
     start_urls = [
         'https://www.beyondlimits.com/Sales/Men/#bb_artlist',
         'https://www.beyondlimits.com/Sales/Women/'
     ]
-    retailer = 'beyondlimits-gb'
+    retailer = 'beyondlimits-uk'
     market = 'UK'
-    language = 'English'
+    language = 'en'
     gender = ['Men', 'Women']
 
     def get_product_sku(self, response):
         skus = {}
-        css_size = "option:not(:first-child)::text"
-        product_size = response.css(css_size).getall()
+        color_css = ".bb_boxtxt--content ul > li:first-child::text"
+        size_css = "option:not(:first-child)::text"
 
-        if product_size:
-            css_price = ".price span::text"
-            css_sku_id = "small.bb_art--artnum span::text"
-            css_color = ".bb_boxtxt--content ul > li:first-child::text"
-            css_currency = "div.price meta::attr(content)"
+        price, currency = self.get_product_price(response)
+        common_sku = {
+            'price': price,
+            'currency': currency,
+            'color': response.css(color_css).get().split(" ", 1)[1]
+        }
+        color = common_sku['color'].capitalize().replace(' ', '_')
+        product_size = response.css(size_css).getall()
 
-            price_color = {
-                'price': response.css(css_price).get().split(" ", 1)[0],
-                'sku_id': response.css(css_sku_id).get(),
-                'color': response.css(css_color).get().split(" ", 1)[1],
-                'currency': response.css(css_currency).get(),
-                'sku_color': response.css(css_color).get().split(" ", 1)[1].capitalize().replace(' ', '_')
-            }
-
-            for sizes in product_size:
-                current_sku = {f"{price_color['sku_color']}_{sizes}": {'price': price_color['price'],
-                                                                       'currency': price_color['currency'],
-                                                                       'size': sizes,
-                                                                       'color': price_color['color']}}
-                skus.update(current_sku)
+        for sizes in product_size:
+            common_sku['size'] = sizes
+            current_sku = {f"{color}_{sizes}": common_sku}
+            skus.update(current_sku)
         return skus
 
     def parse(self, response):
-        css_single_product = ".bb_product--imgwrap > a::attr(href)"
-        links = response.css(css_single_product).getall()
+        product_css = ".bb_product--imgwrap > a::attr(href)"
+        links = response.css(product_css).getall()
         for link in links:
-            yield Request(link, callback=self.parse_of_clothing_item)
+            yield Request(link, callback=self.parse_item)
 
-        css_pagination = "a.bb_pagination--item::attr(href)"
-        next_page = response.css(css_pagination).getall()
-        for link in next_page:
-            yield Request(link, callback=self.parse)
+        pagination_css = "a.bb_pagination--item::attr(href)"
+        next_page = response.css(pagination_css).getall()
+        if next_page:
+            yield map(lambda page: Request(page, callback=self.parse), next_page)
 
-    def parse_of_clothing_item(self, response):
+    def parse_item(self, response):
         garment = BeyondLimitItem()
         garment["name"] = self.get_product_name(response)
         garment["skus"] = self.get_product_sku(response)
@@ -107,3 +101,8 @@ class CrawlSpider(Spider):
 
     def get_gender(self, response):
         return next(gender for gender in self.gender if gender in response.url)
+
+    def get_product_price(self, response):
+        price_css = ".price span::text"
+        currency_css = "div.price meta::attr(content)"
+        return response.css(price_css).get().split(" ", 1)[0], response.css(currency_css).get()
