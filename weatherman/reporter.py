@@ -36,7 +36,7 @@ class Reports:
     def plot_month(self, records):
         for reading in records:
             if reading['Max TemperatureC'] and reading['Min TemperatureC']:
-                date = (datetime.strptime(reading.get('PKT', reading.get('PKST')), '%Y-%m-%d'))
+                date = (datetime.strptime(reading.get('PKT', reading['PKST']), '%Y-%m-%d'))
 
                 print(
                     f"{date.strftime('%d')}"
@@ -52,7 +52,7 @@ class Reports:
     def plot_month_horizontal(self, records):
         for reading in records:
             if reading['Max TemperatureC'] and reading['Min TemperatureC']:
-                date = (datetime.strptime(reading.get('PKT', reading.get('PKST')), '%Y-%m-%d'))
+                date = (datetime.strptime(reading.get('PKT', reading['PKST']), '%Y-%m-%d'))
                 print(
                     f"{date.strftime('%d')} "
                     f"{self.CBLUE}{reading['Min TemperatureC'] * '+'}{self.CEND}"

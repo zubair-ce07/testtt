@@ -11,12 +11,12 @@ class WeatherCalculator:
 
     def _min(self, feature):
         reading = min(self.weather_records, key=lambda wr: wr[feature] if wr[feature] else math.inf)
-        return (reading[feature], reading.get('PKT', reading.get('PKST'))
+        return (reading[feature], reading.get('PKT', reading['PKST'])
                 if reading[feature] is not math.inf else (None, None))
 
     def _max(self, feature):
         reading = max(self.weather_records, key=lambda wr: wr[feature] if wr[feature] else -math.inf)
-        return (reading[feature], reading.get('PKT', reading.get('PKST'))
+        return (reading[feature], reading.get('PKT', reading['PKST'])
                 if reading[feature] is not -math.inf else (None, None))
 
     def calculate_weather(self):
