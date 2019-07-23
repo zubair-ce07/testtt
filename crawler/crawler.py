@@ -1,11 +1,10 @@
-import time
-
-import requests
 import argparse
 import asyncio
 import concurrent.futures
-from parsel import Selector
+import time
 
+import requests
+from parsel import Selector
 
 class Crawler:
     def __init__(self, start_url, max_workers, delay, max_num_urls):
@@ -16,7 +15,7 @@ class Crawler:
         self.bounded_semaphore = asyncio.BoundedSemaphore(max_workers)
         self.parser = Parser()
 
-    def _find_urls(self, request):
+    async def _find_urls(self, request):
         all_urls = Selector(text=request.text).xpath("//a/@href").getall()
         found_urls = []
         for url in all_urls:
@@ -66,10 +65,8 @@ class ConcurrentCrawler(Crawler):
                 await asyncio.sleep(self.delay)
                 future_response = await asyncio.get_event_loop().run_in_executor(None, requests.get, url)
                 return future_response
-        except requests.ConnectionError:
+        except (requests.ConnectionError, requests.Timeout):
             print(f"Connection Error Occured while trying to get: {url}")
-        except requests.Timeout:
-            print(f"Timeout Error Occured while trying to get: {url}")
 
 
 class ParallelCrawler(Crawler):
@@ -82,10 +79,8 @@ class ParallelCrawler(Crawler):
                     future_response = await asyncio.get_running_loop().run_in_executor(pool, requests.get, url)
                     await asyncio.sleep(self.delay)
                     return future_response
-        except requests.ConnectionError:
+        except (requests.ConnectionError, requests.Timeout):
             print(f"Connection Error Occured while trying to get: {url}")
-        except requests.Timeout:
-            print(f"Timeout Error Occured while trying to get: {url}")
 
 
 class Parser:
@@ -97,7 +92,7 @@ class Parser:
 
     def arg_parser(self):
         parser = argparse.ArgumentParser()
-        parser.add_argument('-u', action='store', dest='start_url',
+        parser.add_argument('-u', action='store', dest='start_url', type=lambda u: 
                             help='Enter URL where you want to start crawling.')
         parser.add_argument('-w', action='store', dest="concurrent_requests", type=int,
                             help="Enter Number of concurrent requests a worker can make.")
