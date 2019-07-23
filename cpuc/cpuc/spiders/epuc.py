@@ -3,6 +3,7 @@ import re
 import scrapy
 from scrapy import FormRequest
 from datetime import datetime, timedelta
+
 from scrapy.loader import ItemLoader
 
 from cpuc.items import ProceedingDetail, Filing
@@ -12,6 +13,10 @@ class CpucSpider(scrapy.Spider):
     name = "epuc"
     allowed_domains = ['epuc.vermont.gov']
     start_urls = ['https://epuc.vermont.gov/?q=User']
+
+    def __init__(self, days=2, *args, **kwargs):
+        super(CpucSpider, self).__init__(*args, **kwargs)
+        self.days = days
 
     def parse(self, response):
         """ This function will do login ."""
@@ -44,19 +49,29 @@ class CpucSpider(scrapy.Spider):
             meta={'cookiejar': response.meta['cookiejar']}
         )
 
+    @staticmethod
+    def get_start_date():
+        search_start_date = datetime.now().date()
+        search_start_date = search_start_date.strftime("%m/%d/%Y")
+        return search_start_date
+
+    def get_end_date(self):
+        search_end_date = (datetime.now() - timedelta(days=int(self.days))).date()
+        search_end_date = search_end_date.strftime("%m/%d/%Y")
+        return search_end_date
+
     def search_case(self, response):
         """This function make search for last two days dockets"""
 
-        search_start_date = datetime.now().date()
-        search_end_date = (datetime.now() - timedelta(days=5)).date()
-        search_end_date = search_end_date.strftime("%m/%d/%Y")
-        search_start_date = search_start_date.strftime("%m/%d/%Y")
+        search_start_date = self.get_start_date()
+        search_end_date = self.get_end_date()
+
         ecp_form_id = response.xpath("//input[@name='ecpFormId']/@value").get()
 
         formdata = {
             'formId': response.xpath("//*[@name='formId']/@value").get(),
-            'data(181445)': str(search_end_date),
-            'data(181445_right)': str(search_start_date),
+            'data(181445)': search_end_date,
+            'data(181445_right)': search_start_date,
             'eCourtFormCode': 'S-Document-Orders-Portal',
             'ecpFormId': ecp_form_id,
             'op': 'Search',
@@ -70,8 +85,8 @@ class CpucSpider(scrapy.Spider):
             callback=self.parse_proceeding_numbers,
             meta={
                 'cookiejar': response.meta['cookiejar'],
-                'proceeding_urls': list(),
-                'proceeding_type': list()
+                'proceeding_urls': [],
+                'proceeding_type': []
             },
             dont_filter=True
         )
@@ -82,7 +97,7 @@ class CpucSpider(scrapy.Spider):
         proceeding_urls = response.meta['proceeding_urls']
         proceeding_type = response.meta['proceeding_type']
 
-        for row in response.xpath("//table[contains(@class, 'searchResultsPage')]/tr[@style='height:17px']"):
+        for row in response.xpath("//table[contains(@class, 'searchResultsPage')]/tr[starts-with(@id,'form_search_')]"):
             proceeding_urls.append(response.urljoin(row.xpath("td[1]/span/a/@href").get()))
             proceeding_type.append(row.xpath("td[3]/text()").get().strip())
 
@@ -116,31 +131,29 @@ class CpucSpider(scrapy.Spider):
     def parse_proceeding_details(self, response):
         """In this method, all proceeding docket detail will scrap"""
 
-        docket_loader = ItemLoader(item=ProceedingDetail(), response=response, selector=response)
-        docket_loader.add_value("source_url", response.url)
-        content = response.xpath("//div[@class='content']/div[@style][1]/table")
-        title = response.xpath("//div[@id='formBody_1065']/table//tr/td//span[last()]/text()").getall()
-
-        if len(title) > 2:
-            title = title[2].strip()
-            docket_loader.add_value('title', title)
-        docket_loader.add_value('proceeding_type', response.meta['proceeding_type'])
-
         if response.url != 'https://epuc.vermont.gov/?q=node/104/16216':
+
+            docket_loader = ItemLoader(item=ProceedingDetail(), response=response, selector=response)
+
+            docket_loader.add_value("source_url", response.url)
+            content = response.xpath("//div[@class='content']/div[@style][1]/table")
+            title = response.xpath("//div[@id='formBody_1065']/table//tr/td//span[last()]/text()").getall()[2].strip()
+            docket_loader.add_value('title', title)
+            docket_loader.add_value('proceeding_type', response.meta['proceeding_type'])
             docket_loader.add_value('filled_on', content.xpath("//tr[3]/td[2]/text()").get().split(':')[1].strip())
+            docket_loader.add_value('status', content.xpath("//tr[3]/td[1]/text()").get().split(':')[1].strip())
+            docket_loader.add_value('industries', content.xpath("//tr[5]/td[3]/text()").get().strip())
 
-        docket_loader.add_value('status', content.xpath("//tr[3]/td[1]/text()").get().split(':')[1].strip())
-        docket_loader.add_value('industries', content.xpath("//tr[5]/td[3]/text()").get().strip())
+            yield response.follow(
+                url='https://epuc.vermont.gov/?q=node/64/143572/FV-People-Portal',
+                meta={
+                    'cookiejar': response.meta['cookiejar'],
+                    'docket_loader': docket_loader
+                },
+                callback=self.parse_filing_parties,
+                dont_filter=True
 
-        yield response.follow(
-            url='https://epuc.vermont.gov/?q=node/64/143572/FV-People-Portal',
-            meta={
-                'cookiejar': response.meta['cookiejar'],
-                'docket_loader': docket_loader
-            },
-            dont_filter=True,
-            callback=self.parse_filing_parties
-        )
+            )
 
     def parse_filing_parties(self, response):
         """In this method, all people who are involving in each docket are parse"""
@@ -148,7 +161,7 @@ class CpucSpider(scrapy.Spider):
         docket_loader = response.meta['docket_loader']
 
         filing_parties = response.xpath("//table[starts-with(@id, 'form.')]/tr[starts-with(@id, 'tree.branch.')]")
-        parties = list()
+        parties = []
         for party in filing_parties:
             party = party.xpath("td[2]/span[last()]/text()").get()
             if party:
@@ -161,7 +174,7 @@ class CpucSpider(scrapy.Spider):
             meta={
                 'cookiejar': response.meta['cookiejar'],
                 'docket_loader': docket_loader,
-                'filing': list()
+                'filing': []
             },
             dont_filter=True,
             callback=self.parse_comission_issue_document
@@ -173,7 +186,7 @@ class CpucSpider(scrapy.Spider):
         docket_loader = response.meta['docket_loader']
         filings = response.meta['filing']
 
-        self.get_filings(filings, response)
+        self.parse_filings(filings, response)
 
         yield response.follow(
             url='https://epuc.vermont.gov/?q=node/64/143572/FV-ALLOTDOX-PTL',
@@ -192,14 +205,14 @@ class CpucSpider(scrapy.Spider):
         docket_loader = response.meta['docket_loader']
         filings = response.meta['filing']
 
-        self.get_filings(filings, response)
+        self.parse_filings(filings, response)
 
         docket_loader.add_value('filings', filings)
 
         return docket_loader.load_item()
 
     @staticmethod
-    def get_filings(filings, response):
+    def parse_filings(filings, response):
         """In this method, here data of filing loads in filing list"""
 
         filings_data = response.xpath("//table[starts-with(@id, 'form.')]/tr[starts-with(@class, 'tt')]")
