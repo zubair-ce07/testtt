@@ -1,27 +1,15 @@
 import datetime
+
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth.models import User
+from taskmanager.models import Task
+from taskmanager.validators import validate_username_unique, validate_email_unique
 
 
-class TaskForm(forms.Form):
-    title = forms.CharField(
-        max_length=50,
-        widget=forms.TextInput(attrs={
-            "class": "form-control",
-            "placeholder": "Task title"
-        })
-    )
-
-    description = forms.CharField(
-        widget=forms.Textarea(
-            attrs={
-                "class": "form-control",
-                "placeholder": "Enter description!"
-            })
-    )
-
-    assignee = forms.ModelChoiceField(queryset=User.objects.all())
+class TaskForm(forms.ModelForm):
+    class Meta:
+        model = Task
+        fields = '__all__'
 
     due_date = forms.DateField(
         widget=forms.TextInput(attrs={
@@ -39,6 +27,7 @@ class UserRegistrationForm(UserCreationForm):
     username = forms.CharField(
         max_length=50,
         label='Username:',
+        validators=[validate_username_unique],
         widget=forms.TextInput(attrs={
             "class": "form-control",
             "placeholder": "Username"
@@ -66,6 +55,7 @@ class UserRegistrationForm(UserCreationForm):
     email = forms.CharField(
         max_length=50,
         label="Email",
+        validators=[validate_email_unique],
         widget=forms.TextInput(attrs={
             "class": "form-control",
             "placeholder": "Email",
@@ -93,12 +83,3 @@ class UserRegistrationForm(UserCreationForm):
             "type": "password"
         })
     )
-
-    def clean(self):
-        cleaned_data = self.cleaned_data
-        email = cleaned_data.get("email")
-        username = cleaned_data.get("username")
-        if User.objects.filter(email=email).exists():
-            self.add_error(field='email', error='This email address already exists!')
-        if User.objects.filter(username=username).exists():
-            self.add_error(field='username', error='This username already exists!')
