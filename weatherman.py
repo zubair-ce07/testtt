@@ -6,7 +6,7 @@ from pprint import pprint
 MIN_TEMPC_COL = "Min TemperatureC"
 MAX_TEMPC_COL = "Max TemperatureC"
 MAX_HUMIDITY_COL = "Max Humidity"
-DATE_COL = "PKST" # TODO: DATE_COL can have multiple names like PKST or PKT
+DATE_COL = "PKST"  # TODO: DATE_COL can have multiple names like PKST or PKT
 
 
 class WeatherMan:
@@ -17,7 +17,7 @@ class WeatherMan:
         """
             process the given directory for weather files and store the files path
             in a dictionary for later processing
-            
+
             weather_files_dict = { year : list of file paths of given year}
         """
         for f in listdir(dir_path):
@@ -28,7 +28,7 @@ class WeatherMan:
                     self.weather_files_dict[file_year] = [file_path]
                 else:
                     self.weather_files_dict[file_year].append(file_path)
-    
+
     def get_dataframe_from_files(self, file_paths):
         """
             receives a list of file paths and return a single dataframe
@@ -37,6 +37,10 @@ class WeatherMan:
         for file_path in file_paths:
             print("Reading from file", file_path)
             df = pd.read_csv(file_path, index_col=None, engine="python")
+            # Renaming PKT to PKST to sync the columns over multiple files
+            if "PKT" in df.columns:
+                df.rename(columns={"PKT": "PKST"}, inplace=True)
+
             dfs.append(df)
 
         dataframe = pd.concat(dfs, axis=0, sort=False, ignore_index=True)
@@ -58,15 +62,18 @@ class WeatherMan:
         """
         if not self.weather_files_dict[year]:
             return
-        
+
         file_paths = self.weather_files_dict[year]
         self.dataframe = self.get_dataframe_from_files(file_paths)
         self.preprocess_dataframe()
 
         # fetching required rows out of dataframe
-        max_temp_row = self.dataframe.loc[self.dataframe[MAX_TEMPC_COL].idxmax()]
-        min_temp_row = self.dataframe.loc[self.dataframe[MIN_TEMPC_COL].idxmin()]
-        max_humidity_row = self.dataframe.loc[self.dataframe[MAX_HUMIDITY_COL].idxmax()]
+        max_temp_row = self.dataframe.loc[self.dataframe[MAX_TEMPC_COL].idxmax(
+        )]
+        min_temp_row = self.dataframe.loc[self.dataframe[MIN_TEMPC_COL].idxmin(
+        )]
+        max_humidity_row = self.dataframe.loc[self.dataframe[MAX_HUMIDITY_COL].idxmax(
+        )]
 
         data = {}
         # Temparature stats for given Year
@@ -84,8 +91,8 @@ class WeatherMan:
 
         return data
 
+
 class Report:
-    
     def __init__(self, dir_path):
         self.wm = WeatherMan()
         self.data_dir = dir_path
@@ -93,9 +100,8 @@ class Report:
     def yearlyReport(self, year):
         self.wm.process_files(self.data_dir)
         yearlyData = self.wm.get_year_stats(year)
-        
         self.printYearlyReport(yearlyData)
-        
+
     def printYearlyReport(self, data):
         """
             data type : json
@@ -117,10 +123,10 @@ class Report:
         print(f'Lowest: {data["temp"]["min"]}C on {data["temp"]["minDay"]}')
         print(f'Humid: {data["humidity"]["max"]}% on {data["temp"]["maxDay"]}')
 
+
 if __name__ == "__main__":
     # getting directory
     data_dir = 'weatherfiles/weatherfiles/'
     report = Report(data_dir)
-    report.yearlyReport('2008')
+    report.yearlyReport('2004')
     # FIXME: for data where date column is PKT rather than PKST
-    
