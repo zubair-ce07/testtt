@@ -45,7 +45,7 @@ class OnlyParser(Spider):
         item['category'] = self.extract_category(raw_product)
         item['gender'] = self.extract_gender(raw_product)
         item['description'] = self.extract_description(raw_product)
-        item['requests_queue'] = self.construct_sku_requests(response, raw_product)
+        item['requests_queue'] = self.construct_sku_requests(raw_product)
         item['image_urls'] = self.extract_image_urls(raw_product)
         item['skus'] = []
 
@@ -84,23 +84,6 @@ class OnlyParser(Spider):
 
     def extract_colour(self, response):
         return clean(response.css('.color-combination ::text'))
-
-    def has_length(self, response):
-        length_css = '.length .swatch__item--selectable:not(.swatch__item--unavailable),' \
-                     '.length .swatch__item--selected:not(.swatch__item--unavailable)'
-
-        if not clean(response.css('.length')):
-            return True
-        elif clean(response.css(length_css)):
-            return True
-
-        return False
-
-    def has_skus(self, response):
-        size_css = '.size .swatch__item--selectable:not(.swatch__item--unavailable) ::text,' \
-                   '.size .swatch__item--selected:not(.swatch__item--unavailable) ::text'
-
-        return clean(response.css(size_css))
 
     def extract_size(self, response):
         size_css = '.size .swatch__item--selected .swatch__item-inner-text__text-container ::text'
@@ -143,15 +126,11 @@ class OnlyParser(Spider):
 
         return request
 
-    def construct_sku_requests(self, response, raw_product):
-        return [Request(item['url'], callback=self.parse_sku) for item in raw_product['@graph']] \
-            if self.has_skus(response) else []
+    def construct_sku_requests(self, raw_product):
+        return [Request(item['url'], callback=self.parse_sku) for item in raw_product['@graph']]
 
     def extract_skus(self, response):
         skus = []
-
-        if not self.has_length(response):
-            return skus
 
         common_sku = self.extract_pricing(response)
         colour = self.extract_colour(response)
