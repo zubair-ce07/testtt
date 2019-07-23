@@ -1,6 +1,8 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic.edit import FormView
 from django.views import generic
+from django.contrib import messages
+from braces import views as braces_views
 
 from articles.models import Article, Author, Website
 from articles.forms import NewArticleForm, NewAuthorForm, NewWebsiteForm
@@ -16,7 +18,7 @@ class DetailView(generic.DetailView):
     model = Article
     template_name = 'articles/detail.html'
 
-class ArticleCreateView(FormView):
+class ArticleCreateView(braces_views.LoginRequiredMixin, braces_views.SuperuserRequiredMixin, FormView):
     template_name = 'articles/add_article.html'
     form_class = NewArticleForm
     success_url = '/'
@@ -27,7 +29,7 @@ class ArticleCreateView(FormView):
         article.authors.add(*authors)
         return super(ArticleCreateView, self).form_valid(form)
 
-class AuthorCreateView(FormView):
+class AuthorCreateView(braces_views.LoginRequiredMixin, braces_views.SuperuserRequiredMixin, FormView):
     template_name = 'articles/add_author.html'
     form_class = NewAuthorForm
     success_url = '/'
@@ -36,7 +38,7 @@ class AuthorCreateView(FormView):
         Author.objects.create(**form.cleaned_data)
         return super(AuthorCreateView, self).form_valid(form)
 
-class WebsiteCreateView(FormView):
+class WebsiteCreateView(braces_views.LoginRequiredMixin, braces_views.SuperuserRequiredMixin, FormView):
     template_name = 'articles/add_website.html'
     form_class = NewWebsiteForm
     success_url = '/'

@@ -1,0 +1,48 @@
+{% extends 'articles/base.html' %}
+{% load static %}
+{% load materializecss %}
+
+{% block imports %}
+<link rel="stylesheet" href="{% static 'accounts/css/materialize.min.css' %}">
+<script src="{% static 'accounts/js/jquery-3.4.1.js' %}"></script>
+{% endblock %}
+
+{% block title %}
+Signup | 
+{% endblock %}
+
+{% block container %}
+<br><br>
+<center>
+    <h4>Sign up for a new account</h4>
+</center>
+<div class="row">
+    <form class="col s12" method="post">
+        {% csrf_token %}
+        <br>
+        <div class="row">
+            <div class="col s3"></div>
+            <div class="input-field col s6">
+                {{ form.username|materializecss }}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col s3"></div>
+            <div class="input-field col s6">
+                {{ form.password1|materializecss }}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col s3"></div>
+            <div class="input-field col s6">
+                {{ form.password2|materializecss }}
+            </div>
+        </div>
+        <center>
+            <p>Already have an account? <span><a href="{% url 'login' %}">Login</a></span></p>
+            <br>
+            <button type="submit" class="btn waves-effect btn-large btn-success">Signup</button>
+        </center>
+    </form>
+</div>
+{% endblock container %}

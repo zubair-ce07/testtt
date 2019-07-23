@@ -1,0 +1,41 @@
+{% load static %}
+{% load materializecss %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="icon" href="{% static 'accounts/media/icon.png' %}" type="image/gif">
+    {% block imports %}
+    
+    {% endblock %}
+    <link rel="stylesheet" type="text/css" href="{% static 'accounts/css/style.css' %}">
+    <script src="{% static 'accounts/js/materialize.min.js' %}"></script>
+    <script src="{% static 'accounts/js/script.js' %}"></script>
+    <title>{% block title %}{% endblock %} Readers Haven</title>
+</head>
+
+<body>
+    <div class="navbar-fixed">
+        <nav id="navbar"">
+            <div class=" nav-wrapper">
+                <a id="heading-text" href="/" class="brand-logo center">Readers Haven</a>
+                <ul class="right hide-on-med-and-down">
+                    {% block navbarbutton %}
+                    
+                    {% endblock %}
+                </ul>
+            </div>
+        </nav>
+    </div>
+    <div class="container">
+    {% block container %}
+    
+    {% endblock %}
+    </div>
+</body>
+
+</html>

@@ -8,7 +8,15 @@
 {% endblock %}
 
 {% block navbarbutton %}
-
+{% if user.is_authenticated %}
+<ul id="dropdown1" class="dropdown-content">
+    <li><a href="{% url 'logout' %}">Logout</a></li>
+</ul>
+<li><a class="dropdown-trigger" id="heading-text" href="#!" data-target="dropdown1">{{ user.username }}<i class="material-icons right">arrow_drop_down</i></a></li>
+{% else %}
+<li><a id="heading-text" href="{% url 'login' %}">Login</a></li>
+<li><a id="heading-text" href="/accounts/signup/">Signup</a></li>
+{% endif %}
 {% endblock %}
 
 {% block container %}
@@ -40,16 +48,18 @@
 {% endfor %}
 {% endif %}
 <br><br>
+{% if user.is_superuser %}
 <div class="fixed-action-btn">
   <a title="Add New" class="btn-floating btn-large red">
     <i class="large material-icons">add</i>
   </a>
   <ul>
-    <li><a class="btn-floating red" href="/articles/add-article" title="Add Article"><i class="material-icons">description</i></a></li>
-    <li><a class="btn-floating yellow darken-1" href="/articles/add-author" title="Add Author"><i class="material-icons">account_circle</i></a></li>
-    <li><a class="btn-floating green" href="/articles/add-website" title="Add Website"><i class="material-icons">language</i></a></li>
+    <li><a class="btn-floating red" href="/articles/add-article" title="Article"><i class="material-icons">description</i></a></li>
+    <li><a class="btn-floating yellow darken-1" href="/articles/add-author" title="Author"><i class="material-icons">account_circle</i></a></li>
+    <li><a class="btn-floating green" href="/articles/add-website" title="Website"><i class="material-icons">language</i></a></li>
   </ul>
 </div>
+{% endif %}
 {% if is_paginated %}
 <ul class="pagination right">
     {% if page_obj.has_previous %}

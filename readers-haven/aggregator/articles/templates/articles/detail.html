@@ -12,7 +12,15 @@
 {% endblock %}
 
 {% block navbarbutton %}
-
+{% if user.is_authenticated %}
+<ul id="dropdown1" class="dropdown-content">
+    <li><a href="{% url 'logout' %}">Logout</a></li>
+</ul>
+<li><a class="dropdown-trigger" id="heading-text" href="#!" data-target="dropdown1">{{ user.username }}<i class="material-icons right">arrow_drop_down</i></a></li>
+{% else %}
+<li><a id="heading-text" href="{% url 'login' %}">Login</a></li>
+<li><a id="heading-text" href="/accounts/signup/">Signup</a></li>
+{% endif %}
 {% endblock %}
 
 {% block container %}
