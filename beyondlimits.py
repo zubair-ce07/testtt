@@ -1,6 +1,6 @@
 from datetime import datetime
-from scrapy import Spider
-from scrapy import Request
+
+from scrapy import Request, Spider
 from scrapy_spider.items import BeyondLimitItem
 
 
@@ -12,84 +12,98 @@ class CrawlSpider(Spider):
         'https://www.beyondlimits.com/Sales/Women/'
     ]
     retailer = 'beyondlimits-gb'
-
-    def get_product_name(self, response):
-        return response.css('.bb_art--header h1::text').get()
-
-    def get_product_description(self, response):
-        return response.css('header.bb_art--header p::text').get()
-
-    def get_retailer_sku(self, response):
-        return response.css('small.bb_art--artnum span::text').get()
-
-    def get_image_urls(self, response):
-        return response.css('a.bb_pic--navlink::attr(href)').getall()
-
-    def get_product_care(self, response):
-        return response.css('.bb_boxtxt--content ul>li:not(:first-child)::text').getall()
-
-    def get_product_category(self, response):
-        return response.css('span.bb_breadcrumb--item.is-last strong::text').get()
-
-    def get_crawl_id(self):
-        return f"{self.retailer}-{datetime.now().strftime('%Y%m%d')}" \
-               f"-{int(datetime.timestamp(datetime.now()))}-medp"
+    market = 'UK'
+    language = 'English'
+    gender = ['Men', 'Women']
 
     def get_product_sku(self, response):
-        male_size_id = {'S': 1, 'M': 2, 'L': 3, 'XL': 4, 'XXL': 5}
-        female_size_id = {'XS': 1, 'S': 2, 'M': 3, 'L': 4}
-        sku = {}
-        product_size = response.css('option:not(:first-child)::text').getall()
-        if product_size:
-            product_price = response.css('.price span::text').get()
-            product_currency = response.css('div.price meta::attr(content)').get()
-            product_sku = response.css('small.bb_art--artnum span::text').get()
-            color_extracted = response.css('.bb_boxtxt--content ul > li:first-child::text').get()
-            color = color_extracted.split(" ", 1)
-            for sizes in product_size:
-                if self.get_gender(response) == 'Women':
-                    color_size = int(product_sku[3:]) + female_size_id[sizes]
-                else:
-                    color_size = int(product_sku[3:]) + male_size_id[sizes]
-                current_sku = {str(product_sku[:3]) + str(color_size): {'price': product_price,
-                                                                        'currency': product_currency,
-                                                                        'size': sizes,
-                                                                        'color': color[1]}}
-                sku.update(current_sku)
-        return sku
+        skus = {}
+        css_size = "option:not(:first-child)::text"
+        product_size = response.css(css_size).getall()
 
-    def get_gender(self, response):
-        product_url = response.css('a.flag.en.selected::attr(href)').get()
-        if 'Men' in product_url:
-            return 'Men'
-        else:
-            return 'Women'
+        if product_size:
+            css_price = ".price span::text"
+            css_sku_id = "small.bb_art--artnum span::text"
+            css_color = ".bb_boxtxt--content ul > li:first-child::text"
+            css_currency = "div.price meta::attr(content)"
+
+            price_color = {
+                'price': response.css(css_price).get().split(" ", 1)[0],
+                'sku_id': response.css(css_sku_id).get(),
+                'color': response.css(css_color).get().split(" ", 1)[1],
+                'currency': response.css(css_currency).get(),
+                'sku_color': response.css(css_color).get().split(" ", 1)[1].capitalize().replace(' ', '_')
+            }
+
+            for sizes in product_size:
+                current_sku = {f"{price_color['sku_color']}_{sizes}": {'price': price_color['price'],
+                                                                       'currency': price_color['currency'],
+                                                                       'size': sizes,
+                                                                       'color': price_color['color']}}
+                skus.update(current_sku)
+        return skus
 
     def parse(self, response):
-        links = response.css('.bb_product--imgwrap > a::attr(href)').getall()
+        css_single_product = ".bb_product--imgwrap > a::attr(href)"
+        links = response.css(css_single_product).getall()
         for link in links:
             yield Request(link, callback=self.parse_of_clothing_item)
-        next_page = response.css('a.bb_pagination--item::attr(href)').getall()
 
+        css_pagination = "a.bb_pagination--item::attr(href)"
+        next_page = response.css(css_pagination).getall()
         for link in next_page:
             yield Request(link, callback=self.parse)
 
     def parse_of_clothing_item(self, response):
         garment = BeyondLimitItem()
-        garment['name'] = self.get_product_name(response)
-        garment["sku"] = self.get_product_sku(response)
+        garment["name"] = self.get_product_name(response)
+        garment["skus"] = self.get_product_sku(response)
         garment["gender"] = self.get_gender(response)
         garment["description"] = self.get_product_description(response)
         garment["retailer_sku"] = self.get_retailer_sku(response)
         garment["image_urls"] = self.get_image_urls(response)
         garment["care"] = self.get_product_care(response)
-        garment["lang"] = response.css('a.flag.en.selected::attr(title)').get()
-        garment["brand"] = response.css('.ft_logo--inner img::attr(title)').get()
+        garment["lang"] = self.language
+        garment["brand"] = self.get_product_brand(response)
         garment["category"] = self.get_product_category(response)
-        garment["url"] = response.css('a.flag.en.selected::attr(href)').get()
+        garment["url"] = response.url
         garment["crawl_start_time"] = datetime.now().isoformat()
         garment["date"] = int(datetime.timestamp(datetime.now()))
         garment["crawl_id"] = self.get_crawl_id()
-        garment["market"] = 'GB'
+        garment["market"] = self.market
         garment["retailer"] = self.retailer
         yield garment
+
+    def get_product_name(self, response):
+        css = ".bb_art--header h1::text"
+        return response.css(css).get()
+
+    def get_product_description(self, response):
+        css = "header.bb_art--header p::text"
+        return response.css(css).get()
+
+    def get_retailer_sku(self, response):
+        css = "small.bb_art--artnum span::text"
+        return response.css(css).get()
+
+    def get_image_urls(self, response):
+        css = "a.bb_pic--navlink::attr(href)"
+        return response.css(css).getall()
+
+    def get_product_care(self, response):
+        css = ".bb_boxtxt--content ul > li:not(:first-child)::text"
+        return ' '.join(response.css(css).getall())
+
+    def get_product_category(self, response):
+        css = "span.bb_breadcrumb--item.is-last strong::text"
+        return response.css(css).get()
+
+    def get_crawl_id(self):
+        return f"{self.retailer}-{datetime.now().strftime('%Y%m%d-%H%M%s')}-medp"
+
+    def get_product_brand(self, response):
+        css = ".ft_logo--inner img::attr(title)"
+        return response.css(css).get()
+
+    def get_gender(self, response):
+        return next(gender for gender in self.gender if gender in response.url)
