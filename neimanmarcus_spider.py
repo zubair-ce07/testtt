@@ -1,5 +1,4 @@
 import json
-from urllib.parse import urljoin
 
 from scrapy import Request, FormRequest, Selector
 from scrapy.linkextractors import LinkExtractor
@@ -22,8 +21,8 @@ class MixinTW(Mixin):
     homeware = 'homeware'
 
     pagination_url = 'https://www.neimanmarcus.com/en-tw/category.service?instart_disable_injection=true'
-    region_payload = '%7B%22currencyPreference%22%3A%22TWD%22%2C%22countryPreference%22%3A%22TW%22%2C%22securityStatus' \
-                     '%22%3A%22Anonymous%22%2C%22cartItemCount%22%3A0%7D'
+    region_payload = '%7B%22currencyPreference%22%3A%22TWD%22%2C%22countryPreference%22%3A%22TW%22%2C%22' \
+                     'securityStatus%22%3A%22Anonymous%22%2C%22cartItemCount%22%3A0%7D'
 
     start_urls = ['https://www.neimanmarcus.com/en-tw/index.jsp']
 
@@ -38,7 +37,7 @@ class NeimanMarcusParseSpider(BaseParseSpider):
 
     def parse(self, response):
         response.meta['products_response'] = response
-        yield self.products_request(response)
+        yield self.skus_request(response)
 
     def parse_products(self, response):
         raw_products = self.raw_products(response)
@@ -61,12 +60,16 @@ class NeimanMarcusParseSpider(BaseParseSpider):
             garment['category']  = self.product_category(garment)
             garment['skus'] = self.skus(product_s, raw_skus)
 
-            if self.is_apparel(garment):
-                garment['gender'] = self.product_gender(garment)
-            else:
+            if self.is_homeware(garment):
                 garment['industry'] = self.homeware
+            else:
+                garment['gender'] = self.product_gender(garment)
 
             return garment
+
+    def skus_request(self, response):
+        formdata = {'data': self.payload(response)}
+        return FormRequest(url=self.sku_url, formdata=formdata, meta=response.meta.copy(), callback=self.parse_products)
 
     def product_id(self, product_s):
         return clean(product_s.css('.product-images ::attr("prod-id")'))[0]
@@ -76,7 +79,7 @@ class NeimanMarcusParseSpider(BaseParseSpider):
 
     def image_urls(self, product_s):
         image_urls = clean(product_s.css('.product-images ::attr(data-zoom-url)'))
-        image_urls = [urljoin(self.start_urls[0], image_url) for image_url in image_urls]
+        image_urls = [image_url for image_url in image_urls]
 
         raw_colour_codes = clean(product_s.css('#color-pickers ::attr(data-sku-img)'))
         raw_colour_codes = [json.loads(rc_codes).values() for rc_codes in raw_colour_codes]
@@ -108,17 +111,13 @@ class NeimanMarcusParseSpider(BaseParseSpider):
 
         return skus
 
-    def is_apparel(self, garment):
+    def is_homeware(self, garment):
         trail = soupify([f'{category} {url}' for category, url in garment.get('trail') or []]).lower()
-        return 'men' in trail and 'home' not in trail
+        return 'men' not in trail and 'home' in trail
 
     def raw_products(self, response):
         products = json.loads(response.text)
         return json.loads(products['ProductSizeAndColor']['productSizeAndColorJSON'])
-
-    def products_request(self, response):
-        formdata = {'data': self.payload(response)}
-        return FormRequest(url=self.sku_url, formdata=formdata, meta=response.meta.copy(), callback=self.parse_products)
 
     def payload(self, response):
         raw_product = json.loads(response.css('script:contains("window.utag_data")::text').re_first('({.*})'))
@@ -129,21 +128,11 @@ class NeimanMarcusParseSpider(BaseParseSpider):
 
 
 class NeimanMarcusCrawlSpider(BaseCrawlSpider):
-    listings_css = [
-        '.silo-nav [href*=men]',
-        '.silo-nav [href*=boys]',
-        '.silo-nav [href*=girls]',
-        '.silo-nav [href*=baby]',
-        '.silo-nav [href*=home]',
-        '.silo-nav [href*=contemporary]',
-        '.silo-nav [href*=shoes]',
-        '.silo-nav [href*=handbags]',
-        '.silo-nav [href*=jewelry]',
-    ]
+    allowed_r = [r'.*men|boys|girls|baby|home|contemporary|shoes|handbags|handbags|jewelry.*']
     products_css = ['#productTemplateId']
 
     rules = (
-        Rule(LinkExtractor(restrict_css=listings_css), callback='parse'),
+        Rule(LinkExtractor(allow=allowed_r), callback='parse'),
         Rule(LinkExtractor(restrict_css=products_css), callback='parse_item'),
     )
 
@@ -157,12 +146,10 @@ class NeimanMarcusCrawlSpider(BaseCrawlSpider):
 
 
     def pagination_requests(self, response):
-
         pagination_formdata = {
             'service': 'getCategoryGrid',
             'sid': 'getCategoryGrid'
         }
-
 
         nav_path = url_query_parameter(response.url, 'navpath')
 
@@ -181,23 +168,21 @@ class NeimanMarcusCrawlSpider(BaseCrawlSpider):
             f'"userConstrainedResults":"true","updateFilter":"false","rwd":"true",' \
             f'"categoryId":"{category_id}","sortByFavorites":false,"isFeaturedSort":false,"prevSort":""}}}}}}}}'
 
-        meta = response.meta.copy()
-        meta['trail'] = self.add_trail(response)
+        meta = self.get_meta_with_trail(response)
 
         for page_no in range(1, int(total_pages[-1])):
             formdata = pagination_formdata.copy()
             formdata['data'] = payload.format(page_no)
 
-            yield FormRequest(url=self.pagination_url, formdata=formdata, meta=meta.copy(), callback=self.products_requests)
+            yield FormRequest(url=self.pagination_url, formdata=formdata, meta=meta.copy(), callback=self.skus_request)
 
 
-    def products_requests(self, response):
+    def skus_request(self, response):
         raw_category = json.loads(response.text)
         raw_products = Selector(text=raw_category['GenericSearchResp']['productResults'])
 
         urls = clean(raw_products.css('#productTemplateId ::attr(href)'))
-        meta = response.meta.copy()
-        meta['trail'] = self.add_trail(response)
+        meta = self.get_meta_with_trail(response)
 
         return [response.follow(url=url, callback=self.parse_item, meta=meta.copy()) for url in urls]
 
