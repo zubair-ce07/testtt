@@ -1,9 +1,6 @@
-import re
-
 import scrapy
 from scrapy import FormRequest
 from datetime import datetime, timedelta
-
 from scrapy.loader import ItemLoader
 
 from cpuc.items import ProceedingDetail, Filing
@@ -49,17 +46,6 @@ class CpucSpider(scrapy.Spider):
             meta={'cookiejar': response.meta['cookiejar']}
         )
 
-    @staticmethod
-    def get_start_date():
-        search_start_date = datetime.now().date()
-        search_start_date = search_start_date.strftime("%m/%d/%Y")
-        return search_start_date
-
-    def get_end_date(self):
-        search_end_date = (datetime.now() - timedelta(days=int(self.days))).date()
-        search_end_date = search_end_date.strftime("%m/%d/%Y")
-        return search_end_date
-
     def search_case(self, response):
         """This function make search for last two days dockets"""
 
@@ -101,7 +87,8 @@ class CpucSpider(scrapy.Spider):
             proceeding_urls.append(response.urljoin(row.xpath("td[1]/span/a/@href").get()))
             proceeding_type.append(row.xpath("td[3]/text()").get().strip())
 
-        next_page = response.xpath("//ul[@class='pagination']/li[@class=' active ']/following-sibling::li/a/@href").get()
+        next_page = response.xpath("//ul[@class='pagination']/li[@class=' active ']/following-sibling::li/a/@href")\
+            .get()
 
         if next_page:
 
@@ -223,3 +210,14 @@ class CpucSpider(scrapy.Spider):
             filing_loader.add_xpath('description', "td[3]/text()")
             filing_loader.add_xpath('types', "td[6]/text()")
             filings.append(filing_loader.load_item())
+
+    @staticmethod
+    def get_start_date():
+        search_start_date = datetime.now().date()
+        search_start_date = search_start_date.strftime("%m/%d/%Y")
+        return search_start_date
+
+    def get_end_date(self):
+        search_end_date = (datetime.now() - timedelta(days=int(self.days))).date()
+        search_end_date = search_end_date.strftime("%m/%d/%Y")
+        return search_end_date
