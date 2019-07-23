@@ -26,19 +26,19 @@ class RecursiveCrawler:
 
         return html
 
-    async def visited_urls(self, thread_id, work_queue):
+    async def visited_urls(self, workers, work_queue):
 
         while not work_queue.empty():
             current_url = await work_queue.get()
 
             try:
-                await self.get_results(current_url, thread_id)
+                await self.get_results(current_url, workers)
                 await asyncio.sleep(self.download_delay)
 
             except Exception:
                 await asyncio.sleep(self.download_delay)
 
-    async def get_results(self, url, thread_id):
+    async def get_results(self, url, workers):
 
         if self.request_count <= self.max_urls:
             html = await self.get_url_body(url)
@@ -61,6 +61,6 @@ class RecursiveCrawler:
             queue = asyncio.Queue()
             [queue.put_nowait(url) for url in self.urls[self.request_count:self.max_urls]]
             loop = asyncio.get_event_loop()
-            tasks = [self.visited_urls(thread_id, queue) for thread_id in range(self.concurrent_requests)]
+            tasks = [self.visited_urls(workers, queue) for workers in range(self.concurrent_requests)]
             loop.run_until_complete(asyncio.wait(tasks))
 
