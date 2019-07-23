@@ -1,0 +1,14 @@
+.tasks-heading {
+    margin-top: 30px;
+}
+
+hr {
+    height: 1px;
+    border: none;
+    color: #333;
+    background-color: #333;
+}
+
+.card-title {
+    font-size: small;
+}

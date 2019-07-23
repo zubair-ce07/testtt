@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 {% block page_content %}
+
     <h2>{{ task.title }}</h2>
+
     <div class="row">
         <div class="col-md-4">
             <h6>Task description:</h6>
@@ -14,4 +16,5 @@
         </div>
     </div>
     <a class="btn btn-primary" href="{% url 'task_index' %}">Back</a>
+
 {% endblock %}

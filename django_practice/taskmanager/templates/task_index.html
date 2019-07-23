@@ -1,22 +1,33 @@
 {% extends "base.html" %}
+
+{% block extra_head %}
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
+{% endblock %}
+
 {% block page_content %}
 
     <a href="{% url 'create_task' %}" class="btn btn-primary"> Create a Task </a>
 
-    <h2 style="margin-top: 30px;">Tasks</h2>
-    <hr style="height:1px;border:none;color:#333;background-color:#333;">
+    <h2 class="tasks-heading">Tasks</h2>
+    <hr>
+
     {% if not tasks %}
+
         <h4>No tasks exist</h4>
+
     {% else %}
+
         <div class="row">
             {% for task in tasks %}
                 <div class="col-md-4">
                     <div class="card mb-2">
                         <div class="card-body">
                             <h3 class="card-title">{{ task.title }}</h3>
-                            <p class="card-title" style="font-size: small">
+                            <p class="card-title">
                                 <strong>Assignee: </strong> {{ task.assignee }}</p>
-                            <p class="card-title" style="font-size: small"><strong>Due: </strong> {{ task.due_date }}
+                            <p class="card-title">
+                                <strong>Due: </strong> {{ task.due_date }}
                             </p>
                             <p class="card-text">{{ task.description }}</p>
                             <a href="{% url 'edit_task' task.id %}"
@@ -36,6 +47,7 @@
                 </div>
             {% endfor %}
         </div>
+
     {% endif %}
 
 {% endblock %}

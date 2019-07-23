@@ -1,5 +1,6 @@
+from __future__ import absolute_import
 from django.urls import path
-from . import views
+from taskmanager import views
 
 urlpatterns = [
     path("", views.redirect_task_index, name="redirect_task_index"),
@@ -8,4 +9,6 @@ urlpatterns = [
     path("tasks/task/", views.create_task, name="create_task"),
     path("tasks/task/<int:pk>/edit", views.edit_task, name="edit_task"),
     path("tasks/task/<int:pk>/", views.delete_task, name="delete_task"),
+    path('register/', views.register, name="register")
 ]
+

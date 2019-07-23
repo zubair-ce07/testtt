@@ -1,5 +1,5 @@
+from __future__ import absolute_import
 from django.contrib import admin
-from .views import Task
+from taskmanager.models import Task
 
-# Register your models here.
 admin.site.register(Task)
