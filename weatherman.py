@@ -303,8 +303,8 @@ def get_month_and_year(data):
 @click.option(
     '-e',
     nargs=1,
-    help="gets an year in format yyyy.\nprints the stats for most humdity, "
-    "lowest temparature, and"
+    help="gets an year in format yyyy. Prints the stats for most humdity, "
+    "lowest temparature, and "
     "highest temparture for the given year."
 
 
@@ -312,25 +312,23 @@ def get_month_and_year(data):
 @click.option(
     '-a',
     nargs=1,
-    help="gets date in format yyyy/mm.\nprints the average stats for humdity, "
-    "lowest temparature, and"
-    "highest temparture for the given month of the year."
+    help="gets date in format yyyy/mm. Prints the average stats for humdity, "
+    "lowest temparature, and highest temparture for the given month of the year."
 )
 @click.option(
     '-c',
     nargs=1,
-    help="gets date in format yyyy/mm.\nprints a horizontal bar chart for each day for, "
-    "lowest temparature, and"
-    "highest temparture"
+    help="gets date in format yyyy/mm. Prints a horizontal bar chart for each day for, "
+    "lowest temparature, and highest temparture"
 )
 @click.argument('path_to_files')
 @click.option(
     '-multiple',
     default="1",
     nargs=0,
-    help="displays a single line horizontal bar chart. Use this tag with -c."
-    "use 1 for single line."
-    "use 0 for multiple line"
+    help="displays a single line horizontal bar chart. Use this tag with -c.\n"
+    "use 1 for single line. "
+    "and 0 for multiple line"
 )
 def argumentParser(e, a, c, path_to_files, multiple):
     if not isdir(path_to_files):
