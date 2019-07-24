@@ -45,7 +45,7 @@ class WeathermanFileReader:
                     if daily_data:
                         row_count += 1;
                         monthly_records.append(daily_data)
-                        if (command == "-e"):
+                        if (command == "e"):
                             if highest_temp:
                                 if daily_data[selected_fields[2]] > highest_temp[selected_fields[2]]:
                                     highest_temp = daily_data
@@ -63,17 +63,17 @@ class WeathermanFileReader:
                                     max_humidity = daily_data
                             else:
                                 max_humidity = daily_data
-                        elif(command == "-a"):
+                        elif(command == "a"):
                             avg_fields[0] += daily_data[selected_fields[0]]
                             avg_fields[1] += daily_data[selected_fields[1]]
                             avg_fields[2] += daily_data[selected_fields[2]]
 
 
-        if (command == "-c"):
+        if (command == "c"):
             return monthly_records
-        elif (command == "-e"):
+        elif (command == "e"):
             return [highest_temp,min_temp,max_humidity]
-        elif (command == "-a"):
+        elif (command == "a"):
             if (row_count != 0):
                 avg_fields[0] /= row_count
                 avg_fields[1] /= row_count
