@@ -12,9 +12,11 @@ class BeyondLimitsSpider(CrawlSpider):
         "https://www.beyondlimits.com/Men/",
         "https://www.beyondlimits.com/Women/"
     ]
+
     retailer = "beyondlimits-uk"
     market = "UK"
     language = "en"
+
     gender = ["Men", "Women"]
     default_gender = "Unisex-adults"
 
@@ -25,9 +27,8 @@ class BeyondLimitsSpider(CrawlSpider):
 
         common_sku = self.get_product_pricing(response)
         common_sku["color"] = response.css(color_css).get().split(" ", 1)[1]
-        product_sizes = response.css(size_css).getall()
 
-        for size in product_sizes:
+        for size in response.css(size_css).getall():
             sku = common_sku.copy()
             sku["size"] = size
             skus[f"{sku['color']}_{sku['size']}"] = sku
@@ -99,10 +100,7 @@ class BeyondLimitsSpider(CrawlSpider):
 
     def get_gender(self, response):
         gender = [gender for gender in self.gender if gender in response.url]
-        if gender:
-            return gender[0]
-        else:
-            return self.default_gender
+        return gender[0] if gender else self.default_gender
 
     def get_product_pricing(self, response):
         price_css = ".price span::text"
@@ -110,8 +108,10 @@ class BeyondLimitsSpider(CrawlSpider):
         previous_price_css = ".bb_art--pricecontent  del::text"
         previous_price = response.css(previous_price_css).get()
 
-        pricing = {"price": response.css(price_css).get().split(" ", 1)[0],
-                   "currency": response.css(currency_css).get()}
+        pricing = {
+            "price": response.css(price_css).get().split(" ", 1)[0],
+            "currency": response.css(currency_css).get()
+        }
         if previous_price:
-            pricing["previous price"] = previous_price.split(" ", 1)[0]
+            pricing["previous_price"] = previous_price.split(" ", 1)[0]
         return pricing
