@@ -3,11 +3,11 @@ import sys
 import os
 
 from errors import *
-from DataReader import *
-from Reports import *
+from data_reader import *
+from reports import *
 
 
-def validateArguments(args):
+def validate_arguments(args):
     if (len(args) < 2) or (len(args) % 2 == 1):
         raise InvalidArguments("Invalid arguments")
 
@@ -19,47 +19,47 @@ def validateArguments(args):
 
 def main():
 
-    path = validateArguments(sys.argv)
-    reader = DataReader(path)
-    reports = DataReport()
+    path = validate_arguments(sys.argv)
+    reader = WeathermanFileReader(path)
+    reports = WeathermanReportPrinter()
 
     argIndex = 2
 
     for arg in range(2, len(sys.argv), 2):
         command = sys.argv[argIndex]
-        commandArgument = sys.argv[argIndex + 1]
+        command_argument = sys.argv[argIndex + 1]
         if (command == '-e'):
-            givenYear = commandArgument
+            given_year = command_argument
 
-            highestTemp = {}
-            minTemp = {}
-            maxHumidity = {}
-            for monthNumber in range(1,13):
+            highest_temp = {}
+            min_temp = {}
+            max_humidity = {}
+            for month_number in range(1,13):
 
-                facts = reader.getMonthlyData(givenYear = givenYear,monthNumber = monthNumber,selectedFields = yearlyRecordFields,\
-                                                command = command,highestTemp = highestTemp, minTemp = minTemp, maxHumidity = maxHumidity)
-                highestTemp = facts[0]
-                minTemp = facts[1]
-                maxHumidity = facts[2]
-            reports.printYearlyReport(facts)
+                facts = reader.get_monthly_data(given_year = given_year,month_number = month_number,selected_fields = yearly_record_fields,\
+                                                command = command,highest_temp = highest_temp, min_temp = min_temp, max_humidity = max_humidity)
+                highest_temp = facts[0]
+                min_temp = facts[1]
+                max_humidity = facts[2]
+            reports.print_yearly_report(facts)
 
 
         elif (command == '-a'):
-            givenYear = commandArgument.split("/")[0]
-            monthNumber = commandArgument.split("/")[1]
+            given_year = command_argument.split("/")[0]
+            month_number = command_argument.split("/")[1]
 
-            avgFacts = reader.getMonthlyData(givenYear = givenYear,monthNumber = monthNumber,selectedFields = averageTemperatureFields\
+            avg_facts = reader.get_monthly_data(given_year = given_year,month_number = month_number,selected_fields = average_temperature_fields\
                                             ,command = command)
-            reports.printAverageReport(avgFacts, monthNumber, givenYear)
+            reports.print_average_report(avg_facts, month_number, given_year)
 
 
         elif (command == '-c'):
-            givenYear = commandArgument.split("/")[0]
-            monthNumber = commandArgument.split("/")[1]
+            given_year = command_argument.split("/")[0]
+            month_number = command_argument.split("/")[1]
 
-            monthlyRecords = reader.getMonthlyData(givenYear = givenYear,monthNumber = monthNumber,selectedFields = temperatureFields\
+            monthlyRecords = reader.get_monthly_data(given_year = given_year,month_number = month_number,selected_fields = temperature_fields\
                                             ,command = command)
-            reports.printMonthlyReport(monthlyRecords, monthNumber, givenYear)
+            reports.print_monthly_report(monthlyRecords, month_number, given_year)
 
         else:
             raise InvalidArguments("Invalid command: " + command);
@@ -72,5 +72,5 @@ if __name__ == "__main__":
         main()
     except InvalidArguments as error:
         print(error.message)
-    except:
-        print("Something went wrong")
+    '''except:
+        print("Something went wrong")'''
