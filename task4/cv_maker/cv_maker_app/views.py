@@ -2,21 +2,27 @@
 from __future__ import unicode_literals
 from django.shortcuts import render
 from django.core.files.storage import FileSystemStorage
-from django.views import View
+from django.views.generic import FormView
+from django.views.generic.detail import DetailView
 from django.http import HttpResponse
 from rest_framework import viewsets
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
+from django.contrib.auth.decorators import user_passes_test
 
 from .forms import BasicInformationForm, EducationForm, ExperienceForm
 from .models import BasicInformation, Experience, Education, Job
 from .serializers import JobSerializer
 
 
-class HomeView(View):
+class HomeView(FormView):
     def get(self, request):
         return render(request, 'home.html')
 
 
-class BasicInformationView(View):
+class BasicInformationView(FormView):
+
+    @method_decorator(login_required)
     def post(self, request):
         form = BasicInformationForm(request.POST, request.FILES)
         if form.is_valid() and request.FILES['image']:
@@ -24,27 +30,22 @@ class BasicInformationView(View):
             image = request.FILES['image']
             fs = FileSystemStorage()
             image_name = fs.save(image.name, image)
-            user_id = request.POST.get('user_id') or render(request, 'login.html')
-            name = request.POST['name'] or ""
-            email = request.POST["email"]or ''
-            date_of_birth = request.POST['date_of_birth']or ''
-            contact_number = request.POST['contact_number']or ''
-            address = request.POST["address"]or ''
+            user_id = request.POST.get('user_id')
+            name = request.POST.get('name') or ""
+            email = request.POST.get("email") or ''
+            date_of_birth = request.POST.get('date_of_birth') or ''
+            contact_number = request.POST.get('contact_number')or ''
+            address = request.POST.get("address")or ''
             skill1 = request.POST.get('skill1') or ''
-            skill1_level = request.POST.get('skill1_level') or ''
             skill2 = request.POST.get('skill2') or ''
-            skill2_level = request.POST.get('skill2_level') or ''
             skill3 = request.POST.get('skill3') or ''
-            skill3_level = request.POST.get('skill3_level') or ''
             skill4 = request.POST.get('skill4') or ''
-            skill4_level = request.POST.get('skill4_level') or ''
             skill5 = request.POST.get('skill5') or ''
-            skill5_level = request.POST.get('skill5_level') or ''
-            hobby1 = request.POST['hobby1'] or ''
-            hobby2 = request.POST['hobby2'] or ''
-            hobby3 = request.POST['hobby3'] or ''
-            reference1 = request.POST['reference1'] or ''
-            reference2 = request.POST['reference2'] or ''
+            hobby1 = request.POST.get('hobby1') or ''
+            hobby2 = request.POST.get('hobby2') or ''
+            hobby3 = request.POST.get('hobby3') or ''
+            reference1 = request.POST.get('reference1') or ''
+            reference2 = request.POST.get('reference2') or ''
 
             BasicInformation.objects.create(
                 user_id=user_id,
@@ -59,11 +60,6 @@ class BasicInformationView(View):
                 skill3=skill3,
                 skill4=skill4,
                 skill5=skill5,
-                skill1_level=skill1_level,
-                skill2_level=skill2_level,
-                skill3_level=skill3_level,
-                skill4_level=skill4_level,
-                skill5_level=skill5_level,
                 hobby1=hobby1,
                 hobby2=hobby2,
                 hobby3=hobby3,
@@ -74,21 +70,24 @@ class BasicInformationView(View):
             print(form.errors)
         return render(request, 'basic_information.html', {'form': form})
 
+    @method_decorator(login_required)
     def get(self, request):
         return render(request, 'basic_information.html')
 
 
-class ExperienceView(View):
+class ExperienceView(FormView):
+
+    @method_decorator(login_required)
     def post(self, request):
         form = ExperienceForm(request.POST)
         if form.is_valid():
-            user_id = request.POST.get('user_id') or render(request, 'login.html')
-            organization = request.POST['organization']
-            position = request.POST["position"]
-            starting_date = request.POST['starting_date']
-            ending_date = request.POST['ending_date'] or None
-            city = request.POST["city"]
-            job_description = request.POST["job_description"]
+            user_id = request.POST.get('user_id')
+            organization = request.POST.get('organization')
+            position = request.POST.get("position")
+            starting_date = request.POST.get('starting_date')
+            ending_date = request.POST.get('ending_date') or None
+            city = request.POST.get("city")
+            job_description = request.POST.get("job_description")
 
             Experience.objects.create(
                 user_id=user_id,
@@ -104,21 +103,24 @@ class ExperienceView(View):
             print(form.errors)
         return render(request, 'experience.html', {'form': form})
 
+    @method_decorator(login_required)
     def get(self, request):
         return render(request, 'experience.html')
 
 
-class EducationView(View):
+class EducationView(FormView):
+
+    @method_decorator(login_required)
     def post(self, request):
         form = EducationForm(request.POST)
         if form.is_valid():
-            user_id = request.POST.get('user_id') or render(request, 'login.html')
-            degree = request.POST['degree']
-            institute = request.POST["institute"]
-            starting_date = request.POST['starting_date']
-            ending_date = request.POST['ending_date'] or None
-            city = request.POST["city"]
-            description = request.POST["description"]
+            user_id = request.POST.get('user_id')
+            degree = request.POST.get('degree')
+            institute = request.POST.get("institute")
+            starting_date = request.POST.get('starting_date')
+            ending_date = request.POST.get('ending_date') or None
+            city = request.POST.get("city")
+            description = request.POST.get("description")
 
             Education.objects.create(
                 user_id=user_id,
@@ -134,11 +136,13 @@ class EducationView(View):
             print(form.errors)
         return render(request, 'education.html', {'form': form})
 
+    @method_decorator(login_required)
     def get(self, request):
         return render(request, 'education.html')
 
 
-class RetrieveCvView(View):
+class RetrieveCvView(DetailView):
+    @method_decorator(login_required)
     def get(self, request):
         if BasicInformation.objects.filter(user_id=request.user.id):
             person = {'basic_information': BasicInformation.objects.get(user_id=request.user.id),

@@ -32,45 +32,10 @@
             <div>
             <h4>Skills</h4>
             Skill 1: <input type="text" name="skill1"><br> <div class="alert-danger"> {{form.skill1.errors}} </div>
-                <div class="form-check">
-                <input type="radio" class="radio" name="skill1_level" value=1>Beginner<br>
-                <input type="radio" class="radio" name="skill1_level" value=2>Little knowledge<br>
-                <input type="radio" class="radio" name="skill1_level" value=3>Intermediate<br>
-                <input type="radio" class="radio" name="skill1_level" value=4>Advance<br>
-                <input type="radio" class="radio" name="skill1_level" value=5>Expert<br>
-                </div>
             Skill 2: <input type="text" name="skill2" placeholder="Optional"><br> <div class="alert-danger"> {{form.skill2.errors}} </div>
-                <div class="form-check">
-                <input type="radio" class="radio" name="skill2_level" value=1>Beginner<br>
-                <input type="radio" class="radio" name="skill2_level" value=2>Little knowledge<br>
-                <input type="radio" class="radio" name="skill2_level" value=3>Intermediate<br>
-                <input type="radio" class="radio" name="skill2_level" value=4>Advance<br>
-                <input type="radio" class="radio" name="skill2_level" value=5>Expert<br>
-            </div>
-            <p>Skill 3: <input type="text" name="skill3" placeholder="Optional"><br> <div class="alert-danger"> {{form.skill3.errors}} </div>
-                <div class="form-check">
-                <input type="radio" class="radio" name="skill3_level" value=1>Beginner<br>
-                <input type="radio" class="radio" name="skill3_level" value=2>Little knowledge<br>
-                <input type="radio" class="radio" name="skill3_level" value=3>Intermediate<br>
-                <input type="radio" class="radio" name="skill3_level" value=4>Advance<br>
-                <input type="radio" class="radio" name="skill3_level" value=5>Expert<br>
-                </div>
+            Skill 3: <input type="text" name="skill3" placeholder="Optional"><br> <div class="alert-danger"> {{form.skill3.errors}} </div>
             Skill 4: <input type="text" name="skill4" placeholder="Optional"><br> <div class="alert-danger"> {{form.skill4.errors}} </div>
-                <div class="form-check">
-                <input type="radio" class="radio" name="skill4_level" value=1>Beginner<br>
-                <input type="radio" class="radio" name="skill4_level" value=2>Little knowledge<br>
-                <input type="radio" class="radio" name="skill4_level" value=3>Intermediate<br>
-                <input type="radio" class="radio" name="skill4_level" value=4>Advance<br>
-                <input type="radio" class="radio" name="skill4_level" value=5>Expert<br>
-                </div>
             Skill 5: <input type="text" name="skill5" placeholder="Optional"><br> <div class="alert-danger"> {{form.skill5.errors}} </div>
-                <div class="form-check">
-                <input type="radio" class="radio" name="skill5_level" value=1>Beginner<br>
-                <input type="radio" class="radio" name="skill5_level" value=2>Little knowledge<br>
-                <input type="radio" class="radio" name="skill5_level" value=3>Intermediate<br>
-                <input type="radio" class="radio" name="skill5_level" value=4>Advance<br>
-                <input type="radio" class="radio" name="skill5_level" value=5>Expert<br>
-                </div>
             </div>
             <h4>Hobbies</h4>
             <p>Hobby 1: <input type="text" name="hobby1"></p> <div class="alert-danger"> {{form.hobby1.errors}} </div>
@@ -83,11 +48,11 @@
     </form>
     <div align="right">
         <button>
-            <a href="../" class="navbar-brand">Go Home</a></button> &nbsp &nbsp
+            <a href="{% url 'home' %}" class="navbar-brand">Go Home</a></button> &nbsp &nbsp
         <button>
-            <a href="../experience" class="navbar-brand">Add Experience</a></button> &nbsp &nbsp
+            <a href="{% url 'experience' %}" class="navbar-brand">Add Experience</a></button> &nbsp &nbsp
         <button>
-            <a href="../education" class="navbar-brand">Add Education</a></button>
+            <a href="{% url 'education' %}" class="navbar-brand">Add Education</a></button>
     </div>
     <br> <br>
 </div>

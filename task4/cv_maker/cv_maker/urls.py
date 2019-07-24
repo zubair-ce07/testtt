@@ -36,7 +36,7 @@ urlpatterns = [
     url(r'^education/', EducationView.as_view(), name='education'),
     url(r'^signup/$', Signup.as_view(), name='signup'),
     url(r'^logout/$', auth_views.LogoutView.as_view(), name='logout'),
-    url(r'^login/$', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
+    url(r'login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
     url(r'^cv/$', RetrieveCvView.as_view(), name='retrieve_cv'),
     path('', include(router.urls)),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework'))

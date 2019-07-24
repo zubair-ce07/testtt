@@ -39,11 +39,11 @@
         </form>
         <div align="right">
             <button>
-                <a href="../education" class="navbar-brand">Add Education</a></button> &nbsp &nbsp
+                <a href="{% url 'education' %}" class="navbar-brand">Add Education</a></button> &nbsp &nbsp
             <button>
-                <a href="../" class="navbar-brand">Go Home</a></button> &nbsp &nbsp
+                <a href="{% url 'home' %}" class="navbar-brand">Go Home</a></button> &nbsp &nbsp
             <button>
-                <a href="../cv" class="navbar-brand" target="_blank">Print CV</a></button>
+                <a href="{% url 'retrieve_cv' %}" class="navbar-brand" target="_blank">Print CV</a></button>
         </div>
     </div>
     {% endblock %}

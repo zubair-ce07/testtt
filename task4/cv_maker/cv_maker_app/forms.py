@@ -10,22 +10,11 @@ class BasicInformationForm(forms.ModelForm):
     contact_number = forms.IntegerField()
     address = forms.CharField(max_length=255)
     email = forms.EmailField()
-    CHOICES = [('1', 'Beginner'),
-               ('2', 'Little Knowledge'),
-               ('3', 'Intermediate'),
-               ('4', 'Advance'),
-               ('5', 'Expert')
-               ]
     skill1 = forms.CharField(max_length=30, required=False)
     skill2 = forms.CharField(max_length=30, required=False)
     skill3 = forms.CharField(max_length=30, required=False)
     skill4 = forms.CharField(max_length=30, required=False)
     skill5 = forms.CharField(max_length=30, required=False)
-    skill1_level = forms.ChoiceField(widget=forms.RadioSelect, required=False, choices=CHOICES)
-    skill2_level = forms.ChoiceField(widget=forms.RadioSelect, required=False, choices=CHOICES)
-    skill3_level = forms.ChoiceField(widget=forms.RadioSelect, required=False, choices=CHOICES)
-    skill4_level = forms.ChoiceField(widget=forms.RadioSelect, required=False, choices=CHOICES)
-    skill5_level = forms.ChoiceField(widget=forms.RadioSelect, required=False, choices=CHOICES)
     hobby1 = forms.CharField(max_length=30, required=False)
     hobby2 = forms.CharField(max_length=30, required=False)
     hobby3 = forms.CharField(max_length=30, required=False)
@@ -45,11 +34,6 @@ class BasicInformationForm(forms.ModelForm):
                   'skill3',
                   'skill4',
                   'skill5',
-                  'skill1_level',
-                  'skill2_level',
-                  'skill3_level',
-                  'skill4_level',
-                  'skill5_level',
                   'hobby1',
                   'hobby2',
                   'hobby3',

@@ -4,13 +4,13 @@
         <br><br>
         <div align="center">
         {% if user.is_authenticated %}
-            <button><a href='basic_information' class="navbar-brand">Start CV Making</a></button>
+            <button><a href="{% url 'basic_information' %}" class="navbar-brand">Start CV Making</a></button>
             <br> <br>
-            <button><a href='cv' class="navbar-brand" target="_blank">Print already made CV</a></button> &nbsp &nbsp
-            <button><a href='experience' class="navbar-brand">Add Experience</a></button> &nbsp &nbsp
-            <button><a href='education' class="navbar-brand">Add Education</a></button>
+            <button><a href="{% url 'retrieve_cv' %}" class="navbar-brand" target="_blank">Print already made CV</a></button> &nbsp &nbsp
+            <button><a href="{% url 'experience' %}" class="navbar-brand">Add Experience</a></button> &nbsp &nbsp
+            <button><a href="{% url 'education' %}" class="navbar-brand">Add Education</a></button>
         {% else %}
-            <button><a href='login' class="navbar-brand">Start CV Making</a></button>
+            <button><a href="{% url 'login' %}" class="navbar-brand">Start CV Making</a></button>
         {% endif %}
         </div>
 
