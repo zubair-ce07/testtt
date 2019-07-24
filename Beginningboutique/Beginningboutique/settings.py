@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Scrapy settings for Women_clothing project
+# Scrapy settings for Beginningboutique project
 #
 # For simplicity, this file contains only settings considered important or
 # commonly used. You can find more settings consulting the documentation:
@@ -9,14 +9,14 @@
 #     https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 
-BOT_NAME = 'Women_clothing'
+BOT_NAME = 'Beginningboutique'
 
-SPIDER_MODULES = ['Women_clothing.spiders']
-NEWSPIDER_MODULE = 'Women_clothing.spiders'
+SPIDER_MODULES = ['Beginningboutique.spiders']
+NEWSPIDER_MODULE = 'Beginningboutique.spiders'
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-#USER_AGENT = 'Women_clothing (+http://www.yourdomain.com)'
+#USER_AGENT = 'Beginningboutique (+http://www.yourdomain.com)'
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = True
@@ -47,13 +47,13 @@ ROBOTSTXT_OBEY = True
 # Enable or disable spider middlewares
 # See https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 #SPIDER_MIDDLEWARES = {
-#    'Women_clothing.middlewares.WomenClothingSpiderMiddleware': 543,
+#    'Beginningboutique.middlewares.BeginningboutiqueSpiderMiddleware': 543,
 #}
 
 # Enable or disable downloader middlewares
 # See https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
 #DOWNLOADER_MIDDLEWARES = {
-#    'Women_clothing.middlewares.WomenClothingDownloaderMiddleware': 543,
+#    'Beginningboutique.middlewares.BeginningboutiqueDownloaderMiddleware': 543,
 #}
 
 # Enable or disable extensions
@@ -65,7 +65,7 @@ ROBOTSTXT_OBEY = True
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 #ITEM_PIPELINES = {
-#    'Women_clothing.pipelines.WomenClothingPipeline': 300,
+#    'Beginningboutique.pipelines.BeginningboutiquePipeline': 300,
 #}
 
 # Enable and configure the AutoThrottle extension (disabled by default)

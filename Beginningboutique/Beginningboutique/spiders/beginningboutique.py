@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
-import re
-import json
-
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 
-from Women_clothing.items import BeginningboutiqueItem
+from Beginningboutique.items import BeginningboutiqueItem
 
 
 class Beginningboutique(CrawlSpider):
@@ -83,19 +80,20 @@ class Beginningboutique(CrawlSpider):
         return response.css('.product-images-wrapper * img::attr(src)').getall()
 
     def skus(self, response):
-        path = "//head/script[contains(., 'window.ShopifyAnalytics.meta.currency')]/text()"
-        meta = response.xpath(path).get()
-        variants = json.loads(re.findall(r'"variants.*"}]', meta)[0][11:])
-        sku_in_meta = variants[0].get('sku')
-        color = re.findall(r'-[A-Z|a-z]+', sku_in_meta)
-        color = color[0][1:] if color else None
         skus = {}
+        css = 'script:contains("variants")::text'
+        raw_color = response.css(css).re_first('"sku":"(.*?)"')
+        common_sku = {'colour': raw_color.split('-')[-2]} if raw_color else {}
+        common_sku.update({
+            'price': self.price(response),
+            'currency': self.currency(response)
+        })
+
         for size in response.css('#SingleOptionSelector-0 > option::text').getall():
-            skus[f'{self.product_name(response)} - {size}'] = {'colour': color,
-                                                               'price': self.price(response),
-                                                               'currency': self.currency(response),
-                                                               'size': size,
-                                                               }
+            sku = common_sku.copy()
+            sku['size'] = size
+            skus[f'{sku["colour"]}_{size}' if raw_color else size] = sku
+
         return skus
 
     def price(self, response):
