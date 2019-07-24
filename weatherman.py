@@ -24,12 +24,6 @@ class WeatherMan:
 
             weather_files_dict = { year : list of file paths of given year}
         """
-        #   if file_year not in self.weather_files_dict:
-        #             month = f.split('_')[-1]
-        #             self.weather_files_dict[file_year] = {month: file_path}
-        #         else:
-        #             self.weather_files_dict[file_year].update(
-        #                 {month: file_path}
         for f in listdir(dir_path):
             file_path = join(dir_path, f)
             if isfile(file_path):
