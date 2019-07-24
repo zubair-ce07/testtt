@@ -1,10 +1,5 @@
 #!/usr/bin/python3
 from datetime import datetime
-required_fields = ["PKT", "Min TemperatureC", "Max TemperatureC", " Mean Humidity", "Max Humidity"]
-temperature_fields = ["PKT", "Min TemperatureC", "Max TemperatureC"]
-yearly_record_fields = temperature_fields + ["Max Humidity"]
-average_temperature_fields = ["Min TemperatureC", "Max TemperatureC", " Mean Humidity"]
-
 
 class DayWeather:
 
