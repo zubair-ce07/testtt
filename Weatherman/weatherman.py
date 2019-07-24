@@ -5,6 +5,7 @@ import argparse
 from errors import *
 from data_reader import *
 from reports import *
+from info_extraction import *
 
 
 def dir_path(string):
@@ -53,6 +54,7 @@ def main():
     path = args['data directory']
     reader = WeathermanFileReader(path)
     reports = WeathermanReportPrinter()
+    processor = FactsCalculation()
 
     for arg in args:
         if (args[arg] and (arg in ['a','c','e'])):
@@ -61,37 +63,27 @@ def main():
             if (command == 'e'):
                 given_year = command_argument
 
-                highest_temp = {}
-                min_temp = {}
-                max_humidity = {}
+                yearly_records = []
                 for month_number in range(1,13):
+                    monthly_records = reader.get_monthly_data(given_year = given_year,month_number = month_number)
+                    if (monthly_records):
+                        yearly_records.append(monthly_records)
 
-                    facts = reader.get_monthly_data(given_year = given_year,month_number = month_number,selected_fields = yearly_record_fields,\
-                                                    command = command,highest_temp = highest_temp, min_temp = min_temp, max_humidity = max_humidity)
-                    highest_temp = facts[0]
-                    min_temp = facts[1]
-                    max_humidity = facts[2]
-                reports.print_yearly_report(facts)
+                processor.yearly_records = yearly_records
+                reports.print_yearly_report(processor.get_yearly_temperature_peaks())
 
-
-            elif (command == 'a'):
+            elif (command == 'a' or command == 'c'):
                 given_year = command_argument.split("/")[0]
                 month_number = command_argument.split("/")[1]
 
-                avg_facts = reader.get_monthly_data(given_year = given_year,month_number = month_number,selected_fields = average_temperature_fields\
-                                                ,command = command)
-                reports.print_average_report(avg_facts, month_number, given_year)
+                monthly_records = reader.get_monthly_data(given_year = given_year,month_number = month_number)
+                processor.monthly_records = monthly_records
 
-
-            elif (command == 'c'):
-                given_year = command_argument.split("/")[0]
-                month_number = command_argument.split("/")[1]
-
-                monthlyRecords = reader.get_monthly_data(given_year = given_year,month_number = month_number,selected_fields = temperature_fields\
-                                                ,command = command)
-                reports.print_monthly_report(monthlyRecords, month_number, given_year)
-
-
+                if (command == 'a'):
+                    result = processor.get_monthly_avg_results()
+                    reports.print_average_report(result, month_number, given_year)
+                elif (command == 'c'):
+                    reports.print_monthly_report(monthly_records, month_number, given_year)
 
 
 if __name__ == "__main__":
