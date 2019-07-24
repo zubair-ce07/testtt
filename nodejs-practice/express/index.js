@@ -2,9 +2,20 @@ var express = require('express');
 var wiki = require('./wiki.js')
 
 var app = express();
-let listenPort = 8080
+let listenPort = 8080;
 
-// Using a Router to handle route-prefix
+
+var onUserConnection = function (req, res, next) {
+    console.log("User connected from port: " + 
+                req.connection.remotePort + 
+                " for path " + 
+                req.originalUrl);
+    next();
+}
+
+
+app.use(onUserConnection);
+
 app.use('/wiki', wiki);
 
 app.use('/public', express.static('public'));
