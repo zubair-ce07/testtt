@@ -7,6 +7,10 @@
 <script src="{% static 'articles/js/jquery-3.4.1.js' %}"></script>
 {% endblock %}
 
+{% block hamburger %}
+<a href="#" id="heading-text" data-target="slide-out" class="sidenav-trigger show-on-large"><i class="material-icons">menu</i></a>
+{% endblock %}
+
 {% block navbarbutton %}
 {% if user.is_authenticated %}
 <ul id="dropdown1" class="dropdown-content">
@@ -46,6 +50,9 @@
     </div>
 </div>
 {% endfor %}
+{% else %}
+<br><br>
+<h5 id="heading-text">No articles found :( <br><br> Come back later?</h5>
 {% endif %}
 <br><br>
 {% if user.is_superuser %}

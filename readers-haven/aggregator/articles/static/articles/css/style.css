@@ -6,6 +6,11 @@
     color: #0C4B33
 }
 
+#category-text{
+    color: #0C4B33;
+    font-size: 20px
+}
+
 #author-name{
     font-style: italic
 }

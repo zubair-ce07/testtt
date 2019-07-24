@@ -11,6 +11,10 @@
 {{ article.title }} | 
 {% endblock %}
 
+{% block hamburger %}
+<a href="#" id="heading-text" data-target="slide-out" class="sidenav-trigger show-on-large"><i class="material-icons">menu</i></a>
+{% endblock %}
+
 {% block navbarbutton %}
 {% if user.is_authenticated %}
 <ul id="dropdown1" class="dropdown-content">

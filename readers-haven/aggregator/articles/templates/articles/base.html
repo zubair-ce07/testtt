@@ -16,14 +16,25 @@
     <script src="{% static 'articles/js/materialize.min.js' %}"></script>
     <script src="{% static 'articles/js/script.js' %}"></script>
     <title>{% block title %}{% endblock %} Readers Haven</title>
+
 </head>
 
 <body>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var elems = document.querySelectorAll('.sidenav');
+    var instances = M.Sidenav.init(elems);
+  });
+
+</script>
     <div class="navbar-fixed">
         <nav id="navbar"">
             <div class=" nav-wrapper">
-                <a id="heading-text" href="/" class="brand-logo center">Readers Haven</a>
-                <ul class="right hide-on-med-and-down">
+            {% block hamburger %}
+            
+            {% endblock %}
+            <a id="heading-text" href="/" class="brand-logo center">Readers Haven</a>
+             <ul class="right hide-on-med-and-down">
                     {% block navbarbutton %}
                     
                     {% endblock %}
@@ -31,6 +42,26 @@
             </div>
         </nav>
     </div>
+    <ul id="slide-out" class="sidenav">
+        <center>
+            <h4><a id="heading-text" href="/">Readers Haven</a></h4>
+            <br>
+            <h5 id="heading-text">Categories</h5>
+        </center>
+        <br>
+        <li><div class="divider"></div></li>
+        <br>
+        <li><a id="category-text" href="{% url 'articles:category' 'Technology' %}">Technology</a></li>
+        <li><a id="category-text" href="{% url 'articles:category' 'Entertainment' %}">Entertainment</a></li>
+        <li><a id="category-text" href="{% url 'articles:category' 'Sports' %}">Sports</a></li>
+        <li><a id="category-text" href="{% url 'articles:category' 'Education' %}">Education</a></li>
+        <li><a id="category-text" href="{% url 'articles:category' 'Business' %}">Business</a></li>
+        <li><a id="category-text" href="{% url 'articles:category' 'Science' %}">Science</a></li>
+        <li><a id="category-text" href="{% url 'articles:category' 'International' %}">International</a></li>
+        <li><a id="category-text" href="{% url 'articles:category' 'Lifestyle' %}">Lifestyle</a></li>
+        <li><a id="category-text" href="{% url 'articles:category' 'Miscellaneous' %}">Miscellaneous</a></li>
+    </ul>
+  
     <div class="container">
     {% block container %}
     

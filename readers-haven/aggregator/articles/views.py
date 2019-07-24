@@ -17,6 +17,15 @@ class IndexView(generic.ListView):
     paginate_by = 4
     queryset = Article.objects.order_by('-publish_time')
 
+class CategoryView(generic.ListView):
+    model = Article
+    template_name = 'articles/index.html'
+    context_object_name = 'recent_articles'
+    paginate_by = 4
+
+    def get_queryset(self):
+        return Article.objects.filter(category=self.kwargs['category'])
+
 class DetailView(generic.DetailView):
     model = Article
     template_name = 'articles/detail.html'
