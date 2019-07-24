@@ -37,7 +37,7 @@ class WeatherCalculations:
 
     @staticmethod
     def get_max_min_avg(required_records):
-        max_avg_temp = min(required_records, key=lambda weatherdata: weatherdata.mean_temperature)
+        max_avg_temp = max(required_records, key=lambda weatherdata: weatherdata.mean_temperature)
         min_avg_temp = min(required_records, key=lambda weatherdata: weatherdata.mean_temperature)
         mean_humidity = sum(record.mean_humidity for record in required_records) / len(required_records)
         return[max_avg_temp, min_avg_temp, mean_humidity]
