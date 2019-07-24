@@ -2,6 +2,7 @@ import csv
 import sys
 import os
 import operator
+import calendar
 
 
 class WeatherMan:
@@ -20,7 +21,7 @@ class WeatherMan:
         max_temperatures = []
         low_temperatures = []
         dates = []
-        most_humidity = []
+        max_humidities = []
 
         files = self.year_files(year)
         if len(files) == 0:
@@ -31,15 +32,39 @@ class WeatherMan:
                 csv_reader = csv.reader(csv_file, delimiter=',')
                 next(csv_reader)  # for skipping titles
                 for row in csv_reader:
-                    if row[1] == '':
-                        continue
-                    max_temperatures.append(int(row[1]))
+                    if self.check_emptinesss(row[1]):
+                        max_temperatures.append(int(row[1]))
+                    if self.check_emptinesss(row[3]):
+                        low_temperatures.append(int(row[3]))
+                    if self.check_emptinesss(row[7]):
+                        max_humidities.append(int(row[7]))
                     dates.append(row[0])
-                    low_temperatures.append(int(row[3]))
-                    most_humidity.append(int(row[7]))
-        print('Highest: '+str(max(max_temperatures)))
-        print('Lowest: '+str(min(low_temperatures)))
-        print('Humid: '+str(max(most_humidity)))
+
+        max_temperature = max(max_temperatures)
+        low_temperature = min(low_temperatures)
+        max_humid = max(max_humidities)
+
+        print('Highest: '+str(max_temperature)+'C on ' +
+              self.get_and_format_date(dates, max_temperatures,
+                                       max_temperature))
+        print('Lowest: '+str(low_temperature)+'C on ' +
+              self.get_and_format_date(dates, low_temperatures,
+                                       low_temperature))
+        print('Humid: '+str(max_humid)+'% on ' +
+              self.get_and_format_date(dates, max_humidities, max_humid))
+
+    def check_emptinesss(self, data):
+        if data == '':
+            return False
+        return True
+
+    def get_and_format_date(self, date_list, data_list, data):
+        date = date_list[data_list.index(data)]
+        date = date.split('-')
+        month = date[1]
+        day = date[2]
+        month = calendar.month_abbr[int(month)]
+        return month + ' ' + day
 
 
 report_type = sys.argv[1]
