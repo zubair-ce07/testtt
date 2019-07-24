@@ -2,30 +2,38 @@ class ReportGenerator:
 
     low = "\033[1;34m+"
     high = "\033[1;31m+"
+    red = "\033[1;31m"
+    blue = "\033[1;34m"
 
-    def monthly_average(self, data):
-        print(f"Highest Average: {round(data[0])}")
-        print(f"Lowest Average: {round(data[1])}")
-        print(f"Average Mean Humidity:{round(data[2])}%")
+    @staticmethod
+    def print_yearly(data):
+        print(f"Highest: {data.max_temp.max_temp}C" + " on " 
+              f"{data.max_temp.date:%B %d}")
+        print(f"Lowest: {data.min_temp.min_temp}C" + " on "
+              f"{data.min_temp.date:%B %d}")
+        print(f"Humidity: {data.max_humidity.max_humidity}%" + " on " 
+              f"{data.max_humidity.date:%B %d}")
 
-    def print_max_min(self, data):
-        print(f"Highest: {data[0].highest_temp}C on {data[0].date.strftime('%b')} "
-              f"{data[0].date.day}")
-        print(f"Lowest: {data[1].lowest_temp}C on {data[2].date.strftime('%b')} "
-              f"{data[1].date.day}")
-        print(f"Humidity: {data[2].highest_humidity}% on {data[2].date.strftime('%b')} "
-              f"{data[2].date.day}")
+    @staticmethod
+    def print_monthly(data):
+        print(f"Highest Average: {data.max_avg_temp.mean_temperature}C")
+        print(f"Lowest Average: {data.min_avg_temp.mean_temperature}C")
+        print(f"Average Mean Humidity: {data.mean_humidity:.0f}%")
 
-    def print_chart(self, data):
-        for i in data:
-            print(f"{self.low * i.lowest_temp}"
-                  f" {i.lowest_temp} C \n {self.high * i.highest_temp}"
-                  f" {i.highest_temp} C")
+    @staticmethod
+    def print_double_chart(data):
+        for weather_reading in data.monthly_temp:
+            max_temp = weather_reading.max_temp
+            min_temp = weather_reading.min_temp
+            red = ReportGenerator.red
+            blue = ReportGenerator.blue
+            print(f"{red}{weather_reading.date.day} {ReportGenerator.high * max_temp} {max_temp}C")
+            print(f"{blue}{weather_reading.date.day} {ReportGenerator.low * min_temp} {min_temp}C")
 
-    def bonus_chart(self, data):
-        for i in data:
-            print(f"{self.low * i.lowest_temp}"
-                  f"{self.high * (i.highest_temp - i.lowest_temp)}"
-                  f" {i.lowest_temp} C - {i.highest_temp} C")
-
-
+    @staticmethod
+    def print_bonus_chart(data):
+        for weather_reading in data.monthly_temp:
+            max_temp = weather_reading.max_temp
+            min_temp = weather_reading.min_temp
+            print(f"{ReportGenerator.low * min_temp}{ReportGenerator.high * max_temp}"
+                  f" {ReportGenerator.blue}{min_temp}C - {ReportGenerator.red}{max_temp}C")
