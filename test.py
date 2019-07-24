@@ -2,6 +2,7 @@ import calendar
 from os import path
 import statistics
 from termcolor import colored
+import sys
 
 #___________________________________________________________________________
 class monthly_data:
@@ -209,7 +210,22 @@ class calc:
  #___________________________________________________________________________
 
 
-c1 = calc()
-c1.show_yearly_data(2005)
-c1.show_monthly_data_avg(5, 2005)
-c1.show_monthly_horizontal_chart(5, 2005)
+flag = sys.argv[1]
+print(flag)
+if flag == '-e':
+    year = sys.argv[2]
+    c1 = calc()
+    c1.show_yearly_data(int(year))
+else:
+    var = sys.argv[2]
+    var = var.split('/')
+    year, mon = var[0], var[1]
+    if flag == '-a':
+        c1 = calc()
+        c1.show_monthly_data_avg(int(mon), int(year))
+    elif flag == '-c':
+        c1 = calc()
+        c1.show_monthly_horizontal_chart(int(mon), int(year))
+    
+    
+
