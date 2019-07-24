@@ -1,6 +1,7 @@
 {% extends 'articles/base.html' %}
 {% load static %}
 {% load materializecss %}
+{% load account_extras %}
 
 {% block imports %}
 <link rel="stylesheet" href="{% static 'accounts/css/materialize.min.css' %}">
@@ -17,6 +18,16 @@ Login |
     <h4>Log in to your account</h4>
 </center>
 <div class="row">
+    {% if form.errors %}
+    {{ form.errors }}
+    {% endif %}
+    {% if next|adminrequired %}
+    {% if user.is_authenticated %}
+    {% if not user.is_superuser %}
+    <p>This page is accessible to admin members only <span><a href="/">Back to Home</a></span></p>
+    {% endif %}
+    {% endif %}
+    {% endif %}
     <form class="col s12" method="post">
         {% csrf_token %}
         <br>
@@ -38,6 +49,7 @@ Login |
             <br>
             <button type="submit" class="btn waves-effect btn-large btn-success">Login</button>
         </center>
+        <input type="hidden" name="next" value="{{ next }}">
     </form>
 </div>
 {% endblock container %}

@@ -18,7 +18,7 @@
 </ul>
 <li><a class="dropdown-trigger" id="heading-text" href="#!" data-target="dropdown1">{{ user.username }}<i class="material-icons right">arrow_drop_down</i></a></li>
 {% else %}
-<li><a id="heading-text" href="{% url 'login' %}">Login</a></li>
+<li><a id="heading-text" href="{% url 'login' %}?next={{ request.path }}">Login</a></li>
 <li><a id="heading-text" href="/accounts/signup/">Signup</a></li>
 {% endif %}
 {% endblock %}
@@ -39,23 +39,36 @@
 <hr>
 <h4>Comments</h4>
 <br>
+{% if user.is_authenticated %}
+<div class="row">
+    <div class="col s6">
+        <form action="/articles/{{article.id}}/comment/" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="user" value="{{ user.id }}">
+            <input type="hidden" name="article" value="{{ article.id }}">
+            <div class="row">
+                <input type="text" name="comment_text" autocomplete="off" placeholder="Add comment...">
+            </div>
+            <input type="submit" class="btn" value="Post">
+        </form>
+    </div>
+</div>
+<br>
+{% else %}
+<h6>To add a comment, you have to <span><a href="{% url 'login' %}?next={{ request.path }}">Login</a></span></h6>
+<br>
+{% endif %}
 {% for comment in article.comment_set.all %}
 <div class="row">
-    <div style="border: groove" class="col s12">
+    <div style="border: outset" class="col s10">
         <div class="row">
             <div class="col s1"></div>
             <div class="col s6">
                 <h6 style="color: rgb(8, 125, 235)">{{ comment.user }} <span style="font-size: 15px; font-style: italic; opacity: 0.7; color: black" class="right">{{ comment.publish_time }}</span> </h6>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col s1"></div>
-            <div class="col s6">
                 <p>{{ comment.comment_text }}</p>
             </div>
         </div>
     </div>
-    
 </div>
 {% endfor %}
 <br>

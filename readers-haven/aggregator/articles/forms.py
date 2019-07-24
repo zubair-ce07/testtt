@@ -1,6 +1,6 @@
 from django import forms
 
-from articles.models import Article, Author, Website
+from articles.models import Article, Author, Website, Comment
 
 class NewArticleForm(forms.ModelForm):
     class Meta:
@@ -15,4 +15,9 @@ class NewAuthorForm(forms.ModelForm):
 class NewWebsiteForm(forms.ModelForm):
     class Meta:
         model = Website
+        fields = '__all__'
+
+class NewCommentForm(forms.ModelForm):
+    class Meta:
+        model = Comment
         fields = '__all__'
