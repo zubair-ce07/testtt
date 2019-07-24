@@ -42,9 +42,9 @@ class CeaSpider(scrapy.Spider):
     image_template = 'https://cea.vteximg.com.br/arquivos/ids/{}.jpg'
 
     def parse(self, response):
-        major_categories_url = response.css('.header_submenu_item-large ::attr(href)').get()
+        listing_urls = response.css('.header_submenu_item-large ::attr(href)').get()
         yield from [response.follow(url=url, callback=self.paginantion)
-                    for url in major_categories_url]
+                    for url in listing_urls]
 
     def paginantion(self, response):
         page_count = int(response.css('script[type="text/javascript"]').re('pagecount_\d+ = (.+?);')[0])
@@ -71,12 +71,7 @@ class CeaSpider(scrapy.Spider):
         item['description'] = self.product_description(response)
         item['care'] = []
         item['skus'] = {}
-        item['requests'] = [response.follow(response.url, callback=self.parse_sku)]
-        item['requests'].append(scrapy.Request(url=self.get_image_url(response), callback=self.get_imagesid))
-        color_queue = response.css('.img-wrapper ::attr(href)').getall()
-
-        for color_url in color_queue:
-            item['requests'].append(response.follow(color_url, callback=self.parse_sku))
+        item['requests'] = self.product_requests(response)
 
         yield from self.next_request_or_item(item)
 
@@ -109,6 +104,16 @@ class CeaSpider(scrapy.Spider):
     def product_description(self, response):
         return clean(response.css('.productDescription::text').get())
 
+    def product_requests(self, response):
+        requests = [response.follow(response.url + '/#', callback=self.parse_sku)]
+        requests.append(response.follow(url=self.get_image_url(response), callback=self.get_imagesid))
+        color_queue = response.css('.img-wrapper ::attr(href)').getall()
+
+        for color_url in color_queue:
+            requests.append(response.follow(color_url, callback=self.parse_sku))
+
+        return requests
+
     def get_image_url(self, response):
         raw_json = response.css('script').re("var skuJson_0 = (.+?);")
         product_id = json.loads(raw_json[0]).get('productId')
@@ -127,24 +132,22 @@ class CeaSpider(scrapy.Spider):
 
     def parse_sku(self, response):
         item = response.meta['item']
-        sizes = self.available_sizes(response)
+        sizes = self.sizes(response)
         color = self.color(response)
-        price = self.price(response)
+        price = response.css('#___rc-p-dv-id ::attr(value)').get()
         previous_price = self.prev_price(response)
-        raw_sku = item['skus']
 
         for size in sizes:
-            raw_sku.update({f'{color}_{size}': {
+            item['skus'].update({f'{color}_{size}': {
                 'color': color,
                 'price': price,
                 'previous_price': previous_price,
                 'size': size
             }})
 
-        item['skus'] = raw_sku
         yield from self.next_request_or_item(item)
 
-    def available_sizes(self, response):
+    def sizes(self, response):
         raw_json = response.css('script').re('var skuJson_0 = (.+?);')
         color_json = json.loads(raw_json[0])
         return color_json.get('dimensionsMap', {}).get('Tamanho', {}) or ['OneSize']
@@ -155,9 +158,6 @@ class CeaSpider(scrapy.Spider):
             return color
 
         return 'OneColor'
-
-    def price(self, response):
-        return response.css('#___rc-p-dv-id ::attr(value)').get()
 
     def prev_price(self, response):
         raw_json = response.css('script').re('var skuJson_0 = (.+?);')
@@ -172,4 +172,3 @@ class CeaSpider(scrapy.Spider):
             return
         item.pop('requests', None)
         yield item
-//Arbi
