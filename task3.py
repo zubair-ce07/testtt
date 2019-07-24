@@ -1,8 +1,6 @@
 import re
 
 import scrapy
-from scrapy.linkextractors import LinkExtractor
-from scrapy.spiders import Rule
 
 
 class AsicsItem(scrapy.Item):
@@ -19,25 +17,23 @@ class AsicsItem(scrapy.Item):
     requests = scrapy.Field()
 
 
-def clean(raw_data):
-    if isinstance(raw_data, list):
-        return [re.sub('\s+', ' ', data).strip() for data in raw_data
-                if re.sub('\s+', ' ', data).strip()]
-    elif isinstance(raw_data, str):
-        return re.sub('\s+', ' ', raw_data).strip()
+def clean(raw_strs):
+    if isinstance(raw_strs, list):
+        cleaned_strs = [re.sub('\s+', ' ', st).strip() for st in raw_strs]
+        return [st for st in cleaned_strs if st]
+
+    elif isinstance(raw_strs, str):
+        return re.sub('\s+', ' ', raw_strs).strip()
 
 
 class AsicsSpider(scrapy.Spider):
     name = 'asics'
     allowed_domains = ['asics.com']
     start_urls = [
-        # 'https://www.asics.com/us/en-us/',
-        'https://www.asics.com/us/en-us/court-ff-novak/p/0020013180.100'
-
+        'https://www.asics.com/us/en-us/',
     ]
 
-
-    def aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaparse(self, response):
+    def parse(self, response):
         listing_urls = response.css('.childlink-wrapper ::attr(href)').getall()
         yield from [response.follow(url=url, callback=self.parse_category)
                     for url in listing_urls]
@@ -51,7 +47,7 @@ class AsicsSpider(scrapy.Spider):
         if next_page_url:
             yield response.follow(url=next_page_url, callback=self.parse_category)
 
-    def parse(self, response):
+    def parse_item(self, response):
         item = AsicsItem()
         item['retailer_sku'] = self.product_id(response)
         item['name'] = self.product_name(response)
@@ -66,7 +62,6 @@ class AsicsSpider(scrapy.Spider):
         item['requests'] = self.product_colors(response)
 
         yield from self.next_request_or_item(item)
-
 
     def product_id(self, response):
         return response.css('[itemprop="productID"] ::attr(content)').get()
@@ -93,54 +88,52 @@ class AsicsSpider(scrapy.Spider):
     def product_brand(self, response):
         return response.css('html ::attr(data-brand)').get()
 
-    def product_colors(self,response):
+    def product_colors(self, response):
         color_urls = response.css('.colorVariant ::attr(href)').getall()
         return [response.follow(color_url, callback=self.product_skus)
                 for color_url in color_urls]
 
     def product_skus(self, response):
-        print('\n\n\n\n\n\nAAAAAAAAAAAAAAAAAAAAAA')
 
         item = response.meta['item']
         prev_price = response.css('.pull-right del ::text').getall()
         color = response.css('[itemprop="color"] ::text').get()
-        raw_skus = item['skus']
-        print('\n\n\n\n\n\n\n\n Color: ', color)
-        for sku_sel in response.css('#sizes-options .SizeOption.inStock :first-of-type'):
-            print('\n\n\n\n\n',sku_sel.css('::attr(data-value)').get())
-            print(sku_sel.css('[itemprop="priceCurrency"]::attr(content)').get())
-            print(sku_sel.css('[itemprop="price"]::attr(content)').get())
-            print('Size:',clean(sku_sel.css('a.SizeOption ::text').get()))
+        common_sku = {
+            'color': color,
+            'previous_price': prev_price
+        }
 
+        for sku_selector in response.css('#sizes-options .SizeOption.inStock'):
+            key = sku_selector.css('::attr(data-value)').get()
 
-            # print('\n\n\n\n\n\n\n\n SIZE: ', clean(sku_sel.css('.SizeOption ::text').get()))
-            # single_sku = {
-            #     sku_sel.css('::attr(data-value)').get():
-            #         {
-            #
-            #             'color': color,
-            #             'currency': sku_sel.css('[itemprop="priceCurrency"]::attr(content)').get(),
-            #             'price': sku_sel.css('[itemprop="price"]::attr(content)').get(),
-            #             'size': clean(sku_sel.css('.SizeOption ::text').get()),
-            #             'previous_price': prev_price
-            #         }
-            # }
-            # raw_skus.update(single_sku)
+            if self.check_key(key, item['skus']):
+                sku = {
+                    'currency': sku_selector.css('[itemprop="priceCurrency"]::attr(content)').get(),
+                    'price': sku_selector.css('[itemprop="price"]::attr(content)').get(),
+                    'size': clean(sku_selector.css('a.SizeOption ::text').get()),
+                }
+                sku.update(common_sku)
+                item['skus'].update({key: sku})
 
-        item['skus'] = raw_skus
         yield from self.next_request_or_item(item)
 
-    def next_request_or_item(self, item):
+    def check_key(self, key, dict):
+        sku_dic_keys = list(map(lambda x: x.split('.')[2:], list(dict.keys())))
+        key = key.split('.')[2:]
 
-        print('\n\n\n\n\n',item['requests'])
+        for sku_key in sku_dic_keys:
+            if sku_key == key:
+                return False
+        return True
+
+    def next_request_or_item(self, item):
 
         if item['requests']:
             request = item['requests'].pop()
             request.meta.update({'item': item})
-            print('QQQQQQQQQQQQQQQQQQQQ',request.callback)
             yield request
             return
 
         item.pop('requests', None)
-        # yield item
-#ARSH
+        yield item
+
