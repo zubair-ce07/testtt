@@ -3,62 +3,20 @@ import datetime
 import argparse
 import csv
 import glob
-from operator import attrgetter
-
-def convert_short_to_long_date(arg):
-
-    date = arg.split("/")
-    year, month = date[0], datetime.date(int(date[0]), int(date[1]), 1).strftime('%B')[:3]
-    return year, month
 
 class WeathermanEntries(object):
 
-    def __init__(self, weather_timezone, max_temperature, min_temperature, max_humidity, average_humididty):
-        self.weather_timezone = weather_timezone
-        self.max_temperature = int(max_temperature) if max_temperature else 0
-        self.min_temperature = int(min_temperature) if min_temperature else 0
-        self.max_humidity = int(max_humidity) if max_humidity else 0
-        self.average_humididty = int(average_humididty) if average_humididty else 0
+    def __init__(self):
+        self.entries = {}
 
-    def calculate_highest_temp(weatherman_entries):
+    def set_entries(self, key, entries):
+        self.entries[key] = entries
 
-        return max(weatherman_entries, key=attrgetter('max_temperature')),
-
-    def calculate_lowest_temp(weatherman_entries):
-
-        return min(weatherman_entries, key=attrgetter('min_temperature')),
-
-    def calculate_most_humid(weatherman_entries):
-
-        return max(weatherman_entries, key=attrgetter('max_humidity'))
-
-    def calculate_highest_avg_temp(weatherman_entries):
-
-        temperature_count = len(weatherman_entries)
-        highest_temperature_value = round(sum(weatherman.max_temperature for weatherman
-        in weatherman_entries)/ temperature_count, 2)
-        return highest_temperature_value
-
-    def calculate_lowest_avg_temp(weatherman_entries):
-
-        temperature_count = len(weatherman_entries)
-        lowest_temperature_value = round(sum(weatherman.max_temperature for weatherman
-        in weatherman_entries)/ temperature_count, 2)
-        return lowest_temperature_value
-
-    def calculate_avg_mean_humid(self, by=None):
-
-        temperature_count = len(weatherman_entries)
-        average_humidity_value = round(sum(weatherman.average_humididty for weatherman
-        in weatherman_entries)/ temperature_count, 2)
-        return average_humidity_value
-
-    def draw_chart_for_max_min_temp(self, by=None):
-
-        year, month = convert_short_to_long_date(by)
-        desired_weatherman_entries = list(filter(lambda x: by and year in x and month in x, self.entries.keys()))
+    def draw_chart_for_max_min_temp(self, by=None, all_weather_records):
+        desired_weatherman_entries = list(filter(lambda x: by and all_weather_records.year in x and
+                                                           all_weather_records.month in x, self.entries.keys()))
         for entry in desired_weatherman_entries:
-            print("{}, {}".format(month, year))
+            print("{}, {}".format(all_weather_records.month, all_weather_records.year))
             for record in self.entries[entry]:
                 max_temp = record.get('Max TemperatureC')
                 min_temp = record.get('Min TemperatureC')
@@ -67,60 +25,73 @@ class WeathermanEntries(object):
                     print(pkt + " \033[91m" + "+" * int(max_temp) + "\033[0m" + " " + max_temp + "C")
                     print(pkt + " \033[34m" + "+" * int(min_temp) + "\033[0m" + " " + min_temp + "C")
 
-    def draw_bonus_chart_for_max_min_temp(self, by=None):
-
-        year, month = convert_short_to_long_date(by)
-        desired_weatherman_entries = list(filter(lambda x: by and year in x and month in x, self.entries.keys()))
+    def draw_bonus_chart_for_max_min_temp(self, by=None, all_weather_records):
+        desired_weatherman_entries = list(filter(lambda x: by and all_weather_records.year in x and
+                                                           all_weather_records.month in x, self.entries.keys()))
         for entry in desired_weatherman_entries:
-            print("{}, {}".format(month, year))
+            # use f-string instead of format.
+            print("{}, {}".format(all_weather_records.month, all_weather_records.year))
             for record in self.entries[entry]:
                 max_temp = record.get('Max TemperatureC')
                 min_temp = record.get('Min TemperatureC')
                 if max_temp and min_temp:
                     pkt = record.get("PKT") or record.get("PKST")
-                    print(pkt + " \033[34m" + "+" * int(min_temp) + "\033[0m" + "\033[91m" + "+" * int(max_temp)
-                          + "\033[0m" + " " + min_temp + "C-" + max_temp + "C")
+                    print(pkt + " \033[34m" + "+" * int(min_temp) + "\033[0m" + "\033[91m" + "+" * int(
+                        max_temp) + "\033[0m" + " " + min_temp + "C-" + max_temp + "C")
+
 
 weatherman_entries = WeathermanEntries()
 
-class WeathermanRecord(object):
 
-    def read_to_weatherman_entry(meta, line):
-        
-        return WeathermanRecord(dict(zip(meta, line)))
+class WeathermanRecord:
 
-def read_parse_report(csv_path):
+    def __init__(self, records):
+        self.highest_temp = records.get('highest_temp')
+        self.date = records.get('PKT')
 
-    with open(csv_path) as input_file:
-        weather_reader = csv.DictReader(input_file)
-        weather_reader_list = list(weather_reader)
-        return weather_reader_list
+def read_to_weatherman_entry(meta, line):
+    return WeathermanRecord(dict(zip(meta, line)))
 
-def calculate_given_year_temperature(year):
 
-    highest_temp = weatherman_entries.calculate_highest_temp(year)
-    lowest_temp = weatherman_entries.calculate_lowest_temp(year)
-    most_humid = weatherman_entries.calculate_most_humid(year)
+def read_parse_report(report):
+
+    all_content = []
+    for record in csv.DictReader(open(report)):
+        if (record.get("PKST") or record.get("PKT")) and record.get("Max TemperatureC") and \
+                record.get("Min TemperatureC") and record.get("Max Humidity") and record.get(" Mean Humidity"):
+            all_content.append(all_content(record))
+    return all_content
+
+def calculate_yearly_report(required_date, all_weather_records):
+    desired_records = []
+
+    for record in all_weather_records:
+        if record['PKT'].year == required_date.year:
+            desired_records.append(record)
+    highest_temp = max(desired_records, key=lambda x: x['Max TemperatureC'])
+    lowest_temp = min(desired_records, key=lambda x: x['Min TemperatureC'])
+    most_humid = max(desired_records, key=lambda x: x[' Mean Humidity']) / len(desired_records)
     return highest_temp, lowest_temp, most_humid
 
-def report_given_year_temperature(highest_temp, lowest_temp, most_humid):
-
+def generate_yearly_report(highest_temp, lowest_temp, most_humid):
     print("Highest: {} on {}".format(highest_temp[0], highest_temp[1]))
     print("Lowest: {} on {}".format(lowest_temp[0], lowest_temp[1]))
     print("Humidity: {} on {}".format(most_humid[0], most_humid[1]))
 
-def calculate_given_month_temperature(date):
+def calculate_monthly_report(required_date, all_weather_records):
+    desired_records = []
+    for record in all_weather_records:
+        if record['date'].year == required_date.year & record['date'].month == required_date.month:
+            desired_records.append(record)
+    highest_temp = max(desired_records, key=lambda x: x['highest_temp'])
+    lowest_temp = min(desired_records, key=lambda x: x['lowest_temp'])
+    most_humid = sum(desired_records, key=lambda x: x['most_humid']) / len(desired_records)
+    return highest_temp, lowest_temp, most_humid
 
-    highest_avg_temp = weatherman_entries.calculate_highest_avg_temp(date)
-    lowest_avg_temp = weatherman_entries.calculate_lowest_avg_temp(date)
-    avg_mean_humid = weatherman_entries.calculate_avg_mean_humid(date)
-    return highest_avg_temp, lowest_avg_temp, avg_mean_humid
-
-def report_given_month_temperature(highest_avg_temp, lowest_avg_temp, avg_mean_humid):
-
-    print("Highest Average: {}".format(highest_avg_temp) + "C")
-    print("Lowest Average: {}".format(lowest_avg_temp) + "C")
-    print("Average Mean Humidity: {}".format(avg_mean_humid))
+def generate_monthly_report(highest_avg_temp, lowest_avg_temp, avg_mean_humid):
+    print("Highest: {} on {}".format(highest_avg_temp[0], highest_avg_temp[1]))
+    print("Lowest: {} on {}".format(lowest_avg_temp[0], lowest_avg_temp[1]))
+    print("Humidity: {} on {}".format(avg_mean_humid[0], avg_mean_humid[1]))
 
 def draw_two_line_horizontal_bar_chart(date):
     weatherman_entries.draw_chart_for_max_min_temp(date)
@@ -129,33 +100,25 @@ def draw_one_line_horizontal_bar_chart(date):
     weatherman_entries.draw_bonus_chart_for_max_min_temp(date)
 
 def main():
-
-    weather_mans = []
-    parser = argparse.ArgumentParser()
-    parser.add_argument('path', help='path of directory')
-    parser.add_argument('-e', '--year_date', nargs='*', dest='year_to_report', action='store',
-                        type=lambda date_in_string: datetime.strptime(date_in_string, '%Y').date())
-    parser.add_argument('-a', '--year_date', nargs='*', dest='month_to_report', action='store',
-                        type=lambda date_in_string: datetime.strptime(date_in_string, '%Y/%m').date())
-    parser.add_argument('-c', '--year_date', nargs='*', dest='plot_graph', action='store',
-                        type=lambda date_in_string: datetime.strptime(date_in_string, '%Y/%m').date())
+    parser = argparse.ArgumentParser(description='Displaying Murree weather reports')
+    parser.add_argument('path', help='Path of directory')
+    parser.add_argument('-e', '--year_to_report', type=lambda d: datetime.datetime.strptime(d, '%Y').date())
+    parser.add_argument('-a', '--month_to_report', type=lambda d: datetime.datetime.strptime(d, '%Y/%m').date())
+    parser.add_argument('-c', '--plot_graph', type=lambda d: datetime.datetime.strptime(d, '%Y/%m').date())
     args = parser.parse_args()
-    for report in glob.glob("*" + args.path + "/*.txt"):
-        read_parse_report(report)
-
-    if args.year_date:
-        if  args.year_to_report:
-                highest_temp, lowest_temp, most_humid= calculate_given_year_temperature(args.year_date)
-                report_given_year_temperature(highest_temp, lowest_temp, most_humid)
-
-        elif args.month_to_report:
-                avg_highest_temp, avg_lowest_temp, avg_most_humid= calculate_given_month_temperature(args.year_date)
-                report_given_month_temperature(avg_highest_temp, avg_lowest_temp, avg_most_humid)
-
-        elif args.plot_graph:
-                draw_two_line_horizontal_bar_chart(args.year_date)
-                draw_one_line_horizontal_bar_chart(args.year_date)
+    all_weather_records = []
+    for file_name in glob.glob("G:/updated/Github/weatherman-master/weatherfiles/*.txt"):
+        all_weather_records = all_weather_records + read_parse_report(file_name)
+    if args.year_to_report:
+        highest_temp, lowest_temp, most_humid = calculate_yearly_report(args.year_to_report, all_weather_records)
+        generate_yearly_report(highest_temp, lowest_temp, most_humid)
+    if args.month_to_report:
+        avg_highest_temp, avg_lowest_temp, avg_most_humid = calculate_monthly_report(args.month_to_report,
+                                                                                     all_weather_records)
+        generate_monthly_report(avg_highest_temp, avg_lowest_temp, avg_most_humid)
+    if args.plot_graph:
+        draw_two_line_horizontal_bar_chart(args.plot_graph, all_weather_records)
+        draw_one_line_horizontal_bar_chart(args.plot_graph, all_weather_records)
 
 if __name__ == "__main__":
     main()
-
