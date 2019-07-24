@@ -12,19 +12,19 @@ class WeatherReporter():
     def report_year_extremes(self, highest_temperature_day, lowest_temperature_day, most_humid_day):
         """Print year extremes to the console"""
         hottest_day_report = "Highest: {}C on {} {}".format(
-            highest_temperature_day["Max TemperatureC"],
-            calendar.month_name[highest_temperature_day["PKT"].month],
-            highest_temperature_day["PKT"].day)
+            highest_temperature_day.max_temperature,
+            calendar.month_name[highest_temperature_day.date.month],
+            highest_temperature_day.date.day)
 
         coldest_day_report = "Lowest: {}C on {} {}".format(
-            lowest_temperature_day["Min TemperatureC"],
-            calendar.month_name[lowest_temperature_day["PKT"].month],
-            lowest_temperature_day["PKT"].day)
+            lowest_temperature_day.min_temperature,
+            calendar.month_name[lowest_temperature_day.date.month],
+            lowest_temperature_day.date.day)
 
         humid_day_report = "Humidity: {}% on {} {}".format(
-            most_humid_day["Max Humidity"],
-            calendar.month_name[most_humid_day["PKT"].month],
-            most_humid_day["PKT"].day)
+            most_humid_day.max_humidity,
+            calendar.month_name[most_humid_day.date.month],
+            most_humid_day.date.day)
         print(hottest_day_report, coldest_day_report,
               humid_day_report, sep="\n", end="\n\n")
 

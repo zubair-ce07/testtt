@@ -1,4 +1,5 @@
 from datetime import date
+from column_attribute_association import associations
 
 
 class WeatherReading:
@@ -10,16 +11,25 @@ class WeatherReading:
            Uses column types specified in associations file to to type cast values accordingly
         """
 
-        for key in kwargs.copy().keys():
-            try:
-                kwargs[key] = int(kwargs[key])
-            except ValueError:
+        attributes = {}
+
+        for key in kwargs:
+            attribute_name = associations[key]["attribute_name"]
+            data_type = associations[key]["type"]
+
+            value = kwargs[key]
+
+            if data_type == "number":
+                try:
+                    value = int(value)
+                except ValueError:
+                    value = None
+            elif data_type == "date":
+                y, m, d = value.split('-')
+                value = date(int(y), int(m), int(d))
+            elif data_type == "string":
                 pass
 
-        y, m, d = kwargs["PKT"].split('-')
-        kwargs["PKT"] = date(int(y), int(m), int(d))
+            attributes[attribute_name] = value
 
-        self.__dict__.update(kwargs)
-    
-    def __getitem__(self, key):
-        return self.__dict__[key]
+        self.__dict__.update(attributes)
