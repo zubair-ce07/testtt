@@ -65,7 +65,7 @@ class WeatherDataParser:
 
     """
 
-    def read_file_from_weather_data(self, filename):
+    def parse_file_from_weather_data_csvs(self, filename):
         """
         Receives filename of a weather data file and returns a dictionary of WeatherReading data structures for
         each line in the file (which represents a single day)
@@ -79,27 +79,17 @@ class WeatherDataParser:
             while temp_line == "\n":
                 temp_line = file_cursor.readline()
             for line in file_cursor.readlines():
-                reading = self.create_weather_reading_from_data(line)
+                reading = self.parse_weather_reading_from_csv(line)
                 if reading:
                     file_data[reading.pakistan_time] = reading
         return file_data
 
-    def create_weather_reading_from_data(self, data):
+    def parse_weather_reading_from_csv(self, data):
         data = data.strip().split(',')
         if len(data) is 23:
-            return WeatherReading(pakistan_time=data[0], max_tempc=data[1], mean_tempc=data[2], min_tempc=data[3],
-                                  dewpointc=data[4], mean_dewpointc=data[5], min_dewpointc=data[6],
-                                  max_humidity=data[7], mean_humidity=data[8],
-                                  min_humidity=data[9],
-                                  max_sealevelpressurehpa=data[10], mean_sealevelpressurehpa=data[11],
-                                  min_sealevelpressurehpa=data[12], max_visibilitykm=data[13],
-                                  mean_visibilitykm=data[14], min_visibilitykm=data[15], max_windspeedkmh=data[16],
-                                  mean_windspeedkmh=data[17],
-                                  max_gustspeedkmh=data[18],
-                                  precipitationcm=data[19], cloudcover=data[20], events=data[21],
-                                  windirdegrees=data[22])
+            return WeatherReading(*data)
 
-    def read_data_year_wise(self, year, directory_name):
+    def parse_yearly_data_from_directory(self, year, directory_name):
         """
         Takes year and the directory path of the weather data directory as input and returns data of that year
 
@@ -111,14 +101,14 @@ class WeatherDataParser:
         files_in_directory = os.listdir(directory_name)
         for file in files_in_directory:
             if str(year) in file:
-                year_data[file] = self.read_file_from_weather_data(file)
+                year_data[file] = self.parse_file_from_weather_data_csvs(file)
         return year_data
 
 
 class WeatherReportCalculator:
     """
     Receives weather data readings, report type, year and month and calculates required report related
-    calculations of the given year and month
+    results for the given year and month
 
     """
 
@@ -128,12 +118,12 @@ class WeatherReportCalculator:
         :param date:
         :return: a string in 'day(in digits) Month(full name)
         """
-        date_splitted = date.split('-')
+        split_date = date.split('-')
         months = (
             "January", "February", "March", "April", "May", "June", "July", "August", "September", "October",
             "November", "December")
-        month = "{} {}".format(months[int(date_splitted[1]) - 1], date_splitted[2])
-        return month
+        day_string = "{} {}".format(months[int(split_date[1]) - 1], split_date[2])
+        return day_string
 
     def is_given(self, reading):
         return reading is not ''
@@ -145,26 +135,23 @@ class WeatherReportCalculator:
         :param readings:
         :returns: WeatherCalculation data structure populated with calculated values
         """
-        max_temp = 0
-        max_temp_day = ""
-        min_temp = 1000
-        min_temp_day = ""
-        humidity = 0
-        humidity_day = ""
+        generic_report_type_data = {"max_temp": 0, "max_temp_day": "", "min_temp": 1000, "min_temp_day": "",
+                                    "humidity": 0,
+                                    "humidity_day": ""}
         for key_month_data, month_data in readings.items():
             for key_day_data, day_data in month_data.items():
-                if self.is_given(day_data.max_tempc) and int(day_data.max_tempc) > max_temp:
-                    max_temp = int(day_data.max_tempc)
-                    max_temp_day = self.get_day_from_date(key_day_data)
-                if self.is_given(day_data.min_tempc) and int(day_data.min_tempc) < min_temp:
-                    min_temp = int(day_data.min_tempc)
-                    min_temp_day = self.get_day_from_date(key_day_data)
-                if self.is_given(day_data.max_humidity) and int(day_data.max_humidity) > humidity:
-                    humidity = int(day_data.max_humidity)
-                    humidity_day = self.get_day_from_date(key_day_data)
+                if self.is_given(day_data.max_tempc) and int(day_data.max_tempc) > generic_report_type_data["max_temp"]:
+                    generic_report_type_data["max_temp"] = int(day_data.max_tempc)
+                    generic_report_type_data["max_temp_day"] = self.get_day_from_date(key_day_data)
+                if self.is_given(day_data.min_tempc) and int(day_data.min_tempc) < generic_report_type_data["min_temp"]:
+                    generic_report_type_data["min_temp"] = int(day_data.min_tempc)
+                    generic_report_type_data["min_temp_day"] = self.get_day_from_date(key_day_data)
+                if self.is_given(day_data.max_humidity) and int(day_data.max_humidity) > generic_report_type_data[
+                        "humidity"]:
+                    generic_report_type_data["humidity"] = int(day_data.max_humidity)
+                    generic_report_type_data["humidity_day"] = self.get_day_from_date(key_day_data)
 
-        return WeatherReportData(max_temp=max_temp, max_temp_day=max_temp_day, min_temp=min_temp,
-                                 min_temp_day=min_temp_day, humidity=humidity, humidity_day=humidity_day)
+        return WeatherReportData(**generic_report_type_data)
 
     def report_type_average(self, readings, filename):
         """
@@ -175,26 +162,25 @@ class WeatherReportCalculator:
         :param readings:
         :returns: WeatherCalculation data structure populated with calculated values
         """
-        max_temp = 0
-        max_temp_mean = 0
-        min_temp = 1000
-        min_temp_mean = 0
-        humidity = 0
+        average_report_type_data = {"max_temp": 0, "min_temp": 1000, "humidity": 0}
         count = 0
+        max_temp_mean = 0
+        min_temp_mean = 0
         mean = 0
         for key_day_data, day_data in readings[filename].items():
-            if self.is_given(day_data.mean_tempc) and int(day_data.mean_tempc) > max_temp:
+            if self.is_given(day_data.mean_tempc) and int(day_data.mean_tempc) > average_report_type_data["max_temp"]:
                 max_temp_mean += int(day_data.max_tempc)
-            if self.is_given(day_data.mean_tempc) and int(day_data.mean_tempc) < min_temp:
+            if self.is_given(day_data.mean_tempc) and int(day_data.mean_tempc) < average_report_type_data["min_temp"]:
                 min_temp_mean += int(day_data.min_tempc)
-            if self.is_given(day_data.mean_humidity) and int(day_data.mean_humidity) > humidity:
+            if self.is_given(day_data.mean_humidity) and int(day_data.mean_humidity) > average_report_type_data[
+                    "humidity"]:
                 mean += int(day_data.max_humidity)
                 count += 1
-        max_temp = int(max_temp_mean / count)
-        min_temp = int(min_temp_mean / count)
-        humidity = int(mean / count)
+        average_report_type_data["max_temp"] = int(max_temp_mean / count)
+        average_report_type_data["min_temp"] = int(min_temp_mean / count)
+        average_report_type_data["humidity"] = int(mean / count)
 
-        return WeatherReportData(max_temp=max_temp, min_temp=min_temp, humidity=humidity)
+        return WeatherReportData(**average_report_type_data)
 
     def report_type_bar_charts(self, readings, year, month, filename):
         """
@@ -214,14 +200,12 @@ class WeatherReportCalculator:
         for date in readings[filename]:
             if readings[filename][date].max_tempc != '':
                 print(day, sep=' ', end='', flush=True)
-                for i in range(int(readings[filename][date].max_tempc)):
-                    print("\033[01;31;40m +", sep=' ', end='', flush=True)
+                print("\033[01;31;40m +" * int(readings[filename][date].max_tempc), sep=' ', end='', flush=True)
                 print(' ' + readings[filename][date].max_tempc + 'C', sep=' ', end='', flush=True)
                 print()
             if readings[filename][date].min_tempc != '':
                 print(day, sep=' ', end='', flush=True)
-                for i in range(int(readings[filename][date].min_tempc)):
-                    print("\033[1;34;40m +", sep=' ', end='', flush=True)
+                print("\033[1;34;40m +" * int(readings[filename][date].min_tempc), sep=' ', end='', flush=True)
                 print(' ' + readings[filename][date].min_tempc + 'C', sep=' ', end='', flush=True)
                 print()
                 print()
