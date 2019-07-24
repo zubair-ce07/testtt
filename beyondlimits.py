@@ -6,35 +6,31 @@ from scrapy_spider.items import BeyondLimitItem
 
 
 class BeyondLimitsSpider(CrawlSpider):
-    name = 'beyondlimitspider'
-    allowed_domains = ['beyondlimits.com']
+    name = "beyondlimitspider"
+    allowed_domains = ["beyondlimits.com"]
     start_urls = [
-        'https://www.beyondlimits.com/Men/',
-        'https://www.beyondlimits.com/Women/'
+        "https://www.beyondlimits.com/Men/",
+        "https://www.beyondlimits.com/Women/"
     ]
-    retailer = 'beyondlimits-uk'
-    market = 'UK'
-    language = 'en'
-    gender = ['Men', 'Women', 'Unisex-adults']
-    default_gender = 'Unisex-adults'
+    retailer = "beyondlimits-uk"
+    market = "UK"
+    language = "en"
+    gender = ["Men", "Women"]
+    default_gender = "Unisex-adults"
 
     def get_product_sku(self, response):
         skus = {}
         color_css = ".bb_boxtxt--content ul > li:first-child::text"
         size_css = "option:not(:first-child)::text"
 
-        price = self.get_product_price(response)
-        common_sku = {
-            'color': response.css(color_css).get().split(" ", 1)[1],
-        }
-        common_sku.update(price)
-        color = common_sku['color'].capitalize().replace(' ', '_')
+        common_sku = self.get_product_pricing(response)
+        common_sku["color"] = response.css(color_css).get().split(" ", 1)[1]
         product_sizes = response.css(size_css).getall()
 
         for size in product_sizes:
             sku = common_sku.copy()
-            sku['size'] = size
-            current_sku = {f"{color}_{size}": sku}
+            sku["size"] = size
+            current_sku = {f"{sku['color'].capitalize().replace(' ', '_')}_{sku['size']}": sku}
             skus.update(current_sku)
 
         return skus
@@ -42,8 +38,8 @@ class BeyondLimitsSpider(CrawlSpider):
     def parse(self, response):
         product_css = ".bb_product a::attr(href)"
         product_url = response.css(product_css).getall()
-        for link in product_url:
-            yield Request(link, callback=self.parse_item)
+        for url in product_url:
+            yield Request(url, callback=self.parse_item)
 
         pagination_css = "a.bb_pagination--item::attr(href)"
         next_page = response.css(pagination_css).getall()
@@ -89,7 +85,7 @@ class BeyondLimitsSpider(CrawlSpider):
 
     def get_product_care(self, response):
         css = ".bb_boxtxt--content ul > li:not(:first-child)::text"
-        return ' '.join(response.css(css).getall())
+        return " ".join(response.css(css).getall())
 
     def get_product_category(self, response):
         css = "span.bb_breadcrumb--item.is-last strong::text"
@@ -105,12 +101,15 @@ class BeyondLimitsSpider(CrawlSpider):
     def get_gender(self, response):
         return next(gender for gender in self.gender if gender in response.url) or self.default_gender
 
-    def get_product_price(self, response):
+    def get_product_pricing(self, response):
         price_css = ".price span::text"
         currency_css = "div.price meta::attr(content)"
-        old_price_css = '.bb_art--pricecontent  del::text'
-        return {'price': response.css(price_css).get().split(" ", 1)[0],
-                'currency': response.css(currency_css).get(),
-                **({'old price': response.css(old_price_css).get().split(" ", 1)[0]}
-                   if response.css(old_price_css).get() else {})
-                }
+        previous_price_css = ".bb_art--pricecontent  del::text"
+        previous_price = response.css(previous_price_css).get()
+
+        pricing = {"price": response.css(price_css).get().split(" ", 1)[0],
+                   "currency": response.css(currency_css).get()}
+        if previous_price:
+            pricing.update({"previous price": previous_price.split(" ", 1)[0]})
+
+        return pricing
