@@ -20,21 +20,6 @@ class BeyondLimitsSpider(CrawlSpider):
     gender = ["Men", "Women"]
     default_gender = "Unisex-adults"
 
-    def get_product_sku(self, response):
-        skus = {}
-        color_css = ".bb_boxtxt--content ul > li:first-child::text"
-        size_css = "option:not(:first-child)::text"
-
-        common_sku = self.get_product_pricing(response)
-        common_sku["color"] = response.css(color_css).get().split(" ", 1)[1]
-
-        for size in response.css(size_css).getall():
-            sku = common_sku.copy()
-            sku["size"] = size
-            skus[f"{sku['color']}_{sku['size']}"] = sku
-
-        return skus
-
     def parse(self, response):
         product_css = ".bb_product a::attr(href)"
         product_url = response.css(product_css).getall()
@@ -115,3 +100,18 @@ class BeyondLimitsSpider(CrawlSpider):
         if previous_price:
             pricing["previous_price"] = previous_price.split(" ", 1)[0]
         return pricing
+
+    def get_product_sku(self, response):
+        skus = {}
+        color_css = ".bb_boxtxt--content ul > li:first-child::text"
+        size_css = "option:not(:first-child)::text"
+
+        common_sku = self.get_product_pricing(response)
+        common_sku["color"] = response.css(color_css).get().split(" ", 1)[1]
+
+        for size in response.css(size_css).getall():
+            sku = common_sku.copy()
+            sku["size"] = size
+            skus[f"{sku['color']}_{sku['size']}"] = sku
+
+        return skus
