@@ -8,7 +8,6 @@
       {{field}}
     </div>
   {% endfor %}
-
   <div class="form-group">
         <button class="btn btn-success" type="submit">Check Availability</button>
   </div> 
@@ -24,6 +23,7 @@
       <th>Capacity</th>
       <th>Category</th>
       <th>Floor</th>
+      <th>Action</th>
     </tr>
   {% endif %}
 
@@ -35,6 +35,11 @@
       <td>{{ room.capacity }}</td>
       <td>{{ room.category }}</td>
       <td>{{ room.floor }}</td>
+      <td>
+        <a href="{% url 'reservation-report' room.id checkin checkout%}">
+          <button class="btn btn-xs btn-primary">Reserve</button>    
+         </a>  
+      </td>
     </tr>
   {% endfor %}
 {% endblock view %}

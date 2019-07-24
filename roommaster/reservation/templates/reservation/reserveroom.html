@@ -1,3 +1,20 @@
 {% extends "reservation/base.html" %}
-{% block view %}
-{% endblock view %}
+{% block content %}
+<form action="{% url 'reservation-reservations' %}" method="POST">
+  {% csrf_token %}
+  {% for field in form %}
+    <div class="form-group">
+      <label>{{ field.label_tag }}</label><br>
+      {{field}}
+      {% if "customer" in field.html_name %}
+        <a href="/admin/reservation/customer/add" target="_blank">
+          <button class="btn btn-primary">Add</button>
+        </a>
+      {% endif %}
+    </div>
+  {% endfor %}
+  <div class="form-group">
+    <button class="btn btn-success" type="submit" onclick="return confirm('Are you sure to reserve room?');">Reserve Room</button>
+  </div>
+</form> 
+{% endblock content %}
