@@ -64,7 +64,7 @@ describe('Flight Prediction Graph: ', function() {
 	it("Should be able to uncheck EWR Airport and verify if results don't contain EWR airport", async function() {
 
 		await flightResults.clickEWRCheckbox();
-		expect(await flightResults.isResultsContainEWRAirport()).to.be.true;
+		expect(await flightResults.isResultsNotContainEWRAirport()).to.be.true;
 	});
 
 	it("Should be able to click Price for JetBlue Airways and verify if results contain jetblue Airways only", async function() {
@@ -80,7 +80,7 @@ describe('Flight Prediction Graph: ', function() {
 		expect(await flightResults.isResultsNotContainEconomyCabins()).to.be.true;
 	});
 
-	it("Should be able click reset link on cabins and verify if result contain economy cabins", async function() {
+	it("Should be able to click reset link on cabins and verify if results contain economy cabins", async function() {
 
 		await flightResults.clickResetCabinLink();
 		expect(await flightResults.isResultsNotContainEconomyCabins()).to.be.false;

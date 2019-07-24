@@ -8,7 +8,7 @@ export class flightResultsPage {
 	kayakCommonPage = new commonPage();
 	helper = new kayakHelper();
 
-	kayakUrl = "https://www.kayak.com/flights/NYC-LAX/2019-08-18/2019-08-25"
+	kayakUrl = "https://www.kayak.com/flights/NYC-LAX/2019-08-18/2019-08-25";
 	cheapestPrice: ElementFinder = element(by.css("a[id$='price_aTab']"));
 	flightCount: ElementFinder = element(by.css("div[id$=resultsCount]"));
 	flightCountLink: ElementFinder = element(by.css("div[id$=resultsCount] .showAll"));
@@ -123,7 +123,6 @@ export class flightResultsPage {
 		let bookingExpand = await this.bookingProvidersTitle.getAttribute("aria-expanded");
 		if(bookingExpand === "false") {
 			await this.bookingProvidersTitle.click();
-	
 		}
 	}
 
@@ -132,7 +131,7 @@ export class flightResultsPage {
 		return this.airlinesFilter.then(async function(airlines) {
 			for(let airline of airlines) {
 				let airlineText: string = await airline.element(by.css("label[id$=check-label]")).getText();
-				airlineText = airlineText.trim()
+				airlineText = airlineText.trim();
 				if(airlineText.indexOf("JetBlue") !== -1) {
 					await airline.element(by.css("button[id$=-price")).click();
 				}
@@ -146,7 +145,7 @@ export class flightResultsPage {
 		return this.qualityFilter.then(async function(flights) {
 			for(let flight of flights) {
 				let flightText: string = await flight.element(by.css("label[id$=check-label]")).getText();
-				flightText = flightText.trim()
+				flightText = flightText.trim();
 				if(flightText.indexOf("longer flights") !== -1) {
 					await flight.element(by.css("div[id$=check-icon]")).click();
 				}
@@ -282,7 +281,7 @@ export class flightResultsPage {
 		});
 	}
 
-	async isResultsContainEWRAirport(): Promise<boolean> {
+	async isResultsNotContainEWRAirport(): Promise<boolean> {
 		await browser.sleep(3000);
 		return this.flightResults.then(async function(results) {
 			for(let result of results) {
