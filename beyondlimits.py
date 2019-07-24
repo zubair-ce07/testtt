@@ -9,45 +9,46 @@ class BeyondLimitsSpider(CrawlSpider):
     name = 'beyondlimitspider'
     allowed_domains = ['beyondlimits.com']
     start_urls = [
-        'https://www.beyondlimits.com/Sales/Men/#bb_artlist',
-        'https://www.beyondlimits.com/Sales/Women/'
+        'https://www.beyondlimits.com/Men/',
+        'https://www.beyondlimits.com/Women/'
     ]
     retailer = 'beyondlimits-uk'
     market = 'UK'
     language = 'en'
-    gender = ['Men', 'Women']
+    gender = ['Men', 'Women', 'Unisex-adults']
+    default_gender = 'Unisex-adults'
 
     def get_product_sku(self, response):
         skus = {}
         color_css = ".bb_boxtxt--content ul > li:first-child::text"
         size_css = "option:not(:first-child)::text"
 
-        price, currency = self.get_product_price(response)
+        price = self.get_product_price(response)
         common_sku = {
-            'price': price,
-            'currency': currency,
-            'color': response.css(color_css).get().split(" ", 1)[1]
+            'color': response.css(color_css).get().split(" ", 1)[1],
         }
+        common_sku.update(price)
         color = common_sku['color'].capitalize().replace(' ', '_')
-        product_size = response.css(size_css).getall()
+        product_sizes = response.css(size_css).getall()
 
-        for sizes in product_size:
-            common_attr = common_sku
-            common_attr['size'] = sizes
-            current_sku = {f"{color}_{sizes}": common_attr}
+        for size in product_sizes:
+            sku = common_sku.copy()
+            sku['size'] = size
+            current_sku = {f"{color}_{size}": sku}
             skus.update(current_sku)
+
         return skus
 
     def parse(self, response):
-        product_css = ".bb_product--imgwrap > a::attr(href)"
-        links = response.css(product_css).getall()
-        for link in links:
+        product_css = ".bb_product a::attr(href)"
+        product_url = response.css(product_css).getall()
+        for link in product_url:
             yield Request(link, callback=self.parse_item)
 
         pagination_css = "a.bb_pagination--item::attr(href)"
         next_page = response.css(pagination_css).getall()
         if next_page:
-            yield map(lambda page: Request(page, callback=self.parse), next_page)
+            yield Request(next_page[0], callback=self.parse)
 
     def parse_item(self, response):
         garment = BeyondLimitItem()
@@ -67,6 +68,7 @@ class BeyondLimitsSpider(CrawlSpider):
         garment["crawl_id"] = self.get_crawl_id()
         garment["market"] = self.market
         garment["retailer"] = self.retailer
+
         yield garment
 
     def get_product_name(self, response):
@@ -101,9 +103,14 @@ class BeyondLimitsSpider(CrawlSpider):
         return response.css(css).get()
 
     def get_gender(self, response):
-        return next(gender for gender in self.gender if gender in response.url)
+        return next(gender for gender in self.gender if gender in response.url) or self.default_gender
 
     def get_product_price(self, response):
         price_css = ".price span::text"
         currency_css = "div.price meta::attr(content)"
-        return response.css(price_css).get().split(" ", 1)[0], response.css(currency_css).get()
+        old_price_css = '.bb_art--pricecontent  del::text'
+        return {'price': response.css(price_css).get().split(" ", 1)[0],
+                'currency': response.css(currency_css).get(),
+                **({'old price': response.css(old_price_css).get().split(" ", 1)[0]}
+                   if response.css(old_price_css).get() else {})
+                }
