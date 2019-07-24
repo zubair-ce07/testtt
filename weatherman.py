@@ -91,30 +91,38 @@ class WeatherMan:
         lowest_temp_count = 0
         humidity_count = 0
 
-        with open(self.__path+'Murree_weather_'+year+'_' +
-                  month+'.txt') as csv_file:
-            csv_reader = csv.reader(csv_file, delimiter=',')
-            next(csv_reader)  # skipping titiles
-            for row in csv_reader:
-                # checkin if the filed is empty and then adding it to the
-                # averages for later use
-                if self.check_emptinesss(row[1]):
-                    highest_temp_average += int(row[1])
-                    highest_temp_count += 1
-                if self.check_emptinesss(row[3]):
-                    lowest_temp_average += int(row[3])
-                    lowest_temp_count += 1
-                if self.check_emptinesss(row[8]):
-                    average_humidity += int(row[8])
-                    humidity_count += 1
+        try:
+            with open(self.__path+'Murree_weather_'+year+'_' +
+                      month+'.txt') as csv_file:
+                csv_reader = csv.reader(csv_file, delimiter=',')
+                next(csv_reader)  # skipping titiles
+                for row in csv_reader:
+                    # checkin if the filed is empty and then adding it to the
+                    # averages for later use
+                    if self.check_emptinesss(row[1]):
+                        highest_temp_average += int(row[1])
+                        highest_temp_count += 1
+                    if self.check_emptinesss(row[3]):
+                        lowest_temp_average += int(row[3])
+                        lowest_temp_count += 1
+                    if self.check_emptinesss(row[8]):
+                        average_humidity += int(row[8])
+                        humidity_count += 1
 
-        # calculating average
-        highest_temp_average = highest_temp_average // highest_temp_count
-        lowest_temp_average = lowest_temp_average // lowest_temp_count
-        average_humidity = average_humidity // humidity_count
-        print('Highest Average: '+str(highest_temp_average)+'C')
-        print('Lowest Average: '+str(lowest_temp_average)+'C')
-        print('Average Humidity: '+str(average_humidity)+'%')
+            # calculating average
+            highest_temp_average = highest_temp_average // highest_temp_count
+            lowest_temp_average = lowest_temp_average // lowest_temp_count
+            average_humidity = average_humidity // humidity_count
+            print('Highest Average: '+str(highest_temp_average)+'C')
+            print('Lowest Average: '+str(lowest_temp_average)+'C')
+            print('Average Humidity: '+str(average_humidity)+'%')
+        except FileNotFoundError:
+            print("Data does not exsist for this date")
+
+    def split_date_into_date_year(date):
+        date = date.split('/')
+        year = date[0]
+        month = date[1]
 
     def highest_lowest_temprature_of_a_day(self, date):
         # splitting date and year form the given date
@@ -124,23 +132,26 @@ class WeatherMan:
         print(self.format_date(month, year))
         month = months[int(month)-1]  # months in words from months array
 
-        with open(self.__path+'Murree_weather_'+year+'_' +
-                  month+'.txt') as csv_file:
-            csv_reader = csv.reader(csv_file, delimiter=',')
-            next(csv_reader)  # skipping titiles
-            day = 1
-            for row in csv_reader:
-                if self.check_emptinesss(row[1]):
-                        # printing bar charts
-                    print(day, end=' ')
-                    for _ in range(int(row[1])):
-                        print(Fore.RED + '+', end='')
-                    print(Fore.WHITE+str(' '+row[1]+'C'))
-                    print(day, end=' ')
-                    for _ in range(int(row[3])):
-                        print(Fore.BLUE + '+', end='')
-                    print(Fore.WHITE+str(' '+row[1]+'C'))
-                    day += 1
+        try:
+            with open(self.__path+'Murree_weather_'+year+'_' +
+                      month+'.txt') as csv_file:
+                csv_reader = csv.reader(csv_file, delimiter=',')
+                next(csv_reader)  # skipping titiles
+                day = 1
+                for row in csv_reader:
+                    if self.check_emptinesss(row[1]):
+                            # printing bar charts
+                        print(day, end=' ')
+                        for _ in range(int(row[1])):
+                            print(Fore.RED + '+', end='')
+                        print(Fore.WHITE+str(' '+row[1]+'C'))
+                        print(day, end=' ')
+                        for _ in range(int(row[3])):
+                            print(Fore.BLUE + '+', end='')
+                        print(Fore.WHITE+str(' '+row[1]+'C'))
+                        day += 1
+        except FileNotFoundError:
+            print('Data does not exsist for this date')
 
     def highest_lowest_temprature_of_a_day2(self, date):
         # splitting date and year form the given date
@@ -150,26 +161,32 @@ class WeatherMan:
         print(self.format_date(month, year))
         month = months[int(month)-1]  # months in words from months array
 
-        with open(self.__path+'Murree_weather_'+year+'_' +
-                  month+'.txt') as csv_file:
-            csv_reader = csv.reader(csv_file, delimiter=',')
-            next(csv_reader)  # skipping titiles
-            day = 1
-            for row in csv_reader:
-                if self.check_emptinesss(row[1]):
-                    print(day, end=' ')
-                    for _ in range(int(row[3])):
-                        print(Fore.BLUE + '+', end='')
-                    for _ in range(int(row[1])):
-                        print(Fore.RED + '+', end='')
-                    print(Fore.WHITE+str(' '+row[1]+'C- '), end='')
-                    print(''+Fore.WHITE+str(row[1]+'C'))
-                    day += 1
+        try:
+            with open(self.__path+'Murree_weather_'+year+'_' +
+                      month+'.txt') as csv_file:
+                csv_reader = csv.reader(csv_file, delimiter=',')
+                next(csv_reader)  # skipping titiles
+                day = 1
+                for row in csv_reader:
+                    if self.check_emptinesss(row[1]):
+                        print(day, end=' ')
+                        for _ in range(int(row[3])):
+                            print(Fore.BLUE + '+', end='')
+                        for _ in range(int(row[1])):
+                            print(Fore.RED + '+', end='')
+                        print(Fore.WHITE+str(' '+row[1]+'C- '), end='')
+                        print(''+Fore.WHITE+str(row[1]+'C'))
+                        day += 1
+        except FileNotFoundError:
+            print("Data does not exsist for this date")
 
 
-report_type = sys.argv[1]
-date = sys.argv[2]
-path = sys.argv[3]
+try:
+    report_type = sys.argv[1]
+    date = sys.argv[2]
+    path = sys.argv[3]
+except:
+    print('File not executed properly')
 
 months = [
     'Jan', 'Feb', 'Mar', 'Apr',
@@ -180,10 +197,18 @@ months = [
 w = WeatherMan(path)
 
 if(report_type == '-e'):
-    w.highest_record_in_a_year(date)
-if(report_type == '-a'):
-    w.average_record_in_a_month(date)
-if(report_type == '-c'):
-    w.highest_lowest_temprature_of_a_day(date)
-if(report_type == '-d'):
-    w.highest_lowest_temprature_of_a_day2(date)
+    try:
+        int(date)
+        w.highest_record_in_a_year(date)
+    except ValueError:
+        print('Enter an intiger for year')
+try:
+    date.split('/')
+    if(report_type == '-a'):
+        w.average_record_in_a_month(date)
+    if(report_type == '-c'):
+        w.highest_lowest_temprature_of_a_day(date)
+    if(report_type == '-d'):
+        w.highest_lowest_temprature_of_a_day2(date)
+except:
+    print('Enter a valid intiger value and seperator for year and month')
