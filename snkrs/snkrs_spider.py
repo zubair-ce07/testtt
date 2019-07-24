@@ -6,7 +6,7 @@ from snkrs.items import SnkrsItem
 class SnkrsSpider(Spider):
     lang = 'en'
     name = 'snkrsspider'
-    possible_genders = ['Men', 'Women', 'Girl', 'Boy', 'Adults', 'Unisex Kids', 'Unisex Adults']
+    possible_genders = ['men', 'women', 'girls', 'boys', 'unisex-kids', 'unisex-adults']
     start_urls = ['https://www.snkrs.com/en/']
 
     def parse(self, response):
@@ -93,23 +93,18 @@ class SnkrsSpider(Spider):
         return [c.replace('-', '').strip() for c in response.css(css).extract()] or []
 
     def parse_gender(self, response):
-        name = self.parse_name(response)
-        categories = self.parse_category(response)
-        descriptions = self.parse_description(response)
+        gender_candidates = [*self.parse_name(response).split(' '),
+                             *[c for cs in self.parse_category(response) for c in cs.split(' ')],
+                             *[d for ds in self.parse_description(response) for d in ds.split(' ')]]
 
-        for gender in self.possible_genders:
-            output_gender = [gender] if gender in name else \
-                [gender for category in categories if gender in category.split(' ')] or \
-                [gender for description in descriptions if gender in description.split(' ')]
+        gender_candidates = [g.lower() for g in gender_candidates]
+        output_gender = [gender for gender in self.possible_genders if gender in gender_candidates]
 
-            if output_gender:
-                return output_gender[0].lower()
-
-        return 'unisex adults'
+        return output_gender[0] if output_gender else 'unisex-adults'
 
     def parse_skus(self, response):
         span_css = '.attribute_list li span.units_container::text'
-        inner_span_css = '.attribute_list ul li span.units_container span:first-child::text'
+        inner_span_css = '.attribute_list ul li spanclear.units_container span:first-child::text'
         sizes_s = [size.strip() for size in response.css(inner_span_css).extract() or
                    response.css(span_css).extract()]
 
