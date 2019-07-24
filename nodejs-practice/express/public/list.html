@@ -1,0 +1,80 @@
+<html>
+<head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
+
+    <style>
+        .center {
+            width:fit-content;
+            padding: 40px;
+            border: 3px dotted rgb(55, 0, 128); 
+            margin: 1% auto;
+        }
+        
+        .box {
+            width:fit-content;
+            height: fit-content;
+            display: table-cell; 
+            background-color: rgb(166, 233, 233);
+            border: 2px dashed white;
+            margin: 5px;
+            padding: 5px 30px;
+        }
+
+        .t_ {
+            background-color: brown;
+            width: 30%;
+            display: table;
+            margin: 0 auto;
+        }
+
+        .t_row {
+            display: table-row;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <a class="navbar-brand" href="/" style = "color:green"> Home </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class='jumbotron center m-5'>
+        <button class = 'btn-add-row btn btn-default btn-lg btn-block'> Add Row </button>
+        <button class = 'btn-add-col btn btn-default btn-lg btn-block'> Add Column </button>
+    </div>
+
+    <div class = 't_'>
+        <div class = 't_row'>
+            <div class = 'box centered'> <h1> 0 </h1> </div>
+        </div>
+    </div>
+    
+
+    <script>
+        $(document).ready(function() {
+            let number = 0;
+            let table = $('.t_')
+            let row = $('.t_row')
+            let box = $('.box')
+            $('.btn-add-row').click(function() {
+                table.append( `<div class = 't_row t_row${++number}'>
+                                   <div class = 'box centered'> <h1> ${number} </h1> </div>
+                               </div>` );
+                console.log(`t_row${number}`)
+                row = $(`.t_row${number}`)
+            })
+
+            $('.btn-add-col').click(function() {
+                row.append( `<div class = 'box box${++number} centered '> <h1> ${number} </h1> </div>` );
+                console.log(`box${number}`)
+                box = $(`.box${number}`)
+            })
+        })
+    </script>
+</body>
+</html>
