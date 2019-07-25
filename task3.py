@@ -21,7 +21,6 @@ def clean(raw_strs):
     if isinstance(raw_strs, list):
         cleaned_strs = [re.sub('\s+', ' ', st).strip() for st in raw_strs]
         return [st for st in cleaned_strs if st]
-
     elif isinstance(raw_strs, str):
         return re.sub('\s+', ' ', raw_strs).strip()
 
@@ -59,9 +58,42 @@ class AsicsSpider(scrapy.Spider):
         item['care'] = []
         item['brand'] = self.product_brand(response)
         item['skus'] = {}
-        item['requests'] = self.product_colors(response)
+        item['requests'] = self.colour_requests(response)
 
+        return self.next_request_or_item(item)
+
+    def product_skus(self, response):
+        item = response.meta['item']
+        common_sku = {
+            'color': response.css('[itemprop="color"] ::text').get(),
+            'previous_price': response.css('.pull-right del ::text').getall()
+        }
+
+        for sku_sel in response.css('.tab:not(.hide-tab) > .size-box-select-container #sizes-options > .SizeOption'):
+            key = sku_sel.css('::attr(data-value)').get()
+            sku = {
+                'out_of_stock': self.stock_status(sku_sel),
+                'currency': sku_sel.css('[itemprop="priceCurrency"]::attr(content)').get(),
+                'price': sku_sel.css('[itemprop="price"]::attr(content)').get(),
+                'size': clean(sku_sel.css('a.SizeOption ::text').get()),
+            }
+            sku.update(common_sku)
+            item['skus'].update({key: sku})
         yield from self.next_request_or_item(item)
+
+    def next_request_or_item(self, item):
+        if item['requests']:
+            request = item['requests'].pop()
+            request.meta.update({'item': item})
+            yield request
+            return
+        item.pop('requests', None)
+        yield item
+
+    def stock_status(self, sku_sel):
+        if "disabled" in sku_sel.css('::attr(class)').get():
+            return True
+        return False
 
     def product_id(self, response):
         return response.css('[itemprop="productID"] ::attr(content)').get()
@@ -70,10 +102,10 @@ class AsicsSpider(scrapy.Spider):
         return response.css('.single-prod-title ::text').get()
 
     def product_gender(self, response):
-        return response.css('script[type="text/javascript"]').re('\"gender\":\"(.+?)\"')[0]
+        return response.css('script:contains("gender")').re('\"gender\":\"(.+?)\"')[0]
 
     def product_category(self, response):
-        return response.css('.breadcrumb ::text').getall()[1]
+        return response.css('.breadcrumb ::text').getall()[1].split(' ')
 
     def product_url(self, response):
         return response.url
@@ -86,54 +118,10 @@ class AsicsSpider(scrapy.Spider):
         return response.css('.owl-carousel ::attr(data-big)').getall()
 
     def product_brand(self, response):
-        return response.css('html ::attr(data-brand)').get()
+        return response.css('::attr(data-brand)').get()
 
-    def product_colors(self, response):
+    def colour_requests(self, response):
         color_urls = response.css('.colorVariant ::attr(href)').getall()
         return [response.follow(color_url, callback=self.product_skus)
                 for color_url in color_urls]
-
-    def product_skus(self, response):
-
-        item = response.meta['item']
-        prev_price = response.css('.pull-right del ::text').getall()
-        color = response.css('[itemprop="color"] ::text').get()
-        common_sku = {
-            'color': color,
-            'previous_price': prev_price
-        }
-
-        for sku_selector in response.css('#sizes-options .SizeOption.inStock'):
-            key = sku_selector.css('::attr(data-value)').get()
-
-            if self.check_key(key, item['skus']):
-                sku = {
-                    'currency': sku_selector.css('[itemprop="priceCurrency"]::attr(content)').get(),
-                    'price': sku_selector.css('[itemprop="price"]::attr(content)').get(),
-                    'size': clean(sku_selector.css('a.SizeOption ::text').get()),
-                }
-                sku.update(common_sku)
-                item['skus'].update({key: sku})
-
-        yield from self.next_request_or_item(item)
-
-    def check_key(self, key, dict):
-        sku_dic_keys = list(map(lambda x: x.split('.')[2:], list(dict.keys())))
-        key = key.split('.')[2:]
-
-        for sku_key in sku_dic_keys:
-            if sku_key == key:
-                return False
-        return True
-
-    def next_request_or_item(self, item):
-
-        if item['requests']:
-            request = item['requests'].pop()
-            request.meta.update({'item': item})
-            yield request
-            return
-
-        item.pop('requests', None)
-        yield item
 
