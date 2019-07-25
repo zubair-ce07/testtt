@@ -50,52 +50,42 @@ arg_parser.add_argument(
 
 arguments = arg_parser.parse_args()
 
-parser = WeatherParser()
-
-readings = []
-file_paths = glob.glob(arguments.readings_dir + "/*")
-
-for file_path in file_paths:
-    readings = readings + parser.parse_weather_file(file_path)
-
 analyzer = WeatherAnalyzer()
 reporter = WeatherReporter()
 
 
-def get_yearly_reports(readings, year):
+def get_yearly_reports(readings_dir, year):
     """Report the hottest, coldest and the most humid day in a year"""
-    hottest_day = analyzer.get_maximum_temperature_day(readings, year)
-    coldest_day = analyzer.get_minimum_temperature_day(readings, year)
-    most_humid_day = analyzer.get_most_humidity_day(readings, year)
+    readings = WeatherParser.parse_weather_files(readings_dir, year)
+    hottest_day = analyzer.get_maximum_temperature_day(readings)
+    coldest_day = analyzer.get_minimum_temperature_day(readings)
+    most_humid_day = analyzer.get_most_humidity_day(readings)
     reporter.report_year_extremes(hottest_day, coldest_day, most_humid_day)
 
 
-def get_monthly_reports(readings, year, month):
+def get_monthly_reports(readings_dir, year, month):
     """Report the average highest temperature, average lowest temperature and average mean humidity for a month"""
-    avg_hottest_temperature = analyzer.get_avg_maximum_temperature(
-        readings, year, month)
-    avg_coldest_temperature = analyzer.get_avg_minimum_temperature(
-        readings, year, month)
-    avg_humidity = analyzer.get_avg_mean_humidity(readings, year, month)
+    readings = WeatherParser.parse_weather_files(readings_dir, year, month)
+    avg_hottest_temperature = analyzer.get_avg_maximum_temperature(readings)
+    avg_coldest_temperature = analyzer.get_avg_minimum_temperature(readings)
+    avg_humidity = analyzer.get_avg_mean_humidity(readings)
     reporter.report_month_averages(
         avg_hottest_temperature, avg_coldest_temperature, avg_humidity)
 
 
-def get_monthly_bar_charts(readings, year, month):
+def get_monthly_bar_charts(readings_dir, year, month):
     """Print bar charts for the highest and lowest temperatures in a month"""
-    max_temperatures = analyzer.get_maximum_temperatures(
-        readings, year, month)
-    min_temperatures = analyzer.get_minimum_temperatures(
-        readings, year, month)
+    readings = WeatherParser.parse_weather_files(readings_dir, year, month)
+    max_temperatures = analyzer.get_maximum_temperatures(readings)
+    min_temperatures = analyzer.get_minimum_temperatures(readings)
     reporter.report_month_temperatures(max_temperatures, min_temperatures)
 
 
-def get_monthly_single_bar_chart(readings, year, month):
+def get_monthly_single_bar_chart(readings_dir, year, month):
     """Print single lined bar charts for the highest and lowest temperatures in a month"""
-    max_temperatures = analyzer.get_maximum_temperatures(
-        readings, year, month)
-    min_temperatures = analyzer.get_minimum_temperatures(
-        readings, year, month)
+    readings = WeatherParser.parse_weather_files(readings_dir, year, month)
+    max_temperatures = analyzer.get_maximum_temperatures(readings)
+    min_temperatures = analyzer.get_minimum_temperatures(readings)
     reporter.report_month_temperatures(
         max_temperatures, min_temperatures, True)
 
@@ -104,13 +94,16 @@ if __name__ == "__main__":
     """Parse the arguments passed to the program"""
 
     if arguments.e:
-        get_yearly_reports(readings, arguments.e)
+        get_yearly_reports(arguments.readings_dir, arguments.e)
 
     if arguments.a:
-        get_monthly_reports(readings, arguments.a[0], arguments.a[1])
+        get_monthly_reports(arguments.readings_dir,
+                            arguments.a[0], arguments.a[1])
 
     if arguments.c:
-        get_monthly_bar_charts(readings, arguments.c[0], arguments.c[1])
+        get_monthly_bar_charts(arguments.readings_dir,
+                               arguments.c[0], arguments.c[1])
 
     if arguments.o:
-        get_monthly_single_bar_chart(readings, arguments.o[0], arguments.o[1])
+        get_monthly_single_bar_chart(
+            arguments.readings_dir, arguments.o[0], arguments.o[1])
