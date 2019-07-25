@@ -56,3 +56,6 @@ class Comment(models.Model):
     comment_text = models.TextField()
     user = models.ForeignKey(User, related_name="user_comments", on_delete=models.DO_NOTHING)
     publish_time = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.comment_text
