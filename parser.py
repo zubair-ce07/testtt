@@ -10,7 +10,7 @@ class WeatherParser:
     @staticmethod
     def parse_weather_files(readings_dir, year, month=0):
         """Returns WeatherReading objects after parsing the weather reading CSV file"""
-        file_paths = "{}/*{}*{}*".format(readings_dir, year, calendar.month_abbr[month])
+        file_paths = f"{readings_dir}/*{year}*{calendar.month_abbr[month]}*"
         file_paths = glob.glob(file_paths)
 
         objects = []
