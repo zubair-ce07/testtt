@@ -25,7 +25,6 @@ class WeatherCalculations:
         for row in weather_records:
             if (row.date.month == month if month else True) and row.date.year == year:
                 required_records.append(row)
-
         return required_records
 
     @staticmethod
@@ -37,7 +36,7 @@ class WeatherCalculations:
 
     @staticmethod
     def get_max_min_avg(required_records):
-        max_avg_temp = max(required_records, key=lambda weatherdata: weatherdata.mean_temperature)
-        min_avg_temp = min(required_records, key=lambda weatherdata: weatherdata.mean_temperature)
+        max_avg_temp = max(required_records, key=lambda weatherdata: weatherdata.mean_temp)
+        min_avg_temp = min(required_records, key=lambda weatherdata: weatherdata.mean_temp)
         mean_humidity = sum(record.mean_humidity for record in required_records) / len(required_records)
         return[max_avg_temp, min_avg_temp, mean_humidity]

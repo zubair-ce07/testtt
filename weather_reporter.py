@@ -16,8 +16,8 @@ class ReportGenerator:
 
     @staticmethod
     def print_monthly(data):
-        print(f"Highest Average: {data.max_avg_temp.mean_temperature}C")
-        print(f"Lowest Average: {data.min_avg_temp.mean_temperature}C")
+        print(f"Highest Average: {data.max_avg_temp.mean_temp}C")
+        print(f"Lowest Average: {data.min_avg_temp.mean_temp}C")
         print(f"Average Mean Humidity: {data.mean_humidity:.0f}%")
 
     @staticmethod
