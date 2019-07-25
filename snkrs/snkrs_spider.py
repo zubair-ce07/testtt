@@ -8,11 +8,11 @@ class SnkrsSpider(Spider):
     name = 'snkrsspider'
     retailer = 'snkrs'
     genders = [{'women': ['woman', 'women']},
-               {'men': ['guy', 'guys', 'man', 'men']},
+               {'men': ['guy', 'guys', 'jordan', 'man', 'men']},
                {'girls': ['girls']},
                {'boys': ['boys']},
-               {'unisex-kids': ['kids']},
-               {'unisex-adults': ['adults']}]
+               {'unisex-kids': ['kids', 'toy']},
+               {'unisex-adults': ['adults', 'dynamic']}]
     start_urls = ['https://www.snkrs.com/en/']
 
     def parse(self, response):
