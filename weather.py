@@ -5,7 +5,11 @@ class WeatherReading:
     """Structure to store weather readings data"""
 
     def __init__(self, readings_row):
-        self.date = datetime.strptime(readings_row["PKT"], '%Y-%m-%d')
+        if "PKT" in readings_row:
+            self.date = datetime.strptime(readings_row["PKT"], '%Y-%m-%d')
+        elif "PSKT" in readings_row:
+            self.date = datetime.strptime(readings_row["PSKT"], '%Y-%m-%d')
+
         self.max_temperature = int(readings_row["Max TemperatureC"])
         self.mean_temperature = int(readings_row["Mean TemperatureC"])
         self.min_temperature = int(readings_row["Min TemperatureC"])

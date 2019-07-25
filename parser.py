@@ -21,10 +21,12 @@ class WeatherParser:
                 weather_reading_rows = csv.DictReader(weather_file)
 
                 for row in weather_reading_rows:
-                        try:
-                            # if row['PKT'][0:4] != "<!--":  # check if row is valid
-                                raw_weather_readings_object = WeatherReading(row)
-                                objects.append(raw_weather_readings_object)
-                        except KeyError:
+                    if "PKT" in row:
+                        if row['PKT'][0:4] == "<!--":  # check if row is not a comment
                             continue
+                    if "PSKT" in row:
+                        if row['PSKT'][0:4] == "<!--":  # check if row is not a comment
+                            continue
+                    raw_weather_readings_object = WeatherReading(row)
+                    objects.append(raw_weather_readings_object)
         return objects
