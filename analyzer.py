@@ -1,14 +1,14 @@
-class WeatherAnalyzer():
+class WeatherAnalyzer:
     """Extracts aggregate information from WeatherReading objects"""
 
-    def __average(self, values):
+    def _average(self, values):
         """Returns average of values in an array"""
         total = sum(values)
         count = len(values)
-        try:
-            return round(total/count)
-        except ZeroDivisionError:
+        if count == 0:
             return 0
+        else:
+            return round(total/count)
 
     def get_maximum_temperature_day(self, readings):
         """Returns WeatherReading object with the maximum temperature"""
@@ -31,19 +31,19 @@ class WeatherAnalyzer():
     def get_avg_maximum_temperature(self, readings):
         """Returns average maximum temperature for a month"""
         readings = [w for w in readings if w.max_temperature != None]
-        average_max_temperature = self.__average([w.max_temperature for w in readings])
+        average_max_temperature = self._average([w.max_temperature for w in readings])
         return average_max_temperature
 
     def get_avg_minimum_temperature(self, readings):
         """Returns average minimum temperature for a month"""
         readings = [w for w in readings if w.min_temperature != None]
-        average_min_temperature = self.__average([w.min_temperature for w in readings])
+        average_min_temperature = self._average([w.min_temperature for w in readings])
         return average_min_temperature
 
     def get_avg_mean_humidity(self, readings):
         """Returns average mean humidity for a month"""
         readings = [w for w in readings if w.min_temperature != None]
-        avg_mean_humidity = self.__average([w.mean_humidity for w in readings])
+        avg_mean_humidity = self._average([w.mean_humidity for w in readings])
         return avg_mean_humidity
 
     def get_maximum_temperatures(self, readings):
