@@ -1,0 +1,111 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Room Master - Report</title>
+    <!-- Bootstrap Styles-->
+    <link href="assets/css/bootstrap.css" rel="stylesheet">
+    <!-- FontAwesome Styles-->
+    <link href="assets/css/font-awesome.css" rel="stylesheet">
+    <!-- Custom Styles-->
+    <link href="assets/css/custom-styles.css" rel="stylesheet">
+    <!-- Google Fonts-->
+    <link href="http://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  
+  <style type="text/css">
+  .header {
+    border-bottom: 5px solid #000;  
+    width: 90%;
+    margin: 0 auto;
+  }
+  .header h1 {
+    position: relative;
+    font-family:Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+  }
+  .header img {
+    width: 100px;
+    height: 100px;
+    float: left;
+  }
+  body {
+    margin: 5px;
+    border: 5px double #666;
+    font-family:Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+    font-size: large
+  }
+  
+  </style>
+</head>
+  
+<body>
+  <div class="header" align="center"> 
+    <img src="{% static 'reservation/logo.png' %}">
+    <h1><b>ROOM MASTER MANAGEMENT SYSTEM</b></h1>
+    <h1>REPORT: {{ date }}</h1>
+  </div>
+  <div align="center">
+    <table class="table table-bordered">
+      <tbody>
+        <tr>
+          <td>Total Reservations Today: <b>{{ daily_reservations }}</b></td>
+          <td>Total Monthly Reservations: <b>{{ monthly_reservations }}</b></td>
+        </tr>
+
+        <tr>
+          <td>Rooms Available Today: <b> {{ available_rooms }} </b>
+            <table>
+              <thead>
+                <tr>
+                  <th>Room#</th>
+                  <th>Min Rent</th>
+                  <th>Max Rent</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for room in rooms %}
+                  <tr>
+                    <td>{{ room.room_no }}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+                    <td>{{ room.min_rent }}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+                    <td>{{ room.max_rent }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </td>
+          <td>Total employees: <b>{{ total_employees }}</b>
+            <table>
+              <thead>
+                <tr>
+                  <th>Designation</th>
+                  <th>Employees</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for employee in employees %}
+                  <tr>
+                    <td>{{ employee.designation }}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+                    <td>{{ employee.dcount }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </td>
+        </tr>
+
+        <tr>
+          <td><b><u>Today's Income</u></b><br>Total income: {{ today_income }}</td>
+          <td><b><u>Months's Income</u></b><br>Total income: {{ monthly_income }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>

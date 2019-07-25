@@ -44,6 +44,9 @@ class Reservation(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
     room = models.ForeignKey(Room, on_delete=models.CASCADE)
 
+    def __str__(self):
+        return str(self.pk)
+
 
 class Employee(models.Model):
     name = models.CharField(max_length=60)

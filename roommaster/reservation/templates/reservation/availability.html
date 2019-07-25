@@ -36,9 +36,9 @@
       <td>{{ room.category }}</td>
       <td>{{ room.floor }}</td>
       <td>
-        <a href="{% url 'reservation-report' room.id checkin checkout%}">
+        <a href="{% url 'reservation-reserveroom' room.id checkin checkout%}">
           <button class="btn btn-xs btn-primary">Reserve</button>    
-         </a>  
+        </a>  
       </td>
     </tr>
   {% endfor %}
