@@ -5,10 +5,10 @@ class WeatherAnalyzer():
         """Returns average of values in an array"""
         total = sum(values)
         count = len(values)
-        if count == 0:
-            return 0
-        else:
+        try:
             return round(total/count)
+        except ZeroDivisionError:
+            return 0
 
     def get_maximum_temperature_day(self, readings):
         """Returns WeatherReading object with the maximum temperature"""

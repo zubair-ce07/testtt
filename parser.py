@@ -8,8 +8,7 @@ from weather import WeatherReading
 class WeatherParser:
     """Parses weather readings from CSV file to WeatherReading objects"""
 
-    @staticmethod
-    def parse_weather_files(readings_dir, year, month=0):
+    def parse_weather_files(self, readings_dir, year, month=0):
         """Returns WeatherReading objects after parsing the weather reading CSV file"""
         file_paths = f"{readings_dir}/*{year}*{calendar.month_abbr[month]}*"
         file_paths = glob.glob(file_paths)
