@@ -4,7 +4,7 @@ import argparse
 
 from data_reader import *
 from reports import *
-from info_extraction import *
+from result_calculator import *
 
 
 def dir_path(string):
@@ -16,7 +16,10 @@ def dir_path(string):
 
 def valid_year(s):
     try:
-        datetime.strptime(s, "%Y")
+        date = datetime.strptime(s, "%Y")
+        if date.year < 2004 or date.year > 2016:
+            msg = "Valid years: 2004 - 2016"
+            raise argparse.ArgumentTypeError(msg)
         return s
     except ValueError:
         msg = "Invalid year: '{0}'.".format(s)
@@ -24,7 +27,12 @@ def valid_year(s):
 
 def valid_date_format(s):
     try:
-        datetime.strptime(s,"%Y/%m")
+        date_entered = datetime.strptime(s,"%Y/%m")
+        starting_date = datetime.strptime("2004/2","%Y/%m")
+        ending_date = datetime.strptime("2016/10","%Y/%m")
+        if not (starting_date < date_entered and date_entered < ending_date):
+            msg = "Valid date: 2004/3 - 2016/9"
+            raise argparse.ArgumentTypeError(msg)
         return s
     except Exception as e:
         msg = "invalid date/format: '{0}'.".format(s) + " Plase use yyyy/mm"
@@ -33,14 +41,14 @@ def valid_date_format(s):
 def setup_arguments():
 
     parser = argparse.ArgumentParser(description='Weatherman, Weather data analyser tool.')
-    parser.add_argument('data directory', type=dir_path,
+    parser.add_argument('data_directory', type=dir_path,
                         help='Weather data directory path')
     parser.add_argument('-e', type=valid_year)
     parser.add_argument('-a', type=valid_date_format)
     parser.add_argument('-c', type=valid_date_format)
 
 
-    return vars(parser.parse_args())
+    return (parser.parse_args())
 
 def perform_monthly_operations(command, command_argument, reader, reports, processor):
     given_year = command_argument.split("/")[0]
@@ -57,14 +65,13 @@ def perform_monthly_operations(command, command_argument, reader, reports, proce
 
 def main():
     args = setup_arguments()
-    path = args['data directory']
+    path = args.data_directory
     reader = WeathermanFileReader(path)
     reports = WeathermanReportPrinter()
-    processor = FactsCalculation()
+    processor = ResultCalculator()
 
-    if (args['e']):
-        command = 'e'
-        given_year = str(args['e'])
+    if (args.e):
+        given_year = args.e
         yearly_records = []
         for month_number in range(1,13):
             monthly_records = reader.get_monthly_data(given_year = given_year,month_number = month_number)
@@ -74,11 +81,11 @@ def main():
         processor.yearly_records = yearly_records
         reports.print_yearly_report(processor.get_yearly_temperature_peaks())
 
-    if (args['a']):
-        perform_monthly_operations('a', str(args['a']), reader, reports, processor)
+    if (args.a):
+        perform_monthly_operations('a', args.a, reader, reports, processor)
 
-    if (args['c']):
-        perform_monthly_operations('c', str(args['c']), reader, reports, processor)
+    if (args.c):
+        perform_monthly_operations('c', args.c, reader, reports, processor)
 
 if __name__ == "__main__":
 

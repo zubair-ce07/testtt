@@ -1,10 +1,12 @@
 #!/usr/bin/python3
 import calendar
 from datetime import datetime
-from data_holder import *
+from collections import namedtuple
+from weather_records import *
+from weather_results import *
 
 
-class FactsCalculation:
+class ResultCalculator:
     def __init__(self, monthly_records=[], yearly_records=[]):
         self.monthly_records = monthly_records
         self.yearly_records = yearly_records
@@ -17,11 +19,11 @@ class FactsCalculation:
             result.max_humidity = self.yearly_records[0][0]
             for monthly_record in self.yearly_records:
                 for daily_record in monthly_record:
-                    if hasattr(daily_record,'max_temprature') and result.max_temprature.max_temprature < daily_record.max_temprature:
+                    if result.max_temprature.max_temprature < daily_record.max_temprature:
                         result.max_temprature = daily_record
-                    if hasattr(daily_record,'min_temprature') and result.min_temprature.min_temprature > daily_record.min_temprature:
+                    if result.min_temprature.min_temprature > daily_record.min_temprature:
                         result.min_temprature = daily_record
-                    if hasattr(daily_record,'max_humidity') and result.max_humidity.max_humidity < daily_record.max_humidity:
+                    if result.max_humidity.max_humidity < daily_record.max_humidity:
                         result.max_humidity = daily_record
             return result
 
@@ -33,15 +35,11 @@ class FactsCalculation:
             result.mean_humidity_avg = 0
 
             for daily_record in self.monthly_records:
-                if hasattr(daily_record,'max_temprature'):
-                    result.max_avg_temperature += daily_record.max_temprature
-                if hasattr(daily_record,'min_temprature'):
-                    result.min_avg_temperature += daily_record.min_temprature
-                if hasattr(daily_record,'mean_humidity'):
-                    result.mean_humidity_avg += daily_record.mean_humidity
-            if (len(self.monthly_records) > 0):
-                row_count = len(self.monthly_records)
-                result.max_avg_temperature /= row_count
-                result.min_avg_temperature /= row_count
-                result.mean_humidity_avg /= row_count
+                result.max_avg_temperature += daily_record.max_temprature
+                result.min_avg_temperature += daily_record.min_temprature
+                result.mean_humidity_avg += daily_record.mean_humidity
+            row_count = len(self.monthly_records)
+            result.max_avg_temperature /= row_count
+            result.min_avg_temperature /= row_count
+            result.mean_humidity_avg /= row_count
             return result
