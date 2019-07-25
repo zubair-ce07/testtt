@@ -17,16 +17,13 @@ class WeatherParser:
 
         for file_path in file_paths:
             with open(file_path, 'r') as weather_file:
-                next(weather_file) # discard empty line at top
+                next(weather_file)  # discard empty line at top
                 weather_reading_rows = csv.DictReader(weather_file)
 
                 for row in weather_reading_rows:
-                    if "PKT" in row:
-                        if row['PKT'][0:4] == "<!--":  # check if row is not a comment
-                            continue
-                    if "PSKT" in row:
-                        if row['PSKT'][0:4] == "<!--":  # check if row is not a comment
-                            continue
+                    date = row.get('PKT', row.get('PKST'))
+                    if date[0:4] == "<!--":  # check if row is not a comment
+                        continue
                     raw_weather_readings_object = WeatherReading(row)
                     objects.append(raw_weather_readings_object)
         return objects
