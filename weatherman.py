@@ -12,7 +12,7 @@ def is_year(year):
     try:
         year = int(year)
     except ValueError:
-        message = "{} is not a valid year.".format(year)
+        message = f"{year} is not a valid year."
         raise argparse.ArgumentTypeError(message)
     return year
 
@@ -29,7 +29,7 @@ def is_month(month):
         if month < 1 or month > 12:
             raise ValueError
     except ValueError:
-        message = "{} is not a valid month.".format(month)
+        message = f"{month} is not a valid month."
         raise argparse.ArgumentTypeError(message)
     return [year, month]
 

@@ -1,5 +1,6 @@
 import calendar
 
+
 class WeatherReporter():
     """Pretty prints weather information on the console"""
 
@@ -11,33 +12,28 @@ class WeatherReporter():
 
     def report_year_extremes(self, highest_temperature_day, lowest_temperature_day, most_humid_day):
         """Print year extremes to the console"""
-        hottest_day_report = "Highest: {}C on {} {}".format(
-            highest_temperature_day.max_temperature,
-            calendar.month_name[highest_temperature_day.date.month],
-            highest_temperature_day.date.day)
+        hottest_day_report = f"Highest: {highest_temperature_day.max_temperature}C" \
+            f" on {calendar.month_name[highest_temperature_day.date.month]} " \
+            f" {highest_temperature_day.date.day}"
 
-        coldest_day_report = "Lowest: {}C on {} {}".format(
-            lowest_temperature_day.min_temperature,
-            calendar.month_name[lowest_temperature_day.date.month],
-            lowest_temperature_day.date.day)
+        coldest_day_report = f"Lowest: {lowest_temperature_day.min_temperature}C" \
+            f" on {calendar.month_name[lowest_temperature_day.date.month]}" \
+            f" {lowest_temperature_day.date.day}"
 
-        humid_day_report = "Humidity: {}% on {} {}".format(
-            most_humid_day.max_humidity,
-            calendar.month_name[most_humid_day.date.month],
-            most_humid_day.date.day)
+        humid_day_report = f"Humidity: {most_humid_day.max_humidity}%" \
+            f" on {calendar.month_name[most_humid_day.date.month]}" \
+            f" {most_humid_day.date.day}"
+
         print(hottest_day_report, coldest_day_report,
               humid_day_report, sep="\n", end="\n\n")
 
     def report_month_averages(self, avg_highest_temperature, avg_lowest_temperature, avg_mean_humidity):
         """Print month averages to the console"""
-        avg_highest_temp_report = "Highest Average: {}C".format(
-            avg_highest_temperature)
+        avg_highest_temp_report = f"Highest Average: {avg_highest_temperature}C"
 
-        avg_lowest_temp_report = "Lowest Average: {}C".format(
-            avg_lowest_temperature)
+        avg_lowest_temp_report = f"Lowest Average: {avg_lowest_temperature}C"
 
-        avg_mean_humidity_report = "Average Mean Humidity: {}%".format(
-            avg_mean_humidity)
+        avg_mean_humidity_report = f"Average Mean Humidity: {avg_mean_humidity}%"
 
         print(avg_highest_temp_report, avg_lowest_temp_report,
               avg_mean_humidity_report, sep="\n", end="\n\n")
@@ -52,14 +48,18 @@ class WeatherReporter():
             min_temp = min_temperatures[i]
 
             if single_line:
-                report = "{:02d} {}{} {}C - {}C".format(i+1, self.__get_colored_plus(
-                    max_temp, "red"), self.__get_colored_plus(min_temp, "blue"), max_temp, min_temp)
+                report = f"{i+1:02d}" \
+                    f" {self.__get_colored_plus(max_temp, 'red')}" \
+                    f"{self.__get_colored_plus(min_temp, 'blue')}" \
+                    f" {max_temp}C - {min_temp}C"
                 print(report)
             else:
-                report_max = "{:02d} {} {}C".format(
-                    i+1, self.__get_colored_plus(max_temp, "red"), max_temp)
-                report_min = "{:02d} {} {}C".format(
-                    i+1, self.__get_colored_plus(min_temp, "blue"), min_temp)
+                report_max = f"{i+1:02d}" \
+                    f" {self.__get_colored_plus(max_temp, 'red')}" \
+                    f" {max_temp}C"
+                report_min = f"{i+1:02d}" \
+                    f" {self.__get_colored_plus(min_temp, 'blue')}" \
+                    f" {min_temp}C"
                 print(report_max, report_min, sep="\n")
         print("")
 
