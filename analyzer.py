@@ -1,50 +1,34 @@
 class WeatherAnalyzer:
     """Extracts aggregate information from WeatherReading objects"""
 
-    def _average(self, values):
+    def average(self, readings, key):
         """Returns average of values in an array"""
-        total = sum(values)
-        count = len(values)
-        if count == 0:
-            return 0
-        else:
-            return round(total/count)
+        total = 0
+        count = 0
+        for reading in readings:
+            value = getattr(reading, key)
+            if value is not None:
+                total = total + value
+                count = count + 1
+        return round(total/count) if count != 0 else 0
 
-    def get_maximum_temperature_day(self, readings):
-        """Returns WeatherReading object with the maximum temperature"""
-        readings = [w for w in readings if w.max_temperature != None]
-        day_with_max_temperature = max(readings, key=lambda w: w.min_temperature)
-        return day_with_max_temperature
+    def maximum(self, readings, key):
+        max_reading = readings[0]
+        for reading in readings:
+            value = getattr(reading, key)
+            max_value = getattr(max_reading, key)
+            if value is not None and value > max_value:
+                max_reading = reading
+        return max_reading
 
-    def get_minimum_temperature_day(self, readings):
-        """Returns WeatherReading object with the minimum temperature"""
-        readings = [w for w in readings if w.min_temperature != None]
-        day_with_min_temperature = min(readings, key=lambda w: w.min_temperature)
-        return day_with_min_temperature
-
-    def get_most_humidity_day(self, readings):
-        """Returns WeatherReading object with the highest humidity"""
-        readings = [w for w in readings if w.max_humidity != None]
-        day_with_max_humidity = max(readings, key=lambda w: w.max_humidity)
-        return day_with_max_humidity
-
-    def get_avg_maximum_temperature(self, readings):
-        """Returns average maximum temperature for a month"""
-        readings = [w for w in readings if w.max_temperature != None]
-        average_max_temperature = self._average([w.max_temperature for w in readings])
-        return average_max_temperature
-
-    def get_avg_minimum_temperature(self, readings):
-        """Returns average minimum temperature for a month"""
-        readings = [w for w in readings if w.min_temperature != None]
-        average_min_temperature = self._average([w.min_temperature for w in readings])
-        return average_min_temperature
-
-    def get_avg_mean_humidity(self, readings):
-        """Returns average mean humidity for a month"""
-        readings = [w for w in readings if w.min_temperature != None]
-        avg_mean_humidity = self._average([w.mean_humidity for w in readings])
-        return avg_mean_humidity
+    def minimum(self, readings, key):
+        min_reading = readings[0]
+        for reading in readings:
+            value = getattr(reading, key)
+            min_value = getattr(min_reading, key)
+            if value is not None and value < min_value:
+                min_reading = reading
+        return min_reading
 
     def get_maximum_temperatures(self, readings):
         """Returns a list of maximum temperature in a month ordered by date"""

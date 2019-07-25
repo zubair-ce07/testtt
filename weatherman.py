@@ -16,9 +16,9 @@ class WeatherMan:
     def get_yearly_reports(self, readings_dir, year):
         """Report the hottest, coldest and the most humid day in a year"""
         readings = self.parser.parse_weather_files(readings_dir, year)
-        hottest_day = self.analyzer.get_maximum_temperature_day(readings)
-        coldest_day = self.analyzer.get_minimum_temperature_day(readings)
-        most_humid_day = self.analyzer.get_most_humidity_day(readings)
+        hottest_day = self.analyzer.maximum(readings, 'max_temperature')
+        coldest_day = self.analyzer.minimum(readings, 'min_temperature')
+        most_humid_day = self.analyzer.maximum(readings, 'max_humidity')
         self.reporter.report_year_extremes(
             hottest_day, coldest_day, most_humid_day)
 
@@ -29,29 +29,21 @@ class WeatherMan:
         """
 
         readings = self.parser.parse_weather_files(readings_dir, year, month)
-        avg_hottest_temperature = self.analyzer.get_avg_maximum_temperature(
-            readings)
-        avg_coldest_temperature = self.analyzer.get_avg_minimum_temperature(
-            readings)
-        avg_humidity = self.analyzer.get_avg_mean_humidity(readings)
+        avg_hottest_temperature = self.analyzer.average(
+            readings, 'max_temperature')
+        avg_coldest_temperature = self.analyzer.average(
+            readings, 'min_temperature')
+        avg_humidity = self.analyzer.average(readings, 'mean_humidity')
         self.reporter.report_month_averages(
             avg_hottest_temperature, avg_coldest_temperature, avg_humidity)
 
-    def get_monthly_bar_charts(self, readings_dir, year, month):
+    def get_monthly_bar_charts(self, readings_dir, year, month, single_line=False):
         """Print bar charts for the highest and lowest temperatures in a month"""
         readings = self.parser.parse_weather_files(readings_dir, year, month)
         max_temperatures = self.analyzer.get_maximum_temperatures(readings)
         min_temperatures = self.analyzer.get_minimum_temperatures(readings)
         self.reporter.report_month_temperatures(
-            max_temperatures, min_temperatures)
-
-    def get_monthly_single_bar_chart(self, readings_dir, year, month):
-        """Print single lined bar charts for the highest and lowest temperatures in a month"""
-        readings = self.parser.parse_weather_files(readings_dir, year, month)
-        max_temperatures = self.analyzer.get_maximum_temperatures(readings)
-        min_temperatures = self.analyzer.get_minimum_temperatures(readings)
-        self.reporter.report_month_temperatures(
-            max_temperatures, min_temperatures, True)
+            max_temperatures, min_temperatures, single_line)
 
 
 def parse_year(year):
@@ -122,5 +114,5 @@ if __name__ == "__main__":
                                            arguments.c[0], arguments.c[1])
 
     if arguments.o:
-        weather_man.get_monthly_single_bar_chart(
-            arguments.readings_dir, arguments.o[0], arguments.o[1])
+        weather_man.get_monthly_bar_charts(arguments.readings_dir,
+                                           arguments.o[0], arguments.o[1], True)
