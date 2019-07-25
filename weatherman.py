@@ -1,10 +1,14 @@
 import csv
 import sys
-import os
+import glob
 import operator
-import calendar
+from datetime import datetime
+import argparse
+
 from colorama import init
 from colorama import Fore, Style
+
+from filereader import read_file
 
 
 class WeatherMan:
@@ -13,7 +17,8 @@ class WeatherMan:
 
     def year_files(self, year):  # fettching year files
         year_files = []
-        directory_files = os.listdir(self.__path)
+        directory_files = glob.glob(
+            '{}Murree_weather_{}*'.format(self.__path, year))
         for file in directory_files:
             if str(year) in file:
                 year_files.append(file)
@@ -22,26 +27,20 @@ class WeatherMan:
     def highest_record_in_a_year(self, year):
         max_temperatures = []
         low_temperatures = []
-        dates = []
+        weather_data_dates = []
         max_humidities = []
 
-        files = self.year_files(year)  # given year files
-        if len(files) == 0:
+        year_files = self.year_files(year)  # given year files
+        if len(year_files) == 0:
             print('No Data Found For This Year')
             return
-        for file in files:  # looping over list of files
-            with open(self.__path+file) as csv_file:
-                csv_reader = csv.reader(csv_file, delimiter=',')
-                next(csv_reader)  # for skipping titles
-                for row in csv_reader:
-                    # checking if a field data is empth
-                    if self.check_emptinesss(row[1]):
-                        max_temperatures.append(int(row[1]))
-                    if self.check_emptinesss(row[3]):
-                        low_temperatures.append(int(row[3]))
-                    if self.check_emptinesss(row[7]):
-                        max_humidities.append(int(row[7]))
-                    dates.append(row[0])
+        for file in year_files:  # looping over list of files
+            # tuple of list returned
+            weather_data = read_file(file)
+            max_temperatures += weather_data[0]
+            low_temperatures += weather_data[1]
+            max_humidities += weather_data[2]
+            weather_data_dates += weather_data[4]
 
         # calculating maximum,minimum and max humidity
         max_temperature = max(max_temperatures)
@@ -49,166 +48,169 @@ class WeatherMan:
         max_humid = max(max_humidities)
 
         # prinitng values to console
-        print('Highest: '+str(max_temperature)+'C on ' +
-              self.get_and_format_date(dates, max_temperatures,
-                                       max_temperature))
-        print('Lowest: '+str(low_temperature)+'C on ' +
-              self.get_and_format_date(dates, low_temperatures,
-                                       low_temperature))
-        print('Humid: '+str(max_humid)+'% on ' +
-              self.get_and_format_date(dates, max_humidities, max_humid))
+        print('Highest: {}C on {}'.format(
+            str(max_temperature),
+            self.get_weather_data_date(
+                weather_data_dates,
+                max_temperatures,
+                max_temperature
+            )))
+        print('Lowest: {}C on {}'.format(
+            str(low_temperature),
+            self.get_weather_data_date(
+                weather_data_dates,
+                low_temperatures,
+                low_temperature
+            )))
+        print('Humid: {}% on {}'.format(
+            str(max_humid),
+            self.get_weather_data_date(
+                weather_data_dates,
+                max_humidities,
+                max_humid
+            )))
 
-    # checking if the data inn argument is empty or not
-    def check_emptinesss(self, data):
-        if data == '':
-            return False
-        return True
+    # getting date for a given data and then formating that date to words
+    def get_weather_data_date(self, date_list, data_list, data):
+        data_date = date_list[data_list.index(data)]
+        return datetime.strptime(data_date, '%Y-%m-%d').strftime('%B %d')
 
-    # getting date for a given filed and then formating that date to words
-    def get_and_format_date(self, date_list, data_list, data):
-        date = date_list[data_list.index(data)]
-        date = date.split('-')
-        month = date[1]
-        day = date[2]
-        month = calendar.month_abbr[int(month)]
-        return month + ' ' + day
-
-    # formating date to words
-    def format_date(self, month, year):
-        month = calendar.month_abbr[int(month)]
-        return month + ' ' + year
-
-    def average_record_in_a_month(self, date):
-        # splitting date and year form the given date
-        date = date.split('/')
-        year = date[0]
-        month = date[1]
-        month = months[int(month)-1]  # months in words from months array
+    def average_record_in_a_month(self, weather_date):
+        date_object = datetime.strptime(weather_date, '%Y/%m')
+        month = date_object.strftime('%b')
+        year = date_object.strftime('%Y')
         highest_temp_average = 0
         lowest_temp_average = 0
         average_humidity = 0
         highest_temp_count = 0
         lowest_temp_count = 0
         humidity_count = 0
+        max_temperatures = []
+        low_temperatures = []
+        average_humidities = []
+        weather_data_dates = []
 
-        try:
-            with open(self.__path+'Murree_weather_'+year+'_' +
-                      month+'.txt') as csv_file:
-                csv_reader = csv.reader(csv_file, delimiter=',')
-                next(csv_reader)  # skipping titiles
-                for row in csv_reader:
-                    # checkin if the filed is empty and then adding it to the
-                    # averages for later use
-                    if self.check_emptinesss(row[1]):
-                        highest_temp_average += int(row[1])
-                        highest_temp_count += 1
-                    if self.check_emptinesss(row[3]):
-                        lowest_temp_average += int(row[3])
-                        lowest_temp_count += 1
-                    if self.check_emptinesss(row[8]):
-                        average_humidity += int(row[8])
-                        humidity_count += 1
+        file_path = '{}Murree_weather_{}_{}.txt'.format(
+            self.__path, year, month)
+        weather_data = read_file(file_path)
+        max_temperatures += weather_data[0]
+        low_temperatures += weather_data[1]
+        average_humidities += weather_data[3]
+        weather_data_dates += weather_data[4]
 
-            # calculating average
-            highest_temp_average = highest_temp_average // highest_temp_count
-            lowest_temp_average = lowest_temp_average // lowest_temp_count
-            average_humidity = average_humidity // humidity_count
-            print('Highest Average: '+str(highest_temp_average)+'C')
-            print('Lowest Average: '+str(lowest_temp_average)+'C')
-            print('Average Humidity: '+str(average_humidity)+'%')
-        except FileNotFoundError:
-            print("Data does not exsist for this date")
+        for i in range(len(weather_data_dates)):
+                # checkin if the filed is empty and then adding it to the
+                # averages for later use
+            if max_temperatures[i]:
+                highest_temp_average += int(max_temperatures[i])
+                highest_temp_count += 1
+            if low_temperatures[i]:
+                lowest_temp_average += int(low_temperatures[i])
+                lowest_temp_count += 1
+            if average_humidities[i]:
+                average_humidity += int(average_humidities[i])
+                humidity_count += 1
 
-    def split_date_into_date_year(date):
-        date = date.split('/')
-        year = date[0]
-        month = date[1]
+        # calculating average
+        highest_temp_average = highest_temp_average // highest_temp_count
+        lowest_temp_average = lowest_temp_average // lowest_temp_count
+        average_humidity = average_humidity // humidity_count
+        print('Highest Average: {}C'.format(str(highest_temp_average)))
+        print('Lowest Average: {}C'.format(str(lowest_temp_average)))
+        print('Average Humidity: {}%'.format(str(average_humidity)))
 
-    def highest_lowest_temprature_of_a_day(self, date):
-        # splitting date and year form the given date
-        date = date.split('/')
-        year = date[0]
-        month = date[1]
-        print(self.format_date(month, year))
-        month = months[int(month)-1]  # months in words from months array
+    def highest_lowest_temprature_of_a_day_two_horisontal_bar_charts(
+            self, weather_date):
+        date_object = datetime.strptime(weather_date, '%Y/%m')
+        # printing date in words
+        print(date_object.strftime('%B %Y'))
+        month = date_object.strftime('%b')
+        year = date_object.strftime('%Y')
 
-        try:
-            with open(self.__path+'Murree_weather_'+year+'_' +
-                      month+'.txt') as csv_file:
-                csv_reader = csv.reader(csv_file, delimiter=',')
-                next(csv_reader)  # skipping titiles
-                day = 1
-                for row in csv_reader:
-                    if self.check_emptinesss(row[1]):
-                            # printing bar charts
-                        print(day, end=' ')
-                        for _ in range(int(row[1])):
-                            print(Fore.RED + '+', end='')
-                        print(Fore.WHITE+str(' '+row[1]+'C'))
-                        print(day, end=' ')
-                        for _ in range(int(row[3])):
-                            print(Fore.BLUE + '+', end='')
-                        print(Fore.WHITE+str(' '+row[1]+'C'))
-                        day += 1
-        except FileNotFoundError:
-            print('Data does not exsist for this date')
+        max_temperatures = []
+        low_temperatures = []
 
-    def highest_lowest_temprature_of_a_day2(self, date):
-        # splitting date and year form the given date
-        date = date.split('/')
-        year = date[0]
-        month = date[1]
-        print(self.format_date(month, year))
-        month = months[int(month)-1]  # months in words from months array
+        file_path = '{}Murree_weather_{}_{}.txt'.format(
+            self.__path, year, month)
+        weather_data = read_file(file_path)
+        max_temperatures += weather_data[0]
+        low_temperatures += weather_data[1]
+        weather_date = 1
+        for i in range(len(max_temperatures)):
+                # checkin if the filed is empty and then adding it to the
+            if max_temperatures[i]:
+                print(weather_date, end=' ')
+                print(Fore.RED + '+' * int(max_temperatures[i]), end='')
+                print(Fore.WHITE+str(' {}C'.format(max_temperatures[i])))
+                print(weather_date, end=' ')
+                print(Fore.BLUE + '+' * int(low_temperatures[i]), end='')
+                print(Fore.WHITE+str(' {}C'.format(low_temperatures[i])))
+                weather_date += 1
 
-        try:
-            with open(self.__path+'Murree_weather_'+year+'_' +
-                      month+'.txt') as csv_file:
-                csv_reader = csv.reader(csv_file, delimiter=',')
-                next(csv_reader)  # skipping titiles
-                day = 1
-                for row in csv_reader:
-                    if self.check_emptinesss(row[1]):
-                        print(day, end=' ')
-                        for _ in range(int(row[3])):
-                            print(Fore.BLUE + '+', end='')
-                        for _ in range(int(row[1])):
-                            print(Fore.RED + '+', end='')
-                        print(Fore.WHITE+str(' '+row[1]+'C- '), end='')
-                        print(''+Fore.WHITE+str(row[1]+'C'))
-                        day += 1
-        except FileNotFoundError:
-            print("Data does not exsist for this date")
+    def highest_lowest_temprature_of_a_day_one_horsontal_bar_chart(
+            self, weather_date
+    ):
+        date_object = datetime.strptime(weather_date, '%Y/%m')
+        # printing date in words
+        print(date_object.strftime('%B %Y'))
+        month = date_object.strftime('%b')
+        year = date_object.strftime('%Y')
+
+        max_temperatures = []
+        low_temperatures = []
+
+        file_path = '{}Murree_weather_{}_{}.txt'.format(
+            self.__path, year, month)
+        weather_data = read_file(file_path)
+        max_temperatures += weather_data[0]
+        low_temperatures += weather_data[1]
+        weather_date = 1
+        for i in range(len(max_temperatures)):
+                # checkin if the filed is empty and then adding it to the
+            if max_temperatures[i]:
+                print(weather_date, end=' ')
+                print(Fore.BLUE + '+' * int(low_temperatures[i]), end='')
+                print(Fore.RED + '+' * int(max_temperatures[i]), end=' ')
+                print(
+                    Fore.WHITE+str(' {}C - {}C'.format(
+                        low_temperatures[i], max_temperatures[i]
+                    )))
+                weather_date += 1
 
 
-try:
-    report_type = sys.argv[1]
-    date = sys.argv[2]
-    path = sys.argv[3]
-except:
-    print('File not executed properly')
+def main():
 
-months = [
-    'Jan', 'Feb', 'Mar', 'Apr',
-    'May', 'Jun', 'Jul', 'Aug',
-    'Sep', 'Oct', 'Nov', 'Dec']
+    parser = argparse.ArgumentParser(description='Year for ')
+    parser.add_argument('files_path', type=str,
+                        help='Path to weather files')
+    parser.add_argument(
+        '-e', type=int, help='Highest Record of the year  Expected  \
+        Value Format: 2014')
+    parser.add_argument(
+        '-a', type=str, help='Average Highest, Lowest Temp, Humidity  \
+        Expected Value Format: 2014/2')
+    parser.add_argument(
+        '-c', type=str, help='Two horisontal bar charts for Temperature  \
+            Expected Value Format: 2014/2')
+    parser.add_argument(
+        '-d', type=str, help='One horisontal bar charts for Temperature  \
+            Expected Value Format: 2014/2')
+    args = parser.parse_args()
 
-# w = WeatherMan('weatherfiles//')
-w = WeatherMan(path)
+    path = args.files_path
+    weather_man = WeatherMan(path)
 
-if(report_type == '-e'):
-    try:
-        int(date)
-        w.highest_record_in_a_year(date)
-    except ValueError:
-        print('Enter an intiger for year')
-try:
-    date.split('/')
-    if(report_type == '-a'):
-        w.average_record_in_a_month(date)
-    if(report_type == '-c'):
-        w.highest_lowest_temprature_of_a_day(date)
-    if(report_type == '-d'):
-        w.highest_lowest_temprature_of_a_day2(date)
-except:
-    print('Enter a valid intiger value and seperator for year and month')
+    if args.e:
+        weather_man.highest_record_in_a_year(args.e)
+    if args.a:
+        weather_man.average_record_in_a_month(args.a)
+    if args.c:
+        weather_man.\
+            highest_lowest_temprature_of_a_day_two_horisontal_bar_charts(
+                args.c)
+    if args.d:
+        weather_man.highest_lowest_temprature_of_a_day_one_horsontal_bar_chart(
+            args.d)
+
+
+main()

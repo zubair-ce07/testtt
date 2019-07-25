@@ -1,0 +1,26 @@
+import csv
+
+
+def read_file(path):
+    max_temperatures = []
+    low_temperatures = []
+    weather_data_dates = []
+    max_humidities = []
+    average_humidities = []
+
+    csv_file = open(path)
+    csv_reader = csv.reader(csv_file, delimiter=',')
+    next(csv_reader)  # for skipping titles
+    for row in csv_reader:
+        # checking if a field data is empty
+        if row[1]:
+            max_temperatures.append(int(row[1]))
+        if row[3]:
+            low_temperatures.append(int(row[3]))
+        if row[7]:
+            max_humidities.append(int(row[7]))
+        if row[8]:
+            average_humidities.append(int(row[8]))
+        weather_data_dates.append(row[0])
+    return (max_temperatures, low_temperatures, max_humidities,
+            average_humidities, weather_data_dates)
