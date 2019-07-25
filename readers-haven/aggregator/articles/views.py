@@ -15,20 +15,24 @@ class IndexView(generic.ListView):
     template_name = 'articles/index.html'
     context_object_name = 'recent_articles'
     paginate_by = 4
-    queryset = Article.objects.order_by('-publish_time')
-
-class CategoryView(generic.ListView):
-    model = Article
-    template_name = 'articles/index.html'
-    context_object_name = 'recent_articles'
-    paginate_by = 4
-
+    
     def get_queryset(self):
-        return Article.objects.filter(category=self.kwargs['category'])
+        if 'category' in self.kwargs:
+            return Article.objects.filter(category=self.kwargs['category'])
+        else:
+            return Article.objects.order_by('-publish_time')
 
-class DetailView(generic.DetailView):
+class DetailView(generic.DetailView, FormView):
     model = Article
     template_name = 'articles/detail.html'
+    form_class = NewCommentForm
+    
+    def get_success_url(self):
+        return self.request.path
+
+    def form_valid(self, form):
+        Comment.objects.create(**form.cleaned_data)
+        return super(DetailView, self).form_valid(form)
 
 class ArticleCreateView(braces_views.SuperuserRequiredMixin, FormView):
     template_name = 'articles/add_article.html'
@@ -58,19 +62,3 @@ class WebsiteCreateView(braces_views.SuperuserRequiredMixin, FormView):
     def form_valid(self, form):
         Website.objects.create(**form.cleaned_data)
         return super(WebsiteCreateView, self).form_valid(form)
-
-@login_required
-def comment(request, article_id):
-    if request.method == 'POST':
-        form = NewCommentForm(request.POST)
-        if form.is_valid():
-            article = get_object_or_404(Article, pk=article_id)
-            print("Form data: ", form.cleaned_data)
-            Comment.objects.create(**form.cleaned_data)
-            return HttpResponseRedirect(reverse('articles:detail', args=(article.id,)))
-        else:
-            print("Invalid form data")
-            print(form.errors)
-            return render(request, 'articles/index.html')
-    if request.method == 'GET':
-            return HttpResponseRedirect(reverse('articles:detail', args=(article_id,)))

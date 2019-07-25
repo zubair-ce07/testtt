@@ -1,16 +1,24 @@
 #navbar{
-    background: #C9F0DD
-}
-
-#heading-text{
-    color: #0C4B33
+    background: #233870
 }
 
 #category-text{
-    color: #0C4B33;
+    color: #233870;
     font-size: 20px
 }
 
 #author-name{
     font-style: italic
+}
+
+.btn{
+    background: #233870
+}
+
+.btn:hover{
+    background: #4d67b1
+}
+
+.card-content h5 a:hover{
+    text-decoration: underline
 }

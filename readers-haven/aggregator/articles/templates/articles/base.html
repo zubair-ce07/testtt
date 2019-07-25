@@ -26,6 +26,11 @@ document.addEventListener('DOMContentLoaded', function() {
     var instances = M.Sidenav.init(elems);
   });
 
+document.addEventListener('DOMContentLoaded', function() {
+    var elems = document.querySelectorAll('.tooltipped');
+    var instances = M.Tooltip.init(elems);
+  });
+
 </script>
     <div class="navbar-fixed">
         <nav id="navbar"">
@@ -44,7 +49,7 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
     <ul id="slide-out" class="sidenav">
         <center>
-            <h4><a id="heading-text" href="/">Readers Haven</a></h4>
+            <h4><a style="color: #233870" href="/">Readers Haven</a></h4>
             <br>
             <h5 id="heading-text">Categories</h5>
         </center>

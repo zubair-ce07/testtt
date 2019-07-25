@@ -14,7 +14,7 @@
 {% block navbarbutton %}
 {% if user.is_authenticated %}
 <ul id="dropdown1" class="dropdown-content">
-    <li><a href="{% url 'logout' %}">Logout</a></li>
+    <li><a id="category-text" href="{% url 'logout' %}">Logout</a></li>
 </ul>
 <li><a class="dropdown-trigger" id="heading-text" href="#!" data-target="dropdown1">{{ user.username }}<i class="material-icons right">arrow_drop_down</i></a></li>
 {% else %}
@@ -35,11 +35,11 @@
         </div>
         <div class="card-stacked">
             <div class="card-content">
-                <h5><a id="heading-text" href="{% url 'articles:detail' article.id %}">{{ article.title }}</a>
+                <h5><a style="color: #233870" id="title" href="{% url 'articles:detail' article.id %}">{{ article.title }}</a>
                 </h5>
             </div>
             <div class="card-action">
-                <h6 class="right">Category: {{ article.category }}</h6>
+                <h6 class="right">{{ article.category }}</h6>
                 <h6>
                     {% for author in article.authors.all %}
                     <span id="author-name">{{ author.full_name }} &nbsp;&nbsp;&nbsp;</span>
@@ -57,13 +57,13 @@
 <br><br>
 {% if user.is_superuser %}
 <div class="fixed-action-btn">
-  <a title="Add New" class="btn-floating btn-large red">
+  <a style="background: #233870" data-position="left" data-tooltip="Add New" class="btn-floating btn-large tooltipped">
     <i class="large material-icons">add</i>
   </a>
   <ul>
-    <li><a class="btn-floating red" href="/articles/add-article" title="Article"><i class="material-icons">description</i></a></li>
-    <li><a class="btn-floating yellow darken-1" href="/articles/add-author" title="Author"><i class="material-icons">account_circle</i></a></li>
-    <li><a class="btn-floating green" href="/articles/add-website" title="Website"><i class="material-icons">language</i></a></li>
+    <li><a class="btn-floating red tooltipped" data-position="left" data-tooltip="Article" href="/articles/add-article"><i class="material-icons">description</i></a></li>
+    <li><a class="btn-floating yellow darken-1 tooltipped" data-position="left" data-tooltip="Author" href="/articles/add-author"><i class="material-icons">account_circle</i></a></li>
+    <li><a class="btn-floating green tooltipped" data-position="left" data-tooltip="Website" href="/articles/add-website"><i class="material-icons">language</i></a></li>
   </ul>
 </div>
 {% endif %}
