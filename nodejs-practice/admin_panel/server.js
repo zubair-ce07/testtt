@@ -1,6 +1,7 @@
 var express = require('express');
 var crypto = require('crypto');
 var passport = require('passport');
+var flash = require('connect-flash')
 var Strategy = require('passport-local').Strategy;
 const MongoClient = require('mongodb').MongoClient;
 const uri = "mongodb+srv://admin:admin@cluster0-ttgom.mongodb.net/test?retryWrites=true&w=majority";
@@ -27,6 +28,12 @@ function saltHashPassword(userpassword) {
   return sha512(userpassword, salt);
 }
 
+
+function viewUsers(req, res) {
+  db.find((err, records)=> {
+    res.render('viewUsers', {records: records})
+  })
+}
 
 function addUser(req, res) {
   let userDetails = req.body
@@ -67,13 +74,13 @@ client.connect(err => {
 passport.use(new Strategy(
   function(username, password, cb) {
     db.findOne({username:username}, function(err, user) {
+      if (!user) { return cb(null, false); }
       given_password_hash = sha512(password, user.password_salt).passwordHash
       if (err) { return cb(err); }
-      if (!user) { return cb(null, false); }
       if (given_password_hash != user.password_hash) { 
         console.log(given_password_hash); 
         console.log(user.password_hash); 
-        return cb(null, false); 
+        return cb(null, false, {message: "Wrong Password!"}); 
       }
       return cb(null, user);
     });
@@ -97,7 +104,7 @@ var app = express();
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
 
-
+app.use(flash())
 app.use(express.urlencoded({ extended: true }));
 app.use(require('express-session')({ secret: 'keyboard cat', resave: false, saveUninitialized: false }));
 
@@ -112,11 +119,12 @@ app.get('/',
 
 app.get('/login',
   function(req, res){
-    res.render('login', { user: req.user });
+    // console.log(req.flash("error"))
+    res.render('login', { user: req.user, error: req.flash('error')});
   });
   
 app.post('/login', 
-  passport.authenticate('local', { failureRedirect: '/login' }),
+  passport.authenticate('local', { failureRedirect: '/login', failureFlash: true}),
   function(req, res) {
     res.redirect('/');
   });
@@ -124,6 +132,10 @@ app.post('/login',
 app.get('/addUser',
 function(req, res) {
   res.render('addUser', {success: 0, failed: 0});
+});
+
+app.get('/viewUsers', function (req, res) {
+  viewUsers(req, res)
 });
 
 app.post('/addUser', function (req, res) {
