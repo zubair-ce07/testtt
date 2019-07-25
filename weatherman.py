@@ -117,7 +117,7 @@ class WeatherMan:
         print('Lowest Average: {}C'.format(str(lowest_temp_average)))
         print('Average Humidity: {}%'.format(str(average_humidity)))
 
-    def highest_lowest_temprature_of_a_day_two_horisontal_bar_charts(
+    def highest_lowest_temprature_of_a_day_two_horizontal_bar_charts(
             self, weather_date):
         """This method prints max and min temperature seprately
         of each day of a month in horizontal bar chart"""
@@ -145,7 +145,7 @@ class WeatherMan:
             print(Fore.WHITE+str(' {}C'.format(low_temperatures[i])))
             weather_date += 1
 
-    def highest_lowest_temprature_of_a_day_one_horsontal_bar_chart(
+    def highest_lowest_temprature_of_a_day_one_horzontal_bar_chart(
             self, weather_date
     ):
         """This method prints max and min temperature
@@ -192,10 +192,10 @@ def main():
         '-a', type=str, help='Average Highest, Lowest Temp, Humidity  \
         Expected Value Format: 2014/2')
     parser.add_argument(
-        '-c', type=str, help='Two horisontal bar charts for Temperature  \
+        '-c', type=str, help='Two horizontal bar charts for Temperature  \
             Expected Value Format: 2014/2')
     parser.add_argument(
-        '-d', type=str, help='One horisontal bar charts for Temperature  \
+        '-d', type=str, help='One horizontal bar charts for Temperature  \
             Expected Value Format: 2014/2')
     args = parser.parse_args()
 
@@ -213,11 +213,11 @@ def main():
     if args.c:
         utils.date_validation(args.c)
         weather_man. \
-            highest_lowest_temprature_of_a_day_two_horisontal_bar_charts(
+            highest_lowest_temprature_of_a_day_two_horizontal_bar_charts(
                 args.c)
     if args.d:
         utils.date_validation(args.d)
-        weather_man.highest_lowest_temprature_of_a_day_one_horsontal_bar_chart(
+        weather_man.highest_lowest_temprature_of_a_day_one_horzontal_bar_chart(
             args.d)
 
 
