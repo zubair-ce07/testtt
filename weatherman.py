@@ -56,33 +56,33 @@ class WeatherMan:
 
 def parse_year(year):
     """Year parser to use with argument parser"""
-    try:
-        year = int(year)
-    except ValueError:
+    if year.isdigit():
+        return int(year)
+    else:
         message = f"{year} is not a valid year."
         raise argparse.ArgumentTypeError(message)
-    return year
 
 
 def parse_month(month):
     """Month parser to use with argument parser"""
-    try:
-        year, month = month.split("/")
-    except ValueError:
+
+    if month[-3] != "/" and month[-2] != "/":
         message = "Please pass month with year in the format YYYY/MM e.g. 2005/6"
         raise argparse.ArgumentTypeError(message)
+
+    year, month = month.split("/")
     year = parse_year(year)
-    try:
+
+    if month.isdigit():
         month = int(month)
-        if month < 1 or month > 12:
-            raise ValueError
-    except ValueError:
+    else:
         message = f"{month} is not a valid month."
         raise argparse.ArgumentTypeError(message)
+
     return [year, month]
 
 
-def main():
+if __name__ == "__main__":
     """Parse the arguments passed to the program"""
 
     arg_parser = argparse.ArgumentParser(
@@ -124,6 +124,3 @@ def main():
     if arguments.o:
         weather_man.get_monthly_single_bar_chart(
             arguments.readings_dir, arguments.o[0], arguments.o[1])
-
-
-main()
