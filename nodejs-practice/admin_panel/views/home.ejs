@@ -1,0 +1,12 @@
+<% include head %>
+<div class="jumbotron text-center">
+	<h1>Home</h1>
+	<br>
+	<% if (!user) { %>
+		<p>Welcome! Please <a href="/login">log in</a>.</p>
+	<% } else { %>
+		<p>Hello, <%= user.username %>. View your <a href="/profile">profile</a>.</p>
+		<a href="/addUser" class = "btn btn-primary"> Add User</a>
+		<a href="/viewUsers" class = "btn btn-danger"> View Users</a>
+	<% } %>
+</div>
