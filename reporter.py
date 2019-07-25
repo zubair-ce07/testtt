@@ -4,11 +4,9 @@ import calendar
 class WeatherReporter():
     """Pretty prints weather information on the console"""
 
-    def __init__(self):
-        """Define ASCII terminal colors and list of full month names"""
-        self.blue = '\033[94m'
-        self.red = '\033[91m'
-        self.white = '\033[00m'
+    BLUE = '\033[94M'
+    RED = '\033[91M'
+    WHITE = '\033[00m'
 
     def report_year_extremes(self, highest_temperature_day, lowest_temperature_day, most_humid_day):
         """Print year extremes to the console"""
@@ -49,25 +47,21 @@ class WeatherReporter():
 
             if single_line:
                 report = f"{i+1:02d}" \
-                    f" {self.__get_colored_plus(max_temp, 'red')}" \
-                    f"{self.__get_colored_plus(min_temp, 'blue')}" \
+                    f" {self.__get_colored_plus(max_temp, self.RED)}" \
+                    f"{self.__get_colored_plus(min_temp, self.BLUE)}" \
                     f" {max_temp}C - {min_temp}C"
                 print(report)
             else:
                 report_max = f"{i+1:02d}" \
-                    f" {self.__get_colored_plus(max_temp, 'red')}" \
+                    f" {self.__get_colored_plus(max_temp, self.RED)}" \
                     f" {max_temp}C"
                 report_min = f"{i+1:02d}" \
-                    f" {self.__get_colored_plus(min_temp, 'blue')}" \
+                    f" {self.__get_colored_plus(min_temp, self.BLUE)}" \
                     f" {min_temp}C"
                 print(report_max, report_min, sep="\n")
         print("")
 
     def __get_colored_plus(self, times, color):
         """Print colored +++ to the console"""
-        if color == "blue":
-            selected_color = self.blue
-        elif color == "red":
-            selected_color = self.red
-        selected_color = selected_color + "+" * times + self.white
+        selected_color = f"{color}{'+' * times}{self.WHITE}"
         return selected_color
