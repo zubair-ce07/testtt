@@ -2,7 +2,7 @@ class WeatherAnalyzer:
     """Extracts aggregate information from WeatherReading objects"""
 
     def average(self, readings, key):
-        """Returns average of values in an array"""
+        """Returns average of values for given key"""
         total = 0
         count = 0
         for reading in readings:
@@ -13,6 +13,7 @@ class WeatherAnalyzer:
         return round(total/count) if count != 0 else 0
 
     def maximum(self, readings, key):
+        """Returns reading with maximum value for key"""
         max_reading = readings[0]
         for reading in readings:
             value = getattr(reading, key)
@@ -22,6 +23,7 @@ class WeatherAnalyzer:
         return max_reading
 
     def minimum(self, readings, key):
+        """Returns reading with minimum value for key"""
         min_reading = readings[0]
         for reading in readings:
             value = getattr(reading, key)
