@@ -1,7 +1,10 @@
+"""This module is for file reading"""
 import csv
 
 
 def read_file(path):
+    """This method recieve file path through arguments and read data from the
+    file and return it in a list's tuple"""
     max_temperatures = []
     low_temperatures = []
     weather_data_dates = []
@@ -22,5 +25,6 @@ def read_file(path):
         if row[8]:
             average_humidities.append(int(row[8]))
         weather_data_dates.append(row[0])
+    csv_file.close()
     return (max_temperatures, low_temperatures, max_humidities,
             average_humidities, weather_data_dates)
