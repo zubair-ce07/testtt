@@ -1,7 +1,7 @@
 from datetime import datetime
 
 
-class WeatherData:
+class WeatherRecords:
     def __init__(self, data):
         date = data.get("PKT", data.get('PKST'))
         self.date = datetime.strptime(date, '%Y-%m-%d')
