@@ -127,3 +127,27 @@ class RetrieveCvView(DetailView):
 class JobViewSet(viewsets.ModelViewSet):
     queryset = Job.objects.all()
     serializer_class = JobSerializer
+
+
+class JobsView(DetailView):
+    @method_decorator(login_required)
+    def get(self, request):
+        jobs = Job.objects.all()
+        user = BasicInformation.objects.get(user_id=request.user.id)
+        user_skills = [
+            user.skill1.lower(),
+            user.skill2.lower(),
+            user.skill3.lower(),
+            user.skill4.lower(),
+            user.skill5.lower()
+        ]
+        related_jobs = []
+        print("Job: ", jobs[1].skill1, "user: ", user.skill1)
+        for job in jobs:
+            if job.skill1.lower() in user_skills:
+                related_jobs.append(job)
+            elif job.skill2.lower() in user_skills:
+                related_jobs.append(job)
+            elif job.skill2.lower() in user_skills:
+                related_jobs.append(job)
+        return render(request, 'jobs.html', {'jobs': related_jobs})

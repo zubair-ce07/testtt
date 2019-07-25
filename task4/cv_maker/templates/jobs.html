@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+    {% block body %}
+        <h1 align="center">Welcome to CV making website</h1>
+        <br><br>
+        <div align="center">
+            <ul type="none">
+                {% for job in jobs %}
+                <li>
+                    <h2>{{job.title}} </h2>
+                    <div align="left" style="margin-left:100px">
+                    <ul type="none" >
+                        <li>
+                            {{job.description}}
+                        </li>
+                        <li>
+                            Skills required: {{job.skill1}} {{job.skill2}} {{job.skill3}}
+                        </li>
+                        <li>
+                            Experience required: {{job.experience}} years
+                        </li>
+                        <li>
+                            City: {{job.city}}
+                        </li>
+                    </ul>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+
+
+        </div>
+
+    {% endblock %}

@@ -21,6 +21,7 @@ from django.urls import include, path
 from rest_framework import routers
 
 from cv_maker_app.views import HomeView, BasicInformationView, EducationView, ExperienceView, RetrieveCvView, JobViewSet
+from cv_maker_app.views import JobsView
 from django.contrib.auth import views as auth_views
 from accounts.views import Signup
 
@@ -37,6 +38,7 @@ urlpatterns = [
     url(r'^signup/$', Signup.as_view(), name='signup'),
     url(r'^logout/$', auth_views.LogoutView.as_view(), name='logout'),
     url(r'login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
+    url(r'^job/', JobsView.as_view(), name='jobs'),
     url(r'^cv/$', RetrieveCvView.as_view(), name='retrieve_cv'),
     path('', include(router.urls)),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework'))
