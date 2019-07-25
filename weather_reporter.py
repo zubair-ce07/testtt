@@ -1,7 +1,7 @@
 class ReportGenerator:
 
-    low = "\033[1;34m+"
-    high = "\033[1;31m+"
+    blue_plus_sign = "\033[1;34m+"
+    red_plus_sign = "\033[1;31m+"
     red_color_code = "\033[1;31m"
     purple_color_code = "\033[1;35m"
     blue_color_code = "\033[1;34m"
@@ -30,18 +30,17 @@ class ReportGenerator:
             blue_color = ReportGenerator.blue_color_code
             purple_color = ReportGenerator.purple_color_code
             print(f"{purple_color}{weather_reading.date:%d}"
-                  f" {red_color}{ReportGenerator.high * max_temp} {max_temp}C")
+                  f" {red_color}{ReportGenerator.red_plus_sign * max_temp} {max_temp}C")
             print(f"{purple_color}{weather_reading.date:%d}"
-                  f" {blue_color}{ReportGenerator.low * min_temp} {min_temp}C")
+                  f" {blue_color}{ReportGenerator.blue_plus_sign * min_temp} {min_temp}C")
 
     @staticmethod
     def print_bonus_chart(data):
         for weather_reading in data.monthly_temp:
             max_temp = weather_reading.max_temp
             min_temp = weather_reading.min_temp
-            red_color = ReportGenerator.red_color_code
-            blue_color = ReportGenerator.blue_color_code
             purple_color = ReportGenerator.purple_color_code
             print(f"{purple_color}{weather_reading.date:%d} "
-                  f"{ReportGenerator.low * min_temp}{ReportGenerator.high * max_temp}"
+                  f"{ReportGenerator.blue_plus_sign * min_temp}"
+                  f"{ReportGenerator.red_plus_sign * max_temp}"
                   f" {purple_color}{min_temp}C - {max_temp}C")
