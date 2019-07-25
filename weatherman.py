@@ -8,7 +8,7 @@ import argparse
 
 from colorama import Fore
 
-from filereader import read_file
+from file_reader import read_file
 import utils
 
 
