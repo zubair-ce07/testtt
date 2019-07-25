@@ -3,24 +3,10 @@ import calendar
 import csv
 import os
 from datetime import datetime
+import glob
 from data_holder import *
 
-
-filename_prefix = "Murree_weather_" #Murree_weather_2004_Aug
-file_extention = ".txt"
-
-def get_daily_selected_attributes(record,fields):
-    info = {}
-    for field in fields:
-        if not record[field]:
-            return
-        else:
-            if (field == temperature_fields[0]):
-                info[field] = datetime.strptime(record[temperature_fields[0]], "%Y-%m-%d")
-            else:
-                info[field] = int(record[field])
-    return info
-
+filename_format = "{}**/*{}*{}*"
 
 class WeathermanFileReader:
 
@@ -29,21 +15,16 @@ class WeathermanFileReader:
 
     def get_monthly_data(self,given_year, month_number):
         given_month = calendar.month_name[int(month_number)][0:3]
-        file_path = self.path + "/" + filename_prefix + given_year + "_" + given_month + file_extention
-
-        attributes = []
+        files = glob.glob(filename_format.format(self.path,given_year,given_month))
         monthly_records = []
-        avg_fields = [0,0,0]
-        row_count = 0;
 
-        if (os.path.isfile(file_path)):
-            with open(file_path) as dataFile:
-                dict_reader = csv.DictReader(dataFile)
+        if (files):
+            with open(files[0]) as data_file:
+                dict_reader = csv.DictReader(data_file)
                 for row in dict_reader:
 
-                    daily_data = DayWeather(row)
+                    daily_data = WeatherRecords(row)
                     if daily_data:
-                        row_count += 1;
                         monthly_records.append(daily_data)
 
         return monthly_records

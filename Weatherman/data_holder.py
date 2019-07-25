@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 from datetime import datetime
 
-class DayWeather:
+class WeatherRecords:
 
     def __init__(self, day_weather):
         if day_weather['PKT']:

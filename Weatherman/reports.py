@@ -13,23 +13,19 @@ class WeathermanReportPrinter:
     def print_yearly_report(self, result):
 
         if (result):
-            if (result.max_temprature):
-                print("Highest:", end = " ")
-                print(str(result.max_temprature.max_temprature) + "C on", end = " ")
-                print(result.max_temprature.date.strftime("%B %d"))
-
-            if (result.min_temprature):
-                print("Lowest:", end = " ")
-                print(str(result.min_temprature.min_temprature) + "C on", end = " ")
-                print(result.min_temprature.date.strftime("%B %d"))
-
-            if (result.max_humidity):
-                print("Humidity:", end = " ")
-                print(str(result.max_humidity.max_humidity) + "% on", end = " ")
-                print(result.max_humidity.date.strftime("%B %d"))
-                print("\n")
+            self.__print_fact(result.max_temprature, "max_temprature", "Highest:", "C")
+            self.__print_fact(result.min_temprature, "min_temprature", "Lowest:", "C")
+            self.__print_fact(result.max_humidity, "max_humidity", "Humidity:", "%")
+            print("\n")
         else:
             print("Data not found.\n")
+
+    def __print_fact(self, weather_record, attribute_name, fact_prefix, postfix):
+        if (weather_record):
+            print(fact_prefix, end = " ")
+            print(str(getattr(weather_record,attribute_name)) + postfix + " on", end = " ")
+            print(weather_record.date.strftime("%B %d"))
+
 
     def print_average_report(self, result, month_number, given_year):
         if (result):
