@@ -16,9 +16,12 @@ class WeatherMan:
     def get_yearly_reports(self, readings_dir, year):
         """Report the hottest, coldest and the most humid day in a year"""
         readings = self.parser.parse_weather_files(readings_dir, year)
-        hottest_day = self.analyzer.maximum(readings, 'max_temperature')
-        coldest_day = self.analyzer.minimum(readings, 'min_temperature')
-        most_humid_day = self.analyzer.maximum(readings, 'max_humidity')
+        hottest_day = self.analyzer.get_maximum_reading(
+            readings, 'max_temperature')
+        coldest_day = self.analyzer.get_minimum_reading(
+            readings, 'min_temperature')
+        most_humid_day = self.analyzer.get_maximum_reading(
+            readings, 'max_humidity')
         self.reporter.report_year_extremes(
             hottest_day, coldest_day, most_humid_day)
 
@@ -29,19 +32,22 @@ class WeatherMan:
         """
 
         readings = self.parser.parse_weather_files(readings_dir, year, month)
-        avg_hottest_temperature = self.analyzer.average(
+        avg_hottest_temperature = self.analyzer.get_average_of_attributes(
             readings, 'max_temperature')
-        avg_coldest_temperature = self.analyzer.average(
+        avg_coldest_temperature = self.analyzer.get_average_of_attributes(
             readings, 'min_temperature')
-        avg_humidity = self.analyzer.average(readings, 'mean_humidity')
+        avg_humidity = self.analyzer.get_average_of_attributes(
+            readings, 'mean_humidity')
         self.reporter.report_month_averages(
             avg_hottest_temperature, avg_coldest_temperature, avg_humidity)
 
     def get_monthly_bar_charts(self, readings_dir, year, month, single_line=False):
         """Print bar charts for the highest and lowest temperatures in a month"""
         readings = self.parser.parse_weather_files(readings_dir, year, month)
-        max_temperatures = self.analyzer.get_maximum_temperatures(readings)
-        min_temperatures = self.analyzer.get_minimum_temperatures(readings)
+        max_temperatures = self.analyzer.get_attribute_list(
+            readings, "max_temperature")
+        min_temperatures = self.analyzer.get_attribute_list(
+            readings, "min_temperature")
         self.reporter.report_month_temperatures(
             max_temperatures, min_temperatures, single_line)
 
