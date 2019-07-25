@@ -29,7 +29,7 @@ def is_valid_path(file_path):
     raise argparse.ArgumentTypeError(f"Invalid Directory")
 
 
-def check_args():
+def read_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("file_path", help="The local file path of weather files", type=is_valid_path)
     parser.add_argument("-e", help="highest, lowest, highest humidity for a given year", type=is_valid_year)
@@ -41,20 +41,20 @@ def check_args():
 
 
 if __name__ == "__main__":
-    args = check_args()
+    args = read_args()
     file_path = args.file_path
-    parsed_records = FileParser().file_reader(file_path)
+    parsed_records = FileParser().parse(file_path)
     report_gen = ReportGenerator()
     calculations = WeatherCalculations()
 
     if args.e:
         weather_result = calculations.get_weather_results(parsed_records, args.e)
-        report_gen.print_yearly(weather_result)
+        report_gen.print_yearly_report(weather_result)
 
     if args.a:
         year, month = args.a
         weather_result = calculations.get_weather_results(parsed_records, year, month)
-        report_gen.print_monthly(weather_result)
+        report_gen.print_monthly_report(weather_result)
 
     if args.c:
         year, month = args.c
