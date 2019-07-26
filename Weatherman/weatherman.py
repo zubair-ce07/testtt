@@ -54,7 +54,7 @@ def perform_monthly_operations(command, command_argument, reader, reports, proce
     given_year = command_argument.split("/")[0]
     month_number = command_argument.split("/")[1]
 
-    monthly_records = reader.get_monthly_data(given_year = given_year,month_number = month_number)
+    monthly_records = reader.parse_weather_records(given_year = given_year,month_number = month_number)
     processor.monthly_records = monthly_records
 
     if (command == 'a'):
@@ -74,7 +74,7 @@ def main():
         given_year = args.e
         yearly_records = []
         for month_number in range(1,13):
-            monthly_records = reader.get_monthly_data(given_year = given_year,month_number = month_number)
+            monthly_records = reader.parse_weather_records(given_year = given_year,month_number = month_number)
             if (monthly_records):
                 yearly_records.append(monthly_records)
 
