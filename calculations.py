@@ -15,7 +15,6 @@ class RideFareCalculations:
             self.total_distance = 0
             self.kilometer += 1
         return self.total_distance, self.kilometer
-<<<<<<< HEAD
 
     def get_fare(self, total_distance):
         self.total_fare += (total_distance/15000)
@@ -24,15 +23,4 @@ class RideFareCalculations:
         if self.wait_time > 5:
             self.total_fare += 16
             self.wait_time = 0.0
-=======
-
-    def get_fare(self, total_distance):
-        self.total_fare += (total_distance/15000)
-        if self.speed.speed_state() <= 15:
-            self.wait_time = self.wait_time + 0.002
-        if self.wait_time > 5:
-            self.total_fare += 16
-            self.wait_time = 0.0
-
->>>>>>> 16854b26792236e47ae79093d3eb042db47d769d
         return self.total_fare, self.wait_time
