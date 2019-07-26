@@ -1,5 +1,4 @@
-from django.contrib.auth.base_user import BaseUserManager
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
 
 
@@ -7,9 +6,7 @@ class CustomUser(AbstractUser):
     is_student = models.BooleanField(default=False)
     is_teacher = models.BooleanField(default=False)
     email = models.EmailField(max_length=254, unique=True)
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = []
-    object = BaseUserManager()
+    objects = UserManager()
 
     def __str__(self):
         return self.email
@@ -54,14 +51,14 @@ class TakenQuiz(models.Model):
         verbose_name_plural: 'TakenQuizzes'
 
     def __str__(self):
-        return self.student
+        return self.student.email
 
 
 class SelectedOption(models.Model):
     student = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='student')
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name='taken')
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='Attempted')
-    Answer = models.ForeignKey(Answer, on_delete=models.CASCADE, related_name='Choosed')
+    answer = models.ForeignKey(Answer, on_delete=models.CASCADE, related_name='Choosed')
 
     def __str__(self):
-        return self.Answer
+        return self.answer.text

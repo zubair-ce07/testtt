@@ -16,9 +16,11 @@ def signup(request):
             if form.cleaned_data.get('is_teacher', False) and form.cleaned_data.get('is_student', False):
                 messages.error(request, 'You Can be Either a Student or Teacher, Not both!.')
                 return render(request, 'signup.html', {'form': form})
-            user = form.save(commit=False)
-            user.save()
-            username = user.email
+            if not form.cleaned_data.get('is_teacher', False) and not form.cleaned_data.get('is_student', False):
+                messages.error(request, 'Select Either  Student or Teacher.')
+                return render(request, 'signup.html', {'form': form})
+            user = form.save()
+            username = user.username
             raw_password = form.cleaned_data.get('password1')
             user = authenticate(username=username, password=raw_password, backend='django.contrib.auth.backends.ModelBackend')
             login(request, user)
@@ -127,7 +129,7 @@ def take_quiz(request, quiz_pk):
         quiz_solution = zip(quiz_questions, correct_ans, submitted_ans)
         TakenQuiz.objects.create(student_id=request.user.id, quiz_id=quiz_pk, score=score)
         for question, answer in zip(quiz_questions, submitted_ans):
-            SelectedOption.objects.create(student_id=request.user.id, question_id=question.pk, Answer_id=answer.id,
+            SelectedOption.objects.create(student_id=request.user.id, question_id=question.pk, answer_id=answer.id,
                                           quiz_id=quiz_pk)
         return render(request, 'result.html', {'quiz_sol': quiz_solution, 'score': score})
     return render(request, 'take_quiz.html', {'questions': zip(quiz_questions, range(1, len(quiz_questions) + 1))})
