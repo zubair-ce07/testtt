@@ -177,7 +177,7 @@ export class FlightResultsPage {
 		return this.stopsFilter.then(async function(stops) {
 			for(let stop of stops) {
 				const price: string = await stop.element(by.className("price")).getText();
-				if(price.match(/\$((?:\d|\,)*\.?\d+)/g) === null) {
+				if(!price.match(/\$((?:\d|\,)*\.?\d+)/g)) {
 					return false;
 				}
 			}
@@ -417,7 +417,6 @@ export class FlightResultsPage {
 		let airlinesResetLinkDisplayed = await this.airlinesResetLink.isDisplayed();
 		let airportsResetLinkDisplayed = await this.airportsResetLink.isDisplayed();
 		let bookingProvidersResetLinkDisplayed = await this.bookingProvidersResetLink.isDisplayed();
-
 		if(!stopsResetLinkDisplayed && !cabinResetLinkDisplayed && !airlinesResetLinkDisplayed && !airportsResetLinkDisplayed && !bookingProvidersResetLinkDisplayed) {
 			return true;
 		}
