@@ -1,7 +1,7 @@
 var express = require('express');
 var crypto = require('crypto');
 var passport = require('passport');
-var flash = require('connect-flash')
+var loginStatus = require('connect-ensure-login');
 var Strategy = require('passport-local').Strategy;
 const MongoClient = require('mongodb').MongoClient;
 const uri = "mongodb+srv://admin:admin@cluster0-ttgom.mongodb.net/test?retryWrites=true&w=majority";
@@ -31,34 +31,56 @@ function saltHashPassword(userpassword) {
 
 function viewUsers(req, res) {
   db.find((err, records)=> {
-    res.render('viewUsers', {records: records})
+    records.toArray((err, array) => {
+      res.json(array)
+    })
   })
 }
 
 function addUser(req, res) {
-  let userDetails = req.body
-  let passwordObject = saltHashPassword(req.body.password)
+  let userDetails = req.query
+  let passwordObject = saltHashPassword(userDetails.password)
 
-  if(userDetails.admin) {
-    db.count().then((count)=> {
-      db.insertOne({ id: count+1,
-        username: userDetails.username, 
-        name: userDetails.name, 
-        admin: true, 
-        password_hash: passwordObject.passwordHash, 
-        password_salt: passwordObject.salt})
-    })
-    res.render('addUser', {success: 1, failed: 0});
-  } else {
-    db.count().then((count)=> {
-      db.insertOne({ id: count+1,
-        username: userDetails.username, 
-        name: userDetails.name, 
-        admin: false, 
-        password_hash: passwordObject.passwordHash, 
-        password_salt: passwordObject.salt})
-    })
-    res.render('addUser', {success: 1, failed: 0});
+  db.findOne({username: userDetails.username}, (err, result) => {
+    if (err) {
+      console.log(err);
+      res.json({response: "Sorry, there was an error..."})
+      return err;
+    }
+
+    if(result) {
+      res.json({response: `Sorry, user with ${userDetails.username} already exists...`})
+      return;
+    } else {
+      try {
+        db.insertOne({
+          username: userDetails.username, 
+          name: userDetails.name, 
+          admin: userDetails.admin, 
+          password_hash: passwordObject.passwordHash, 
+          password_salt: passwordObject.salt})
+        res.json({response: `User ${userDetails.username} was successfully added!`});
+      } catch (e) {
+        res.json({response: "Sorry, there was an error..."})
+        return err
+      }
+    }
+  })
+}
+
+function deleteUser(req, res) {
+  let usernameToDelete = req.query.username
+  if(!usernameToDelete) {
+    res.json({response: "Please specify a USERNAME to delete from database"});
+    return;
+  }
+  
+  try {
+      db.deleteOne({username: usernameToDelete});
+      res.json({response: `User ${usernameToDelete} was successfully deleted!`});
+  } catch(e) {
+    console.log(e)
+    res.json({response: `Failed to delete the user: ${usernameToDelete}`})
   }
 }
 
@@ -100,11 +122,6 @@ passport.deserializeUser(function(username, cb) {
 
 var app = express();
 
-
-app.set('views', __dirname + '/views');
-app.set('view engine', 'ejs');
-
-app.use(flash())
 app.use(express.urlencoded({ extended: true }));
 app.use(require('express-session')({ secret: 'keyboard cat', resave: false, saveUninitialized: false }));
 
@@ -114,32 +131,28 @@ app.use(passport.session());
 
 app.get('/',
   function(req, res) {
-    res.render('home', { user: req.user });
+    if (req.user) {
+      res.json({response: "Hi there! You are now logged in..."})
+    } else {
+      res.json({response: "Please log in.."});
+    }
   });
 
-app.get('/login',
-  function(req, res){
-    // console.log(req.flash("error"))
-    res.render('login', { user: req.user, error: req.flash('error')});
-  });
   
-app.post('/login', 
-  passport.authenticate('local', { failureRedirect: '/login', failureFlash: true}),
+app.post('/login',
+  passport.authenticate('local', { failureRedirect: '/'}),
   function(req, res) {
     res.redirect('/');
   });
-
-app.get('/addUser',
-function(req, res) {
-  res.render('addUser', {success: 0, failed: 0});
-});
 
 app.get('/viewUsers', function (req, res) {
   viewUsers(req, res)
 });
 
-app.post('/addUser', function (req, res) {
-  addUser(req, res)
+app.post('/addUser',
+  loginStatus.ensureLoggedIn('/'),
+  function (req, res) {
+    addUser(req, res)
 })
   
 app.get('/logout',
@@ -148,10 +161,30 @@ app.get('/logout',
     res.redirect('/');
   });
 
+app.options('/',
+  function(req, res) {
+    res.send("GET, POST, HEAD, PUT, DELETE, OPTIONS")
+  }
+)
+
+app.delete('/', 
+  loginStatus.ensureLoggedIn('/'),
+  function (req, res) {
+    deleteUser(req, res);
+  }
+)
+
 app.get('/profile',
-  require('connect-ensure-login').ensureLoggedIn(),
-  function(req, res){
-    res.render('profile', { user: req.user });
+  loginStatus.ensureLoggedIn('/'),
+  function(req, res) {
+    let user = req.user;
+    res.json({userDetails: {
+                             id: user.id,
+                             username: user.username,
+                             name: user.name,
+                             admin: user.admin
+                           }
+            });
   });
 
 app.listen(8080);
