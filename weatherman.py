@@ -143,18 +143,18 @@ def main():
 
     if args.a:
         for arg in args.a:
-            my_date = str(arg.year)+"/"+str(arg.month)
-            print(f"For {my_date}")
-            year, month = my_date.split("/")
+            print(f"For {arg.year}/{arg.month}")
+            year = str(arg.year)
+            month = str(arg.month)
             report = ReportGenerator(weather_record, year, month)
             report.report_for_month()
             print("\n")
 
     if args.c:
         for arg in args.c:
-            my_date = str(arg.year)+"/"+str(arg.month)
-            print(f"For {my_date}")
-            year, month = my_date.split("/")
+            print(f"For {arg.year}/{arg.month}")
+            year = str(arg.year)
+            month = str(arg.month)
             report = ReportGenerator(weather_record, year, month)
             report.bar_charts()
             print("\n")
