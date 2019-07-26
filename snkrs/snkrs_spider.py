@@ -8,11 +8,18 @@ class SnkrsSpider(Spider):
     name = 'snkrsspider'
     retailer = 'snkrs'
     genders = [
-        ('women', 'women'), ('woman', 'woman'),
-        ('girls', 'girls'), ('boys', 'boys'),
-        ('kids', 'unisex-kids'), ('toy', 'unisex-kids'),
-        ('adults', 'unisex-adults'), ('dynamic', 'unisex-adults'),
-        ('guy', 'men'), ('guys', 'men'), ('jordan', 'men'), ('man', 'men'), ('men', 'men')
+        ('man', 'men'),
+        ('men', 'men'),
+        ('jordan', 'men'),
+        ('guy', 'boys'),
+        ('boys', 'boys'),
+        ('women', 'women'),
+        ('woman', 'women'),
+        ('girls', 'girls'),
+        ('kids', 'unisex-kids'),
+        ('toy', 'unisex-kids'),
+        ('adults', 'unisex-adults'),
+        ('dynamic', 'unisex-adults')
     ]
     start_urls = ['https://www.snkrs.com/en/']
 
