@@ -39,7 +39,7 @@ def logout_view(request):
 def home(request):
     if request.user.is_student:
         return redirect('student_home')
-    quiz_list = Quiz.objects.all()
+    quiz_list = Quiz.objects.filter(owner_id=request.user.id)
     return render(request, 'home.html', {'quizzes': quiz_list})
 
 
@@ -192,7 +192,9 @@ def student_home(request):
     if request.user.is_teacher:
         return HttpResponseBadRequest(content='Not Authorized')
     student = request.user
-    quiz_list = Quiz.objects.exclude(id__in=[quiz.quiz_id for quiz in TakenQuiz.objects.filter(student=student).all()]).all()
+    quiz_list = Quiz.objects.exclude(
+        id__in=[quiz.quiz_id for quiz in TakenQuiz.objects.filter(student=student)]).all().exclude(
+        questions__isnull=True)
     return render(request, 'student_home.html', {'quizzes': quiz_list})
 
 
@@ -200,6 +202,6 @@ def student_home(request):
 def result_view(request):
     if not request.user.is_student:
         return HttpResponseBadRequest(content='Not authorized')
-    student = request.user
     results = TakenQuiz.objects.all().filter(student=request.user)
     return render(request, 'result_view.html', {'results': results})
+

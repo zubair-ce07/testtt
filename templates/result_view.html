@@ -6,7 +6,7 @@
                   <tr>
                     <th>Quiz</th>
                     <th>Score</th>
-                    <th>Date</th>
+                      <th>Total</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -14,7 +14,7 @@
                   <tr>
                     <td>{{result.quiz.name}}</td>
                     <td>{{result.score}}</td>
-                    <td>{{result.date}}</td>
+                      <td>{{result.quiz.questions.count}}</td>
                   </tr>
                   {%endfor%}
                 </tbody>

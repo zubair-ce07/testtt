@@ -1,11 +1,28 @@
 {%extends 'base.html'%}
 {% block content %}
 <div class="container">
-    <h1>Your Score is {{score}}</h1>
+    <h1 class="text-center">Your Score is {{score}}</h1>
     {% for question, answer, selected in quiz_sol %}
-    <h4>Question: {{question.text}}</h4>
-    <h5>Answer: {{answer.text}}</h5>
-    <h6>Selected Option: {{selected.text}}</h6>
+    {%comment%}
+    <!--    <h4>Question: {{question.text}}</h4>-->
+    <!--    <p class="lead">Answer: {{answer.text}}</p>-->
+    <!--    <p class="{%if answer.text != selected.text%}lead text-danger{%else%}lead text-primary{%endif%}">Selected Option: {{selected.text}}</p>-->
+    {%endcomment%}
+    <dl class="row">
+        <dt class="col-sm-3">Question</dt>
+        <dd class="col-sm-9">{{question.text}}</dd>
+
+        <dt class="col-sm-3">Answer</dt>
+        <dd class="col-sm-9">
+            <p class="lead">Answer: {{answer.text}}</p>
+        </dd>
+
+        <dt class="col-sm-3">Selected Option</dt>
+        <dd class="col-sm-9"><p
+                class="{%if answer.text != selected.text%}lead text-danger{%else%}lead text-primary{%endif%}">Selected
+            Option: {{selected.text}}</p></dd>
+
+    </dl>
         {% endfor %}
 </div>
 

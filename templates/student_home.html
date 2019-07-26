@@ -9,6 +9,7 @@
             <th>Quiz</th>
             <th>Take</th>
             <th>Published Date</th>
+              <th>Created By</th>
           </tr>
         </thead>
         <tbody>
@@ -17,6 +18,7 @@
             <td>{{quiz.name}}</td>
             <td><a class="btn btn-dark" href="{%url 'take_quiz' quiz.pk%}">Take Quiz</a></td>
             <td>{{quiz.date}}</td>
+              <td>{{quiz.owner.username}}</td>
           </tr>
           {%endfor%}
         </tbody>
