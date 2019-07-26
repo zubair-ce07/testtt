@@ -75,7 +75,7 @@ def add_question(request, quiz_pk):
             question = form.save(commit=False)
             question.quiz_id = quiz_pk
             question.save()
-            return redirect('add_options',question.pk)
+            return redirect('add_options', question.pk)
     else:
         form = QuestionForm()
     return render(request, 'add_question.html', {'form': form})
@@ -86,10 +86,14 @@ def add_options(request, question_pk):
     if request.user.is_student:
         return HttpResponseBadRequest(content='Not Authorized')
     if request.method == 'POST':
-        option1 = {'text': request.POST.get('A'), 'is_correct': True if request.POST.get('Correct') == 'A' else False,'question_id': question_pk}
-        option2 = {'text': request.POST.get('B'), 'is_correct': True if request.POST.get('Correct') == 'B' else False,'question_id': question_pk}
-        option3 = {'text': request.POST.get('C'), 'is_correct': True if request.POST.get('Correct') == 'C' else False,'question_id': question_pk}
-        option4 = {'text': request.POST.get('D'), 'is_correct': True if request.POST.get('Correct') == 'D' else False,'question_id': question_pk}
+        option1 = {'text': request.POST.get('A'), 'is_correct': True if request.POST.get('Correct') == 'A' else False,
+                   'question_id': question_pk}
+        option2 = {'text': request.POST.get('B'), 'is_correct': True if request.POST.get('Correct') == 'B' else False,
+                   'question_id': question_pk}
+        option3 = {'text': request.POST.get('C'), 'is_correct': True if request.POST.get('Correct') == 'C' else False,
+                   'question_id': question_pk}
+        option4 = {'text': request.POST.get('D'), 'is_correct': True if request.POST.get('Correct') == 'D' else False,
+                   'question_id': question_pk}
         Answer.objects.create(**option1)
         Answer.objects.create(**option2)
         Answer.objects.create(**option3)
@@ -114,7 +118,8 @@ def take_quiz(request, quiz_pk):
         return HttpResponseBadRequest(content='Not Authorized')
     if TakenQuiz.objects.filter(student_id=request.user.id, quiz_id=quiz_pk).exists():
         return HttpResponseBadRequest(content='Already Taken, Cannot Retake')
-    quiz_questions = [question for question in get_object_or_404(Quiz,pk=quiz_pk).questions.all() if question.answers.all().count() >= 2 and question.answers.filter(is_correct=True).count() == 1]
+    quiz_questions = [question for question in get_object_or_404(Quiz, pk=quiz_pk).questions.all() if
+                      question.answers.all().count() >= 2 and question.answers.filter(is_correct=True).count() == 1]
     if request.method == 'POST':
         submitted_ans = Answer.objects.filter(pk__in=[request.POST.get(str(quiz.pk)) for quiz in quiz_questions])
         score = Answer.objects.filter(id__in=[ans.id for ans in submitted_ans]).filter(is_correct=True).count()
@@ -124,7 +129,7 @@ def take_quiz(request, quiz_pk):
         for question, answer in zip(quiz_questions, submitted_ans):
             SelectedOption.objects.create(student_id=request.user.id, question_id=question.pk, Answer_id=answer.id,
                                           quiz_id=quiz_pk)
-        return render(request,'result.html', {'quiz_sol': quiz_solution, 'score': score})
+        return render(request, 'result.html', {'quiz_sol': quiz_solution, 'score': score})
     return render(request, 'take_quiz.html', {'questions': zip(quiz_questions, range(1, len(quiz_questions) + 1))})
 
 
@@ -186,7 +191,7 @@ def student_home(request):
         return HttpResponseBadRequest(content='Not Authorized')
     student = request.user
     quiz_list = Quiz.objects.exclude(id__in=[quiz.quiz_id for quiz in TakenQuiz.objects.filter(student=student).all()]).all()
-    return render(request, 'student_home.html',{'quizzes': quiz_list})
+    return render(request, 'student_home.html', {'quizzes': quiz_list})
 
 
 @login_required
