@@ -19,7 +19,7 @@
 <li><a class="dropdown-trigger" id="heading-text" href="#!" data-target="dropdown1">{{ user.username }}<i class="material-icons right">arrow_drop_down</i></a></li>
 {% else %}
 <li><a id="heading-text" href="{% url 'login' %}">Login</a></li>
-<li><a id="heading-text" href="/accounts/signup/">Signup</a></li>
+<li><a id="heading-text" href="{% url 'accounts:signup' %}">Signup</a></li>
 {% endif %}
 {% endblock %}
 
@@ -62,7 +62,7 @@
   </a>
   <ul>
     <li><a class="btn-floating red tooltipped" data-position="left" data-tooltip="Article" href="/articles/add-article"><i class="material-icons">description</i></a></li>
-    <li><a class="btn-floating yellow darken-1 tooltipped" data-position="left" data-tooltip="Author" href="/articles/add-author"><i class="material-icons">account_circle</i></a></li>
+    <li><a class="btn-floating yellow darken-1 tooltipped" data-position="left" data-tooltip="Author" href="/articles/add-author"><i class="material-icons">person</i></a></li>
     <li><a class="btn-floating green tooltipped" data-position="left" data-tooltip="Website" href="/articles/add-website"><i class="material-icons">language</i></a></li>
   </ul>
 </div>

@@ -13,7 +13,7 @@ Add Website |
 
 {% block navbarbutton %}
 <ul id="dropdown1" class="dropdown-content">
-    <li><a href="{% url 'logout' %}">Logout</a></li>
+    <li><a id="category-text" href="{% url 'logout' %}">Logout</a></li>
 </ul>
 <li><a class="dropdown-trigger" id="heading-text" href="#!" data-target="dropdown1">{{ user.username }}<i class="material-icons right">arrow_drop_down</i></a></li>
 {% endblock %}

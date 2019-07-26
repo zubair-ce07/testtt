@@ -19,12 +19,12 @@ Login |
 </center>
 <div class="row">
     {% if form.errors %}
-    {{ form.errors }}
+    {{ form.non_field_errors }}
     {% endif %}
     {% if next|adminrequired %}
     {% if user.is_authenticated %}
     {% if not user.is_superuser %}
-    <p>This page is accessible to admin members only <span><a href="/">Back to Home</a></span></p>
+    <p>This page is accessible to admin members only <span><a href="{% url 'index' %}">Back to Home</a></span></p>
     {% endif %}
     {% endif %}
     {% endif %}
@@ -45,7 +45,7 @@ Login |
             </div>
         </div>       
         <center>
-            <p>Don't have an account? <span><a href="/accounts/signup/">Create a new one!</a></span></p>
+            <p>Don't have an account? <span><a href="{% url 'accounts:signup' %}">Create a new one!</a></span></p>
             <br>
             <button type="submit" class="btn waves-effect btn-large btn-success">Login</button>
         </center>

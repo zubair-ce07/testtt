@@ -22,3 +22,7 @@
 .card-content h5 a:hover{
     text-decoration: underline
 }
+
+.pagination li.active {
+    background-color: #233870 !important
+}
