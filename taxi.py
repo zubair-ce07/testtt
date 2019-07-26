@@ -1,6 +1,10 @@
+<<<<<<< HEAD
+=======
 import keyboard
+>>>>>>> 16854b26792236e47ae79093d3eb042db47d769d
 import os
 import time
+import keyboard
 import psutil
 
 from taxi_ride import TaxiRide
@@ -16,16 +20,25 @@ class TaxiMeterApp:
 
     def output(self):
         self.ride_time += 0.002
+<<<<<<< HEAD
+        total_distance, kilometer = self.fare_calculator.get_distance(self.speed.speed_state(),
+                                                                      self.ride_time)
+        total_fare, wait_time = self.fare_calculator.get_fare(total_distance)
+=======
 
         total_distance, kilometer = self.fare_calculator.get_distance(self.speed.speed_state(), self.ride_time)
         total_fare, wait_time = self.fare_calculator.get_fare(total_distance)
 
+>>>>>>> 16854b26792236e47ae79093d3eb042db47d769d
         if keyboard.is_pressed('p'):
             time.sleep(5)
         if keyboard.is_pressed('e'):
             p = psutil.Process()
             p.suspend()
+<<<<<<< HEAD
+=======
 
+>>>>>>> 16854b26792236e47ae79093d3eb042db47d769d
         print("Ride Time: %d Seconds:" % self.ride_time)
         print("Distance : %d KM %d Meters" % (kilometer, total_distance))
         print("Speed: %.2f KPH" % self.speed.speed_state())
