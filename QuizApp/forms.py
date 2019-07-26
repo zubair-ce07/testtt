@@ -1,15 +1,14 @@
 from django import forms
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm
-from django.forms.models import ModelForm
 
-from QuizApp.models import Answer, CustomUser, Question, Quiz
+from QuizApp.models import CustomUser, Question, Quiz
 
 
 class CustomUserCreationForm(UserCreationForm):
 
     class Meta(UserCreationForm):
         model = CustomUser
-        fields = ('email','is_teacher', 'is_student')
+        fields = ('username', 'email', 'is_teacher', 'is_student')
 
 
 class CustomUserChangeForm(UserChangeForm):

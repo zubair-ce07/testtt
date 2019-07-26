@@ -1,7 +1,9 @@
 from django.urls import include, path
+
 from . import views
+
 urlpatterns = [
-    path('', views.home, name='quiz_list'),
+    path('', views.home, name='home'),
     path('signout', views.logout_view, name='signout'),
     path('signup', views.signup, name='signup'),
     path('accounts/', include('django.contrib.auth.urls')),
