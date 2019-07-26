@@ -1,7 +1,10 @@
-"""This is module is about weather data, it reads weather data and report max
-    temp,min temp,max humidity of an year,average max temp,min temp and
-    humidity of a month, it also plot bar charts for of everyday for max
-    and min temperature."""
+"""Weather Data report Module.
+
+it reads weather data and report max
+temp,min temp,max humidity of an year,average max temp,min temp and
+humidity of a month, it also plot bar charts for of everyday for max
+and min temperature.
+"""
 import glob
 from datetime import datetime
 import argparse
@@ -13,14 +16,24 @@ import utils
 
 
 class WeatherMan:
-    """This class has 4 emthod that prints differnet report and
-    it store path of the files from where the data is fetched"""
+    """Weatherman class for weather reports.
+
+    This class has 4 methods that prints different reports and
+    it store path of the files from where the data is fetched
+    """
 
     def __init__(self, path):
+        """Weatherman object initilizer.
+
+        it take path from the arguments and set it to it's instance variable
+        """
         self.__path = path+'//'
 
     def year_files(self, year):  # fettching year files
-        """This method fecth files for given year"""
+        """Return year files.
+
+        it take year and fetch that year files and return it
+        """
         year_files = []
         directory_files = glob.glob(
             '{}Murree_weather_{}*'.format(self.__path, year))
@@ -30,8 +43,11 @@ class WeatherMan:
         return year_files
 
     def highest_record_in_a_year(self, year):
-        """This method prints highest,lowest tempreture,most humidity of the
-        year with month and day"""
+        """Find Highest,Lowest temperature and most Humidity in a year.
+
+        This method prints highest,lowest tempreture,most humidity of the
+        year with month and day
+        """
         max_temperatures = []
         low_temperatures = []
         weather_data_dates = []
@@ -78,8 +94,11 @@ class WeatherMan:
             )))
 
     def average_record_in_a_month(self, weather_date):
-        """This method prints average max,min temperature and
-         humidity of a month"""
+        """Find average highest,lowest temperature and average Humidity in a month.
+
+        This method prints average max,min temperature and
+        humidity of a month
+        """
         weather_date = datetime.strptime(weather_date, '%Y/%m')
         month = weather_date.strftime('%b')
         year = weather_date.strftime('%Y')
@@ -100,8 +119,8 @@ class WeatherMan:
         weather_data_dates += weather_data[4]
 
         for i in range(len(weather_data_dates)):
-                # checkin if the filed is empty and then adding it to the
-                # averages for later use
+            # checkin if the filed is empty and then adding it to the
+            # averages for later use
             if len(max_temperatures) > i:
                 highest_temp_average += int(max_temperatures[i])
             if len(low_temperatures) > i:
@@ -119,8 +138,11 @@ class WeatherMan:
 
     def highest_lowest_temprature_of_a_day_two_horizontal_bar_charts(
             self, weather_date):
-        """This method prints max and min temperature seprately
-        of each day of a month in horizontal bar chart"""
+        """Print Highest lowest Temperature in a Horizontal bar chart.
+
+        This method prints max and min temperature seprately
+        of each day of a month in horizontal bar chart
+        """
         date_object = datetime.strptime(weather_date, '%Y/%m')
         # printing date in words
         print(date_object.strftime('%B %Y'))
@@ -148,8 +170,11 @@ class WeatherMan:
     def highest_lowest_temprature_of_a_day_one_horzontal_bar_chart(
             self, weather_date
     ):
-        """This method prints max and min temperature
-        of each day of a month in one horizontal bar chart"""
+        """Print Highest,Lowest temperature in a single Horizontal bar chart.
+
+        This method prints max and min temperature
+        of each day of a month in one horizontal bar chart
+        """
         date_object = datetime.strptime(weather_date, '%Y/%m')
         # printing date in words
         print(date_object.strftime('%B %Y'))
@@ -179,9 +204,11 @@ class WeatherMan:
 
 
 def main():
-    """main method of the program where arguments are
-    evaluated and respective report is generated"""
+    """Weather man main method.
 
+    main method of the program where arguments are
+    evaluated and respective report is generated
+    """
     parser = argparse.ArgumentParser(description='Year for ')
     parser.add_argument('files_path', type=str,
                         help='Path to weather files')
