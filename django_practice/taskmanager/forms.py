@@ -5,6 +5,10 @@ from django.contrib.auth.forms import UserCreationForm
 from taskmanager.models import Task
 from taskmanager.validators import validate_username_unique, validate_email_unique
 
+from taskmanager.validators import validate_user_profile_picture
+
+from taskmanager.models import CustomUser
+
 
 class TaskForm(forms.ModelForm):
     class Meta:
@@ -22,21 +26,35 @@ class TaskForm(forms.ModelForm):
 
 
 class UserRegistrationForm(UserCreationForm):
-    field_order = ['username', 'email', 'first_name', 'last_name', 'password1', 'password2']
+    class Meta:
+        model = CustomUser
+        fields = ['profile_picture', 'username', 'email', 'first_name', 'last_name', 'birthday', 'address',
+                  'password1', 'password2']
+
+    # field_order = ['profile_picture', 'username', 'email', 'first_name', 'last_name', 'birthday', 'address',
+    #                'password1', 'password2']
 
     username = forms.CharField(
         max_length=50,
         label='Username:',
-        validators=[validate_username_unique],
         widget=forms.TextInput(attrs={
             "class": "form-control",
             "placeholder": "Username"
         })
     )
 
+    email = forms.CharField(
+        max_length=50,
+        label="Email",
+        widget=forms.TextInput(attrs={
+            "class": "form-control",
+            "placeholder": "Email",
+            "type": "email"
+        })
+    )
     first_name = forms.CharField(
         max_length=50,
-        label="First Name:",
+        label="First Name",
         widget=forms.TextInput(attrs={
             "class": "form-control",
             "placeholder": "First Name"
@@ -45,41 +63,61 @@ class UserRegistrationForm(UserCreationForm):
 
     last_name = forms.CharField(
         max_length=50,
-        label="Last Name:",
+        label="Last Name",
         widget=forms.TextInput(attrs={
             "class": "form-control",
             "placeholder": "Last Name"
         })
     )
 
+    address = forms.Textarea()
+
+    birthday = forms.DateField(
+        widget=forms.TextInput(attrs={
+            "class": "form-control",
+            "type": 'date',
+            "max": datetime.date.today(),
+            "value": datetime.date.today()
+        })
+    )
+
+    profile_picture = forms.ImageField(
+        validators=[validate_user_profile_picture]
+    )
+
+    def save(self, commit=True):
+        user = super(UserRegistrationForm, self).save(commit=False)
+        user.first_name = self.cleaned_data["first_name"]
+        user.last_name = self.cleaned_data["last_name"]
+        user.email = self.cleaned_data["email"]
+        user.profile_picture = self.cleaned_data["profile_picture"]
+        user.address = self.cleaned_data["address"]
+        user.birthday = self.cleaned_data["birthday"]
+        if commit:
+            user.save()
+        return user
+
+
+class UpdateProfileForm(forms.ModelForm):
+    class Meta:
+        model = CustomUser
+        fields = ['profile_picture', 'username', 'email', 'first_name', 'last_name', 'birthday', 'address', ]
+
+    username = forms.CharField(
+        max_length=50,
+        label='Username:',
+        widget=forms.TextInput(attrs={
+            "class": "form-control",
+            "placeholder": "Username"
+        })
+    )
+
     email = forms.CharField(
         max_length=50,
         label="Email",
-        validators=[validate_email_unique],
         widget=forms.TextInput(attrs={
             "class": "form-control",
             "placeholder": "Email",
             "type": "email"
-        })
-    )
-
-    password1 = forms.CharField(
-        label="Password:",
-        help_text="150 characters or fewer. Atleast 8 characters, Not too common, Letters, digits and @/./-/+/_ "
-                  "allowed. ",
-        widget=forms.TextInput(attrs={
-            "class": "form-control",
-            "placeholder": "Password",
-            'type': "password",
-        })
-    )
-
-    password2 = forms.CharField(
-        label="Confirm Password:",
-        help_text="Enter the same password as before.",
-        widget=forms.TextInput(attrs={
-            "class": "form-control",
-            "placeholder": "Confirm Password",
-            "type": "password"
         })
     )

@@ -25,13 +25,13 @@ ALLOWED_HOSTS = ['djangopractice-taskmanager.herokuapp.com']
 # Application definition
 
 INSTALLED_APPS = [
+    'taskmanager',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'taskmanager',
     'whitenoise.runserver_nostatic',
 ]
 
@@ -90,6 +90,8 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
+AUTH_USER_MODEL = 'taskmanager.CustomUser'
+
 TIME_ZONE = 'UTC'
 
 USE_I18N = True
@@ -107,6 +109,10 @@ PROJECT_ROOT = os.path.join(os.path.abspath(__file__))
 STATIC_ROOT = os.path.join(PROJECT_ROOT, 'static')
 
 STATIC_URL = '/static/'
+
+MEDIA_URL = '/media/'
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 STATICFILES_DIRS = (
     "/home/rehan/workspace/the-lab/django_practice/static",

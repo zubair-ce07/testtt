@@ -10,7 +10,7 @@
     <h2>Register</h2>
 
     <div class="container col-md-5">
-        <form method="POST" action="{% url 'register' %}">
+        <form method="POST" action="{% url 'register' %}" enctype="multipart/form-data">
             {% csrf_token %}
 
             {% for field in form %}
