@@ -15,21 +15,20 @@ def read_file(path):
     """
     weather_data = WeatherData()
     try:
-        csv_file = open(path)
-        csv_reader = csv.reader(csv_file, delimiter=',')
-        next(csv_reader)  # for skipping titles
-        for row in csv_reader:
-            # checking if a field data is empty
-            if row[1]:
-                weather_data.max_temperatures.append(int(row[1]))
-            if row[3]:
-                weather_data.low_temperatures.append(int(row[3]))
-            if row[7]:
-                weather_data.max_humidities.append(int(row[7]))
-            if row[8]:
-                weather_data.average_humidities.append(int(row[8]))
-            weather_data.weather_data_dates.append(row[0])
-        csv_file.close()
+        input_file = csv.DictReader(open(path))
+        for row in input_file:
+            if row['Max TemperatureC']:
+                weather_data.max_temperatures.append(
+                    int(row['Max TemperatureC']))
+            if row['Min TemperatureC']:
+                weather_data.low_temperatures.append(
+                    int(row['Min TemperatureC']))
+            if row['Max Humidity']:
+                weather_data.max_humidities.append(int(row['Max Humidity']))
+            if row[' Mean Humidity']:
+                weather_data.average_humidities.append(
+                    int(row[' Mean Humidity']))
+            weather_data.weather_data_dates.append(row['PKT'])
         return weather_data
     except FileNotFoundError:
         print("Data not found for this date")
