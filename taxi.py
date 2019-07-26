@@ -1,48 +1,37 @@
-import keyboard
-from os import system
+import os
 import time
+import keyboard
 import psutil
-from speed import Speed
-from calculations import DataCalculator
+
+from taxi_ride import TaxiRide
+from calculations import RideFareCalculations
+
 
 class TaxiMeterApp:
-    wait_time = 0
     ride_time = 0
-    total_distance = 0
-    base_fare = 80
-    total_fare = base_fare
-    kilometer = 0
 
     def __init__(self):
-
-        self.speed = Speed()
-        self.data_calculator = DataCalculator()
+        self.speed = TaxiRide()
+        self.fare_calculator = RideFareCalculations()
 
     def output(self):
-        total_distance, total_fare, ride_time, wait_time = self.data_calculator.ride_fare_calculation(
-            self.speed.speed_state())
-        if self.wait_time > 15:
-            self.wait_time = 0.0
-            self.total_fare += 16
-
-        if total_distance > 1000:
-            total_distance = 0
-            self.kilometer += 1
+        self.ride_time += 0.002
+        total_distance, kilometer = self.fare_calculator.get_distance(self.speed.speed_state(),
+                                                                      self.ride_time)
+        total_fare, wait_time = self.fare_calculator.get_fare(total_distance)
         if keyboard.is_pressed('p'):
             time.sleep(5)
         if keyboard.is_pressed('e'):
             p = psutil.Process()
             p.suspend()
-
-        print("Ride Time: %d Seconds:" % ride_time)
-        print("Distance : %d KM %d Meters" % (self.kilometer, total_distance))
+        print("Ride Time: %d Seconds:" % self.ride_time)
+        print("Distance : %d KM %d Meters" % (kilometer, total_distance))
         print("Speed: %.2f KPH" % self.speed.speed_state())
         print("Fare: %d Rs" % total_fare)
-        print("Wait Time: %.2f" % wait_time)
+        print("Wait Time: %d Seconds" % wait_time)
 
 
 taxi_meter_app = TaxiMeterApp()
-
 while True:
     taxi_meter_app.output()
-    system('clear')
+    os.system('clear')
