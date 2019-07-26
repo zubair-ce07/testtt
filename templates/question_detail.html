@@ -1,0 +1,21 @@
+{%extends 'base.html'%}
+{% block content %}
+<div class="container">
+    <p class="lead mark col-md-8">{{question.text}}</p>
+    <ul>
+            {% for answer in answers %}
+            <code class="text-justify">{{answer.text}}{%if answer.is_correct%}<span style="all:initial"> &#x2714;</span>{%endif%}</code><br>
+            {% empty %}
+            <kbd>Sorry, No Options for this Question, </kbd>
+            <br>
+            <br>
+            <a class="btn btn-secondary" href="{%url 'add_options' question.pk %}">Add Options</a>
+            {%endfor%}
+    </ul>
+    <a class="btn btn-secondary" href="{%url 'edit_question' question.pk%}">Edit Question</a>
+    {%if answers.count > 0%}
+    <a class="btn btn-success" href="{%url 'edit_options' question.pk %}">Edit Options</a>
+    {%endif%}
+    <a class="btn btn-danger" href="{%url 'delete_question' question.pk%}">Delete Question</a>
+</div>
+{%endblock%}

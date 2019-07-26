@@ -1,0 +1,26 @@
+{%extends 'base.html'%}
+{% block content %}
+<div class="container">
+        <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Student</th>
+                    <th>Score</th>
+                    <th>Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                        {%for quiz in quizzes%}
+                  <tr>
+                    <td>{{quiz.student}}</td>
+                    <td><kbd class="font-weight-bold">{{quiz.score}}</kbd></td>
+                    <td><a class="btn btn-info" href="{%url 'quiz_result' quiz.pk%}">{{quiz.date}}</a></td>
+                  </tr>
+                  {%endfor%}
+                </tbody>
+              </table>
+
+
+</div>
+
+{%endblock%}

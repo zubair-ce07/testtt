@@ -1,0 +1,39 @@
+{%extends 'base.html'%}
+{% block content %}
+<div class="container">
+        {% comment %}
+<ul>
+    {%for quiz in quizzes%}
+    <li>
+        <a href="{%url 'quiz_details' quiz.pk%}">
+            {{quiz.name}}
+        </a>
+    </li>
+</ul>
+{% endcomment %}
+<table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Quiz</th>
+            <th>Taken</th>
+            <th>Result</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+                {%for quiz in quizzes%}
+          <tr>
+            <td>{{quiz.name}}</td>
+            <td><kbd class="font-weight-bold">{{quiz.taken_quizzes.all.count}}</kbd></td>
+            <td><a class="btn btn-info" href="{%url 'quiz_result' quiz.pk%}">Show</a></td>
+            <td>
+                <a class="btn btn-dark" href="{%url 'quiz_details' quiz.pk%}">Details</a>
+                <a class="btn btn-danger" href="{%url 'delete_quiz' quiz.pk%}">Delete</a>
+            </td>
+          </tr>
+          {%endfor%}
+        </tbody>
+      </table>
+
+</div>
+{% endblock %}

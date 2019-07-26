@@ -1,0 +1,45 @@
+{%extends 'base.html'%}
+{% block content %}
+
+<div class="container">
+    <h1>{{question.text}}</h1>
+    <form method="POST" id="form_id" onsubmit="return validateForm()">
+            {% csrf_token %}
+        <input type="text" name="A" required>
+        <input type="radio" name="Correct" value="A" required>
+        <br>
+        <input type="text" name="B"required>
+        <input type="radio" name="Correct" value="B" >
+        <br>
+        <input type="text" name="C" required>
+        <input type="radio" name="Correct" value="C">
+        <br>
+        <input type="text" name="D" required>
+        <input type="radio" name="Correct" value="D">
+        <br>
+        <input type="submit">
+    </form>
+</div>
+<script>
+        function validateForm()
+        {
+            var msg= "",
+                fields = document.getElementById("form_id").getElementsByTagName("input");
+            
+            for (var i=0; i<fields.length; i++){
+                if(fields[i].type.toLowerCase() == "text"){
+                    inp = fields[i].value.trim() 
+                if (inp == "") 
+                    msg += 'Input Field can not be blank. \n';
+                }
+            }
+        
+            if(msg) {
+                alert(msg);
+                return false;
+            }
+            else
+                return true;
+        }
+</script>
+{%endblock%}

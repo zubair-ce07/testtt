@@ -1,0 +1,13 @@
+{%extends 'base.html'%}
+{% block content %}
+<div class="container">
+        <form class="form-group " method="POST">
+            {% csrf_token %}
+            <div class="form-control col-md-5 ">
+            {{form.as_ul}}
+            <input class="offset-md-3  btn btn-success" type="submit">
+            </div>
+        </form>
+        <a href="{% url 'quiz_list'%}">Go back</a>
+    </div>
+{%endblock%}
