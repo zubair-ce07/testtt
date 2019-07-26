@@ -1,27 +1,30 @@
-import argparse
 import csv
-import calendar
 import glob
+import calendar
+import argparse
+
 from colorama import Fore
 from colorama import Style
 from datetime import datetime
 
+FILE_NAME_T = "Murree_weather_"
+
 
 class Validator:
     @staticmethod
-    def is_valid_date_month(given_date):
+    def is_valid_date(date):
         try:
-            return datetime.strptime(given_date, "%Y/%m")
+            return datetime.strptime(date, "%Y/%m")
         except ValueError:
-            msg = "Not a valid date: '{0}'.".format(given_date)
+            msg = "Not a valid date: '{0}'.".format(date)
             raise argparse.ArgumentTypeError(msg)
 
     @staticmethod
-    def is_valid_date_year(given_date):
+    def is_valid_year(year):
         try:
-            return datetime.strptime(given_date, "%Y")
+            return datetime.strptime(year, "%Y")
         except ValueError:
-            msg = "Not a valid date: '{0}'.".format(given_date)
+            msg = "Not a valid year: '{0}'.".format(year)
             raise argparse.ArgumentTypeError(msg)
 
 
@@ -65,7 +68,7 @@ class ReportPrinter:
 class ReportGenerator:
     def __init__(self, arguments, path):
         self.arguments = arguments
-        self.reader = Reader(path)
+        self.reader = ReportReader(path)
 
     def generate_monthly_report(self, file_name):
         monthly_data = self.reader.read_monthly_records(file_name)
@@ -102,11 +105,9 @@ class ReportGenerator:
 
     def generate_reports(self):
         for arg in self.arguments:
-            file_name = "Murree_weather_"
             if self.arguments[arg] and arg != "path":
-                print()
                 date = self.arguments[arg].strftime("%Y_%b")
-                file_name = file_name + date + ".txt";
+                file_name = FILE_NAME_T + date + ".txt"
                 if arg == "a":
                     self.generate_monthly_report(file_name)
                 elif arg == "b":
@@ -118,7 +119,7 @@ class ReportGenerator:
                     self.generate_yearly_report(year)
 
 
-class Reader:
+class ReportReader:
 
     def __init__(self, path):
         self.files = [f for f in glob.glob(path + "**/*.txt", recursive=True)]
@@ -144,7 +145,7 @@ class Reader:
             with open(file_name) as weather_file:
                 reader = csv.DictReader(weather_file)
                 for row in reader:
-                    daily_data = Reader.read_daily_records(row)
+                    daily_data = ReportReader.read_daily_records(row)
                     if daily_data:
                         monthly_record.append(daily_data)
             return monthly_record
@@ -152,9 +153,8 @@ class Reader:
     def read_yearly_records(self, year):
         yearly_record = []
         for i in range(1, 13):
-            file_name = "Murree_weather_"
             given_date = year + "_" + calendar.month_abbr[i]
-            file_name = file_name + given_date + ".txt"
+            file_name = FILE_NAME_T + given_date + ".txt"
             monthly_record = self.read_monthly_records(file_name)
             if monthly_record:
                 yearly_record.extend(monthly_record)
@@ -164,10 +164,10 @@ class Reader:
 def get_arguments_list():
     parser = argparse.ArgumentParser()
     parser.add_argument("path", type=str)
-    parser.add_argument("-a", type=Validator.is_valid_date_month)
-    parser.add_argument("-b", type=Validator.is_valid_date_month)
-    parser.add_argument("-c", type=Validator.is_valid_date_month)
-    parser.add_argument("-e", type=Validator.is_valid_date_year)
+    parser.add_argument("-a", type=Validator.is_valid_date)
+    parser.add_argument("-b", type=Validator.is_valid_date)
+    parser.add_argument("-c", type=Validator.is_valid_date)
+    parser.add_argument("-e", type=Validator.is_valid_year)
     args = vars(parser.parse_args())
     if not (args["a"] or args["b"] or args["c"] or args["e"]):
         parser.error('No arguments provided.')
@@ -175,8 +175,8 @@ def get_arguments_list():
 
 
 def main():
-    arguments_list = get_arguments_list()
-    report = ReportGenerator(arguments_list, arguments_list["path"])
+    arguments = get_arguments_list()
+    report = ReportGenerator(arguments, arguments["path"])
     report.generate_reports()
 
 
