@@ -2,22 +2,27 @@ var chai = require('chai');
 var chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
 var expect = chai.expect;
-import {flightResultsPage} from './flightResultsPage'
+import {FlightResultsPage} from './FlightResultsPage'
 
 describe('Flight Prediction Graph: ', function() {
 
-	let flightResults = new flightResultsPage();
+	let flightResults = new FlightResultsPage();
 	
 	before("Should open kayak site and maximize browser", async function() {
+		
 		await flightResults.isNonAngularApplication();
 		await flightResults.get();
 		await flightResults.maximizeBrowser(); 
+		await flightResults.closePopupDialog();
+	});
+
+	it("Should FPP(Flight Prediction Price) graph Appears in Left Rail", async function() {
 		
+		expect(await flightResults.isPredictionPriceDisplayed()).to.be.true;
 	});
 
 	it("Should show xxx of XXXX flights on top", async function() {
 		
-		await flightResults.closePopup();
 		expect(await flightResults.getFlightsCount()).to.match(/^[0-9]+ of [0-9]+ flights$/gm);
 	});
 
@@ -49,16 +54,19 @@ describe('Flight Prediction Graph: ', function() {
 		expect(await flightResults.isResultsContainNonStopAndOneStopOnly()).to.be.true;
 	});
 
-	it("Should be able check Depart/Return Same and verify if results contain Depart and Return Same", async function() {
+	it("Should be able check Depart/Return Same and verify if results contain Depart and Return Same and Results get fever", async function() {
 
-		await flightResults.clickSameDepartAndReturn();
+		const flightCountBefore = await flightResults.getTotalFlights();
+		await flightResults.checkSameDepartAndReturn();
+		const flightCountAfter = await flightResults.getTotalFlights();
 		expect(await flightResults.isResultsContainDepartAndReturnSame()).to.be.true;
+		expect(flightCountAfter).to.be.below(flightCountBefore);
 	});
 
 	it("Should be able to uncheck Depart/Return Same and verify if results contain either Depart and Return same or not", async function() {
 
-		await flightResults.clickSameDepartAndReturn();
-		expect(await flightResults.isResultsContainDepartAndReturnSame()).to.be.true;
+		await flightResults.unCheckSameDepartAndReturn();
+		expect(await flightResults.isResultsContainDepartAndReturnSameAndDifferent()).to.be.true;
 	});
 
 	it("Should be able to uncheck EWR Airport and verify if results don't contain EWR airport", async function() {
@@ -80,10 +88,10 @@ describe('Flight Prediction Graph: ', function() {
 		expect(await flightResults.isResultsNotContainEconomyCabins()).to.be.true;
 	});
 
-	it("Should be able to click reset link on cabins and verify if results contain economy cabins", async function() {
+	it("Should be able to click reset link on cabins and verify if results contain all cabins", async function() {
 
 		await flightResults.clickResetCabinLink();
-		expect(await flightResults.isResultsNotContainEconomyCabins()).to.be.false;
+		expect(await flightResults.isResultsContainAllCabins()).to.be.false;
 	});
 
 	it("Should be able to check long flights and verify if count of total flights increases", async function() {
@@ -92,7 +100,6 @@ describe('Flight Prediction Graph: ', function() {
 		await flightResults.clickFlightQualityTitle();
 		await flightResults.clickLongFlightsFilter();
 		const flightCountAfter = await flightResults.getTotalFlights();
-		
 		expect(flightCountBefore).to.be.below(flightCountAfter);
 	});
 
@@ -115,17 +122,15 @@ describe('Flight Prediction Graph: ', function() {
 		expect(await flightResults.getCheapestPrice()).to.be.equal(await flightResults.getBookingProviderFilterPrice());
 	});
 
-	it("Should be able to click reset link at top of booking providers filter and verify if results contain providers again", async function() {
+	it("Should be able to click reset link at top of booking providers filter and verify if results contain all providers", async function() {
 
 		await flightResults.clickBookingProviderResetLink();
-		expect(await flightResults.isResultsContainsAlaskaAirlinesOnly()).to.be.false;
+		expect(await flightResults.isResultsContainsAllProviders()).to.be.false;
 	});
 
-	it("should be able to click xxx of XXX on top and verify if all filters are reset again", async function() {
+	it("should be able to click xxx of XXXX on top and verify if all filters are reset again", async function() {
 
 		await flightResults.clickTopFlightsLink();
-		expect(await flightResults.isResultsContainsAlaskaAirlinesOnly()).to.be.false;
-		expect(await flightResults.isResultsContainJetBlueAirwaysOnly()).to.be.false;
-		expect(await flightResults.isResultsNotContainEconomyCabins()).to.be.false;
+		expect(await flightResults.isAllFiltersReset()).to.be.false;
 	});
 });

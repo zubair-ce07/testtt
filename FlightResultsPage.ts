@@ -1,18 +1,19 @@
-import {browser, $, element, by, protractor, promise, ElementFinder, ElementArrayFinder} from 'protractor';
-import{kayakFactory} from "./kayakFactory";
-import {commonPage} from "./commonPage"
+import {browser, $, element, by, protractor, promise, ElementFinder, ElementArrayFinder, ProtractorExpectedConditions} from 'protractor';
+import {CommonPage} from "./CommonPage"
 import { kayakHelper } from './kayakHelper';
 
-export class flightResultsPage {
+export class FlightResultsPage {
 
-	kayakCommonPage = new commonPage();
-	helper = new kayakHelper();
-
-	kayakUrl = "https://www.kayak.com/flights/NYC-LAX/2019-08-18/2019-08-25";
+	kayakCommonPage: CommonPage = new CommonPage();
+	helper: kayakHelper = new kayakHelper();
+	expectedCondition: ProtractorExpectedConditions = protractor.ExpectedConditions;
+	kayakUrl: string = "https://www.kayak.com/flights/NYC-LAX/2019-08-18/2019-08-25";	
+	loadingClass: ElementFinder = element(by.css("div[class*=no-spin]"));
+	flightPredictionGraph = element(by.css("div[class*='FlightQueryPricePrediction'] div[id$=advice]"));
 	cheapestPrice: ElementFinder = element(by.css("a[id$='price_aTab']"));
 	flightCount: ElementFinder = element(by.css("div[id$=resultsCount]"));
 	flightCountLink: ElementFinder = element(by.css("div[id$=resultsCount] .showAll"));
-	FlightsTotalCount: ElementFinder = element(by.css("span[id$=counts-totalCount]"));
+	flightsTotalCount: ElementFinder = element(by.css("span[id$=counts-totalCount]"));
 	stopsFilter: ElementArrayFinder = element.all(by.css("div[id$=stops-content] li"));
 	airlinesFilter: ElementArrayFinder = element.all(by.css("div[id$=airlines-airlines-content] li"));
 	bookingProvidersFilter: ElementArrayFinder = element.all(by.css("div[id$=providers-content] li"));
@@ -20,16 +21,18 @@ export class flightResultsPage {
 	qualityFilter: ElementArrayFinder = element.all(by.css("div[id$=quality-section-content] li"));
 	stopsInResults: ElementArrayFinder = element.all(by.css(".section.stops"));
 	sameDepartAndReturnCheckbox: ElementFinder = element(by.css("div[id$=sameair-check-icon]"));
-	EWRCheckbox: ElementFinder = element(by.css("div[id$=EWR-check-icon]"));
+	ewrCheckbox: ElementFinder = element(by.css("div[id$=EWR-check-icon]"));
 	cabinTitle: ElementFinder = element(by.css("div[id$=cabin-title]"));
 	flightQualityTitle: ElementFinder = element(by.css("div[id$=quality-section-title]"));
 	bookingProvidersTitle: ElementFinder = element(by.css("div[id$=providers-title]"));
 	stopsResetLink: ElementFinder = element(by.css("a[id$=stops-reset]"));
 	cabinResetLink: ElementFinder = element(by.css("a[id$=cabin-reset]"));
+	airlinesResetLink: ElementFinder = element(by.css("a[id$=airlines-reset]"));
+	airportsResetLink: ElementFinder = element(by.css("a[id$=airports-section-reset]"));
 	bookingProvidersResetLink: ElementFinder = element(by.css("a[id$=providers-reset]"));
 	flightResults: ElementArrayFinder = element.all(by.css(".Flights-Results-FlightResultItem"));
-	popupDialogue: ElementFinder = element(by.css(".flightsDriveBy"));
-	popupDialogueClosedButton: ElementFinder = this.popupDialogue.element(by.css(".Button-No-Standard-Style.close"));
+	popupDialog: ElementFinder = element(by.css(".flightsDriveBy"));
+	popupDialogCloseButton: ElementFinder = this.popupDialog.element(by.css(".Button-No-Standard-Style.close"));
 
 	async get(): Promise<void> {
 		await browser.get(this.kayakUrl);
@@ -43,13 +46,13 @@ export class flightResultsPage {
 		await browser.manage().window().setSize(1600, 1000);
 	}
 
-	async closePopup(): Promise<void> {
-		await this.kayakCommonPage.waitUntillElementAppears(this.popupDialogue)
-		await this.popupDialogueClosedButton.click();
+	async closePopupDialog(): Promise<void> {
+		await this.kayakCommonPage.waitUntillElementAppears(this.popupDialog)
+		await this.popupDialogCloseButton.click();
 	}
 
 	async getTotalFlights(): Promise<number> {
-		return this.FlightsTotalCount.getText().then(function(totalFlights) {
+		return this.flightsTotalCount.getText().then(function(totalFlights) {
 			return Number(totalFlights);
 		});
 	}
@@ -65,17 +68,15 @@ export class flightResultsPage {
 	}
 
 	async getBookingProviderFilterPrice(): Promise<number> {
-		await browser.sleep(3000);
+		let that = await this;
 		return this.bookingProvidersFilter.then(async function(providers) {
 			for(let provider of providers) {
 				await browser.actions().mouseMove(provider).perform();
-				await browser.sleep(1000);
 				let PriceText: string = await provider.element(by.css("button[id$=-price]")).getText();
 				if(PriceText.trim()) {
-					return await this.helper.getPrice(PriceText);
+					return await that.helper.getPrice(PriceText);
 				}
 			}
-			await browser.sleep(3000);
 		});
 	}
 
@@ -85,12 +86,22 @@ export class flightResultsPage {
 		});
 	}
 
-	async clickSameDepartAndReturn(): Promise<void> {
-		await this.sameDepartAndReturnCheckbox.click();
+	async checkSameDepartAndReturn(): Promise<void> {
+		let isSameDepartAndReturnChecked = await this.sameDepartAndReturnCheckbox.getAttribute("aria-checked");
+		if(isSameDepartAndReturnChecked === "false") {
+			await this.sameDepartAndReturnCheckbox.click();
+		}
+	}
+
+	async unCheckSameDepartAndReturn(): Promise<void> {
+		let isSameDepartAndReturnChecked = await this.sameDepartAndReturnCheckbox.getAttribute("aria-checked");
+		if(isSameDepartAndReturnChecked === "true") {
+			await this.sameDepartAndReturnCheckbox.click();
+		}
 	}
 
 	async clickEWRCheckbox(): Promise<void> {
-		await this.EWRCheckbox.click();
+		await this.ewrCheckbox.click();
 	}
 
 	async clickBookingProviderResetLink(): Promise<void> {
@@ -127,7 +138,6 @@ export class flightResultsPage {
 	}
 
 	async clickJetBluePrice(): Promise<void> {
-		await browser.sleep(3000);
 		return this.airlinesFilter.then(async function(airlines) {
 			for(let airline of airlines) {
 				let airlineText: string = await airline.element(by.css("label[id$=check-label]")).getText();
@@ -136,12 +146,10 @@ export class flightResultsPage {
 					await airline.element(by.css("button[id$=-price")).click();
 				}
 			}
-			await browser.sleep(3000);
 		});
 	}
 
 	async clickLongFlightsFilter(): Promise<void> {
-		await browser.sleep(3000);
 		return this.qualityFilter.then(async function(flights) {
 			for(let flight of flights) {
 				let flightText: string = await flight.element(by.css("label[id$=check-label]")).getText();
@@ -150,7 +158,6 @@ export class flightResultsPage {
 					await flight.element(by.css("div[id$=check-icon]")).click();
 				}
 			}
-			await browser.sleep(5000);
 		});
 	}
 
@@ -174,15 +181,16 @@ export class flightResultsPage {
 					return false;
 				}
 			}
-			return true
+			return true;
 		});
 	}
 	
 	async isStopFiltersHighlightedAndShowOnlyOnHover(): Promise<boolean> {
+		let that = await this;
 		return this.stopsFilter.then(async function(stops) {
 			for (let stop of stops) {
-				await browser.actions().mouseMove(stop).perform();
-				await browser.sleep(1000);
+				await browser.actions().mouseMove(stop).mouseMove(stop).perform();
+				await browser.wait(that.expectedCondition.visibilityOf(stop.element(by.css("button[id$='-only']"))), 30000);
 				const onlyLink: boolean = await stop.element(by.css("button[id$='-only']")).isPresent();
 				if(!onlyLink) {
 					return false
@@ -198,21 +206,21 @@ export class flightResultsPage {
 	}
 
 	async hoverAndClickNonStopOnlyLink(): Promise<void> {
-		this.stopsFilter.then(async function(stops) {
+		let that = await this;
+		await this.stopsFilter.then(async function(stops) {
 			for (let stop of stops) {
 				await browser.actions().mouseMove(stop).perform();
-				await browser.sleep(1000);
 				let stopText = await stop.element(by.css("label[id$=check-label]")).getText();
 				if(stopText.trim() === "Nonstop") {
+					await browser.wait(that.expectedCondition.visibilityOf(stop.element(by.css("button[id$='-only']"))), 30000);
 					await stop.element(by.css("button[id$='-only']")).click();
+					return;
 				}
 			}
-			await browser.sleep(5000);
 		});
 	}
 
 	async uncheckEconomyFilter(): Promise<void> {
-		await browser.sleep(3000);
 		return this.cabinFilter.then(async function(cabins) {
 			for(let cabin of cabins) {
 				let cabinText: string = await cabin.element(by.css("label[id$=check-label]")).getText();
@@ -220,29 +228,33 @@ export class flightResultsPage {
 					await cabin.element(by.css("div[id$=check-icon]")).click();
 				}
 			}
-			await browser.sleep(5000);
 		});
 	}
 
-	
 	async selectAlaskaAirlines(): Promise<void> {
-		await browser.sleep(3000);
+		let that = await this;
 		return this.bookingProvidersFilter.then(async function(providers) {
 			for(let provider of providers) {
 				await browser.actions().mouseMove(provider).perform();
-				await browser.sleep(3000);
 				let providerText: string = await provider.element(by.css("label[id$=check-label]")).getText();
 				if(providerText.trim().indexOf("Alaska Airlines") !== -1) {
+					await browser.wait(that.expectedCondition.visibilityOf(provider.element(by.css("button[id$='-only']"))), 30000);
 					await provider.element(by.css("button[id$=-only")).click();
 					return;
 				}
 			}
-			await browser.sleep(5000);
 		});
 	}
 
+	async isPredictionPriceDisplayed(): Promise<boolean> {
+		browser.wait(this.kayakCommonPage.patternToBePresentInElement(this.flightPredictionGraph, /buy now/i));
+		if(this.flightPredictionGraph.isDisplayed()) {
+			return true;
+		}
+	}
+
 	async isResultsContainNonStopOnly(): Promise<boolean> {
-		await browser.sleep(3000);
+		await browser.wait(this.expectedCondition.invisibilityOf(this.loadingClass), 10000);
 		return await this.stopsInResults.then(async function(stops) {
 			for(let stop of stops) {
 				let stopText: string = await stop.getText();
@@ -255,7 +267,7 @@ export class flightResultsPage {
 	}
 
 	async isResultsContainNonStopAndOneStopOnly(): Promise<boolean> {
-		await browser.sleep(2000);
+		await browser.wait(this.expectedCondition.invisibilityOf(this.loadingClass), 10000);
 		return this.stopsInResults.then(async function(results) {
 			for(let result of results) {
 				let stopText: string = await result.getText();
@@ -268,7 +280,7 @@ export class flightResultsPage {
 	}
 
 	async isResultsContainJetBlueAirwaysOnly(): Promise<boolean> {
-		await browser.sleep(5000);
+		await browser.wait(this.expectedCondition.invisibilityOf(this.loadingClass), 10000);
 		return this.flightResults.then(async function(results) {
 			for(let result of results) {
 				let airline: string = await result.element(by.css(".section.times .bottom")).getText();
@@ -282,7 +294,7 @@ export class flightResultsPage {
 	}
 
 	async isResultsNotContainEWRAirport(): Promise<boolean> {
-		await browser.sleep(3000);
+		await browser.wait(this.expectedCondition.invisibilityOf(this.loadingClass), 10000);
 		return this.flightResults.then(async function(results) {
 			for(let result of results) {
 				let departed: string = await result.element(by.css("div[id$=leg-0")).element(by.css(".section.duration .bottom")).getText();
@@ -296,7 +308,7 @@ export class flightResultsPage {
 	}
 
 	async isResultsContainDepartAndReturnSame(): Promise<boolean> {
-		await browser.sleep(3000);
+		await browser.wait(this.expectedCondition.invisibilityOf(this.loadingClass), 10000);
 		return this.flightResults.then(async function(results) {
 			for(let result of results) {
 				let departed: string = await result.element(by.css("div[id$=leg-0")).element(by.css(".section.duration .bottom")).getText();
@@ -311,8 +323,24 @@ export class flightResultsPage {
 		});
 	}
 
+	async isResultsContainDepartAndReturnSameAndDifferent(): Promise<boolean> {
+		await browser.wait(this.expectedCondition.invisibilityOf(this.loadingClass), 10000);
+		return this.flightResults.then(async function(results) {
+			for(let result of results) {
+				let departed: string = await result.element(by.css("div[id$=leg-0")).element(by.css(".section.duration .bottom")).getText();
+				let returned: string = await result.element(by.css("div[id$=leg-1")).element(by.css(".section.duration .bottom")).getText();
+				departed = await departed.split("‐")[1].trim();
+				returned = await returned.split("‐")[0].trim();
+				if(returned.indexOf(departed) === -1) {
+					return true;
+				}	
+			}
+			return false;
+		});
+	}
+
 	async isResultsContainsAlaskaAirlinesOnly(): Promise<boolean> {
-		await browser.sleep(7000);
+		await browser.wait(this.expectedCondition.invisibilityOf(this.loadingClass), 10000);
 		return this.flightResults.then(async function(results) {
 			for(let result of results) {
 				let airline: string = await result.element(by.css(".providerName")).getText();
@@ -325,8 +353,34 @@ export class flightResultsPage {
 		});
 	}
 
+	async getAllProvidersNames(): Promise<string[]> {
+		return this.bookingProvidersFilter.then(async function(providers) {
+			let providerNames: string[] = [];
+			for(let provider of providers) {
+				let providerText: string = await provider.element(by.css("label[id$=-check-label]")).getText();
+				await providerNames.push(providerText);
+			}
+			return providerNames;
+		});
+	}
+
+	async isResultsContainsAllProviders(): Promise<boolean> {
+		await browser.wait(this.expectedCondition.invisibilityOf(this.loadingClass), 10000);
+		let providerNames: string[] = await this.getAllProvidersNames();
+		return this.flightResults.then(async function(results) {
+			for(let result of results) {
+				let airline: string = await result.element(by.css(".providerName")).getText();
+				airline = await airline.trim();
+				if(providerNames.indexOf(airline) === -1) {
+					return false;
+				}
+			}
+			return true;
+		});
+	}
+
 	async isResultsNotContainEconomyCabins(): Promise<boolean> {
-		await browser.sleep(8000);
+		await browser.wait(this.expectedCondition.invisibilityOf(this.loadingClass), 10000);
 		return this.flightResults.then(async function(results) {
 			for(let result of results) {
 				let cabinExists: boolean =  await result.element(by.css("span[id$=toolTipTarget]")).isPresent()
@@ -339,5 +393,36 @@ export class flightResultsPage {
 			}
 			return true;
 		});
+	}
+
+	async isResultsContainAllCabins(): Promise<boolean> {
+		await browser.wait(this.expectedCondition.invisibilityOf(this.loadingClass), 10000);
+		return this.flightResults.then(async function(results) {
+			for(let result of results) {
+				let cabinExists: boolean =  await result.element(by.css("span[id$=toolTipTarget]")).isPresent()
+				if(cabinExists) {
+					let cabin: string = await result.element(by.css("span[id$=toolTipTarget]")).getText();
+					if(cabin.trim().indexOf("Economy") === -1 && cabin.trim().indexOf("Saver") === -1 && cabin.trim().indexOf("Main") === -1) {
+						return false;
+					}
+				}
+			}
+			return true;
+		});
+	}
+
+	async isAllFiltersReset(): Promise<boolean> {
+		let stopsResetLinkDisplayed = await this.stopsResetLink.isDisplayed();
+		let cabinResetLinkDisplayed = await this.cabinResetLink.isDisplayed();
+		let airlinesResetLinkDisplayed = await this.airlinesResetLink.isDisplayed();
+		let airportsResetLinkDisplayed = await this.airportsResetLink.isDisplayed();
+		let bookingProvidersResetLinkDisplayed = await this.bookingProvidersResetLink.isDisplayed();
+
+		if(!stopsResetLinkDisplayed && !cabinResetLinkDisplayed && !airlinesResetLinkDisplayed && !airportsResetLinkDisplayed && !bookingProvidersResetLinkDisplayed) {
+			return true;
+		}
+		else {
+			return false;
+		}
 	}
 }

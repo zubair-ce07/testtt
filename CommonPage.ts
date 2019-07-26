@@ -1,12 +1,12 @@
 import {browser, $, element, by, protractor, promise, ElementFinder, ElementArrayFinder, ProtractorExpectedConditions} from 'protractor';
 
-export class commonPage {
+export class CommonPage {
   
     async waitUntillElementAppears(element: any): Promise<void> {
         let until: ProtractorExpectedConditions = await protractor.ExpectedConditions; 
         browser.wait(
         until.visibilityOf(element),
-        90000, 'element taking too long to appear in the DOM');
+        30000, 'element taking too long to appear in the DOM');
     }
 
     patternToBePresentInElement(elementFinder: ElementFinder, pattern: RegExp) {
