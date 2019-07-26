@@ -3,13 +3,11 @@ class WeatherAnalyzer:
 
     def get_average_of_attributes(self, readings, key):
         """Returns average of values for given key"""
-        total = 0
-        count = 0
-        for reading in readings:
-            value = getattr(reading, key)
-            if value is not None:
-                total = total + value
-                count = count + 1
+
+        readings = [r for r in readings if getattr(r, key) is not None]
+        total = sum((getattr(r, key) for r in readings))
+        count = len(readings)
+
         return round(total/count) if count != 0 else 0
 
     def get_maximum_reading(self, readings, key):
