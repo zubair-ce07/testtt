@@ -1,54 +1,66 @@
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from reservation.models import Room, Customer, Employee, Reservation
-from django.views.generic import TemplateView, ListView
+from django.views.generic import TemplateView
 from django.db.models import Q, Count, Sum
-from reservation.form import AvailabilityForm, ReservationForm
+from django.contrib.auth.forms import UserCreationForm
+from reservation.form import AvailabilityForm, ReservationForm, RegistrationForm
 from django.views.decorators.cache import cache_control
+from django.contrib import messages
 import datetime
 
 
 class HomeView(TemplateView):
     template_name = 'reservation/home.html'
 
+    @method_decorator(login_required)
+    def get(self, request):
+        return render(request, self.template_name)
 
-class RoomsView(ListView):
-    model = Room
+
+class RoomsView(TemplateView):
     template_name = 'reservation/rooms.html'
-    context_object_name = 'rooms'
-    queryset = Room.objects.all()
+
+    @method_decorator(login_required)
+    def get(self, request):
+        return render(request, self.template_name, {'title': 'Rooms', 'rooms': Room.objects.all()})
 
 
-class CustomersView(ListView):
-    model = Customer
+class CustomersView(TemplateView):
     template_name = 'reservation/customers.html'
-    context_object_name = 'customers'
-    queryset = Customer.objects.all()
+
+    @method_decorator(login_required)
+    def get(self, request):
+        return render(request, self.template_name, {'title': 'Customers', 'customers': Customer.objects.all()})
 
 
-class ReservationsView(ListView):
-    model = Reservation
-    template_name = 'reservation/reservations.html'
-    context_object_name = 'reservations'
-    queryset = Reservation.objects.all()
+class ReservationsView(TemplateView):
+    template_name = 'reservation/reservations.html'    
+
+    @method_decorator(login_required)
+    def get(self, request):
+        return render(request, self.template_name, {'title': 'Reservations', 'reservations': Reservation.objects.all()})
 
 
-class EmployeesView(ListView):
-    model = Employee
+class EmployeesView(TemplateView):
     template_name = 'reservation/employees.html'
-    context_object_name = 'employees'
-    queryset = Employee.objects.all()
+
+    @method_decorator(login_required)
+    def get(self, request):
+        return render(request, self.template_name, {'title': 'Employees', 'employees': Employee.objects.all()})
 
 
-class AvailabilityView(ListView):
-    model = Room
+class AvailabilityView(TemplateView):
     template_name = 'reservation/availability.html'
-    context_object_name = 'rooms'
 
+    @method_decorator(login_required)
     def get(self, request):
         form = AvailabilityForm()
-        return render(request, self.template_name, {'form': form})
+        return render(request, self.template_name, {'title': 'Availability', 'form': form})
 
+    @method_decorator(login_required)
     def post(self, request):
         form = AvailabilityForm(request.POST)
         if form.is_valid():
@@ -69,6 +81,7 @@ class AvailabilityView(ListView):
 class ReportView(TemplateView):
     template_name = 'reservation/report.html'
 
+    @method_decorator(login_required)
     def get(self, request):
         today = datetime.date.today().strftime('%Y-%m-%d')
         month = datetime.date.today().strftime('%m')
@@ -86,23 +99,51 @@ class ReportView(TemplateView):
         return render(request, self.template_name, context)
 
 
-class ReserveRoomView(ListView):
+class ReserveRoomView(TemplateView):
     template_name = 'reservation/reserveroom.html'
 
+    @method_decorator(login_required)
     def get(self, request, id, checkin, checkout):
         form = ReservationForm(room=Room.objects.filter(id=id)[0], checkin=checkin, checkout=checkout)
         return render(request, self.template_name, {'form': form})
 
 
 class AddReservation(TemplateView):
-    template_name = '/reservations'
-
-    @cache_control(no_cache=True, must_revalidate=True)
+    @method_decorator(login_required)
     def post(self, request):
-        room = Room.objects.filter(room_no=request.POST.get('room'))[0]
+        form = ReservationForm(request.POST)
+        if form.is_valid():
+            room = Room.objects.filter(room_no=form.cleaned_data.get('room'))[0]
+            rent = form.cleaned_data.get('rent')
+            customer = form.cleaned_data.get('customer')
+            checkin = form.cleaned_data.get('checkin')
+            checkout = form.cleaned_data.get('checkout')
+            Reservation(room=room, rent=rent, customer=customer, checkin=checkin, checkout=checkout).save()
+            messages.success(request, f'Room #{room} is reserved from {checkin} to {checkout}')
+            return redirect('reservation-reservations')
+
+        """room = Room.objects.filter(room_no=request.POST.get('room'))[0]
         rent = request.POST.get('rent')
         customer = Customer.objects.filter(id=request.POST.get('customer'))[0]
         checkin = request.POST.get('checkin')
-        checkout = request.POST.get('checkout')
-        Reservation(room=room, rent=rent, customer=customer, checkin=checkin, checkout=checkout).save()
-        return redirect(self.template_name)
+        checkout = request.POST.get('checkout')"""
+
+
+class RegistrationView(TemplateView):
+    template_name = 'reservation/register.html'
+
+    @method_decorator(login_required)
+    def get(self, request):
+        form = RegistrationForm()
+        return render(request, self.template_name, {'form': form})
+
+    @method_decorator(login_required)
+    def post(self, request):
+        form = RegistrationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            username = form.cleaned_data.get('username')
+            messages.success(request, f'Account created for {username}!')
+            return redirect('reservation-home')
+
+        return render(request, self.template_name, {'form': form})

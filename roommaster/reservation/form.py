@@ -1,6 +1,8 @@
 from django import forms
 from reservation.models import Customer
 from django.core.validators import MinValueValidator
+from django.contrib.auth.models import User
+from django.contrib.auth.forms import UserCreationForm
 
 
 class AvailabilityForm(forms.Form):
@@ -10,9 +12,9 @@ class AvailabilityForm(forms.Form):
 
 class ReservationForm(forms.Form):
     def __init__(self, *args, **kwargs):
-        self.room = kwargs.pop('room')
-        self.checkin = kwargs.pop('checkin')
-        self.checkout = kwargs.pop('checkout')
+        self.room = kwargs.get('room')
+        self.checkin = kwargs.get('checkin')
+        self.checkout = kwargs.get('checkout')
         super(ReservationForm, self).__init__(*args, **kwargs)
         self.fields['room'].widget = forms.TextInput(attrs={'value': self.room, 'readonly': 'readonly'})
         self.fields['checkin'].widget = forms.TextInput(attrs={'value': self.checkin, 'readonly': 'readonly'})
@@ -23,3 +25,11 @@ class ReservationForm(forms.Form):
     customer = forms.ModelChoiceField(queryset=Customer.objects.all())
     checkin = forms.DateField()
     checkout = forms.DateField()
+
+
+class RegistrationForm(UserCreationForm):
+    email = forms.EmailField()
+
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'password1', 'password2']
