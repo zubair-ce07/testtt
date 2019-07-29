@@ -266,104 +266,66 @@ export class FlightResultsPage {
 		return this.flightPredictionGraph.isDisplayed();
 	}
 
-	async resultsContainNonStopOnly(): Promise<boolean> {
+	async getArrayFromResults(selector: string) {
 		await browser.wait(this.expectedCondition.invisibilityOf(this.loadingClass), 10000);
-		return await this.stopsInResults.then(async function(stops) {
-			for(let stop of stops) {
-				let stopText: string = await stop.getText();
-				if(stopText.indexOf("nonstop") === -1) {
-					return false;
-				}
+		return this.flightResults.then(async function(results) {
+			let elementTextContents: string[];
+			for(let result of results) {
+				let elementTextContent: string = result.element(by.css(selector)).getText();
+				elementTextContents.push(elementTextContent.trim());
 			}
-			return true;
+			return elementTextContents;
 		});
+	}
+
+	async resultsContainNonStopOnly(): Promise<boolean> {
+		
+		let stops: string[] = await this.getArrayFromResults(".section.stops");
+		return (stops.indexOf("nonstop") === -1) ? false : true;
+				
 	}
 
 	async resultsContainNonStopAndOneStopOnly(): Promise<boolean> {
-		await browser.wait(this.expectedCondition.invisibilityOf(this.loadingClass), 10000);
-		return this.stopsInResults.then(async function(results) {
-			for(let result of results) {
-				let stopText: string = await result.getText();
-				if((stopText.trim().indexOf("nonstop") === -1) && (stopText.indexOf("1 stop") === -1)) {
-					return false;
-				}
-			}
-			return true;
-		});
+		let stops: string[] = await this.getArrayFromResults(".section.stops");
+		return ((stops.indexOf("nonstop") === -1) && (stops.indexOf("1 stop") === -1)) ? false : true;
 	}
 
 	async resultsContainJetBlueAirwaysOnly(): Promise<boolean> {
-		await browser.wait(this.expectedCondition.invisibilityOf(this.loadingClass), 10000);
-		return this.flightResults.then(async function(results) {
-			for(let result of results) {
-				let airline: string = await result.element(by.css(".section.times .bottom")).getText();
-				if(airline.trim().indexOf("JetBlue") === -1) {
-					console.log(airline);
-					return false;
-				}
-			}
-			return true;
-		});
+		let airlines: string[] = await this.getArrayFromResults(".section.times .bottom");
+		return airlines.indexOf("JetBlue") ? false : true;
 	}
 
 	async resultsNotContainEWRAirport(): Promise<boolean> {
-		await browser.wait(this.expectedCondition.invisibilityOf(this.loadingClass), 10000);
-		return this.flightResults.then(async function(results) {
-			for(let result of results) {
-				let departed: string = await result.element(by.css("div[id$=leg-0")).element(by.css(".section.duration .bottom")).getText();
-				departed = departed.split("‐")[0].trim();
-				if(departed.indexOf("EWR") !== -1) {
-					return false;
-				}
-			}
-			return true;
-		});
+		let departureAiports: string[] = await this.getArrayFromResults("div[id$=leg-0] .section.duration .bottom span");
+		return departureAiports.indexOf("EWR") !== -1 ? false : true;
+				
 	}
 
 	async resultsContainDepartAndReturnSame(): Promise<boolean> {
-		await browser.wait(this.expectedCondition.invisibilityOf(this.loadingClass), 10000);
-		return this.flightResults.then(async function(results) {
-			for(let result of results) {
-				let departed: string = await result.element(by.css("div[id$=leg-0")).element(by.css(".section.duration .bottom")).getText();
-				let returned: string = await result.element(by.css("div[id$=leg-1")).element(by.css(".section.duration .bottom")).getText();
-				departed = await departed.split("‐")[1].trim();
-				returned = await returned.split("‐")[0].trim();
-				if(returned.indexOf(departed) === -1) {
-					return false;
-				}	
-			}
-			return true;
-		});
+		let departures: string[] = await this.getArrayFromResults("div[id$=leg-0] .section.duration .bottom:nth-child(3)");
+		let returns: string[] = await this.getArrayFromResults("div[id$=leg-1] .section.duration .bottom:nth-child(1)");
+		for (let departure in departures) {
+			if(returns.indexOf(departure) === -1) {
+				return false;
+			}	
+		}
+		return true;
 	}
 
 	async resultsContainDepartAndReturnSameAndDifferent(): Promise<boolean> {
-		await browser.wait(this.expectedCondition.invisibilityOf(this.loadingClass), 10000);
-		return this.flightResults.then(async function(results) {
-			for(let result of results) {
-				let departed: string = await result.element(by.css("div[id$=leg-0")).element(by.css(".section.duration .bottom")).getText();
-				let returned: string = await result.element(by.css("div[id$=leg-1")).element(by.css(".section.duration .bottom")).getText();
-				departed = await departed.split("‐")[1].trim();
-				returned = await returned.split("‐")[0].trim();
-				if(returned.indexOf(departed) === -1) {
-					return true;
-				}	
-			}
-			return false;
-		});
+		let departures: string[] = await this.getArrayFromResults("div[id$=leg-0] .section.duration .bottom:nth-child(3)");
+		let returns: string[] = await this.getArrayFromResults("div[id$=leg-1] .section.duration .bottom:nth-child(1)");
+		for (let departure in departures) {
+			if(returns.indexOf(departure) === -1) {
+				return true;
+			}	
+		}
+		return false;
 	}
 
 	async resultsContainsAlaskaAirlinesOnly(): Promise<boolean> {
-		await browser.wait(this.expectedCondition.invisibilityOf(this.loadingClass), 10000);
-		return this.flightResults.then(async function(results) {
-			for(let result of results) {
-				let airline: string = await result.element(by.css(".providerName")).getText();
-				airline = await airline.trim();
-				if(airline.indexOf("Alaska Airlines") === -1) {
-					return false;
-				}
-			}
-			return true;
-		});
+		let airlines: string[] = await this.getArrayFromResults(".providerName");
+		return airlines.indexOf("Alaska Airlines") === -1 ? false : true;
 	}
 
 	async getAllProvidersNames(): Promise<string[]> {
@@ -378,50 +340,19 @@ export class FlightResultsPage {
 	}
 
 	async resultsContainsAllProviders(): Promise<boolean> {
-		await browser.wait(this.expectedCondition.invisibilityOf(this.loadingClass), 10000);
-		let providerNames: string[] = await this.getAllProvidersNames();
-		return this.flightResults.then(async function(results) {
-			for(let result of results) {
-				let airline: string = await result.element(by.css(".providerName")).getText();
-				airline = await airline.trim();
-				if(providerNames.indexOf(airline) === -1) {
-					return false;
-				}
-			}
-			return true;
-		});
+		let airlines: string[] = await this.getArrayFromResults(".providerName");
+		return (airlines.indexOf("American Airlines") === -1) ? false : true;
 	}
 
 	async resultsNotContainEconomyCabins(): Promise<boolean> {
-		await browser.wait(this.expectedCondition.invisibilityOf(this.loadingClass), 10000);
-		return this.flightResults.then(async function(results) {
-			for(let result of results) {
-				let cabinExists: boolean =  await result.element(by.css("span[id$=toolTipTarget]")).isPresent();
-				if(cabinExists) {
-					let cabin: string = await result.element(by.css("span[id$=toolTipTarget]")).getText();
-					if(cabin.trim().indexOf("Economy") !== -1) {
-						return false;
-					}
-				}
-			}
-			return true;
-		});
+		let cabins: string[] = await this.getArrayFromResults("span[id$=toolTipTarget]");
+		return (cabins.indexOf("Economy") !== -1) ? false : true;
 	}
 
 	async resultsContainAllCabins(): Promise<boolean> {
-		await browser.wait(this.expectedCondition.invisibilityOf(this.loadingClass), 10000);
-		return this.flightResults.then(async function(results) {
-			for(let result of results) {
-				let cabinExists: boolean =  await result.element(by.css("span[id$=toolTipTarget]")).isPresent();
-				if(cabinExists) {
-					let cabin: string = await result.element(by.css("span[id$=toolTipTarget]")).getText();
-					if(cabin.trim().indexOf("Economy") === -1 && cabin.trim().indexOf("Saver") === -1 && cabin.trim().indexOf("Main") === -1) {
-						return false;
-					}
-				}
-			}
-			return true;
-		});
+		let cabins: string[] = await this.getArrayFromResults("span[id$=toolTipTarget]");
+		return (cabins.indexOf("Economy") === -1 && cabins.indexOf("Saver") === -1 && cabins.indexOf("Main") === -1) 
+		? false : true;	
 	}
 
 	async resetAllFilters(): Promise<boolean> {
