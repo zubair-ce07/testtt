@@ -1,18 +1,29 @@
 {%extends 'base.html'%}
 {% block content %}
 <div class="container">
-        <h1>{{quiz.name}}</h1>
-<ul>
-{% for question in questions %}
-       <h5><a href="{%url 'question_detail' quiz.pk question.pk%}"> {{question.text}}</a></h5>
-        {% for answer in question.answers.all %}
-        <li>{{answer.text}}{%if answer.is_correct%}<span>Correct</span>{%endif%}</li>
-        {%endfor%}
-        
+        <h3 class="text-primary text-center">{{quiz.name}}</h3>
+
+    <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Question</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for question in questions %}
+          <tr>
+            <td>{{question.text}}</td>
+            <td>
+                <a class="btn btn-dark" href="{%url 'edit_question' question.pk%}">Edit</a>
+                <a class="btn btn-danger" href="{%url 'delete_question' question.pk%}">Delete</a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
         {% empty %}
         <kbd>Sorry, No Questions, Add right away</kbd>
         {%endfor%}
-    </ul>
     <a class="btn btn-success" href="{%url 'add_question' quiz.pk%}">Add Questions</a>
         <a class="btn btn-danger" href="{%url 'delete_quiz' quiz.pk%}">Delete Quiz</a>
 </div>

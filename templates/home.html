@@ -5,6 +5,7 @@
         <thead>
           <tr>
             <th>Quiz</th>
+              <th>Questions</th>
               <th>Attempts</th>
             <th>Result</th>
             <th>Action</th>
@@ -14,6 +15,7 @@
                 {%for quiz in quizzes%}
           <tr>
             <td>{{quiz.name}}</td>
+              <td>{{quiz.questions.all.count}}</td>
             <td><kbd class="font-weight-bold">{{quiz.taken_quizzes.all.count}}</kbd></td>
             <td><a class="btn btn-info" href="{%url 'quiz_result' quiz.pk%}">Show</a></td>
             <td>
