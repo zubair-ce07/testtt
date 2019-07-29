@@ -6,7 +6,7 @@ export class CommonPage {
         let until: ProtractorExpectedConditions = await protractor.ExpectedConditions; 
         browser.wait(
         until.visibilityOf(element),
-        30000, 'element taking too long to appear in the DOM');
+        10000, 'element taking too long to appear in the DOM');
     }
 
     patternToBePresentInElement(elementFinder: ElementFinder, pattern: RegExp) {

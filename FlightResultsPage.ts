@@ -1,5 +1,5 @@
 import {browser, $, element, by, protractor, promise, ElementFinder, ElementArrayFinder, ProtractorExpectedConditions} from 'protractor';
-import {CommonPage} from "./CommonPage"
+import {CommonPage} from "./CommonPage";
 import { kayakHelper } from './kayakHelper';
 
 export class FlightResultsPage {
@@ -20,8 +20,6 @@ export class FlightResultsPage {
 	cabinFilter: ElementArrayFinder = element.all(by.css("div[id$=cabin-content] li"));
 	qualityFilter: ElementArrayFinder = element.all(by.css("div[id$=quality-section-content] li"));
 	stopsInResults: ElementArrayFinder = element.all(by.css(".section.stops"));
-	sameDepartAndReturnCheckbox: ElementFinder = element(by.css("div[id$=sameair-check-icon]"));
-	ewrCheckbox: ElementFinder = element(by.css("div[id$=EWR-check-icon]"));
 	cabinTitle: ElementFinder = element(by.css("div[id$=cabin-title]"));
 	flightQualityTitle: ElementFinder = element(by.css("div[id$=quality-section-title]"));
 	bookingProvidersTitle: ElementFinder = element(by.css("div[id$=providers-title]"));
@@ -33,6 +31,17 @@ export class FlightResultsPage {
 	flightResults: ElementArrayFinder = element.all(by.css(".Flights-Results-FlightResultItem"));
 	popupDialog: ElementFinder = element(by.css(".flightsDriveBy"));
 	popupDialogCloseButton: ElementFinder = this.popupDialog.element(by.css(".Button-No-Standard-Style.close"));
+	jetBlueAirlinePrice: ElementFinder = element(by.css["button[id$=B6-price]"]);
+	oneStopCheckIcon: ElementFinder = element(by.css("div[id$='-1-check-icon']"));
+	oneStopCheckBox: ElementFinder = element(by.css("input[id$=1-check]"));
+	departureAndReturnSameCheckIcon: ElementFinder = element(by.css("div[id$='sameair-check-icon']"));
+	departureAndReturnSameCheckbox: ElementFinder = element(by.css("input[id$=sameair-check]"));
+	ewrCheckIcon: ElementFinder = element(by.css("div[id$=EWR-check-icon]"));
+	ewrCheckbox: ElementFinder = element(by.css("input[id$=sameair-check]"));
+	economyCabinCheckIcon: ElementFinder = element(by.css("div[id$=e-check-icon]"));
+	economoyCabinCheckBox: ElementFinder = element(by.css("input[id$=e-check]"));
+	longFlightsCheckIcon: ElementFinder = element(by.css("div[id$='baditin-check-icon']"));
+	longFlightCheckBox: ElementFinder = element(by.css("input[id$='baditin-check']"));
 
 	async get(): Promise<void> {
 		await browser.get(this.kayakUrl);
@@ -42,12 +51,8 @@ export class FlightResultsPage {
 		browser.ignoreSynchronization = await true;
 	}
 
-	async maximizeBrowser() {
-		
-	}
-
 	async closePopupDialog(): Promise<void> {
-		await this.kayakCommonPage.waitUntillElementAppears(this.popupDialog)
+		await this.kayakCommonPage.waitUntillElementAppears(this.popupDialog);
 		await this.popupDialogCloseButton.click();
 	}
 
@@ -79,28 +84,44 @@ export class FlightResultsPage {
 		});
 	}
 
+	async oneStopChecked(): Promise<boolean> {
+		return await this.oneStopCheckBox.getAttribute("aria-checked") === "true";
+	}
+
 	async clickOneStopCheckbox(): Promise<void> {
-		await this.stopsFilter.then(function(stops) {
-			stops[1].element(by.css("div[id$=check-icon]")).click();
-		});
-	}
-
-	async checkSameDepartAndReturn(): Promise<void> {
-		let isSameDepartAndReturnChecked = await this.sameDepartAndReturnCheckbox.getAttribute("aria-checked");
-		if(isSameDepartAndReturnChecked === "false") {
-			await this.sameDepartAndReturnCheckbox.click();
+		let oneStopChecked = await this.oneStopChecked();
+		if(!oneStopChecked) {
+			this.oneStopCheckIcon.click();
 		}
 	}
 
-	async uncheckSameDepartAndReturn(): Promise<void> {
-		let isSameDepartAndReturnChecked = await this.sameDepartAndReturnCheckbox.getAttribute("aria-checked");
-		if(isSameDepartAndReturnChecked === "true") {
-			await this.sameDepartAndReturnCheckbox.click();
+	async sameDepartureAndReturnAirportChecked(): Promise<boolean> {
+		return await this.departureAndReturnSameCheckbox.getAttribute("aria-checked") === "true";
+	}
+
+	async checkSameDepartureAndReturnAirport(): Promise<void> {
+		let sameDepartureAndReturnChecked = await this.sameDepartureAndReturnAirportChecked;
+		if(!sameDepartureAndReturnChecked) {
+			await this.departureAndReturnSameCheckIcon.click();
 		}
 	}
 
-	async clickEWRCheckbox(): Promise<void> {
-		await this.ewrCheckbox.click();
+	async uncheckSameDepartureAndReturnAirport(): Promise<void> {
+		let sameDepartureAndReturnChecked = await this.sameDepartureAndReturnAirportChecked;
+		if(sameDepartureAndReturnChecked) {
+			await this.departureAndReturnSameCheckIcon.click();
+		}
+	}
+
+	async ewrAirportChecked(): Promise<boolean> {
+		return await this.ewrCheckbox.getAttribute("aria-checked") === "true";
+	}
+
+	async checkEwrAirport(): Promise<void> {
+		let ewrAirportChecked = await this.ewrAirportChecked;
+		if(!ewrAirportChecked) {
+			await this.ewrCheckIcon.click();
+		}
 	}
 
 	async clickBookingProviderResetLink(): Promise<void> {
@@ -137,29 +158,22 @@ export class FlightResultsPage {
 	}
 
 	async clickJetBluePrice(): Promise<void> {
-		return this.airlinesFilter.then(async function(airlines) {
-			for(let airline of airlines) {
-				let airlineText: string = await airline.element(by.css("label[id$=check-label]")).getText();
-				if(airlineText.trim().indexOf("JetBlue") !== -1) {
-					await airline.element(by.css("button[id$=-price")).click();
-				}
-			}
-		});
+		await this.jetBlueAirlinePrice.click();
 	}
 
-	async clickLongFlightsFilter(): Promise<void> {
+	async longFlightsFilterChecked(): Promise<boolean> {
+		return await this.longFlightCheckBox.getAttribute("aria-checked") === "true";
+	}
+
+	async checkLongFlightsFilter(): Promise<void> {
 		await this.clickFlightQualityTitle();
-		return this.qualityFilter.then(async function(flights) {
-			for(let flight of flights) {
-				let flightText: string = await flight.element(by.css("label[id$=check-label]")).getText();
-				if(flightText.trim().indexOf("longer flights") !== -1) {
-					await flight.element(by.css("div[id$=check-icon]")).click();
-				}
-			}
-		});
+		const longFlightsFilterChecked = await this.longFlightsFilterChecked();
+		if(!longFlightsFilterChecked) {
+			this.longFlightCheckBox.click();
+		}
 	}
 
-	async stopFiltersChecked(): Promise<boolean> {
+	async airportStopFiltersChecked(): Promise<boolean> {
 		return this.stopsFilter.then(async function(stops) {
 			for (let stop of stops) {
 				const stopChecked: string = await stop.element(by.tagName("input")).getAttribute("aria-checked");
@@ -171,7 +185,7 @@ export class FlightResultsPage {
 		});
 	}
 
-	async stopFiltersContainPrices(): Promise<boolean> {
+	async airportStopFiltersContainPrices(): Promise<boolean> {
 		return this.stopsFilter.then(async function(stops) {
 			for(let stop of stops) {
 				const price: string = await stop.element(by.className("price")).getText();
@@ -183,7 +197,7 @@ export class FlightResultsPage {
 		});
 	}
 	
-	async stopFiltersHighlightedAndShowOnlyOnHover(): Promise<boolean> {
+	async airportStopFiltersHighlightedAndAppearOnlyOnHover(): Promise<boolean> {
 		let that = await this;
 		return this.stopsFilter.then(async function(stops) {
 			for (let stop of stops) {
@@ -219,16 +233,16 @@ export class FlightResultsPage {
 		});
 	}
 
-	async uncheckEconomyFilter(): Promise<void> {
+	async economyCabinChecked(): Promise<boolean> {
+		return await this.economoyCabinCheckBox.getAttribute("aria-checked") === "true";
+	}
+
+	async uncheckEconomyCabin(): Promise<void> {
 		await this.clickCabinTitle();
-		return this.cabinFilter.then(async function(cabins) {
-			for(let cabin of cabins) {
-				let cabinText: string = await cabin.element(by.css("label[id$=check-label]")).getText();
-				if(cabinText.trim().indexOf("Economy") !== -1) {
-					await cabin.element(by.css("div[id$=check-icon]")).click();
-				}
-			}
-		});
+		const economyCabinChecked = await this.economyCabinChecked();
+		if(economyCabinChecked) {
+			this.economoyCabinCheckBox.click();
+		}
 	}
 
 	async selectAlaskaAirlines(): Promise<void> {
@@ -247,8 +261,8 @@ export class FlightResultsPage {
 		});
 	}
 
-	async FlightPredictionPriceDisplayed(): Promise<boolean> {
-		await browser.wait(this.kayakCommonPage.patternToBePresentInElement(this.flightPredictionGraph, /buy now/i));
+	async farePredictionPriceDisplayed(): Promise<boolean> {
+		await browser.wait(this.kayakCommonPage.patternToBePresentInElement(this.flightPredictionGraph, /\w\w+/i));
 		return this.flightPredictionGraph.isDisplayed();
 	}
 
@@ -410,7 +424,7 @@ export class FlightResultsPage {
 		});
 	}
 
-	async allFiltersReset(): Promise<boolean> {
+	async resetAllFilters(): Promise<boolean> {
 		let stopsResetLinkDisplayed = await this.stopsResetLink.isDisplayed();
 		let cabinResetLinkDisplayed = await this.cabinResetLink.isDisplayed();
 		let airlinesResetLinkDisplayed = await this.airlinesResetLink.isDisplayed();

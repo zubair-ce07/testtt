@@ -11,7 +11,7 @@ export let config: Config = {
 	'browserName': 'chrome'
 	},
 	onPrepare: () => {
-		browser.ignoreSynchronization = true;
+		browser.waitForAngularEnabled(false);
 		browser.driver.manage().window().maximize();
 	},
 	SELENIUM_PROMISE_MANAGER: false,
