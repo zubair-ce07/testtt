@@ -1,11 +1,7 @@
 #!/usr/bin/python3
 import calendar
-import colorama
 from colorama import Fore
-from colorama import Style
 
-from weather_records import *
-from weather_results import *
 
 
 class WeathermanReportPrinter:
@@ -17,11 +13,11 @@ class WeathermanReportPrinter:
         print("\n")
 
     def __print_fact(self, weather_record, attribute_name, fact_prefix, postfix):
-        print(fact_prefix, end = " ")
-        print(str(getattr(weather_record,attribute_name)) + postfix + " on", end = " ")
+        print(fact_prefix, end=" ")
+        print(str(getattr(weather_record, attribute_name)) + postfix + " on", end=" ")
         print(weather_record.date.strftime("%B %d"))
 
-    def print_average_report(self, result, month_number, given_year):
+    def print_average_report(self, result):
         print("Highest Average: " + str(int(result.max_avg_temperature)) + "C")
         print("Lowest Average: " + str(int(result.min_avg_temperature)) + "C")
         print("Average Mean Humidity:" + str(int(result.mean_humidity_avg)) + "%\n")
@@ -32,8 +28,8 @@ class WeathermanReportPrinter:
         print(calendar.month_name[int(month_number)], given_year)
         print(len(monthly_records))
         for day in monthly_records:
-            print(day.date.strftime("%d"), end = " ")
-            print(Fore.BLUE + "+" * day.min_temprature, end = "")
-            print(Fore.RED + "+" * day.max_temprature, end = " ")
+            print(day.date.strftime("%d"), end=" ")
+            print(Fore.BLUE + "+" * day.min_temprature, end="")
+            print(Fore.RED + "+" * day.max_temprature, end=" ")
             print(Fore.WHITE + str(day.min_temprature) + "C - " + str(day.max_temprature) + "C")
         print("\n")
