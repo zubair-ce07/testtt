@@ -28,7 +28,6 @@ def clean(raw_strs):
     if isinstance(raw_strs, list):
         cleaned_strs = [re.sub('\s+', ' ', st).strip() for st in raw_strs]
         return [st for st in cleaned_strs if st]
-
     elif isinstance(raw_strs, str):
         return re.sub('\s+', ' ', raw_strs).strip()
 
@@ -38,35 +37,38 @@ class CeaSpider(CrawlSpider):
     allowed_domains = ['cea.com.br']
     start_urls = [
         'https://www.cea.com.br/',
-    ]
+     ]
     gender_dic = {
         'Masculina': 'men',
         'Feminina': 'women',
         'Infantil': 'kids'
     }
-    listing_css = '.header_submenu_item-large'
-    rules = (
-        Rule(LinkExtractor(restrict_css=listing_css), callback='paginantion'),
-    )
     image_url_t = 'https://www.cea.com.br/api/catalog_system/pub/products/search?fq=productId:' \
                   '{}&sc=1'
     image_t = 'https://cea.vteximg.com.br/arquivos/ids/{}.jpg'
+    listing_css = '.header_submenu_item-large'
+
+    rules = (
+        Rule(LinkExtractor(restrict_css=listing_css), callback='paginantion'),
+    )
 
     def paginantion(self, response):
-        page_count = int(
-            response.css('script[type="text/javascript"]:contains("pagecount")'
-                         '').re('pagecount_\d+ = (.+?);')[0])
-        page_url_parameters = response.css('script[type="text/javascript"]:'
-                                           'contains(".load")').re("\).load\(\'(.+?)\' +")[0]
+        page_count = int(response.css(
+            'script[type="text/javascript"]:contains("pagecount")').re(
+            'pagecount_\d+ = (.+?);')[0])
 
-        for page_number in range(1, page_count):
-            page_url = page_url_parameters + str(page_number)
-            yield response.follow(url=page_url, callback=self.parse_products)
+        page_url_parameters = response.css(
+            'script[type="text/javascript"]:contains(".load")').re(
+            "\).load\(\'(.+?)\' +")[0]
+
+        return [response.follow(url=page_url_parameters + str(page_number),
+                                callback=self.parse_products)
+                for page_number in range(1, page_count)]
 
     def parse_products(self, response):
         page_products_url = response.css('.product-details_name ::attr(href)').getall()
-        yield from [response.follow(url=url, callback=self.parse_item)
-                    for url in page_products_url]
+        return [response.follow(url=url, callback=self.parse_item)
+                for url in page_products_url]
 
     def parse_item(self, response):
         raw_json = self.product_json(response)
@@ -82,25 +84,24 @@ class CeaSpider(CrawlSpider):
         item['skus'] = {}
         item['requests'] = self.product_requests(response, raw_json)
 
-        yield from self.next_request_or_item(item)
+        return self.next_request_or_item(item)
 
     def parse_sku(self, response):
         raw_json = self.product_json(response)
         item = response.meta['item']
+
         for sku in raw_json.get('skus'):
             color = sku.get('dimensions').get('Cor')
             size = sku.get('dimensions').get('Tamanho')
-
             item['skus'].update({f'{color}_{size}': {
                 'out_of_stock': not sku.get('available'),
                 'price': sku.get('bestPrice'),
                 'previous_price': sku.get('listPrice'),
                 'size': size,
                 'color': color,
-
             }})
 
-        yield from self.next_request_or_item(item)
+        return self.next_request_or_item(item)
 
     def product_json(self, response):
         return json.loads(response.css('script:contains("var skuJson_0")').re("var skuJson_0 "
@@ -134,15 +135,13 @@ class CeaSpider(CrawlSpider):
         return clean(response.css('.productDescription::text').get())
 
     def product_requests(self, response, raw_json):
-        requests = [response.follow(response.url + '#', callback=self.parse_sku, meta={'raw_json'
-                                                                                       '': raw_json})]
-        requests.append(response.follow(url=self.get_image_url(raw_json), callback=self.get_imagesid))
+        requests = [response.follow(response.url + '#', callback=self.parse_sku, meta={'raw_json': raw_json}),
+                    response.follow(url=self.get_image_url(raw_json), callback=self.get_imagesid)]
         color_queue = response.css('.img-wrapper ::attr(href)').getall()
 
         for color_url in color_queue:
             requests.append(response.follow(color_url, callback=self.parse_sku, meta={'raw_json'
                                                                                       '': raw_json}))
-
         return requests
 
     def get_image_url(self, raw_json):
@@ -152,20 +151,17 @@ class CeaSpider(CrawlSpider):
     def get_imagesid(self, response):
         item = response.meta['item']
         raw_images_json = json.loads(response.text)
-        images = []
 
-        for i in raw_images_json[0]['items'][0]['images']:
-            images.append(self.image_t.format(i["imageId"]))
+        item['image_urls'] = [self.image_t.format(i["imageId"])
+                              for i in raw_images_json[0]['items'][0]['images']]
 
-        item['image_urls'] = images
-        yield from self.next_request_or_item(item)
+        return self.next_request_or_item(item)
 
     def next_request_or_item(self, item):
         if item['requests']:
             request = item['requests'].pop()
             request.meta.update({'item': item})
-            yield request
-            return
+            return request
         item.pop('requests', None)
-        yield item
+        return item
 
