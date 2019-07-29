@@ -34,7 +34,7 @@ class AsicsSpider(scrapy.Spider):
 
     def parse(self, response):
         listing_urls = response.css('.childlink-wrapper ::attr(href)').getall()
-        yield from [response.follow(url=url, callback=self.parse_category)
+        return [response.follow(url=url, callback=self.parse_category)
                     for url in listing_urls]
 
     def parse_category(self, response):
@@ -44,7 +44,7 @@ class AsicsSpider(scrapy.Spider):
 
         next_page_url = response.css('rightArrow ::attr(href)').get()
         if next_page_url:
-            yield response.follow(url=next_page_url, callback=self.parse_category)
+            return response.follow(url=next_page_url, callback=self.parse_category)
 
     def parse_item(self, response):
         item = AsicsItem()
@@ -79,16 +79,15 @@ class AsicsSpider(scrapy.Spider):
             }
             sku.update(common_sku)
             item['skus'].update({key: sku})
-        yield from self.next_request_or_item(item)
+        return self.next_request_or_item(item)
 
     def next_request_or_item(self, item):
         if item['requests']:
             request = item['requests'].pop()
             request.meta.update({'item': item})
-            yield request
-            return
+            return request
         item.pop('requests', None)
-        yield item
+        return item
 
     def stock_status(self, sku_sel):
         if "disabled" in sku_sel.css('::attr(class)').get():
