@@ -35,7 +35,7 @@ class AsicsSpider(scrapy.Spider):
     def parse(self, response):
         listing_urls = response.css('.childlink-wrapper ::attr(href)').getall()
         return [response.follow(url=url, callback=self.parse_category)
-                    for url in listing_urls]
+                for url in listing_urls]
 
     def parse_category(self, response):
         product_urls = response.css('.prod-wrap ::attr(href)').getall()
@@ -62,7 +62,17 @@ class AsicsSpider(scrapy.Spider):
 
         return self.next_request_or_item(item)
 
-    def product_skus(self, response):
+    def colour_requests(self, response):
+        color_urls = response.css('.colorVariant ::attr(href)').getall()
+        return [response.follow(color_url, callback=self.parse_color)
+                for color_url in color_urls]
+
+    def parse_color(self, response):
+        item = response.meta['item']
+        item['image_urls'].extend(self.image_urls(response))
+        return self.parse_sku(response)
+
+    def parse_sku(self, response):
         item = response.meta['item']
         common_sku = {
             'color': response.css('[itemprop="color"] ::text').get(),
@@ -72,13 +82,15 @@ class AsicsSpider(scrapy.Spider):
         for sku_sel in response.css('.tab:not(.hide-tab) > .size-box-select-container #sizes-options > .SizeOption'):
             key = sku_sel.css('::attr(data-value)').get()
             sku = {
-                'out_of_stock': self.stock_status(sku_sel),
+                'out_of_stock': bool(sku_sel.css('.disabled')),
                 'currency': sku_sel.css('[itemprop="priceCurrency"]::attr(content)').get(),
                 'price': sku_sel.css('[itemprop="price"]::attr(content)').get(),
                 'size': clean(sku_sel.css('a.SizeOption ::text').get()),
             }
+
             sku.update(common_sku)
             item['skus'].update({key: sku})
+
         return self.next_request_or_item(item)
 
     def next_request_or_item(self, item):
@@ -89,11 +101,6 @@ class AsicsSpider(scrapy.Spider):
         item.pop('requests', None)
         return item
 
-    def stock_status(self, sku_sel):
-        if "disabled" in sku_sel.css('::attr(class)').get():
-            return True
-        return False
-
     def product_id(self, response):
         return response.css('[itemprop="productID"] ::attr(content)').get()
 
@@ -101,7 +108,7 @@ class AsicsSpider(scrapy.Spider):
         return response.css('.single-prod-title ::text').get()
 
     def product_gender(self, response):
-        return response.css('script:contains("gender")').re('\"gender\":\"(.+?)\"')[0]
+        return response.css('script:contains("gender")').re_first('\"gender\":\"(.+?)\"')
 
     def product_category(self, response):
         return response.css('.breadcrumb ::text').getall()[1].split(' ')
@@ -118,9 +125,4 @@ class AsicsSpider(scrapy.Spider):
 
     def product_brand(self, response):
         return response.css('::attr(data-brand)').get()
-
-    def colour_requests(self, response):
-        color_urls = response.css('.colorVariant ::attr(href)').getall()
-        return [response.follow(color_url, callback=self.product_skus)
-                for color_url in color_urls]
 
