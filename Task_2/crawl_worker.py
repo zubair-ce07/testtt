@@ -1,6 +1,8 @@
 import queue
 from urllib.parse import urlparse
 import requests
+from time import time
+from time import sleep
 from parsel import Selector
 
 
@@ -20,10 +22,9 @@ class CrawlWorker:
 
     def __init__(self):
         CrawlWorker.cuncurrent_request_made += 1
+        self.start_time = time()
         if not CrawlWorker.url_queue:
             CrawlWorker.url_queue = queue.Queue(maxsize=CrawlWorker.total_pages_to_load)
-
-
 
     def __del__(self):
         CrawlWorker.cuncurrent_request_made -= 1
@@ -36,9 +37,12 @@ class CrawlWorker:
         CrawlWorker.url_queue.task_done()
         CrawlWorker.already_visisted_urls.append(url.geturl())
         print("Loading URL: " + url.geturl())
-
+        sleep_time_ms = CrawlWorker.download_delay - ((self.start_time - time())*1000)
+        if sleep_time_ms > 0:
+            sleep(sleep_time_ms/1000)
         response = requests.get(url.geturl())
         if response.status_code == SUCCESS_RESPONSE_CODE:
+            self.start_time = time()
             CrawlWorker.total_bytes_downloaded += len(response.content)
             CrawlWorker.page_loaded_successfully += 1
             if CrawlWorker.page_loaded_successfully >= CrawlWorker.total_pages_to_load:
