@@ -33,14 +33,14 @@ class WeSpider(CrawlSpider):
     allowed_domains = ['wefashion.de']
     start_urls = [
         'https://www.wefashion.de/',
-     ]
+    ]
 
     gender_dict = {'Damen': 'Women',
                    'Herren': 'Men',
-                   'Kinder' : 'kids'
+                   'Kinder': 'kids'
                    }
 
-    page_urls_template = '{}?sz=30&start={}'
+    page_urls_template = '{}?sz=9&start={}'
     sku_key_template = '{}_{}'
     listings_css = '.level-top-1'
     categories_css = '.refinement-link'
@@ -56,13 +56,12 @@ class WeSpider(CrawlSpider):
             for products_count in range(0, int(total_products), 30):
                 yield response.follow(self.page_urls_template.format(response.url, products_count),
                                       callback=self.extract_products_url)
-
-        return response.follow(response.url, callback=self.extract_products_url)
+        else:
+            return response.follow(response.url, callback=self.extract_products_url)
 
     def extract_products_url(self, response):
-
-        for product_url in response.css('.name-link ::attr(href)').getall():
-            yield response.follow(product_url, callback=self.parse_item)
+        return [response.follow(product_url, callback=self.parse_item)
+                for product_url in response.css('.name-link ::attr(href)').getall()]
 
     def parse_item(self, response):
         item = WeItem()
@@ -78,7 +77,7 @@ class WeSpider(CrawlSpider):
         item['skus'] = {}
         item['requests'] = self.colour_urls(response)
 
-        yield from self.next_request_or_item(item)
+        return self.next_request_or_item(item)
 
     def parse_sku(self, response):
         item = response.meta['item']
@@ -95,7 +94,7 @@ class WeSpider(CrawlSpider):
             common_sku.update({'size': size})
             item['skus'].update({self.sku_key_template.format(color, size): common_sku.copy()})
 
-        yield from self.next_request_or_item(item)
+        return self.next_request_or_item(item)
 
     def retailer_sku(self, response):
         return response.css('.variation-select ::attr(data-product-id)').get()
@@ -149,9 +148,7 @@ class WeSpider(CrawlSpider):
         if item['requests']:
             request = item['requests'].pop()
             request.meta.update({'item': item})
-            yield request
-            return
-
+            return request
         item.pop('requests', None)
-        yield item
+        return item
 
