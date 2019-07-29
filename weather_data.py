@@ -2,6 +2,7 @@
 
 This module has a class that has all the attribute to hold weather data
 """
+from datetime import datetime
 
 
 class WeatherData:
@@ -15,8 +16,17 @@ class WeatherData:
 
         it initialize all weather data attributes
         """
-        self.max_temperatures = []
-        self.low_temperatures = []
-        self.max_humidities = []
-        self.average_humidities = []
-        self.weather_data_dates = []
+        self.max_temperature = ''
+        self.low_temperature = ''
+        self.max_humidity = ''
+        self.average_humidity = ''
+        self.weather_date = ''
+
+    def get_weather_data_date(self):
+        """Return weather data.
+
+        This method extract date from the date list and
+        return the date in words format
+        """
+        return datetime.strptime(self.weather_date, '%Y-%m-%d') \
+            .strftime('%B %d')

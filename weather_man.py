@@ -49,7 +49,7 @@ class WeatherMan:
         This method prints highest,lowest tempreture,most humidity of the
         year with month and day
         """
-        year_weather_data = WeatherData()
+        year_weather_data = []
         year_files = self.year_files(year)  # given year files
         if not year_files:
             print('No Data Found For This Year')
@@ -57,42 +57,22 @@ class WeatherMan:
         for file in year_files:  # looping over list of files
             # tuple of list returned
             monthly_weather_data = read_file(file)
-            year_weather_data.max_temperatures += monthly_weather_data. \
-                max_temperatures
-            year_weather_data.low_temperatures += monthly_weather_data. \
-                low_temperatures
-            year_weather_data.max_humidities += monthly_weather_data. \
-                max_humidities
-            year_weather_data.weather_data_dates += monthly_weather_data. \
-                weather_data_dates
+            year_weather_data += monthly_weather_data
 
         # calculating maximum,minimum and max humidity
-        max_temperature = max(year_weather_data.max_temperatures)
-        low_temperature = min(year_weather_data.low_temperatures)
-        max_humid = max(year_weather_data.max_humidities)
-
+        max_temperature_object = utils.get_max_temperature(year_weather_data)
+        low_temperature_object = utils.get_min_temperature(year_weather_data)
+        max_humid_object = utils.get_max_humidity(year_weather_data)
         # prinitng values to console
         print('Highest: {}C on {}'.format(
-            str(max_temperature),
-            utils.get_weather_data_date(
-                year_weather_data.weather_data_dates,
-                year_weather_data.max_temperatures,
-                max_temperature
-            )))
+            str(max_temperature_object.max_temperature),
+            max_temperature_object.get_weather_data_date()))
         print('Lowest: {}C on {}'.format(
-            str(low_temperature),
-            utils.get_weather_data_date(
-                year_weather_data.weather_data_dates,
-                year_weather_data.low_temperatures,
-                low_temperature
-            )))
+            str(low_temperature_object.low_temperature),
+            low_temperature_object.get_weather_data_date()))
         print('Humid: {}% on {}'.format(
-            str(max_humid),
-            utils.get_weather_data_date(
-                year_weather_data.weather_data_dates,
-                year_weather_data.max_humidities,
-                max_humid
-            )))
+            str(max_humid_object.max_humidity),
+            max_humid_object.get_weather_data_date()))
 
     def average_record_in_a_month(self, weather_date):
         """Find average highest,lowest temperature and average Humidity in a month.
@@ -106,29 +86,34 @@ class WeatherMan:
         highest_temp_average = 0
         lowest_temp_average = 0
         average_humidity = 0
-        weather_date = WeatherData()
+        highest_temp_average_count = 0
+        lowest_temp_average_count = 0
+        average_humidity_count = 0
 
         file_path = '{}Murree_weather_{}_{}.txt'.format(
             self.__path, year, month)
         weather_data = read_file(file_path)
 
-        for i in range(len(weather_data.weather_data_dates)):
+        for weather in weather_data:
             # checkin if the filed is empty and then adding it to the
             # averages for later use
-            if len(weather_data.max_temperatures) > i:
-                highest_temp_average += int(weather_data.max_temperatures[i])
-            if len(weather_data.low_temperatures) > i:
-                lowest_temp_average += int(weather_data.low_temperatures[i])
-            if len(weather_data.average_humidities) > i:
-                average_humidity += int(weather_data.average_humidities[i])
+            if weather.max_temperature:
+                highest_temp_average += int(weather.max_temperature)
+                highest_temp_average_count += 1
+            if weather.low_temperature:
+                lowest_temp_average += int(weather.low_temperature)
+                lowest_temp_average_count += 1
+            if weather.average_humidity:
+                average_humidity += int(weather.average_humidity)
+                average_humidity_count += 1
 
         # calculating average
-        highest_temp_average = highest_temp_average // len(
-            weather_data.max_temperatures)
-        lowest_temp_average = lowest_temp_average // len(
-            weather_data.low_temperatures)
-        average_humidity = average_humidity // len(
-            weather_data.average_humidities)
+        highest_temp_average = highest_temp_average // \
+            highest_temp_average_count
+        lowest_temp_average = lowest_temp_average // \
+            lowest_temp_average_count
+        average_humidity = average_humidity // \
+            average_humidity_count
         print('Highest Average: {}C'.format(str(highest_temp_average)))
         print('Lowest Average: {}C'.format(str(lowest_temp_average)))
         print('Average Humidity: {}%'.format(str(average_humidity)))
@@ -151,17 +136,18 @@ class WeatherMan:
             self.__path, year, month)
         weather_data = read_file(file_path)
         weather_date = 1
-        for i, max_temp in enumerate(weather_data.max_temperatures):
-            print(weather_date, end=' ')
-            print(Fore.RED + '+' * int(max_temp), end='')
-            print(Fore.WHITE +
-                  str(' {}C'.format(weather_data.max_temperatures[i])))
-            print(weather_date, end=' ')
-            print(Fore.BLUE + '+' *
-                  int(weather_data.low_temperatures[i]), end='')
-            print(Fore.WHITE +
-                  str(' {}C'.format(weather_data.low_temperatures[i])))
-            weather_date += 1
+        for weather in weather_data:
+            if weather.max_temperature:
+                print(weather_date, end=' ')
+                print(Fore.RED + '+' * int(weather.max_temperature), end='')
+                print(Fore.WHITE +
+                      str(' {}C'.format(weather.max_temperature)))
+                print(weather_date, end=' ')
+                print(Fore.BLUE + '+' *
+                      int(weather.low_temperature), end='')
+                print(Fore.WHITE +
+                      str(' {}C'.format(weather.low_temperature)))
+                weather_date += 1
 
     def highest_lowest_temprature_of_a_day_one_horzontal_bar_chart(
             self, weather_date
@@ -182,17 +168,17 @@ class WeatherMan:
             self.__path, year, month)
         weather_data = read_file(file_path)
         weather_date = 1
-        for i, max_temp in enumerate(weather_data.max_temperatures):
+        for weather in weather_data:
             # checkin if the filed is empty and then adding it to the
-            if weather_data.max_temperatures[i]:
+            if weather.max_temperature:
                 print(weather_date, end=' ')
                 print(Fore.BLUE + '+' *
-                      int(weather_data.low_temperatures[i]), end='')
-                print(Fore.RED + '+' * int(max_temp), end=' ')
+                      int(weather.low_temperature), end='')
+                print(Fore.RED + '+' * int(weather.max_temperature), end=' ')
                 print(
                     Fore.WHITE+str(' {}C - {}C'.format(
-                        weather_data.low_temperatures[i],
-                        weather_data.max_temperatures[i]
+                        weather.low_temperature,
+                        weather.max_temperature
                     )))
                 weather_date += 1
 
