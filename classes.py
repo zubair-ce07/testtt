@@ -49,7 +49,7 @@ class RecursiveCrawler:
 
         select = parsel.Selector(text=html)
         divs = select.xpath('//div')
-        divs = divs.xpath('//p')
+        divs = divs.xpath('.//p')
         page_url_list = divs.css('a::attr(href)').extract()
         for urls in page_url_list:
             if re.match('http', str(urls)):
