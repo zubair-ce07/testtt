@@ -1,18 +1,18 @@
 import re
-import scrapy
 
+from scrapy import Spider, Request
 from datetime import datetime
 
 
-class AsicsSpider(scrapy.Spider):
-    name = 'asics'
-    start_urls = ['https://www.asics.com']
+class AsicsSpider(Spider):
+    name = "asics"
+    start_urls = ["https://www.asics.com"]
 
     def parse(self, response):
         urls = response.css(".navNodeImageContainer a::attr(href)").getall()
         for url in urls:
             category = response.urljoin(url)
-            yield scrapy.Request(category, callback=self.parse_category)
+            yield Request(category, callback=self.parse_category)
 
     def parse_category(self, response):
         products = response.css(".prod-wrap a::attr(href)").getall()
@@ -20,66 +20,28 @@ class AsicsSpider(scrapy.Spider):
         category = response.css(".prod-wrap a::attr(data-category)").get()
         for product in products:
             product_url = response.urljoin(product)
-            yield scrapy.Request(product_url, callback=self.parse_product, meta={"gender": gender, "category": category})
+            yield Request(product_url, callback=self.parse_product, meta={"gender": gender, "category": category})
         next_page = response.css("#nextPageLink a::attr(href)").get()
         if next_page:
             next_page = response.urljoin(next_page)
-            yield scrapy.Request(next_page, callback=self.parse_category)
-
-    @staticmethod
-    def parse_sku(response):
-        sku_key = []
-        sku_size = []
-        sku_price = []
-        sku_currency = []
-        product = response.meta["product"]
-        requests = response.meta["requests"]
-        sku = response.css(".desktop-style")
-        if not sku:
-            sku = response.css(".dropdown")
-        color_code = response.css(".tfc-fitrec-product::attr(data-colorid)").get()
-        color = response.xpath("//a[contains(@href,'"+color_code+"')]").css("::attr(title)").get()
-        for i in range(0, len(sku)):
-            size_option = sku[i].css("a.SizeOption::text").getall()
-            sku_size = [re.sub('\s+', '', s) for s in size_option if s.strip()]
-            if sku_size:
-                sku_key = sku[i].css(".SizeOption::attr(data-value)").getall()
-                sku_currency = sku[i].css(".SizeOption meta[itemprop=priceCurrency]::attr(content)").getall()
-                sku_price = sku[i].css(".SizeOption meta[itemprop=price]::attr(content)").getall()
-                break
-
-        skus = list(zip(sku_key, sku_currency, sku_price, sku_size))
-        sku_result = {}
-        for sku in skus:
-            val = {
-                "color": color,
-                "currency": sku[1],
-                "price": sku[2],
-                "size": sku[3]
-            }
-            sku_result[sku[0]] = val
-            product["skus"].update(sku_result)
-        if requests:
-            req = requests.pop()
-            req.meta["product"] = product
-            req.meta["requests"] = requests
-            yield req
-        else:
-            yield product
+            yield Request(next_page, callback=self.parse_category)
 
     def parse_product(self, response):
-        brand = "ASICS"
+        brand = response.css("html::attr(data-brand)").get()
         date = datetime.now().timestamp()
         gender = response.meta["gender"]
         category = response.meta["category"]
         currency = response.css("#page::attr(data-currency-iso-code)").get()
         market = response.css("#countrycode::attr(value)").get()
         name = response.css(".single-prod-title::text").get()
-        description = response.css("#collapse1::text").get()
-        if not description:
-            description = response.css("meta[property='og:description']::attr(content)").get()
+        description = response.css("meta[property='og:description']::attr(content)").get()
         price = response.css("p.price meta[itemprop=price]::attr(content)").get()
         images = response.css(".product-img::attr(data-url-src)").getall()
+
+        if self.start_urls[0] in response.url:
+            sku = AsicsSpider.generate_sku_first_domain(response)
+        else:
+            sku = AsicsSpider.generate_sku_second_domain(response)
 
         product = {
             "brand": brand,
@@ -93,16 +55,83 @@ class AsicsSpider(scrapy.Spider):
             "market": market,
             "name": name,
             "price": price,
-            "skus": {}
+            "skus": sku
         }
-        colors_url = response.css(".col-sm-4 a.colorVariant::attr(href)").getall()
+
+        colors_url = response.css("#variant-choices div:not([class*='active']) a::attr(href)").getall()
+
         requests = []
+
         for sku_color in colors_url:
             color_url = response.urljoin(sku_color)
-            requests.append(scrapy.Request(color_url, self.parse_sku, dont_filter=True))
+            requests.append(Request(color_url, self.parse_color))
+        yield from AsicsSpider.check_requests(requests, product)
+
+    def parse_color(self, response):
+        product = response.meta["product"]
+        requests = response.meta["requests"]
+        if self.start_urls[0] in response.url:
+            sku_result = AsicsSpider.generate_sku_first_domain(response)
+        else:
+            sku_result = AsicsSpider.generate_sku_second_domain(response)
+
+        product["skus"].update(sku_result)
+        yield from AsicsSpider.check_requests(requests, product)
+
+    @staticmethod
+    def generate_sku_second_domain(response):
+        sku_result = {}
+        raw_sku = response.css("#SelectSizeDropDown")
+        size_option = raw_sku.css("a.SizeOption::text").getall()
+        sku_size = clean_data(size_option)
+        color = response.css("#variant-choices .active img::attr(title)").get()
+        for index in range(1, len(sku_size) + 1):
+            div = raw_sku.xpath(f"./li[{index}]")
+            sku_key = div.css("::attr(data-value)").get()
+            sku_currency = div.css("meta[itemprop=priceCurrency]::attr(content)").get()
+            sku_price = div.css("meta[itemprop=price]::attr(content)").get()
+            sku_result[sku_key] = {
+                "color": color,
+                "currency": sku_currency,
+                "price": sku_price,
+                "size": sku_size[index - 1]
+            }
+        return sku_result
+
+    @staticmethod
+    def generate_sku_first_domain(response):
+        sku_size = []
+        sku_result = {}
+        raw_sku = response.css(".tab-content .tab:not(.hide-tab) .size-box-select-container .size-select-list")
+        color = response.css("#variant-choices .active img::attr(title)").get()
+        if raw_sku:
+            raw_sku = raw_sku[0]
+            size_option = raw_sku.css("a.SizeOption::text").getall()
+            sku_size = clean_data(size_option)
+        for index in range(1, len(sku_size) + 1):
+            div = raw_sku.xpath(f"./div[{index}]")
+            sku_key = div.css("::attr(data-value)").get()
+            sku_currency = div.css("meta[itemprop=priceCurrency]::attr(content)").get()
+            sku_price = div.css("meta[itemprop=price]::attr(content)").get()
+            sku_result[sku_key] = {
+                "color": color,
+                "currency": sku_currency,
+                "price": sku_price,
+                "size": sku_size[index - 1]
+            }
+        return sku_result
+
+    @staticmethod
+    def check_requests(requests, product):
         if requests:
             req = requests.pop()
             req.meta["product"] = product
             req.meta["requests"] = requests
             yield req
+        else:
+            yield product
+
+
+def clean_data(data):
+    return [re.sub('\s+', '', datum) for datum in data if datum.strip()]
 
