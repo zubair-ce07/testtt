@@ -65,4 +65,9 @@ node_modules
 # Secret
 admin_panel/database/credentials.js
 
+# DOTENV
+
+.env
+
+
 
