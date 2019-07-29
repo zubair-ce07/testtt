@@ -50,15 +50,18 @@ class Item:
         return self.response.xpath('//label[@class="attribute-title"]/text()').extract()
 
     def _get_skus(self):
+        color = self._get_color()
+        currency = self._get_currency()
+        price = self._get_price()
         sizes = self._get_sizes()
         skus = []
         for size in sizes:
             skus.append({
-                "colour": self._get_color(),
-                "price": self._get_price(),
-                "currency": self._get_currency(),
+                "colour": color,
+                "price": price,
+                "currency": currency,
                 "size": size,
-                "sku_id": f'{self._get_color()}_{size}'
+                "sku_id": f'{color}_{size}'
                 })
         return skus
 
@@ -91,9 +94,13 @@ class BrandStoreSpider(CrawlSpider):
     start_urls = ['http://kidsbrandstore.de/']
 
     rules = (
-        Rule(LinkExtractor(deny='\.html'), callback='parse_item', follow=True),
+        Rule(LinkExtractor(allow="https://kidsbrandstore\.de:443", deny='\.html'), callback='parse_item', follow=True),
     )
+
+    def start_requests(self):
+        yield scrapy.Request('http://kidsbrandstore.de/', self.parse, dont_filter=False)
+
 
     def parse_item(self, response):
         if response.xpath("//meta[@name='og:title']"):
-            return Item(response).create_item()
+            yield Item(response).create_item()
