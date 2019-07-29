@@ -10,8 +10,6 @@ def create_worker():
     worker.load_url()
 
 def main():
-    '''doc string'''
-
     start_time = time()
     CrawlWorker()
     url = urlparse('https://arbisoft.com/')
