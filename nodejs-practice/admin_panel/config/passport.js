@@ -15,10 +15,10 @@ passport.use(new Strategy(
 function(username, password, cb) {
 	collection.findOne({username:username}, function(err, user) {
 		if (!user) { return cb(null, false); }
-		given_password_hash = passwordUtility.sha512(password, user.password_salt).passwordHash
+		var givenPassHash = passwordUtility.sha512(password, user.password_salt).passwordHash
 		if (err) {return cb(err); }
-		if (given_password_hash != user.password_hash) { 
-			console.log(given_password_hash);
+		if (givenPassHash != user.password_hash) { 
+			console.log(givenPassHash);
 			return cb(null, false, {message: "Wrong Password!"}); 
 		}
 		return cb(null, user);
