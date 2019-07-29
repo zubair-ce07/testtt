@@ -1,12 +1,13 @@
 const passwordUtility = require("../helpers/passwordUtility.js");
-require("./passport");
-const client = require("../database/db")
+const strategy = require("./passport");
+const mongo = require("./connect.js")
 
 var db;
 
-client.connect(err => {
-    db = client.db("users_test").collection("users_test");
-});
+mongo.connect((err) => {
+	if (err) throw err
+	db = mongo.db.db("users_test").collection("users_test");
+})
 
 exports.viewUsers = function (req, res) {
 	db.find((err, records)=> {

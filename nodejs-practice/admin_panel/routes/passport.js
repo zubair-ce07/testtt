@@ -1,13 +1,14 @@
 const passport = require('passport');
 const Strategy = require('passport-local').Strategy;
 const passwordUtility = require("../helpers/passwordUtility.js");
-const client = require("../database/db")
+const mongo = require("./connect.js")
 
-let db;
+var db;
 
-client.connect(err => {
-    db = client.db("users_test").collection("users_test");
-});
+mongo.connect((err) => {
+	if (err) throw err
+	db = mongo.db.db("users_test").collection("users_test");
+})
 
 
 passport.use(new Strategy(
