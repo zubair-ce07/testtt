@@ -28,6 +28,7 @@ class WeatherRecordsParser:
             for weather_record in csv.DictReader(f):
                 if all(weather_record.get(y) for y in self.required_fields):
                     date = weather_record.get('PKT', weather_record.get('PKST'))
+                    date = datetime.strptime(date, '%Y-%m-%d')
                     weather_record = WeatherRecord(date,
                                                    int(weather_record['Max TemperatureC']),
                                                    int(weather_record['Min TemperatureC']),
@@ -59,9 +60,8 @@ class WeatherReportsProcess():
     reports_calculator = CalculateWeatherResults()
 
     def show_extreme_results(self, report_result, extreme_report_type):
-        date_object = datetime.strptime(report_result.date, '%Y-%m-%d')
         print(f'{extreme_report_type}: {report_result.max_temp} C on '
-              f'{date_object.strftime("%b %d")}')
+              f'{report_result.date.strftime("%b %d")}')
 
     def process_extreme_result(self, records):
         if not records:
@@ -92,14 +92,13 @@ class WeatherReportsProcess():
             return
 
         for weather_record in records:
-            date_object = datetime.strptime(weather_record.date, '%Y-%m-%d')
-            print(date_object.strftime('%d'), end='')
+            print(weather_record.date.strftime('%d'), end='')
 
             for plus_counter in range(0, weather_record.max_temp):
                 print(f'\033[1;31;40m + ', end='')
 
             print(f'{weather_record.max_temp} C')
-            print(date_object.strftime('%d'), end='')
+            print(weather_record.date.strftime('%d'), end='')
 
             for plus_counter in range(0, weather_record.min_temp):
                 print(f'\033[1;34;40m - ', end='')
@@ -111,8 +110,7 @@ class WeatherReportsProcess():
             return
 
         for weather_record in records:
-            date_object = datetime.strptime(weather_record.date, '%Y-%m-%d')
-            print(f'\033[1;31;40m {date_object.strftime("%d")}', end='\t')
+            print(f'\033[1;31;40m {weather_record.date.strftime("%d")}', end='\t')
             print(f'\033[1;31;40m {weather_record.max_temp} C', end='')
 
             for plus_counter in range(0, weather_record.max_temp):
@@ -149,7 +147,7 @@ def main():
 
     record_parser = WeatherRecordsParser()
     process_results = WeatherReportsProcess()
-    file_names_template = f'{args.path}/Murree_weather_' + '{}*'
+    file_names_template = f'{args.path}/Murree_weather_{{}}*'
 
     if args.year:
         records = record_parser.read_files_records(file_names_template.format(args.year))
