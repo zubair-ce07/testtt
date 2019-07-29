@@ -1,0 +1,277 @@
+{
+	"info": {
+		"_postman_id": "bad04e03-6254-4534-8c53-f51b2f112bd3",
+		"name": "admin_panel Testing",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "localhost:8080/",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "localhost:8080/",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "localhost:8080/login?username=admin&password=admin",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "localhost:8080/login?username=admin&password=admin",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"login"
+					],
+					"query": [
+						{
+							"key": "username",
+							"value": "admin"
+						},
+						{
+							"key": "password",
+							"value": "admin"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "localhost:8080/viewUsers",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "localhost:8080/viewUsers",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"viewUsers"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "localhost:8080/profile",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "localhost:8080/profile",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"profile"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "localhost:8080/addUser?username=testUser1&name=TEST USER&password=testUser1&admin=false",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "localhost:8080/addUser?username=testUser1&name=TEST USER&password=testUser1&admin=false",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"addUser"
+					],
+					"query": [
+						{
+							"key": "username",
+							"value": "testUser1"
+						},
+						{
+							"key": "name",
+							"value": "TEST USER"
+						},
+						{
+							"key": "password",
+							"value": "testUser1"
+						},
+						{
+							"key": "admin",
+							"value": "false"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "localhost:8080/updateUser?username=testUser&name=TEST USER&password=testUser&admin=true",
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "localhost:8080/updateUser?username=testUser&name=TEST USER&password=testUser&admin=true",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"updateUser"
+					],
+					"query": [
+						{
+							"key": "username",
+							"value": "testUser"
+						},
+						{
+							"key": "name",
+							"value": "TEST USER"
+						},
+						{
+							"key": "password",
+							"value": "testUser"
+						},
+						{
+							"key": "admin",
+							"value": "true"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "localhost:8080/updateUser?username=testUser1&name=I AM THE TEST USER&password=testUser&admin=true",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "localhost:8080/updateUser?username=testUser1&name=I AM THE TEST USER&password=testUser&admin=true",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"updateUser"
+					],
+					"query": [
+						{
+							"key": "username",
+							"value": "testUser1"
+						},
+						{
+							"key": "name",
+							"value": "I AM THE TEST USER"
+						},
+						{
+							"key": "password",
+							"value": "testUser"
+						},
+						{
+							"key": "admin",
+							"value": "true"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "localhost:8080/deleteUser?username=testUser1",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "localhost:8080/deleteUser?username=testUser1",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"deleteUser"
+					],
+					"query": [
+						{
+							"key": "username",
+							"value": "testUser1"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "localhost:8080/logout",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "localhost:8080/logout",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"logout"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

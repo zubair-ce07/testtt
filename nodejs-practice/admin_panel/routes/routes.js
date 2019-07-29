@@ -15,24 +15,37 @@ Router.get('/', function(req, res) {
 });
 
 
-Router.post('/',
+Router.post('/login',
 	passport.authenticate('local', { failureRedirect: '/'}),
 	function(req, res) {
 		res.redirect('/');
 });
 
 
-Router.get('/viewUsers', function (req, res) {
-	controllers.viewUsers(req, res)
+Router.get('/viewUsers', 
+	loginStatus.ensureLoggedIn('/'),
+	function (req, res) {
+		controllers.viewUsers(req, res)
 });
 
 
-Router.put('/',
+Router.post('/addUser',
 	loginStatus.ensureLoggedIn('/'),
 	function (req, res) {
 		controllers.addUser(req, res)
 })
 
+Router.put('/updateUser',
+	loginStatus.ensureLoggedIn('/'),
+	function (req, res) {
+		controllers.updateUser(req, res)
+})
+
+Router.patch('/updateUser',
+	loginStatus.ensureLoggedIn('/'),
+	function(req, res) {
+		controllers.updateUser(req, res);
+})
 
 Router.get('/logout',
 	function(req, res){
@@ -40,14 +53,7 @@ Router.get('/logout',
 		res.redirect('/');
 });
 
-
-Router.patch('/',
-	function(req, res) {
-		controllers.updateUser(req, res);
-})
-
-
-Router.delete('/', 
+Router.delete('/deleteUser', 
 	loginStatus.ensureLoggedIn('/'),
 	function (req, res) {
 		controllers.deleteUser(req, res);
@@ -57,14 +63,7 @@ Router.delete('/',
 Router.get('/profile',
 	loginStatus.ensureLoggedIn('/'),
 	function(req, res) {
-		let user = req.user;
-		res.json({userDetails: {
-			id: user.id,
-			username: user.username,
-			name: user.name,
-			admin: user.admin
-		}
-	});
-});
+		controllers.showProfile(req, res);
+})
 
 module.exports = Router;

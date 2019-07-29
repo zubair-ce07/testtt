@@ -3,17 +3,17 @@ const Strategy = require('passport-local').Strategy;
 const passwordUtility = require("../helpers/passwordUtility.js");
 const mongo = require("./connect.js")
 
-var db;
+var collection;
 
 mongo.connect((err) => {
-	if (err) throw err
-	db = mongo.db.db("users_test").collection("users_test");
+	if (err) throw err;
+	collection = mongo.database.collection("users_test");
 })
 
 
 passport.use(new Strategy(
 function(username, password, cb) {
-	db.findOne({username:username}, function(err, user) {
+	collection.findOne({username:username}, function(err, user) {
 		if (!user) { return cb(null, false); }
 		given_password_hash = passwordUtility.sha512(password, user.password_salt).passwordHash
 		if (err) {return cb(err); }
@@ -32,7 +32,7 @@ passport.serializeUser(function(user, cb) {
 
 
 passport.deserializeUser(function(username, cb) {
-	db.findOne({username: username}, function (err, user) {
+	collection.findOne({username: username}, function (err, user) {
 		if (err) { return cb(err); }
 		cb(null, user);
 	});
