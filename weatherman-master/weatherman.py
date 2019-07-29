@@ -122,36 +122,36 @@ def main():
     parser = argparse.ArgumentParser(description="Enter Arguments")
 
     parser.add_argument('path', help='path of directory')
-    parser.add_argument("-e", action="store", dest="highest_values",
+    parser.add_argument("-e", action="store", dest="yearly_report",
                         help="year of show highest and lowest values ", type=lambda x: datetime.strptime(x, '%Y'))
 
-    parser.add_argument("-a", action="store", dest="average_values",
+    parser.add_argument("-a", action="store", dest="monthly_report",
                         help="year and month to show average values", type=lambda x: datetime.strptime(x, '%Y/%m'))
 
     parser.add_argument("-c", action="store",
-                        dest="charts_values",
+                        dest="horizontol_charts",
                         help="year and month to display horizontol charts",
                         type=lambda x: datetime.strptime(x, '%Y/%m'))
 
     args = parser.parse_args()
-    if args.highest_values:
-        for input_file in glob.glob(args.path + "/*" + str(args.highest_values.year) + "*"):
+    if args.yearly_report:
+        for input_file in glob.glob(args.path + "/*" + str(args.yearly_report.year) + "*"):
             full_file_path = os.path.join(args.path, input_file)
             weather_records = prepare_weather_man(full_file_path)
 
         max_temp, min_temp, max_humidity = calculate_yearly_report(weather_records)
         show_yearly_report(max_temp, min_temp, max_humidity)
 
-    elif args.average_values:
-        prepare_weather_man(make_file_name(args.path, args.average_values))
+    elif args.monthly_report:
+        prepare_weather_man(make_file_name(args.path, args.monthly_report))
         highest_average, lowest_average, humidity_average = calculate_monthly_report(weather_records)
         show_monthly_report(highest_average, lowest_average, humidity_average)
 
-    elif args.charts_values:
-        prepare_weather_man(make_file_name(args.path, args.charts_values))
-        bar_charts_header = date_header_for_charts(args.charts_values)
+    elif args.horizontol_charts:
+        prepare_weather_man(make_file_name(args.path, args.horizontol_charts))
+        bar_charts_header = date_header_for_charts(args.horizontol_charts)
         show_bar_chart(weather_records, bar_charts_header)
 
-        
+
 if __name__ == "__main__":
-     main()
+    main()
