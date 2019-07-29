@@ -10,5 +10,15 @@ import scrapy
 
 class KidsbrandstoreItem(scrapy.Item):
     # define the fields for your item here like:
-    # name = scrapy.Field()
-    pass
+    retailer_sku = scrapy.Field()
+    gender = scrapy.Field()
+    category = scrapy.Field()
+    brand = scrapy.Field()
+    url = scrapy.Field()
+    name = scrapy.Field()
+    description = scrapy.Field()
+    care = scrapy.Field()
+    image_urls = scrapy.Field()
+    skus = scrapy.Field()
+    price = scrapy.Field()
+    currency = scrapy.Field()
