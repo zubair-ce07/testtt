@@ -2,7 +2,9 @@
 import calendar
 import csv
 from glob import glob
+
 from weather_records import WeatherRecords
+
 
 def is_valid_weather_record(record):
     for field in WeathermanFileReader.required_fields:

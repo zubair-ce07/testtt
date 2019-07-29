@@ -1,7 +1,8 @@
 #!/usr/bin/python3
 import os
-import argparse
 from datetime import datetime
+import argparse
+
 from data_reader import WeathermanFileReader
 from reports import WeathermanReportPrinter
 from result_calculator import ResultCalculator

@@ -1,8 +1,7 @@
 #!/usr/bin/python3
 import calendar
+
 from colorama import Fore
-
-
 
 class WeathermanReportPrinter:
 
