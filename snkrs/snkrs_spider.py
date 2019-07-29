@@ -1,3 +1,5 @@
+import re
+
 from scrapy import Request
 from scrapy.spiders import Spider
 from snkrs.items import SnkrsItem
@@ -109,22 +111,22 @@ class SnkrsSpider(Spider):
         for size in sizes or ['One Size']:
             sku = {
                 'size': size,
-                'price': response.css(price_css).get(),
+                'price': float(response.css(price_css).get().replace(',', '')),
                 'currency': response.css(currency_css).get()
             }
 
-            color_css = '#short_description_content p:contains("Color")::text'
-            color = response.css(color_css).get()
-            if color:
-                color = color.replace('Color', '').replace(':', '').replace('-', '').strip()
-                sku['color'] = color
+            colour_css = '#short_description_content p:contains("Color")::text'
+            colour = response.css(colour_css).get()
+            if colour:
+                colour = re.sub(r'-\s?Color\s?:\s', '', colour)
+                sku['colour'] = colour
 
             previous_price_css = '#old_price_display span::text'
             previous_prices = response.css(previous_price_css).getall()
             if previous_prices:
-                sku['previous_prices'] = [p.split(' ')[0] for p in previous_prices]
+                sku['previous_prices'] = [float(p.split(' ')[0].replace(',', '')) for p in previous_prices]
 
-            sku['sku_id'] = f'{color}_{size}' if color else size
+            sku['sku_id'] = f'{colour}_{size}' if colour else size
             skus.append(sku)
 
         return skus
