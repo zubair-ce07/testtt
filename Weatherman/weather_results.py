@@ -4,7 +4,7 @@ from datetime import datetime
 class WeatherResults:
     def __init__(self):
 
-        self.date = datetime.strptime("2004-7-0", "%Y-%m-%d")
+        self.date = datetime.strptime("2004-7-1", "%Y-%m-%d")
         self.max_temprature = 0
         self.min_temprature = 0
         self.most_humidity = 0
