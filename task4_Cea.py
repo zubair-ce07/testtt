@@ -135,7 +135,7 @@ class CeaSpider(CrawlSpider):
         return clean(response.css('.productDescription::text').get())
 
     def product_requests(self, response, raw_json):
-        requests = [response.follow(response.url + '#', callback=self.parse_sku, meta={'raw_json': raw_json}),
+        requests = [response.follow(response.url, callback=self.parse_sku, dont_filter=True, meta={'raw_json': raw_json}),
                     response.follow(url=self.get_image_url(raw_json), callback=self.get_imagesid)]
         color_queue = response.css('.img-wrapper ::attr(href)').getall()
 
