@@ -27,11 +27,11 @@ class RecursiveCrawler:
         return html
 
     async def visited_urls(self, workers, work_queue):
-
         while not work_queue.empty():
             current_url = await work_queue.get()
 
             try:
+                print(current_url)
                 await self.get_results(current_url, workers)
                 await asyncio.sleep(self.download_delay)
 
