@@ -101,27 +101,37 @@ class BossSpider(CrawlSpider):
     def parse_size(self, response):
 
         item = response.meta['item']
-        size_queue = response.css('.product-stage__choose-size--container ::attr(href)').getall()
+        sizes = response.css('.product-stage__choose-size--container a')
 
-        if size_queue:
-            for size_url in size_queue:
-                item['requests'].append(response.follow(size_url, callback=self.parse_sku))
-        else:
-            item['requests'].append(response.follow(response.url + '/#', callback=self.parse_sku))
+        for a in sizes:
+            if a.css('::attr(href)'):
+                item['requests'].append(response.follow(a.css('::attr(href)').get(), callback=self.parse_sku))
+            else:
+                item['requests'].append(
+                    response.follow(response.url, callback=self.parse_sku, dont_filter=True,
+                                    meta={'size': clean(a.css('.swatch-list__size ::text').get())}))
 
         return self.next_request_or_item(item)
 
     def parse_sku(self, response):
+        size = None
+        out_of_stock = False
+        if 'size' in response.meta:
+            size = response.meta['size']
+            out_of_stock = True
+
         item = response.meta['item']
         color = clean(response.css('.product-stage__control-item__label--variations '
                                    '::text').getall()[2])
         price = clean(response.css('.product-price--price-sales ::text').get())
         previous_price = clean(response.css('.product-price--price-standard s ::text').getall())
-        size = self.product_size(response)
+        if not size:
+            size = self.product_size(response)
 
         item['skus'].update({f'{color}_{size}': {
             'color': color,
             'price': price,
+            'out_of_stock': out_of_stock,
             'previous_price': previous_price,
             'size': size
         }})
