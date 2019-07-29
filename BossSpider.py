@@ -37,7 +37,7 @@ class BossSpider(CrawlSpider):
     allowed_domains = ['hugoboss.com']
     start_urls = [
         'https://www.hugoboss.com/uk/home'
-        ]
+    ]
 
     listing_css = '.main-header'
     product_css = '.product-tile__link'
@@ -64,7 +64,7 @@ class BossSpider(CrawlSpider):
         item['skus'] = {}
         item['requests'] = self.colors_queues(response)
 
-        yield from self.next_request_or_item(item)
+        return self.next_request_or_item(item)
 
     def retailer_sku(self, response):
         return response.css('script[type="text/javascript"]').re("productSku\":\"(.+?)\"")[0]
@@ -109,7 +109,7 @@ class BossSpider(CrawlSpider):
         else:
             item['requests'].append(response.follow(response.url + '/#', callback=self.parse_sku))
 
-        yield from self.next_request_or_item(item)
+        return self.next_request_or_item(item)
 
     def parse_sku(self, response):
         item = response.meta['item']
@@ -126,7 +126,7 @@ class BossSpider(CrawlSpider):
             'size': size
         }})
 
-        yield from self.next_request_or_item(item)
+        return self.next_request_or_item(item)
 
     def product_size(self, response):
         size = clean(response.css('.product-stage__control-item__selcted-size ::text').get())
@@ -138,8 +138,7 @@ class BossSpider(CrawlSpider):
         if item['requests']:
             request = item['requests'].pop()
             request.meta.update({'item': item})
-            yield request
-        else:
-            item.pop('requests', None)
-            yield item
+            return request
+        item.pop('requests', None)
+        return item
 
