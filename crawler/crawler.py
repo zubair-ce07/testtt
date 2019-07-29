@@ -2,6 +2,7 @@ import argparse
 import asyncio
 import concurrent.futures
 import functools
+import re
 import time
 from urllib.parse import urljoin
 from urllib.parse import urlparse
@@ -17,61 +18,57 @@ class Crawler:
         self.max_num_urls = max_num_urls
         self.visited_urls = set()
         self.bounded_semaphore = asyncio.BoundedSemaphore(max_workers)
-
-    def _validate_urls(self, url, base_url=None):
-        if url not in self.visited_urls:
-            if "http" not in url:
-                url = urljoin(base_url, url)
-            if ("http" in url and "#" not in url and
-                    "?" not in url and all([urlparse(url).scheme, urlparse(url).netloc])):
-                return url
+        self.domain = "tennis-warehouse.com"
+        self.loop = asyncio.get_event_loop()
 
     async def _find_urls(self, http_response, base_url):
-        await asyncio.sleep(0.1)
-        all_urls = Selector(text=http_response.text).xpath("//a/@href").getall()
-        fn = functools.partial(self._validate_urls, base_url=base_url)
-        return filter(self._validate_urls, all_urls)
+        await asyncio.sleep(self.delay)
+        anchor_urls = Selector(text=http_response.text).xpath("//a/@href").getall()
+        anchor_urls = [u for u in anchor_urls if (self.domain in u or u.startswith('/')) and '@' not in u]
+        return map(lambda url: urljoin(base_url, url), anchor_urls)
 
     async def _get_url_data(self, url):
         http_response = await self._http_request(url)
         found_urls = set()
         if http_response:
-            urls = await self._find_urls(http_response, url)
-            found_urls.update(urls)
+            found_urls.update(await self._find_urls(http_response, url))
         return url, http_response, found_urls
 
     async def _extract_multi_url(self, to_fetch):
-        futures, results = [], []
+        futures = []
         for url in to_fetch:
             if url not in self.visited_urls and len(self.visited_urls) < self.max_num_urls:
                 self.visited_urls.add(url)
                 futures.append(self._get_url_data(url))
-        for future in asyncio.as_completed(futures):
-            results.append((await future))
-        return results
+        return [(await future) for future in asyncio.as_completed(futures)]
 
-    async def crawl(self):
+    async def _crawl(self):
         to_fetch = [self.start_url]
         results = []
         while len(self.visited_urls) < self.max_num_urls:
             batch = await self._extract_multi_url(to_fetch)
             to_fetch = []
             for url, data, found_urls in batch:
-                data = len(data.content) if data else 0
-                results.append({"URL": url, "Bytes": data})
+                bytes_downloaded = len(data.content) if data else 0
+                results.append({"URL": url, "Bytes": bytes_downloaded})
                 to_fetch.extend(found_urls)
+        return results
+
+    def run_crawler(self):
+        try:
+            results = self.loop.run_until_complete(self._crawl())
+        finally:
+            self.loop.close()
         return results
 
 
 class ConcurrentCrawler(Crawler):
 
     async def _http_request(self, url):
-        print(f'Fetching: {url}')
         try:
             async with self.bounded_semaphore:
                 await asyncio.sleep(self.delay)
-                fn = functools.partial(requests.get, url, timeout=10)
-                future_response = await asyncio.get_event_loop().run_in_executor(None, fn)
+                future_response = await asyncio.get_event_loop().run_in_executor(None, requests.get, url)
                 return future_response
         except (requests.ConnectionError, requests.Timeout):
             pass
@@ -80,55 +77,59 @@ class ConcurrentCrawler(Crawler):
 class ParallelCrawler(Crawler):
 
     async def _http_request(self, url):
-        print(f'Fetching: {url}')
         try:
             async with self.bounded_semaphore:
                 with concurrent.futures.ProcessPoolExecutor() as pool:
-                    fn = functools.partial(requests.get, url, timeout=10)
-                    future_response = await asyncio.get_running_loop().run_in_executor(pool, fn)
+                    future_response = await asyncio.get_running_loop().run_in_executor(pool, requests.get, url)
                     await asyncio.sleep(self.delay)
                     return future_response
         except (requests.ConnectionError, requests.Timeout):
             pass
 
 
+def _is_valid_url(url):
+    regex = re.compile(r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+")
+    if url is not None and regex.search(url):
+        return url
+    else:
+        raise argparse.ArgumentTypeError(f"{url} is invalid.")
+
+
 def arg_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('-u', action='store', dest='start_url',
-                        type=lambda u: u if all([urlparse(u).scheme, urlparse(u).netloc]) else parser.error("Invalid URL"),
+                        type=_is_valid_url,
                         help='Enter URL where you want to start crawling.')
-    parser.add_argument('-w', action='store', dest="concurrent_requests", type=int,
+    parser.add_argument('-w', action='store', dest="concurrent_requests",
+                        type=lambda n: int(n) if int(n) > 0 else argparse.ArgumentTypeError(f"{d} is invalid."),
                         help="Enter Number of concurrent requests a worker can make.")
-    parser.add_argument('-d', action='store', dest="download_delay", type=float,
+    parser.add_argument('-d', action='store', dest="download_delay",
+                        type=lambda d: float(d) if float(d) >= 0 else argparse.ArgumentTypeError(f"{d} is invalid."),
                         help="Enter download delay that each worker has to follow.")
-    parser.add_argument('-m', action='store', dest="max_urls", type=int,
+    parser.add_argument('-m', action='store', dest="max_urls",
+                        type=lambda n: int(n) if int(n) > 0 else argparse.ArgumentTypeError(f"{d} is invalid."),
                         help="Maximum number of URLs to crawl.")
-    parser.add_argument('-c', action='store', dest="crawler_to_run", type=str,
+    parser.add_argument('-c', action='store', dest="crawler_to_run", type=str, choices=['parallel', 'concurrent'],
                         help="Enter 1 to run concurrent and 2 to run  parallel crawler.")
     return parser.parse_args()
 
 
-def report(results):
+def generate_report(results):
     print(f"Bytes Downloaded: {sum([r['Bytes'] for r in results])}")
     print(f"Average Page Size: {sum([r['Bytes'] for r in results]) / len(results)}")
     print(f"Requests Made: {len(results)}")
 
 
 def main():
-    start = time.time()
     args = arg_parser()
 
     if args.crawler_to_run == "concurrent":
-        crawler = ConcurrentCrawler(args.start_url, args.concurrent_requests, args.download_delay, args.max_urls)
+        results = ConcurrentCrawler(args.start_url, args.concurrent_requests,
+                                    args.download_delay, args.max_urls).run_crawler()
     elif args.crawler_to_run == "parallel":
-        crawler = ParallelCrawler(args.start_url, args.concurrent_requests, args.download_delay, args.max_urls)
-
-    loop = asyncio.get_event_loop()
-    results = loop.run_until_complete(crawler.crawl())
-    loop.close()
-    end = time.time()
-    report(results)
-    print((f"Execution Time: {end - start}"))
+        results = ParallelCrawler(args.start_url, args.concurrent_requests,
+                                  args.download_delay, args.max_urls).run_crawler()
+    generate_report(results)
 
 
 if __name__ == "__main__":
