@@ -1,4 +1,4 @@
-const connection = require("../database/db")
+const connection = require("./configuration.js")
 
 module.exports.connect = function connect(cb) {
     connection.connect(err => {

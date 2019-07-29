@@ -1,7 +1,7 @@
 const express = require("express");
 const loginStatus = require('connect-ensure-login');
 const passport = require('passport');
-const controllers = require("./controllers.js");
+const controllers = require("../controllers/controllers.js");
 
 
 const Router = express.Router();

@@ -1,7 +1,7 @@
 const passport = require('passport');
 const Strategy = require('passport-local').Strategy;
 const passwordUtility = require("../helpers/passwordUtility.js");
-const mongo = require("./connect.js")
+const mongo = require("../database/connect.js")
 
 var collection;
 
