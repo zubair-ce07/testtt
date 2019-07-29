@@ -7,6 +7,9 @@ from operator import attrgetter
 from datetime import datetime
 
 
+weather_records = []
+
+
 class Color:
     PURPLE = '\033[95m'
     BLUE = '\033[94m'
@@ -71,12 +74,10 @@ def show_bar_chart(weather_man, header_line):
     for day_count, weather_row in enumerate(weather_man):
         print(
             Color.PURPLE + format(day_count + 1, '02d') + ' ' + Color.RED + (
-                '+' * abs(weather_row.max_temperature)) + ' ' + Color.PURPLE
-            + str(weather_row.max_temperature) + 'C')
+                '+' * abs(weather_row.max_temperature)) + ' ' + Color.PURPLE + str(weather_row.max_temperature) + 'C')
         print(
             Color.PURPLE + format(day_count + 1, '02d') + ' ' + Color.BLUE + (
-                '+' * abs(weather_row.min_temperature)) + ' ' + Color.PURPLE
-            + str(weather_row.min_temperature) + 'C')
+                '+' * abs(weather_row.min_temperature)) + ' ' + Color.PURPLE + str(weather_row.min_temperature) + 'C')
 
     print(Color.END + header_line)
     for day_count, weather_row in enumerate(weather_man):
@@ -117,10 +118,7 @@ def date_header_for_charts(year_argument):
 
 
 def main():
-    weather_records = []
-
     parser = argparse.ArgumentParser(description="Enter Arguments")
-
     parser.add_argument('path', help='path of directory')
     parser.add_argument("-e", action="store", dest="yearly_report", help="year of show highest and lowest values ",
                         type=lambda x: datetime.strptime(x, '%Y'))
@@ -128,8 +126,8 @@ def main():
     parser.add_argument("-a", action="store", dest="monthly_report", help="year and month to show average values",
                         type=lambda x: datetime.strptime(x, '%Y/%m'))
 
-    parser.add_argument("-c", action="store", dest="horizontol_charts",
-                        help="year and month to display horizontol charts",
+    parser.add_argument("-c", action="store",
+                        dest="horizontol_charts", help="year and month to display horizontol charts",
                         type=lambda x: datetime.strptime(x, '%Y/%m'))
 
     args = parser.parse_args()
@@ -142,12 +140,12 @@ def main():
         show_yearly_report(max_temp, min_temp, max_humidity)
 
     elif args.monthly_report:
-        prepare_weather_man(make_file_name(args.path, args.monthly_report))
+        weather_records = prepare_weather_man(make_file_name(args.path, args.monthly_report))
         highest_average, lowest_average, humidity_average = calculate_monthly_report(weather_records)
         show_monthly_report(highest_average, lowest_average, humidity_average)
 
     elif args.horizontol_charts:
-        prepare_weather_man(make_file_name(args.path, args.horizontol_charts))
+        weather_records = prepare_weather_man(make_file_name(args.path, args.horizontol_charts))
         bar_charts_header = date_header_for_charts(args.horizontol_charts)
         show_bar_chart(weather_records, bar_charts_header)
 
