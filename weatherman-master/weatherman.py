@@ -122,14 +122,13 @@ def main():
     parser = argparse.ArgumentParser(description="Enter Arguments")
 
     parser.add_argument('path', help='path of directory')
-    parser.add_argument("-e", action="store", dest="yearly_report",
-                        help="year of show highest and lowest values ", type=lambda x: datetime.strptime(x, '%Y'))
+    parser.add_argument("-e", action="store", dest="yearly_report", help="year of show highest and lowest values ",
+                        type=lambda x: datetime.strptime(x, '%Y'))
 
-    parser.add_argument("-a", action="store", dest="monthly_report",
-                        help="year and month to show average values", type=lambda x: datetime.strptime(x, '%Y/%m'))
+    parser.add_argument("-a", action="store", dest="monthly_report", help="year and month to show average values",
+                        type=lambda x: datetime.strptime(x, '%Y/%m'))
 
-    parser.add_argument("-c", action="store",
-                        dest="horizontol_charts",
+    parser.add_argument("-c", action="store", dest="horizontol_charts",
                         help="year and month to display horizontol charts",
                         type=lambda x: datetime.strptime(x, '%Y/%m'))
 
