@@ -48,15 +48,15 @@ class AsicsSpider(scrapy.Spider):
 
     def parse_item(self, response):
         item = AsicsItem()
-        item['retailer_sku'] = self.product_id(response)
+        item['retailer_sku'] = self.retailer_sku(response)
         item['name'] = self.product_name(response)
         item['gender'] = self.product_gender(response)
         item['category'] = self.product_category(response)
         item['url'] = self.product_url(response)
         item['description'] = self.product_description(response)
-        item['image_urls'] = self.image_urls(response)
-        item['care'] = []
         item['brand'] = self.product_brand(response)
+        item['image_urls'] = []
+        item['care'] = []
         item['skus'] = {}
         item['requests'] = self.colour_requests(response)
 
@@ -74,12 +74,18 @@ class AsicsSpider(scrapy.Spider):
 
     def parse_sku(self, response):
         item = response.meta['item']
+        item['skus'].update(self.product_skus(response))
+        return self.next_request_or_item(item)
+
+    def product_skus(self, response):
+        skus = {}
         common_sku = {
             'color': response.css('[itemprop="color"] ::text').get(),
             'previous_price': response.css('.pull-right del ::text').getall()
         }
 
-        for sku_sel in response.css('.tab:not(.hide-tab) > .size-box-select-container #sizes-options > .SizeOption'):
+        size_css = response.css('.tab:not(.hide-tab) > .size-box-select-container #sizes-options > .SizeOption')
+        for sku_sel in size_css:
             key = sku_sel.css('::attr(data-value)').get()
             sku = {
                 'out_of_stock': bool(sku_sel.css('.disabled')),
@@ -89,20 +95,24 @@ class AsicsSpider(scrapy.Spider):
             }
 
             sku.update(common_sku)
-            item['skus'].update({key: sku})
+            skus.update({key: sku})
 
-        return self.next_request_or_item(item)
+        return skus
 
     def next_request_or_item(self, item):
         if item['requests']:
             request = item['requests'].pop()
             request.meta.update({'item': item})
             return request
+
         item.pop('requests', None)
         return item
 
-    def product_id(self, response):
-        return response.css('[itemprop="productID"] ::attr(content)').get()
+    def retailer_sku(self, response):
+        retailer_sku = response.css('[itemprop="productID"] ::attr(content)').get()
+        if retailer_sku:
+            return retailer_sku
+        raise Exception('Product not available')
 
     def product_name(self, response):
         return response.css('.single-prod-title ::text').get()
