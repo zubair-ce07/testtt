@@ -1,7 +1,15 @@
-## Running Locally
+## What is this about?
 
-1. Clone/download the repository
-2. Set up the `.env` file with valid credentials for database
-3. Run `npm install` to gather the dependencies
-4. Run `node server.js`
-5. You have a working endpoint now served at `localhost:8080` which can be tested using `Postman` or a suitable alternative
+This repository has 3 sub-directories made during revisiting NodeJS, ExpressJS and MongoDB (with Mongoose).
+
+### `admin_panel`
+
+This directory provides an API backend connected to a server. Admin can login and add/remove/update users in the database. This covers the basic CURD operations and can be tested using `POSTMAN`
+
+### `express`
+
+Simple express-based web-app that serves some views based on the given routes
+
+### `intro`
+
+Some NodeJS practice code files.
