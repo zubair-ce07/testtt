@@ -1,3 +1,5 @@
+import re
+
 import scrapy
 from scrapy import FormRequest
 from datetime import datetime, timedelta
@@ -27,6 +29,7 @@ class CpucSpider(scrapy.Spider):
             'op': 'Log in'
         }
         cookiejar = form_build_id
+
         return scrapy.FormRequest(
             url='https://epuc.vermont.gov/?q=User',
             formdata=formdata,
@@ -51,18 +54,9 @@ class CpucSpider(scrapy.Spider):
 
         search_start_date = self.get_start_date()
         search_end_date = self.get_end_date()
-
-        ecp_form_id = response.xpath("//input[@name='ecpFormId']/@value").get()
-
         formdata = {
-            'formId': response.xpath("//*[@name='formId']/@value").get(),
             'data(181445)': search_end_date,
             'data(181445_right)': search_start_date,
-            'eCourtFormCode': 'S-Document-Orders-Portal',
-            'ecpFormId': ecp_form_id,
-            'op': 'Search',
-            'form_build_id': response.xpath("//input[@name='form_build_id']/@value").get(),
-            'form_id': 'ecp_searchform_form'
         }
 
         return FormRequest.from_response(
@@ -83,12 +77,15 @@ class CpucSpider(scrapy.Spider):
         proceeding_urls = response.meta['proceeding_urls']
         proceeding_type = response.meta['proceeding_type']
 
-        for row in response.xpath("//table[contains(@class, 'searchResultsPage')]/tr[starts-with(@id,'form_search_')]"):
-            proceeding_urls.append(response.urljoin(row.xpath("td[1]/span/a/@href").get()))
+        for row in response.xpath("//tr[starts-with(@id,'form_search_')]"):
+            url = response.urljoin(row.xpath("td[1]/span/a/@href").get())
+
+            if "q=node/104/" in url:
+                url = url.replace("q=node/104/", "q=node/64/")
+            proceeding_urls.append(url)
             proceeding_type.append(row.xpath("td[3]/text()").get().strip())
 
-        next_page = response.xpath("//ul[@class='pagination']/li[@class=' active ']/following-sibling::li/a/@href")\
-            .get()
+        next_page = response.xpath("//li[@class=' active ']/following-sibling::li/a/@href").get()
 
         if next_page:
 
@@ -103,7 +100,6 @@ class CpucSpider(scrapy.Spider):
              )
 
         else:
-
             for index, url in enumerate(proceeding_urls):
 
                 yield response.follow(
@@ -118,52 +114,71 @@ class CpucSpider(scrapy.Spider):
     def parse_proceeding_details(self, response):
         """In this method, all proceeding docket detail will scrap"""
 
-        if response.url != 'https://epuc.vermont.gov/?q=node/104/16216':
+        docket_loader = ItemLoader(item=ProceedingDetail(), response=response, selector=response)
 
-            docket_loader = ItemLoader(item=ProceedingDetail(), response=response, selector=response)
+        docket_loader.add_value("source_url", response.url)
+        content = response.xpath("//div[@class='content']/div[@style][1]/table")
 
-            docket_loader.add_value("source_url", response.url)
-            content = response.xpath("//div[@class='content']/div[@style][1]/table")
-            title = response.xpath("//div[@id='formBody_1065']/table//tr/td//span[last()]/text()").getall()[2].strip()
-            docket_loader.add_value('title', title)
-            docket_loader.add_value('proceeding_type', response.meta['proceeding_type'])
-            docket_loader.add_value('filled_on', content.xpath("//tr[3]/td[2]/text()").get().split(':')[1].strip())
-            docket_loader.add_value('status', content.xpath("//tr[3]/td[1]/text()").get().split(':')[1].strip())
-            docket_loader.add_value('industries', content.xpath("//tr[5]/td[3]/text()").get().strip())
+        title = response.xpath("//div[@id='formBody_1065']/table//tr/td//span[last()]/text()").getall()
 
-            yield response.follow(
-                url='https://epuc.vermont.gov/?q=node/64/143572/FV-People-Portal',
-                meta={
-                    'cookiejar': response.meta['cookiejar'],
-                    'docket_loader': docket_loader
-                },
-                callback=self.parse_filing_parties,
-                dont_filter=True
+        if title:
+            title = title[2].strip()
 
-            )
+        docket_loader.add_value('title', title)
+        docket_loader.add_value('proceeding_type', response.meta['proceeding_type'])
+        filled_on = content.xpath("//tr[3]/td[2]/text()").get()
+
+        if filled_on and len(filled_on) == 2:
+            docket_loader.add_value('filled_on', filled_on.split(':')[1].strip())
+
+        status = content.xpath("//tr[3]/td[1]/text()").get()
+
+        if status and len(status) == 2:
+            docket_loader.add_value('status', status.split(':')[1].strip())
+
+        industries = content.xpath("//tr[5]/td[3]/text()").get()
+
+        if industries:
+            industries = industries.strip()
+
+        docket_loader.add_value('industries', industries)
+        url = response.url + '/FV-People-Portal'
+
+        yield response.follow(
+            url=url,
+            meta={
+                'cookiejar': response.meta['cookiejar'],
+                'docket_loader': docket_loader
+            },
+            callback=self.parse_filing_parties,
+
+        )
 
     def parse_filing_parties(self, response):
         """In this method, all people who are involving in each docket are parse"""
 
         docket_loader = response.meta['docket_loader']
-
-        filing_parties = response.xpath("//table[starts-with(@id, 'form.')]/tr[starts-with(@id, 'tree.branch.')]")
+        filing_parties = response.xpath("//table[starts-with(@id, 'form.')]/tr[starts-with(@id, 'tree.branch.')]"
+                                        "[not(starts-with(@class, 'tt'))]")
         parties = []
+
         for party in filing_parties:
             party = party.xpath("td[2]/span[last()]/text()").get()
+
             if party:
                 parties.append(party.strip())
 
         docket_loader.add_value('filing_parties', parties)
 
+        url = response.url.replace('/FV-People-Portal', '') + '/FV-BDIssued-PTL'
+
         yield response.follow(
-            url='https://epuc.vermont.gov/?q=node/64/143572/FV-BDIssued-PTL',
+            url=url,
             meta={
                 'cookiejar': response.meta['cookiejar'],
                 'docket_loader': docket_loader,
                 'filing': []
             },
-            dont_filter=True,
             callback=self.parse_comission_issue_document
         )
 
@@ -175,14 +190,17 @@ class CpucSpider(scrapy.Spider):
 
         self.parse_filings(filings, response)
 
+        if "https://epuc.vermont.gov/?q=node/64/141065" in response.url:
+            print("length filing {}".format(len(filings)))
+        url = response.url.replace('/FV-BDIssued-PTL', '') + '/FV-ALLOTDOX-PTL'
+
         yield response.follow(
-            url='https://epuc.vermont.gov/?q=node/64/143572/FV-ALLOTDOX-PTL',
+            url=url,
             meta={
                 'cookiejar': response.meta['cookiejar'],
                 'docket_loader': docket_loader,
                 'filing': filings
             },
-            dont_filter=True,
             callback=self.parse_other_document
         )
 
@@ -192,24 +210,86 @@ class CpucSpider(scrapy.Spider):
         docket_loader = response.meta['docket_loader']
         filings = response.meta['filing']
 
+        if "https://epuc.vermont.gov/?q=node/64/141065" in response.url:
+            print("length filing {}".format(len(filings)))
+
         self.parse_filings(filings, response)
 
         docket_loader.add_value('filings', filings)
 
         return docket_loader.load_item()
 
-    @staticmethod
-    def parse_filings(filings, response):
+    def parse_filings(self, filings, response):
         """In this method, here data of filing loads in filing list"""
 
-        filings_data = response.xpath("//table[starts-with(@id, 'form.')]/tr[starts-with(@class, 'tt')]")
+        filings_data = response.xpath("//table[starts-with(@id, 'form.treeTable')]/tr[starts-with(@id, 'tree.branch')]")
+        doc_type = ""
+        filing_loader = ItemLoader(item=Filing(), response=response)
+
         for filing in filings_data:
-            filing_loader = ItemLoader(item=Filing(), response=response, selector=filing)
-            filled_on = filing.xpath("td[2]/text()").getall()[3].strip()
-            filing_loader.add_value('filled_on', filled_on)
-            filing_loader.add_xpath('description', "td[3]/text()")
-            filing_loader.add_xpath('types', "td[6]/text()")
-            filings.append(filing_loader.load_item())
+
+            if self.get_column_count(filing) == 2:
+                doc_type = filing.xpath("td[2]/text()").getall()
+                doc_type = self.removed_garbage_from_data(doc_type)
+                match = re.search(r'(\d+/\d+/\d+)', doc_type[0])
+
+                if match:
+                    filing_loader.add_value('filled_on', match.group(1))
+                else:
+                    filing_loader.add_value('types', doc_type[0])
+
+            elif self.get_column_count(filing) == 7:
+
+                if len(filing_loader.get_output_value('types')) == 0:
+                    filing_loader.add_value('types', doc_type)
+
+                if filing_loader.get_output_value('filled_on') is None:
+                    filled_on = filing.xpath("td[2]/text()").getall()
+                    filled_on = self.removed_garbage_from_data(filled_on)
+                    filing_loader.add_value('filled_on', filled_on)
+                filing_loader.replace_value('description', filing.xpath("td[3]/text()").get().strip())
+                document = [filing.xpath("td[7]/a/@href").get().strip()]
+                filing_loader.replace_value('documents', document)
+                del document
+
+                filing_parties = self.get_filing_if_exist(response, filing)
+
+                if filing_parties:
+                    filing_loader.replace_value('filing_parties', filing_parties)
+
+                filings.append(filing_loader.load_item())
+                del filing_loader
+                filing_loader = ItemLoader(item=Filing(), response=response)
+
+            elif self.get_column_count(filing) == 8:
+
+                filled_on = self.removed_garbage_from_data(filing.xpath("td[2]/text()").getall())
+                filing_loader.add_value('filled_on', filled_on)
+                description = filing.xpath("td[3]/text()").get().strip()
+                filing_loader.add_value('description', description)
+                filing_parties = self.removed_garbage_from_data(filing.xpath("td[5]/text()").getall())
+                filing_loader.add_value('filing_parties', filing_parties)
+                documents = filing.xpath("td[8]/a/@href").get()
+                filing_loader.add_value('documents', documents)
+                filings.append(filing_loader.load_item())
+                del filing_loader
+                filing_loader = ItemLoader(item=Filing(), response=response)
+
+    @staticmethod
+    def get_filing_if_exist(response, filing):
+        filings_data = response.xpath("//table[starts-with(@id, 'form.treeTable')]/thead/tr[2]/th[5]/text()")\
+            .get().strip()
+        if filings_data == 'Filed By':
+            filing_parties = filing.xpath("td[4]/text()").get().strip()
+            return filing_parties
+        return False
+
+    @staticmethod
+    def get_column_count(filing):
+        count = 0
+        for td in filing.xpath("td").getall():
+            count += 1
+        return count
 
     @staticmethod
     def get_start_date():
@@ -221,3 +301,7 @@ class CpucSpider(scrapy.Spider):
         search_end_date = (datetime.now() - timedelta(days=int(self.days))).date()
         search_end_date = search_end_date.strftime("%m/%d/%Y")
         return search_end_date
+
+    @staticmethod
+    def removed_garbage_from_data(data_list):
+        return [data.strip() for data in data_list if data.strip()]
