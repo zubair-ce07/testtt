@@ -70,7 +70,6 @@ class AsicsSpider(scrapy.Spider):
     def parse_color(self, response):
         item = response.meta['item']
         item['image_urls'].extend(self.image_urls(response))
-        item = response.meta['item']
         item['skus'].update(self.product_skus(response))
         return self.next_request_or_item(item)
 
