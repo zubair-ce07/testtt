@@ -1,11 +1,8 @@
 import argparse
 import asyncio
 import concurrent.futures
-import functools
 import re
-import time
 from urllib.parse import urljoin
-from urllib.parse import urlparse
 
 import requests
 from parsel import Selector
