@@ -106,27 +106,30 @@ class SnkrsSpider(Spider):
                  response.css(sizes_css).getall()]
 
         skus = []
-        price_css = '#our_price_display::attr(content)'
-        currency_css = 'p.our_price_display meta::attr(content)'
         for size in sizes or ['One Size']:
-            sku = {
-                'size': size,
-                'price': float(response.css(price_css).get().replace(',', '')),
-                'currency': response.css(currency_css).get()
-            }
-
+            sku = {}
             colour_css = '#short_description_content p:contains("Color")::text'
             colour = response.css(colour_css).get()
             if colour:
                 colour = re.sub(r'-\s?Color\s?:\s', '', colour)
                 sku['colour'] = colour
 
-            previous_price_css = '#old_price_display span::text'
-            previous_prices = response.css(previous_price_css).getall()
-            if previous_prices:
-                sku['previous_prices'] = [float(p.split(' ')[0].replace(',', '')) for p in previous_prices]
-
+            sku['size'] = size,
             sku['sku_id'] = f'{colour}_{size}' if colour else size
+            sku = {**sku, **self.get_pricing_details(response)}
             skus.append(sku)
-
         return skus
+
+    def get_pricing_details(self, response):
+        price_css = '#our_price_display::attr(content)'
+        previous_price_css = '#old_price_display span::text'
+        currency_css = 'p.our_price_display meta::attr(content)'
+
+        details = {}
+        details['currency'] = response.css(currency_css).get()
+        details['price'] = int(response.css(price_css).get().replace('.', '')),
+
+        previous_prices = response.css(previous_price_css).getall()
+        if previous_prices:
+            details['previous_prices'] = [int(p.split(' ')[0].replace('.', '')) for p in previous_prices]
+        return details
