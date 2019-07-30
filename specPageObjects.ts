@@ -152,7 +152,7 @@ describe('Flight Prediction Graph: ', function() {
 	it("Should click any provider price and verify if click price should match cheapest result", async function() {
 
 		await flightResults.selectAlaskaAirlines();
-		expect(await flightResults.getCheapestPrice()).to.be.equal(await flightResults.getBookingProviderFilterPrice());
+		expect(await flightResults.getCheapestPrice()).to.be.equal(await flightResults.getCheapoAirBookingProviderPrice());
 	});
 
 	it("Should click reset link in the booking providers and verify if all providers results are displayed", async function() {
