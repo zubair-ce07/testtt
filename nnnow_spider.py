@@ -1,13 +1,11 @@
 import scrapy
 import json
-import requests
 
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 
 
 class Nnnow(CrawlSpider):
-
     name = 'Nnnowspider'
     start_urls = ['https://www.nnnow.com/']
     all_products_paths = '/men', '/women', '/kids', '/footwear'
@@ -23,13 +21,15 @@ class Nnnow(CrawlSpider):
         item = NnnowRecord()
         item['name'] = self.get_name(response)
         item['brand'] = self.get_brand(response)
+        item['skus'] = []
         item['category'] = self.get_category(response)
         item['image_urls'] = self.get_image_urls(response)
         item['url'] = self.get_url(response)
-        item['description'] =self.get_description(converted_data)
+        item['description'] = self.get_description(converted_data)
         item['care'] = self.get_care(converted_data)
-        item['skus'] = self.get_skus(converted_data)
-        return item
+        item['requests'] = []
+        item['requests'].extend(self.color_requests(converted_data, item))
+        return self.get_request_or_item(item)
 
     def get_name(self, response):
         return response.css('.nw-product-name .nw-product-title::text').get()
@@ -51,42 +51,52 @@ class Nnnow(CrawlSpider):
         converted_data = json.loads(all_data)
         return converted_data
 
-    def get_skus(self, converted_data):
-        urls = converted_data['ProductStore']['PdpData']['colors']['colors']['']
+    def color_requests(self, converted_data, item):
         color_ids = []
-        for item in urls:
-            one_url = item['url']
-            split_url = one_url.split("-")[-1]
-            color_ids.append(split_url)
-        return self.color_requests(color_ids)
-
-    def color_requests(self, color_ids):
+        one_color_data = converted_data['ProductStore']['PdpData']['mainStyle']['styleId']
+        if converted_data.get('ProductStore', {}).get('PdpData', {}).get('colors', {}).get('colors', {}).get('', {}):
+            multiple_colors_data = converted_data['ProductStore']['PdpData']['colors']['colors']['']
+            for color in multiple_colors_data:
+                color_ids.append(color['styleId'])
+        else:
+            color_ids.append(one_color_data)
         headers = {
             'Origin': 'https://www.nnnow.com',
             'Content-Type': 'application/json',
             'module': 'odin',
             'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36',
         }
-        for item in color_ids:
-            data = {"module":"odin","styleId":""}
-            data['styleId'] = item
-            response = requests.post('https://api.nnnow.com/d/api/product/details', headers=headers, data=json.dumps(data))
-            return self.generate_skus(response)
+        url = 'https://api.nnnow.com/d/api/product/details'
+        for ids in color_ids:
+            data = {"module": "odin", "styleId": ""}
+            data['styleId'] = ids
+            requests_all = []
+            requests_all.append(
+                scrapy.Request(url=url, method="POST", headers=headers, meta={"item": item}, callback=self.parse_colors, body=json.dumps(data)))
+        return requests_all
 
-    def generate_skus(self, response):
-        skus_result = response.json()['data']['mainStyle']['skus']
-        color_result = response.json()['data']['colors']['selectedColor']['primaryColor']
+    def get_request_or_item(self, item):
+        if item['requests']:
+            return item['requests'].pop()
+        del item["requests"]
+        return item
+
+    def parse_colors(self, response):
+        item = response.meta["item"]
+        responses = json.loads(response.body)
+        color = responses['data']['mainStyle']['colorDetails']['primaryColor']
+        skus_all = responses['data']['mainStyle']['skus']
         sku_list = []
-        for item in skus_result:
-            if item['inStock'] == 'False':
+        for one_sku in skus_all:
+            if one_sku['inStock'] == 'False':
                 out_of_stock = 'True'
             else:
                 out_of_stock = 'False'
-            sku = (dict(
-                {'Size': item['size'], 'skuId': item['skuId'], 'price': item['price'], 'out_of_stock': out_of_stock}))
+            sku = {'Size': one_sku['size'], 'skuId': one_sku['skuId'], 'price': one_sku['price'], 'out_of_stock': out_of_stock}
             sku_list.append(sku)
-            all_skus = dict({'color': color_result, 'skus': sku_list})
-        return all_skus
+            all_skus = {'color': color, 'skus': sku_list}
+            item['skus'] = all_skus
+        return self.get_request_or_item(item)
 
     def get_url(self, response):
         return response.css("meta[name='og_url']::attr(content)").get()
@@ -99,13 +109,13 @@ class Nnnow(CrawlSpider):
 
 
 class NnnowRecord(scrapy.Item):
-
     name = scrapy.Field()
     brand = scrapy.Field()
     category = scrapy.Field()
     image_urls = scrapy.Field()
     currency = scrapy.Field()
-    skus= scrapy.Field()
+    skus = scrapy.Field()
     url = scrapy.Field()
     care = scrapy.Field()
     description = scrapy.Field()
+    requests = scrapy.Field()
