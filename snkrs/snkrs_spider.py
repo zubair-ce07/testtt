@@ -107,29 +107,22 @@ class SnkrsSpider(Spider):
 
         skus = []
         for size in sizes or ['One Size']:
-            sku = {}
+            sku = self.get_pricing_details(response)
             colour_css = '#short_description_content p:contains("Color")::text'
             colour = response.css(colour_css).get()
             if colour:
                 colour = re.sub(r'-\s?Color\s?:\s', '', colour)
                 sku['colour'] = colour
-
             sku['size'] = size,
             sku['sku_id'] = f'{colour}_{size}' if colour else size
-            sku = {**sku, **self.get_pricing_details(response)}
             skus.append(sku)
         return skus
 
     def get_pricing_details(self, response):
-        price_css = '#our_price_display::attr(content)'
-        previous_price_css = '#old_price_display span::text'
-        currency_css = 'p.our_price_display meta::attr(content)'
-
         details = {}
-        details['currency'] = response.css(currency_css).get()
-        details['price'] = int(response.css(price_css).get().replace('.', '')),
-
-        previous_prices = response.css(previous_price_css).getall()
+        details['currency'] = response.css('p.our_price_display meta::attr(content)').get()
+        details['price'] = int(response.css('#our_price_display::attr(content)').get().replace('.', '')),
+        previous_prices = response.css('#old_price_display span::text').getall()
         if previous_prices:
             details['previous_prices'] = [int(p.split(' ')[0].replace('.', '')) for p in previous_prices]
         return details
