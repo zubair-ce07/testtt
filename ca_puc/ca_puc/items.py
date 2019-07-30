@@ -6,18 +6,28 @@
 # https://docs.scrapy.org/en/latest/topics/items.html
 
 from scrapy import Field, Item
+from scrapy.loader.processors import MapCompose, TakeFirst, Identity
 
 
 class CaPucItem(Item):
-    # define the fields for your item here like:
-    # name = scrapy.Field()
-    _id = Field()
-    filed_on = Field()
-    assignees = Field()
-    industries = Field()
-    filed_by = Field()
-    proceeding_type = Field()
-    title = Field()
-    status = Field()
-    state_id = Field()
+    _id = Field(output_processor=TakeFirst())
+    filed_on = Field(output_processor=TakeFirst())
+    assignees = Field(output_processor=TakeFirst())
+    industries = Field(output_processor=TakeFirst())
+    filed_by = Field(output_processor=TakeFirst())
+    proceeding_type = Field(output_processor=TakeFirst())
+    title = Field(output_processor=TakeFirst())
+    status = Field(output_processor=TakeFirst())
+    state_id = Field(
+        input_processor=MapCompose(
+            # x is heading "ID - 'Documets'"
+            lambda x: x.split('-')[0],
+            str.strip
+        ),
+        output_processor=TakeFirst()
+    )
     filings = Field()
+
+    # Used while parsing the filings for a specific proceeding
+    total_filing_count = Field(output_processor=TakeFirst())
+    filing_count = Field(output_processor=TakeFirst())
