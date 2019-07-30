@@ -70,9 +70,6 @@ class AsicsSpider(scrapy.Spider):
     def parse_color(self, response):
         item = response.meta['item']
         item['image_urls'].extend(self.image_urls(response))
-        return self.parse_sku(response)
-
-    def parse_sku(self, response):
         item = response.meta['item']
         item['skus'].update(self.product_skus(response))
         return self.next_request_or_item(item)
@@ -84,8 +81,8 @@ class AsicsSpider(scrapy.Spider):
             'previous_price': response.css('.pull-right del ::text').getall()
         }
 
-        size_css = response.css('.tab:not(.hide-tab) > .size-box-select-container #sizes-options > .SizeOption')
-        for sku_sel in size_css:
+        size_sels = response.css('.tab:not(.hide-tab) > .size-box-select-container #sizes-options > .SizeOption')
+        for sku_sel in size_sels:
             key = sku_sel.css('::attr(data-value)').get()
             sku = {
                 'out_of_stock': bool(sku_sel.css('.disabled')),
@@ -95,25 +92,22 @@ class AsicsSpider(scrapy.Spider):
             }
 
             sku.update(common_sku)
-            skus.update({key: sku})
+            skus[key] = sku
 
         return skus
 
     def next_request_or_item(self, item):
         if item['requests']:
             request = item['requests'].pop()
-            request.meta.update({'item': item})
+            request.meta['item'] = item
             return request
 
         item.pop('requests', None)
         return item
 
     def retailer_sku(self, response):
-        retailer_sku = response.css('[itemprop="productID"] ::attr(content)').get()
-        if retailer_sku:
-            return retailer_sku
-        raise Exception('Product not available')
-
+        return response.css('[itemprop="productID"] ::attr(content)').get()
+        
     def product_name(self, response):
         return response.css('.single-prod-title ::text').get()
 
