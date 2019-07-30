@@ -1,8 +1,8 @@
 import re
 from datetime import datetime
 
-from scrapy import Request
 from scrapy.spiders import CrawlSpider, Rule
+from scrapy import Request
 from scrapy.linkextractors import LinkExtractor
 
 from orsay.items import OrsayItem
@@ -26,7 +26,7 @@ class OrsaySpider(CrawlSpider):
 
     rules = (
         Rule(LinkExtractor(allow=('/produkte/', '.header-in'), deny=deny_urls)),
-        Rule(LinkExtractor(allow=('.html', product_css), deny=deny_urls), callback='parse_item'))
+        Rule(LinkExtractor(allow=('.html', product_css), deny=deny_urls), callback='parse_item'),)
 
     def parse_item(self, response):
         garment = OrsayItem()
@@ -45,7 +45,7 @@ class OrsaySpider(CrawlSpider):
         garment["market"] = self.market
         garment["retailer"] = self.retailer
         garment["gender"] = self.gender
-        garment["price"] = self.get_product_pricing(response)
+        garment["price"] = 0
         garment["skus"] = {}
         garment["meta_data"] = self.get_sku_reqs(response, garment)
 
@@ -55,7 +55,8 @@ class OrsaySpider(CrawlSpider):
         return list(map(lambda string: re.sub(r'\s+', '', string), raw_list))
 
     def clean_price(self, price):
-        return re.sub(r'\s+', '', str(price))
+        price = re.sub(r'\s+', '', str(price))
+        return format(float(re.sub(',', '.', str(price))), '.2f')
 
     def get_product_name(self, response):
         css = ".product-name::text"
@@ -63,7 +64,7 @@ class OrsaySpider(CrawlSpider):
 
     def get_product_description(self, response):
         css = ".with-gutter::text"
-        return response.css(css).get()
+        return response.css(css).getall()
 
     def get_retailer_sku(self, response):
         css = ".product-sku::text"
@@ -71,11 +72,11 @@ class OrsaySpider(CrawlSpider):
 
     def get_image_urls(self, response):
         css = ".primary-image::attr(src)"
-        return response.css(css).getall()
+        return list(map(lambda url: url.split("?")[0], response.css(css).getall()))
 
     def get_product_care(self, response):
         css = ".product-material p::text"
-        return response.css(css).get()
+        return self.clean(response.css(css).getall())
 
     def get_product_brand(self, response):
         css = ".header-logo img::attr(alt)"
@@ -124,24 +125,27 @@ class OrsaySpider(CrawlSpider):
             del sku_reqs[0]
             yield sku_req
         else:
+            garment["price"] = min(garment["skus"][sku]["price"] for sku in garment["skus"])
             yield garment
 
     def get_product_sku(self, response):
         skus = {}
-        selected_color_css = '.selectable.selected .swatchanchor::attr(title)'
+        selected_color_css = ".selected-value::text"
         size_css = ".swatches.size .selectable .swatchanchor::text"
+        stock_status_css = ".in-stock-msg::text"
 
+        stock_status = response.css(stock_status_css).get()
         selected_color = response.css(selected_color_css).get()
         sizes = self.clean(response.css(size_css).getall())
         common_sku = self.get_product_pricing(response)
-        common_sku['color'] = selected_color
+        common_sku["color"] = selected_color
         if not sizes:
-            sizes = ['Single size']
+            sizes = ["single_size"]
 
         for size in sizes:
             sku = common_sku.copy()
             sku["size"] = size
-            sku["out_of_stock"] = True if not size else False
+            sku["availability"] = stock_status
             skus[f"{sku['color']}_{sku['size']}"] = sku
 
         return skus
