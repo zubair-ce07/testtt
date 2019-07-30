@@ -1,8 +1,8 @@
 import re
+from datetime import datetime, timedelta
 
 import scrapy
 from scrapy import FormRequest
-from datetime import datetime, timedelta
 from scrapy.loader import ItemLoader
 
 from cpuc.items import ProceedingDetail, Filing
@@ -28,14 +28,10 @@ class CpucSpider(scrapy.Spider):
             'form_build_id': form_build_id,
             'op': 'Log in'
         }
-        cookiejar = form_build_id
 
         return scrapy.FormRequest(
             url='https://epuc.vermont.gov/?q=User',
             formdata=formdata,
-            meta={
-                'cookiejar': cookiejar
-            },
             method='POST',
             callback=self.redirect_to_search
             )
@@ -46,7 +42,6 @@ class CpucSpider(scrapy.Spider):
         return response.follow(
             url='https://epuc.vermont.gov/?q=node/101',
             callback=self.search_case,
-            meta={'cookiejar': response.meta['cookiejar']}
         )
 
     def search_case(self, response):
@@ -64,7 +59,6 @@ class CpucSpider(scrapy.Spider):
             formdata=formdata,
             callback=self.parse_proceeding_numbers,
             meta={
-                'cookiejar': response.meta['cookiejar'],
                 'proceeding_urls': [],
                 'proceeding_type': []
             },
@@ -93,7 +87,6 @@ class CpucSpider(scrapy.Spider):
                 next_page,
                 callback=self.parse_proceeding_numbers,
                 meta={
-                    'cookiejar': response.meta['cookiejar'],
                     'proceeding_urls': proceeding_urls,
                     'proceeding_type': proceeding_type
                     }
@@ -106,7 +99,6 @@ class CpucSpider(scrapy.Spider):
                     url,
                     callback=self.parse_proceeding_details,
                     meta={
-                        'cookiejar': response.meta['cookiejar'],
                         'proceeding_type': proceeding_type[index]
                     }
                 )
@@ -147,7 +139,6 @@ class CpucSpider(scrapy.Spider):
         yield response.follow(
             url=url,
             meta={
-                'cookiejar': response.meta['cookiejar'],
                 'docket_loader': docket_loader
             },
             callback=self.parse_filing_parties,
@@ -175,7 +166,6 @@ class CpucSpider(scrapy.Spider):
         yield response.follow(
             url=url,
             meta={
-                'cookiejar': response.meta['cookiejar'],
                 'docket_loader': docket_loader,
                 'filing': []
             },
@@ -190,14 +180,11 @@ class CpucSpider(scrapy.Spider):
 
         self.parse_filings(filings, response)
 
-        if "https://epuc.vermont.gov/?q=node/64/141065" in response.url:
-            print("length filing {}".format(len(filings)))
         url = response.url.replace('/FV-BDIssued-PTL', '') + '/FV-ALLOTDOX-PTL'
 
         yield response.follow(
             url=url,
             meta={
-                'cookiejar': response.meta['cookiejar'],
                 'docket_loader': docket_loader,
                 'filing': filings
             },
@@ -209,9 +196,6 @@ class CpucSpider(scrapy.Spider):
 
         docket_loader = response.meta['docket_loader']
         filings = response.meta['filing']
-
-        if "https://epuc.vermont.gov/?q=node/64/141065" in response.url:
-            print("length filing {}".format(len(filings)))
 
         self.parse_filings(filings, response)
 
