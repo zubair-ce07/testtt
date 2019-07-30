@@ -5,7 +5,7 @@ import argparse
 
 from data_reader import WeathermanFileReader
 from reports import WeathermanReportPrinter
-from result_calculator import ResultCalculator
+from result_calculator import WeatherAnalyzer
 
 
 def dir_path(string):
@@ -49,44 +49,43 @@ def setup_arguments():
 
     return parser.parse_args()
 
-def perform_monthly_operations(command, command_argument, reader, reports, processor):
+def perform_monthly_operations(command, command_argument, weather_data_reader, \
+                                report_printer, weather_analyzer):
     given_year = command_argument.split("/")[0]
     month_number = command_argument.split("/")[1]
 
-    monthly_weather_records = reader.parse_weather_records(given_year=given_year, \
+    monthly_weather_records = weather_data_reader.parse_weather_records(given_year=given_year, \
                                             month_number=month_number)
-    processor.monthly_weather_records = monthly_weather_records
 
     if command == 'a':
-        result = processor.get_monthly_avg_results()
-        reports.print_average_report(result)
+        weather_analyzer.weather_records = monthly_weather_records
+        result = weather_analyzer.get_monthly_avg_results()
+        report_printer.print_average_report(result)
     elif command == 'c':
-        reports.print_monthly_report(monthly_weather_records, month_number, given_year)
+        report_printer.print_monthly_report(monthly_weather_records, month_number, given_year)
 
 def main():
-    args = setup_arguments()
-    path = args.data_directory
-    reader = WeathermanFileReader(path)
-    reports = WeathermanReportPrinter()
-    processor = ResultCalculator(monthly_weather_records=[], yearly_weather_records=[])
+    commandline_arguments = setup_arguments()
+    weather_data_directory_path = commandline_arguments.data_directory
+    weather_data_reader = WeathermanFileReader(weather_data_directory_path)
+    report_printer = WeathermanReportPrinter()
+    weather_analyzer = WeatherAnalyzer(weather_records=[])
 
-    if args.e:
-        given_year = args.e
+    if commandline_arguments.e:
+        given_year = commandline_arguments.e
         yearly_weather_records = []
-        for month_number in range(1, 13):
-            monthly_weather_records = reader.parse_weather_records(given_year=given_year, \
-                                            month_number=month_number)
-            if monthly_weather_records:
-                yearly_weather_records.append(monthly_weather_records)
+        yearly_weather_records = weather_data_reader.parse_weather_records(given_year=given_year)
 
-        processor.yearly_weather_records = yearly_weather_records
-        reports.print_yearly_report(processor.get_yearly_temperature_peaks())
+        weather_analyzer.weather_records = yearly_weather_records
+        report_printer.print_yearly_report(weather_analyzer.get_yearly_temperature_peaks())
 
-    if args.a:
-        perform_monthly_operations('a', args.a, reader, reports, processor)
+    if commandline_arguments.a:
+        perform_monthly_operations('a', commandline_arguments.a, \
+            weather_data_reader, report_printer, weather_analyzer)
 
-    if args.c:
-        perform_monthly_operations('c', args.c, reader, reports, processor)
+    if commandline_arguments.c:
+        perform_monthly_operations('c', commandline_arguments.c, \
+            weather_data_reader, report_printer, weather_analyzer)
 
 if __name__ == "__main__":
 

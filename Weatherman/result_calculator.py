@@ -1,39 +1,49 @@
 #!/usr/bin/python3
+from operator import attrgetter
+
 from weather_results import WeatherResults
 
 
-class ResultCalculator:
-    def __init__(self, monthly_weather_records, yearly_weather_records):
-        self.monthly_weather_records = monthly_weather_records
-        self.yearly_weather_records = yearly_weather_records
+class WeatherAnalyzer:
+    def __init__(self, weather_records):
+        self.weather_records = weather_records
 
     def get_yearly_temperature_peaks(self):
-        result = WeatherResults()
-        result.max_temprature = self.yearly_weather_records[0][0]
-        result.min_temprature = self.yearly_weather_records[0][0]
-        result.max_humidity = self.yearly_weather_records[0][0]
-        for monthly_record in self.yearly_weather_records:
-            for daily_record in monthly_record:
-                if result.max_temprature.max_temprature < daily_record.max_temprature:
-                    result.max_temprature = daily_record
-                if result.min_temprature.min_temprature > daily_record.min_temprature:
-                    result.min_temprature = daily_record
-                if result.max_humidity.max_humidity < daily_record.max_humidity:
-                    result.max_humidity = daily_record
+        
+        seq = [max(self.weather_records[i], key=attrgetter('max_temprature')) \
+                for i in range(len(self.weather_records))]
+        max_temprature = max(seq, key=attrgetter('max_temprature'))
+
+        seq = [min(self.weather_records[i], key=attrgetter('min_temprature')) \
+                for i in range(len(self.weather_records))]
+        min_temprature = min(seq, key=attrgetter('min_temprature'))
+
+        seq = [max(self.weather_records[i], key=attrgetter('max_humidity')) \
+                for i in range(len(self.weather_records))]
+        max_humidity = max(seq, key=attrgetter('max_humidity'))
+
+        result = WeatherResults(
+            max_temprature=max_temprature,
+            min_temprature=min_temprature,
+            max_humidity=max_humidity
+        )
         return result
 
     def get_monthly_avg_results(self):
-        result = WeatherResults()
-        result.max_avg_temperature = 0
-        result.min_avg_temperature = 0
-        result.mean_humidity_avg = 0
 
-        for daily_record in self.monthly_weather_records:
-            result.max_avg_temperature += daily_record.max_temprature
-            result.min_avg_temperature += daily_record.min_temprature
-            result.mean_humidity_avg += daily_record.mean_humidity
-        row_count = len(self.monthly_weather_records)
-        result.max_avg_temperature /= row_count
-        result.min_avg_temperature /= row_count
-        result.mean_humidity_avg /= row_count
+        __sum = sum(c.max_temprature for c in self.weather_records)
+        highest_avg_temp = int(__sum/len(self.weather_records))
+
+        __sum = sum(c.min_temprature for c in self.weather_records)
+        lowest_avg_temp = int(__sum/len(self.weather_records))
+
+        __sum = sum(c.mean_humidity for c in self.weather_records)
+        avg_mean_humidity = int(__sum/len(self.weather_records))
+
+        result = WeatherResults(
+            highest_avg_temp=highest_avg_temp,
+            lowest_avg_temp=lowest_avg_temp,
+            avg_mean_humidity=avg_mean_humidity
+        )
+
         return result
