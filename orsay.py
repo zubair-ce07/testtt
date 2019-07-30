@@ -125,27 +125,29 @@ class OrsaySpider(CrawlSpider):
             del sku_reqs[0]
             yield sku_req
         else:
-            garment["price"] = min(garment["skus"][sku]["price"] for sku in garment["skus"])
+            garment["price"] = min([garment["skus"][sku]["price"] for sku in garment["skus"]])
             yield garment
 
     def get_product_sku(self, response):
         skus = {}
         selected_color_css = ".selected-value::text"
-        size_css = ".swatches.size .selectable .swatchanchor::text"
-        stock_status_css = ".in-stock-msg::text"
+        sizes_css = ".swatches.size .swatchanchor::text"
+        out_of_stock_sizes_css = ".swatches.size .unselectable .swatchanchor::text"
 
-        stock_status = response.css(stock_status_css).get()
         selected_color = response.css(selected_color_css).get()
-        sizes = self.clean(response.css(size_css).getall())
+        sizes = self.clean(response.css(sizes_css).getall())
+        out_of_stock_sizes = self.clean(response.css(out_of_stock_sizes_css).getall())
         common_sku = self.get_product_pricing(response)
         common_sku["color"] = selected_color
+
         if not sizes:
             sizes = ["single_size"]
 
         for size in sizes:
             sku = common_sku.copy()
             sku["size"] = size
-            sku["availability"] = stock_status
+            if size in out_of_stock_sizes:
+                sku["out_of_stock"] = True
             skus[f"{sku['color']}_{sku['size']}"] = sku
 
         return skus
