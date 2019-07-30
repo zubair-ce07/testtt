@@ -51,9 +51,7 @@ class BrandStoreSpider(CrawlSpider):
         return response.css('.description::text').extract_first()
 
     def parse_care(self, response):
-        return (response.css('div[class=product-information-wrapper] p::text').extract()[-3]
-                if response.css('div[class=product-information-wrapper] p::text').extract()
-                else None)
+        return (response.css('div[class=product-information-wrapper] p::text')[-3].extract())
 
     def parse_image_urls(self, response):
         return response.css('figure a img::attr(src)').extract()
@@ -78,26 +76,32 @@ class BrandStoreSpider(CrawlSpider):
     def parse_color(self, response):
         if response.css('.desktop-header::text').extract():
             title = response.css('.desktop-header::text').extract_first()
-            return title.split('-')[-1].replace('.', '').replace(' ', '')
-        else:
-            return None
+            return (title.split('-')[-1].replace('.', '').replace(' ', ''))
 
     def parse_sizes(self, response):
         return response.css('.attribute-title::text').extract()
 
     def parse_skus(self, response):
         skus = []
-        color = self.parse_color(response)
+        color = self.parse_color(response) if self.parse_color(response) else ""
         sizes = self.parse_sizes(response)
         price = self.parse_price(response)
         currency = self.parse_currency(response)
 
         for size in sizes:
-            skus.append({
-                "colour": color,
-                "price": price,
-                "currency": currency,
-                "size": size,
-                "sku_id": f'{color}_{size}'
-            })
+            if color:
+                skus.append({
+                    "colour": color,
+                    "price": price,
+                    "currency": currency,
+                    "size": size,
+                    "sku_id": f'{color}_{size}'
+                })
+            else:
+                skus.append({
+                    "price": price,
+                    "currency": currency,
+                    "size": size,
+                    "sku_id": f'{size}'
+                })
         return skus
