@@ -76,31 +76,34 @@ class CeaSpider(CrawlSpider):
 
         item['skus'] = self.product_skus(response)
         item['image_urls'] = []
-        item['requests'] = self.colour_requests(response, item)
+        item['requests'] = self.color_requests(response)
+        item['requests'].append(self.images_requests(response, item))
 
         return self.next_request_or_item(item)
 
-    def colour_requests(self, response, item):
-        requests = [response.follow(self.image_url_t.format(item['retailer_sku']),
-                                    callback=self.parse_images, meta={'item': item})]
+    def images_requests(self, response, item):
+        return response.follow(self.image_url_t.format(item['retailer_sku']),
+                               callback=self.parse_images, meta={'item': item})
+
+    def color_requests(self, response):
         color_queue = response.css('.img-wrapper ::attr(href)').getall()
-        for color_url in color_queue:
-            requests.append(response.follow(color_url, callback=self.parse_product))
 
-        return requests
+        return [response.follow(color_url, callback=self.parse_colour)
+                for color_url in color_queue]
 
-    def parse_product(self, response):
+    def parse_colour(self, response):
         item = response.meta['item']
         item['skus'].update(self.product_skus(response))
         product_id = self.retailer_sku(response)
+
         return response.follow(self.image_url_t.format(product_id),
                                callback=self.parse_images, meta={'item': item})
 
     def product_skus(self, response):
         skus = {}
-        raw_json = self.raw_product(response)
+        raw_skus = self.raw_product(response)['skus']
 
-        for sku in raw_json.get('skus'):
+        for sku in raw_skus:
             color = sku.get('dimensions').get('Cor')
             size = sku.get('dimensions').get('Tamanho')
             skus[f'{color}_{size}'] = {
@@ -114,14 +117,16 @@ class CeaSpider(CrawlSpider):
         return skus
 
     def parse_images(self, response):
-
         item = response.meta['item']
-        raw_images_json = json.loads(response.text)[0]['items'][0]
-
-        item['image_urls'].extend([self.image_t.format(i["imageId"])
-                                   for i in raw_images_json['images']])
+        item['image_urls'].extend(self.get_images_url(response))
 
         return self.next_request_or_item(item)
+
+    def get_images_url(self, response):
+        raw_images_json = json.loads(response.text)[0]['items'][0]
+
+        return [self.image_t.format(i["imageId"])
+                for i in raw_images_json['images']]
 
     def raw_product(self, response):
         raw_css = 'script:contains("var skuJson_0")'
