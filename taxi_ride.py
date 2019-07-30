@@ -1,11 +1,11 @@
 import keyboard
 
-from taxi import TaxiMeter
+from taxi import TaxiMeterApp
 
 
 class TaxiRide:
     def __init__(self):
-        self.fare_calculations = TaxiMeter()
+        self.fare_calculations = TaxiMeterApp()
         self.speed_increment_factor = 8
 
     def check_speed(self):
