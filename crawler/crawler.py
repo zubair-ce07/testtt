@@ -18,17 +18,17 @@ class Crawler:
         self.domain = "tennis-warehouse.com"
         self.loop = asyncio.get_event_loop()
 
-    async def _find_urls(self, http_response, base_url):
+    async def parse(self, http_response, base_url):
         await asyncio.sleep(self.delay)
         anchor_urls = Selector(text=http_response.text).xpath("//a/@href").getall()
         anchor_urls = [u for u in anchor_urls if (self.domain in u or u.startswith('/')) and '@' not in u]
         return map(lambda url: urljoin(base_url, url), anchor_urls)
 
-    async def _get_url_data(self, url):
+    async def _extract_url_data(self, url):
         http_response = await self._http_request(url)
         found_urls = set()
         if http_response:
-            found_urls.update(await self._find_urls(http_response, url))
+            found_urls.update(await self.parse(http_response, url))
         return url, http_response, found_urls
 
     async def _extract_multi_url(self, to_fetch):
@@ -36,7 +36,7 @@ class Crawler:
         for url in to_fetch:
             if url not in self.visited_urls and len(self.visited_urls) < self.max_num_urls:
                 self.visited_urls.add(url)
-                futures.append(self._get_url_data(url))
+                futures.append(self._extract_url_data(url))
         return [(await future) for future in asyncio.as_completed(futures)]
 
     async def _crawl(self):
@@ -86,28 +86,32 @@ class ParallelCrawler(Crawler):
 
 def _is_valid_url(url):
     regex = re.compile(r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+")
-    if url is not None and regex.search(url):
+    if re.match(regex, url):
         return url
-    else:
-        raise argparse.ArgumentTypeError(f"{url} is invalid.")
+    raise argparse.ArgumentTypeError(f"{url} is invalid.")
 
 
 def arg_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('-u', action='store', dest='start_url',
                         type=_is_valid_url,
-                        help='Enter URL where you want to start crawling.')
+                        help='Enter URL where you want to start crawling.',
+                        default="https://www.tennis-warehouse.com/")
     parser.add_argument('-w', action='store', dest="concurrent_requests",
                         type=lambda n: int(n) if int(n) > 0 else argparse.ArgumentTypeError(f"{d} is invalid."),
-                        help="Enter Number of concurrent requests a worker can make.")
+                        help="Enter Number of concurrent requests a worker can make.",
+                        default=50)
     parser.add_argument('-d', action='store', dest="download_delay",
                         type=lambda d: float(d) if float(d) >= 0 else argparse.ArgumentTypeError(f"{d} is invalid."),
-                        help="Enter download delay that each worker has to follow.")
+                        help="Enter download delay that each worker has to follow.",
+                        default=2)
     parser.add_argument('-m', action='store', dest="max_urls",
                         type=lambda n: int(n) if int(n) > 0 else argparse.ArgumentTypeError(f"{d} is invalid."),
-                        help="Maximum number of URLs to crawl.")
+                        help="Maximum number of URLs to crawl.",
+                        default=200)
     parser.add_argument('-c', action='store', dest="crawler_to_run", type=str, choices=['parallel', 'concurrent'],
-                        help="Enter 1 to run concurrent and 2 to run  parallel crawler.")
+                        help="Enter 1 to run concurrent and 2 to run  parallel crawler.",
+                        default="concurrent")
     return parser.parse_args()
 
 
