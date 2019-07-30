@@ -9,7 +9,7 @@ class Numbers(Enum):
     WAIT_MIN = 60
 
 
-class TaxiMeter:
+class TaxiMeterApp:
     def __init__(self):
         self.total_distance = 0
         self.total_fare = 80
