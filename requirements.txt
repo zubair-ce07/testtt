@@ -1,0 +1,4 @@
+parsel==1.5.1
+requests==2.22.0
+wheel
+validators==0.13.0
