@@ -20,7 +20,7 @@ describe('Flight Prediction Graph: ', function() {
 		expect(await flightResults.farePredictionPriceDisplayed()).to.be.true;
 	});
 
-	it("Should show xxx of XXXX flights on top", async function() {
+	it("Should display xxx of XXXX flights on top", async function() {
 		
 		expect(await flightResults.getFlightsCount()).to.match(/^[0-9]+ of [0-9]+ flights$/gm);
 	});
@@ -40,24 +40,29 @@ describe('Flight Prediction Graph: ', function() {
 		expect(await flightResults.airportStopFiltersHighlightedAndAppearOnlyOnHover()).to.be.true;
 	});
 
-	it("Should click nonstop only link and verify if nonstop results are listed only", async function() {
+	it("Should click nonstop 'only' link", async function() {
 
 		await flightResults.hoverAndClickNonStopOnlyLink();
+		expect(await flightResults.nonStopChecked()).to.be.true;
+	});
+
+	it("Should display results with nonstop only", async function() {
+
 		expect(await flightResults.resultsContainNonStopOnly()).to.be.true;
 	});
 
-	it("Should appear reset link on the top of stop filters", async function() {
+	it("Should display reset link on the top of stop filters", async function() {
 
 		expect(await flightResults.stopResetLinkDisplayed()).to.be.true;
 	});
 
-	it("Should click onestop checkbox and verify if results include 1 stop flights along with nonstop", async function() {
+	it("Should click onestop checkbox", async function() {
 
 		await flightResults.clickOneStopCheckbox();
 		expect(await flightResults.oneStopChecked()).to.be.true;
 	});
 
-	it("Should results include 1 stop flights along with nonstop", async function() {
+	it("Should display results with 1-stop and non-stop", async function() {
 
 		expect(await flightResults.resultsContainNonStopAndOneStopOnly()).to.be.true;
 	});
@@ -68,9 +73,9 @@ describe('Flight Prediction Graph: ', function() {
 		expect(await flightResults.sameDepartureAndReturnAirportChecked()).to.be.true;
 	});
 
-	it("Should results have the same departure and return airport", async function() {
+	it("Should display results with same departure and return airport", async function() {
 
-		expect(await flightResults.resultsContainDepartAndReturnSame()).to.be.true;
+		expect(await flightResults.resultsContainDepartureAndReturnSame()).to.be.true;
 	});
 
 	it("should display fewer number of flight results", async function() {
@@ -85,9 +90,9 @@ describe('Flight Prediction Graph: ', function() {
 		expect(await flightResults.sameDepartureAndReturnAirportChecked()).to.be.false;
 	});
 
-	it("Should results with different departure and arrival airports listed again", async function() {
+	it("Should display results with different departure and arrival airports", async function() {
 
-		expect(await flightResults.resultsContainDepartAndReturnSameAndDifferent()).to.be.true;
+		expect(await flightResults.resultsContainDepartureAndReturnSameAndDifferent()).to.be.true;
 	});
 
 	it("Should check EWR under Airports", async function() {
@@ -96,14 +101,19 @@ describe('Flight Prediction Graph: ', function() {
 		expect(await flightResults.ewrAirportChecked()).to.be.true;
 	});
 
-	it("Should results do not include results with EWR", async function() {
+	it("Should display results without EWR airport", async function() {
 
 		expect(await flightResults.resultsNotContainEWRAirport()).to.be.true;
 	});
 
-	it("Should click Price for JetBlue Airways under airlines and verify if jetblue Airways results listed only", async function() {
+	it("Should click Price for JetBlue Airways", async function() {
 
 		await flightResults.clickJetBluePrice();
+		expect(await flightResults.jetBlueAirlineChecked()).to.be.true;
+	});
+
+	it("Should display results with jetblue Airways only", async function() {
+
 		expect(await flightResults.resultsContainJetBlueAirwaysOnly()).to.be.true;
 	});
 
@@ -118,10 +128,15 @@ describe('Flight Prediction Graph: ', function() {
 		expect(await flightResults.resultsNotContainEconomyCabins()).to.be.true;
 	});
 
-	it("Should click reset link above cabins and verify if results include all cabin classes", async function() {
+	it("Should click reset link above cabins", async function() {
 
 		await flightResults.clickResetCabinLink();
-		expect(await flightResults.resultsContainAllCabins()).to.be.false;
+		expect(await flightResults.resetCabinLinkDisplayed()).to.be.false;
+	});
+
+	it("Should display results with all cabin classes", async function() {
+
+		expect(await flightResults.resultsContainAllCabins()).to.be.true;
 	});
 
 	it("Should check 'Show xx longer flights' filter option", async function() {
@@ -130,40 +145,51 @@ describe('Flight Prediction Graph: ', function() {
 		expect(flightResults.longFlightsFilterChecked()).to.be.true;
 	});
 
-	it("Should number of results is now more than what it was", async function() {
+	it("Should display more number of results", async function() {
 
 		const flightCountAfter = await flightResults.getTotalFlights();
 		expect(flightCountBefore).to.eventually.be.below(flightCountAfter);
 	});
 
 
-	it("Should click Alaska Airlines only link under booking providers and verify if results contain Alaska Airlines results only", async function() {
+	it("Should click Alaska Airlines 'only' link", async function() {
 
 		await flightResults.selectAlaskaAirlines();
+		expect(await flightResults.alaskaAirlinesFilterChecked()).to.be.true;
+	});
+
+	it("Should display results with Alaska Airlines only", async function() {
+
 		expect(await flightResults.resultsContainsAlaskaAirlinesOnly()).to.be.true;
 	});
 
-	it("Should click reset link and verify if all booking provider results are displayed", async function() {
+	it("Should click reset link", async function() {
 
 		await flightResults.clickBookingProviderResetLink();
+		expect(await flightResults.bookingProviderResetLinkDisplayed()).to.be.false;
+	});
+
+	it("Should display results with all booking providers", async function() {
+
 		expect(await flightResults.resultsContainsAlaskaAirlinesOnly()).to.be.false;
 	});
 
-	it("Should click any provider price and verify if click price should match cheapest result", async function() {
+	it("Should click CheapoAir provider price", async function() {
+
+		await flightResults.clickCheapoAirBookingProviderPrice();
+		expect(await flightResults.cheapoairBookingProviderCheckbox).to.be.true;
+	});
+
+	it("Should CheapoAir price matches cheapest result", async function() {
 
 		await flightResults.selectAlaskaAirlines();
 		expect(await flightResults.getCheapestPrice()).to.be.equal(await flightResults.getCheapoAirBookingProviderPrice());
 	});
 
-	it("Should click reset link in the booking providers and verify if all providers results are displayed", async function() {
-
-		await flightResults.clickBookingProviderResetLink();
-		expect(await flightResults.resultsContainsAllProviders()).to.be.false;
-	});
-
-	it("should click xxx of XXXX on top of the page and verify if all filters are unset again", async function() {
+	it("Should click xxx of XXXX on top and verify if all filters reset again", async function() {
 
 		await flightResults.clickTopFlightsLink();
 		expect(await flightResults.resetAllFilters()).to.be.false;
 	});
+
 });

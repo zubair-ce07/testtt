@@ -31,6 +31,7 @@ export class FlightResultsPage {
 	popupDialog: ElementFinder = element(by.css(".flightsDriveBy"));
 	popupDialogCloseButton: ElementFinder = this.popupDialog.element(by.css(".Button-No-Standard-Style.close"));
 	jetBlueAirlinePrice: ElementFinder = element(by.css["button[id$=B6-price]"]);
+	jetBlueAirlineCheckBox: ElementFinder = element(by.css["input[id$=B6-check]"]);
 	oneStopCheckIcon: ElementFinder = element(by.css("div[id$='-1-check-icon']"));
 	oneStopCheckBox: ElementFinder = element(by.css("input[id$='1-check']"));
 	departureAndReturnSameCheckIcon: ElementFinder = element(by.css("div[id$='sameair-check-icon']"));
@@ -42,10 +43,13 @@ export class FlightResultsPage {
 	longFlightsCheckIcon: ElementFinder = element(by.css("div[id$='baditin-check-icon']"));
 	longFlightCheckBox: ElementFinder = element(by.css("input[id$='baditin-check']"));
 	nonStopFilter: ElementFinder = element(by.css("li[id$='-0']"));
-	nonStopOnlyLink: ElementFinder = element(by.css("button[id$='0-only']"));	
+	nonStopOnlyLink: ElementFinder = element(by.css("button[id$='0-only']"));
+	nonStopCheckBox: ElementFinder = element(by.css("input[id$='0-check']"));	
 	alaskaAirlineFilter: ElementFinder = element(by.css("li[id$='-0']"));
 	alaskaAirlineOnlyLink: ElementFinder = element(by.css("button[id$='-AS-only']"));	
+	alaskaAirlineCheckBox: ElementFinder = element(by.css("input[id$='AS-check']"));
 	cheapoairBookingProviderPrice: ElementFinder = element(by.css("button[id$=-CHEAPOAIR-price]"));
+	cheapoairBookingProviderCheckbox: ElementFinder = element(by.css("input[id$=CHEAPOAIR-check]"));
 
 	async get(): Promise<void> {
 		await browser.get(this.kayakUrl);
@@ -105,7 +109,7 @@ export class FlightResultsPage {
 	}
 
 	async ewrAirportChecked(): Promise<boolean> {
-		return await this.ewrCheckbox.getAttribute("aria-checked") === "true";
+		return await this.ewrCheckBox.getAttribute("aria-checked") === "true";
 	}
 
 	async checkEwrAirport(): Promise<void> {
@@ -119,12 +123,20 @@ export class FlightResultsPage {
 		await this.bookingProvidersResetLink.click();
 	}
 
+	async bookingProviderResetLinkDisplayed(): Promise<void> {
+		await this.bookingProvidersResetLink.isDisplayed();
+	}
+
 	async clickTopFlightsLink(): Promise<void> {
 		await this.flightCountLink.click();
 	}
 
 	async clickResetCabinLink(): Promise<void> {
 		await this.cabinResetLink.click();
+	}
+
+	async resetCabinLinkDisplayed(): Promise<void> {
+		await this.cabinResetLink.isDisplayed();
 	}
 
 	async clickCabinTitle(): Promise<void> {
@@ -152,6 +164,10 @@ export class FlightResultsPage {
 		await this.jetBlueAirlinePrice.click();
 	}
 
+	async jetBlueAirlineChecked(): Promise<boolean> {
+		return await this.jetBlueAirlineCheckBox.getAttribute("aria-checked") === "true";
+	}
+
 	async longFlightsFilterChecked(): Promise<boolean> {
 		return await this.longFlightCheckBox.getAttribute("aria-checked") === "true";
 	}
@@ -175,6 +191,10 @@ export class FlightResultsPage {
 		await this.nonStopOnlyLink.click();
 	}
 
+	async nonStopChecked(): Promise<boolean> {
+		return await this.nonStopCheckBox.getAttribute("aria-checked") === "true";
+	}
+
 	async economyCabinChecked(): Promise<boolean> {
 		return await this.economoyCabinCheckBox.getAttribute("aria-checked") === "true";
 	}
@@ -193,13 +213,16 @@ export class FlightResultsPage {
 		await this.alaskaAirlineOnlyLink.click();
 	}
 
+	async alaskaAirlinesFilterChecked(): Promise<boolean> {
+		return await this.alaskaAirlineCheckBox.getAttribute("aria-checked") === "true";
+	}
 	async farePredictionPriceDisplayed(): Promise<boolean> {
 		await browser.wait(this.kayakCommonPage.patternToBePresentInElement(this.flightPredictionGraph, /\w\w+/i));
 		return this.flightPredictionGraph.isDisplayed();
 	}
 
 	async getTargetedArrayFromResults(selector: string) {
-		await browser.wait(this.expectedCondition.invisibilityOf(this.loadingClass), 10000);
+		await browser.wait(this.expectedCondition.invisibilityOf(this.loadingClass), 30000);
 		return this.flightResults.then(async function(results) {
 			let elementTextContents: string[] = await [];
 			for(let result of results) {
@@ -232,7 +255,7 @@ export class FlightResultsPage {
 				
 	}
 
-	async resultsContainDepartAndReturnSame(): Promise<boolean> {
+	async resultsContainDepartureAndReturnSame(): Promise<boolean> {
 		let departures: string[] = await this.getTargetedArrayFromResults("div[id$=leg-0] .section.duration .bottom span:nth-child(3)");
 		let returns: string[] = await this.getTargetedArrayFromResults("div[id$=leg-1] .section.duration .bottom span:nth-child(1)");
 		for (let departure in departures) {
@@ -243,7 +266,7 @@ export class FlightResultsPage {
 		return true;
 	}
 
-	async resultsContainDepartAndReturnSameAndDifferent(): Promise<boolean> {
+	async resultsContainDepartureAndReturnSameAndDifferent(): Promise<boolean> {
 		let departures: string[] = await this.getTargetedArrayFromResults("div[id$=leg-0] .section.duration .bottom span:nth-child(3)");
 		let returns: string[] = await this.getTargetedArrayFromResults("div[id$=leg-1] .section.duration .bottom span:nth-child(1)");
 		for (let departure in departures) {
@@ -294,9 +317,18 @@ export class FlightResultsPage {
 		return Number(price.split("$")[1]);
 	}
 
+	async cheapoAirBookingProviderChecked(): Promise<boolean> {
+		return await this.cheapoairBookingProviderCheckbox.getAttribute("aria-checked" ) === "true";
+	}
+
+	async clickCheapoAirBookingProviderPrice(): Promise<void> {
+		await this.cheapoairBookingProviderPrice.click();
+	}
+
 	async airportStopsCheck(selector: string, attribute: string = null) {
 		return this.stopsFilter.then(async function(stops) {
 			for (let stop of stops) {
+				await browser.actions().mouseMove(stop).mouseMove(stop).perform();
 				let stopChecked: string = await (attribute) ? stop.element(by.css(selector)).getAttribute(attribute) : stop.element(by.css(selector)).getText();
 				if(!stopChecked || stopChecked === "false") {
 					return false;
@@ -319,11 +351,11 @@ export class FlightResultsPage {
 		return this.stopsFilter.then(async function(stops) {
 			for (let stop of stops) {
 				await browser.actions().mouseMove(stop).mouseMove(stop).perform();
-				await browser.wait(that.expectedCondition.visibilityOf(stop.element(by.css("button[id$='-only']"))), 10000);
+				await browser.wait(that.expectedCondition.visibilityOf(stop.element(by.css("button[id$='-only']"))), 30000);
 				let onlyLink: boolean = await stop.element(by.css("button[id$='-only']")).isPresent();
 				let highlightedColor: string = await stop.getCssValue("background-color");
 				if(!onlyLink && highlightedColor !== "rgba(219, 238, 255, 1)") {
-					return false
+					return false;
 				}
 			}
 			return true;
