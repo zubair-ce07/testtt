@@ -1,16 +1,15 @@
-const mongo = require("../database/connect.js");
+const connection = require("../database/connect.js");
+const model = require("../database/model");
+var ObjectID = require('mongodb').ObjectID;
 
-var collection;
-
-mongo.connect((err) => {
-	if (err) throw err
-	collection = mongo.database.collection("users_test");
+connection.connect(() => {
+    // Connected
 })
 
 
 exports.findAll = () => {
     return new Promise((resolve, reject) => {
-        collection.find({}, {projection:{_id: 0, password_salt: 0, password_hash: 0}}, (err, result) => {
+        model.Users.find({}, "-_id -password_salt -password_hash").lean().exec((err, result) => {
             if (err) reject(err);
             resolve(result)
         })
@@ -20,16 +19,20 @@ exports.findAll = () => {
 
 exports.findOne = (username) => {
     return new Promise((resolve, reject) => {
-        collection.findOne({username: username}, (err, result) => {
-            if (err) reject(err)
+        model.Users.findOne({username: username})
+        .then ((result) => {
             resolve(result)
+        })
+        .catch((err) => {
+            reject(err)
         })
     })
 }
 
+
 exports.updateOne = (username, update) => {
     return new Promise((resolve, reject) => {
-        collection.updateOne({username: username}, {$set: update}, (err, result) => {
+        model.Users.updateOne({username: username}, update, (err, result) => {
             if (err) reject(err)
             resolve(result)
         })
@@ -39,21 +42,25 @@ exports.updateOne = (username, update) => {
 
 exports.insertOne = (userDetails, passwordObject) => {
     return new Promise((resolve, reject) => {
-        collection.insertOne({
-            username: userDetails.username, 
-            name: userDetails.name, 
-            admin: userDetails.admin, 
-            password_hash: passwordObject.passwordHash, 
-            password_salt: passwordObject.salt}, (err) => {
-                if (err) reject(err)
-                resolve()
-            })
+        new model.Users({
+                        _id: new ObjectID(),
+                        username: userDetails.username, 
+                        name: userDetails.name, 
+                        admin: userDetails.admin, 
+                        password_hash: passwordObject.passwordHash, 
+                        password_salt: passwordObject.salt}).save()
+        .then(() => {
+            resolve()
+        })
+        .catch(err => {
+            reject (err)
+        })
     })
 }
 
 exports.deleteOne = (username) => {
     return new Promise((resolve, reject) => {
-        collection.deleteOne({username: username}, (err) => {
+        model.Users.deleteOne({username: username}, (err) => {
             if (err) reject(err)
             resolve()
         })

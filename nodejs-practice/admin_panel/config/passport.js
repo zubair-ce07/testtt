@@ -1,23 +1,24 @@
 const passport = require('passport');
 const Strategy = require('passport-local').Strategy;
 const passwordUtility = require("../helpers/passwordUtility.js");
-const mongo = require("../database/connect.js")
+const connection = require("../database/connect.js");
+const model = require("../database/model")
 
-var collection;
+// var collection;
 
-mongo.connect((err) => {
-	if (err) throw err;
-	collection = mongo.database.collection("users_test");
+connection.connect(() => {
+    console.log("WE ARE CONNECTED")
+	// collection = connection.database.collection("users_test");
 })
 
 
 passport.use(new Strategy(
 function(username, password, cb) {
-	collection.findOne({username:username}, function(err, user) {
+	model.Users.findOne({username:username}, function(err, user) {
 		if (!user) { return cb(null, false); }
-		var givenPassHash = passwordUtility.sha512(password, user.password_salt).passwordHash
+		var givenPassHash = passwordUtility.sha512(password, user.get("password_salt")).passwordHash
 		if (err) {return cb(err); }
-		if (givenPassHash != user.password_hash) { 
+		if (givenPassHash != user.get("password_hash")) { 
 			console.log(givenPassHash);
 			return cb(null, false, {message: "Wrong Password!"}); 
 		}
@@ -27,12 +28,12 @@ function(username, password, cb) {
 
 
 passport.serializeUser(function(user, cb) {
-	cb(null, user.username);
+	cb(null, user.get("username"));
 });
 
 
 passport.deserializeUser(function(username, cb) {
-	collection.findOne({username: username}, function (err, user) {
+	model.Users.findOne({username: username}, function (err, user) {
 		if (err) { return cb(err); }
 		cb(null, user);
 	});

@@ -6,10 +6,9 @@ const promises = require("./DbPromises.js")
 exports.showProfile = function (req, res) {
 	let user = req.user;
 		res.json({userDetails: {
-			id: user.id,
-			username: user.username,
-			name: user.name,
-			admin: user.admin
+			username: user.get("username"),
+			name: user.get("name"),
+			admin: user.get("admin")
 		}
 	})
 }
@@ -17,10 +16,7 @@ exports.showProfile = function (req, res) {
 exports.viewUsers = function (req, res) {
 	promises.findAll()
 	.then((records)=> {
-		records.toArray((err, array) => {
-			if (err) throw err;
-			res.json(array)
-		})
+		res.json(records)
 	})
 	.catch((err) => {
 		throw err
@@ -101,13 +97,11 @@ exports.updateUser = function (req, res) {
 		if(result) {
 			let update = {}
 			for(key in result) {
-				if(key == "password") {
+				if(key == "password" || key == "toString") {
 					continue;
 				}
 				if(key in req.query) {
 					update[key] = req.query[key]
-				} else {
-					update[key] = result[key]
 				}
 			}
 			if("password" in req.query) {
@@ -116,6 +110,7 @@ exports.updateUser = function (req, res) {
 				update["password_hash"] = passwordObject.passwordHash
 				update["password_salt"] = passwordObject.salt
 			}
+			
 			promises.updateOne(usernameToUpdate, update)
 			.then(() => {
 				res.send({response: "Update applied"})
