@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block page_content %}
+
+    <form method="POST" class="post-form" action="">
+        {% csrf_token %}
+
+        <div class="container">
+
+            <div class="form-group row">
+                <div class="col-sm-4">
+                    <h3>Update User Profile</h3>
+                </div>
+            </div>
+
+            {% for field in form %}
+
+                <div class="form-group row">
+
+                    <label class="col-sm-2 col-form-label" for="id_title">{{ field.label }}</label>
+                    <div class="col-sm-4">
+                        {{ field }}
+                    </div>
+
+                </div>
+
+            {% endfor %}
+
+            <br>
+
+            <div class="form-group row">
+                <div class="col-sm-4">
+                    <button type="submit" class="btn btn-success">Update</button>
+                    <a class="btn btn-primary" href="{% url 'user_detail' user.id  %}">Back</a>
+                </div>
+            </div>
+
+        </div>
+    </form>
+
+{% endblock %}
+

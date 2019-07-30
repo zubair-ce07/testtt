@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block page_content %}
+
+    <h2>{{ user.get_full_name }}</h2>
+
+    <div class="container">
+        <div class="col-md-4">
+            <img src="{{ user.profile_picture.url }}">
+
+            <h6>Username:</h6>
+            <p>{{ user.username }}</p>
+            <h6>Email:</h6>
+            <p>{{ user.email }}</p>
+            <h6>Address:</h6>
+            <p>{{ user.address }}</p>
+            <h6>Birthday:</h6>
+            <p>{{ user.birthday }}</p>
+            <br>
+        </div>
+    </div>
+    <a href="{% url 'edit_user' user.id %}"
+       class="btn btn-warning">
+        Edit Profile
+    </a>&nbsp;
+    <a href="{% url 'password_change' user.id %}"
+       class="btn btn-warning">
+        Change password
+    </a>&nbsp;
+    <a class="btn btn-primary" href="{% url 'task_index' %}">Back</a>
+
+{% endblock %}

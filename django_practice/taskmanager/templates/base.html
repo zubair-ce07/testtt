@@ -22,8 +22,13 @@
 
             {% if user.is_authenticated %}
 
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'user_detail' user.id %}">
+                        <img src="{{ user.profile_picture.url }}" alt="Image not available" width="25" height="25">
+                        <span>{{ user.get_full_name }}</span>
+                    </a>
+                </li>
                 <li class="nav-item"><a class="nav-link auth-link" href="{% url 'logout' %}">Logout</a></li>
-                <li class="nav-item"><a class="nav-link float-left" >Logged in: {{ user.username }}</a></li>
 
             {% else %}
 
