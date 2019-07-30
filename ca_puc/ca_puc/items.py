@@ -5,10 +5,19 @@
 # See documentation in:
 # https://docs.scrapy.org/en/latest/topics/items.html
 
-import scrapy
+from scrapy import Field, Item
 
 
-class CaPucItem(scrapy.Item):
+class CaPucItem(Item):
     # define the fields for your item here like:
     # name = scrapy.Field()
-    pass
+    _id = Field()
+    filed_on = Field()
+    assignees = Field()
+    industries = Field()
+    filed_by = Field()
+    proceeding_type = Field()
+    title = Field()
+    status = Field()
+    state_id = Field()
+    filings = Field()
