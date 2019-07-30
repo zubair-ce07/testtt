@@ -1,7 +1,7 @@
 import os
-
+import time
 from taxi_ride import TaxiRide
-from calculations import RideFareCalculations, Numbers
+from calculations import FareCalculator, Numbers
 
 
 class TaxiMeterApp:
@@ -9,24 +9,26 @@ class TaxiMeterApp:
 
     def __init__(self):
         self.speed = TaxiRide()
-        self.fare_calculator = RideFareCalculations()
+        self.fare_calculator = FareCalculator()
 
-    def taxi_ride(self):
+    def get_results(self):
         self.ride_time += Numbers.TIME_PASSED.value
         total_distance = self.fare_calculator.get_distance(self.speed.get_speed(), self.ride_time)
-        total_fare, wait_time = self.fare_calculator.get_fare(self.speed.get_speed(), total_distance)
-        taxi_meter_app.output(total_distance, total_fare, wait_time)
-        TaxiRide.get_taxi_state()
+        total_fare= self.fare_calculator.get_fare(total_distance, self.ride_time)
+        wait_time = self.fare_calculator.get_wait_time(self.speed.get_speed())
+        taxi_meter_app.print_results(total_distance, total_fare, wait_time)
 
-    def output(self, total_distance, total_fare, wait_time):
-        print("Ride Time: %d Seconds:" % self.ride_time)
-        print("Distance : %d KM %d Meters" % (total_distance/Numbers.KILOMETER.value, total_distance))
-        print("Speed: %.2f KPM" % self.speed.get_speed())
-        print("Fare: %d Rs" % total_fare)
-        print("Wait Time: %d Seconds" % wait_time)
+    def print_results(self, total_distance, total_fare, wait_time):
+        print(f'Ride Time: {round(self.ride_time)} Seconds')
+        print(f'Distance : {round(total_distance/Numbers.KILOMETER.value)} KM {round(total_distance)} M')
+        print(f'Speed: {round(self.speed.get_speed())} KPH')
+        print(f'Fare: {round(total_fare)} Rs')
+        print(f'Wait Time: {round(wait_time)} Seconds')
 
 
 taxi_meter_app = TaxiMeterApp()
 while True:
-    taxi_meter_app.taxi_ride()
+    taxi_meter_app.get_results()
+    TaxiRide.get_taxi_state()
     os.system('clear')
+
