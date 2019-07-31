@@ -2,26 +2,27 @@ import re
 import json
 
 import scrapy
-from scrapy.spiders import CrawlSpider, Rule
+from scrapy import Item, Field
 from scrapy.linkextractors import LinkExtractor
+from scrapy.spiders import CrawlSpider, Rule
 
 
-class CeaItem(scrapy.Item):
-    retailer_sku = scrapy.Field()
-    gender = scrapy.Field()
-    name = scrapy.Field()
-    category = scrapy.Field()
-    url = scrapy.Field()
-    brand = scrapy.Field()
-    description = scrapy.Field()
-    care = scrapy.Field()
-    image_urls = scrapy.Field()
-    stock = scrapy.Field()
-    color = scrapy.Field()
-    currency = scrapy.Field()
-    price = scrapy.Field()
-    skus = scrapy.Field()
-    requests = scrapy.Field()
+class CeaItem(Item):
+    retailer_sku = Field()
+    gender = Field()
+    name = Field()
+    category = Field()
+    url = Field()
+    brand = Field()
+    description = Field()
+    care = Field()
+    image_urls = Field()
+    stock = Field()
+    color = Field()
+    currency = Field()
+    price = Field()
+    skus = Field()
+    requests = Field()
 
 
 def clean(raw_strs):
@@ -44,8 +45,8 @@ class CeaSpider(CrawlSpider):
         'Feminina': 'women',
         'Infantil': 'kids'
     }
-    image_url_t = 'https://www.cea.com.br/api/catalog_system/pub/products/search?fq=productId:' \
-                  '{}&sc=1'
+    image_url_t = 'https://www.cea.com.br/api/catalog_system' \
+                  '/pub/products/search?fq=productId:{}&sc=1'
     image_t = 'https://cea.vteximg.com.br/arquivos/ids/{}.jpg'
     listing_css = '.header_submenu_item-large'
     product_css = '.product-details_name'
@@ -59,13 +60,14 @@ class CeaSpider(CrawlSpider):
         pagination_sel = response.css('script:contains("pagecount")')
         page_count = int(pagination_sel.re_first('pagecount_\d+ = (.+?);'))
         pagination_url = pagination_sel.re_first(".load\(\'(.+?)\' +")
-
         return [response.follow(url=f'{pagination_url}{page_number}', callback=self.parse)
                 for page_number in range(1, page_count)]
 
     def parse_item(self, response):
+        raw_skus = self.raw_product(response)
+
         item = CeaItem()
-        item['retailer_sku'] = self.retailer_sku(response)
+        item['retailer_sku'] = self.retailer_sku(raw_skus)
         item['name'] = self.product_name(response)
         item['gender'] = self.product_gender(response)
         item['category'] = self.product_category(response)
@@ -73,37 +75,37 @@ class CeaSpider(CrawlSpider):
         item['brand'] = self.product_brand()
         item['description'] = self.product_description(response)
         item['care'] = []
-
-        item['skus'] = self.product_skus(response)
         item['image_urls'] = []
+
+        item['skus'] = self.product_skus(raw_skus)
         item['requests'] = self.color_requests(response)
-        item['requests'].append(self.images_requests(response, item))
+        item['requests'].append(self.images_request(response, item['retailer_sku']))
 
         return self.next_request_or_item(item)
 
-    def images_requests(self, response, item):
-        return response.follow(self.image_url_t.format(item['retailer_sku']),
-                               callback=self.parse_images, meta={'item': item})
+    def images_request(self, response, retailer_sku):
+        return scrapy.Request(self.image_url_t.format(retailer_sku),
+                              callback=self.parse_images)
 
     def color_requests(self, response):
         color_queue = response.css('.img-wrapper ::attr(href)').getall()
-
         return [response.follow(color_url, callback=self.parse_colour)
                 for color_url in color_queue]
 
     def parse_colour(self, response):
+        raw_skus = self.raw_product(response)
+
         item = response.meta['item']
-        item['skus'].update(self.product_skus(response))
-        product_id = self.retailer_sku(response)
+        item['skus'].update(self.product_skus(raw_skus))
+        product_id = self.retailer_sku(raw_skus)
 
-        return response.follow(self.image_url_t.format(product_id),
-                               callback=self.parse_images, meta={'item': item})
+        return scrapy.Request(self.image_url_t.format(product_id),
+                              callback=self.parse_images, meta={'item': item})
 
-    def product_skus(self, response):
+    def product_skus(self, raw_skus):
         skus = {}
-        raw_skus = self.raw_product(response)['skus']
 
-        for sku in raw_skus:
+        for sku in raw_skus['skus']:
             color = sku.get('dimensions').get('Cor')
             size = sku.get('dimensions').get('Tamanho')
             skus[f'{color}_{size}'] = {
@@ -118,13 +120,11 @@ class CeaSpider(CrawlSpider):
 
     def parse_images(self, response):
         item = response.meta['item']
-        item['image_urls'].extend(self.get_images_url(response))
-
+        item['image_urls'] += self.get_images_url(response)
         return self.next_request_or_item(item)
 
     def get_images_url(self, response):
         raw_images_json = json.loads(response.text)[0]['items'][0]
-
         return [self.image_t.format(i["imageId"])
                 for i in raw_images_json['images']]
 
@@ -133,8 +133,7 @@ class CeaSpider(CrawlSpider):
         raw_product = response.css(raw_css).re_first('var skuJson_0 = (.+?);')
         return json.loads(raw_product)
 
-    def retailer_sku(self, response):
-        raw_json = self.raw_product(response)
+    def retailer_sku(self, raw_json):
         return raw_json['productId']
 
     def product_name(self, response):
@@ -166,6 +165,7 @@ class CeaSpider(CrawlSpider):
             request = item['requests'].pop()
             request.meta['item'] = item
             return request
+
         item.pop('requests', None)
         return item
 
