@@ -1,10 +1,9 @@
+import asyncio
 from time import time
-from threading import Thread
 from urllib.parse import urlparse
 import argparse
 
 from crawl_worker import CrawlWorker
-
 
 def setup_arguments():
     parser = argparse.ArgumentParser(description='URL data monitor.')
@@ -20,33 +19,46 @@ def setup_arguments():
 
     return parser.parse_args()
 
-def create_worker():
+async def create_worker():
     worker = CrawlWorker()
-    worker.load_url()
+    await worker.request()
 
-def main():
+async def main():
+
     commandline_arguments = setup_arguments()
     CrawlWorker.cuncurrent_request_allowed = commandline_arguments.c_requests
-    CrawlWorker.download_delay = commandline_arguments.download_delay
-    CrawlWorker.set_max_request_count(commandline_arguments.page_count)
+    CrawlWorker.download_delay = commandline_arguments.download_delay / 1000
+    CrawlWorker.total_pages_to_load = commandline_arguments.page_count
 
-    url = urlparse('https://arbisoft.com/')
-    CrawlWorker.url_queue.put(url, False)
+    url = urlparse("https://arbisoft.com/")
+    await CrawlWorker.url_queue.put(url)
+    crawl_workers = set()
+
     start_time = time()
+    while CrawlWorker.page_loaded_successfully < CrawlWorker.total_pages_to_load:
+        if CrawlWorker.loading_request_made < CrawlWorker.total_pages_to_load:
+            if len(crawl_workers) >= CrawlWorker.cuncurrent_request_allowed:
+                _done, crawl_workers = await asyncio.wait(
+                    crawl_workers, return_when=asyncio.FIRST_COMPLETED)
+            crawl_workers.add(loop.create_task(create_worker()))
+        else:
+            await asyncio.wait(crawl_workers, return_when=asyncio.FIRST_COMPLETED)
 
-    while True:
-        if CrawlWorker.cuncurrent_request_made < CrawlWorker.cuncurrent_request_allowed \
-            and CrawlWorker.loading_request_made < CrawlWorker.total_pages_to_load:
-            worker_thread = Thread(target=create_worker)
-            worker_thread.start()
+    await asyncio.wait(crawl_workers)
 
-        if CrawlWorker.page_loaded_successfully >= CrawlWorker.total_pages_to_load:
-            print("Page loaded: " + str(CrawlWorker.page_loaded_successfully))
-            print("Total downloaded size: " + str(CrawlWorker.total_bytes_downloaded))
-            print("Total time taken: %s" % (time() - start_time))
-            break
+    total_bytes_downloaded = CrawlWorker.total_bytes_downloaded
+    total_pages_loaded = CrawlWorker.page_loaded_successfully
+    avg_page_size = total_bytes_downloaded / total_pages_loaded
+
+    print(f"\nTotal pages loaded: {total_pages_loaded}")
+    print(f"Total bytes downloaded: {total_bytes_downloaded}")
+    print(f"Average page size: {avg_page_size}")
+    print(f"Total time taken: {(time() - start_time)} seconds\n")
 
 
-if __name__ == "__main__":
-
-    main()
+loop = asyncio.get_event_loop()
+try:
+    loop.run_until_complete(main())
+    loop.run_until_complete(loop.shutdown_asyncgens())
+finally:
+    loop.close()
