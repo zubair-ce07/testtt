@@ -11,8 +11,8 @@ if __name__ == '__main__':
             time.sleep(4)
         if keyboard.is_pressed('e'):
             break
-        taxi_ride.print_results()
         taxi_ride.check_speed()
         taxi_ride.fare_calculator()
-        time.sleep(1)
+        taxi_ride.print_results()
+        time.sleep(0.25)
         os.system('clear')
