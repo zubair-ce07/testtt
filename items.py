@@ -19,4 +19,4 @@ class OrsayItem(Item):
     gender = Field()
     price = Field()
     skus = Field()
-    meta_data = Field()
+    meta = Field()
