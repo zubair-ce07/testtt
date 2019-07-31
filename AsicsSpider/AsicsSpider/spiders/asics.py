@@ -1,9 +1,9 @@
 import re
-
 from datetime import datetime
+
 from scrapy import Request
-from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
+from scrapy.spiders import CrawlSpider, Rule
 
 
 class AsicsSpider(CrawlSpider):
@@ -99,7 +99,7 @@ class AsicsSpider(CrawlSpider):
             request = requests.pop()
             request.meta["product"] = product
             request.meta["requests"] = requests
-            yield request
+            return request
 
         yield product
 
@@ -107,5 +107,3 @@ class AsicsSpider(CrawlSpider):
 def clean(raw_text):
     if raw_text:
         return re.sub('\s+', '', raw_text)
-
-    return None
