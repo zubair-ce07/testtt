@@ -2,22 +2,30 @@
 {% block content %}
 
 <div class="container">
-    <h1>{{question.text}}</h1>
+
+    <p class="lead">Add options and marked the correct </p>
+    <mark class="h4 mark text-primary">{{question.text}}</mark>
+    <br>
+    <br>
     <form method="POST" id="form_id" onsubmit="return validateForm()">
             {% csrf_token %}
-        <input type="text" name="A" required>
-        <input type="radio" name="Correct" value="A" required>
+        <input  type="text" name="A" required>
+        <input  type="radio" name="Correct" value="A" required>
+        <br>
         <br>
         <input type="text" name="B"required>
         <input type="radio" name="Correct" value="B" >
         <br>
+        <br>
         <input type="text" name="C" required>
         <input type="radio" name="Correct" value="C">
+        <br>
         <br>
         <input type="text" name="D" required>
         <input type="radio" name="Correct" value="D">
         <br>
-        <input type="submit">
+        <br>
+        <input class="btn btn-success" value="Save" type="submit">
     </form>
 </div>
 <script>

@@ -1,12 +1,17 @@
 {%extends 'base.html'%}
 {% block content %}
 <div class="container">
+    <h4>Enter The Name of Quiz</h4>
     <form class="form-group " method="POST">
         {% csrf_token %}
-        <div class="form-control col-md-5 ">
-        {{form.as_ul}}
-        <input class="offset-md-3  btn btn-success" type="submit">
-        </div>
+          {% for field in form %}
+          <div class="form-group">
+            <label>{{ field.label_tag }}</label><br>
+            {{field}}
+          </div>
+          {% endfor %}
+                      <input type="submit" class="btn btn-primary" value="Save Quiz">
+
     </form>
     <a href="{% url 'home'%}">Go back</a>
 </div>

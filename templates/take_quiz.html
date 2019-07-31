@@ -4,10 +4,10 @@
     <form method="POST">
             {% csrf_token %}
 
-    {%for question, index in questions%}
-       
+    {%for index, question in questions%}
+
         <div class="p-3 mb-2 bg-dark text-white">
-               {{index}}: <span >{{question.text}}</span>
+              <span class="bg-success text-dark rounded-circle px-3 py-1 mx-2 h3"> {{index}}</span> <span class="h3">{{question.text}}</span>
         </div>
         {% for answer in question.answers.all %}
         <div class="custom-control custom-radio">
@@ -16,8 +16,9 @@
     </div>
             {%endfor%}
     {%endfor%}
-
+<div class="text-center">
         <input class="btn btn-success" type="submit" value="Show Result">
+    </div>
     </form>
 </div>
 {%endblock%}

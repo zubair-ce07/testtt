@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.cache import cache_control
-
+import random
 from QuizApp.forms import QuizForm, QuestionForm, CustomUserCreationForm
 from QuizApp.models import Answer, Question, Quiz, TakenQuiz, SelectedOption
 
@@ -51,9 +51,9 @@ def add_quiz(request):
         form = QuizForm(request.POST)
         if form.is_valid():
             quiz = form.save(commit=False)
-            quiz.owner_id = 1
+            quiz.owner_id = request.user.id
             quiz.save()
-        return redirect('home')
+        return redirect('add_question', quiz.pk)
     else:
         form = QuizForm()
     return render(request, 'add_quiz.html', {'form': form})
@@ -80,7 +80,7 @@ def add_question(request, quiz_pk):
             return redirect('add_options', question.pk)
     else:
         form = QuestionForm()
-    return render(request, 'add_question.html', {'form': form})
+    return render(request, 'add_question.html', {'form': form, 'quiz': get_object_or_404(Quiz, pk=quiz_pk)})
 
 
 @login_required
@@ -122,6 +122,7 @@ def take_quiz(request, quiz_pk):
         return HttpResponseBadRequest(content='Already Taken, Cannot Retake')
     quiz_questions = [question for question in get_object_or_404(Quiz, pk=quiz_pk).questions.all() if
                       question.answers.all().count() >= 2 and question.answers.filter(is_correct=True).count() == 1]
+    random.shuffle(quiz_questions, random.random)
     if request.method == 'POST':
         submitted_ans = Answer.objects.filter(pk__in=[request.POST.get(str(quiz.pk)) for quiz in quiz_questions])
         score = Answer.objects.filter(id__in=[ans.id for ans in submitted_ans]).filter(is_correct=True).count()
@@ -131,8 +132,8 @@ def take_quiz(request, quiz_pk):
         for question, answer in zip(quiz_questions, submitted_ans):
             SelectedOption.objects.create(student_id=request.user.id, question_id=question.pk, answer_id=answer.id,
                                           quiz_id=quiz_pk)
-        return render(request, 'result.html', {'quiz_sol': quiz_solution, 'score': score})
-    return render(request, 'take_quiz.html', {'questions': zip(quiz_questions, range(1, len(quiz_questions) + 1))})
+        return render(request, 'result.html', {'quiz_sol': quiz_solution, 'score': score, 'total': len(quiz_questions)})
+    return render(request, 'take_quiz.html', {'questions': enumerate(quiz_questions, start=1)})
 
 
 @login_required

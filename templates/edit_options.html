@@ -7,8 +7,10 @@
             <input type="text" name="{{answer.pk}}" value="{{answer.text}}" required>
             <input type="radio" name="correct" value="{{answer.pk}}" required>
             <br>
-            {%endfor%}
                 <input type="submit">
+                        {%empty%}
+            <kbd class="h4 text-white">No Options</kbd>
+            {%endfor%}
         </form>
         <a href="{% url 'home'%}">Go back</a>
 </div>

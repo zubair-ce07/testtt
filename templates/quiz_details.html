@@ -15,14 +15,17 @@
           <tr>
             <td>{{question.text}}</td>
             <td>
-                <a class="btn btn-dark" href="{%url 'edit_question' question.pk%}">Edit</a>
+                <a class="btn btn-dark" href="{%url 'edit_question' question.pk%}">Edit Question</a>
+                <a class="btn btn-dark" href="{%url 'edit_options' question.pk%}">Edit Options</a>
                 <a class="btn btn-danger" href="{%url 'delete_question' question.pk%}">Delete</a>
             </td>
           </tr>
+                {% empty %}
+
         </tbody>
       </table>
-        {% empty %}
         <kbd>Sorry, No Questions, Add right away</kbd>
+    <br>
         {%endfor%}
     <a class="btn btn-success" href="{%url 'add_question' quiz.pk%}">Add Questions</a>
         <a class="btn btn-danger" href="{%url 'delete_quiz' quiz.pk%}">Delete Quiz</a>
