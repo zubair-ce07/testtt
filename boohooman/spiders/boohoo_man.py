@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import re
+
 import scrapy
 from scrapy.linkextractors import LinkExtractor
 from scrapy_splash import SplashRequest
@@ -46,6 +48,10 @@ class BoohooManSpider(scrapy.Spider):
         product_price = response.css(
             'span.price-sales::text').get().strip()
         color = response.css('span.selected-value::text').get().strip()
+        category = response.css(
+            'li+li.breadcrumb-item > a > span::text').get()
+        description = response.css('li > div > p+p::text').get()
+        description = re.sub(re.compile('<.*?>'), '', description)
 
         sizes = response.css(
             'ul.swatches.size.clearfix > li.selectable > \
@@ -65,6 +71,8 @@ class BoohooManSpider(scrapy.Spider):
         self.items_data[product_code] = {
             'Product Name': product_name,
             'product Price': product_price,
+            'description': description,
+            'category': category,
             color: {
                 'sizes': sizes,
                 'images': images
