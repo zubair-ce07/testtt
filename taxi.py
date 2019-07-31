@@ -17,6 +17,12 @@ class TaxiMeterApp:
         self.ride_time = 0
         self.taxi_speed = 0
 
+    def fare_calculator(self):
+        self.calculate_ride_time()
+        self.calculate_wait_time()
+        self.calculate_distance()
+        self.calculate_fair()
+
     def calculate_ride_time(self):
         self.ride_time += Numbers.TIME_PASSED.value
 

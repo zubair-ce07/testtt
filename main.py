@@ -12,7 +12,7 @@ if __name__ == '__main__':
         if keyboard.is_pressed('e'):
             break
         taxi_ride.process_user_input()
-        taxi_ride.fare_calculator()
+        taxi_ride.calculate_fare()
         taxi_ride.print_results()
         time.sleep(0.25)
         os.system('clear')
