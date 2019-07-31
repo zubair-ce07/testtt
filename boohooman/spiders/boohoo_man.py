@@ -44,11 +44,11 @@ class BoohooManSpider(scrapy.Spider):
         """
         yield scrapy.Request(
             response.url, callback=self.parse_items, dont_filter=True)
-        # pages_url = response.css(
-        #     '.pagination-item.device-paginate.js-device-paginate > \
-        #     a::attr(href)').getall()
-        # for url in pages_url:
-        #     yield scrapy.Request(url, callback=self.parse_items)
+        pages_url = response.css(
+            '.pagination-item.device-paginate.js-device-paginate > \
+            a::attr(href)').getall()
+        for url in pages_url:
+            yield scrapy.Request(url, callback=self.parse_items)
 
     def parse_items(self, response):
         """Scrap items from a page.
