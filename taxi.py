@@ -4,7 +4,7 @@ from enum import Enum
 class Numbers(Enum):
     FARE_WAIT_TIME = 5
     FARE_DISTANCE = 15
-    TIME_PASSED = 0.125
+    TIME_PASSED = 0.05
     DISTANCE_KM = 1000
     WAIT_MIN = 60
 
