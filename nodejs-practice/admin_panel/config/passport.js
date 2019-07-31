@@ -1,16 +1,7 @@
 const passport = require('passport');
 const Strategy = require('passport-local').Strategy;
 const passwordUtility = require("../helpers/passwordUtility.js");
-const connection = require("../database/connect.js");
 const model = require("../database/model")
-
-// var collection;
-
-connection.connect(() => {
-    console.log("WE ARE CONNECTED")
-	// collection = connection.database.collection("users_test");
-})
-
 
 passport.use(new Strategy(
 function(username, password, cb) {

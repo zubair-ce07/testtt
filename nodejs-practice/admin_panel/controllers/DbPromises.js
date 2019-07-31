@@ -1,10 +1,5 @@
-const connection = require("../database/connect.js");
 const model = require("../database/model");
-var ObjectID = require('mongodb').ObjectID;
-
-connection.connect(() => {
-    // Connected
-})
+const ObjectID = require('mongodb').ObjectID;
 
 
 exports.findAll = () => {

@@ -1,7 +1,8 @@
 require('dotenv').config();
+require("./database/connect.js").connect( () => { console.log("Connected to the database...") } );
+
 const express = require('express');
 const passport = require("passport");
-const connection = require("./database/connect.js");
 const routes = require("./routes/routes.js")
 
 var app = express();

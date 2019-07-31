@@ -1,6 +1,7 @@
 const passwordUtility = require("../helpers/passwordUtility.js");
 const strategy = require("../config/passport.js");
 const promises = require("./DbPromises.js")
+const addUserValidation = require("../helpers/validators.js").addUserValidation
 
 
 exports.showProfile = function (req, res) {
@@ -26,32 +27,37 @@ exports.viewUsers = function (req, res) {
 exports.addUser = function (req, res) {
 	let userDetails = req.query
 
-	if(!userDetails.username || !userDetails.name || !userDetails.admin || !userDetails.password) {
-		res.json({response: "`username`, `name`, `password`, `admin` all MUST be provided!"})
-		return
-	}
-	var salt = passwordUtility.genRandomString(16);
-	let passwordObject = passwordUtility.sha512(userDetails.password, salt)
-	
-	promises.findOne(userDetails.username)
-	.then((result) => {
-		if(result) {
-			res.json({response: `Sorry, user with ${userDetails.username} already exists...`})
-			return;
-		} else {
+	addUserValidation.validate({username: userDetails.username,
+						name: userDetails.name,
+						admin: userDetails.admin,
+						password: userDetails.password})
+	.then((val) => {
+		var salt = passwordUtility.genRandomString(16);
+		let passwordObject = passwordUtility.sha512(val.password, salt)
 
-			promises.insertOne(userDetails, passwordObject)
-			.then(() => {
-				res.json({response: `User ${userDetails.username} was successfully added!`});
-			})
-			.catch((err) => {
-				res.json({response: "Sorry, there was an error..."})
-				throw err
-			})
-		}
+		promises.findOne(val.username)
+		.then((result) => {
+			if(result) {
+				res.json({response: `Sorry, user with ${val.username} already exists...`})
+				return;
+			} else {
+
+				promises.insertOne(val, passwordObject)
+				.then(() => {
+					res.json({response: `User ${val.username} was successfully added!`});
+				})
+				.catch((err) => {
+					res.json({response: "Sorry, there was an error..."})
+					throw err
+				})
+			}
+		})
+		.catch((err) => {
+			console.log(err)
+		})
 	})
 	.catch((err) => {
-		console.log(err)
+		res.json({"ValidationError": err.details[0].message})
 	})
 }
 
