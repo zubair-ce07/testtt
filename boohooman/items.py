@@ -8,12 +8,18 @@
 import scrapy
 
 
-class BoohoomanItem(scrapy.Item):
+class Item(scrapy.Item):
     # define the fields for your item here like:
-    # name = scrapy.Field()
-    skuz = scrapy.Field(serializer=list)
-    pass
+    product_code = scrapy.Field()
+    product_name = scrapy.Field()
+    product_price = scrapy.Field()
+    product_description = scrapy.Field()
+    product_category = scrapy.Field()
+    product_link = scrapy.Field()
+    data_skus = scrapy.Field()
 
 
 class ProductSkus(scrapy.Item):
-    pass
+    color = scrapy.Field()
+    sizes = scrapy.Field()
+    pictures = scrapy.Field()

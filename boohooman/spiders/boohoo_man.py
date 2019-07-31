@@ -5,6 +5,8 @@ import scrapy
 from scrapy.linkextractors import LinkExtractor
 from scrapy_splash import SplashRequest
 
+from ..items import Item, ProductSkus
+
 
 class BoohooManSpider(scrapy.Spider):
     name = 'boohoo_man'
@@ -24,11 +26,11 @@ class BoohooManSpider(scrapy.Spider):
     def parse_pages(self, response):
         yield scrapy.Request(
             response.url, callback=self.parse_items, dont_filter=True)
-        pages_url = response.css(
-            '.pagination-item.device-paginate.js-device-paginate > \
-            a::attr(href)').getall()
-        for url in pages_url:
-            yield scrapy.Request(url, callback=self.parse_items)
+        # pages_url = response.css(
+        #     '.pagination-item.device-paginate.js-device-paginate > \
+        #     a::attr(href)').getall()
+        # for url in pages_url:
+        #     yield scrapy.Request(url, callback=self.parse_items)
 
     def parse_items(self, response):
         items_url = response.css(
@@ -68,25 +70,34 @@ class BoohooManSpider(scrapy.Spider):
         colors = response.css(
             'ul.swatches.color.clearfix > li.selectable:not(.selected) > \
             span::attr(data-href)').getall()
-        self.items_data[product_code] = {
-            'Product Name': product_name,
-            'product Price': product_price,
-            'description': description,
-            'category': category,
-            color: {
-                'sizes': sizes,
-                'images': images
-            }
-        }
+        skus = ProductSkus()
+        item = Item(product_code=product_code, product_price=product_price,
+                    product_name=product_name, product_description=description,
+                    product_category=category, product_link=response.url,
+                    data_skus=[])
+        skus = ProductSkus(color=color, sizes=sizes, pictures=images)
+        item["data_skus"].append(skus)
+        print(colors)
+        # self.items_data[product_code] = {
+        #     'Product Name': product_name,
+        #     'product Price': product_price,
+        #     'description': description,
+        #     'category': category,
+        #     color: {
+        #         'sizes': sizes,
+        #         'images': images
+        #     }
+        # }
         if colors:
             request = SplashRequest(
                 colors[0], self.parse_item_color, endpoint='render.html',
                 args={'wait': 0.5}
             )
             request.meta['colors'] = colors
+            request.meta['item'] = item
             yield request
-        # else:
-        #     print(self.items_data[product_code])
+        else:
+            yield item
 
     def parse_item_color(self, response):
         color = response.css('span.selected-value::text').get().strip()
@@ -105,11 +116,13 @@ class BoohooManSpider(scrapy.Spider):
             images.append('https://i1.adis.ws/i/boohooamplience/{}_{}_xl_{}'
                           .format(
                               product_code.lower(), color, i))
-
-        self.items_data[product_code][color] = {
-            'sizes': sizes,
-            'images': images
-        }
+        item = response.meta['item']
+        skus = ProductSkus(color=color, sizes=sizes, pictures=images)
+        item['data_skus'].append(skus)
+        # self.items_data[product_code][color] = {
+        #     'sizes': sizes,
+        #     'images': images
+        # }
         colors = response.meta['colors'].remove(response.url)
         if colors:
             request = SplashRequest(
@@ -117,6 +130,7 @@ class BoohooManSpider(scrapy.Spider):
                 args={'wait': 0.5}
             )
             request.meta['colors'] = colors
+            request.meta['item'] = item
             yield request
         else:
-            print(self.items_data[product_code])
+            yield item
