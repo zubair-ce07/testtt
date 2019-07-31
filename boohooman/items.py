@@ -11,4 +11,9 @@ import scrapy
 class BoohoomanItem(scrapy.Item):
     # define the fields for your item here like:
     # name = scrapy.Field()
+    skuz = scrapy.Field(serializer=list)
+    pass
+
+
+class ProductSkus(scrapy.Item):
     pass

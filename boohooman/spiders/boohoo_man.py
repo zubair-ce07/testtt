@@ -51,14 +51,14 @@ class BoohooManSpider(scrapy.Spider):
             'ul.swatches.size.clearfix > li.selectable > \
             span::text').getall()
         sizes = [size.strip() for size in sizes]
+        images = [
+            'https://i1.adis.ws/i/boohooamplience/{}_{}_xl'
+            .format(product_code.lower(), color)]
 
-        # main = response.css(
-        #     '.product-col-1.product-image-container').get()
-        # print(main)
-        # print(main.css('ul').extract())
-        # a.thumbnail-link.js-thumbnail-link::attr(href)
-        # for image in images:
-        #     print(image)
+        for i in range(1, 4):
+            images.append('https://i1.adis.ws/i/boohooamplience/{}_{}_xl_{}'
+                          .format(
+                              product_code.lower(), color, i))
         colors = response.css(
             'ul.swatches.color.clearfix > li.selectable:not(.selected) > \
             span::attr(data-href)').getall()
@@ -66,7 +66,8 @@ class BoohooManSpider(scrapy.Spider):
             'Product Name': product_name,
             'product Price': product_price,
             color: {
-                'sizes': sizes
+                'sizes': sizes,
+                'images': images
             }
         }
         for url in colors:
@@ -83,9 +84,9 @@ class BoohooManSpider(scrapy.Spider):
             'ul.swatches.size.clearfix > li.selectable > \
             span::text').getall()
         sizes = [size.strip() for size in sizes]
-        print(color)
-        print(self.items_data[product_code])
+        # print(color)
+        # print(self.items_data[product_code])
         self.items_data[product_code][color] = {
             'sizes': sizes
         }
-        print(self.items_data[product_code])
+        # print(self.items_data[product_code])
