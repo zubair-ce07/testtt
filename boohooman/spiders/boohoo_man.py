@@ -1,20 +1,33 @@
-# -*- coding: utf-8 -*-
+"""Boohooman scrapper module.
+
+This module scrap all the items from boohoman website and store it in a json
+file
+"""
 import re
 
 import scrapy
-from scrapy.linkextractors import LinkExtractor
 from scrapy_splash import SplashRequest
 
 from ..items import Item, ProductSkus
 
 
 class BoohooManSpider(scrapy.Spider):
+    """This is scrapper class for boohooman scrapper.
+
+    This class have differnet methods that scrap each part of the website.
+    """
+
     name = 'boohoo_man'
     allowed_domains = ['www.boohooman.com']
     start_urls = ['https://www.boohooman.com/']
     items_data = {}
 
     def parse(self, response):
+        """Scrap clothing menu.
+
+        This method scrap clothing menu and extract links from it and then
+        call parse_pages on those links
+        """
         clothing = response.xpath(
             "//li['@class=has-submenu js-has-submenu js-prevent-event \
             js-menu-tab' and ./a[contains(.,'CLOTHING')]]")
@@ -24,6 +37,11 @@ class BoohooManSpider(scrapy.Spider):
             yield scrapy.Request(url, callback=self.parse_pages)
 
     def parse_pages(self, response):
+        """Scrap pages of a menu.
+
+        This method extract all the pages links for a menu and
+        then call parese_items on those links
+        """
         yield scrapy.Request(
             response.url, callback=self.parse_items, dont_filter=True)
         # pages_url = response.css(
@@ -33,6 +51,10 @@ class BoohooManSpider(scrapy.Spider):
         #     yield scrapy.Request(url, callback=self.parse_items)
 
     def parse_items(self, response):
+        """Scrap items from a page.
+
+        This method extract all the links of the items in a page
+        """
         items_url = response.css(
             'a.name-link.js-canonical-link::attr(data-href)').getall()
         for url in items_url:
@@ -43,8 +65,13 @@ class BoohooManSpider(scrapy.Spider):
             )
 
     def parse_item(self, response):
+        """Scrap item from a page.
+
+        This method extract all data of an item from a page
+        """
         product_name = response.css(
             'h1.product-name.js-product-name::text').get()
+        print('Processing : {}'.format(product_name))
         product_code = response.css(
             'div.product-number > span::text').get()
         product_price = response.css(
@@ -53,7 +80,9 @@ class BoohooManSpider(scrapy.Spider):
         category = response.css(
             'li+li.breadcrumb-item > a > span::text').get()
         description = response.css('li > div > p+p::text').get()
-        description = re.sub(re.compile('<.*?>'), '', description)
+        tags_count = re.findall(r'<(?:a\b[^>]*>|/a>)', description)
+        description = re.sub(re.compile('<.*?>'), '',
+                             description, len(tags_count))
 
         sizes = response.css(
             'ul.swatches.size.clearfix > li.selectable > \
@@ -77,17 +106,6 @@ class BoohooManSpider(scrapy.Spider):
                     data_skus=[])
         skus = ProductSkus(color=color, sizes=sizes, pictures=images)
         item["data_skus"].append(skus)
-        print(colors)
-        # self.items_data[product_code] = {
-        #     'Product Name': product_name,
-        #     'product Price': product_price,
-        #     'description': description,
-        #     'category': category,
-        #     color: {
-        #         'sizes': sizes,
-        #         'images': images
-        #     }
-        # }
         if colors:
             request = SplashRequest(
                 colors[0], self.parse_item_color, endpoint='render.html',
@@ -100,6 +118,12 @@ class BoohooManSpider(scrapy.Spider):
             yield item
 
     def parse_item_color(self, response):
+        """Parse item with aother color.
+
+        This method will be callled if an item has more than one color then
+        this will be called recursively for that item until all the colors
+        data is extracted
+        """
         color = response.css('span.selected-value::text').get().strip()
         product_code = response.css(
             'div.product-number > span::text').get()
@@ -107,7 +131,6 @@ class BoohooManSpider(scrapy.Spider):
             'ul.swatches.size.clearfix > li.selectable > \
             span::text').getall()
         sizes = [size.strip() for size in sizes]
-
         images = [
             'https://i1.adis.ws/i/boohooamplience/{}_{}_xl'
             .format(product_code.lower(), color)]

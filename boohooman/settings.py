@@ -8,6 +8,8 @@
 #     https://docs.scrapy.org/en/latest/topics/settings.html
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
+import datetime
+
 
 BOT_NAME = 'boohooman'
 
@@ -21,6 +23,11 @@ DOWNLOADER_MIDDLEWARES = {
 }
 
 SPLASH_URL = 'http://localhost:8050/'
+
+currentDT = datetime.datetime.now()
+FEED_URI = './data/{}.json'.format(currentDT)
+FEED_EXPORT_INDENT = 2
+FEED_FORMAT = 'json'
 
 SPIDER_MIDDLEWARES = {
     'scrapy_splash.SplashDeduplicateArgsMiddleware': 100,
