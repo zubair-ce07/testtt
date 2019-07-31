@@ -53,7 +53,8 @@ exports.addUser = function (req, res) {
 			}
 		})
 		.catch((err) => {
-			console.log(err)
+			res.json({response: "Sorry, there was an error..."})
+			throw err
 		})
 	})
 	.catch((err) => {

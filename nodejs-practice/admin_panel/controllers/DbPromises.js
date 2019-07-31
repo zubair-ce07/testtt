@@ -55,9 +55,12 @@ exports.insertOne = (userDetails, passwordObject) => {
 
 exports.deleteOne = (username) => {
     return new Promise((resolve, reject) => {
-        model.Users.deleteOne({username: username}, (err) => {
-            if (err) reject(err)
+        model.Users.deleteOne({username: username})
+        .then(() => {
             resolve()
+        })
+        .catch((err) => {
+            reject(err)
         })
     })
 }

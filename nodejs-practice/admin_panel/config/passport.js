@@ -4,28 +4,37 @@ const passwordUtility = require("../helpers/passwordUtility.js");
 const model = require("../database/model")
 
 passport.use(new Strategy(
-function(username, password, cb) {
-	model.Users.findOne({username:username}, function(err, user) {
-		if (!user) { return cb(null, false); }
+	
+function(username, password, callback) {
+	model.Users.findOne({username:username})
+	.then(user => {
+		if (!user) { return callback(null, false); }
 		var givenPassHash = passwordUtility.sha512(password, user.get("password_salt")).passwordHash
-		if (err) {return cb(err); }
 		if (givenPassHash != user.get("password_hash")) { 
 			console.log(givenPassHash);
-			return cb(null, false, {message: "Wrong Password!"}); 
+			return callback(null, false, {message: "Wrong Password!"}); 
 		}
-		return cb(null, user);
-	});
+		return callback(null, user);
+	})
+	.catch(err => {
+		return callback(err)
+	})
 }));
 
 
-passport.serializeUser(function(user, cb) {
-	cb(null, user.get("username"));
+passport.serializeUser(function(user, callback) {
+	callback(null, user.get("username"));
 });
 
 
-passport.deserializeUser(function(username, cb) {
-	model.Users.findOne({username: username}, function (err, user) {
-		if (err) { return cb(err); }
-		cb(null, user);
-	});
+passport.deserializeUser(function(username, callback) {
+
+	model.Users.findOne({username: username})
+	.then(user => {
+		callback(null, user);
+	})
+	.catch(err => {
+		return callback(err)
+	})
+
 });

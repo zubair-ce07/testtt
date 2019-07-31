@@ -1,11 +1,12 @@
 const mongoose = require("mongoose")
-const connection = require("./configuration.js")
-const models = require("./model.js")
 
-mongoose.connection.on('error', console.error.bind(console, 'connection error:'));
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.DB_CLUSTER}`;
+const options = {useNewUrlParser: true, dbName: "users_test"}
 
-module.exports.connect = function connect(cb) {
-    mongoose.connection.once('open', function() {
-        cb()
-    });
-}
+mongoose.connect(uri, options)
+.then(() => {
+    console.log("Connected to the database...")
+})
+.catch((err) => {
+    console.log("ConnectionError: ", err);
+})
