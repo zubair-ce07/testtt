@@ -18,13 +18,11 @@ class TaxiRide:
         self.fare_calculations.taxi_speed += self.speed_increment_factor
 
     def decrease_speed(self):
-        self.fare_calculations.taxi_speed += self.speed_increment_factor
+        self.fare_calculations.taxi_speed -= self.speed_increment_factor
+        self.fare_calculations.taxi_speed = max(0, self.fare_calculations.taxi_speed)
 
-    def fare_calculator(self):
-        self.fare_calculations.calculate_ride_time()
-        self.fare_calculations.calculate_wait_time()
-        self.fare_calculations.calculate_fair()
-        self.fare_calculations.calculate_distance()
+    def calculate_fare(self):
+        self.fare_calculations.fare_calculator()
 
     def print_results(self):
         self.fare_calculations.print_results()
