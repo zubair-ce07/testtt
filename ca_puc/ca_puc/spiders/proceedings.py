@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+"""
+    This module implements a spider that crawls proceedings for a 
+    given time period from the following website
+    http://docs.cpuc.ca.gov/
+"""
+
 import scrapy
 from scrapy_splash import SplashRequest, SplashFormRequest
 from scrapy.loader import ItemLoader
@@ -10,7 +16,6 @@ from ..items import CaPucItem
 
 
 class ProceedingsSpider(scrapy.Spider):
-    """Spider that crawls proceedings for a given time period"""
     name = 'proceedings'
     search_form_url = 'http://docs.cpuc.ca.gov/advancedsearchform.aspx/'
     proceeding_details_base_url = 'https://apps.cpuc.ca.gov/apex/f?p=401:{}:'\
@@ -40,6 +45,8 @@ class ProceedingsSpider(scrapy.Spider):
             Get the search form and send a form request with
             given time period
         """
+        # print('parse headers', response.headers)
+
         # getting the view state
         view_state, \
             view_state_generator,   \
@@ -62,24 +69,61 @@ class ProceedingsSpider(scrapy.Spider):
         yield SplashFormRequest(
             url=self.search_form_url,
             formdata=form_data,
-            callback=self.parse_proceedings
+            callback=self.parse_proceedings,
+            meta={'first_page': True}
         )
+
+    def get_all_proceeding_pages_requests(self, response):
+        """
+            Get all of the remaining pages target and
+            yield a form request to them.
+        """
+        view_state, \
+            view_state_generator, \
+            event_validation = self.get_form_states(response)
+        # Getting pages
+        pages_selector = '//*[@class="PageTable"]/tbody/tr/td[2]/a/@href'
+        # Sending request for paginations
+        for p in response.xpath(pages_selector).getall():
+            if not p.startswith('javascript:__doPostBack'):
+                continue
+            event_target = p.split("'")[1]
+            # creating a form data for request
+            form_data = {
+                '__EVENTTARGET': event_target,
+                '__EVENTARGUMENT': '',
+                '__VIEWSTATE': view_state,
+                '__VIEWSTATEGENERATOR': view_state_generator,
+                '__EVENTVALIDATION': event_validation
+            }
+            # yielding a Form Request
+            yield SplashFormRequest.from_response(
+                response,
+                url='http://docs.cpuc.ca.gov/SearchRes.aspx',
+                formdata=form_data,
+                callback=self.parse_proceedings,
+                meta={'first_page': False}
+            )
 
     def parse_proceedings(self, response):
         """
             Get the search results and send an
             individual request for each proceeding id
         """
+        # print('parse_proceedings headers', response.headers)
+        # if response.meta['first_page']:
+        #     # processing the remaining all pages
+        #     for req in self.get_all_proceeding_pages_requests(response):
+        #         yield req
+
+        # print(response.text)
         proceeding_ids = self.get_proceeding_ids(response)
+        print(list(set(proceeding_ids)))
         for p_id in proceeding_ids:
-            yield SplashRequest(
+            yield scrapy.Request(
                 url='{}{}'.format(self.proceeding_details_url, p_id),
                 callback=self.parse_proceedings_details,
                 meta={'proceeding_id': p_id},
-                endpoint='render.html',
-                args={
-                    'wait': 0.5
-                }
             )
 
     def parse_proceedings_details(self, response):
@@ -90,6 +134,7 @@ class ProceedingsSpider(scrapy.Spider):
 
             meta_data: loader:ItemLoader
         """
+        # print('parse_proceedings_details headers', response.headers)
         proceeding_id = response.meta['proceeding_id']
 
         loader = ItemLoader(item=CaPucItem(), response=response)
@@ -118,13 +163,13 @@ class ProceedingsSpider(scrapy.Spider):
         """
         loader = response.meta['loader']
         # getting filing details
-        filings_rows = response.xpath('//*[@class="apexir_WORKSHEET_DATA"]/tr')
+        filings_rows = response.xpath(
+            '//*[@class="apexir_WORKSHEET_DATA"]/tr[preceding-sibling::*]')
         # update loaders with meta data of filing count and total filings
-        # len - 2 because we are ignoring the header row
-        loader.add_value('total_filing_count', len(filings_rows) - 2)
+        loader.add_value('total_filing_count', len(filings_rows))
         loader.add_value('filing_count', 0)
 
-        for row in filings_rows[1:]:
+        for i, row in enumerate(filings_rows):
             filing = {
                 "description": row.xpath('td[4]/text()').get(),
                 "documents": [],
@@ -135,11 +180,13 @@ class ProceedingsSpider(scrapy.Spider):
             # Getting doucments for each filing
             documents_link = row.css('td a::attr("href")').get()
 
-            yield SplashRequest(
+            yield scrapy.Request(
                 url=documents_link,
                 callback=self.parse_documents,
                 meta={'loader': loader, 'filing': filing}
             )
+
+            print("Filing Number", (i+1))
 
     def parse_documents(self, response):
         """
@@ -152,23 +199,30 @@ class ProceedingsSpider(scrapy.Spider):
         """
         loader, filing = response.meta["loader"], \
             response.meta["filing"]
-        # populating filing with respective documents
-        filing = self.get_filing_with_documents(response, filing)
-        # updating filings
-        filings = loader.load_item()['filings'].append(filing) \
-            if 'filings' in loader.load_item() else [filing]
 
-        loader.replace_value('filings', filings)
+        # # populating filing with respective documents
+        # filing = self.get_filing_with_documents(response, filing)
+        # # updating filings
+        # filings = loader.load_item()['filings'].append(filing) \
+        #     if 'filings' in loader.load_item() else [filing]
+
+        # loader.replace_value('filings', filings)
 
         loader.replace_value(
             'filing_count',
             loader.load_item()['filing_count'] + 1
         )
         # Check if its last request so we can yield the item
+        print("REQUEST FOR ",
+              loader.load_item()["state_id"],
+              loader.load_item()["filing_count"],
+              loader.load_item()["total_filing_count"])
+
         if self.is_last_request(loader):
-            item = loader.load_item()
-            del item['total_filing_count']
-            del item['filing_count']
+            print("LAST REQUEST FOR ",
+                  loader.load_item()["state_id"],
+                  loader.load_item()["filing_count"],
+                  loader.load_item()["total_filing_count"])
             return loader.load_item()
 
     def is_last_request(self, loader):
@@ -177,22 +231,18 @@ class ProceedingsSpider(scrapy.Spider):
             loader.load_item()['filing_count']
 
     def get_filing_with_documents(self, response, filing):
-        """ 
+        """
             Fetch the documents from response and
             return the updated filing with documents
         """
         rows = response.css('#ResultTable tr:not([style])')
         for row in rows:
             source_url = row.css('.ResultLinkTD a::attr("href")').get()
-            title = row.css('.ResultTitleTD::text').get()
-            name = source_url.split('.')[0].split('/')[-1]
-            extenion = source_url.split('.')[1]
-
             document = {
-                "name": name,
-                "extension": extenion,
-                "source_url": source_url,
-                "title": title
+                "name": source_url.split('.')[0].split('/')[-1],
+                "extension": source_url.split('.')[1],
+                "source_url": row.css('.ResultLinkTD a::attr("href")').get(),
+                "title": row.css('.ResultTitleTD::text').get()
             }
 
             filing["documents"].append(document)
@@ -206,7 +256,7 @@ class ProceedingsSpider(scrapy.Spider):
         for proceeding in response.xpath(proceedings_selector).getall():
             ids += re.findall(r'\w\d{7}', proceeding)
 
-        return ids
+        return ['A1803016', 'R1812006']
 
     def get_form_states(self, response):
         """ Getting VIEWSTATE from asp pages"""
