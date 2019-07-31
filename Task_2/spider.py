@@ -25,15 +25,15 @@ def create_worker():
     worker.load_url()
 
 def main():
-    args = setup_arguments()
-    CrawlWorker.cuncurrent_request_allowed = args.c_requests
-    CrawlWorker.download_delay = args.download_delay
-    CrawlWorker.total_pages_to_load = args.page_count
+    commandline_arguments = setup_arguments()
+    CrawlWorker.cuncurrent_request_allowed = commandline_arguments.c_requests
+    CrawlWorker.download_delay = commandline_arguments.download_delay
+    CrawlWorker.set_max_request_count(commandline_arguments.page_count)
 
-    start_time = time()
-    CrawlWorker()
     url = urlparse('https://arbisoft.com/')
     CrawlWorker.url_queue.put(url, False)
+    start_time = time()
+
     while True:
         if CrawlWorker.cuncurrent_request_made < CrawlWorker.cuncurrent_request_allowed \
             and CrawlWorker.loading_request_made < CrawlWorker.total_pages_to_load:
@@ -41,7 +41,7 @@ def main():
             worker_thread.start()
 
         if CrawlWorker.page_loaded_successfully >= CrawlWorker.total_pages_to_load:
-            print("page loaded: " + str(CrawlWorker.page_loaded_successfully))
+            print("Page loaded: " + str(CrawlWorker.page_loaded_successfully))
             print("Total downloaded size: " + str(CrawlWorker.total_bytes_downloaded))
             print("Total time taken: %s" % (time() - start_time))
             break
