@@ -78,11 +78,15 @@ class BoohooManSpider(scrapy.Spider):
                 'images': images
             }
         }
-        for url in colors:
-            yield SplashRequest(
-                url, self.parse_item_color, endpoint='render.html',
+        if colors:
+            request = SplashRequest(
+                colors[0], self.parse_item_color, endpoint='render.html',
                 args={'wait': 0.5}
             )
+            request.meta['colors'] = colors
+            yield request
+        else:
+            print(self.items_data[product_code])
 
     def parse_item_color(self, response):
         color = response.css('span.selected-value::text').get().strip()
@@ -92,9 +96,16 @@ class BoohooManSpider(scrapy.Spider):
             'ul.swatches.size.clearfix > li.selectable > \
             span::text').getall()
         sizes = [size.strip() for size in sizes]
-        # print(color)
-        # print(self.items_data[product_code])
         self.items_data[product_code][color] = {
             'sizes': sizes
         }
-        # print(self.items_data[product_code])
+        colors = response.meta['colors'].remove(response.url)
+        if colors:
+            request = SplashRequest(
+                colors[0], self.parse_item_color, endpoint='render.html',
+                args={'wait': 0.5}
+            )
+            request.meta['colors'] = colors
+            yield request
+        else:
+            print(self.items_data[product_code])
