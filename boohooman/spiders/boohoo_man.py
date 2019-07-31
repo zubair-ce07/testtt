@@ -85,8 +85,8 @@ class BoohooManSpider(scrapy.Spider):
             )
             request.meta['colors'] = colors
             yield request
-        else:
-            print(self.items_data[product_code])
+        # else:
+        #     print(self.items_data[product_code])
 
     def parse_item_color(self, response):
         color = response.css('span.selected-value::text').get().strip()
@@ -96,8 +96,19 @@ class BoohooManSpider(scrapy.Spider):
             'ul.swatches.size.clearfix > li.selectable > \
             span::text').getall()
         sizes = [size.strip() for size in sizes]
+
+        images = [
+            'https://i1.adis.ws/i/boohooamplience/{}_{}_xl'
+            .format(product_code.lower(), color)]
+
+        for i in range(1, 4):
+            images.append('https://i1.adis.ws/i/boohooamplience/{}_{}_xl_{}'
+                          .format(
+                              product_code.lower(), color, i))
+
         self.items_data[product_code][color] = {
-            'sizes': sizes
+            'sizes': sizes,
+            'images': images
         }
         colors = response.meta['colors'].remove(response.url)
         if colors:
