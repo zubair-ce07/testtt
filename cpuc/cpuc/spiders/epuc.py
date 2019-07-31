@@ -43,8 +43,8 @@ class VermontSpider(scrapy.Spider):
     def search_case(self, response):
         """This function make search for last two days dockets"""
 
-        search_start_date = self.get_end_date()
-        search_end_date = self.get_start_date()
+        search_start_date = self.get_start_date()
+        search_end_date = self.get_end_date()
         formdata = {
             'data(181445)': search_end_date,
             'data(181445_right)': search_start_date,
@@ -107,10 +107,11 @@ class VermontSpider(scrapy.Spider):
 
         docket_loader.add_value('proceeding_type', response.meta['proceeding_type'])
         filed_on = response.meta.get('filed_on', None)
-        filed_on = self.parse_filed_on_date(filed_on, content)
+        filed_on = filed_on or self.parse_filed_on_date(content)
         docket_loader.add_value('filled_on', filed_on)
 
-        docket_loader.add_value("source_url", response.url)
+        source_url = response.meta.get('source_url', response.url)
+        docket_loader.add_value("source_url", source_url)
         docket_loader.add_value('state_id', response.url.rsplit('/', 1)[-1])
 
         docket_loader.add_value('title', self.removed_garbage_from_data(
@@ -341,22 +342,17 @@ class VermontSpider(scrapy.Spider):
                 url=url,
                 callback=self.parse_proceeding_details,
                 meta={
-                    'filed_on': filed_on
+                    'filed_on': filed_on,
+                    'source_url': response.urls
                 }
             )
 
     @staticmethod
-    def parse_filed_on_date(filed_on, content):
+    def parse_filed_on_date(content):
+        filed_on = content.xpath("//tr[3]/td[2]/text()").get()
         if filed_on:
+            return filed_on.split(':')[1].strip()
 
-            return filed_on
-        else:
-
-            filed_on = content.xpath("//tr[3]/td[2]/text()").get()
-
-            if filed_on:
-
-                return filed_on.split(':')[1].strip()
 
     @staticmethod
     def remove_garbage_from_string(data):
