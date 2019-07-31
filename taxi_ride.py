@@ -8,7 +8,7 @@ class TaxiRide:
         self.fare_calculations = TaxiMeterApp()
         self.speed_increment_factor = 8
 
-    def check_speed(self):
+    def process_user_input(self):
         if keyboard.is_pressed('up'):
             self.increase_speed()
         elif keyboard.is_pressed('down'):
