@@ -8,11 +8,15 @@
             <h6>Task description:</h6>
             <p>{{ task.description }}</p>
             <br>
-            <h6>Assigned by:</h6>
+            <h6>Assigned to:</h6>
             <p>{{ task.assignee }}</p>
+            <br>
+            <h6>Assigned by:</h6>
+            <p>{{ task.assigned_by }}</p>
             <br>
             <h6>Due on:</h6>
             <p>{{ task.due_date }}</p>
+            <br>
         </div>
     </div>
     <a class="btn btn-primary" href="{% url 'task_index' %}">Back</a>
