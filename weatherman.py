@@ -52,37 +52,36 @@ class ReportPrinter:
         print(max_temp, min_temp, max_humidity, sep="\n")
 
     @staticmethod
-    def print_single_bar_chart_report(record):
-        print(record["date"].strftime("%d")
+    def print_single_bar_chart_report(daily_record):
+        print(daily_record["date"].strftime("%d")
               + Fore.RED
               + " "
-              + "+" * record["min_temp"]
+              + "+" * daily_record["min_temp"]
               + Fore.BLUE
-              + "+" * (record["max_temp"] - record["min_temp"])
+              + "+" * (daily_record["max_temp"] - daily_record["min_temp"])
               + Style.RESET_ALL
-              + str(record["min_temp"])
+              + str(daily_record["min_temp"])
               + " - "
-              + str(record["max_temp"]))
+              + str(daily_record["max_temp"]))
 
     @staticmethod
-    def print_double_bar_chart_report(record):
+    def print_double_bar_chart_report(daily_record):
         print(Fore.RED + "{} {} {}C".format(
-            record["date"].strftime("%d"),
-            "+" * record["max_temp"],
-            record["max_temp"]
+            daily_record["date"].strftime("%d"),
+            "+" * daily_record["max_temp"],
+            daily_record["max_temp"]
         )
               )
         print(Fore.BLUE + "{} {} {}C".format(
-            record["date"].strftime("%d"),
-            "+" * record["min_temp"],
-            record["min_temp"]
+            daily_record["date"].strftime("%d"),
+            "+" * daily_record["min_temp"],
+            daily_record["min_temp"]
         )
               )
         print(Style.RESET_ALL)
 
 
 class ReportGenerator:
-
     def __init__(self, path):
         self.report_reader = ReportReader(path)
 
@@ -92,9 +91,9 @@ class ReportGenerator:
             return
 
         length = len(records)
-        avg_max_temp = round(sum(record["max_temp"] for record in records) / length)
-        avg_min_temp = round(sum(record["min_temp"] for record in records) / length)
-        avg_mean_humidity = round(sum(record["mean_humidity"] for record in records) / length)
+        avg_max_temp = round(sum(daily_record["max_temp"] for daily_record in records) / length)
+        avg_min_temp = round(sum(daily_record["min_temp"] for daily_record in records) / length)
+        avg_mean_humidity = round(sum(daily_record["mean_humidity"] for daily_record in records) / length)
         ReportPrinter.print_month_report(avg_max_temp, avg_min_temp, avg_mean_humidity)
 
     def generate_year_report(self, year):
@@ -108,20 +107,20 @@ class ReportGenerator:
         ReportPrinter.print_year_report(max_temp, min_temp, max_humidity)
 
     def generate_single_bar_chart_report(self, date):
-        records = self.report_reader.read_records(date)
-        if not records:
+        month_records = self.report_reader.read_records(date)
+        if not month_records:
             return
 
-        for record in records:
-            ReportPrinter.print_single_bar_chart_report(record)
+        for daily_record in month_records:
+            ReportPrinter.print_single_bar_chart_report(daily_record)
 
     def generate_double_bar_chart_report(self, date):
-        records = self.report_reader.read_records(date)
-        if not records:
+        month_records = self.report_reader.read_records(date)
+        if not month_records:
             return
 
-        for record in records:
-            ReportPrinter.print_double_bar_chart_report(record)
+        for daily_record in month_records:
+            ReportPrinter.print_double_bar_chart_report(daily_record)
 
     def generate_reports(self, arguments):
         if arguments.a:
@@ -138,24 +137,22 @@ class ReportGenerator:
 
 
 class ReportReader:
-
     def __init__(self, path):
         self.path = path
         self.files = [file_ for file_ in glob.glob(path + "**/*.txt", recursive=True)]
 
     @staticmethod
-    def read_daily_records(record):
-        if record["Max TemperatureC"] and record["Min TemperatureC"]\
-                and record["Max Humidity"] and record[" Mean Humidity"]:
-            record = {
-                "date": datetime.strptime(record["PKT"], "%Y-%m-%d"),
-                "max_temp": int(record["Max TemperatureC"]),
-                "min_temp": int(record["Min TemperatureC"]),
-                "max_humidity": int(record["Max Humidity"]),
-                "mean_humidity": int(record[" Mean Humidity"])
+    def format_records(daily_record):
+        if daily_record["Max TemperatureC"] and daily_record["Min TemperatureC"]\
+                and daily_record["Max Humidity"] and daily_record[" Mean Humidity"]:
+            daily_record = {
+                "date": datetime.strptime(daily_record["PKT"], "%Y-%m-%d"),
+                "max_temp": int(daily_record["Max TemperatureC"]),
+                "min_temp": int(daily_record["Min TemperatureC"]),
+                "max_humidity": int(daily_record["Max Humidity"]),
+                "mean_humidity": int(daily_record[" Mean Humidity"])
             }
-
-            return record
+            return daily_record
 
     def read_records(self, date):
         records = []
@@ -163,13 +160,11 @@ class ReportReader:
         file_names = [file_ for file_ in self.files if date in file_]
         for file_ in file_names:
             with open(file_) as weather_file:
-
                 reader = csv.DictReader(weather_file)
                 for row in reader:
-                    record = ReportReader.read_daily_records(row)
-
-                    if record:
-                        records.append(record)
+                    daily_record = self.format_records(row)
+                    if daily_record:
+                        records.append(daily_record)
 
             records.extend(records)
         return records
