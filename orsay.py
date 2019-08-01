@@ -1,10 +1,9 @@
-import re
+import w3lib.url
 from datetime import datetime
 
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy import Request
 from scrapy.linkextractors import LinkExtractor
-from urllib.parse import urlparse
 
 from orsay.items import OrsayItem
 
@@ -22,12 +21,12 @@ class OrsaySpider(CrawlSpider):
 
     gender = "Women"
 
-    restrict_home_css = [".level-1"]
-    restrict_product_css = [".thumb-link"]
+    listings_css = [".level-1", "load-more-wrapper"]
+    products_css = [".thumb-link"]
 
     rules = (
-        Rule(LinkExtractor(restrict_css=restrict_home_css)),
-        Rule(LinkExtractor(restrict_css=restrict_product_css), callback='parse_item'),)
+        Rule(LinkExtractor(restrict_css=listings_css)),
+        Rule(LinkExtractor(restrict_css=products_css), callback='parse_item'))
 
     def parse_item(self, response):
         garment = OrsayItem()
@@ -47,15 +46,15 @@ class OrsaySpider(CrawlSpider):
         garment["retailer"] = self.retailer
         garment["gender"] = self.gender
         garment["skus"] = {}
-        garment["meta"] = self.get_sku_reqs(response, garment)
+        garment["meta"] = self.color_requests(response, garment)
 
-        return self.yield_sku_reqs(garment)
+        return self.next_request_or_garment(garment)
 
     def clean(self, raw_list):
-        return [re.sub(r'\s+', '', string) for string in raw_list]
+        return [string.strip() for string in raw_list]
 
     def clean_price(self, price):
-        return re.sub(r'\s+', '', str(price)).replace(",", "")
+        return price.strip().replace(",", "")
 
     def get_product_name(self, response):
         css = ".product-name::text"
@@ -63,7 +62,7 @@ class OrsaySpider(CrawlSpider):
 
     def get_product_description(self, response):
         css = ".with-gutter::text"
-        return response.css(css).getall()
+        return self.clean(response.css(css).getall())
 
     def get_retailer_sku(self, response):
         css = ".product-sku::text"
@@ -71,7 +70,7 @@ class OrsaySpider(CrawlSpider):
 
     def get_image_urls(self, response):
         css = ".primary-image::attr(src)"
-        return [urlparse(url).netloc+urlparse(url).path for url in response.css(css).getall()]
+        return [w3lib.url.url_query_cleaner(url) for url in response.css(css).getall()]
 
     def get_product_care(self, response):
         css = ".product-material p::text"
@@ -92,32 +91,38 @@ class OrsaySpider(CrawlSpider):
         previous_price_css = ".price-standard::text"
         previous_price = response.css(previous_price_css).get()
         if previous_price:
-            return {"previous_price": self.clean_price(previous_price.split(" ", 1)[0])}
+            return self.clean_price(previous_price.split(" ", 1)[0])
+
+    def get_sale_price(self, response):
+        price_css = ".price-sales::text"
+        return self.clean_price(response.css(price_css).get().split(" ", 1)[0])
+
+    def get_price_currency(self, response):
+        currency_css = ".country-currency::text"
+        return response.css(currency_css).get()
 
     def get_product_pricing(self, response):
-        price_css = ".price-sales::text"
-        currency_css = ".country-currency::text"
-        pricing = self.get_previous_price(response) or {}
+        pricing = {"previous_price": self.get_previous_price(response)} if self.get_previous_price(response) else {}
         pricing.update({
-            "price": self.clean_price(response.css(price_css).get().split(" ", 1)[0]),
-            "currency": response.css(currency_css).get()
+            "price": self.get_sale_price(response),
+            "currency": self.get_price_currency(response)
         })
         return pricing
 
-    def get_sku_reqs(self, response, garment):
-        color_urls_css = ".swatchanchor.js-color-swatch::attr(href)"
-        return [Request(url, callback=self.update_sku, meta={"garment": garment}, dont_filter=True) for url in
-                response.css(color_urls_css).getall()]
+    def color_requests(self, response, garment):
+        color_css = ".swatchanchor.js-color-swatch::attr(href)"
+        return [Request(url, callback=self.parse_color, meta={"garment": garment}, dont_filter=True) for url in
+                response.css(color_css).getall()]
 
-    def update_sku(self, response):
+    def parse_color(self, response):
         garment = response.meta["garment"]
         garment["skus"].update(self.get_product_sku(response))
-        garment["image_urls"] += (self.get_image_urls(response))
-        return self.yield_sku_reqs(garment)
+        garment["image_urls"] += self.get_image_urls(response)
+        return self.next_request_or_garment(garment)
 
-    def yield_sku_reqs(self, garment):
+    def next_request_or_garment(self, garment):
         sku_reqs = garment["meta"]
-        yield sku_reqs and sku_reqs.pop() or garment
+        yield (sku_reqs and sku_reqs.pop()) or garment
 
     def get_product_sku(self, response):
         skus = {}
@@ -130,9 +135,9 @@ class OrsaySpider(CrawlSpider):
         common_sku = self.get_product_pricing(response)
         common_sku["color"] = selected_color
 
-        for size in self.clean(response.css(sizes_css).getall()) or ["single_size"]:
+        for size in response.css(sizes_css) or ["single_size"]:
             sku = common_sku.copy()
-            sku["size"] = size
+            sku["size"] = size.get().strip()
             if size in out_of_stock_sizes:
                 sku["out_of_stock"] = True
             skus[f"{sku['color']}_{sku['size']}"] = sku
