@@ -1,7 +1,8 @@
 import asyncio
-from urllib.parse import urljoin, urlparse
-
 import requests
+import concurrent.futures
+
+from urllib.parse import urljoin, urlparse
 from parsel import Selector
 
 
@@ -12,6 +13,7 @@ class ConcurrentSpider:
         self.urls_limit = max_urls
         self.download_delay = download_delay
         self.bounded_semaphore = asyncio.BoundedSemaphore(concurrent_requests)
+        self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=concurrent_requests)
         self.visited_urls = []
         self.queued_urls = {start_url}
         self.downloaded_bytes = 0
@@ -26,21 +28,23 @@ class ConcurrentSpider:
         return urljoin(base_url, url)
 
     def filter_links(self, links):
-        return {link for link in links if self.validate_link(link)}
+        return {link for link in links if self.validate_links(link)}
 
-    def validate_link(self, link):
+    def validate_links(self, link):
         return link not in self.visited_urls and self.allowed_domain == urlparse(link).netloc
 
     def parse_response(self, response):
         links = self.extract_links(response)
         absolute_links = [self.make_link_absolute(response.url, link) for link in links]
-        self.queued_urls.update(self.filter_links(absolute_links))
-        html = response.text
-        length = len(html)
-        self.downloaded_bytes += length
+        filtered_links = self.filter_links(absolute_links)
+        self.queued_urls.update(filtered_links)
 
-    async def make_request(self, url):
+    async def generate_requests(self, url):
         async with self.bounded_semaphore:
+            await asyncio.sleep(self.download_delay)
+            future = self.event_loop.run_in_executor(self.executor, requests.get, url)
+            response = await future
+            self.downloaded_bytes += len(response.text)
             self.parse_response(requests.get(url))
 
     async def schedule_requests(self):
@@ -54,8 +58,7 @@ class ConcurrentSpider:
             if url in self.visited_urls:
                 continue
             self.visited_urls.append(url)
-            await self.make_request(url)
-            await asyncio.sleep(self.download_delay)
+            await self.generate_requests(url)
 
     def crawl(self):
         try:
