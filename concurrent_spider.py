@@ -13,7 +13,6 @@ class ConcurrentSpider:
         self.urls_limit = max_urls
         self.download_delay = download_delay
         self.bounded_semaphore = asyncio.BoundedSemaphore(concurrent_requests)
-        self.executor = ThreadPoolExecutor(max_workers=concurrent_requests)
         self.visited_urls = []
         self.queued_urls = {start_url}
         self.downloaded_bytes = 0
@@ -39,11 +38,14 @@ class ConcurrentSpider:
         self.queued_urls.update(self.filter_links(absolute_links))
 
     async def make_request(self, url):
-        self.parse_response(requests.get(url))
+        async with self.bounded_semaphore:
+            self.parse_response(requests.get(url))
+            html = requests.get(url).text
+            length = len(html)
+            self.downloaded_bytes += length
 
     async def schedule_requests(self):
         while self.queued_urls:
-            print(f'QUEUED-> {self.queued_urls}')
             print(f'VISITED-> {self.visited_urls}')
             if len(self.visited_urls) == self.urls_limit:
                 break
@@ -52,11 +54,8 @@ class ConcurrentSpider:
             url = self.queued_urls.pop()
             if url in self.visited_urls:
                 continue
-            print(f'URL-> {url}')
             self.visited_urls.append(url)
-            await self.bounded_semaphore
             await self.make_request(url)
-
             await asyncio.sleep(self.download_delay)
 
     def crawl(self):
