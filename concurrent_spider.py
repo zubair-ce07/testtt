@@ -35,13 +35,13 @@ class ConcurrentSpider:
         links = self.extract_links(response)
         absolute_links = [self.make_link_absolute(response.url, link) for link in links]
         self.queued_urls.update(self.filter_links(absolute_links))
+        html = response.text
+        length = len(html)
+        self.downloaded_bytes += length
 
     async def make_request(self, url):
         async with self.bounded_semaphore:
             self.parse_response(requests.get(url))
-            html = requests.get(url).text
-            length = len(html)
-            self.downloaded_bytes += length
 
     async def schedule_requests(self):
         while self.queued_urls:
