@@ -1,5 +1,4 @@
 import json
-import re
 from datetime import datetime
 
 from scrapy.spiders import CrawlSpider, Rule
@@ -20,14 +19,12 @@ class LanebryantSpider(CrawlSpider):
 
     gender = "Women"
 
-    restrict_home_css = ["#asc-header-con", ]
+    restrict_home_css = ["#asc-header-con", ".mar-pagination-section"]
     restrict_product_css = [".inverted", ]
-    restrict_pagination_css = [".mar-pagination-section"]
 
     rules = (
         Rule(LinkExtractor(restrict_css=restrict_home_css)),
         Rule(LinkExtractor(restrict_css=restrict_product_css), callback="parse_item"),
-        Rule(LinkExtractor(restrict_css=restrict_pagination_css))
     )
 
     def parse_item(self, response):
@@ -53,81 +50,70 @@ class LanebryantSpider(CrawlSpider):
 
         yield garment
 
-    def clean(self, raw_list):
-        return [re.sub(r"\s+", "", string) for string in raw_list]
-
     def clean_price(self, price):
         return price.replace(".", "").replace("$", "")
 
-    def clean_json(self, json_text):
+    def clean(self, json_text):
         return json_text.replace("\n", "").replace("\\", "").replace("\r", "").replace("\'", "")
 
+    def get_product_json(self, response):
+        xpath = "//script[@type='application/ld+json']//text()"
+        return json.loads(self.clean(response.xpath(xpath).get())[:-2])
+
+    def get_sku_json(self, response):
+        css = "#pdpInitialData::text"
+        return json.loads(response.css(css).get())
+
     def get_product_name(self, response):
-        css = ".mar-product-title::text"
-        return response.css(css).get()
+        return response.css(".mar-product-title::text").get()
 
     def get_product_description(self, response):
-        xpath = "//script[@type='application/ld+json']//text()"
-        extracted_json = self.clean_json(response.xpath(xpath).get())
-        return [json.loads(extracted_json[:-2])["description"]]
+        return [self.get_product_json(response)["description"]]
 
     def get_retailer_sku(self, response):
-        xpath = "//script[@type='application/ld+json']//text()"
-        extracted_json = self.clean_json(response.xpath(xpath).get())
-        return json.loads(extracted_json[:-2])["sku"]
+        return self.get_product_json(response)["sku"]
 
     def get_image_urls(self, response):
-        css = "#pdpInitialData::text"
-        parsed_json = json.loads(response.css(css).get())
         return [images["sku_image"].replace("//", "", 2) for images in
-                parsed_json["pdpDetail"]["product"][0]["all_available_colors"][0]["values"]]
+                self.get_sku_json(response)["pdpDetail"]["product"][0]["all_available_colors"][0]["values"]]
 
     def get_product_price(self, response):
-        xpath = "//script[@type='application/ld+json']//text()"
-        extracted_json = self.clean_json(response.xpath(xpath).get())
-        return self.clean_price(json.loads(extracted_json[:-2])["offers"]["price"])
+        return self.clean_price(self.get_product_json(response)["offers"]["price"])
 
     def get_product_care(self, response):
         css = ".mar-product-additional-info #tab1 li:not(:first-child)::text"
-        return self.clean(response.css(css).getall())
+        return [care.strip() for care in response.css(css).getall()]
 
     def get_product_brand(self, response):
-        css = "a.lb> h2::text"
-        return response.css(css).get()
+        return response.css("a.lb> h2::text").get()
 
     def get_product_category(self, response):
         xpath = "//script[@type='text/javascript']//text()"
-        category = response.xpath(xpath).get()
-        return re.search('pageName": "(.+?)"', category).group(1).replace(" ", "").split(":")
+        category = response.xpath(xpath).re_first('pageName": "(.+?)"')
+        return category.replace(" ", "").split(":")
 
     def get_crawl_id(self):
         return f"{self.retailer}-{datetime.now().strftime('%Y%m%d-%H%M%s')}-medp"
 
     def get_product_sizes(self, response):
-        css = "#pdpInitialData::text"
-        parsed_json = json.loads(response.css(css).get())
         return {sizes["id"]: sizes["value"] for sizes in
-                parsed_json["pdpDetail"]["product"][0]["all_available_sizes"][0]["values"]}
+                self.get_sku_json(response)["pdpDetail"]["product"][0]["all_available_sizes"][0]["values"]}
 
     def get_product_colors(self, response):
-        css = "#pdpInitialData::text"
-        parsed_json = json.loads(response.css(css).get())
         return {colors["id"]: colors["name"] for colors in
-                parsed_json["pdpDetail"]["product"][0]["all_available_colors"][0]["values"]} or {}
+                self.get_sku_json(response)["pdpDetail"]["product"][0]["all_available_colors"][0]["values"]} or {}
 
     def get_previous_price(self, parsed_json):
-        if parsed_json["pdpDetail"]["product"][0]["skus"][0]["prices"]['list_price'] is not \
-                parsed_json["pdpDetail"]["product"][0]["skus"][0]["prices"]["sale_price"]:
-            return {'previous_price': self.clean_price(parsed_json["pdpDetail"]["product"][0]["skus"][0]["prices"]['list_price'])}
+        if parsed_json['list_price'] is not parsed_json["sale_price"]:
+            return {'previous_price': self.clean_price(parsed_json['list_price'])}
 
     def get_product_skus(self, response):
         skus = {}
-        css = "#pdpInitialData::text"
 
-        parsed_json = json.loads(response.css(css).get())
+        parsed_json = self.get_sku_json(response)
         sizes = self.get_product_sizes(response)
         colors = self.get_product_colors(response)
-        common_sku = self.get_previous_price(parsed_json) or {}
+        common_sku = self.get_previous_price(parsed_json["pdpDetail"]["product"][0]["skus"][0]["prices"]) or {}
 
         for item in parsed_json["pdpDetail"]["product"][0]["skus"]:
             sku = common_sku.copy()
