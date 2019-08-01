@@ -6,7 +6,6 @@ file
 import re
 
 import scrapy
-from scrapy_splash import SplashRequest
 
 from ..items import Item, ProductSkus
 
@@ -59,10 +58,8 @@ class BoohooManSpider(scrapy.Spider):
             'a.name-link.js-canonical-link::attr(data-href)').getall()
         for url in items_url:
             # yield scrapy.Request(url, callback=self.parse_item)
-            yield SplashRequest(
-                url, self.parse_item, endpoint='render.html',
-                args={'wait': 0.5}
-            )
+            yield scrapy.Request(
+                url, callback=self.parse_item)
 
     def parse_item(self, response):
         """Scrap item from a page.
@@ -107,10 +104,8 @@ class BoohooManSpider(scrapy.Spider):
         skus = ProductSkus(color=color, sizes=sizes, pictures=images)
         item["data_skus"].append(skus)
         if colors:
-            request = SplashRequest(
-                colors[0], self.parse_item_color, endpoint='render.html',
-                args={'wait': 0.5}
-            )
+            request = scrapy.Request(
+                colors[0], callback=self.parse_item_color)
             request.meta['colors'] = colors
             request.meta['item'] = item
             yield request
@@ -148,10 +143,8 @@ class BoohooManSpider(scrapy.Spider):
         # }
         colors = response.meta['colors'].remove(response.url)
         if colors:
-            request = SplashRequest(
-                colors[0], self.parse_item_color, endpoint='render.html',
-                args={'wait': 0.5}
-            )
+            request = scrapy.Request(
+                colors[0], callback=self.parse_item_color)
             request.meta['colors'] = colors
             request.meta['item'] = item
             yield request

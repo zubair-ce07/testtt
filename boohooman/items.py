@@ -1,3 +1,7 @@
+""""Boohooman Items Module.
+
+This is a module for Boohooman product Items
+"""
 # -*- coding: utf-8 -*-
 
 # Define here the models for your scraped items
@@ -9,7 +13,11 @@ import scrapy
 
 
 class Item(scrapy.Item):
-    # define the fields for your item here like:
+    """Product Item.
+
+    This is a class for boohooman item
+    """
+
     product_code = scrapy.Field()
     product_name = scrapy.Field()
     product_price = scrapy.Field()
@@ -20,6 +28,11 @@ class Item(scrapy.Item):
 
 
 class ProductSkus(scrapy.Item):
+    """Product Skus Item.
+
+    This is a product item data skus
+    """
+
     color = scrapy.Field()
     sizes = scrapy.Field()
     pictures = scrapy.Field()
