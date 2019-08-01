@@ -85,6 +85,8 @@ class BoohooManSpider(scrapy.Spider):
                                              len(tags_count))
         item['data_skus'] = []
 
+        print("Processing : {}".format(item['product_name']))
+
         sizes = response.css(
             'ul.swatches.size.clearfix > li.selectable > \
             span::text').getall()
