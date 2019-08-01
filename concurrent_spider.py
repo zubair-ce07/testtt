@@ -3,7 +3,6 @@ from urllib.parse import urljoin, urlparse
 
 import requests
 from parsel import Selector
-from concurrent.futures import ThreadPoolExecutor
 
 
 class ConcurrentSpider:
