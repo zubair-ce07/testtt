@@ -83,6 +83,7 @@ class BoohooManSpider(scrapy.Spider):
         item['product_description'] = re.sub(re.compile(r'<[^>]+>'), '',
                                              item['product_description'],
                                              len(tags_count))
+        item['data_skus'] = []
 
         sizes = response.css(
             'ul.swatches.size.clearfix > li.selectable > \
