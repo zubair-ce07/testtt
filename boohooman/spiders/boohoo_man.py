@@ -76,9 +76,10 @@ class BoohooManSpider(scrapy.Spider):
         color = response.css('span.selected-value::text').get().strip()
         category = response.css(
             'li+li.breadcrumb-item > a > span::text').get()
-        description = response.css('li > div > p+p::text').get()
-        tags_count = re.findall(r'<(?:a\b[^>]*>|/a>)', description)
-        description = re.sub(re.compile('<.*?>'), '',
+        description = response.css(
+            '#product-short-description-tab > div > p+p').get()
+        tags_count = re.findall(r'<[^>]+>', description)
+        description = re.sub(re.compile(r'<[^>]+>'), '',
                              description, len(tags_count))
 
         sizes = response.css(
