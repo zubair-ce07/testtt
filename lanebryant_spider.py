@@ -19,12 +19,12 @@ class LanebryantSpider(CrawlSpider):
 
     gender = "Women"
 
-    restrict_home_css = ["#asc-header-con", ".mar-pagination-section"]
-    restrict_product_css = [".inverted", ]
+    listings_css = ["#asc-header-con", ".mar-pagination-section"]
+    products_css = [".inverted", ]
 
     rules = (
-        Rule(LinkExtractor(restrict_css=restrict_home_css)),
-        Rule(LinkExtractor(restrict_css=restrict_product_css), callback="parse_item"),
+        Rule(LinkExtractor(restrict_css=listings_css)),
+        Rule(LinkExtractor(restrict_css=products_css), callback="parse_item"),
     )
 
     def parse_item(self, response):
