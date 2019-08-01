@@ -66,21 +66,23 @@ class BoohooManSpider(scrapy.Spider):
 
         This method extract all data of an item from a page
         """
-        product_name = response.css(
-            'h1.product-name.js-product-name::text').get()
-        print('Processing : {}'.format(product_name))
-        product_code = response.css(
+        item = Item()
+        item['product_link'] = response.url
+        item['product_code'] = response.css(
             'div.product-number > span::text').get()
-        product_price = response.css(
+        item['product_name'] = response.css(
+            'h1.product-name.js-product-name::text').get()
+        item['product_price'] = response.css(
             'span.price-sales::text').get().strip()
-        color = response.css('span.selected-value::text').get().strip()
-        category = response.css(
+        item['product_category'] = response.css(
             'li+li.breadcrumb-item > a > span::text').get()
-        description = response.css(
+        color = response.css('span.selected-value::text').get().strip()
+        item['product_description'] = response.css(
             '#product-short-description-tab > div > p+p').get()
-        tags_count = re.findall(r'<[^>]+>', description)
-        description = re.sub(re.compile(r'<[^>]+>'), '',
-                             description, len(tags_count))
+        tags_count = re.findall(r'<[^>]+>', item['product_description'])
+        item['product_description'] = re.sub(re.compile(r'<[^>]+>'), '',
+                                             item['product_description'],
+                                             len(tags_count))
 
         sizes = response.css(
             'ul.swatches.size.clearfix > li.selectable > \
@@ -88,20 +90,16 @@ class BoohooManSpider(scrapy.Spider):
         sizes = [size.strip() for size in sizes]
         images = [
             'https://i1.adis.ws/i/boohooamplience/{}_{}_xl'
-            .format(product_code.lower(), color)]
+            .format(item['product_code'].lower(), color)]
 
         for i in range(1, 4):
             images.append('https://i1.adis.ws/i/boohooamplience/{}_{}_xl_{}'
                           .format(
-                              product_code.lower(), color, i))
+                              item['product_code'].lower(), color, i))
         colors = response.css(
             'ul.swatches.color.clearfix > li.selectable:not(.selected) > \
             span::attr(data-href)').getall()
-        skus = ProductSkus()
-        item = Item(product_code=product_code, product_price=product_price,
-                    product_name=product_name, product_description=description,
-                    product_category=category, product_link=response.url,
-                    data_skus=[])
+
         skus = ProductSkus(color=color, sizes=sizes, pictures=images)
         item["data_skus"].append(skus)
         if colors:

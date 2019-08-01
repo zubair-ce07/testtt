@@ -1,4 +1,4 @@
-""""Boohooman Items Module.
+"""Boohooman Items Module.
 
 This is a module for Boohooman product Items
 """
