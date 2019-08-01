@@ -7,7 +7,7 @@ import re
 
 import scrapy
 
-from ..items import Item, ProductSkus
+from boohooman.items import Item, ProductSkus
 
 
 class BoohooManSpider(scrapy.Spider):
@@ -57,7 +57,6 @@ class BoohooManSpider(scrapy.Spider):
         items_url = response.css(
             'a.name-link.js-canonical-link::attr(data-href)').getall()
         for url in items_url:
-            # yield scrapy.Request(url, callback=self.parse_item)
             yield scrapy.Request(
                 url, callback=self.parse_item)
 
@@ -66,45 +65,11 @@ class BoohooManSpider(scrapy.Spider):
 
         This method extract all data of an item from a page
         """
-        item = Item()
-        item['product_link'] = response.url
-        item['product_code'] = response.css(
-            'div.product-number > span::text').get()
-        item['product_name'] = response.css(
-            'h1.product-name.js-product-name::text').get()
-        item['product_price'] = response.css(
-            'span.price-sales::text').get().strip()
-        item['product_category'] = response.css(
-            'li+li.breadcrumb-item > a > span::text').get()
-        color = response.css('span.selected-value::text').get().strip()
-        item['product_description'] = response.css(
-            '#product-short-description-tab > div > p+p').get()
-        tags_count = re.findall(r'<[^>]+>', item['product_description'])
-        item['product_description'] = re.sub(re.compile(r'<[^>]+>'), '',
-                                             item['product_description'],
-                                             len(tags_count))
-        item['data_skus'] = []
-
-        print("Processing : {}".format(item['product_name']))
-
-        sizes = response.css(
-            'ul.swatches.size.clearfix > li.selectable > \
-            span::text').getall()
-        sizes = [size.strip() for size in sizes]
-        images = [
-            'https://i1.adis.ws/i/boohooamplience/{}_{}_xl'
-            .format(item['product_code'].lower(), color)]
-
-        for i in range(1, 4):
-            images.append('https://i1.adis.ws/i/boohooamplience/{}_{}_xl_{}'
-                          .format(
-                              item['product_code'].lower(), color, i))
+        item = self.make_item(response)
         colors = response.css(
             'ul.swatches.color.clearfix > li.selectable:not(.selected) > \
             span::attr(data-href)').getall()
 
-        skus = ProductSkus(color=color, sizes=sizes, pictures=images)
-        item["data_skus"].append(skus)
         if colors:
             request = scrapy.Request(
                 colors[0], callback=self.parse_item_color)
@@ -139,10 +104,6 @@ class BoohooManSpider(scrapy.Spider):
         item = response.meta['item']
         skus = ProductSkus(color=color, sizes=sizes, pictures=images)
         item['data_skus'].append(skus)
-        # self.items_data[product_code][color] = {
-        #     'sizes': sizes,
-        #     'images': images
-        # }
         colors = response.meta['colors'].remove(response.url)
         if colors:
             request = scrapy.Request(
@@ -152,3 +113,48 @@ class BoohooManSpider(scrapy.Spider):
             yield request
         else:
             yield item
+
+    def make_item(self, response):
+        """Extract item from a response.
+
+        This method extract all data of an item from a response and then
+        return it
+        """
+        item = Item()
+        item['product_link'] = response.url
+        item['product_code'] = response.css(
+            'div.product-number > span::text').get()
+        item['product_name'] = response.css(
+            'h1.product-name.js-product-name::text').get()
+        item['product_price'] = response.css(
+            'span.price-sales::text').get().strip()
+        item['product_category'] = response.css(
+            'li+li.breadcrumb-item > a > span::text').get()
+        color = response.css('span.selected-value::text').get().strip()
+
+        description = response.css(
+            '#product-short-description-tab > div > p+p').get()
+        if description:
+            item['product_description'] = description
+            item['product_description'] = re.sub(re.compile(r'<[^>]+>'), '',
+                                                 item['product_description'])
+        item['data_skus'] = []
+
+        print("Processing : {}".format(item['product_name']))
+
+        sizes = response.css(
+            'ul.swatches.size.clearfix > li.selectable > \
+            span::text').getall()
+        sizes = [size.strip() for size in sizes]
+        images = [
+            'https://i1.adis.ws/i/boohooamplience/{}_{}_xl'
+            .format(item['product_code'].lower(), color)]
+
+        for i in range(1, 4):
+            images.append('https://i1.adis.ws/i/boohooamplience/{}_{}_xl_{}'
+                          .format(
+                              item['product_code'].lower(), color, i))
+        skus = ProductSkus(color=color, sizes=sizes, pictures=images)
+        item["data_skus"].append(skus)
+
+        return item
