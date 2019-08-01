@@ -133,14 +133,6 @@ class VermontSpider(scrapy.Spider):
         docket_loader.add_value('spider_name', self.name)
         docket_loader.add_value('state', "VT")
 
-        # yield response.follow(
-        #     url=response.url + '/FV-People-Portal',
-        #     callback=self.parse_filing_parties,
-        #     meta={
-        #         'docket_loader': docket_loader
-        #     }
-        # )
-
         return response.follow(
             url=response.url + '/FV-People-Portal',
             callback=self.parse_filing_parties,
