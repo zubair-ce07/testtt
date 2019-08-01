@@ -169,7 +169,7 @@ class ProceedingsSpider(scrapy.Spider):
         loader.add_value('total_filing_count', len(filings_rows))
         loader.add_value('filing_count', 0)
 
-        for i, row in enumerate(filings_rows):
+        for row in enumerate(filings_rows):
             filing = {
                 "description": row.xpath('td[4]/text()').get(),
                 "documents": [],
@@ -183,10 +183,9 @@ class ProceedingsSpider(scrapy.Spider):
             yield scrapy.Request(
                 url=documents_link,
                 callback=self.parse_documents,
-                meta={'loader': loader, 'filing': filing}
+                meta={'loader': loader, 'filing': filing},
+                dont_filter=True
             )
-
-            print("Filing Number", (i+1))
 
     def parse_documents(self, response):
         """
@@ -200,29 +199,21 @@ class ProceedingsSpider(scrapy.Spider):
         loader, filing = response.meta["loader"], \
             response.meta["filing"]
 
-        # # populating filing with respective documents
-        # filing = self.get_filing_with_documents(response, filing)
-        # # updating filings
-        # filings = loader.load_item()['filings'].append(filing) \
-        #     if 'filings' in loader.load_item() else [filing]
+        # populating filing with respective documents
+        filing = self.get_filing_with_documents(response, filing)
+        # updating filings
+        filings = loader.load_item()['filings'].append(filing) \
+            if 'filings' in loader.load_item() else [filing]
 
-        # loader.replace_value('filings', filings)
+        loader.replace_value('filings', filings)
 
         loader.replace_value(
             'filing_count',
             loader.load_item()['filing_count'] + 1
         )
-        # Check if its last request so we can yield the item
-        print("REQUEST FOR ",
-              loader.load_item()["state_id"],
-              loader.load_item()["filing_count"],
-              loader.load_item()["total_filing_count"])
 
+        # Check if its last request so we can yield the item
         if self.is_last_request(loader):
-            print("LAST REQUEST FOR ",
-                  loader.load_item()["state_id"],
-                  loader.load_item()["filing_count"],
-                  loader.load_item()["total_filing_count"])
             return loader.load_item()
 
     def is_last_request(self, loader):
@@ -256,7 +247,7 @@ class ProceedingsSpider(scrapy.Spider):
         for proceeding in response.xpath(proceedings_selector).getall():
             ids += re.findall(r'\w\d{7}', proceeding)
 
-        return ['A1803016', 'R1812006']
+        return ids
 
     def get_form_states(self, response):
         """ Getting VIEWSTATE from asp pages"""
