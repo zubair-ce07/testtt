@@ -1,62 +1,70 @@
 from __future__ import absolute_import
+
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
-from django.http import Http404
-from django.shortcuts import render, redirect
 from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import render, redirect
+from django.views.generic import ListView, DetailView
+from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from taskmanager.forms import TaskForm, UserRegistrationForm, UpdateProfileForm
 from taskmanager.models import Task, CustomUser
 
 
-def task_index(request):
-    tasks = Task.objects.all().order_by('due_date')
-    context = {
-        'tasks': tasks,
-    }
-    return render(request, 'task_index.html', context)
+class TaskIndexView(ListView):
+    template_name = 'task_index.html'
+
+    def get(self, request, *args, **kwargs):
+        tasks = Task.objects.all().order_by('due_date')
+        context = {
+            'tasks': tasks,
+        }
+        return render(request, self.template_name, context)
 
 
-def task_detail(request, pk):
-    task = Task.objects.get(id=pk)
-    context = {
-        'task': task
-    }
-    return render(request, 'task_detail.html', context)
+class TaskDetailView(DetailView):
+    template_name = 'task_detail.html'
+
+    def get(self, request, *args, **kwargs):
+        task = Task.objects.get(id=kwargs['pk'])
+        context = {
+            'task': task
+        }
+        return render(request, self.template_name, context)
 
 
-def user_detail(request, pk):
-    try:
-        user = CustomUser.objects.get(id=pk)
-    except CustomUser.DoesNotExist:
-        raise Http404
-    context = {
-        'user': user
-    }
-    return render(request, 'user_detail.html', context)
+class CreateTaskView(LoginRequiredMixin, CreateView):
+    template_name = 'create_task.html'
 
+    def get(self, request, *args, **kwargs):
+        form = TaskForm()
+        context = {
+            'form': form
+        }
+        return render(request, self.template_name, context)
 
-@login_required
-def create_task(request):
-    form = TaskForm()
-    if request.method == 'POST':
+    def post(self, request, *args, **kwargs):
         form = TaskForm(request.POST)
         if form.is_valid():
             form.save()
             messages.success(request, 'Task created, an email will be sent to you soon!')
         return redirect('task_index')
 
-    context = {
-        'form': form
-    }
-    return render(request, 'create_task.html', context)
 
+class EditTaskView(LoginRequiredMixin, UpdateView):
+    template_name = 'edit_task.html'
 
-@login_required
-def edit_task(request, pk):
-    task = Task.objects.get(id=pk)
-    form = TaskForm(instance=task)
-    if request.method == 'POST':
+    def get(self, request, *args, **kwargs):
+        task = Task.objects.get(id=kwargs['pk'])
+        form = TaskForm(instance=task)
+        context = {
+            'form': form
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request, *args, **kwargs):
+        task = Task.objects.get(id=kwargs['pk'])
         form = TaskForm(request.POST, instance=task)
         if form.is_valid():
             if request.user.username == form.cleaned_data['assignee'].username \
@@ -66,54 +74,73 @@ def edit_task(request, pk):
                 return redirect('task_index')
             messages.error(request, 'Not authorized')
             return redirect('task_index')
-        return render(request, 'edit_task.html', {'task': task})
-    context = {
-        'form': form
-    }
-    return render(request, 'edit_task.html', context)
+        return render(request, self.template_name, {'task': task})
 
 
-@login_required
-def edit_user(request, pk):
-    user = CustomUser.objects.get(id=pk)
-    form = UpdateProfileForm(instance=user)
-    if request.method == 'POST':
+class DeleteTaskView(LoginRequiredMixin, DeleteView):
+    template_name = "delete_task.html"
+
+    def get(self, request, *args, **kwargs):
+        task = Task.objects.get(id=kwargs['pk'])
+        return render(request, self.template_name, {'task': task})
+
+    def post(self, request, *args, **kwargs):
+        task = Task.objects.get(id=kwargs['pk'])
+        task.delete()
+        messages.success(request, 'Task deleted!')
+        return redirect('task_index')
+
+
+class UserDetailView(DetailView):
+    template_name = 'user_detail.html'
+
+    def get(self, request, *args, **kwargs):
+        user = CustomUser.objects.get(id=kwargs['pk'])
+        context = {
+            'user': user
+        }
+        return render(request, self.template_name, context)
+
+
+class EditUserView(LoginRequiredMixin, UpdateView):
+    template_name = 'edit_user.html'
+
+    def get(self, request, *args, **kwargs):
+        user = CustomUser.objects.get(id=kwargs['pk'])
+        form = UpdateProfileForm(instance=user)
+        context = {
+            'form': form
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request, *args, **kwargs):
+        user = CustomUser.objects.get(id=kwargs['pk'])
         form = UpdateProfileForm(request.POST, request.FILES, instance=user)
         if form.is_valid():
             form.save()
             return redirect('user_detail', user.id)
-        return render(request, 'edit_user.html', {'user': user})
-    context = {
-        'form': form
-    }
-    return render(request, 'edit_user.html', context)
+        return render(request, self.template_name, {'user': user})
 
 
-@login_required
-def change_password(request, pk):
-    user = CustomUser.objects.get(id=pk)
-    form = PasswordChangeForm(user=user)
-    if request.method == 'POST':
+class ChangePasswordView(LoginRequiredMixin, UpdateView):
+    template_name = 'registration/password_change_form.html'
+
+    def get(self, request, *args, **kwargs):
+        user = CustomUser.objects.get(id=kwargs['pk'])
+        form = PasswordChangeForm(user=user)
+        return render(request, self.template_name, {
+            'form': form,
+            'user': user
+        })
+
+    def post(self, request, *args, **kwargs):
+        user = CustomUser.objects.get(id=kwargs['pk'])
         form = PasswordChangeForm(request.POST, instance=user)
         if form.is_valid():
             saved_form = form.save()
             update_session_auth_hash(request, saved_form)
             return redirect('user_detail', user.id)
-        return render(request, 'registration/password_change_form.html', {'user': user})
-    return render(request, 'registration/password_change_form.html', {
-        'form': form,
-        'user': user
-    })
-
-
-@login_required
-def delete_task(request, pk):
-    task = Task.objects.get(id=pk)
-    if request.method == 'POST':
-        task.delete()
-        messages.success(request, 'Task deleted!')
-        return redirect('task_index')
-    return render(request, 'delete_task.html', {'task': task})
+        return render(request, self.template_name, {'user': user})
 
 
 def redirect_task_index(request):
