@@ -1,10 +1,6 @@
 import argparse
-import requests
 
-from bs4 import BeautifulSoup
-
-from classes import *
-
+from concurrent_spider import ConcurrentSpider
 
 
 parser = argparse.ArgumentParser()
@@ -16,32 +12,14 @@ args = parser.parse_args()
 
 
 def main():
-
-    urls = get_urls(args.website)
+    start_url = args.website
     max_urls = int(args.max_urls)
     concurrent_requests = int(args.concurrent_requests)
     dl_delay = float(args.download_delay)
-    concurrent_crawler = RecursiveCrawler(urls, concurrent_requests, max_urls, dl_delay)
-    concurrent_crawler.event_loop()
-    print(f'\nTotal Number of Requests: {concurrent_crawler.request_count}')
-    print(f'Total Bytes Downloaded: {concurrent_crawler.length}')
-    print(f'Average File Size: {round(concurrent_crawler.length / max_urls)}')
+    concurrent_crawler = ConcurrentSpider(start_url, max_urls, dl_delay, concurrent_requests)
+    concurrent_crawler.crawl()
+    concurrent_crawler.print_results()
 
 
-def get_urls(url):
-    url_list = []
-    response = requests.get(url)
-    soup = BeautifulSoup(response.text, 'lxml')
-    for link in soup.findAll('a'):
-        url = link.get('href')
-        if re.match('http', str(url)):
-            url_list.append(url)
-        else:
-            continue
-
-    return url_list
-
-
-if __name__ == '__main__':
+if __name__== '__main__':
     main()
-
