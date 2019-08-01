@@ -25,7 +25,6 @@ class CrawlWorker:
             and url
 
     async def handle_response(self, response):
-        await asyncio.sleep(CrawlWorker.download_delay)
         CrawlWorker.page_loaded_successfully += 1
         CrawlWorker.total_bytes_downloaded += len(response)
         selector = Selector(response)
@@ -51,9 +50,5 @@ class CrawlWorker:
                 if resp.status == SUCCESS_RESPONSE_CODE:
                     response = await resp.text()
                     await self.handle_response(response)
-                    if CrawlWorker.loading_request_made < CrawlWorker.total_pages_to_load:
-                        await self.request()
                 else:
-                    if CrawlWorker.total_pages_to_load >= CrawlWorker.loading_request_made:
-                        CrawlWorker.loading_request_made -= 1
-                        await self.request()
+                    CrawlWorker.loading_request_made -= 1

@@ -40,6 +40,7 @@ async def main():
             if len(crawl_workers) >= CrawlWorker.cuncurrent_request_allowed:
                 _done, crawl_workers = await asyncio.wait(
                     crawl_workers, return_when=asyncio.FIRST_COMPLETED)
+            await asyncio.sleep(CrawlWorker.download_delay)
             crawl_workers.add(loop.create_task(create_worker()))
         else:
             await asyncio.wait(crawl_workers, return_when=asyncio.FIRST_COMPLETED)
