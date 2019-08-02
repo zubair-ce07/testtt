@@ -150,10 +150,11 @@ class ProceedingsSpider(scrapy.Spider):
             }
             # Getting doucments for each filing
             documents_link = row.css('td a::attr("href")').get()
+            if re.search('orderadocument', documents_link):
+                self.decrement_total_filing_count(response)
+                continue
 
             response.meta['filing'] = filing
-            count += 1
-            response.meta['filing_number'] = count
             yield scrapy.Request(
                 url=documents_link,
                 callback=self.parse_documents,
@@ -229,9 +230,9 @@ class ProceedingsSpider(scrapy.Spider):
             for futher processing.
             Skipping orderadocument urls
         """
-        if re.search('orderadocument', response.url):
-            self.decrement_total_filing_count(response)
-            return
+        # if re.search('orderadocument', response.url):
+        #     self.decrement_total_filing_count(response)
+        #     return
         # Getting pages
         pages_selector = '//a[contains(@href, "rptPages")]/@href'
         # Sending request for paginations
@@ -345,6 +346,10 @@ class ProceedingsSpider(scrapy.Spider):
             get total filling count from response and
             update the total_filing_count in loader
         """
+        print(response.url)
+        print(response.xpath(
+            '//*[contains(@class, "pagination")]'
+        ).get())
         loader = response.meta['loader']
         total_filing_count = int(
             response.xpath(
