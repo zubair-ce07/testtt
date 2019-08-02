@@ -319,18 +319,14 @@ class VermontSpider(scrapy.Spider):
     def get_end_date():
         """ return current date """
 
-        search_start_date = datetime.now().date()
-        search_start_date = search_start_date.strftime("%m/%d/%Y")
-
-        return search_start_date
+        return datetime.now().date().strftime("%m/%d/%Y")
 
     def get_start_date(self):
         """ return date till where you want data """
 
         search_end_date = (datetime.now() - timedelta(days=int(self.days))).date()
-        search_end_date = search_end_date.strftime("%m/%d/%Y")
 
-        return search_end_date
+        return search_end_date.strftime("%m/%d/%Y")
 
     @staticmethod
     def removed_garbage_from_data(data_list):
