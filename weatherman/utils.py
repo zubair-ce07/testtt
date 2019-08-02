@@ -36,7 +36,7 @@ def get_max_temperature(weather_data):
     max_temperature_weather = weather_data[0]
     for weather in weather_data:
         if weather.max_temperature and int(weather.max_temperature) > int(max_temperature_weather.max_temperature):
-                max_temperature_weather = weather
+            max_temperature_weather = weather
     return max_temperature_weather
 
 
@@ -47,8 +47,8 @@ def get_min_temperature(weather_data):
     """
     min_temperature_weather = weather_data[0]
     for weather in weather_data:
-       if weather.max_temperature and int(weather.max_temperature) > int(max_temperature_weather.max_temperature):
-                min_temperature_weather = weather
+        if weather.max_temperature and int(weather.max_temperature) > int(max_temperature_weather.max_temperature):
+            min_temperature_weather = weather
     return min_temperature_weather
 
 
