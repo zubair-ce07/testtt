@@ -34,10 +34,9 @@ def prepare_weather_man(path_to_file):
         for weather_row in read_and_filter_csv_file(full_file_path, is_comment, is_whitespace):
             weather_record_date = datetime.strptime(weather_row.get('PKT'), '%Y-%m-%d') if weather_row.get('PKT') \
                 else datetime.strptime(weather_row.get('PKST'), '%Y-%m-%d')
-            weatherman_row = WeatherMan(weather_record_date,
-                                        weather_row['Max TemperatureC'],
-                                        weather_row["Min TemperatureC"],
-                                        weather_row['Max Humidity'], weather_row[' Mean Humidity'])
+            weatherman_row = WeatherMan(weather_record_date, weather_row['Max TemperatureC'],
+                                        weather_row["Min TemperatureC"], weather_row['Max Humidity'],
+                                        weather_row[' Mean Humidity'])
             weather_records.append(weatherman_row)
 
 
