@@ -1,4 +1,4 @@
-import w3lib.url
+from w3lib.url import url_query_cleaner
 from datetime import datetime
 
 from scrapy.spiders import CrawlSpider, Rule
@@ -21,12 +21,25 @@ class OrsaySpider(CrawlSpider):
 
     gender = "Women"
 
-    listings_css = [".level-1", "load-more-wrapper"]
+    current_products = 0
+
+    listings_css = [".level-1"]
     products_css = [".thumb-link"]
 
     rules = (
-        Rule(LinkExtractor(restrict_css=listings_css)),
-        Rule(LinkExtractor(restrict_css=products_css), callback='parse_item'))
+        Rule(LinkExtractor(restrict_css=listings_css), callback="pagination"),
+        Rule(LinkExtractor(restrict_css=products_css), callback="parse_item"),
+    )
+
+    def pagination(self, response):
+        pagination_details = self.get_pagination_details(response)
+        if pagination_details:
+            self.current_products += pagination_details['product_size']
+
+            while self.current_products < pagination_details['max_products']:
+                next_page = pagination_details['pagination_url'] + str(self.current_products)
+                self.current_products += pagination_details['product_size']
+                yield Request(next_page, callback=self.parse)
 
     def parse_item(self, response):
         garment = OrsayItem()
@@ -56,6 +69,20 @@ class OrsaySpider(CrawlSpider):
     def clean_price(self, price):
         return price.strip().replace(",", "")
 
+    def get_pagination_details(self, response):
+        self.current_products = 0
+        pagination_url = response.url + "?sz="
+        max_products_css = ".js-pagination-product-count::attr(data-count)"
+        product_size_css = "#search-result-items > li:nth-child(72)::attr(data-idx)"
+        product_size = response.css(product_size_css).get()
+        max_products = response.css(max_products_css).get()
+        if max_products:
+            return {
+                "pagination_url": pagination_url,
+                "max_products": int(max_products),
+                "product_size": int(product_size)
+            }
+
     def get_product_name(self, response):
         css = ".product-name::text"
         return response.css(css).get()
@@ -70,7 +97,7 @@ class OrsaySpider(CrawlSpider):
 
     def get_image_urls(self, response):
         css = ".primary-image::attr(src)"
-        return [w3lib.url.url_query_cleaner(url) for url in response.css(css).getall()]
+        return [url_query_cleaner(url) for url in response.css(css).getall()]
 
     def get_product_care(self, response):
         css = ".product-material p::text"
@@ -82,7 +109,7 @@ class OrsaySpider(CrawlSpider):
 
     def get_product_category(self, response):
         css = ".breadcrumb-element-link span::text"
-        return response.css(css).getall()[1]
+        return response.css(css).getall()
 
     def get_crawl_id(self):
         return f"{self.retailer}-{datetime.now().strftime('%Y%m%d-%H%M%s')}-medp"
@@ -102,11 +129,13 @@ class OrsaySpider(CrawlSpider):
         return response.css(currency_css).get()
 
     def get_product_pricing(self, response):
-        pricing = {"previous_price": self.get_previous_price(response)} if self.get_previous_price(response) else {}
-        pricing.update({
+        pricing = {
             "price": self.get_sale_price(response),
             "currency": self.get_price_currency(response)
-        })
+        }
+        if self.get_previous_price(response):
+            pricing.update({"previous_price": self.get_previous_price(response)})
+
         return pricing
 
     def color_requests(self, response, garment):
@@ -131,14 +160,13 @@ class OrsaySpider(CrawlSpider):
         out_of_stock_sizes_css = ".swatches.size .unselectable .swatchanchor::text"
 
         selected_color = response.css(selected_color_css).get()
-        out_of_stock_sizes = self.clean(response.css(out_of_stock_sizes_css).getall())
         common_sku = self.get_product_pricing(response)
         common_sku["color"] = selected_color
 
         for size in response.css(sizes_css) or ["single_size"]:
             sku = common_sku.copy()
             sku["size"] = size.get().strip()
-            if size in out_of_stock_sizes:
+            if size in response.css(out_of_stock_sizes_css):
                 sku["out_of_stock"] = True
             skus[f"{sku['color']}_{sku['size']}"] = sku
 
