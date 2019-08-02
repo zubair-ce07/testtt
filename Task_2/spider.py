@@ -20,13 +20,14 @@ def setup_arguments():
 async def main():
 
     commandline_arguments = setup_arguments()
-    await CrawlWorker.setup_worker(
+    worker = CrawlWorker(
         commandline_arguments.page_count,
         commandline_arguments.c_requests,
         commandline_arguments.download_delay / 1000,
         "https://arbisoft.com/",
         loop
     )
+    await worker.start_crawling()
 
 loop = asyncio.get_event_loop()
 try:
