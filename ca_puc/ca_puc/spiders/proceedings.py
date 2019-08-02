@@ -9,7 +9,6 @@ import scrapy
 from scrapy_splash import SplashRequest
 from scrapy.loader import ItemLoader
 from scrapy.loader.processors import MapCompose
-from pprint import pprint
 import re
 
 from ..items import CaPucItem
@@ -65,7 +64,6 @@ class ProceedingsSpider(scrapy.Spider):
         # Getting pages
         pages_selector = '//a[contains(@href, "rptPages")]/@href'
         # Sending request for paginations
-        print(len(response.xpath(pages_selector).getall()))
         for p in response.xpath(pages_selector).getall():
             event_target = p.split("'")[1]
             # creating a form data for request
@@ -90,7 +88,6 @@ class ProceedingsSpider(scrapy.Spider):
             individual request for each proceeding id
         """
         proceeding_ids = self.get_proceeding_ids(response)
-        print(list(set(proceeding_ids)))
         for p_id in proceeding_ids:
             yield scrapy.Request(
                 url='{}{}'.format(self.proceeding_details_url, p_id),
@@ -98,9 +95,9 @@ class ProceedingsSpider(scrapy.Spider):
                 meta={'proceeding_id': p_id},
             )
 
-        # if "do_pagination" in response.meta and response.meta["do_pagination"]:
-        #     for next_proceeding in self.do_proceedings_pagination(response):
-        #         yield next_proceeding
+        if "do_pagination" in response.meta and response.meta["do_pagination"]:
+            for next_proceeding in self.do_proceedings_pagination(response):
+                yield next_proceeding
 
     def parse_proceedings_details(self, response):
         """
@@ -110,7 +107,6 @@ class ProceedingsSpider(scrapy.Spider):
 
             meta_data: loader:ItemLoader
         """
-        # print('parse_proceedings_details headers', response.headers)
         proceeding_id = response.meta['proceeding_id']
 
         loader = ItemLoader(item=CaPucItem(), response=response)
@@ -144,7 +140,6 @@ class ProceedingsSpider(scrapy.Spider):
         # update loaders with meta data of filing count and total filings
         self.update_total_filing_count(response)
 
-        count = 0
         for row in filings_rows:
             filing = {
                 "description": row.xpath('td[4]/text()').get(),
@@ -165,11 +160,10 @@ class ProceedingsSpider(scrapy.Spider):
                 meta=response.meta,
                 dont_filter=True
             )
-            print(count)
 
         # Doing pagination for filings
-        # for filing_next_page in self.do_filings_pagination(response):
-        #     yield filing_next_page
+        for filing_next_page in self.do_filings_pagination(response):
+            yield filing_next_page
 
     def do_filings_pagination(self, response):
         """
@@ -273,7 +267,6 @@ class ProceedingsSpider(scrapy.Spider):
 
             return required item
         """
-        print("FILING NUMBER -----> ", response.meta["filing_number"])
         loader, filing = response.meta["loader"], \
             response.meta["filing"]
 
@@ -290,7 +283,6 @@ class ProceedingsSpider(scrapy.Spider):
         )
         # Check if its last request so we can yield the item
         if self.is_last_request(loader):
-            print("Last Request")
             return loader.load_item()
 
     def get_filing_with_documents(self, response, filing):
