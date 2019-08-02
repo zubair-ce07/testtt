@@ -1,6 +1,4 @@
 import asyncio
-from time import time
-from urllib.parse import urlparse
 import argparse
 
 from crawl_worker import CrawlWorker
@@ -19,41 +17,16 @@ def setup_arguments():
 
     return parser.parse_args()
 
-async def create_worker(cuncurrent_task_lock):
-    worker = CrawlWorker()
-    await worker.request()
-    try:
-        await cuncurrent_task_lock.release()
-    except TypeError:
-        pass
-
 async def main():
 
     commandline_arguments = setup_arguments()
-    download_delay = commandline_arguments.download_delay / 1000
-    CrawlWorker.total_pages_to_load = commandline_arguments.page_count
-
-    url = urlparse("https://arbisoft.com/")
-    await CrawlWorker.url_queue.put(url)
-    crawl_workers = set()
-    cuncurrent_task_lock = asyncio.Semaphore(value=commandline_arguments.c_requests)
-    start_time = time()
-    while CrawlWorker.page_loaded_successfully < CrawlWorker.total_pages_to_load:
-        await cuncurrent_task_lock.acquire()
-        await asyncio.sleep(download_delay)
-        crawl_workers.add(loop.create_task(create_worker(cuncurrent_task_lock)))
-
-    await asyncio.wait(crawl_workers)
-
-    total_bytes_downloaded = CrawlWorker.total_bytes_downloaded
-    total_pages_loaded = CrawlWorker.page_loaded_successfully
-    avg_page_size = total_bytes_downloaded / total_pages_loaded
-
-    print(f"\nTotal pages loaded: {total_pages_loaded}")
-    print(f"Total bytes downloaded: {total_bytes_downloaded}")
-    print(f"Average page size: {avg_page_size}")
-    print(f"Total time taken: {(time() - start_time)} seconds\n")
-
+    await CrawlWorker.setup_worker(
+        commandline_arguments.page_count,
+        commandline_arguments.c_requests,
+        commandline_arguments.download_delay / 1000,
+        "https://arbisoft.com/",
+        loop
+    )
 
 loop = asyncio.get_event_loop()
 try:
