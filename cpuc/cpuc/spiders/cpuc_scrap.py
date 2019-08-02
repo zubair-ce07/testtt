@@ -60,4 +60,9 @@ class CpucScrapSpider(scrapy.Spider):
         yield scrapy.Request(link, callback=self.scrap_documents)
 
     def scrap_documents(self, response):
-        print(response.url)
+        documents_links = LinkExtractor(
+            allow=r"http: // docs.cpuc.ca.gov/SearchRes.aspx?DocFormat \
+             = ALL & DocID =.*"
+        ).extract_links(response)
+        for link in documents_links:
+            print(link.url)
