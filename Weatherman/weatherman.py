@@ -50,9 +50,9 @@ def setup_arguments():
     return parser.parse_args()
 
 def perform_monthly_operations(command, date, weather_data_reader, report_printer, weather_analyzer):
-    monthly_weather_records = weather_data_reader.parse_weather_records(
-        given_year=date.year,
-        month_number=date.month
+    monthly_weather_records = weather_data_reader.get_weather_records(
+        year=date.year,
+        month=date.month
     )
     if command == 'a':
         weather_analyzer.weather_records = monthly_weather_records
@@ -65,13 +65,14 @@ def main():
     commandline_arguments = setup_arguments()
     weather_data_directory_path = commandline_arguments.data_directory
     weather_data_reader = WeathermanFileReader(weather_data_directory_path)
+    weather_data_reader.read_all_data()
     report_printer = WeathermanReportPrinter()
     weather_analyzer = WeatherAnalyzer(weather_records=[])
 
     if commandline_arguments.e:
         given_year = commandline_arguments.e.year
         yearly_weather_records = []
-        yearly_weather_records = weather_data_reader.parse_weather_records(given_year=given_year)
+        yearly_weather_records = weather_data_reader.get_weather_records(year=given_year)
 
         weather_analyzer.weather_records = yearly_weather_records
         report_printer.print_yearly_report(weather_analyzer.get_yearly_temperature_peaks())

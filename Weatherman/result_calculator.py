@@ -10,17 +10,9 @@ class WeatherAnalyzer:
 
     def get_yearly_temperature_peaks(self):
         
-        seq = [max(self.weather_records[i], key=attrgetter('max_temprature')) \
-                for i in range(len(self.weather_records))]
-        max_temprature = max(seq, key=attrgetter('max_temprature'))
-
-        seq = [min(self.weather_records[i], key=attrgetter('min_temprature')) \
-                for i in range(len(self.weather_records))]
-        min_temprature = min(seq, key=attrgetter('min_temprature'))
-
-        seq = [max(self.weather_records[i], key=attrgetter('max_humidity')) \
-                for i in range(len(self.weather_records))]
-        max_humidity = max(seq, key=attrgetter('max_humidity'))
+        max_temprature = max(self.weather_records, key=attrgetter('max_temprature'))
+        min_temprature = min(self.weather_records, key=attrgetter('min_temprature'))
+        max_humidity = max(self.weather_records, key=attrgetter('max_humidity'))
 
         result = WeatherResults(
             max_temprature=max_temprature,
