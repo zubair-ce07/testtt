@@ -1,6 +1,7 @@
-first_name,last_name,email,username,address1,birthday,password,profile_picture
+first_name,last_name,email,username,address,birthday,password,profile_picture
 jon,doe,user1@test.com,user1,address1,2019-07-10,12arbi345,images/avatars/tumblr_oab3m3nUHp1vn5n6to8_250_q3fZx2u.jpg
 peter,ahmad,user2@test.com,user2,address2,2019-07-11,12arbi345,images/avatars/tumblr_oab3m3nUHp1vn5n6to8_250_q3fZx2u.jpg
 michael,ali,user3@test.com,user3,address3,2019-07-12,12arbi345,images/avatars/tumblr_oab3m3nUHp1vn5n6to8_250_q3fZx2u.jpg
 ali,george,user4@test.com,user4,address4,2019-07-13,12arbi345,images/avatars/tumblr_oab3m3nUHp1vn5n6to8_250_q3fZx2u.jpg
 john,cena,user5@test.com,user5,address5,2019-07-14,12arbi345,images/avatars/tumblr_oab3m3nUHp1vn5n6to8_250_q3fZx2u.jpg
+rehan,ahmad,rehan.ahmad@arbisoft.com,rehan,address_rehan,2019-07-10,12arbi345,images/avatars/tumblr_oab3m3nUHp1vn5n6to8_250_q3fZx2u.jpg
