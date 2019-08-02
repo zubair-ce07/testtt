@@ -138,7 +138,8 @@ class ProceedingsSpider(scrapy.Spider):
         filings_rows = response.xpath(
             '//*[@class="apexir_WORKSHEET_DATA"]/tr[preceding-sibling::*]')
         # update loaders with meta data of filing count and total filings
-        self.update_total_filing_count(response)
+        if not self.update_total_filing_count(response):
+            return
 
         for row in filings_rows:
             filing = {
@@ -346,17 +347,18 @@ class ProceedingsSpider(scrapy.Spider):
             get total filling count from response and
             update the total_filing_count in loader
         """
-        print(response.url)
-        print(response.xpath(
-            '//*[contains(@class, "pagination")]'
-        ).get())
+        pagination_text = response.xpath(
+            '//*[contains(@class, "pagination")]/*/text()'
+        ).get()
+        if not pagination_text:
+            return False
+
         loader = response.meta['loader']
         total_filing_count = int(
-            response.xpath(
-                '//*[contains(@class, "pagination")]/*/text()'
-            ).get().split('of')[-1].strip()
+            pagination_text.split('of')[-1].strip()
         )
         loader.add_value('total_filing_count', total_filing_count)
+        return True
 
     def decrement_total_filing_count(self, response):
         """
