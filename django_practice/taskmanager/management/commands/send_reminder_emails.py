@@ -9,18 +9,19 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         current_date = datetime.date.today()
-        start_week = current_date - datetime.timedelta(current_date.weekday())
-        end_week = start_week + datetime.timedelta(7)
-        due_tasks = Task.objects.filter(due_date__range=[start_week, end_week])
+        due_date_to_check = current_date + datetime.timedelta(2)
+        due_tasks = Task.objects.filter(due_date__range=[current_date, due_date_to_check])
         for task in due_tasks:
             send_email.delay(
                 subject='Task reminder',
                 message='A task assigned to you by {} is due this week on {}.'.format(task.assigned_by.get_full_name(),
-                                                                                      task.due_date),
+                                                                                      task.due_date.strftime(
+                                                                                          '%d %B, %Y')),
                 recipients=[task.assignee.email])
             send_email.delay(
                 subject='Task reminder',
                 message='A task assigned by you to {} is due this week on {}.'.format(task.assignee.get_full_name(),
-                                                                                      task.due_date),
+                                                                                      task.due_date.strftime(
+                                                                                          '%d %B, %Y')),
                 recipients=[task.assigned_by.email])
         self.stdout.write(self.style.SUCCESS('Due emails will be sent soon'))
