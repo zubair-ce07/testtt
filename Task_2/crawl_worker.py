@@ -11,28 +11,28 @@ SUCCESS_RESPONSE_CODE = 200
 
 class CrawlWorker:
 
-    def __init__(self, total_pages_to_load, cuncurrent_request_allowed, \
-        download_delay, first_url, loop):
-        self.total_pages_to_load = total_pages_to_load
-        self.cuncurrent_request_allowed = cuncurrent_request_allowed
+    def __init__(self, crawl_limit, max_current_requests, \
+        download_delay, start_url, loop):
+        self.crawl_limit = crawl_limit
+        self.max_current_requests = max_current_requests
         self.download_delay = download_delay
         self.loop = loop
         self.url_queue = queue.Queue()
-        url = urlparse(first_url)
+        url = urlparse(start_url)
         self.url_queue.put(url)
-        self.visiting_domain = url.netloc
-        self.already_visisted_urls = []
+        self.allowed_domain = url.netloc
+        self.visisted_urls = []
         self.total_urls_requested = 0
-        self.page_loaded_successfully = 0
+        self.pages_visisted = 0
         self.total_bytes_downloaded = 0
 
     async def start_crawling(self):
         crawl_workers = set()
         cuncurrent_task_lock = asyncio.Semaphore(
-            value=self.cuncurrent_request_allowed
+            value=self.max_current_requests
         )
         start_time = time()
-        while self.page_loaded_successfully < self.total_pages_to_load:
+        while self.pages_visisted < self.crawl_limit:
             await cuncurrent_task_lock.acquire()
             await asyncio.sleep(self.download_delay)
             crawl_workers.add(self.loop.create_task(self.__create_request(cuncurrent_task_lock)))
@@ -43,7 +43,7 @@ class CrawlWorker:
     def __print_result(self, start_time):
 
         total_bytes_downloaded = self.total_bytes_downloaded
-        total_pages_loaded = self.page_loaded_successfully
+        total_pages_loaded = self.pages_visisted
         avg_page_size = total_bytes_downloaded / total_pages_loaded
 
         print(f"\nTotal pages loaded: {total_pages_loaded}")
@@ -59,12 +59,11 @@ class CrawlWorker:
             pass
 
     def __is_valid_url(self, url):
-        return (not url.geturl() in self.already_visisted_urls) \
-            and (url.netloc == self.visiting_domain) \
-            and url
+        if url and (url.netloc == self.allowed_domain):
+            return url.geturl() not in self.visisted_urls
 
     async def __handle_response(self, response):
-        self.page_loaded_successfully += 1
+        self.pages_visisted += 1
         self.total_bytes_downloaded += len(response)
         selector = Selector(response)
         href_links = selector.xpath('//a/@href').getall()
@@ -74,8 +73,8 @@ class CrawlWorker:
                 self.url_queue.put(new_url)
 
     def __is_request_allowed(self):
-        return (self.url_queue.qsize() != 0) and \
-            (self.total_urls_requested < self.total_pages_to_load)
+        return self.url_queue.qsize() and \
+            (self.total_urls_requested < self.crawl_limit)
 
     async def __crawl_request(self):
         if not self.__is_request_allowed():
