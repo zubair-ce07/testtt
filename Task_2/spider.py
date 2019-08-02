@@ -19,31 +19,29 @@ def setup_arguments():
 
     return parser.parse_args()
 
-async def create_worker():
+async def create_worker(cuncurrent_task_lock):
     worker = CrawlWorker()
     await worker.request()
+    try:
+        await cuncurrent_task_lock.release()
+    except TypeError:
+        pass
 
 async def main():
 
     commandline_arguments = setup_arguments()
-    CrawlWorker.cuncurrent_request_allowed = commandline_arguments.c_requests
-    CrawlWorker.download_delay = commandline_arguments.download_delay / 1000
+    download_delay = commandline_arguments.download_delay / 1000
     CrawlWorker.total_pages_to_load = commandline_arguments.page_count
 
     url = urlparse("https://arbisoft.com/")
     await CrawlWorker.url_queue.put(url)
     crawl_workers = set()
-
+    cuncurrent_task_lock = asyncio.Semaphore(value=commandline_arguments.c_requests)
     start_time = time()
     while CrawlWorker.page_loaded_successfully < CrawlWorker.total_pages_to_load:
-        if CrawlWorker.loading_request_made < CrawlWorker.total_pages_to_load:
-            if len(crawl_workers) >= CrawlWorker.cuncurrent_request_allowed:
-                _done, crawl_workers = await asyncio.wait(
-                    crawl_workers, return_when=asyncio.FIRST_COMPLETED)
-            await asyncio.sleep(CrawlWorker.download_delay)
-            crawl_workers.add(loop.create_task(create_worker()))
-        else:
-            await asyncio.wait(crawl_workers, return_when=asyncio.FIRST_COMPLETED)
+        await cuncurrent_task_lock.acquire()
+        await asyncio.sleep(download_delay)
+        crawl_workers.add(loop.create_task(create_worker(cuncurrent_task_lock)))
 
     await asyncio.wait(crawl_workers)
 

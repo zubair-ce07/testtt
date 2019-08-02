@@ -10,13 +10,11 @@ SUCCESS_RESPONSE_CODE = 200
 class CrawlWorker:
 
     total_bytes_downloaded = 0
-    cuncurrent_request_allowed = 5
     total_pages_to_load = 15
     page_loaded_successfully = 0
     url_queue = asyncio.Queue()
     loading_request_made = 0
     already_visisted_urls = []
-    download_delay = 0.1
     visiting_domain = None
 
     def __is_valid_url(self, url):
