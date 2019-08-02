@@ -83,8 +83,6 @@ class CrawlWorker:
         self.total_urls_requested += 1
         raw_url = self.url_queue.get()
         self.url_queue.task_done()
-        if not self.visiting_domain:
-            self.visiting_domain = raw_url.netloc
         url = raw_url.geturl()
         print(f"Loading URL: {url}")
         async with aiohttp.ClientSession() as session:
