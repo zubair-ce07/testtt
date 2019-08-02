@@ -98,17 +98,14 @@ def arg_parser():
                         help='Enter URL where you want to start crawling.',
                         default="https://www.tennis-warehouse.com/")
     parser.add_argument('-w', action='store', dest="concurrent_requests",
-                        type=lambda n: int(n) if int(n) > 0 else argparse.ArgumentTypeError(f"{d} is invalid."),
-                        help="Enter Number of concurrent requests a worker can make.",
-                        default=50)
+                        type=lambda n: int(n) if int(n) > 0 else 1,
+                        help="Enter Number of concurrent requests a worker can make.")
     parser.add_argument('-d', action='store', dest="download_delay",
-                        type=lambda d: float(d) if float(d) >= 0 else argparse.ArgumentTypeError(f"{d} is invalid."),
-                        help="Enter download delay that each worker has to follow.",
-                        default=2)
+                        type=lambda d: float(d) if float(d) >= 0 else 2,
+                        help="Enter download delay that each worker has to follow.")
     parser.add_argument('-m', action='store', dest="max_urls",
-                        type=lambda n: int(n) if int(n) > 0 else argparse.ArgumentTypeError(f"{d} is invalid."),
-                        help="Maximum number of URLs to crawl.",
-                        default=200)
+                        type=lambda n: int(n) if int(n) > 0 else 200,
+                        help="Maximum number of URLs to crawl.")
     parser.add_argument('-c', action='store', dest="crawler_to_run", type=str, choices=['parallel', 'concurrent'],
                         help="Enter 1 to run concurrent and 2 to run  parallel crawler.",
                         default="concurrent")
