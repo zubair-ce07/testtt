@@ -7,10 +7,7 @@ from weather_records import WeatherRecords
 
 
 def is_valid_weather_record(record):
-    for field in WeathermanFileReader.required_fields:
-        if not record.get(field):
-            return False
-    return True
+    return all(record.get(field) for field in WeathermanFileReader.required_fields)
 
 class WeathermanFileReader:
 
@@ -23,11 +20,12 @@ class WeathermanFileReader:
     def __init__(self, path):
         self.path = path
 
-    def parse_weather_records(self, given_year, month_number=""):
-        if month_number != "":
-            month_number = calendar.month_abbr[int(month_number)]
+    def parse_weather_records(self, given_year, month_number=0):
+        month_abbr = ""
+        if month_number != 0:
+            month_abbr = calendar.month_abbr[month_number]
         files = glob(WeathermanFileReader.filename_format.\
-                    format(self.path, given_year, month_number))
+                    format(self.path, given_year, month_abbr))
         yearly_weather_records = []
 
         for file in files:
@@ -40,6 +38,6 @@ class WeathermanFileReader:
                         if daily_data:
                             monthly_weather_records.append(daily_data)
             yearly_weather_records.append(monthly_weather_records)
-        if month_number != "":
+        if month_number != 0:
             return yearly_weather_records[0]
         return yearly_weather_records

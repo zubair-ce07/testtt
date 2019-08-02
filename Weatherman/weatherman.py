@@ -20,7 +20,7 @@ def valid_year(argument_value):
         if date.year < 2004 or date.year > 2016:
             msg = "Valid years: 2004 - 2016"
             raise argparse.ArgumentTypeError(msg)
-        return argument_value
+        return date
     except ValueError:
         msg = "Invalid year: '{0}'.".format(argument_value)
         raise argparse.ArgumentTypeError(msg)
@@ -32,7 +32,7 @@ def valid_date_format(argument_value):
         ending_date = datetime.strptime("2016/9", "%Y/%m")
         if (starting_date > date_entered) or (date_entered > ending_date):
             raise argparse.ArgumentTypeError()
-        return argument_value
+        return date_entered
     except Exception:
         msg = "invalid date/format: '{0}'.".format(argument_value) + \
                 " Plase use format: yyyy/mm and valid date: 2004/7 - 2016/9"
@@ -49,20 +49,17 @@ def setup_arguments():
 
     return parser.parse_args()
 
-def perform_monthly_operations(command, command_argument, weather_data_reader, \
-                                report_printer, weather_analyzer):
-    given_year = command_argument.split("/")[0]
-    month_number = command_argument.split("/")[1]
-
-    monthly_weather_records = weather_data_reader.parse_weather_records(given_year=given_year, \
-                                            month_number=month_number)
-
+def perform_monthly_operations(command, date, weather_data_reader, report_printer, weather_analyzer):
+    monthly_weather_records = weather_data_reader.parse_weather_records(
+        given_year=date.year,
+        month_number=date.month
+    )
     if command == 'a':
         weather_analyzer.weather_records = monthly_weather_records
         result = weather_analyzer.get_monthly_avg_results()
         report_printer.print_average_report(result)
     elif command == 'c':
-        report_printer.print_monthly_report(monthly_weather_records, month_number, given_year)
+        report_printer.print_monthly_report(monthly_weather_records, date.month, date.year)
 
 def main():
     commandline_arguments = setup_arguments()
@@ -72,7 +69,7 @@ def main():
     weather_analyzer = WeatherAnalyzer(weather_records=[])
 
     if commandline_arguments.e:
-        given_year = commandline_arguments.e
+        given_year = commandline_arguments.e.year
         yearly_weather_records = []
         yearly_weather_records = weather_data_reader.parse_weather_records(given_year=given_year)
 
