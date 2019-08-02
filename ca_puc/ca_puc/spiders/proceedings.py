@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-    This module implements a spider that crawls proceedings for a 
+    This module implements a spider that crawls proceedings for a
     given time period from the following website
     http://docs.cpuc.ca.gov/
 """
 
 import scrapy
-from scrapy_splash import SplashRequest, SplashFormRequest
+from scrapy_splash import SplashRequest
 from scrapy.loader import ItemLoader
 from scrapy.loader.processors import MapCompose
 from pprint import pprint
@@ -25,55 +25,32 @@ class ProceedingsSpider(scrapy.Spider):
     start_urls = [search_form_url]
     # download_delay = 5
 
-    def start_requests(self):
-        """
-            Fetch the JS rendered Search Form and
-            send the response to parse method
-        """
-        for url in self.start_urls:
-            yield SplashRequest(
-                url=url,
-                callback=self.parse,
-                endpoint='render.html',
-                args={
-                    'wait': 0.5
-                }
-            )
-
     def parse(self, response):
         """
             Get the search form and send a form request with
             given time period
         """
-        # print('parse headers', response.headers)
-
-        # getting the view state
-        view_state, \
-            view_state_generator,   \
-            event_validation = self.get_form_states(response)
-
         # creating a form data for request
         form_data = {
             '__EVENTTARGET': '',
             '__EVENTARGUMENT': '',
             'FilingDateFrom': '02/21/19',
             'FilingDateTo': '02/26/19',
-            '__VIEWSTATE': view_state,
-            '__VIEWSTATEGENERATOR': view_state_generator,
-            '__EVENTVALIDATION': event_validation,
             'IndustryID': '-1',
             'ddlCpuc01Types': '-1',
             'SearchButton': 'Search'
         }
         # yielding a Form Request
-        yield SplashFormRequest(
+        yield scrapy.FormRequest.from_response(
+            response,
             url=self.search_form_url,
             formdata=form_data,
             callback=self.parse_proceedings,
-            meta={'first_page': True}
+            formid="frmSearchform",
+            meta={'do_pagination': True}
         )
 
-    def get_all_proceeding_pages_requests(self, response):
+    def do_proceedings_pagination(self, response):
         """
             Get all of the remaining pages target and
             yield a form request to them.
@@ -82,11 +59,10 @@ class ProceedingsSpider(scrapy.Spider):
             view_state_generator, \
             event_validation = self.get_form_states(response)
         # Getting pages
-        pages_selector = '//*[@class="PageTable"]/tbody/tr/td[2]/a/@href'
+        pages_selector = '//a[contains(@href, "rptPages")]/@href'
         # Sending request for paginations
+        print(len(response.xpath(pages_selector).getall()))
         for p in response.xpath(pages_selector).getall():
-            if not p.startswith('javascript:__doPostBack'):
-                continue
             event_target = p.split("'")[1]
             # creating a form data for request
             form_data = {
@@ -97,12 +73,11 @@ class ProceedingsSpider(scrapy.Spider):
                 '__EVENTVALIDATION': event_validation
             }
             # yielding a Form Request
-            yield SplashFormRequest.from_response(
-                response,
+            yield scrapy.FormRequest(
                 url='http://docs.cpuc.ca.gov/SearchRes.aspx',
                 formdata=form_data,
                 callback=self.parse_proceedings,
-                meta={'first_page': False}
+                dont_filter=True
             )
 
     def parse_proceedings(self, response):
@@ -110,13 +85,6 @@ class ProceedingsSpider(scrapy.Spider):
             Get the search results and send an
             individual request for each proceeding id
         """
-        # print('parse_proceedings headers', response.headers)
-        # if response.meta['first_page']:
-        #     # processing the remaining all pages
-        #     for req in self.get_all_proceeding_pages_requests(response):
-        #         yield req
-
-        # print(response.text)
         proceeding_ids = self.get_proceeding_ids(response)
         print(list(set(proceeding_ids)))
         for p_id in proceeding_ids:
@@ -125,6 +93,10 @@ class ProceedingsSpider(scrapy.Spider):
                 callback=self.parse_proceedings_details,
                 meta={'proceeding_id': p_id},
             )
+
+        if "do_pagination" in response.meta and response.meta["do_pagination"]:
+            for next_proceeding in self.do_proceedings_pagination(response):
+                yield next_proceeding
 
     def parse_proceedings_details(self, response):
         """
@@ -169,7 +141,7 @@ class ProceedingsSpider(scrapy.Spider):
         loader.add_value('total_filing_count', len(filings_rows))
         loader.add_value('filing_count', 0)
 
-        for row in enumerate(filings_rows):
+        for row in filings_rows:
             filing = {
                 "description": row.xpath('td[4]/text()').get(),
                 "documents": [],
@@ -180,11 +152,12 @@ class ProceedingsSpider(scrapy.Spider):
             # Getting doucments for each filing
             documents_link = row.css('td a::attr("href")').get()
 
-            yield scrapy.Request(
+            yield SplashRequest(
                 url=documents_link,
                 callback=self.parse_documents,
                 meta={'loader': loader, 'filing': filing},
-                dont_filter=True
+                dont_filter=True,
+                dont_process_response=True
             )
 
     def parse_documents(self, response):
@@ -196,6 +169,7 @@ class ProceedingsSpider(scrapy.Spider):
 
             return required item
         """
+        print(response.headers)
         loader, filing = response.meta["loader"], \
             response.meta["filing"]
 
@@ -227,6 +201,7 @@ class ProceedingsSpider(scrapy.Spider):
             return the updated filing with documents
         """
         rows = response.css('#ResultTable tr:not([style])')
+        print(len(rows), " Documents Fetched ")
         for row in rows:
             source_url = row.css('.ResultLinkTD a::attr("href")').get()
             document = {
@@ -245,17 +220,18 @@ class ProceedingsSpider(scrapy.Spider):
         ids = []
         proceedings_selector = '//*[@class="ResultTitleTD"]/text()[2]'
         for proceeding in response.xpath(proceedings_selector).getall():
+            print(proceeding)
             ids += re.findall(r'\w\d{7}', proceeding)
 
         return ids
 
     def get_form_states(self, response):
         """ Getting VIEWSTATE from asp pages"""
-        view_state = response.css(
-            'input[name="__VIEWSTATE"]::attr(value)').get()
-        view_state_generator = response.css(
-            'input[name="__VIEWSTATEGENERATOR"]::attr(value)').get()
-        event_validation = response.css(
-            'input[name="__EVENTVALIDATION"]::attr(value)').get()
+        view_state = response.xpath(
+            '//input[contains(@id, "__VIEWSTATE")]/@value').get()
+        view_state_generator = response.xpath(
+            '//input[contains(@id, "__VIEWSTATEGENERATOR")]/@value').get()
+        event_validation = response.xpath(
+            '//input[contains(@id, "__EVENTVALIDATION")]/@value').get()
 
         return view_state, view_state_generator, event_validation
