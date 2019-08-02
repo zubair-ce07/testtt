@@ -27,7 +27,7 @@ class CpucScrapSpider(scrapy.Spider):
     def scrap_proceeding(self, response):
         proceeding_code = response.css(
             '.rc-content-main > h1::text').get().split('-')[0].strip()
-        print(proceeding_code)
+        # print(proceeding_code)
         filled_by = response.css(
             '#P56_FILED_BY::text').get()
         service_list_url = response.css(
@@ -55,4 +55,9 @@ class CpucScrapSpider(scrapy.Spider):
             "description": description,
             "staff": staff
         }
-        print(self.data[proceeding_code])
+        # print(self.data[proceeding_code])
+        link = response.url.replace('56', '57')
+        yield scrapy.Request(link, callback=self.scrap_documents)
+
+    def scrap_documents(self, response):
+        print(response.url)
