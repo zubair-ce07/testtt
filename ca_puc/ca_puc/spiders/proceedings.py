@@ -25,6 +25,11 @@ class ProceedingsSpider(scrapy.Spider):
     start_urls = [search_form_url]
     # download_delay = 5
 
+    def __init__(self):
+        self.p_instance = None
+        self.p_flow_id = None
+        self.p_flow_step_id = None
+
     def parse(self, response):
         """
             Get the search form and send a form request with
@@ -46,7 +51,6 @@ class ProceedingsSpider(scrapy.Spider):
             url=self.search_form_url,
             formdata=form_data,
             callback=self.parse_proceedings,
-            formid="frmSearchform",
             meta={'do_pagination': True}
         )
 
@@ -94,9 +98,9 @@ class ProceedingsSpider(scrapy.Spider):
                 meta={'proceeding_id': p_id},
             )
 
-        if "do_pagination" in response.meta and response.meta["do_pagination"]:
-            for next_proceeding in self.do_proceedings_pagination(response):
-                yield next_proceeding
+        # if "do_pagination" in response.meta and response.meta["do_pagination"]:
+        #     for next_proceeding in self.do_proceedings_pagination(response):
+        #         yield next_proceeding
 
     def parse_proceedings_details(self, response):
         """
@@ -119,11 +123,12 @@ class ProceedingsSpider(scrapy.Spider):
         loader.add_css('title', '#P56_DESCRIPTION::text')
         loader.add_css('status', '#P56_STATUS::text')
         loader.add_css('state_id', 'h1::text')
+        loader.add_value('filing_count', 0)
 
         yield scrapy.Request(
             url='{}{}'.format(self.filings_url, proceeding_id),
             callback=self.parse_filings,
-            meta={'loader': loader}
+            meta={'loader': loader, 'first_page': True}
         )
 
     def parse_filings(self, response):
@@ -133,14 +138,13 @@ class ProceedingsSpider(scrapy.Spider):
 
             meta_data: loader:ItemLoader, filing:dict
         """
-        loader = response.meta['loader']
         # getting filing details
         filings_rows = response.xpath(
             '//*[@class="apexir_WORKSHEET_DATA"]/tr[preceding-sibling::*]')
         # update loaders with meta data of filing count and total filings
-        loader.add_value('total_filing_count', len(filings_rows))
-        loader.add_value('filing_count', 0)
+        self.update_total_filing_count(response)
 
+        count = 0
         for row in filings_rows:
             filing = {
                 "description": row.xpath('td[4]/text()').get(),
@@ -152,15 +156,115 @@ class ProceedingsSpider(scrapy.Spider):
             # Getting doucments for each filing
             documents_link = row.css('td a::attr("href")').get()
 
-            yield SplashRequest(
+            response.meta['filing'] = filing
+            count += 1
+            response.meta['filing_number'] = count
+            yield scrapy.Request(
                 url=documents_link,
                 callback=self.parse_documents,
-                meta={'loader': loader, 'filing': filing},
-                dont_filter=True,
-                dont_process_response=True
+                meta=response.meta,
+                dont_filter=True
             )
+            print(count)
+
+        # Doing pagination for filings
+        # for filing_next_page in self.do_filings_pagination(response):
+        #     yield filing_next_page
+
+    def do_filings_pagination(self, response):
+        """
+            Doing pagination for filings
+            1. check if anchor exists for next page.
+            2. create appropriate form data
+            3. send form request to navigate
+        """
+        next_page_anchor = self.get_filing_next_page_anchor(response)
+        # Sending request for paginations
+        if not next_page_anchor:
+            # Return after last page parsing
+            return
+
+        widget_action_mod = next_page_anchor.split("'")[1]
+        x01 = response.xpath('//input[@id="apexir_WORKSHEET_ID"]/@value').get()
+        x02 = response.xpath('//input[@id="apexir_REPORT_ID"]/@value').get()
+
+        # update member variables to hold data across multiple requests
+        if not self.p_instance:
+            self.p_instance = response.xpath(
+                '//input[contains(@name,"p_instance")]/@value').get()
+        if not self.p_flow_id:
+            self.p_flow_id = response.xpath(
+                '//input[@id="pFlowId"]/@value').get()
+        if not self.p_flow_step_id:
+            self.p_flow_step_id = response.xpath(
+                '//input[@id="pFlowStepId"]/@value').get()
+
+        form_data = {
+            'p_request': 'APXWGT',
+            'p_instance': self.p_instance,
+            'p_flow_id': self.p_flow_id,
+            'p_flow_step_id': self.p_flow_step_id,
+            'p_widget_num_return': '100',
+            'p_widget_name': 'worksheet',
+            'p_widget_mod': 'ACTION',
+            'p_widget_action': 'PAGE',
+            'p_widget_action_mod': widget_action_mod,
+            'x01': x01,
+            'x02': x02
+        }
+        response.meta["first_page"] = False
+        # yielding a Form Request
+        yield scrapy.FormRequest(
+            url="https://apps.cpuc.ca.gov/apex/wwv_flow.show",
+            formdata=form_data,
+            callback=self.parse_filings,
+            dont_filter=True,
+            headers={
+                'Referer': response.url
+            },
+            meta=response.meta,
+        )
 
     def parse_documents(self, response):
+        """
+            Simulating an event click on a link.
+
+            at first the response does not contain the required data.
+            This method sends a Form Request with necessary data to
+            the same url and send the response to appropriat callback
+            for futher processing.
+            Skipping orderadocument urls
+        """
+        if re.search('orderadocument', response.url):
+            self.decrement_total_filing_count(response)
+            return
+        # Getting pages
+        pages_selector = '//a[contains(@href, "rptPages")]/@href'
+        # Sending request for paginations
+        for p in response.xpath(pages_selector).getall():
+            event_target = p.split("'")[1]
+            # creating a form data for request
+            form_data = {
+                '__EVENTTARGET': event_target,
+                '__EVENTARGUMENT': ''
+            }
+            # yielding a Form Request
+            yield scrapy.FormRequest.from_response(
+                response,
+                url=response.url,
+                dont_click=True,
+                formdata=form_data,
+                callback=self.get_all_documents,
+                dont_filter=True,
+                meta=response.meta
+            )
+
+    def is_last_request(self, loader):
+        """ Check if its last request of filing """
+        return loader.load_item()['total_filing_count'] == \
+            loader.load_item()['filing_count']
+
+    def get_all_documents(self, response):
         """
             Iterate through document rows on the given document page
             and update the filing with the respective documents.
@@ -169,13 +273,12 @@ class ProceedingsSpider(scrapy.Spider):
 
             return required item
         """
-        print(response.headers)
+        print("FILING NUMBER -----> ", response.meta["filing_number"])
         loader, filing = response.meta["loader"], \
             response.meta["filing"]
 
-        # populating filing with respective documents
         filing = self.get_filing_with_documents(response, filing)
-        # updating filings
+
         filings = loader.load_item()['filings'].append(filing) \
             if 'filings' in loader.load_item() else [filing]
 
@@ -185,24 +288,20 @@ class ProceedingsSpider(scrapy.Spider):
             'filing_count',
             loader.load_item()['filing_count'] + 1
         )
-
         # Check if its last request so we can yield the item
         if self.is_last_request(loader):
+            print("Last Request")
             return loader.load_item()
-
-    def is_last_request(self, loader):
-        """ Check if its last request of filing """
-        return loader.load_item()['total_filing_count'] == \
-            loader.load_item()['filing_count']
 
     def get_filing_with_documents(self, response, filing):
         """
             Fetch the documents from response and
             return the updated filing with documents
         """
-        rows = response.css('#ResultTable tr:not([style])')
-        print(len(rows), " Documents Fetched ")
-        for row in rows:
+        document_rows = response.xpath(
+            '//table[contains(@id, "ResultTable")]//tr[not(@style)]'
+        )
+        for row in document_rows:
             source_url = row.css('.ResultLinkTD a::attr("href")').get()
             document = {
                 "name": source_url.split('.')[0].split('/')[-1],
@@ -220,7 +319,6 @@ class ProceedingsSpider(scrapy.Spider):
         ids = []
         proceedings_selector = '//*[@class="ResultTitleTD"]/text()[2]'
         for proceeding in response.xpath(proceedings_selector).getall():
-            print(proceeding)
             ids += re.findall(r'\w\d{7}', proceeding)
 
         return ids
@@ -235,3 +333,42 @@ class ProceedingsSpider(scrapy.Spider):
             '//input[contains(@id, "__EVENTVALIDATION")]/@value').get()
 
         return view_state, view_state_generator, event_validation
+
+    def get_filing_next_page_anchor(self, response):
+        """
+            Return href of the next page anchor
+            in pagination
+        """
+        first_page_anchor_selector = \
+            '//*[contains(@class, "pagination")]/*/a/@href'
+        anchor_selector = \
+            '//*[contains(@class,"pagination")]/*/a/following-sibling::a/@href'
+
+        return response.xpath(first_page_anchor_selector).get()\
+            if response.meta["first_page"] \
+            else response.xpath(anchor_selector).get()
+
+    def update_total_filing_count(self, response):
+        """
+            get total filling count from response and
+            update the total_filing_count in loader
+        """
+        loader = response.meta['loader']
+        total_filing_count = int(
+            response.xpath(
+                '//*[contains(@class, "pagination")]/*/text()'
+            ).get().split('of')[-1].strip()
+        )
+        loader.add_value('total_filing_count', total_filing_count)
+
+    def decrement_total_filing_count(self, response):
+        """
+            decrement the total filing count in loader.
+            more specifically used to skip orderadocument
+            count.
+        """
+        loader = response.meta['loader']
+        loader.replace_value(
+            'total_filing_count',
+            loader.load_item()['total_filing_count'] - 1
+        )
