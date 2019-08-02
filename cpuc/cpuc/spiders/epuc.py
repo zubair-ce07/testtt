@@ -69,7 +69,6 @@ class VermontSpider(scrapy.Spider):
         proceeding_type = response.meta.get('proceeding_type', [])
 
         for row in response.xpath("//tr[starts-with(@id,'form_search_')]"):
-
             url = response.urljoin(row.xpath("td[1]/span/a/@href").get())
             proceeding_urls.append(url)
             proceeding_type.append(row.xpath("td[3]/text()").get().strip())
@@ -77,7 +76,6 @@ class VermontSpider(scrapy.Spider):
         next_page = response.xpath("//li[@class=' active ']/following-sibling::li/a/@href").get()
 
         if next_page:
-
             yield response.follow(
                 next_page,
                 callback=self.parse_proceeding_numbers,
@@ -87,7 +85,6 @@ class VermontSpider(scrapy.Spider):
                 })
 
         else:
-
             for index, url in enumerate(proceeding_urls):
                 yield response.follow(
                     url,
@@ -225,9 +222,7 @@ class VermontSpider(scrapy.Spider):
         filing_loader = ItemLoader(item=Filing(), response=response)
 
         for filing in filings_data:
-
             if self.get_column_count(filing) == 2:
-
                 doc_type = filing.xpath("td[2]/text()").getall()
                 doc_type = self.removed_garbage_from_data(doc_type)
                 match = self.get_date(doc_type[0])
@@ -238,7 +233,6 @@ class VermontSpider(scrapy.Spider):
                     filing_loader.add_value('types', doc_type[0])
 
             elif self.get_column_count(filing) == 7:
-
                 if not filing_loader.get_output_value('types'):
                     filing_loader.add_value('types', doc_type)
 
@@ -258,14 +252,12 @@ class VermontSpider(scrapy.Spider):
                 filing_parties = self.get_filing(response, filing)
 
                 if filing_parties:
-
                     filing_loader.replace_value('filing_parties', filing_parties)
 
                 filings.append(filing_loader.load_item())
                 filing_loader = ItemLoader(item=Filing(), response=response)
 
             elif self.get_column_count(filing) == 8:
-
                 filled_on = self.removed_garbage_from_data(filing.xpath("td[2]/text()").getall())
                 filing_loader.add_value('filled_on', filled_on)
                 description = filing.xpath("td[3]/text()").get().strip()
@@ -353,7 +345,6 @@ class VermontSpider(scrapy.Spider):
         url = response.url.replace('q=node/104/', 'q=node/64/')
 
         if 'Date Filed' in filed_on:
-
             match = self.get_date(filed_on)
             filed_on = match.group(1)
 
