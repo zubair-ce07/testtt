@@ -156,7 +156,6 @@ def edit_options(request, question_pk):
         return HttpResponseBadRequest(content='Not Authorized')
     answers = Question.objects.get(pk=question_pk).answers.all()
     if request.method == 'POST':
-        print(request.POST)
         for answer in answers:
             answer.text = request.POST.get(str(answer.pk))
             answer.is_correct = True if int(request.POST.get('correct')) == answer.pk else False
