@@ -40,7 +40,9 @@ def home(request):
     if request.user.is_student:
         return redirect('student_home')
     quiz_list = Quiz.objects.filter(owner_id=request.user.id)
+    # published = Quiz.objects.filter(pk__in=[question.exclude(answers__isnull=False).quiz_id for question in quiz_list])
     return render(request, 'home.html', {'quizzes': quiz_list})
+
 
 
 @login_required
@@ -121,8 +123,7 @@ def take_quiz(request, quiz_pk):
     if TakenQuiz.objects.filter(student_id=request.user.id, quiz_id=quiz_pk).exists():
         return HttpResponseBadRequest(content='Already Taken, Cannot Retake')
     quiz_questions = [question for question in get_object_or_404(Quiz, pk=quiz_pk).questions.all() if
-                      question.answers.all().count() >= 2 and question.answers.filter(is_correct=True).count() == 1]
-    random.shuffle(quiz_questions, random.random)
+                      question.answers.all().count() == 2 and question.answers.filter(is_correct=True).count() == 1]
     if request.method == 'POST':
         submitted_ans = Answer.objects.filter(pk__in=[request.POST.get(str(quiz.pk)) for quiz in quiz_questions])
         score = Answer.objects.filter(id__in=[ans.id for ans in submitted_ans]).filter(is_correct=True).count()
@@ -133,6 +134,7 @@ def take_quiz(request, quiz_pk):
             SelectedOption.objects.create(student_id=request.user.id, question_id=question.pk, answer_id=answer.id,
                                           quiz_id=quiz_pk)
         return render(request, 'result.html', {'quiz_sol': quiz_solution, 'score': score, 'total': len(quiz_questions)})
+    random.shuffle(quiz_questions, random.random)
     return render(request, 'take_quiz.html', {'questions': enumerate(quiz_questions, start=1)})
 
 
@@ -160,7 +162,8 @@ def edit_options(request, question_pk):
             answer.is_correct = True if int(request.POST.get('correct')) == answer.pk else False
             answer.save()
         return redirect('question_detail', Question.objects.get(pk=question_pk).quiz_id, question_pk)
-
+    if answers.count() == 0:
+        return redirect('question_detail', get_object_or_404(Question,pk=question_pk).quiz_id, question_pk)
     return render(request, 'edit_options.html', {'answers': answers})
 
 
@@ -195,7 +198,7 @@ def student_home(request):
     student = request.user
     quiz_list = Quiz.objects.exclude(
         id__in=[quiz.quiz_id for quiz in TakenQuiz.objects.filter(student=student)]).all().exclude(
-        questions__isnull=True)
+        questions__isnull=True).exclude(id__in=[question.quiz_id for question in Question.objects.all() if question.answers.all().count() < 4])
     return render(request, 'student_home.html', {'quizzes': quiz_list})
 
 

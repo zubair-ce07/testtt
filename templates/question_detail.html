@@ -12,9 +12,9 @@
             <a class="btn btn-secondary" href="{%url 'add_options' question.pk %}">Add Options</a>
             {%endfor%}
     </ul>
-    <a class="btn btn-secondary" href="{%url 'edit_question' question.pk%}">Edit Question</a>
+    <a class="btn btn-dark" href="{%url 'edit_question' question.pk%}">Edit Question</a>
     {%if answers.count > 0%}
-    <a class="btn btn-success" href="{%url 'edit_options' question.pk %}">Edit Options</a>
+    <a class="btn btn-dark" href="{%url 'edit_options' question.pk %}">Edit Options</a>
     {%endif%}
     <a class="btn btn-danger" href="{%url 'delete_question' question.pk%}">Delete Question</a>
 </div>
