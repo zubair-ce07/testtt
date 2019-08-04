@@ -123,7 +123,7 @@ def take_quiz(request, quiz_pk):
     if TakenQuiz.objects.filter(student_id=request.user.id, quiz_id=quiz_pk).exists():
         return HttpResponseBadRequest(content='Already Taken, Cannot Retake')
     quiz_questions = [question for question in get_object_or_404(Quiz, pk=quiz_pk).questions.all() if
-                      question.answers.all().count() == 2 and question.answers.filter(is_correct=True).count() == 1]
+                      question.answers.all().count() == 4 and question.answers.filter(is_correct=True).count() == 1]
     if request.method == 'POST':
         submitted_ans = Answer.objects.filter(pk__in=[request.POST.get(str(quiz.pk)) for quiz in quiz_questions])
         score = Answer.objects.filter(id__in=[ans.id for ans in submitted_ans]).filter(is_correct=True).count()
