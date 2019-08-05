@@ -45,20 +45,22 @@ class WeatherReporter:
         """
 
         for i, (max_temp, min_temp) in enumerate(zip(max_temperatures, min_temperatures)):
+            single_line_report = f"{i+1:02d}" \
+                f" {self._get_colored_plus(max_temp, self._RED)}" \
+                f"{self._get_colored_plus(min_temp, self._BLUE)}" \
+                f" {max_temp}C - {min_temp}C"
+
+            dual_line_report = f"{i+1:02d}" \
+                f" {self._get_colored_plus(max_temp, self._RED)}" \
+                f" {max_temp}C" \
+                f"{i+1:02d}" \
+                f" {self._get_colored_plus(min_temp, self._BLUE)}" \
+                f" {min_temp}C"
+
             if single_line:
-                report = f"{i+1:02d}" \
-                    f" {self._get_colored_plus(max_temp, self._RED)}" \
-                    f"{self._get_colored_plus(min_temp, self._BLUE)}" \
-                    f" {max_temp}C - {min_temp}C"
-                print(report)
+                print(single_line_report)
             else:
-                report_max = f"{i+1:02d}" \
-                    f" {self._get_colored_plus(max_temp, self._RED)}" \
-                    f" {max_temp}C"
-                report_min = f"{i+1:02d}" \
-                    f" {self._get_colored_plus(min_temp, self._BLUE)}" \
-                    f" {min_temp}C"
-                print(report_max, report_min, sep="\n")
+                print(dual_line_report)
         print("")
 
     def _get_colored_plus(self, times, color):
