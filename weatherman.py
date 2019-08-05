@@ -16,40 +16,28 @@ class WeatherMan:
     def get_yearly_reports(self, readings_dir, year):
         """Report the hottest, coldest and the most humid day in a year"""
         readings = self.parser.parse_weather_files(readings_dir, year)
-        hottest_day = self.analyzer.get_max_reading(
-            readings, 'max_temperature')
-        coldest_day = self.analyzer.get_min_reading(
-            readings, 'min_temperature')
-        most_humid_day = self.analyzer.get_max_reading(
-            readings, 'max_humidity')
-        self.reporter.report_year_extremes(
-            hottest_day, coldest_day, most_humid_day)
+        hottest_day = self.analyzer.get_max_reading(readings, "max_temperature")
+        coldest_day = self.analyzer.get_min_reading(readings, "min_temperature")
+        most_humid_day = self.analyzer.get_max_reading(readings, "max_humidity")
+        self.reporter.report_year_extremes(hottest_day, coldest_day, most_humid_day)
 
     def get_monthly_reports(self, readings_dir, year, month):
         """
             Report the average highest temperature, average lowest temperature
             and average mean humidity for a month
         """
-
         readings = self.parser.parse_weather_files(readings_dir, year, month)
-        avg_hottest_temperature = self.analyzer.extract_attributes(
-            readings, 'max_temperature')
-        avg_coldest_temperature = self.analyzer.extract_attributes(
-            readings, 'min_temperature')
-        avg_humidity = self.analyzer.get_avg_of_attributes(
-            readings, 'mean_humidity')
-        self.reporter.report_month_averages(
-            avg_hottest_temperature, avg_coldest_temperature, avg_humidity)
+        avg_max_temp = self.analyzer.get_avg_of_attributes(readings, "max_temperature")
+        avg_min_temp = self.analyzer.get_avg_of_attributes(readings, "min_temperature")
+        avg_humidity = self.analyzer.get_avg_of_attributes(readings, "mean_humidity")
+        self.reporter.report_month_avgs(avg_max_temp, avg_min_temp, avg_humidity)
 
     def get_monthly_bar_charts(self, readings_dir, year, month, single_line=False):
         """Print bar charts for the highest and lowest temperatures in a month"""
         readings = self.parser.parse_weather_files(readings_dir, year, month)
-        max_temperatures = self.analyzer.extract_attributes(
-            readings, "max_temperature")
-        min_temperatures = self.analyzer.extract_attributes(
-            readings, "min_temperature")
-        self.reporter.report_month_temperatures(
-            max_temperatures, min_temperatures, single_line)
+        max_temps = self.analyzer.extract_attributes(readings, "max_temperature")
+        min_temps = self.analyzer.extract_attributes(readings, "min_temperature")
+        self.reporter.report_month_temps(max_temps, min_temps, single_line)
 
 
 def parse_year(year):
@@ -61,14 +49,14 @@ def parse_year(year):
         raise argparse.ArgumentTypeError(message)
 
 
-def parse_month(month):
+def parse_month(year_month):
     """Month parser to use with argument parser"""
 
-    if month[-3] != "/" and month[-2] != "/":
+    if year_month[-3] != "/" and year_month[-2] != "/":
         message = "Please pass month with year in the format YYYY/MM e.g. 2005/6"
         raise argparse.ArgumentTypeError(message)
 
-    year, month = month.split("/")
+    year, month = year_month.split("/")
     year = parse_year(year)
 
     if month.isdigit():
@@ -86,9 +74,9 @@ if __name__ == "__main__":
     arg_parser = argparse.ArgumentParser(
         description="Program to parse, analyze and report weather readings")
     arg_parser.add_argument(
-        'readings_dir', help="Path to weather readings directory")
+        "readings_dir", help="Path to weather readings directory")
     arg_parser.add_argument(
-        '-e', type=parse_year, help="Display the highest temperature and day,\
+        "-e", type=parse_year, help="Display the highest temperature and day,\
              lowest temperature and day, most humid day and humidity for a\
                   given year (e.g. 2002)")
     arg_parser.add_argument(
@@ -104,21 +92,18 @@ if __name__ == "__main__":
              for the highest and lowest temperature on each day. Highest in red\
                   and lowest in blue for a given month")
 
-    arguments = arg_parser.parse_args()
+    args = arg_parser.parse_args()
 
     weather_man = WeatherMan()
 
-    if arguments.e:
-        weather_man.get_yearly_reports(arguments.readings_dir, arguments.e)
+    if args.e:
+        weather_man.get_yearly_reports(args.readings_dir, args.e)
 
-    if arguments.a:
-        weather_man.get_monthly_reports(arguments.readings_dir,
-                                        arguments.a[0], arguments.a[1])
+    if args.a:
+        weather_man.get_monthly_reports(args.readings_dir,args.a[0], args.a[1])
 
-    if arguments.c:
-        weather_man.get_monthly_bar_charts(arguments.readings_dir,
-                                           arguments.c[0], arguments.c[1])
+    if args.c:
+        weather_man.get_monthly_bar_charts(args.readings_dir, args.c[0], args.c[1])
 
-    if arguments.o:
-        weather_man.get_monthly_bar_charts(arguments.readings_dir,
-                                           arguments.o[0], arguments.o[1], True)
+    if args.o:
+        weather_man.get_monthly_bar_charts(args.readings_dir, args.o[0], args.o[1], True)
