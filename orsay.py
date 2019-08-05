@@ -2,7 +2,7 @@ import re
 from w3lib.url import url_query_cleaner, add_or_replace_parameter
 from datetime import datetime
 
-from scrapy.spiders import CrawlSpider, Rule
+from scrapy.spiders import CrawlSpider, Rule, Spider
 from scrapy import Request
 from scrapy.linkextractors import LinkExtractor
 
@@ -31,16 +31,16 @@ class OrsaySpider(CrawlSpider):
     )
 
     def parse_pagination(self, response):
-        max_products_css = ".js-pagination-product-count::attr(data-count)"
-        product_size_xpath = "//script[@type='text/javascript']//text()"
+        total_products_css = ".js-pagination-product-count::attr(data-count)"
+        page_size_css = "script:contains('DEFAULT_PAGE_SIZE')"
         regex = 'DEFAULT_PAGE_SIZE":"(.+?)"'
 
-        product_size = int(response.xpath(product_size_xpath).re_first(regex))
-        max_products = int(response.css(max_products_css).get())
+        page_size = int(response.css(page_size_css).re_first(regex))
+        total_products = int(response.css(total_products_css).get())
 
-        for products in range(0, max_products + product_size, product_size):
-            next_page = add_or_replace_parameter(response.url, 'sz', products)
-            yield Request(next_page, callback=self.parse)
+        for products in range(0, total_products + page_size, page_size):
+            next_page_url = add_or_replace_parameter(response.url, 'sz', products)
+            yield Request(next_page_url, callback=self.parse)
 
     def parse_item(self, response):
         garment = OrsayItem()
@@ -149,16 +149,15 @@ class OrsaySpider(CrawlSpider):
         common_sku = self.get_product_pricing(response)
         common_sku["color"] = selected_color
 
-        for size in response.css(sizes_css):
+        for size_sel in response.css(sizes_css):
             sku = common_sku.copy()
-            sku["size"] = size.css('.swatchanchor::text').get().strip()
-            if size.get() in size.css('.unselectable').getall():
+            sku["size"] = size_sel.css('.swatchanchor::text').get().strip()
+            if size_sel.css('.unselectable'):
                 sku["out_of_stock"] = True
             skus[f"{sku['color']}_{sku['size']}"] = sku
 
-        if not response.css(sizes_css):
-            sku = common_sku.copy()
-            sku["size"] = 'single_size'
-            skus[f"{sku['color']}_{sku['size']}"] = sku
+        if not skus:
+            common_sku["size"] = 'Single_size'
+            skus[f"{common_sku['color']}_{common_sku['size']}"] = common_sku
 
         return skus
