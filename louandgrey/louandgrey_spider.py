@@ -13,23 +13,28 @@ class LouandgreySpider(CrawlSpider):
         'https://www.louandgrey.com/'
     ]
 
+    product_css = 'li.product .product-wrap a[data-page]'
+    listing_css = '.sub-nav'
+
     rules = [
-        Rule(link_extractor=LinkExtractor(restrict_css='li.product .product-wrap a[data-page]'),
-             callback='parse_product'),
-        Rule(link_extractor=LinkExtractor(restrict_css='.sub-nav'), callback='parse_listing')
+        Rule(link_extractor=LinkExtractor(restrict_css=product_css), callback='parse_product'),
+        Rule(link_extractor=LinkExtractor(restrict_css=listing_css), callback='parse_listing')
     ]
 
     def parse(self, response):
         requests = super(LouandgreySpider, self).parse(response)
+        trail = self.louandgrey_parser.add_trail(response)
+
         for request in requests:
-            request.meta['trail'] = self.louandgrey_parser.add_trail(response)
+            request.meta['trail'] = trail
             yield request
 
     def parse_listing(self, response):
         pages_count = int(response.css('.product-listing input[name="pages"]::attr(value)').get())
-        for index in range(1, pages_count+1):
-            yield Request(url=add_or_replace_parameter(response.url, 'goToPage', index),
-                          meta={'trail': self.louandgrey_parser.add_trail(response)})
+        meta_params = {'trail': self.louandgrey_parser.add_trail(response)}
+
+        for index in range(1, pages_count + 1):
+            yield Request(url=add_or_replace_parameter(response.url, 'goToPage', index), meta=meta_params)
 
     def parse_product(self, response):
         yield self.louandgrey_parser.parse(response)
