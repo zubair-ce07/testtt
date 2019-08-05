@@ -3,6 +3,7 @@ from w3lib.url import add_or_replace_parameters
 from scrapy import Request
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
+
 from woolrich.spiders.woolrich_parser import WoolrichParser
 
 
@@ -23,9 +24,10 @@ class WoolrichSpider(CrawlSpider):
 
     def parse(self, response):
         requests = super(WoolrichSpider, self).parse(response)
+        trail = self.add_trail(response)
 
         for request in requests:
-            request.meta['trail'] = self.add_trail(response)
+            request.meta['trail'] = trail
             yield request
 
     def parse_listing(self, response):

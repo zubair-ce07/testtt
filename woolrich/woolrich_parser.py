@@ -2,6 +2,7 @@ import re
 
 from scrapy import Request
 from scrapy.spiders import Spider
+
 from woolrich.items import WoolrichItem
 
 
@@ -12,9 +13,8 @@ class WoolrichParser(Spider):
     name = 'woolrichparser'
     retailer = 'woolrich-uk'
 
-    SIZE_URLS = 'size_urls'
-    COLOUR_URLS = 'colour_urls'
     ITEM = 'item'
+    REQUESTS = 'requests'
 
     genders = [
         ('women', 'women'),
@@ -38,72 +38,57 @@ class WoolrichParser(Spider):
         item['url'] = response.url
         item['market'] = self.market
         item['retailer'] = self.retailer
-        item['trail'] = response.meta.get('trail', [])
         item['name'] = self.get_name(response)
         item['care'] = self.get_care(response)
+        item['gender'] = self.get_gender(response)
+        item['trail'] = response.meta.get('trail', [])
+        item['category'] = self.get_categories(response)
         item['image_urls'] = self.get_image_urls(response)
         item['retailer_sku'] = self.get_product_id(response)
-        item['gender'] = self.get_gender(response)
         item['description'] = self.get_description(response)
-        item['category'] = self.get_categories(response)
+        response.meta['requests'] = self.get_colour_requests(response)
 
-        return self.make_colour_request(item, response)
+        return self.next_request_or_item(item, response)
 
-    def make_colour_request(self, item, response):
-        colour_urls = self.get_colour_urls(response)
-        if colour_urls:
-            params = {}
-            params[self.ITEM] = item
-            params[self.COLOUR_URLS] = colour_urls
-            params[self.SIZE_URLS] = []
-            return Request(url=colour_urls[0], meta=params, callback=self.parse_colour_requests)
-        else:
+    def next_request_or_item(self, item, response):
+        requests = response.meta['requests']
+        if not requests:
             return item
 
+        request = requests.pop(0)
+        request.meta[self.ITEM], request.meta[self.REQUESTS] = item, requests
+
+        return request
+
     def parse_colour_requests(self, response):
-        meta = response.meta
-        colour_urls, item, size_urls = meta[self.COLOUR_URLS], meta[self.ITEM], meta[self.SIZE_URLS]
-        size_urls.extend(self.get_size_urls(response))
-        colour_urls = colour_urls[1:]
+        item, requests = response.meta[self.ITEM], response.meta[self.REQUESTS]
+        requests.extend(self.get_size_requests(response))
+        response.meta[self.REQUESTS] = requests
 
-        params = {}
-        params[self.ITEM] = item
-        params[self.SIZE_URLS] = size_urls
-
-        if colour_urls:
-            params[self.COLOUR_URLS] = colour_urls
-            yield Request(url=colour_urls[0], meta=params, callback=self.parse_colour_requests)
-        else:
-            yield Request(url=size_urls[0], meta=params, callback=self.parse_skus)
+        return self.next_request_or_item(item, response)
 
     def parse_skus(self, response):
-        size_urls, item = response.meta[self.SIZE_URLS], response.meta[self.ITEM]
+        item, requests = response.meta[self.ITEM], response.meta[self.REQUESTS]
 
         skus = item.get('skus', [])
-        skus_per_size = self.get_sku(response)
-        skus.append(skus_per_size)
+        skus.append(self.get_sku(response))
 
         item['skus'] = skus
         item['image_urls'].extend(self.get_image_urls(response))
+        response.meta[self.REQUESTS] = requests
 
-        size_urls = size_urls[1:]
-        if size_urls:
-            params = {}
-            params[self.ITEM] = item
-            params[self.SIZE_URLS] = size_urls
-            yield Request(url=size_urls[0], meta=params, callback=self.parse_skus)
-        else:
-            item['image_urls'] = set(item['image_urls'])
-            yield item
+        return self.next_request_or_item(item, response)
 
     def get_name(self, response):
         return response.css('#product-content .product-name::text').get().strip()
 
-    def get_size_urls(self, response):
-        return response.css('.swatches.size .swatchanchor::attr(href)').getall()
+    def get_size_requests(self, response):
+        urls = response.css('.swatches.size .swatchanchor::attr(href)').getall()
+        return [Request(url=url, callback=self.parse_skus) for url in urls]
 
-    def get_colour_urls(self, response):
-        return response.css('.swatches.color .swatchanchor::attr(href)').getall()
+    def get_colour_requests(self, response):
+        urls = response.css('.swatches.color .swatchanchor::attr(href)').getall()
+        return [Request(url=url, callback=self.parse_colour_requests) for url in urls]
 
     def get_product_id(self, response):
         return response.css('input#pid::attr(value)').get()
