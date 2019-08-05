@@ -10,7 +10,7 @@ class WeatherReading:
 
     def __init__(self, readings_row):
         date = readings_row.get("PKT", readings_row.get("PKST"))
-        self.date = datetime.strptime(date, '%Y-%m-%d')
+        self.date = datetime.strptime(date, "%Y-%m-%d")
 
         self.max_temperature = self._parse_numeric_value(readings_row, "Max TemperatureC")
         self.mean_temperature= self._parse_numeric_value(readings_row, "Mean TemperatureC")

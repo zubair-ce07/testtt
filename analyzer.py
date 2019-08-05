@@ -23,6 +23,6 @@ class WeatherAnalyzer:
         return min(readings, key=lambda r: getattr(r, key))
 
     def extract_attributes(self, readings, key):
-        """Returns attribute 'key' from readings, ordered by date"""
+        """Returns attribute "key" from readings, ordered by date"""
         readings = sorted(readings, key=lambda w: w.date.day)
         return [getattr(r, key) for r in readings]
