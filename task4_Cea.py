@@ -39,7 +39,7 @@ class CeaSpider(CrawlSpider):
         'https://www.cea.com.br/',
     ]
 
-    gender_dic = {
+    gender_map = {
         'Masculina': 'men',
         'Feminina': 'women',
         'Infantil': 'kids'
@@ -49,7 +49,7 @@ class CeaSpider(CrawlSpider):
     image_t = 'https://cea.vteximg.com.br/arquivos/ids/{}.jpg'
     listing_css = '.header_submenu_item-large'
     product_css = '.product-details_name'
-    product_colors_request = []
+    products_request = []
 
     rules = (
         Rule(LinkExtractor(restrict_css=listing_css), callback='parse_paginantion'),
@@ -78,10 +78,7 @@ class CeaSpider(CrawlSpider):
         item['skus'] = self.product_skus(raw_product)
 
         item['requests'] = self.images_request(item['retailer_sku'])
-        product_colors_request = self.color_requests(response)
-
-        yield self.next_request_or_item(item)
-        yield self.next_product(product_colors_request)
+        return [self.next_request_or_item(item)] + self.color_requests(response)
 
     def images_request(self, retailer_sku):
         return [Request(self.image_url_t.format(retailer_sku),
@@ -132,7 +129,7 @@ class CeaSpider(CrawlSpider):
     def product_gender(self, response):
         name = self.product_name(response)
 
-        for token, gender in self.gender_dic.items():
+        for token, gender in self.gender_map.items():
             if token in name:
                 return gender
 
