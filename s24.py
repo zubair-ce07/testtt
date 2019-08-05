@@ -39,9 +39,11 @@ class _24sSpider(CrawlSpider):
     start_urls = [
         'https://www.24s.com/en-us/'
     ]
-    sku_key_t = '{}_{}'
+
     prod_req_t = '{}?color={}'
-    pagination_url_t = 'https://dkpvob44gb-dsn.algolia.net/1/indexes/*/queries?{}'
+    pagination_url_t = 'https://dkpvob44gb-dsn.algolia.net/1/indexes/*/queries?x-algolia-agent=' \
+                       'Algolia+for+vanilla+JavaScript+3.32.1%3BJS+Helper+2.26.1&x-algolia-' \
+                       'application-id=DKPVOB44GB&x-algolia-api-key=9b23af4f250bb432947c20b7c82890a2'
     product_url_t = '{}-{}_{}?defaultSku={}&color={}'
     facets = urllib.parse.quote('["brand","brand","color_en_pack","clothing_size_FR",'
                                 '"clothing_size_US","clothing_size_UK","clothing_size_IT",'
@@ -55,36 +57,24 @@ class _24sSpider(CrawlSpider):
                       '537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',
         'content-type': 'application/x-www-form-urlencoded',
     }
-    params = (
-        ('x-algolia-agent', 'Algolia for vanilla JavaScript 3.32.1;JS Helper 2.26.1'),
-        ('x-algolia-application-id', 'DKPVOB44GB'),
-        ('x-algolia-api-key', '9b23af4f250bb432947c20b7c82890a2'),
-    )
 
-    listing_css = ['.nav-link', '[class="device-drop-btn"]']
-    all_brands_css = ['#lbm-brands-page-html']
+    listings_and_brand_css = ['.nav-link', '[class="device-drop-btn"]',
+                              '#lbm-brands-page-html']
 
     rules = (
-        Rule(LinkExtractor(restrict_css=listing_css), callback='parse_pagination', follow=True),
-        Rule(LinkExtractor(restrict_css=all_brands_css), callback='parse_pagination'),
+        Rule(LinkExtractor(restrict_css=listings_and_brand_css), callback='parse_pagination'),
     )
 
     def parse_pagination(self, response):
-        page_number = self.get_page_number(response)
         tag_filter = self.get_tag_filters(response)
         rule_contexts = self.get_rule_contexts(response)
 
         body = '{"requests":[{"indexName":"prod_products","params":"query=&tagFilters=' + tag_filter \
-               + '&page=' + page_number + '&getRankingInfo=true&ruleContexts=' + rule_contexts \
+               + '&page=0&getRankingInfo=true&ruleContexts=' + rule_contexts \
                + '&facets=' + self.facets + '"}]}'
 
-        yield Request(self.pagination_url_t.format(urllib.parse.urlencode(self.params)), method='POST',
-                      body=body, headers=self.headers, callback=self.parse_products, meta={'listing_url': response.url})
-
-    def get_page_number(self, response):
-        if 'pg_num' in response.meta.keys():
-            return response.meta['pg_num']
-        return '0'
+        return Request(self.pagination_url_t, method='POST',
+                       body=body, headers=self.headers, callback=self.parse_products)
 
     def get_tag_filters(self, response):
         raw_tag_filter = ["US"]
@@ -96,10 +86,9 @@ class _24sSpider(CrawlSpider):
         raw_rule_context = response.css('::attr(data-filter)').get()
 
         if ',' in raw_rule_context:
-            raw_rule_context = [re.sub(',', '_MERCH_US', )]
+            raw_rule_context = [re.sub(',', '_MERCH_US', raw_rule_context)]
         else:
-            context_format = '{}{}'
-            raw_rule_context = [context_format.format(raw_rule_context, '_MERCH_US')]
+            raw_rule_context = [f"{raw_rule_context}{'_MERCH_US'}"]
 
         rule_context = re.sub(' ', '', (re.sub('\'', '"', str(raw_rule_context))))
         return urllib.parse.quote(rule_context)
@@ -118,9 +107,16 @@ class _24sSpider(CrawlSpider):
             yield response.follow(product_url, callback=self.parse_item)
 
         if products_json['page'] <= products_json['nbPages']:
-            next_page_num = str((products_json['page']) + 1)
-            return response.follow(response.meta['listing_url'], callback=self.parse_pagination,
-                                   meta={'pg_num': next_page_num}, dont_filter=True)
+            body = self.request_body(response)
+
+            return Request(self.pagination_url_t, method='POST',
+                           body=body, headers=self.headers, callback=self.parse_products)
+
+    def request_body(self, response):
+        body = response.request.body.decode('ISO-8859-1')
+        page_number = re.findall('page=(.+?)&', body)[0]
+        next_page = str(int(page_number) + 1)
+        return re.sub('page=' + page_number, 'page=' + next_page, body)
 
     def clean_accent_and_grb(self, raw_str):
         str = ''.join((c for c in unicodedata.normalize('NFD', raw_str) if
@@ -183,7 +179,7 @@ class _24sSpider(CrawlSpider):
         if not sizes:
             common_sku['out_of_stock'] = False
             common_sku['size'] = 'OneSize'
-            return {self.sku_key_t.format(common_sku["size"], color): common_sku.copy()}
+            return {f'{common_sku["size"]}_{color}': common_sku.copy()}
 
         for size in sizes:
 
@@ -193,7 +189,7 @@ class _24sSpider(CrawlSpider):
                 size = size[:size.index(' - O')]
             common_sku['size'] = size
 
-            skus[self.sku_key_t.format(color, size)] = common_sku.copy()
+            skus[f'{color}_ {size}'] = common_sku.copy()
 
         return skus
 
