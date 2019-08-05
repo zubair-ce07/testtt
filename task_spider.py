@@ -1,44 +1,28 @@
-import scrapy
+from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 from ..items import ClothesItem
 
 
-class ClothesSpider(scrapy.Spider):
+class ClothesSpider(CrawlSpider):
     name = 'clothes'
     allowed_domains = ['descente.com']
     start_urls = [
         'https://athletic.descente.com'
     ]
-
-    def parse(self, response):
-        link_extractor = LinkExtractor(allow=r"/collections/best-sellers")
-        link_extractor = link_extractor.extract_links(response)
-
-        if len(link_extractor) != 0:
-            for link in link_extractor:
-                yield scrapy.Request(str(link.url), callback=self.parse_product_page)
-
-    def parse_product_page(self, response):
-        link_extractor = LinkExtractor(allow=r"/products/dmmnja72u")
-        link_extractor = link_extractor.extract_links(response)
-
-        if len(link_extractor) != 0:
-            for link in link_extractor:
-                yield scrapy.Request(str(link.url), callback=self.parse_item)
+    rules = (
+        Rule(LinkExtractor(allow=("/products/dmmnja72u",)), callback='parse_item'),
+        Rule(LinkExtractor(allow=("/collections/best-sellers", ))),
+    )
 
     def parse_item(self, response):
         items = ClothesItem()
-
         url_split = response.url.split('/')
-        category = []
-        for i in range(3, len(url_split) - 1):
-            category.append(url_split[i])
 
         items['retailer_sku'] = url_split[-1]
-        items['category'] = category
+        items['category'] = self.extract_category(response)
         items['brand'] = 'Athletic Descente'
         items['url'] = response.url
-        items['name'] = response.css('h1::text').get()
+        items['name'] = self.extract_name(response)
         items['description'] = self.extract_description(response)
         items['care'] = self.extract_care(response)
         items['image_urls'] = self.extract_image_urls(response)
@@ -46,45 +30,49 @@ class ClothesSpider(scrapy.Spider):
 
         yield items
 
-    def extract_skus(self, response):
-        sku_ids = response.xpath('//form/select/option/@data-sku').getall()
-        sizes = response.xpath('//form/select/option/@data-option1').getall()
-        colours = response.xpath('//form/select/option/@data-option2').getall()
-        prices = response.xpath('//form/select/option/@data-price').re('\d.*')
-        currencies = response.xpath('//form/select/option/text()').getall()
-        for i in range(len(currencies)):
-            currencies[i] = currencies[i].strip()
-            currencies[i] = currencies[i].split(' ')[-1]
+    def extract_name(self, response):
+        return response.css('h1::text').get()
 
+    def extract_category(self, response):
+        return response.xpath('//div[@class="breadcrumb-container"]/a[@title="Products"]/text()').getall()
+
+    def extract_skus(self, response):
         skus = []
-        for i in range(len(sku_ids)):
+        skus_xpath = response.xpath('//form/select/option')
+        for raw_sku in skus_xpath:
+            sku_id = raw_sku.xpath('./@data-sku').get()
+            size = raw_sku.xpath('./@data-option1').get()
+            colour = raw_sku.xpath('./@data-option2').get()
+            price = raw_sku.xpath('./@data-price').re_first('\d.*')
+            currency = raw_sku.xpath('./text()').get()
+            currency = currency.strip()
+            currency = currency.split(' ')[-1]
+
             sku_dict = {
-                "price": float(prices[i]) * 100,
-                "currency": currencies[i],
-                "size": sizes[i],
-                "colour": colours[i],
-                "sku_id": sku_ids[i]
+                "price": float(price) * 100,
+                "currency": currency,
+                "size": size,
+                "colour": colour,
+                "sku_id": sku_id
             }
             skus.append(sku_dict)
         return skus
 
     def extract_description(self, response):
-        desc = response.xpath('//div[@class="product-description-internal"]/p/text()').getall() \
-               + response.xpath('//div[@class="specifics-inner"]/ul/li/ul/li/text()').getall()
+        desc_all = response.xpath('//div[@class="product-description-internal"]/p/text() | '
+                                  '//div[@class="specifics-inner"]/ul/li/ul/li/text()').getall()
         description = []
-        for i in range(len(desc)):
-            description += [d for d in desc[i].split('.') if d.strip() != '']
+        for desc in desc_all:
+            description += [d for d in desc.split('.') if d.strip() != '']
         return description
 
     def extract_care(self, response):
-        care__ = []
-        care = response.xpath('//div[@class="specifics-inner"]/ul/li/text()')[-1].getall()
-        for i in range(len(care)):
-            care__ = [c for c in care[i].split('.') if c != '']
-        return care__
+        care = []
+        care_all = response.xpath('//div[@class="specifics-inner"]/ul/li/text()')[-1].getall()
+        for care_element in care_all:
+            care = [c for c in care_element.split('.') if c.strip() != '']
+        return care
 
     def extract_image_urls(self, response):
-        image_urls = response.xpath('//div[@class="slick-slider product-images-slider"]/div/img/@src').getall()
-        for i in range(len(image_urls)):
-            image_urls[i] = "http:" + image_urls[i]
-        return image_urls
+        xpath = '//div[@class="slick-slider product-images-slider"]/div/img/@src'
+        return [f"http:{i}" for i in response.xpath(xpath).getall()]
