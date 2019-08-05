@@ -22,7 +22,7 @@ class CrawlWorker:
         self.url_queue.put(url)
         self.allowed_domain = url.netloc
         self.visisted_urls = []
-        self.total_urls_requested = 0
+        self.remaining_requests = crawl_limit
         self.pages_visisted = 0
         self.total_bytes_downloaded = 0
 
@@ -74,12 +74,12 @@ class CrawlWorker:
 
     def __is_request_allowed(self):
         return self.url_queue.qsize() and \
-            (self.total_urls_requested < self.crawl_limit)
+            (self.remaining_requests > 0)
 
     async def __crawl_request(self):
         if not self.__is_request_allowed():
             return
-        self.total_urls_requested += 1
+        self.remaining_requests -= 1
         raw_url = self.url_queue.get()
         self.url_queue.task_done()
         url = raw_url.geturl()
@@ -90,4 +90,4 @@ class CrawlWorker:
                     response = await resp.text()
                     await self.__handle_response(response)
                 else:
-                    self.total_urls_requested -= 1
+                    self.remaining_requests += 1
