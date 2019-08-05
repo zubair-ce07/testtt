@@ -1,6 +1,6 @@
 import re
 
-import scrapy
+from scrapy import Item, Field
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 
@@ -11,21 +11,20 @@ def clean(raw_data):
                 if re.sub('\s+', ' ', data).strip()]
     elif isinstance(raw_data, str):
         return re.sub('\s+', ' ', raw_data).strip()
-    return ''
 
 
-class WeItem(scrapy.Item):
-    retailer_sku = scrapy.Field()
-    gender = scrapy.Field()
-    name = scrapy.Field()
-    category = scrapy.Field()
-    url = scrapy.Field()
-    brand = scrapy.Field()
-    description = scrapy.Field()
-    care = scrapy.Field()
-    image_urls = scrapy.Field()
-    skus = scrapy.Field()
-    requests = scrapy.Field()
+class WeItem(Item):
+    retailer_sku = Field()
+    gender = Field()
+    name = Field()
+    category = Field()
+    url = Field()
+    brand = Field()
+    description = Field()
+    care = Field()
+    image_urls = Field()
+    skus = Field()
+    requests = Field()
 
 
 class WeSpider(CrawlSpider):
@@ -40,26 +39,27 @@ class WeSpider(CrawlSpider):
                    'Kinder': 'kids'
                    }
 
-    page_urls_template = '{}?sz=9&start={}'
-    sku_key_template = '{}_{}'
+    page_urls_t = '{}?sz=9&start={}'
+    sku_key_t = '{}_{}'
     listings_css = '.level-top-1'
     categories_css = '.refinement-link'
+
     rules = (
         Rule(LinkExtractor(restrict_css=listings_css), callback='parse'),
-        Rule(LinkExtractor(restrict_css=categories_css), callback='load_pages'),
+        Rule(LinkExtractor(restrict_css=categories_css), callback='parse_pagination'),
     )
 
-    def load_pages(self, response):
+    def parse_pagination(self, response):
         total_products = response.css('.plp-progress-bar ::attr(max)').get()
 
         if total_products:
             for products_count in range(0, int(total_products), 30):
-                yield response.follow(self.page_urls_template.format(response.url, products_count),
-                                      callback=self.extract_products_url)
+                yield response.follow(self.page_urls_t.format(response.url, products_count),
+                                      callback=self.parse_products)
         else:
-            return response.follow(response.url, callback=self.extract_products_url)
+            return response.follow(response.url, callback=self.parse_products)
 
-    def extract_products_url(self, response):
+    def parse_products(self, response):
         return [response.follow(product_url, callback=self.parse_item)
                 for product_url in response.css('.name-link ::attr(href)').getall()]
 
@@ -74,13 +74,12 @@ class WeSpider(CrawlSpider):
         item['description'] = self.product_description(response)
         item['care'] = self.product_care(response)
         item['image_urls'] = self.images_url(response)
-        item['skus'] = {}
-        item['requests'] = self.colour_urls(response)
+        item['skus'] = self.product_skus(response)
 
+        item['requests'] = self.colour_requests(response)
         return self.next_request_or_item(item)
 
-    def parse_sku(self, response):
-        item = response.meta['item']
+    def product_skus(self, response):
         color = self.product_color(response)
         price = response.css('.pdp-price .price-sales ::attr(data-price)').get()
         previous_price = clean(response.css('.price-standard ::text').get())
@@ -90,11 +89,42 @@ class WeSpider(CrawlSpider):
                       'price': price,
                       'previous_price': previous_price}
 
+        skus = {}
         for size in sizes:
-            common_sku.update({'size': size})
-            item['skus'].update({self.sku_key_template.format(color, size): common_sku.copy()})
+            out_of_stock, size = self.check_stock_status(size)
+            common_sku.update({
+                'out_of_stock': out_of_stock,
+                'size': size,
+
+            })
+            skus[self.sku_key_t.format(color, size)] = common_sku.copy()
+
+        return skus
+
+    def product_color(self, response):
+        color = response.css('.variant-attribute--color span ::text').get()
+        return clean(re.sub('Farbe:|\s+', '', color))
+
+    def product_sizes(self, response):
+        size_sel = response.css('#va-size')[0]
+        sizes = size_sel.css('option ::text').getall()[1:]
+        return clean([size for size in sizes])
+
+    def colour_requests(self, response):
+        colour_urls = response.css('.color .emptyswatch ::attr(href)').getall()
+        return [response.follow(color_url, callback=self.parse_color) for color_url in colour_urls]
+
+    def parse_color(self, response):
+        item = response.meta['item']
+        item['image_urls'].extend(self.images_url(response))
+        item['skus'].update(self.product_skus(response))
 
         return self.next_request_or_item(item)
+
+    def check_stock_status(self, size):
+        if 'Ausverkauft' in size:
+            return True, re.sub('- Ausverkauft', '', size)
+        return False, size
 
     def retailer_sku(self, response):
         return response.css('.variation-select ::attr(data-product-id)').get()
@@ -123,32 +153,12 @@ class WeSpider(CrawlSpider):
     def images_url(self, response):
         return response.css('.pdp-figure__image ::attr(data-image-replacement)').getall()
 
-    def colour_urls(self, response):
-        colour_urls = response.css('.swatches color ::attr(href)').getall()
-        if not colour_urls:
-            colour_selectors = response.css('#va-color')[0]
-            colour_urls = colour_selectors.css('option ::attr(value)').getall()
-
-        return [response.follow(color_url, callback=self.parse_sku) for color_url in colour_urls]
-
-    def product_color(self, response):
-        color = response.css('.variant-attribute--list.variant-attribute--color span ::text').get()
-
-        if color:
-            return clean(re.sub('Farbe', '', color))
-        return clean(re.sub('- Ausverkauft', '', response.css('[selected="selected"] ::text').get()))
-
-    def product_sizes(self, response):
-        size_selector = response.css('#va-size')[0]
-        sizes = size_selector.css('option ::text').getall()[1:]
-
-        return clean([re.sub('- Ausverkauft', '', size) for size in sizes])
-
     def next_request_or_item(self, item):
         if item['requests']:
             request = item['requests'].pop()
             request.meta.update({'item': item})
             return request
+
         item.pop('requests', None)
         return item
 
