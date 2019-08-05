@@ -1,7 +1,5 @@
 import json
 import re
-import sys
-
 import scrapy
 from scrapy.spiders import CrawlSpider
 
@@ -10,7 +8,6 @@ def clean(raw_strs):
     if isinstance(raw_strs, list):
         cleaned_strs = [re.sub('\s+', ' ', st).strip() for st in raw_strs]
         return [st for st in cleaned_strs if st]
-
     elif isinstance(raw_strs, str):
         return re.sub('\s+', ' ', raw_strs).strip()
 
@@ -32,13 +29,14 @@ class Gap(CrawlSpider):
     name = 'gap'
     allowed_domains = ['gap.cn']
     api_url = 'https://www.gap.cn/gap/rest/category?'
-    product_url_template = 'https://www.gap.cn/gap/rest/productnew?id={}&store_id=1&customer_group_id=0'
-    product_page_url_template = '{}cid={}&store_id=1&from=side&customer_group_id=0'
-    pagination_url_template = 'https://www.gap.cn/gap/rest/category?cid={}&action=getCategoryProduct&page={}&store_' \
-                              'id=1&platform=pc&allCategoryId={}&lastCategoryId={}&lastCategoryDisplayNum={}' \
-                              '&lastCategoryTotalNum={}&haveDisplayAllCategoryId={}&from=side&customer_group_id=0'
-    products_url_template = 'https://www.gap.cn/gap/rest/category?cid={}&store_id=1&from=side&customer_group_id=0'
-
+    listing_url_t = '{}cid={}'
+    catg_url_t = '{}id={}'
+    product_url_t = 'https://www.gap.cn/gap/rest/productnew?id={}&store_id=1&customer_group_id=0'
+    product_page_url_t = '{}cid={}&store_id=1&from=side&customer_group_id=0'
+    pagination_url_t = 'https://www.gap.cn/gap/rest/category?cid={}&action=getCategoryProduct&page={}&store_' \
+                       'id=1&platform=pc&allCategoryId={}&lastCategoryId={}&lastCategoryDisplayNum={}' \
+                       '&lastCategoryTotalNum={}&haveDisplayAllCategoryId={}&from=side&customer_group_id=0'
+    products_url_t = 'https://www.gap.cn/gap/rest/category?cid={}&store_id=1&from=side&customer_group_id=0'
     gender_dict = {
         '孕妇装|': 'women',
         '女装|': 'women',
@@ -47,61 +45,48 @@ class Gap(CrawlSpider):
         '男孩|': 'boy',
         '幼儿|': 'unisex-kids',
         '婴儿|': 'unisex-kids'
-
     }
-
     start_urls = [
         'https://www.gap.cn/gap/rest/category?action=getTopNavs&store_id=1'
     ]
 
     def parse(self, response):
-        listings_json = json.loads(response.text)
-
-        yield from [response.follow(f'{self.api_url}cid={listing_id.get("id")}',
-                                    callback=self.parse_categories)
-                    for listing_id in listings_json.get('data').get('marketTopNavs')]
+        listings_json = json.loads(response.text)['data']['marketTopNavs']
+        return [response.follow(self.listing_url_t.format(self.api_url, listing_id.get("id")),
+                                callback=self.parse_categories)
+                for listing_id in listings_json]
 
     def parse_categories(self, response):
-        categories_json = json.loads(response.text)
+        categories_json = json.loads(response.text)['data']['currentProductList']['currentChildCategoryIdAll']
+        return [response.follow(self.catg_url_t.format(self.api_url, category_code),
+                                callback=self.parse_subcategories)
+                for category_code in categories_json.split(',')]
 
-        yield from [response.follow(f'{self.api_url}id={category_code}', callback=self.parse_subcategory)
-                    for category_code in
-                    categories_json.get('data').get('currentProduct'
-                                                    'List').get('currentChildCategoryIdAll').split(',')]
+    def parse_subcategories(self, response):
+        subcategories_json = json.loads(response.text)['data']['child_categories']
+        return [response.follow(self.products_url_t.format(subcategory_code), callback=self.parse_pagination,
+                                meta={'catg_id': subcategory_code}) for subcategory_code in subcategories_json]
 
-    def parse_subcategory(self, response):
-        subcategories_json = json.loads(response.text)
-
-        yield from [response.follow(self.product_page_url_template.format(self.api_url, subcategory_code),
-                                    callback=self.total_products)
-                    for subcategory_code in subcategories_json.get('data').get('child_categories')]
-
-    def total_products(self, response):
-        catg_id = re.findall('cid=(.+?)&', response.url)[0]
-
-        yield response.follow(self.products_url_template.format(catg_id), callback=self.pagination,
-                              meta={'catg_id': catg_id})
-
-    def pagination(self, response):
+    def parse_pagination(self, response):
         catg_id = response.meta['catg_id']
         products_json = json.loads(response.text)
-        total_products = int(products_json.get('data').get('currentProductList').get('categoryProducts').
-                             get('category_' + catg_id).get('category').get('product_count'))
+        total_products = int(products_json['data']['currentProductList']['categoryProducts'
+                                                                         '']['category_' + catg_id]['category'
+                                                                                                    '']['product_count'])
         page_number = 1
-
-        yield from [response.follow(self.pagination_url_template.format(catg_id, page_number, catg_id, catg_id,
-                                                                        product_displayed, total_products, catg_id),
-                                    callback=self.parse_products, meta={'catg_id': catg_id})
-                    for product_displayed in range(0, total_products, 60)]
+        return [response.follow(self.pagination_url_t.format(catg_id, page_number, catg_id, catg_id,
+                                                             product_displayed, total_products, catg_id),
+                                callback=self.parse_products, meta={'catg_id': catg_id})
+                for product_displayed in range(0, total_products, 60)]
 
     def parse_products(self, response):
         catg_id = response.meta['catg_id']
-        products_json = json.loads(response.text)
-        yield from [
-            response.follow(self.product_url_template.format(product_code.get('productId')),
+        products_json = json.loads(response.text)['data']['categoryProducts']
+        return [
+            response.follow(self.product_url_t.format(product_code['productId']),
                             callback=self.parse_item)
             for product_code in
-            products_json.get('data').get('categoryProducts').get('category_' + catg_id).get('products')]
+            products_json['category_' + catg_id]['products']]
 
     def parse_item(self, response):
         raw_product = json.loads(response.text)
@@ -116,11 +101,10 @@ class Gap(CrawlSpider):
         item['care'] = self.product_care(raw_product)
         item['image_urls'] = self.images_url(raw_product)
         item['skus'] = self.parse_sku(raw_product)
-
-        yield item
+        return item
 
     def retailer_sku(self, raw_product):
-        return raw_product.get('data').get('trackingcode').get('productId')
+        return raw_product['data']['trackingcode']['productId']
 
     def product_gender(self, raw_product):
         return self.gender_dict.get(raw_product.get('data').get('prefixCategoryName'), 'unisex-adults')
@@ -149,10 +133,8 @@ class Gap(CrawlSpider):
 
     def parse_sku(self, raw_product):
         sku = {}
-
         for color_json in raw_product.get('data').get('colors'):
             color = color_json.get("colorName")
-
             for size in color_json.get('size'):
                 size = size.get("sizeNumber")
                 sku.update({
