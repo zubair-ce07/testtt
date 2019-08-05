@@ -142,18 +142,18 @@ class OrsaySpider(CrawlSpider):
 
     def get_product_sku(self, response):
         skus = {}
-        selected_color_css = ".selected-value::text"
-        sizes_css = ".swatches.size li"
-
-        selected_color = response.css(selected_color_css).get()
         common_sku = self.get_product_pricing(response)
-        common_sku["color"] = selected_color
 
-        for size_sel in response.css(sizes_css):
+        color_css = ".selected-value::text"
+        common_sku["color"] = response.css(color_css).get()
+
+        for size_sel in response.css(".swatches.size li"):
             sku = common_sku.copy()
             sku["size"] = size_sel.css('.swatchanchor::text').get().strip()
+
             if size_sel.css('.unselectable'):
                 sku["out_of_stock"] = True
+
             skus[f"{sku['color']}_{sku['size']}"] = sku
 
         if not skus:
