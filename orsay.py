@@ -21,24 +21,28 @@ class OrsaySpider(CrawlSpider):
 
     gender = "Women"
 
-    current_products = 0
-
     listings_css = [".level-1"]
     products_css = [".thumb-link"]
 
     rules = (
-        Rule(LinkExtractor(restrict_css=listings_css), callback="pagination"),
+        Rule(LinkExtractor(restrict_css=listings_css), callback="parse_pagination"),
         Rule(LinkExtractor(restrict_css=products_css), callback="parse_item"),
     )
 
-    def pagination(self, response):
-        pagination_details = self.get_pagination_details(response)
-        if pagination_details:
-            self.current_products += pagination_details['product_size']
+    def parse_pagination(self, response):
+        current_products = 0
+        pagination_url = response.url + "?sz="
+        max_products_css = ".js-pagination-product-count::attr(data-count)"
+        product_size_xpath = "//script[@type='text/javascript']//text()"
 
-            while self.current_products < pagination_details['max_products']:
-                next_page = pagination_details['pagination_url'] + str(self.current_products)
-                self.current_products += pagination_details['product_size']
+        product_size = int(response.xpath(product_size_xpath).re_first('DEFAULT_PAGE_SIZE":"(.+?)"'))
+        max_products = int(response.css(max_products_css).get())
+
+        if max_products:
+            current_products += product_size
+            while current_products < max_products:
+                next_page = pagination_url + str(current_products)
+                current_products += product_size
                 yield Request(next_page, callback=self.parse)
 
     def parse_item(self, response):
@@ -68,20 +72,6 @@ class OrsaySpider(CrawlSpider):
 
     def clean_price(self, price):
         return price.strip().replace(",", "")
-
-    def get_pagination_details(self, response):
-        self.current_products = 0
-        pagination_url = response.url + "?sz="
-        max_products_css = ".js-pagination-product-count::attr(data-count)"
-        product_size_css = "#search-result-items > li:nth-child(72)::attr(data-idx)"
-        product_size = response.css(product_size_css).get()
-        max_products = response.css(max_products_css).get()
-        if max_products:
-            return {
-                "pagination_url": pagination_url,
-                "max_products": int(max_products),
-                "product_size": int(product_size)
-            }
 
     def get_product_name(self, response):
         css = ".product-name::text"
@@ -129,12 +119,13 @@ class OrsaySpider(CrawlSpider):
         return response.css(currency_css).get()
 
     def get_product_pricing(self, response):
+        previous_price = self.get_previous_price(response)
         pricing = {
             "price": self.get_sale_price(response),
             "currency": self.get_price_currency(response)
         }
-        if self.get_previous_price(response):
-            pricing.update({"previous_price": self.get_previous_price(response)})
+        if previous_price:
+            pricing['previous_price'] = previous_price
 
         return pricing
 
@@ -156,17 +147,16 @@ class OrsaySpider(CrawlSpider):
     def get_product_sku(self, response):
         skus = {}
         selected_color_css = ".selected-value::text"
-        sizes_css = ".swatches.size .swatchanchor::text"
-        out_of_stock_sizes_css = ".swatches.size .unselectable .swatchanchor::text"
+        sizes = response.css(".swatches.size li")
 
         selected_color = response.css(selected_color_css).get()
         common_sku = self.get_product_pricing(response)
         common_sku["color"] = selected_color
 
-        for size in response.css(sizes_css) or ["single_size"]:
+        for size in sizes.css('swatchanchor::text') or ["single_size"]:
             sku = common_sku.copy()
             sku["size"] = size.get().strip()
-            if size in response.css(out_of_stock_sizes_css):
+            if size in sizes.css('.unselectable .swatchanchor::text').getall():
                 sku["out_of_stock"] = True
             skus[f"{sku['color']}_{sku['size']}"] = sku
 
