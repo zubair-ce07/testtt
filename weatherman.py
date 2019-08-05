@@ -10,16 +10,14 @@ WHITE_TEXT = "\033[0;37m"
 
 class ReportGenerator:
     def __init__(self, weather_record, year, month='*'):
-        self.year = year
-        self.month = month
         self.weather_record = []
-        if self.month == '*':
+        if month == '*':
             for r in weather_record.records:
-                if r.record_date.year == self.year:
+                if r.record_date.year == year:
                     self.weather_record.append(r)
         else:
             for r in weather_record.records:
-                if r.record_date.year == self.year and r.record_date.month == self.month:
+                if r.record_date.year == year and r.record_date.month == month:
                     self.weather_record.append(r)
         self.cal = Calculations()
 
@@ -46,7 +44,6 @@ class ReportGenerator:
 
 
 class Calculations:
-
     def calculations_for_year(self, weather_record):
         max_temp = max([r for r in weather_record if r.max_temperature],
                        key=lambda x: x.max_temperature)
@@ -67,7 +64,6 @@ class Calculations:
 
 
 class WeatherData:
-
     def __init__(self, row):
         if row.get('PKT'):
             self.record_date = datetime.strptime(row.get('PKT'), '%Y-%m-%d')
@@ -82,7 +78,6 @@ class WeatherData:
 
 
 class WeatherRecord:
-
     def __init__(self, path):
         self.records = []
 
