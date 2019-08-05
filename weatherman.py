@@ -76,19 +76,19 @@ if __name__ == "__main__":
     arg_parser.add_argument(
         "readings_dir", help="Path to weather readings directory")
     arg_parser.add_argument(
-        "-e", type=parse_year, help="Display the highest temperature and day,\
+        "-e", "--yearly_report", type=parse_year, help="Display the highest temperature and day,\
              lowest temperature and day, most humid day and humidity for a\
                   given year (e.g. 2002)")
     arg_parser.add_argument(
-        "-a", type=parse_month, help="Display the average highest temperature,\
+        "-a", "--monthly_avgs", type=parse_month, help="Display the average highest temperature,\
              average lowest temperature, average mean humidity for a given\
                   month (e.g. 2005/6)")
     arg_parser.add_argument(
-        "-c", type=parse_month, help="Draw two horizontal bar charts on the \
+        "-c", "--barchart", type=parse_month, help="Draw two horizontal bar charts on the \
             console for the highest and lowest temperature on each day.\
                  Highest in red and lowest in blue for a given month")
     arg_parser.add_argument(
-        "-o", type=parse_month, help="Draw one horizontal bar chart on the console\
+        "-o", "--barchart_single", type=parse_month, help="Draw one horizontal bar chart on the console\
              for the highest and lowest temperature on each day. Highest in red\
                   and lowest in blue for a given month")
 
@@ -96,14 +96,15 @@ if __name__ == "__main__":
 
     weather_man = WeatherMan()
 
-    if args.e:
-        weather_man.get_yearly_reports(args.readings_dir, args.e)
+    if args.yearly_report:
+        weather_man.get_yearly_reports(args.readings_dir, args.yearly_report)
 
-    if args.a:
-        weather_man.get_monthly_reports(args.readings_dir,args.a[0], args.a[1])
+    if args.monthly_avgs:
+        weather_man.get_monthly_reports(args.readings_dir, args.monthly_avgs[0], args.monthly_avgs[1])
 
-    if args.c:
-        weather_man.get_monthly_bar_charts(args.readings_dir, args.c[0], args.c[1])
+    if args.barchart:
+        weather_man.get_monthly_bar_charts(args.readings_dir, args.barchart[0], args.barchart[1])
 
-    if args.o:
-        weather_man.get_monthly_bar_charts(args.readings_dir, args.o[0], args.o[1], True)
+    if args.barchart_single:
+        weather_man.get_monthly_bar_charts(args.readings_dir, args.barchart_single[0], 
+                                            args.barchart_single[1], True)
