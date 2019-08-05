@@ -9,7 +9,6 @@ import {KayakFlightsResultsPage} from './KayakFlightsResultsPage';
 import {BookingProviderPage} from './BookingProviderPage';
 
 const helper = new Helper();
-
 const kayakFactory = new KayakFactory();
 const flightsPage: KayakFlightsPage = kayakFactory.createKayakPageObject("KayakFlightsPage");
 const flightsResultPage: KayakFlightsResultsPage =  kayakFactory.createKayakPageObject("KayakFlightsResultsPage");
@@ -99,7 +98,7 @@ describe("Kayak Flights Result Page:", function() {
 	});
 
 	it("should display ZRH Airport be selected in leg two's origin airport", async function() {
-		expect(await flightsResultPage.getOriginAirportOfLegOne()).to.be.include("ZRH");
+		expect(await flightsResultPage.getOriginAirportOfLegTwo()).to.be.include("ZRH");
 	});
 
 	it("should display LON Airport be selected in leg two's destination aiport", async function() {
@@ -165,11 +164,11 @@ describe("Provider Page:", function() {
 		expect(await providerPage.getoriginAirport()).to.be.include("FRA");
 	});
 
-	it("Should display ZRH Airport selected in origin airport", async function() {
+	it("Should display ZRH Airport selected in destination airport", async function() {
 		expect(await providerPage.getDestinationAirport()).to.be.include("ZRH");
 	});
 
-	it("Should display ZRH Airport selected in origin airport", async function() {
+	it("Should display selected Dates in Date Field", async function() {
 		expect(await providerPage.getDepartureDate()).to.be.equal(helper.getSwissFormatedDate(6));
 	});
 

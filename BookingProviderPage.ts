@@ -1,5 +1,5 @@
 import {browser, $, element, by, protractor, promise, ElementFinder, ElementArrayFinder, ProtractorExpectedConditions, ExpectedConditions, Key} from 'protractor';
-import { KayakHelper } from './Helper';
+import { Helper } from './Helper';
 var dragAndDrop = require('html-dnd').code;
 
 export class BookingProviderPage {
