@@ -2,17 +2,18 @@ var chai = require('chai');
 var chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
 var expect = chai.expect;
-import {KayakFactory} from './KayakFactory'
+import {browser} from 'protractor';
+import {Factory} from './Factory'
 import {Helper} from './Helper';
 import {KayakFlightsPage} from './KayakFlightsPage';
 import {KayakFlightsResultsPage} from './KayakFlightsResultsPage';
 import {BookingProviderPage} from './BookingProviderPage';
 
 const helper = new Helper();
-const kayakFactory = new KayakFactory();
-const flightsPage: KayakFlightsPage = kayakFactory.createKayakPageObject("KayakFlightsPage");
-const flightsResultPage: KayakFlightsResultsPage =  kayakFactory.createKayakPageObject("KayakFlightsResultsPage");
-const providerPage: BookingProviderPage =  kayakFactory.createKayakPageObject("BookingProviderPage");
+const factory = new Factory();
+const flightsPage: any = factory.createPageObject(`${browser.params.page}FlightsPage`);
+const flightsResultPage: any =  factory.createPageObject(`${browser.params.page}FlightsResultsPage`);
+const providerPage: BookingProviderPage =  new BookingProviderPage();
 
 describe("Kayak Flights Page:", function() {
 
@@ -280,6 +281,7 @@ describe("Flight Results Page:", function() {
 	});
 
 	it("should close messages when click 'ok'", async function() {
+		await flightsResultPage.clickErrorDialogOkButton();
 		expect(await flightsResultPage.closeErrorDialogBox()).to.be.true;
 	});
 });

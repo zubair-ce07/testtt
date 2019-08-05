@@ -48,6 +48,7 @@ export class KayakFlightsResultsPage {
 
     async getOriginAirportOfLegOne(): Promise<string> {
         return await this.originAirportOfLegOne.getText();
+        browser.params
     }
 
     async multipleCitiesFormDisplayed(): Promise<boolean> {

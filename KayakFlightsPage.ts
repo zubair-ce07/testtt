@@ -1,12 +1,9 @@
 import {browser, $, element, by, protractor, promise, ElementFinder, ElementArrayFinder, ProtractorExpectedConditions, ExpectedConditions, Key} from 'protractor';
-import { KayakHelper } from './Helper';
-import {KayakCommonPage} from './KayakCommonPage';
-
+import { Helper } from './Helper';
 
 export class KayakFlightsPage {
 
-    kayakHelper = new KayakHelper();
-    kayakCommonPage = new KayakCommonPage();
+    kayakHelper = new Helper();
     kayakUrl: string = "https://www.kayak.com/flights";
     searchOptionsDropDown: ElementFinder = element(by.css("div[id$=switch-display]"));
     multipleCitiesOption: ElementFinder = element(by.css("li[id$=switch-option-3]"));
