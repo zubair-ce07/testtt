@@ -127,8 +127,8 @@ class OrsaySpider(CrawlSpider):
 
     def color_requests(self, response, garment):
         color_css = ".swatchanchor.js-color-swatch::attr(href)"
-        return [Request(url, callback=self.parse_color, meta={"garment": garment}, dont_filter=True) for url in
-                response.css(color_css).getall()]
+        return [Request(url, callback=self.parse_color, meta={"garment": garment}, dont_filter=True)
+                for url in response.css(color_css).getall()]
 
     def parse_color(self, response):
         garment = response.meta["garment"]
@@ -157,7 +157,7 @@ class OrsaySpider(CrawlSpider):
             skus[f"{sku['color']}_{sku['size']}"] = sku
 
         if not skus:
-            common_sku["size"] = 'Single_size'
+            common_sku["size"] = 'One_size'
             skus[f"{common_sku['color']}_{common_sku['size']}"] = common_sku
 
         return skus
