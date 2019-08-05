@@ -1,4 +1,4 @@
-from re import sub
+import re
 
 from scrapy import Request
 from scrapy.spiders import Spider
@@ -12,8 +12,8 @@ class WoolrichParser(Spider):
     name = 'woolrichparser'
     retailer = 'woolrich-uk'
 
-    SIZE_BACKLOG = 'size_backlog'
-    COLOUR_BACKLOG = 'colour_backlog'
+    SIZE_URLS = 'size_urls'
+    COLOUR_URLS = 'colour_urls'
     ITEM = 'item'
 
     genders = [
@@ -34,6 +34,7 @@ class WoolrichParser(Spider):
 
     def parse(self, response):
         item = WoolrichItem()
+        item['skus'] = []
         item['url'] = response.url
         item['market'] = self.market
         item['retailer'] = self.retailer
@@ -45,111 +46,115 @@ class WoolrichParser(Spider):
         item['gender'] = self.get_gender(response)
         item['description'] = self.get_description(response)
         item['category'] = self.get_categories(response)
-        colour_backlog = self.get_colour_backlog(response)
 
-        params = {}
-        params[self.ITEM] = item
-        params[self.COLOUR_BACKLOG] = colour_backlog
-        params[self.SIZE_BACKLOG] = []
+        return self.make_colour_request(item, response)
 
-        return Request(url=colour_backlog[0], meta=params, callback=self.parse_colour_sizes)
-
-    def parse_colour_sizes(self, response):
-        meta = response.meta
-        colour_backlog, item, size_backlog = meta[self.COLOUR_BACKLOG], meta[self.ITEM], meta[self.SIZE_BACKLOG]
-        size_backlog.extend(self.get_size_backlog(response))
-        colour_backlog = colour_backlog[1:]
-
-        params = {}
-        params[self.ITEM] = item
-        params[self.SIZE_BACKLOG] = size_backlog
-
-        if colour_backlog:
-            params[self.COLOUR_BACKLOG] = colour_backlog
-            yield Request(url=colour_backlog[0], meta=params, callback=self.parse_colour_sizes)
+    def make_colour_request(self, item, response):
+        colour_urls = self.get_colour_urls(response)
+        if colour_urls:
+            params = {}
+            params[self.ITEM] = item
+            params[self.COLOUR_URLS] = colour_urls
+            params[self.SIZE_URLS] = []
+            return Request(url=colour_urls[0], meta=params, callback=self.parse_colour_requests)
         else:
-            yield Request(url=size_backlog[0][0], meta=params, callback=self.parse_skus)
+            return item
+
+    def parse_colour_requests(self, response):
+        meta = response.meta
+        colour_urls, item, size_urls = meta[self.COLOUR_URLS], meta[self.ITEM], meta[self.SIZE_URLS]
+        size_urls.extend(self.get_size_urls(response))
+        colour_urls = colour_urls[1:]
+
+        params = {}
+        params[self.ITEM] = item
+        params[self.SIZE_URLS] = size_urls
+
+        if colour_urls:
+            params[self.COLOUR_URLS] = colour_urls
+            yield Request(url=colour_urls[0], meta=params, callback=self.parse_colour_requests)
+        else:
+            yield Request(url=size_urls[0], meta=params, callback=self.parse_skus)
 
     def parse_skus(self, response):
-        size_backlog, item = response.meta[self.SIZE_BACKLOG], response.meta[self.ITEM]
+        size_urls, item = response.meta[self.SIZE_URLS], response.meta[self.ITEM]
 
         skus = item.get('skus', [])
-        skus_per_size = self.get_sku(response, {'size': size_backlog[0][1]})
+        skus_per_size = self.get_sku(response)
         skus.append(skus_per_size)
 
         item['skus'] = skus
         item['image_urls'].extend(self.get_image_urls(response))
 
-        size_backlog = size_backlog[1:]
-        if size_backlog:
+        size_urls = size_urls[1:]
+        if size_urls:
             params = {}
             params[self.ITEM] = item
-            params[self.SIZE_BACKLOG] = size_backlog
-            yield Request(url=size_backlog[0][0], meta=params, callback=self.parse_skus)
+            params[self.SIZE_URLS] = size_urls
+            yield Request(url=size_urls[0], meta=params, callback=self.parse_skus)
         else:
             item['image_urls'] = set(item['image_urls'])
             yield item
 
-    def add_trail(self, response):
-        trail = (response.css('head title::text').get(), response.url)
-        return [*response.meta['trail'], trail] if response.meta.get('trail') else [trail]
-
-    def get_in_stock(self, response):
-        in_stock = response.css('.in-stock-msg::text').get()
-        return int(sub(r'\sitem\sleft', '', in_stock)) if in_stock else 0
-
     def get_name(self, response):
         return response.css('#product-content .product-name::text').get().strip()
 
-    def get_size_backlog(self, response):
-        css = '.swatches.size .swatchanchor::{}'
-        sizes = [s.strip() for s in response.css(css.format('text')).getall()]
-        urls = response.css(css.format('attr(href)')).getall()
-        return list(zip(urls, sizes))
+    def get_size_urls(self, response):
+        return response.css('.swatches.size .swatchanchor::attr(href)').getall()
 
-    def get_colour_backlog(self, response):
+    def get_colour_urls(self, response):
         return response.css('.swatches.color .swatchanchor::attr(href)').getall()
 
     def get_product_id(self, response):
-        product_id = sub(r'.*dwvar_', '', response.url)
-        return sub(r'_color.*', '', product_id)
+        return response.css('input#pid::attr(value)').get()
 
     def get_categories(self, response):
         return response.css('.breadcrumb-element::text').getall()[:-1]
 
     def get_description(self, response):
-        descriptions = response.css('.description::text').getall()
-        return [description.strip() for description in descriptions]
+        return self.sanitize_list(response.css('.description::text').getall())
 
     def get_care(self, response):
-        return [care.strip() for care in response.css('.fit-content::text').getall()]
+        return self.sanitize_list(response.css('.fit-content::text').getall())
+
+    def get_size(self, response):
+        return re.search(r'(?<=size\=).*(?=\&dwvar)', response.url).group(0)
 
     def get_image_urls(self, response):
         css = '#thumbnails .carousel-container-inner a::attr(href)'
         return response.css(css).getall()
 
     def get_gender(self, response):
-        genders_candidate = ' '.join([response.url]
-                                     + [url for title, url in response.meta['trail']]
-                                     ).lower()
+        trail = [url for _, url in response.meta.get('trail') or []]
+        genders_candidate = ' '.join([response.url] + trail).lower()
+
         for tag, gender in self.genders:
             if tag in genders_candidate:
                 return gender
+
         return 'unisex-adults'
 
-    def get_sku(self, response, additional_attrs):
-        colour_css = '.swatches.color .selected .swatch::text'
-        price_css = '#product-content .price-sales::text'
-        sku_item = additional_attrs
-        sku_item['currency'] = self.currency,
-        sku_item['colour'] = response.css(colour_css).get().strip()
-        sku_item['price'] = int(response.css(price_css).get()[1:].replace('.', ''))
+    def sanitize_price(self, price):
+        return int(''.join(re.findall(r'\d+', price)))
 
-        previous_prices = response.css('#product-content .price-sales::text').getall()
+    def sanitize_list(self, inputs):
+        return [i.strip() for i in inputs]
+
+    def get_sku(self, response):
+        price_css = '#product-content .price-sales::text'
+        colour_css = '.swatches.color .selected .swatch::text'
+
+        sku_item = {}
+        sku_item['currency'] = self.currency,
+        sku_item['size'] = self.get_size(response)
+        sku_item['colour'] = response.css(colour_css).get().strip()
+        sku_item['price'] = self.sanitize_price(response.css(price_css).get())
+
+        previous_prices = response.css('#product-content .price-standard::text').getall()
         if previous_prices:
-            previous_prices = [int(p[1:].replace('.', '')) for p in previous_prices]
-            sku_item['previous_prices'] = previous_prices
+            sku_item['previous_prices'] = [self.sanitize_price(p) for p in previous_prices]
 
         sku_item['sku_id'] = f'{sku_item["colour"].replace(" ", "-")}_{sku_item["size"]}'.lower()
-        sku_item['in_stock'] = self.get_in_stock(response)
+        sku_item['in_stock'] = bool(response.css('.in-stock-msg::text').get())
+
         return sku_item
