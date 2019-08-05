@@ -65,7 +65,7 @@ class LanebryantSpider(CrawlSpider):
         return json.loads(response.css(css).get())
 
     def get_product_name(self, response):
-        return response.css(".mar-product-title::text").get()
+        return response.css(".mar-product-title::text").get().strip()
 
     def get_product_description(self, response):
         return [self.get_product_json(response)["description"]]
@@ -74,8 +74,12 @@ class LanebryantSpider(CrawlSpider):
         return self.get_product_json(response)["sku"]
 
     def get_image_urls(self, response):
-        return [images["sku_image"].replace("//", "", 2) for images in
-                self.get_sku_json(response)["pdpDetail"]["product"][0]["all_available_colors"][0]["values"]]
+        images = []
+        base_images = [images["sku_image"].replace("//", "", 2) for images in
+                       self.get_sku_json(response)["pdpDetail"]["product"][0]["all_available_colors"][0]["values"]]
+        for image in base_images:
+            images += [image, image + '_Back', image + '_alt1']
+        return images
 
     def get_product_price(self, response):
         return self.clean_price(self.get_product_json(response)["offers"]["price"])
@@ -101,11 +105,21 @@ class LanebryantSpider(CrawlSpider):
 
     def get_product_colors(self, response):
         return {colors["id"]: colors["name"] for colors in
-                self.get_sku_json(response)["pdpDetail"]["product"][0]["all_available_colors"][0]["values"]} or {}
+                self.get_sku_json(response)["pdpDetail"]["product"][0]["all_available_colors"][0]["values"]}
 
-    def get_previous_price(self, parsed_json):
-        if parsed_json['list_price'] is not parsed_json["sale_price"]:
-            return {'previous_price': self.clean_price(parsed_json['list_price'])}
+    def get_sale_price(self, parsed_json):
+        if parsed_json['list_price'] != parsed_json["sale_price"]:
+            return self.clean_price(parsed_json['list_price'])
+
+    def get_product_pricing(self, parsed_json):
+        pricing = {
+            "price": self.clean_price(parsed_json["sale_price"]),
+            "currency": self.currency
+        }
+        if self.get_sale_price(parsed_json):
+            pricing.update({"previous_price": self.get_sale_price(parsed_json)})
+
+        return pricing
 
     def get_product_skus(self, response):
         skus = {}
@@ -113,11 +127,10 @@ class LanebryantSpider(CrawlSpider):
         parsed_json = self.get_sku_json(response)
         sizes = self.get_product_sizes(response)
         colors = self.get_product_colors(response)
-        common_sku = self.get_previous_price(parsed_json["pdpDetail"]["product"][0]["skus"][0]["prices"]) or {}
+        common_sku = self.get_product_pricing(parsed_json["pdpDetail"]["product"][0]["skus"][0]["prices"]) or {}
 
         for item in parsed_json["pdpDetail"]["product"][0]["skus"]:
             sku = common_sku.copy()
-            sku["price"] = self.clean_price(item["prices"]["sale_price"])
             sku["color"] = colors[item["color"]]
             sku["size"] = sizes[item["size"]] if item["size"] in sizes else item["size"]
             if not parsed_json["pdpDetail"]["product"][0]["isSellable"]:
