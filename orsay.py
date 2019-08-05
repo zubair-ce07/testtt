@@ -68,7 +68,7 @@ class OrsaySpider(CrawlSpider):
         return [re.sub(" +", " ", string.strip()) for string in raw_list]
 
     def clean_price(self, price):
-        return price.strip().replace(",", "")
+        return int(price.strip().replace(",", ""))
 
     def get_product_name(self, response):
         css = ".product-name::text"
@@ -143,7 +143,7 @@ class OrsaySpider(CrawlSpider):
     def get_product_sku(self, response):
         skus = {}
         selected_color_css = ".selected-value::text"
-        sizes_css = ".swatches.size li .swatchanchor::text"
+        sizes_css = ".swatches.size li"
 
         selected_color = response.css(selected_color_css).get()
         common_sku = self.get_product_pricing(response)
@@ -151,8 +151,8 @@ class OrsaySpider(CrawlSpider):
 
         for size in response.css(sizes_css):
             sku = common_sku.copy()
-            sku["size"] = size.get().strip()
-            if size.get() in response.css('.unselectable .swatchanchor::text').getall():
+            sku["size"] = size.css('.swatchanchor::text').get().strip()
+            if size.get() in size.css('.unselectable').getall():
                 sku["out_of_stock"] = True
             skus[f"{sku['color']}_{sku['size']}"] = sku
 
