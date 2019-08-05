@@ -62,11 +62,11 @@ class _24sSpider(CrawlSpider):
     )
 
     listing_css = ['.nav-link', '[class="device-drop-btn"]']
-    all_brands_css = '#lbm-brands-page-html'
+    all_brands_css = ['#lbm-brands-page-html']
 
     rules = (
         Rule(LinkExtractor(restrict_css=listing_css), callback='parse_pagination', follow=True),
-        Rule(LinkExtractor(restrict_css=all_brands_css), callback='foo'),
+        Rule(LinkExtractor(restrict_css=all_brands_css), callback='parse_pagination'),
     )
 
     def parse_pagination(self, response):
@@ -119,7 +119,7 @@ class _24sSpider(CrawlSpider):
 
         if products_json['page'] <= products_json['nbPages']:
             next_page_num = str((products_json['page']) + 1)
-            return response.follow(response.meta['listing_url'], callback=self.parse,
+            return response.follow(response.meta['listing_url'], callback=self.parse_pagination,
                                    meta={'pg_num': next_page_num}, dont_filter=True)
 
     def clean_accent_and_grb(self, raw_str):
