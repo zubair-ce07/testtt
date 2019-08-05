@@ -44,6 +44,7 @@ export class KayakFlightsResultsPage {
     thirdErrorMessage: ElementFinder = element(by.css("ul[id$=-messages] li:nth-child(3)"));
     takeOffSliderRange: ElementFinder = element(by.css("div[id$=times-takeoff-slider-1-rangeLabel]"));
     flightResults: ElementArrayFinder = element.all(by.css(".Flights-Results-FlightResultItem"));
+    erorDialogCloseButton: ElementFinder = element(by.css("button[class*=errorDialogCloseButton]"))
 
     async getOriginAirportOfLegOne(): Promise<string> {
         return await this.originAirportOfLegOne.getText();
@@ -220,6 +221,14 @@ export class KayakFlightsResultsPage {
 
     async getThirdErrorMessage(): Promise<string> {
         return await this.thirdErrorMessage.getText();
+    }
+
+    async clickErrorDialogOkButton(): Promise<void> {
+        await this.erorDialogCloseButton.click();
+    }
+
+    async closeErrorDialogBox(): Promise<boolean> {
+        return !(await this.errorDialogBoxDisplayed());
     }
 
     async resultsContainNewTimeRangeForSecondLeg(): Promise<boolean> {

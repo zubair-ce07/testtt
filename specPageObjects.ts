@@ -278,4 +278,8 @@ describe("Flight Results Page:", function() {
 	it("should display error message with 'Please enter a valid 'Depart' date for flight '1'.'", async function() {
 		expect(await flightsResultPage.getThirdErrorMessage()).to.be.equal("Please enter a valid 'Depart' date for flight '1'.");
 	});
+
+	it("should close messages when click 'ok'", async function() {
+		expect(await flightsResultPage.closeErrorDialogBox()).to.be.true;
+	});
 });
