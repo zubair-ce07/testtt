@@ -1,4 +1,5 @@
-from w3lib.url import url_query_cleaner
+import re
+from w3lib.url import url_query_cleaner, add_or_replace_parameter
 from datetime import datetime
 
 from scrapy.spiders import CrawlSpider, Rule
@@ -30,20 +31,16 @@ class OrsaySpider(CrawlSpider):
     )
 
     def parse_pagination(self, response):
-        current_products = 0
-        pagination_url = response.url + "?sz="
         max_products_css = ".js-pagination-product-count::attr(data-count)"
         product_size_xpath = "//script[@type='text/javascript']//text()"
+        regex = 'DEFAULT_PAGE_SIZE":"(.+?)"'
 
-        product_size = int(response.xpath(product_size_xpath).re_first('DEFAULT_PAGE_SIZE":"(.+?)"'))
+        product_size = int(response.xpath(product_size_xpath).re_first(regex))
         max_products = int(response.css(max_products_css).get())
 
-        if max_products:
-            current_products += product_size
-            while current_products < max_products:
-                next_page = pagination_url + str(current_products)
-                current_products += product_size
-                yield Request(next_page, callback=self.parse)
+        for products in range(0, max_products + product_size, product_size):
+            next_page = add_or_replace_parameter(response.url, 'sz', products)
+            yield Request(next_page, callback=self.parse)
 
     def parse_item(self, response):
         garment = OrsayItem()
@@ -68,7 +65,7 @@ class OrsaySpider(CrawlSpider):
         return self.next_request_or_garment(garment)
 
     def clean(self, raw_list):
-        return [string.strip() for string in raw_list]
+        return [re.sub(" +", " ", string.strip()) for string in raw_list]
 
     def clean_price(self, price):
         return price.strip().replace(",", "")
@@ -107,8 +104,7 @@ class OrsaySpider(CrawlSpider):
     def get_previous_price(self, response):
         previous_price_css = ".price-standard::text"
         previous_price = response.css(previous_price_css).get()
-        if previous_price:
-            return self.clean_price(previous_price.split(" ", 1)[0])
+        return self.clean_price(previous_price.split(" ", 1)[0]) if previous_price else None
 
     def get_sale_price(self, response):
         price_css = ".price-sales::text"
@@ -147,17 +143,22 @@ class OrsaySpider(CrawlSpider):
     def get_product_sku(self, response):
         skus = {}
         selected_color_css = ".selected-value::text"
-        sizes = response.css(".swatches.size li")
+        sizes_css = ".swatches.size li .swatchanchor::text"
 
         selected_color = response.css(selected_color_css).get()
         common_sku = self.get_product_pricing(response)
         common_sku["color"] = selected_color
 
-        for size in sizes.css('swatchanchor::text') or ["single_size"]:
+        for size in response.css(sizes_css):
             sku = common_sku.copy()
             sku["size"] = size.get().strip()
-            if size in sizes.css('.unselectable .swatchanchor::text').getall():
+            if size.get() in response.css('.unselectable .swatchanchor::text').getall():
                 sku["out_of_stock"] = True
+            skus[f"{sku['color']}_{sku['size']}"] = sku
+
+        if not response.css(sizes_css):
+            sku = common_sku.copy()
+            sku["size"] = 'single_size'
             skus[f"{sku['color']}_{sku['size']}"] = sku
 
         return skus
