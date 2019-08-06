@@ -15,7 +15,7 @@ class BeyondLimitSpider(CrawlSpider):
         'Women',
     ]
     rules = (
-        Rule(LinkExtractor(allow=(), restrict_css='.bb_mega--subitem > .bb_mega--link')),
+        Rule(LinkExtractor(restrict_css='.bb_mega--subitem > .bb_mega--link')),
         Rule(LinkExtractor(restrict_css='.bb_product--link'), callback='parse_items')
     )
 
@@ -49,19 +49,19 @@ class BeyondLimitSpider(CrawlSpider):
 
     def extract_gender(self, response):
         raw_genders = response.css('[itemprop=title]::text').getall()
-        for gender in self.clean_data(raw_genders):
+        for gender in self.clean(raw_genders):
             if gender in self.gender_category_terms:
                 return gender.lower()
 
     def extract_category(self, response):
         raw_category = response.css('[itemprop=title]::text').getall()
-        for category in self.clean_data(raw_category):
+        for category in self.clean(raw_category):
             if category in self.gender_category_terms:
                 return category
 
     def extract_description(self, response):
         raw_description = response.css('#description p::text, #description:not(li)::text').getall()
-        description = self.clean_data(raw_description)
+        description = self.clean(raw_description)
         return description
 
     @staticmethod
@@ -80,5 +80,5 @@ class BeyondLimitSpider(CrawlSpider):
         return skus
 
     @staticmethod
-    def clean_data(uncleaned_data):
+    def clean(uncleaned_data):
         return [item.strip() for item in uncleaned_data if item.strip()]
