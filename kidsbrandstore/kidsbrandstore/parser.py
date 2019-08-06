@@ -48,7 +48,7 @@ class Parser:
 
     def price(self, response):
         price_text = response.css('.price::text').extract_first(default="")
-        return float(price_text.replace(",", '.'))
+        return int(price_text.replace(",", ''))
 
     def currency(self, response):
         return response.css('.price_currency_code::text').extract_first()
@@ -72,7 +72,7 @@ class Parser:
         return response.css('.attribute-title::text').extract()
 
     def skus(self, response):
-        skus = []
+        skus = {}
         color = self.color(response)
         sizes = self.sizes(response)
         price = self.price(response)
@@ -84,6 +84,5 @@ class Parser:
         sku["currency"] = currency
         for size in sizes:
             sku['size'] = size
-            sku['sku_id'] = f"{color}_{size}"
-            skus.append(copy.deepcopy(sku))
+            skus[f"{color}_{size}"] = copy.deepcopy(sku)
         return skus
