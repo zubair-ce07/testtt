@@ -16,7 +16,7 @@ class BeyondLimitSpider(CrawlSpider):
     ]
     rules = (
         Rule(LinkExtractor(allow=(), restrict_css='.bb_mega--subitem > .bb_mega--link')),
-        Rule(LinkExtractor(restrict_css='.bb_product--link'),follow=True, callback='parse_items')
+        Rule(LinkExtractor(restrict_css='.bb_product--link'), callback='parse_items')
     )
 
     def parse_items(self, response):
