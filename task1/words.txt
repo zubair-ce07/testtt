@@ -1,0 +1,108 @@
+Rev 1, 6/8/2012, Describes the basic infrastructure that has been implemented so far
+Rev 2, 6/14/2012, Added support for groups, tenant info, tenant app subscriptions
+Rev 3, 6/19/2012, Admin and non-admin api separated out, new tables added, validation logic added, bulk operations supported.
+Rev 4, 6/25/2012, Added support for MyAllowedApps and MyCfgApps
+
+Introduction
+Admin API
+Sign-up
+Supported SaaS applications
+SaaS Application Parameters
+Tenant Information
+Groups
+Users
+User Groups
+Tenant Apps
+Tenant App Parameters
+Group Apps
+User Apps
+Policies
+Reports
+Non-Admin API
+MyInfo
+MyGroups
+MyAllowedApps
+MyCfgApps
+Introduction
+This document describes the REST api offered by the Elastica backend. Examples with use cases are presented where applicable. 
+
+Prerequisite: Please refer to the �Elastica Database Schema� for DB design decisions, especially Multi-tenancy. More clarity is needed on SSO design but it is expected to get integrated without any changes to the API presented in this document.
+
+All the APIs that need to be exercised against elastica database (e.g. sign up for elastica service) will have the following prefix:
+	http://www.elastica.co/api/admin/v1/
+
+All the APIs that need to be exercised against a particular tenant (e.g. add a user) will have the following prefixes:
+	Admin users: http://<tenant>.elastica.co/api/admin/v1/
+Regular users: http://<tenant>.elastica.co/api/user/v1/
+
+It is assumed that we will use the URL-rewrite feature of a load-balancer to rewrite the above URLs to be of the form:
+	http://www.elastica.co/<tenant>/api/admin/v1/  or
+	http://www.elastica.co/<tenant>/api/user/v1/ 
+
+The backend is designed to look for this  <tenant> value to determine the name of the database. Currently, <tenant> string is arrived at by removing the dot from the primary domain name of the tenant.
+
+All operations are authenticated. Basic authentication is used for now until we get SSO/OAuth mechanisms integrated. With basic authentication, every API request needs to carry the username and password.
+ 
+Search options, as per Django conventions, are supported on the most useful fields of the table. See Basic-filtering for some more info. The schema of each API lists the names of the fields that are searchable/filterable. For example, to search for all root-level groups, the following query can be used:
+	/<tenant>/api/v1/groups/parent_group__isnull=True
+To search for child groups under the group named Sales, the following query can be used:
+	/<tenant>/api/v1/groups/parent_group=Sales
+
+Bulk operations are supported (see TastyPie Bulk Operations Example, Bulk Ops Format).
+
+The milkyway/sol/client/web/www/api/scripts directory has sample scripts that exercise the API described in this document.
+Admin API
+Sign-up
+If a user wants to sign up his/her company with Elastica, this API is used. Only the POST method is supported. The user is expected to currently provide the following four mandatory fields:
+	Name of the company
+	Primary domain name of the company
+	Admin user�s email
+	Admin user�s password
+	(More fields can be added as and when necessary)
+
+The sign-up will fail:
+?	if primary domain is already in use by another tenant. 
+?	admin user�s email doesn�t contain the same domain name
+?	Any of the mandatory fields are NULL or empty
+(More validations will be added later, e.g. strength of the password)
+
+The primary domain cannot be modified subsequently as it will be used as the name of the tenant�s database. The assumption here is that the domain name will uniquely belong to one and only enterprise and can be used as a means to identify that enterprise. For example, if the primary domain is abc.com, then the database will be named as �abccom� (Note: this may need a change).
+
+There is no authentication of the sign-up activity as we should allow anyone to sign up. The UI should use a CAPTCHA or similar mechanism to prevent the bots and DoS attacks.
+
+If the sign-up fails, the response will contain a descriptive error message. 
+
+
+Get the Schema	curl http://127.0.0.1:8000/api/admin/v1/signup/schema/
+
+Sign up for service	curl --dump-header - -H "Content-Type: application/json" -X POST --data '{"name": "ABC Exports", "primary_domain": "abc.com", "admin_email": "admin@abc.com", "admin_password": "password"}' http://127.0.0.1:8000/api/v1/signup/
+
+Sample scripts in the api/scripts/admin/signup directory: schema, signup, signup2
+Supported SaaS applications
+This API allows the UI to get the list of SaaS applications supported by Elastica and their common properties (e.g. icon for that application). Only GET method is supported. Purpose of this API is for populating the pick lists presented to the end user.
+
+Get the schema	curl http://127.0.0.1:8000/api/admin/v1/apps/schema/
+Get the list of apps	curl http://127.0.0.1:8000/api/admin/v1/apps/?format=json
+
+Sample scripts in api/scripts/admin/signup directory: schema, list
+SaaS Application Parameters
+The SaaS applications will need some configuration and this configuration can be different from application to application. For example, API-driven applications will require, as a minimum, admin credentials to exercise the API of that application. This API allows the UI to get a list of these parameters and render them on screen. For each parameter, the name, description and type of that parameter are returned. For example, the following params are returned for �Google Apps�
+
+    {
+        	"app_name": "Google Apps",
+        	"id": "4fe10a23b877f5f86e9d3aa0",
+        	"param_descr": "Admin account's password",
+        	"param_name": "admin_password",
+        	"param_type": "password",
+        	"resource_uri": "/api/admin/v1/appparams/4fe10a23b877f5f86e9d3aa0/"
+    },
+    {
+        	"app_name": "Google Apps",
+        	"id": "4fe10a23b877f5f86e9d3a9f",
+        	"param_descr": "Admin account's userid",
+        	"param_name": "admin_uname",
+        	"param_type": "text",
+        	"resource_uri": "/api/admin/v1/appparams/4fe10a23b877f5f86e9d3a9f/"
+    }
+
+The description can be used for human-friendly labels. The type can be used to determine what kind of input widget needs to be used. For example, a parameter of type �password� may be rendered as two TextFields, the second one for verification of the value entered in the first field with both fields having password hiding turned on.
