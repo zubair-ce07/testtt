@@ -6,10 +6,9 @@ import argparse
 from year_report import *
 from month_report import *
 from chart_report import *
-from chart_report_bonus import *
 
 
-def extract_file_namaes(args, file_names):
+def generate_file_namaes(args, file_names):
 
     if args.e:
 
@@ -51,29 +50,21 @@ def main():
         file_names.clear()
 
         if opt == 'e' and value is not None:
-            print("Task1 :")
-            extract_file_namaes(args, file_names)
-            obj = year_report()
+            generate_file_namaes(args, file_names)
+            obj = YearReport()
             obj.generate_year_report(file_names)
-
         elif opt == 'a' and value is not None:
-            print("Task2 :")
-            obj = month_report()
-            extract_file_namaes(args, file_names)
+            obj = MonthReport()
+            generate_file_namaes(args, file_names)
             obj.generate_month_report(file_names)
-
         elif opt == 'c' and value is not None:
-            print("Task3 :")
-            obj = chart_report()
-            extract_file_namaes(args, file_names)
-            obj.generate_chart_report(file_names)
-
+            obj = ChartReport()
+            generate_file_namaes(args, file_names)
+            obj.generate_chart_report(file_names,0)
         elif opt == 'd' and value is not None:
-            print("Task5 :")
-            extract_file_namaes(args, file_names)
-            obj = chart_report_bonus()
-            obj.generate_chart_report_bonus(file_names)
-
+            generate_file_namaes(args, file_names)
+            obj = ChartReport()
+            obj.generate_chart_report(file_names,1)
 
 
 if __name__ == "__main__":
