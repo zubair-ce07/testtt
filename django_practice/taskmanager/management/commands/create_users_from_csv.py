@@ -1,6 +1,7 @@
 import csv
 
 from django.contrib.auth.hashers import make_password
+from django.core.exceptions import ValidationError
 from django.core.management.base import BaseCommand
 from django.db import DatabaseError, IntegrityError, transaction
 from taskmanager.models import CustomUser
@@ -12,7 +13,7 @@ class NoArgumentException(Exception):
 
 
 class InvalidFilePathException(Exception):
-    """Raised if no argument is passed"""
+    """Raised if argument doesnt have path to a valid csv file"""
     pass
 
 
@@ -25,11 +26,12 @@ class Command(BaseCommand):
     @transaction.atomic
     def handle(self, *args, **options):
         try:
-            if not options['file']:  # if no argument is passed
-                raise NoArgumentException('argument can not be empty')
-            if '.csv' not in options['file']:
-                raise InvalidFilePathException('invalid file type')
-            with open(options['file']) as file_cursor:
+            filepath = options.get('file')
+            if not filepath:  # if no argument is passed
+                raise NoArgumentException()
+            if '.csv' not in filepath:
+                raise InvalidFilePathException()
+            with open(filepath) as file_cursor:
                 csv_reader = csv.DictReader(file_cursor)
                 stats = {
                     'created': 0,
@@ -38,14 +40,14 @@ class Command(BaseCommand):
                 }
                 for single_user_data in csv_reader:
                     new_user = {
-                        'first_name': single_user_data['first_name'],
-                        'last_name': single_user_data['last_name'],
-                        'email': single_user_data['email'],
+                        'first_name': single_user_data.get('first_name'),
+                        'last_name': single_user_data.get('last_name'),
+                        'email': single_user_data.get('email'),
                         'username': single_user_data['username'],
-                        'address': single_user_data['address'],
-                        'birthday': single_user_data['birthday'],
-                        'profile_picture': single_user_data['profile_picture'],
-                        'password': make_password(single_user_data['password'])
+                        'address': single_user_data.get('address'),
+                        'birthday': single_user_data.get('birthday'),
+                        'profile_picture': single_user_data.get('profile_picture'),
+                        'password': make_password(single_user_data.get('password'))
                     }
                     try:
                         user, is_created = CustomUser.objects.update_or_create(**new_user)
@@ -53,9 +55,14 @@ class Command(BaseCommand):
                             stats['created'] += 1
                         else:
                             stats['updated'] += 1
-                    except DatabaseError as dbError:
+                    except IntegrityError as dbError:
                         stats['failed'] += 1
-                        print('user creation for user', str(new_user), 'failed due to database errors')
+                        print('user creation for user', str(new_user), 'failed due to integrity errors')
+                        print('Error:', dbError)
+                        print()
+                    except ValidationError as dbError:
+                        stats['failed'] += 1
+                        print('user creation for user', str(new_user), 'failed due to validation errors')
                         print('Error:', dbError)
                         print()
 
@@ -67,7 +74,5 @@ class Command(BaseCommand):
             print("No argument is passed. Please pass a valid argument")
         except InvalidFilePathException:
             print("Path was incorrect or does not lead to a csv file. Please provide a valid csv file path")
-        except KeyError:
-            print('An invalid key exists in the given csv file')
         except FileNotFoundError:
             print('File was not found at the given path. Please provide a valid path')
