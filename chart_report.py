@@ -5,7 +5,7 @@ from data import data
 
 class chart_report(data):
 
-    def generate_chart_report(self,file_names):
+    def generate_chart_report(self, file_names):
         read_file.read_file(file_names,
                             self.day_record, self.weather_data)
         RED = "\033[1;31m"
@@ -42,3 +42,4 @@ class chart_report(data):
 
         else:
             print("NO data found")
+

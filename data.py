@@ -1,5 +1,5 @@
 class data:
-
+    
     def __init__(self):
 
         self.weather_data = {

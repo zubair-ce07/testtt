@@ -6,7 +6,7 @@ from data import data
 class chart_report_bonus(data):
     def generate_chart_report_bonus(self, file_names):
         read_file.read_file(file_names,
-                                  self.day_record, self.weather_data)
+                            self.day_record, self.weather_data)
         RED = "\033[1;31m"
         BLUE = "\033[1;34m"
         RESET = "\033[0;0m"
@@ -35,3 +35,4 @@ class chart_report_bonus(data):
                 sys.stdout.write(RESET)
         else:
             print("NO data found")
+

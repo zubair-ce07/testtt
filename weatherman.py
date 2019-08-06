@@ -1,24 +1,19 @@
 import os
 import calendar
+import argparse
 import csv
+import argparse
 from year_report import *
 from month_report import *
 from chart_report import *
 from chart_report_bonus import *
 
 
-def check_bound(lenght, count):
-    if count >= lenght:
-        return False
-    else:
-        return True
-
-
-def extract_file_namaes(argv, argv_pointer, file_names):
-    if argv[argv_pointer] == '-e':
+def extract_file_namaes(args, file_names):
+    if args.e:
         for month_idx in range(1, 13):
             temp = ("Murree_weather_{year}_{month}.txt".format(
-                year=argv[argv_pointer+1], month=calendar.month_name[month_idx][:3]))
+                year=args.e, month=calendar.month_name[month_idx][:3]))
             try:
                 with open(temp, "r") as csvFile:
                     reader = csv.reader(csvFile)
@@ -27,61 +22,59 @@ def extract_file_namaes(argv, argv_pointer, file_names):
             except IOError:
                 print("", end="")
 
-    if argv[argv_pointer] == '-a' or argv[argv_pointer] == '-c' or argv[argv_pointer] == '-d':
-        year, month_index = argv[argv_pointer + 1].split('/')
+    elif args.a:
+        year, month_index = args.a.split('/')
         file_names.append("Murree_weather_{year}_{month}.txt".format(
-            year=year, month=calendar.month_name[int(month_index)][:3]))
+                          year=year, month=calendar.month_name[int(month_index)][:3]))
+
+    elif args.c:
+        year, month_index = args.c.split('/')
+        file_names.append("Murree_weather_{year}_{month}.txt".format(
+                          year=year, month=calendar.month_name[int(month_index)][:3]))
+
+    elif args.d:
+        year, month_index = args.d.split('/')
+        file_names.append("Murree_weather_{year}_{month}.txt".format(
+                          year=year, month=calendar.month_name[int(month_index)][:3]))
 
 
-def main(argv):
+def main():
+    parser = argparse.ArgumentParser(description='Optional app description')
+    parser.add_argument('-e', help='year report')
+    parser.add_argument('-a', help='month report')
+    parser.add_argument('-c', help='chart report')
+    parser.add_argument('-d', help='chart report bonus')
+    args = parser.parse_args()
+
     file_names = []
-    lenght = len(argv)
-    count = 0
-    while check_bound(lenght, count):
+    for opt, value in args.__dict__.items():
         file_names.clear()
-        if argv[count] == '-e':
+        if opt == 'e' and value is not None:
             print("Task1 :")
-            extract_file_namaes(sys.argv[1:], count, file_names)
+            extract_file_namaes(args, file_names)
             obj = year_report()
-            count = count + 1
             obj.generate_year_report(file_names)
-            count = count + 1
-            if not(check_bound(lenght, count)):
-                break
 
-        if argv[count] == '-a':
+        elif opt == 'a' and value is not None:
             print("Task2 :")
             obj = month_report()
-            extract_file_namaes(sys.argv[1:], count, file_names)
-            count = count + 1
+            extract_file_namaes(args, file_names)
             obj.generate_month_report(file_names)
-            count = count + 1
-            if not(check_bound(lenght, count)):
-                break
 
-        if argv[count] == '-c':
+        elif opt == 'c' and value is not None:
             print("Task3 :")
             obj = chart_report()
-            extract_file_namaes(sys.argv[1:], count, file_names)
-            count = count + 1
+            extract_file_namaes(args, file_names)
             obj.generate_chart_report(file_names)
-            count = count + 1
-            if not(check_bound(lenght, count)):
-                break
 
-        if argv[count] == '-d':
+        elif opt == 'd' and value is not None:
             print("Task5 :")
-            extract_file_namaes(sys.argv[1:], count, file_names)
-            count = count + 1
+            extract_file_namaes(args, file_names)
             obj = chart_report_bonus()
             obj.generate_chart_report_bonus(file_names)
-            count = count + 1
-            if not(check_bound(lenght, count)):
-                break
 
 
 if __name__ == "__main__":
     os.system('cls' if os.name == 'nt' else 'clear')
-
-    main(sys.argv[1:])
+    main()
 
