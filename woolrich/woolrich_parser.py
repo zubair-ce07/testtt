@@ -56,26 +56,23 @@ class WoolrichParser(Spider):
             return item
 
         request = requests.pop(0)
-        request.meta[self.ITEM], request.meta[self.REQUESTS] = item, requests
+        request.meta.setdefault(self.ITEM, item)
+        request.meta.setdefault(self.REQUESTS, requests)
 
         return request
 
     def parse_colour_requests(self, response):
-        item, requests = response.meta[self.ITEM], response.meta[self.REQUESTS]
-        requests.extend(self.get_size_requests(response))
-        response.meta[self.REQUESTS] = requests
+        response.meta[self.REQUESTS].extend(self.get_size_requests(response))
+        return self.next_request_or_item(response.meta[self.ITEM], response)
 
-        return self.next_request_or_item(item, response)
-
-    def parse_skus(self, response):
-        item, requests = response.meta[self.ITEM], response.meta[self.REQUESTS]
+    def parse_size(self, response):
+        item = response.meta[self.ITEM]
 
         skus = item.get('skus', [])
         skus.append(self.get_sku(response))
 
         item['skus'] = skus
         item['image_urls'].extend(self.get_image_urls(response))
-        response.meta[self.REQUESTS] = requests
 
         return self.next_request_or_item(item, response)
 
@@ -84,7 +81,7 @@ class WoolrichParser(Spider):
 
     def get_size_requests(self, response):
         urls = response.css('.swatches.size .swatchanchor::attr(href)').getall()
-        return [Request(url=url, callback=self.parse_skus) for url in urls]
+        return [Request(url=url, callback=self.parse_size) for url in urls]
 
     def get_colour_requests(self, response):
         urls = response.css('.swatches.color .swatchanchor::attr(href)').getall()
@@ -120,7 +117,7 @@ class WoolrichParser(Spider):
         return 'unisex-adults'
 
     def sanitize_price(self, price):
-        return int(''.join(re.findall(r'\d+', price)))
+        return float(''.join(re.findall(r'\d+', price)))
 
     def sanitize_list(self, inputs):
         return [i.strip() for i in inputs]
