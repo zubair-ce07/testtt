@@ -1,11 +1,14 @@
 import re
 import json
+
 from datetime import datetime
+from scrapy.spiders import Spider
 
 from lanebryant.items import LaneBryantItem
 
 
-class LaneBryantParser:
+class LaneBryantParser(Spider):
+    name = "lanebryant_parser"
 
     currency = "CA"
     retailer = "lanebryant-ca"
@@ -14,7 +17,7 @@ class LaneBryantParser:
 
     gender = "Women"
 
-    def parse_item(self, response):
+    def parse(self, response):
         garment = LaneBryantItem()
         garment["name"] = self.get_product_name(response)
         garment["description"] = self.get_product_description(response)
@@ -37,18 +40,15 @@ class LaneBryantParser:
 
         yield garment
 
-    def clean_price(self, price):
-        return price.replace(".", "").replace("$", "")
+    def clean(self, text):
+        regex = r"\r\n|\r|\n|\\|\\'|\.|\$"
+        return re.sub(regex, "", text)
 
-    def clean(self, json_text):
-        replacements = "\r\n|\r|\n|\\|\\'"
-        return re.sub(replacements, "", json_text)
-
-    def get_product_json(self, response):
-        css = "script:contains('@context')"
+    def raw_product(self, response):
+        css = "script:contains('@context')::text"
         return json.loads(self.clean(response.css(css).get())[:-2])
 
-    def get_sku_json(self, response):
+    def raw_sku(self, response):
         css = "#pdpInitialData::text"
         return json.loads(response.css(css).get())["pdpDetail"]["product"][0]
 
@@ -56,15 +56,15 @@ class LaneBryantParser:
         return response.css(".mar-product-title::text").get().strip()
 
     def get_product_description(self, response):
-        return [self.get_product_json(response)["description"]]
+        return [self.raw_product(response)["description"]]
 
     def get_retailer_sku(self, response):
-        return self.get_product_json(response)["sku"]
+        return self.raw_product(response)["sku"]
 
     def get_image_urls(self, response):
         images = []
         base_images = [images["sku_image"].replace("//", "", 2)
-                       for images in self.get_sku_json(response)["all_available_colors"][0]["values"]]
+                       for images in self.raw_sku(response)["all_available_colors"][0]["values"]]
 
         for image in base_images:
             images += [image, image + '_Back', image + '_alt1']
@@ -72,14 +72,14 @@ class LaneBryantParser:
         return images
 
     def get_product_price(self, response):
-        return self.clean_price(self.get_product_json(response)["offers"]["price"])
+        return self.clean(self.raw_product(response)["offers"]["price"])
 
     def get_product_care(self, response):
         css = ".mar-product-additional-info #tab1 li:not(:first-child)::text"
         return [care.strip() for care in response.css(css).getall()]
 
     def get_product_brand(self, response):
-        return response.css("a.lb> h2::text").get()
+        return self.raw_product(response)["brand"]
 
     def get_product_category(self, response):
         css = "script:contains('window.lanebryantDLLite')"
@@ -89,22 +89,21 @@ class LaneBryantParser:
     def get_crawl_id(self):
         return f"{self.retailer}-{datetime.now().strftime('%Y%m%d-%H%M%s')}-medp"
 
-    def get_product_sizes(self, response):
-        return {sizes["id"]: sizes["value"]
-                for sizes in self.get_sku_json(response)["all_available_sizes"][0]["values"]}
+    def get_product_color_sizes(self, response):
+        return [{colors["id"]: colors["name"]
+                 for colors in self.raw_sku(response)["all_available_colors"][0]["values"]},
 
-    def get_product_colors(self, response):
-        return {colors["id"]: colors["name"]
-                for colors in self.get_sku_json(response)["all_available_colors"][0]["values"]}
+                {sizes["id"]: sizes["value"]
+                 for sizes in self.raw_sku(response)["all_available_sizes"][0]["values"]}]
 
     def get_previous_price(self, parsed_json):
-        return self.clean_price(parsed_json['list_price']) \
+        return self.clean(parsed_json['list_price']) \
             if parsed_json['list_price'] != parsed_json["sale_price"] else None
 
     def get_product_pricing(self, parsed_json):
         previous_price = self.get_previous_price(parsed_json)
         pricing = {
-            "price": self.clean_price(parsed_json["sale_price"]),
+            "price": self.clean(parsed_json["sale_price"]),
             "currency": self.currency
         }
         if previous_price:
@@ -115,16 +114,16 @@ class LaneBryantParser:
     def get_product_skus(self, response):
         skus = {}
 
-        parsed_json = self.get_sku_json(response)
+        parsed_json = self.raw_sku(response)
         common_sku = self.get_product_pricing(parsed_json["skus"][0]["prices"]) or {}
-
-        sizes = self.get_product_sizes(response)
-        colors = self.get_product_colors(response)
+        color_sizes = self.get_product_color_sizes(response)
 
         for item in parsed_json["skus"]:
             sku = common_sku.copy()
-            sku["color"] = colors[item["color"]]
-            sku["size"] = sizes[item["size"]] if item["size"] in sizes else item["size"]
+
+            sku["color"] = color_sizes[0][item["color"]]
+            sku["size"] = color_sizes[1][item["size"]] \
+                if item["size"] in color_sizes[1] else item["size"]
 
             if not parsed_json["isSellable"]:
                 sku["out_of_stock"] = True
