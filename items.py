@@ -1,18 +1,18 @@
-import scrapy
+from scrapy import Item,Field
 
 
-class BeyondlimitItem(scrapy.Item):
-    retailer_sku = scrapy.Field()
-    lang = scrapy.Field()
-    gender = scrapy.Field()
-    category = scrapy.Field()
-    brand = scrapy.Field()
-    url = scrapy.Field()
-    market = scrapy.Field()
-    retailer = scrapy.Field()
-    name = scrapy.Field()
-    description = scrapy.Field()
-    care = scrapy.Field()
-    image_urls = scrapy.Field()
-    skus = scrapy.Field()
-    trail = scrapy.Field()
+class BeyondlimitItem(Item):
+    retailer_sku = Field()
+    lang = Field()
+    gender = Field()
+    category = Field()
+    brand = Field()
+    url = Field()
+    market = Field()
+    retailer = Field()
+    name = Field()
+    description = Field()
+    care = Field()
+    image_urls = Field()
+    skus = Field()
+    trail = Field()
