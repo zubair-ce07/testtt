@@ -10,10 +10,11 @@ from chart_report_bonus import *
 
 
 def extract_file_namaes(args, file_names):
+
     if args.e:
+
         for month_idx in range(1, 13):
-            temp = ("Murree_weather_{year}_{month}.txt".format(
-                year=args.e, month=calendar.month_name[month_idx][:3]))
+            temp = (f"Murree_weather_{args.e}_{calendar.month_name[month_idx][:3]}.txt")
             try:
                 with open(temp, "r") as csvFile:
                     reader = csv.reader(csvFile)
@@ -24,21 +25,19 @@ def extract_file_namaes(args, file_names):
 
     elif args.a:
         year, month_index = args.a.split('/')
-        file_names.append("Murree_weather_{year}_{month}.txt".format(
-                          year=year, month=calendar.month_name[int(month_index)][:3]))
+        file_names.append(f"Murree_weather_{year}_{calendar.month_name[int(month_index)][:3]}.txt")
 
     elif args.c:
         year, month_index = args.c.split('/')
-        file_names.append("Murree_weather_{year}_{month}.txt".format(
-                          year=year, month=calendar.month_name[int(month_index)][:3]))
+        file_names.append(f"Murree_weather_{year}_{calendar.month_name[int(month_index)][:3]}.txt")
 
     elif args.d:
         year, month_index = args.d.split('/')
-        file_names.append("Murree_weather_{year}_{month}.txt".format(
-                          year=year, month=calendar.month_name[int(month_index)][:3]))
+        file_names.append(f"Murree_weather_{year}_{calendar.month_name[int(month_index)][:3]}.txt")
 
 
 def main():
+
     parser = argparse.ArgumentParser(description='Optional app description')
     parser.add_argument('-e', help='year report')
     parser.add_argument('-a', help='month report')
@@ -47,8 +46,10 @@ def main():
     args = parser.parse_args()
 
     file_names = []
+
     for opt, value in args.__dict__.items():
         file_names.clear()
+
         if opt == 'e' and value is not None:
             print("Task1 :")
             extract_file_namaes(args, file_names)
@@ -74,7 +75,9 @@ def main():
             obj.generate_chart_report_bonus(file_names)
 
 
+
 if __name__ == "__main__":
+
     os.system('cls' if os.name == 'nt' else 'clear')
     main()
 
