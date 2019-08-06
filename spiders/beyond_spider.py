@@ -1,4 +1,5 @@
 from ..items import BeyondlimitItem
+
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 
@@ -7,38 +8,54 @@ class BeyondLimitSpider(CrawlSpider):
     name = 'beyond_spider'
     start_urls = ['https://www.beyondlimits.com']
     allowed_domain = 'www.beyondlimits.com'
+
     brand = 'BeyondLimits'
     lang = 'en'
     market = 'UK'
+
     gender_category_terms = [
         'Men',
         'Women',
     ]
+
+    category_css = '.bb_mega--subitem > .bb_mega--link'
+    product_css = '.bb_product--link'
     rules = (
-        Rule(LinkExtractor(restrict_css='.bb_mega--subitem > .bb_mega--link')),
-        Rule(LinkExtractor(restrict_css='.bb_product--link'), callback='parse_items')
+        Rule(LinkExtractor(restrict_css=category_css)),
+        Rule(LinkExtractor(restrict_css=product_css), callback='parse_items')
     )
 
     def parse_items(self, response):
-        item = BeyondlimitItem()
-        item['retailer_sku'] = response.css('[itemprop=productID]::text').get()
-        item['lang'] = BeyondLimitSpider.lang
-        item['trail'] = self.extract_trail(response)
-        item['gender'] = self.extract_gender(response)
-        item['category'] = self.extract_category(response)
-        item['brand'] = BeyondLimitSpider.brand
-        item['market'] = BeyondLimitSpider.market
-        item['url'] = response.url
-        item['brand'] = BeyondLimitSpider.brand
-        item['name'] = response.css('[itemprop=name]::text').get()
-        item['description'] = self.extract_description(response)
-        item['image_urls'] = response.css('.bb_pic--navlink::attr(data-bbzoompicurl)').getall()
-        item['care'] = response.css('#description li::text, #description .MsoNormal span::text').getall()
-        item['gender'] = self.extract_gender(response)
-        item['category'] = self.extract_category(response)
-        item['skus'] = self.extract_skus(response)
+        garment = BeyondlimitItem()
+        garment['retailer_sku'] = response.css('[itemprop=productID]::text').get()
+        garment['lang'] = self.lang
+        garment['trail'] = self.extract_trail(response)
+        garment['gender'] = self.extract_gender(response)
+        garment['category'] = self.extract_category(response)
+        garment['brand'] = self.brand
+        garment['url'] = response.url
+        garment['market'] = BeyondLimitSpider.market
+        garment['name'] = self.extract_name(response)
+        garment['description'] = self.extract_description(response)
+        garment['image_urls'] = self.extract_image_urls(response)
+        garment['care'] = self.extract_care(response)
+        garment['gender'] = self.extract_gender(response)
+        garment['category'] = self.extract_category(response)
+        garment['skus'] = self.extract_skus(response)
 
-        return item
+        return garment
+
+    @staticmethod
+    def extract_name(response):
+        return response.css('[itemprop=name]::text').get()
+
+    @staticmethod
+    def extract_image_urls(response):
+        return response.css('.bb_pic--navlink::attr(data-bbzoompicurl)').getall()
+
+    @staticmethod
+    def extract_care(response):
+        return response.css('#description li::text, #description .MsoNormal span::text').getall()
 
     def extract_trail(self, response):
         category = self.extract_category(response)
@@ -60,7 +77,8 @@ class BeyondLimitSpider(CrawlSpider):
                 return category
 
     def extract_description(self, response):
-        raw_description = response.css('#description p::text, #description:not(li)::text').getall()
+        description_css = '#description p::text, #description:not(li)::text'
+        raw_description = response.css(description_css).getall()
         description = self.clean(raw_description)
         return description
 
