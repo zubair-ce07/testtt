@@ -9,6 +9,7 @@ class TaxiRide:
         self.meter_calculations = TaxiMeterApp()
         self.speed_increment_factor = 8
         self.ride_finished = False
+        self.wait_state = False
 
     def process_user_input(self):
         if keyboard.is_pressed('up'):
@@ -34,3 +35,10 @@ class TaxiRide:
 
     def print_results(self):
         self.meter_calculations.print_results()
+
+    def get_taxi_state(self):
+        if self.meter_calculations.taxi_speed < 10:
+            self.wait_state = True
+        else:
+            self.wait_state = False
+            self.meter_calculations.calculate_ride_time()

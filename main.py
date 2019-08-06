@@ -8,6 +8,7 @@ if __name__ == '__main__':
     while not taxi_ride.ride_finished:
         taxi_ride.process_user_input()
         taxi_ride.calculate_fare()
+        taxi_ride.get_taxi_state()
         taxi_ride.print_results()
         time.sleep(0.1)
         os.system('clear')

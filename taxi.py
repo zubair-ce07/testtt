@@ -16,24 +16,18 @@ class TaxiMeterApp:
         self.wait_time = 0
         self.ride_time = 0
         self.taxi_speed = 0
-        self.wait_state = False
 
     def fare_calculator(self):
-        self.calculate_ride_time()
         self.calculate_wait_time()
         self.calculate_distance()
         self.calculate_fair()
 
     def calculate_ride_time(self):
-        if not self.wait_state:
-            self.ride_time += Numbers.TIME_PASSED.value
+        self.ride_time += Numbers.TIME_PASSED.value
 
     def calculate_wait_time(self):
         if self.taxi_speed <= 10:
             self.wait_time += Numbers.TIME_PASSED.value
-            self.wait_state = True
-        else:
-            self.wait_state = False
 
     def calculate_distance(self):
         self.total_distance += self.taxi_speed * Numbers.TIME_PASSED.value
