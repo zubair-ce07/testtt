@@ -146,3 +146,4 @@ class BossCrawlSpider(CrawlSpider):
         Rule(LinkExtractor(restrict_css=listing_and_pagination_css), callback='parse'),
         Rule(LinkExtractor(restrict_css=product_css), callback=parse_spider.parse_item),
     )
+
