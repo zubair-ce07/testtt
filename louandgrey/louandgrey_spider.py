@@ -3,6 +3,7 @@ from w3lib.url import add_or_replace_parameter
 from scrapy import Request
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
+
 from louandgrey.spiders.louandgrey_parser import LouandgreyParser
 
 

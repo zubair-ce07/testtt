@@ -4,6 +4,7 @@ from w3lib.url import add_or_replace_parameter
 
 from scrapy import Request
 from scrapy.spiders import Spider
+
 from louandgrey.items import LouandgreyItem
 
 
@@ -29,16 +30,28 @@ class LouandgreyParser(Spider):
         item['retailer_sku'] = self.get_product_id(response)
         item['description'] = self.get_description(response)
         item['pricing_details'] = self.get_pricing_details(response)
-        url = add_or_replace_parameter(self.product_url, 'prodId', item['retailer_sku'])
+        response.meta.setdefault('requests', self.get_sku_requests(item['retailer_sku']))
 
-        return Request(url=url, meta={'item': item}, callback=self.parse_skus)
+        return self.next_request_or_item(item, response)
+
+    def next_request_or_item(self, item, response):
+        requests = response.meta['requests']
+
+        if not requests:
+            return item
+
+        request = requests.pop(0)
+        request.meta.setdefault('item', item)
+        request.meta.setdefault('requests', requests)
+
+        return request
 
     def parse_skus(self, response):
         item = response.meta['item']
         item['skus'] = self.get_skus(item, json.loads(response.body_as_unicode()))
-        url = self.image_url.format(item["retailer_sku"])
+        response.meta['requests'].extend(self.get_image_requests(item['retailer_sku']))
 
-        yield Request(url=url, meta={'item': item}, callback=self.parse_image_urls)
+        return self.next_request_or_item(item, response)
 
     def parse_image_urls(self, response):
         item = response.meta['item']
@@ -52,6 +65,14 @@ class LouandgreyParser(Spider):
     def add_trail(self, response):
         trail = (response.css('head title::text').get(), response.url)
         return [*response.meta['trail'], trail] if response.meta.get('trail') else [trail]
+
+    def get_sku_requests(self, retialer_sku):
+        url = add_or_replace_parameter(self.product_url, 'prodId', retialer_sku)
+        return [Request(url=url, callback=self.parse_skus)]
+
+    def get_image_requests(self, retailer_sku):
+        url = self.image_url.format(retailer_sku)
+        return [Request(url=url, callback=self.parse_image_urls)]
 
     def get_name(self, response):
         return response.css('h1[itemprop="name"]::text').get()
@@ -109,7 +130,7 @@ class LouandgreyParser(Spider):
         return [i.strip() for i in inputs]
 
     def sanitize_price(self, price):
-        return int(''.join(re.findall(r'\d+', price)))
+        return float(''.join(re.findall(r'\d+', price)))
 
     def get_pricing_details(self, response):
         price_css = 'meta[itemprop="price"]::attr(content)'
