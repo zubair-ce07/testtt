@@ -22,6 +22,7 @@ class Proceeding(scrapy.Item):
     description = scrapy.Field()
     staff = scrapy.Field()
     documents = scrapy.Field()
+    total_documents = scrapy.Field()
 
 
 class ProceedingDocument(scrapy.Item):
@@ -29,7 +30,7 @@ class ProceedingDocument(scrapy.Item):
     # document_type = scrapy.Field()
     # filled_by = scrapy.Field()
     # description = scrapy.Field()
-    results = scrapy.Field()
+    files = scrapy.Field()
     link = scrapy.Field()
 
 
