@@ -1,7 +1,8 @@
-from  scrapy import Item, Field
+from scrapy import Item, Field
+
 
 class ErnstingSpiderItem(Item):
-    id = Field()
+    product_id = Field()
     name = Field()
     description = Field()
     category = Field()
