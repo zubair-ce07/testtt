@@ -110,7 +110,6 @@ class ProceedingsSpider(scrapy.Spider):
         proceeding_id = response.meta['proceeding_id']
 
         loader = ItemLoader(item=CaPucItem(), response=response)
-        loader.add_css('_id', 'div.rounded-corner-region::attr("id")')
         loader.add_css('filed_on', '#P56_FILING_DATE::text')
         loader.add_css('assignees', '#P56_STAFF::text')
         loader.add_css('industries', '#P56_INDUSTRY::text')

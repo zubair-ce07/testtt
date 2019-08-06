@@ -10,7 +10,6 @@ from scrapy.loader.processors import MapCompose, TakeFirst, Identity
 
 
 class CaPucItem(Item):
-    _id = Field(output_processor=TakeFirst())
     filed_on = Field(output_processor=TakeFirst())
     assignees = Field(output_processor=TakeFirst())
     industries = Field(output_processor=TakeFirst())
