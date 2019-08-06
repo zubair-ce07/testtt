@@ -31,14 +31,10 @@ class ChartReport(data):
             max_temp = data["Max TemperatureC"]
             sys.stdout.write(self.RED)
 
-            if max_temp != "":
-                for count in range(int(max_temp)):
-                    print("+", end="")
-                sys.stdout.write(self.RESET)
-                print(f" {max_temp} C")
-            else:
-                sys.stdout.write(self.RESET)
-                print(" None")
+            for count in range(int(max_temp)):
+                print("+", end="")
+            sys.stdout.write(self.RESET)
+            print(f" {max_temp} C")
 
             sys.stdout.write(self.RESET)
 
@@ -46,14 +42,10 @@ class ChartReport(data):
             min_tmep = data["Min TemperatureC"]
             sys.stdout.write(self.BLUE)
 
-            if min_tmep != "":
-                for count in range(int(min_tmep)):
-                    print("+", end="")
-                sys.stdout.write(self.RESET)
-                print(f" {min_tmep} C")
-            else:
-                sys.stdout.write(self.RESET)
-                print(" None")
+            for count in range(int(min_tmep)):
+                 print("+", end="")
+            sys.stdout.write(self.RESET)
+            print(f" {min_tmep} C")
 
             sys.stdout.write(self.RESET)
 
@@ -67,23 +59,18 @@ class ChartReport(data):
             min_tmep = data["Min TemperatureC"]
             sys.stdout.write(self.BLUE)
 
-            if min_tmep != "":
-                for count in range(int(min_tmep)):
-                    print("+", end="")
+            for count in range(int(min_tmep)):
+                print("+", end="")
 
-                max_temp = data["Max TemperatureC"]
-            else:
-                sys.stdout.write(self.RESET)
-                print(" None")
+            max_temp = data["Max TemperatureC"]
                 
             sys.stdout.write(self.RED)
 
-            if max_temp != "":
-                for count in range(int(max_temp)):
-                    print("+", end="")
-                sys.stdout.write(self.RESET)
-                print(f" {max_temp} C", end=" ")
-                print(f" {min_tmep} C")
+            for count in range(int(max_temp)):
+                print("+", end="")
+            sys.stdout.write(self.RESET)
+            print(f" {max_temp} C", end="")
+            print(f" {min_tmep} C")
 
             sys.stdout.write(self.RESET)
 

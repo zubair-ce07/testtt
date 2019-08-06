@@ -20,16 +20,13 @@ def generate_file_namaes(args, file_names):
                 csvFile.close()
                 file_names.append(temp)
             except IOError:
-                print("", end="")
-
+                print(f"{temp} file not found...")
     elif args.a:
         year, month_index = args.a.split('/')
         file_names.append(f"Murree_weather_{year}_{calendar.month_name[int(month_index)][:3]}.txt")
-
     elif args.c:
         year, month_index = args.c.split('/')
         file_names.append(f"Murree_weather_{year}_{calendar.month_name[int(month_index)][:3]}.txt")
-
     elif args.d:
         year, month_index = args.d.split('/')
         file_names.append(f"Murree_weather_{year}_{calendar.month_name[int(month_index)][:3]}.txt")
