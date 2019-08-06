@@ -15,9 +15,25 @@ months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
           ]
 
 
-def parser(files_dir, files):
-    weather_readings = []
+# def parser(files_dir, files):
+#     weather_readings = []
+#
+#     for file in files:
+#         with open(files_dir + file) as f:
+#             next(f)
+#
+#             # line contains information of a single day of a month
+#             for line in f:
+#                 line = line.strip().split(',')
+#                 weather_readings.append(DayInfo(line))
+#
+#     return weather_readings
 
+
+def parser(files_dir, files):
+    weather_readings = {pkt: [], max_temp: [], mean_temp: [],
+                        min_temp: [], mean_humidity: []
+                        }
     for file in files:
         with open(files_dir + file) as f:
             next(f)
@@ -25,9 +41,7 @@ def parser(files_dir, files):
             # line contains information of a single day of a month
             for line in f:
                 line = line.strip().split(',')
-                weather_readings.append(DayInfo(line))
 
-    return weather_readings
 
 
 def main():
