@@ -19,7 +19,7 @@ class LaneBryantSpider(CrawlSpider):
     parse_spider = LaneBryantParser()
 
     rules = (
-        Rule(LinkExtractor(restrict_css=listings_css)),
+        Rule(LinkExtractor(restrict_css=listings_css), callback='parse'),
         Rule(LinkExtractor(restrict_css=products_css), callback='parse_item'),
     )
 
