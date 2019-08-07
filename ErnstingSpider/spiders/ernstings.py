@@ -130,4 +130,3 @@ class ErnstingsSpider(CrawlSpider):
             skus[sku_key] = sku
 
         return skus
-s
