@@ -44,7 +44,7 @@ class LaneBryantParser(Spider):
         yield garment
 
     def clean(self, text):
-        regex = r"\r\n|\r|\n|\\|\\'|\.|\$"
+        regex = r"\r\n|\r|\n|\\|\\'|\.|\$|\  +"
         return re.sub(regex, "", text)
 
     def raw_product(self, response):
@@ -59,7 +59,7 @@ class LaneBryantParser(Spider):
         return response.css(".mar-product-title::text").get().strip()
 
     def get_product_description(self, raw_product):
-        return [raw_product["description"]]
+        return [self.clean(raw_product["description"])]
 
     def get_retailer_sku(self, raw_product):
         return raw_product["sku"]
@@ -94,12 +94,7 @@ class LaneBryantParser(Spider):
                        for images in raw_images]
 
         for image in base_images:
-            images += [
-                image,
-                image + '_Back',
-                image + '_alt1'
-            ]
-
+            images += [image, f"{image}_Back", f"{image}_alt1"]
         return images
 
     def get_product_pricing(self, parsed_json):
@@ -113,26 +108,23 @@ class LaneBryantParser(Spider):
 
         return pricing
 
-    def get_product_color_sizes(self, raw_sku):
-        color_size = {}
+    def get_sku_details(self, raw_sku, sku_id, sku_list):
 
-        color_size.update({colors["id"]: colors["name"]
-                          for colors in raw_sku["all_available_colors"][0]["values"]})
-        color_size.update({sizes["id"]: sizes["value"]
-                          for sizes in raw_sku["all_available_sizes"][0]["values"]})
-        return color_size
+        return {colors["id"]: colors[sku_id]
+                for colors in raw_sku[sku_list][0]["values"]}
 
     def get_product_skus(self, raw_sku):
         skus = {}
 
         common_sku = self.get_product_pricing(raw_sku["skus"][0]["prices"])
-        color_sizes = self.get_product_color_sizes(raw_sku)
+        colors = self.get_sku_details(raw_sku, "name", "all_available_colors")
+        sizes = self.get_sku_details(raw_sku, "value", "all_available_sizes")
 
         for item in raw_sku["skus"]:
             sku = common_sku.copy()
 
-            sku["color"] = color_sizes[item['color']]
-            sku["size"] = color_sizes[item['size']] if color_sizes[item['size']] else item['size']
+            sku["color"] = colors[item['color']]
+            sku["size"] = sizes[item['size']] if sizes[item['size']] else item['size']
 
             if not raw_sku["isSellable"]:
                 sku["out_of_stock"] = True
