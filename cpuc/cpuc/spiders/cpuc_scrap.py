@@ -11,11 +11,11 @@ from cpuc.items import Proceeding, ProceedingDocument, Document
 class CpucScrapSpider(scrapy.Spider):
     name = 'cpuc_scrap'
     start_urls = ['https://apps.cpuc.ca.gov/apex/f?p=401:1:0::NO:RP/']
-    cookie = ''
+    cookie_count = 0
 
     def parse(self, response):
-        self.cookie = response.headers.getlist(
-            'Set-Cookie')[0].decode("utf-8").split(';')[0]
+        # self.cookie = response.headers.getlist(
+        #     'Set-Cookie')[0].decode("utf-8").split(';')[0]
         yield scrapy.FormRequest.from_response(
             response,
             formdata={'p_t04': '01/01/2019',
@@ -31,7 +31,8 @@ class CpucScrapSpider(scrapy.Spider):
         x01 = response.css('#apexir_WORKSHEET_ID::attr(value)').get()
         x02 = response.css('#apexir_REPORT_ID::attr(value)').get()
         for link in proceeding_links:
-            yield scrapy.Request(link.url, callback=self.scrap_proceeding)
+            self.cookie_count += 1
+            yield scrapy.Request(link.url, callback=self.scrap_proceeding, meta={'cookiejar': self.cookie_count})
         if response.css('.fielddata > a') and response.css(".fielddata > a > img[title*='Next']"):
             frmdata = {'p_request': 'APXWGT',
                        'p_instance': p_instance,
@@ -77,7 +78,8 @@ class CpucScrapSpider(scrapy.Spider):
 
         link = response.url.replace('56', '57')
         request = scrapy.Request(
-            link, callback=self.scrap_documents)
+            link, callback=self.scrap_documents,
+            meta={'cookiejar': response.meta['cookiejar']})
         if request:
             request.meta['proceeding'] = proceeding
             yield request
@@ -85,6 +87,7 @@ class CpucScrapSpider(scrapy.Spider):
             yield Proceeding
 
     def scrap_documents(self, response):
+        print(response.url)
         proceeding = response.meta['proceeding']
         p_instance = response.css('#pInstance::attr(value)').get()
         x01 = response.css('#apexir_WORKSHEET_ID::attr(value)').get()
@@ -97,7 +100,10 @@ class CpucScrapSpider(scrapy.Spider):
             document_link = document_row.css(
                 "tr > td[headers*='DOCUMENT_TYPE'] > a::attr(href)").get()
             if document_link and re.search(r"http://docs.cpuc.ca.gov/SearchRes.aspx\?DocFormat=ALL&DocID=", document_link):
-                proceeding_document = ProceedingDocument()
+                if(response.url == "https://apps.cpuc.ca.gov/apex/wwv_flow.show"):
+                    proceeding_document = response.meta['proceeding_document']
+                else:
+                    proceeding_document = ProceedingDocument()
                 proceeding_document['filling_date'] = document_row.css(
                     "tr > td[headers*='FILING_DATE']::text").get()
                 proceeding_document['document_type'] = document_row.css(
@@ -110,7 +116,7 @@ class CpucScrapSpider(scrapy.Spider):
                 proceeding['total_documents'] += 1
                 documents_links.append(document_link)
                 request = scrapy.Request(
-                    document_link, callback=self.scrap_document, dont_filter=True)
+                    document_link, callback=self.scrap_document, dont_filter=True, meta={'cookiejar': response.meta['cookiejar']})
                 request.meta['proceeding'] = proceeding
                 request.meta['proceeding_document'] = proceeding_document
                 yield request
@@ -130,8 +136,11 @@ class CpucScrapSpider(scrapy.Spider):
                        }
             url = "https://apps.cpuc.ca.gov/apex/wwv_flow.show"
             req = scrapy.FormRequest(url, callback=self.scrap_documents, formdata=frmdata,
-                                     headers={'Referer': response.url})
+                                     headers={'Referer': response.url}, meta={'cookiejar': response.meta['cookiejar']})
             req.meta['proceeding'] = proceeding
+            req.meta['proceeding_document'] = proceeding_document
+            print(req.headers)
+            print(req._body)
             yield req
 
         if not documents_links:
