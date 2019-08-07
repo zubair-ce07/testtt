@@ -13,7 +13,7 @@ class Proceeding(scrapy.Item):
     # name = scrapy.Field()
 
     proceeding_no = scrapy.Field()
-    filled_by = scrapy.Field()
+    filed_by = scrapy.Field()
     service_list = scrapy.Field()
     industry = scrapy.Field()
     filling_date = scrapy.Field()
@@ -26,10 +26,10 @@ class Proceeding(scrapy.Item):
 
 
 class ProceedingDocument(scrapy.Item):
-    # filling_date = scrapy.Field()
-    # document_type = scrapy.Field()
-    # filled_by = scrapy.Field()
-    # description = scrapy.Field()
+    filling_date = scrapy.Field()
+    document_type = scrapy.Field()
+    filed_by = scrapy.Field()
+    description = scrapy.Field()
     files = scrapy.Field()
     link = scrapy.Field()
 

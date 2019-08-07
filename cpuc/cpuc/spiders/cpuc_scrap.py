@@ -16,9 +16,6 @@ class CpucScrapSpider(scrapy.Spider):
     def parse(self, response):
         self.cookie = response.headers.getlist(
             'Set-Cookie')[0].decode("utf-8").split(';')[0]
-        print(response.headers.getlist(
-            'Set-Cookie'))
-        print(self.cookie)
         yield scrapy.FormRequest.from_response(
             response,
             formdata={'p_t04': '01/01/2019',
@@ -50,16 +47,15 @@ class CpucScrapSpider(scrapy.Spider):
                        'x02': x02
                        }
             url = "https://apps.cpuc.ca.gov/apex/wwv_flow.show"
-            req = scrapy.FormRequest(url, callback=self.proceeding_parse, formdata=frmdata,
-                                     headers={'Cookie': self.cookie})
-            # print(req.headers)
+            req = scrapy.FormRequest(
+                url, callback=self.proceeding_parse, formdata=frmdata)
             yield req
 
     def scrap_proceeding(self, response):
         proceeding = Proceeding(
             proceeding_no=response.css(
                 '.rc-content-main > h1::text').get().split('-')[0].strip(),
-            filled_by=response.css(
+            filed_by=response.css(
                 '#P56_FILED_BY::text').get(),
             service_list=response.css(
                 '#P56_SERVICE_LISTS > span > a::attr(href)').get(),
@@ -79,7 +75,6 @@ class CpucScrapSpider(scrapy.Spider):
         )
         proceeding['total_documents'] = 0
 
-        # print(self.data[proceeding_code])
         link = response.url.replace('56', '57')
         request = scrapy.Request(
             link, callback=self.scrap_documents)
@@ -91,47 +86,60 @@ class CpucScrapSpider(scrapy.Spider):
 
     def scrap_documents(self, response):
         proceeding = response.meta['proceeding']
+        p_instance = response.css('#pInstance::attr(value)').get()
+        x01 = response.css('#apexir_WORKSHEET_ID::attr(value)').get()
+        x02 = response.css('#apexir_REPORT_ID::attr(value)').get()
 
-        documents_links = LinkExtractor(
-            allow=r"http://docs.cpuc.ca.gov/SearchRes.aspx\?DocFormat=ALL&DocID="
-        ).extract_links(response)
-        if documents_links:
-            proceeding['total_documents'] += len(documents_links)
-            for link in documents_links:
+        documents_links = []
+        document_rows = response.css("#{} > tr + tr".format(x01)).getall()
+        for document_row in document_rows:
+            document_row = scrapy.Selector(text=document_row)
+            document_link = document_row.css(
+                "tr > td[headers*='DOCUMENT_TYPE'] > a::attr(href)").get()
+            if document_link and re.search(r"http://docs.cpuc.ca.gov/SearchRes.aspx\?DocFormat=ALL&DocID=", document_link):
+                proceeding_document = ProceedingDocument()
+                proceeding_document['filling_date'] = document_row.css(
+                    "tr > td[headers*='FILING_DATE']::text").get()
+                proceeding_document['document_type'] = document_row.css(
+                    "tr > td[headers*='DOCUMENT_TYPE'] > a > span > u::text").get()
+                proceeding_document['filed_by'] = document_row.css(
+                    "tr > td[headers*='FILED_BY']::text").get()
+                proceeding_document['description'] = document_row.css(
+                    "tr > td[headers*='DESCRIPTION']::text").get()
+
+                proceeding['total_documents'] += 1
+                documents_links.append(document_link)
                 request = scrapy.Request(
-                    link.url, callback=self.scrap_document, dont_filter=True)
+                    document_link, callback=self.scrap_document, dont_filter=True)
                 request.meta['proceeding'] = proceeding
+                request.meta['proceeding_document'] = proceeding_document
                 yield request
-            p_instance = response.css('#pInstance::attr(value)').get()
-            x01 = response.css('#apexir_WORKSHEET_ID::attr(value)').get()
-            x02 = response.css('#apexir_REPORT_ID::attr(value)').get()
-            if response.css('.fielddata > a') and response.css(".fielddata > a > img[title*='Next']"):
-                print("hello")
-                frmdata = {'p_request': 'APXWGT',
-                           'p_instance': p_instance,
-                           'p_flow_id': '401',
-                           'p_flow_step_id': '57',
-                           'p_widget_num_return': '100',
-                           'p_widget_name': 'worksheet',
-                           'p_widget_mod': 'ACTION',
-                           'p_widget_action': 'PAGE',
-                           'p_widget_action_mod': response.css(
-                               '.fielddata > a::attr(href)').get().split("'")[1],
-                           'x01': x01,
-                           'x02': x02
-                           }
-                url = "https://apps.cpuc.ca.gov/apex/wwv_flow.show"
-                req = scrapy.FormRequest(url, callback=self.scrap_documents, formdata=frmdata,
-                                         headers={'Cookie': self.cookie})
-                # print(req.headers)
-                yield req
+        if response.css('.fielddata > a') and response.css(".fielddata > a > img[title*='Next']"):
+            frmdata = {'p_request': 'APXWGT',
+                       'p_instance': p_instance,
+                       'p_flow_id': '401',
+                       'p_flow_step_id': '57',
+                       'p_widget_num_return': '100',
+                       'p_widget_name': 'worksheet',
+                       'p_widget_mod': 'ACTION',
+                       'p_widget_action': 'PAGE',
+                       'p_widget_action_mod': response.css(
+                           '.fielddata > a::attr(href)').get().split("'")[1],
+                       'x01': x01,
+                       'x02': x02
+                       }
+            url = "https://apps.cpuc.ca.gov/apex/wwv_flow.show"
+            req = scrapy.FormRequest(url, callback=self.scrap_documents, formdata=frmdata,
+                                     headers={'Referer': response.url})
+            req.meta['proceeding'] = proceeding
+            yield req
 
-        else:
+        if not documents_links:
             yield proceeding
 
     def scrap_document(self, response):
         proceeding = response.meta['proceeding']
-        proceeding_document = ProceedingDocument()
+        proceeding_document = response.meta['proceeding_document']
         proceeding_document['link'] = response.url
         files = response.selector.xpath(
             '//table[@id="ResultTable"]/tbody/tr')  # css was not working
