@@ -1,5 +1,5 @@
 class Report:
-
+    """ Report utility to print calculation's result """
     @staticmethod
     def print_report(result):
         print(

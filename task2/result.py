@@ -1,4 +1,5 @@
 class Result:
+    """ Result model to hold calculated results """
     def __init__(self, month, year):
         self.month = month
         self.year = year

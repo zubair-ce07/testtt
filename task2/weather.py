@@ -1,4 +1,5 @@
 class Weather:
+    """ Weather Model - logical representation of weather file """
     def __init__(self):
         self.month = '',
         self.year = '',
