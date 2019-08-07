@@ -91,14 +91,15 @@ class _24sSpider(CrawlSpider):
         return urllib.parse.quote(rule_context)
 
     def parse_pagination(self, response):
-        self.extract_products(response)
+        self.extract_products_url(response)
         total_pages = json.loads(response.text)['results'][0]['nbPages'] + 1
         body = json.loads(response.request.body)
 
         for page_number in range(1, total_pages):
             body = self.next_req_body(body, page_number)
             yield Request(self.pagination_url_t, method='POST',
-                          body=json.dumps(body), headers=self.headers, callback=self.extract_products_url)
+                          body=json.dumps(body), headers=self.headers,
+                          callback=self.extract_products_url, dont_filter=True)
 
     def next_req_body(self, body, page_number):
         body['requests'][0]['params'] = re.sub('page=(.+?)&',
@@ -227,4 +228,5 @@ class _24sSpider(CrawlSpider):
 
     def product_care(self, response):
         return clean(response.css('.grey ::text').getall()[-1].split('/'))
+
 
