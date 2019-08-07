@@ -15,7 +15,10 @@ class ReadFile:
                 reader = csv.DictReader(csvFile)
 
                 for data_read in reader:
-                    weather_data["PKT"] = data_read["PKT"]
+                    try:
+                        weather_data["PKT"] = data_read["PKT"]
+                    except:
+                        weather_data["PKT"] = data_read["PKST"]
                     weather_data["Max TemperatureC"] = data_read["Max TemperatureC"]
                     weather_data["Min TemperatureC"] = data_read["Min TemperatureC"]
                     weather_data["Max Humidity"] = data_read["Max Humidity"]

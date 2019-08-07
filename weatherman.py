@@ -13,14 +13,14 @@ def generate_file_namaes(args, file_names):
     if args.e:
 
         for month_idx in range(1, 13):
-            temp = (f"Murree_weather_{args.e}_{calendar.month_name[month_idx][:3]}.txt")
+            file_name = (f"Murree_weather_{args.e}_{calendar.month_name[month_idx][:3]}.txt")
             try:
-                with open(temp, "r") as csvFile:
+                with open(file_name, "r") as csvFile:
                     reader = csv.reader(csvFile)
                 csvFile.close()
-                file_names.append(temp)
+                file_names.append(file_name)
             except IOError:
-                print(f"{temp} file not found...")
+                print(f"{file_name} file not found...")
     elif args.a:
         year, month_index = args.a.split('/')
         file_names.append(f"Murree_weather_{year}_{calendar.month_name[int(month_index)][:3]}.txt")
