@@ -15,4 +15,3 @@ class LouandgreyItem(scrapy.Item):
     care = scrapy.Field()
     image_urls = scrapy.Field()
     skus = scrapy.Field()
-    pricing_details = scrapy.Field()

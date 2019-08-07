@@ -1,6 +1,3 @@
-from w3lib.url import add_or_replace_parameter
-
-from scrapy import Request
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 
@@ -14,28 +11,26 @@ class LouandgreySpider(CrawlSpider):
         'https://www.louandgrey.com/'
     ]
 
-    product_css = 'li.product .product-wrap a[data-page]'
+    allowed_domains = [
+        'louandgrey.com',
+        'anninc.scene7.com'
+    ]
+
+    product_css = '.product-wrap a[data-page]'
+    next_page_css = 'link[rel="next"]'
     listing_css = '.sub-nav'
 
     rules = [
         Rule(link_extractor=LinkExtractor(restrict_css=product_css), callback='parse_product'),
-        Rule(link_extractor=LinkExtractor(restrict_css=listing_css), callback='parse_listing')
+        Rule(link_extractor=LinkExtractor(restrict_css=next_page_css)),
+        Rule(link_extractor=LinkExtractor(restrict_css=listing_css))
     ]
 
     def parse(self, response):
         requests = super(LouandgreySpider, self).parse(response)
         trail = self.louandgrey_parser.add_trail(response)
 
-        for request in requests:
-            request.meta['trail'] = trail
-            yield request
-
-    def parse_listing(self, response):
-        pages_count = int(response.css('.product-listing input[name="pages"]::attr(value)').get())
-        meta_params = {'trail': self.louandgrey_parser.add_trail(response)}
-
-        for index in range(1, pages_count + 1):
-            yield Request(url=add_or_replace_parameter(response.url, 'goToPage', index), meta=meta_params)
+        return [r.replace(meta={**r.meta,'trail': trail.copy()}) for r in requests]
 
     def parse_product(self, response):
         yield self.louandgrey_parser.parse(response)
