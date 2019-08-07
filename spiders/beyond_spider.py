@@ -8,11 +8,10 @@ class BeyondLimitSpider(CrawlSpider):
     name = 'beyond_spider'
     start_urls = ['https://www.beyondlimits.com']
     allowed_domain = 'www.beyondlimits.com'
-
     brand = 'BeyondLimits'
+
     lang = 'en'
     market = 'UK'
-
     gender_category_terms = [
         'Men',
         'Women',
@@ -65,16 +64,12 @@ class BeyondLimitSpider(CrawlSpider):
         return trail
 
     def extract_gender(self, response):
-        raw_genders = response.css('[itemprop=title]::text').getall()
-        for gender in self.clean(raw_genders):
-            if gender in self.gender_category_terms:
-                return gender.lower()
+        gender_clean = self.clean(response.css('[itemprop=title]::text').getall())
+        return [gender.lower() for gender in gender_clean if gender in self.gender_category_terms]
 
     def extract_category(self, response):
-        raw_category = response.css('[itemprop=title]::text').getall()
-        for category in self.clean(raw_category):
-            if category in self.gender_category_terms:
-                return category
+        category_clean = self.clean(response.css('[itemprop=title]::text').getall())
+        return [category for category in category_clean if category in self.gender_category_terms]
 
     def extract_description(self, response):
         description_css = '#description p::text, #description:not(li)::text'
@@ -86,15 +81,17 @@ class BeyondLimitSpider(CrawlSpider):
     def extract_skus(response):
         skus = []
         colour = response.css('#description li:nth-child(1)::text').re_first(r'\s\w+')
+        common_sku = {
+            "price": response.css('[itemprop=price]::text').get(),
+            "currency": response.css('[itemprop=priceCurrency]::attr(content)').get()
+        }
         for item_size in response.css("select.bb_form--select option[value!=\"\"]::text").getall():
-            sku = {
-                "sku_id": f"{colour}_{item_size}",
-                "colour": colour,
-                "price": response.css('[itemprop=price]::text').get(),
-                "currency": response.css('[itemprop=priceCurrency]::attr(content)').get(),
-                "size": item_size
-            }
+            sku = common_sku.copy()
+            sku['sku_id'] = f"{colour}_{item_size}"
+            sku['colour'] = colour
+            sku['size'] = item_size
             skus.append(sku)
+
         return skus
 
     @staticmethod
