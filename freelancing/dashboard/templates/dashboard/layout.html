@@ -1,0 +1,35 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <!-- Compiled and minified CSS -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"
+    />
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}" />
+    <!-- Compiled and minified JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <title>Chercher</title>
+  </head>
+  <body>
+    <div class="navbar-fixed">
+      <nav>
+        <div class="nav-wrapper">
+          <a href="/" class="brand-logo">Job Chercher</a>
+          <ul class="right hide-on-med-and-down">
+            <li><a href="/auth/signin">Sign In</a></li>
+            <li><a href="/auth/signup">Sign Up</a></li>
+          </ul>
+        </div>
+      </nav>
+    </div>
+    <div class="container">
+      {% block content %} {% endblock %}
+    </div>
+  </body>
+</html>
