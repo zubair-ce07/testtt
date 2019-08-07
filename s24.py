@@ -119,9 +119,9 @@ class _24sSpider(CrawlSpider):
             yield response.follow(product_url, callback=self.parse_item)
 
     def clean_accent_and_grb(self, raw_str):
-        str = ''.join((c for c in unicodedata.normalize('NFD', raw_str) if
-                       unicodedata.category(c) != 'Mn')).lower()
-        return re.sub(' |\/', '-', re.sub('"', '', str))
+        raw_str = ''.join((c for c in unicodedata.normalize('NFD', raw_str) if
+                           unicodedata.category(c) != 'Mn')).lower()
+        return re.sub(' |\/', '-', re.sub('"', '', raw_str))
 
     def parse_item(self, response):
         item = _24sItem()
@@ -141,9 +141,9 @@ class _24sSpider(CrawlSpider):
 
     def color_requests(self, response):
         requests = []
-        raw_product_json = json.loads(response.css('::attr(data-variants-tree)').get())
+        product_json = json.loads(response.css('::attr(data-variants-tree)').get())
 
-        for color in raw_product_json['_children']:
+        for color in product_json['_children']:
             if not color['selected']:
                 url = response.url[:response.url.index('?')]
                 requests.append(Request(f'{url}?color={color["value"]}', callback=self.parse_color))
