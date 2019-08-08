@@ -39,21 +39,20 @@ class _24sSpider(CrawlSpider):
         'https://www.24s.com/en-us/'
     ]
 
-    pagination_url = 'https://dkpvob44gb-dsn.algolia.net/1/indexes/*/queries?x-algolia-agent=Algolia+for+vanilla+JavaScri' \
-                     'pt+3.32.1%3BJS+Helper+2.26.1&x-algolia-application-id=DKPVOB44GB&x-algolia-api-key=9b23af4f250bb43' \
-                     '2947c20b7c82890a2'
-    product_url_t = '{}-{}_{}?defaultSku={}&color={}'
+    pagination_url = 'https://dkpvob44gb-dsn.algolia.net/1/indexes/*/queries?x-algolia-agent=Algolia+for+vanilla' \
+                     '+JavaScript+3.32.1%3BJS+Helper+2.26.1&x-algolia-application-id=DKPVOB44GB&x-algolia-api-' \
+                     'key=9b23af4f250bb432947c20b7c82890a2'
 
     headers = {
         'accept': 'application/json',
         'Origin': 'https://www.24s.com',
-        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safar'
-                      'i/537.36',
+        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 '
+                      'Safari/537.36',
         'content-type': 'application/x-www-form-urlencoded',
     }
 
-    body_json = json.loads('{"requests":[{"indexName":"prod_products","params":"query=&tagFilters={}&page=0&getRankingIn'
-                           'fo=true&ruleContexts={}"}]}')
+    body_json = json.loads('{"requests":[{"indexName":"prod_products","params":"query=&tagFilters={}&page=0&'
+                           'getRankingInfo=true&ruleContexts={}"}]}')
 
     listings_css = ['.nav-link', '[class="device-drop-btn"]']
     rules = (
@@ -61,13 +60,20 @@ class _24sSpider(CrawlSpider):
     )
 
     def parse_categories(self, response):
-        body = self.req_body(response)
+        body = self.req_payload(response)
         return Request(self.pagination_url, method='POST', body=body, headers=self.headers,
                        callback=self.parse_pagination)
 
+    def req_payload(self, response):
+        tag_filter = self.get_tag_filters(response)
+        rule_contexts = self.get_rule_contexts(response)
+        params = self.body_json['requests'][0]['params'].format(tag_filter, rule_contexts)
+        self.body_json['requests'][0]['params'] = params
+
+        return json.dumps(self.body_json)
+
     def get_tag_filters(self, response):
-        raw_tag_filter = ["US"]
-        raw_tag_filter += response.css('::attr(data-filter)').get().split(',')
+        raw_tag_filter = ["US"] + response.css('::attr(data-filter)').get().split(',')
         tag_filter = str(raw_tag_filter).replace('\'', '"').replace(' ', '')
 
         return urllib.parse.quote(tag_filter)
@@ -75,10 +81,10 @@ class _24sSpider(CrawlSpider):
     def get_rule_contexts(self, response):
         raw_rule_context = response.css('::attr(data-filter)').get()
 
-        raw_rule_context = [raw_rule_context.repalce(',', '_MERCH_US')] if ',' in raw_rule_context \
-            else [raw_rule_context.repalce(',', '_MERCH_US')]
-        rule_context = str(raw_rule_context).replace('\'', '"').replace(' ', '')
+        if ',' not in raw_rule_context:
+            raw_rule_context = f'{raw_rule_context},'
 
+        rule_context = raw_rule_context.replace('\'', '"').replace(' ', '').replace(',', '_MERCH_US')
         return urllib.parse.quote(rule_context)
 
     def parse_pagination(self, response):
@@ -87,37 +93,26 @@ class _24sSpider(CrawlSpider):
 
         for page_number in range(1, total_pages):
             body = self.req_body(response, page_number)
-
             yield Request(self.pagination_url, method='POST', body=body, headers=self.headers,
                           callback=self.parse_products, dont_filter=True)
 
-    def req_body(self, response, page_number=0):
-
-        if not page_number:
-            tag_filter = self.get_tag_filters(response)
-            rule_contexts = self.get_rule_contexts(response)
-            params = self.body_json['requests'][0]['params'].format(tag_filter, rule_contexts)
-            self.body_json['requests'][0]['params'] = params
-
-            return json.dumps(self.body_json)
-        else:
-            body = json.loads(response.request.body)
-            body['requests'][0]['params'] = re.sub('page=(.+?)&', f'page={page_number}&', body['requests'][0]['params'])
-
-            return json.dump(body)
+    def req_body(self, response, page_number):
+        body = json.loads(response.request.body)
+        body['requests'][0]['params'] = re.sub('page=(.+?)&', f'page={page_number}&',
+                                               body['requests'][0]['params'])
+        return json.dump(body)
 
     def parse_products(self, response):
         raw_products = json.loads(response.text)['results'][0]
 
         for product in raw_products['hits']:
-            product_url = self.clean_accent_and_grb(self.product_url_t.format(
-                product['title_en'], product['brand'], product['item_group_id'], product['sku'],
-                product['color_brand']))
-
+            product_url = self.clean_url(f'{product["title_en"]}-{product["brand"]}_{product["item_group_id"]}?'
+                                         f'defaultSku={product["sku"]}&color={product["color_brand"]}')
             yield response.follow(product_url, callback=self.parse_item)
 
-    def clean_accent_and_grb(self, raw_str):
-        raw_str = ''.join((c for c in unicodedata.normalize('NFD', raw_str) if unicodedata.category(c) != 'Mn')).lower()
+    def clean_url(self, raw_str):
+        raw_str = (c for c in unicodedata.normalize('NFD', raw_str) if unicodedata.category(c) != 'Mn')
+        raw_str = ''.join(raw_str).lower()
         return re.sub(' |\/', '-', raw_str.replace('"', ''))
 
     def parse_item(self, response):
@@ -138,7 +133,6 @@ class _24sSpider(CrawlSpider):
 
     def color_requests(self, response):
         product_json = json.loads(response.css('::attr(data-variants-tree)').get())
-
         return [Request(self.new_color_url(color, response), callback=self.parse_color)
                 for color in product_json['_children'] if not color['selected']]
 
@@ -148,6 +142,7 @@ class _24sSpider(CrawlSpider):
         query = dict(urllib.parse.parse_qsl(url_parts[4]))
         query.update(params)
         url_parts[4] = urllib.parse.urlencode(query)
+
         return urllib.parse.urlunparse(url_parts)
 
     def parse_color(self, response):
