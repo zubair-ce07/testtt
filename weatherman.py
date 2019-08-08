@@ -6,7 +6,6 @@ import reportgenerator
 
 PKT, PKT_INDEX = 'PKT', 0
 MAX_TEMP, MAX_TEMP_INDEX = 'Max Temp', 1
-MEAN_TEMP, MEAN_TEMP_INDEX = 'Mean Temp', 2
 MIN_TEMP, MIN_TEMP_INDEX = 'Min Temp', 3
 MEAN_HUMIDITY, MEAN_HUMIDITY_INDEX = 'Mean Humidity', 8
 
@@ -44,7 +43,7 @@ MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
 
 
 def parse(files_dir, file_names):
-    weather_readings = {PKT: [], MAX_TEMP: [], MEAN_TEMP: [],
+    weather_readings = {PKT: [], MAX_TEMP: [],
                         MIN_TEMP: [], MEAN_HUMIDITY: []
                         }
     for file in file_names:
@@ -56,7 +55,6 @@ def parse(files_dir, file_names):
                 info = info.strip().split(',')
                 weather_readings[PKT].append(info[PKT_INDEX])
                 weather_readings[MAX_TEMP].append(int(info[MAX_TEMP_INDEX]) if info[MAX_TEMP_INDEX] != '' else None)
-                weather_readings[MEAN_TEMP].append(int(info[MEAN_TEMP_INDEX]) if info[MEAN_TEMP_INDEX] != '' else None)
                 weather_readings[MIN_TEMP].append(int(info[MIN_TEMP_INDEX]) if info[MIN_TEMP_INDEX] != '' else None)
                 weather_readings[MEAN_HUMIDITY].append(int(info[MEAN_HUMIDITY_INDEX])
                                                        if info[MEAN_HUMIDITY_INDEX] != '' else None)

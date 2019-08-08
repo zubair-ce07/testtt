@@ -39,7 +39,7 @@ def generate_month_temp_detailed_report(month, year, results):
 
     print(f'{month} {year}')
 
-    row = '{day} \033[1;34m{lowest_bar}\033[1;31m{highest_bar}\033[0;0m {lowest_temp}C - {highest_temp}C'
+    row = '{day:02d} \033[1;34m{lowest_bar}\033[1;31m{highest_bar}\033[0;0m {lowest_temp}C - {highest_temp}C'
     for i, day in enumerate(days):
         max_temp = max_temps[i]
         min_temp = min_temps[i]
@@ -47,7 +47,7 @@ def generate_month_temp_detailed_report(month, year, results):
         highest_bar, max_temp = ('+' * max_temp, max_temp) if max_temp is not None else ('', 'N/A ')
         lowest_bar, min_temp = ('+' * min_temp, min_temp) if min_temp is not None else ('', 'N/A ')
 
-        print(row.format(day=day,
+        print(row.format(day=int(day),
                          lowest_bar=lowest_bar,
                          highest_bar=highest_bar,
                          lowest_temp=min_temp,
