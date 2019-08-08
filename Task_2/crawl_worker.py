@@ -23,20 +23,20 @@ class CrawlWorker:
         self.visisted_urls = []
         self.pages_visisted = 0
         self.total_bytes_downloaded = 0
+        self.cuncurrent_task_lock = asyncio.Semaphore(value=self.max_current_requests)
 
     async def start_crawling(self):
         crawl_workers = set()
-        cuncurrent_task_lock = asyncio.Semaphore(value=self.max_current_requests)
         start_time = time()
         while self.pages_visisted < self.crawl_limit:
-            await cuncurrent_task_lock.acquire()
+            await self.cuncurrent_task_lock.acquire()
             await asyncio.sleep(self.download_delay)
-            crawl_workers.add(self.loop.create_task(self.__create_request(cuncurrent_task_lock)))
+            crawl_workers.add(self.loop.create_task(self.__create_request(self.cuncurrent_task_lock)))
 
-        self.__print_result(start_time)
+        self.print_result(start_time)
         await asyncio.wait(crawl_workers)
 
-    def __print_result(self, start_time):
+    def print_result(self, start_time):
 
         total_bytes_downloaded = self.total_bytes_downloaded
         total_pages_loaded = self.pages_visisted
