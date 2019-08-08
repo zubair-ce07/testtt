@@ -8,6 +8,10 @@ class LaneBryantSpider(CrawlSpider):
 
     name = "lanebryant_spider"
     allowed_domains = ["lanebryant.com"]
+    start_urls = ['http://www.lanebryant.com/']
+    cookies = {
+        'GEOLOCATION_INFO': 'CA|Canada|CAD'
+    }
 
     listings_css = [
         "#asc-header-con",
@@ -23,8 +27,7 @@ class LaneBryantSpider(CrawlSpider):
     )
 
     def start_requests(self):
-        start_url = 'http://www.lanebryant.com/'
-        yield Request(start_url, callback=self.parse, cookies={'GEOLOCATION_INFO': 'CA|Canada|CAD'})
+        return [Request(url, callback=self.parse, cookies=self.cookies, dont_filter=True) for url in self.start_urls]
 
     def parse_item(self, response):
         return self.parse_spider.parse(response)
