@@ -26,9 +26,7 @@ class WeatherParser:
                 next(weather_file)  # discard empty line at top
                 rows = csv.DictReader(weather_file)
 
-                readings = [WeatherReading(row)
-                            for row in rows if self._is_row_valid(row)]
-
-                weather_readings.extend(readings)
+                weather_readings += [WeatherReading(row)
+                                     for row in rows if self._is_row_valid(row)]
 
         return weather_readings
