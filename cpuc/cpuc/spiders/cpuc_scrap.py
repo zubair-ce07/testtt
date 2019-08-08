@@ -26,6 +26,7 @@ class CpucScrapSpider(scrapy.Spider):
     cookie_count = 0
     DOCUMENT_LINK_VALIDATION = r"http://docs.cpuc.ca.gov/SearchRes.aspx\?"\
         "DocFormat=ALL&DocID="
+    PAGINATION_URL = "https://apps.cpuc.ca.gov/apex/wwv_flow.show"
 
     def parse(self, response):
         """Search proceeding.
@@ -65,9 +66,8 @@ class CpucScrapSpider(scrapy.Spider):
                        'x01': response.css('#apexir_WORKSHEET_ID::attr(value)').get(),
                        'x02': response.css('#apexir_REPORT_ID::attr(value)').get()
                        }
-            url = "https://apps.cpuc.ca.gov/apex/wwv_flow.show"
             req = scrapy.FormRequest(
-                url, callback=self.proceeding_parse, formdata=frmdata)
+                self.PAGINATION_URL, callback=self.proceeding_parse, formdata=frmdata)
             yield req
 
     def scrap_proceeding(self, response):
@@ -160,9 +160,8 @@ class CpucScrapSpider(scrapy.Spider):
                        'x01': response.css('#apexir_WORKSHEET_ID::attr(value)').get(),
                        'x02': response.css('#apexir_REPORT_ID::attr(value)').get()
                        }
-            url = "https://apps.cpuc.ca.gov/apex/wwv_flow.show"
             req = scrapy.FormRequest(
-                url,
+                self.PAGINATION_URL,
                 callback=self.scrap_documents,
                 formdata=frmdata,
                 headers={'Referer': response.url},
