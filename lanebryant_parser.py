@@ -4,7 +4,7 @@ from datetime import datetime
 
 from scrapy.spiders import Spider
 
-from lanebryant.lanebryant_items import LaneBryantItem
+from lanebryant.items import LaneBryantItem
 
 
 class LaneBryantParser(Spider):
@@ -108,22 +108,22 @@ class LaneBryantParser(Spider):
 
         return pricing
 
-    def get_sku_details(self, raw_sku, sku_id, sku_list):
-        return {colors["id"]: colors[sku_id]
-                for colors in raw_sku[sku_list][0]["values"]}
+    def variant_map(self, raw_sku, sku_id, sku_list):
+        return {variant["id"]: variant[sku_id]
+                for variant in raw_sku[sku_list][0]["values"]}
 
     def get_product_skus(self, raw_sku):
         skus = {}
 
         common_sku = self.get_product_pricing(raw_sku["skus"][0]["prices"])
-        colors = self.get_sku_details(raw_sku, "name", "all_available_colors")
-        sizes = self.get_sku_details(raw_sku, "value", "all_available_sizes")
+        colour_map = self.variant_map(raw_sku, "name", "all_available_colors")
+        size_map = self.variant_map(raw_sku, "value", "all_available_sizes")
 
         for item in raw_sku["skus"]:
             sku = common_sku.copy()
 
-            sku["color"] = colors[item['color']]
-            sku["size"] = sizes[item['size']] if sizes[item['size']] else item['size']
+            sku["color"] = colour_map[item['color']]
+            sku["size"] = size_map[item['size']] if size_map[item['size']] else item['size']
 
             if not raw_sku["isSellable"]:
                 sku["out_of_stock"] = True
