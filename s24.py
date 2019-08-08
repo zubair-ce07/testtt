@@ -39,26 +39,21 @@ class _24sSpider(CrawlSpider):
         'https://www.24s.com/en-us/'
     ]
 
-    pagination_url = 'https://dkpvob44gb-dsn.algolia.net/1/indexes/*/queries?x-algolia-agent=' \
-                     'Algolia+for+vanilla+JavaScript+3.32.1%3BJS+Helper+2.26.1&x-algolia-' \
-                     'application-id=DKPVOB44GB&x-algolia-api-key=9b23af4f250bb432947c20b7c82890a2'
+    pagination_url = 'https://dkpvob44gb-dsn.algolia.net/1/indexes/*/queries?x-algolia-agent=Algolia+for+vanilla+JavaScri' \
+                     'pt+3.32.1%3BJS+Helper+2.26.1&x-algolia-application-id=DKPVOB44GB&x-algolia-api-key=9b23af4f250bb43' \
+                     '2947c20b7c82890a2'
     product_url_t = '{}-{}_{}?defaultSku={}&color={}'
-    facets = urllib.parse.quote('["brand","brand","color_en_pack","clothing_size_FR",'
-                                '"clothing_size_US","clothing_size_UK","clothing_size_IT",'
-                                '"clothing_size_DE","clothing_size_JP","shoes_size_EU",'
-                                '"shoes_size_FR","shoes_size_US","shoes_size_UK",'
-                                '"shoes_size_JP","shoes_size_KOR","promotion_event_type"]')
+
     headers = {
         'accept': 'application/json',
         'Origin': 'https://www.24s.com',
-        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/'
-                      '537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',
+        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safar'
+                      'i/537.36',
         'content-type': 'application/x-www-form-urlencoded',
     }
-    body = '{"requests":[{"indexName":"prod_products",' \
-           '"params":"query=&tagFilters={}&page=0&getRankingInfo=true' \
-           '&ruleContexts={}&facets={}"}]}'
-    body_json = json.loads(body)
+
+    body_json = json.loads('{"requests":[{"indexName":"prod_products","params":"query=&tagFilters={}&page=0&getRankingIn'
+                           'fo=true&ruleContexts={}"}]}')
 
     listings_css = ['.nav-link', '[class="device-drop-btn"]']
     rules = (
@@ -67,69 +62,63 @@ class _24sSpider(CrawlSpider):
 
     def parse_categories(self, response):
         body = self.req_body(response)
-        return Request(self.pagination_url, method='POST',
-                       body=body, headers=self.headers, callback=self.parse_pagination)
-
-    def req_body(self, response):
-        tag_filter = self.get_tag_filters(response)
-        rule_contexts = self.get_rule_contexts(response)
-        self.body_json['requests'][0]['params'] = \
-            self.body_json['requests'][0]['params'].format(tag_filter, rule_contexts, self.facets)
-
-        return json.dumps(self.body_json)
+        return Request(self.pagination_url, method='POST', body=body, headers=self.headers,
+                       callback=self.parse_pagination)
 
     def get_tag_filters(self, response):
         raw_tag_filter = ["US"]
-        raw_tag_filter.extend(response.css('::attr(data-filter)').get().split(','))
-        tag_filter = re.sub(' ', '', re.sub('\'', '"', str(raw_tag_filter)))
+        raw_tag_filter += response.css('::attr(data-filter)').get().split(',')
+        tag_filter = str(raw_tag_filter).replace('\'', '"').replace(' ', '')
+
         return urllib.parse.quote(tag_filter)
 
     def get_rule_contexts(self, response):
         raw_rule_context = response.css('::attr(data-filter)').get()
 
-        if ',' in raw_rule_context:
-            raw_rule_context = [re.sub(',', '_MERCH_US', raw_rule_context)]
-        else:
-            raw_rule_context = [f"{raw_rule_context}{'_MERCH_US'}"]
+        raw_rule_context = [raw_rule_context.repalce(',', '_MERCH_US')] if ',' in raw_rule_context \
+            else [raw_rule_context.repalce(',', '_MERCH_US')]
+        rule_context = str(raw_rule_context).replace('\'', '"').replace(' ', '')
 
-        rule_context = re.sub(' ', '', (re.sub('\'', '"', str(raw_rule_context))))
         return urllib.parse.quote(rule_context)
 
     def parse_pagination(self, response):
         self.parse_products(response)
         total_pages = json.loads(response.text)['results'][0]['nbPages'] + 1
-        body = json.loads(response.request.body)
 
         for page_number in range(1, total_pages):
-            body = self.next_req_body(body, page_number)
+            body = self.req_body(response, page_number)
 
-            yield Request(self.pagination_url, method='POST',
-                          body=body, headers=self.headers,
+            yield Request(self.pagination_url, method='POST', body=body, headers=self.headers,
                           callback=self.parse_products, dont_filter=True)
 
-    def next_req_body(self, body, page_number):
-        body['requests'][0]['params'] = re.sub('page=(.+?)&',
-                                               f'page={page_number}&',
-                                               body['requests'][0]['params'])
-        return json.dump(body)
+    def req_body(self, response, page_number=0):
+
+        if not page_number:
+            tag_filter = self.get_tag_filters(response)
+            rule_contexts = self.get_rule_contexts(response)
+            params = self.body_json['requests'][0]['params'].format(tag_filter, rule_contexts)
+            self.body_json['requests'][0]['params'] = params
+
+            return json.dumps(self.body_json)
+        else:
+            body = json.loads(response.request.body)
+            body['requests'][0]['params'] = re.sub('page=(.+?)&', f'page={page_number}&', body['requests'][0]['params'])
+
+            return json.dump(body)
 
     def parse_products(self, response):
         raw_products = json.loads(response.text)['results'][0]
 
         for product in raw_products['hits']:
-            title = self.clean_accent_and_grb(product['title_en'])
-            brand = self.clean_accent_and_grb(product['brand'])
-            group_id = product['item_group_id']
-            sku_id = product['sku']
-            color = self.clean_accent_and_grb(product['color_brand'])
-            
-	    product_url = self.product_url_t.format(title, brand, group_id, sku_id, color)
+            product_url = self.clean_accent_and_grb(self.product_url_t.format(
+                product['title_en'], product['brand'], product['item_group_id'], product['sku'],
+                product['color_brand']))
+
             yield response.follow(product_url, callback=self.parse_item)
 
     def clean_accent_and_grb(self, raw_str):
-        raw_str = ''.join((c for c in unicodedata.normalize('NFD', raw_str) if
-                           unicodedata.category(c) != 'Mn')).lower()
-        return re.sub(' |\/', '-', re.sub('"', '', raw_str))
+        raw_str = ''.join((c for c in unicodedata.normalize('NFD', raw_str) if unicodedata.category(c) != 'Mn')).lower()
+        return re.sub(' |\/', '-', raw_str.replace('"', ''))
 
     def parse_item(self, response):
         item = _24sItem()
@@ -148,27 +137,28 @@ class _24sSpider(CrawlSpider):
         return self.next_request_or_item(item)
 
     def color_requests(self, response):
-        requests = []
         product_json = json.loads(response.css('::attr(data-variants-tree)').get())
 
-        for color in product_json['_children']:
-            if not color['selected']:
-                url = re.findall('(.+?)\?', response.url)[0]
-                requests.append(Request(f'{url}?color={color["value"]}', callback=self.parse_color))
+        return [Request(self.new_color_url(color, response), callback=self.parse_color)
+                for color in product_json['_children'] if not color['selected']]
 
-        return requests
+    def new_color_url(self, color, response):
+        params = {'color': color}
+        url_parts = list(urllib.parse.urlparse(response.url))
+        query = dict(urllib.parse.parse_qsl(url_parts[4]))
+        query.update(params)
+        url_parts[4] = urllib.parse.urlencode(query)
+        return urllib.parse.urlunparse(url_parts)
 
     def parse_color(self, response):
         item = response.meta['item']
-        item['image_urls'].extend(self.product_images(response))
+        item['image_urls'] += self.product_images(response)
         item['skus'].update(self.product_skus(response))
         return self.next_request_or_item(item)
 
     def product_images(self, response):
-        images_urls_1 = response.css('[id*="product-img-"] img ::attr(src)').getall()
-        images_urls_2 = response.css('[id*="img-"] img ::attr(src)').getall()
-
-        return [url for url in images_urls_1 + images_urls_2
+        images_urls = response.css('[id*="product-img-"] img ::attr(src) , [id*="img-"] img ::attr(src)').getall()
+        return [url for url in images_urls
                 if 'base64' not in url]
 
     def product_skus(self, response):
@@ -184,20 +174,12 @@ class _24sSpider(CrawlSpider):
             'currency': price_sel.css('::attr(data-currency)').get()
         }
 
-        if not sizes:
-            common_sku['out_of_stock'] = False
-            common_sku['size'] = 'OneSize'
-            return {f'{common_sku["size"]}_{color}': common_sku.copy()}
-
-        for size in sizes:
-            common_sku['out_of_stock'] = False
-
+        for size in sizes or ['One_Size']:
             if 'Out of stock' in size:
                 common_sku['out_of_stock'] = True
-                size = re.findall('(.+?)-', size)[0]
+                size = clean(size.split('-')[0])
             common_sku['size'] = size
-
-            skus[f'{color}_ {size}'] = common_sku.copy()
+            skus[f'{color}_{size}'] = common_sku.copy()
 
         return skus
 
@@ -211,18 +193,16 @@ class _24sSpider(CrawlSpider):
         return item
 
     def retailer_sku(self, response):
-        return urlparse.parse_qs(urlparse.urlparse(response.url).query)['defaultSku'][0]
+        return response.css('script:contains("productSKU")').re_first('productSKU\"\:\"(.+?)\"')
 
     def product_gender(self, response):
-        return response.css('script:contains("universe")'). \
-            re_first('universe\":\"(.+?)\"')
+        return response.css('script:contains("universe")').re_first('universe\":\"(.+?)\"')
 
     def product_name(self, response):
         return response.css('#product-toolbar h2::text').get()
 
     def product_category(self, response):
-        return response.css('script:contains("category")'). \
-            re_first('category\"\:\"(.+?)\"').split('\\/')
+        return response.css('script:contains("category")').re_first('category\"\:\"(.+?)\"').split('\\/')
 
     def product_url(self, response):
         return response.url
