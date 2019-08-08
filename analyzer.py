@@ -2,7 +2,7 @@ class WeatherAnalyzer:
     """Extracts aggregate information from WeatherReading objects"""
 
     def _filter(self, readings, key):
-        "Filter readings by given attribute"
+        """Filter readings by given attribute"""
         return [r for r in readings if getattr(r, key) is not None]
 
     def get_avg_of_attributes(self, readings, key):
