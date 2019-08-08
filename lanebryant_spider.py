@@ -27,7 +27,7 @@ class LaneBryantSpider(CrawlSpider):
     )
 
     def start_requests(self):
-        return [Request(url, callback=self.parse, cookies=self.cookies, dont_filter=True) for url in self.start_urls]
+        return [Request(url, callback=self.parse, cookies=self.cookies) for url in self.start_urls]
 
     def parse_item(self, response):
         return self.parse_spider.parse(response)
