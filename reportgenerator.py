@@ -16,10 +16,10 @@ def generate_year_info_report(results):
                                                     month=lowest_temp_result[1],
                                                     day=lowest_temp_result[2]
                                                     ))
-    print('Humidity: {humidity}% on {month} {day}'.format(humidity=most_humidity_result[0],
-                                                          month=most_humidity_result[1],
-                                                          day=most_humidity_result[2]
-                                                          ))
+    print('Humidity: {humidity}% on {month} {day}\n'.format(humidity=most_humidity_result[0],
+                                                            month=most_humidity_result[1],
+                                                            day=most_humidity_result[2]
+                                                            ))
 
 
 def generate_month_info_report(results):
@@ -29,7 +29,7 @@ def generate_month_info_report(results):
 
     print('Highest Average: {highest_avg}C'.format(highest_avg=highest_average))
     print('Lowest Average: {lowest_avg}C'.format(lowest_avg=lowest_average))
-    print('Average Mean Humidity: {humidity}%'.format(humidity=average_mean_humidity))
+    print('Average Mean Humidity: {humidity}%\n'.format(humidity=average_mean_humidity))
 
 
 def generate_month_temp_detailed_report(results):
@@ -42,9 +42,14 @@ def generate_month_temp_detailed_report(results):
         max_temp = max_temps[i]
         min_temp = min_temps[i]
 
+        highest_bar, max_temp = ('+' * max_temp, max_temp) if max_temp is not None else ('', 'N/A ')
+        lowest_bar, min_temp = ('+' * min_temp, min_temp) if min_temp is not None else ('', 'N/A ')
+
         print(row.format(day=day,
-                         lowest_bar='+' * min_temp,
-                         highest_bar='+' * max_temp,
+                         lowest_bar=lowest_bar,
+                         highest_bar=highest_bar,
                          lowest_temp=min_temp,
                          highest_temp=max_temp
                          ))
+
+    print()

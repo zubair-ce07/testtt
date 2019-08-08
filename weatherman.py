@@ -1,9 +1,8 @@
 import argparse
-import sys
 import os
 import statistics
 
-import report_generator
+import reportgenerator
 
 PKT, PKT_INDEX = 'PKT', 0
 MAX_TEMP, MAX_TEMP_INDEX = 'Max Temp', 1
@@ -123,59 +122,65 @@ def compute_month_temp_detail(weather_readings):
 
 def main():
     # creating argument parser
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument('files_dir',
-    #                     type=str,
-    #                     help='Directory containing weather files')
-    # parser.add_argument('-e',
-    #                     metavar='e',
-    #                     type=str,
-    #                     nargs='?',
-    #                     help=('For a given year display the highest temperature and day, lowest temperature and day, '
-    #                           'most humid day and humidity.'))
-    # parser.add_argument('-a',
-    #                     metavar='a',
-    #                     type=str,
-    #                     nargs='?',
-    #                     help=('For a given month display the average highest temperature, average lowest temperature, '
-    #                           'average mean humidity.'))
-    # parser.add_argument('-c',
-    #                     metavar='c',
-    #                     type=str,
-    #                     nargs='?',
-    #                     help=(
-    #                         'For a given month draw two horizontal bar charts on the console for the highest and '
-    #                         'lowest temperature on each day. Highest in red and lowest in blue.'))
-    # args = parser.parse_args()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('files_dir',
+                        type=str,
+                        help='Directory containing weather files')
+    parser.add_argument('-e',
+                        metavar='e',
+                        type=str,
+                        nargs='?',
+                        help=('For a given year display the highest temperature and day, lowest temperature and day, '
+                              'most humid day and humidity.'))
+    parser.add_argument('-a',
+                        metavar='a',
+                        type=str,
+                        nargs='?',
+                        help=('For a given month display the average highest temperature, average lowest temperature, '
+                              'average mean humidity.'))
+    parser.add_argument('-c',
+                        metavar='c',
+                        type=str,
+                        nargs='?',
+                        help=(
+                            'For a given month draw two horizontal bar charts on the console for the highest and '
+                            'lowest temperature on each day. Highest in red and lowest in blue.'))
+    args = parser.parse_args()
 
     # extracting arguments
     files_dir = 'weatherfiles/'  # args.files_dir + '/'
-    e = None  # args.e
-    a = None  # args.a
-    c = '2011/3'  # args.c
+    e = args.e
+    a = args.a
+    c = args.c
 
     if e is not None:
+        print(f'-e {e}')
+
         year = e
-        files_prefix = 'Murree_weather_{year}_'.format(year=year)
+        files_prefix = f'Murree_weather_{year}_'
         year_file_names = [file for file in os.listdir(files_dir)
                            if file.startswith(files_prefix)]
         weather_readings = parse(files_dir, year_file_names)
         results = compute_year_info(weather_readings)
-        report_generator.generate_year_info_report(results)
+        reportgenerator.generate_year_info_report(results)
 
     if a is not None:
+        print(f'-a {a}')
+
         year, month = a.split('/')
         file_name = 'Murree_weather_{year}_{month}.txt'.format(year=year, month=MONTHS_ABBREVIATED[int(month) - 1])
         weather_readings = parse(files_dir, [file_name])
         results = compute_month_info(weather_readings)
-        report_generator.generate_month_info_report(results)
+        reportgenerator.generate_month_info_report(results)
 
     if c is not None:
+        print(f'-c {c}')
+
         year, month = c.split('/')
         file_name = 'Murree_weather_{year}_{month}.txt'.format(year=year, month=MONTHS_ABBREVIATED[int(month) - 1])
         weather_readings = parse(files_dir, [file_name])
         results = compute_month_temp_detail(weather_readings)
-        report_generator.generate_month_temp_detailed_report(results)
+        reportgenerator.generate_month_temp_detailed_report(results)
 
 
 main()
