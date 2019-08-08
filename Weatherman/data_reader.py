@@ -22,17 +22,14 @@ class WeathermanFileReader:
         self.weather_records = []
 
     def read_all_data(self):
-        files = glob(WeathermanFileReader.filename_format.\
-                    format(self.path))
+        files = glob(WeathermanFileReader.filename_format.format(self.path))
 
-        for file in files:
-            with open(file) as data_file:
+        for file_path in files:
+            with open(file_path) as data_file:
                 dict_reader = csv.DictReader(data_file)
                 for row in dict_reader:
                     if is_valid_weather_record(row):
-                        daily_data = WeatherRecords(row)
-                        if daily_data:
-                            self.weather_records.append(daily_data)
+                        self.weather_records.append(WeatherRecords(row))
 
     def get_weather_records(self, year, month=0):
         if month == 0:

@@ -49,18 +49,6 @@ def setup_arguments():
 
     return parser.parse_args()
 
-def perform_monthly_operations(command, date, weather_data_reader, report_printer, weather_analyzer):
-    monthly_weather_records = weather_data_reader.get_weather_records(
-        year=date.year,
-        month=date.month
-    )
-    if command == 'a':
-        weather_analyzer.weather_records = monthly_weather_records
-        result = weather_analyzer.get_monthly_avg_results()
-        report_printer.print_average_report(result)
-    elif command == 'c':
-        report_printer.print_monthly_report(monthly_weather_records, date.month, date.year)
-
 def main():
     commandline_arguments = setup_arguments()
     weather_data_directory_path = commandline_arguments.data_directory
@@ -78,12 +66,16 @@ def main():
         report_printer.print_yearly_report(weather_analyzer.get_yearly_temperature_peaks())
 
     if commandline_arguments.a:
-        perform_monthly_operations('a', commandline_arguments.a, \
-            weather_data_reader, report_printer, weather_analyzer)
+        date = commandline_arguments.a
+        monthly_weather_records = weather_data_reader.get_weather_records(year=date.year, month=date.month)
+        weather_analyzer.weather_records = monthly_weather_records
+        result = weather_analyzer.get_monthly_avg_results()
+        report_printer.print_average_report(result)
 
     if commandline_arguments.c:
-        perform_monthly_operations('c', commandline_arguments.c, \
-            weather_data_reader, report_printer, weather_analyzer)
+        date = commandline_arguments.c
+        monthly_weather_records = weather_data_reader.get_weather_records(year=date.year, month=date.month)
+        report_printer.print_monthly_report(monthly_weather_records, date.month, date.year)
 
 if __name__ == "__main__":
 
