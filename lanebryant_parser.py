@@ -4,7 +4,7 @@ from datetime import datetime
 
 from scrapy.spiders import Spider
 
-from lanebryant.items import LaneBryantItem
+from lanebryant.lanebryant_items import LaneBryantItem
 
 
 class LaneBryantParser(Spider):
