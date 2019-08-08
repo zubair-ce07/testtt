@@ -9,8 +9,9 @@ from urllib.parse import urljoin
 
 import scrapy
 from scrapy.linkextractors import LinkExtractor
-
-from cpuc.items import Proceeding, ProceedingDocument, Document
+from scrapy.loader.processors import TakeFirst
+from cpuc.items import ProceedingDocumentLoader, DocumentLoader, \
+    ProceedingLoader
 
 
 class CpucScrapSpider(scrapy.Spider):
@@ -37,10 +38,10 @@ class CpucScrapSpider(scrapy.Spider):
             response,
             formdata={'p_t04': '01/01/2019',
                       'p_t05': '08/02/2019', 'p_request': 'Go'},
-            callback=self.proceeding_parse
+            callback=self.proceedings_parse
         )
 
-    def proceeding_parse(self, response):
+    def proceedings_parse(self, response):
         """Scrap proceeding documents.
 
         This method scrap all the proceeding document and handle it's pagination.
@@ -67,7 +68,7 @@ class CpucScrapSpider(scrapy.Spider):
                        'x02': response.css('#apexir_REPORT_ID::attr(value)').get()
                        }
             req = scrapy.FormRequest(
-                self.PAGINATION_URL, callback=self.proceeding_parse, formdata=frmdata)
+                self.PAGINATION_URL, callback=self.proceedings_parse, formdata=frmdata)
             yield req
 
     def scrap_proceeding(self, response):
@@ -75,28 +76,21 @@ class CpucScrapSpider(scrapy.Spider):
 
         This method scrap a proceeding details and request it's documnts.
         """
-        proceeding = Proceeding(
-            proceeding_no=response.css(
-                '.rc-content-main > h1::text').get().split('-')[0].strip(),
-            filed_by=response.css(
-                '#P56_FILED_BY::text').get(),
-            service_list=response.css(
-                '#P56_SERVICE_LISTS > span > a::attr(href)').get(),
-            industry=response.css(
-                '#P56_INDUSTRY::text').get(),
-            filling_date=response.css(
-                '#P56_FILING_DATE::text').get(),
-            category=response.css(
-                '#P56_CATEGORY::text').get(),
-            current_status=response.css(
-                '#P56_STATUS::text').get(),
-            description=response.css(
-                '#P56_DESCRIPTION::text').get(),
-            staff=response.css(
-                '#P56_STAFF::text').get(),
-            documents=[]
-        )
-        proceeding['total_documents'] = 0
+        proceeding = ProceedingLoader(selector=response)
+        proceeding.add_css("proceeding_no", '.rc-content-main > h1::text')
+        proceeding.add_css("filed_by", '#P56_FILED_BY::text')
+        proceeding.add_css(
+            "filed_by", '#P56_SERVICE_LISTS > span > a::attr(href)')
+        proceeding.add_css(
+            "service_list", '#P56_SERVICE_LISTS > span > a::attr(href)')
+        proceeding.add_css("industry", '#P56_INDUSTRY::text')
+        proceeding.add_css("filling_date", '#P56_FILING_DATE::text')
+        proceeding.add_css("category", '#P56_CATEGORY::text')
+        proceeding.add_css("current_status", '#P56_STATUS::text')
+        proceeding.add_css("description", '#P56_DESCRIPTION::text')
+        proceeding.add_css("staff", '#P56_STAFF::text')
+        proceeding.add_value(
+            "total_documents", 0)
 
         link = response.url.replace('56', '57')
         request = scrapy.Request(
@@ -126,17 +120,19 @@ class CpucScrapSpider(scrapy.Spider):
             if document_link and re.search(
                     self.DOCUMENT_LINK_VALIDATION,
                     document_link):
-                proceeding_document = ProceedingDocument()
-                proceeding_document['filling_date'] = document_row.css(
-                    "tr > td[headers*='FILING_DATE']::text").get()
-                proceeding_document['document_type'] = document_row.css(
-                    "tr > td[headers*='DOCUMENT_TYPE'] > a > span > u::text").get()
-                proceeding_document['filed_by'] = document_row.css(
-                    "tr > td[headers*='FILED_BY']::text").get()
-                proceeding_document['description'] = document_row.css(
-                    "tr > td[headers*='DESCRIPTION']::text").get()
-
-                proceeding['total_documents'] += 1
+                proceeding_document = ProceedingDocumentLoader(
+                    selector=document_row)
+                proceeding_document.add_css(
+                    'filling_date', "tr > td[headers*='FILING_DATE']::text")
+                proceeding_document.add_css(
+                    'document_type', "tr > td[headers*='DOCUMENT_TYPE'] > a > span > u::text")
+                proceeding_document.add_css(
+                    'filed_by', "tr > td[headers*='FILED_BY']::text")
+                proceeding_document.add_css(
+                    'description', "tr > td[headers*='DESCRIPTION']::text")
+                proceeding.replace_value(
+                    'total_documents', proceeding.get_collected_values(
+                        "total_documents")[0]+1)
                 documents_links.append(document_link)
                 request = scrapy.Request(
                     document_link,
@@ -170,7 +166,7 @@ class CpucScrapSpider(scrapy.Spider):
             yield req
 
         if not documents_links:
-            yield proceeding
+            yield proceeding.load_item()
 
     @staticmethod
     def scrap_item(response):
@@ -180,24 +176,22 @@ class CpucScrapSpider(scrapy.Spider):
         """
         proceeding = response.meta['proceeding']
         proceeding_document = response.meta['proceeding_document']
-        proceeding_document['link'] = response.url
+        proceeding_document.add_value('link', response.url)
         files = response.selector.xpath(
             '//table[@id="ResultTable"]/tbody/tr')  # css was not working
-        proceeding_document['files'] = []
         for file in files:
             if file.css('.ResultTitleTD').get():
-                document = Document(
-                    title=re.sub(re.compile(r'<[^>]+>'), '',
-                                 file.css('.ResultTitleTD').get()),
-                    doc_type=file.css('.ResultTypeTD::text').get(),
-                    pdf_link=urljoin(
-                        'http://docs.cpuc.ca.gov', file.css(
-                            '.ResultLinkTD > a::attr(href)').get()
-                    ),
-                    published_date=file.css('.ResultDateTD::text').get()
-                )
-                proceeding_document['files'].append(document)
-        proceeding['documents'].append(proceeding_document)
+                document = DocumentLoader(selector=file)
+                # title = re.sub(re.compile(r'<[^>]+>'), '',
+                #              file.css('.ResultTitleTD').get()),
+                document.add_css('title', '.ResultTitleTD')
+                document.add_css('doc_type', '.ResultTypeTD::text')
+                pdf_link = urljoin('http://docs.cpuc.ca.gov',
+                                   file.css('.ResultLinkTD > a::attr(href)').get())
+                document.add_value('pdf_link', pdf_link)
+                document.add_css('published_date', '.ResultDateTD::text')
+                proceeding_document.add_value('files', document.load_item())
+        proceeding.add_value('documents', proceeding_document.load_item())
 
-        if len(proceeding['documents']) == proceeding['total_documents']:
-            yield proceeding
+        if len(proceeding.get_collected_values("documents")) == proceeding.get_collected_values("total_documents")[0]:
+            yield proceeding.load_item()
