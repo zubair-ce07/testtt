@@ -52,11 +52,18 @@ class WeatherReporter:
             max_temp_bar = self._get_colored_bar(max_temp, self._RED)
             min_temp_bar = self._get_colored_bar(min_temp, self._BLUE)
 
-            if single_line:
-                print(f"{formated_day} {max_temp_bar}{min_temp_bar} {max_temp}C - {min_temp}C")
-            else:
-                print(f"{formated_day} {max_temp_bar} {max_temp}C")
-                print(f"{formated_day} {min_temp_bar} {min_temp}C")
+            single_line_report = (
+                f"{formated_day} {max_temp_bar}{min_temp_bar} "
+                f"{max_temp}C - {min_temp}C"
+            )
+            dual_line_report = (
+                f"{formated_day} {max_temp_bar} {max_temp}C\n"
+                f"{formated_day} {min_temp_bar} {min_temp}C"
+            )
+
+            report = single_line_report if single_line else dual_line_report
+
+            print(report)
 
         print("")
 
