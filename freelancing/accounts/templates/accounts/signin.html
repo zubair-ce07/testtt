@@ -1,3 +1,35 @@
-{% extends 'dashboard/layout.html'%} {% block content%}
-<h2>Sign In</h2>
+{% extends 'accounts/card_wrapper.html'%} {% block card_content%}
+
+<div class="row">
+  <div class="center-align">
+    <h4>Login To Start Working</h4>
+  </div>
+</div>
+<div class="row">
+  <form action="{% url 'signin' %}" method="post" class="col s12">
+    {% csrf_token %}
+    <div class="row">
+      {% for field in form %}
+      <div class="input-field col s12">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        <span class="helper-text">
+          {{ field.help_text }}
+        </span>
+        {% for error in field.errors %}
+        <span class="helper-text" style="color: red">
+          {{ error }}
+        </span>
+        {% endfor %}
+      </div>
+      {% endfor %}
+    </div>
+    <button class="btn waves-effect" type="submit">
+      Login
+    </button>
+    <span class="helper-text center-align" style="color: red">
+      {{ form.non_field_errors }}
+    </span>
+  </form>
+</div>
 {% endblock %}
