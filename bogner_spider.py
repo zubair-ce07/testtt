@@ -10,30 +10,41 @@ class BognerSpider(CrawlSpider):
         'https://www.bogner.com/en-gb/women.html'
     ]
     rules = (
-        Rule(LinkExtractor(allow=("/women", "/men",), restrict_xpaths='//nav[@id="nav"]//li[@class="level2   "]//a')),
-        Rule(LinkExtractor(restrict_xpaths='//div[@class="toolbar-bottom"]//a[@class="next i-next"]')),
+        Rule(LinkExtractor(allow=("/women", "/men",), restrict_xpaths=['//nav[@id="nav"]//li[@class="level2   "]//a',
+                                                                       '//div[@class="toolbar-bottom"]'
+                                                                       '//a[@class="next i-next"]'])),
         Rule(LinkExtractor(restrict_xpaths='//a[@class="product-image is-visible-default"]'), callback='parse_item'),
     )
+    set_retailer_skus = set()
 
     def parse_item(self, response):
         items = BognerItem()
+        retailer_sku = self.extract_retailer_sku(response)
 
-        items['url'] = response.url
-        items['retailer_sku'] = self.extract_retailer_sku(response)
-        items['category'] = self.extract_category(response)
-        items['gender'] = items['category'][0]
-        items['brand'] = self.extract_brand(response)
-        items['name'] = self.extract_name(response)
-        items['description'] = self.extract_description(response)
-        items['care'] = self.extract_care(response)
-        items['image_urls'] = self.extract_image_urls(response)
-        items['price'] = self.extract_price(response)
-        items['currency'] = "GBP"
-        items['retailer'] = self.extract_retailer(response)
-        items['market'] = items['retailer'].split(' ')[-1]
-        items['skus'] = self.extract_skus(response, items['price'])
+        if self.check_if_parsed(retailer_sku):
+            return
+        else:
+            items['url'] = response.url
+            items['retailer_sku'] = retailer_sku
+            items['category'] = self.extract_category(response)
+            items['gender'] = items['category'][0] if items['category'] else None
+            items['brand'] = self.extract_brand(response)
+            items['name'] = self.extract_name(response)
+            items['description'] = self.extract_description(response)
+            items['care'] = self.extract_care(response)
+            items['image_urls'] = self.extract_image_urls(response)
+            items['price'] = self.extract_price(response)
+            items['currency'] = "GBP"
+            items['retailer'] = self.extract_retailer(response)
+            items['market'] = items['retailer'].split(' ')[-1]
+            items['skus'] = self.extract_skus(response, items['price'])
+            self.set_retailer_skus.add(retailer_sku)
+            yield items
 
-        yield items
+    def check_if_parsed(self, retailer_sku):
+        if retailer_sku in self.set_retailer_skus:
+            return True
+        return False
 
     def extract_retailer_sku(self, response):
         return response.xpath('//p[@class="sku"]/text()').re_first('\d+')
