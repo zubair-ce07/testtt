@@ -39,9 +39,9 @@ class _24sSpider(CrawlSpider):
         'https://www.24s.com/en-us/'
     ]
 
-    pagination_url_t = 'https://dkpvob44gb-dsn.algolia.net/1/indexes/*/queries?x-algolia-agent=' \
-                       'Algolia+for+vanilla+JavaScript+3.32.1%3BJS+Helper+2.26.1&x-algolia-' \
-                       'application-id=DKPVOB44GB&x-algolia-api-key=9b23af4f250bb432947c20b7c82890a2'
+    pagination_url = 'https://dkpvob44gb-dsn.algolia.net/1/indexes/*/queries?x-algolia-agent=' \
+                     'Algolia+for+vanilla+JavaScript+3.32.1%3BJS+Helper+2.26.1&x-algolia-' \
+                     'application-id=DKPVOB44GB&x-algolia-api-key=9b23af4f250bb432947c20b7c82890a2'
     product_url_t = '{}-{}_{}?defaultSku={}&color={}'
     facets = urllib.parse.quote('["brand","brand","color_en_pack","clothing_size_FR",'
                                 '"clothing_size_US","clothing_size_UK","clothing_size_IT",'
@@ -55,23 +55,28 @@ class _24sSpider(CrawlSpider):
                       '537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',
         'content-type': 'application/x-www-form-urlencoded',
     }
+    body = '{"requests":[{"indexName":"prod_products",' \
+           '"params":"query=&tagFilters={}&page=0&getRankingInfo=true' \
+           '&ruleContexts={}&facets={}"}]}'
+    body_json = json.loads(body)
 
     listings_css = ['.nav-link', '[class="device-drop-btn"]']
-
     rules = (
         Rule(LinkExtractor(restrict_css=listings_css), callback='parse_categories'),
     )
 
     def parse_categories(self, response):
+        body = self.req_body(response)
+        return Request(self.pagination_url, method='POST',
+                       body=body, headers=self.headers, callback=self.parse_pagination)
+
+    def req_body(self, response):
         tag_filter = self.get_tag_filters(response)
         rule_contexts = self.get_rule_contexts(response)
+        self.body_json['requests'][0]['params'] = \
+            self.body_json['requests'][0]['params'].format(tag_filter, rule_contexts, self.facets)
 
-        body = '{"requests":[{"indexName":"prod_products","params":"query=&tagFilters=' + tag_filter \
-               + '&page=0&getRankingInfo=true&ruleContexts=' + rule_contexts \
-               + '&facets=' + self.facets + '"}]}'
-
-        return Request(self.pagination_url_t, method='POST',
-                       body=body, headers=self.headers, callback=self.parse_pagination)
+        return json.dumps(self.body_json)
 
     def get_tag_filters(self, response):
         raw_tag_filter = ["US"]
@@ -91,23 +96,24 @@ class _24sSpider(CrawlSpider):
         return urllib.parse.quote(rule_context)
 
     def parse_pagination(self, response):
-        self.extract_products_url(response)
+        self.parse_products(response)
         total_pages = json.loads(response.text)['results'][0]['nbPages'] + 1
         body = json.loads(response.request.body)
 
         for page_number in range(1, total_pages):
             body = self.next_req_body(body, page_number)
-            yield Request(self.pagination_url_t, method='POST',
-                          body=json.dumps(body), headers=self.headers,
-                          callback=self.extract_products_url, dont_filter=True)
+
+            yield Request(self.pagination_url, method='POST',
+                          body=body, headers=self.headers,
+                          callback=self.parse_products, dont_filter=True)
 
     def next_req_body(self, body, page_number):
         body['requests'][0]['params'] = re.sub('page=(.+?)&',
                                                f'page={page_number}&',
                                                body['requests'][0]['params'])
-        return body
+        return json.dump(body)
 
-    def extract_products_url(self, response):
+    def parse_products(self, response):
         raw_products = json.loads(response.text)['results'][0]
 
         for product in raw_products['hits']:
@@ -116,7 +122,8 @@ class _24sSpider(CrawlSpider):
             group_id = product['item_group_id']
             sku_id = product['sku']
             color = self.clean_accent_and_grb(product['color_brand'])
-            product_url = self.product_url_t.format(title, brand, group_id, sku_id, color)
+            
+	    product_url = self.product_url_t.format(title, brand, group_id, sku_id, color)
             yield response.follow(product_url, callback=self.parse_item)
 
     def clean_accent_and_grb(self, raw_str):
@@ -146,7 +153,7 @@ class _24sSpider(CrawlSpider):
 
         for color in product_json['_children']:
             if not color['selected']:
-                url = response.url[:response.url.index('?')]
+                url = re.findall('(.+?)\?', response.url)[0]
                 requests.append(Request(f'{url}?color={color["value"]}', callback=self.parse_color))
 
         return requests
@@ -183,11 +190,11 @@ class _24sSpider(CrawlSpider):
             return {f'{common_sku["size"]}_{color}': common_sku.copy()}
 
         for size in sizes:
-
             common_sku['out_of_stock'] = False
+
             if 'Out of stock' in size:
                 common_sku['out_of_stock'] = True
-                size = size[:size.index(' - O')]
+                size = re.findall('(.+?)-', size)[0]
             common_sku['size'] = size
 
             skus[f'{color}_ {size}'] = common_sku.copy()
@@ -214,7 +221,8 @@ class _24sSpider(CrawlSpider):
         return response.css('#product-toolbar h2::text').get()
 
     def product_category(self, response):
-        return response.css('script:contains("category")').re_first('category\"\:\"(.+?)\"').split('\\/')
+        return response.css('script:contains("category")'). \
+            re_first('category\"\:\"(.+?)\"').split('\\/')
 
     def product_url(self, response):
         return response.url
@@ -228,5 +236,4 @@ class _24sSpider(CrawlSpider):
 
     def product_care(self, response):
         return clean(response.css('.grey ::text').getall()[-1].split('/'))
-
 
