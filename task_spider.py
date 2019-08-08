@@ -1,6 +1,7 @@
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 from ..items import ClothesItem
+import re
 
 
 class ClothesSpider(CrawlSpider):
@@ -10,31 +11,47 @@ class ClothesSpider(CrawlSpider):
         'https://athletic.descente.com'
     ]
     rules = (
-        Rule(LinkExtractor(allow=("/products/dmmnja72u",)), callback='parse_item'),
-        Rule(LinkExtractor(allow=("/collections/best-sellers", ))),
+        Rule(LinkExtractor(restrict_xpaths='//div[@class="row standard-product-list"]//a[@class="product-title"]'),
+             callback='parse_item'),
+        Rule(LinkExtractor(restrict_xpaths=['//div[@id="menu1Dropdown"]//a', '//div[@id="menu2Dropdown"]//a',
+                                            '//div[@class="col-12 pagination"]/span[@class="next"]/a'])),
     )
+    set_retailer_skus = set()
 
     def parse_item(self, response):
         items = ClothesItem()
         url_split = response.url.split('/')
 
-        items['retailer_sku'] = url_split[-1]
-        items['category'] = self.extract_category(response)
-        items['brand'] = 'Athletic Descente'
-        items['url'] = response.url
-        items['name'] = self.extract_name(response)
-        items['description'] = self.extract_description(response)
-        items['care'] = self.extract_care(response)
-        items['image_urls'] = self.extract_image_urls(response)
-        items['skus'] = self.extract_skus(response)
+        if self.check_if_parsed(url_split[-1]):
+            return
+        else:
+            items['retailer_sku'] = url_split[-1]
+            items['category'] = self.extract_category(response)
+            items['brand'] = self.extract_brand(response)
+            items['url'] = response.url
+            items['name'] = self.extract_name(response)
+            items['description'] = self.extract_description(response)
+            items['care'] = self.extract_care(response)
+            items['image_urls'] = self.extract_image_urls(response)
+            items['skus'] = self.extract_skus(response)
+            self.set_retailer_skus.add(items['retailer_sku'])
+            yield items
 
-        yield items
+    def check_if_parsed(self, retailer_sku):
+        if retailer_sku in self.set_retailer_skus:
+            return True
+        return False
 
     def extract_name(self, response):
         return response.css('h1::text').get()
 
     def extract_category(self, response):
         return response.xpath('//div[@class="breadcrumb-container"]/a[@title="Products"]/text()').getall()
+
+    def extract_brand(self, response):
+        brand = re.findall("var item = {(.+)};", response.body.decode("utf-8"), re.S)
+        brand = re.findall("Brand: (.+?),", brand[0], re.S)
+        return brand[0]
 
     def extract_skus(self, response):
         skus = []
@@ -62,15 +79,18 @@ class ClothesSpider(CrawlSpider):
         desc_all = response.xpath('//div[@class="product-description-internal"]/p/text() | '
                                   '//div[@class="specifics-inner"]/ul/li/ul/li/text()').getall()
         description = []
-        for desc in desc_all:
-            description += [d for d in desc.split('.') if d.strip() != '']
+        if desc_all:
+            for desc in desc_all:
+                description += [d for d in desc.split('.') if d.strip() != '']
         return description
 
     def extract_care(self, response):
         care = []
-        care_all = response.xpath('//div[@class="specifics-inner"]/ul/li/text()')[-1].getall()
-        for care_element in care_all:
-            care = [c for c in care_element.split('.') if c.strip() != '']
+        care_all = response.xpath('//div[@class="specifics-inner"]/ul/li/text()')
+        if care_all:
+            care_all = care_all[-1].getall()
+            for care_element in care_all:
+                care = [c for c in care_element.split('.') if c.strip() != '']
         return care
 
     def extract_image_urls(self, response):
