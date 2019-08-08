@@ -33,6 +33,11 @@ class ErnstingsSpider(CrawlSpider):
     name = "ernstings"
     allowed_domains = ["ernstings-family.de"]
     start_urls = ["https://ernstings-family.de/"]
+    product_api_url_t = "https://www.ernstings-family.de/search/resources/store/10151/" \
+                        "productview/bySearchTerm/*?pageNumber={page_no}&pageSize=24&" \
+                        "categoryId={category_id}&profileName=EF_findProductsBySearchTerm_Details"
+    product_url_t = "https://www.ernstings-family.de/ProductDisplay?categoryId" \
+                    "={category_id}&productId={product_id}&storeId=10151"
     rules = [
         Rule(LinkExtractor(restrict_css=".main-navigation-holder")),
         Rule(LinkExtractor(restrict_css="#subnavi-"), callback="parse_sub_category")
@@ -40,13 +45,10 @@ class ErnstingsSpider(CrawlSpider):
 
     def parse_sub_category(self, response):
         category_id = response.css("meta[name='pageId']::attr(content)").get()
+
         total_pages = self.get_pages_count(response)
-        url_t = "https://www.ernstings-family.de/search/resources/store/10151/" \
-                "productview/bySearchTerm/*?pageNumber={page_no}&pageSize=24&" \
-                "categoryId={category_id}&profileName=EF_findProductsBySearchTerm_Details"
-        
         for page_no in range(1, total_pages):
-            url = url_t.format(page_no=page_no, category_id=category_id)
+            url = self.product_api_url_t.format(page_no=page_no, category_id=category_id)
             yield Request(url, callback=self.parse_products_api)
 
     def parse_products_api(self, response):
@@ -54,11 +56,10 @@ class ErnstingsSpider(CrawlSpider):
         url = results["resourceId"]
         pattern = re.compile("categoryId=(\d+)")
         category_id = pattern.search(url).group(1)
-        
+
         for result in results["catalogEntryView"]:
             product_id = result["uniqueID"]
-            product_url = f"https://www.ernstings-family.de/ProductDisplay?categoryId" \
-                          f"={category_id}&productId={product_id}&storeId=10151"
+            product_url = self.product_url_t.format(category_id=category_id, product_id=product_id)
             yield Request(product_url, callback=self.parse_product)
 
     def parse_product(self, response):
@@ -92,36 +93,34 @@ class ErnstingsSpider(CrawlSpider):
     def get_product_description(response):
         description_xpath = "//div[@class='product-detail-information-contents']" \
                             "//span[contains(.,'Details')]/../.."
-        description = clean(response.xpath(description_xpath).css("p::text").getall())
-        description_bullets = clean(response.xpath(description_xpath).css("li::text").getall())
-        return [description, description_bullets]
+        return clean(response.xpath(description_xpath).css("p::text, li::text").getall())
 
     @staticmethod
     def get_product_care(response):
         material_xpath = "//div[@class='product-detail-information-contents']" \
                          "//span[contains(.,'Material')]/../.."
-        material = clean(response.xpath(material_xpath).css("p::text").getall())
-        material_bullets = clean(response.xpath(material_xpath).css("li::text").getall())
+        material = clean(response.xpath(material_xpath).css("p::text, li::text").getall())
         care = clean(response.css(".care-icon-text-wrapper img::attr(alt)").getall())
-        return [care, material, material_bullets]
+        return material + care
 
     @staticmethod
     def extract_skus(response):
         skus = {}
         color = clean(response.css(".product-detail-product-color::text").get())
         currency = response.css("script::text").re('"commandContextCurrency": "(.+)",')
-        offer_price = clean(response.css(".offer-price::text").getall())
-        previous_price_css ="product-price" if not offer_price else "strike-price"
+        price = clean(response.css(".offer-price::text").get())
+        previous_price_css = "product-price" if not price else "strike-price"
         previous_price = clean(response.css(f".{previous_price_css}::text").getall())
-        sku = {
+        common_sku = {
             "color": color,
             "currency": currency,
             "previous_price": previous_price,
-            "offer_price": offer_price,
+            "price": price,
         }
 
         size_options = response.css("#select-size-product-detail option")
         for option in size_options:
+            sku = common_sku
             out_of_stock = True if option.css("[disabled]") else False
             size = option.css("::text").get()
             sku_key = f"{color}_{size}"
