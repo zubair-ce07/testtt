@@ -11,8 +11,7 @@ SUCCESS_RESPONSE_CODE = 200
 
 class CrawlWorker:
 
-    def __init__(self, crawl_limit, max_current_requests, \
-        download_delay, start_url, loop):
+    def __init__(self, crawl_limit, max_current_requests, download_delay, start_url, loop):
         self.crawl_limit = crawl_limit
         self.max_current_requests = max_current_requests
         self.download_delay = download_delay
@@ -22,23 +21,20 @@ class CrawlWorker:
         self.url_queue.put(url)
         self.allowed_domain = url.netloc
         self.visisted_urls = []
-        self.remaining_requests = crawl_limit
         self.pages_visisted = 0
         self.total_bytes_downloaded = 0
 
     async def start_crawling(self):
         crawl_workers = set()
-        cuncurrent_task_lock = asyncio.Semaphore(
-            value=self.max_current_requests
-        )
+        cuncurrent_task_lock = asyncio.Semaphore(value=self.max_current_requests)
         start_time = time()
         while self.pages_visisted < self.crawl_limit:
             await cuncurrent_task_lock.acquire()
             await asyncio.sleep(self.download_delay)
             crawl_workers.add(self.loop.create_task(self.__create_request(cuncurrent_task_lock)))
 
-        await asyncio.wait(crawl_workers)
         self.__print_result(start_time)
+        await asyncio.wait(crawl_workers)
 
     def __print_result(self, start_time):
 
@@ -49,7 +45,7 @@ class CrawlWorker:
         print(f"\nTotal pages loaded: {total_pages_loaded}")
         print(f"Total bytes downloaded: {total_bytes_downloaded}")
         print(f"Average page size: {avg_page_size}")
-        print("Total time taken: %s" % (time() - start_time))
+        print(f"Total time taken: {(time() - start_time)}")
 
     async def __create_request(self, cuncurrent_task_lock):
         await self.__crawl_request()
@@ -73,13 +69,11 @@ class CrawlWorker:
                 self.url_queue.put(new_url)
 
     def __is_request_allowed(self):
-        return self.url_queue.qsize() and \
-            (self.remaining_requests > 0)
+        return self.url_queue.qsize() and self.pages_visisted < self.crawl_limit
 
     async def __crawl_request(self):
         if not self.__is_request_allowed():
             return
-        self.remaining_requests -= 1
         raw_url = self.url_queue.get()
         self.url_queue.task_done()
         url = raw_url.geturl()
@@ -89,5 +83,3 @@ class CrawlWorker:
                 if resp.status == SUCCESS_RESPONSE_CODE:
                     response = await resp.text()
                     await self.__handle_response(response)
-                else:
-                    self.remaining_requests += 1
