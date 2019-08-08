@@ -180,7 +180,7 @@ def main():
         file_name = 'Murree_weather_{year}_{month}.txt'.format(year=year, month=MONTHS_ABBREVIATED[int(month) - 1])
         weather_readings = parse(files_dir, [file_name])
         results = compute_month_temp_detail(weather_readings)
-        reportgenerator.generate_month_temp_detailed_report(results)
+        reportgenerator.generate_month_temp_detailed_report(month=MONTHS[int(month) - 1], year=year, results=results)
 
 
 main()

@@ -32,10 +32,12 @@ def generate_month_info_report(results):
     print('Average Mean Humidity: {humidity}%\n'.format(humidity=average_mean_humidity))
 
 
-def generate_month_temp_detailed_report(results):
+def generate_month_temp_detailed_report(month, year, results):
     days = results[0]
     max_temps = results[1]
     min_temps = results[2]
+
+    print(f'{month} {year}')
 
     row = '{day} \033[1;34m{lowest_bar}\033[1;31m{highest_bar}\033[0;0m {lowest_temp}C - {highest_temp}C'
     for i, day in enumerate(days):
