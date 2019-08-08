@@ -60,21 +60,21 @@ def main():
     if commandline_arguments.e:
         given_year = commandline_arguments.e.year
         yearly_weather_records = []
-        yearly_weather_records = weather_data_reader.get_weather_records(year=given_year)
+        yearly_weather_records = weather_data_reader.filter_weather_records(year=given_year)
 
         weather_analyzer.weather_records = yearly_weather_records
         report_printer.print_yearly_report(weather_analyzer.get_yearly_temperature_peaks())
 
     if commandline_arguments.a:
         date = commandline_arguments.a
-        monthly_weather_records = weather_data_reader.get_weather_records(year=date.year, month=date.month)
+        monthly_weather_records = weather_data_reader.filter_weather_records(year=date.year, month=date.month)
         weather_analyzer.weather_records = monthly_weather_records
         result = weather_analyzer.get_monthly_avg_results()
         report_printer.print_average_report(result)
 
     if commandline_arguments.c:
         date = commandline_arguments.c
-        monthly_weather_records = weather_data_reader.get_weather_records(year=date.year, month=date.month)
+        monthly_weather_records = weather_data_reader.filter_weather_records(year=date.year, month=date.month)
         report_printer.print_monthly_report(monthly_weather_records, date.month, date.year)
 
 if __name__ == "__main__":

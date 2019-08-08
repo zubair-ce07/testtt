@@ -5,10 +5,6 @@ from glob import glob
 
 from weather_records import WeatherRecords
 
-
-def is_valid_weather_record(record):
-    return all(record.get(field) for field in WeathermanFileReader.required_fields)
-
 class WeathermanFileReader:
 
     filename_format = "{}**/*"
@@ -21,18 +17,18 @@ class WeathermanFileReader:
         self.path = path
         self.weather_records = []
 
+    def is_valid_weather_record(self, record):
+        return all(record.get(field) for field in WeathermanFileReader.required_fields)
+
     def read_all_data(self):
         files = glob(WeathermanFileReader.filename_format.format(self.path))
 
         for file_path in files:
             with open(file_path) as data_file:
-                dict_reader = csv.DictReader(data_file)
-                for row in dict_reader:
-                    if is_valid_weather_record(row):
+                for row in csv.DictReader(data_file):
+                    if self.is_valid_weather_record(row):
                         self.weather_records.append(WeatherRecords(row))
 
-    def get_weather_records(self, year, month=0):
-        if month == 0:
-            return [weather_record for weather_record in self.weather_records if weather_record.date.year == year]
+    def filter_weather_records(self, year, month=0):
         return [weather_record for weather_record in self.weather_records \
-            if weather_record.date.year == year and weather_record.date.month == month]
+            if weather_record.date.year == year and (weather_record.date.month == month or month == 0)]
