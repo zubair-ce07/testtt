@@ -1,4 +1,5 @@
 from ..items import Product
+
 from scrapy.spiders import CrawlSpider
 
 
