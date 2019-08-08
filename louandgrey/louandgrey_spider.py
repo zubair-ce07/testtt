@@ -17,20 +17,28 @@ class LouandgreySpider(CrawlSpider):
     ]
 
     product_css = '.product-wrap a[data-page]'
-    next_page_css = 'link[rel="next"]'
-    listing_css = '.sub-nav'
+    listing_css = ['.sub-nav', 'link[rel="next"]']
 
     rules = [
         Rule(link_extractor=LinkExtractor(restrict_css=product_css), callback='parse_product'),
-        Rule(link_extractor=LinkExtractor(restrict_css=next_page_css)),
-        Rule(link_extractor=LinkExtractor(restrict_css=listing_css))
+        Rule(link_extractor=LinkExtractor(restrict_css=listing_css, tags=['a', 'link']), callback='parse'),
     ]
 
     def parse(self, response):
         requests = super(LouandgreySpider, self).parse(response)
-        trail = self.louandgrey_parser.add_trail(response)
+        trail = self.add_trail(response)
 
-        return [r.replace(meta={**r.meta,'trail': trail.copy()}) for r in requests]
+        return [r.replace(meta={**r.meta, 'trail': trail.copy()}) for r in requests]
 
     def parse_product(self, response):
-        yield self.louandgrey_parser.parse(response)
+        return self.louandgrey_parser.parse(response)
+
+    def add_trail(self, response):
+        new_trail = (response.css('head title::text').get(), response.url)
+        if not response.meta:
+            return [new_trail]
+
+        trail = response.meta.get('trail', [])
+        trail.append(new_trail)
+
+        return trail
