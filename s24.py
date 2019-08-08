@@ -60,11 +60,11 @@ class _24sSpider(CrawlSpider):
     )
 
     def parse_categories(self, response):
-        body = self.req_payload(response)
+        body = self.request_payload(response)
         return Request(self.pagination_url, method='POST', body=body, headers=self.headers,
                        callback=self.parse_pagination)
 
-    def req_payload(self, response):
+    def request_payload(self, response):
         tag_filter = self.get_tag_filters(response)
         rule_contexts = self.get_rule_contexts(response)
         params = self.body_json['requests'][0]['params'].format(tag_filter, rule_contexts)
@@ -75,7 +75,6 @@ class _24sSpider(CrawlSpider):
     def get_tag_filters(self, response):
         raw_tag_filter = ["US"] + response.css('::attr(data-filter)').get().split(',')
         tag_filter = str(raw_tag_filter).replace('\'', '"').replace(' ', '')
-
         return urllib.parse.quote(tag_filter)
 
     def get_rule_contexts(self, response):
@@ -92,11 +91,11 @@ class _24sSpider(CrawlSpider):
         total_pages = json.loads(response.text)['results'][0]['nbPages'] + 1
 
         for page_number in range(1, total_pages):
-            body = self.req_body(response, page_number)
+            body = self.request_body(response, page_number)
             yield Request(self.pagination_url, method='POST', body=body, headers=self.headers,
                           callback=self.parse_products, dont_filter=True)
 
-    def req_body(self, response, page_number):
+    def request_body(self, response, page_number):
         body = json.loads(response.request.body)
         body['requests'][0]['params'] = re.sub('page=(.+?)&', f'page={page_number}&',
                                                body['requests'][0]['params'])
