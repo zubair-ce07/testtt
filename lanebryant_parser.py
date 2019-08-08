@@ -10,7 +10,7 @@ from lanebryant.lanebryant_items import LaneBryantItem
 class LaneBryantParser(Spider):
     name = "lanebryant_parser"
 
-    currency = "CA"
+    currency = "CAD"
     retailer = "lanebryant-ca"
     lang = "en"
     market = "CA"
@@ -109,7 +109,6 @@ class LaneBryantParser(Spider):
         return pricing
 
     def get_sku_details(self, raw_sku, sku_id, sku_list):
-
         return {colors["id"]: colors[sku_id]
                 for colors in raw_sku[sku_list][0]["values"]}
 
