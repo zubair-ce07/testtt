@@ -48,26 +48,16 @@ class WeatherReporter:
         """
 
         for day, (max_temp, min_temp) in enumerate(zip(max_temps, min_temps)):
-            single_line_report = (
-                f"{day+1:02d}"
-                f" {self._get_colored_bar(max_temp, self._RED)}"
-                f"{self._get_colored_bar(min_temp, self._BLUE)}"
-                f" {max_temp}C - {min_temp}C"
-            )
-
-            dual_line_report = (
-                f"{day+1:02d}"
-                f" {self._get_colored_bar(max_temp, self._RED)}"
-                f" {max_temp}C"
-                f"\n{day+1:02d}"
-                f" {self._get_colored_bar(min_temp, self._BLUE)}"
-                f" {min_temp}C"
-            )
+            formated_day = f"{day+1:02d}"
+            max_temp_bar = self._get_colored_bar(max_temp, self._RED)
+            min_temp_bar = self._get_colored_bar(min_temp, self._BLUE)
 
             if single_line:
-                print(single_line_report)
+                print(f"{formated_day} {max_temp_bar}{min_temp_bar} {max_temp}C - {min_temp}C")
             else:
-                print(dual_line_report)
+                print(f"{formated_day} {max_temp_bar} {max_temp}C")
+                print(f"{formated_day} {min_temp_bar} {min_temp}C")
+
         print("")
 
     def _get_colored_bar(self, bar_length, color):
