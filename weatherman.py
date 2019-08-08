@@ -2,7 +2,9 @@ import argparse
 import os
 import statistics
 import calendar
+import csv
 
+import dayinfo
 import reportgenerator
 
 PKT, PKT_INDEX = 'PKT', 0
@@ -11,46 +13,19 @@ MIN_TEMP, MIN_TEMP_INDEX = 'Min Temp', 3
 MEAN_HUMIDITY, MEAN_HUMIDITY_INDEX = 'Mean Humidity', 8
 
 
-# class DayInfo:
-#     def __init__(self, info):
-#         self.pkt = info[0] if info[0] != '' else None
-#         self.max_temp = int(info[1]) if info[1] != '' else None
-#         self.mean_temp = int(info[2]) if info[2] != '' else None
-#         self.min_temp = int(info[3]) if info[3] != '' else None
-#         self.mean_humidity = int(info[8]) if info[8] != '' else None
-#
-#
-# def parse(files_dir, files):
-#     weather_readings = []
-#
-#     for file in files:
-#         with open(files_dir + file) as f:
-#             next(f)
-#
-#             # line contains information of a single day of a month
-#             for line in f:
-#                 line = line.strip().split(',')
-#                 weather_readings.append(DayInfo(line))
-#
-#     return weather_readings
+def parse(files_dir, files):
+    weather_readings = []
 
-
-def parse(files_dir, file_names):
-    weather_readings = {PKT: [], MAX_TEMP: [],
-                        MIN_TEMP: [], MEAN_HUMIDITY: []
-                        }
-    for file in file_names:
+    for file in files:
         with open(files_dir + file) as f:
-            next(f)
+            reader = csv.DictReader(f)
 
-            # info contains information of a single day of a month
-            for info in f:
-                info = info.strip().split(',')
-                weather_readings[PKT].append(info[PKT_INDEX])
-                weather_readings[MAX_TEMP].append(int(info[MAX_TEMP_INDEX]) if info[MAX_TEMP_INDEX] != '' else None)
-                weather_readings[MIN_TEMP].append(int(info[MIN_TEMP_INDEX]) if info[MIN_TEMP_INDEX] != '' else None)
-                weather_readings[MEAN_HUMIDITY].append(int(info[MEAN_HUMIDITY_INDEX])
-                                                       if info[MEAN_HUMIDITY_INDEX] != '' else None)
+            for info in reader:
+                pkt = info['PKT']
+                max_temp = int(info['Max TemperatureC']) if info['Max TemperatureC'] != '' else None
+                min_temp = int(info['Min TemperatureC']) if info['Min TemperatureC'] != '' else None
+                mean_humidity = int(info[' Mean Humidity']) if info[' Mean Humidity'] != '' else None
+                weather_readings.append(dayinfo.DayInfo(pkt, max_temp, min_temp, mean_humidity))
 
     return weather_readings
 
@@ -90,13 +65,15 @@ def compute_year_info(weather_readings):
 
 
 def compute_month_info(weather_readings):
-    max_temps = weather_readings[MAX_TEMP]
-    min_temps = weather_readings[MIN_TEMP]
-    mean_humiditys = weather_readings[MEAN_HUMIDITY]
-
-    highest_average = statistics.mean(filter(skip_none, max_temps))
-    lowest_average = statistics.mean(filter(skip_none, min_temps))
-    average_mean_humidity = statistics.mean(filter(skip_none, mean_humiditys))
+    highest_average = statistics.mean(filter(skip_none,
+                                             (weather_reading.max_temp for weather_reading in weather_readings)
+                                             ))
+    lowest_average = statistics.mean(filter(skip_none,
+                                            (weather_reading.min_temp for weather_reading in weather_readings)
+                                            ))
+    average_mean_humidity = statistics.mean(filter(skip_none,
+                                            (weather_reading.mean_humidity for weather_reading in weather_readings)
+                                            ))
 
     return highest_average, lowest_average, average_mean_humidity
 
