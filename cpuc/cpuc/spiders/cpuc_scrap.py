@@ -1,3 +1,8 @@
+"""CPUC scraping module.
+
+This module is for scraping cpuc website.
+"""
+
 # -*- coding: utf-8 -*-
 import re
 from urllib.parse import urljoin
@@ -9,13 +14,24 @@ from cpuc.items import Proceeding, ProceedingDocument, Document
 
 
 class CpucScrapSpider(scrapy.Spider):
+    """Cpuc scraping class.
+
+    this class has different method from submitting search form from a start
+    date to an end date and then scraping proceeding and then documents and
+    their items details.
+    """
+
     name = 'cpuc_scrap'
     start_urls = ['https://apps.cpuc.ca.gov/apex/f?p=401:1:0::NO:RP/']
     cookie_count = 0
+    DOCUMENT_LINK_VALIDATION = r"http://docs.cpuc.ca.gov/SearchRes.aspx\?"\
+        "DocFormat=ALL&DocID="
 
     def parse(self, response):
-        # self.cookie = response.headers.getlist(
-        #     'Set-Cookie')[0].decode("utf-8").split(';')[0]
+        """Search proceeding.
+
+        This method submit search form from a start date to an end date.
+        """
         yield scrapy.FormRequest.from_response(
             response,
             formdata={'p_t04': '01/01/2019',
@@ -24,18 +40,20 @@ class CpucScrapSpider(scrapy.Spider):
         )
 
     def proceeding_parse(self, response):
+        """Scrap proceeding documents.
+
+        This method scrap all the proceeding document and handle it's pagination.
+        """
         proceeding_links = LinkExtractor(
             allow=r"::NO:RP,57,RIR:P5_PROCEEDING_SELECT:"
         ).extract_links(response)
-        p_instance = response.css('#pInstance::attr(value)').get()
-        x01 = response.css('#apexir_WORKSHEET_ID::attr(value)').get()
-        x02 = response.css('#apexir_REPORT_ID::attr(value)').get()
         for link in proceeding_links:
             self.cookie_count += 1
-            yield scrapy.Request(link.url, callback=self.scrap_proceeding, meta={'cookiejar': self.cookie_count})
+            yield scrapy.Request(link.url, callback=self.scrap_proceeding,
+                                 meta={'cookiejar': self.cookie_count})
         if response.css('.fielddata > a') and response.css(".fielddata > a > img[title*='Next']"):
             frmdata = {'p_request': 'APXWGT',
-                       'p_instance': p_instance,
+                       'p_instance': response.css('#pInstance::attr(value)').get(),
                        'p_flow_id': '401',
                        'p_flow_step_id': '5',
                        'p_widget_num_return': '100',
@@ -44,8 +62,8 @@ class CpucScrapSpider(scrapy.Spider):
                        'p_widget_action': 'PAGE',
                        'p_widget_action_mod': response.css(
                            '.fielddata > a::attr(href)').get().split("'")[1],
-                       'x01': x01,
-                       'x02': x02
+                       'x01': response.css('#apexir_WORKSHEET_ID::attr(value)').get(),
+                       'x02': response.css('#apexir_REPORT_ID::attr(value)').get()
                        }
             url = "https://apps.cpuc.ca.gov/apex/wwv_flow.show"
             req = scrapy.FormRequest(
@@ -53,6 +71,10 @@ class CpucScrapSpider(scrapy.Spider):
             yield req
 
     def scrap_proceeding(self, response):
+        """Scrap a proceeding.
+
+        This method scrap a proceeding details and request it's documnts.
+        """
         proceeding = Proceeding(
             proceeding_no=response.css(
                 '.rc-content-main > h1::text').get().split('-')[0].strip(),
@@ -84,26 +106,27 @@ class CpucScrapSpider(scrapy.Spider):
             request.meta['proceeding'] = proceeding
             yield request
         else:
-            yield Proceeding
+            yield proceeding
 
     def scrap_documents(self, response):
-        print(response.url)
+        """Scrap a document.
+
+        This method scrap documnts and handle it's pagination.
+        """
         proceeding = response.meta['proceeding']
-        p_instance = response.css('#pInstance::attr(value)').get()
-        x01 = response.css('#apexir_WORKSHEET_ID::attr(value)').get()
-        x02 = response.css('#apexir_REPORT_ID::attr(value)').get()
 
         documents_links = []
-        document_rows = response.css("#{} > tr + tr".format(x01)).getall()
+        document_rows = response.css(
+            "#{} > tr + tr".format(response.css(
+                '#apexir_WORKSHEET_ID::attr(value)').get())).getall()
         for document_row in document_rows:
             document_row = scrapy.Selector(text=document_row)
             document_link = document_row.css(
                 "tr > td[headers*='DOCUMENT_TYPE'] > a::attr(href)").get()
-            if document_link and re.search(r"http://docs.cpuc.ca.gov/SearchRes.aspx\?DocFormat=ALL&DocID=", document_link):
-                if(response.url == "https://apps.cpuc.ca.gov/apex/wwv_flow.show"):
-                    proceeding_document = response.meta['proceeding_document']
-                else:
-                    proceeding_document = ProceedingDocument()
+            if document_link and re.search(
+                    self.DOCUMENT_LINK_VALIDATION,
+                    document_link):
+                proceeding_document = ProceedingDocument()
                 proceeding_document['filling_date'] = document_row.css(
                     "tr > td[headers*='FILING_DATE']::text").get()
                 proceeding_document['document_type'] = document_row.css(
@@ -116,13 +139,16 @@ class CpucScrapSpider(scrapy.Spider):
                 proceeding['total_documents'] += 1
                 documents_links.append(document_link)
                 request = scrapy.Request(
-                    document_link, callback=self.scrap_document, dont_filter=True, meta={'cookiejar': response.meta['cookiejar']})
+                    document_link,
+                    callback=self.scrap_item,
+                    dont_filter=True,
+                    meta={'cookiejar': response.meta['cookiejar']})
                 request.meta['proceeding'] = proceeding
                 request.meta['proceeding_document'] = proceeding_document
                 yield request
         if response.css('.fielddata > a') and response.css(".fielddata > a > img[title*='Next']"):
             frmdata = {'p_request': 'APXWGT',
-                       'p_instance': p_instance,
+                       'p_instance': response.css('#pInstance::attr(value)').get(),
                        'p_flow_id': '401',
                        'p_flow_step_id': '57',
                        'p_widget_num_return': '100',
@@ -131,22 +157,28 @@ class CpucScrapSpider(scrapy.Spider):
                        'p_widget_action': 'PAGE',
                        'p_widget_action_mod': response.css(
                            '.fielddata > a::attr(href)').get().split("'")[1],
-                       'x01': x01,
-                       'x02': x02
+                       'x01': response.css('#apexir_WORKSHEET_ID::attr(value)').get(),
+                       'x02': response.css('#apexir_REPORT_ID::attr(value)').get()
                        }
             url = "https://apps.cpuc.ca.gov/apex/wwv_flow.show"
-            req = scrapy.FormRequest(url, callback=self.scrap_documents, formdata=frmdata,
-                                     headers={'Referer': response.url}, meta={'cookiejar': response.meta['cookiejar']})
+            req = scrapy.FormRequest(
+                url,
+                callback=self.scrap_documents,
+                formdata=frmdata,
+                headers={'Referer': response.url},
+                meta={'cookiejar': response.meta['cookiejar']})
             req.meta['proceeding'] = proceeding
-            req.meta['proceeding_document'] = proceeding_document
-            print(req.headers)
-            print(req._body)
             yield req
 
         if not documents_links:
             yield proceeding
 
-    def scrap_document(self, response):
+    @staticmethod
+    def scrap_item(response):
+        """Scrap a document items.
+
+        This method scrap all the items of a document.
+        """
         proceeding = response.meta['proceeding']
         proceeding_document = response.meta['proceeding_document']
         proceeding_document['link'] = response.url
@@ -154,7 +186,7 @@ class CpucScrapSpider(scrapy.Spider):
             '//table[@id="ResultTable"]/tbody/tr')  # css was not working
         proceeding_document['files'] = []
         for file in files:
-            if(file.css('.ResultTitleTD').get()):
+            if file.css('.ResultTitleTD').get():
                 document = Document(
                     title=re.sub(re.compile(r'<[^>]+>'), '',
                                  file.css('.ResultTitleTD').get()),
