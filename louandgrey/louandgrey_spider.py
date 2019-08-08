@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 
@@ -28,7 +30,7 @@ class LouandgreySpider(CrawlSpider):
         requests = super(LouandgreySpider, self).parse(response)
         trail = self.add_trail(response)
 
-        return [r.replace(meta={**r.meta, 'trail': trail.copy()}) for r in requests]
+        return [r.replace(meta={**r.meta, 'trail': deepcopy(trail)}) for r in requests]
 
     def parse_product(self, response):
         return self.louandgrey_parser.parse(response)
