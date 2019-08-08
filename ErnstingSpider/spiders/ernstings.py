@@ -120,7 +120,7 @@ class ErnstingsSpider(CrawlSpider):
 
         size_options = response.css("#select-size-product-detail option")
         for option in size_options:
-            sku = common_sku
+            sku = common_sku.copy()
             out_of_stock = True if option.css("[disabled]") else False
             size = option.css("::text").get()
             sku_key = f"{color}_{size}"
