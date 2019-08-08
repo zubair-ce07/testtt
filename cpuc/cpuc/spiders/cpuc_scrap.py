@@ -9,7 +9,6 @@ from urllib.parse import urljoin
 
 import scrapy
 from scrapy.linkextractors import LinkExtractor
-from scrapy.loader.processors import TakeFirst
 from cpuc.items import ProceedingDocumentLoader, DocumentLoader, \
     ProceedingLoader
 
@@ -120,16 +119,8 @@ class CpucScrapSpider(scrapy.Spider):
             if document_link and re.search(
                     self.DOCUMENT_LINK_VALIDATION,
                     document_link):
-                proceeding_document = ProceedingDocumentLoader(
-                    selector=document_row)
-                proceeding_document.add_css(
-                    'filling_date', "tr > td[headers*='FILING_DATE']::text")
-                proceeding_document.add_css(
-                    'document_type', "tr > td[headers*='DOCUMENT_TYPE'] > a > span > u::text")
-                proceeding_document.add_css(
-                    'filed_by', "tr > td[headers*='FILED_BY']::text")
-                proceeding_document.add_css(
-                    'description', "tr > td[headers*='DESCRIPTION']::text")
+                proceeding_document = self.make_proceeding_document(
+                    document_row)
                 proceeding.replace_value(
                     'total_documents', proceeding.get_collected_values(
                         "total_documents")[0]+1)
@@ -182,8 +173,6 @@ class CpucScrapSpider(scrapy.Spider):
         for file in files:
             if file.css('.ResultTitleTD').get():
                 document = DocumentLoader(selector=file)
-                # title = re.sub(re.compile(r'<[^>]+>'), '',
-                #              file.css('.ResultTitleTD').get()),
                 document.add_css('title', '.ResultTitleTD')
                 document.add_css('doc_type', '.ResultTypeTD::text')
                 pdf_link = urljoin('http://docs.cpuc.ca.gov',
@@ -193,5 +182,24 @@ class CpucScrapSpider(scrapy.Spider):
                 proceeding_document.add_value('files', document.load_item())
         proceeding.add_value('documents', proceeding_document.load_item())
 
-        if len(proceeding.get_collected_values("documents")) == proceeding.get_collected_values("total_documents")[0]:
+        if len(proceeding.get_collected_values("documents")) == \
+                proceeding.get_collected_values("total_documents")[0]:
             yield proceeding.load_item()
+
+    @staticmethod
+    def make_proceeding_document(document_row):
+        """Make proceeding_document loader object.
+
+        make and return proceeding_document object and then return it
+        """
+        proceeding_document = ProceedingDocumentLoader(
+            selector=document_row)
+        proceeding_document.add_css(
+            'filling_date', "tr > td[headers*='FILING_DATE']::text")
+        proceeding_document.add_css(
+            'document_type', "tr > td[headers*='DOCUMENT_TYPE'] > a > span > u::text")
+        proceeding_document.add_css(
+            'filed_by', "tr > td[headers*='FILED_BY']::text")
+        proceeding_document.add_css(
+            'description', "tr > td[headers*='DESCRIPTION']::text")
+        return proceeding_document
