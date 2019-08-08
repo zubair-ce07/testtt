@@ -6,7 +6,7 @@ from scrapy.spiders import CrawlSpider, Rule, Spider
 from scrapy import Request
 from scrapy.linkextractors import LinkExtractor
 
-from orsay.items import OrsayItem
+from orsay.orsay_items import OrsayItem
 
 
 class OrsaySpider(CrawlSpider):
