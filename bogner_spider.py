@@ -15,36 +15,41 @@ class BognerSpider(CrawlSpider):
                                                                        '//a[@class="next i-next"]'])),
         Rule(LinkExtractor(restrict_xpaths='//a[@class="product-image is-visible-default"]'), callback='parse_item'),
     )
-    set_retailer_skus = set()
+    retailer_skus_all = set()
 
     def parse_item(self, response):
-        items = BognerItem()
         retailer_sku = self.extract_retailer_sku(response)
 
         if self.check_if_parsed(retailer_sku):
             return
         else:
-            items['url'] = response.url
-            items['retailer_sku'] = retailer_sku
-            items['category'] = self.extract_category(response)
-            items['gender'] = items['category'][0] if items['category'] else None
-            items['brand'] = self.extract_brand(response)
-            items['name'] = self.extract_name(response)
-            items['description'] = self.extract_description(response)
-            items['care'] = self.extract_care(response)
-            items['image_urls'] = self.extract_image_urls(response)
-            items['price'] = self.extract_price(response)
-            items['currency'] = "GBP"
-            items['retailer'] = self.extract_retailer(response)
-            items['market'] = items['retailer'].split(' ')[-1]
-            items['skus'] = self.extract_skus(response, items['price'])
-            self.set_retailer_skus.add(retailer_sku)
+            items = self.make_new_item(response, retailer_sku)
             yield items
 
     def check_if_parsed(self, retailer_sku):
-        if retailer_sku in self.set_retailer_skus:
+        if retailer_sku in self.retailer_skus_all:
             return True
-        return False
+        else:
+            self.retailer_skus_all.add(retailer_sku)
+            return False
+
+    def make_new_item(self, response, retailer_sku):
+        items = BognerItem()
+        items['url'] = response.url
+        items['retailer_sku'] = retailer_sku
+        items['category'] = self.extract_category(response)
+        items['gender'] = items['category'][0] if items['category'] else None
+        items['brand'] = self.extract_brand(response)
+        items['name'] = self.extract_name(response)
+        items['description'] = self.extract_description(response)
+        items['care'] = self.extract_care(response)
+        items['image_urls'] = self.extract_image_urls(response)
+        items['price'] = self.extract_price(response)
+        items['currency'] = "GBP"
+        items['retailer'] = self.extract_retailer(response)
+        items['market'] = items['retailer'].split(' ')[-1]
+        items['skus'] = self.extract_skus(response, items['price'])
+        return items
 
     def extract_retailer_sku(self, response):
         return response.xpath('//p[@class="sku"]/text()').re_first('\d+')
@@ -62,19 +67,16 @@ class BognerSpider(CrawlSpider):
         return response.xpath('//title/text()').re_first('\|.*').split('|')[-1].strip()
 
     def extract_description(self, response):
-        desc1 = response.css('.std p::text').get()
-        desc2 = response.xpath('//div[@class="accordion-content-container"]/'
+        note = response.css('.std p::text').get()
+        details = response.xpath('//div[@class="accordion-content-container"]/'
                                'div[@class="product-features"]/ul/li/text()').getall()
-        description = [d for d in desc1.split('.') if d.strip() != ''] + desc2
+        description = [d for d in note.split('.') if d.strip()] + details
         return description
 
     def extract_care(self, response):
-        care1 = response.xpath('//div[@class="accordion-content-container"]/div[@class="material-care-container"]'
-                               '/div[@class="material-composition-container"]/p/text()').getall()
-
-        care2 = response.xpath('//div[@class="accordion-content-container"]/div[@class="material-care-container"]'
-                               '/div[@class="material-care-tip"]/ul/li/p/text()').getall()
-        return care1 + care2
+        care_xpath = response.xpath('//div[@class="accordion-content-container"]/div[@class="material-care-container"]')
+        return care_xpath.xpath('./div[@class="material-composition-container"]/p/text() | '
+                                './div[@class="material-care-tip"]/ul/li/p/text()').getall()
 
     def extract_image_urls(self, response):
         return response.xpath('//div[@class="view-gallery-slider is-unified-slider"]/div/div/img/@data-src').getall()
@@ -90,55 +92,26 @@ class BognerSpider(CrawlSpider):
 
         sizes_xpath = response.xpath('//div[@id="product-options-wrapper"]//ul[@class="product-sizes"]')
         sizes = []
+        availability = []
         if sizes_xpath:
             sizes_xpath = sizes_xpath[1]
             sizes = sizes_xpath.xpath('.//li/@data-size-label').getall()
-
-        availability_xpath = response.xpath('//div[@id="product-options-wrapper"]//ul[@class="product-sizes"]')
-        availability = []
-        if availability_xpath:
-            availability_xpath = availability_xpath[1]
-            availability = availability_xpath.xpath('.//li/@data-size-availability').getall()
-
-        skus = []
-        if len(sizes) != 0:
-            skus = self.skus_with_size(colours, sizes, availability, price)
+            availability = sizes_xpath.xpath('.//li/@data-size-availability').getall()
         else:
-            skus = self.skus_without_sizes(colours, price)
-        return skus
+            sizes.append('ONE-SIZE')
+            availability.append('in-stock')
 
-    def skus_with_size(self, colours, sizes, availability, price):
         skus = []
         for colour in colours:
             for size, stock in zip(sizes, availability):
+                sku = {
+                    'sku_id': f"{colour}_{size}",
+                    'price': price,
+                    'currency': "GBP",
+                    'size': size,
+                    'colour': colour
+                }
                 if stock == 'sold out':
-                    sku = {
-                        'sku_id': f"{colour}_{size}",
-                        'price': price,
-                        'currency': "GBP",
-                        'size': size,
-                        'colour': colour,
-                        'out-of-stock': True
-                    }
-                else:
-                    sku = {
-                        'sku_id': f"{colour}_{size}",
-                        'price': price,
-                        'currency': "GBP",
-                        'size': size,
-                        'colour': colour
-                    }
+                    sku['out-of-stock'] = True
                 skus.append(sku)
-        return skus
-
-    def skus_without_sizes(self, colours, price):
-        skus = []
-        for colour in colours:
-            sku = {
-                'sku_id': colour,
-                'price': price,
-                'currency': "GBP",
-                'colour': colour
-            }
-            skus.append(sku)
         return skus
