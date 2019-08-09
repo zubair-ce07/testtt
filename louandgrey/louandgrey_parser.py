@@ -68,15 +68,17 @@ class LouandgreyParser(Spider):
         pricing_details = self.get_pricing_details(product_details)
 
         for raw_skus in product_details['skucolors']['colors']:
-
             for raw_sku in raw_skus['skusizes']['sizes']:
-                if raw_sku['available'] == 'true':
-                    sku = {**pricing_details}
-                    sku['colour'] = raw_skus['colorName']
-                    sku['size'] = raw_sku['sizeAbbr']
-                    sku['sku_id'] = raw_sku['skuId']
-                    sku['out_of_stock'] = not bool(int(raw_sku['quantity']))
-                    skus.append(sku)
+                sku = {**pricing_details}
+                sku['colour'] = raw_skus['colorName']
+                sku['size'] = raw_sku['sizeAbbr']
+                sku['sku_id'] = raw_sku['skuId']
+                sku['out_of_stock'] = not bool(int(raw_sku['quantity']))
+
+                if raw_sku['available'] != 'true':
+                    sku['out_of_stock'] = True
+
+                skus.append(sku)
 
         return skus
 
