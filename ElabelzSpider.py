@@ -4,7 +4,7 @@ from math import ceil
 
 from scrapy import Item, Field, Request
 from scrapy.linkextractors import LinkExtractor
-from scrapy.spiders import CrawlSpider, Rule
+from scrapy.spiders import CrawlSpider, Rule, Spider
 
 
 class ElabelzItem(Item):
@@ -29,52 +29,11 @@ def clean(raw_strs):
         return re.sub('\s+', ' ', raw_strs).strip()
 
 
-class ElabelzSpider(CrawlSpider):
-    name = 'elabelz'
-    allowed_domains = ['elabelz.com']
-    start_urls = [
-        'https://www.elabelz.com/ae/'
-    ]
-
-    AED_hash = '5be9a3741e418425a69adf6d'
-    headers = {
-        'currency': AED_hash,
-        'Origin': 'https://www.elabelz.com',
-        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 '
-                      '(KHTML, like Gecko) Chrome/74.0.3729.131 Safari/537.36',
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-    }
-
+class ElabelzParseSpider(Spider):
+    name = 'elabelzparse'
     product_url_t = 'https://www.elabelz.com/ae/product/{}/{}'
-    req_url = 'https://api.elabelz.com/products/search'
-    listing_css = ['.dgQ2N']
-    category_css = ['._1QWPi']
 
-    rules = (Rule(LinkExtractor(restrict_css=listing_css), callback='parse'),
-             Rule(LinkExtractor(restrict_css=category_css), callback='parse_categories'),)
-
-    def parse_categories(self, response):
-        total_pages = ceil(int(response.css('._3uvdp::text').get().split(' ')[0]) / 68) + 1
-        category_json = json.loads(response.css('script:contains("dataManager")::text').get())
-        query = category_json['props']['initialState']['state']['tracking']['page']['query']
-
-        body = {
-            "limit": 68,
-            "seoParams": {
-                "division": json.dumps(clean([query.get('division')])),
-                "category": json.dumps(clean([query.get('category')]))
-            },
-            "filters": {},
-            "page": 0
-        }
-        body.update(query)
-
-        for page_number in range(1, total_pages):
-            yield Request(self.req_url, method='POST', body=json.dumps(body),
-                          headers=self.headers, callback=self.parse_product, dont_filter=True)
-
-    def parse_product(self, response):
+    def parse_products(self, response):
         raw_products_json = json.loads(response.text)
 
         for product_json in raw_products_json['products']:
@@ -102,14 +61,12 @@ class ElabelzSpider(CrawlSpider):
         return product_json['taxonomy']['gender']
 
     def product_category(self, product_json):
-        if product_json['taxonomy'].get('subCategory1'):
-            return [product_json['taxonomy']['category'],
-                    product_json['taxonomy']['subCategory1']]
-        return [product_json['taxonomy']['category']]
+        taxonomy = product_json['taxonomy']
+        return [taxonomy['category'], taxonomy.get('subCategory1', '')]
 
     def product_url(self, product_json):
-        return self.product_url_t.format(self.product_brand(product_json),
-                                         product_json['seourl'])
+        brand = self.product_brand(product_json)
+        return self.product_url_t.format(brand, product_json['seourl'])
 
     def product_description(self, product_json):
         return product_json['description'].split('.')
@@ -126,13 +83,61 @@ class ElabelzSpider(CrawlSpider):
     def product_skus(self, product_json):
         skus = {}
         for sku in product_json['stockProducts']:
-            skus[f'{sku["color"]}_{sku["size"]}'] = {
+            key = f'{sku["color"]}_{sku["size"]}'
+            skus[key] = {
                 'color': sku["color"],
                 'size': sku['size'],
                 'price': sku['price'],
                 'previous_price': sku.get('fullPrice'),
-                'out_of_stock': not bool(sku["totalQuantity"])
             }
 
+            if not sku["totalQuantity"]:
+                skus[key]['out_of_stock'] = True
+
         return skus
+
+
+class ElabelzCrawlSpider(CrawlSpider):
+    name = 'elabelz'
+    allowed_domains = ['elabelz.com']
+    start_urls = [
+        'https://www.elabelz.com/ae/'
+    ]
+    parse_spider = ElabelzParseSpider()
+
+    headers = {
+        'currency': '5be9a3741e418425a69adf6d',
+        'Origin': 'https://www.elabelz.com',
+        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 '
+                      '(KHTML, like Gecko) Chrome/74.0.3729.131 Safari/537.36',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+    }
+
+    request_url = 'https://api.elabelz.com/products/search'
+    listing_css = ['.dgQ2N']
+    category_css = ['._1QWPi']
+
+    rules = (Rule(LinkExtractor(restrict_css=listing_css), callback='parse'),
+             Rule(LinkExtractor(restrict_css=category_css), callback='parse_categories'),)
+
+    def parse_categories(self, response):
+        total_pages = ceil(int(response.css('._3uvdp::text').get().split(' ')[0]) / 68) + 1
+        category_json = json.loads(response.css('script:contains("dataManager")::text').get())
+        query = category_json['props']['initialState']['state']['tracking']['page']['query']
+
+        body = {
+            "limit": 68,
+            "seoParams": {
+                "division": json.dumps(clean([query.get('division')])),
+                "category": json.dumps(clean([query.get('category')]))
+            },
+            "filters": {},
+            "page": 0
+        }
+        body.update(query)
+
+        for page_number in range(1, total_pages):
+            yield Request(self.request_url, method='POST', body=json.dumps(body), headers=self.headers,
+                          callback=self.parse_spider.parse_products, dont_filter=True)
 
