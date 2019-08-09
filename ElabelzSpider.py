@@ -47,7 +47,7 @@ class ElabelzSpider(CrawlSpider):
     }
 
     product_url_t = 'https://www.elabelz.com/ae/product/{}/{}'
-
+    req_url = 'https://api.elabelz.com/products/search'
     listing_css = ['.dgQ2N']
     category_css = ['._1QWPi']
 
@@ -71,7 +71,7 @@ class ElabelzSpider(CrawlSpider):
         body.update(query)
 
         for page_number in range(1, total_pages):
-            yield Request('https://api.elabelz.com/products/search', method='POST', body=json.dumps(body),
+            yield Request(self.req_url, method='POST', body=json.dumps(body),
                           headers=self.headers, callback=self.parse_product, dont_filter=True)
 
     def parse_product(self, response):
@@ -135,3 +135,4 @@ class ElabelzSpider(CrawlSpider):
             }
 
         return skus
+
