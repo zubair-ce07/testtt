@@ -4,22 +4,20 @@ RESET = "\033[0;0m"
 
 
 def generate_year_info_report(results):
-    highest_temp_result = results[0]
-    lowest_temp_result = results[1]
-    most_humidity_result = results[2]
+    highest_temperature = results[0][0]
+    highest_temperature_month = results[0][1]
+    highest_temperature_day = results[0][2]
+    print(f'Highest: {highest_temperature}C on {highest_temperature_month} {highest_temperature_day}')
 
-    print('Highest: {temp}C on {month} {day}'.format(temp=highest_temp_result[0],
-                                                     month=highest_temp_result[1],
-                                                     day=highest_temp_result[2]
-                                                     ))
-    print('Lowest: {temp}C on {month} {day}'.format(temp=lowest_temp_result[0],
-                                                    month=lowest_temp_result[1],
-                                                    day=lowest_temp_result[2]
-                                                    ))
-    print('Humidity: {humidity}% on {month} {day}\n'.format(humidity=most_humidity_result[0],
-                                                            month=most_humidity_result[1],
-                                                            day=most_humidity_result[2]
-                                                            ))
+    lowest_temperature = results[1][0]
+    lowest_temperature_month = results[1][1]
+    lowest_temperature_day = results[1][2]
+    print(f'Lowest: {lowest_temperature}C on {lowest_temperature_month} {lowest_temperature_day}')
+
+    most_humidity = results[2][0]
+    most_humidity_month = results[2][1]
+    most_humidity_day = results[2][2]
+    print(f'Humidity: {most_humidity}% on {most_humidity_month} {most_humidity_day}\n')
 
 
 def generate_month_info_report(results):
@@ -27,31 +25,20 @@ def generate_month_info_report(results):
     lowest_average = results[1]
     average_mean_humidity = results[2]
 
-    print('Highest Average: {highest_avg}C'.format(highest_avg=highest_average))
-    print('Lowest Average: {lowest_avg}C'.format(lowest_avg=lowest_average))
-    print('Average Mean Humidity: {humidity}%\n'.format(humidity=average_mean_humidity))
+    print(f'Highest Average: {highest_average}C')
+    print(f'Lowest Average: {lowest_average}C')
+    print(f'Average Mean Humidity: {average_mean_humidity}%\n')
 
 
-def generate_month_temp_detailed_report(month, year, results):
-    days = results[0]
-    max_temps = results[1]
-    min_temps = results[2]
-
+def generate_month_temperature_detailed_report(month, year, results):
     print(f'{month} {year}')
 
-    row = '{day:02d} \033[1;34m{lowest_bar}\033[1;31m{highest_bar}\033[0;0m {lowest_temp}C - {highest_temp}C'
-    for i, day in enumerate(days):
-        max_temp = max_temps[i]
-        min_temp = min_temps[i]
-
-        highest_bar, max_temp = ('+' * max_temp, max_temp) if max_temp is not None else ('', 'N/A ')
-        lowest_bar, min_temp = ('+' * min_temp, min_temp) if min_temp is not None else ('', 'N/A ')
-
-        print(row.format(day=int(day),
-                         lowest_bar=lowest_bar,
-                         highest_bar=highest_bar,
-                         lowest_temp=min_temp,
-                         highest_temp=max_temp
-                         ))
+    for day, max_temperature, min_temperature in results:
+        min_temperature_bar = '+' * min_temperature
+        max_temperature_bar = '+' * max_temperature
+        print(f'{day:02d} '
+              f'\033[1;34m{min_temperature_bar}'
+              f'\033[1;31m{max_temperature_bar}'
+              f'\033[0;0m {min_temperature:02d}C - {max_temperature:02d}C')
 
     print()
