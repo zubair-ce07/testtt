@@ -89,17 +89,17 @@ class MKCParser(Spider):
         skus = []
         attributes_json = response.css('#product-options-wrapper script').re_first(self.json_pattern)
         attributes_json = json.loads(attributes_json)['attributes']
-        raw_colour_skus, raw_size_skus = attributes_json['141']['options'], attributes_json['142']['options']
+        raw_colours, raw_sizes = attributes_json['141']['options'], attributes_json['142']['options']
         pricing_details = self.get_pricing_details(response)
 
-        for raw_colour_sku in raw_colour_skus:
+        for raw_colour in raw_colours:
 
-            for product in raw_colour_sku['products']:
+            for product in raw_colour['products']:
 
-                for raw_size_sku in raw_size_skus:
+                for raw_size in raw_sizes:
 
-                    if product in raw_size_sku['products']:
-                        sku = {**pricing_details, 'size': raw_size_sku['label'], 'colour': raw_colour_sku['label']}
+                    if product in raw_size['products']:
+                        sku = {**pricing_details, 'size': raw_size['label'], 'colour': raw_colour['label']}
                         sku['out_of_stock'] = out_of_stock
                         sku['sku_id'] = f'{sku["colour"]}_{sku["size"]}'
                         skus.append(sku)
@@ -112,8 +112,7 @@ class MKCParser(Spider):
         return False if out_of_stock == 'in stock' else True
 
     def get_pricing_details(self, response):
-        pricing_json = response.css('div.main script').re_first(self.json_pattern)
-        pricing_json = json.loads(pricing_json)
+        pricing_json = json.loads(response.css('div.main script').re_first(self.json_pattern))
         pricing = {'currency': self.currency}
         pricing['price'] = self.sanitize_price(pricing_json['productPrice'])
         pricing['previous_prices'] = [self.sanitize_price(pricing_json['productOldPrice'])]
