@@ -73,7 +73,7 @@ class LouandgreyParser(Spider):
                 sku['colour'] = raw_skus['colorName']
                 sku['size'] = raw_sku['sizeAbbr']
                 sku['sku_id'] = raw_sku['skuId']
-                sku['out_of_stock'] = not raw_sku['available'] == 'true'
+                sku['out_of_stock'] = raw_sku['available'] != 'true'
                 skus.append(sku)
 
         return skus
