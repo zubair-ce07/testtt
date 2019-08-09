@@ -25,16 +25,17 @@ class LouandgreyParser(Spider):
     def parse(self, response):
         item = LouandgreyItem()
         item['url'] = response.url
+        item['trail'] = response.meta.get('trail', [])
         item['brand'] = self.brand
         item['market'] = self.market
         item['gender'] = self.gender
         item['retailer'] = self.retailer
         item['care'] = self.get_care(response)
         item['name'] = self.get_name(response)
-        item['trail'] = response.meta.get('trail', [])
         item['category'] = self.get_categories(response)
         item['retailer_sku'] = self.get_product_id(response)
         item['description'] = self.get_description(response)
+
         requests = self.get_sku_requests(response) + self.get_image_requests(response)
         response.meta['requests'] = requests
 
@@ -117,7 +118,7 @@ class LouandgreyParser(Spider):
         return [f'{image_url}{item["i"]["n"]}' for item in image_items]
 
     def sanitize_list(self, inputs):
-        return [i.strip() for i in inputs if i]
+        return [i.strip() for i in inputs if i and i.strip()]
 
     def sanitize_price(self, price):
         return float(''.join(re.findall(r'\d+', price)))
