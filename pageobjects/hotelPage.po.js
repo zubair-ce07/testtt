@@ -14,6 +14,11 @@ var HotelPage = function() {
         };
     };
 
+    this.waitForOriginsListPresence = function() {
+        const originDDSelector = this.getHotelPageInfo().originDropdownSelector;
+        utils.waitForElementPresence(originDDSelector, 10000, 'Error! Unable to load hotel result page');
+    }
+
     this.getHotelSearchResult = function() {
         return element.all(by.css(this.getHotelPageInfo().singleHotelClass));
     };
@@ -21,6 +26,12 @@ var HotelPage = function() {
     this.waitForSearchCompletion = function() {
         var EC = protractor.ExpectedConditions;
         browser.wait(EC.visibilityOf(element(by.css('.resultsContainer')).element(by.css('.finished'))), 10000, 'Error! Unable to load hotels list in selected origin');
+        utils.waitForElementPresence(this.getHotelPageInfo().singleHotelClass, 10000, 'Error! Unable to load hotels in selected origin');
+    };
+
+    this.getSearchButton = function() {
+        const searchBtn = element(by.css("div[id$=-formGridSearchBtn]"));
+        return searchBtn;
     };
 
     this.getFirstHotelFromList = function() {
@@ -155,9 +166,6 @@ var HotelPage = function() {
 
                                     // verify hotel image is present on top left
                                     expect(selectedHotelImage.isPresent()).toBe(true);
-                                    /* selectedHotelImage.getText().then(function(value) {
-                                        
-                                    }); */
 
                                     // click view deal button
                                     const viewDetailBtn = `button[id='${id}-booking-bookButton']`;

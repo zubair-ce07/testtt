@@ -45,18 +45,20 @@ var HomePage = function() {
         };
     };
 
-    this.searchOriginsList = function(searchTerm) {
+    this.searchOriginsList = () => {
         const originField = this.getOriginField();
         originField.click();
         let inputField = element.all(by.css('div[id$=-location-textInputWrapper]'))
             .get(0)
             .element(by.css('input[id$=-location]'));
-        inputField.sendKeys(searchTerm);
+        inputField.sendKeys(this.getHomePageInfo().originSearchKeyword).then(() => {
+            console.log(`origin ${this.getHomePageInfo().originSearchKeyword} is typed`);
+        });
     };
 
     this.selectFirstOriginFromList = function() {
         // select first option from result set
-        const list = element.all(by.css('div[id$=location-smartbox-dropdown]')).first().all(by.css('li'));
+        const list = element.all(by.css('div[id$=-location-smartbox-dropdown]')).first().all(by.css('li'));
         list.count().then(function(txt) {
             console.log('total origins found: ',txt);
         });

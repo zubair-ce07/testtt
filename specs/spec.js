@@ -1,87 +1,73 @@
-var homePage = require('./../pageobjects/homePage.po.js');
-var hotelPage = require('./../pageobjects/hotelPage.po');
-var utils = require('./../utils/common.js');
+let homePageObject = require('./../pageobjects/homePage.po.js');
+let hotelPageObject = require('./../pageobjects/hotelPage.po');
+let utils = require('./../utils/common.js');
 
 describe('Hostel App', function() {
 
-    var home = new homePage();
-    var hotel = new hotelPage();
+    let homePage = new homePageObject();
+    let hotelPage = new hotelPageObject();
     
-    it("1. should verify origin, start date, end date and guest field on home page", function() {
+    it("Should display the origin on home page", function() {
         // open hotels page
-        home.getHotelsPage();
-        expect(browser.getCurrentUrl()).toEqual(home.getHomePageInfo().hotelPageUrl);
+        homePage.getHotelsPage();
+        expect(browser.getCurrentUrl()).toEqual(homePage.getHomePageInfo().hotelPageUrl);
 
-        // verify origin field
-        expect(home.getOriginField().isPresent()).toBe(true);
-
-        // verify start & end date field
-        const {startDate, endDate } = home.getDateFields();
-        expect(startDate.isPresent()).toBe(true);
-        expect(endDate.isPresent()).toBe(true);
-
-        // verify guest field
-        expect(home.getGuestField().getText()).toEqual(home.getHomePageInfo().guestFieldText);
+        expect(homePage.getOriginField().isDisplayed()).toBe(true);
     });
 
-    it("2. should verify hotel page search", function() {
-        // set keyword like 'BCN in origin field
-        //browser.ignoreSynchronization = true;
-        //browser.get( 'https://www.kayak.com/hotels');
-        home.searchOriginsList(home.getHomePageInfo().originSearchKeyword);
-        const originDDSelector = hotel.getHotelPageInfo().originDropdownSelector;
-        utils.waitForElementPresence(originDDSelector, 10000, 'Error! Unable to load hotel result page');
-        home.selectFirstOriginFromList();
+    it("Should display the start date on home page", function() {
+        const {startDate } = homePage.getDateFields();
+        expect(startDate.isDisplayed()).toBe(true);
+    });
 
+    it("Should display the end date on home page", function() {
+        const {endDate } = homePage.getDateFields();
+        expect(endDate.isDisplayed()).toBe(true);
+    });
+
+    it("Should display ‘1 room, 2 guests’ in guests field", function() {
+        expect(homePage.getGuestField().getText()).toEqual(homePage.getHomePageInfo().guestFieldText);
+    });
+
+    it("Should load hotels results page", function() {
+        homePage.searchOriginsList();
+        hotelPage.waitForOriginsListPresence();
+        homePage.selectFirstOriginFromList();
+        
+    });
+
+    it("Should display at least 5 hotel results", async function() {
         // click search button on home page
-        const searchBtn = element(by.css(home.getHomePageInfo().searchBtnSelector));
-        searchBtn.click().then(function(result){
+        const searchBtn = hotelPage.getSearchButton();
+        await searchBtn.click()
+        hotelPage.waitForSearchCompletion();
 
-            browser.sleep(5000).then(function() {
-
-                // 
-                //utils.waitForElementVisibility(hotel.getHotelPageInfo().searchResultSelector, 10000, 'Error! Unable to load hotels list in selected origin');
-                //var EC = protractor.ExpectedConditions;
-                //browser.wait(EC.visibilityOf(element(by.css('.resultsContainer')).element(by.css('.finished'))), timeout, error);
-
-                hotel.waitForSearchCompletion();
-                utils.waitForElementPresence(hotel.getHotelPageInfo().singleHotelClass, 10000, 'Error! Unable to load hotels in selected origin');
-    
-                // verify atleast 5 hotels should display in search result
-                const searchResult = hotel.getHotelSearchResult();
-                searchResult.count().then(function(value) {
-                    console.log(`total hotels found: ${value} `);
-                    const searchResultDiv = element(by.css(hotel.getHotelPageInfo().searchResultSelector));
-                    expect(searchResultDiv.isPresent()).toBe(true);
-                    /* searchResultDiv.getText().then(function(value) {
-                      expect(searchResultDiv.isPresent()).toBe(true);
-                    }); */
-    
-                    expect(value).toBeGreaterThan(4);
-                });
-            });
-        });
-    });
+        // verify atleast 5 hotels should display in search result
+        const searchResult = hotelPage.getHotelSearchResult();
+        const hotelsCount = await searchResult.count();
+        console.log(`total hotels found: ${hotelsCount}`);
+        expect(hotelsCount).toBeGreaterThan(4);
+    })
  
-    it("3. should verify hotel detail page", function() {
-        let hotelsList = hotel.getHotelSearchResult();
+    it("should verify hotel detail page", function() {
+        let hotelsList = hotelPage.getHotelSearchResult();
         if(hotelsList)
         {
             // click hotel title
-            const titleLink = hotel.getFirstHotelTitle();
+            const titleLink = hotelPage.getFirstHotelTitle();
             titleLink.click().then(function() {
                 titleLink.getText().then(function(value) {
                     console.log(`hotel title clicked: "${value}"`);
                 })
                 browser.sleep(5000).then(function() {
-                    utils.waitForElementPresence(hotel.getHotelPageInfo().singleHotelClass, 10000, 'Error! Unable to load hotels in selected origin');
+                    utils.waitForElementPresence(hotelPage.getHotelPageInfo().singleHotelClass, 10000, 'Error! Unable to load hotels in selected origin');
 
                     // verify selected hotel detail page
-                    const hostelDetail = hotel.getFirstHotelDetail();
+                    const hostelDetail = hotelPage.getFirstHotelDetail();
                     expect(hostelDetail.isPresent()).toBe(true);
     
                     // verify selected hotel photos count
-                    const photosCount = hotel.getFirstHotelPhotos().count();
+                    const photosCount = hotelPage.getFirstHotelPhotos().count();
                     expect(photosCount).toBeGreaterThan(0);
                     photosCount.then(function(value) {
                         console.log(`hotel photos count: ${value}`);
@@ -91,17 +77,17 @@ describe('Hostel App', function() {
         }
     });
 
-     it("4. should verify map section in hotel detail", function() {
-        const hotelMap = hotel.getFirstHotelTab('map');
+     it("should verify map section in hotel detail", function() {
+        const hotelMap = hotelPage.getFirstHotelTab('map');
 
         hotelMap.getAttribute("id").then(function(hotelMapId) {
             element(by.css(`div[id=${hotelMapId}]`))
                 .click()
                 .then(function() {
                     console.log("map tab is clicked");
-                    const mapContent = element.all(by.css(hotel.getHotelPageInfo().singleHotelClass))
+                    const mapContent = element.all(by.css(hotelPage.getHotelPageInfo().singleHotelClass))
                     .first()
-                    .all(by.css(hotel.getHotelPageInfo().mapContentSelector));   
+                    .all(by.css(hotelPage.getHotelPageInfo().mapContentSelector));   
                     browser.sleep(10000).then(function() {
                         mapContent.count().then(function(value) {
                             expect(value).toBe(1);
@@ -112,17 +98,17 @@ describe('Hostel App', function() {
         });
     });
 
-    it("5. should verify reviews section in hotel detail", function() {
-        const hotelReview = hotel.getFirstHotelTab('review');
+    it("should verify reviews section in hotel detail", function() {
+        const hotelReview = hotelPage.getFirstHotelTab('review');
 
         hotelReview.getAttribute("id").then(function(id) {
             element(by.css(`div[id=${id}]`))
                 .click()
                 .then(function() {
                     console.log("review tab is clicked");
-                    const reviewContent = element.all(by.css(hotel.getHotelPageInfo().singleHotelClass))
+                    const reviewContent = element.all(by.css(hotelPage.getHotelPageInfo().singleHotelClass))
                     .first()
-                    .all(by.css(hotel.getHotelPageInfo().reviewSelector));
+                    .all(by.css(hotelPage.getHotelPageInfo().reviewSelector));
                     browser.sleep(2000).then(function() {
                         expect(reviewContent.isPresent()).toBe(true);
                     });
@@ -131,17 +117,17 @@ describe('Hostel App', function() {
     });
 
 
-    it("6. should verify rates section in hotel detail", function() {
-        const hotelReview = hotel.getFirstHotelTab('rates');
+    it("should verify rates section in hotel detail", function() {
+        const hotelReview = hotelPage.getFirstHotelTab('rates');
 
         hotelReview.getAttribute("id").then(function(id) {
             element(by.css(`div[id=${id}]`))
                 .click()
                 .then(function() {
                     console.log("rates tab is clicked");
-                    const ratesContent = element.all(by.css(hotel.getHotelPageInfo().singleHotelClass))
+                    const ratesContent = element.all(by.css(hotelPage.getHotelPageInfo().singleHotelClass))
                     .first()
-                    .all(by.css(hotel.getHotelPageInfo().ratesSelector));
+                    .all(by.css(hotelPage.getHotelPageInfo().ratesSelector));
                     browser.sleep(2000).then(function() {
                         expect(ratesContent.isPresent()).toBe(true);
                     });
@@ -149,15 +135,15 @@ describe('Hostel App', function() {
         });
     }); 
 
-    it("7,8,9,10. should verify GO To Map button, hotel marker hover, hover marker image and deal button", function() {
-        const goToMap = hotel.getGoToMap();
+    it("should verify GO To Map button, hotel marker hover, hover marker image and deal button", function() {
+        const goToMap = hotelPage.getGoToMap();
         goToMap.getText().then(function(value) {
             console.log('go to map button clicked');
             goToMap.click().then(function() {
                 browser.sleep(10000).then(function() {
-                    const mapContent = element(by.css(hotel.getHotelPageInfo().goToMapSelector));
+                    const mapContent = element(by.css(hotelPage.getHotelPageInfo().goToMapSelector));
                     expect(mapContent.isPresent()).toBe(true);
-                    hotel.verifyHotelMarker();
+                    hotelPage.verifyHotelMarker();
                 });
                 
             });
