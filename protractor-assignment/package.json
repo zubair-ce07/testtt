@@ -1,0 +1,29 @@
+{
+  "name": "protractor-assignment",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "tsc": "tsc",
+    "pretest": "npm run tsc",
+    "webdriver-start": "webdriver-manager start",
+    "webdriver-update": "webdriver-manager update",
+    "test": "protractor protractor.conf.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/node": "^12.7.0",
+    "chai": "^4.2.0",
+    "chai-as-promised": "^7.1.1",
+    "mocha": "^6.2.0",
+    "tslint": "^5.18.0",
+    "typescript": "^3.5.3"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.1.7",
+    "@types/mocha": "^5.2.7",
+    "protractor": "^5.4.2",
+    "ts-node": "^8.3.0"
+  }
+}
