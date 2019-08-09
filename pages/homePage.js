@@ -32,15 +32,16 @@ const homePage = function () {
         element(by.css("button[aria-label='Edit search']")).click();
         let graphElement = element.all(by.css('.graph-col'));
         if(operationType === 'first_half') {
+            // Waiting for the second graph to be invisible
             browser.wait(EC.invisibilityOf(graphElement.get(1)),5000);
         } else {
+            // Waiting for the second graph to be visible
             browser.wait(EC.visibilityOf(graphElement.get(1)),5000);
         }
         graphElement = element.all(by.css('.graph-col'));
         return graphElement.count();
     };
     this.selectDateFromCalendar = function () {
-        // Click on oneway radio button
         element(by.xpath("//div[contains(@id,'-dateRangeInput-display-end-inner')]")).click();
         const newcalendarDate = element(by.css("div[aria-label='September 10']"));
         // Wait for the calendar to be visible
@@ -52,28 +53,36 @@ const homePage = function () {
     this.hoverOverGraphBar = function () {
         const grapBar = element(by.css("button[data-date='2019-08-11']"));
         browser.actions().mouseMove(grapBar).perform();
-        return grapBar.element(by.css('.bar')).element(by.css('.price-info')).element(by.css('.price-price'));
+        const tooltip = grapBar.element(by.css('.bar')).element(by.css('.price-info')).element(by.css('.price-price'));
+        // Wait for the tooltip to be visible
+        browser.wait(EC.visibilityOf(tooltip),5000);
+        return tooltip;
     };
     this.getNewDate = async function () {
         const selectedBar = element(by.css('.Button-No-Standard-Style.js-bar.item.selected'));
         // Wait for the selected bar to be visible
-        browser.wait(EC.elementToBeClickable(selectedBar), 5000);
+        browser.wait(EC.elementToBeClickable(selectedBar), 8000);
         const pre_selectedDate = await browser.wait(function () {
             // Getting the pre-selected date
             return selectedBar.getAttribute('data-date')
         });
-        console.log('pre_selected Date =', pre_selectedDate);
+        // Adding two days in the current selected date
         return moment(pre_selectedDate).add(2, 'days').format('YYYY-MM-DD');
     };
     this.getNewSelectedGraphBar = async function (barDate) {
-        console.log(barDate);
         const newGraphBar = element(by.css("button[data-date='" + barDate + "']"));
+        browser.wait(EC.elementToBeClickable(newGraphBar), 5000);
         await newGraphBar.click();
         return newGraphBar;
     };
     this.getSelectedBarStatus = function (newSelectGraphBar) {
-        // browser.wait(EC.invisibilityOf(newSelectGraphBar),500);
-        browser.sleep(2000);
+        browser.wait(EC.visibilityOf(newSelectGraphBar),8000);
+        browser.wait(async function () {
+            const SelectedGraphBarAttributes = await newSelectGraphBar.getAttribute('class');
+                if(SelectedGraphBarAttributes.includes('selected')){
+                    return true
+                }
+        },5000);
         return newSelectGraphBar.getAttribute('class')
     };
     this.getSelectedBarPrice = async function () {
@@ -92,21 +101,37 @@ const homePage = function () {
         return await searchBtn.isPresent();
     };
     this.searchTheseDays = function () {
-        let searchTheseDaysButton = element(by.xpath("//a[contains(@aria-describedby,'-search-dates-description')]"));
+        const searchTheseDaysButton = element(by.xpath("//a[contains(@aria-describedby,'-search-dates-description')]"));
         searchTheseDaysButton.click();
+        browser.wait(EC.invisibilityOf(searchTheseDaysButton),5000);
     };
     this.showDetails = function () {
-        let showDetailsBtn = element.all(by.xpath("//div[contains(@id,'-extra-info-details-link')]"));
-        browser.wait(EC.visibilityOf(showDetailsBtn),5000);
-        showDetailsBtn = showDetailsBtn.first();
+        // Wait for the Graph to be populated so new data could be loaded
+        const graphElement = element.all(by.css('.graph-col'));
+        browser.wait(EC.visibilityOf(graphElement.get(1)),5000);
+        const showDetailsBtn = element(by.xpath("//a[contains(@id,'-extra-info-details-link-toggleMore')]"));
+        // Wait for the show details Btn to be clickable
+        browser.wait(EC.elementToBeClickable(showDetailsBtn),5000);
         showDetailsBtn.click();
     };
     this.getDepartureDateInDetailsPanel = function () {
-        let detailsPanelDepartureDate = element.all(by.css('.leg-dates-set'));
+        let detailsPanel = element.all(by.xpath("//section[contains(@id,'-details-leg-details')]"));
+        detailsPanel = detailsPanel.first();
+        // Wait for the deatils drop down to be visible
+        browser.wait(EC.visibilityOf(detailsPanel),5000);
+        const detailsPanelDepartureDate = element.all(by.css('.leg-dates-set')).first();
         browser.wait(EC.visibilityOf(detailsPanelDepartureDate),5000);
-        detailsPanelDepartureDate = detailsPanelDepartureDate.first();
+        browser.wait(EC.visibilityOf(detailsPanelDepartureDate.element(by.css('div'))),5000);
         return detailsPanelDepartureDate.element(by.css('div'));
-    }
+    };
+    this.isSelectedPriceTextShownExist = async function () {
+        const selectedPriceText = element(by.css('.hightlight'));
+        return await selectedPriceText.isPresent();
+    };
+    this.isSearchTheseDaysButtonExist = async function () {
+        const selectedPriceText = element(by.xpath("//a[contains(@aria-describedby,'-search-dates-description')]"));
+        return await selectedPriceText.isPresent();
+    };
 
 };
 module.exports = new homePage();

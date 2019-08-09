@@ -35,7 +35,6 @@ describe('Protractor Demo App', function() {
     // Step 2
 
     it('Should display first half of estimated price graph',async function () {
-        // get oneway radio button
         momondoHomepage.selectTripType('One-way');
         expect(momondoHomepage.getMainVisibleGraphCount('first_half')).toEqual(1);
     });
@@ -56,6 +55,7 @@ describe('Protractor Demo App', function() {
     });
 
     // Step 5
+
     // 1)
     it('Should highlight selected bar',async function () {
         // Getting date of two days after than currently selected one
@@ -80,37 +80,37 @@ describe('Protractor Demo App', function() {
         const searchBtnShown = momondoHomepage.getSearchBtnShown();
         expect(searchBtnShown).toEqual(true);
     });
+
+
+
     // Step 6
+
     // 1)
     it('Should display updated date in first result’s details section',async function () {
         momondoHomepage.searchTheseDays();
-        // browser.sleep(5000);
         momondoHomepage.showDetails();
-        let departureDateValue = momondoHomepage.getDepartureDateInDetailsPanel();
-        let tempDate = moment(SELECTED_DATE).format('ddd, MMM D');
-        expect(departureDateValue.getText()).toEqual(tempDate);
+        const FirstResultDepartureDate = momondoHomepage.getDepartureDateInDetailsPanel();
+        // Should match the departure date in first result card i.e. Tue, Aug 10 with selected date in the bar graph i.e YYYY-MM-DD
+        const expectedDate = moment(SELECTED_DATE).format('ddd, MMM D');
+        expect(FirstResultDepartureDate.getText()).toEqual(expectedDate);
     });
-    // // 2)
-    // it('Should display updated departure date',function () {
-    //     let departField = element(by.xpath("//div[contains(@id,'-dateRangeInput-display-start-inner')]"));
-    //     let tempDate = moment(SELECTED_DATE).format('ddd M/D');
-    //     expect(departField.getText()).toBe(tempDate);
-    // });
-    // // 3)
-    // it('Should not display ‘Price shown are estimates per person’ label',function () {
-    //     let estimatesPerPersonText = element(by.className('hightlight'));
-    //     // Should display ‘Price shown are estimates per person”
-    //     estimatesPerPersonText.isPresent().then(function (value) {
-    //         expect(value).toEqual(false);
-    //     });
-    // });
-    // // 4)
-    // it('Should not display ‘Search these days’ button',function () {
-    //     let searchTheseDaysButton = element(by.xpath("//a[contains(@aria-describedby,'-search-dates-description')]"));
-    //     // Should display ‘Search these days’ button
-    //     searchTheseDaysButton.isPresent().then(function (value) {
-    //         expect(value).toEqual(false);
-    //     });
-    // })
+    // 2)
+    it('Should display updated departure date',function () {
+        const departureField = momondoHomepage.getDepartureFieldText();
+        // Should match the departure date in search form i.e. Tue M/D with selected date in the bar graph i.e YYYY-MM-DD
+        const expectedDate = moment(SELECTED_DATE).format('ddd M/D');
+        expect(departureField.getText()).toBe(expectedDate);
+    });
+    // 3)
+    it('Should not display ‘Price shown are estimates per person’ label',async function () {
+        const estimatesPerPersonText = await momondoHomepage.isSelectedPriceTextShownExist();
+        expect(estimatesPerPersonText).toEqual(false);
+    });
+    // 4)
+    it('Should not display ‘Search these days’ button',async function () {
+        const searchTheseDaysButton = await momondoHomepage.isSearchTheseDaysButtonExist();
+        // Should display ‘Search these days’ button
+        expect(searchTheseDaysButton).toEqual(false);
+    })
 
 });
