@@ -2,7 +2,7 @@ import argparse
 import os
 import calendar
 
-from parser import parse
+import reader
 import calculator
 import reportgenerator
 
@@ -51,8 +51,8 @@ def main():
         files_prefix = f'Murree_weather_{year}_'
         year_file_names = [file for file in os.listdir(files_dir)
                            if file.startswith(files_prefix)]
-        weather_readings = parse(files_dir, year_file_names)
-        results = calculator.compute_year_info(weather_readings)
+        weather_readings = reader.reader(files_dir, year_file_names)
+        results = calculator.extract_year_info(weather_readings)
         reportgenerator.generate_year_info_report(results)
 
     if a is not None:
@@ -60,7 +60,7 @@ def main():
 
         year, month = a.split('/')
         file_name = get_file_name(year, month)
-        weather_readings = parse(files_dir, [file_name])
+        weather_readings = reader.reader(files_dir, [file_name])
         results = calculator.compute_month_info(weather_readings)
         reportgenerator.generate_month_info_report(results)
 
@@ -69,7 +69,7 @@ def main():
 
         year, month = c.split('/')
         file_name = get_file_name(year, month)
-        weather_readings = parse(files_dir, [file_name])
+        weather_readings = reader.reader(files_dir, [file_name])
         results = calculator.compute_month_temperature_detail(weather_readings)
         reportgenerator.generate_month_temperature_detailed_report(month=calendar.month_name[int(month)],
                                                                    year=year,

@@ -1,5 +1,4 @@
 import statistics
-import operator
 import calendar
 
 
@@ -8,16 +7,16 @@ def parse_date(date):
     return calendar.month_name[int(m)], int(d)
 
 
-def compute_year_info(weather_readings):
-    max_temperature_day_information = max(weather_readings, key=operator.attrgetter('max_temperature'))
+def extract_year_info(weather_readings):
+    max_temperature_day_information = max(weather_readings, key=lambda reading: reading.max_temperature)
     max_temperature = max_temperature_day_information.max_temperature
     max_temperature_month, max_temperature_day = parse_date(date=max_temperature_day_information.date)
 
-    min_temperature_day_information = min(weather_readings, key=operator.attrgetter('min_temperature'))
+    min_temperature_day_information = min(weather_readings, key=lambda reading: reading.min_temperature)
     min_temperature = min_temperature_day_information.min_temperature
     min_temperature_month, min_temperature_day = parse_date(date=min_temperature_day_information.date)
 
-    most_humid_day_information = max(weather_readings, key=operator.attrgetter('mean_humidity'))
+    most_humid_day_information = max(weather_readings, key=lambda reading: reading.mean_humidity)
     most_humidity = most_humid_day_information.mean_humidity
     most_humidity_month, most_humidity_day = parse_date(date=most_humid_day_information.date)
 
