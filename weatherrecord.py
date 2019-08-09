@@ -1,4 +1,4 @@
-class DayInformation:
+class WeatherRecord:
     def __init__(self, date, max_temperature, min_temperature, mean_humidity):
         self.date = date
         self.max_temperature = max_temperature
