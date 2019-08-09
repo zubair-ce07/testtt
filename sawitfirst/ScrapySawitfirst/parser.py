@@ -82,7 +82,7 @@ class Parser:
     def currency(self, response):
         return response.css('*[property=og\:price\:currency]::attr(content)').extract_first()
 
-    def gender(self, response):
+    def gender(self):
         return "female"
 
     def color(self, response, variants):
