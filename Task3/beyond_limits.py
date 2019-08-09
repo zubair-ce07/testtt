@@ -62,6 +62,7 @@ class BeyondLimitsSpider(scrapy.Spider):
 
     def get_skus(self, response):
         product_price = response.css(".price span::attr(content)").get()
+        old_price = response.css(".oldPrice del::text").getall()
         currency = response.css(".price meta::attr(content)").get()
         product_sizes = response.css(".bb_form--select option::text").getall()
         if product_sizes:
@@ -72,10 +73,12 @@ class BeyondLimitsSpider(scrapy.Spider):
             for size in product_sizes:
                 sku =	{
                     "colour": color,
-                    "pirce": product_price,
+                    "price": product_price,
                     "currency": currency,
                     "size": size
                 }
+                if old_price:
+                    sku["privious_prices"] = old_price
                 skus[f"{color}_{size}"] = sku
         return skus
 

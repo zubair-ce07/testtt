@@ -14,5 +14,8 @@ class Product(scrapy.Item):
     care = scrapy.Field()
     image_urls = scrapy.Field()
     skus = scrapy.Field()
+    price = scrapy.Field()
+    currency = scrapy.Field()
+
 
 
