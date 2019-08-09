@@ -6,9 +6,11 @@ This module is for scraping cpuc website.
 # -*- coding: utf-8 -*-
 import re
 from urllib.parse import urljoin
+from datetime import datetime
 
 import scrapy
 from scrapy.linkextractors import LinkExtractor
+
 from cpuc.items import ProceedingDocumentLoader, DocumentLoader, \
     ProceedingLoader
 
@@ -27,16 +29,44 @@ class CpucScrapSpider(scrapy.Spider):
     DOCUMENT_LINK_VALIDATION = r"http://docs.cpuc.ca.gov/SearchRes.aspx\?"\
         "DocFormat=ALL&DocID="
     PAGINATION_URL = "https://apps.cpuc.ca.gov/apex/wwv_flow.show"
+    P_WIDGET_NUM_RETURN = '100'
+    P_WIDGET_Name = 'worksheet'
+    P_WIDGET_MOD = 'ACTION'
+    P_WIDGET_ACTION = 'PAGE'
+
+    def __init__(self, start_date=None, end_date=None, *args, **kwargs):
+        """Spider parameters initialization.
+
+        This method will check if the parameters were present.
+        """
+        super(CpucScrapSpider, self).__init__(*args, **kwargs)
+        if start_date is None or end_date is None:
+            self.start_date = ''
+            self.end_date = ''
+        else:
+            self.start_date = start_date
+            self.end_date = end_date
 
     def parse(self, response):
         """Search proceeding.
 
         This method submit search form from a start date to an end date.
         """
+        if self.start_date and self.end_date:
+            if self.date_validation(self.start_date) and \
+                    self.date_validation(self.end_date):
+                form_data = {'p_t04': self.start_date,
+                             'p_t05': self.end_date, 'p_request': 'Go'}
+            else:
+                print("Date format is false, Date Format is m/d/y")
+                return
+        else:
+            form_data = {'p_t04': '01/01/2019',
+                         'p_t05': '08/02/2019', 'p_request': 'Go'}
+
         yield scrapy.FormRequest.from_response(
             response,
-            formdata={'p_t04': '01/01/2019',
-                      'p_t05': '08/02/2019', 'p_request': 'Go'},
+            formdata=form_data,
             callback=self.proceedings_parse
         )
 
@@ -53,21 +83,21 @@ class CpucScrapSpider(scrapy.Spider):
             yield scrapy.Request(link.url, callback=self.scrap_proceeding,
                                  meta={'cookiejar': self.cookie_count})
         if response.css('.fielddata > a') and response.css(".fielddata > a > img[title*='Next']"):
-            frmdata = {'p_request': 'APXWGT',
-                       'p_instance': response.css('#pInstance::attr(value)').get(),
-                       'p_flow_id': '401',
-                       'p_flow_step_id': '5',
-                       'p_widget_num_return': '100',
-                       'p_widget_name': 'worksheet',
-                       'p_widget_mod': 'ACTION',
-                       'p_widget_action': 'PAGE',
-                       'p_widget_action_mod': response.css(
-                           '.fielddata > a::attr(href)').get().split("'")[1],
-                       'x01': response.css('#apexir_WORKSHEET_ID::attr(value)').get(),
-                       'x02': response.css('#apexir_REPORT_ID::attr(value)').get()
-                       }
+            form_data = {'p_request': 'APXWGT',
+                         'p_instance': response.css('#pInstance::attr(value)').get(),
+                         'p_flow_id': response.css('#pFlowId::attr(value)').get(),
+                         'p_flow_step_id': response.css('#pFlowStepId::attr(value)').get(),
+                         'p_widget_num_return': self.P_WIDGET_NUM_RETURN,
+                         'p_widget_name': self.P_WIDGET_Name,
+                         'p_widget_mod': self.P_WIDGET_MOD,
+                         'p_widget_action': self.P_WIDGET_ACTION,
+                         'p_widget_action_mod': response.css(
+                             '.fielddata > a::attr(href)').get().split("'")[1],
+                         'x01': response.css('#apexir_WORKSHEET_ID::attr(value)').get(),
+                         'x02': response.css('#apexir_REPORT_ID::attr(value)').get()
+                         }
             req = scrapy.FormRequest(
-                self.PAGINATION_URL, callback=self.proceedings_parse, formdata=frmdata)
+                self.PAGINATION_URL, callback=self.proceedings_parse, formdata=form_data)
             yield req
 
     def scrap_proceeding(self, response):
@@ -107,11 +137,11 @@ class CpucScrapSpider(scrapy.Spider):
         This method scrap documnts and handle it's pagination.
         """
         proceeding = response.meta['proceeding']
-
+        apexir_workshet_id = response.css(
+            '#apexir_WORKSHEET_ID::attr(value)').get()
         documents_links = []
         document_rows = response.css(
-            "#{} > tr + tr".format(response.css(
-                '#apexir_WORKSHEET_ID::attr(value)').get())).getall()
+            "#{} > tr + tr".format(apexir_workshet_id)).getall()
         for document_row in document_rows:
             document_row = scrapy.Selector(text=document_row)
             document_link = document_row.css(
@@ -134,23 +164,23 @@ class CpucScrapSpider(scrapy.Spider):
                 request.meta['proceeding_document'] = proceeding_document
                 yield request
         if response.css('.fielddata > a') and response.css(".fielddata > a > img[title*='Next']"):
-            frmdata = {'p_request': 'APXWGT',
-                       'p_instance': response.css('#pInstance::attr(value)').get(),
-                       'p_flow_id': '401',
-                       'p_flow_step_id': '57',
-                       'p_widget_num_return': '100',
-                       'p_widget_name': 'worksheet',
-                       'p_widget_mod': 'ACTION',
-                       'p_widget_action': 'PAGE',
-                       'p_widget_action_mod': response.css(
-                           '.fielddata > a::attr(href)').get().split("'")[1],
-                       'x01': response.css('#apexir_WORKSHEET_ID::attr(value)').get(),
-                       'x02': response.css('#apexir_REPORT_ID::attr(value)').get()
-                       }
+            form_data = {'p_request': 'APXWGT',
+                         'p_instance': response.css('#pInstance::attr(value)').get(),
+                         'p_flow_id': response.css('#pFlowId::attr(value)').get(),
+                         'p_flow_step_id': response.css('#pFlowStepId::attr(value)').get(),
+                         'p_widget_num_return': self.P_WIDGET_NUM_RETURN,
+                         'p_widget_name': self.P_WIDGET_Name,
+                         'p_widget_mod': self.P_WIDGET_MOD,
+                         'p_widget_action': self.P_WIDGET_ACTION,
+                         'p_widget_action_mod': response.css(
+                             '.fielddata > a::attr(href)').get().split("'")[1],
+                         'x01': response.css('#apexir_WORKSHEET_ID::attr(value)').get(),
+                         'x02': response.css('#apexir_REPORT_ID::attr(value)').get()
+                         }
             req = scrapy.FormRequest(
                 self.PAGINATION_URL,
                 callback=self.scrap_documents,
-                formdata=frmdata,
+                formdata=form_data,
                 headers={'Referer': response.url},
                 meta={'cookiejar': response.meta['cookiejar']})
             req.meta['proceeding'] = proceeding
@@ -203,3 +233,15 @@ class CpucScrapSpider(scrapy.Spider):
         proceeding_document.add_css(
             'description', "tr > td[headers*='DESCRIPTION']::text")
         return proceeding_document
+
+    @staticmethod
+    def date_validation(date):
+        """Validate date.
+
+        This method validate date if date formaat is correct then it return true
+        """
+        try:
+            datetime.strptime(date, '%m/%d/%Y')
+            return True
+        except ValueError:
+            return False

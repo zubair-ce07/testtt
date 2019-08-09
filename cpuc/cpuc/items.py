@@ -1,4 +1,4 @@
-"""Cpuc items module
+"""Cpuc items module.
 
 This is Cpuc items module.
 """
@@ -9,10 +9,11 @@ This is Cpuc items module.
 # See documentation in:
 # https://docs.scrapy.org/en/latest/topics/items.html
 
+import re
+
 import scrapy
 from scrapy.loader import ItemLoader
 from scrapy.loader.processors import Identity, TakeFirst, Compose
-import re
 
 clean_proceeding_no = Compose(
     lambda p: p[0].split('-')[0].strip())

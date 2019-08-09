@@ -22,6 +22,8 @@ FEED_URI = './data/{}.json'.format(current_date)
 FEED_EXPORT_INDENT = 2
 FEED_FORMAT = 'json'
 
+# uncomment below lines to use proxy
+
 # ROTATING_PROXY_LIST = [
 #     '98.172.141.125:8080',
 #     '95.170.208.42:8080',
