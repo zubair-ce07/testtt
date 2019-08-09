@@ -1,3 +1,7 @@
+"""Cpuc items module
+
+This is Cpuc items module.
+"""
 # -*- coding: utf-8 -*-
 
 # Define here the models for your scraped items
@@ -17,8 +21,10 @@ clean_title = Compose(
 
 
 class Proceeding(scrapy.Item):
-    # define the fields for your item here like:
-    # name = scrapy.Field()
+    """Proceeding Cpuc.
+
+    Proceeding item class
+    """
 
     proceeding_no = scrapy.Field()
     filed_by = scrapy.Field()
@@ -34,22 +40,23 @@ class Proceeding(scrapy.Item):
 
 
 class ProceedingLoader(ItemLoader):
+    """Proceeding Item loader.
+
+    proceeding Item loader class
+    """
+
     default_item_class = Proceeding
     default_output_processor = TakeFirst()
     proceeding_no_out = clean_proceeding_no
-    # filed_by_out = Identity()
-    # service_list_out = Identity()
-    # industry_out = Identity()
-    # filling_date_out = Identity()
-    # category = Identity()
-    # current_status_out = Identity()
-    # description_out = Identity()
-    # staff_out = Identity()
     documents_out = Identity()
-    # total_documents_in = TakeFirst()
 
 
 class ProceedingDocument(scrapy.Item):
+    """Proceeding Document.
+
+    Proceeding Document Item class
+    """
+
     filling_date = scrapy.Field()
     document_type = scrapy.Field()
     filed_by = scrapy.Field()
@@ -59,6 +66,11 @@ class ProceedingDocument(scrapy.Item):
 
 
 class ProceedingDocumentLoader(ItemLoader):
+    """Proceeding document Item loader.
+
+    proceeding document Item loader class
+    """
+
     default_item_class = ProceedingDocument
     default_output_processor = TakeFirst()
     proceeding_no_out = clean_proceeding_no
@@ -66,6 +78,11 @@ class ProceedingDocumentLoader(ItemLoader):
 
 
 class Document(scrapy.Item):
+    """Document item.
+
+    Document item Item class
+    """
+
     title = scrapy.Field()
     doc_type = scrapy.Field()
     pdf_link = scrapy.Field()
@@ -73,6 +90,11 @@ class Document(scrapy.Item):
 
 
 class DocumentLoader(ItemLoader):
+    """Proceeding item Item loader.
+
+    Document item Item loader class
+    """
+
     default_item_class = Document
     default_output_processor = TakeFirst()
     title_out = clean_title
