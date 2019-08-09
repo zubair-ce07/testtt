@@ -47,10 +47,10 @@ describe('kayak website', function() {
 
   		console.log("Done With step 1");
 
-    
-  	});
+   
+  	}); 
 
-  	it('should set BCN and search hotels: Step 2, 3 & 4', function() {
+  	it('should set BCN and search hotels: Step 2-10', function() {
 
   		openLink('Hotels');
 
@@ -199,7 +199,7 @@ describe('kayak website', function() {
 					browser.wait(EC.elementToBeClickable(mapContainer),10000);
 					expect((mapContainer).isPresent()).toBe(true);
 
-					console.log("Map Showed successfully");
+					console.log("Done With step 7");
 
 					//Step 8: mouse hover the hotel markers
 					browser.wait(EC.visibilityOf(mapContainer.element(by.css(".gm-style"))),15000);
@@ -233,22 +233,33 @@ describe('kayak website', function() {
 						});
 					});
 
+					console.log("Done With step 8");
+
+					//Step 9: click the deal btn
+
 					browser.actions().mouseMove(selectedHotel).mouseMove(selectedHotel).click().perform().then( function(){
-						var resultWrapper = element(by.css("div[class *= resultWrapper]"));
+						var resultWrapper = element.all(by.css("div[class *= resultWrapper]")).first();
 						browser.wait(EC.visibilityOf(resultWrapper),10000);
 
-					});
+						var itemWrapper = resultWrapper.all(by.css("div[id *= mainItemWrapper]")).first();
+						browser.wait(EC.visibilityOf(itemWrapper),10000);
 
-
-					selectedHotel.click().then(function(){
-
-						var resultWrapper = element(by.css("div[class *= resultWrapper]"));
-						//browser.wait(EC.visibilityOf(resultWrapper),10000);
-
-						var itemWrapper = resultWrapper.element(by.css("div[id *= mainItemWrapper]"));
+						console.log("Done With step 9");
 
 						var dealBtn = element(by.css("button[id *= bookButton]"));
-						dealBtn.click();
+						dealBtn.click().then(function(){
+
+							// Step 10: check the deals in new tab
+							browser.sleep(5000);
+							browser.getAllWindowHandles().then(function (handles) {
+					            newWindowHandle = handles[1]; // this is your new window
+					            browser.switchTo().window(newWindowHandle).then(function () {
+					                expect(browser.getCurrentUrl()).toMatch("https://www.hotels.com/"); //someURL
+					            });
+					        });
+						});
+
+						console.log("Done With step 10");
 
 					});
 				});
@@ -257,4 +268,3 @@ describe('kayak website', function() {
   	});	
   	
 });
-
