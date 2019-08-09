@@ -20,5 +20,7 @@ from django.conf.urls import url
 urlpatterns = [
     url(r'^$', include('dashboard.urls')),
     path('admin/', admin.site.urls),
-    path('auth/', include('accounts.urls'))
+    path('auth/', include('accounts.urls')),
+    path('user/', include('dashboard.urls')),
+    path('seller/', include('seller.urls')),
 ]

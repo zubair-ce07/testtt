@@ -1,0 +1,27 @@
+<!-- Dropdown Structure -->
+<ul id="settings_dropdown" class="dropdown-content">
+  <li><a href="/user/settings">Profile</a></li>
+  <li class="divider"></li>
+  <li><a href="/auth/logout">Logout</a></li>
+</ul>
+
+<div class="navbar-fixed">
+  <nav>
+    <div class="nav-wrapper teal">
+      <a href="/" class="brand-logo">Job Chercher</a>
+      <ul class="right hide-on-med-and-down">
+        <li><a href="/seller">Switch to Selling</a></li>
+        {% if not user.is_authenticated %}
+        <li><a href="/auth/signin">Sign In</a></li>
+        <li><a href="/auth/signup">Sign Up</a></li>
+        {% else %}
+        <li>
+          <a class="dropdown-trigger" data-target="settings_dropdown"
+            >{{ user }}<i class="material-icons right">arrow_drop_down</i></a
+          >
+        </li>
+        {% endif %}
+      </ul>
+    </div>
+  </nav>
+</div>
