@@ -108,11 +108,13 @@ class LouandgreyParser(Spider):
         if not match:
             return []
 
-        url = re.sub(r'LO.*', '', self.image_request_url_t)
-        items = json.loads(match.group(0))['set']['item']
+        image_url = re.sub(r'LO.*', '', self.image_request_url_t)
+        image_items = json.loads(match.group(0))['set']['item']
 
-        return [f'{url}{items["i"]["n"]}'] if isinstance(items, dict)\
-                else [f'{url}{i["i"]["n"]}' for i in items]
+        if isinstance(image_items, dict):
+            return [f'{image_url}{image_items["i"]["n"]}']
+
+        return [f'{image_url}{item["i"]["n"]}' for item in image_items]
 
     def sanitize_list(self, inputs):
         return [i.strip() for i in inputs if i]
