@@ -6,7 +6,7 @@ describe('Hostel App', function() {
 
     var home = new homePage();
     var hotel = new hotelPage();
-
+    
     it("1. should verify origin, start date, end date and guest field on home page", function() {
         // open hotels page
         home.getHotelsPage();
@@ -25,8 +25,10 @@ describe('Hostel App', function() {
     });
 
     it("2. should verify hotel page search", function() {
-        // set keywork like 'BCN in origin field
-        home.searchOriginsList(home.getHomePageInfo().originSearchKeywork);
+        // set keyword like 'BCN in origin field
+        //browser.ignoreSynchronization = true;
+        //browser.get( 'https://www.kayak.com/hotels');
+        home.searchOriginsList(home.getHomePageInfo().originSearchKeyword);
         const originDDSelector = hotel.getHotelPageInfo().originDropdownSelector;
         utils.waitForElementPresence(originDDSelector, 10000, 'Error! Unable to load hotel result page');
         home.selectFirstOriginFromList();
@@ -60,7 +62,7 @@ describe('Hostel App', function() {
             });
         });
     });
-
+ 
     it("3. should verify hotel detail page", function() {
         let hotelsList = hotel.getHotelSearchResult();
         if(hotelsList)
@@ -145,9 +147,9 @@ describe('Hostel App', function() {
                     });
                 });
         });
-    });
+    }); 
 
-    it("7. should verify GO To Map button on hotel detail page", function() {
+    it("7,8,9,10. should verify GO To Map button, hotel marker hover, hover marker image and deal button", function() {
         const goToMap = hotel.getGoToMap();
         goToMap.getText().then(function(value) {
             console.log('go to map button clicked');
@@ -155,6 +157,7 @@ describe('Hostel App', function() {
                 browser.sleep(10000).then(function() {
                     const mapContent = element(by.css(hotel.getHotelPageInfo().goToMapSelector));
                     expect(mapContent.isPresent()).toBe(true);
+                    hotel.verifyHotelMarker();
                 });
                 
             });

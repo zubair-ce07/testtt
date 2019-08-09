@@ -4,7 +4,7 @@ var HomePage = function() {
         return {
             homePageUrl: "https://www.kayak.com/",
             hotelPageUrl: "https://www.kayak.com/hotels",
-            originSearchKeywork: "BCN",
+            originSearchKeyword: "BCN",
             guestFieldText: "1 room, 2 guests",
             searchBtnSelector: "div[id$=-formGridSearchBtn]",
         }
