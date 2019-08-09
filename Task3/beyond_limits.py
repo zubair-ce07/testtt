@@ -81,12 +81,16 @@ class BeyondLimitsSpider(scrapy.Spider):
 
     def parse(self, response):
 
-        links = response.css("a::attr(href)")
-        product = response.css(".bb_details")
-        if product:
-            yield self.parse_product(response)
-
+        links = response.css(".bb_catnav--list a::attr(href)")
         for link in links:
             if self.is_url_valid(link.get()):
-                yield response.follow(link, self.parse)
+                yield response.follow(link, self.parse_category)
+
+    def parse_category(self, response):
+        next_page = response.css(".bb_pagination--item.next::attr(href)").get()
+        products = response.css(".bb_product--link.bb_product--imgsizer::attr(href)").getall()
+        for product in products:
+            yield response.follow(product, self.parse_product)
+        if next_page:
+            yield response.follow(next_page, self.parse_category)
 
