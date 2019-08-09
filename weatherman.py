@@ -10,13 +10,11 @@ import reportgenerator
 def get_file_name(files_dir, year, month=None):
     if month is not None:
         return [f'{files_dir}Murree_weather_{year}_{calendar.month_abbr[int(month)]}.txt']
-    else:
-        files_prefix = f'Murree_weather_{year}_'
-        return [files_dir + file for file in os.listdir(files_dir) if file.startswith(files_prefix)]
+    files_prefix = f'Murree_weather_{year}_'
+    return [files_dir + file for file in os.listdir(files_dir) if file.startswith(files_prefix)]
 
 
 def main():
-    # creating argument parser
     parser = argparse.ArgumentParser()
     parser.add_argument('files_dir', type=str, help='Directory containing weather files')
     parser.add_argument('-e', metavar='e', type=str, nargs='?',
