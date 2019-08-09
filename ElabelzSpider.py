@@ -92,40 +92,40 @@ class ElabelzSpider(CrawlSpider):
 
             yield item
 
-    def retailer_sku(self, prod_json):
-        return prod_json['productNumber']
+    def retailer_sku(self, product_json):
+        return product_json['productNumber']
 
-    def product_name(self, prod_json):
-        return prod_json['name']
+    def product_name(self, product_json):
+        return product_json['name']
 
-    def product_gender(self, prod_json):
-        return prod_json['taxonomy']['gender']
+    def product_gender(self, product_json):
+        return product_json['taxonomy']['gender']
 
-    def product_category(self, prod_json):
-        if prod_json['taxonomy'].get('subCategory1'):
-            return [prod_json['taxonomy']['category'],
-                    prod_json['taxonomy']['subCategory1']]
-        return [prod_json['taxonomy']['category']]
+    def product_category(self, product_json):
+        if product_json['taxonomy'].get('subCategory1'):
+            return [product_json['taxonomy']['category'],
+                    product_json['taxonomy']['subCategory1']]
+        return [product_json['taxonomy']['category']]
 
-    def product_url(self, prod_json):
-        return self.product_url_t.format(self.product_brand(prod_json),
-                                         prod_json['seourl'])
+    def product_url(self, product_json):
+        return self.product_url_t.format(self.product_brand(product_json),
+                                         product_json['seourl'])
 
-    def product_description(self, prod_json):
-        return prod_json['description'].split('.')
+    def product_description(self, product_json):
+        return product_json['description'].split('.')
 
-    def product_brand(self, prod_json):
-        return prod_json['brandName']
+    def product_brand(self, product_json):
+        return product_json['brandName']
 
-    def product_care(self, prod_json):
-        return prod_json.get('washing').split('.')
+    def product_care(self, product_json):
+        return product_json.get('washing').split('.')
 
-    def product_image_urls(self, prod_json):
-        return [images_url['url'] for images_url in prod_json['images']]
+    def product_image_urls(self, product_json):
+        return [images_url['url'] for images_url in product_json['images']]
 
-    def product_skus(self, prod_json):
+    def product_skus(self, product_json):
         skus = {}
-        for sku in prod_json['stockProducts']:
+        for sku in product_json['stockProducts']:
             skus[f'{sku["color"]}_{sku["size"]}'] = {
                 'color': sku["color"],
                 'size': sku['size'],
