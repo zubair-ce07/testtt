@@ -16,7 +16,7 @@ class ClothesSpider(CrawlSpider):
         Rule(LinkExtractor(restrict_xpaths=['//div[@id="menu1Dropdown"]//a', '//div[@id="menu2Dropdown"]//a',
                                             '//div[@class="col-12 pagination"]/span[@class="next"]/a'])),
     )
-    set_retailer_skus = set()
+    retailer_skus_all = set()
 
     def parse_item(self, response):
         items = ClothesItem()
@@ -34,13 +34,14 @@ class ClothesSpider(CrawlSpider):
             items['care'] = self.extract_care(response)
             items['image_urls'] = self.extract_image_urls(response)
             items['skus'] = self.extract_skus(response)
-            self.set_retailer_skus.add(items['retailer_sku'])
             yield items
 
     def check_if_parsed(self, retailer_sku):
-        if retailer_sku in self.set_retailer_skus:
+        if retailer_sku in self.retailer_skus_all:
             return True
-        return False
+        else:
+            self.retailer_skus_all.add(retailer_sku)
+            return False
 
     def extract_name(self, response):
         return response.css('h1::text').get()
@@ -51,7 +52,7 @@ class ClothesSpider(CrawlSpider):
     def extract_brand(self, response):
         brand = re.findall("var item = {(.+)};", response.body.decode("utf-8"), re.S)
         brand = re.findall("Brand: (.+?),", brand[0], re.S)
-        return brand[0]
+        return brand[0] if brand else "Athletic Descente"
 
     def extract_skus(self, response):
         skus = []
@@ -79,9 +80,8 @@ class ClothesSpider(CrawlSpider):
         desc_all = response.xpath('//div[@class="product-description-internal"]/p/text() | '
                                   '//div[@class="specifics-inner"]/ul/li/ul/li/text()').getall()
         description = []
-        if desc_all:
-            for desc in desc_all:
-                description += [d for d in desc.split('.') if d.strip() != '']
+        for desc in desc_all:
+            description += [d for d in desc.split('.') if d.strip()]
         return description
 
     def extract_care(self, response):
@@ -90,7 +90,7 @@ class ClothesSpider(CrawlSpider):
         if care_all:
             care_all = care_all[-1].getall()
             for care_element in care_all:
-                care = [c for c in care_element.split('.') if c.strip() != '']
+                care = [c for c in care_element.split('.') if c.strip()]
         return care
 
     def extract_image_urls(self, response):
