@@ -34,11 +34,9 @@ def generate_month_temperature_detailed_report(month, year, results):
     print(f'{month} {year}')
 
     for day, max_temperature, min_temperature in results:
-        min_temperature_bar = '+' * min_temperature
-        max_temperature_bar = '+' * max_temperature
         print(f'{day:02d} '
-              f'\033[1;34m{min_temperature_bar}'
-              f'\033[1;31m{max_temperature_bar}'
+              f'\033[1;34m{"+" * min_temperature}'
+              f'\033[1;31m{"+" * max_temperature}'
               f'\033[0;0m {min_temperature:02d}C - {max_temperature:02d}C')
 
     print()

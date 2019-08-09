@@ -7,6 +7,10 @@ import calculator
 import reportgenerator
 
 
+def get_file_name(year, month):
+    return f'Murree_weather_{year}_{calendar.month_abbr[int(month)]}.txt'
+
+
 def main():
     # creating argument parser
     parser = argparse.ArgumentParser()
@@ -55,8 +59,7 @@ def main():
         print(f'-a {a}')
 
         year, month = a.split('/')
-        month = calendar.month_abbr[int(month)]
-        file_name = f'Murree_weather_{year}_{month}.txt'
+        file_name = get_file_name(year, month)
         weather_readings = parse(files_dir, [file_name])
         results = calculator.compute_month_info(weather_readings)
         reportgenerator.generate_month_info_report(results)
@@ -65,7 +68,7 @@ def main():
         print(f'-c {c}')
 
         year, month = c.split('/')
-        file_name = f'Murree_weather_{year}_{calendar.month_abbr[int(month)]}.txt'
+        file_name = get_file_name(year, month)
         weather_readings = parse(files_dir, [file_name])
         results = calculator.compute_month_temperature_detail(weather_readings)
         reportgenerator.generate_month_temperature_detailed_report(month=calendar.month_name[int(month)],
@@ -73,4 +76,5 @@ def main():
                                                                    results=results)
 
 
-main()
+if __name__ == "__main__":
+    main()
