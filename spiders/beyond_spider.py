@@ -1,12 +1,13 @@
 from ..items import BeyondlimitItem
 
-from scrapy.linkextractors import LinkExtractor
-from scrapy.spiders import CrawlSpider, Rule
+from scrapy.spiders import CrawlSpider
 
 
 class BeyondLimitSpider(CrawlSpider):
     name = 'beyond_spider'
-    start_urls = ['https://www.beyondlimits.com']
+    start_urls = ['https://www.beyondlimits.com/Men/',
+                  'https://www.beyondlimits.com/Women/'
+                  ]
     allowed_domain = 'www.beyondlimits.com'
     brand = 'BeyondLimits'
 
@@ -17,12 +18,16 @@ class BeyondLimitSpider(CrawlSpider):
         'Women',
     ]
 
-    category_css = '.bb_mega--subitem > .bb_mega--link'
-    product_css = '.bb_product--link'
-    rules = (
-        Rule(LinkExtractor(restrict_css=category_css)),
-        Rule(LinkExtractor(restrict_css=product_css), callback='parse_items')
-    )
+    def parse(self, response):
+        product_css = 'div.bb_product--tobasket a::attr(href)'
+        product_url = response.css(product_css).getall()
+        for url in product_url:
+            yield response.follow(url, callback=self.parse_items)
+
+        pagination_css = "div a.bb_pagination--item::attr(href)"
+        next_page = response.css(pagination_css).getall()
+        if next_page:
+            yield response.follow(next_page[0], callback=self.parse)
 
     def parse_items(self, response):
         garment = BeyondlimitItem()
@@ -41,8 +46,7 @@ class BeyondLimitSpider(CrawlSpider):
         garment['gender'] = self.extract_gender(response)
         garment['category'] = self.extract_category(response)
         garment['skus'] = self.extract_skus(response)
-
-        return garment
+        yield garment
 
     @staticmethod
     def extract_name(response):
@@ -60,7 +64,7 @@ class BeyondLimitSpider(CrawlSpider):
         category = self.extract_category(response)
         start_trail = " "
         first_trail = f'{self.allowed_domain}/{self.lang}/{category}'
-        trail = f'{start_trail}, {first_trail}]'
+        trail = f'{start_trail}, {first_trail}'
         return trail
 
     def extract_gender(self, response):
