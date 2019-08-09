@@ -13,7 +13,6 @@ class MKCParser(Spider):
     brand = 'mooseknuckles'
     json_pattern = r'\{.*\}'
     retailer = 'mooseknuckles-ca'
-    colour_map = {}
     genders = [
         ('women', 'women'),
         ('woman', 'women'),
@@ -58,14 +57,6 @@ class MKCParser(Spider):
                 return gender
 
         return 'unisex-adults'
-
-    def get_colour_map(self, response):
-        css = '#product-options-wrapper script'
-        re_pattern = f'(?<=colorMapping\s\=\s){self.json_pattern}'
-        raw_colour_mapping = response.css(css).re_first(re_pattern)
-        raw_colour_mapping = json.loads(raw_colour_mapping)
-
-        return dict((v,k) for k, v in raw_colour_mapping.items())
 
     def get_care(self, response):
         care_css = '#collateral-tabs .tab-container:nth-child(4) .tab-content li::text'
