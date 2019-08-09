@@ -35,21 +35,19 @@ class LouandgreyParser(Spider):
         item['category'] = self.get_categories(response)
         item['retailer_sku'] = self.get_product_id(response)
         item['description'] = self.get_description(response)
-        response.meta['requests'] = self.get_sku_requests(item['retailer_sku'])
-        response.meta['requests'].extend(self.get_image_requests(item['retailer_sku']))
+        requests = self.get_sku_requests(response) + self.get_image_requests(response)
+        response.meta['requests'] = requests
 
         return self.next_request_or_item(item, response)
 
     def parse_skus(self, response):
         item = response.meta['item']
         item['skus'] = self.get_skus(response)
-
         return self.next_request_or_item(item, response)
 
     def parse_image_urls(self, response):
         item = response.meta['item']
         item['image_urls'] = self.get_image_urls(response)
-
         return self.next_request_or_item(item, response)
 
     def next_request_or_item(self, item, response):
@@ -66,26 +64,27 @@ class LouandgreyParser(Spider):
     def get_skus(self, response):
         skus = []
         product_details = json.loads(response.text)['products'][0]
-        sku = self.get_pricing_details(product_details)
+        pricing_details = self.get_pricing_details(product_details)
 
         for raw_skus in product_details['skucolors']['colors']:
-            sku['colour'] = raw_skus['colorName']
 
             for raw_sku in raw_skus['skusizes']['sizes']:
                 if raw_sku['available'] == 'true':
+                    sku = {**pricing_details}
+                    sku['colour'] = raw_skus['colorName']
                     sku['size'] = raw_sku['sizeAbbr']
                     sku['sku_id'] = raw_sku['skuId']
-                    sku['out_of_stock'] = not(bool(int(raw_sku['quantity'])))
+                    sku['out_of_stock'] = not bool(int(raw_sku['quantity']))
                     skus.append(sku)
 
         return skus
 
-    def get_sku_requests(self, retialer_sku):
-        url = add_or_replace_parameter(self.product_url, 'prodId', retialer_sku)
+    def get_sku_requests(self, response):
+        url = add_or_replace_parameter(self.product_url, 'prodId', self.get_product_id(response))
         return [Request(url=url, callback=self.parse_skus)]
 
-    def get_image_requests(self, retailer_sku):
-        url = self.image_request_url_t.format(retailer_sku)
+    def get_image_requests(self, response):
+        url = self.image_request_url_t.format(self.get_product_id(response))
         return [Request(url=url, callback=self.parse_image_urls)]
 
     def get_name(self, response):
@@ -105,21 +104,18 @@ class LouandgreyParser(Spider):
         return self.sanitize_list(response.css('#fabricpanel::text').getall())
 
     def get_image_urls(self, response):
-        match = re.search(r'\{.*\}', response.text)
+        match = re.search(r'{.*}', response.text)
         if not match:
             return []
 
-        image_url = re.sub(r'LO.*', '', self.image_request_url_t)
-        image_items = json.loads(match.group(0))['set']['item']
+        url = re.sub(r'LO.*', '', self.image_request_url_t)
+        items = json.loads(match.group(0))['set']['item']
 
-        if isinstance(image_items, dict):
-            return [f'{image_url}{image_items["i"]["n"]}']
-
-        return [f'{image_url}{item["i"]["n"]}' for item in image_items]
+        return [f'{url}{items["i"]["n"]}'] if isinstance(items, dict)\
+                else [f'{url}{i["i"]["n"]}' for i in items]
 
     def sanitize_list(self, inputs):
-        sanitized = list(map(lambda i: i.strip(), inputs))
-        return list(filter(lambda s: s != '', sanitized))
+        return [i.strip() for i in inputs if i]
 
     def sanitize_price(self, price):
         return float(''.join(re.findall(r'\d+', price)))
