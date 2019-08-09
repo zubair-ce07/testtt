@@ -6,7 +6,7 @@ import { browser, protractor, element, by, $$, ElementArrayFinder, ElementFinder
 describe('kayak user', () => {
   browser.manage().window().maximize();
   browser.ignoreSynchronization = true;
-  let page: AppHotelPage;
+  let page : AppHotelPage;
   before(() => {
     page = new AppHotelPage();
     browser.waitForAngularEnabled(false);
@@ -14,7 +14,7 @@ describe('kayak user', () => {
     page.getHotelLink().click();
   });
   it('should click the hotel button and navigate to hotels page', () => {
-    browser.getCurrentUrl().then((currentUrl: string) => {
+    browser.getCurrentUrl().then(( currentUrl : string) => {
       expect(currentUrl).to.equal(`${browser.baseUrl}/hotels`);
       // tslint:disable-next-line: no-unused-expression
       expect(page.getOriginInput()).to.be.exist;
@@ -22,7 +22,7 @@ describe('kayak user', () => {
       expect(page.getStartDate()).to.be.exist;
       // tslint:disable-next-line: no-unused-expression
       expect(page.getEndDate()).to.be.exist;
-      page.getDisplayText().getText().then((text: string) => {
+      page.getDisplayText().getText().then(( text : string) => {
         expect(text).to.equal(Aliases.guestFieldText);
       });
     });
@@ -34,18 +34,20 @@ describe('kayak user', () => {
 describe('kayak user', () => {
   browser.manage().window().maximize();
   browser.ignoreSynchronization = true;
-  let page: AppHotelPage;
+  let page : AppHotelPage;
   before(async () => {
     page = new AppHotelPage();
     browser.waitForAngularEnabled(false);
     page.navigateToHotel();
-    await page.getOriginInputWrapper().click();
-    await page.getOriginInput().sendKeys('BCN');
-    searchTriggersHandler(page.getOriginDropdown());
-    browser.sleep(11000);
   });
 
   it('should click the origin field', async () => {
+    await page.getOriginInputWrapper().click();
+    await page.getOriginInput().sendKeys('BCN');
+    searchTriggersHandler(page.getOriginDropdown());
+    page.getOriginDropdown().click();
+    page.getSearchButton().click();
+    browser.sleep(11000);
     const divLists : ElementArrayFinder = element.all(by.css('[id$=searchResultsList] .normalResults div[tabindex]'));
     const count : number = await divLists.count();
     expect(count).to.greaterThan(4);
@@ -72,7 +74,7 @@ describe('kayak user', () => {
     // tslint:disable-next-line: no-unused-expression
     expect(await element.all(by.css('[id$=ratesContainer]')).first().isDisplayed()).to.be.true;
   });
-  it.only('should click go to map', async () => {
+  it('should click go to map', async () => {
     searchTriggersHandler(page.getGoToMapLink());
     await page.getGoToMapLink().click();
     expect(await element(by.css('[id$=rightRail] .rail-map-container > div')).getAttribute('class')).to.contain('open');
