@@ -79,11 +79,13 @@ class FakharSpiderConcurrent:
     async def make_requests(self, client, website):
         async with client.get(website) as response:
             global TOTAL_REQUESTS
+
             print(
                 f"Link : {website} :: having a download delay of : {self._download_delay} s")
             # ------------------ Awaiting for the Delay user Specified --------------------------#
             await asyncio.sleep(self._download_delay)
             website_html = await response.read()
+
             TOTAL_REQUESTS += 1
             content = Selector(str(website_html))
             # ---------------- Crawling the link for urls, images ----------------------#
@@ -108,6 +110,7 @@ class FakharSpiderConcurrent:
                                        self._urls_to_visit - URLS_VISITED + 1) if count > 0]
                 # ---------------------- Tasks Created = Urls to Visit -----------------------#
                 URLS_VISITED += len(visit_url_tasks)
+
                 # ---------------------- Asyncronously calling Tasks -----------------------#
                 '''----------------LOGIC : URL to visit must only be run, which are specified by the user--------------
                    ---------------- 5 urls to visit, suer specifies 2 concurrent requests to be made ------------------
@@ -120,6 +123,7 @@ class FakharSpiderConcurrent:
                 while visit != len(visit_url_tasks):
                     tasks_to_run.clear()
                     # --------------- Gather -r(CONCURRENT REQUESTS) tasks from total list of -u(URLS TO VISIT) ------#
+
                     for _ in range(self._requests):
                         if visit == len(visit_url_tasks):
                             break
