@@ -27,43 +27,36 @@ def parse_arguments():
     return parser.parse_args(sys.argv[1:])
 
 
-class FakharSpiderConcurrent:
+class FakharConcurrentSpider:
     def __init__(self, arguments):
         self._download_delay = arguments.delay
         self._urls_to_visit = arguments.number_urls_visit
         self._requests = arguments.requests
 
-    @staticmethod
-    async def get_urls(content):
+    async def get_urls(self, content):
         return content.xpath("//a/@href").getall()
 
-    @staticmethod
-    async def get_general_images(content):
+    async def get_general_images(self, content):
         return content.xpath("//source/@srcset").getall()
 
-    @staticmethod
-    async def get_item_images(content):
+    async def get_item_images(self, content):
         return content.xpath("//img/@src").getall()
 
-    @staticmethod
-    async def get_text(content):
+    async def get_text(self, content):
         return content.xpath(
             "//body//*[self::span or self::div or self::p or self::a or self::h2 or self::li]//text()").getall()
 
-    @staticmethod
-    def correct_url_and_text(urls, text):
+    def correct_url_and_text(self, urls, text):
         return list(set(urls)), [item for item in text if len(item) > 2]
 
-    @staticmethod
-    def append_parent_address_url(website, urls):
+    def append_parent_address_url(self, website, urls):
         corrected_urls = []
         for url in urls:
             if "http" not in url:
                 corrected_urls.append("".join(f"{website}{url}"))
         return corrected_urls
 
-    @staticmethod
-    def print_retrieved_data(website, urls, item_images, general_images, text):
+    def print_retrieved_data(self, website, urls, item_images, general_images, text):
         for link in urls:
             print(f"{website} :: Link Found : {link}", end="\n")
         for img_src in item_images:
@@ -145,44 +138,52 @@ class FakharSpiderConcurrent:
 
             return len(website_html)
 
+    async def concurrent_call(self, loop):
+        client = aiohttp.ClientSession(loop=loop)
+        # --------------- Making Tasks for requesting webpage -r times specified by user ------------------#
+        task = [asyncio.ensure_future(
+            self.make_requests(client, "https://www.target.com"))]
 
-class FakharSpiderParallel:
+        # --------------- Requesting the website, and awaiting on the task to complete ------------------#
+        done, _ = await asyncio.wait(task)
+
+        # --------------- for each task which is completed, do the following ------------------#
+        # for task in tasks:
+        #    if task in done:
+        #        print("DONE")
+        await client.close()
+
+
+class FakharParallelSpider:
     def __init__(self, arguments):
         self._download_delay = arguments.delay
         self._urls_to_visit = arguments.number_urls_visit
         self._requests = arguments.requests
 
-    @staticmethod
-    def get_urls(content):
+    def get_urls(self, content):
         return content.xpath("//a/@href").getall()
 
-    @staticmethod
-    def get_general_images(content):
+    def get_general_images(self, content):
         return content.xpath("//source/@srcset").getall()
 
-    @staticmethod
-    def get_item_images(content):
+    def get_item_images(self, content):
         return content.xpath("//img/@src").getall()
 
-    @staticmethod
-    def get_text(content):
+    def get_text(self, content):
         return content.xpath(
             "//body//*[self::span or self::div or self::p or self::a or self::h2 or self::li]//text()").getall()
 
-    @staticmethod
-    def correct_url_and_text(urls, text):
+    def correct_url_and_text(self, urls, text):
         return list(set(urls)), [item for item in text if len(item) > 2]
 
-    @staticmethod
-    def append_parent_address_url(website, urls):
+    def append_parent_address_url(self, website, urls):
         corrected_urls = []
         for url in urls:
             if "http" not in url:
                 corrected_urls.append("".join(f"{website}{url}"))
         return corrected_urls
 
-    @staticmethod
-    def print_retrieved_data(website, urls, item_images, general_images, text):
+    def print_retrieved_data(self, website, urls, item_images, general_images, text):
         for link in urls:
             print(f"{website} :: Link Found : {link}", end="\n")
         for img_src in item_images:
@@ -247,33 +248,16 @@ class FakharSpiderParallel:
         return [website_html, response.content]
 
 
-async def concurrent_call(loop, arguments):
-    client = aiohttp.ClientSession(loop=loop)
-    spider = FakharSpiderConcurrent(arguments)
-    # --------------- Making Tasks for requesting webpage -r times specified by user ------------------#
-    task = [asyncio.ensure_future(
-        spider.make_requests(client, "https://www.target.com"))]
-
-    # --------------- Requesting the website, and awaiting on the task to complete ------------------#
-    done, _ = await asyncio.wait(task)
-
-    # --------------- for each task which is completed, do the following ------------------#
-    # for task in tasks:
-    #    if task in done:
-    #        print("DONE")
-    await client.close()
-
-
 def main():
     global URLS_VISITED
     global TOTAL_PAGE_SIZE
     global TOTAL_REQUESTS
-
     arguments = parse_arguments()
     start = time.time()
     # ----- CONCURRERNT SPIDER ---------#
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(concurrent_call(loop, arguments))
+    spider = FakharConcurrentSpider(arguments)
+    loop.run_until_complete(spider.concurrent_call(loop))
     loop.stop()
     end = time.time()
 
@@ -285,7 +269,7 @@ def main():
 
     start = time.time()
     # ----- PARALLEL SPIDER ---------#
-    spider = FakharSpiderParallel(arguments)
+    spider = FakharParallelSpider(arguments)
     # --------------- Making Tasks for requesting web page -r times specified by user ------------------#
     spider.make_requests("https://www.target.com"),
     end = time.time()
