@@ -2,6 +2,7 @@ import { Aliases } from './../shared/constants';
 import { expect } from 'chai';
 import { AppHotelPage } from '../pages/hotel.po';
 import { browser, protractor, element, by, $$, ElementArrayFinder, ElementFinder } from 'protractor';
+import { HotelDetailPage } from '../pages/hotel-detail.po';
 
 describe('kayak user', () => {
   browser.manage().window().maximize();
@@ -35,15 +36,17 @@ describe('kayak user', () => {
   browser.manage().window().maximize();
   browser.ignoreSynchronization = true;
   let page : AppHotelPage;
+  let  detailPage : HotelDetailPage ;
   before(async () => {
     page = new AppHotelPage();
+    detailPage = new HotelDetailPage();
     browser.waitForAngularEnabled(false);
     page.navigateToHotel();
   });
 
   it('should click the origin field', async () => {
     await page.getOriginInputWrapper().click();
-    await page.getOriginInput().sendKeys('BCN');
+    await page.getOriginInput().sendKeys(Aliases.originSearchKeywork);
     searchTriggersHandler(page.getOriginDropdown());
     page.getOriginDropdown().click();
     page.getSearchButton().click();
@@ -53,31 +56,31 @@ describe('kayak user', () => {
     expect(count).to.greaterThan(4);
   });
   it('should click the hotel link', async () => {
-    await element(by.css('.normalResults > div:nth-child(2) div.mainItemWrapper button.allowWrap')).click();
+    await detailPage.getHotelDetailLink().click();
     // tslint:disable-next-line: no-unused-expression
-    expect(await element.all(by.css('[id$=detailsContent] .inlineTab.active')).first().isDisplayed()).to.be.true;
+    expect(await detailPage.getHotelDetailSection().isDisplayed()).to.be.true;
     // tslint:disable-next-line: no-unused-expression
-    expect(await element.all(by.css('[id$=overviewContainer] .col-photos')).first().isDisplayed()).to.be.true;
+    expect(await detailPage.getHotelImages().isDisplayed()).to.be.true;
   });
   it('should click the map tab', async () => {
-    await element.all(by.css('[id$=detailsContent] div[data-tab=map]')).first().click();
+    await detailPage.getMapTabLink().click();
     // tslint:disable-next-line: no-unused-expression
-    expect(await element.all(by.css('[id$=mapContainer]')).first().isDisplayed()).to.be.true;
+    expect(await detailPage.getMapSection().isDisplayed()).to.be.true;
   });
   it('should click the review tab', async () => {
-    await element.all(by.css('[id$=detailsContent] div[data-tab=reviews]')).first().click();
+    await detailPage.getReviewTabLink().first().click();
     // tslint:disable-next-line: no-unused-expression
-    expect(await element.all(by.css('[id$=reviewsContainer]')).first().isDisplayed()).to.be.true;
+    expect(await detailPage.getReviewsSection().isDisplayed()).to.be.true;
   });
   it('should click the rates tab', async () => {
-    await element.all(by.css('[id$=detailsContent] div[data-tab=rates]')).first().click();
+    await detailPage.getratesTabLInk().click();
     // tslint:disable-next-line: no-unused-expression
-    expect(await element.all(by.css('[id$=ratesContainer]')).first().isDisplayed()).to.be.true;
+    expect(await detailPage.getRatesSection().isDisplayed()).to.be.true;
   });
   it('should click go to map', async () => {
-    searchTriggersHandler(page.getGoToMapLink());
-    await page.getGoToMapLink().click();
-    expect(await element(by.css('[id$=rightRail] .rail-map-container > div')).getAttribute('class')).to.contain('open');
+    searchTriggersHandler(detailPage.getGoToMapLink());
+    await detailPage.getGoToMapLink().click();
+    expect(await detailPage.getGoToMapSection().getAttribute('class')).to.contain('open');
   });
   async function searchTriggersHandler ( ele : ElementFinder) : Promise<void> {
     const expectedCondition = protractor.ExpectedConditions;

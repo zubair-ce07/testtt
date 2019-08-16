@@ -19,9 +19,6 @@ getOriginInput () : ElementFinder {
 getOriginDropdown () : ElementFinder {
     return element(by.css('[id$=location-smartbox-dropdown] > ul > li:first-child'));
 }
-getGoToMapLink () : ElementFinder {
-    return element(by.css('[id$=filtersSection] > a '));
-}
 getStartDate () : ElementFinder {
 return element(by.css('[id$=dateRangeInput-display-start]'));
 }
