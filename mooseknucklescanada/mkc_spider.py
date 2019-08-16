@@ -1,7 +1,8 @@
 import json
 import re
 
-from scrapy.spiders import Spider
+from scrapy.linkextractors import LinkExtractor
+from scrapy.spiders import CrawlSpider, Rule, Spider
 
 from mooseknucklescanada.items import MKCItem
 
@@ -11,8 +12,12 @@ class MKCParser(Spider):
     currency = 'CAD'
     name = 'mkcparser'
     brand = 'mooseknuckles'
-    json_pattern = r'\{.*\}'
     retailer = 'mooseknuckles-ca'
+
+    allowed_domains = [
+        'mooseknucklescanada.com'
+    ]
+
     genders = [
         ('women', 'women'),
         ('woman', 'women'),
@@ -65,7 +70,6 @@ class MKCParser(Spider):
     def get_categories(self, response):
         categories = response.css('.std::text').getall()
         categories.append(response.css('button.btn-cart::attr(data-category)').get())
-
         return self.sanitize_list(categories)
 
     def get_image_urls(self, response):
@@ -79,31 +83,24 @@ class MKCParser(Spider):
 
     def get_skus(self, response):
         skus = []
-        out_of_stock = self.get_out_of_stock(response)
-        if out_of_stock:
+        if self.get_out_of_stock(response):
             return skus
 
-        return self.get_colour_size_skus(response, out_of_stock)
-
-    def get_colour_size_skus(self, response, out_of_stock):
-        skus = []
-        attributes_json = response.css('#product-options-wrapper script').re_first(self.json_pattern)
-        attributes_json = json.loads(attributes_json)['attributes']
-        raw_colours, raw_sizes = attributes_json['141']['options'], attributes_json['142']['options']
+        attributes = response.css('#product-options-wrapper script').re_first(r'{.*}')
+        attributes_map = json.loads(attributes)['attributes']
+        raw_colours, raw_sizes = attributes_map['141']['options'], attributes_map['142']['options']
         pricing_details = self.get_pricing_details(response)
 
         for raw_colour in raw_colours:
-
             for product in raw_colour['products']:
-
                 for raw_size in raw_sizes:
-
-                    if product in raw_size['products']:
-                        sku = {**pricing_details, 'size': raw_size['label'], 'colour': raw_colour['label']}
-                        sku['out_of_stock'] = out_of_stock
-                        sku['sku_id'] = f'{sku["colour"]}_{sku["size"]}'
-                        skus.append(sku)
-                        break
+                    if not product in raw_size['products']:
+                        continue
+                    sku = {**pricing_details, 'size': raw_size['label'], 'colour': raw_colour['label']}
+                    sku['out_of_stock'] = self.get_out_of_stock(response)
+                    sku['sku_id'] = f'{sku["colour"]}_{sku["size"]}'
+                    skus.append(sku)
+                    break
 
         return skus
 
@@ -112,10 +109,10 @@ class MKCParser(Spider):
         return False if out_of_stock == 'in stock' else True
 
     def get_pricing_details(self, response):
-        pricing_json = json.loads(response.css('div.main script').re_first(self.json_pattern))
+        pricing_map = json.loads(response.css('div.main script').re_first(r'{.*}'))
         pricing = {'currency': self.currency}
-        pricing['price'] = self.sanitize_price(pricing_json['productPrice'])
-        pricing['previous_prices'] = [self.sanitize_price(pricing_json['productOldPrice'])]
+        pricing['price'] = self.sanitize_price(pricing_map['productPrice'])
+        pricing['previous_prices'] = [self.sanitize_price(pricing_map['productOldPrice'])]
 
         return pricing
 
@@ -130,4 +127,38 @@ class MKCParser(Spider):
         return final_price
 
     def sanitize_list(self, inputs):
-        return list(map(lambda i: i and i.strip(), inputs))
+        return [i.strip() for i in inputs if i and i.strip()]
+
+
+class MKCCrawler(CrawlSpider):
+    name = 'mkccrawler'
+    mkc_parser = MKCParser()
+
+    allowed_domains = [
+        'mooseknucklescanada.com'
+    ]
+
+    start_urls = [
+        'https://www.mooseknucklescanada.com/en/'
+    ]
+
+    product_css = '.ls-products-grid__images'
+    listing_css = ['.nav-primary', '.toolbar-bottom .next.i-next']
+
+    rules = [
+        Rule(link_extractor=LinkExtractor(restrict_css=product_css), callback='parse_product'),
+        Rule(link_extractor=LinkExtractor(restrict_css=listing_css), callback='parse')
+    ]
+
+    def parse(self, response):
+        requests = super(MKCCrawler, self).parse(response)
+        trail = self.add_trail(response)
+
+        return [r.replace(meta={**r.meta, 'trail': trail.copy()}) for r in requests]
+
+    def parse_product(self, response):
+        yield self.mkc_parser.parse(response)
+
+    def add_trail(self, response):
+        new_trail = [(response.css('head title::text').get(), response.url)]
+        return response.meta.get('trail', []) + new_trail
