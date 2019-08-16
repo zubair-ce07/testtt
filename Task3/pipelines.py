@@ -7,9 +7,9 @@ class RequiredProductFields(object):
                        'description', 'care', 'image_urls', 'skus']
 
     def process_item(self, item, spider):
-        for field in self.required_fields:
-            if not item.get(field):
-                raise DropItem(f"Missing field: {field} in {item}")
+        missing_fields = [field for field in self.required_fields if not item.get(field)]
+        if (missing_fields):
+            raise DropItem(f"Missing fields: {missing_fields} in {item}")
         return item
 
 class SetItemPrice(object):

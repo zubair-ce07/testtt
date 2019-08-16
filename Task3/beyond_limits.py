@@ -13,9 +13,8 @@ class BeyondLimitsSpider(scrapy.Spider):
     def parse(self, response):
 
         links = response.css(".bb_catnav--list a::attr(href)")
-        for link in links:
-            if self.is_url_valid(link.get()):
-                yield response.follow(link, self.parse_category)
+        requests = [response.follow(link, self.parse_category) for link in links if self.is_url_valid(link.get())]
+        return requests
 
     def parse_category(self, response):
         next_page = response.css(".bb_pagination--item.next::attr(href)").get()
@@ -95,3 +94,4 @@ class BeyondLimitsSpider(scrapy.Spider):
                     sku["privious_prices"] = old_price
                 skus[f"{color}_{size}"] = sku
         return skus
+
