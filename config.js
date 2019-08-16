@@ -17,11 +17,9 @@ exports.config = {
     specs: ['./specs/spec.js'],
     jasmineNodeOpts: {
         isVerbose: true,
-        //defaultTimeoutInterval: 30000
     },
     onPrepare: function () {
         browser.ignoreSynchronization = true;
         browser.manage().window().maximize();
-        //browser.manage().timeouts().implicitlyWait(5000);
     }
 };
