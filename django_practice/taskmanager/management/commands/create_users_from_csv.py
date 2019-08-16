@@ -25,7 +25,6 @@ class Command(BaseCommand):
 
     @transaction.atomic
     def handle(self, *args, **options):
-        filepath = ''
         try:
             filepath = options.get('file')
             if not filepath:  # if no argument is passed
