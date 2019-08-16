@@ -153,4 +153,5 @@ def login_user(request):
         if user:
             login(request, user)
             return redirect('task_index')
-    return render(request, 'registration/login.html')
+        messages.error(request, message='username/email or password is incorrect')
+        return redirect('login')
