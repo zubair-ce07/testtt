@@ -27,7 +27,7 @@ def parse_arguments():
     return parser.parse_args(sys.argv[1:])
 
 
-class FakharConcurrentSpider:
+class ConcurrentSpider:
     def __init__(self, arguments):
         self._download_delay = arguments.delay
         self._urls_to_visit = arguments.number_urls_visit
@@ -154,7 +154,7 @@ class FakharConcurrentSpider:
         await client.close()
 
 
-class FakharParallelSpider:
+class ParallelSpider:
     def __init__(self, arguments):
         self._download_delay = arguments.delay
         self._urls_to_visit = arguments.number_urls_visit
@@ -256,7 +256,7 @@ def main():
     start = time.time()
     # ----- CONCURRERNT SPIDER ---------#
     loop = asyncio.get_event_loop()
-    spider = FakharConcurrentSpider(arguments)
+    spider = ConcurrentSpider(arguments)
     loop.run_until_complete(spider.concurrent_call(loop))
     loop.stop()
     end = time.time()
@@ -269,7 +269,7 @@ def main():
 
     start = time.time()
     # ----- PARALLEL SPIDER ---------#
-    spider = FakharParallelSpider(arguments)
+    spider = ParallelSpider(arguments)
     # --------------- Making Tasks for requesting web page -r times specified by user ------------------#
     spider.make_requests("https://www.target.com"),
     end = time.time()
