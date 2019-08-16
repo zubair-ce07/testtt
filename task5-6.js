@@ -1,103 +1,103 @@
-describe('kayak website', function() {
-	beforeEach (function(){
-		browser.waitForAngularEnabled(false);
-		browser.get('https://www.kayak.com/');
-		global.EC = protractor.ExpectedConditions;
+describe('kayak website', function () {
+    beforeEach(function () {
+        browser.waitForAngularEnabled(false);
+        browser.get(browser.params.kayakSiteLink);
+        global.EC = protractor.ExpectedConditions;
 
-	});
+    });
 
-	function openLink(link){
-		var link = element(by.linkText(link));
-    	browser.wait(EC.visibilityOf(link),15000);
-    	link.click();
-	}
-	
-  	it('should display hotel reviews and rates: Step 5-6', function() {
+    function openLink(link) {
+        var link = element(by.linkText(link));
+        browser.wait(EC.visibilityOf(link), 15000);
+        link.click();
+    }
 
-  		openLink('Hotels');
+    it('should display hotel reviews and rates: Step 5-6', function () {
+
+        openLink(browser.params.hotels);
 
 
-  		var originField = element.all(by.css("[id *= location-display]")).first().click()
-  		browser.wait(EC.visibilityOf(originField),7000);
-  		//set the origin
+        var originField = element.all(by.css("[id *= location-display]")).first().click()
+        browser.wait(EC.visibilityOf(originField), 7000);
+        //set the origin
 
-		var originText = element.all(by.css("[id *= textInputWrapper]")).first().element(by.tagName('input'));
-		browser.wait(EC.visibilityOf(originText),7000);
-		originText.sendKeys("BCN");
-		//select the origin
+        var originText = element.all(by.css("[id *= textInputWrapper]")).first().element(by.tagName('input'));
+        browser.wait(EC.visibilityOf(originText), 7000);
+        originText.sendKeys(browser.params.bcnKeys);
+        //select the origin
 
-  		var originList = element.all(by.css("[id *= location-smarty-content]")).first();
+        var originList = element.all(by.css("[id *= location-smarty-content]")).first();
 
-  		expect((originList).isPresent()).toBe(true);
-  		
-  		browser.wait(EC.elementToBeClickable(originList),5000);
+        expect((originList).isPresent()).toBe(true);
 
-  		originList.all(by.tagName('li')).first().click();
+        browser.wait(EC.elementToBeClickable(originList), 5000);
 
-  		//press the search button
+        originList.all(by.tagName('li')).first().click();
 
-  		var searchBtn = element(by.css("[id$=-formGridSearchBtn]")).element(by.tagName('button'));
-  		searchBtn.click().then( function() {
+        //press the search button
 
-  			// check the result set
-	  		var resultsContainer = element(by.css("[id = searchResultsList]"));
-	  		browser.wait(EC.presenceOf(resultsContainer),10000);
-			
-			var resultbox = element(by.css("[class *= normalResults]"));
-			browser.wait(EC.presenceOf(resultbox),10000);
+        var searchBtn = element(by.css("[id$=-formGridSearchBtn]")).element(by.tagName('button'));
+        searchBtn.click().then(function () {
 
-			var results = resultsContainer.all(by.css("[class*=Base-Results-HorizonResult]"));
-			browser.wait(EC.presenceOf(results),10000);
-			
-			// select hotel and check
-			var hotel = results.first();
-			// click the first option
+            // check the result set
+            var resultsContainer = element(by.css("[id = searchResultsList]"));
+            browser.wait(EC.presenceOf(resultsContainer), 10000);
 
-			hotel.click().then( function() {
+            var resultbox = element(by.css("[class *= normalResults]"));
+            browser.wait(EC.presenceOf(resultbox), 10000);
 
-				//check the details section
+            var results = resultsContainer.all(by.css("[class*=Base-Results-HorizonResult]"));
+            browser.wait(EC.presenceOf(results), 10000);
 
-				var detailsCon = element.all(by.css("[id*=detailsWrapper]")).first();
-				browser.wait(EC.visibilityOf(detailsCon),6000);
+            // select hotel and check
+            var hotel = results.first();
+            // click the first option
 
-				expect((detailsCon).isPresent()).toBe(true);
+            hotel.click().then(function () {
 
-				//Step 5: check the reviews in review tab
+                //check the details section
 
-				var reviewTab = detailsCon.all(by.css("[id*=reviews]")).first();
-				browser.wait(EC.visibilityOf(reviewTab),7500);
+                var detailsCon = element.all(by.css("[id*=detailsWrapper]")).first();
+                browser.wait(EC.visibilityOf(detailsCon), 6000);
 
-				expect((reviewTab).isPresent()).toBe(true);
+                expect((detailsCon).isPresent()).toBe(true);
 
-				reviewTab.click().then(function(){
+                //Step 5: check the reviews in review tab
 
-					var reviewContainer = element.all(by.css("[id*=reviewsContainer]")).first();
-					browser.wait(EC.visibilityOf(reviewContainer),3000);
+                var reviewTab = detailsCon.all(by.css("[id*=reviews]")).first();
+                browser.wait(EC.visibilityOf(reviewTab), 7500);
 
-					expect((reviewContainer).isPresent()).toBe(true);
+                expect((reviewTab).isPresent()).toBe(true);
 
-				});
+                reviewTab.click().then(function () {
 
-				//Step 6: check the rates in rate tab
+                    var reviewContainer = element.all(by.css("[id*=reviewsContainer]")).first();
+                    browser.wait(EC.visibilityOf(reviewContainer), 3000);
 
-				var ratesTab = detailsCon.all(by.css("[id*=rates]")).first();
-				browser.wait(EC.visibilityOf(ratesTab),6000);
+                    expect((reviewContainer).isPresent()).toBe(true);
 
-				expect((ratesTab).isPresent()).toBe(true);
+                });
 
-				ratesTab.click().then(function(){
+                //Step 6: check the rates in rate tab
 
-					var ratesContainer = element.all(by.css("[id*=ratesContainer]")).first();
-					browser.wait(EC.visibilityOf(ratesContainer),4000);
+                var ratesTab = detailsCon.all(by.css("[id*=rates]")).first();
+                browser.wait(EC.visibilityOf(ratesTab), 6000);
 
-					expect((ratesContainer).isPresent()).toBe(true);
+                expect((ratesTab).isPresent()).toBe(true);
 
-				});	
-				
-			});
+                ratesTab.click().then(function () {
 
-		});
+                    var ratesContainer = element.all(by.css("[id*=ratesContainer]")).first();
+                    browser.wait(EC.visibilityOf(ratesContainer), 4000);
 
-  	});	
-  	
+                    expect((ratesContainer).isPresent()).toBe(true);
+
+                });
+
+            });
+
+        });
+
+    });
+
 });

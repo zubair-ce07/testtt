@@ -1,25 +1,23 @@
 exports.config = {
-	seleniumAddress: 'http://localhost:4444/wd/hub',
-	specs: ['task1.js'],
-	capabilities: {
-	    browserName: 'chrome',
-	    chromeOptions: {
-	        args: [
-	            '--start-maximized'//,'--headless'
-	        ]
-	    }
-	},
-	framework: 'jasmine',
-
-	//Also add jasmine node options.
-
-	jasmineNodeOpts: {
-
-	    defaultTimeoutInterval: 30000,
-
-
-	},
-	params: {
-    	hotleLinkTitle: 'Hotels: Find Cheap Hotel Deals & Discounts - KAYAK'
-  	}
+    seleniumAddress: 'http://localhost:4444/wd/hub',
+    specs: ['task1.js'],
+    capabilities: {
+        browserName: 'chrome',
+        chromeOptions: {
+            args: [
+                '--start-maximized','--headless'
+            ]
+        }
+    },
+    framework: 'jasmine',
+    jasmineNodeOpts: {
+        defaultTimeoutInterval: 30000,
+    },
+    params: {
+        kayakSiteLink : 'https://www.kayak.com/',
+        hotels : 'Hotels',
+        bcnKeys : 'BCN',
+        hotleLinkTitle: 'Hotels: Find Cheap Hotel Deals & Discounts - KAYAK',
+        guestFieldText: '1 room, 2 guests'
+    }
 };

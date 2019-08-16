@@ -1,96 +1,96 @@
-describe('kayak website', function() {
-	beforeEach (function(){
-		browser.waitForAngularEnabled(false);
-		browser.get('https://www.kayak.com/');
-		global.EC = protractor.ExpectedConditions;
+describe('kayak website', function () {
+    beforeEach(function () {
+        browser.waitForAngularEnabled(false);
+        browser.get(browser.params.kayakSiteLink);
+        global.EC = protractor.ExpectedConditions;
 
-	});
+    });
 
-	function openLink(link){
-		var link = element(by.linkText(link));
-    	browser.wait(EC.visibilityOf(link),15000);
-    	link.click();
-	}
-	
-  	it('should display hotel details and map: Step 3-4', function() {
+    function openLink(link) {
+        var link = element(by.linkText(link));
+        browser.wait(EC.visibilityOf(link), 15000);
+        link.click();
+    }
 
-  		openLink('Hotels');
+    it('should display hotel details and map: Step 3-4', function () {
 
-  		var originField = element.all(by.css("[id *= location-display]")).first().click()
-  		browser.wait(EC.visibilityOf(originField),7000);
-  		//set the origin
+        openLink(browser.params.hotels);
 
-		var originText = element.all(by.css("[id *= textInputWrapper]")).first().element(by.tagName('input'));
-		browser.wait(EC.visibilityOf(originText),7000);
-		originText.sendKeys("BCN");
-		//select the origin
+        var originField = element.all(by.css("[id *= location-display]")).first().click()
+        browser.wait(EC.visibilityOf(originField), 7000);
+        //set the origin
 
-  		var originList = element.all(by.css("[id *= location-smarty-content]")).first();
+        var originText = element.all(by.css("[id *= textInputWrapper]")).first().element(by.tagName('input'));
+        browser.wait(EC.visibilityOf(originText), 7000);
+        originText.sendKeys(browser.params.bcnKeys);
+        //select the origin
 
-  		expect((originList).isPresent()).toBe(true);
-  		
-  		browser.wait(EC.elementToBeClickable(originList),5000);
+        var originList = element.all(by.css("[id *= location-smarty-content]")).first();
 
-  		originList.all(by.tagName('li')).first().click();
+        expect((originList).isPresent()).toBe(true);
 
-  		//press the search button
+        browser.wait(EC.elementToBeClickable(originList), 5000);
 
-  		var searchBtn = element(by.css("[id$=-formGridSearchBtn]")).element(by.tagName('button'));
-  		searchBtn.click().then( function() {
+        originList.all(by.tagName('li')).first().click();
 
-  			// check the result set
-	  		var resultsContainer = element(by.css("[id = searchResultsList]"));
-	  		browser.wait(EC.presenceOf(resultsContainer),10000);
-			
-			var resultbox = element(by.css("[class *= normalResults]"));
-			browser.wait(EC.presenceOf(resultbox),10000);
+        //press the search button
 
-			var results = resultsContainer.all(by.css("[class*=Base-Results-HorizonResult]"));
-			browser.wait(EC.presenceOf(results),10000);
+        var searchBtn = element(by.css("[id$=-formGridSearchBtn]")).element(by.tagName('button'));
+        searchBtn.click().then(function () {
 
-			// select hotel and check
-			var hotel = results.first();
-			// click the first option
+            // check the result set
+            var resultsContainer = element(by.css("[id = searchResultsList]"));
+            browser.wait(EC.presenceOf(resultsContainer), 10000);
 
-			hotel.click().then( function() {
+            var resultbox = element(by.css("[class *= normalResults]"));
+            browser.wait(EC.presenceOf(resultbox), 10000);
 
-				//check the details section
+            var results = resultsContainer.all(by.css("[class*=Base-Results-HorizonResult]"));
+            browser.wait(EC.presenceOf(results), 10000);
 
-				var detailsCon = element.all(by.css("[id*=detailsWrapper]")).first();
-				browser.wait(EC.visibilityOf(detailsCon),6000);
+            // select hotel and check
+            var hotel = results.first();
+            // click the first option
 
-				expect((detailsCon).isPresent()).toBe(true);
+            hotel.click().then(function () {
 
-				//check the photos section
+                //check the details section
 
-				var photosCon = element.all(by.css("[class*=col-photos]")).first();
-				browser.wait(EC.visibilityOf(photosCon),7000);
+                var detailsCon = element.all(by.css("[id*=detailsWrapper]")).first();
+                browser.wait(EC.visibilityOf(detailsCon), 6000);
 
-				expect((photosCon).isPresent()).toBe(true);
+                expect((detailsCon).isPresent()).toBe(true);
 
-				//Step 4: check the map in map tab
+                //check the photos section
 
-				var mapTab = detailsCon.all(by.css("[id*=map]")).first();
-				browser.wait(EC.presenceOf(mapTab),7000);
+                var photosCon = element.all(by.css("[class*=col-photos]")).first();
+                browser.wait(EC.visibilityOf(photosCon), 7000);
 
-				expect((mapTab).isPresent()).toBe(true);
+                expect((photosCon).isPresent()).toBe(true);
 
-				mapTab.click().then(function(){
+                //Step 4: check the map in map tab
 
-					var mapContainer = element.all(by.css("[id*=mapContainer]")).first();
-					browser.wait(EC.visibilityOf(mapContainer),15000);
+                var mapTab = detailsCon.all(by.css("[id*=map]")).first();
+                browser.wait(EC.presenceOf(mapTab), 7000);
 
-					var map = mapContainer.all(by.css("[class*=gm-style]")).first();
-					browser.wait(EC.visibilityOf(map),10000);
+                expect((mapTab).isPresent()).toBe(true);
 
-					expect((map).isPresent()).toBe(true);
+                mapTab.click().then(function () {
+
+                    var mapContainer = element.all(by.css("[id*=mapContainer]")).first();
+                    browser.wait(EC.visibilityOf(mapContainer), 15000);
+
+                    var map = mapContainer.all(by.css("[class*=gm-style]")).first();
+                    browser.wait(EC.visibilityOf(map), 10000);
+
+                    expect((map).isPresent()).toBe(true);
 
 
-				});
-				
-			});			
-		});
+                });
 
-  	});	
-  	
+            });
+        });
+
+    });
+
 });
