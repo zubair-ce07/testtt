@@ -10,6 +10,21 @@ class BeyondLimitsSpider(scrapy.Spider):
     allowed_domains = ['beyondlimits.com']
     start_urls = ['https://www.beyondlimits.com/']
 
+    def parse(self, response):
+
+        links = response.css(".bb_catnav--list a::attr(href)")
+        for link in links:
+            if self.is_url_valid(link.get()):
+                yield response.follow(link, self.parse_category)
+
+    def parse_category(self, response):
+        next_page = response.css(".bb_pagination--item.next::attr(href)").get()
+        products = response.css(".bb_product--link.bb_product--imgsizer::attr(href)").getall()
+        for product in products:
+            yield response.follow(product, self.parse_product)
+        if next_page:
+            yield response.follow(next_page, self.parse_category)
+
     def parse_product(self, response):
         product_item = Product()
         product_item['name'] = response.css(".bb_art--title::text").get()
@@ -33,16 +48,15 @@ class BeyondLimitsSpider(scrapy.Spider):
         return description
 
     def get_gender(self, response):
-        category = ''.join(self.get_category(response))
+        category = ' '.join(self.get_category(response))
         for gender in self.possible_genders:
-            if gender in category:
+            if gender.lower() in category.lower():
                 return gender
 
     def get_category(self, response):
         categories = response.css(".bb_breadcrumb--item span::text, .bb_breadcrumb--item strong::text").getall()
         if categories:
-            del categories[0]
-        return categories
+            return categories[1:]
 
     def get_care(self, response):
         description_list = response.css("#description li::text").getall()
@@ -81,19 +95,3 @@ class BeyondLimitsSpider(scrapy.Spider):
                     sku["privious_prices"] = old_price
                 skus[f"{color}_{size}"] = sku
         return skus
-
-    def parse(self, response):
-
-        links = response.css(".bb_catnav--list a::attr(href)")
-        for link in links:
-            if self.is_url_valid(link.get()):
-                yield response.follow(link, self.parse_category)
-
-    def parse_category(self, response):
-        next_page = response.css(".bb_pagination--item.next::attr(href)").get()
-        products = response.css(".bb_product--link.bb_product--imgsizer::attr(href)").getall()
-        for product in products:
-            yield response.follow(product, self.parse_product)
-        if next_page:
-            yield response.follow(next_page, self.parse_category)
-

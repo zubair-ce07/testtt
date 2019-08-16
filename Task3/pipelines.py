@@ -14,14 +14,8 @@ class RequiredProductFields(object):
 
 class SetItemPrice(object):
     def process_item(self, item, spider):
-        skus = []
-        item_sku = item['skus']
-        for id in item_sku:
-            sku = item_sku[id]
-            sku['id'] = id
-            skus.append(sku)
-        item['skus'] = skus
-        item['price'] = min([x['price'] for x in skus])
-        item['currency'] = skus[0]['currency']
+        item['skus'] = [dict(sku, id=id) for (id, sku) in item['skus'].items()]
+        item['price'] = min([x['price'] for x in item['skus']])
+        item['currency'] = item['skus'][0]['currency']
         return item
 
