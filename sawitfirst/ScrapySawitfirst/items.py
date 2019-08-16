@@ -13,5 +13,6 @@ class Item(scrapy.Item):
     image_urls = scrapy.Field()
     skus = scrapy.Field()
     price = scrapy.Field()
-    old_price = scrapy.Field()
+    previous_prices = scrapy.Field()
     currency = scrapy.Field()
+

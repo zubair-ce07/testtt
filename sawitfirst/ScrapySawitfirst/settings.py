@@ -10,3 +10,4 @@ DOWNLOAD_DELAY = 0.25
 ITEM_PIPELINES = {
     'ScrapySawitfirst.pipelines.DuplicatesPipeline': 0,
 }
+
