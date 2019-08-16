@@ -77,14 +77,16 @@ let HotelSearchResultPage = function() {
 
     this.getTabId = function(tabName) {
         let tabId = '';
-        if(tabName === 'map') {
-            tabId = 'map'
-        }
-        else if (tabName === 'review') {
-            tabId = 'reviews';
-        }
-        else if (tabName === 'rates') {
-            tabId = 'rates'
+        switch(tabName) {
+            case 'map':
+                tabId = 'map';
+                break;
+            case 'review':
+                tabId = 'reviews';
+                break;
+            case 'rates':
+                tabId = 'rates';
+                break;
         }
         return tabId;
     };
