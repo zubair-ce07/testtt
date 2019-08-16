@@ -1,197 +1,68 @@
-var utils = require('./../utils/common');
+let HotelPage = function() {
 
-var HotelPage = function() {
-    
-    this.getHotelPageInfo = function() {
+    this.getHotelPageInfo = () => {
         return {
-            singleHotelClass: ".resultWrapper",
-            originDropdownSelector: "div[id$=-location-smartbox-dropdown]",
-            searchResultSelector: "div[id=searchResultsList]",
-            mapContentSelector: ".Hotels-Results-InlineTab.Hotels-Results-InlineMap",
-            reviewSelector: ".Hotels-Results-InlineTab.Hotels-Results-InlineReviews",
-            ratesSelector: ".Hotels-Results-InlineTab.Hotels-Results-InlineRates",
-            goToMapSelector: ".Hotels-Results-HotelRightRailMap.open"
+            kayakPageUrl: "https://www.kayak.com/",
+            hotelPageUrl: "https://www.kayak.com/hotels",
+            originSearchKeyword: "BCN",
+            guestFieldText: "1 room, 2 guests",
+            searchBtnSelector: "div[id$=-formGridSearchBtn]",
+        }
+    };
+
+    this.openHomePage = () => {
+        browser.get(this.getHotelPageInfo().kayakPageUrl);
+    };
+
+    this.clickHotelsPage = async () => {
+        const link = element(by.linkText("Hotels"));
+        await link.click();
+    };
+
+    this.isHotelPageDisplayed = async() => {
+        const currentPageURL = await browser.getCurrentUrl();
+        return currentPageURL === this.getHotelPageInfo().hotelPageUrl;
+    };
+
+    this.getOriginField = () => {
+        return element(by.css("div[id$=-fieldGridLocationCol]")).element(by.css("div[id$=-location-display]"));
+    };
+
+    this.getGuestField = () => {
+        return element(by.css("div[id$=-roomsGuestsAboveForm]")).element(by.css(".js-label"));
+    };
+
+    this.getDateFields = () => {
+        let datepicker = element(by.css("div[id*=-fieldGridDatePickerCol]"));
+        if(datepicker.isPresent()) {
+            datepicker = datepicker.element(by.css("div[id$=-dateRangeInput-display]"));
+        }
+        const startDate = datepicker.element(by.css("div[id$=-dateRangeInput-display-start-inner]"));
+        const endDate = datepicker.element(by.css("div[id$=-dateRangeInput-display-end-inner]"));
+        return {
+            startDate,
+            endDate
         };
     };
 
-    this.waitForOriginsListPresence = function() {
-        const originDDSelector = this.getHotelPageInfo().originDropdownSelector;
-        utils.waitForElementPresence(originDDSelector, 10000, 'Error! Unable to load hotel result page');
-    }
-
-    this.getHotelSearchResult = function() {
-        return element.all(by.css(this.getHotelPageInfo().singleHotelClass));
-    };
-
-    this.waitForSearchCompletion = function() {
-        var EC = protractor.ExpectedConditions;
-        browser.wait(EC.visibilityOf(element(by.css('.resultsContainer')).element(by.css('.finished'))), 10000, 'Error! Unable to load hotels list in selected origin');
-        utils.waitForElementPresence(this.getHotelPageInfo().singleHotelClass, 10000, 'Error! Unable to load hotels in selected origin');
-    };
-
-    this.getSearchButton = function() {
-        const searchBtn = element(by.css("div[id$=-formGridSearchBtn]"));
-        return searchBtn;
-    };
-
-    this.getFirstHotelFromList = function() {
-        return this.getHotelSearchResult().first();
-    };
-
-    this.getFirstHotelDetail = function() {
-        return element.all(by.css(this.getHotelPageInfo().searchResultSelector))
-            .first()
-            .all(by.css(this.getHotelPageInfo().singleHotelClass))
-            .first()
-            .all(by.css('.Hotels-Results-InlineDetailTabs'));
-    };
-
-    this.getFirstHotelTitle = function() {
-        return this.getFirstHotelFromList().all(by.css('button[id$=info-title]'));
-    };
-
-    this.getFirstHotelPhotos = function() {
-        try {
-            const firstHotelInfo = this.getFirstHotelDetail();
-            if(firstHotelInfo.isPresent()) {
-                return firstHotelInfo.first().all(by.css('.photoGrid')).first().all(by.css('.col-1-3'));
-            }
-        }
-        catch(err) {
-            utils.handleException('getFirstHotelPhotos'. err.message);
-        }
-    };
-
-    this.getFirstHotelTab = function(tabName) {
-        try {
-            let tabId = '';
-            if(tabName === 'map') {
-                tabId = 'map'
-            } 
-            else if (tabName === 'review') {
-                tabId = 'reviews';
-            }
-            else if (tabName === 'rates') {
-                tabId = 'rates'
-            }
-            const tabSelector = `div[id$=-${tabId}]`;
-            const result = this.getFirstHotelDetail()
-                .first()
-                .all(by.css("div[id$=-tabs]"))
-                .first()
-                .all(by.css(tabSelector))
-                .first();
-
-            return result;
-        }
-        catch(err) {
-            utils.handleException('getFirstHotelTab'. err.message);
-        }
-        return null;
-    };
-
-    this.getGoToMap = function() {
-        const goToMap = element(by.css('.collapsible-wrapper')).element(by.css('div[id$=-map]'));
-        return goToMap;
-    }
-
-    this.getHotelMarkers = function() {
-        return element.all(by.css('.hotel-marker'));
-    }
-
-    this.getSingleHotelMarkers = function(elements, index) {
-        const hotelMarker = elements.get(index);
-        hotelMarker.getText().then(function(txt){
-            console.log(`title of hotel marker hovered: ${txt}`);
+    this.searchOriginsList = () => {
+        const originField = this.getOriginField();
+        originField.click();
+        let inputField = element.all(by.css('div[id$=-location-textInputWrapper]'))
+            .get(0)
+            .element(by.css('input[id$=-location]'));
+        inputField.sendKeys(this.getHotelPageInfo().originSearchKeyword).then(() => {
+            console.log(`origin ${this.getHotelPageInfo().originSearchKeyword} is typed`);
         });
-        return hotelMarker;
-    }
+    };
 
-    this.getVisibleHotelMarker = function(hotelMarkers, index) {
-        hotelMarker = hotelMarkers.get(index);
-        hotelMarker.getLocation().then(function(location) {
-            console.log('location', location.y);
-            if(location.y > 0) {
-                return hotelMarker;
-            }
+    this.selectFirstOriginFromList = () => {
+        const list = element.all(by.css('div[id$=-location-smartbox-dropdown]')).first().all(by.css('li'));
+        list.count().then(function(txt) {
+            console.log('total origins found: ',txt);
         });
-    }
-
-    this.getAllHotelMarkers = function() {
-        return element.all(by.css('.hotel-marker'));
-    }
-
-    this.getSingleHotelMarker = function(hotelMarkers, index) {
-        return hotelMarkers.get(index);
-    }
-
-    
-    this.verifyHotelMarker = function() {
-        // get all hover markers
-        const hotelMarkers = this.getAllHotelMarkers();
-
-        hotelMarkers.count().then(totalMarkers => {
-            console.log(`total hotel markers found: ${totalMarkers}`);
-
-            // get single hover marker
-            hotelMarker = this.getSingleHotelMarker(hotelMarkers, 0);
-            hotelMarker.getCssValue('top').then(function(location) {
-                console.log('location x || y', location);
-
-                 // move mouse over hotel marker
-                browser.actions().mouseMove(hotelMarker).perform().then(function() {
-                    browser.sleep(2000);
-                    hotelMarker.getText().then(function(txt) {
-                    console.log('title of hotel marker hovered:', txt);
-                    });
-
-                    // get hovered hotel marker id
-                    hotelMarker.getAttribute("id").then(function(value) {
-                        if(value) {
-
-                            // verify hover box is visible
-                            const id = value.replace(/^\D+/g, '');
-                            const hoverBoxId = `summaryCard-${id}`;
-                            console.log('hover box id', hoverBoxId);
-                            
-                            const hoveredBox = element(by.css(`div[id=${hoverBoxId}]`));
-                            hoveredBox.getText().then(function(value) {
-                                console.log('hovered element text: ', value);
-                                
-                                // click hovered box
-                                hoveredBox.click().then(function() {
-                                    browser.sleep(10000);
-                                    const hotelDetailWrapperId = "div[id='"+id+"-photo']";
-                                    const selectedHotelImage = element(by.css(hotelDetailWrapperId));
-
-                                    // verify hotel image is present on top left
-                                    expect(selectedHotelImage.isPresent()).toBe(true);
-
-                                    // click view deal button
-                                    const viewDetailBtn = `button[id='${id}-booking-bookButton']`;
-                                    element(by.css(viewDetailBtn)).click().then(function() {
-                                        console.log("view deal button clicked");
-                                        browser.sleep(3000);
-                                        browser.getAllWindowHandles().then(function(handles) {
-                                            browser.switchTo().window(handles[1]).then(function(){
-                                                browser.getCurrentUrl().then(function(url) {
-                                                    console.log('opened deal page url: ', url);
-                                                    expect(url && url.length > 0).toBe(true);
-                                                });
-                                            }); // end >> browser switchTo
-                                        }); // end >> getAllWindowHandles()
-                                    }); // end >> Click view detail buton
-                                }); // end >> hovered box clicked
-                            }); // end >> hovered box >> getText() 
-                        }
-                        else {
-                            console.log('hotel marker not found');
-                        }
-                    }); // end >> get id of hovered hotel marker 
-                }); // end >> move mouse over hotel marker
-            }); // end >> get selected hotel marker "top" location 
-        }); // end >> get hotel markers count
-    }
+        list.first().click();
+    };
 };
 
-module.exports = HotelPage;
+export default HotelPage;
