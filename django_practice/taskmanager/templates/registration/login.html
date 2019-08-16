@@ -5,14 +5,14 @@
 
     <div class="container">
 
-        <form method="POST" action="{% url 'login' %}">
+        <form method="POST" action="{% url 'login_user' %}">
             {% csrf_token %}
 
             {% if form.errors %}
                 <h5 class="text-danger">Username or password incorrect!</h5>
             {% endif %}
 
-            <p>Username:</p>
+            <p>Username/Email:</p>
             <div class="form-group">
                 {{ form.username }}
             </div>

@@ -2,6 +2,8 @@ from __future__ import absolute_import
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
 from django.http import Http404
 from django.shortcuts import render, redirect
 from django.contrib.auth.forms import PasswordChangeForm
@@ -137,3 +139,18 @@ def register(request):
         form = UserRegistrationForm()
     context = {'form': form}
     return render(request, 'registration/register.html', context)
+
+
+def login_user(request):
+    if request.method == "POST":
+        username = request.POST['username']
+        password = request.POST['password']
+        try:
+            validate_email(username)
+            user = authenticate(username=CustomUser.objects.get(email=username), password=password)
+        except ValidationError:
+            user = authenticate(username=username, password=password)
+        if user:
+            login(request, user)
+            return redirect('task_index')
+    return render(request, 'registration/login.html')
