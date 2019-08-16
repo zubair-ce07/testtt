@@ -1,0 +1,104 @@
+describe('kayak website', function() {
+	beforeEach (function(){
+		browser.waitForAngularEnabled(false);
+		browser.get('https://www.kayak.com/');
+		global.EC = protractor.ExpectedConditions;
+
+	});
+
+	function openLink(link){
+		var link = element(by.linkText(link));
+    	browser.wait(EC.visibilityOf(link),15000);
+    	link.click();
+	}
+	
+
+  	it('should display map view and hotle markers: Step 7-8', function() {
+
+  		openLink('Hotels');
+
+  		var originField = element.all(by.css("[id *= location-display]")).first().click()
+  		browser.wait(EC.visibilityOf(originField),7000);
+  		//set the origin
+
+		var originText = element.all(by.css("[id *= textInputWrapper]")).first().element(by.tagName('input'));
+		browser.wait(EC.visibilityOf(originText),7000);
+		originText.sendKeys("BCN");
+
+		//select the origin
+
+  		var originList = element.all(by.css("[id *= location-smarty-content]")).first();
+
+  		expect((originList).isPresent()).toBe(true);
+  		
+  		browser.wait(EC.elementToBeClickable(originList),5000);
+
+  		originList.all(by.tagName('li')).first().click();
+
+  		//press the search button
+
+  		var searchBtn = element(by.css("[id$=-formGridSearchBtn]")).element(by.tagName('button'));
+  		searchBtn.click().then( function() {
+
+  			// check the result set
+	  		var resultsContainer = element(by.css("[id = searchResultsList]"));
+	  		browser.wait(EC.presenceOf(resultsContainer),10000);
+			
+			var resultbox = element(by.css("[class *= normalResults]"));
+			browser.wait(EC.presenceOf(resultbox),10000);
+
+			var results = resultsContainer.all(by.css("[class*=Base-Results-HorizonResult]"));
+			browser.wait(EC.presenceOf(results),10000);
+			//Step 7: Go to map view
+
+			var mapView = element.all(by.css("[class *= filterListContainer]")).first();
+			
+			expect((mapView).isPresent()).toBe(true);
+			var mapBtn = mapView.element(by.css(".showMap"));
+			expect((mapBtn).isPresent()).toBe(true);
+			mapBtn.click().then( function(){
+
+				// check the rail filters
+
+				var mapContainer = element.all(by.css("[class *= rail-map-container")).first();
+				browser.wait(EC.elementToBeClickable(mapContainer),10000);
+				expect((mapContainer).isPresent()).toBe(true);
+
+				//Step 8: mouse hover the hotel markers
+				browser.wait(EC.visibilityOf(mapContainer.element(by.css(".gm-style"))),15000);
+				var hotelMarker = mapContainer.all(by.css(".hotel-marker"));					
+				var selectedHotel = hotelMarker.first();
+
+				hotelMarker.each(function(elem, index) { 
+
+
+					elem.getCssValue("top").then(function(top){
+					
+						if(top > 0) {
+							selectedHotel = element;
+							expect((selectedHotel).isPresent()).toBe(true);	
+							browser.actions().mouseMove(selectedHotel).mouseMove(selectedHotel).perform().then(function(){
+								
+								var hotelId = selectedHotel.getAttribute("id").then(function(value){
+
+									var id = value.substring(value.indexOf('-'), value.length);
+									var cardId= 'summaryCard' + id;
+
+									var summaryCard = element(by.css("[id *= " + cardId + "]"));
+
+									expect((summaryCard).isDisplayed()).toBeTruthy();
+									
+								});
+							
+							});	
+						}	
+
+					});
+				});
+
+			});
+		});
+
+  	});	
+  	
+});

@@ -1,11 +1,11 @@
 exports.config = {
 	seleniumAddress: 'http://localhost:4444/wd/hub',
-	specs: ['assignment1.js'],
+	specs: ['task1.js'],
 	capabilities: {
 	    browserName: 'chrome',
 	    chromeOptions: {
 	        args: [
-	            '--start-maximized','--headless'
+	            '--start-maximized'//,'--headless'
 	        ]
 	    }
 	},
@@ -19,4 +19,7 @@ exports.config = {
 
 
 	},
+	params: {
+    	hotleLinkTitle: 'Hotels: Find Cheap Hotel Deals & Discounts - KAYAK'
+  	}
 };
