@@ -9,14 +9,23 @@ from ..items import StartItem
 class MySpider(CrawlSpider):
 
     name = "derek-rose"
-    start_urls = ['https://www.derek-rose.com/kids/childrens-clothing/kids-pyjamas/kids-pyjamas-paris-16-cotton-jacquard-navy.html'
+    start_urls = ['https://www.derek-rose.com/'
     ]
+    rules = (
+        Rule(
+            LinkExtractor(restrict_css=(".global-nav__item"),allow = ".html"),
+        ),
+        Rule(
+            LinkExtractor(restrict_css=(".category-products"),allow = ".html"),
+            callback='parse_items'
+        ),
+   )
 
-    def parse(self, response):
+    def parse_items(self, response):
 
         items = StartItem()
         items['retailer_sku'] = self.get_retailer_sku(response)
-        items['gender'] = "boy"
+        items['gender'] = self.get_gender(response)
         items['brand'] = "derek rose"
         items['url'] = self.get_url(response)
         items['name'] = self.get_name(response)
@@ -27,17 +36,17 @@ class MySpider(CrawlSpider):
         yield items
 
 
+    def get_gender(self,response):
+
+        return response.xpath('//th[contains(text(),"Gender")]/following-sibling::td/text()').extract_first()
+
     def get_retailer_sku(self,response):
 
         return response.css(".product-details__sku::text").extract_first().split(": ")[1]
 
-    def get_gender(self, response):
-
-        return response.css(".product-details__attrs::text").extract()
-
     def get_url(self, response):
 
-        return self.start_urls
+        return response.url
 
     def get_name(self, response):
 
