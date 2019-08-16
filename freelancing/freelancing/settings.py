@@ -137,3 +137,9 @@ STATICFILES_DIRS = [
 
 # AUTHENTICATION
 LOGIN_URL = "/auth/signin"
+
+AUTH_USER_MODEL = 'accounts.User'
+
+# Assets
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

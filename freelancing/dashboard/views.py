@@ -12,12 +12,15 @@ def index(request):
     if not request.user.profile.description:
         return redirect('settings_profile')
 
+    if request.user.is_seller:
+        return redirect('/seller')
+
     return render(request, 'dashboard/index.html')
 
 
 @login_required()
 def settings(request):
-    return render(request, 'settings/settings.html')
+    return render(request, 'profile/profile_details.html')
 
 
 @login_required()
@@ -28,7 +31,11 @@ def settings_profile(request):
     }
 
     if request.method == "POST":
-        form = ProfileForm(request.POST, instance=request.user.profile)
+        form = ProfileForm(
+            request.POST,
+            request.FILES,
+            instance=request.user.profile
+        )
         if form.is_valid():
             form.save()
 

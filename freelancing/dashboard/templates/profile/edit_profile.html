@@ -9,13 +9,17 @@
   <form
     action="{% url 'settings_profile' %}"
     method="post"
+    enctype="multipart/form-data"
     class="col s6 offset-s3"
   >
     {% csrf_token %}
     <div class="row">
       {% for field in form %}
       <div class="input-field col s12">
+        {% ifnotequal field.label "Profile image" %}
         <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+
+        {% endifnotequal %}
         {{ field }}
         <span class="helper-text">
           {{ field.help_text }}

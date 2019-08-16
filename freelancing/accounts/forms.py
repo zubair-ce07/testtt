@@ -1,7 +1,7 @@
 from django import forms
-from django.contrib.auth.models import User
+from django.conf import settings
 from django.contrib.auth.forms import UserCreationForm
-from .models import Profile
+from .models import Profile, User
 
 
 class SignUpForm(UserCreationForm):
@@ -22,4 +22,4 @@ class SignUpForm(UserCreationForm):
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = Profile
-        fields = ('description', 'country')
+        fields = ('description', 'country', 'profile_image')

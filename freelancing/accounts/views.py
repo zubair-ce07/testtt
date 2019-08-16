@@ -72,3 +72,24 @@ def signout(request):
     """
     logout(request)
     return redirect('/')
+
+
+def change_role(request):
+    role = request.GET['role']
+
+    if role is None:
+        return redirect(request.url)
+
+    if role == "seller":
+        print("CHANGING ROLE TO SELLER")
+        request.user.is_seller = True
+        request.user.is_buyer = False
+        request.user.save()
+
+    if role == "buyer":
+        print("CHANGING ROLE TO BUYER")
+        request.user.is_seller = False
+        request.user.is_buyer = True
+        request.user.save()
+
+    return redirect('/')
