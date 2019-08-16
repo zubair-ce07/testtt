@@ -30,7 +30,7 @@ class Command(BaseCommand):
             filepath = options.get('file')
             if not filepath:  # if no argument is passed
                 raise NoArgumentException()
-            if '.csv' not in filepath:
+            if not filepath.endswith('.csv'):
                 raise InvalidFilePathException()
 
         except NoArgumentException:
@@ -40,34 +40,35 @@ class Command(BaseCommand):
         except FileNotFoundError:
             self.stdout.write('File was not found at the given path. Please provide a valid path')
 
-        with open(filepath) as file_cursor:
-            csv_reader = csv.DictReader(file_cursor)
-            stats = {
-                'created': 0,
-                'updated': 0,
-                'failed': 0
-            }
-            for single_user_data in csv_reader:
-                single_user_data['password'] = make_password(single_user_data.get('password'))
-                try:
-                    user, is_created = CustomUser.objects.update_or_create(**single_user_data)
-                    if is_created:
-                        stats['created'] += 1
-                    else:
-                        stats['updated'] += 1
-                except IntegrityError as dbError:
-                    stats['failed'] += 1
-                    self.stdout.write(
-                        'user creation for user {} failed due to integrity errors'.format(single_user_data))
-                    self.stdout.write('Error: {}'.format(dbError))
-                    self.stdout.write('')
-                except ValidationError as dbError:
-                    stats['failed'] += 1
-                    self.stdout.write(
-                        'user creation for user {} failed due to validations errors'.format(single_user_data))
-                    self.stdout.write('Error: {}'.format(dbError))
-                    self.stdout.write('')
+        else:
+            with open(filepath) as file_cursor:
+                csv_reader = csv.DictReader(file_cursor)
+                stats = {
+                    'created': 0,
+                    'updated': 0,
+                    'failed': 0
+                }
+                for single_user_data in csv_reader:
+                    single_user_data['password'] = make_password(single_user_data.get('password'))
+                    try:
+                        user, is_created = CustomUser.objects.update_or_create(**single_user_data)
+                        if is_created:
+                            stats['created'] += 1
+                        else:
+                            stats['updated'] += 1
+                    except IntegrityError as dbError:
+                        stats['failed'] += 1
+                        self.stdout.write(
+                            'user creation for user {} failed due to integrity errors'.format(single_user_data))
+                        self.stdout.write('Error: {}'.format(dbError))
+                        self.stdout.write('')
+                    except ValidationError as dbError:
+                        stats['failed'] += 1
+                        self.stdout.write(
+                            'user creation for user {} failed due to validations errors'.format(single_user_data))
+                        self.stdout.write('Error: {}'.format(dbError))
+                        self.stdout.write('')
 
-            self.stdout.write('users created: {}'.format(stats['created']))
-            self.stdout.write('users updated: {}'.format(stats['updated']))
-            self.stdout.write('users failed: {}'.format(stats['failed']))
+                self.stdout.write('users created: {}'.format(stats['created']))
+                self.stdout.write('users updated: {}'.format(stats['updated']))
+                self.stdout.write('users failed: {}'.format(stats['failed']))
