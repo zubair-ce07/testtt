@@ -20,7 +20,7 @@ describe('kayak website', function () {
                 newWindowHandle = handles[1]; // this is your new window
                 browser.switchTo().window(newWindowHandle).then(function () {
                     browser.wait(function () {
-                        expect(browser.getCurrentUrl()).toContain("https://www.hotels.com/"); //someURL
+                        expect((browser.getCurrentUrl()).isDisplayed()).toBeTruthy();
                     });
                 });
             });

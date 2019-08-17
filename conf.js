@@ -1,11 +1,11 @@
 exports.config = {
     seleniumAddress: 'http://localhost:4444/wd/hub',
-    specs: ['hotelCardsVerification.js'],
+    specs: ['hotelsSanity.js'],
     capabilities: {
         browserName: 'chrome',
         chromeOptions: {
             args: [
-                '--start-maximized','--headless'
+                '--start-maximized'//,'--headless'
             ]
         }
     },
@@ -19,5 +19,9 @@ exports.config = {
         bcnKeys : 'BCN',
         hotleLinkTitle: 'Hotels: Find Cheap Hotel Deals & Discounts - KAYAK',
         guestFieldText: '1 room, 2 guests'
+    },
+    onPrepare: function () {
+        browser.ignoreSynchronization = true;
+        
     }
 };
