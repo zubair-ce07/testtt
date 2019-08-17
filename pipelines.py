@@ -5,13 +5,15 @@ class OnlyPipeline(object):
 
 
 class DuplicatesPipeline(object):
+    def __init__(self):
+        self.images = []
+
     def process_item(self, item, onlyspider):
-        images = []
         for image in item['image_urls']:
-            if image in images:
+            if image in self.images:
                 pass
             else:
-                images.append(image)
-        item['image_urls'] = images
-        images.clear()
+                self.images.append(image)
+        item['image_urls'] = self.images
+        self.images = []
         return item

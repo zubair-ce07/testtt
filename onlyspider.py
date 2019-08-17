@@ -52,6 +52,17 @@ class OnlySpider(CrawlSpider):
 
         return self.next_request_or_garment(garment)
 
+    def parse_size(self, response):
+        garment = response.meta["garment"]
+        garment["skus"].update(self.get_product_sku(response))
+        garment["image_urls"] += self.get_image_urls(response)
+        return self.next_request_or_garment(garment)
+
+    def parse_color(self, response):
+        garment = response.meta["garment"]
+        self.size_requests(response, garment)
+        return self.next_request_or_garment(garment)
+
     def clean(self, raw_list):
         regex = r"\r\n|\r|\n|\-|\  +"
         return [re.sub(regex, "", string.strip()) for string in raw_list]
@@ -117,6 +128,10 @@ class OnlySpider(CrawlSpider):
 
         return pricing
 
+    def next_request_or_garment(self, garment):
+        sku_reqs = garment["meta"]
+        yield (sku_reqs and sku_reqs.pop()) or garment
+
     def color_requests(self, response, garment):
         color_css = ".swatch__item--unavailable-colorpattern .js-swatch-item-link::attr(data-href)," \
                     " .swatch__item--selectable-colorpattern .js-swatch-item-link::attr(data-href)"
@@ -126,30 +141,21 @@ class OnlySpider(CrawlSpider):
         urls = response.css(color_css).getall()
 
         urls.append(url_query_cleaner(selected_color, ['dwvar_colorPattern', 'pid']))
-        request_urls = self.add_size_requests(response, urls)
+        urls = [add_or_replace_parameters(url, {'format': 'ajax'}) for url in urls]
 
         return [Request(url, callback=self.parse_color, meta={"garment": garment}, dont_filter=True)
-                for url in request_urls]
+                for url in urls]
 
-    def add_size_requests(self, response, urls):
+    def size_requests(self, response, garment):
         request_urls = []
         size_css = ".swatch.size .js-swatch-item .js-swatch-item-link::attr(title)"
         sizes = [size.split(": ", 1)[1] for size in response.css(size_css).getall()]
 
         for size in sizes:
-            request_urls += [add_or_replace_parameters(url, {'dwvar_size': size, 'format': 'ajax'}) for url in urls]
+            request_urls.append(add_or_replace_parameters(response.url, {'dwvar_size': size}))
 
-        return request_urls
-
-    def parse_color(self, response):
-        garment = response.meta["garment"]
-        garment["skus"].update(self.get_product_sku(response))
-        garment["image_urls"] += self.get_image_urls(response)
-        return self.next_request_or_garment(garment)
-
-    def next_request_or_garment(self, garment):
-        sku_reqs = garment["meta"]
-        yield (sku_reqs and sku_reqs.pop()) or garment
+        garment["meta"] += [Request(url, callback=self.parse_size, meta={"garment": garment}, dont_filter=True)
+                            for url in request_urls]
 
     def get_product_sku(self, response):
         skus = {}
@@ -157,27 +163,30 @@ class OnlySpider(CrawlSpider):
 
         color_css = ".swatch__item--selected-colorpattern .js-swatch-item-link::attr(title)," \
                     ".swatch__item--selected.swatch__item--unavailable-colorpattern .js-swatch-item-link::attr(title)"
-        size_sel = response.css(".swatch__item--selected")
+        size_css = ".swatch__item--selected .js-swatch-item-link"
+        out_of_stock_css = ".swatch__item--selected .swatch__item--unavailable .js-swatch-item-link"
 
         common_sku["color"] = response.css(color_css).re_first('Colour: (.+)')
-        common_sku["size"] = size_sel.css(".js-swatch-item-link::attr(title)").re_first('Size: (.+)')
+        common_sku["size"] = response.css(size_css).re_first('Size: (.+)')
 
-        if size_sel.css(".js-swatch-item-link") in size_sel.css(".swatch__item--unavailable .js-swatch-item-link"):
+        if response.css(out_of_stock_css):
             common_sku["out_of_stock"] = True
 
-        if response.css(".swatch.length"):
-            for len_sel in response.css(".swatch.length .js-swatch-item"):
-                sku = common_sku.copy()
-
-                length = len_sel.css('.js-swatch-item-link::attr(title)').get().split(": ", 1)[1]
-                sku["size"] = f"{common_sku['size']}/{length}"
-
-                if len_sel.css('.swatch__item--selectable.swatch__item--unavailable'):
-                    sku["out_of_stock"] = True
-
-                skus[f"{sku['color']}_{sku['size']}"] = sku
-        else:
+        if not response.css(".swatch.length"):
             sku = common_sku.copy()
+            skus[f"{sku['color']}_{sku['size']}"] = sku
+
+            return skus
+
+        for len_sel in response.css(".swatch.length .js-swatch-item"):
+            sku = common_sku.copy()
+
+            length = len_sel.css('.js-swatch-item-link::attr(title)').get().split(": ", 1)[1]
+            sku["size"] = f"{common_sku['size']}/{length}"
+
+            if len_sel.css('.swatch__item--selectable.swatch__item--unavailable'):
+                sku["out_of_stock"] = True
+
             skus[f"{sku['color']}_{sku['size']}"] = sku
 
         return skus
