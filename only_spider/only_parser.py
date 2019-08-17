@@ -1,35 +1,21 @@
 import re
 from datetime import datetime
 
-from scrapy.spiders import CrawlSpider, Rule, Request
-from scrapy.linkextractors import LinkExtractor
+from scrapy.spiders import Spider, Request
 from w3lib.url import url_query_cleaner, add_or_replace_parameter
 
 from only.only_items import OnlyItem
 
 
-class OnlySpider(CrawlSpider):
-    name = "only_spider"
-    allowed_domains = ["only.com"]
-    start_urls = ['https://www.only.com/gb/en/home']
+class OnlyParser(Spider):
+    name = "only_parser"
 
     currency = "GB"
     retailer = "only-ca"
     lang = "en"
     market = "UK"
 
-    listings_css = [
-        ".category-navigation__item",
-        ".js-paging-controls-numbers"
-    ]
-    products_css = [".thumb-link"]
-
-    rules = (
-        Rule(LinkExtractor(restrict_css=listings_css), callback='parse'),
-        Rule(LinkExtractor(restrict_css=products_css), callback='parse_item'),
-    )
-
-    def parse_item(self, response):
+    def parse(self, response):
         garment = OnlyItem()
         garment["name"] = self.get_product_name(response)
         garment["description"] = self.get_product_description(response)
