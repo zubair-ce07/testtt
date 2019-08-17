@@ -18,34 +18,23 @@ describe('kayak website', function () {
 
         openLink(browser.params.hotels);
 
-        // Check Title of the page
         expect(browser.getTitle()).toEqual(browser.params.hotleLinkTitle);
-
-        //Check the guests field is displayed or not
 
         var guestField = element(by.css("[id *= roomsGuestsAboveForm]")).element(by.css("[class *= _idj]"));
 
         expect(guestField.getText()).toBe(browser.params.guestFieldText);
 
-        //Check the origin field is displayed or not
-
         var originField = element(by.css("[id *= location-textInputWrapper]"));
 
         expect((originField).isPresent()).toBe(true);
-
-        //Check the start date field is displayed or not
 
         var startDateField = element(by.css("[id *= dateRangeInput-display-start]"));
 
         expect((startDateField).isPresent()).toBe(true);
 
-        //Check the end date field is displayed or not
-
         var endDateField = element(by.css("[id *= dateRangeInput-display-end]"));
 
         expect((endDateField).isPresent()).toBe(true);
-
-
     });
 
 

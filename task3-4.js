@@ -18,12 +18,10 @@ describe('kayak website', function () {
 
         var originField = element.all(by.css("[id *= location-display]")).first().click()
         browser.wait(EC.visibilityOf(originField), 7000);
-        //set the origin
 
         var originText = element.all(by.css("[id *= textInputWrapper]")).first().element(by.tagName('input'));
         browser.wait(EC.visibilityOf(originText), 7000);
         originText.sendKeys(browser.params.bcnKeys);
-        //select the origin
 
         var originList = element.all(by.css("[id *= location-smarty-content]")).first();
 
@@ -33,12 +31,9 @@ describe('kayak website', function () {
 
         originList.all(by.tagName('li')).first().click();
 
-        //press the search button
-
         var searchBtn = element(by.css("[id$=-formGridSearchBtn]")).element(by.tagName('button'));
         searchBtn.click().then(function () {
 
-            // check the result set
             var resultsContainer = element(by.css("[id = searchResultsList]"));
             browser.wait(EC.presenceOf(resultsContainer), 10000);
 
@@ -48,20 +43,14 @@ describe('kayak website', function () {
             var results = resultsContainer.all(by.css("[class*=Base-Results-HorizonResult]"));
             browser.wait(EC.presenceOf(results), 10000);
 
-            // select hotel and check
             var hotel = results.first();
-            // click the first option
 
             hotel.click().then(function () {
-
-                //check the details section
 
                 var detailsCon = element.all(by.css("[id*=detailsWrapper]")).first();
                 browser.wait(EC.visibilityOf(detailsCon), 6000);
 
                 expect((detailsCon).isPresent()).toBe(true);
-
-                //check the photos section
 
                 var photosCon = element.all(by.css("[class*=col-photos]")).first();
                 browser.wait(EC.visibilityOf(photosCon), 7000);
@@ -84,7 +73,6 @@ describe('kayak website', function () {
                     browser.wait(EC.visibilityOf(map), 10000);
 
                     expect((map).isPresent()).toBe(true);
-
 
                 });
 
