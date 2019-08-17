@@ -35,30 +35,27 @@ class LouandgreyParser(Spider):
         item['category'] = self.get_categories(response)
         item['retailer_sku'] = self.get_product_id(response)
         item['description'] = self.get_description(response)
+        item['requests'] = self.get_sku_requests(response) + self.get_image_requests(response)
 
-        requests = self.get_sku_requests(response) + self.get_image_requests(response)
-        response.meta['requests'] = requests
-
-        return self.next_request_or_item(item, response)
+        return self.next_request_or_item(item)
 
     def parse_skus(self, response):
         item = response.meta['item']
         item['skus'] = self.get_skus(response)
-        return self.next_request_or_item(item, response)
+        return self.next_request_or_item(item)
 
     def parse_image_urls(self, response):
         item = response.meta['item']
         item['image_urls'] = self.get_image_urls(response)
-        return self.next_request_or_item(item, response)
+        return self.next_request_or_item(item)
 
-    def next_request_or_item(self, item, response):
-        if not(response.meta and response.meta.get('requests')):
+    def next_request_or_item(self, item):
+        if not item.get('requests'):
+            del item['requests']
             return item
 
-        requests = response.meta['requests']
-        request = requests.pop(0)
+        request = item['requests'].pop(0)
         request.meta.setdefault('item', item)
-        request.meta.setdefault('requests', requests)
 
         return request
 
