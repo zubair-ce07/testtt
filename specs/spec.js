@@ -6,24 +6,26 @@ describe('KAYAK App', () => {
     let hotelPage = new hotelPageObject();
     let hotelSearchResultPage = new hotelSearchResultPageObject();
     let mapPage = new mapPageObject();
-    let hotelInfoHoverBox = null;
-    let hotelInfoHoverBoxIdInDOM = null;
+    let mapTabName = "map";
+    let reviewTabName = "review";
+    let ratesTabName = "rates";
+
+    it(" Should open hotels front page", () => {
+        hotelPage.openHomePage();
+        hotelPage.openHotelsPage();
+        expect(hotelPage.isHotelPageDisplayed()).toBe(true);
+    });
 
     it("Should display the origin field", () => {
-        hotelPage.openHomePage();
-        hotelPage.clickHotelsPage();
-        expect(hotelPage.isHotelPageDisplayed()).toBe(true);
         expect(hotelPage.getOriginField().isDisplayed()).toBe(true);
     });
 
     it("Should display the start date field", () => {
-        const { startDate } = hotelPage.getDateFields();
-        expect(startDate.isDisplayed()).toBe(true);
+        expect(hotelPage.getTravelStartDate().isDisplayed()).toBe(true);
     });
 
     it("Should display the end date field", () => {
-        const { endDate } = hotelPage.getDateFields();
-        expect(endDate.isDisplayed()).toBe(true);
+        expect(hotelPage.getTravelEndDate().isDisplayed()).toBe(true);
     });
 
     it("Should display ‘1 room, 2 guests’ in guests field", () => {
@@ -31,14 +33,13 @@ describe('KAYAK App', () => {
     });
 
     it("Should load hotels results page", async () => {
-        await hotelPage.setTextInOriginField('BCN');
-        hotelSearchResultPage.waitForOriginsListPresence();
-        await hotelPage.selectFirstOriginFromOriginsList();
+        await hotelPage.setOriginToBCN();
+        await hotelPage.searchHotels();
+        hotelSearchResultPage.waitForSearchCompletion();
+        expect(hotelSearchResultPage.getHotelSearchResultPage().isDisplayed()).toBe(true);
     });
 
     it("Should display at least 5 hotel results", async () => {
-        await hotelSearchResultPage.clickSearchHotelsButton();
-        hotelSearchResultPage.waitForSearchCompletion();
         const searchResult = hotelSearchResultPage.getHotelSearchResult();
         const hotelsCount = await searchResult.count();
         console.log(`hotels count ${hotelsCount}`);
@@ -46,8 +47,7 @@ describe('KAYAK App', () => {
     });
 
     it("Should display hotel details section", async () => {
-        await hotelSearchResultPage.clickFirstHotelTitle();
-        const hostelDetail = hotelSearchResultPage.getFirstHotelDetail();
+        const hostelDetail = await hotelSearchResultPage.openSingleHotelDetail();
         expect(hostelDetail.isDisplayed()).toBe(true);
     });
 
@@ -58,50 +58,37 @@ describe('KAYAK App', () => {
     });
 
     it("Should display map in ‘Map’ section", async () => {
-        const tabName = 'map';
-        await hotelSearchResultPage.clickSelectedHotelTab(tabName);
-        const mapContent = hotelSearchResultPage.getTabContent(tabName);
-        //const mapCount = await mapContent.count();
+        const mapContent = await hotelSearchResultPage.openTab(mapTabName);
         expect(mapContent.isDisplayed()).toBe(true);
     });
 
     it("Should display reviews in ‘Reviews’ section", async () => {
-        const tabName = 'review';
-        await hotelSearchResultPage.clickSelectedHotelTab(tabName);
-        const reviewContent = hotelSearchResultPage.getTabContent(tabName);
+        const reviewContent = await hotelSearchResultPage.openTab(reviewTabName);
         expect(reviewContent.isDisplayed()).toBe(true);
     });
 
     it("Should display rates in ‘Rates’ section", async () => {
-        const tabName = 'rates';
-        await hotelSearchResultPage.clickSelectedHotelTab(tabName);
-        const ratesContent = hotelSearchResultPage.getTabContent(tabName);
+        const ratesContent = await hotelSearchResultPage.openTab(ratesTabName);
         expect(ratesContent.isDisplayed()).toBe(true);
     });
 
     it("Should display map view", async () => {
-        await hotelSearchResultPage.clickGoToMap();
-        const mapContent = hotelSearchResultPage.getMap();
+        const mapContent = await hotelSearchResultPage.getGoToMap();
         expect(mapContent.isDisplayed()).toBe(true);
     });
 
     it("Should display hotel info", async () => {
-        const hotelMarker = await mapPage.getSingleHotelMarker();
-        await mapPage.moveMouseOverHotelMarker(hotelMarker);
-        hotelInfoHoverBoxIdInDOM = await mapPage.getHotelInfoHoverBoxIdInDOM(hotelMarker);
-        hotelInfoHoverBox = mapPage.getHotelInfoHoverBox(hotelInfoHoverBoxIdInDOM);
-        expect(hotelInfoHoverBox.isDisplayed()).toBe(true);
+        const hotelInfo = await mapPage.getHotelInfo();
+        expect(hotelInfo.isDisplayed()).toBe(true);
     });
 
     it("Should display hotel card on the left side", async () => {
-        await hotelInfoHoverBox.click();
-        const hotelCardImage = mapPage.getHotelCardImage(hotelInfoHoverBoxIdInDOM);
+        const hotelCardImage = await mapPage.getHotelCard();
         expect(hotelCardImage.isDisplayed()).toBe(true);
     });
 
     it("Should open provider page in new tab", async () => {
-        await mapPage.clickViewDealButton(hotelInfoHoverBoxIdInDOM);
-        const dealPageURL = await mapPage.getDealPageURL();
-        expect(dealPageURL && dealPageURL.length > 0).toBe(true);
+        const dealPageURL = await mapPage.openDealPage();
+        expect(dealPageURL).toContain("kayak.com");
     });
 });

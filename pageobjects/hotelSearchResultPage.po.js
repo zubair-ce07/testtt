@@ -7,9 +7,6 @@ import {
 let HotelSearchResultPage = function () {
     this.getHotelSearchPageInfo = () => {
         return {
-            originDropdownSelector: "[id$=-location-smartbox-dropdown]",
-            searchButtonSelector: "[id$=-formGridSearchBtn]",
-            searchButtonSubSelector: ".SeparateIconAndTextButton",
             searchResultListSelector: ".resultsContainer",
             searchResultListSelector2: ".finished",
             singleHotelSelector: ".resultWrapper",
@@ -26,22 +23,6 @@ let HotelSearchResultPage = function () {
         };
     };
 
-    this.waitForOriginsListPresence = () => {
-        const { originDropdownSelector } = this.getHotelSearchPageInfo();
-        const originsListDropDown = getElementByCSS(originDropdownSelector);
-        waitForElementPresence(originsListDropDown, 10000, 'Error! Unable to load hotel result page');
-    };
-
-    this.clickSearchHotelsButton = async () => {
-        const { searchButtonSelector, searchButtonSubSelector } = this.getHotelSearchPageInfo();
-        const searchBtn = element(by.css(searchButtonSelector)).element(by.css(searchButtonSubSelector));
-        await searchBtn.click();
-    };
-
-    this.getHotelSearchResult = () => {
-        return element.all(by.css(this.getHotelSearchPageInfo().singleHotelSelector));
-    };
-
     this.waitForSearchCompletion = () => {
         const { searchResultListSelector, searchResultListSelector2, singleHotelSelector } = this.getHotelSearchPageInfo();
 
@@ -50,6 +31,19 @@ let HotelSearchResultPage = function () {
 
         const hotelsList = getElementByCSS(singleHotelSelector);
         waitForElementPresence(hotelsList, 10000, 'Error! Unable to load hotels in selected origin');
+    };
+
+    this.getHotelSearchResultPage = () => {
+        return getElementByCSS('.Base-Results-ResultsPage');
+    };
+
+    this.getHotelSearchResult = () => {
+        return element.all(by.css(this.getHotelSearchPageInfo().singleHotelSelector));
+    };
+
+    this.openSingleHotelDetail = async () => {
+        await this.clickFirstHotelTitle();
+        return this.getFirstHotelDetail();
     };
 
     this.clickFirstHotelTitle = async () => {
@@ -79,6 +73,26 @@ let HotelSearchResultPage = function () {
         const { singleHotelAllPhotosSelector, singleHotelSinglePhotoSelector } = this.getHotelSearchPageInfo();
         const firstHotelInfo = this.getFirstHotelDetail();
         return firstHotelInfo.all(by.css(singleHotelAllPhotosSelector)).first().all(by.css(singleHotelSinglePhotoSelector));
+    };
+
+    this.openTab = async (tabName) => {
+        await this.clickSelectedHotelTab(tabName);
+        return this.getTabContent(tabName);
+    };
+
+    this.clickSelectedHotelTab = async (tabName) => {
+        const tab = this.getFirstHotelTab(tabName);
+        const tabId = await tab.getAttribute("id");
+        await element(by.css(`[id=${tabId}]`)).click();
+        console.log(`${tabName} tab is clicked"`);
+    };
+
+    this.getTabContent = (tabName) => {
+        const mapContent = element.all(by.css(this.getHotelSearchPageInfo().singleHotelSelector))
+            .first()
+            .all(by.css(this.getTabContentSelector(tabName))).first();
+        waitForElementVisibility(mapContent, 10000, `Timeout Error! selected hotel tab ${tabName} is taking too long to appear`);
+        return mapContent;
     };
 
     this.getTabId = function (tabName) {
@@ -119,19 +133,10 @@ let HotelSearchResultPage = function () {
             .first();
     };
 
-    this.clickSelectedHotelTab = async (tabName) => {
-        const tab = this.getFirstHotelTab(tabName);
-        const tabId = await tab.getAttribute("id");
-        await element(by.css(`[id=${tabId}]`)).click();
-        console.log(`${tabName} tab is clicked"`);
-    };
-
-    this.getTabContent = (tabName) => {
-        const mapContent = element.all(by.css(this.getHotelSearchPageInfo().singleHotelSelector))
-            .first()
-            .all(by.css(this.getTabContentSelector(tabName))).first();
-        waitForElementVisibility(mapContent, 10000, `Timeout Error! selected hotel tab ${tabName} is taking too long to appear`);
-        return mapContent;
+    this.getGoToMap = async () => {
+        await this.clickGoToMap();
+        this.waitForGoToMapVisibility();
+        return getElementByCSS(this.getHotelSearchPageInfo().goToMapSelector);
     };
 
     this.clickGoToMap = async () => {
@@ -140,11 +145,10 @@ let HotelSearchResultPage = function () {
         await goToMap.click();
     };
 
-    this.getMap = () => {
-        const mapContent = element(by.css(this.getHotelSearchPageInfo().goToMapSelector));
+    this.waitForGoToMapVisibility = () => {
+        const mapContent = getElementByCSS(this.getHotelSearchPageInfo().goToMapSelector);
         waitForElementVisibility(mapContent, 10000, `Timeout Error! Large Map is taking too long to appear`);
         console.log('map content displayed');
-        return mapContent;
     };
 };
 

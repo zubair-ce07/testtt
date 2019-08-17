@@ -7,8 +7,24 @@ let mapPage = function () {
         }
     };
 
+    this.setHotelMarkerId = (hotelMarkerId) => {
+        this.hotelMarkerId = hotelMarkerId;
+    };
+
+    this.getHotelMarkerId = () => {
+        return this.hotelMarkerId;
+    };
+
     this.getAllHotelMarkers = () => {
         return element.all(by.css(this.getMapPageInfo().hotelMarkerSelector));
+    };
+
+    this.getHotelInfo = async () => {
+        const hotelMarker = await this.getSingleHotelMarker();
+        await this.moveMouseOverHotelMarker(hotelMarker);
+        const hotelMarkerId = await this.getHotelInfoHoverBoxIdInDOM(hotelMarker);
+        this.setHotelMarkerId(hotelMarkerId);
+        return this.getHotelInfoHoverBox();
     };
 
     this.getSingleHotelMarker = async () => {
@@ -40,22 +56,31 @@ let mapPage = function () {
         return hoverBoxId;
     };
 
-    this.getHotelInfoHoverBox = (hoverBoxId) => {
-        const hoverBoxSelector = `summaryCard-${hoverBoxId}`;
+    this.getHotelInfoHoverBox = () => {
+        const hoverBoxSelector = `summaryCard-${this.getHotelMarkerId()}`;
         return element(by.css(`[id=${hoverBoxSelector}]`));
     };
 
-    this.getHotelCardImage = (hotelInfoHoverBoxId) => {
-        const hotelCardImage = element(by.css(`[id='${hotelInfoHoverBoxId}-photo']`));
+    this.getHotelCard = async () => {
+        await this.getHotelInfoHoverBox().click();
+        return this.getHotelCardImage();
+    };
+
+    this.getHotelCardImage = () => {
+        const hotelCardImage = element(by.css(`[id='${this.getHotelMarkerId()}-photo']`));
         waitForElementPresence(hotelCardImage, 1000, 'Timeout error! Hotel card image is taking too long to appear');
         return hotelCardImage;
     };
 
-    this.clickViewDealButton = async (hotelInfoHoverBoxId) => {
-        const dealBtnSelector = `[id='${hotelInfoHoverBoxId}-booking-bookButton']`;
+    this.openDealPage = async () => {
+        await this.clickViewDealButton();
+        return await this.getDealPageURL();
+    };
+
+    this.clickViewDealButton = async () => {
+        const dealBtnSelector = `[id='${this.getHotelMarkerId()}-booking-bookButton']`;
         const viewDealBtn = element(by.css(dealBtnSelector));
         await viewDealBtn.click();
-        browser.sleep(5000);
     };
 
     this.getDealPageURL = async () => {

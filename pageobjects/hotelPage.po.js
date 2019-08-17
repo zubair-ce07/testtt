@@ -1,3 +1,5 @@
+import { getElementByCSS, waitForElementPresence } from "../utils/common";
+
 let HotelPage = function () {
     this.getHotelPageInfo = () => {
         return {
@@ -15,7 +17,9 @@ let HotelPage = function () {
             datepickerSelector: "[id*=-fieldGridDatePickerCol]",
             datepickerSubSelector: "[id$=-dateRangeInput-display]",
             startDateSelector: "[id$=-dateRangeInput-display-start-inner]",
-            endDateSelector: "[id$=-dateRangeInput-display-end-inner]"
+            endDateSelector: "[id$=-dateRangeInput-display-end-inner]",
+            searchButtonSelector: "[id$=-formGridSearchBtn]",
+            searchButtonSubSelector: ".SeparateIconAndTextButton",
         }
     };
 
@@ -23,7 +27,7 @@ let HotelPage = function () {
         browser.get(this.getHotelPageInfo().kayakPageUrl);
     };
 
-    this.clickHotelsPage = async () => {
+    this.openHotelsPage = async () => {
         const link = element(by.linkText("Hotels"));
         await link.click();
     };
@@ -43,15 +47,27 @@ let HotelPage = function () {
         return element(by.css(guestFieldSelector)).element(by.css(guestFieldSubSelector));
     };
 
-    this.getDateFields = () => {
-        const { datepickerSelector, datepickerSubSelector, startDateSelector, endDateSelector } = this.getHotelPageInfo();
-        const datepicker = element(by.css(datepickerSelector)).element(by.css(datepickerSubSelector));
-        const startDate = datepicker.element(by.css(startDateSelector));
-        const endDate = datepicker.element(by.css(endDateSelector));
-        return {
-            startDate,
-            endDate
-        };
+    this.getTravelDatePickerField = () => {
+        const { datepickerSelector, datepickerSubSelector } = this.getHotelPageInfo();
+        return element(by.css(datepickerSelector)).element(by.css(datepickerSubSelector));
+    };
+
+    this.getTravelStartDate = () => {
+        const { startDateSelector } = this.getHotelPageInfo();
+        const datepicker = this.getTravelDatePickerField();
+        return datepicker.element(by.css(startDateSelector));
+    };
+
+    this.getTravelEndDate = () => {
+        const { endDateSelector } = this.getHotelPageInfo();
+        const datepicker = this.getTravelDatePickerField();
+        return datepicker.element(by.css(endDateSelector));
+    };
+
+    this.setOriginToBCN = async () => {
+        await this.setTextInOriginField('BCN');
+        this.waitForOriginsListPresence();
+        await this.selectFirstOriginFromOriginsList();
     };
 
     this.setTextInOriginField = async (searchKeyword) => {
@@ -63,11 +79,27 @@ let HotelPage = function () {
         console.log(`origin ${searchKeyword} is typed`);
     };
 
+    this.waitForOriginsListPresence = () => {
+        const { originsListDropdownSelector } = this.getHotelPageInfo();
+        const originsListDropDown = getElementByCSS(originsListDropdownSelector);
+        waitForElementPresence(originsListDropDown, 10000, 'Error! Unable to load hotel result page');
+    };
+
     this.selectFirstOriginFromOriginsList = async () => {
         const list = element.all(by.css(this.getHotelPageInfo().originsListDropdownSelector)).first().all(by.css('li'));
         const originsFound = await list.count();
         console.log('total origins found: ', originsFound);
         await list.first().click();
+    };
+
+    this.searchHotels = async () => {
+        await this.clickSearchHotelsButton();
+    };
+
+    this.clickSearchHotelsButton = async () => {
+        const { searchButtonSelector, searchButtonSubSelector } = this.getHotelPageInfo();
+        const searchBtn = element(by.css(searchButtonSelector)).element(by.css(searchButtonSubSelector));
+        await searchBtn.click();
     };
 };
 
