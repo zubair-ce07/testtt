@@ -1,4 +1,4 @@
-let HotelPage = function() {
+let HotelPage = function () {
     this.getHotelPageInfo = () => {
         return {
             kayakPageUrl: "https://www.kayak.com/",
@@ -28,7 +28,7 @@ let HotelPage = function() {
         await link.click();
     };
 
-    this.isHotelPageDisplayed = async() => {
+    this.isHotelPageDisplayed = async () => {
         const currentPageURL = await browser.getCurrentUrl();
         return currentPageURL === this.getHotelPageInfo().hotelPageUrl;
     };
@@ -55,7 +55,7 @@ let HotelPage = function() {
     };
 
     this.setTextInOriginField = async (searchKeyword) => {
-        const { originInputFieldSelector, originInputFieldSubSelector} = this.getHotelPageInfo();
+        const { originInputFieldSelector, originInputFieldSubSelector } = this.getHotelPageInfo();
         const originField = this.getOriginField();
         await originField.click();
         let inputField = element.all(by.css(originInputFieldSelector)).get(0).element(by.css(originInputFieldSubSelector));
@@ -66,7 +66,7 @@ let HotelPage = function() {
     this.selectFirstOriginFromOriginsList = async () => {
         const list = element.all(by.css(this.getHotelPageInfo().originsListDropdownSelector)).first().all(by.css('li'));
         const originsFound = await list.count();
-        console.log('total origins found: ',originsFound);
+        console.log('total origins found: ', originsFound);
         await list.first().click();
     };
 };

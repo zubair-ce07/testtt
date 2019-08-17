@@ -17,12 +17,12 @@ describe('KAYAK App', () => {
     });
 
     it("Should display the start date field", () => {
-        const {startDate } = hotelPage.getDateFields();
+        const { startDate } = hotelPage.getDateFields();
         expect(startDate.isDisplayed()).toBe(true);
     });
 
     it("Should display the end date field", () => {
-        const {endDate } = hotelPage.getDateFields();
+        const { endDate } = hotelPage.getDateFields();
         expect(endDate.isDisplayed()).toBe(true);
     });
 
@@ -51,13 +51,13 @@ describe('KAYAK App', () => {
         expect(hostelDetail.isDisplayed()).toBe(true);
     });
 
-    it("Should display hotel images in ‘Details’ section", async() => {
+    it("Should display hotel images in ‘Details’ section", async () => {
         const photosCount = await hotelSearchResultPage.getFirstHotelPhotos().count();
         expect(photosCount).toBeGreaterThan(0);
         console.log(`hotel photos count: ${photosCount}`);
     });
 
-    it("Should display map in ‘Map’ section", async() => {
+    it("Should display map in ‘Map’ section", async () => {
         const tabName = 'map';
         await hotelSearchResultPage.clickSelectedHotelTab(tabName);
         const mapContent = hotelSearchResultPage.getTabContent(tabName);
@@ -65,21 +65,21 @@ describe('KAYAK App', () => {
         expect(mapContent.isDisplayed()).toBe(true);
     });
 
-    it("Should display reviews in ‘Reviews’ section", async() => {
+    it("Should display reviews in ‘Reviews’ section", async () => {
         const tabName = 'review';
         await hotelSearchResultPage.clickSelectedHotelTab(tabName);
         const reviewContent = hotelSearchResultPage.getTabContent(tabName);
         expect(reviewContent.isDisplayed()).toBe(true);
     });
 
-    it("Should display rates in ‘Rates’ section", async() => {
+    it("Should display rates in ‘Rates’ section", async () => {
         const tabName = 'rates';
         await hotelSearchResultPage.clickSelectedHotelTab(tabName);
         const ratesContent = hotelSearchResultPage.getTabContent(tabName);
         expect(ratesContent.isDisplayed()).toBe(true);
     });
 
-    it("Should display map view", async() => {
+    it("Should display map view", async () => {
         await hotelSearchResultPage.clickGoToMap();
         const mapContent = hotelSearchResultPage.getMap();
         expect(mapContent.isDisplayed()).toBe(true);
@@ -92,7 +92,7 @@ describe('KAYAK App', () => {
         hotelInfoHoverBox = mapPage.getHotelInfoHoverBox(hotelInfoHoverBoxIdInDOM);
         expect(hotelInfoHoverBox.isDisplayed()).toBe(true);
     });
-    
+
     it("Should display hotel card on the left side", async () => {
         await hotelInfoHoverBox.click();
         const hotelCardImage = mapPage.getHotelCardImage(hotelInfoHoverBoxIdInDOM);

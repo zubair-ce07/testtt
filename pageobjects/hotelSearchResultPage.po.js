@@ -1,10 +1,10 @@
 import {
-        waitForElementPresence,
-        waitForElementVisibility,
-        getElementByCSS
+    waitForElementPresence,
+    waitForElementVisibility,
+    getElementByCSS
 } from './../utils/common';
 
-let HotelSearchResultPage = function() {
+let HotelSearchResultPage = function () {
     this.getHotelSearchPageInfo = () => {
         return {
             originDropdownSelector: "[id$=-location-smartbox-dropdown]",
@@ -28,7 +28,7 @@ let HotelSearchResultPage = function() {
 
     this.waitForOriginsListPresence = () => {
         const { originDropdownSelector } = this.getHotelSearchPageInfo();
-        const originsListDropDown= getElementByCSS(originDropdownSelector);
+        const originsListDropDown = getElementByCSS(originDropdownSelector);
         waitForElementPresence(originsListDropDown, 10000, 'Error! Unable to load hotel result page');
     };
 
@@ -59,7 +59,7 @@ let HotelSearchResultPage = function() {
         const clickedHotelTitle = await titleLink.getText();
         console.log(`hotel title clicked: "${clickedHotelTitle}"`);
 
-        const hotelsSelector= getElementByCSS(this.getHotelSearchPageInfo().singleHotelSelector);
+        const hotelsSelector = getElementByCSS(this.getHotelSearchPageInfo().singleHotelSelector);
         waitForElementPresence(hotelsSelector, 10000, 'Error! Unable to load hotels in selected origin');
     };
 
@@ -81,9 +81,9 @@ let HotelSearchResultPage = function() {
         return firstHotelInfo.all(by.css(singleHotelAllPhotosSelector)).first().all(by.css(singleHotelSinglePhotoSelector));
     };
 
-    this.getTabId = function(tabName) {
+    this.getTabId = function (tabName) {
         let tabId = '';
-        switch(tabName) {
+        switch (tabName) {
             case 'map':
                 tabId = 'map';
                 break;
@@ -97,8 +97,8 @@ let HotelSearchResultPage = function() {
         return tabId;
     };
 
-    this.getTabContentSelector = function(tabName) {
-        if(tabName === 'map') {
+    this.getTabContentSelector = function (tabName) {
+        if (tabName === 'map') {
             return this.getHotelSearchPageInfo().mapContentSelector;
         }
         else if (tabName === 'review') {
@@ -109,7 +109,7 @@ let HotelSearchResultPage = function() {
         }
     };
 
-    this.getFirstHotelTab = function(tabName) {
+    this.getFirstHotelTab = function (tabName) {
         const tabId = this.getTabId(tabName);
         const tabSelector = `[id$=-${tabId}]`;
         return this.getFirstHotelDetail()
@@ -134,7 +134,7 @@ let HotelSearchResultPage = function() {
         return mapContent;
     };
 
-    this.clickGoToMap = async() => {
+    this.clickGoToMap = async () => {
         const { goToMapButtonContainerSelector, goToMapButtonSelector } = this.getHotelSearchPageInfo();
         const goToMap = element(by.css(goToMapButtonContainerSelector)).element(by.css(goToMapButtonSelector));
         await goToMap.click();

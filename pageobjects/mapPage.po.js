@@ -1,6 +1,6 @@
 import { waitForElementPresence } from './../utils/common';
 
-let mapPage = function() {
+let mapPage = function () {
     this.getMapPageInfo = () => {
         return {
             hotelMarkerSelector: ".hotel-marker",
@@ -17,11 +17,11 @@ let mapPage = function() {
         console.log(`total hotel markers found: ${totalHotelMarkers}`);
 
         let hotelMarker = null;
-        for(let markerIndex = 0; markerIndex < totalHotelMarkers; markerIndex++) {
+        for (let markerIndex = 0; markerIndex < totalHotelMarkers; markerIndex++) {
             const selectedMarker = hotelMarkers.get(markerIndex);
             let top = await selectedMarker.getCssValue('top');
-            top = top.replace(/\D/g,'');
-            if(top > 0) {
+            top = top.replace(/\D/g, '');
+            if (top > 0) {
                 hotelMarker = selectedMarker;
                 break;
             }
