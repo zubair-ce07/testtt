@@ -1,6 +1,6 @@
 exports.config = {
     seleniumAddress: 'http://localhost:4444/wd/hub',
-    specs: ['task1.js'],
+    specs: ['hotelCardsVerification.js'],
     capabilities: {
         browserName: 'chrome',
         chromeOptions: {

@@ -11,8 +11,56 @@ describe('kayak website', function () {
         browser.wait(EC.visibilityOf(link), 15000);
         link.click();
     }
+    function verifyMaps(detailsCon) {
+        var mapTab = detailsCon.all(by.css("[id*=map]")).first();
+        browser.wait(EC.presenceOf(mapTab), 7000);
 
-    it('should display hotel details and map: Step 3-4', function () {
+        expect((mapTab).isPresent()).toBe(true);
+
+        mapTab.click().then(function () {
+
+            var mapContainer = element.all(by.css("[id*=mapContainer]")).first();
+            browser.wait(EC.visibilityOf(mapContainer), 15000);
+
+            var map = mapContainer.all(by.css("[class*=gm-style]")).first();
+            browser.wait(EC.visibilityOf(map), 10000);
+
+            expect((map).isPresent()).toBe(true);
+
+        });
+    }
+    function verifyRates(detailsCon) {
+        var ratesTab = detailsCon.all(by.css("[id*=rates]")).first();
+        browser.wait(EC.visibilityOf(ratesTab), 6000);
+
+        expect((ratesTab).isPresent()).toBe(true);
+
+        ratesTab.click().then(function () {
+
+            var ratesContainer = element.all(by.css("[id*=ratesContainer]")).first();
+            browser.wait(EC.visibilityOf(ratesContainer), 4000);
+
+            expect((ratesContainer).isPresent()).toBe(true);
+
+        });
+    }
+    function verifyReviews(detailsCon) {
+        var reviewTab = detailsCon.all(by.css("[id*=reviews]")).first();
+        browser.wait(EC.visibilityOf(reviewTab), 7500);
+
+        expect((reviewTab).isPresent()).toBe(true);
+
+        reviewTab.click().then(function () {
+
+            var reviewContainer = element.all(by.css("[id*=reviewsContainer]")).first();
+            browser.wait(EC.visibilityOf(reviewContainer), 3000);
+
+            expect((reviewContainer).isPresent()).toBe(true);
+
+        });
+    }
+
+    it('should display hotel details, map, rates and reviews: Step 3,4,5,6', function () {
 
         openLink(browser.params.hotels);
 
@@ -57,24 +105,11 @@ describe('kayak website', function () {
 
                 expect((photosCon).isPresent()).toBe(true);
 
-                //Step 4: check the map in map tab
+                verifyMaps(detailsCon);
 
-                var mapTab = detailsCon.all(by.css("[id*=map]")).first();
-                browser.wait(EC.presenceOf(mapTab), 7000);
+                verifyReviews(detailsCon);
 
-                expect((mapTab).isPresent()).toBe(true);
-
-                mapTab.click().then(function () {
-
-                    var mapContainer = element.all(by.css("[id*=mapContainer]")).first();
-                    browser.wait(EC.visibilityOf(mapContainer), 15000);
-
-                    var map = mapContainer.all(by.css("[class*=gm-style]")).first();
-                    browser.wait(EC.visibilityOf(map), 10000);
-
-                    expect((map).isPresent()).toBe(true);
-
-                });
+                verifyRates(detailsCon)
 
             });
         });

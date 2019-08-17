@@ -12,8 +12,53 @@ describe('kayak website', function () {
         link.click();
     }
 
+    function verifyDeals() {
+        var dealBtn = element.all(by.css("[id *= bookButton]")).first();
+        dealBtn.click().then(function () {
+            // Step 10: check the deals in new tab
+            browser.getAllWindowHandles().then(function (handles) {
+                newWindowHandle = handles[1]; // this is your new window
+                browser.switchTo().window(newWindowHandle).then(function () {
+                    browser.wait(function () {
+                        expect(browser.getCurrentUrl()).toContain("https://www.hotels.com/"); //someURL
+                    });
+                });
+            });
+        });
+    }
 
-    it('should display map view and hotle markers: Step 7-8', function () {
+    function selectVisibleHotel(hotelMarker) {
+        var selectedHotel = hotelMarker.first();
+
+        hotelMarker.each(function (elem, index) {
+
+            elem.getCssValue("top").then(function (top) {
+
+                if (top > 0) {
+                    selectedHotel = element;
+                    expect((selectedHotel).isPresent()).toBe(true);
+                    browser.actions().mouseMove(selectedHotel).mouseMove(selectedHotel).perform().then(function () {
+
+                        var hotelId = selectedHotel.getAttribute("id").then(function (value) {
+
+                            var id = value.substring(value.indexOf('-'), value.length);
+                            var cardId = 'summaryCard' + id;
+
+                            var summaryCard = element(by.css("[id *= " + cardId + "]"));
+
+                            expect((summaryCard).isDisplayed()).toBeTruthy();
+
+                        });
+
+                    });
+                }
+
+            });
+        });
+        return selectedHotel;
+    }
+
+    it('should display selected hotle details and provider page: Step 9-10', function () {
 
         openLink(browser.params.hotels);
 
@@ -43,13 +88,14 @@ describe('kayak website', function () {
 
             var results = resultsContainer.all(by.css("[class*=Base-Results-HorizonResult]"));
             browser.wait(EC.presenceOf(results), 10000);
-            //Step 7: Go to map view
+
 
             var mapView = element.all(by.css("[class *= filterListContainer]")).first();
 
             expect((mapView).isPresent()).toBe(true);
             var mapBtn = mapView.element(by.css(".showMap"));
             expect((mapBtn).isPresent()).toBe(true);
+
             mapBtn.click().then(function () {
 
                 var mapContainer = element.all(by.css("[class *= rail-map-container")).first();
@@ -57,38 +103,24 @@ describe('kayak website', function () {
                 expect((mapContainer).isPresent()).toBe(true);
 
                 //Step 8: mouse hover the hotel markers
+
                 browser.wait(EC.visibilityOf(mapContainer.element(by.css(".gm-style"))), 15000);
                 var hotelMarker = mapContainer.all(by.css(".hotel-marker"));
-                var selectedHotel = hotelMarker.first();
+                var selectedHotel = selectVisibleHotel(hotelMarker);
 
-                hotelMarker.each(function (elem, index) {
-                    elem.getCssValue("top").then(function (top) {
+                //Step 9: click the deal btn
 
-                        if (top > 0) {
-                            selectedHotel = element;
-                            expect((selectedHotel).isPresent()).toBe(true);
-                            browser.actions().mouseMove(selectedHotel).mouseMove(selectedHotel).perform().then(function () {
+                browser.actions().mouseMove(selectedHotel).mouseMove(selectedHotel).click().perform().then(function () {
+                    var resultWrapper = element.all(by.css("[class *= resultWrapper]")).first();
+                    browser.wait(EC.visibilityOf(resultWrapper), 10000);
 
-                                var hotelId = selectedHotel.getAttribute("id").then(function (value) {
+                    var itemWrapper = resultWrapper.all(by.css("[id *= mainItemWrapper]")).first();
+                    browser.wait(EC.visibilityOf(itemWrapper), 10000);
 
-                                    var id = value.substring(value.indexOf('-'), value.length);
-                                    var cardId = 'summaryCard' + id;
+                    verifyDeals();
 
-                                    var summaryCard = element(by.css("[id *= " + cardId + "]"));
-
-                                    expect((summaryCard).isDisplayed()).toBeTruthy();
-
-                                });
-
-                            });
-                        }
-
-                    });
                 });
-
             });
         });
-
     });
-
 });
