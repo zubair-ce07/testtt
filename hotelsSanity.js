@@ -19,18 +19,23 @@ describe('Test hotels on kayak website', function () {
 
     it('should check the origin field on hotels page', function () {
 
-        expect(hotelPage.isPresent(hotelPage.originField)).toBe(true);
+        expect(hotelPage.isDisplayed(hotelPage.originField)).toBe(true);
     });
 
     it('should check the start date field on hotels page', function () {
 
-        expect(hotelPage.isPresent(hotelPage.startDateField)).toBe(true);
+        expect(hotelPage.isDisplayed(hotelPage.startDateField)).toBe(true);
     });
 
     it('should check the end date field on hotels page', function () {
 
-        expect(hotelPage.isPresent(hotelPage.endDateField)).toBe(true);
+        expect(hotelPage.isDisplayed(hotelPage.endDateField)).toBe(true);
     });
 
+    it('should verify the count of searched hotels with BCN origin', function () {
+        
+        var resultCount = hotelPage.searchHotels();
+        expect(resultCount).toBeGreaterThanOrEqual(5);
+    });
 
 });
