@@ -1,11 +1,11 @@
 import { Aliases } from './../shared/constants';
 import { expect } from 'chai';
 import { AppHotelPage } from '../pages/hotel.po';
-import { browser, protractor, element, by, $$, ElementArrayFinder, ElementFinder } from 'protractor';
+import { browser,element, by, ElementArrayFinder } from 'protractor';
 import { HotelDetailPage } from '../pages/hotel-detail.po';
+import { browserWaitHandler } from '../shared/utils';
 
 describe('kayak user', () => {
-  browser.manage().window().maximize();
   browser.ignoreSynchronization = true;
   let page : AppHotelPage;
   before(() => {
@@ -33,7 +33,6 @@ describe('kayak user', () => {
 
 
 describe('kayak user', () => {
-  browser.manage().window().maximize();
   browser.ignoreSynchronization = true;
   let page : AppHotelPage;
   let  detailPage : HotelDetailPage ;
@@ -47,7 +46,7 @@ describe('kayak user', () => {
   it('should click the origin field', async () => {
     await page.getOriginInputWrapper().click();
     await page.getOriginInput().sendKeys(Aliases.originSearchKeywork);
-    searchTriggersHandler(page.getOriginDropdown());
+    browserWaitHandler(page.getOriginDropdown());
     page.getOriginDropdown().click();
     page.getSearchButton().click();
     browser.sleep(11000);
@@ -68,7 +67,7 @@ describe('kayak user', () => {
     expect(await detailPage.getMapSection().isDisplayed()).to.be.true;
   });
   it('should click the review tab', async () => {
-    await detailPage.getReviewTabLink().first().click();
+    await detailPage.getReviewTabLink().click();
     // tslint:disable-next-line: no-unused-expression
     expect(await detailPage.getReviewsSection().isDisplayed()).to.be.true;
   });
@@ -77,14 +76,49 @@ describe('kayak user', () => {
     // tslint:disable-next-line: no-unused-expression
     expect(await detailPage.getRatesSection().isDisplayed()).to.be.true;
   });
-  it('should click go to map', async () => {
-    searchTriggersHandler(detailPage.getGoToMapLink());
+});
+
+
+describe('kayak user' , () => {
+  let page : AppHotelPage;
+  let  detailPage : HotelDetailPage;
+  before(async () => {
+    page = new AppHotelPage();
+    detailPage = new HotelDetailPage();
+    browser.waitForAngularEnabled(false);
+    page.navigateToHotel();
+    await page.getOriginInputWrapper().click();
+    await page.getOriginInput().sendKeys(Aliases.originSearchKeywork);
+    browserWaitHandler(page.getOriginDropdown());
+    page.getOriginDropdown().click();
+    page.getSearchButton().click();
+    browser.sleep(5000);
+    browserWaitHandler(detailPage.getGoToMapLink());
     await detailPage.getGoToMapLink().click();
-    expect(await detailPage.getGoToMapSection().getAttribute('class')).to.contain('open');
   });
-  async function searchTriggersHandler ( ele : ElementFinder) : Promise<void> {
-    const expectedCondition = protractor.ExpectedConditions;
-    const clickable = expectedCondition.elementToBeClickable(ele);
-    browser.wait(clickable, 5000);
-  }
+  it('should show the map section' , async () => {
+     expect(await detailPage.getGoToMapSection().getAttribute('class')).to.contain('open');
+ });
+  it('should hover the hotel marker and display summary section', async () => {
+    browserWaitHandler(detailPage.getAllHotelMarkers().get(0));
+    await browser.actions().mouseMove(detailPage.getAllHotelMarkers().get(0)).perform();
+    // tslint:disable-next-line: no-unused-expression
+    expect(await element(by.css('[id*=summaryCard]')).isDisplayed()).to.be.true;
+  });
+  it('should click the hotel marker , click the view deal button' , async () =>  {
+    browserWaitHandler(detailPage.getAllHotelMarkers().get(0));
+    await detailPage.getAllHotelMarkers().get(0).click();
+    const markerId = await detailPage.getAllHotelMarkers().get(0).getAttribute('id');
+    const markerIdSuffix = markerId.split('-')[1];
+    // tslint:disable-next-line: no-unused-expression
+    expect(await element(by.id(markerIdSuffix)).isDisplayed()).to.be.true;
+     // tslint:disable-next-line: no-unused-expression
+    const viewDealBtnId = `${markerIdSuffix}-booking-bookButton`;
+    const btn =  await detailPage.getViewDealButton(viewDealBtnId).click();
+    browser.sleep(10000);
+    const handlers =  await  browser.getAllWindowHandles();
+    browser.switchTo().window(handlers[1]);
+    expect(await browser.getCurrentUrl()).contains(Aliases.hotelsBaseUrl);
+
+  });
 });

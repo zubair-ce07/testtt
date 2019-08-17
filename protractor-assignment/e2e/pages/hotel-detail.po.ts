@@ -34,5 +34,12 @@ export class HotelDetailPage {
     getGoToMapSection () : ElementFinder {
       return element(by.css('[id$=rightRail] .rail-map-container > div'));
     }
+    getAllHotelMarkers () : ElementArrayFinder {
+        return element.all(by.css('.hotel-marker'));
+    }
+    getViewDealButton (viewDealBtnId : string) : ElementFinder {
+        // $('[id$=booking-bookButton]').first().click()
+       return element(by.id(viewDealBtnId));
+    }
 
 }

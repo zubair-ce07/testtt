@@ -2,7 +2,7 @@
 // https://github.com/angular/protractor/blob/master/lib/config.ts
 
 exports.config = {
-    allScriptsTimeout: 55000, // Timeout of each script
+    allScriptsTimeout: 120000, // Timeout of each script
     specs: [
       './e2e/tests/*.e2e-spec.ts'  // pattern for your tests
     ],
@@ -19,7 +19,7 @@ exports.config = {
       reporter: "spec",
       slow: 3000,
       ui: 'bdd',
-      timeout: 550000
+      timeout: 880000
     },
     beforeLaunch: function() { // If you're using type script then you need compiler options
        require('ts-node').register({
@@ -27,6 +27,7 @@ exports.config = {
        });
      },
     onPrepare: function() { // making chai available globally. in your test use `const expect = global['chai'].expect;`
+      browser.manage().window().maximize();
       var chai = require('chai');
       var chaiAsPromised = require("chai-as-promised");
       chai.use(chaiAsPromised);
