@@ -3,12 +3,14 @@ import hotelSearchResultPageObject from './../pageobjects/hotelSearchResultPage.
 import mapPageObject from './../pageobjects/mapPage.po';
 
 describe('KAYAK App', () => {
-    let hotelPage = new hotelPageObject();
-    let hotelSearchResultPage = new hotelSearchResultPageObject();
-    let mapPage = new mapPageObject();
-    let mapTabName = "map";
-    let reviewTabName = "review";
-    let ratesTabName = "rates";
+    const hotelPage = new hotelPageObject();
+    const hotelSearchResultPage = new hotelSearchResultPageObject();
+    const mapPage = new mapPageObject();
+    const tabsName = {
+        map: "map",
+        review: "review",
+        rate: "rates"
+    };
 
     it(" Should open hotels front page", () => {
         hotelPage.openHomePage();
@@ -58,17 +60,17 @@ describe('KAYAK App', () => {
     });
 
     it("Should display map in ‘Map’ section", async () => {
-        const mapContent = await hotelSearchResultPage.openTab(mapTabName);
+        const mapContent = await hotelSearchResultPage.openTab(tabsName.map);
         expect(mapContent.isDisplayed()).toBe(true);
     });
 
     it("Should display reviews in ‘Reviews’ section", async () => {
-        const reviewContent = await hotelSearchResultPage.openTab(reviewTabName);
+        const reviewContent = await hotelSearchResultPage.openTab(tabsName.review);
         expect(reviewContent.isDisplayed()).toBe(true);
     });
 
     it("Should display rates in ‘Rates’ section", async () => {
-        const ratesContent = await hotelSearchResultPage.openTab(ratesTabName);
+        const ratesContent = await hotelSearchResultPage.openTab(tabsName.rate);
         expect(ratesContent.isDisplayed()).toBe(true);
     });
 
