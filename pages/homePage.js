@@ -2,23 +2,23 @@ const moment = require('moment');
 const homePage = function () {
     browser.ignoreSynchronization = true;
     const EC = protractor.ExpectedConditions;
-    this.get = async function() {
-        await browser.get('https://global.momondo.com/flight-search/LON-NYC/2019-08-10/2019-09-10?sort=price_a');
+    this.loadHomePage = async function() {
+        await browser.get('https://global.momondo.com/flight-search/LON-NYC/2019-08-24/2019-09-22?sort=price_a');
     };
-    this.getOriginFieldText = function () {
+    this.getOrigin = function () {
         return element(by.name('origin')).getAttribute('value');
     };
-    this.getDestinationFieldText = function () {
+    this.getDestination = function () {
         return element(by.name('destination')).getAttribute('value');
     };
-    this.getDepartureFieldText = function () {
-        return element(by.xpath("//div[contains(@id,'-dateRangeInput-display-start-inner')]")).getText();
+    this.getDepartureDate = function () {
+        return element(by.css("div[id*='-dateRangeInput-display-start-inner']")).getText();
     };
-    this.getReturnFieldText = function () {
-        return element(by.xpath("//div[contains(@id,'-dateRangeInput-display-end-inner')]")).getText();
+    this.getReturnDate = function () {
+        return element(by.css("div[id*='-dateRangeInput-display-end-inner']")).getText();
     };
-    this.getTravelersFieldText = function () {
-        return element(by.xpath("//a[contains(@id, '-travelers-dialog')]/div[contains(@class,label)]")).getText();
+    this.getTravelers = function () {
+        return element(by.css("a[id*='-travelers-dialog']")).element(by.css('.label')).getText();
     };
     this.isGraphVisible = function () {
         let graphElement = element(by.css('.graph-grid'));
@@ -42,18 +42,18 @@ const homePage = function () {
         return graphElement.count();
     };
     this.selectDateFromCalendar = function () {
-        element(by.xpath("//div[contains(@id,'-dateRangeInput-display-end-inner')]")).click();
-        const newcalendarDate = element(by.css("div[aria-label='September 10']"));
+        element(by.css("div[id*='-dateRangeInput-display-end-inner']")).click();
+        const newCalendarDateElement = element(by.css("div[aria-label='September 10']"));
         // Wait for the calendar to be visible
-        browser.wait(EC.elementToBeClickable(newcalendarDate), 5000);
-        newcalendarDate.click();
+        browser.wait(EC.elementToBeClickable(newCalendarDateElement), 5000);
+        newCalendarDateElement.click();
         // Wait for the Calendar to hide
-        browser.wait(EC.invisibilityOf(newcalendarDate), 5000);
+        browser.wait(EC.invisibilityOf(newCalendarDateElement), 5000);
     };
     this.hoverOverGraphBar = function () {
-        const grapBar = element(by.css("button[data-date='2019-08-11']"));
-        browser.actions().mouseMove(grapBar).perform();
-        const tooltip = grapBar.element(by.css('.bar')).element(by.css('.price-info')).element(by.css('.price-price'));
+        const graphBar = element(by.css("button[data-date='2019-08-29']"));
+        browser.actions().mouseMove(graphBar).perform();
+        const tooltip = graphBar.element(by.css('.bar')).element(by.css('.price-info')).element(by.css('.price-price'));
         // Wait for the tooltip to be visible
         browser.wait(EC.visibilityOf(tooltip),5000);
         return tooltip;
@@ -62,10 +62,8 @@ const homePage = function () {
         const selectedBar = element(by.css('.Button-No-Standard-Style.js-bar.item.selected'));
         // Wait for the selected bar to be visible
         browser.wait(EC.elementToBeClickable(selectedBar), 8000);
-        const pre_selectedDate = await browser.wait(function () {
-            // Getting the pre-selected date
-            return selectedBar.getAttribute('data-date')
-        });
+        // Getting the pre-selected date
+        const pre_selectedDate = selectedBar.getAttribute('data-date');
         // Adding two days in the current selected date
         return moment(pre_selectedDate).add(2, 'days').format('YYYY-MM-DD');
     };
@@ -96,12 +94,12 @@ const homePage = function () {
         return await selectedPriceText.isPresent();
     };
     this.getSearchBtnShown = async function () {
-        const searchBtn = element(by.xpath("//a[contains(@aria-describedby,'-search-dates-description')]"));
+        const searchBtn = element(by.css("a[aria-describedby*='-search-dates-description']"));
         browser.wait(EC.visibilityOf(searchBtn), 5000);
         return await searchBtn.isPresent();
     };
     this.searchTheseDays = function () {
-        const searchTheseDaysButton = element(by.xpath("//a[contains(@aria-describedby,'-search-dates-description')]"));
+        const searchTheseDaysButton = element(by.css("a[aria-describedby*='-search-dates-description']"));
         searchTheseDaysButton.click();
         browser.wait(EC.invisibilityOf(searchTheseDaysButton),5000);
     };
@@ -109,13 +107,13 @@ const homePage = function () {
         // Wait for the Graph to be populated so new data could be loaded
         const graphElement = element.all(by.css('.graph-col'));
         browser.wait(EC.visibilityOf(graphElement.get(1)),5000);
-        const showDetailsBtn = element(by.xpath("//a[contains(@id,'-extra-info-details-link-toggleMore')]"));
+        const showDetailsBtn = element(by.css("a[id*='-extra-info-details-link-toggleMore']"));
         // Wait for the show details Btn to be clickable
         browser.wait(EC.elementToBeClickable(showDetailsBtn),5000);
         showDetailsBtn.click();
     };
     this.getDepartureDateInDetailsPanel = function () {
-        let detailsPanel = element.all(by.xpath("//section[contains(@id,'-details-leg-details')]"));
+        let detailsPanel = element.all(by.css("div[class='resultInner']"));
         detailsPanel = detailsPanel.first();
         // Wait for the deatils drop down to be visible
         browser.wait(EC.visibilityOf(detailsPanel),5000);
@@ -129,7 +127,7 @@ const homePage = function () {
         return await selectedPriceText.isPresent();
     };
     this.isSearchTheseDaysButtonExist = async function () {
-        const selectedPriceText = element(by.xpath("//a[contains(@aria-describedby,'-search-dates-description')]"));
+        const selectedPriceText = element(by.css("a[aria-describedby*='-search-dates-description']"));
         return await selectedPriceText.isPresent();
     };
 

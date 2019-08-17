@@ -4,27 +4,27 @@ describe('Protractor Demo App', function() {
     // To ignore checking the angular app
     browser.ignoreSynchronization = true;
     let SELECTED_DATE = '';
-    momondoHomepage.get();
+    momondoHomepage.loadHomePage();
     // Step 1
     // 1)
     it('Should display ‘London (LON)’ in the origin field', function() {
-        expect(momondoHomepage.getOriginFieldText()).toEqual('London (LON)');
+        expect(momondoHomepage.getOrigin()).toEqual('London (LON)');
     });
     // 2)
     it('Should display ‘New York (NYC)’ in the destination field.', function() {
-        expect(momondoHomepage.getDestinationFieldText()).toEqual('New York (NYC)');
+        expect(momondoHomepage.getDestination()).toEqual('New York (NYC)');
     });
     // 3)
-    it('Should display ‘Sat 8/10’ in the departure date field', function() {
-        expect(momondoHomepage.getDepartureFieldText()).toBe('Sat 8/10');
+    it('Should display ‘Sat 8/24’ in the departure date field', function() {
+        expect(momondoHomepage.getDepartureDate()).toBe('Sat 8/24');
     });
     // 4)
-    it('Should display ‘Tue 9/10’ in the return date field.', function() {
-        expect(momondoHomepage.getReturnFieldText()).toBe('Tue 9/10');
+    it('Should display ‘Sun 9/22’ in the return date field.', function() {
+        expect(momondoHomepage.getReturnDate()).toBe('Sun 9/22');
     });
     // 5)
     it('Should display ‘1 Adult, Economy’ in travelers field', function() {
-        expect(momondoHomepage.getTravelersFieldText()).toBe('1 Adult, Economy');
+        expect(momondoHomepage.getTravelers()).toBe('1 Adult, Economy');
     });
     // 6)
     it('Should display ‘Estimated Price Graph’ below the search form', function() {
@@ -96,7 +96,7 @@ describe('Protractor Demo App', function() {
     });
     // 2)
     it('Should display updated departure date',function () {
-        const departureField = momondoHomepage.getDepartureFieldText();
+        const departureField = momondoHomepage.getDepartureDate();
         // Should match the departure date in search form i.e. Tue M/D with selected date in the bar graph i.e YYYY-MM-DD
         const expectedDate = moment(SELECTED_DATE).format('ddd M/D');
         expect(departureField.getText()).toBe(expectedDate);
