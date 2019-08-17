@@ -1,0 +1,157 @@
+{
+  "users": [
+    {
+      "firstName": "Ali",
+      "lastName": "Azhar",
+      "email": "ali@mail.com",
+      "password": "123",
+      "displayPicture": "https://s3.amazonaws.com/uifaces/faces/twitter/jeffgolenski/128.jpg",
+      "id": 1,
+      "following": {
+        "3": true
+      }
+    },
+    {
+      "email": "tom@mail.com",
+      "password": "123",
+      "firstName": "Tom",
+      "lastName": "Riddle",
+      "displayPicture": "https://s3.amazonaws.com/uifaces/faces/twitter/hugocornejo/128.jpg",
+      "id": 2,
+      "following": {}
+    },
+    {
+      "firstName": "Harry",
+      "lastName": "Potter",
+      "email": "harry@mail.com",
+      "password": "123",
+      "displayPicture": "https://s3.amazonaws.com/uifaces/faces/twitter/gusoto/128.jpg",
+      "id": 3,
+      "following": {}
+    },
+    {
+      "firstName": "Ron",
+      "lastName": "Weasely",
+      "email": "ron@mail.com",
+      "password": "123",
+      "displayPicture": "https://s3.amazonaws.com/uifaces/faces/twitter/aaroni/128.jpg",
+      "id": 4,
+      "following": {}
+    },
+    {
+      "firstName": "Hermoine",
+      "lastName": "Granger",
+      "email": "hermoine@mail.com",
+      "password": "123",
+      "displayPicture": "https://s3.amazonaws.com/uifaces/faces/twitter/mgonto/128.jpg",
+      "id": 5,
+      "following": {}
+    },
+    {
+      "firstName": "Draco",
+      "lastName": "Malfoy",
+      "email": "draco@mail.com",
+      "password": "123",
+      "displayPicture": "https://s3.amazonaws.com/uifaces/faces/twitter/xamorep/128.jpg",
+      "id": 6,
+      "following": {}
+    },
+    {
+      "firstName": "Lord",
+      "lastName": "Voldemort",
+      "email": "lord@mail.com",
+      "password": "123",
+      "displayPicture": "https://s3.amazonaws.com/uifaces/faces/twitter/embrcecreations/128.jpg",
+      "id": 7,
+      "following": {
+        "1": true
+      }
+    }
+  ],
+  "posts": [
+    {
+      "status": "Hi! I am Ali Azhar",
+      "author": 1,
+      "time": "2019-08-11T16:13:28+05:00",
+      "id": 1
+    },
+    {
+      "status": "Hi! I am Tom Riddle",
+      "author": 2,
+      "time": "2019-08-11T17:13:28+05:00",
+      "id": 2
+    },
+    {
+      "status": "Hi! I am Harry Potter",
+      "author": 3,
+      "time": "2019-08-11T18:13:28+05:00",
+      "id": 3
+    },
+    {
+      "status": "Hi! I am Ron Weasely",
+      "author": 4,
+      "time": "2019-08-11T19:13:28+05:00",
+      "id": 4
+    },
+    {
+      "status": "Hi! I am Hermoine Granger",
+      "author": 5,
+      "time": "2019-08-11T20:13:28+05:00",
+      "id": 5
+    },
+    {
+      "status": "Hi! I am Draco Malfoy",
+      "author": 6,
+      "time": "2019-08-11T15:13:28+05:00",
+      "id": 6
+    },
+    {
+      "status": "Hi! I am Lord Voldemort",
+      "author": 7,
+      "time": "2019-08-11T14:13:28+05:00",
+      "id": 7
+    },
+    {
+      "status": "Hello again! I am Ali Azhar",
+      "author": 1,
+      "time": "2019-08-11T12:13:28+05:00",
+      "id": 8
+    },
+    {
+      "status": "Hello again! I am Ron Weasely",
+      "author": 4,
+      "time": "2019-08-11T10:13:28+05:00",
+      "id": 9
+    }
+  ],
+  "comments": [
+    {
+      "message": "Hello",
+      "author": 1,
+      "time": "8/17/2019, 1:22:45 AM",
+      "postId": 1,
+      "id": 1
+    },
+    {
+      "message": "Hi",
+      "author": 1,
+      "time": "8/17/2019, 1:22:59 AM",
+      "postId": 2,
+      "id": 2
+    },
+    {
+      "message": "bi",
+      "author": 1,
+      "time": "8/17/2019, 1:23:14 AM",
+      "postId": 2,
+      "id": 3
+    },
+    {
+      "message": "s",
+      "author": 1,
+      "time": "8/17/2019, 1:35:18 AM",
+      "postId": 1,
+      "id": 4
+    }
+  ]
+}
