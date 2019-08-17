@@ -1,5 +1,6 @@
 const moment = require('moment');
 const homePage = function () {
+    // Ignore the Angular app check because the application we are testing is developed in ReactJS
     browser.ignoreSynchronization = true;
     const EC = protractor.ExpectedConditions;
     this.loadHomePage = async function() {
@@ -23,7 +24,7 @@ const homePage = function () {
     this.isGraphVisible = function () {
         let graphElement = element(by.css('.graph-grid'));
         browser.wait(EC.visibilityOf(graphElement),5000);
-        return graphElement.isPresent();
+        return graphElement.isDisplayed();
     };
     this.selectTripType = function (tripType) {
         element(by.css("label[title='"+tripType+"']")).click();
@@ -50,13 +51,13 @@ const homePage = function () {
         // Wait for the Calendar to hide
         browser.wait(EC.invisibilityOf(newCalendarDateElement), 5000);
     };
-    this.hoverOverGraphBar = function () {
+    this.getGraphBarTooltip = function () {
         const graphBar = element(by.css("button[data-date='2019-08-29']"));
         browser.actions().mouseMove(graphBar).perform();
         const tooltip = graphBar.element(by.css('.bar')).element(by.css('.price-info')).element(by.css('.price-price'));
         // Wait for the tooltip to be visible
         browser.wait(EC.visibilityOf(tooltip),5000);
-        return tooltip;
+        return tooltip.getText();
     };
     this.getNewDate = async function () {
         const selectedBar = element(by.css('.Button-No-Standard-Style.js-bar.item.selected'));
@@ -86,17 +87,17 @@ const homePage = function () {
     this.getSelectedBarPrice = async function () {
         const selectedPrice = element(by.css('.highlight-price'));
         browser.wait(EC.visibilityOf(selectedPrice),5000);
-        return await selectedPrice.isPresent();
+        return await selectedPrice.isDisplayed();
     };
     this.getSelectedPriceTextShown = async function () {
         const selectedPriceText = element(by.css('.hightlight'));
         browser.wait(EC.visibilityOf(selectedPriceText), 5000);
-        return await selectedPriceText.isPresent();
+        return await selectedPriceText.isDisplayed();
     };
-    this.getSearchBtnShown = async function () {
+    this.isSearchBtnShown = async function () {
         const searchBtn = element(by.css("a[aria-describedby*='-search-dates-description']"));
         browser.wait(EC.visibilityOf(searchBtn), 5000);
-        return await searchBtn.isPresent();
+        return await searchBtn.isDisplayed();
     };
     this.searchTheseDays = function () {
         const searchTheseDaysButton = element(by.css("a[aria-describedby*='-search-dates-description']"));
@@ -112,7 +113,7 @@ const homePage = function () {
         browser.wait(EC.elementToBeClickable(showDetailsBtn),5000);
         showDetailsBtn.click();
     };
-    this.getDepartureDateInDetailsPanel = function () {
+    this.getDepartureDateFromDetailsPanel = function () {
         let detailsPanel = element.all(by.css("div[class='resultInner']"));
         detailsPanel = detailsPanel.first();
         // Wait for the deatils drop down to be visible
@@ -120,9 +121,9 @@ const homePage = function () {
         const detailsPanelDepartureDate = element.all(by.css('.leg-dates-set')).first();
         browser.wait(EC.visibilityOf(detailsPanelDepartureDate),5000);
         browser.wait(EC.visibilityOf(detailsPanelDepartureDate.element(by.css('div'))),5000);
-        return detailsPanelDepartureDate.element(by.css('div'));
+        return detailsPanelDepartureDate.element(by.css('div')).getText();
     };
-    this.isSelectedPriceTextShownExist = async function () {
+    this.isPricesShownTextExist = async function () {
         const selectedPriceText = element(by.css('.hightlight'));
         return await selectedPriceText.isPresent();
     };

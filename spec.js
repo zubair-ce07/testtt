@@ -51,7 +51,7 @@ describe('Protractor Demo App', function() {
     // Step 4
 
     it('Should display tooltip with price',function () {
-        expect(momondoHomepage.hoverOverGraphBar().getText()).toContain('USD');
+        expect(momondoHomepage.getGraphBarTooltip()).toContain('USD');
     });
 
     // Step 5
@@ -77,7 +77,7 @@ describe('Protractor Demo App', function() {
     });
     // 4)
     it('Should display ‘Search these days’ button',function () {
-        const searchBtnShown = momondoHomepage.getSearchBtnShown();
+        const searchBtnShown = momondoHomepage.isSearchBtnShown();
         expect(searchBtnShown).toEqual(true);
     });
 
@@ -89,10 +89,10 @@ describe('Protractor Demo App', function() {
     it('Should display updated date in first result’s details section',async function () {
         momondoHomepage.searchTheseDays();
         momondoHomepage.showDetails();
-        const FirstResultDepartureDate = momondoHomepage.getDepartureDateInDetailsPanel();
+        const FirstResultDepartureDate = momondoHomepage.getDepartureDateFromDetailsPanel();
         // Should match the departure date in first result card i.e. Tue, Aug 10 with selected date in the bar graph i.e YYYY-MM-DD
         const expectedDate = moment(SELECTED_DATE).format('ddd, MMM D');
-        expect(FirstResultDepartureDate.getText()).toEqual(expectedDate);
+        expect(FirstResultDepartureDate).toEqual(expectedDate);
     });
     // 2)
     it('Should display updated departure date',function () {
@@ -103,7 +103,7 @@ describe('Protractor Demo App', function() {
     });
     // 3)
     it('Should not display ‘Price shown are estimates per person’ label',async function () {
-        const estimatesPerPersonText = await momondoHomepage.isSelectedPriceTextShownExist();
+        const estimatesPerPersonText = await momondoHomepage.isPricesShownTextExist();
         expect(estimatesPerPersonText).toEqual(false);
     });
     // 4)
