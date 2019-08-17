@@ -2,7 +2,7 @@ import hotelPageObject from './../pageobjects/hotelPage.po';
 import hotelSearchResultPageObject from './../pageobjects/hotelSearchResultPage.po';
 import mapPageObject from './../pageobjects/mapPage.po';
 
-describe('KAYAK App', () => {
+describe('Hotels Sanity - Front Page - Search Result Page - Map Page - Hotel Deals Page', () => {
     const hotelPage = new hotelPageObject();
     const hotelSearchResultPage = new hotelSearchResultPageObject();
     const mapPage = new mapPageObject();
