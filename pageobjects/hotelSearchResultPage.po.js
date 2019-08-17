@@ -7,6 +7,7 @@ import {
 let HotelSearchResultPage = function () {
     this.getHotelSearchPageInfo = () => {
         return {
+            searchResultPageSelector: '.Base-Results-ResultsPage',
             searchResultListSelector: ".resultsContainer",
             searchResultListSelector2: ".finished",
             singleHotelSelector: ".resultWrapper",
@@ -24,17 +25,13 @@ let HotelSearchResultPage = function () {
     };
 
     this.waitForSearchCompletion = () => {
-        const { searchResultListSelector, searchResultListSelector2, singleHotelSelector } = this.getHotelSearchPageInfo();
-
+        const { searchResultListSelector, searchResultListSelector2 } = this.getHotelSearchPageInfo();
         let EC = protractor.ExpectedConditions;
         browser.wait(EC.visibilityOf(element(by.css(searchResultListSelector)).element(by.css(searchResultListSelector2))), 100000, 'Error! Unable to load hotels list in selected origin');
-
-        const hotelsList = getElementByCSS(singleHotelSelector);
-        waitForElementPresence(hotelsList, 10000, 'Error! Unable to load hotels in selected origin');
     };
 
     this.getHotelSearchResultPage = () => {
-        return getElementByCSS('.Base-Results-ResultsPage');
+        return getElementByCSS(this.getHotelSearchPageInfo().searchResultPageSelector);
     };
 
     this.getHotelSearchResult = () => {
@@ -71,8 +68,8 @@ let HotelSearchResultPage = function () {
 
     this.getFirstHotelPhotos = () => {
         const { singleHotelAllPhotosSelector, singleHotelSinglePhotoSelector } = this.getHotelSearchPageInfo();
-        const firstHotelInfo = this.getFirstHotelDetail();
-        return firstHotelInfo.all(by.css(singleHotelAllPhotosSelector)).first().all(by.css(singleHotelSinglePhotoSelector));
+        const firstHotelDetail = this.getFirstHotelDetail();
+        return firstHotelDetail.all(by.css(singleHotelAllPhotosSelector)).first().all(by.css(singleHotelSinglePhotoSelector));
     };
 
     this.openTab = async (tabName) => {
@@ -134,15 +131,15 @@ let HotelSearchResultPage = function () {
     };
 
     this.getGoToMap = async () => {
-        await this.clickGoToMap();
+        await this.clickGoToMapButton();
         this.waitForGoToMapVisibility();
         return getElementByCSS(this.getHotelSearchPageInfo().goToMapSelector);
     };
 
-    this.clickGoToMap = async () => {
+    this.clickGoToMapButton = async () => {
         const { goToMapButtonContainerSelector, goToMapButtonSelector } = this.getHotelSearchPageInfo();
-        const goToMap = element(by.css(goToMapButtonContainerSelector)).element(by.css(goToMapButtonSelector));
-        await goToMap.click();
+        const goToMapButton = element(by.css(goToMapButtonContainerSelector)).element(by.css(goToMapButtonSelector));
+        await goToMapButton.click();
     };
 
     this.waitForGoToMapVisibility = () => {
