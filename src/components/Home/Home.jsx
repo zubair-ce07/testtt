@@ -14,11 +14,9 @@ class Home extends Component {
       <>
         <Topbar />
         <Sidebar />
-        <div className="container" id="main-container">
-          <div className="main">
-            <NewPost />
-            <Feed />
-          </div>
+        <div className="main">
+          <NewPost />
+          <Feed />
         </div>
       </>
     );

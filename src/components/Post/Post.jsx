@@ -7,10 +7,10 @@ import CommentList from "../CommentList/CommentList";
 
 import { deletePost } from "../../actions/post.action";
 
-import "./Post.css";
+import "./Post.sass";
 
 class Post extends Component {
-  state = { showComments: false, description: "View comments" };
+  state = { showComments: true, description: "View comments" };
 
   toggleComments = () => {
     this.setState({
@@ -24,33 +24,23 @@ class Post extends Component {
       return <CommentList postId={this.props.post.id} />;
   };
 
-  /*
-    TODO: Move styles to stylesheel
-  */
-  closeButtonStyles = {
-    position: "absolute",
-    right: "14px",
-    top: "10px"
-  };
-
   handleDeletePost = postId => {
     this.props.deletePost(postId);
   };
 
-  renderUserDetails = userId => {
+  renderUserName = userId => {
+    const user = this.props.users[userId];
+    if (user) {
+      return `${user.firstName} ${user.lastName}`;
+    }
+    return "...";
+  };
+
+  renderUserPicture = userId => {
     const user = this.props.users[userId];
     if (user) {
       return (
-        <div className="row">
-          <div className="col-1">
-            <img className="profile-picture" src={user.displayPicture} alt="" />
-          </div>
-          <div className="col-11">
-            <span className="profile-link">
-              {user.firstName} {user.lastName}
-            </span>
-          </div>
-        </div>
+        <img className="profile-picture" src={user.displayPicture} alt="" />
       );
     }
     return "...";
@@ -74,33 +64,37 @@ class Post extends Component {
 
   renderPost = post => {
     return (
-      <>
-        <div className="post-card card">
+      <div className="Post">
+        <div className="card">
           <button
             onClick={() => this.handleDeletePost(post.id)}
             type="button"
-            style={this.closeButtonStyles}
             className="close"
           >
             <span aria-hidden="true">&times;</span>
           </button>
-          <div className="card-body">
-            {this.renderUserDetails(post.author)}
-            <span className="post-time">{this.renderDate(post.time)}</span>
-            <div className="post-status">{post.status}</div>
+          <div className="meta">
+            <div>{this.renderUserPicture(post.author)}</div>
+            <div className="name-time">
+              <div className="profile-link">
+                {this.renderUserName(post.author)}
+              </div>
+              <div className="time">{this.renderDate(post.time)}</div>
+            </div>
           </div>
-          <span className="comments-count" onClick={this.toggleComments}>
-            {this.state.description}
-          </span>
+          <div className="post-status">{post.status}</div>
+          <div className="comments-toggle">
+            <div onClick={this.toggleComments}>{this.state.description}</div>
+          </div>
         </div>
         {this.renderComments()}
         {this.renderAddComment(post.id)}
-      </>
+      </div>
     );
   };
 
   render = () => {
-    return <div>{this.renderPost(this.props.post)}</div>;
+    return this.renderPost(this.props.post);
   };
 }
 

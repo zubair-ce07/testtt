@@ -24,43 +24,11 @@ body {
   background-color: rgb(250, 251, 252);
 }
 
-.Sidebar {
-  height: 100%;
-  width: 20vw;
-  position: fixed;
-  z-index: 1;
-  top: 0;
-  left: 0;
-  overflow-x: hidden;
-  padding-top: 20px;
-  background-color: white;
-  border-right: solid 1px rgb(217, 217, 217);
-}
-
-.main {
-  margin-left: 25pc;
-  margin-top: 125px;
-}
-
 .profile-picture {
   border-radius: 50%;
   border: solid 1px rgb(217, 217, 217);
   height: 40px;
   width: 40px;
-}
-
-.NewPost .card {
-  padding: 15px;
-  margin-bottom: 20px;
-}
-
-.NewPost input {
-  border: none;
-}
-
-.NewPost input:focus {
-  border: none;
-  box-shadow: none;
 }
 
 ::placeholder {
@@ -83,57 +51,6 @@ body {
 
 .profile-link:hover {
   text-decoration: underline;
-}
-
-.post-time {
-  margin-top: -5px;
-  position: absolute;
-  top: 45px;
-  left: 78px;
-  color: #495057;
-  font-size: 0.8em;
-}
-
-.post-status {
-  margin-top: 10px;
-  font-size: 14px;
-  line-height: 1.3;
-}
-
-.comments-count {
-  color: #495057;
-  font-size: 0.8em;
-  position: absolute;
-  bottom: 5px;
-  right: 9px;
-  cursor: pointer;
-  z-index: 100;
-}
-
-.comments-count:hover {
-  text-decoration: underline;
-}
-
-.post-card {
-  border-radius: 0.25rem 0.25rem 0px 0px;
-}
-
-.comment-card {
-  border-radius: 0px 0px 0.25rem 0.25rem;
-  border: none;
-  padding: 10px;
-}
-
-.message {
-  padding: 10px;
-  font-size: 13px;
-  background-color: #f2f3f5;
-  border-radius: 50px;
-}
-
-.message > span {
-  padding-right: 10px !important;
-  padding-left: 10px !important;
 }
 
 .add-comment-card {

@@ -4,7 +4,7 @@ import { connect } from "react-redux";
 import Comment from "../Comment/Comment";
 import { fetchCommentsAndUsers } from "../../actions/comment.action";
 
-import "./CommentList.css";
+import "./CommentList.sass";
 
 class CommentList extends Component {
   state = {};
@@ -21,13 +21,15 @@ class CommentList extends Component {
         return <Comment key={comment.id} comment={comment} />;
       });
     } else {
-      return <div className="alert alert-light">No comments added so far</div>;
+      return <small>No comments added so far</small>;
     }
   };
 
   render = () => {
     return (
-      <div className="card comment-list-card">{this.renderComments()}</div>
+      <div className="CommentList">
+        <div className="card">{this.renderComments()}</div>
+      </div>
     );
   };
 }

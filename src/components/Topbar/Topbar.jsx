@@ -3,7 +3,7 @@ import { connect } from "react-redux";
 
 import { logout } from "../../actions/user.action";
 
-import "./Topbar.css";
+import "./Topbar.sass";
 
 class Topbar extends Component {
   state = {};

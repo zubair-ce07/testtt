@@ -4,7 +4,7 @@ import { connect } from "react-redux";
 
 import { createPost } from "../../actions/post.action";
 
-import "./NewPost.css";
+import "./NewPost.sass";
 
 class NewPost extends Component {
   state = {};
@@ -15,30 +15,12 @@ class NewPost extends Component {
 
   renderInput = ({ input, placeholder, meta }) => {
     return (
-      <div className="NewPost">
-        <div className="card">
-          <div className="row">
-            <div className="col-1">
-              <img
-                className="profile-picture"
-                src={this.props.user.displayPicture}
-                alt=""
-              />
-            </div>
-            <div className="col-11">
-              <input
-                className="form-control"
-                {...input}
-                type={input.type}
-                placeholder={placeholder}
-              />
-            </div>
-          </div>
-          <hr />
-          <span className="post-prompt">Press Enter to post.</span>
-        </div>
-        <div />
-      </div>
+      <input
+        className="form-control"
+        {...input}
+        type={input.type}
+        placeholder={placeholder}
+      />
     );
   };
 
@@ -70,12 +52,23 @@ class NewPost extends Component {
 
   render = () => {
     return (
-      <div>
-        <Form
-          onSubmit={this.onSubmit}
-          validate={this.validate}
-          render={this.renderForm}
-        />
+      <div className="NewPost">
+        <div className="card">
+          <div className="prompt">
+            <img
+              className="profile-picture"
+              src={this.props.user.displayPicture}
+              alt=""
+            />
+            <Form
+              onSubmit={this.onSubmit}
+              validate={this.validate}
+              render={this.renderForm}
+            />
+          </div>
+          <hr />
+          <span className="post-prompt">Press Enter to post.</span>
+        </div>
       </div>
     );
   };

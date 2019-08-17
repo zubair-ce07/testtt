@@ -4,6 +4,8 @@ import { connect } from "react-redux";
 
 import { createComment } from "../../actions/comment.action";
 
+import "./AddComment.sass";
+
 class AddComment extends Component {
   state = {};
 
@@ -13,27 +15,12 @@ class AddComment extends Component {
 
   renderInput = ({ input, placeholder, meta, type }) => {
     return (
-      <div className="add-comment-card card">
-        <div className="row">
-          <div className="col-1">
-            <img
-              className="profile-picture-small"
-              src={this.props.user.displayPicture}
-              alt=""
-            />
-          </div>
-          <div className="col-11">
-            <input
-              {...input}
-              type={type}
-              className="form-control"
-              placeholder={placeholder}
-            />
-          </div>
-          <hr />
-          <span className="post-prompt">Press Enter to post.</span>
-        </div>
-      </div>
+      <input
+        {...input}
+        type={type}
+        className="form-control"
+        placeholder={placeholder}
+      />
     );
   };
 
@@ -56,7 +43,21 @@ class AddComment extends Component {
   };
 
   render = () => {
-    return <Form onSubmit={this.onSubmit} render={this.renderForm} />;
+    return (
+      <div className="AddComment">
+        <div className="card">
+          <div className="prompt">
+            <img
+              className="profile-picture-small"
+              src={this.props.user.displayPicture}
+              alt=""
+            />
+            <Form onSubmit={this.onSubmit} render={this.renderForm} />
+          </div>
+          <span className="post-prompt">Press Enter to post.</span>
+        </div>
+      </div>
+    );
   };
 }
 
