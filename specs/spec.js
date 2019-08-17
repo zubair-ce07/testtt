@@ -3,7 +3,6 @@ import hotelSearchResultPageObject from './../pageobjects/hotelSearchResultPage.
 import mapPageObject from './../pageobjects/mapPage.po';
 
 describe('KAYAK App', () => {
-
     let hotelPage = new hotelPageObject();
     let hotelSearchResultPage = new hotelSearchResultPageObject();
     let mapPage = new mapPageObject();
@@ -93,8 +92,7 @@ describe('KAYAK App', () => {
         hotelInfoHoverBox = mapPage.getHotelInfoHoverBox(hotelInfoHoverBoxIdInDOM);
         expect(hotelInfoHoverBox.isDisplayed()).toBe(true);
     });
-
-
+    
     it("Should display hotel card on the left side", async () => {
         await hotelInfoHoverBox.click();
         const hotelCardImage = mapPage.getHotelCardImage(hotelInfoHoverBoxIdInDOM);
