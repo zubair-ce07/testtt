@@ -11,9 +11,7 @@ class DuplicatesPipeline(object):
 
     def process_item(self, item, onlyspider):
         for image in item['image_urls']:
-            if image in self.images:
-                pass
-            else:
+            if image not in self.images:
                 self.images.append(image)
         item['image_urls'] = self.images
         self.images = []

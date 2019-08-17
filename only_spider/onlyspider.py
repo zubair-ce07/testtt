@@ -136,13 +136,11 @@ class OnlySpider(CrawlSpider):
         color_css = ".swatch__item--unavailable-colorpattern .js-swatch-item-link::attr(data-href)," \
                     ".swatch__item--selectable-colorpattern .js-swatch-item-link::attr(data-href)," \
                     ".swatch.size .js-swatch-item-link::attr(data-href)"
-
         return [Request(add_or_replace_parameter(url, 'format', 'ajax'), callback=self.parse_color,
                         meta={"garment": garment}) for url in response.css(color_css).getall()]
 
     def size_requests(self, response, garment):
         size_css = ".swatch.size .swatch__item-inner-text__text-container::text"
-
         return [Request(add_or_replace_parameter(response.url, 'dwvar_size', size), callback=self.parse_size,
                         dont_filter=True, meta={"garment": garment}) for size in response.css(size_css).getall()]
 
