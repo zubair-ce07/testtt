@@ -140,18 +140,3 @@ def register(request):
     context = {'form': form}
     return render(request, 'registration/register.html', context)
 
-
-def login_user(request):
-    if request.method == "POST":
-        username = request.POST['username']
-        password = request.POST['password']
-        try:
-            validate_email(username)
-            user = authenticate(username=CustomUser.objects.get(email=username), password=password)
-        except ValidationError:
-            user = authenticate(username=username, password=password)
-        if user:
-            login(request, user)
-            return redirect('task_index')
-        messages.error(request, message='username/email or password is incorrect')
-        return redirect('login')
