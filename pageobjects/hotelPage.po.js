@@ -86,10 +86,10 @@ let HotelPage = function () {
     };
 
     this.selectFirstOriginFromOriginsList = async () => {
-        const list = element.all(by.css(this.getHotelPageInfo().originsListDropdownSelector)).first().all(by.css('li'));
-        const originsFound = await list.count();
-        console.log('total origins found: ', originsFound);
-        await list.first().click();
+        const allOrigins = element.all(by.css(this.getHotelPageInfo().originsListDropdownSelector)).first().all(by.css('li'));
+        const originsCount = await allOrigins.count();
+        console.log('total origins found: ', originsCount);
+        await allOrigins.first().click();
     };
 
     this.searchHotels = async () => {
