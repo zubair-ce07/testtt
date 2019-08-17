@@ -3,7 +3,7 @@ from datetime import datetime
 
 from scrapy.spiders import CrawlSpider, Rule, Request
 from scrapy.linkextractors import LinkExtractor
-from w3lib.url import url_query_cleaner, add_or_replace_parameters
+from w3lib.url import url_query_cleaner, add_or_replace_parameter
 
 from only.only_items import OnlyItem
 
@@ -95,8 +95,7 @@ class OnlySpider(CrawlSpider):
     def get_product_category(self, response):
         css = "script:contains('@context')"
         regex = 'category":"(.+?)"'
-        return [category.strip()
-                for category in response.css(css).re_first(regex).split(">")]
+        return [category.strip() for category in response.css(css).re_first(regex).split(">")]
 
     def get_gender(self, response):
         css = "script:contains('@context')"
@@ -116,7 +115,6 @@ class OnlySpider(CrawlSpider):
     def get_sale_price(self, response):
         price_css = ".nonsticky-price__container--visible .value__price::text, " \
                     ".nonsticky-price__container--visible .value__price--discounted::text"
-
         return self.clean_price(response.css(price_css).get())
 
     def get_product_pricing(self, response):
@@ -139,21 +137,14 @@ class OnlySpider(CrawlSpider):
                     ".swatch__item--selectable-colorpattern .js-swatch-item-link::attr(data-href)," \
                     ".swatch.size .js-swatch-item-link::attr(data-href)"
 
-        urls = response.css(color_css).getall()
-
-        return [Request(add_or_replace_parameters(url, {'format': 'ajax'}), callback=self.parse_color,
-                        meta={"garment": garment}, dont_filter=True) for url in urls]
+        return [Request(add_or_replace_parameter(url, 'format', 'ajax'), callback=self.parse_color,
+                        meta={"garment": garment}) for url in response.css(color_css).getall()]
 
     def size_requests(self, response, garment):
-        requests = []
-        size_css = ".swatch.size .js-swatch-item .js-swatch-item-link::attr(title)"
-        sizes = [size.split(": ", 1)[1] for size in response.css(size_css).getall()]
+        size_css = ".swatch.size .swatch__item-inner-text__text-container::text"
 
-        for size in sizes:
-            requests.append(add_or_replace_parameters(response.url, {'dwvar_size': size}))
-
-        return [Request(url, callback=self.parse_size, meta={"garment": garment}, dont_filter=True)
-                for url in requests]
+        return [Request(add_or_replace_parameter(response.url, 'dwvar_size', size), callback=self.parse_size,
+                        dont_filter=True, meta={"garment": garment}) for size in response.css(size_css).getall()]
 
     def get_product_sku(self, response):
         skus = {}
@@ -162,24 +153,24 @@ class OnlySpider(CrawlSpider):
         color_css = ".swatch__item--selected-colorpattern .js-swatch-item-link::attr(title)," \
                     ".swatch__item--selected.swatch__item--unavailable-colorpattern .js-swatch-item-link::attr(title)"
         size_css = ".swatch__item--selected .js-swatch-item-link::attr(title)"
-        out_of_stock_css = ".swatch__item--selected .swatch__item--unavailable .js-swatch-item-link"
+        out_of_stock_css = ".swatch__item--selected.swatch__item--unavailable .js-swatch-item-link"
 
         common_sku["color"] = response.css(color_css).re_first('Colour: (.+)')
         common_sku["size"] = response.css(size_css).re_first('Size: (.+)')
 
         if not response.css(".swatch.length"):
-            if response.css(out_of_stock_css):
-                common_sku["out_of_stock"] = True
-
             sku = common_sku.copy()
-            skus[f"{sku['color']}_{sku['size']}"] = sku
 
+            if response.css(out_of_stock_css):
+                sku["out_of_stock"] = True
+
+            skus[f"{sku['color']}_{sku['size']}"] = sku
             return skus
 
         for len_sel in response.css(".swatch.length .js-swatch-item"):
             sku = common_sku.copy()
 
-            length = len_sel.css('.js-swatch-item-link::attr(title)').get().split(": ", 1)[1]
+            length = len_sel.css('.swatch__item-inner-text__text-container::text').get()
             sku["size"] = f"{common_sku['size']}/{length}"
 
             if len_sel.css('.swatch__item--selectable.swatch__item--unavailable'):
