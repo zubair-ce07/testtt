@@ -16,6 +16,12 @@ return element(by.css('[id$=location-display-inner]'));
 getOriginInput () : ElementFinder {
  return element(by.css('[id$=location-textInputWrapper] > input'));
 }
+getHotelOriginContainerWrapper () : ElementFinder {
+return element(by.css('[id$=location-display]'));
+}
+getSearchResultsList () : ElementArrayFinder {
+  return  element.all(by.css('[id$=searchResultsList] .normalResults div[tabindex]'));
+ }
 getOriginDropdown () : ElementFinder {
     return element(by.css('[id$=location-smartbox-dropdown] > ul > li:first-child'));
 }
