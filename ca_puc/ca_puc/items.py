@@ -26,7 +26,3 @@ class CaPucItem(Item):
         output_processor=TakeFirst()
     )
     filings = Field()
-
-    # Used while parsing the filings for a specific proceeding
-    total_filing_count = Field(output_processor=TakeFirst())
-    filing_count = Field(output_processor=TakeFirst())

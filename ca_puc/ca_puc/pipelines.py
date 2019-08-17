@@ -10,8 +10,6 @@ import pymongo
 
 class CaPucPipeline(object):
     def process_item(self, item, spider):
-        del item['total_filing_count']
-        del item['filing_count']
         return item
 
 
