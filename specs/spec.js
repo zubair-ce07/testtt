@@ -31,10 +31,10 @@ describe('KAYAK App', () => {
         expect(hotelPage.getGuestField().getText()).toEqual(hotelPage.getHotelPageInfo().guestFieldText);
     });
 
-    it("Should load hotels results page", () => {
-        hotelPage.searchOriginsList();
+    it("Should load hotels results page", async () => {
+        await hotelPage.setTextInOriginField('BCN');
         hotelSearchResultPage.waitForOriginsListPresence();
-        hotelPage.selectFirstOriginFromList();
+        await hotelPage.selectFirstOriginFromOriginsList();
     });
 
     it("Should display at least 5 hotel results", async () => {
