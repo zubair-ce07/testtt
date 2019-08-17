@@ -1,4 +1,4 @@
-const moment = require('moment');
+import moment from 'moment';
 const momondoHomepage = require('./pages/homePage');
 describe('Protractor Demo App', function() {
     let SELECTED_DATE = '';

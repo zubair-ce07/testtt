@@ -1,4 +1,4 @@
-const moment = require('moment');
+import moment from 'moment';
 const homePage = function () {
     browser.ignoreSynchronization = true;
     const EC = protractor.ExpectedConditions;

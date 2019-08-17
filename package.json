@@ -1,0 +1,7 @@
+{
+  "name": "the-lab",
+  "version": "1.0.0",
+  "dependencies": {
+    "moment": "latest"
+  }
+}
