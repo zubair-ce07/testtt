@@ -123,13 +123,11 @@ const homePage = function () {
         browser.wait(EC.visibilityOf(detailsPanelDepartureDate.element(by.css('div'))),5000);
         return detailsPanelDepartureDate.element(by.css('div')).getText();
     };
-    this.isPricesShownTextExist = async function () {
-        const selectedPriceText = element(by.css('.hightlight'));
-        return await selectedPriceText.isPresent();
+    this.isPricesShownTextExist = function () {
+        return element(by.css('.hightlight'));
     };
-    this.isSearchTheseDaysButtonExist = async function () {
-        const selectedPriceText = element(by.css("a[aria-describedby*='-search-dates-description']"));
-        return await selectedPriceText.isPresent();
+    this.isSearchTheseDaysButtonExist = function () {
+        return element(by.css("a[aria-describedby*='-search-dates-description']"));
     };
 
 };

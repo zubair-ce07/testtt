@@ -33,7 +33,6 @@ describe('Protractor Demo App', function() {
 
 
     // Step 2
-
     it('Should display first half of estimated price graph',async function () {
         momondoHomepage.selectTripType('One-way');
         expect(momondoHomepage.getMainVisibleGraphCount('first_half')).toEqual(1);
@@ -41,7 +40,6 @@ describe('Protractor Demo App', function() {
 
 
     // Step 3
-
     it('Should display both graphs',async function () {
         momondoHomepage.selectTripType('Round-trip');
         momondoHomepage.selectDateFromCalendar();
@@ -49,13 +47,11 @@ describe('Protractor Demo App', function() {
     });
 
     // Step 4
-
     it('Should display tooltip with price',function () {
         expect(momondoHomepage.getGraphBarTooltip()).toContain('USD');
     });
 
     // Step 5
-
     // 1)
     it('Should highlight selected bar',async function () {
         // Getting date of two days after than currently selected one
@@ -84,7 +80,6 @@ describe('Protractor Demo App', function() {
 
 
     // Step 6
-
     // 1)
     it('Should display updated date in first result’s details section',async function () {
         momondoHomepage.searchTheseDays();
@@ -102,15 +97,11 @@ describe('Protractor Demo App', function() {
         expect(departureField.getText()).toBe(expectedDate);
     });
     // 3)
-    it('Should not display ‘Price shown are estimates per person’ label',async function () {
-        const estimatesPerPersonText = await momondoHomepage.isPricesShownTextExist();
-        expect(estimatesPerPersonText).toEqual(false);
+    it('Should not display ‘Price shown are estimates per person’ label',function () {
+        expect(momondoHomepage.isPricesShownTextExist());
     });
     // 4)
-    it('Should not display ‘Search these days’ button',async function () {
-        const searchTheseDaysButton = await momondoHomepage.isSearchTheseDaysButtonExist();
-        // Should display ‘Search these days’ button
-        expect(searchTheseDaysButton).toEqual(false);
+    it('Should not display ‘Search these days’ button',function () {
+        expect(momondoHomepage.isSearchTheseDaysButtonExist())
     })
-
 });
