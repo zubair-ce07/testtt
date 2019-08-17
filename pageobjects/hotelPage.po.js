@@ -1,12 +1,21 @@
 let HotelPage = function() {
-
     this.getHotelPageInfo = () => {
         return {
             kayakPageUrl: "https://www.kayak.com/",
             hotelPageUrl: "https://www.kayak.com/hotels",
             originSearchKeyword: "BCN",
             guestFieldText: "1 room, 2 guests",
-            searchBtnSelector: "div[id$=-formGridSearchBtn]",
+            originFieldSelector: "[id$=-fieldGridLocationCol]",
+            originFieldSubSelector: "[id$=-location-display]",
+            originInputFieldSelector: "[id$=-location-textInputWrapper]",
+            originInputFieldSubSelector: "[id$=-location]",
+            originsListDropdownSelector: "[id$=-location-smartbox-dropdown]",
+            guestFieldSelector: "[id$=-roomsGuestsAboveForm]",
+            guestFieldSubSelector: ".js-label",
+            datepickerSelector: "[id*=-fieldGridDatePickerCol]",
+            datepickerSubSelector: "[id$=-dateRangeInput-display]",
+            startDateSelector: "[id$=-dateRangeInput-display-start-inner]",
+            endDateSelector: "[id$=-dateRangeInput-display-end-inner]"
         }
     };
 
@@ -25,43 +34,40 @@ let HotelPage = function() {
     };
 
     this.getOriginField = () => {
-        return element(by.css("div[id$=-fieldGridLocationCol]")).element(by.css("div[id$=-location-display]"));
+        const { originFieldSelector, originFieldSubSelector } = this.getHotelPageInfo();
+        return element(by.css(originFieldSelector)).element(by.css(originFieldSubSelector));
     };
 
     this.getGuestField = () => {
-        return element(by.css("div[id$=-roomsGuestsAboveForm]")).element(by.css(".js-label"));
+        const { guestFieldSelector, guestFieldSubSelector } = this.getHotelPageInfo();
+        return element(by.css(guestFieldSelector)).element(by.css(guestFieldSubSelector));
     };
 
     this.getDateFields = () => {
-        let datepicker = element(by.css("div[id*=-fieldGridDatePickerCol]"));
-        if(datepicker.isPresent()) {
-            datepicker = datepicker.element(by.css("div[id$=-dateRangeInput-display]"));
-        }
-        const startDate = datepicker.element(by.css("div[id$=-dateRangeInput-display-start-inner]"));
-        const endDate = datepicker.element(by.css("div[id$=-dateRangeInput-display-end-inner]"));
+        const { datepickerSelector, datepickerSubSelector, startDateSelector, endDateSelector } = this.getHotelPageInfo();
+        const datepicker = element(by.css(datepickerSelector)).element(by.css(datepickerSubSelector));
+        const startDate = datepicker.element(by.css(startDateSelector));
+        const endDate = datepicker.element(by.css(endDateSelector));
         return {
             startDate,
             endDate
         };
     };
 
-    this.searchOriginsList = () => {
+    this.setTextInOriginField = async (searchKeyword) => {
+        const { originInputFieldSelector, originInputFieldSubSelector} = this.getHotelPageInfo();
         const originField = this.getOriginField();
-        originField.click();
-        let inputField = element.all(by.css('div[id$=-location-textInputWrapper]'))
-            .get(0)
-            .element(by.css('input[id$=-location]'));
-        inputField.sendKeys(this.getHotelPageInfo().originSearchKeyword).then(() => {
-            console.log(`origin ${this.getHotelPageInfo().originSearchKeyword} is typed`);
-        });
+        await originField.click();
+        let inputField = element.all(by.css(originInputFieldSelector)).get(0).element(by.css(originInputFieldSubSelector));
+        await inputField.sendKeys(searchKeyword);
+        console.log(`origin ${searchKeyword} is typed`);
     };
 
-    this.selectFirstOriginFromList = () => {
-        const list = element.all(by.css('div[id$=-location-smartbox-dropdown]')).first().all(by.css('li'));
-        list.count().then(function(txt) {
-            console.log('total origins found: ',txt);
-        });
-        list.first().click();
+    this.selectFirstOriginFromOriginsList = async () => {
+        const list = element.all(by.css(this.getHotelPageInfo().originsListDropdownSelector)).first().all(by.css('li'));
+        const originsFound = await list.count();
+        console.log('total origins found: ',originsFound);
+        await list.first().click();
     };
 };
 

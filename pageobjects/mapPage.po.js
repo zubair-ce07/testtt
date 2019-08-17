@@ -1,12 +1,17 @@
-import * as utils from './../utils/common';
+import { waitForElementPresence } from './../utils/common';
 
 let mapPage = function() {
+    this.getMapPageInfo = () => {
+        return {
+            hotelMarkerSelector: ".hotel-marker",
+        }
+    };
+
     this.getAllHotelMarkers = () => {
-        return element.all(by.css('.hotel-marker'));
+        return element.all(by.css(this.getMapPageInfo().hotelMarkerSelector));
     };
 
     this.getSingleHotelMarker = async () => {
-        //return hotelMarkers.get(index);
         const hotelMarkers = this.getAllHotelMarkers();
         const totalHotelMarkers = await hotelMarkers.count();
         console.log(`total hotel markers found: ${totalHotelMarkers}`);
@@ -37,17 +42,17 @@ let mapPage = function() {
 
     this.getHotelInfoHoverBox = (hoverBoxId) => {
         const hoverBoxSelector = `summaryCard-${hoverBoxId}`;
-        return element(by.css(`div[id=${hoverBoxSelector}]`));
+        return element(by.css(`[id=${hoverBoxSelector}]`));
     };
 
     this.getHotelCardImage = (hotelInfoHoverBoxId) => {
-        const hotelCardImage = element(by.css(`div[id='${hotelInfoHoverBoxId}-photo']`));
-        utils.waitForElementPresence(hotelCardImage, 1000, 'Timeout error! Hotel card image is taking too long to appear');
+        const hotelCardImage = element(by.css(`[id='${hotelInfoHoverBoxId}-photo']`));
+        waitForElementPresence(hotelCardImage, 1000, 'Timeout error! Hotel card image is taking too long to appear');
         return hotelCardImage;
     };
 
     this.clickViewDealButton = async (hotelInfoHoverBoxId) => {
-        const dealBtnSelector = `button[id='${hotelInfoHoverBoxId}-booking-bookButton']`;
+        const dealBtnSelector = `[id='${hotelInfoHoverBoxId}-booking-bookButton']`;
         const viewDealBtn = element(by.css(dealBtnSelector));
         await viewDealBtn.click();
         browser.sleep(5000);
