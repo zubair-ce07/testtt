@@ -8,9 +8,6 @@ class CustomUser(AbstractUser):
     birthday = models.DateField(blank=True, null=True)
     profile_picture = models.ImageField(upload_to="images/avatars/", blank=True, null=True)
 
-    class Meta:
-        unique_together = ('email', 'username',)
-
 
 class Task(models.Model):
     title = models.CharField(max_length=50)

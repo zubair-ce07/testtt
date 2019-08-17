@@ -26,7 +26,7 @@ def send_registration_confirmation_mail(sender, instance, created, password, **k
 @receiver(post_save, sender=Task)
 def send_task_creation_mail(sender, instance, created, **kwargs):
     if created:
-        datetime_object = datetime.datetime.strptime(instance.due_date, '%Y-%m-%d')
+        datetime_object = datetime.datetime.strptime(str(instance.due_date), '%Y-%m-%d')
         tasks.send_email.delay(
             subject='Task Assignment',
             message='A new task {} has been assigned to you due on {} by {}'.format(instance.title,

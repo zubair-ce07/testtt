@@ -1,7 +1,8 @@
 import json
 import random
-import string
+from string import ascii_letters, digits
 
+from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ValidationError
 from django.core.management.base import BaseCommand
@@ -10,40 +11,28 @@ from taskmanager.models import CustomUser, Task
 from taskmanager.signals import send_email
 
 
-class NoArgumentException(Exception):
-    """Raised if no argument is passed"""
-    pass
-
-
-class InvalidFilePathException(Exception):
-    """Raised if no argument is passed"""
-    pass
-
-
 class Command(BaseCommand):
     help = 'Takes a json file containing tasks information and enters them into database'
 
     def add_arguments(self, parser):
         parser.add_argument('--file', type=str)
 
-    def randomString(self, string_length=10):
-        """Generate a random string of fixed length """
-        alphanumeric_characters = string.ascii_letters + string.digits
-        return ''.join(random.choice(alphanumeric_characters) for i in range(string_length))
+    def print_stats(self, entity, stats):
+        self.stdout.write('{} seed stats'.format(entity))
+        self.stdout.write('{} created: {}'.format(entity, stats['created']))
+        self.stdout.write('{} updated: {}'.format(entity, stats['updated']))
+        self.stdout.write('{} failed: {}'.format(entity, stats['failed']))
+        self.stdout.write('')
 
     @transaction.atomic
     def handle(self, *args, **options):
         try:
             filepath = options.get('file')
-            if not filepath:  # if no argument is passed
-                raise NoArgumentException('argument can not be empty')
+            if not filepath:
+                self.stdout.write('No argument is passed. Please pass a valid argument')
             if not filepath.endswith('.json'):
-                raise InvalidFilePathException('invalid file type')
-        except NoArgumentException:
-            self.stdout.write("No argument is passed. Please pass a valid argument")
-        except InvalidFilePathException:
-            self.stdout.write(
-                "Path was incorrect or does not lead to a json file. Please provide a valid json file path")
+                self.stdout.write(
+                    'Path was incorrect or does not lead to a json file. Please provide a valid json file path')
         except FileNotFoundError:
             self.stdout.write('File was not found at the given path. Please provide a valid path')
         else:
@@ -61,8 +50,8 @@ class Command(BaseCommand):
                 }
                 users = []
                 for key, single_user_data in json_reader['users'].items():
-                    # generate random alphanumeric password of length 10
-                    password = self.randomString(10)
+                    password = CustomUser.objects.make_random_password(length=10,
+                                                                       allowed_chars=ascii_letters + digits)
                     single_user_data['password'] = make_password(password)
 
                     try:
@@ -106,12 +95,5 @@ class Command(BaseCommand):
                         self.stdout.write('Error: {}'.format(dbError))
                         self.stdout.write('')
 
-                self.stdout.write('Users seed stats')
-                self.stdout.write('users created: {}'.format(users_stats['created']))
-                self.stdout.write('users updated: {}'.format(users_stats['updated']))
-                self.stdout.write('users failed: {}'.format(users_stats['failed']))
-                self.stdout.write('')
-                self.stdout.write('Tasks seed stats')
-                self.stdout.write('tasks created: {}'.format(tasks_stats['created']))
-                self.stdout.write('tasks updated: {}'.format(tasks_stats['updated']))
-                self.stdout.write('tasks failed: {}'.format(tasks_stats['failed']))
+                self.print_stats('Users', users_stats)
+                self.print_stats('Tasks', tasks_stats)
