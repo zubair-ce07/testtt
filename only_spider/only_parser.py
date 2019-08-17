@@ -34,7 +34,7 @@ class OnlyParser(Spider):
         garment["gender"] = self.get_gender(response)
         garment["price"] = self.get_sale_price(response)
         garment["skus"] = {}
-        garment["meta"] = self.color_requests(response, garment)
+        garment["meta"] = self.color_requests(response)
 
         return self.next_request_or_garment(garment)
 
@@ -46,7 +46,7 @@ class OnlyParser(Spider):
     def parse_color(self, response):
         garment = response.meta["garment"]
         garment["image_urls"] += self.get_image_urls(response)
-        garment["meta"] += self.size_requests(response, garment)
+        garment["meta"] += self.size_requests(response)
         return self.next_request_or_garment(garment)
 
     def clean(self, raw_list):
@@ -115,20 +115,27 @@ class OnlyParser(Spider):
         return pricing
 
     def next_request_or_garment(self, garment):
-        sku_reqs = garment["meta"]
-        yield (sku_reqs and sku_reqs.pop()) or garment
+        requests = garment["meta"]
 
-    def color_requests(self, response, garment):
+        if requests:
+            request = requests.pop()
+            request.meta["garment"] = garment
+            yield request
+
+        else:
+            yield garment
+
+    def color_requests(self, response):
         color_css = ".swatch__item--unavailable-colorpattern .js-swatch-item-link::attr(data-href)," \
                     ".swatch__item--selectable-colorpattern .js-swatch-item-link::attr(data-href)," \
                     ".swatch.size .js-swatch-item-link::attr(data-href)"
-        return [Request(add_or_replace_parameter(url, 'format', 'ajax'), callback=self.parse_color,
-                        meta={"garment": garment}) for url in response.css(color_css).getall()]
+        return [Request(add_or_replace_parameter(url, 'format', 'ajax'), callback=self.parse_color)
+                for url in response.css(color_css).getall()]
 
-    def size_requests(self, response, garment):
+    def size_requests(self, response):
         size_css = ".swatch.size .swatch__item-inner-text__text-container::text"
         return [Request(add_or_replace_parameter(response.url, 'dwvar_size', size), callback=self.parse_size,
-                        dont_filter=True, meta={"garment": garment}) for size in response.css(size_css).getall()]
+                        dont_filter=True) for size in response.css(size_css).getall()]
 
     def get_product_sku(self, response):
         skus = {}
