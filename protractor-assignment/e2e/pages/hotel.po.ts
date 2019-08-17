@@ -1,4 +1,6 @@
+import { Aliases } from './../shared/constants';
 import { browser, by, element, ElementFinder , $ , $$, ElementArrayFinder } from 'protractor';
+import { browserWaitHandler } from '../shared/utils';
 
 export class AppHotelPage {
 async navigateTo () : Promise<string> {
@@ -10,10 +12,10 @@ async navigateToHotel () : Promise<string> {
 getHotelLink () : ElementFinder {
 return element(by.css('.Common-Layout-StyleJamNavigation ul li.js-vertical-hotels'));
 }
-getOriginInputWrapper () : ElementFinder {
+getDestinationInputWrapper () : ElementFinder {
 return element(by.css('[id$=location-display-inner]'));
 }
-getOriginInput () : ElementFinder {
+getDestinationInput () : ElementFinder {
  return element(by.css('[id$=location-textInputWrapper] > input'));
 }
 getHotelOriginContainerWrapper () : ElementFinder {
@@ -22,7 +24,7 @@ return element(by.css('[id$=location-display]'));
 getSearchResultsList () : ElementArrayFinder {
   return  element.all(by.css('[id$=searchResultsList] .normalResults div[tabindex]'));
  }
-getOriginDropdown () : ElementFinder {
+getDestinationDropdown () : ElementFinder {
     return element(by.css('[id$=location-smartbox-dropdown] > ul > li:first-child'));
 }
 getStartDate () : ElementFinder {
@@ -36,5 +38,16 @@ return element.all(by.css('[id$=roomsGuestsDropdown-trigger] div.js-label')).fir
 }
 getSearchButton () : ElementFinder {
 return element(by.css('[id$=formGridSearchBtn]'));
+}
+async getSearchHotelHandler () : Promise<number>  {
+    await this.getDestinationInputWrapper().click();
+    await this.getDestinationInput().sendKeys(Aliases.originSearchKeywork);
+    browserWaitHandler(this.getDestinationDropdown());
+    await this.getDestinationDropdown().click();
+    await this.getSearchButton().click();
+    browserWaitHandler(this.getSearchResultsList().first());
+    const hotelResultList : ElementArrayFinder = this.getSearchResultsList();
+    const hotelResultCount : number = await hotelResultList.count();
+    return hotelResultCount;
 }
 }

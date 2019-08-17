@@ -1,4 +1,4 @@
-import { browser, by, element, ElementFinder , $ , $$, ElementArrayFinder } from 'protractor';
+import { by, element, ElementFinder , ElementArrayFinder } from 'protractor';
 
 export class HotelDetailPage {
     getGoToMapLink () : ElementFinder {
@@ -38,7 +38,6 @@ export class HotelDetailPage {
         return element.all(by.css('.hotel-marker'));
     }
     getViewDealButton (viewDealBtnId : string) : ElementFinder {
-        // $('[id$=booking-bookButton]').first().click()
        return element(by.id(viewDealBtnId));
     }
 

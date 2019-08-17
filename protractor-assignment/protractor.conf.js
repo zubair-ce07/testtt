@@ -27,6 +27,7 @@ exports.config = {
        });
      },
     onPrepare: function() { // making chai available globally. in your test use `const expect = global['chai'].expect;`
+      browser.waitForAngularEnabled(false);  
       browser.manage().window().maximize();
       var chai = require('chai');
       var chaiAsPromised = require("chai-as-promised");
