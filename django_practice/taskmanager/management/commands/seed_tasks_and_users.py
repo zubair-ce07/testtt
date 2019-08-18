@@ -18,23 +18,26 @@ class Command(BaseCommand):
         parser.add_argument('--file', type=str)
 
     def print_stats(self, entity, stats):
-        self.stdout.write('{} seed stats'.format(entity))
-        self.stdout.write('{} created: {}'.format(entity, stats['created']))
-        self.stdout.write('{} updated: {}'.format(entity, stats['updated']))
-        self.stdout.write('{} failed: {}'.format(entity, stats['failed']))
+        self.stdout.write(f'{entity} seed stats')
+        self.stdout.write(f"{entity} created: {stats['created']}")
+        self.stdout.write(f"{entity} updated: {stats['updated']}")
+        self.stdout.write(f"{entity} failed: {stats['failed']}")
+        self.stdout.write('')
+
+    def print_error(self, entity, error_type, error, entity_details):
+        self.stdout.write(
+            f'{entity} creation for {entity} {str(entity_details)}  failed due to {error_type} errors')
+        self.stdout.write(f'Error: {error}')
         self.stdout.write('')
 
     @transaction.atomic
     def handle(self, *args, **options):
-        try:
-            filepath = options.get('file')
-            if not filepath:
-                self.stdout.write('No argument is passed. Please pass a valid argument')
-            if not filepath.endswith('.json'):
-                self.stdout.write(
-                    'Path was incorrect or does not lead to a json file. Please provide a valid json file path')
-        except FileNotFoundError:
-            self.stdout.write('File was not found at the given path. Please provide a valid path')
+        filepath = options.get('file')
+        if not filepath:
+            self.stdout.write('No argument is passed. Please pass a valid argument')
+        elif not filepath.endswith('.json'):
+            self.stdout.write(
+                'Path was incorrect or does not lead to a json file. Please provide a valid json file path')
         else:
             with open(filepath) as file_cursor:
                 json_reader = json.load(file_cursor)
@@ -49,13 +52,14 @@ class Command(BaseCommand):
                     'failed': 0
                 }
                 users = []
-                for key, single_user_data in json_reader['users'].items():
+                for single_user_data in json_reader['users'].values():
+                    print(single_user_data)
                     password = CustomUser.objects.make_random_password(length=10,
                                                                        allowed_chars=ascii_letters + digits)
                     single_user_data['password'] = make_password(password)
 
                     try:
-                        user, is_created = CustomUser.objects.get_or_create(
+                        user, is_created = CustomUser.objects.update_or_create(
                             username=single_user_data.get('username'),
                             email=single_user_data.get('email'),
                             defaults=single_user_data)
@@ -67,18 +71,14 @@ class Command(BaseCommand):
                             users_stats['updated'] += 1
                     except IntegrityError as dbError:
                         users_stats['failed'] += 1
-                        self.stdout.write(
-                            'user creation for user {} failed due to integrity errors'.format(str(single_user_data)))
-                        self.stdout.write('Error: {}'.format(dbError))
-                        self.stdout.write('')
+                        self.print_error(entity='user', error_type='integrity', error=dbError,
+                                         entity_details=single_user_data)
                     except ValidationError as dbError:
                         users_stats['failed'] += 1
-                        self.stdout.write(
-                            'user creation for user {} failed due to validation errors'.format(str(single_user_data)))
-                        self.stdout.write('Error: {}'.format(dbError))
-                        self.stdout.write('')
+                        self.print_error(entity='user', error_type='validation', error=dbError,
+                                         entity_details=single_user_data)
 
-                for key, single_task_data in json_reader['tasks'].items():
+                for single_task_data in json_reader['tasks'].values():
                     random.seed(random.randint)
                     single_task_data['assignee'] = random.choice(users)
                     single_task_data['assigned_by'] = random.choice(users)
@@ -90,10 +90,8 @@ class Command(BaseCommand):
                             tasks_stats['updated'] += 1
                     except ValidationError as dbError:
                         tasks_stats['failed'] += 1
-                        self.stdout.write(
-                            'task creation for task {}  failed due to database errors'.format(str(single_task_data)))
-                        self.stdout.write('Error: {}'.format(dbError))
-                        self.stdout.write('')
+                        self.print_error(entity='task', error_type='validation', error=dbError,
+                                         entity_details=single_task_data)
 
                 self.print_stats('Users', users_stats)
                 self.print_stats('Tasks', tasks_stats)

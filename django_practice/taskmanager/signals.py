@@ -17,8 +17,7 @@ def send_registration_confirmation_mail(sender, instance, created, password, **k
     if created:
         tasks.send_email.delay(
             subject='Account creation',
-            message='A new account has been created against your email. Login with the following password: {}'.format(
-                password),
+            message=f"A new account has been created against your email. Login with the following password: {password}",
             recipients=[instance.email]
         )
 
@@ -29,9 +28,6 @@ def send_task_creation_mail(sender, instance, created, **kwargs):
         datetime_object = datetime.datetime.strptime(str(instance.due_date), '%Y-%m-%d')
         tasks.send_email.delay(
             subject='Task Assignment',
-            message='A new task {} has been assigned to you due on {} by {}'.format(instance.title,
-                                                                                    datetime_object.strftime(
-                                                                                        '%d, %B %Y'),
-                                                                                    instance.assigned_by.username
-                                                                                    ),
+            message=f"A new task {instance.title} has been assigned to you due on "
+                    f"{datetime_object.strftime('%d, %B %Y')} by {instance.assigned_by.username} ",
             recipients=[instance.assignee.email])
