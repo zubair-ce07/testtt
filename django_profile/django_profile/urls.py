@@ -20,9 +20,8 @@ from user_profile import views as user_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', auth_views.LoginView.as_view(
-        template_name='user_profile/login.html'), name='login'),
-    path('register/', user_views.register, name='register'),
+    path('', user_views.LoginView.as_view(), name='login'),
+    path('register/', user_views.Register.as_view(), name='register'),
     path('user', include('user_profile.urls')),
     path('logout/', auth_views.LogoutView.as_view(template_name='user_profile/logout.html'), name='logout'),
 ]
