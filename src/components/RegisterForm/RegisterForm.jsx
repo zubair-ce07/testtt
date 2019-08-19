@@ -3,7 +3,7 @@ import { Field, Form } from "react-final-form";
 import { connect } from "react-redux";
 import { registerUser } from "../../actions/user.action";
 
-import "./RegisterForm.sass";
+import "./Form.sass";
 import history from "../../history";
 
 class RegisterForm extends Component {
@@ -102,7 +102,7 @@ class RegisterForm extends Component {
 
   render = () => {
     return (
-      <div className="RegisterForm">
+      <div className="Form">
         <div className="card">
           <Form
             onSubmit={this.onSubmit}

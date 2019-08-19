@@ -5,7 +5,7 @@ import { connect } from "react-redux";
 import { loginUser } from "../../actions/user.action";
 import history from "../../history";
 
-import "./LoginForm.sass";
+import "../RegisterForm/Form.sass";
 
 class LoginForm extends Component {
   state = {};
@@ -16,11 +16,11 @@ class LoginForm extends Component {
 
   renderStatus = () => {
     const { error } = this.props.auth;
-    if (error) return <div>{error}</div>;
+    if (error) return <div className="error">{error}</div>;
   };
 
   renderError = ({ error, touched }) => {
-    if (error && touched) return <div>{error}</div>;
+    if (error && touched) return <div className="error">{error}</div>;
   };
 
   renderInput = ({ input, label, meta }) => {
@@ -69,7 +69,7 @@ class LoginForm extends Component {
 
   render = () => {
     return (
-      <div className="LoginForm">
+      <div className="Form">
         <div className="card">
           <Form
             onSubmit={this.onSubmit}

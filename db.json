@@ -72,12 +72,6 @@
   ],
   "posts": [
     {
-      "status": "Hi! I am Ali Azhar",
-      "author": 1,
-      "time": "2019-08-11T16:13:28+05:00",
-      "id": 1
-    },
-    {
       "status": "Hi! I am Tom Riddle",
       "author": 2,
       "time": "2019-08-11T17:13:28+05:00",
@@ -124,16 +118,15 @@
       "author": 4,
       "time": "2019-08-11T10:13:28+05:00",
       "id": 9
+    },
+    {
+      "status": "Hi I am Ali",
+      "author": 1,
+      "time": "2019-08-19T11:35:27+05:00",
+      "id": 10
     }
   ],
   "comments": [
-    {
-      "message": "Hello",
-      "author": 1,
-      "time": "8/17/2019, 1:22:45 AM",
-      "postId": 1,
-      "id": 1
-    },
     {
       "message": "Hi",
       "author": 1,
@@ -147,13 +140,6 @@
       "time": "8/17/2019, 1:23:14 AM",
       "postId": 2,
       "id": 3
-    },
-    {
-      "message": "s",
-      "author": 1,
-      "time": "8/17/2019, 1:35:18 AM",
-      "postId": 1,
-      "id": 4
     },
     {
       "message": "Hi Harry!",
@@ -170,11 +156,18 @@
       "id": 6
     },
     {
-      "message": "Hi again",
+      "message": "Hello Hermoine",
       "author": 1,
-      "time": "2019-08-19T04:18:26+05:00",
-      "postId": 1,
-      "id": 7
+      "time": "2019-08-19T11:12:54+05:00",
+      "postId": 5,
+      "id": 8
+    },
+    {
+      "message": "Hi Ron! I am Ali",
+      "author": 1,
+      "time": "2019-08-19T11:28:11+05:00",
+      "postId": 4,
+      "id": 9
     }
   ]
 }

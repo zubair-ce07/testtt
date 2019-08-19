@@ -60,20 +60,31 @@ class Post extends Component {
   }
 
   renderAddComment = postId => {
-    if (this.props.isSignedIn) return <AddComment postId={postId} />;
+    if (this.props.auth.isSignedIn) return <AddComment postId={postId} />;
+  };
+
+  renderCross = (postId, authorId) => {
+    if (authorId == this.props.auth.user.id)
+      return (
+        <>
+          <button
+            onClick={() => this.handleDeletePost(postId)}
+            type="button"
+            className="close"
+          >
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </>
+      );
+
+    return null;
   };
 
   renderPost = post => {
     return (
       <div className="Post">
         <div className="card">
-          <button
-            onClick={() => this.handleDeletePost(post.id)}
-            type="button"
-            className="close"
-          >
-            <span aria-hidden="true">&times;</span>
-          </button>
+          {this.renderCross(post.id, post.author)}
           <div className="meta">
             <div>{this.renderUserPicture(post.author)}</div>
             <div className="name-time">
@@ -103,7 +114,7 @@ class Post extends Component {
 }
 
 const mapStateToProps = state => {
-  return { users: state.users, isSignedIn: state.auth.isSignedIn };
+  return { users: state.users, auth: state.auth };
 };
 
 export default connect(
