@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import re
+
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 import w3lib.url
@@ -17,15 +19,11 @@ class PancoCrawlerSpider(CrawlSpider):
 
     def parse_category(self, response):
         next_page = response.css(".paginate-bottom a.js-pagination-next::attr(href)").get()
-        page_num = self.get_next_page(next_page)
+        page_num = re.findall("\\d+", next_page)
         if page_num:
-            url = w3lib.url.add_or_replace_parameter(response.request.url, 'page', page_num)
+            url = w3lib.url.add_or_replace_parameter(response.request.url, 'page', page_num[0])
             yield response.follow(url, self.parse_category)
 
         products = response.css(".product-item-info a::attr(href)").getall()
         for product in products:
-            yield self.product_parser.start_product_request(product, response)
-
-    def get_next_page(self, next_page):
-        if next_page != "#":
-            return next_page.split("?page=")[1]
+            yield response.follow(product, self.product_parser.parse_product)
