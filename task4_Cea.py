@@ -44,10 +44,8 @@ class CeaSpider(CrawlSpider):
     image_url_t = 'https://www.cea.com.br/api/catalog_system' \
                   '/pub/products/search?fq=productId:{}&sc=1'
     image_t = 'https://cea.vteximg.com.br/arquivos/ids/{}.jpg'
-
     listing_css = ['.header_submenu_item-large']
     product_css = ['.product-details_name']
-    products_request = []
 
     rules = (
         Rule(LinkExtractor(restrict_css=listing_css), callback='parse_paginantion'),
@@ -89,17 +87,17 @@ class CeaSpider(CrawlSpider):
     def product_skus(self, raw_product):
         skus = {}
 
-        for sku in raw_product['skus']:
-            color = sku['dimensions']['Cor']
-            size = sku['dimensions']['Tamanho']
+        for raw_sku in raw_product['skus']:
+            color = raw_sku['dimensions']['Cor']
+            size = raw_sku['dimensions']['Tamanho']
             key = f'{color}_{size}'
             skus[key] = {
-                'price': sku['bestPrice'],
-                'previous_price': sku.get('listPrice'),
+                'price': raw_sku['bestPrice'],
+                'previous_price': raw_sku.get('listPrice'),
                 'size': size,
                 'color': color,
             }
-            if not sku['available']:
+            if not raw_sku['available']:
                 skus[key]['out_of_stock'] = True
 
         return skus
@@ -141,7 +139,7 @@ class CeaSpider(CrawlSpider):
         return response.url
 
     def product_brand(self, response):
-        return response.css('.brand::text').get or 'C&A'
+        return response.css('.brand::text').get() or 'C&A'
 
     def product_description(self, response):
         return clean(response.css('.productDescription::text').get())
