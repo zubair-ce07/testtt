@@ -1,7 +1,7 @@
 import scrapy
 
 
-class KidsbrandstoreItem(scrapy.Item):
+class KidsBrandStoreItem(scrapy.Item):
     retailer_sku = scrapy.Field()
     gender = scrapy.Field()
     category = scrapy.Field()

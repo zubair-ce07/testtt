@@ -1,12 +1,17 @@
 import copy
 import re
+import pdb
 
-from kidsbrandstore.items import KidsbrandstoreItem
+from kidsbrandstore.items import KidsBrandStoreItem
+
+from scrapy.spiders import Spider
 
 
-class Parser:
+class Parser(Spider):
+    name = "kidsbrandstoreitem"
+    gender_pairs = {"jungen": "boys", "m\u00E4dchen": "girls"}
     def parse_item(self, response):
-        product = KidsbrandstoreItem()
+        product = KidsBrandStoreItem()
         product['retailer_sku'] = self.retailer_sku(response)
         product['gender'] = self.gender(response)
         product['category'] = self.category(response)
@@ -84,5 +89,5 @@ class Parser:
         sku["currency"] = currency
         for size in sizes:
             sku['size'] = size
-            skus[f"{color}_{size}"] = copy.deepcopy(sku)
+            skus["{}_{}".format(color, size)] = copy.deepcopy(sku)
         return skus
