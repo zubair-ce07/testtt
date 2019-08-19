@@ -53,9 +53,7 @@ class Post extends Component {
         .add(3, "hours")
         .isBefore()
     )
-      return moment(date).calendar(null, {
-        lastWeek: "MMMM D [at] h[:]m A"
-      });
+      return moment(date).format("MMMM D [at] h[:]m A");
     else return moment(date).fromNow();
   }
 
