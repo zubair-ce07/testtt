@@ -36,9 +36,16 @@ class SpeedoParser(Spider):
 
         return self.next_request_or_item(item)
 
+    def parse_colour_requests(self, response):
+        item = response.meta['item']
+        raw_sizes = json.loads(response.text)['product']['variationAttributes'][1]['values']
+        item['requests'].extend([Request(size['url'], callback=self.parse_skus_and_images) for size in raw_sizes])
+
+        return self.next_request_or_item(item)
+
     def parse_skus_and_images(self, response):
         item = response.meta['item']
-        item['skus'].extend(self.get_sku(response))
+        item['skus'].append(self.get_sku(response))
         item['image_urls'].extend(self.get_image_urls(response))
 
         return self.next_request_or_item(item)
@@ -55,7 +62,7 @@ class SpeedoParser(Spider):
 
     def get_colour_requests(self, response):
         urls = response.css('a.color-attribute::attr(href)').getall()
-        return [Request(url=url, callback=self.parse_skus_and_images) for url in urls]
+        return [Request(url=url, callback=self.parse_colour_requests) for url in urls]
 
     def get_image_urls(self, response):
         raw_urls = json.loads(response.text)['product']['images']['large']
@@ -75,19 +82,14 @@ class SpeedoParser(Spider):
         return self.sanitize_list([description_map[0]['content']] + features)
 
     def get_sku(self, response):
-        product_map = json.loads(response.text)['product']
-        out_of_stock = self.get_out_of_stock(product_map['availability']['messages'])
-        skus = []
+        product_map = json.loads(response.text)['product']['variationAttributes']
+        sku = self.get_pricing_details(response)
+        sku['colour'] = product_map[0]['displayValue']
+        sku['size'] = product_map[1]['displayValue']
+        sku['sku_id'] = f'{sku["colour"]}-{sku["size"]}'
+        sku['out_of_stock'] = self.get_out_of_stock(response)
 
-        for raw_size in product_map['variationAttributes'][1]['values']:
-            sku = {**self.get_pricing_details(response)}
-            sku['colour'] = product_map['variationAttributes'][0]['displayValue']
-            sku['size'] = raw_size['displayValue']
-            sku['sku_id'] = f'{sku["colour"]}-{sku["size"]}'
-            sku['out_of_stock'] = out_of_stock
-            skus.append(sku)
-
-        return skus
+        return sku
 
     def get_pricing_details(self, response):
         price_map = json.loads(response.text)['product']['price']
@@ -103,7 +105,8 @@ class SpeedoParser(Spider):
         return self.sanitize_list(response.css('.breadcrumb a::text').getall()[1:-1])
 
     def get_gender(self, response):
-        return response.css('.product-spec-list dd::text').get()
+        gender = response.css('.product-spec-list dd::text').get()
+        return 'unisex-kids' if gender in ['Babies', 'Toddlers'] else gender
 
     def get_care(self, response):
         care = response.css('.product-spec-list dd:nth-last-child(1)::text').get()
@@ -115,8 +118,9 @@ class SpeedoParser(Spider):
     def sanitize_price(self, price):
         return float(''.join(re.findall(r'\d+', price)))
 
-    def get_out_of_stock(self, messages):
-        return re.findall(r'>(.*?)</div>', messages[0])[0] != 'In Stock'
+    def get_out_of_stock(self, response):
+        messages = json.loads(response.text)['product']['availability']['messages']
+        return not bool(re.findall(r'>(.*?)</div>', messages[0]))
 
 
 class SpeedoCrawler(CrawlSpider):
