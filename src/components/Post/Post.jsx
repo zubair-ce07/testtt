@@ -73,7 +73,7 @@ class Post extends Component {
   };
 
   renderCross = (postId, authorId) => {
-    if (authorId == this.props.auth.user.id)
+    if (authorId === this.props.auth.user.id)
       return (
         <>
           <button

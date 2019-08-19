@@ -47,6 +47,8 @@ class FriendFinder extends Component {
     if (users) {
       return Object.keys(users)
         .filter(userId => {
+          console.log("usreID", userId);
+
           const name = users[userId].firstName + users[userId].lastName;
           return name
             .toLowerCase()

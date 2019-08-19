@@ -116,6 +116,7 @@ export const registerUser = newUser => async dispatch => {
   }
 
   newUser.displayPicture = faker.image.avatar();
+  newUser.following = {};
 
   database.post("/users", newUser);
 

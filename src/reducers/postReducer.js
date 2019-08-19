@@ -3,7 +3,8 @@ import {
   CREATE_POST,
   FETCH_FEED,
   DELETE_POST,
-  FETCH_USER_POSTS
+  FETCH_USER_POSTS,
+  LOGOUT
 } from "../actions/types";
 
 const INITIAL_STATE = {};
@@ -24,6 +25,8 @@ export default (state = INITIAL_STATE, action) => {
     case FETCH_USER_POSTS: {
       return { ..._.mapKeys(action.payload, "id") };
     }
+    case LOGOUT:
+      return INITIAL_STATE;
     default:
       return state;
   }

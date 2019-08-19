@@ -43,13 +43,6 @@ export const fetchUserPosts = userId => async dispatch => {
 export const fetchFeed = () => async (dispatch, getState) => {
   const { id, following } = getState().auth.user;
 
-  if (Object.keys(following).length === 0) {
-    return dispatch({
-      type: FETCH_FEED,
-      payload: []
-    });
-  }
-
   /**
    * This step is server's responsibility but since we have
    * a thin server, it's been done here
@@ -67,6 +60,7 @@ export const fetchFeed = () => async (dispatch, getState) => {
   query += "_sort=id&_order=desc";
 
   const response = await database.get(query);
+  console.log("posts", response.data);
   dispatch({
     type: FETCH_FEED,
     payload: response.data

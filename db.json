@@ -68,6 +68,37 @@
       "following": {
         "1": true
       }
+    },
+    {
+      "firstName": "Umar",
+      "lastName": "Azhar",
+      "email": "umar@mail.com",
+      "password": "123",
+      "displayPicture": "https://s3.amazonaws.com/uifaces/faces/twitter/jm_denis/128.jpg",
+      "following": {
+        "2": true
+      },
+      "id": 8
+    },
+    {
+      "firstName": "Linus",
+      "lastName": "Torvald",
+      "email": "linus@mail.com",
+      "password": "123",
+      "displayPicture": "https://s3.amazonaws.com/uifaces/faces/twitter/josemarques/128.jpg",
+      "following": {},
+      "id": 9
+    },
+    {
+      "firstName": "Satya",
+      "lastName": "Nadella",
+      "email": "satya@mail.com",
+      "password": "123",
+      "displayPicture": "https://s3.amazonaws.com/uifaces/faces/twitter/her_ruu/128.jpg",
+      "following": {
+        "3": true
+      },
+      "id": 10
     }
   ],
   "posts": [
@@ -124,6 +155,12 @@
       "author": 1,
       "time": "2019-08-19T11:35:27+05:00",
       "id": 10
+    },
+    {
+      "status": "Hello I am Umar",
+      "author": 8,
+      "time": "2019-08-19T12:48:02+05:00",
+      "id": 11
     }
   ],
   "comments": [
