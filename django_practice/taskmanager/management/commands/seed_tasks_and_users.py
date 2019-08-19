@@ -30,6 +30,51 @@ class Command(BaseCommand):
         self.stdout.write(f'Error: {error}')
         self.stdout.write('')
 
+    def seed_users(self, seed_users_data, users_stats):
+        users = []
+        for single_user_data in seed_users_data:
+            print(single_user_data)
+            password = CustomUser.objects.make_random_password(length=10,
+                                                               allowed_chars=ascii_letters + digits)
+            single_user_data['password'] = make_password(password)
+
+            try:
+                user, is_created = CustomUser.objects.update_or_create(
+                    username=single_user_data.get('username'),
+                    email=single_user_data.get('email'),
+                    defaults=single_user_data)
+                users.append(user)
+                if is_created:
+                    send_email(user, is_created, password)
+                    users_stats['created'] += 1
+                else:
+                    users_stats['updated'] += 1
+            except IntegrityError as dbError:
+                users_stats['failed'] += 1
+                self.print_error(entity='user', error_type='integrity', error=dbError,
+                                 entity_details=single_user_data)
+            except ValidationError as dbError:
+                users_stats['failed'] += 1
+                self.print_error(entity='user', error_type='validation', error=dbError,
+                                 entity_details=single_user_data)
+        return users
+
+    def seed_tasks(self, seed_tasks_data, tasks_stats, users):
+        for single_task_data in seed_tasks_data:
+            random.seed(random.randint)
+            single_task_data['assignee'] = random.choice(users)
+            single_task_data['assigned_by'] = random.choice(users)
+            try:
+                task, is_created = Task.objects.update_or_create(**single_task_data)
+                if is_created:
+                    tasks_stats['created'] += 1
+                else:
+                    tasks_stats['updated'] += 1
+            except ValidationError as dbError:
+                tasks_stats['failed'] += 1
+                self.print_error(entity='task', error_type='validation', error=dbError,
+                                 entity_details=single_task_data)
+
     @transaction.atomic
     def handle(self, *args, **options):
         filepath = options.get('file')
@@ -51,47 +96,9 @@ class Command(BaseCommand):
                     'updated': 0,
                     'failed': 0
                 }
-                users = []
-                for single_user_data in json_reader['users'].values():
-                    print(single_user_data)
-                    password = CustomUser.objects.make_random_password(length=10,
-                                                                       allowed_chars=ascii_letters + digits)
-                    single_user_data['password'] = make_password(password)
 
-                    try:
-                        user, is_created = CustomUser.objects.update_or_create(
-                            username=single_user_data.get('username'),
-                            email=single_user_data.get('email'),
-                            defaults=single_user_data)
-                        users.append(user)
-                        if is_created:
-                            send_email(user, is_created, password)
-                            users_stats['created'] += 1
-                        else:
-                            users_stats['updated'] += 1
-                    except IntegrityError as dbError:
-                        users_stats['failed'] += 1
-                        self.print_error(entity='user', error_type='integrity', error=dbError,
-                                         entity_details=single_user_data)
-                    except ValidationError as dbError:
-                        users_stats['failed'] += 1
-                        self.print_error(entity='user', error_type='validation', error=dbError,
-                                         entity_details=single_user_data)
-
-                for single_task_data in json_reader['tasks'].values():
-                    random.seed(random.randint)
-                    single_task_data['assignee'] = random.choice(users)
-                    single_task_data['assigned_by'] = random.choice(users)
-                    try:
-                        task, is_created = Task.objects.update_or_create(**single_task_data)
-                        if is_created:
-                            tasks_stats['created'] += 1
-                        else:
-                            tasks_stats['updated'] += 1
-                    except ValidationError as dbError:
-                        tasks_stats['failed'] += 1
-                        self.print_error(entity='task', error_type='validation', error=dbError,
-                                         entity_details=single_task_data)
+                users = self.seed_users(json_reader['users'].values(), users_stats)
+                self.seed_tasks(json_reader['tasks'].values(), tasks_stats, users)
 
                 self.print_stats('Users', users_stats)
                 self.print_stats('Tasks', tasks_stats)
