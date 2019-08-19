@@ -12,8 +12,8 @@ class User(AbstractUser):
     email = models.EmailField(unique=True, error_messages={
         'unique': _("A user with that username already exists."),
     })
-    address = models.TextField()
-    gender = models.CharField(max_length=20)
-    phone_no = models.IntegerField(null=True)
+    address = models.TextField(blank=True)
+    gender = models.CharField(max_length=20, blank=True)
+    phone_no = models.IntegerField(null=True, blank=True)
 
     REQUIRED_FIELDS = ['username']
