@@ -10,7 +10,7 @@ class User(AbstractUser):
     USERNAME_FIELD = 'email'
 
     email = models.EmailField(unique=True, error_messages={
-        'unique': _("A user with that username already exists."),
+        'unique': _("A user with that email already exists."),
     })
     address = models.TextField(blank=True)
     gender = models.CharField(max_length=20, blank=True)
