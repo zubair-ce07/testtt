@@ -15,8 +15,13 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.conf.urls import url
 from django.conf import settings
 from django.conf.urls.static import static
+from rest_framework import routers
+from rest_framework.authtoken.views import obtain_auth_token
+
+from accounts.api import views as user_views
 
 
 urlpatterns = [
@@ -25,6 +30,12 @@ urlpatterns = [
     path('auth/', include('accounts.urls')),
     path('user/', include('dashboard.urls')),
     path('seller/', include('seller.urls')),
+
+    # api
+    url(r'^api/v1/api-token-auth/', obtain_auth_token),
+    url(r'^api/v1/users/$', user_views.UserApi.as_view()),
+    url(r'^api/v1/users/(?P<pk>[0-9]+)$',
+        user_views.UserDetailsApi.as_view())
 ]
 
 if settings.DEBUG:
