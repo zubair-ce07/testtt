@@ -15,3 +15,4 @@ class MKCItem(scrapy.Item):
     care = scrapy.Field()
     image_urls = scrapy.Field()
     skus = scrapy.Field()
+    out_of_stock = scrapy.Field()
