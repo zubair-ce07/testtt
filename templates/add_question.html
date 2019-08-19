@@ -1,9 +1,8 @@
 {%extends 'base.html'%}
 {% block content %}
 <div class="container">
-    <p class="h4 text-primary">Add Question for Quiz  <strong class="text-dark">{{quiz.name}}</strong> </p>
+    <p class="h4 text-primary">Add Question for Quiz  <strong class="text-success h1">{{quiz.name}}</strong> </p>
     <p class="lead">Clicking Save and Continue will be redirected to Option page</p>
-  <p class="mark">You can Also <abbr title="During Quiz, The question will not be loaded." class="initialism">Draft</abbr> this Question.</p>
 
     <form class="form-group " method="POST">
         {% csrf_token %}
@@ -13,7 +12,6 @@
             {{field}}
           </div>
           {% endfor %}
-                    <button class="btn btn-primary" href="/">Draft</button>
                       <input type="submit" class="btn btn-success" value="Save And Continue">
 
     </form>

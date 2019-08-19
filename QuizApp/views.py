@@ -6,18 +6,15 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.cache import cache_control
 import random
 from QuizApp.forms import QuizForm, QuestionForm, CustomUserCreationForm
-from QuizApp.models import Answer, Question, Quiz, TakenQuiz, SelectedOption
+from QuizApp.models import *
 
 
 def signup(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
-            if form.cleaned_data.get('is_teacher', False) and form.cleaned_data.get('is_student', False):
-                messages.error(request, 'You Can be Either a Student or Teacher, Not both!.')
-                return render(request, 'signup.html', {'form': form})
             if not form.cleaned_data.get('is_teacher', False) and not form.cleaned_data.get('is_student', False):
-                messages.error(request, 'Select Either  Student or Teacher.')
+                messages.error(request, 'Invalid input! Please specify one of the following (Teacher, Student)')
                 return render(request, 'signup.html', {'form': form})
             user = form.save()
             username = user.username
@@ -39,8 +36,7 @@ def logout_view(request):
 def home(request):
     if request.user.is_student:
         return redirect('student_home')
-    quiz_list = Quiz.objects.filter(owner_id=request.user.id)
-    # published = Quiz.objects.filter(pk__in=[question.exclude(answers__isnull=False).quiz_id for question in quiz_list])
+    quiz_list = Quiz.objects.filter(owner=request.user)
     return render(request, 'home.html', {'quizzes': quiz_list})
 
 
@@ -53,7 +49,7 @@ def add_quiz(request):
         form = QuizForm(request.POST)
         if form.is_valid():
             quiz = form.save(commit=False)
-            quiz.owner_id = request.user.id
+            quiz.owner = request.user
             quiz.save()
         return redirect('add_question', quiz.pk)
     else:
@@ -98,20 +94,20 @@ def add_options(request, question_pk):
                    'question_id': question_pk}
         option4 = {'text': request.POST.get('D'), 'is_correct': True if request.POST.get('Correct') == 'D' else False,
                    'question_id': question_pk}
-        Answer.objects.create(**option1)
-        Answer.objects.create(**option2)
-        Answer.objects.create(**option3)
-        Answer.objects.create(**option4)
+        Option.objects.create(**option1)
+        Option.objects.create(**option2)
+        Option.objects.create(**option3)
+        Option.objects.create(**option4)
         return redirect('quiz_details', Question.objects.get(pk=question_pk).quiz.id)
     else:
         return render(request, 'add_options.html', {'question': Question.objects.get(pk=question_pk)})
 
 
 @login_required
-def question_detail(request, quiz_pk, question_pk):
+def question_detail(request, question_pk):
     if request.user.is_student:
         return HttpResponseBadRequest(content='Not Authorized')
-    question = get_object_or_404(Question, pk=question_pk, quiz_id=quiz_pk)
+    question = get_object_or_404(Question, pk=question_pk)
     return render(request, 'question_detail.html', {'question': question, 'answers':  question.answers.all()})
 
 
@@ -120,19 +116,18 @@ def question_detail(request, quiz_pk, question_pk):
 def take_quiz(request, quiz_pk):
     if not request.user.is_student:
         return HttpResponseBadRequest(content='Not Authorized')
-    if TakenQuiz.objects.filter(student_id=request.user.id, quiz_id=quiz_pk).exists():
+    if Result.objects.filter(taken_by=request.user, quiz_id=quiz_pk).exists():
         return HttpResponseBadRequest(content='Already Taken, Cannot Retake')
     quiz_questions = [question for question in get_object_or_404(Quiz, pk=quiz_pk).questions.all() if
                       question.answers.all().count() == 4 and question.answers.filter(is_correct=True).count() == 1]
     if request.method == 'POST':
-        submitted_ans = Answer.objects.filter(pk__in=[request.POST.get(str(quiz.pk)) for quiz in quiz_questions])
-        score = Answer.objects.filter(id__in=[ans.id for ans in submitted_ans]).filter(is_correct=True).count()
+        submitted_ans = Option.objects.filter(pk__in=[request.POST.get(str(quiz.pk)) for quiz in quiz_questions])
+        score = Option.objects.filter(id__in=[ans.id for ans in submitted_ans]).filter(is_correct=True).count()
         correct_ans = [question.answers.get(is_correct=True) for question in quiz_questions]
         quiz_solution = zip(quiz_questions, correct_ans, submitted_ans)
-        TakenQuiz.objects.create(student_id=request.user.id, quiz_id=quiz_pk, score=score)
+        Result.objects.create(taken_by=request.user, quiz_id=quiz_pk, score=score)
         for question, answer in zip(quiz_questions, submitted_ans):
-            SelectedOption.objects.create(student_id=request.user.id, question_id=question.pk, answer_id=answer.id,
-                                          quiz_id=quiz_pk)
+            AnswerOption.objects.create(student=request.user, question=question, answer=answer)
         return render(request, 'result.html', {'quiz_sol': quiz_solution, 'score': score, 'total': len(quiz_questions)})
     random.shuffle(quiz_questions, random.random)
     return render(request, 'take_quiz.html', {'questions': enumerate(quiz_questions, start=1)})
@@ -196,7 +191,7 @@ def student_home(request):
         return HttpResponseBadRequest(content='Not Authorized')
     student = request.user
     quiz_list = Quiz.objects.exclude(
-        id__in=[quiz.quiz_id for quiz in TakenQuiz.objects.filter(student=student)]).all().exclude(
+        id__in=[quiz.quiz_id for quiz in Result.objects.filter(taken_by=student)]).all().exclude(
         questions__isnull=True).exclude(id__in=[question.quiz_id for question in Question.objects.all() if question.answers.all().count() < 4])
     return render(request, 'student_home.html', {'quizzes': quiz_list})
 
@@ -205,6 +200,10 @@ def student_home(request):
 def result_view(request):
     if not request.user.is_student:
         return HttpResponseBadRequest(content='Not authorized')
-    results = TakenQuiz.objects.all().filter(student=request.user)
+    results = Result.objects.all().filter(student=request.user)
     return render(request, 'result_view.html', {'results': results})
 
+
+def result_details(request, quiz_pk, student_pk):
+    result = AnswerOption.objects.filter(student_id=student_pk, question__in=get_object_or_404(Quiz, pk=quiz_pk).questions.all())
+    return render(request, 'result_details.html', {'result': result})

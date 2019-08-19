@@ -3,15 +3,16 @@ from django.urls import include, path
 from QuizApp import views
 
 urlpatterns = [
+    path('result_details/<int:quiz_pk>/student/<int:student_pk>/', views.result_details, name='result_details'),
     path('', views.home, name='home'),
     path('signout', views.logout_view, name='signout'),
     path('signup', views.signup, name='signup'),
     path('accounts/', include('django.contrib.auth.urls')),
     path('add/', views.add_quiz, name='add_quiz'),
     path('quiz/<int:quiz_pk>/', views.quiz_details, name='quiz_details'),
-    path('quiz/<int:quiz_pk>/question_detail/<int:question_pk>/', views.question_detail, name='question_detail'),
-    path('quiz/add/add_options/<int:question_pk>/', views.add_options, name='add_options'),
-    path('quiz/add/<int:quiz_pk>/', views.add_question, name='add_question'),
+    path('quiz/question_detail/<int:question_pk>/', views.question_detail, name='question_detail'),
+    path('quiz/add_options/<int:question_pk>/', views.add_options, name='add_options'),
+    path('quiz/add_question/<int:quiz_pk>/', views.add_question, name='add_question'),
     path('take_quiz/<int:quiz_pk>/', views.take_quiz, name='take_quiz'),
     path('edit_question/<int:question_pk>/', views.edit_question, name='edit_question'),
     path('edit_options/<int:question_pk>/', views.edit_options, name='edit_options'),

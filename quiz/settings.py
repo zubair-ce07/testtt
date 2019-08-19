@@ -120,7 +120,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-AUTH_USER_MODEL = 'QuizApp.CustomUser'
+AUTH_USER_MODEL = 'QuizApp.User'
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [

@@ -16,8 +16,11 @@
           <tr>
             <td>{{question.text}}</td>
             <td>
-                <a class="btn btn-dark" href="{%url 'question_detail' question.quiz_id question.pk%}">Details</a>
+                <a class="btn btn-dark" href="{%url 'question_detail' question.pk%}">Details</a>
                 <a class="btn btn-danger" href="{%url 'delete_question' question.pk%}">Delete</a>
+                {%if not question.answers.exists %}
+                <a class="btn btn-danger" href="{%url 'add_options' question.pk%}">Add options for this question</a>
+                {%endif%}
             </td>
           </tr>
                 {% empty %}
