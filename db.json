@@ -175,6 +175,27 @@
       "time": "2019-08-19T12:16:32+05:00",
       "postId": 4,
       "id": 10
+    },
+    {
+      "message": "Hi Voldy",
+      "author": 1,
+      "time": "2019-08-19T12:30:55+05:00",
+      "postId": 7,
+      "id": 11
+    },
+    {
+      "message": "Hi again",
+      "author": 1,
+      "time": "2019-08-19T12:31:54+05:00",
+      "postId": 7,
+      "id": 12
+    },
+    {
+      "message": "Yes I know",
+      "author": 1,
+      "time": "2019-08-19T12:32:22+05:00",
+      "postId": 10,
+      "id": 13
     }
   ]
 }

@@ -11,6 +11,7 @@ class AddComment extends Component {
 
   onSubmit = formValues => {
     this.props.createComment(formValues, this.props.postId);
+    this.props.showComments();
   };
 
   renderInput = ({ input, placeholder, meta, type }) => {

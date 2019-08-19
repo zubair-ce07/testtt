@@ -58,7 +58,18 @@ class Post extends Component {
   }
 
   renderAddComment = postId => {
-    if (this.props.auth.isSignedIn) return <AddComment postId={postId} />;
+    if (this.props.auth.isSignedIn)
+      return (
+        <AddComment
+          postId={postId}
+          showComments={() => {
+            this.setState({
+              showComments: true,
+              description: "Hide comments"
+            });
+          }}
+        />
+      );
   };
 
   renderCross = (postId, authorId) => {
