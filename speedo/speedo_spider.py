@@ -83,6 +83,7 @@ class SpeedoParser(Spider):
 
     def get_sku(self, response):
         product_map = json.loads(response.text)['product']['variationAttributes']
+
         sku = self.get_pricing_details(response)
         sku['colour'] = product_map[0]['displayValue']
         sku['size'] = product_map[1]['displayValue']
