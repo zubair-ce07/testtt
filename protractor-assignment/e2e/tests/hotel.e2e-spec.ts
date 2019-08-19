@@ -57,7 +57,6 @@ describe('kayak app assignment', () => {
   });
 
   context('hotel search result page', () => {
-    let markerIdSuffix : string;
     before(async () => {
       await hotelPage.getSearchHotelHandler();
       await hotelDetailPage.getHotelDetailLink().click();
@@ -70,21 +69,14 @@ describe('kayak app assignment', () => {
     it('should hover the hotel marker and display summary section', async () => {
       browserWaitHandler(hotelDetailPage.getAllHotelMarkers().get(0));
       await browser.actions().mouseMove(hotelDetailPage.getAllHotelMarkers().get(0)).perform();
-      expect(await element(by.css('[id*=summaryCard]')).isDisplayed()).to.be.true;
+      expect(await hotelDetailPage.getMarkerSummary().isDisplayed()).to.be.true;
     });
     it('should click the hotel marker and display hotel card', async () => {
-      browserWaitHandler(hotelDetailPage.getAllHotelMarkers().get(0));
-      await hotelDetailPage.getAllHotelMarkers().get(0).click();
-      const markerId = await hotelDetailPage.getAllHotelMarkers().get(0).getAttribute('id');
-      markerIdSuffix = markerId.split('-')[1];
+      const markerIdSuffix =  await  hotelDetailPage.getHotelMarkerId();
       expect(await element(by.id(markerIdSuffix)).isDisplayed()).to.be.true;
     });
     it('should click the view deal button and open provider page in new tab', async () => {
-      const viewDealBtnId = `${markerIdSuffix}-booking-bookButton`;
-      await hotelDetailPage.getViewDealButton(viewDealBtnId).click();
-      browser.sleep(10000);
-      const handlers = await browser.getAllWindowHandles();
-      browser.switchTo().window(handlers[1]);
+      await hotelDetailPage.getViewDealBUttonId();
       expect(await browser.getCurrentUrl()).contains(Aliases.hotelsBaseUrl);
     });
   });
