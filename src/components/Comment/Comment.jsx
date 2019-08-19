@@ -19,7 +19,7 @@ class Comment extends Component {
         <div className="message">
           <div>
             <span
-              onClick={() => history.push(`/user/${comment.author.id}`)}
+              onClick={() => history.push(`/user/${comment.author}`)}
               className="profile-link"
             >
               {users[comment.author].firstName} {users[comment.author].lastName}
