@@ -64,7 +64,7 @@ var HotelPage = function () {
 
     }
 
-    this.isDisplayed =  function (elem) {
+    this.isDisplayedCheck =  function (elem) {
         try {
             return  elem.isDisplayed();
         } catch (error) {

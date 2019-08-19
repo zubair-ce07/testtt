@@ -23,19 +23,19 @@ describe('Test hotels on kayak website', function () {
     it('should check the origin field on hotels page', function () {
 
         hotelPage.setElement("originField");
-        expect(hotelPage.isDisplayed(hotelPage.getElement("originField"))).toBe(true);
+        expect(hotelPage.isDisplayedCheck(hotelPage.getElement("originField"))).toBe(true);
     });
 
     it('should check the start date field on hotels page', function () {
 
         hotelPage.setElement("startDateField");
-        expect(hotelPage.isDisplayed(hotelPage.getElement("startDateField"))).toBe(true);
+        expect(hotelPage.isDisplayedCheck(hotelPage.getElement("startDateField"))).toBe(true);
     });
 
     it('should check the end date field on hotels page', function () {
 
         hotelPage.setElement("endDateField");
-        expect(hotelPage.isDisplayed(hotelPage.getElement("endDateField"))).toBe(true);
+        expect(hotelPage.isDisplayedCheck(hotelPage.getElement("endDateField"))).toBe(true);
     });
 
     it('should verify the count of searched hotels with BCN origin', function () {
@@ -47,37 +47,58 @@ describe('Test hotels on kayak website', function () {
 
     it('should display the searched hotel details in detail tab', function () {
 
-        var hotelDetails = searchedHotelPage.getSearchedHotelDetails();
+        var hotelDetailsView = searchedHotelPage.getSearchedHotelDetails();
         
-        expect(hotelDetails).toBe(true);
+        expect(hotelDetailsView).toBe(true);
     });
     
     it('should display the searched hotel photos in detail tab', function () {
 
-        expect(searchedHotelPage.isDisplayed(searchedHotelPage.photosContainer)).toBe(true);
+        expect(searchedHotelPage.isDisplayedCheck(searchedHotelPage.photosContainer)).toBe(true);
     });
     
     it('should verify the searched hotel maps in map tab', function () {
 
-        var hotelMap = searchedHotelPage.getSearchedHotelMaps();
-        expect(hotelMap).toBe(true);
+        var hotelMapView = searchedHotelPage.getSearchedHotelMaps();
+        expect(hotelMapView).toBe(true);
     });
     
     it('should verify the searched hotel reviews in reviews tab', function () {
 
-        var hotelReviews = searchedHotelPage.getSearchedHotelReviews();
-        expect(hotelReviews).toBe(true);
+        var hotelReviewsView = searchedHotelPage.getSearchedHotelReviews();
+        expect(hotelReviewsView).toBe(true);
     });
     
     it('should verify the searched hotel rates in rates tab', function () {
 
-        var hotelRates = searchedHotelPage.getSearchedHotelRates();
-        expect(hotelRates).toBe(true);
+        var hotelRatesView = searchedHotelPage.getSearchedHotelRates();
+        expect(hotelRatesView).toBe(true);
     });
 
     it('should display map view', function () {
         
-        mapViewPage.displayMapView();
-        expect(mapViewPage.isDisplayed(mapViewPage.getElement("mapBtn"))).toBe(true);
+        var mapContainerView = mapViewPage.getMapView();
+        expect(mapContainerView).toBe(true);
     });
+
+    it('should hover the hotel marker and display summary card', function () {
+
+        var summaryCardView = mapViewPage.getHotelSummaryCard() 
+        expect(summaryCardView).toBe(true);
+        
+    }); 
+
+    it('should verify card view of selected hotel ', function () {
+        
+        var hotelCardView = mapViewPage.getHotelDetailCard() 
+        expect(hotelCardView).toBe(true);
+        
+    }); 
+
+    it('should verify deals of selected hotel on next tab', function () {
+        
+        var dealsWindow = mapViewPage.getDealsWindow() 
+        expect(dealsWindow).toBe(true);
+        
+    }); 
 });
