@@ -12,10 +12,10 @@ describe('Hotels Sanity -', () => {
         rate: "rates"
     };
     const pageName = {
-        hotels: "Hotels Page - ",
-        hotelsSearchResult: "Hotels Search Result Page - ",
-        map: "Map Page - ",
-        deal: "Deal Page - "
+        hotels: "Hotels Page -",
+        hotelsSearchResult: "Hotels Search Result Page -",
+        map: "Map Page -",
+        deal: "Deal Page -"
     };
 
     it(`${pageName.hotels} Should open hotels front page`, () => {
@@ -37,7 +37,7 @@ describe('Hotels Sanity -', () => {
     });
 
     it(`${pageName.hotels} Should display ‘1 room, 2 guests’ in guests field`, () => {
-        expect(hotelPage.getGuestField().getText()).toEqual(hotelPage.getHotelPageInfo().guestFieldText);
+        expect(hotelPage.getGuestField().getText()).toEqual(hotelPage.guestFieldText);
     });
 
     it(`${pageName.hotelsSearchResult} Should load hotels results page`, async () => {

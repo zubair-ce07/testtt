@@ -1,11 +1,8 @@
 import { waitForElementPresence } from './../utils/common';
 
 let mapPage = function () {
-    this.getMapPageInfo = () => {
-        return {
-            hotelMarkerSelector: ".hotel-marker",
-        }
-    };
+
+    this.hotelMarkerSelector = ".hotel-marker";
 
     this.setHotelMarkerId = (hotelMarkerId) => {
         this.hotelMarkerId = hotelMarkerId;
@@ -16,14 +13,13 @@ let mapPage = function () {
     };
 
     this.getAllHotelMarkers = () => {
-        return element.all(by.css(this.getMapPageInfo().hotelMarkerSelector));
+        return element.all(by.css(this.hotelMarkerSelector));
     };
 
     this.getHotelInfo = async () => {
         const hotelMarker = await this.getSingleHotelMarker();
         await this.moveMouseOverHotelMarker(hotelMarker);
-        const hotelMarkerId = await this.getHotelInfoHoverBoxIdInDOM(hotelMarker);
-        this.setHotelMarkerId(hotelMarkerId);
+        await this.saveHoveredBoxDOMId(hotelMarker);
         return this.getHotelInfoHoverBox();
     };
 
@@ -32,28 +28,28 @@ let mapPage = function () {
         const totalHotelMarkers = await hotelMarkers.count();
         console.log(`total hotel markers found: ${totalHotelMarkers}`);
 
-        let hotelMarker = null;
+        let selectedHotelMarker = null;
         for (let markerIndex = 0; markerIndex < totalHotelMarkers; markerIndex++) {
-            const selectedMarker = hotelMarkers.get(markerIndex);
-            let top = await selectedMarker.getCssValue('top');
+            const currentMarker = hotelMarkers.get(markerIndex);
+            let top = await currentMarker.getCssValue('top');
             top = top.replace(/\D/g, '');
             if (top > 0) {
-                hotelMarker = selectedMarker;
+                selectedHotelMarker = currentMarker;
                 break;
             }
         }
 
-        return hotelMarker;
+        return selectedHotelMarker;
     };
 
     this.moveMouseOverHotelMarker = async (hotelMarker) => {
         await browser.actions().mouseMove(hotelMarker).perform()
     };
 
-    this.getHotelInfoHoverBoxIdInDOM = async (hotelMarker) => {
+    this.saveHoveredBoxDOMId = async (hotelMarker) => {
         let hoverBoxId = await hotelMarker.getAttribute("id");
         hoverBoxId = hoverBoxId.replace(/^\D+/g, '');
-        return hoverBoxId;
+        this.setHotelMarkerId(hoverBoxId);
     };
 
     this.getHotelInfoHoverBox = () => {
@@ -84,14 +80,18 @@ let mapPage = function () {
     };
 
     this.getDealPageURL = async () => {
-        const handles = await browser.getAllWindowHandles();
-        await browser.switchTo().window(handles[1]);
+        await this.switchToNewTab();
         let EC = protractor.ExpectedConditions;
         browser.wait(EC.urlContains('kayak.com'), 5000);
         const dealPageUrl = await browser.getCurrentUrl();
         console.log('opened deal page url: ', dealPageUrl);
         return dealPageUrl;
     };
+
+    this.switchToNewTab = async () => {
+        const handles = await browser.getAllWindowHandles();
+        await browser.switchTo().window(handles[1]);
+    }
 };
 
 export default mapPage;
