@@ -36,25 +36,24 @@ class BossSpider(CrawlSpider):
         'https://www.hugoboss.com/uk/home'
     ]
 
-    listing_and_pagination_css = ['.main-header', '.pagingbar__next']
+    listings_css = ['.main-header', '.pagingbar__next']
     product_css = ['.product-tile__link']
     one_size_sel = [Selector(text='<span><span href="#">One_Size</span></span>')]
 
     rules = (
-        Rule(LinkExtractor(restrict_css=listing_and_pagination_css), callback='parse'),
+        Rule(LinkExtractor(restrict_css=listings_css), callback='parse'),
         Rule(LinkExtractor(restrict_css=product_css), callback='parse_item'),
     )
 
     def parse_item(self, response):
-        product_json = json.loads(response.css('script:contains("productSku")'
-                                               '::text').re_first('push\((.+?)\)'))
+        raw_product = self.get_raw_product(response)
         item = BossItem()
-        item['retailer_sku'] = self.retailer_sku(product_json)
-        item['gender'] = self.product_gender(product_json)
-        item['name'] = self.product_name(product_json)
-        item['category'] = self.product_category(product_json)
+        item['retailer_sku'] = self.retailer_sku(raw_product)
+        item['gender'] = self.product_gender(raw_product)
+        item['name'] = self.product_name(raw_product)
+        item['category'] = self.product_category(raw_product)
         item['url'] = self.product_url(response)
-        item['brand'] = self.product_brand(product_json)
+        item['brand'] = self.product_brand(raw_product)
         item['description'] = self.product_description(response)
         item['care'] = self.product_care(response)
         item['image_urls'] = self.images_url(response)
@@ -63,9 +62,13 @@ class BossSpider(CrawlSpider):
         item['requests'] = self.colour_requests(response)
         return self.next_request_or_item(item)
 
+    def get_raw_product(self, response):
+        raw_sku_css = 'script:contains("productSku")::text'
+        return json.loads(response.css(raw_sku_css).re_first('push\((.+?)\)'))
+
     def colour_requests(self, response):
-        color_urls = response.css('.swatch-list__image--is-large '
-                                  '::attr(href)').getall()
+        colour_css = '.swatch-list__image--is-large ::attr(href)'
+        color_urls = response.css(colour_css).getall()
         return [response.follow(url, callback=self.parse_color)
                 for url in color_urls if url not in response.url]
 
@@ -76,21 +79,22 @@ class BossSpider(CrawlSpider):
         return self.next_request_or_item(item)
 
     def product_skus(self, response):
+        colour_css = '.product-stage__control-item__label--variations ::text'
         sizes_sel = response.css('.product-stage__choose-size--container a')
-        color = clean(response.css('.product-stage__control-item__label--variations '
-                                   '::text').getall()[2])
+        color = clean(response.css(colour_css).getall()[2])
 
         common_sku = {
             'color': color,
             'price': clean(response.css('.product-price--price-sales ::text').get()),
-            'previous_price': clean(response.css('.product-price--price-'
-                                                 'standard s ::text').getall())}
+            'previous_price': clean(response.css('.product-price--price-standard s ::text').getall())}
         skus = {}
 
         for size_sel in sizes_sel or self.one_size_sel:
             sku = common_sku.copy()
             sku['size'] = clean(size_sel.css('span span::text').get())
-            sku['out_of_stock'] = not bool(size_sel.css('::attr(href)').get())
+
+            if not bool(size_sel.css('::attr(href)').get()):
+                sku['out_of_stock'] = True
             skus[f'{sku["color"]}_{sku["size"]}'] = sku
 
         return skus
@@ -104,23 +108,23 @@ class BossSpider(CrawlSpider):
         item.pop('requests', None)
         return item
 
-    def retailer_sku(self, product_json):
-        return product_json['productSku']
+    def retailer_sku(self, raw_product):
+        return raw_product['productSku']
 
-    def product_gender(self, product_json):
-        return product_json['productGender']
+    def product_gender(self, raw_product):
+        return raw_product['productGender']
 
-    def product_name(self, product_json):
-        return product_json['productName']
+    def product_name(self, raw_product):
+        return raw_product['productName']
 
-    def product_category(self, product_json):
-        return product_json['productCategory'].split(' ')
+    def product_category(self, raw_product):
+        return raw_product['productCategory'].split(' ')
 
     def product_url(self, response):
         return response.url
 
-    def product_brand(self, product_json):
-        return product_json['productBrand']
+    def product_brand(self, raw_product):
+        return raw_product['productBrand']
 
     def product_description(self, response):
         return clean(response.css('.description div ::text').get().split('.'))
