@@ -18,9 +18,6 @@ class BeyondLimitsSpider(CrawlSpider):
         next_page = response.css(".bb_pagination--item.next::attr(href)").get()
         products = response.css(".bb_product--link.bb_product--imgsizer::attr(href)").getall()
         for product in products:
-            yield self.product_parser.start_product_request(product, response)
+            yield response.follow(product, self.product_parser.parse_product)
         if next_page:
             yield response.follow(next_page, self.parse_category)
-
-    
-    

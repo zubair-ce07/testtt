@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import scrapy
+import re
 
 from ..items import Product
 
@@ -8,9 +9,6 @@ class BeyondParserSpider(scrapy.Spider):
     allowed_domains = ['beyondlimits.com']
     start_urls = ['https://www.beyondlimits.com/']
     possible_genders = ['Men', 'Women']
-
-    def start_product_request(self, product, response):
-        return response.follow(product, self.parse_product)
 
     def parse_product(self, response):
         product_item = Product()
@@ -25,6 +23,7 @@ class BeyondParserSpider(scrapy.Spider):
         product_item['url'] = response.request.url
         product_item['care'] = self.get_care(response)
         product_item['skus'] = self.get_skus(response)
+
         return product_item
 
     def get_product_description(self, response):
@@ -38,7 +37,8 @@ class BeyondParserSpider(scrapy.Spider):
                 return gender
 
     def get_category(self, response):
-        categories = response.css(".bb_breadcrumb--item span::text, .bb_breadcrumb--item strong::text").getall()
+        categories_css = ".bb_breadcrumb--item span::text, .bb_breadcrumb--item strong::text"
+        categories = response.css(categories_css).getall()
         if categories:
             return categories[1:]
 
@@ -51,12 +51,10 @@ class BeyondParserSpider(scrapy.Spider):
         return product_care
 
     def get_colours(self, response):
-        description_list = response.css("#description li::text").getall()
-        colours = []
-        for product_feature in description_list:
-            if "Colour" in product_feature:
-                colours = product_feature.replace("Colour: ", "").split(",")
-        return colours
+        description = " ".join(response.css("#description li::text").getall())
+        colours = re.findall ( 'Colour: (.*?) Care', description, re.DOTALL)
+        if colours:
+            return colours[0].split(",")
 
     def get_skus(self, response):
         product_price = response.css(".price span::attr(content)").get()
