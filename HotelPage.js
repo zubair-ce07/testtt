@@ -39,10 +39,10 @@ var HotelPage = function () {
                     this.originField = element.all(by.css("[id *= location-display]")).first();
                     break;
                 case "startDateField":
-                    this.startDateField =  element(by.css("[id *= dateRangeInput-display-start]"));
+                    this.startDateField =  element.all(by.css("[id *= dateRangeInput-display-start]")).first();
                     break;
                 case "endDateField":
-                    this.endDateField =  element(by.css("[id *= dateRangeInput-display-end]"));
+                    this.endDateField =  element.all(by.css("[id *= dateRangeInput-display-end]")).first();
                     break;
             }
         } catch (error) {
@@ -63,7 +63,6 @@ var HotelPage = function () {
         }
 
     }
-
 
     this.isDisplayed =  function (elem) {
         try {
