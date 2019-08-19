@@ -1,5 +1,4 @@
 from __future__ import absolute_import
-
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
