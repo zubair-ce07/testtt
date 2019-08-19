@@ -72,26 +72,31 @@ class KleineParseSpider(Spider):
 
     def product_skus(self, response):
         common_sku = {
-            'color': response.css('h5:contains("Farbe") + p::text').get() or 'OneColor',
             'price': response.css('script:contains("config")::text').re_first('price":\s"(.+?)"'),
-            'prev_price': clean(response.css('.old-price .price::text').get()) or 0
         }
+
+        color = response.css('h5:contains("Farbe") + p::text').get()
+        previous_prices = response.css('h5:contains("Farbe") + p::text').get()
+
+        if color:
+            common_sku['color'] = color
+
+        if previous_prices:
+            common_sku['previous_prices'] = [clean(previous_prices)]
 
         skus = {}
         for raw_size in self.get_raw_sizes(response):
             common_sku['size'] = raw_size['label']
-            key = f'{common_sku["color"]}_{common_sku["size"]}'
-            skus[key] = common_sku
+            sku_id = f'{common_sku.get("color", "OneColor")}_{common_sku["size"]}'
+            skus[sku_id] = common_sku
 
         return skus
 
     def get_raw_sizes(self, response):
         size_css = 'script:contains("spConfig")'
-        try:
-            raw_json = json.loads(response.css(size_css).re_first('fig\((.+?)\)'))
-            return raw_json['attributes']['155']['options']
-        except:
-            return [{'label': 'OneSize'}]
+        one_size = '{"attributes":{"155":{"options":[{"label": "OneSize"}]}}}'
+        raw_json = json.loads(response.css(size_css).re_first('fig\((.+?)\)', one_size))
+        return raw_json['attributes']['155']['options']
 
 
 class KleineCrawlSpider(CrawlSpider):
