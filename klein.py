@@ -1,11 +1,10 @@
 import json
 import re
-from urllib.parse import parse_qs, urlparse
 
 from scrapy import Request
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule, Spider
-from w3lib.url import add_or_replace_parameter
+from w3lib.url import add_or_replace_parameter, url_query_parameter
 
 from kleineskarussell.items import KleineskarussellItem
 
@@ -60,7 +59,6 @@ class KleineParseSpider(Spider):
         return response.css('.product-manufacturer .h2::text').get()
 
     def product_care(self, response):
-
         raw_cares = response.css('.tab-content .std ::text').getall()
         return [raw_care for symbol in self.care_list for raw_care in clean(raw_cares)
                 if symbol in raw_care]
@@ -70,32 +68,38 @@ class KleineParseSpider(Spider):
                 for url in response.css('.gallery-image::attr(srcset)').getall()]
 
     def product_skus(self, response):
-        common_sku = {
-            'price': response.css('script:contains("config")::text').re_first('price":\s"(.+?)"'),
-        }
+        skus = {}
+        common_sku = self.product_pricing(response)
 
         product_color = response.css('h5:contains("Farbe") + p::text').get()
-        previous_prices = response.css('h5:contains("Farbe") + p::text').get()
-
         if product_color:
             common_sku['color'] = product_color
 
-        if previous_prices:
-            common_sku['previous_prices'] = [clean(previous_prices)]
-
-        skus = {}
         for raw_size in self.get_raw_sizes(response):
-            sku_id = f'{product_color}_{raw_size["label"]}' if product_color else raw_size['label']
-            skus[sku_id] = common_sku.copy()
-            skus[sku_id]['size'] = raw_size['label']
+            sku = common_sku.copy()
+            sku['size'] = raw_size['label']
+            sku_id = f'{sku["color"]}_{sku["size"]}' if sku.get('color') else sku['size']
+            skus[sku_id] = sku.copy()
 
         return skus
+
+    def product_pricing(self, response):
+        price = response.css('script:contains("config")::text').re_first('price":\s"(.+?)"')
+        previous_prices = response.css('h5:contains("Farbe") + p::text').get()
+
+        if previous_prices:
+            return {'price': price,
+                    'previous_prices': previous_prices
+                    }
+
+        return {'price': price
+                }
 
     def get_raw_sizes(self, response):
         size_css = 'script:contains("spConfig")'
         one_size = '{"attributes":{"155":{"options":[{"label": "OneSize"}]}}}'
-        raw_json = json.loads(response.css(size_css).re_first('fig\((.+?)\)', one_size))
-        return raw_json['attributes']['155']['options']
+        raw_sizes = json.loads(response.css(size_css).re_first('fig\((.+?)\)', one_size))
+        return raw_sizes['attributes']['155']['options']
 
 
 class KleineCrawlSpider(CrawlSpider):
@@ -107,13 +111,13 @@ class KleineCrawlSpider(CrawlSpider):
     parse_spider = KleineParseSpider()
 
     listings_css = ['.nav-primary']
+
     rules = (
         Rule(LinkExtractor(restrict_css=listings_css), callback='parse_category'),
     )
 
     def parse_category(self, response):
-        parsed_url = urlparse(response.url).query
-        url_page = int(parse_qs(parsed_url).get('p', [1])[0])
+        url_page = int(url_query_parameter(response.url, "p", 1))
         current_page = int(response.css('.current::text').get(1))
 
         if url_page is not current_page:
@@ -126,4 +130,5 @@ class KleineCrawlSpider(CrawlSpider):
     def parse_products(self, response):
         return [Request(product_url, callback=self.parse_spider.parse_item)
                 for product_url in response.css('.product-image::attr(href)').getall()]
+
 
