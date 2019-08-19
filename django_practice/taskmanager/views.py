@@ -3,9 +3,9 @@ from __future__ import absolute_import
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import PasswordChangeForm
 from django.http import Http404
 from django.shortcuts import render, redirect
+from django.contrib.auth.forms import PasswordChangeForm
 from taskmanager.forms import TaskForm, UserRegistrationForm, UpdateProfileForm
 from taskmanager.models import Task, CustomUser
 
@@ -138,4 +138,3 @@ def register(request):
         form = UserRegistrationForm()
     context = {'form': form}
     return render(request, 'registration/register.html', context)
-
