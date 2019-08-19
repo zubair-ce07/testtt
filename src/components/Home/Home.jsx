@@ -12,7 +12,7 @@ class Home extends Component {
   render = () => {
     return (
       <>
-        <Topbar />
+        <Topbar title="News Feed" />
         <Sidebar />
         <div className="main">
           <NewPost />

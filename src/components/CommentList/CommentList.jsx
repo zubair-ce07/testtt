@@ -14,8 +14,7 @@ class CommentList extends Component {
   };
 
   renderComments = () => {
-    if (this.props.comments === undefined)
-      return <div className="alert alert-light">Loading</div>;
+    if (this.props.comments === undefined) return <small>Loading</small>;
     if (this.props.comments.length) {
       return this.props.comments.map(comment => {
         return <Comment key={comment.id} comment={comment} />;

@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import { connect } from "react-redux";
 import moment from "moment";
 
+import history from "../../history";
 import AddComment from "../AddComment/AddComment";
 import CommentList from "../CommentList/CommentList";
 
@@ -10,7 +11,7 @@ import { deletePost } from "../../actions/post.action";
 import "./Post.sass";
 
 class Post extends Component {
-  state = { showComments: true, description: "View comments" };
+  state = { showComments: false, description: "View comments" };
 
   toggleComments = () => {
     this.setState({
@@ -76,7 +77,10 @@ class Post extends Component {
           <div className="meta">
             <div>{this.renderUserPicture(post.author)}</div>
             <div className="name-time">
-              <div className="profile-link">
+              <div
+                onClick={() => history.push(`/user/${post.id}`)}
+                className="profile-link"
+              >
                 {this.renderUserName(post.author)}
               </div>
               <div className="time">{this.renderDate(post.time)}</div>

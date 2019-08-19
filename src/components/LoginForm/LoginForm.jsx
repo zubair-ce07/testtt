@@ -5,7 +5,7 @@ import { connect } from "react-redux";
 import { loginUser } from "../../actions/user.action";
 import history from "../../history";
 
-import "./LoginForm.css";
+import "./LoginForm.sass";
 
 class LoginForm extends Component {
   state = {};
@@ -28,9 +28,9 @@ class LoginForm extends Component {
       meta.error && meta.touched ? "is-invalid" : ""
     }`;
     return (
-      <div className="form-group row">
-        <label className="col-sm-2 col-form-label">{label}</label>
-        <div className="col-sm-6">
+      <div className="">
+        <label className="">{label}</label>
+        <div className="">
           <input {...input} type={input.type} className={inputClass} />
           {this.renderError(meta)}
         </div>
@@ -58,25 +58,27 @@ class LoginForm extends Component {
             label="Password"
             component={this.renderInput}
           />
-          <button className="btn btn-primary">Login</button>
+          <div className="buttons">
+            <button className="btn btn-light">Login</button>
+            <span onClick={this.register}>Not registered?</span>
+          </div>
         </form>
-        <button className="btn btn-primary" onClick={this.register}>
-          Register
-        </button>
       </>
     );
   };
 
   render = () => {
     return (
-      <>
-        <Form
-          onSubmit={this.onSubmit}
-          validate={validate}
-          render={this.renderForm}
-        />
-        {this.renderStatus()}
-      </>
+      <div className="LoginForm">
+        <div className="card">
+          <Form
+            onSubmit={this.onSubmit}
+            validate={validate}
+            render={this.renderForm}
+          />
+          {this.renderStatus()}
+        </div>
+      </div>
     );
   };
 }

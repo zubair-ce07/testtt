@@ -6,9 +6,11 @@ import {
   unfollowUser
 } from "../../actions/user.action";
 
-import "./FriendFinder.css";
+import "./FriendFinder.sass";
 
 class FriendFinder extends Component {
+  state = { filterString: "" };
+
   componentDidMount = () => {
     this.props.fetchAllUsers();
   };
@@ -23,35 +25,76 @@ class FriendFinder extends Component {
 
   renderFollow = (userId, myId) => {
     const me = this.props.users[myId];
-    if (me.following[userId])
-      return <button onClick={() => this.unfollow(userId)}>Unfollow</button>;
-    return <button onClick={() => this.follow(userId)}>Follow</button>;
+    const classes = "btn btn-light ";
+    const followingCss = `${classes} following`;
+    const notFollowingCss = `${classes} not-following`;
+    if (me.following[userId]) {
+      return (
+        <button className={followingCss} onClick={() => this.unfollow(userId)}>
+          Unfollow
+        </button>
+      );
+    }
+    return (
+      <button className={notFollowingCss} onClick={() => this.follow(userId)}>
+        Follow
+      </button>
+    );
   };
 
   renderUsers = () => {
     const { users, me } = this.props;
     if (users) {
-      return Object.keys(users).map(userId => {
-        /**
-         * TODO: Investigate => Check not working.
-         */
-        if (userId !== me.id) {
+      return Object.keys(users)
+        .filter(userId => {
+          const name = users[userId].firstName + users[userId].lastName;
+          return name
+            .toLowerCase()
+            .includes(this.state.filterString.toLocaleLowerCase());
+        })
+        .filter(userId => {
+          return !(parseInt(userId) === me.id);
+        })
+        .map(userId => {
           return (
-            <div key={userId}>
-              <img src={users[userId].displayPicture} alt="" />
-              {users[userId].firstName} {users[userId].lastName}
+            <div className="contact" key={userId}>
+              <img
+                className="profile-picture"
+                src={users[userId].displayPicture}
+                alt=""
+              />
+              <span>
+                {users[userId].firstName} {users[userId].lastName}
+              </span>
               {this.renderFollow(userId, me.id)}
             </div>
           );
-        }
-        return <></>;
-      });
+        });
     } else {
       return <div>LOADING</div>;
     }
   };
+
+  filterContacts = e => {
+    this.setState({ filterString: e.target.value });
+  };
+
   render = () => {
-    return <div>{this.renderUsers()}</div>;
+    return (
+      <div className="FriendFider">
+        <div className="directory">
+          <div className="title">Directory</div>
+          {this.renderUsers()}
+        </div>
+        <div className="search">
+          <i className="fa fa-search" />
+          <input
+            placeholder="Search contacts.."
+            onChange={this.filterContacts}
+          />
+        </div>
+      </div>
+    );
   };
 }
 

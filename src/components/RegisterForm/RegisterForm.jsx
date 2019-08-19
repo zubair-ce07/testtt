@@ -3,7 +3,8 @@ import { Field, Form } from "react-final-form";
 import { connect } from "react-redux";
 import { registerUser } from "../../actions/user.action";
 
-import "./RegisterForm.css";
+import "./RegisterForm.sass";
+import history from "../../history";
 
 class RegisterForm extends Component {
   state = {};
@@ -44,9 +45,9 @@ class RegisterForm extends Component {
     }`;
 
     return (
-      <div className="form-group row">
-        <label className="col-sm-2 col-form-label">{label}</label>
-        <div className="col-sm-6">
+      <div className="">
+        <label className="">{label}</label>
+        <div className="">
           <input {...input} type={input.type} className={inputClass} />
           {this.renderError(meta)}
         </div>
@@ -87,21 +88,30 @@ class RegisterForm extends Component {
           label="Confirm Password"
           component={this.renderInput}
         />
-        <button className="btn btn-primary">Register</button>
+        <div className="buttons">
+          <button className="btn btn-light">Register</button>
+          <span onClick={this.login}>Already registered?</span>
+        </div>
       </form>
     );
   };
 
+  login = () => {
+    history.push("/login");
+  };
+
   render = () => {
     return (
-      <>
-        <Form
-          onSubmit={this.onSubmit}
-          validate={validate}
-          render={this.renderForm}
-        />
-        {this.renderStatus()}
-      </>
+      <div className="RegisterForm">
+        <div className="card">
+          <Form
+            onSubmit={this.onSubmit}
+            validate={validate}
+            render={this.renderForm}
+          />
+          {this.renderStatus()}
+        </div>
+      </div>
     );
   };
 }

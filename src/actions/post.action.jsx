@@ -41,7 +41,7 @@ export const fetchUserPosts = userId => async dispatch => {
 };
 
 export const fetchFeed = () => async (dispatch, getState) => {
-  const { following } = getState().auth.user;
+  const { id, following } = getState().auth.user;
 
   if (Object.keys(following).length === 0) {
     return dispatch({
@@ -50,7 +50,13 @@ export const fetchFeed = () => async (dispatch, getState) => {
     });
   }
 
+  /**
+   * This step is server's responsibility but since we have
+   * a thin server, it's been done here
+   */
+
   let query = "/posts?";
+  query += `author=${id}&`;
 
   Object.keys(following).forEach(k => {
     if (following[k]) {

@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
 
+import history from "../../history";
 import "./Comment.sass";
 
 class Comment extends Component {
@@ -17,7 +18,10 @@ class Comment extends Component {
         />
         <div className="message">
           <div>
-            <span className="profile-link">
+            <span
+              onClick={() => history.push(`/user/${comment.author.id}`)}
+              className="profile-link"
+            >
               {users[comment.author].firstName} {users[comment.author].lastName}
             </span>
             {comment.message}

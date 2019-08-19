@@ -9,7 +9,7 @@
 |                 |------------------------------------------------------|
 |                 |               |                   |                  |
 |                 |               |                   |                  |
-|       20vw      |    15vw       |      50vw         |         15vw     |
+|       15vw      |    15vw       |      50vw         |         15vw     |
 |                 |               |                   |                  |
 |                 |               |                   |                  |
 |                 |               |                   |                  |
@@ -22,6 +22,13 @@
 
 body {
   background-color: rgb(250, 251, 252);
+}
+
+.main {
+  position: absolute;
+  width: 50vw;
+  left: 32vw;
+  margin-top: 125px;
 }
 
 .profile-picture {
@@ -91,16 +98,4 @@ body {
   border-radius: 0px 0px 0px 0px;
   border-bottom: none;
   border-top: none;
-}
-
-.UserWall {
-  position: absolute;
-  top: 0px;
-  width: 50vw;
-  left: 35vw;
-}
-
-.user-card {
-  position: absolute;
-  width: 20vw;
 }

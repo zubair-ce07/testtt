@@ -8,8 +8,9 @@
       "displayPicture": "https://s3.amazonaws.com/uifaces/faces/twitter/jeffgolenski/128.jpg",
       "id": 1,
       "following": {
-        "3": true,
-        "4": true
+        "4": true,
+        "5": true,
+        "7": true
       }
     },
     {
@@ -167,6 +168,13 @@
       "time": "2019-08-17T17:47:43+05:00",
       "postId": 3,
       "id": 6
+    },
+    {
+      "message": "Hi again",
+      "author": 1,
+      "time": "2019-08-19T04:18:26+05:00",
+      "postId": 1,
+      "id": 7
     }
   ]
 }

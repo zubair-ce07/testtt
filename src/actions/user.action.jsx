@@ -87,7 +87,7 @@ export const loginUser = userCedentials => async dispatch => {
     Some modifications needed in ProfilePage to enable this option here.
     As of now, automatic reroute won't happen.
   */
-  // history.push("/");
+  history.push("/");
 };
 
 // REGISTER
