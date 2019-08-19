@@ -20,6 +20,7 @@ def clean(raw_strs):
 
 class KleineParseSpider(Spider):
     name = 'Kleineparse'
+    care_list = ['%', '°']
 
     def parse_item(self, response):
         item = KleineskarussellItem()
@@ -43,9 +44,7 @@ class KleineParseSpider(Spider):
         return response.css('.product-name h1::text').get()
 
     def product_gender(self, category):
-        if 'Mama' in category:
-            return 'Women'
-        return 'Unisex-Kids'
+        return 'women' if 'Mama' in category else 'unisex-kids'
 
     def product_category(self, response):
         css = 'script:contains("config")::text'
@@ -61,9 +60,9 @@ class KleineParseSpider(Spider):
         return response.css('.product-manufacturer .h2::text').get()
 
     def product_care(self, response):
-        care_list = ['%', '°']
+
         raw_cares = response.css('.tab-content .std ::text').getall()
-        return [raw_care for symbol in care_list for raw_care in clean(raw_cares)
+        return [raw_care for symbol in self.care_list for raw_care in clean(raw_cares)
                 if symbol in raw_care]
 
     def product_image_urls(self, response):
@@ -75,20 +74,20 @@ class KleineParseSpider(Spider):
             'price': response.css('script:contains("config")::text').re_first('price":\s"(.+?)"'),
         }
 
-        color = response.css('h5:contains("Farbe") + p::text').get()
+        product_color = response.css('h5:contains("Farbe") + p::text').get()
         previous_prices = response.css('h5:contains("Farbe") + p::text').get()
 
-        if color:
-            common_sku['color'] = color
+        if product_color:
+            common_sku['color'] = product_color
 
         if previous_prices:
             common_sku['previous_prices'] = [clean(previous_prices)]
 
         skus = {}
         for raw_size in self.get_raw_sizes(response):
-            common_sku['size'] = raw_size['label']
-            sku_id = f'{common_sku.get("color", "OneColor")}_{common_sku["size"]}'
-            skus[sku_id] = common_sku
+            sku_id = f'{product_color}_{raw_size["label"]}' if product_color else raw_size['label']
+            skus[sku_id] = common_sku.copy()
+            skus[sku_id]['size'] = raw_size['label']
 
         return skus
 

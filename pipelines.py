@@ -1,10 +1,11 @@
 class KleineskarussellPipeline(object):
     def process_item(self, item, spider):
-        flat_sku = []
+        skus = []
 
-        for key, sku in item['skus'].items():
-            sku['key'] = key
-            flat_sku.append(sku)
-        item['skus'] = flat_sku
+        for sku_key, sku in item['skus'].items():
+            sku['key'] = sku_key
+            skus.append(sku)
+        item['skus'] = skus
 
         return item
+
