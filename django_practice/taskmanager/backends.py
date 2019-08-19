@@ -14,7 +14,7 @@ class EmailAndUsernameAuthBackend:
             except ValidationError:
                 user = CustomUser.objects.get(username=login_name)
             else:
-                user = CustomUser.objects.get(username=CustomUser.objects.get(email=login_name))
+                user = CustomUser.objects.get(email=login_name)
             if user and check_password(password, user.password):
                 return user
 

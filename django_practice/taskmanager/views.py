@@ -1,12 +1,11 @@
 from __future__ import absolute_import
+
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import ValidationError
-from django.core.validators import validate_email
+from django.contrib.auth.forms import PasswordChangeForm
 from django.http import Http404
 from django.shortcuts import render, redirect
-from django.contrib.auth.forms import PasswordChangeForm
 from taskmanager.forms import TaskForm, UserRegistrationForm, UpdateProfileForm
 from taskmanager.models import Task, CustomUser
 

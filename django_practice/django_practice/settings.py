@@ -97,7 +97,7 @@ LANGUAGE_CODE = 'en-us'
 AUTH_USER_MODEL = 'taskmanager.CustomUser'
 
 AUTHENTICATION_BACKENDS = (
-    'django.contrib.auth.backends.ModelBackend',
+    'taskmanager.backends.EmailAndUsernameAuthBackend',
 )
 
 TIME_ZONE = 'UTC'
