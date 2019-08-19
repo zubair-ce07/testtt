@@ -12,4 +12,3 @@ class DuplicatesPipeline:
         else:
             self.skus_seen.add(item['retailer_sku'])
             return item
-

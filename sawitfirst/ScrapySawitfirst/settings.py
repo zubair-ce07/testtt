@@ -5,9 +5,8 @@ NEWSPIDER_MODULE = 'ScrapySawitfirst.spiders'
 
 ROBOTSTXT_OBEY = True
 
-DOWNLOAD_DELAY = 0.25
+DOWNLOAD_DELAY = 0.125
 
 ITEM_PIPELINES = {
     'ScrapySawitfirst.pipelines.DuplicatesPipeline': 0,
 }
-

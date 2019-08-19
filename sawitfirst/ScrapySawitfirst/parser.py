@@ -2,8 +2,6 @@ import copy
 import json
 import re
 from urllib.parse import urljoin
-from urllib.parse import urlsplit
-from w3lib.url import add_or_replace_parameter
 
 import scrapy
 from scrapy.spiders import Spider
@@ -13,6 +11,7 @@ from ScrapySawitfirst.items import Item
 
 class SawItFirstParser(Spider):
     name = "sawitfirstitemparser"
+    gender = "women"
     color_request_url = "https://4uiusmis27.execute-api.eu-central-1.amazonaws.com/isaw/get-colours"
     product_request_url = "https://www.isawitfirst.com/products/"
     headers = {
@@ -23,17 +22,52 @@ class SawItFirstParser(Spider):
                        (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36 OPR/62.0.3331.99"
     }
     care_raw = ["%", "machine", "wash", "wipe", "clean", "hand"]
-    category_hitsperpage = 60
-    prodpage_bottom_hitsperpage = 15
-    uid = "ATT_1564987309510_06771628066488389"
-    sid = "db4jx5c7ut"
-    fields_category = "id, handle, image, title, tags, FSM_compare_at_price, FSM_price, FSM_OnSale"
-    fields_prodpage_bottom = "id, handle, image, title, tags, FSM_compare_at_price, FSM_price, FSM_OnSale"
 
-    def parse_item(self, response):
+    def parse(self, response):
+        product = self.product(response)
+        form_data = {
+            "jl_numbers": response.css(".product-info-block::attr(data-jlnumber)").extract(),
+            "site": "isawitfirst.com"
+        }
+        self.headers["Referer"] = response.url
+        request = scrapy.http.JSONRequest(self.color_request_url,
+                                          callback=self.parse_color_requests,
+                                          data=form_data, headers=self.headers
+                                          )
+        request.meta["product"] = product
+        yield request
+
+    def parse_color_requests(self, response):
+        product = response.meta["product"]
+        colours = json.loads(response.text)
+        for colour in colours["products"]:
+            url = urljoin(self.product_request_url, colour['handle'])
+            request = scrapy.Request(url, callback=self.parse_skus)
+            product['meta'].append(request)
+            request.meta['colours'] = colours
+            request.meta['product'] = product
+        return self.next_request_or_product(product)
+
+    def parse_skus(self, response):
+        product = response.meta["product"]
+        colours = response.meta["colours"]
+        product['skus'].update(self.product_skus(response, colours))
+        return self.next_request_or_product(product)
+
+    def next_request_or_product(self, product):
+        requests = product['meta']
+
+        if requests:
+            request = requests.pop(0)
+            request.meta["product"] = product
+            yield request
+        else:
+            yield product
+
+    def product(self, response):
         product = Item()
         product['retailer_sku'] = self.retailer_sku(response)
-        product['gender'] = self.gender()
+        product['gender'] = self.gender
         product['category'] = self.category(response)
         product['brand'] = self.brand(response)
         product['url'] = self.url(response)
@@ -45,67 +79,25 @@ class SawItFirstParser(Spider):
         product['previous_prices'] = self.previous_prices(response)
         product['currency'] = self.currency(response)
         product['skus'] = {}
-        form_data = {"jl_numbers": re.findall(r"-(jl\d+-?\d*)$", response.url), "site": "isawitfirst.com"}
-        self.headers["Referer"] = response.url
-        request = scrapy.http.JSONRequest(self.color_request_url,
-                                          callback=self.parse_sku_requests,
-                                          data=form_data, headers=self.headers
-                                          )
-        request.meta["product"] = product
-        yield request
-
-    def parse_next_page(self, response):
-        page_data = json.loads(response.text)
-        page_data = page_data["zones"][0]["data"]["metadata"]
-        url = response.meta["url"]
-        hits = int(page_data["hits"])
-        hitsperpage = int(page_data["hitsperpage"])
-        first = int(page_data["first"])
-        if (first + hitsperpage) < hits:
-            url = urlsplit(url).geturl()
-            if first == 0:
-                next_page = 1
-            else:
-                next_page = (first / hitsperpage) + 1
-            url = add_or_replace_parameter(url, 'page', f"{next_page}")
-            yield scrapy.Request(url, callback=self.parse)
-
-    def prepare_params(self, response):
-        category_re = r'data-attraqt-category="(\w+[-?\w*]*)"'
-        params = {
-            "siteid": response.css(".page-collection::attr(data-attraqt-site-id)").extract_first(),
-            "pageurl": response.url,
-            "zone0": re.findall(r'data-attraqt-page-type="(\w+)"', response.text)[0],
-            "sid": self.sid,
-            "uid": self.uid,
-            "config_category": re.findall(category_re, response.text)[0],
-            "config_categorytree": re.findall(category_re, response.text)[0]
-        }
-        if params["zone0"] == "category":
-            params["fields_category"] = self.fields_category
-            params["category_hitsperpage"] = self.category_hitsperpage
-            params["category_page"] = int(re.findall(r"page=(\d+)$", response.url)[0]) + 1
-        else:
-            params["fields_prodpage_bottom"] = self.fields_prodpage_bottom
-            params["prodpage_bottom_hitsperpage"] = self.prodpage_bottom_hitsperpage
-            params["sku"] = re.findall(r'"resourceId":(\d+)}', response.text)[0]
-        return params
+        product['meta'] = []
+        return product
 
     def retailer_sku(self, response):
         return response.css(".product-sku > *::text").extract_first()
 
     def category(self, response):
-        categories_str = re.findall("Categories: (.+),", response.text)[0]
-        return re.findall(r'"\s*([^"]*?)\s*"', categories_str)
+        categories_raw = re.findall("Categories: (.+),", response.text)[0]
+        return re.findall(r'"\s*([^"]*?)\s*"', categories_raw)
 
     def brand(self, response):
-        return re.findall(r'Brand: "(.+)",', response.text)[0]
+        text = response.css(".analytics").extract_first()
+        return re.findall(r'"brand":"([\w \\u\.]+)","', text)[0]
 
     def url(self, response):
         return response.url
 
     def product_name(self, response):
-        return re.findall(r'Name: "(.+)",', response.text)[0]
+        return response.css("[itemprop=name]::attr(content)").extract_first()
 
     def description(self, response):
         return response.xpath('//*[*[@class="product-description-title"]]/p/text()').extract()
@@ -132,11 +124,8 @@ class SawItFirstParser(Spider):
     def currency(self, response):
         return response.css('[property=og\:price\:currency]::attr(content)').extract_first()
 
-    def gender(self):
-        return "women"
-
-    def color(self, response, variants):
-        for product in variants["products"]:
+    def color(self, response, colours):
+        for product in colours["products"]:
             if product['handle'] in response.url:
                 return product["colour_name"]
 
@@ -148,19 +137,9 @@ class SawItFirstParser(Spider):
             stock.append((size, quantity))
         return stock
 
-    def parse_sku_requests(self, response):
-        product = response.meta["product"]
-        colours = json.loads(response.text)
-        for colour in colours["products"]:
-            request = scrapy.Request(urljoin(self.product_request_url, colour['handle']), callback=self.parse_skus)
-            request.meta["product"] = product
-            request.meta["variants_info"] = colours
-            yield request
-
-    def parse_skus(self, response):
-        product = response.meta["product"]
-        variants = response.meta["variants_info"]
-        color = self.color(response, variants)
+    def product_skus(self, response, colours):
+        skus = {}
+        color = self.color(response, colours)
         price = self.price(response)
         previous_prices = self.previous_prices(response)
         currency = self.currency(response)
@@ -173,7 +152,5 @@ class SawItFirstParser(Spider):
                 sku["out_of_stock"] = True
             else:
                 sku["out_of_stock"] = False
-            product["skus"][f"{color}_{size}"] = copy.deepcopy(sku)
-        if len(product["skus"]) == len(variants["products"]) * len(stock):
-            yield product
-
+            skus[f"{color}_{size}"] = copy.deepcopy(sku)
+        return skus

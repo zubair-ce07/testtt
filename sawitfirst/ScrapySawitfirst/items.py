@@ -15,4 +15,4 @@ class Item(scrapy.Item):
     price = scrapy.Field()
     previous_prices = scrapy.Field()
     currency = scrapy.Field()
-
+    meta = scrapy.Field()
