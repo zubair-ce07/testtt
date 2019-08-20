@@ -1,3 +1,7 @@
+"""User Profile Models module.
+
+This is user profile models module it has differnet model for the user profile app.
+"""
 from django.db import models
 
 from django.db import models
@@ -7,7 +11,12 @@ from django.utils.translation import gettext_lazy as _
 
 
 class User(AbstractUser):
+    """Customized user Model.
 
+    This is customized user model for user profile app, it inherit
+    the AbstractUser,add different fields to it and override it's
+    username field from username to email.
+    """
     gender_choices = [
         ('male', 'Male'),
         ('female', 'Female'),

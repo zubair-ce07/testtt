@@ -37,9 +37,24 @@ class Register(View):
         return render(request, 'user_profile/register.html', {'form': form})
 
 
+"""User Profile Views module.
+
+This module contains differnet views for user profile app.
+"""
+
+
 class Profile(View):
+    """Render and Save Profile Form.
+
+    This method renders the profile form and also save it's data
+    when form is submitted
+    """
+
     @method_decorator(login_required)
     def post(self, request):
+        """POST method for Profile Form.
+        This method will save profile data when profile form is submitted.
+        """
         form = UserUpdateForm(request.POST, instance=request.user)
         if form.is_valid():
             form.save()
@@ -48,6 +63,9 @@ class Profile(View):
 
     @method_decorator(login_required)
     def get(self, request):
+        """GET method for Profile Form.
+        This method will render profile form.
+        """
         form = UserUpdateForm(instance=request.user)
         context = {
             'form': form
@@ -57,5 +75,12 @@ class Profile(View):
 
 
 class LoginView(auth_views.LoginView):
+    """Login view Class.
+
+    This method will render the login form,it inherits LoginView, and override
+    it's from class to our login form so that email field is displayed instead
+    of username.
+    """
+
     template_name = 'user_profile/login.html'
     form_class = UserLoginForm
