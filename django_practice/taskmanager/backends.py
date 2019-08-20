@@ -1,7 +1,6 @@
 from django.contrib.auth.hashers import check_password
-from django.core.exceptions import ValidationError
-from django.core.validators import validate_email
 from taskmanager.models import CustomUser
+from validate_email import validate_email
 
 
 class EmailAndUsernameAuthBackend:
@@ -9,12 +8,14 @@ class EmailAndUsernameAuthBackend:
         login_name = login_credentials['username']
         password = login_credentials['password']
         if login_name:
-            try:
-                validate_email(login_name)
-            except ValidationError:
-                user = CustomUser.objects.get(username=login_name)
-            else:
-                user = CustomUser.objects.get(email=login_name)
+            is_valid = validate_email(login_name)
+            try
+                if is_valid:
+                    user = CustomUser.objects.get(email=login_name)
+                else:
+                    user = CustomUser.objects.get(username=login_name)
+            except CustomUser.DoesNotExist:
+                user = None
             if user and check_password(password, user.password):
                 return user
 
