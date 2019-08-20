@@ -70,6 +70,7 @@ class KleineParseSpider(Spider):
     def product_skus(self, response):
         skus = {}
         common_sku = self.product_pricing(response)
+        common_sku['currency'] = 'Euro'
 
         product_color = response.css('h5:contains("Farbe") + p::text').get()
         if product_color:
@@ -130,5 +131,4 @@ class KleineCrawlSpider(CrawlSpider):
     def parse_products(self, response):
         return [Request(product_url, callback=self.parse_spider.parse_item)
                 for product_url in response.css('.product-image::attr(href)').getall()]
-
 
