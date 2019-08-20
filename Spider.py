@@ -6,6 +6,7 @@ from ..items import StartItem
 
 
 class QuotesSpider(CrawlSpider):
+
     name = "Lemkus"
     start_urls = [ 'https://www.jacklemkus.com/']
     rules = (
@@ -62,12 +63,13 @@ class QuotesSpider(CrawlSpider):
         price = response.css(".price::text").extract_first()
         currency = 'R'
         size_label =  response.xpath('//th[contains(text(),"Whats My Size (ALL UK)")]/following-sibling::td/text()').extract_first()
-    
+        product_id = response.css(".product-data-mine::attr(data-confproductid)").extract()
 
         sku = {
             "price": price,
             "currency": currency,
-            "size": size_label
+            "size": size_label,
+            "sku-id": product_id
         }
 
         return sku
