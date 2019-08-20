@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import User
+from .models import MyUser
 
 # registered custom used model with the admin app
 
@@ -8,8 +8,8 @@ admin.site.site_title = "User Profiles"
 
 
 class UserAdmin(admin.ModelAdmin):
-    list_display = ['username', 'email', 'first_name', 'last_name', 'gender']
+    list_display = ['email', 'first_name', 'last_name', 'gender']
     list_filter = ('gender', 'email')
 
 
-admin.site.register(User, UserAdmin)
+admin.site.register(MyUser, UserAdmin)

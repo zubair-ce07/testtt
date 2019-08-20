@@ -124,7 +124,7 @@ CRISPY_TEMPLATE_PACK = 'bootstrap4'
 STATIC_URL = '/static/'
 
 # changed the used model so we have to specify in the settings
-AUTH_USER_MODEL = 'user_profile.User'
+AUTH_USER_MODEL = 'user_profile.MyUser'
 # after login page url
 LOGIN_REDIRECT_URL = 'profile'
 # login url

@@ -9,7 +9,6 @@ from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.contrib.auth import views as auth_views
 
-from .models import User
 from .forms import UserRegisterForm, UserUpdateForm, UserLoginForm
 
 
