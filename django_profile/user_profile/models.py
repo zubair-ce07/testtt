@@ -7,13 +7,21 @@ from django.utils.translation import gettext_lazy as _
 
 
 class User(AbstractUser):
+
+    gender_choices = [
+        ('male', 'Male'),
+        ('female', 'Female'),
+        ('other', 'Other')
+    ]
+
     USERNAME_FIELD = 'email'
 
     email = models.EmailField(unique=True, error_messages={
         'unique': _("A user with that email already exists."),
     })
     address = models.TextField(blank=True)
-    gender = models.CharField(max_length=20, blank=True)
+    gender = models.CharField(max_length=20, blank=True, choices=gender_choices,
+                              default='male',)
     phone_no = models.IntegerField(null=True, blank=True)
 
     REQUIRED_FIELDS = ['username']
