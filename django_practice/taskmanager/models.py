@@ -16,3 +16,4 @@ class Task(models.Model):
     assigned_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='assigned_by', null=True)
     due_date = models.DateField()
     last_modified = models.DateTimeField(auto_now=True)
+    status = models.BooleanField(default=False)
