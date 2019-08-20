@@ -14,12 +14,13 @@ class CalvinKleinSpider(CrawlSpider):
         ".pages"
     ]
     products_css = [".product.name.product-item-name"]
+    deny = ['by']
 
     parse_spider = CalvinKleinParser()
 
     rules = (
-        Rule(LinkExtractor(restrict_css=products_css, deny='by'), callback="parse_item"),
-        Rule(LinkExtractor(restrict_css=listings_css, deny='by'), callback="parse")
+        Rule(LinkExtractor(restrict_css=products_css, deny=deny), callback="parse_item"),
+        Rule(LinkExtractor(restrict_css=listings_css, deny=deny), callback="parse")
     )
 
     def parse(self, response):

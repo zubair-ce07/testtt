@@ -4,7 +4,6 @@ from datetime import datetime
 from scrapy.spiders import Spider
 from scrapy import Request
 
-
 from calvinklein.items import CalvinKleinItem
 
 
@@ -30,7 +29,7 @@ class CalvinKleinParser(Spider):
         garment["crawl_id"] = self.get_crawl_id()
         garment["market"] = self.market
         garment["retailer"] = self.retailer
-        garment["gender"] = self.get_gender(response)
+        garment["gender"] = self.get_product_gender(response)
         garment["skus"] = {}
         garment["meta"] = self.color_requests(response)
         garment["trail"] = response.meta["trail"]
@@ -40,36 +39,37 @@ class CalvinKleinParser(Spider):
     def parse_color(self, response):
         garment = response.meta["garment"]
         garment["skus"].update(self.get_product_sku(response))
-        garment["image_urls"] += self.get_image_urls(response)
+        garment["image_urls"] += self.get_product_images(response)
         return self.next_request_or_garment(garment)
 
     def clean_price(self, price):
         return int(price.strip().replace(".", ""))
 
     def clean_json(self, response):
-        json_css = ".product-options-wrapper"
+        json_css = "script:contains('data-role=swatch-options')::text"
         raw_json = response.css(json_css).get()
-        return raw_json.split('magento-init">')[1].split('</script>', 1)[0].replace('\n', '')
+        return raw_json.replace('\n', '')
 
     def get_product_name(self, response):
         css = ".page-title .base::text"
         return response.css(css).get()
 
     def get_product_description(self, response):
-        css = "#ck\.product\.product\.info::text"
-        return response.css(css).getall()
+        css = "#ck\.product\.product\.info::text, #ck\.product\.product\.info li::text"
+        return [description.strip() for description in response.css(css).getall()]
 
     def get_product_care(self, response):
-        css = "#ck\.product\.product\.info li::text"
+        css = ".prod-attribute + .prod-attribute li::text"
         return response.css(css).getall()
 
     def get_retailer_sku(self, response):
-        return response.url.split('-')[-1]
+        css = ".product-add-form form::attr(data-product-sku)"
+        return response.css(css).get()
 
-    def get_image_urls(self, response):
-        css = "input[type=hidden]::attr(content)"
-        base_image_path = response.css(css).get().split("_", 1)[0]
-        return [f"{base_image_path}_0{num}.jpg" for num in range(1, 7)]
+    def get_product_images(self, response):
+        css = ".page-product-configurable"
+        regex = 'full":"(.+?)"'
+        return [image.replace("\\", "") for image in response.css(css).re(regex)]
 
     def get_product_brand(self, response):
         css = "meta::attr(content)"
@@ -79,7 +79,7 @@ class CalvinKleinParser(Spider):
         css = "meta::attr(content)"
         return response.css(css).getall()[3].split("| ")
 
-    def get_gender(self, response):
+    def get_product_gender(self, response):
         css = "script:contains('getListFromLocalStorage')"
         regex = ': "(.+?)"'
         return response.css(css).re(regex)[-1]
@@ -88,8 +88,7 @@ class CalvinKleinParser(Spider):
         return f"{self.retailer}-{datetime.now().strftime('%Y%m%d-%H%M%s')}-medp"
 
     def color_requests(self, response):
-        color_css = '.swatch-option.colour a::attr(href), ' \
-                    'link[rel="canonical"]::attr(href)'
+        color_css = '.swatch-option.colour a::attr(href), link[rel="canonical"]::attr(href)'
         return [Request(url, callback=self.parse_color, dont_filter=True)
                 for url in response.css(color_css).getall()]
 
@@ -128,12 +127,9 @@ class CalvinKleinParser(Spider):
 
         return pricing
 
-    def get_product_json(self, response):
-        raw_json = self.clean_json(response)
-        size_sel = json.loads(raw_json)\
-        ['[data-role=swatch-options]']['swatch-renderer-extended']['jsonConfig']['attributes']['441']['options']
-
-        return size_sel
+    def raw_sku(self, response):
+        raw_skus = json.loads(self.clean_json(response))
+        return raw_skus['[data-role=swatch-options]']['swatch-renderer-extended']['jsonConfig']
 
     def get_product_sku(self, response):
         skus = {}
@@ -141,11 +137,11 @@ class CalvinKleinParser(Spider):
 
         selected_color = response.css(selected_color_css).get()
         common_sku = self.get_product_pricing(response)
-        size_sel = self.get_product_json(response)
+        products = self.raw_sku(response)['attributes']['441']['options']
 
         common_sku["color"] = selected_color
 
-        for size in size_sel:
+        for size in products:
             sku = common_sku.copy()
             sku["size"] = size['label']
 
