@@ -7,20 +7,20 @@ from taskmanager.models import Task, CustomUser
 
 
 class CustomUserAdmin(admin.ModelAdmin):
+    search_fields = ('assigned_by__title', 'assignee__title',)
+    list_display = ('username', 'task_count',)
+
     def get_queryset(self, request):
         queryset = super(CustomUserAdmin, self).get_queryset(request)
-        queryset_self_assigned = queryset.filter(assigned_by=models.F('assignee'))
-        queryset = queryset.exclude(assigned_by=models.F('assignee'))
-        queryset = queryset.annotate(tasks_count=Count('assigned_by'))
-        queryset_self_assigned = queryset_self_assigned.annotate(tasks_count=Count('assigned_by') + Count('assignee'))
+        queryset_self_assigned = queryset.filter(assigned_by=models.F('assignee')).annotate(
+            tasks_count=Count('assigned_by') + Count('assignee'))
+        queryset = queryset.exclude(assigned_by=models.F('assignee')).annotate(tasks_count=Count('assignee'))
         return queryset_self_assigned | queryset
 
     def task_count(self, obj):
         return obj.tasks_count
 
     task_count.short_description = "No. of Tasks"
-    search_fields = ('assigned_by__title', 'assignee__title',)
-    list_display = ('username', 'task_count',)
 
 
 class TaskAdmin(admin.ModelAdmin):
