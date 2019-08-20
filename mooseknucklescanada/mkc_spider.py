@@ -39,6 +39,7 @@ class MKCParser(Spider):
         item['brand'] = self.brand
         item['market'] = self.market
         item['retailer'] = self.retailer
+        item['trail'] = response.meta.get('trail', [])
         item['name'] = self.get_name(response)
         item['care'] = self.get_care(response)
         item['gender'] = self.get_gender(response)
@@ -46,11 +47,10 @@ class MKCParser(Spider):
         item['image_urls'] = self.get_image_urls(response)
         item['description'] = self.get_description(response)
         item['retailer_sku'] = self.get_product_id(response)
-        item['trail'] = response.meta.get('trail', [])
+        item['skus'] = self.get_skus(response)
 
-        oos = self.get_out_of_stock(response)
-        key, value = ('out_of_stock', oos) if oos else ('skus', self.get_out_of_stock(response))
-        item[key] = value
+        if not item['skus']:
+            item['out_of_stock'] = True
 
         return item
 
@@ -84,18 +84,21 @@ class MKCParser(Spider):
         return response.css('meta[property="product:retailer_item_id"]::attr(content)').get()
 
     def get_skus(self, response):
+        skus = []
+        if self.get_out_of_stock(response):
+            return skus
+
         attributes = response.css('#product-options-wrapper script').re_first(r'{.*}')
         attributes_map = json.loads(attributes)['attributes']
         raw_colours, raw_sizes = attributes_map['141']['options'], attributes_map['142']['options']
         pricing_details = self.get_pricing_details(response)
-        skus = []
 
         for raw_colour in raw_colours:
             for product in raw_colour['products']:
                 for raw_size in raw_sizes:
                     if not product in raw_size['products']:
                         continue
-                    sku = {**pricing_details}
+                    sku = pricing_details.copy()
                     sku['size'] = raw_size['label']
                     sku['colour'] = raw_colour['label']
                     sku['sku_id'] = f'{sku["colour"]}_{sku["size"]}'
