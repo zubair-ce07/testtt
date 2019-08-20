@@ -6,13 +6,14 @@ from urllib.parse import urlparse
 from datetime import datetime
 from math import ceil
 
-from scrapy import Spider
+from scrapy.spiders import CrawlSpider, Rule
+from scrapy.linkextractors import LinkExtractor
 import js2xml
 import ccy
 from parsel import Selector
 
 
-class JackLemkusScrapper(Spider):
+class JackLemkusScrapper(CrawlSpider):
     name = 'jack_lemkus_scrapper'
 
     allowed_domains = ['jacklemkus.com']
@@ -24,17 +25,15 @@ class JackLemkusScrapper(Spider):
         # 'https://www.jacklemkus.com/apparel/clrdo-og-sweats-borang',
     ]
 
-    def parse(self, response):
-        categories = response.css('#nav li a:nth-child(2)::attr("href")').getall()
-        for category in categories:
-            yield response.follow(category, self.parse_product_category_page)
+    rules = (
+        Rule(LinkExtractor(allow=('sneakers', 'mens-apparel', 'womens-apparel', 'kids', 'accessories'),
+                           restrict_css='#nav li a:nth-child(2)'), callback='parse_product_category_page'),
+    )
 
     def parse_product_category_page(self, response):
         total_products = response.css('#cust-list > div.amount::text').get().strip().split()[5]
-        for page_number in range(2, ceil(int(total_products) / 16) + 1):
+        for page_number in range(1, ceil(int(total_products) / 16) + 1):
             yield response.follow(f'?p={page_number}', self.parse_product_grid)
-
-        return self.parse_product_grid(response)
 
     def parse_product_grid(self, response):
         product_links = response.css('#products-grid .product-image::attr("href")').getall()
