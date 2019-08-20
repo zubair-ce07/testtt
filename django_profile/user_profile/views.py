@@ -1,3 +1,7 @@
+"""User Profile Views module.
+
+This module contains differnet views for user profile app.
+"""
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.views import View
@@ -7,40 +11,26 @@ from django.contrib.auth import views as auth_views
 
 from .models import User
 from .forms import UserRegisterForm, UserUpdateForm, UserLoginForm
-# Create your views here.
-
-
-# def register(request):
-#     if request.method == 'POST':
-#         form = UserRegisterForm(request.POST)
-#         if form.is_valid():
-#             form.save()
-#             messages.success(request, f'Your account has been Created!')
-#             return redirect('login')
-#     else:
-#         form = UserRegisterForm()
-#     return render(request, 'user_profile/register.html', {'form': form})
 
 
 class Register(View):
+    """Render and save user to profile
+
+    This method renders the user registration form and also save it's data
+    when form is submitted
+    """
+
     def post(self, request):
-        form = UserRegisterForm(request.POST)
-        print(form.is_valid())
-        if form.is_valid():
-            form.save()
+        user_form = UserRegisterForm(request.POST)
+        if user_form.is_valid():
+            user_form.save()
             messages.success(request, f'Your account has been Created!')
             return redirect('login')
-        return render(request, 'user_profile/register.html', {'form': form})
+        return render(request, 'user_profile/register.html', {'form': user_form})
 
     def get(self, request):
-        form = UserRegisterForm()
-        return render(request, 'user_profile/register.html', {'form': form})
-
-
-"""User Profile Views module.
-
-This module contains differnet views for user profile app.
-"""
+        user_form = UserRegisterForm()
+        return render(request, 'user_profile/register.html', {'form': user_form})
 
 
 class Profile(View):
@@ -55,20 +45,21 @@ class Profile(View):
         """POST method for Profile Form.
         This method will save profile data when profile form is submitted.
         """
-        form = UserUpdateForm(request.POST, instance=request.user)
-        if form.is_valid():
-            form.save()
+        user_update_form = UserUpdateForm(request.POST, instance=request.user)
+        if user_update_form.is_valid():
+            user_update_form.save()
             messages.success(request, f'Your account has been updated!')
             return redirect('profile')
+        return render(request, 'user_profile/profile.html', {'form': user_update_form})
 
     @method_decorator(login_required)
     def get(self, request):
         """GET method for Profile Form.
         This method will render profile form.
         """
-        form = UserUpdateForm(instance=request.user)
+        user_update_form = UserUpdateForm(instance=request.user)
         context = {
-            'form': form
+            'form': user_update_form
         }
 
         return render(request, 'user_profile/profile.html', context)
