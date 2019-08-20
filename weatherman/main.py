@@ -5,7 +5,8 @@ months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", 
 
 
 class FileReader:
-    def read(self, path):
+    @staticmethod
+    def read(path):
         try:
             csv_file = open(path, mode='r')
             csv_file.__next__()
@@ -17,7 +18,8 @@ class FileReader:
 
 
 class Formatter:
-    def display_extremes(self, results):
+    @staticmethod
+    def display_extremes(results):
         print("\n\nHighest: %sC on %s %s"
               % (results["highest"],
                  months[int(results["highest_day"].split("-")[1]) - 1],
@@ -31,12 +33,14 @@ class Formatter:
                  months[int(results["humid_day"].split("-")[1]) - 1],
                  results["humid_day"].split("-")[2]))
 
-    def display_averages(self, results):
+    @staticmethod
+    def display_averages(results):
         print("\n\nHighest Average: %dC" % (results["sum_high_temp"] / results["days_high_temp"]))
         print("Lowest Average: %dC" % (results["sum_low_temp"] / results["days_low_temp"]))
         print("Average Humidity: %d" % (results["sum_humidity"] / results["days_humidity"]))
 
-    def display_bars(self, results):
+    @staticmethod
+    def display_bars(results):
         for day, bars in results.items():
             print("%s\033[0;32;40m %s\033[0;31;40m%s \033[0;37;40m%sC - %sC \n"
                   % (day, bars[0], bars[1], len(bars[0]), len(bars[1])))
@@ -66,7 +70,8 @@ class Operations:
                 line_count += 1
         return results
 
-    def get_max_temperature(self, row, results):
+    @staticmethod
+    def get_max_temperature(row, results):
         if ("highest" not in results and row["Max TemperatureC"] != '') \
                 or (row["Max TemperatureC"] != ''
                     and row["Max TemperatureC"] is not None
@@ -75,7 +80,8 @@ class Operations:
             return True, int(row["Max TemperatureC"]), row[keys[0]]
         return False, None, None
 
-    def get_lowest_temperature(self, row, results):
+    @staticmethod
+    def get_lowest_temperature(row, results):
         if ("lowest" not in results and row["Min TemperatureC"] != '') \
                 or (row["Min TemperatureC"] != ''
                     and row["Min TemperatureC"] is not None
@@ -84,7 +90,8 @@ class Operations:
             return True, int(row["Min TemperatureC"]), row[keys[0]]
         return False, None, None
 
-    def get_max_humidity(self, row, results):
+    @staticmethod
+    def get_max_humidity(row, results):
         if ("humid" not in results and row["Max Humidity"] != '') \
                 or (row["Max Humidity"] != ''
                     and row["Max Humidity"] is not None
@@ -93,7 +100,8 @@ class Operations:
             return True, int(row["Max Humidity"]), row[keys[0]]
         return False, None, None
 
-    def calculate_averages(self, args):
+    @staticmethod
+    def calculate_averages(args):
         abs_file_path = ("%s/lahore_weather_%s_%s.txt"
                          % (args[3], args[2].split("/")[0], months[int(args[2].split("/")[1]) - 1]))
         rows = FileReader().read(abs_file_path)
@@ -120,7 +128,8 @@ class Operations:
             line_count += 1
         return results
 
-    def generate_bars(self, args):
+    @staticmethod
+    def generate_bars(args):
         abs_file_path = ("%s/lahore_weather_%s_%s.txt"
                          % (args[3], args[2].split("/")[0], months[int(args[2].split("/")[1]) - 1]))
         rows = FileReader().read(abs_file_path)
