@@ -17,6 +17,7 @@ exports.config = {
         kayakSiteLink : 'https://www.kayak.com/',
         hotels : 'Hotels',
         bcnKeys : 'BCN',
+        bcnSearchResult : 'Barcelona-El Prat (BCN) - Barcelona, Spain',
         hotleLinkTitle: 'Hotels: Find Cheap Hotel Deals & Discounts - KAYAK',
         guestFieldText: '1 room, 2 guests'
     },

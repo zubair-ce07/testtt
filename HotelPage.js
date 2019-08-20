@@ -37,21 +37,19 @@ var HotelPage = function () {
         }
     }
 
-    this.searchHotels = async function () {
-
-        var resultCount = 0;
+    this.setKeysinOriginField = function () {
         var originFieldBox = element.all(by.css("[id *= location-display]")).first();
         browser.wait(EC.visibilityOf(originFieldBox), 3000);
         originFieldBox.click();
-
         var originTextBox = element.all(by.css("[id *= location-textInputWrapper]")).first().element(by.tagName('input'));
         browser.wait(EC.visibilityOf(originTextBox), 7000);
         originTextBox.sendKeys(browser.params.bcnKeys);
+    }
+
+    this.searchHotels = async function () {
 
         var originList = element.all(by.css("[id *= location-smarty-content]")).first();
-
         browser.wait(EC.elementToBeClickable(originList), 5000);
-
         originList.all(by.tagName('li')).first().click();
         var searchBtn = element(by.css("[id$=-formGridSearchBtn]")).element(by.tagName('button'));
         await searchBtn.click();
