@@ -4,11 +4,11 @@
     given time period from the following website
     http://docs.cpuc.ca.gov/
 """
+import re
 
 import scrapy
 from scrapy.loader import ItemLoader
 from scrapy.loader.processors import MapCompose
-import re
 
 from ..items import CaPucItem
 
@@ -35,13 +35,8 @@ class ProceedingsSpider(scrapy.Spider):
         """
         # creating a form data for request
         form_data = {
-            '__EVENTTARGET': '',
-            '__EVENTARGUMENT': '',
-            'FilingDateFrom': '02/21/19',
-            'FilingDateTo': '02/26/19',
-            'IndustryID': '-1',
-            'ddlCpuc01Types': '-1',
-            'SearchButton': 'Search'
+            'FilingDateFrom': '7/1/19',
+            'FilingDateTo': '7/26/19',
         }
         # yielding a Form Request
         yield scrapy.FormRequest.from_response(
@@ -49,54 +44,40 @@ class ProceedingsSpider(scrapy.Spider):
             url=self.search_form_url,
             formdata=form_data,
             callback=self.parse_proceedings,
-            meta={'do_pagination': True}
+            meta={'proceeding_ids': []}
         )
 
-    def do_proceedings_pagination(self, response):
+    def parse_proceedings(self, response):
         """
-            Get all of the remaining pages target and
-            yield a form request to them.
+            Get the search results and collect id from the page
+            and send request to next page for pagination
         """
         view_state, \
             view_state_generator, \
             event_validation = self.get_form_states(response)
-        # Getting pages
-        pages_selector = '//a[contains(@href, "rptPages")]/@href'
-        # Sending request for paginations
-        for p in response.xpath(pages_selector).getall():
-            event_target = p.split("'")[1]
-            # creating a form data for request
-            form_data = {
-                '__EVENTTARGET': event_target,
-                '__EVENTARGUMENT': '',
-                '__VIEWSTATE': view_state,
-                '__VIEWSTATEGENERATOR': view_state_generator,
-                '__EVENTVALIDATION': event_validation
-            }
-            # yielding a Form Request
-            yield scrapy.FormRequest(
-                url='http://docs.cpuc.ca.gov/SearchRes.aspx',
-                formdata=form_data,
-                callback=self.parse_proceedings,
-                dont_filter=True
-            )
-
-    def parse_proceedings(self, response):
-        """
-            Get the search results and send an
-            individual request for each proceeding id
-        """
         proceeding_ids = self.get_proceeding_ids(response)
-        for p_id in proceeding_ids:
-            yield scrapy.Request(
-                url='{}{}'.format(self.proceeding_details_url, p_id),
-                callback=self.parse_proceedings_details,
-                meta={'proceeding_id': p_id},
-            )
+        response.meta['proceeding_ids'].extend(proceeding_ids)
 
-        if "do_pagination" in response.meta and response.meta["do_pagination"]:
-            for next_proceeding in self.do_proceedings_pagination(response):
-                yield next_proceeding
+        lnkNextPage = response.xpath('//a[@id="lnkNextPage"]')
+        if not lnkNextPage:
+            print(len(set(response.meta['proceeding_ids'])))
+            print(set(response.meta['proceeding_ids']))
+            return None
+
+        form_data = {
+            '__EVENTTARGET': 'lnkNextPage',
+            '__EVENTARGUMENT': '',
+            '__VIEWSTATE': view_state,
+            '__VIEWSTATEGENERATOR': view_state_generator,
+            '__EVENTVALIDATION': event_validation
+        }
+
+        yield scrapy.FormRequest(
+            url='http://docs.cpuc.ca.gov/SearchRes.aspx',
+            formdata=form_data,
+            callback=self.parse_proceedings,
+            meta=response.meta
+        )
 
     def parse_proceedings_details(self, response):
         """

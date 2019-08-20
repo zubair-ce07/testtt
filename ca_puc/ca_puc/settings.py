@@ -53,17 +53,9 @@ ROBOTSTXT_OBEY = False
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
-    'ca_puc.middlewares.CaPucDownloaderMiddleware': 543,
     'scrapy.downloadermiddlewares.\
 httpcompression.HttpCompressionMiddleware': 810
 }
-
-# # Splash configurations
-# SPLASH_URL = 'http://localhost:8050/'
-
-# SPIDER_MIDDLEWARES = {
-#     'scrapy_splash.SplashDeduplicateArgsMiddleware': 100,
-# }
 
 # DUPEFILTER_CLASS = 'scrapy_splash.SplashAwareDupeFilter'
 # HTTPCACHE_STORAGE = 'scrapy_splash.SplashAwareFSCacheStorage'
@@ -77,13 +69,13 @@ httpcompression.HttpCompressionMiddleware': 810
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-    'ca_puc.pipelines.CaPucPipeline': 300,
     'ca_puc.pipelines.MongoPipeline': 400,
 }
 
 # MongoDB configurations
 MONGO_URI = 'mongodb://localhost:27017'
 MONGO_DATABASE = 'capuc'
+COLLECTION_NAME = 'proceedings'
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html
