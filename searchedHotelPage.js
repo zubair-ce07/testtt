@@ -1,22 +1,10 @@
 'use strict';
-
 var searchedHotelPage = function () {
     var detailsContainer;
     var photosContainer;
     var resultsContainer;
     var hotelMap;
 
-    var EC = protractor.ExpectedConditions;
-    var error;
-
-    this.isDisplayedCheck = function (elem) {
-        try {
-            return elem.isDisplayed();
-        } catch (error) {
-            console.log(error);
-        }
-
-    }
     this.setElement = function (elem) {
         switch (elem) {
             case "detailsContainer":
@@ -31,16 +19,8 @@ var searchedHotelPage = function () {
         }
 
     }
-    this.getElement = function (elem) {
-        switch (elem) {
-            case "detailsContainer":
-                return this.detailsContainer;
-            case "photosContainer":
-                return this.photosContainer;
-        }
-
-    }
-
+    var EC = protractor.ExpectedConditions;
+    var error;
     this.getSearchResultCount = async function () {
 
         var resultCount = 0;
@@ -126,6 +106,5 @@ var searchedHotelPage = function () {
             console.log(error);
         }
     }
-
 }
 module.exports = new searchedHotelPage();

@@ -1,20 +1,15 @@
 'use strict';
-
-
 var HotelPage = function () {
-
     var guestField;
     var originField;
     var startDateField;
     var endDateField;
 
-    var EC = protractor.ExpectedConditions;
-    var error;
-
     this.openHomePage = async function () {
         await browser.get(browser.params.kayakSiteLink);
     };
-
+    var EC = protractor.ExpectedConditions;
+    var error;
     this.openHotelLink = async function () {
         var link = element(by.linkText(browser.params.hotels));
         await link.click();
@@ -48,29 +43,6 @@ var HotelPage = function () {
         } catch (error) {
             console.log(error)
         }
-    }
-
-    this.getElement = function (elem) {
-        switch (elem) {
-            case "guestField":
-                return this.guestField;
-            case "originField":
-                return this.originField;
-            case "startDateField":
-                return this.startDateField;
-            case "endDateField":
-                return this.endDateField;
-        }
-
-    }
-
-    this.isDisplayedCheck =  function (elem) {
-        try {
-            return  elem.isDisplayed();
-        } catch (error) {
-            console.log(error);
-        }
-
     }
 
     this.searchHotels = async function () {

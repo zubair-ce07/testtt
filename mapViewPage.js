@@ -4,8 +4,6 @@ var mapViewPage = function () {
     var mapContainer
     var selectedHotel;
     var mapView;
-    var EC = protractor.ExpectedConditions;
-    var error;
 
     this.setElement = function (elem) {
         switch (elem) {
@@ -21,15 +19,9 @@ var mapViewPage = function () {
         }
 
     }
-
-    this.isDisplayedCheck = function (elem) {
-        try {
-            return elem.isDisplayed();
-        } catch (error) {
-            console.log(error);
-        }
-
-    }
+    var EC = protractor.ExpectedConditions;
+    var error;
+   
     this.getMapView = async function () {
 
         try {
@@ -64,11 +56,8 @@ var mapViewPage = function () {
                     var cardId = 'summaryCard' + id;
 
                     var summaryCard = element(by.css("[id *= " + cardId + "]"));
-
                 }
-
             });
-
             return this.selectedHotel.isDisplayed();
         } catch (error) {
             console.log(error);
