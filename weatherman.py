@@ -108,7 +108,7 @@ class WeatherDataParser:
 class WeatherReportCalculator:
     """
     Receives weather data readings, report type, year and month and calculates required report related
-    results for the given year and month
+    values for the given year and month
 
     """
 
@@ -147,7 +147,7 @@ class WeatherReportCalculator:
                     generic_report_type_data["min_temp"] = int(day_data.min_tempc)
                     generic_report_type_data["min_temp_day"] = self.get_day_from_date(key_day_data)
                 if self.is_given(day_data.max_humidity) and int(day_data.max_humidity) > generic_report_type_data[
-                        "humidity"]:
+                    "humidity"]:
                     generic_report_type_data["humidity"] = int(day_data.max_humidity)
                     generic_report_type_data["humidity_day"] = self.get_day_from_date(key_day_data)
 
@@ -173,7 +173,7 @@ class WeatherReportCalculator:
             if self.is_given(day_data.mean_tempc) and int(day_data.mean_tempc) < average_report_type_data["min_temp"]:
                 min_temp_mean += int(day_data.min_tempc)
             if self.is_given(day_data.mean_humidity) and int(day_data.mean_humidity) > average_report_type_data[
-                    "humidity"]:
+                "humidity"]:
                 mean += int(day_data.max_humidity)
                 count += 1
         average_report_type_data["max_temp"] = int(max_temp_mean / count)
@@ -195,7 +195,7 @@ class WeatherReportCalculator:
         """
 
         day = 1
-        print(datetime.date(month=int(month), year=int(year), day=1).strftime('%B'), year)
+        print(datetime.date(month=int(month), year=int(year), day=day).strftime('%B'), year)
         print()
         for date in readings[filename]:
             if readings[filename][date].max_tempc != '':
@@ -274,7 +274,7 @@ class WeatherReportGenerator:
 
 def main():
     """
-    Driver function
+    Report generation process automating method
 
     """
     directory_path = sys.argv[1]
