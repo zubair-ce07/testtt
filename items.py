@@ -19,4 +19,3 @@ class StartItem(scrapy.Item):
     care = scrapy.Field()
     image_urls = scrapy.Field()
     skus = scrapy.Field()
-    pass

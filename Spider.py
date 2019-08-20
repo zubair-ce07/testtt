@@ -4,28 +4,21 @@ from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 from ..items import StartItem
 
-
-
 class MySpider(CrawlSpider):
 
     name = "derek-rose"
-    start_urls = ['https://www.derek-rose.com/'
-    ]
+    start_urls = ['https://www.derek-rose.com/']
     rules = (
-        Rule(
-            LinkExtractor(restrict_css=(".global-nav__item"),allow = ".html"),
-        ),
-        Rule(
-            LinkExtractor(restrict_css=(".category-products"),allow = ".html"),
-            callback='parse_items'
-        ),
+        Rule(LinkExtractor(restrict_css=(".global-nav__item"))),
+        Rule(LinkExtractor(restrict_css=(".category-products")),callback='product'),
    )
 
-    def parse_items(self, response):
+    def product(self, response):
 
         items = StartItem()
+
         items['retailer_sku'] = self.get_retailer_sku(response)
-        items['gender'] = self.get_gender(response)
+        items['gender'] = self.extract_gender(response)
         items['brand'] = "derek rose"
         items['url'] = self.get_url(response)
         items['name'] = self.get_name(response)
@@ -33,16 +26,16 @@ class MySpider(CrawlSpider):
         items['care'] = self.get_care(response)
         items['image_urls'] = self.get_image_url(response)
         items['skus'] = self.get_skus(response)
+
         yield items
 
-
-    def get_gender(self,response):
+    def get_retailer_sku(self,response):
+    
+        return response.css(".product-details__sku::text").extract_first("").split(": ")[1]
+        
+    def extract_gender(self,response):
 
         return response.xpath('//th[contains(text(),"Gender")]/following-sibling::td/text()').extract_first()
-
-    def get_retailer_sku(self,response):
-
-        return response.css(".product-details__sku::text").extract_first().split(": ")[1]
 
     def get_url(self, response):
 
@@ -58,8 +51,7 @@ class MySpider(CrawlSpider):
 
     def get_care(self, response):
 
-        care = response.css(".product-details__attrs:last-child")
-        return care.css(".product-details__attrs td::text").extract()
+        return response.css(".product-details__attrs:last-child td::text").extract()
 
     def get_image_url(self, response):
 
@@ -67,22 +59,22 @@ class MySpider(CrawlSpider):
 
     def get_skus(self, response):
 
-        sku = []
+        skus = []
 
         price = response.css(".price::text").extract_first()
         currency = 'GDP'
-        size = response.css(".product-details__option-items a::attr(data-size-label)").extract()
-        sku_id = response.css(".product-details__option-items a::attr(data-product-id)").extract()
+        size_label = response.css(".product-details__option-items a::attr(data-size-label)").extract()
+        product_id = response.css(".product-details__option-items a::attr(data-product-id)").extract()
         
-        for get_size,get_id in zip(size,sku_id):
+        for size,s_id in zip(size_label,product_id):
 
-            dic = {
+            sku = {
                 "price": price,
                 "currency": currency,
-                "size": get_size,
-                "sku-id": get_id
+                "size": size,
+                "sku-id": s_id
             }
-            sku.append(dic)
+            skus.append(sku)
 
 
         return sku
