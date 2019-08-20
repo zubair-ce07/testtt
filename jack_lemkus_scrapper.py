@@ -4,6 +4,7 @@ import re
 import ast
 from urllib.parse import urlparse
 from datetime import datetime
+from math import ceil
 
 from scrapy import Spider
 import js2xml
@@ -13,6 +14,8 @@ from parsel import Selector
 
 class JackLemkusScrapper(Spider):
     name = 'jack_lemkus_scrapper'
+
+    allowed_domains = ['jacklemkus.com']
 
     start_urls = [
         'https://www.jacklemkus.com/',
@@ -24,16 +27,17 @@ class JackLemkusScrapper(Spider):
     def parse(self, response):
         categories = response.css('#nav li a:nth-child(2)::attr("href")').getall()
         for category in categories:
-            yield response.follow(category, self.parse_product_grid)
+            yield response.follow(category, self.parse_product_category_page)
+
+    def parse_product_category_page(self, response):
+        total_products = response.css('#cust-list > div.amount::text').get().strip().split()[5]
+        for page_number in range(2, ceil(int(total_products) / 16) + 1):
+            yield response.follow(f'?p={page_number}', self.parse_product_grid)
+
+        return self.parse_product_grid(response)
 
     def parse_product_grid(self, response):
         product_links = response.css('#products-grid .product-image::attr("href")').getall()
-
-        if len(product_links) == 16:
-            url = response.url.split('?p=')
-            next_page_no = 2 if len(url) == 1 else int(url[1]) + 1
-            yield response.follow(f'?p={next_page_no}', self.parse_product_grid)
-
         for product_link in product_links:
             yield response.follow(product_link, self.parse_product)
 
@@ -69,13 +73,13 @@ class JackLemkusScrapper(Spider):
 
         currency = JackLemkusScrapper.get_currency(response)
 
-        market = JackLemkusScrapper.get_market(response, currency)
+        market = JackLemkusScrapper.get_market(currency)
 
         yield {
             'retailer_sku': JackLemkusScrapper.get_retailer_sku(response),
             'trail': trail,
             'gender': gender,
-            'category': JackLemkusScrapper.get_category(response, trail),
+            'category': JackLemkusScrapper.get_category(trail),
             'brand': brand,
             'url': JackLemkusScrapper.get_url(response),
             'date': JackLemkusScrapper.get_date(response),
@@ -104,7 +108,7 @@ class JackLemkusScrapper(Spider):
                 for trail_anchor in trail_anchors]
 
     @staticmethod
-    def get_category(response, trail):
+    def get_category(trail):
         return [t[0] for t in itertools.islice(trail, 1, None)]
 
     @staticmethod
@@ -117,7 +121,7 @@ class JackLemkusScrapper(Spider):
         return datetime.strptime(date, '%a, %d %b %Y %H:%M:%S GMT').strftime('%Y-%m-%dT%H:%M:%S.%f')
 
     @staticmethod
-    def get_market(response, currency):
+    def get_market(currency):
         return ccy.currency(currency).default_country
 
     @staticmethod
@@ -130,7 +134,8 @@ class JackLemkusScrapper(Spider):
 
     @staticmethod
     def get_image_urls(response):
-        return response.css('li.span1 img::attr("src")').getall()
+        image_urls = response.css('.product-image-wrapper a::attr("href")').getall()
+        return image_urls
 
     @staticmethod
     def get_skus(response, price, currency):
