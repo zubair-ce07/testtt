@@ -25,86 +25,56 @@ var searchedHotelPage = function () {
 
         var resultCount = 0;
         this.setElement("resultsContainer");
-
         browser.wait(EC.presenceOf(this.resultsContainer), 10000);
-
         var resultbox = element(by.css("[class *= normalResults]"));
         browser.wait(EC.presenceOf(resultbox), 10000);
-
         var results = this.resultsContainer.all(by.css("[class*=Base-Results-HorizonResult]"));
         browser.wait(EC.presenceOf(results), 10000);
-
-        try {
-            resultCount = await results.count();
-
-            return await resultCount;
-        } catch (error) {
-            console.log(error);
-        }
+        resultCount = await results.count();
+        return await resultCount;
     }
     this.getSearchedHotelDetails = async function () {
 
         var resultbox = element(by.css("[class *= normalResults]"));
         browser.wait(EC.presenceOf(resultbox), 10000);
-
         var results = this.resultsContainer.all(by.css("[class*=Base-Results-HorizonResult]"));
         browser.wait(EC.presenceOf(results), 10000);
-
         var hotel = results.first();
-        try {
-            await hotel.click();
-            this.setElement("detailsContainer");
-            this.setElement("photosContainer");
-            return this.detailsContainer.isDisplayed();
-        } catch (error) {
-            console.log(error);
-        }
+        await hotel.click();
+        this.setElement("detailsContainer");
+        this.setElement("photosContainer");
+        return this.detailsContainer.isDisplayed();
     }
 
     this.getSearchedHotelMaps = async function () {
 
         var mapTab = this.detailsContainer.all(by.css("[id*=map]")).first();
         browser.wait(EC.presenceOf(mapTab), 7000);
-        try {
-            await mapTab.click()
-            var mapContainer = element.all(by.css("[id*=mapContainer]")).first();
-            browser.wait(EC.visibilityOf(mapContainer), 15000);
-
-            this.hotelMap = mapContainer.all(by.css("[class*=gm-style]")).first();
-            return hotelMap.isDisplayed();
-        } catch (error) {
-            console.log(error);
-        }
+        await mapTab.click()
+        var mapContainer = element.all(by.css("[id*=mapContainer]")).first();
+        browser.wait(EC.visibilityOf(mapContainer), 15000);
+        this.hotelMap = mapContainer.all(by.css("[class*=gm-style]")).first();
+        return hotelMap.isDisplayed();
     }
+
     this.getSearchedHotelReviews = async function () {
 
         var reviewTab = this.detailsContainer.all(by.css("[id*=reviews]")).first();
         browser.wait(EC.visibilityOf(reviewTab), 7500);
-        try {
-            await reviewTab.click()
-
-            var reviewContainer = element.all(by.css("[id*=reviewsContainer]")).first();
-            browser.wait(EC.visibilityOf(reviewContainer), 3000);
-
-            return reviewContainer.isDisplayed();
-        } catch (error) {
-            console.log(error);
-        }
+        await reviewTab.click()
+        var reviewContainer = element.all(by.css("[id*=reviewsContainer]")).first();
+        browser.wait(EC.visibilityOf(reviewContainer), 3000);
+        return reviewContainer.isDisplayed();
     }
+
     this.getSearchedHotelRates = async function () {
 
         var ratesTab = this.detailsContainer.all(by.css("[id*=rates]")).first();
         browser.wait(EC.visibilityOf(ratesTab), 6000);
-        try {
-            await ratesTab.click();
-
-            var ratesContainer = element.all(by.css("[id*=ratesContainer]")).first();
-            browser.wait(EC.visibilityOf(ratesContainer), 4000);
-
-            return ratesContainer.isDisplayed();
-        } catch (error) {
-            console.log(error);
-        }
+        await ratesTab.click();
+        var ratesContainer = element.all(by.css("[id*=ratesContainer]")).first();
+        browser.wait(EC.visibilityOf(ratesContainer), 4000);
+        return ratesContainer.isDisplayed();
     }
 }
 module.exports = new searchedHotelPage();

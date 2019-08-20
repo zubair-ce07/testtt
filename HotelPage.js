@@ -15,60 +15,46 @@ var HotelPage = function () {
         await link.click();
     };
 
-    this.getFieldText =  function () {
-        try {
-            return  this.guestField.getText();
-        } catch (error) {
-            console.log(error);
-        }
+    this.getFieldText = function () {
+
+        return this.guestField.getText();
     };
 
     this.setElement = function (elem) {
-        try {
-
-            switch (elem) {
-                case "guestField":
-                    this.guestField = element.all(by.css("[id *= roomsGuestsAboveForm]")).first().element(by.css("[class *= _idj]"));
-                    break;
-                case "originField":
-                    this.originField = element.all(by.css("[id *= location-display]")).first();
-                    break;
-                case "startDateField":
-                    this.startDateField =  element.all(by.css("[id *= dateRangeInput-display-start]")).first();
-                    break;
-                case "endDateField":
-                    this.endDateField =  element.all(by.css("[id *= dateRangeInput-display-end]")).first();
-                    break;
-            }
-        } catch (error) {
-            console.log(error)
+        switch (elem) {
+            case "guestField":
+                this.guestField = element.all(by.css("[id *= roomsGuestsAboveForm]")).first().element(by.css("[class *= _idj]"));
+                break;
+            case "originField":
+                this.originField = element.all(by.css("[id *= location-display]")).first();
+                break;
+            case "startDateField":
+                this.startDateField = element.all(by.css("[id *= dateRangeInput-display-start]")).first();
+                break;
+            case "endDateField":
+                this.endDateField = element.all(by.css("[id *= dateRangeInput-display-end]")).first();
+                break;
         }
     }
 
     this.searchHotels = async function () {
 
-        try {
-            
-            var resultCount = 0;
-            var originFieldBox = element.all(by.css("[id *= location-display]")).first();
-            browser.wait(EC.visibilityOf(originFieldBox), 3000);
-            originFieldBox.click();
+        var resultCount = 0;
+        var originFieldBox = element.all(by.css("[id *= location-display]")).first();
+        browser.wait(EC.visibilityOf(originFieldBox), 3000);
+        originFieldBox.click();
 
-            var originTextBox = element.all(by.css("[id *= location-textInputWrapper]")).first().element(by.tagName('input'));
-            browser.wait(EC.visibilityOf(originTextBox), 7000);
-            originTextBox.sendKeys(browser.params.bcnKeys);
+        var originTextBox = element.all(by.css("[id *= location-textInputWrapper]")).first().element(by.tagName('input'));
+        browser.wait(EC.visibilityOf(originTextBox), 7000);
+        originTextBox.sendKeys(browser.params.bcnKeys);
 
-            var originList = element.all(by.css("[id *= location-smarty-content]")).first();
+        var originList = element.all(by.css("[id *= location-smarty-content]")).first();
 
-            browser.wait(EC.elementToBeClickable(originList), 5000);
+        browser.wait(EC.elementToBeClickable(originList), 5000);
 
-            originList.all(by.tagName('li')).first().click();
-            var searchBtn =  element(by.css("[id$=-formGridSearchBtn]")).element(by.tagName('button'));
-            await searchBtn.click();
-        } catch (error) {
-            console.log(error);
-        }
-
+        originList.all(by.tagName('li')).first().click();
+        var searchBtn = element(by.css("[id$=-formGridSearchBtn]")).element(by.tagName('button'));
+        await searchBtn.click();
     }
 };
 module.exports = new HotelPage();
