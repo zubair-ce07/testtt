@@ -1,7 +1,29 @@
 {
-  "name": "the-lab",
+  "name": "prot_ts",
   "version": "1.0.0",
+  "description": "TypeScript protractor",
+  "main": "protractor config.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "tsc": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arbisoft/the-lab.git"
+  },
+  "author": "Junaid",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/arbisoft/the-lab/issues"
+  },
+  "homepage": "https://github.com/arbisoft/the-lab#readme",
   "dependencies": {
-    "moment": "latest"
+    "@types/jasmine": "^3.4.0",
+    "@types/node": "^12.7.2",
+    "jasmine": "^3.4.0",
+    "moment": "^2.24.0",
+    "protractor": "^5.4.2",
+    "ts-node": "^8.3.0",
+    "typescript": "^3.5.3"
   }
 }
