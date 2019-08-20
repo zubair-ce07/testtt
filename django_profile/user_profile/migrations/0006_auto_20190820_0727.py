@@ -9,9 +9,9 @@ class Migration(migrations.Migration):
         # We can't import the Person model directly as it may be a newer
         # version than this migration expects. We use the historical version.
         User = apps.get_model('user_profile', 'User')
-        User(username='ali',
-             password='ali123',
-             email='ali@gmail.com'
+        User(username='asim',
+             password='asim123',
+             email='asim@gmail.com'
              ).save()
         User(username='azhar',
              password='azhar123',

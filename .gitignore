@@ -60,4 +60,4 @@ target/
 .vscode
 
 # sqllite
-.sqllite
+*.sqlite3
