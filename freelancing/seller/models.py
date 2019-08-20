@@ -7,6 +7,7 @@ class Category(models.Model):
 
     class Meta:
         db_table = 'categories'
+        verbose_name_plural = "categories"
 
 
 class SearchTag(models.Model):
@@ -49,7 +50,11 @@ def gig_gallery_images_path(instance, filename):
         returns the path where the
         gig gallery images should be stored
     """
-    return "images/gigs/gallery/{0}_{1}_{2}".format(instance.gig.id, instance.gig.gig_title, filename)
+    return "images/gigs/gallery/{0}_{1}_{2}".format(
+        instance.gig.id,
+        instance.gig.gig_title,
+        filename
+    )
 
 
 class Gallery(models.Model):

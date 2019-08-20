@@ -10,7 +10,7 @@ class Requests(models.Model):
     date = models.TextField(max_length=200)
     duration = models.IntegerField()  # Num of Days
     budget = models.IntegerField()  # integer Dollars
-    categories = models.ForeignKey(Category, on_delete=models.CASCADE)
+    categories = models.ManyToManyField(Category)
 
 
 def buyer_request_files_path(instance, filename):

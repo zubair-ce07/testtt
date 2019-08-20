@@ -21,7 +21,7 @@ from django.conf.urls.static import static
 from rest_framework.authtoken.views import obtain_auth_token
 
 from accounts.api import views as user_views
-
+from dashboard.api import views as buyer_views
 
 urlpatterns = [
     path('', include('dashboard.urls')),
@@ -33,8 +33,15 @@ urlpatterns = [
     # api
     url(r'^api/v1/api-token-auth/', obtain_auth_token),
     url(r'^api/v1/users/$', user_views.UserApi.as_view()),
-    url(r'^api/v1/users/(?P<pk>[0-9]+)$',
-        user_views.UserDetailsApi.as_view())
+    url(
+        r'^api/v1/users/(?P<pk>[0-9]+)$',
+        user_views.UserDetailsApi.as_view()
+    ),
+    url(
+        r'^api/v1/requests/$',
+        buyer_views.RequestApi.as_view()
+    ),
+
 ]
 
 if settings.DEBUG:
