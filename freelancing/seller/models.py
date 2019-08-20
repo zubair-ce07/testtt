@@ -5,9 +5,15 @@ from accounts.models import User
 class Category(models.Model):
     category_name = models.TextField(max_length=100)
 
+    class Meta:
+        db_table = 'categories'
+
 
 class SearchTag(models.Model):
     search_tag = models.TextField(max_length=100)
+
+    class Meta:
+        db_table = 'search_tags'
 
 
 class Gig(models.Model):
