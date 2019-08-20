@@ -30,30 +30,30 @@ class FileManager:
 class Formatter:
     @staticmethod
     def display_extremes(results):
-        print("\n\nHighest: %sC on %s %s"
-              % (results["highest"],
-                 datetime.datetime.strptime(results["highest_day"], "%Y-%m-%d").strftime("%b"),
-                 datetime.datetime.strptime(results["highest_day"], "%Y-%m-%d").day))
-        print("Lowest: %sC on %s %s"
-              % (results["lowest"],
-                 datetime.datetime.strptime(results["lowest_day"], "%Y-%m-%d").strftime("%b"),
-                 datetime.datetime.strptime(results["lowest_day"], "%Y-%m-%d").day))
-        print("Humid: %sC on %s %s"
-              % (results["humid"],
-                 datetime.datetime.strptime(results["humid_day"], "%Y-%m-%d").strftime("%b"),
-                 datetime.datetime.strptime(results["humid_day"], "%Y-%m-%d").day))
+        print("\n\nHighest: {}C on {} {}".format(
+            results["highest"],
+            datetime.datetime.strptime(results["highest_day"], "%Y-%m-%d").strftime("%b"),
+            datetime.datetime.strptime(results["highest_day"], "%Y-%m-%d").day))
+        print("Lowest: {}C on {} {}".format(
+            results["lowest"],
+            datetime.datetime.strptime(results["lowest_day"], "%Y-%m-%d").strftime("%b"),
+            datetime.datetime.strptime(results["lowest_day"], "%Y-%m-%d").day))
+        print("Humid: {}C on {} {}".format(
+            results["humid"],
+            datetime.datetime.strptime(results["humid_day"], "%Y-%m-%d").strftime("%b"),
+            datetime.datetime.strptime(results["humid_day"], "%Y-%m-%d").day))
 
     @staticmethod
     def display_averages(results):
-        print("\n\nHighest Average: %dC" % (results["sum_high_temp"] / results["days_high_temp"]))
-        print("Lowest Average: %dC" % (results["sum_low_temp"] / results["days_low_temp"]))
-        print("Average Humidity: %d" % (results["sum_humidity"] / results["days_humidity"]))
+        print("\n\nHighest Average: {}C".format(int(results["sum_high_temp"] / results["days_high_temp"])))
+        print("Lowest Average: {}C".format(int(results["sum_low_temp"] / results["days_low_temp"])))
+        print("Average Humidity: {}".format(int(results["sum_humidity"] / results["days_humidity"])))
 
     @staticmethod
     def display_bars(results):
         for day, bars in results.items():
-            print("%s\033[0;32;40m %s\033[0;31;40m%s \033[0;37;40m%sC - %sC \n"
-                  % (day, bars[0], bars[1], len(bars[0]), len(bars[1])))
+            print("{}\033[0;32;40m {}\033[0;31;40m{} \033[0;37;40m{}C - {}C \n".format(
+                day, bars[0], bars[1], len(bars[0]), len(bars[1])))
 
 
 class Operations:
@@ -78,9 +78,8 @@ class Operations:
 
     @staticmethod
     def get_max_temperature(row, results):
-        if ("highest" not in results and row["Max TemperatureC"] != '') \
-                or (row["Max TemperatureC"] != ''
-                    and row["Max TemperatureC"] is not None
+        if ("highest" not in results and row["Max TemperatureC"]) \
+                or (row["Max TemperatureC"]
                     and int(row["Max TemperatureC"]) > results["highest"]):
             keys = list(row.keys())
             return True, int(row["Max TemperatureC"]), row[keys[0]]
@@ -88,9 +87,8 @@ class Operations:
 
     @staticmethod
     def get_lowest_temperature(row, results):
-        if ("lowest" not in results and row["Min TemperatureC"] != '') \
-                or (row["Min TemperatureC"] != ''
-                    and row["Min TemperatureC"] is not None
+        if ("lowest" not in results and row["Min TemperatureC"]) \
+                or (row["Min TemperatureC"]
                     and int(row["Min TemperatureC"]) < results["lowest"]):
             keys = list(row.keys())
             return True, int(row["Min TemperatureC"]), row[keys[0]]
@@ -98,9 +96,8 @@ class Operations:
 
     @staticmethod
     def get_max_humidity(row, results):
-        if ("humid" not in results and row["Max Humidity"] != '') \
-                or (row["Max Humidity"] != ''
-                    and row["Max Humidity"] is not None
+        if ("humid" not in results and row["Max Humidity"]) \
+                or (row["Max Humidity"]
                     and int(row["Max Humidity"]) > results["humid"]):
             keys = list(row.keys())
             return True, int(row["Max Humidity"]), row[keys[0]]
@@ -119,13 +116,13 @@ class Operations:
         with FileManager(file, 'r') as rows:
             rows.__next__()
             for row in rows:
-                if row["Max TemperatureC"] != '' and row["Max TemperatureC"] is not None:
+                if row["Max TemperatureC"]:
                     results["sum_high_temp"] += int(row["Max TemperatureC"])
                     results["days_high_temp"] += 1
-                if row["Min TemperatureC"] != '' and row["Min TemperatureC"] is not None:
+                if row["Min TemperatureC"]:
                     results["sum_low_temp"] += int(row["Min TemperatureC"])
                     results["days_low_temp"] += 1
-                if row[" Mean Humidity"] != '' and row[" Mean Humidity"] is not None:
+                if row[" Mean Humidity"]:
                     results["sum_humidity"] += int(row[" Mean Humidity"])
                     results["days_humidity"] += 1
         return results
@@ -139,10 +136,10 @@ class Operations:
                 high_temp_str = ''
                 keys = list(row.keys())
 
-                if row["Min TemperatureC"] != '' and row["Min TemperatureC"] is not None:
+                if row["Min TemperatureC"]:
                     for x in range(int(row["Min TemperatureC"])):
                         high_temp_str += '+'
-                if row["Max TemperatureC"] != '' and row["Max TemperatureC"] is not None:
+                if row["Max TemperatureC"]:
                     for x in range(int(row["Max TemperatureC"])):
                         low_temp_str += '+'
                 results[row[keys[0]]] = [low_temp_str, high_temp_str]
