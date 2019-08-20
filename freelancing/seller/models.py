@@ -14,8 +14,8 @@ class Gig(models.Model):
     seller = models.ForeignKey(User, on_delete=models.CASCADE)
     gig_title = models.TextField(max_length=300)
     description = models.TextField(max_length=1000)
-    category = models.ManyToManyField(Category)
-    search_tag = models.ManyToManyField(SearchTag)
+    categories = models.ManyToManyField(Category)
+    search_tags = models.ManyToManyField(SearchTag)
 
 
 class Package(models.Model):
