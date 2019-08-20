@@ -19,41 +19,41 @@ export default class HomePageElements {
     allDetailsPanel: ElementArrayFinder = element.all(by.css("div[class='resultInner']"));
     allDetailsPanelDates: ElementArrayFinder = element.all(by.css('.leg-dates-set'));
 
-    async getFlightOrigin(): Promise<any> {
-        return await this.flightOrigin.getAttribute('value');
+    getFlightOrigin(): any {
+        return this.flightOrigin.getAttribute('value');
     }
-    async getFlightDestination(): Promise<any> {
-        return await this.flightDestination.getAttribute('value');
+    getFlightDestination(): any {
+        return this.flightDestination.getAttribute('value');
     }
-    async getFlightDepartureDate(): Promise<any> {
-        return await this.flightDepartureDate.getText();
+    getFlightDepartureDate(): any {
+        return this.flightDepartureDate.getText();
     }
-    async getFlightReturnDate(): Promise<any> {
-        return await this.flightReturnDate.getText();
+    getFlightReturnDate(): any {
+        return this.flightReturnDate.getText();
     }
-    async getFlightTravelers(): Promise<any> {
-        return await this.flightTravelers.getText();
+    getFlightTravelers(): any {
+        return this.flightTravelers.getText();
     }
-    async getGraph(): Promise<any> {
-        return await this.mainGraph;
+    getGraph(): any {
+        return this.mainGraph;
     }
-    async clickSearchBtn(): Promise<void> {
-        await this.searchBtn.click();
+    clickSearchBtn(): void {
+        this.searchBtn.click();
     }
     getAllVisibleGraphs(): any {
        return this.allVisibleGraphs;
     }
-    async clickFlightReturnDate(): Promise<void> {
-        await this.flightReturnDate.click();
+    clickFlightReturnDate(): void {
+        this.flightReturnDate.click();
     }
     getNewCalendarDate(): any {
         return this.newCalendarDate;
     }
-    async clickNewCalendarDate(): Promise<any> {
-       await this.getNewCalendarDate().click();
+    clickNewCalendarDate(): any {
+        this.getNewCalendarDate().click();
     }
-    async hoverOverGraphBar(): Promise<any> {
-        await browser.actions().mouseMove(this.graphBar).perform();
+    hoverOverGraphBar(): any {
+        browser.actions().mouseMove(this.graphBar).perform();
     }
     getGraphBarTooltip(): any {
         return this.graphBarTooltip;
@@ -61,8 +61,8 @@ export default class HomePageElements {
     getSelectedGraphBar(): any {
         return this.selectedGraphBar;
     }
-    async getSelectedGraphBarDate(): Promise<any> {
-        return await this.selectedGraphBar.getAttribute('data-date');
+    getSelectedGraphBarDate(): any {
+        return this.selectedGraphBar.getAttribute('data-date');
     }
     getNewGraphBar(barDate: string): any {
         return element(by.css("button[data-date='" + barDate + "']"))
@@ -76,19 +76,19 @@ export default class HomePageElements {
     getSearchTheseDaysBtn(): any {
         return this.searchTheseDaysBtn;
     }
-    async clickSearchTheseDaysBtn(): Promise<any> {
-        await this.searchTheseDaysBtn.click();
+    clickSearchTheseDaysBtn(): any {
+        this.searchTheseDaysBtn.click();
     }
     getShowDetailsBtn(): any {
         return this.showDetailsBtn;
     }
-    async clickShowDetailsBtn(): Promise<any> {
-        await this.showDetailsBtn.click();
+    clickShowDetailsBtn(): any {
+        this.showDetailsBtn.click();
     }
     getDetailsPanel(): any {
         return this.allDetailsPanel;
     }
-    async getDetailsPanelDepartureDate(): Promise<any> {
-        return await this.allDetailsPanelDates.first()
+    getDetailsPanelDepartureDate(): any {
+        return this.allDetailsPanelDates.first()
     }
 }
