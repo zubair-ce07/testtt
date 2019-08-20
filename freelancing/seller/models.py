@@ -1,6 +1,5 @@
 from django.db import models
 from accounts.models import User
-# Create your models here.
 
 
 class Category(models.Model):
@@ -12,8 +11,9 @@ class SearchTag(models.Model):
 
 
 class Gig(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    seller = models.ForeignKey(User, on_delete=models.CASCADE)
     gig_title = models.TextField(max_length=300)
+    description = models.TextField(max_length=1000)
     category = models.ManyToManyField(Category)
     search_tag = models.ManyToManyField(SearchTag)
 
@@ -25,11 +25,6 @@ class Package(models.Model):
     delivery_time = models.IntegerField()  # Num of Days
     revisions = models.IntegerField()
     price = models.IntegerField()  # only integer dollars
-
-
-class Description(models.Model):
-    gig = models.ForeignKey(Gig, on_delete=models.CASCADE)
-    description = models.TextField(max_length=1000)
 
 
 class Faq(models.Model):
