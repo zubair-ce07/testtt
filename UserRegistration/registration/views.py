@@ -17,7 +17,8 @@ def home(request):
 def signup(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
-        if form.is_valid():
+        user = UserFormSerializer(data=form.data)
+        if form.is_valid() and user.is_valid():
             form.save()
             email = form.cleaned_data.get('email')
             raw_password = form.cleaned_data.get('password1')
@@ -28,5 +29,4 @@ def signup(request):
     else:
         form = UserCreationForm()
     return render(request, 'registration/signup.html', {'form': form})
-
 
