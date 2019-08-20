@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='task',
             name='status',
-            field=models.BooleanField(default=False),
+            field=models.CharField(choices=[('pending', 'Pending'), ('complete', 'Complete')], default='Pending', max_length=10),
         ),
     ]

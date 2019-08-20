@@ -54,6 +54,10 @@
                                 <strong>Due: </strong> {{ task.due_date }}
                             </p>
                             <p class="card-text">{{ task.description }}</p>
+
+                            <p class="card-title">
+                                <strong>Status: </strong> {{ task.status }}
+                            </p>
                             <hr>
                             {% if task.assignee == user or task.assigned_by == user %}
                                 <a href="{% url 'edit_task' task.id %}"

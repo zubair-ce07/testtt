@@ -9,7 +9,7 @@ class EmailAndUsernameAuthBackend:
         password = login_credentials['password']
         if login_name:
             is_valid = validate_email(login_name)
-            try
+            try:
                 if is_valid:
                     user = CustomUser.objects.get(email=login_name)
                 else:
