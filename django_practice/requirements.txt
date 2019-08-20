@@ -6,7 +6,7 @@ celery==3.1.26.post2
 dj-database-url==0.5.0
 Django==2.2.3
 django-appconf==1.0.3
-django-celery==3.3.0
+django-celery==3.2.2
 django-compat==1.0.15
 django-heroku==0.3.1
 django-tables2==1.0.4

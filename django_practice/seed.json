@@ -1,0 +1,77 @@
+{
+   "tasks": {
+      "task1": {
+         "title": "task1",
+         "description": "description of task1",
+         "due_date": "2019-07-03"
+      },
+      "task2": {
+         "title": "task2",
+         "description": "description of task2",
+         "due_date": "2019-07-05"
+      },
+      "task3": {
+         "title": "task3",
+         "description": "description of task3",
+         "due_date": "2019-07-03"
+      },
+      "task4": {
+         "title": "task4",
+         "description": "description of task4",
+         "due_date": "2019-07-03"
+      },
+      "task5": {
+         "title": "task5",
+         "description": "description of task1",
+         "due_date": "2019-07-03"
+      }
+   },
+
+   "users": {
+       "user1": {
+            "username": "rehan",
+            "first_name": "rehan",
+            "last_name": "ahmad",
+            "email": "rehan.ahmad@arbisoft.com",
+            "address": "address rehan",
+            "birthday": "2019-07-10",
+            "profile_picture": "images/avatars/tumblr_oab3m3nUHp1vn5n6to8_250_q3fZx2u.jpg"
+         },
+       "user2": {
+            "username": "user1",
+            "first_name": "jon",
+            "last_name": "doe",
+            "email": "user1@test.com",
+            "address": "address1",
+            "birthday": "2019-07-10",
+            "profile_picture": "images/avatars/tumblr_oab3m3nUHp1vn5n6to8_250_q3fZx2u.jpg"
+         },
+       "user3": {
+            "username": "user2",
+            "first_name": "peter",
+            "last_name": "ahmad",
+            "email": "user2@test.com",
+            "address": "address2",
+            "birthday": "2019-07-11",
+            "profile_picture": "images/avatars/tumblr_oab3m3nUHp1vn5n6to8_250_q3fZx2u.jpg"
+         },
+       "user4": {
+            "username": "user3",
+            "first_name": "michael",
+            "last_name": "ali",
+            "email": "user3@test.com",
+            "address": "address3",
+            "birthday": "2019-07-12",
+            "profile_picture": "images/avatars/tumblr_oab3m3nUHp1vn5n6to8_250_q3fZx2u.jpg"
+         },
+       "user5": {
+            "username": "user4",
+            "first_name": "john",
+            "last_name": "cena",
+            "email": "user4@test.com",
+            "address": "address4",
+            "birthday": "2019-07-13",
+            "profile_picture": "images/avatars/tumblr_oab3m3nUHp1vn5n6to8_250_q3fZx2u.jpg"
+         }
+   }
+}

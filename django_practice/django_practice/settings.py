@@ -28,7 +28,8 @@ ALLOWED_HOSTS = ['djangopractice-taskmanager.herokuapp.com']
 # Application definition
 
 INSTALLED_APPS = [
-    'taskmanager',
+    'taskmanager.apps.TaskManagerConfig',
+    'django_practice',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
