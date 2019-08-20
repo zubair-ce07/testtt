@@ -1,20 +1,30 @@
 import csv
+import datetime
+import glob
 import sys
 
 months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
 
-class FileReader:
-    @staticmethod
-    def read(path):
+class FileManager:
+    def __init__(self, filename, mode):
+        self.filename = filename
+        self.mode = mode
+        self.file = None
+
+    def __enter__(self):
         try:
-            csv_file = open(path, mode='r')
-            csv_file.__next__()
-            csv_reader = csv.DictReader(csv_file)
+            self.file = open(self.filename, self.mode)
+            self.file.__next__()
+            csv_reader = csv.DictReader(self.file)
             return csv_reader
         except EnvironmentError:
-            print("%s File not found" % path)
+            print("%s File not found" % self.filename)
             return []
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        if not self.file.closed:
+            self.file.close()
 
 
 class Formatter:
@@ -22,16 +32,16 @@ class Formatter:
     def display_extremes(results):
         print("\n\nHighest: %sC on %s %s"
               % (results["highest"],
-                 months[int(results["highest_day"].split("-")[1]) - 1],
-                 results["highest_day"].split("-")[2]))
+                 datetime.datetime.strptime(results["highest_day"], "%Y-%m-%d").strftime("%b"),
+                 datetime.datetime.strptime(results["highest_day"], "%Y-%m-%d").day))
         print("Lowest: %sC on %s %s"
               % (results["lowest"],
-                 months[int(results["lowest_day"].split("-")[1]) - 1],
-                 results["lowest_day"].split("-")[2]))
+                 datetime.datetime.strptime(results["lowest_day"], "%Y-%m-%d").strftime("%b"),
+                 datetime.datetime.strptime(results["lowest_day"], "%Y-%m-%d").day))
         print("Humid: %sC on %s %s"
               % (results["humid"],
-                 months[int(results["humid_day"].split("-")[1]) - 1],
-                 results["humid_day"].split("-")[2]))
+                 datetime.datetime.strptime(results["humid_day"], "%Y-%m-%d").strftime("%b"),
+                 datetime.datetime.strptime(results["humid_day"], "%Y-%m-%d").day))
 
     @staticmethod
     def display_averages(results):
@@ -47,14 +57,12 @@ class Formatter:
 
 
 class Operations:
-    def find_extremes(self, args):
+    def find_extremes(self, files):
         results = {}
-        for month in months:
-            abs_file_path = ("%s/lahore_weather_%s_%s.txt" % (args[3], args[2], month))
-            rows = FileReader().read(abs_file_path)
-            line_count = 0
-            for row in rows:
-                if line_count > 0:
+        for file in files:
+            with FileManager(file, 'r') as rows:
+                rows.__next__()
+                for row in rows:
                     flag, high, max_day = self.get_max_temperature(row, results)
                     if flag:
                         results["highest"], results["highest_day"] = high, max_day
@@ -66,8 +74,6 @@ class Operations:
                     flag, humid, humid_day = self.get_max_humidity(row, results)
                     if flag:
                         results["humid"], results["humid_day"] = humid, humid_day
-
-                line_count += 1
         return results
 
     @staticmethod
@@ -101,10 +107,7 @@ class Operations:
         return False, None, None
 
     @staticmethod
-    def calculate_averages(args):
-        abs_file_path = ("%s/lahore_weather_%s_%s.txt"
-                         % (args[3], args[2].split("/")[0], months[int(args[2].split("/")[1]) - 1]))
-        rows = FileReader().read(abs_file_path)
+    def calculate_averages(file):
         results = {
             "sum_high_temp": 0,
             "days_high_temp": 0,
@@ -113,9 +116,9 @@ class Operations:
             "sum_humidity": 0,
             "days_humidity": 0,
         }
-        line_count = 0
-        for row in rows:
-            if line_count > 0:
+        with FileManager(file, 'r') as rows:
+            rows.__next__()
+            for row in rows:
                 if row["Max TemperatureC"] != '' and row["Max TemperatureC"] is not None:
                     results["sum_high_temp"] += int(row["Max TemperatureC"])
                     results["days_high_temp"] += 1
@@ -125,28 +128,24 @@ class Operations:
                 if row[" Mean Humidity"] != '' and row[" Mean Humidity"] is not None:
                     results["sum_humidity"] += int(row[" Mean Humidity"])
                     results["days_humidity"] += 1
-            line_count += 1
         return results
 
     @staticmethod
-    def generate_bars(args):
-        abs_file_path = ("%s/lahore_weather_%s_%s.txt"
-                         % (args[3], args[2].split("/")[0], months[int(args[2].split("/")[1]) - 1]))
-        rows = FileReader().read(abs_file_path)
+    def generate_bars(file):
         results = {}
+        with FileManager(file, 'r') as rows:
+            for row in rows:
+                low_temp_str = ''
+                high_temp_str = ''
+                keys = list(row.keys())
 
-        for row in rows:
-            low_temp_str = ''
-            high_temp_str = ''
-            keys = list(row.keys())
-
-            if row["Min TemperatureC"] != '' and row["Min TemperatureC"] is not None:
-                for x in range(int(row["Min TemperatureC"])):
-                    high_temp_str += '+'
-            if row["Max TemperatureC"] != '' and row["Max TemperatureC"] is not None:
-                for x in range(int(row["Max TemperatureC"])):
-                    low_temp_str += '+'
-            results[row[keys[0]]] = [low_temp_str, high_temp_str]
+                if row["Min TemperatureC"] != '' and row["Min TemperatureC"] is not None:
+                    for x in range(int(row["Min TemperatureC"])):
+                        high_temp_str += '+'
+                if row["Max TemperatureC"] != '' and row["Max TemperatureC"] is not None:
+                    for x in range(int(row["Max TemperatureC"])):
+                        low_temp_str += '+'
+                results[row[keys[0]]] = [low_temp_str, high_temp_str]
         return results
 
 
@@ -154,12 +153,27 @@ def main():
     args = sys.argv
     ops = Operations()
     fmt = Formatter()
+    all_files = glob.glob(args[3] + "/*.txt")
     if args[1] == "-e":
-        fmt.display_extremes(ops.find_extremes(args))
+        files_to_read = []
+        for file in all_files:
+            if file.__contains__(args[2]):
+                files_to_read.append(file)
+        fmt.display_extremes(ops.find_extremes(files_to_read))
     elif args[1] == "-a":
-        fmt.display_averages(ops.calculate_averages(args))
+        year, mon = args[2].split("/")[0], args[2].split("/")[1]
+        file_to_read = ''
+        for file in all_files:
+            if file.__contains__(year) and file.__contains__(months[int(mon) - 1]):
+                file_to_read = file
+        fmt.display_averages(ops.calculate_averages(file_to_read))
     elif args[1] == "-c":
-        fmt.display_bars(ops.generate_bars(args))
+        year, mon = args[2].split("/")[0], args[2].split("/")[1]
+        file_to_read = ''
+        for file in all_files:
+            if file.__contains__(year) and file.__contains__(months[int(mon) - 1]):
+                file_to_read = file
+        fmt.display_bars(ops.generate_bars(file_to_read))
     else:
         print("Operation unknown")
 
