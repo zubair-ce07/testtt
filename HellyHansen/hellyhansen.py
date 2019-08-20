@@ -13,7 +13,9 @@ class HellyhansenSpider(CrawlSpider):
     product_parser = HellyhansenParser()
 
     rules = (
-        Rule(LinkExtractor(restrict_css=('.v-navigation__inner.v-navigation__inner--level2'), allow=[r'/en_gb/']), callback='parse_category'),
+        Rule(LinkExtractor(
+            restrict_css=('.v-navigation__inner.v-navigation__inner--level2'),
+            allow=[r'/en_gb/']), callback='parse_category'),
     )
 
     def parse_category(self, response):

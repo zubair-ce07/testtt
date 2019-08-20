@@ -9,9 +9,6 @@ class HellyhansenParser(scrapy.Spider):
     start_urls = ['http://hellyhansen.com/en_gb/']
     possible_genders = ['Men', 'Women', 'Kids']
 
-    def parse(self, response):
-        pass
-
     def parse_product(self, response):
         product_item = Product()
         product_item['name'] = response.css('.heading--page-title span.base::text').get()
