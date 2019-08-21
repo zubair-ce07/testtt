@@ -1,64 +1,56 @@
-import scrapy
 from scrapy import Request
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
+
 from ..items import StartItem
 
 
-class QuotesSpider(CrawlSpider):
+class LemkusSpider(CrawlSpider):
 
     name = "Lemkus"
-    start_urls = [ 'https://www.jacklemkus.com/']
+    start_urls = ['https://www.jacklemkus.com/']
     rules = (
-        Rule(LinkExtractor(restrict_css= ".menu-link")),
-        Rule(LinkExtractor(restrict_css=(".products-grid")),callback='product'),
-        Rule(LinkExtractor(restrict_css=(".next.i-next")),callback='product'),
-   )
+        Rule(LinkExtractor(restrict_css= ".clearfix.menu-simple-dropdown.menu-columns")),
+        Rule(LinkExtractor(restrict_css= [".row.products-grid",".next.i-next"]),callback= 'product_items'),
+    )
 
-    def product(self, response):
+    def product_items(self, response):
 
         items = StartItem()
 
-        items['retailer_sku'] = self.get_retailer_sku(response)
+        items['retailer_sku'] = self.extract_retailer_sku(response)
         items['gender'] = self.extract_gender(response)
-        items['brand'] = self.get_brand(response)
-        items['url'] = self.get_url(response)
-        items['name'] = self.get_name(response)
-        items['description'] = self.get_description(response)
-        items['image_urls'] = self.get_image_url(response)
-        items['skus'] = self.get_skus(response)
+        items['brand'] = self.extract_brand(response)
+        items['url'] = self.extract_url(response)
+        items['name'] = self.extract_name(response)
+        items['description'] = self.extract_description(response)
+        items['image_urls'] = self.extract_image_url(response)
+        items['skus'] = self.extract_skus(response)
 
         yield items
 
-    def get_retailer_sku(self,response):
-    
+    def extract_retailer_sku(self,response):        
         return response.css(".sku::text").extract_first()
         
     def extract_gender(self,response):
-
         return response.xpath('//th[contains(text(),"Gender")]/following-sibling::td/text()').extract_first()
 
-    def get_brand(self,response):
-
+    def extract_brand(self,response):
         return response.xpath('//th[contains(text(),"Item Brand")]/following-sibling::td/text()').extract_first()
 
-    def get_url(self, response):
-
+    def extract_url(self, response):
         return response.url
 
-    def get_name(self, response):
-
+    def extract_name(self, response):
         return response.css(".product-name h1::text").extract_first()
 
-    def get_description(self, response):
-
+    def extract_description(self, response):
         return response.css(".std::text").extract_first("").strip()
 
-    def get_image_url(self, response):
-
+    def extract_image_url(self, response):
         return  response.css(".hidden-xs img::attr(src)").extract()
 
-    def get_skus(self, response):
+    def extract_skus(self, response):
 
         price = response.css(".price::text").extract_first()
         currency = 'R'
@@ -74,4 +66,4 @@ class QuotesSpider(CrawlSpider):
 
         return sku
 
-        
+
