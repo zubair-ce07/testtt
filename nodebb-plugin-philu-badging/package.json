@@ -1,0 +1,11 @@
+{
+  "name": "nodebb-plugin-philu-badging",
+  "version": "1.0.0",
+  "description": "Badging Plugin for PhilU",
+  "main": "library.js",
+  "keywords": [
+    "nodebb",
+    "plugin",
+    "badging"
+  ]
+}

@@ -1,0 +1,9 @@
+{
+    "id": "nodebb-plugin-philu-badging",
+    "url": "Absolute URL to your plugin or a Github repository",
+    "library": "./library.js",
+    "hooks": [
+        { "hook": "static:app.load", "method": "init" },
+        { "hook": "action:post.save", "method": "logging" }
+    ]
+}
