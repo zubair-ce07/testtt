@@ -1,0 +1,26 @@
+{
+    "compilerOptions": {
+      "target": "esnext",                        
+      "module": "commonjs",
+      "outDir": "./dist",
+      "rootDir": "./",
+      "strict": true,                                
+      "noImplicitAny": true, 
+       "moduleResolution": "node", 
+       "typeRoots": [
+        "node_modules/@types",
+        "src/typings"
+      ],           
+      "esModuleInterop": true          
+    },
+    "include": [
+      "**/*"
+    ],
+    "exclude": [
+      "assets",
+      "node_modules",
+      "bower_components",
+      "jspm_packages"
+    ]
+  }
+  
