@@ -125,7 +125,11 @@ class CalvinKleinParser(Spider):
     def raw_sku(self, response):
         json_css = "script:contains('data-role=swatch-options')::text"
         raw_json = json.loads(response.css(json_css).get())
-        return raw_json['[data-role=swatch-options]']['swatch-renderer-extended']['jsonConfig']
+        raw_skus = raw_json['[data-role=swatch-options]']['swatch-renderer-extended']['jsonConfig']['attributes']
+
+        key, value = raw_skus.popitem()
+        if value['label'] == 'Size':
+            return value['options']
 
     def get_product_sku(self, response):
         skus = {}
@@ -133,8 +137,7 @@ class CalvinKleinParser(Spider):
 
         selected_color = response.css(selected_color_css).get()
         common_sku = self.get_product_pricing(response)
-        products = self.raw_sku(response)['attributes']['441']['options']
-
+        products = self.raw_sku(response)
         common_sku["color"] = selected_color
 
         for size in products:
