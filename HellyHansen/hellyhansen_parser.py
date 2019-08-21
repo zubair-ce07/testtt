@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-import scrapy
+from scrapy import Spider
 
 from ..items import Product
 
-class HellyhansenParser(scrapy.Spider):
+class HellyhansenParser(Spider):
     name = 'hellyhansenparser'
     allowed_domains = ['hellyhansen.com']
     start_urls = ['http://hellyhansen.com/en_gb/']
@@ -16,13 +16,13 @@ class HellyhansenParser(scrapy.Spider):
         product_item['brand'] = " HELLYHANSEN"
         product_item['lang'] = response.css('html::attr(lang)').get()
         product_item['description'] = self.parse_description(response).strip()
-        image_urls = response.css('.nosto_sku .image_url::text').getall()
-        product_item['image_urls'] = list(dict.fromkeys(image_urls))
+        product_item['image_urls'] = self.parse_image_links(response)
         product_item['category'] = self.parse_categories(response)
         product_item['gender'] = self.parse_gender(response)
         product_item['url'] = response.request.url
         product_item['skus'] = self.parse_skus(response)
         product_item['care'] = self.parse_care(response)
+        
         return product_item
 
     def parse_categories(self, response):
@@ -41,10 +41,14 @@ class HellyhansenParser(scrapy.Spider):
         return care1 or care2
 
     def parse_gender(self, response):
-        categories = ' '.join(self.parse_categories(response)).lower()
+        soup = ' '.join(self.parse_categories(response)).lower()
         for gender in self.possible_genders:
-            if gender.lower() in categories:
+            if gender.lower() in soup:
                 return gender
+
+    def parse_image_links(self, response):
+        image_urls = response.css('.nosto_sku .image_url::text').getall()
+        return list(dict.fromkeys(image_urls))
 
     def parse_skus(self, response):
         raw_skus = response.css('.nosto_sku')
