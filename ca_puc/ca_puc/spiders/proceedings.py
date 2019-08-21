@@ -5,10 +5,12 @@
     http://docs.cpuc.ca.gov/
 """
 import re
+from datetime import datetime
 
 import scrapy
 from scrapy.loader import ItemLoader
 from scrapy.loader.processors import MapCompose
+from scrapy.exceptions import CloseSpider
 
 from ..items import CaPucItem
 
@@ -22,7 +24,10 @@ class ProceedingsSpider(scrapy.Spider):
     filings_url = proceeding_details_base_url.format('57')
     start_urls = [search_form_url]
 
-    def __init__(self):
+    def __init__(self, start_date, end_date):
+        self.validate_date_arguments(start_date, end_date)
+        self.start_date = start_date
+        self.end_date = end_date
         self.p_instance = None
         self.p_flow_id = None
         self.p_flow_step_id = None
@@ -35,8 +40,8 @@ class ProceedingsSpider(scrapy.Spider):
         """
         # creating a form data for request
         form_data = {
-            'FilingDateFrom': '7/10/19',
-            'FilingDateTo': '7/15/19',
+            'FilingDateFrom': self.start_date,
+            'FilingDateTo': self.end_date,
         }
         # yielding a Form Request
         yield scrapy.FormRequest.from_response(
@@ -128,19 +133,24 @@ class ProceedingsSpider(scrapy.Spider):
         # getting filing details
         filings_rows = response.xpath(
             '//*[@class="apexir_WORKSHEET_DATA"]/tr[preceding-sibling::*]')
-
         for row in filings_rows:
+            document_types = row.css('u::text').get()
+            document_types = document_types.split(' ') \
+                if document_types else []
+
+            documents_link = row.css('td a::attr("href")').get()
+            if not documents_link or \
+                    re.search('orderadocument', documents_link):
+                continue
+
             filing = {
                 "description": row.xpath('td[4]/text()').get(),
                 "documents": [],
                 "filed_on": row.xpath('td[1]/text()').get(),
                 "filing_parties": row.xpath('td[3]/text()').get(),
-                "types": row.css('u::text').get().split(' '),
-                "documents_link": row.css('td a::attr("href")').get()
+                "types": document_types,
+                "documents_link": documents_link
             }
-            # Getting doucments for each filing
-            if re.search('orderadocument', filing['documents_link']):
-                continue
 
             response.meta['filing_list'].append(filing)
 
@@ -318,3 +328,12 @@ class ProceedingsSpider(scrapy.Spider):
             '//*[contains(@class,"pagination")]/*/a/@href').getall()
 
         return anchors[-1] if int(current_limit) < int(total_filings) else None
+
+    def validate_date_arguments(self, start_date, end_date):
+        date_format = "%d/%m/%Y"
+        start_date = datetime.strptime(start_date, date_format)
+        end_date = datetime.strptime(end_date, date_format)
+        if start_date > end_date:
+            raise CloseSpider("start date should be lower than end date")
+
+        return True
