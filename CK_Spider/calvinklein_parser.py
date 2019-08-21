@@ -111,11 +111,12 @@ class CalvinKleinParser(Spider):
         return response.css(currency_css).get().split('$')[0]
 
     def get_product_pricing(self, response):
-        previous_price = self.get_previous_price(response)
         pricing = {
             "price": self.get_sale_price(response),
             "currency": self.get_price_currency(response)
         }
+
+        previous_price = self.get_previous_price(response)
         if previous_price:
             pricing['previous_price'] = previous_price
 
