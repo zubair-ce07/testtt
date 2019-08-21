@@ -51,5 +51,6 @@ class scrapySpider(scrapy.Spider):
         var = var.replace("\t", " ")
         var = var.replace("\r", "")
         items['description'] = var.strip()
+        items['image'] = response.css('ul.gallery > li > img::attr(src)').get()
 
         yield items
