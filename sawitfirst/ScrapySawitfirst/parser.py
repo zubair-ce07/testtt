@@ -1,9 +1,10 @@
-import copy
-import json
-import re
+from copy import deepcopy
+from json import loads
+from re import findall
 from urllib.parse import urljoin
 
-import scrapy
+from scrapy import Request
+from scrapy.http import JSONRequest
 from scrapy.spiders import Spider
 
 from ScrapySawitfirst.items import Item
@@ -21,57 +22,16 @@ class SawItFirstParser(Spider):
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36\
                        (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36 OPR/62.0.3331.99"
     }
-    care_raw = ["%", "machine", "wash", "wipe", "clean", "hand"]
+    raw_care = ["%", "machine", "wash", "wipe", "clean", "hand"]
 
     def parse(self, response):
-        product = self.product(response)
-        form_data = {
-            "jl_numbers": response.css(".product-info-block::attr(data-jlnumber)").extract(),
-            "site": "isawitfirst.com"
-        }
-        self.headers["Referer"] = response.url
-        request = scrapy.http.JSONRequest(self.color_request_url,
-                                          callback=self.parse_color_requests,
-                                          data=form_data, headers=self.headers
-                                          )
-        request.meta["product"] = product
-        yield request
-
-    def parse_color_requests(self, response):
-        product = response.meta["product"]
-        colours = json.loads(response.text)
-        for colour in colours["products"]:
-            url = urljoin(self.product_request_url, colour['handle'])
-            request = scrapy.Request(url, callback=self.parse_skus)
-            product['meta'].append(request)
-            request.meta['colours'] = colours
-            request.meta['product'] = product
-        return self.next_request_or_product(product)
-
-    def parse_skus(self, response):
-        product = response.meta["product"]
-        colours = response.meta["colours"]
-        product['skus'].update(self.product_skus(response, colours))
-        return self.next_request_or_product(product)
-
-    def next_request_or_product(self, product):
-        requests = product['meta']
-
-        if requests:
-            request = requests.pop(0)
-            request.meta["product"] = product
-            yield request
-        else:
-            yield product
-
-    def product(self, response):
         product = Item()
         product['retailer_sku'] = self.retailer_sku(response)
         product['gender'] = self.gender
         product['category'] = self.category(response)
         product['brand'] = self.brand(response)
-        product['url'] = self.url(response)
-        product['name'] = self.product_name(response)
+        product['url'] = response.url
+        product['name'] = self.name(response)
         product['description'] = self.description(response)
         product['care'] = self.care(response)
         product['image_urls'] = self.image_urls(response)
@@ -80,23 +40,59 @@ class SawItFirstParser(Spider):
         product['currency'] = self.currency(response)
         product['skus'] = {}
         product['meta'] = []
-        return product
+        yield from self.request_colours(response, product)
+
+    def parse_color_requests(self, response):
+        product = response.meta["product"]
+        colours = loads(response.text)
+        for colour in colours["products"]:
+            url = urljoin(self.product_request_url, colour['handle'])
+            request = Request(url, callback=self.parse_skus)
+            request.meta['colours'] = colours
+            product['meta'].append(request)
+        yield from self.next_request_or_product(product)
+
+    def parse_skus(self, response):
+        product = response.meta["product"]
+        colours = response.meta["colours"]
+        colour = self.product_skus(response, colours)
+        product['skus'].update(colour)
+        yield from self.next_request_or_product(product)
+
+    def request_colours(self, response, product):
+        form_data = {
+            "jl_numbers": response.css(".product-info-block::attr(data-jlnumber)").extract(),
+            "site": "isawitfirst.com"
+        }
+        headers = self.headers
+        headers["Referer"] = response.url
+        request = JSONRequest(self.color_request_url,
+                              callback=self.parse_color_requests,
+                              data=form_data, headers=self.headers
+                              )
+        request.meta["product"] = product
+        yield request
+
+    def next_request_or_product(self, product):
+        if len(product['meta']) > 0:
+            request = product['meta'].pop(0)
+            request.meta["product"] = product
+            yield request
+        else:
+            yield product
 
     def retailer_sku(self, response):
-        return response.css(".product-sku > *::text").extract_first()
+        return response.css(".product-sku > ::text").extract_first()
 
     def category(self, response):
-        categories_raw = re.findall("Categories: (.+),", response.text)[0]
-        return re.findall(r'"\s*([^"]*?)\s*"', categories_raw)
+        categories_raw = findall("Categories: (.+),", response.text)[0]
+        return findall(r'"\s*([^"]*?)\s*"', categories_raw)
 
     def brand(self, response):
         text = response.css(".analytics").extract_first()
-        return re.findall(r'"brand":"([\w \\u\.]+)","', text)[0]
+        return findall(r'"brand":"(.+)","', text)[0]
 
-    def url(self, response):
-        return response.url
-
-    def product_name(self, response):
+    def name(self, response):
         return response.css("[itemprop=name]::attr(content)").extract_first()
 
     def description(self, response):
@@ -104,7 +100,7 @@ class SawItFirstParser(Spider):
 
     def care(self, response):
         description = response.xpath('//*[*[@class="product-description-title"]]/p/text()').extract()
-        return [d for d in description if any(cr in d.lower() for cr in self.care_raw)]
+        return [d for d in description if any(cr in d.lower() for cr in self.raw_care)]
 
     def image_urls(self, response):
         return response.css(".slide-item img::attr(src)").getall()
@@ -144,13 +140,15 @@ class SawItFirstParser(Spider):
         previous_prices = self.previous_prices(response)
         currency = self.currency(response)
         stock = self.stock(response)
-        sku = {"colour": color, "price": price, 'previous_prices': previous_prices, "currency": currency}
+        sku = {
+            "colour": color,
+            "price": price,
+            'previous_prices': previous_prices,
+            "currency": currency
+        }
         for size, quantity in stock:
-
+            sku = sku
             sku["size"] = size
-            if quantity == 0:
-                sku["out_of_stock"] = True
-            else:
-                sku["out_of_stock"] = False
-            skus[f"{color}_{size}"] = copy.deepcopy(sku)
+            sku["out_of_stock"] = quantity == 0
+            skus[f"{color}_{size}"] = deepcopy(sku)
         return skus
