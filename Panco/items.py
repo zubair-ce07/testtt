@@ -15,3 +15,4 @@ class Product(scrapy.Item):
     skus = scrapy.Field()
     price = scrapy.Field()
     currency = scrapy.Field()
+    meta = scrapy.Field()
