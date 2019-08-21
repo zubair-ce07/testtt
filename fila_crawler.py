@@ -90,7 +90,7 @@ class FilaCrawler(CrawlSpider):
     @staticmethod
     def get_care(description):
         care_words = {'sintética', 'composição'}
-        return description if check_existence(care_words, description.lower()) else []
+        return description if check_existence(care_words, description[0].lower()) else []
 
     @staticmethod
     def get_category(trail):
