@@ -12,6 +12,9 @@ class Requests(models.Model):
     budget = models.IntegerField()  # integer Dollars
     categories = models.ManyToManyField(Category)
 
+    class Meta:
+        verbose_name_plural = "Requests"
+
 
 def buyer_request_files_path(instance, filename):
     """
@@ -27,4 +30,10 @@ def buyer_request_files_path(instance, filename):
 
 class RequestFiles(models.Model):
     request = models.ForeignKey(Requests, on_delete=models.CASCADE)
-    file_name = models.FileField(upload_to=buyer_request_files_path)
+    file_name = models.FileField(
+        upload_to=buyer_request_files_path,
+        blank=True
+    )
+
+    class Meta:
+        verbose_name_plural = "Request Files"

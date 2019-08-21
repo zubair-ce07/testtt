@@ -41,6 +41,10 @@ urlpatterns = [
         r'^api/v1/requests/$',
         buyer_views.RequestApi.as_view()
     ),
+    url(
+        r'^api/v1/request_files/$',
+        buyer_views.RequestFilesApi.as_view()
+    ),
 
 ]
 
