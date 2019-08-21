@@ -4,7 +4,7 @@ from django.db import models
 
 class UserManager(BaseUserManager):
     def create_user(self, email, password, first_name, last_name, date_of_birth, gender):
-        if not (email and password and first_name and last_name and date_of_birth and gender):
+        if not any([email, password, first_name, last_name, date_of_birth, gender]):
             raise ValueError("Users must enter all the required fields! ")
         user = self.model(
             email=self.normalize_email(email),

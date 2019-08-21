@@ -10,3 +10,4 @@ urlpatterns = [
     url(r'^signup/$', views.signup, name='signup'),
     url(r'^home$', views.home, name='home'),
 ]
+
