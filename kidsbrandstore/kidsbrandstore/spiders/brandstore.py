@@ -1,11 +1,11 @@
-import scrapy
+from scrapy import Request
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 
 from kidsbrandstore.parser import Parser
 
 
-class BrandStoreSpider(CrawlSpider):
+class BrandStoreCrawler(CrawlSpider):
     name = 'brandstore'
     allowed_domains = ['kidsbrandstore.de']
     start_urls = ['http://kidsbrandstore.de/']

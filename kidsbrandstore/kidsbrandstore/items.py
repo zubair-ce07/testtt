@@ -1,16 +1,16 @@
-import scrapy
+from scrapy import Item, Field
 
 
-class KidsBrandStoreItem(scrapy.Item):
-    retailer_sku = scrapy.Field()
-    gender = scrapy.Field()
-    category = scrapy.Field()
-    brand = scrapy.Field()
-    url = scrapy.Field()
-    name = scrapy.Field()
-    description = scrapy.Field()
-    care = scrapy.Field()
-    image_urls = scrapy.Field()
-    skus = scrapy.Field()
-    price = scrapy.Field()
-    currency = scrapy.Field()
+class KidsBrandStoreItem(Item):
+    retailer_sku = Field()
+    gender = Field()
+    category = Field()
+    brand = Field()
+    url = Field()
+    name = Field()
+    description = Field()
+    care = Field()
+    image_urls = Field()
+    skus = Field()
+    price = Field()
+    currency = Field()

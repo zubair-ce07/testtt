@@ -1,15 +1,15 @@
-import copy
-import re
-import pdb
+from copy import deepcopy
+from re import findall
 
 from kidsbrandstore.items import KidsBrandStoreItem
 
 from scrapy.spiders import Spider
 
 
-class Parser(Spider):
+class KidsBrandStoreParser(Spider):
     name = "kidsbrandstoreitem"
     gender_pairs = {"jungen": "boys", "m\u00E4dchen": "girls"}
+
     def parse_item(self, response):
         product = KidsBrandStoreItem()
         product['retailer_sku'] = self.retailer_sku(response)
@@ -69,7 +69,7 @@ class Parser(Spider):
     def color(self, response):
         title = response.css('.desktop-header::text').extract_first(default="")
         if title:
-            color = re.findall("(\w*\.$)", title)
+            color = findall("(\w*\.$)", title)
             if color:
                 return color[0].replace(".", '')
 
@@ -88,6 +88,7 @@ class Parser(Spider):
         sku['price'] = price
         sku["currency"] = currency
         for size in sizes:
+            sku = sku
             sku['size'] = size
-            skus["{}_{}".format(color, size)] = copy.deepcopy(sku)
+            skus[f"{color}_{size}"] = deepcopy(sku)
         return skus
