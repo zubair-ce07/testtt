@@ -1,9 +1,8 @@
+import argparse
+import calendar
 import csv
 import datetime
 import glob
-import sys
-
-months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
 
 class FileManager:
@@ -146,29 +145,40 @@ class Operations:
         return results
 
 
+def parse_arguments():
+    parser = argparse.ArgumentParser(description='Weatherman app')
+    parser.add_argument('-e', "--extremes", action="store_true", help='find extreme conditions during e whole year')
+    parser.add_argument('-a', "--averages", action="store_true", help='find average conditions during a month')
+    parser.add_argument('-c', "--colours", action="store_true", help='print temperature bars during a month')
+    parser.add_argument('time_span', type=str, help='time span on which the operation should be performed')
+    parser.add_argument('indir', type=str, help='Input dir for data files')
+    args = parser.parse_args()
+    return args
+
+
 def main():
-    args = sys.argv
     ops = Operations()
     fmt = Formatter()
-    all_files = glob.glob(args[3] + "/*.txt")
-    if args[1] == "-e":
+    args = parse_arguments()
+    all_files = glob.glob(args.indir + "/*.txt")
+    if args.extremes:
         files_to_read = []
         for file in all_files:
-            if file.__contains__(args[2]):
+            if file.__contains__(args.time_span):
                 files_to_read.append(file)
         fmt.display_extremes(ops.find_extremes(files_to_read))
-    elif args[1] == "-a":
-        year, mon = args[2].split("/")[0], args[2].split("/")[1]
+    elif args.averages:
+        year, mon = args.time_span.split("/")[0], args.time_span.split("/")[1]
         file_to_read = ''
         for file in all_files:
-            if file.__contains__(year) and file.__contains__(months[int(mon) - 1]):
+            if file.__contains__(year) and file.__contains__(calendar.month_abbr[int(mon)]):
                 file_to_read = file
         fmt.display_averages(ops.calculate_averages(file_to_read))
-    elif args[1] == "-c":
-        year, mon = args[2].split("/")[0], args[2].split("/")[1]
+    elif args.colours:
+        year, mon = args.time_span.split("/")[0], args.time_span.split("/")[1]
         file_to_read = ''
         for file in all_files:
-            if file.__contains__(year) and file.__contains__(months[int(mon) - 1]):
+            if file.__contains__(year) and file.__contains__(calendar.month_abbr[int(mon)]):
                 file_to_read = file
         fmt.display_bars(ops.generate_bars(file_to_read))
     else:
