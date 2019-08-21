@@ -59,7 +59,7 @@ class MKCParser(Spider):
         return response.css('.product-name h1::text').get()
 
     def get_care(self, response):
-        css = '.tab-container:nth-child(4) li::text'
+        css = 'dt:contains("Additional Information") + dd li::text'
         return self.sanitize_list(response.css(css).getall())
 
     def get_gender(self, response):
@@ -89,50 +89,45 @@ class MKCParser(Spider):
         if self.get_out_of_stock(response):
             return skus
 
-        raw_skus, sku_key = self.get_raw_skus_and_key(response)
-        if not raw_skus:
-            return skus
-
+        raw_skus = self.get_raw_skus(response)
         pricing_details = self.get_pricing_details(response)
 
         for raw_sku in raw_skus:
-            sku = pricing_details.copy()
+            if not raw_sku[0] and raw_sku[1]:
+                continue
 
-            if sku_key:
-                sku[sku_key] = raw_sku['label']
-                sku['sku_id'] = f'{raw_sku["id"]}'
-                sku['out_of_stock'] = False
-            else:
+            sku = pricing_details.copy()
+            if raw_sku[0].get('label'):
                 sku['colour'] = raw_sku[0]['label']
+                sku['sku_id'] = f'{raw_sku[0]["id"]}'
+            if raw_sku[1].get('label'):
                 sku['size'] = raw_sku[1]['label']
-                sku['sku_id'] = '_'.join([s['id'] for s in raw_sku])
+                sku['sku_id'] = f'{sku.get("sku_id", "")}{raw_sku[1]["id"]}'
+            if sku.get('colour') and sku.get('size'):
                 oos = it.product(raw_sku[0]['products'], raw_sku[1]['products'])
                 sku['out_of_stock'] = not any([c == s for c, s in oos])
+            elif raw_sku[0] or raw_sku[1]:
+                sku['out_of_stock'] = False
 
             skus.append(sku)
 
         return skus
 
-    def get_raw_skus_and_key(self, response):
+    def get_raw_skus(self, response):
         attributes = response.css('#product-options-wrapper script').re_first(r'{.*}')
         attributes_map = json.loads(attributes)['attributes']
-        raw_skus = []
+        raw_colours, raw_sizes = [], []
 
         for key in attributes_map.keys():
-            if attributes_map[key]['label'] in ['Color', 'Colour']:
-                raw_skus.insert(0, attributes_map[key])
-            if attributes_map[key]['label'] == 'Size':
-                raw_skus.insert(1, attributes_map[key])
+            if attributes_map[key]['label'].lower() in ('color', 'colour'):
+                raw_colours = attributes_map[key]['options']
+            if attributes_map[key]['label'].lower() == 'size':
+                raw_sizes = attributes_map[key]['options']
 
-        if raw_skus:
-            if len(raw_skus) == 2:
-                return it.product(raw_skus[0]['options'], raw_skus[1]['options']), None
-            elif raw_skus[0]['label'] == 'Color':
-                return raw_skus[0]['options'], 'colour'
-            else:
-                return raw_skus[0]['options'], 'size'
+        raw_colours = raw_colours if raw_colours else ['']
+        raw_sizes = raw_sizes if raw_sizes else ['']
 
-        return None, None
+        return it.product(raw_colours, raw_sizes)
 
     def get_out_of_stock(self, response):
         css = 'meta[property="product:availability"]::attr(content)'
