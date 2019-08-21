@@ -15,7 +15,7 @@ class HellyhansenParser(Spider):
         product_item['retailer_sku'] = response.css('.sku .value::text').get()
         product_item['brand'] = " HELLYHANSEN"
         product_item['lang'] = response.css('html::attr(lang)').get()
-        product_item['description'] = self.parse_description(response).strip()
+        product_item['description'] = self.parse_description(response)
         product_item['image_urls'] = self.parse_image_links(response)
         product_item['category'] = self.parse_categories(response)
         product_item['gender'] = self.parse_gender(response)
@@ -29,11 +29,9 @@ class HellyhansenParser(Spider):
         return response.css('.nosto_product .categories .category::text').getall()
 
     def parse_description(self, response):
-        description1 = response.css('.nosto_product .description::text').get()
-        description2 = '\n'.join(response.css('.nosto_product .description p::text').getall())
-        if description1:
-            description1 = description1.strip()
-        return description1 or description2
+        description1 = response.css('.nosto_product .description::text').getall()
+        description2 = response.css('.nosto_product .description p::text').getall()
+        return list(map(str.strip, description1 + description2))   
 
     def parse_care(self, response):
         care1 = response.css(".nosto_product .features::text").getall()
@@ -60,7 +58,6 @@ class HellyhansenParser(Spider):
             price = raw_sku.css(".price::text").get()
             list_prices = raw_sku.css(".list_price::text").getall()
             sku = {
-                "colour": color,
                 "size": size,
                 "price": price,
                 "currency": currency,
@@ -68,6 +65,10 @@ class HellyhansenParser(Spider):
             }
             if 'outofstock' in raw_sku.css(".availability::text").get().lower():
                 sku['out_of_stock'] = True
-            skus[f"{color}_{size}"] = sku
+            if color:
+                sku['colour'] = color
+                skus[f"{color}_{size}"] = sku
+            else:
+                skus[f"{size}"] = sku
 
         return skus
