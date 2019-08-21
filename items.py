@@ -5,8 +5,7 @@
 # See documentation in:
 # https://docs.scrapy.org/en/latest/topics/items.html
 
-from scrapy import Field
-from scrapy import Item
+from scrapy import Field,Item
 
 class StartItem(Item):
     retailer_sku = Field()
