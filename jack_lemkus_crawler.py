@@ -30,7 +30,7 @@ class JackLemkusCrawler(CrawlSpider):
     def parse_product(self, response):
         trail = response.meta['trail'][:-1]
 
-        gender, brand, description, care = JackLemkusCrawler.get_gender_brand_description_care(response)
+        description = JackLemkusCrawler.get_description(response)
 
         price = JackLemkusCrawler.get_price(response)
 
@@ -41,9 +41,9 @@ class JackLemkusCrawler(CrawlSpider):
         yield {
             'retailer_sku': JackLemkusCrawler.get_retailer_sku(response),
             'trail': trail,
-            'gender': gender,
+            'gender': JackLemkusCrawler.get_gender(description),
             'category': JackLemkusCrawler.get_category(trail),
-            'brand': brand,
+            'brand': JackLemkusCrawler.get_brand(description),
             'url': JackLemkusCrawler.get_url(response),
             'date': JackLemkusCrawler.get_date(response),
             'market': market,
@@ -51,7 +51,7 @@ class JackLemkusCrawler(CrawlSpider):
             'url_original': response.url,
             'name': JackLemkusCrawler.get_name(response),
             'description': description,
-            'care': care,
+            'care': JackLemkusCrawler.get_care(description),
             'image_urls': JackLemkusCrawler.get_image_urls(response),
             'skus': JackLemkusCrawler.get_skus(response, price, currency),
             'price': price,
@@ -65,42 +65,16 @@ class JackLemkusCrawler(CrawlSpider):
         return response.css('span.sku::text').get().strip()
 
     @staticmethod
-    def get_gender_brand_description_care(response):
-        gender = None
-        brand = None
-        description = []
-        care = []
-        care_words = {'synthetic', 'composition'}
-
-        # processing description tab data
-        for data in JackLemkusCrawler.get_description_tab_data(response):
-            description.append(data)
-            for care_word in care_words:
-                if care_word in data:
-                    care.append(data)
-                    break
-
-        # processing more info tab data
-        for tr in response.css('#product-attribute-specs-table tr'):
-            entry_id = tr.css('th::text').get().strip()
-            entry_value = tr.css('td::text').get().strip()
-            description.append(entry_id)
-            description.append(entry_value)
-            if entry_id == 'Gender':
-                gender = re.split(r'[\\ \']', entry_value)[0]
-            elif entry_id == 'Item Brand':
-                brand = entry_value
-
-        return gender, brand, description, care
+    def get_gender(description):
+        for i, d in enumerate(description):
+            if d == 'Gender':
+                return re.split(r'[\\ \']', description[i + 1])[0]
 
     @staticmethod
-    def get_description_tab_data(response):
-        # all text present in description tab and its descendants
-        description_tab_data = response.css('#description-tab .std *::text').getall()
-        for data in description_tab_data:
-            data = data.strip()
-            if data != '':
-                yield data
+    def get_brand(description):
+        for i, d in enumerate(description):
+            if d == 'Item Brand':
+                return description[i + 1]
 
     @staticmethod
     def get_category(trail):
@@ -126,6 +100,33 @@ class JackLemkusCrawler(CrawlSpider):
     @staticmethod
     def get_name(response):
         return response.css('div.product-name h1::text').get().strip()
+
+    @staticmethod
+    def get_description(response):
+        description = [data for data in JackLemkusCrawler.get_description_tab_data(response)]
+
+        for tr in response.css('#product-attribute-specs-table tr'):
+            entry_id = tr.css('th::text').get().strip()
+            entry_value = tr.css('td::text').get().strip()
+            description.append(entry_id)
+            description.append(entry_value)
+
+        return description
+
+    @staticmethod
+    def get_description_tab_data(response):
+        # all text present in description tab and its descendants
+        description_tab_data = response.css('#description-tab .std *::text').getall()
+        for data in description_tab_data:
+            data = data.strip()
+            if data != '':
+                yield data
+
+    @staticmethod
+    def get_care(description):
+        care_words = {'synthetic', 'composition'}
+
+        return [d for d in description if any(care_word in d for care_word in care_words)]
 
     @staticmethod
     def get_image_urls(response):
