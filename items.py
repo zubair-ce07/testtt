@@ -5,15 +5,16 @@
 # See documentation in:
 # https://docs.scrapy.org/en/latest/topics/items.html
 
-import scrapy
+from scrapy import Field
+from scrapy import Item
 
+class StartItem(Item):
+    retailer_sku = Field()
+    gender = Field()
+    brand = Field()
+    url = Field()
+    name = Field()
+    description = Field()
+    image_urls = Field()
+    skus = Field()
 
-class StartItem(scrapy.Item):
-    retailer_sku = scrapy.Field()
-    gender = scrapy.Field()
-    brand = scrapy.Field()
-    url = scrapy.Field()
-    name = scrapy.Field()
-    description = scrapy.Field()
-    image_urls = scrapy.Field()
-    skus = scrapy.Field()
