@@ -2,7 +2,6 @@ from __future__ import absolute_import
 
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, update_session_auth_hash
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, redirect
@@ -68,7 +67,7 @@ class EditTaskView(LoginRequiredMixin, UpdateView):
         form = TaskForm(request.POST, instance=task)
         if form.is_valid():
             if request.user.username == form.cleaned_data['assignee'].username \
-                    or request.user == form.cleaned_data['assigned_by'].username:
+                    or request.user.username == form.cleaned_data['assigned_by'].username:
                 form.save()
                 messages.success(request, 'Task updated!')
                 return redirect('task_index')
@@ -147,8 +146,8 @@ def redirect_task_index(request):
     return redirect('task_index')
 
 
-def register(request):
-    if request.method == "POST":
+class Register(CreateView):
+    def post(self, request, *args, **kwargs):
         form = UserRegistrationForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
@@ -160,7 +159,10 @@ def register(request):
             else:
                 raise ValueError('user was not authenticated')
             return redirect('task_index')
-    else:
+        context = {'form': form}
+        return render(request, 'registration/register.html', context)
+
+    def get(self, request, *args, **kwargs):
         form = UserRegistrationForm()
-    context = {'form': form}
-    return render(request, 'registration/register.html', context)
+        context = {'form': form}
+        return render(request, 'registration/register.html', context)

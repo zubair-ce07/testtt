@@ -17,6 +17,10 @@
             <h6>Due on:</h6>
             <p>{{ task.due_date }}</p>
             <br>
+            <br>
+            <h6>Status:</h6>
+            <p>{{ task.status }}</p>
+            <br>
         </div>
     </div>
     <a class="btn btn-primary" href="{% url 'task_index' %}">Back</a>
