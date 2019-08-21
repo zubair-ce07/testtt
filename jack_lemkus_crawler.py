@@ -3,80 +3,66 @@ import re
 import ast
 from urllib.parse import urlparse
 from datetime import datetime
-from math import ceil
 
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 import ccy
 
 
-class JackLemkusScrapper(CrawlSpider):
-    name = 'jack_lemkus_scrapper'
+class JackLemkusCrawler(CrawlSpider):
+    name = 'jacklemkus'
 
     allowed_domains = ['jacklemkus.com']
-
     start_urls = ['https://www.jacklemkus.com/']
 
     rules = (
-        Rule(LinkExtractor(allow=('sneakers', 'mens-apparel', 'womens-apparel', 'kids', 'accessories'),
-                           restrict_css='#nav li a:nth-child(2)'), callback='parse_product_category_page'),
+        Rule(LinkExtractor(deny='how-to-order', restrict_css=('#nav > li > a', 'a.next')), callback='parse'),
+        Rule(LinkExtractor(restrict_css='.products-grid > li > .product-image'), callback='parse_product'),
     )
 
-    def parse_product_category_page(self, response):
-        total_products = response.css('#cust-list > div.amount::text').get().strip().split()[5]
-        for page_number in range(1, ceil(int(total_products) / 16) + 1):
-            yield response.follow(f'?p={page_number}', self.parse_product_grid)
-
-    def parse_product_grid(self, response):
-        product_links = LinkExtractor(restrict_css='#products-grid .product-image').extract_links(response)
-        for product_link in product_links:
-            yield response.follow(product_link, self.parse_product)
+    def parse(self, response):
+        requests = list(super().parse(response))
+        trail = response.meta.get('trail', [["", response.url]])
+        for request in requests:
+            request.meta['trail'] = trail + [[request.meta['link_text'].strip(), request.url]]
+            yield request
 
     def parse_product(self, response):
-        trail = JackLemkusScrapper.get_trail(response)
+        trail = response.meta['trail'][:-1]
 
-        gender, brand, description, care = JackLemkusScrapper.get_gender_brand_description_care(response)
+        gender, brand, description, care = JackLemkusCrawler.get_gender_brand_description_care(response)
 
-        price = JackLemkusScrapper.get_price(response)
+        price = JackLemkusCrawler.get_price(response)
 
-        currency = JackLemkusScrapper.get_currency(response)
+        currency = JackLemkusCrawler.get_currency(response)
 
-        market = JackLemkusScrapper.get_market(currency)
+        market = JackLemkusCrawler.get_market(currency)
 
         yield {
-            'retailer_sku': JackLemkusScrapper.get_retailer_sku(response),
+            'retailer_sku': JackLemkusCrawler.get_retailer_sku(response),
             'trail': trail,
             'gender': gender,
-            'category': JackLemkusScrapper.get_category(trail),
+            'category': JackLemkusCrawler.get_category(trail),
             'brand': brand,
-            'url': JackLemkusScrapper.get_url(response),
-            'date': JackLemkusScrapper.get_date(response),
+            'url': JackLemkusCrawler.get_url(response),
+            'date': JackLemkusCrawler.get_date(response),
             'market': market,
-            'retailer': JackLemkusScrapper.get_retailer(response, market),
+            'retailer': JackLemkusCrawler.get_retailer(response, market),
             'url_original': response.url,
-            'name': JackLemkusScrapper.get_name(response),
+            'name': JackLemkusCrawler.get_name(response),
             'description': description,
             'care': care,
-            'image_urls': JackLemkusScrapper.get_image_urls(response),
-            'skus': JackLemkusScrapper.get_skus(response, price, currency),
+            'image_urls': JackLemkusCrawler.get_image_urls(response),
+            'skus': JackLemkusCrawler.get_skus(response, price, currency),
             'price': price,
             'currency': currency,
-            'spider_name': JackLemkusScrapper.name,
+            'spider_name': JackLemkusCrawler.name,
             'crawl_start_time': self.get_crawl_start_time()
         }
 
     @staticmethod
     def get_retailer_sku(response):
         return response.css('span.sku::text').get().strip()
-
-    @staticmethod
-    def get_trail(response):
-        trail_anchors = response.css('#breadcrumbs li a')
-
-        # trail_anchor.css('::text').get().strip() is trail title e.g. Sneakers
-        # trail_anchor.css('::attr("href")').get().strip() is trail address e.g. https://www.jacklemkus.com/sneakers
-        return [[trail_anchor.css('::text').get().strip(), trail_anchor.css('::attr("href")').get().strip()]
-                for trail_anchor in trail_anchors]
 
     @staticmethod
     def get_gender_brand_description_care(response):
@@ -87,7 +73,7 @@ class JackLemkusScrapper(CrawlSpider):
         care_words = {'synthetic', 'composition'}
 
         # processing description tab data
-        for data in JackLemkusScrapper.get_description_tab_data(response):
+        for data in JackLemkusCrawler.get_description_tab_data(response):
             description.append(data)
             for care_word in care_words:
                 if care_word in data:
@@ -164,5 +150,3 @@ class JackLemkusScrapper(CrawlSpider):
 
     def get_crawl_start_time(self):
         return self.crawler.stats._stats['start_time'].strftime('%Y-%m-%dT%H:%M:%S.%f')
-
-# https://stackoverflow.com/questions/44620722/scrapy-crawlspider-crawls-nothing
