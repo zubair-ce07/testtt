@@ -156,6 +156,15 @@ def parse_arguments():
     return args
 
 
+def get_file_to_read(args, all_files):
+    year, mon = args.time_span.split("/")[0], args.time_span.split("/")[1]
+    file_to_read = ''
+    for file in all_files:
+        if file.__contains__(year) and file.__contains__(calendar.month_abbr[int(mon)]):
+            file_to_read = file
+    return file_to_read
+
+
 def main():
     ops = Operations()
     fmt = Formatter()
@@ -168,18 +177,10 @@ def main():
                 files_to_read.append(file)
         fmt.display_extremes(ops.find_extremes(files_to_read))
     elif args.averages:
-        year, mon = args.time_span.split("/")[0], args.time_span.split("/")[1]
-        file_to_read = ''
-        for file in all_files:
-            if file.__contains__(year) and file.__contains__(calendar.month_abbr[int(mon)]):
-                file_to_read = file
+        file_to_read = get_file_to_read(args, all_files)
         fmt.display_averages(ops.calculate_averages(file_to_read))
     elif args.colours:
-        year, mon = args.time_span.split("/")[0], args.time_span.split("/")[1]
-        file_to_read = ''
-        for file in all_files:
-            if file.__contains__(year) and file.__contains__(calendar.month_abbr[int(mon)]):
-                file_to_read = file
+        file_to_read = get_file_to_read(args, all_files)
         fmt.display_bars(ops.generate_bars(file_to_read))
     else:
         print("Operation unknown")
