@@ -34,16 +34,19 @@ var HotelPage = function () {
             case "endDateField":
                 this.endDateField = element.all(by.css("[id *= dateRangeInput-display-end]")).first();
                 break;
+            case "originTextBox":
+                this.originTextBox = element.all(by.css("[id *= location-textInputWrapper]")).first().element(by.tagName('input'));
+                break;
         }
     }
-
-    this.setKeysinOriginField = function () {
+    var originTextBox;
+    this.setKeysinOriginField = async function () {
         var originFieldBox = element.all(by.css("[id *= location-display]")).first();
         browser.wait(EC.visibilityOf(originFieldBox), 3000);
         originFieldBox.click();
-        var originTextBox = element.all(by.css("[id *= location-textInputWrapper]")).first().element(by.tagName('input'));
-        browser.wait(EC.visibilityOf(originTextBox), 7000);
-        originTextBox.sendKeys(browser.params.bcnKeys);
+        await this.setElement("originTextBox"); 
+        browser.wait(EC.visibilityOf(this.originTextBox), 7000);
+        await this.originTextBox.sendKeys(browser.params.bcnKeys);
     }
 
     this.searchHotels = async function () {

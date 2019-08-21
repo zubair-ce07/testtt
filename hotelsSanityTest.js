@@ -34,10 +34,10 @@ describe('Test hotels on kayak website', function () {
         expect(hotelPage.endDateField.isDisplayed()).toBe(true);
     });
     
-    it('should write BCN in origin', function () {
+    it('should write BCN in origin', async function () {
 
         hotelPage.setKeysinOriginField();
-        expect(hotelPage.originField).toBeEqual(bcnSearchResult);
+        expect(await hotelPage.originTextBox.getAttribute('value')).toEqual(browser.params.bcnKeys);
     });
 
     it('should verify the count of searched hotels with BCN origin', function () {

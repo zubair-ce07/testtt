@@ -55,7 +55,7 @@ var mapViewPage = function () {
 
         await browser.actions().mouseMove(this.selectedHotel).mouseMove(this.selectedHotel).click().perform();
         var detailCardContainer = element.all(by.css("[class *= resultWrapper]")).first();
-        browser.wait(EC.visibilityOf(resultWrapper), 10000);
+        browser.wait(EC.visibilityOf(detailCardContainer), 10000);
         var detailCard = detailCardContainer.all(by.css("[id *= mainItemWrapper]")).first();
         browser.wait(EC.visibilityOf(detailCard), 10000);
         return detailCard.isDisplayed();
