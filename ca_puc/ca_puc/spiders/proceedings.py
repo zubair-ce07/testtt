@@ -21,12 +21,12 @@ class ProceedingsSpider(scrapy.Spider):
     proceeding_details_url = proceeding_details_base_url.format('56')
     filings_url = proceeding_details_base_url.format('57')
     start_urls = [search_form_url]
-    # download_delay = 5
 
     def __init__(self):
         self.p_instance = None
         self.p_flow_id = None
         self.p_flow_step_id = None
+        self.proceeding_set = set()
 
     def parse(self, response):
         """
@@ -35,8 +35,8 @@ class ProceedingsSpider(scrapy.Spider):
         """
         # creating a form data for request
         form_data = {
-            'FilingDateFrom': '7/1/19',
-            'FilingDateTo': '7/26/19',
+            'FilingDateFrom': '7/10/19',
+            'FilingDateTo': '7/15/19',
         }
         # yielding a Form Request
         yield scrapy.FormRequest.from_response(
@@ -44,7 +44,7 @@ class ProceedingsSpider(scrapy.Spider):
             url=self.search_form_url,
             formdata=form_data,
             callback=self.parse_proceedings,
-            meta={'proceeding_ids': []}
+            meta={'proceeding_ids': [], 'cookiejar': 'docs.cpuc.ca.gov'}
         )
 
     def parse_proceedings(self, response):
@@ -60,14 +60,14 @@ class ProceedingsSpider(scrapy.Spider):
 
         lnkNextPage = response.xpath('//a[@id="lnkNextPage"]')
         if not lnkNextPage:
-            proceeding_set = set(response.meta['proceeding_ids'])
+            self.proceeding_set = set(response.meta['proceeding_ids'])
             yield scrapy.Request(
                 url='{}{}'.format(
                     self.proceeding_details_url,
-                    proceeding_set.pop()
+                    self.proceeding_set.pop()
                 ),
                 callback=self.parse_proceedings_details,
-                meta={'proceeding_set': proceeding_set},
+                meta={'cookiejar': 'apps.cpuc.ca.gov'},
             )
         else:
             form_data = {
@@ -93,7 +93,6 @@ class ProceedingsSpider(scrapy.Spider):
 
             meta_data: loader:ItemLoader
         """
-        print("PROCEEDING_DETAILS CALLED")
         loader = ItemLoader(item=CaPucItem(), response=response)
         loader.add_css('filed_on', '#P56_FILING_DATE::text')
         loader.add_css('assignees', '#P56_STAFF::text')
@@ -103,7 +102,6 @@ class ProceedingsSpider(scrapy.Spider):
         loader.add_css('title', '#P56_DESCRIPTION::text')
         loader.add_css('status', '#P56_STATUS::text')
         loader.add_css('state_id', 'h1::text')
-        print("processing proceeding with id", loader.load_item()['state_id'])
 
         yield scrapy.Request(
             url='{}{}'.format(
@@ -121,8 +119,9 @@ class ProceedingsSpider(scrapy.Spider):
 
     def parse_filings(self, response):
         """
-            Iterate through filing rows on the given filing page
-            and send request to parse documents for a given filing
+            maintains a list of filings by iterating
+            through filing rows on the given filing page
+            and do pagination for filings
 
             meta_data: loader:ItemLoader, filing:dict
         """
@@ -154,6 +153,9 @@ class ProceedingsSpider(scrapy.Spider):
             1. check if anchor exists for next page.
             2. create appropriate form data
             3. send form request to navigate
+            when completed:
+            1. sends the collected list of filings to collect
+            documents for respective filings.
         """
         next_page_anchor = self.get_filing_next_page_anchor(response)
         # Sending request for paginations
@@ -161,7 +163,6 @@ class ProceedingsSpider(scrapy.Spider):
             # Here we have all filings in a list we will fill them with
             # respective documents
             yield from self.scrap_filing_for_documents(response)
-
         else:
             widget_action_mod = next_page_anchor.split("'")[1]
             x01 = response.xpath(
@@ -207,77 +208,56 @@ class ProceedingsSpider(scrapy.Spider):
             )
 
     def scrap_filing_for_documents(self, response):
-        if not response.meta['proceeding_set']:
-            return None
+        """
+            Check if all filings are processed
+            then
+                yield proceeding item
+                Check if proceeding_set is empty
+                then
+                    return None
+                else
+                    send request to next proceeding in the list
+            else
+                Collect documents for individual filings
 
+        """
         if len(response.meta['filing_list']) == 0:
             yield response.meta['loader'].load_item()
-            proceeding_set = response.meta['proceeding_set']
-            return scrapy.Request(
+            # proceeding_set = response.meta['proceeding_set']
+            if not self.proceeding_set:
+                return
+            yield scrapy.Request(
                 url='{}{}'.format(
                     self.proceeding_details_url,
-                    proceeding_set.pop()
+                    self.proceeding_set.pop()
                 ),
                 callback=self.parse_proceedings_details,
-                meta={'proceeding_set': proceeding_set},
+                meta={'cookiejar': 'apps.cpuc.ca.gov'},
             )
+        else:
+            filing = response.meta['filing_list'].pop()
 
-        filing = response.meta['filing_list'].pop()
-
-        response.meta['filing'] = filing
-        yield scrapy.Request(
-            url=filing['documents_link'],
-            callback=self.parse_documents,
-            meta=response.meta,
-            dont_filter=True
-        )
-
-    # def parse_documents(self, response):
-    #     """
-    #         Simulating an event click on a link.
-
-    #         at first the response does not contain the required data.
-    #         This method sends a Form Request with necessary data to
-    #         the same url and send the response to appropriat callback
-    #         for futher processing.
-    #     """
-    #     # Getting pages
-    #     pages_selector = '//a[contains(@href, "rptPages")]/@href'
-    #     # Sending request for paginations
-    #     for p in response.xpath(pages_selector).getall():
-    #         event_target = p.split("'")[1]
-    #         # creating a form data for request
-    #         form_data = {
-    #             '__EVENTTARGET': event_target,
-    #             '__EVENTARGUMENT': ''
-    #         }
-    #         # yielding a Form Request
-    #         yield scrapy.FormRequest.from_response(
-    #             response,
-    #             url=response.url,
-    #             dont_click=True,
-    #             formdata=form_data,
-    #             callback=self.get_all_documents,
-    #             dont_filter=True,
-    #             meta=response.meta
-    #         )
+            response.meta['filing'] = filing
+            yield scrapy.Request(
+                url=filing['documents_link'],
+                callback=self.parse_documents,
+                meta={'cookiejar': 'docs.cpuc.ca.gov', **response.meta},
+                dont_filter=True
+            )
 
     def parse_documents(self, response):
         """
             Iterate through document rows on the given document page
             and update the filing with the respective documents.
-            Finally, return the completely populated item if all filings
-            are processed.
-
-            return required item
+            Finally, send request to process next filing in the list.
         """
-        loader, filing = response.meta["loader"], \
-            response.meta["filing"]
+        loader, filing = response.meta.get("loader"), \
+            response.meta.get("filing")
 
         filing = self.get_filing_with_documents(response, filing)
 
-        filings = loader.load_item()['filings'].append(filing) \
-            if 'filings' in loader.load_item() else [filing]
+        filings = loader.load_item().get('filings')
+        filings = filings.append(filing) if filings else [filing]
 
         loader.replace_value('filings', filings)
 
@@ -292,7 +272,6 @@ class ProceedingsSpider(scrapy.Spider):
         document_rows = response.xpath(
             '//table[contains(@id, "ResultTable")]//tr[not(@style)]'
         )
-        print("documents fetched", len(document_rows))
         for row in document_rows:
             source_url = row.css('.ResultLinkTD a::attr("href")').get()
             document = {
@@ -331,8 +310,11 @@ class ProceedingsSpider(scrapy.Spider):
             Return href of the next page anchor
             in pagination
         """
-        first_page_anchor_selector = '//*[contains(@class, "pagination")]/*/a/@href'
-        anchor_selector = '//*[contains(@class,"pagination")]/*/a/following-sibling::a/@href'
-        return response.xpath(first_page_anchor_selector).get()\
-            if response.meta["first_page"] \
-            else response.xpath(anchor_selector).get()
+        pagination_text = response.xpath(
+            '//*[contains(@class, "pagination")]/*/text()').get()
+        current_limit = pagination_text.split('-')[-1].split('of')[0].strip()
+        total_filings = pagination_text.split('of')[-1].strip()
+        anchors = response.xpath(
+            '//*[contains(@class,"pagination")]/*/a/@href').getall()
+
+        return anchors[-1] if int(current_limit) < int(total_filings) else None
