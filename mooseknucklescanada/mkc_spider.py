@@ -1,3 +1,4 @@
+import itertools as it
 import json
 import re
 
@@ -58,8 +59,8 @@ class MKCParser(Spider):
         return response.css('.product-name h1::text').get()
 
     def get_care(self, response):
-        care_css = '#collateral-tabs .tab-container:nth-child(4) .tab-content li::text'
-        return self.sanitize_list(response.css(care_css).getall())
+        css = '.tab-container:nth-child(4) li::text'
+        return self.sanitize_list(response.css(css).getall())
 
     def get_gender(self, response):
         gender_candidate = response.css('.std::text').get().lower()
@@ -88,28 +89,54 @@ class MKCParser(Spider):
         if self.get_out_of_stock(response):
             return skus
 
-        attributes = response.css('#product-options-wrapper script').re_first(r'{.*}')
-        attributes_map = json.loads(attributes)['attributes']
-        raw_colours, raw_sizes = attributes_map['141']['options'], attributes_map['142']['options']
+        raw_skus, sku_key = self.get_raw_skus_and_key(response)
+        if not raw_skus:
+            return skus
+
         pricing_details = self.get_pricing_details(response)
 
-        for raw_colour in raw_colours:
-            for product in raw_colour['products']:
-                for raw_size in raw_sizes:
-                    if not product in raw_size['products']:
-                        continue
-                    sku = pricing_details.copy()
-                    sku['size'] = raw_size['label']
-                    sku['colour'] = raw_colour['label']
-                    sku['sku_id'] = f'{sku["colour"]}_{sku["size"]}'
-                    skus.append(sku)
-                    break
+        for raw_sku in raw_skus:
+            sku = pricing_details.copy()
+
+            if sku_key:
+                sku[sku_key] = raw_sku['label']
+                sku['sku_id'] = f'{raw_sku["id"]}'
+                sku['out_of_stock'] = False
+            else:
+                sku['colour'] = raw_sku[0]['label']
+                sku['size'] = raw_sku[1]['label']
+                sku['sku_id'] = '_'.join([s['id'] for s in raw_sku])
+                oos = it.product(raw_sku[0]['products'], raw_sku[1]['products'])
+                sku['out_of_stock'] = not any([c == s for c, s in oos])
+
+            skus.append(sku)
 
         return skus
 
+    def get_raw_skus_and_key(self, response):
+        attributes = response.css('#product-options-wrapper script').re_first(r'{.*}')
+        attributes_map = json.loads(attributes)['attributes']
+        raw_skus = []
+
+        for key in attributes_map.keys():
+            if attributes_map[key]['label'] in ['Color', 'Colour']:
+                raw_skus.insert(0, attributes_map[key])
+            if attributes_map[key]['label'] == 'Size':
+                raw_skus.insert(1, attributes_map[key])
+
+        if raw_skus:
+            if len(raw_skus) == 2:
+                return it.product(raw_skus[0]['options'], raw_skus[1]['options']), None
+            elif raw_skus[0]['label'] == 'Color':
+                return raw_skus[0]['options'], 'colour'
+            else:
+                return raw_skus[0]['options'], 'size'
+
+        return None, None
+
     def get_out_of_stock(self, response):
-        out_of_stock = response.css('meta[property="product:availability"]::attr(content)').get()
-        return out_of_stock != 'in stock'
+        css = 'meta[property="product:availability"]::attr(content)'
+        return response.css(css).get() != 'in stock'
 
     def get_pricing_details(self, response):
         pricing_map = json.loads(response.css('div.main script').re_first(r'{.*}'))
