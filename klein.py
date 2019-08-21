@@ -19,7 +19,8 @@ def clean(raw_strs):
 
 class KleineParseSpider(Spider):
     name = 'Kleineparse'
-    care_list = ['%', '°']
+    care_delimiters = ['%', '°']
+    currency = 'EUR'
 
     def parse_item(self, response):
         item = KleineskarussellItem()
@@ -60,7 +61,7 @@ class KleineParseSpider(Spider):
 
     def product_care(self, response):
         raw_cares = response.css('.tab-content .std ::text').getall()
-        return [raw_care for symbol in self.care_list for raw_care in clean(raw_cares)
+        return [raw_care for symbol in self.care_delimiters for raw_care in clean(raw_cares)
                 if symbol in raw_care]
 
     def product_image_urls(self, response):
@@ -70,7 +71,6 @@ class KleineParseSpider(Spider):
     def product_skus(self, response):
         skus = {}
         common_sku = self.product_pricing(response)
-        common_sku['currency'] = 'Euro'
 
         product_color = response.css('h5:contains("Farbe") + p::text').get()
         if product_color:
@@ -86,15 +86,15 @@ class KleineParseSpider(Spider):
 
     def product_pricing(self, response):
         price = response.css('script:contains("config")::text').re_first('price":\s"(.+?)"')
-        previous_prices = response.css('h5:contains("Farbe") + p::text').get()
+        previous_prices = clean(response.css('.old-price .price::text').getall())
+        common_pricing = {
+            'price': price,
+            'currency': self.currency
+        }
 
         if previous_prices:
-            return {'price': price,
-                    'previous_prices': previous_prices
-                    }
-
-        return {'price': price
-                }
+            common_pricing['previous_prices'] = previous_prices
+        return common_pricing
 
     def get_raw_sizes(self, response):
         size_css = 'script:contains("spConfig")'
