@@ -11,14 +11,21 @@ class UserFormSerializer(FormSerializer):
         fields = ['__all__']
 
     def create(self, validated_data):
-        User.objects.create_user(
-            validated_data['email'],
-            validated_data['password_'],
-            validated_data['first_name'],
-            validated_data['last_name'],
-            validated_data['date_of_birth'],
-            validated_data['gender']
-        )
+        email = validated_data['email']
+        password = validated_data['password_']
+        first_name = validated_data['first_name']
+        last_name = validated_data['last_name']
+        date_of_birth = validated_data['date_of_birth']
+        gender = validated_data['gender']
+        kwargs = {
+            'email': email,
+            'password': password,
+            'first_name': first_name,
+            'last_name': last_name,
+            'date_of_birth': date_of_birth,
+            'gender': gender
+        }
+        User.objects.create_user(**kwargs)
 
     def validate(self, data):
         super().validate(data)

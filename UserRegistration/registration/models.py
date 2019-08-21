@@ -3,7 +3,13 @@ from django.db import models
 
 
 class UserManager(BaseUserManager):
-    def create_user(self, email, password, first_name, last_name, date_of_birth, gender):
+     def create_user(self, **kwargs):
+        email = kwargs['email']
+        password = kwargs['password']
+        first_name = kwargs['first_name']
+        last_name = kwargs['last_name']
+        date_of_birth = kwargs['date_of_birth']
+        gender = kwargs['gender']
         if not any([email, password, first_name, last_name, date_of_birth, gender]):
             raise ValueError("Users must enter all the required fields! ")
         user = self.model(
