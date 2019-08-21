@@ -42,13 +42,22 @@ class CalvinKleinParser(Spider):
         garment["image_urls"] += self.get_product_images(response)
         return self.next_request_or_garment(garment)
 
+    def next_request_or_garment(self, garment):
+        requests = garment["meta"]
+
+        if not requests:
+            return garment
+
+        request = requests.pop()
+        request.meta["garment"] = garment
+        return request
+
+    def color_requests(self, response):
+        color_css = '.swatch-option.colour a::attr(href), link[rel="canonical"]::attr(href)'
+        return [Request(url, callback=self.parse_color, dont_filter=True) for url in response.css(color_css).getall()]
+
     def clean_price(self, price):
         return int(price.strip().replace(".", ""))
-
-    def clean_json(self, response):
-        json_css = "script:contains('data-role=swatch-options')::text"
-        raw_json = response.css(json_css).get()
-        return raw_json.replace('\n', '')
 
     def get_product_name(self, response):
         css = ".page-title .base::text"
@@ -87,22 +96,6 @@ class CalvinKleinParser(Spider):
     def get_crawl_id(self):
         return f"{self.retailer}-{datetime.now().strftime('%Y%m%d-%H%M%s')}-medp"
 
-    def color_requests(self, response):
-        color_css = '.swatch-option.colour a::attr(href), link[rel="canonical"]::attr(href)'
-        return [Request(url, callback=self.parse_color, dont_filter=True)
-                for url in response.css(color_css).getall()]
-
-    def next_request_or_garment(self, garment):
-        requests = garment["meta"]
-
-        if requests:
-            request = requests.pop()
-            request.meta["garment"] = garment
-            yield request
-
-        else:
-            yield garment
-
     def get_previous_price(self, response):
         previous_price_css = '.price-wrapper[data-price-type="oldPrice"] span::text'
         previous_price = response.css(previous_price_css).get()
@@ -128,8 +121,9 @@ class CalvinKleinParser(Spider):
         return pricing
 
     def raw_sku(self, response):
-        raw_skus = json.loads(self.clean_json(response))
-        return raw_skus['[data-role=swatch-options]']['swatch-renderer-extended']['jsonConfig']
+        json_css = "script:contains('data-role=swatch-options')::text"
+        raw_json = json.loads(response.css(json_css).get())
+        return raw_json['[data-role=swatch-options]']['swatch-renderer-extended']['jsonConfig']
 
     def get_product_sku(self, response):
         skus = {}

@@ -14,7 +14,7 @@ class CalvinKleinSpider(CrawlSpider):
         ".pages"
     ]
     products_css = [".product.name.product-item-name"]
-    deny = ['by']
+    deny = ['by', 'filter', 'price']
 
     parse_spider = CalvinKleinParser()
 
