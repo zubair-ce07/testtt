@@ -54,7 +54,8 @@ class CalvinKleinParser(Spider):
 
     def color_requests(self, response):
         color_css = '.swatch-option.colour a::attr(href), link[rel="canonical"]::attr(href)'
-        return [Request(url, callback=self.parse_color, dont_filter=True) for url in response.css(color_css).getall()]
+        color_urls = response.css(color_css).getall()
+        return [Request(url, callback=self.parse_color, dont_filter=True) for url in color_urls]
 
     def clean_price(self, price):
         return int(price.strip().replace(".", ""))
@@ -141,6 +142,7 @@ class CalvinKleinParser(Spider):
 
             if size['stock_status'] == "0":
                 sku["out_of_stock"] = True
+
             skus[f"{sku['color']}_{sku['size']}"] = sku
 
         if not skus:
