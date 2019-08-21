@@ -9,25 +9,29 @@ class LemkusSpider(CrawlSpider):
 
     name = "Lemkus"
     start_urls = ['https://www.jacklemkus.com/']
+    product_grid = ".row.products-grid"
+    next_page = ".next.i-next"
+    pagging = [product_grid, next_page]
+
     rules = (
-        Rule(LinkExtractor(restrict_css= ".clearfix.menu-simple-dropdown.menu-columns")),
-        Rule(LinkExtractor(restrict_css= [".row.products-grid",".next.i-next"]),callback= 'product_items'),
+        Rule(LinkExtractor(restrict_css=".clearfix.menu-simple-dropdown.menu-columns")),
+        Rule(LinkExtractor(restrict_css = pagging),callback= 'product_items'),
     )
 
     def product_items(self, response):
 
-        items = StartItem()
+        product = StartItem()
 
-        items['retailer_sku'] = self.extract_retailer_sku(response)
-        items['gender'] = self.extract_gender(response)
-        items['brand'] = self.extract_brand(response)
-        items['url'] = self.extract_url(response)
-        items['name'] = self.extract_name(response)
-        items['description'] = self.extract_description(response)
-        items['image_urls'] = self.extract_image_url(response)
-        items['skus'] = self.extract_skus(response)
+        product['retailer_sku'] = self.extract_retailer_sku(response)
+        product['gender'] = self.extract_gender(response)
+        product['brand'] = self.extract_brand(response)
+        product['url'] = response.url
+        product['name'] = self.extract_name(response)
+        product['description'] = self.extract_description(response)
+        product['image_urls'] = self.extract_image_url(response)
+        product['skus'] = self.extract_skus(response)
 
-        yield items
+        yield product
 
     def extract_retailer_sku(self,response):        
         return response.css(".sku::text").extract_first()
@@ -37,9 +41,6 @@ class LemkusSpider(CrawlSpider):
 
     def extract_brand(self,response):
         return response.xpath('//th[contains(text(),"Item Brand")]/following-sibling::td/text()').extract_first()
-
-    def extract_url(self, response):
-        return response.url
 
     def extract_name(self, response):
         return response.css(".product-name h1::text").extract_first()
@@ -65,5 +66,4 @@ class LemkusSpider(CrawlSpider):
         }
 
         return sku
-
 
