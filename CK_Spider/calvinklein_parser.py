@@ -53,8 +53,8 @@ class CalvinKleinParser(Spider):
         return request
 
     def color_requests(self, response):
-        color_css = '.swatch-option.colour a::attr(href), link[rel="canonical"]::attr(href)'
-        color_urls = response.css(color_css).getall()
+        css = '.swatch-option.colour a::attr(href), link[rel="canonical"]::attr(href)'
+        color_urls = response.css(css).getall()
         return [Request(url, callback=self.parse_color, dont_filter=True) for url in color_urls]
 
     def clean_price(self, price):
