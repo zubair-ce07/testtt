@@ -1,6 +1,7 @@
 from scrapy import Field
 from scrapy import Item
 
+
 class Item(Item):
     retailer_sku = Field()
     gender = Field()
