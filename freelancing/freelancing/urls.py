@@ -22,6 +22,7 @@ from rest_framework.authtoken.views import obtain_auth_token
 
 from accounts.api import views as user_views
 from dashboard.api import views as buyer_views
+from seller.api import views as seller_views
 
 urlpatterns = [
     path('', include('dashboard.urls')),
@@ -42,8 +43,24 @@ urlpatterns = [
         buyer_views.RequestApi.as_view()
     ),
     url(
+        r'^api/v1/requests/(?P<pk>[0-9]+)$',
+        buyer_views.RequestDetailsApi.as_view()
+    ),
+    url(
         r'^api/v1/request_files/$',
         buyer_views.RequestFilesApi.as_view()
+    ),
+    url(
+        r'^api/v1/request_files/(?P<pk>[0-9]+)$',
+        buyer_views.RequestDetailsApi.as_view()
+    ),
+    url(
+        r'^api/v1/gigs/$',
+        seller_views.GigApi.as_view()
+    ),
+    url(
+        r'^api/v1/gigs/(?P<pk>[0-9]+)$$',
+        seller_views.GigDetailsApi.as_view()
     ),
 
 ]
