@@ -4,16 +4,16 @@ from scrapy.linkextractors import LinkExtractor
 
 from ..items import StartItem
 
-
 class LemkusSpider(CrawlSpider):
 
     name = "Lemkus"
     start_urls = ['https://www.jacklemkus.com/']
-    pagging = [".row.products-grid", ".next.i-next"]
+    pagging = [".clearfix.menu-simple-dropdown.menu-columns", ".next.i-next"]
+    products = [".row.products-grid"]
     
     rules = (
-        Rule(LinkExtractor(restrict_css=".clearfix.menu-simple-dropdown.menu-columns")),
-        Rule(LinkExtractor(restrict_css = pagging),callback= 'product_items'),
+        Rule(LinkExtractor(restrict_css = pagging)),
+        Rule(LinkExtractor(restrict_css = products), callback = 'product_items'),
     )
 
     def product_items(self, response):
@@ -51,17 +51,40 @@ class LemkusSpider(CrawlSpider):
 
     def extract_skus(self, response):
 
+        skus = []
+
         price = response.css(".price::text").extract_first()
         currency = 'R'
-        size_label =  response.xpath('//th[contains(text(),"Whats My Size (ALL UK)")]/following-sibling::td/text()').extract_first()
-        product_id = response.css(".product-data-mine::attr(data-confproductid)").extract()
+        product_id = response.css(".product-data-mine::attr(data-confproductid)").extract_first()  
+        size_label = response.css(".product-data-mine::attr(data-lookup)").extract()
 
-        sku = {
-            "price": price,
-            "currency": currency,
-            "size": size_label,
-            "sku-id": product_id
-        }
+        if size_label is not None:
+            size_label =  eval(size_label[0])   
 
-        return sku
+            for p_id, p_info in size_label.items():
+
+                if p_info["stock_status"] is not 0:
+                    sku = {
+                        "price": price,
+                        "currency": currency,
+                        "sku-id": product_id,
+                        "size": p_info["size"],
+                        "quantity": p_info["qty"],
+                        "id": p_info["id"]
+                    }
+                    skus.append(sku)
+        
+            return skus
+        else:
+
+            sku = {
+                    "price": price,
+                    "currency": currency,
+                    "sku-id": product_id,
+                    "size": None,
+                    "quantity": None,
+                    "id": None
+                }
+
+            return sku
 
