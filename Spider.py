@@ -82,6 +82,9 @@ class LemkusSpider(CrawlSpider):
             return skus
         else:
 
+            if product_id is None:
+                product_id = "onesize"
+                
             sku = {
                     "price": price,
                     "currency": currency,
