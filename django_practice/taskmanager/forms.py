@@ -57,7 +57,7 @@ class UserRegistrationForm(UserCreationForm):
         return user
 
 
-class UpdateProfileForm(UserRegistrationForm):
+class UpdateProfileForm(forms.ModelForm):
     class Meta:
         model = CustomUser
-        fields = ['profile_picture', 'username', 'email', 'first_name', 'last_name', 'birthday', 'address', ]
+        fields = ('profile_picture', 'username', 'email', 'first_name', 'last_name', 'birthday', 'address', )
