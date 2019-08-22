@@ -56,39 +56,39 @@ class LemkusSpider(CrawlSpider):
 
         price = response.css(".price::text").extract_first()
         currency = self.currency
-        product_id = response.css(".product-data-mine::attr(data-confproductid)").extract_first() 
+        sku_id = response.css(".product-data-mine::attr(data-confproductid)").extract_first() 
         size_label = response.css(".product-data-mine::attr(data-lookup)").extract()
 
         if size_label is not None:
             size_label =  eval(size_label[0]) 
 
-            for p_id, p_info in size_label.items():
+            for _, raw_sku in size_label.items():
 
-                if p_info["stock_status"] is not 0:
+                if raw_sku["stock_status"] is not 0:
 
-                    if product_id is None:
-                        product_id = p_info["size"]
+                    if sku_id is None:
+                        sku_id = raw_sku["size"]
 
                     sku = {
                         "price": price,
                         "currency": currency,
-                        "sku-id": product_id,
-                        "size": p_info["size"],
-                        "quantity": p_info["qty"],
-                        "id": p_info["id"]
+                        "sku-id": sku_id,
+                        "size": raw_sku["size"],
+                        "quantity": raw_sku["qty"],
+                        "id": raw_sku["id"]
                     }                    
                     skus.append(sku)
         
             return skus
         else:
 
-            if product_id is None:
-                product_id = "onesize"
-                
+            if sku_id is None:
+                sku_id = "onesize"
+
             sku = {
                     "price": price,
                     "currency": currency,
-                    "sku-id": product_id,
+                    "sku_id": sku_id,
                 }
 
             return sku
