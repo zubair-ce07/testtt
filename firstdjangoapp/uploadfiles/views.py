@@ -59,4 +59,3 @@ def save_products_to_database(products):
             sku.colour = sku_info.get('colour', '')
             sku.product = product
             sku.save()
-        print(f"inserted: {product.retailer_sku}")
