@@ -49,7 +49,7 @@ class JackLemkusCrawler(CrawlSpider):
         product['name'] = self.extract_name(response)
         product['care'] = self.extract_care(product['description'])
         product['image_urls'] = self.extract_image_urls(response)
-        product['skus'] = self.extract_skus(response, product['price'], product['currency'])
+        product['skus'] = self.extract_skus(response, product['price'])
         product['spider_name'] = JackLemkusCrawler.name
         product['crawl_start_time'] = self.extract_crawl_start_time()
 
@@ -112,14 +112,13 @@ class JackLemkusCrawler(CrawlSpider):
         image_urls = response.css('.product-image-wrapper a::attr("href")').getall()
         return image_urls
 
-    def extract_skus(self, response, price, currency):
+    def extract_skus(self, response, price):
         product_data = ast.literal_eval(response.css('div.product-data-mine::attr("data-lookup")').get())
 
+        common_sku = {'price': price, 'currency': JackLemkusCrawler.currency}
         skus = []
         for data in product_data.values():
-            sku = {}
-            sku['price'] = price
-            sku['currency'] = currency
+            sku = common_sku.copy()
             sku['size'] = data.get('size')
             sku['out_of_stock'] = not data['stock_status']
             sku['sku_id'] = data.get('id')
