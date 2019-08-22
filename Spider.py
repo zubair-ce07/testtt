@@ -7,13 +7,14 @@ from ..items import StartItem
 class LemkusSpider(CrawlSpider):
 
     name = "Lemkus"
+    currency = 'R'
     start_urls = ['https://www.jacklemkus.com/']
-    pagging = [".clearfix.menu-simple-dropdown.menu-columns", ".next.i-next"]
-    product_page = [".row.products-grid"]
+    listings_css = [".clearfix.menu-simple-dropdown.menu-columns", ".next.i-next"]
+    products_css = [".row.products-grid"]
     
     rules = (
-        Rule(LinkExtractor(restrict_css = pagging)),
-        Rule(LinkExtractor(restrict_css = product_page), callback = 'product_items'),
+        Rule(LinkExtractor(restrict_css = listings_css)),
+        Rule(LinkExtractor(restrict_css = products_css), callback = 'product_items'),
     )
 
     def product_items(self, response):
@@ -54,13 +55,17 @@ class LemkusSpider(CrawlSpider):
         skus = []
 
         price = response.css(".price::text").extract_first()
-        currency = 'R'
-        product_id = response.css(".product-data-mine::attr(data-confproductid)").extract_first()  
+        currency = self.currency
+
+        product_id = response.css(".product-data-mine::attr(data-confproductid)").extract_first() 
+        if product_id is None:
+            product_id = "size"
+
         size_label = response.css(".product-data-mine::attr(data-lookup)").extract()
 
         if size_label is not None:
-            size_label =  eval(size_label[0])   
-
+            size_label =  eval(size_label[0]) 
+            
             for p_id, p_info in size_label.items():
 
                 if p_info["stock_status"] is not 0:
@@ -81,9 +86,6 @@ class LemkusSpider(CrawlSpider):
                     "price": price,
                     "currency": currency,
                     "sku-id": product_id,
-                    "size": None,
-                    "quantity": None,
-                    "id": None
                 }
 
             return sku
