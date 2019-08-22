@@ -127,9 +127,9 @@ class CalvinKleinParser(Spider):
         raw_json = json.loads(response.css(json_css).get())
         raw_skus = raw_json['[data-role=swatch-options]']['swatch-renderer-extended']['jsonConfig']['attributes']
 
-        key, value = raw_skus.popitem()
-        if value['label'] == 'Size':
-            return value['options']
+        for value in raw_skus.values():
+            if value['label'] == 'Size':
+                return value['options']
 
     def get_product_sku(self, response):
         skus = {}
