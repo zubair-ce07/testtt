@@ -13,7 +13,8 @@ class FilaCrawler(CrawlSpider):
     allowed_domains = ['fila.com.br']
     start_urls = ['https://www.fila.com.br/']
 
-    listings_css = ('ol.nav-primary > li > a', 'a.next')
+    listings_css = ['ol.nav-primary > li > a', 'a.next']
+    products_css = ['ul.products-grid.products-grid-comum > li div.container-info a']
 
     currency = 'BRL'
     brand = 'Fila'
@@ -21,8 +22,7 @@ class FilaCrawler(CrawlSpider):
 
     rules = (
         Rule(LinkExtractor(deny='outlet', restrict_css=listings_css), callback='parse'),
-        Rule(LinkExtractor(restrict_css='ul.products-grid.products-grid-comum > li div.container-info a'),
-             callback='parse_product'),
+        Rule(LinkExtractor(restrict_css=products_css), callback='parse_product'),
     )
 
     def parse(self, response):
@@ -32,7 +32,7 @@ class FilaCrawler(CrawlSpider):
             yield request
 
     def parse_product(self, response):
-        product = dict()
+        product = {}
 
         product['retailer_sku'] = self.extract_retailer_sku(response)
         product['trail'] = response.meta['trail'][:-1]
@@ -104,13 +104,18 @@ class FilaCrawler(CrawlSpider):
         return list(set(response.css('.product-image-gallery > img::attr("src")').getall()))
 
     def extract_skus(self, response, retailer_sku, price, currency):
-        price_currency_dict = {'price': price, 'currency': currency}
-
         product_sizes = response.css('#configurable_swatch_size .swatch-label::text').getall()
-        return [{**price_currency_dict,
-                 'size': product_size,
-                 'sku_id': f'{retailer_sku}-{product_size}'}
-                for product_size in product_sizes]
+
+        skus = []
+        for product_size in product_sizes:
+            sku = {}
+            sku['price'] = price
+            sku['currency'] = currency
+            sku['size'] = product_size
+            sku['sku_id'] = f'{retailer_sku}-{product_size}'
+            skus.append(sku)
+
+        return skus
 
     def extract_price(self, response):
         return response.css('.normal_price_span::text').get()
