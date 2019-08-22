@@ -1,12 +1,12 @@
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
-from socialapp.user_management.models import UserProfile, Group
+from user_management.models import UserProfile, SocialGroup
 
 
 class Post(models.Model):
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
-    group = models.ForeignKey(Group, default=None, null=True)
+    group = models.ForeignKey(SocialGroup, default=None, null=True, on_delete=models.CASCADE)
     created_at = models.DateField(auto_now_add=True)
     updated_at = models.DateField(auto_now=True)
 
