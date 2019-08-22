@@ -1,7 +1,5 @@
 import itertools
-import re
 import ast
-from urllib.parse import urlparse
 from datetime import datetime
 
 from scrapy.spiders import CrawlSpider, Rule
@@ -15,139 +13,118 @@ class JackLemkusCrawler(CrawlSpider):
     allowed_domains = ['jacklemkus.com']
     start_urls = ['https://www.jacklemkus.com/']
 
+    listings_css = ('#nav > li > a', 'a.next')
+
+    retailer = 'jacklemkus-za'
+    currency = 'ZAR'
+
     rules = (
-        Rule(LinkExtractor(deny='how-to-order', restrict_css=('#nav > li > a', 'a.next')), callback='parse'),
+        Rule(LinkExtractor(deny='how-to-order', restrict_css=listings_css), callback='parse'),
         Rule(LinkExtractor(restrict_css='.products-grid > li > .product-image'), callback='parse_product'),
     )
 
     def parse(self, response):
-        requests = list(super().parse(response))
         trail = response.meta.get('trail', [["", response.url]])
-        for request in requests:
+        for request in super().parse(response):
             request.meta['trail'] = trail + [[request.meta['link_text'].strip(), request.url]]
             yield request
 
     def parse_product(self, response):
-        trail = response.meta['trail'][:-1]
+        product = dict()
 
-        description = JackLemkusCrawler.get_description(response)
+        product['retailer_sku'] = self.extract_retailer_sku(response)
+        product['trail'] = response.meta['trail'][:-1]
+        product['description'] = self.extract_description(response)
+        product['gender'] = self.extract_gender(response)
+        product['category'] = self.extract_category(product['trail'])
+        product['brand'] = self.extract_brand(response)
+        product['url'] = self.extract_url(response)
+        product['date'] = self.extract_date(response)
+        product['price'] = self.extract_price(response)
+        product['currency'] = JackLemkusCrawler.currency
+        product['market'] = self.extract_market(product['currency'])
+        product['retailer'] = JackLemkusCrawler.retailer
+        product['url_original'] = response.url
+        product['name'] = self.extract_name(response)
+        product['care'] = self.extract_care(product['description'])
+        product['image_urls'] = self.extract_image_urls(response)
+        product['skus'] = self.extract_skus(response, product['price'], product['currency'])
+        product['spider_name'] = JackLemkusCrawler.name
+        product['crawl_start_time'] = self.extract_crawl_start_time()
 
-        price = JackLemkusCrawler.get_price(response)
+        yield product
 
-        currency = JackLemkusCrawler.get_currency(response)
-
-        market = JackLemkusCrawler.get_market(currency)
-
-        yield {
-            'retailer_sku': JackLemkusCrawler.get_retailer_sku(response),
-            'trail': trail,
-            'gender': JackLemkusCrawler.get_gender(description),
-            'category': JackLemkusCrawler.get_category(trail),
-            'brand': JackLemkusCrawler.get_brand(description),
-            'url': JackLemkusCrawler.get_url(response),
-            'date': JackLemkusCrawler.get_date(response),
-            'market': market,
-            'retailer': JackLemkusCrawler.get_retailer(response, market),
-            'url_original': response.url,
-            'name': JackLemkusCrawler.get_name(response),
-            'description': description,
-            'care': JackLemkusCrawler.get_care(description),
-            'image_urls': JackLemkusCrawler.get_image_urls(response),
-            'skus': JackLemkusCrawler.get_skus(response, price, currency),
-            'price': price,
-            'currency': currency,
-            'spider_name': JackLemkusCrawler.name,
-            'crawl_start_time': self.get_crawl_start_time()
-        }
-
-    @staticmethod
-    def get_retailer_sku(response):
+    def extract_retailer_sku(self, response):
         return response.css('span.sku::text').get().strip()
 
-    @staticmethod
-    def get_gender(description):
-        for i, d in enumerate(description):
-            if d == 'Gender':
-                return re.split(r'[\\ \']', description[i + 1])[0]
+    def extract_gender(self, response):
+        gender = response.xpath('//*[@id="product-attribute-specs-table"]/tbody/tr/'
+                                'th[contains(text(),"Gender")]/following-sibling::td/text()').get()
+        if gender is None:
+            return ''
+        gender = gender.lower()
 
-    @staticmethod
-    def get_brand(description):
-        for i, d in enumerate(description):
-            if d == 'Item Brand':
-                return description[i + 1]
+        genders = {
+            'men': {'men'},
+            'women': {'women'},
+            'kid': {'kid', 'boy', 'girl', 'toddler', 'gradeschool', 'preschool', 'infant'},
+            'unisex': {'unisex', 'neutral'}
+        }
 
-    @staticmethod
-    def get_category(trail):
+        for g in genders:
+            if check_words_existence(genders[g], gender):
+                return g
+        return ''
+
+    def extract_brand(self, response):
+        return response.xpath('//*[@id="product-attribute-specs-table"]/tbody/tr/'
+                              'th[contains(text(),"Item Brand")]/following-sibling::td/text()').get()
+
+    def extract_category(self, trail):
         return [t[0] for t in itertools.islice(trail, 1, None)]
 
-    @staticmethod
-    def get_url(response):
+    def extract_url(self, response):
         return response.css('head link[rel="canonical"]::attr("href")').get()
 
-    @staticmethod
-    def get_date(response):
+    def extract_date(self, response):
         date = response.headers["Date"].decode('utf-8')
         return datetime.strptime(date, '%a, %d %b %Y %H:%M:%S GMT').strftime('%Y-%m-%dT%H:%M:%S.%f')
 
-    @staticmethod
-    def get_market(currency):
+    def extract_market(self, currency):
         return ccy.currency(currency).default_country
 
-    @staticmethod
-    def get_retailer(response, market):
-        return f'{urlparse(response.url).netloc.split(".")[1]}-{market.lower()}'
-
-    @staticmethod
-    def get_name(response):
+    def extract_name(self, response):
         return response.css('div.product-name h1::text').get().strip()
 
-    @staticmethod
-    def get_description(response):
-        description = [data for data in JackLemkusCrawler.get_description_tab_data(response)]
+    def extract_description(self, response):
+        description_tab_data = (data.strip() for data in response.css('#description-tab .std *::text').getall())
+        return [data for data in description_tab_data if data != '']
 
-        for tr in response.css('#product-attribute-specs-table tr'):
-            entry_id = tr.css('th::text').get().strip()
-            entry_value = tr.css('td::text').get().strip()
-            description.append(entry_id)
-            description.append(entry_value)
-
-        return description
-
-    @staticmethod
-    def get_description_tab_data(response):
-        # all text present in description tab and its descendants
-        description_tab_data = response.css('#description-tab .std *::text').getall()
-        for data in description_tab_data:
-            data = data.strip()
-            if data != '':
-                yield data
-
-    @staticmethod
-    def get_care(description):
+    def extract_care(self, description):
         care_words = {'synthetic', 'composition'}
 
-        return [d for d in description if any(care_word in d for care_word in care_words)]
+        return [d for d in description if check_words_existence(care_words, d.lower())]
 
-    @staticmethod
-    def get_image_urls(response):
+    def extract_image_urls(self, response):
         image_urls = response.css('.product-image-wrapper a::attr("href")').getall()
         return image_urls
 
-    @staticmethod
-    def get_skus(response, price, currency):
+    def extract_skus(self, response, price, currency):
+        price_currency_dict = {'price': price, 'currency': currency}
+
         product_data = ast.literal_eval(response.css('div.product-data-mine::attr("data-lookup")').get())
-        return [{'price': price, 'currency': currency, 'size': data.get('size'),
-                 'out_of_stock': not data['stock_status'], 'sku_id': data.get('id')}
+        return [{**price_currency_dict,
+                 'size': data.get('size'),
+                 'out_of_stock': not data['stock_status'],
+                 'sku_id': data.get('id')}
                 for data in product_data.values()]
 
-    @staticmethod
-    def get_price(response):
+    def extract_price(self, response):
         return response.css('.regular-price .price::text').get()
 
-    @staticmethod
-    def get_currency(response):
-        auto_complete_options_script = response.css('#search_mini_form > div > script::text').get()
-        return re.search("currencycode:'(.+?)'", auto_complete_options_script).group(1)
-
-    def get_crawl_start_time(self):
+    def extract_crawl_start_time(self):
         return self.crawler.stats._stats['start_time'].strftime('%Y-%m-%dT%H:%M:%S.%f')
+
+
+def check_words_existence(words, text):
+    return any(word in text for word in words)
