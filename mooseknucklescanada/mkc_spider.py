@@ -93,20 +93,18 @@ class MKCParser(Spider):
         pricing_details = self.get_pricing_details(response)
 
         for colour, size in raw_skus:
-            if not colour and size:
+            if not(colour and size):
                 continue
 
             sku = pricing_details.copy()
-            if colour.get('label'):
-                sku['colour'] = colour['label']
-                sku['sku_id'] = f'{colour["id"]}'
-            if size.get('label'):
-                sku['size'] = size['label']
-                sku['sku_id'] = f'{sku.get("sku_id", "")}{size["id"]}'
-            if sku.get('colour') and sku.get('size'):
+            if colour:
+                sku['colour'] = sku['sku_id'] = colour['label']
+            sku['size'] = size['label'] if size else 'One Size'
+            sku['sku_id'] = f'{sku.get("sku_id", "")}{sku["size"]}'
+            if colour and size:
                 oos = it.product(colour['products'], size['products'])
                 sku['out_of_stock'] = not any([c == s for c, s in oos])
-            elif colour or size:
+            else:
                 sku['out_of_stock'] = False
 
             skus.append(sku)
