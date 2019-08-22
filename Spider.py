@@ -9,10 +9,8 @@ class LemkusSpider(CrawlSpider):
 
     name = "Lemkus"
     start_urls = ['https://www.jacklemkus.com/']
-    product_grid = ".row.products-grid"
-    next_page = ".next.i-next"
-    pagging = [product_grid, next_page]
-
+    pagging = [".row.products-grid", ".next.i-next"]
+    
     rules = (
         Rule(LinkExtractor(restrict_css=".clearfix.menu-simple-dropdown.menu-columns")),
         Rule(LinkExtractor(restrict_css = pagging),callback= 'product_items'),
