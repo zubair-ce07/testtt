@@ -56,19 +56,19 @@ class LemkusSpider(CrawlSpider):
 
         price = response.css(".price::text").extract_first()
         currency = self.currency
-
         product_id = response.css(".product-data-mine::attr(data-confproductid)").extract_first() 
-        if product_id is None:
-            product_id = "size"
-
         size_label = response.css(".product-data-mine::attr(data-lookup)").extract()
 
         if size_label is not None:
             size_label =  eval(size_label[0]) 
-            
+
             for p_id, p_info in size_label.items():
 
                 if p_info["stock_status"] is not 0:
+
+                    if product_id is None:
+                        product_id = p_info["size"]
+
                     sku = {
                         "price": price,
                         "currency": currency,
@@ -76,7 +76,7 @@ class LemkusSpider(CrawlSpider):
                         "size": p_info["size"],
                         "quantity": p_info["qty"],
                         "id": p_info["id"]
-                    }
+                    }                    
                     skus.append(sku)
         
             return skus
