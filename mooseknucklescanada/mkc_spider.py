@@ -92,21 +92,21 @@ class MKCParser(Spider):
         raw_skus = self.get_raw_skus(response)
         pricing_details = self.get_pricing_details(response)
 
-        for raw_sku in raw_skus:
-            if not raw_sku[0] and raw_sku[1]:
+        for colour, size in raw_skus:
+            if not colour and size:
                 continue
 
             sku = pricing_details.copy()
-            if raw_sku[0].get('label'):
-                sku['colour'] = raw_sku[0]['label']
-                sku['sku_id'] = f'{raw_sku[0]["id"]}'
-            if raw_sku[1].get('label'):
-                sku['size'] = raw_sku[1]['label']
-                sku['sku_id'] = f'{sku.get("sku_id", "")}{raw_sku[1]["id"]}'
+            if colour.get('label'):
+                sku['colour'] = colour['label']
+                sku['sku_id'] = f'{colour["id"]}'
+            if size.get('label'):
+                sku['size'] = size['label']
+                sku['sku_id'] = f'{sku.get("sku_id", "")}{size["id"]}'
             if sku.get('colour') and sku.get('size'):
-                oos = it.product(raw_sku[0]['products'], raw_sku[1]['products'])
+                oos = it.product(colour['products'], size['products'])
                 sku['out_of_stock'] = not any([c == s for c, s in oos])
-            elif raw_sku[0] or raw_sku[1]:
+            elif colour or size:
                 sku['out_of_stock'] = False
 
             skus.append(sku)
@@ -116,16 +116,13 @@ class MKCParser(Spider):
     def get_raw_skus(self, response):
         attributes = response.css('#product-options-wrapper script').re_first(r'{.*}')
         attributes_map = json.loads(attributes)['attributes']
-        raw_colours, raw_sizes = [], []
+        raw_colours, raw_sizes = [''], ['']
 
         for key in attributes_map.keys():
             if attributes_map[key]['label'].lower() in ('color', 'colour'):
                 raw_colours = attributes_map[key]['options']
             if attributes_map[key]['label'].lower() == 'size':
                 raw_sizes = attributes_map[key]['options']
-
-        raw_colours = raw_colours if raw_colours else ['']
-        raw_sizes = raw_sizes if raw_sizes else ['']
 
         return it.product(raw_colours, raw_sizes)
 
