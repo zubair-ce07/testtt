@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from ..models import Category, Gig, Gallery, Package
+from ..models import Category, Gig, Gallery, Package, Faq, Requirements
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -19,8 +19,23 @@ class PackageSerializer(serializers.ModelSerializer):
             'details_offering',
             'delivery_time',
             'revisions',
-            'price'
+            'price',
+            'gig'
         )
+
+
+class FaqSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Faq
+        fields = '__all__'
+
+
+class RequirementsSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Requirements
+        fields = '__all__'
 
 
 class GigSerializer(serializers.ModelSerializer):
@@ -35,12 +50,24 @@ class GigSerializer(serializers.ModelSerializer):
         slug_field="search_tag"
     )
     seller = serializers.PrimaryKeyRelatedField(
-        read_only=True,
+        read_only=True
     )
+    gig_packages = PackageSerializer(read_only=True, many=True)
+    gig_faqs = FaqSerializer(read_only=True, many=True)
+    gig_requirements = RequirementsSerializer(read_only=True, many=True)
 
     class Meta:
         model = Gig
-        fields = '__all__'
+        fields = (
+            'id',
+            'seller',
+            'search_tags',
+            'categories',
+            'gig_title',
+            'gig_packages',
+            'gig_faqs',
+            'gig_requirements'
+        )
 
 
 class GallerySerializer(serializers.ModelSerializer):

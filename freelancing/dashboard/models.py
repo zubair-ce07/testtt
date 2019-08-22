@@ -29,7 +29,11 @@ def buyer_request_files_path(instance, filename):
 
 
 class RequestFiles(models.Model):
-    request = models.ForeignKey(Requests, on_delete=models.CASCADE)
+    request = models.ForeignKey(
+        Requests,
+        on_delete=models.CASCADE,
+        related_name="request_files"
+    )
     file_name = models.FileField(
         upload_to=buyer_request_files_path,
         blank=True

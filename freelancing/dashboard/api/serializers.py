@@ -38,6 +38,7 @@ class RequestSerializer(serializers.ModelSerializer):
     buyer = serializers.PrimaryKeyRelatedField(
         read_only=True,
     )
+    request_files = RequestFileSerializer(read_only=True, many=True)
 
     class Meta:
         model = Requests
@@ -48,5 +49,6 @@ class RequestSerializer(serializers.ModelSerializer):
             'duration',
             'budget',
             'categories',
-            'buyer'
+            'buyer',
+            'request_files'
         )

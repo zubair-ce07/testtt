@@ -16,9 +16,6 @@ class GigApi(generics.ListCreateAPIView):
     serializer_class = GigSerializer
     permission_classes = (IsAuthenticated, isAdminOrSellerOnly, )
 
-    # def list(request, *args, **kwargs):
-    #     queryset = self.getq
-
     def create(self, request, *args, **kwargs):
         # FIXME: use serializer instead to using models
         categories = request.data.pop('categories', [])
@@ -36,7 +33,22 @@ class GigApi(generics.ListCreateAPIView):
             seller=request.user, **request.data
         )
         # creating package for gig
-        package = Package.objects.create(gig=gig, **gig_package)
+        # package = Package.objects.create(gig=gig, **gig_package)
+        print(gig.__dict__)
+        gig_serializer = GigSerializer(data=gig.__dict__)
+        if not gig_serializer.is_valid():
+            return Response(
+                {'error': gig_serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        pkg_serializer = PackageSerializer(
+            data={"gig": gig.__dict__, **gig_package})
+        if not pkg_serializer.is_valid():
+            return Response(
+                {'error': pkg_serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         for requirement in requirements:
             Requirements.objects.create(gig=gig, **requirement)
@@ -54,6 +66,8 @@ class GigApi(generics.ListCreateAPIView):
 
         queryset = self.get_queryset()
         serializer = GigSerializer(queryset, many=True)
+
+        # saving data
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
@@ -82,7 +96,7 @@ class GalleryFilesApi(generics.ListCreateAPIView):
         gallery_files = []
         for uploaded_file in request.data.getlist('files'):
             gallery_file = Gallery.objects.create(
-                request=buyer_request,
+                request=gig,
                 file_name=uploaded_file
             )
             gallery_file.save()

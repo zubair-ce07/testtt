@@ -26,7 +26,11 @@ class Gig(models.Model):
 
 
 class Package(models.Model):
-    gig = models.ForeignKey(Gig, on_delete=models.CASCADE)
+    gig = models.ForeignKey(
+        Gig,
+        related_name="gig_packages",
+        on_delete=models.CASCADE
+    )
     name = models.TextField(max_length=100)
     details_offering = models.TextField(max_length=300)
     delivery_time = models.IntegerField()  # Num of Days
@@ -35,13 +39,21 @@ class Package(models.Model):
 
 
 class Faq(models.Model):
-    gig = models.ForeignKey(Gig, on_delete=models.CASCADE)
+    gig = models.ForeignKey(
+        Gig,
+        on_delete=models.CASCADE,
+        related_name="gig_faqs",
+    )
     question = models.TextField(max_length=400)
     answer = models.TextField(max_length=400)
 
 
 class Requirements(models.Model):
-    gig = models.ForeignKey(Gig, on_delete=models.CASCADE)
+    gig = models.ForeignKey(
+        Gig,
+        on_delete=models.CASCADE,
+        related_name="gig_requirements",
+    )
     requirement_text = models.TextField(max_length=500)
 
 
