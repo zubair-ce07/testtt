@@ -50,7 +50,7 @@ class FilaCrawler(CrawlSpider):
         product['care'] = self.extract_care(product['description'])
         product['image_urls'] = self.extract_image_urls(response)
         product['price'] = self.extract_price(response)
-        product['skus'] = self.extract_skus(response, product['retailer_sku'], product['price'], product['currency'])
+        product['skus'] = self.extract_skus(response, product['retailer_sku'], product['price'])
         product['spider_name'] = FilaCrawler.name
         product['crawl_start_time'] = self.extract_crawl_start_time()
 
@@ -103,14 +103,13 @@ class FilaCrawler(CrawlSpider):
     def extract_image_urls(self, response):
         return list(set(response.css('.product-image-gallery > img::attr("src")').getall()))
 
-    def extract_skus(self, response, retailer_sku, price, currency):
+    def extract_skus(self, response, retailer_sku, price):
         product_sizes = response.css('#configurable_swatch_size .swatch-label::text').getall()
 
+        common_sku = {'price': price, 'currency': FilaCrawler.currency}
         skus = []
         for product_size in product_sizes:
-            sku = {}
-            sku['price'] = price
-            sku['currency'] = currency
+            sku = common_sku.copy()
             sku['size'] = product_size
             sku['sku_id'] = f'{retailer_sku}-{product_size}'
             skus.append(sku)
