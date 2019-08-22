@@ -13,14 +13,15 @@ class JackLemkusCrawler(CrawlSpider):
     allowed_domains = ['jacklemkus.com']
     start_urls = ['https://www.jacklemkus.com/']
 
-    listings_css = ('#nav > li > a', 'a.next')
+    listings_css = ['#nav > li > a', 'a.next']
+    products_css = ['.products-grid > li > .product-image']
 
     retailer = 'jacklemkus-za'
     currency = 'ZAR'
 
     rules = (
         Rule(LinkExtractor(deny='how-to-order', restrict_css=listings_css), callback='parse'),
-        Rule(LinkExtractor(restrict_css='.products-grid > li > .product-image'), callback='parse_product'),
+        Rule(LinkExtractor(restrict_css=products_css), callback='parse_product'),
     )
 
     def parse(self, response):
@@ -30,7 +31,7 @@ class JackLemkusCrawler(CrawlSpider):
             yield request
 
     def parse_product(self, response):
-        product = dict()
+        product = {}
 
         product['retailer_sku'] = self.extract_retailer_sku(response)
         product['trail'] = response.meta['trail'][:-1]
@@ -58,10 +59,11 @@ class JackLemkusCrawler(CrawlSpider):
         return response.css('span.sku::text').get().strip()
 
     def extract_gender(self, response):
-        gender = response.xpath('//*[@id="product-attribute-specs-table"]/tbody/tr/'
-                                'th[contains(text(),"Gender")]/following-sibling::td/text()').get()
+        gender_x = ('//*[@id="product-attribute-specs-table"]/tbody/tr/th[contains(text(),"Gender")]/'
+                    'following-sibling::td/text()')
+        gender = response.xpath(gender_x).get()
         if gender is None:
-            return ''
+            return 'unisex'
         gender = gender.lower()
 
         genders = {
@@ -77,8 +79,9 @@ class JackLemkusCrawler(CrawlSpider):
         return ''
 
     def extract_brand(self, response):
-        return response.xpath('//*[@id="product-attribute-specs-table"]/tbody/tr/'
-                              'th[contains(text(),"Item Brand")]/following-sibling::td/text()').get()
+        brands_x = ('//*[@id="product-attribute-specs-table"]/tbody/tr/th[contains(text(),"Item Brand")]/'
+                    'following-sibling::td/text()')
+        return response.xpath().get()
 
     def extract_category(self, trail):
         return [t[0] for t in itertools.islice(trail, 1, None)]
@@ -110,14 +113,19 @@ class JackLemkusCrawler(CrawlSpider):
         return image_urls
 
     def extract_skus(self, response, price, currency):
-        price_currency_dict = {'price': price, 'currency': currency}
-
         product_data = ast.literal_eval(response.css('div.product-data-mine::attr("data-lookup")').get())
-        return [{**price_currency_dict,
-                 'size': data.get('size'),
-                 'out_of_stock': not data['stock_status'],
-                 'sku_id': data.get('id')}
-                for data in product_data.values()]
+
+        skus = []
+        for data in product_data.values():
+            sku = {}
+            sku['price'] = price
+            sku['currency'] = currency
+            sku['size'] = data.get('size')
+            sku['out_of_stock'] = not data['stock_status']
+            sku['sku_id'] = data.get('id')
+            skus.append(sku)
+
+        return skus
 
     def extract_price(self, response):
         return response.css('.regular-price .price::text').get()
