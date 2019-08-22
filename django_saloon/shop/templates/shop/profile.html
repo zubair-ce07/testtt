@@ -1,0 +1,12 @@
+{% extends "customer/base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+<div class="media-body">
+    <h2 class="account-heading">Update Profile</h2>
+</div>
+<form method="post">{% csrf_token %}
+    {{ user_form|crispy }}
+    {{ shop_form|crispy }}
+    <input type="submit" value="Update">
+</form>
+{% endblock content %}

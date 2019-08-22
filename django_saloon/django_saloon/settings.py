@@ -31,14 +31,16 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'customer',
+
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'crispy_forms'
+    'crispy_forms',
+    'customer.apps.CustomerConfig',
+    'shop.apps.ShopConfig'
 ]
 
 MIDDLEWARE = [
@@ -122,7 +124,7 @@ CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
 STATIC_URL = '/static/'
 
-AUTH_USER_MODEL = 'customer.SaloonUser'
+# AUTH_USER_MODEL = 'customer.SaloonUser'
 
-# login url
+LOGIN_REDIRECT_URL = 'customer_profile'
 LOGIN_URL = 'login'

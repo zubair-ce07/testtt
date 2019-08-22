@@ -17,6 +17,7 @@
 <body>
     <main role="main" class="container">
         <div class="row">
+            <div class="col-md-2"></div>
             <div class="col-md-8">
                 {% if messages %}
                 {% for message in messages %}
@@ -27,6 +28,7 @@
                 {% endif %}
                 {% block content %}{% endblock %}
             </div>
+            <div class="col-md-2"></div>
         </div>
     </main>
 

@@ -4,8 +4,9 @@ from django.contrib.auth.decorators import login_required
 from django.views import View
 from django.utils.decorators import method_decorator
 
-from .forms import UserRegisterForm, UserUpdateForm, CustomerUpdateForm
-from .models import Customer
+from customer.forms import UserRegisterForm, UserUpdateForm
+from .forms import ShopUpdateForm
+from .models import Saloon
 
 
 class Register(View):
@@ -25,7 +26,7 @@ class Register(View):
         if user_form.is_valid():
             user_form.instance.is_customer = True
             user = user_form.save()
-            Customer.objects.create(user=user)
+            Saloon.objects.create(user=user)
             messages.success(request, f'Your account has been Created!')
             return redirect('login')
         return render(request, 'customer/register.html', {'user_form': user_form})
@@ -54,14 +55,14 @@ class Profile(View):
         This method will save profile data when profile form is submitted.
         """
         user_update_form = UserUpdateForm(request.POST, instance=request.user)
-        customer_update_form = CustomerUpdateForm(
-            request.POST, instance=request.user.customer)
-        if user_update_form.is_valid() and customer_update_form.is_valid():
+        shop_update_form = ShopUpdateForm(
+            request.POST, instance=request.user.saloon)
+        if user_update_form.is_valid() and shop_update_form.is_valid():
             user_update_form.save()
-            customer_update_form.save()
+            shop_update_form.save()
             messages.success(request, f'Your account has been updated!')
-            return redirect('customer_profile')
-        return render(request, 'customer/profile.html', {'user_form': user_update_form, 'customer_form': customer_update_form})
+            return redirect('shop_profile')
+        return render(request, 'shop/profile.html', {'user_form': user_update_form, 'shop_form': shop_update_form})
 
     @method_decorator(login_required)
     @staticmethod
@@ -70,7 +71,7 @@ class Profile(View):
         This method will render profile form.
         """
         user_update_form = UserUpdateForm(instance=request.user)
-        customer_update_form = CustomerUpdateForm(
-            instance=request.user.customer)
+        shop_update_form = ShopUpdateForm(
+            instance=request.user.saloon)
 
-        return render(request, 'customer/profile.html', {'user_form': user_update_form, 'customer_form': customer_update_form})
+        return render(request, 'shop/profile.html', {'user_form': user_update_form, 'shop_form': shop_update_form})
