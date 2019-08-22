@@ -61,7 +61,7 @@ class LemkusSpider(CrawlSpider):
         common_sku = {
             "price": price,
             "currency": currency,
-            "sku-id": "onesize"
+            "sku_id": "onesize"
         }
     
         if size_label is None:
@@ -73,12 +73,18 @@ class LemkusSpider(CrawlSpider):
 
             if raw_sku["stock_status"]:
 
+                if raw_sku["id"] is not None:
+                    common_sku["sku_id"] = raw_sku["id"]
+
                 sku = {
                     "size": raw_sku["size"],
                     "quantity": raw_sku["qty"],
                 }      
                 sku.update(common_sku)              
                 skus.append(sku)
-    
-        return skus
+
+        if skus is not None:
+            return skus
+        else:
+            return common_sku
 
