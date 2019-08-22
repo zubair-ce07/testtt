@@ -3,6 +3,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.views import View
 from django.utils.decorators import method_decorator
+from django.contrib.auth import logout as auth_logout
 
 from .forms import UserRegisterForm, UserUpdateForm, CustomerUpdateForm
 from .models import Customer
@@ -74,3 +75,19 @@ class Profile(View):
             instance=request.user.customer)
 
         return render(request, 'customer/profile.html', {'user_form': user_update_form, 'customer_form': customer_update_form})
+
+
+class LogoutView(View):
+    """Log out User.
+
+    This logout user View
+    """
+
+    @staticmethod
+    def get(request):
+        """Log out User.
+
+        This method logout user and redirect it to login page
+        """
+        auth_logout(request)
+        return redirect('login')

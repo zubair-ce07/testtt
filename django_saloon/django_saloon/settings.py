@@ -51,6 +51,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'customer.middleware.usertype.UserProfileRedirect'
+
 ]
 
 ROOT_URLCONF = 'django_saloon.urls'
@@ -126,5 +128,5 @@ STATIC_URL = '/static/'
 
 # AUTH_USER_MODEL = 'customer.SaloonUser'
 
-LOGIN_REDIRECT_URL = 'customer_profile'
+LOGIN_REDIRECT_URL = 'shop_list'
 LOGIN_URL = 'login'

@@ -24,4 +24,5 @@ urlpatterns = [
     path('customer/', include('customer.urls')),
     path('shop/', include('shop.urls')),
     path('login/', auth_views.LoginView.as_view(template_name='customer/login.html'), name='login'),
+    path('logout/', user_views.LogoutView.as_view(), name='logout')
 ]

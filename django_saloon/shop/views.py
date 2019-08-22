@@ -3,6 +3,8 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.views import View
 from django.utils.decorators import method_decorator
+from django.views.generic import ListView
+
 
 from customer.forms import UserRegisterForm, UserUpdateForm
 from .forms import ShopUpdateForm
@@ -75,3 +77,10 @@ class Profile(View):
             instance=request.user.saloon)
 
         return render(request, 'shop/profile.html', {'user_form': user_update_form, 'shop_form': shop_update_form})
+
+
+class SaloonListView(ListView):
+    model = Saloon
+    template_name = 'shop/saloons.html'  # <app>/<model>_<viewtype>.html
+    context_object_name = 'saloons'
+    paginate_by = 5

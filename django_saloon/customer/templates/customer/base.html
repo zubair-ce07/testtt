@@ -15,6 +15,58 @@
 </head>
 
 <body>
+
+    <nav class="navbar navbar-expand-lg navbar-primary bg-light">
+        <a class="navbar-brand" href="{% url 'shop_list' %}">Saloons</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+
+            </ul>
+            <div class="form-inline my-2 my-lg-0">
+
+                <ul class="navbar-nav mr-auto">
+                    {% if user.is_authenticated %}
+                    {% if request.user.saloon %}
+                    <li class="nav-item active">
+                        <a class="nav-link" href="{% url 'shop_profile' %}">Profile<span
+                                class="sr-only">(current)</span></a>
+                    </li>
+                    {% endif %}
+                    {% if request.user.customer %}
+                    <li class="nav-item active">
+                        <a class="nav-link" href="{% url 'customer_profile' %}">Profile<span
+                                class="sr-only">(current)</span></a>
+                    </li>
+                    {% endif %}
+                    <li class="nav-item active">
+                        <a class="btn btn-outline-danger" href="{% url 'logout' %}">logout<span
+                                class="sr-only">(current)</span></a>
+                    </li>
+                    {% else %}
+                    <li class="nav-item active">
+                        <a class="nav-link" href="{% url 'login' %}">Login <span class=" sr-only">(current)</span></a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="{% url 'customer_register' %}">Register <span
+                                class=" sr-only">(current)</span></a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="{% url 'shop_register' %}">Register Saloon <span
+                                class=" sr-only">(current)</span></a>
+                    </li>
+                    {% endif %}
+
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+
     <main role="main" class="container">
         <div class="row">
             <div class="col-md-2"></div>
