@@ -3,7 +3,7 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 
 from ..models import User
 from .serliazers import UserSerializer
-from .permissions import isAdminOrReadOnly, isSameUser
+from .permissions import isSameUser
 
 
 class UserApi(generics.ListCreateAPIView):
@@ -19,4 +19,4 @@ class UserDetailsApi(generics.RetrieveUpdateDestroyAPIView):
 
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = (IsAuthenticated, isAdminOrReadOnly, isSameUser)
+    permission_classes = (IsAuthenticated, isSameUser)

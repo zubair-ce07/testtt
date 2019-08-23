@@ -3,10 +3,14 @@ from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import IsAuthenticated
 
-from ..models import Requests, RequestFiles
+from ..models import Requests, RequestFiles, Offers
 from seller.models import Category
 from .serializers import RequestSerializer, RequestFilesSerializer
-from .permissions import isAdminOrBuyerOnly, isSameBuyer
+from .permissions import isAdminOrBuyerOnly, \
+    isSameBuyer, isSameBuyerRequest, isSameBuyerOffer
+from freelancing.utils.api.response import \
+    invalid_serializer_response, missing_attribute_response
+from seller.api.serializers import OfferSerializer
 
 
 class RequestApi(generics.ListCreateAPIView):
@@ -18,17 +22,24 @@ class RequestApi(generics.ListCreateAPIView):
 
     def create(self, request, *args, **kwargs):
         categories = request.data.pop('categories', [])
+        if not categories:
+            return missing_attribute_response('categories')
 
-        buyer_request = Requests.objects.create(
-            buyer=request.user, **request.data
+        request_serializer = RequestSerializer(
+            data={"buyer": request.user.id, **request.data}
         )
+        if not request_serializer.is_valid():
+            return invalid_serializer_response(request_serializer)
+        buyer_request = request_serializer.save()
+
         for category in categories:
             category = Category.objects.get(id=category["id"])
             buyer_request.categories.add(category)
 
-        queryset = self.get_queryset()
-        serializer = RequestSerializer(queryset, many=True)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(
+            request_serializer.data,
+            status=status.HTTP_201_CREATED
+        )
 
 
 class RequestDetailsApi(generics.RetrieveUpdateDestroyAPIView):
@@ -71,4 +82,13 @@ class RequestFilesDetailsApi(generics.RetrieveUpdateDestroyAPIView):
 
     queryset = RequestFiles.objects.all()
     serializer_class = RequestFilesSerializer
-    permission_classes = (IsAuthenticated, isAdminOrBuyerOnly, isSameBuyer, )
+    permission_classes = (
+        IsAuthenticated, isAdminOrBuyerOnly, isSameBuyerRequest, )
+
+
+class OfferDetailsApi(generics.RetrieveUpdateDestroyAPIView):
+    """Rest api for single offer"""
+
+    queryset = Offers.objects.all()
+    serializer_class = OfferSerializer
+    permission_classes = (IsAuthenticated, isSameBuyerOffer)

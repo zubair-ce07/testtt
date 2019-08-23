@@ -52,7 +52,7 @@ urlpatterns = [
     ),
     url(
         r'^api/v1/request_files/(?P<pk>[0-9]+)$',
-        buyer_views.RequestDetailsApi.as_view()
+        buyer_views.RequestFilesDetailsApi.as_view()
     ),
     url(
         r'^api/v1/gigs/$',
@@ -76,7 +76,7 @@ urlpatterns = [
     ),
     url(
         r'^api/v1/offers/(?P<pk>[0-9]+)$$',
-        seller_views.OfferDetailsApi.as_view()
+        buyer_views.OfferDetailsApi.as_view()
     ),
 
 

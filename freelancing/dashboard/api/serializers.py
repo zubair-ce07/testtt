@@ -36,8 +36,9 @@ class RequestSerializer(serializers.ModelSerializer):
         slug_field="category_name"
     )
     buyer = serializers.PrimaryKeyRelatedField(
-        read_only=True,
+        queryset=User.objects.all()
     )
+
     request_files = RequestFileSerializer(read_only=True, many=True)
 
     class Meta:

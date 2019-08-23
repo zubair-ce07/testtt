@@ -2,17 +2,19 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import IsAuthenticated
-from django.forms.models import model_to_dict
+from django.shortcuts import get_object_or_404
 
 
 from ..models import Gig, Category, SearchTag, Gallery, \
     Package, Requirements, Faq
-from dashboard.models import Offers, Requests
-from django.shortcuts import get_object_or_404
+from dashboard.models import Requests, Offers
 
 from .serializers import GigSerializer, GallerySerializer, \
-    PackageSerializer, OfferSerializer
-from .permissions import isAdminOrSellerOnly, isSameSeller
+    PackageSerializer, RequirementsSerializer, \
+    FaqSerializer, OfferSerializer
+from .permissions import isAdminOrSellerOnly, isSameSeller, isSameSellerGig
+from freelancing.utils.api.response import \
+    invalid_serializer_response, missing_attribute_response
 
 
 class GigApi(generics.ListCreateAPIView):
@@ -23,29 +25,50 @@ class GigApi(generics.ListCreateAPIView):
     permission_classes = (IsAuthenticated, isAdminOrSellerOnly, )
 
     def create(self, request, *args, **kwargs):
-        # FIXME: use serializer instead to using models
         categories = request.data.pop('categories', [])
         search_tags = request.data.pop('search_tags', [])
         faqs = request.data.pop('faqs', [])
         requirements = request.data.pop('requirements', [])
         gig_package = request.data.pop('package', None)
-        if not gig_package:
-            return Response(
-                {'error': "missing attribute 'package'"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
 
-        gig = Gig.objects.create(
-            seller=request.user, **request.data
+        if not gig_package:
+            return missing_attribute_response('package')
+        if not categories:
+            return missing_attribute_response('categories')
+        if not search_tags:
+            return missing_attribute_response('search_tags')
+
+        gig_serializer = GigSerializer(
+            data={"seller": request.user.id, **request.data}
         )
-        # creating package for gig
-        package = Package.objects.create(gig=gig, **gig_package)
+        if not gig_serializer.is_valid():
+            return invalid_serializer_response(gig_serializer)
+
+        gig = gig_serializer.save()
+
+        pkg_serializer = PackageSerializer(
+            data={"gig": gig.id, **gig_package}
+        )
+        if not pkg_serializer.is_valid():
+            return invalid_serializer_response(pkg_serializer)
+
+        pkg_serializer.save()
 
         for requirement in requirements:
-            Requirements.objects.create(gig=gig, **requirement)
+            req_serializer = RequirementsSerializer(
+                data={"gig": gig.id, **requirement}
+            )
+            if not req_serializer.is_valid():
+                return invalid_serializer_response(req_serializer)
+            req_serializer.save()
 
         for faq in faqs:
-            Faq.objects.create(gig=gig, **faq)
+            faq_serializer = FaqSerializer(
+                data={"gig": gig.id, **faq}
+            )
+            if not faq_serializer.is_valid():
+                return invalid_serializer_response(faq_serializer)
+            faq_serializer.save()
 
         for category in categories:
             category = Category.objects.get(id=category["id"])
@@ -102,7 +125,11 @@ class GalleryFilesDetailsApi(generics.RetrieveUpdateDestroyAPIView):
 
     queryset = Gallery.objects.all()
     serializer_class = GallerySerializer
-    permission_classes = (IsAuthenticated, isAdminOrSellerOnly, isSameSeller, )
+    permission_classes = (
+        IsAuthenticated,
+        isAdminOrSellerOnly,
+        isSameSellerGig,
+    )
 
 
 class OffersApi(generics.ListCreateAPIView):
@@ -133,11 +160,3 @@ class OffersApi(generics.ListCreateAPIView):
         # saving data
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
-class OfferDetailsApi(generics.RetrieveUpdateDestroyAPIView):
-    """Rest api for single offer"""
-
-    queryset = Offers.objects.all()
-    serializer_class = OfferSerializer
-    permission_classes = (IsAuthenticated, )
