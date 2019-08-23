@@ -16,3 +16,12 @@ The purpose of this repo is to help the team lead and his team member in trainin
 
 Do not add log files, temp files, data files etc.
 **Do not merge/push anything into master branch**.
+
+#Command to run project
+For Kayak Site
+===============
+site_url=https://www.kayak.com npm test
+
+For Momondo Site
+=================
+site_url=https://global.momondo.com/ npm test
