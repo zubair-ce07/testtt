@@ -20,6 +20,8 @@ interface IFlight {
     setFlightTypeToBusiness(): Promise<void>;
 
     getSelectedTravelerText(): Promise<string>;
+
+    isFlightsSearchPageDisplayed(): Promise<boolean>;
 }
 
 export default IFlight;

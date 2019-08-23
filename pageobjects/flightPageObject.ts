@@ -98,6 +98,10 @@ class FlightPageObject extends BasePageObject {
     async searchFlights(): Promise<void> {
         await this.page.clickSearchButton();
     }
+
+    async isFlightSearchPageDisplayed(): Promise<boolean> {
+        return await this.page.isFlightsSearchPageDisplayed()
+    }
 }
 
 export default FlightPageObject;

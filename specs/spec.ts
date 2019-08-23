@@ -28,7 +28,6 @@ describe('Hotels Sanity -', () => {
         await flightPage.setFirstFlightDetail("FRA", "ZRH");
         await flightPage.setSecondFlightDetail("ZRH", "LON");
         await flightPage.searchFlights();
-        // todo: check current page url, it should be search page
     });
 
     it(`${PageName.FlightsSearch} Should display city filter set to FRA-ZRH & ZRH-LON'`, async function () {
@@ -54,51 +53,45 @@ describe('Hotels Sanity -', () => {
     });
 
     it(`${PageName.FlightsSearch} Should display two takeoff sliders in filter section`, async function () {
-        // todo: wait for search result list to load for site "Momondo" (this should be done in searchFlights() method
         const displayedSlidersCount = await flightSearchPage.getCountOfDisplayedTakeOffSliders();
         expect(displayedSlidersCount).to.be.at.least(2);
     });
 
     it(`${PageName.FlightsSearch} Should display first takeoff slider set to FRA`, async function () {
         const firstSliderTakeOffOrigin = await flightSearchPage.getSliderTakeOffOrigin(0);
-        console.log('origin', firstSliderTakeOffOrigin);
         expect(firstSliderTakeOffOrigin).to.have.string('FRA');
     });
 
     it(`${PageName.FlightsSearch} Should display second takeoff slider set to ZRH`, async function () {
         const secondSliderTakeOffOrigin = await flightSearchPage.getSliderTakeOffOrigin(1);
-        console.log('origin', secondSliderTakeOffOrigin);
         expect(secondSliderTakeOffOrigin).to.have.string('ZRH');
     });
 
     it(`${PageName.FlightsSearch} Should display two landing sliders in filter section`, async function () {
-        // todo: wait for search result list to load for site "Momondo" (this should be done in searchFlights() method
         const displayedSlidersCount = await flightSearchPage.getCountOfDisplayedLandingSliders();
         expect(displayedSlidersCount).to.be.at.least(2);
     });
 
     it(`${PageName.FlightsSearch} Should display first landing slider set to ZRH`, async function () {
         const firstSliderLandingDestination = await flightSearchPage.getSliderLandingDestination(0);
-        console.log('origin', firstSliderLandingDestination);
         expect(firstSliderLandingDestination).to.have.string('ZRH');
     });
 
     it(`${PageName.FlightsSearch} Should display second landing slider set to LON`, async function () {
         const secondSliderLandingDestination = await flightSearchPage.getSliderLandingDestination(1);
-        console.log('origin', secondSliderLandingDestination);
         expect(secondSliderLandingDestination).to.have.string('LON');
     });
 
     it(`Select Take-off ZRH slider and slide filter`, function () {
-        // TO BE DONE: Task 6
+        // TODO: TO BE DONE: Task 6
     });
 
     it(`Click the "View Deal" button for the first result`, function () {
-        // TO BE DONE: Task 7
+        // TODO:TO BE DONE: Task 7
     });
 
     it(`Go back to the flight result page`, function () {
-        // TO BE DONE: Task 8
+        // TODO:TO BE DONE: Task 8
     });
 
     it(`${PageName.FlightsSearch} Should display Multi-City Form`, async function () {
@@ -122,19 +115,16 @@ describe('Hotels Sanity -', () => {
 
     it(`${PageName.FlightsSearch} Should display MC Form first cabin class set to "Business"`, async function () {
         const cabinClass = await flightSearchPage.getMultiCityFormFirstCabinClassFilter();
-        console.log('cabin class', cabinClass);
         expect(cabinClass).to.have.string('Business');
     });
 
     it(`${PageName.FlightsSearch} Should display MC Form second cabin class set to "Business"`, async function () {
         const cabinClass = await flightSearchPage.getMultiCityFormSecondCabinClassFilter();
-        console.log('cabin class', cabinClass);
         expect(cabinClass).to.have.string('Business');
     });
 
     it(`${PageName.FlightsSearch} Should display MC Form Traveler set to "1 Adult"`, async function () {
         const travelerFilter = await flightSearchPage.getMultiCityFormTravelerFilter();
-        console.log('traveler filter', travelerFilter);
         expect(travelerFilter).to.have.string('1 Adult');
     });
 });

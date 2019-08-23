@@ -105,6 +105,11 @@ class SiteMomontoPageObject implements IFlight, IFlightSearchPage {
         await browser.wait(EC.visibilityOf(filterLeftColumn), 20000, getTimeoutErrorMessage("Flights search result left column"));
     }
 
+    async isFlightsSearchPageDisplayed(): Promise<boolean> {
+        const currentPageURL = await browser.getCurrentUrl();
+        return currentPageURL.indexOf("/flight-search") !== -1;
+    }
+
     getAppliedTravelerFilterField(): ElementFinder {
         return element(by.css("[id$=-multiCityTravelers]"));
     }

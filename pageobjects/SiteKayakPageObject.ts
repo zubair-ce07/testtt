@@ -106,6 +106,11 @@ class SiteKayakPageObject implements IFlight, IFlightSearchPage {
         await browser.wait(EC.visibilityOf(searchList), 20000, getTimeoutErrorMessage("Flights search result list"));
     }
 
+    async isFlightsSearchPageDisplayed(): Promise<boolean> {
+        const flightSearchSection = element(by.css(".FlightsSearch"));
+        return await flightSearchSection.isDisplayed();
+    }
+
     getAppliedTravelerFilterField(): ElementFinder {
         return element(by.css(".col-controls")).element(by.css(".js-label"));
     }
