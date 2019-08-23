@@ -24,6 +24,6 @@ class TimeSlot(models.Model):
     time = models.DateTimeField()
 
 
-class Preservation(models.Model):
+class Reservation(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
     time_slot = models.OneToOneField(TimeSlot, on_delete=models.CASCADE)

@@ -1,28 +1,41 @@
 {% extends "customer/base.html" %}
 {% block content %}
-{% for saloon in saloons %}
-{% if saloon.phone_no ==  None %}
-{% else %}
+
+
+{% if not time_slots%}
 <div class="card" style="margin-bottom: 10px; margin-top: 10px">
     <div class="card-header">
-        {{ saloon.shop_name }}
-    </div>
-    <div class="card-body">
-        <h5 class="card-title">Phone No : {{ saloon.phone_no }}</h5>
-        <p class="card-text">Address : {{ saloon.address }}</p>
-        {% if user.is_authenticated %}
-        {% if user.customer %}
-        <a href="{% url 'shop_slots' saloon.shop_name %}" class="btn btn-primary">Reserve a time slot</a>
-        {% endif %}
-        {% else %}
-        <a href="{% url 'login' %}" class="btn btn-primary">Reserve a time slot</a>
-        {% endif %}
+        No Time Slots avalable
     </div>
 </div>
+
 {% endif %}
 
 
+{% for time_slot in time_slots %}
+<div class="card" style="margin-bottom: 10px; margin-top: 10px">
+    <div class="card-header">
+        {{ time_slot.time }}
+    </div>
+    <div class="card-body">
+        {% if time_slot.reservation%}
+        <a href="#" class="btn btn-primary disabled">Reserved</a>
+        {% else %}
+        {% if user.is_authenticated and user.customer%}
+        <form action="" method="post">
+            {% csrf_token %}
+            {{ form }}
+            <input type="hidden" name="slot_id" value="{{time_slot.id}}">
+            <input type="submit" class="btn btn-primary" value="Reserve" />
+        </form>
+        {% else %}
+        <a href="{% url 'login' %}" class="btn btn-primary">Reserve</a>
+        {% endif %}
+        {% endif %}
+    </div>
+</div>
 {% endfor %}
+
 {% if is_paginated %}
 
 {% if page_obj.has_previous %}

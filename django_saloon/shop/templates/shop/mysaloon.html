@@ -1,7 +1,6 @@
 {% extends "customer/base.html" %}
 {% block content %}
 {% if not time_slots %}
-
 <div class="card" style="margin-bottom: 10px; margin-top: 10px">
     <div class="card-header">
         No Time Slots
@@ -70,9 +69,15 @@
 {% endif %}
 {% for time_slot in time_slots %}
 <div class="card" style="margin-bottom: 10px; margin-top: 10px">
+    {% if time_slot.reservation%}
+    <div class="card-header">
+        {{ time_slot.time }} Reserved by {{time_slot.reservation.customer.full_name}}
+    </div>
+    {% else %}
     <div class="card-header">
         {{ time_slot.time }}
     </div>
+    {% endif %}
 </div>
 {% endfor %}
 

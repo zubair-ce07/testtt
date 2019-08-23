@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -10,7 +10,7 @@ from django.views.generic import ListView
 
 from customer.forms import UserRegisterForm, UserUpdateForm
 from .forms import ShopUpdateForm
-from .models import Saloon, TimeSlot
+from .models import Saloon, TimeSlot, Reservation
 
 
 class Register(View):
@@ -124,5 +124,31 @@ class MyShopListView(LoginRequiredMixin, ListView, View):
                     slots.append(
                         TimeSlot(saloon=saloon, time=single_date + timedelta(hours=int(start_time)+slot)))
             TimeSlot.objects.bulk_create(slots)
+            messages.success(
+                request, f'Time slots added!')
 
         return redirect('my_shop')
+
+
+class SaloonSlotListView(LoginRequiredMixin, ListView, View):
+    model = TimeSlot
+    template_name = 'shop/shop_slot_list.html'  # <app>/<model>_<viewtype>.html
+    context_object_name = 'time_slots'
+    paginate_by = 12
+
+    def get_queryset(self):
+        saloon = get_object_or_404(
+            Saloon, shop_name=self.kwargs.get('shop_name'))
+        return TimeSlot.objects.filter(saloon=saloon).order_by('time')
+
+    def post(self, request, shop_name):
+        """POST method for Profile View.
+        This method will save profile data when profile form is submitted.
+        """
+        slot_id = request.POST.get("slot_id", " ")
+        slot = TimeSlot.objects.get(id=slot_id)
+
+        Reservation(customer=request.user.customer, time_slot=slot).save()
+        messages.success(
+            request, f'Time slots reserved!')
+        return redirect('shop_list')
