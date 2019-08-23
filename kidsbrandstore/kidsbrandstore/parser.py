@@ -1,3 +1,4 @@
+from copy import copy
 from copy import deepcopy
 from re import findall
 
@@ -88,7 +89,7 @@ class KidsBrandStoreParser(Spider):
         sku['price'] = price
         sku["currency"] = currency
         for size in sizes:
-            sku = sku
+            sku = copy(sku)
             sku['size'] = size
             skus[f"{color}_{size}"] = deepcopy(sku)
         return skus

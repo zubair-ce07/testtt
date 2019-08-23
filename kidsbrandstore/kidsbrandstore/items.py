@@ -1,4 +1,5 @@
-from scrapy import Item, Field
+from scrapy import Item
+from scrapy import Field
 
 
 class KidsBrandStoreItem(Item):

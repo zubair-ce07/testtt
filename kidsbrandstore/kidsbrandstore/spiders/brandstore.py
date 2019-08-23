@@ -1,6 +1,7 @@
 from scrapy import Request
 from scrapy.linkextractors import LinkExtractor
-from scrapy.spiders import CrawlSpider, Rule
+from scrapy.spiders import CrawlSpider
+from scrapy.spiders import Rule
 
 from kidsbrandstore.parser import Parser
 
