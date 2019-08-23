@@ -1,3 +1,4 @@
+from copy import copy
 from copy import deepcopy
 from json import loads
 from re import findall
@@ -40,7 +41,7 @@ class SawItFirstParser(Spider):
         product['currency'] = self.currency(response)
         product['skus'] = {}
         product['meta'] = []
-        yield from self.request_colours(response, product)
+        return self.request_colours(response, product)
 
     def parse_color_requests(self, response):
         product = response.meta["product"]
@@ -50,14 +51,14 @@ class SawItFirstParser(Spider):
             request = Request(url, callback=self.parse_skus)
             request.meta['colours'] = colours
             product['meta'].append(request)
-        yield from self.next_request_or_product(product)
+        return self.next_request_or_product(product)
 
     def parse_skus(self, response):
         product = response.meta["product"]
         colours = response.meta["colours"]
         colour = self.product_skus(response, colours)
         product['skus'].update(colour)
-        yield from self.next_request_or_product(product)
+        return self.next_request_or_product(product)
 
     def request_colours(self, response, product):
         form_data = {
@@ -71,15 +72,15 @@ class SawItFirstParser(Spider):
                               data=form_data, headers=self.headers
                               )
         request.meta["product"] = product
-        yield request
+        return request
 
     def next_request_or_product(self, product):
         if len(product['meta']) > 0:
             request = product['meta'].pop(0)
             request.meta["product"] = product
-            yield request
+            return request
         else:
-            yield product
+            return product
 
     def retailer_sku(self, response):
         return response.css(".product-sku > ::text").extract_first()
@@ -147,7 +148,7 @@ class SawItFirstParser(Spider):
             "currency": currency
         }
         for size, quantity in stock:
-            sku = sku
+            sku = copy(sku)
             sku["size"] = size
             sku["out_of_stock"] = quantity == 0
             skus[f"{color}_{size}"] = deepcopy(sku)

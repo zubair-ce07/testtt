@@ -9,6 +9,5 @@ class DuplicatesPipeline:
     def process_item(self, item, spider):
         if item['retailer_sku'] in self.skus_seen:
             raise DropItem("Duplicate item found: %s" % item)
-        else:
-            self.skus_seen.add(item['retailer_sku'])
-            return item
+        self.skus_seen.add(item['retailer_sku'])
+        return item

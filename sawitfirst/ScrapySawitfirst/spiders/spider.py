@@ -1,12 +1,15 @@
 from json import loads
 from re import findall
-from urllib.parse import urljoin, urlsplit
-from w3lib.url import add_or_replace_parameter, add_or_replace_parameters, url_query_parameter
+from urllib.parse import urljoin
+from urllib.parse import urlsplit
+from w3lib.url import add_or_replace_parameter
+from w3lib.url import add_or_replace_parameters
+from w3lib.url import url_query_parameter
 
 from scrapy import Request
 from scrapy.linkextractors import LinkExtractor
-from scrapy.spiders import CrawlSpider, Rule
-
+from scrapy.spiders import CrawlSpider
+from scrapy.spiders import Rule
 from ScrapySawitfirst.parser import SawItFirstParser
 
 
@@ -20,7 +23,7 @@ class SawItFirstCrawler(CrawlSpider):
             LinkExtractor(
                 deny_extensions=['html'],
                 restrict_css=categories_css),
-            callback="parse_"
+            callback="parse"
         ),
     )
     parser = SawItFirstParser()
@@ -32,24 +35,27 @@ class SawItFirstCrawler(CrawlSpider):
     PRODPAGE_BOTTOM_HITSPERPAGE = 15
     fields = "id,handle,image,title,tags,FSM_compare_at_price,FSM_price,FSM_OnSale"
 
-    def parse_(self, response):
-        super().parse(response)
+    def parse(self, response):
+        for request in super().parse(response):
+            yield request
         if response.css(".product-listing"):
             product_urls = findall(r'"url": "(.+)"', response.text)
             for href in product_urls:
                 yield Request(response.urljoin(href), callback=self.parser.parse)
+
         url = response.css("[property=og\:url]::attr(content)").extract_first()
         if "collections" in url and "page" not in url:
             url = add_or_replace_parameter(url, 'page', '1')
         page = url_query_parameter(url, "page", None)
         if not page:
             return
+
         params = self.prepare_params(response, url)
         request_url = add_or_replace_parameters(self.attraqt_url, params)
         request = Request(
             request_url, callback=self.parse_next_page)
         request.meta["url"] = response.url
-        yield request
+        return request
 
     def parse_next_page(self, response):
         page_data = loads(response.text)
@@ -58,7 +64,7 @@ class SawItFirstCrawler(CrawlSpider):
         next_page = self.next_page(page_data)
         url = urlsplit(url).geturl()
         url = add_or_replace_parameter(url, 'page', str(next_page))
-        yield Request(url, callback=self.parse_)
+        return Request(url, callback=self.parse)
 
     def next_page(self, page_data):
         hits = int(page_data["hits"])
