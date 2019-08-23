@@ -17,8 +17,9 @@ class MixinDE(Mixin):
     start_urls = [
         "https://www.bonita.de/"
     ]
+
     gender = Gender.WOMEN.value
-    one_sizes = ['ONESIZE']
+    spider_one_sizes = ['ONESIZE']
 
 
 class ParseSpider(BaseParseSpider):
@@ -66,7 +67,7 @@ class ParseSpider(BaseParseSpider):
 
     def image_urls(self, response):
         images_css = ".m-picture-gallery__thumb picture ::attr(data-srcset)"
-        return [url for url in clean(response.css(images_css))]
+        return clean(response.css(images_css))
 
     def skus(self, response, raw_product, product_id):
         skus = {}
@@ -77,8 +78,7 @@ class ParseSpider(BaseParseSpider):
 
         for raw_size in response.css(".m-product-options li"):
             sku = common_sku.copy()
-            size = clean(raw_size.css("::attr(value)"))[0]
-            sku["size"] = self.one_size if size in self.one_sizes else size
+            sku["size"] = clean(raw_size.css("::attr(value)"))[0]
 
             if clean(raw_size.css("[disabled]")):
                 sku["out_of_stock"] = True
@@ -94,7 +94,8 @@ class CrawlSpider(BaseCrawlSpider):
         ".m-pagination__btn:contains('Nächste')"
     ]
     product_css = [
-        ".m-product-tile__link", ".m-teaser-image"
+        ".m-product-tile__link",
+        ".m-teaser-image"
     ]
 
     rules = (
