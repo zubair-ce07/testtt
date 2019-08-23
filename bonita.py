@@ -1,5 +1,4 @@
 import json
-import re
 
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
@@ -12,10 +11,13 @@ class Mixin:
 
 
 class MixinDE(Mixin):
-    market = "DE"
     retailer = Mixin.retailer + "-de"
+    market = "DE"
     allowed_domains = ["bonita.de"]
-    lang = "de"
+    start_urls = ["https://www.bonita.de/"
+                  ]
+    gender = Gender.WOMEN.value
+    one_sizes = ['ONESIZE']
 
 
 def get_prices_css():
@@ -25,21 +27,16 @@ def get_prices_css():
     return f"{previous_price_css}{price_css_t1}{price_css_t2}"
 
 
-class BonitaParseSpider(MixinDE, BaseParseSpider):
-    name = MixinDE.retailer + "-parse"
-    raw_product_css = "#concreteProducts::text"
-
-    name_css = ".o-product-information__product-name::text"
+class ParseSpider(BaseParseSpider):
     price_css = get_prices_css()
     care_css = ".m-product-details__wash-symbols ::attr(title)"
     description_css = "#productDetails ul ::text"
     raw_brand_css = "#concreteProducts::text"
     brand_re = "brand\"\:\"(.+?)\","
-    images_css = ".m-picture-gallery__thumb picture ::attr(data-srcset)"
 
     def parse(self, response):
         raw_product = self.raw_product(response)
-        product_id = list(raw_product)[0]
+        product_id = self.product_id(raw_product)
         garment = self.new_unique_garment(product_id)
 
         if not garment:
@@ -47,37 +44,43 @@ class BonitaParseSpider(MixinDE, BaseParseSpider):
 
         self.boilerplate_normal(garment, response)
 
-        garment["category"] = self._product_category(raw_product)
         garment["image_urls"] = self.image_urls(response)
-        garment["skus"] = self.skus(response, raw_product)
+        garment["skus"] = self.skus(response, raw_product, product_id)
+        garment["category"] = self._product_category(raw_product, product_id)
 
         return garment
 
+    def product_id(self, raw_product):
+        return next(iter(raw_product))
+
     def raw_product(self, response):
-        return json.loads(response.css(self.raw_product_css).get())
+        raw_product_css = "#concreteProducts::text"
+        return json.loads(clean(response.css(raw_product_css))[0])
 
     def product_name(self, response):
-        return clean(response.css(self.name_css).get())
+        name_css = ".o-product-information__product-name::text"
+        return clean(response.css(name_css))[0]
 
-    def _product_category(self, raw_product):
-        raw_category = raw_product[list(raw_product)[0]]["dimension35"]
-        return raw_category.replace("\\", "").split("/")
+    def _product_category(self, raw_product, product_id):
+        return raw_product[product_id]["dimension35"].split("/")
 
     def image_urls(self, response):
-        return [url for url in set(response.css(self.images_css).getall())]
+        images_css = ".m-picture-gallery__thumb picture ::attr(data-srcset)"
+        return [url for url in clean(response.css(images_css))]
 
-    def skus(self, response, raw_product):  # Implement the pipeline, Its not there
+    def skus(self, response, raw_product, product_id):
         skus = {}
         common_sku = self.product_pricing_common(response)
 
-        alternate_color = re.findall("in (.+)", self.product_name(response))[0]
-        common_sku["colour"] = raw_product[list(raw_product)[0]]["dimension33"] or alternate_color
+        alternate_color = self.detect_colour_from_name(response)
+        common_sku["colour"] = raw_product[product_id]["dimension33"] or alternate_color
 
         for raw_size in response.css(".m-product-options li"):
             sku = common_sku.copy()
-            sku["size"] = raw_size.css("::attr(value)").get()
+            size = clean(raw_size.css("::attr(value)"))[0]
+            sku["size"] = self.one_size if size in self.one_sizes else size
 
-            if raw_size.css("::attr(disabled)").get():
+            if clean(raw_size.css("[disabled]")):
                 sku["out_of_stock"] = True
 
             skus[f"{sku['colour']}_{sku['size']}"] = sku
@@ -85,19 +88,22 @@ class BonitaParseSpider(MixinDE, BaseParseSpider):
         return skus
 
 
-class BonitaCrawlSpider(MixinDE, BaseCrawlSpider):
-    name = MixinDE.retailer + "-crawl"
-    start_urls_with_meta = [
-        ("https://www.bonita.de/", {"gender": Gender.WOMEN.value})
-    ]
-
-    parse_spider = BonitaParseSpider()
-
-    listings_css = ["[data-category='Navigation Desktop']", ".m-pagination__btn:contains('Nächste')"]
+class CrawlSpider(BaseCrawlSpider):
+    listings_css = ["[data-category='Navigation Desktop']",
+                    ".m-pagination__btn:contains('Nächste')"]
     product_css = [".m-product-tile__link", ".m-teaser-image"]
 
     rules = (
         Rule(LinkExtractor(restrict_css=listings_css), callback="parse"),
         Rule(LinkExtractor(restrict_css=product_css), callback="parse_item")
     )
+
+
+class ParseSpiderDE(MixinDE, ParseSpider):
+    name = MixinDE.retailer + "-parse"
+
+
+class CrawlSpiderDE(MixinDE, CrawlSpider):
+    name = MixinDE.retailer + "-crawl"
+    parse_spider = ParseSpiderDE()
 
