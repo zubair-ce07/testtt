@@ -50,46 +50,33 @@ class Operations:
         file_manager = FileManager()
         for file in files:
             for row in file_manager.read(file, 'r'):
-                flag, high, max_day = self.get_max_temperature(row, result)
-                if flag:
-                    result["highest"], result["highest_day"] = high, max_day
+                max_temp_data = self.compare_values(row, "Max TemperatureC", result, "highest", ">")
+                if max_temp_data:
+                    result["highest"], result["highest_day"] = max_temp_data["max_val"], max_temp_data["day"]
 
-                flag, low, low_day = self.get_lowest_temperature(row, result)
-                if flag:
-                    result["lowest"], result["lowest_day"] = low, low_day
+                low_temp_data = self.compare_values(row, "Min TemperatureC", result, "lowest", "<")
+                if low_temp_data:
+                    result["lowest"], result["lowest_day"] = low_temp_data["min_val"], low_temp_data["day"]
 
-                flag, humid, humid_day = self.get_max_humidity(row, result)
-                if flag:
-                    result["humid"], result["humid_day"] = humid, humid_day
-
+                max_humidity_data = self.compare_values(row, "Max Humidity", result, "humid", ">")
+                if max_humidity_data:
+                    result["humid"], result["humid_day"] = max_humidity_data["max_val"], max_humidity_data["day"]
         return result
 
     @staticmethod
-    def get_max_temperature(row, result):
-        if ("highest" not in result and row["Max TemperatureC"]) \
-                or (row["Max TemperatureC"]
-                    and int(row["Max TemperatureC"]) > result["highest"]):
-            keys = list(row.keys())
-            return True, int(row["Max TemperatureC"]), row[keys[0]]
-        return False, None, None
-
-    @staticmethod
-    def get_lowest_temperature(row, result):
-        if ("lowest" not in result and row["Min TemperatureC"]) \
-                or (row["Min TemperatureC"]
-                    and int(row["Min TemperatureC"]) < result["lowest"]):
-            keys = list(row.keys())
-            return True, int(row["Min TemperatureC"]), row[keys[0]]
-        return False, None, None
-
-    @staticmethod
-    def get_max_humidity(row, result):
-        if ("humid" not in result and row["Max Humidity"]) \
-                or (row["Max Humidity"]
-                    and int(row["Max Humidity"]) > result["humid"]):
-            keys = list(row.keys())
-            return True, int(row["Max Humidity"]), row[keys[0]]
-        return False, None, None
+    def compare_values(row, row_key, result, result_key, operation):
+        if operation == ">":
+            if (result_key not in result and row[row_key]) \
+                    or (row[row_key]
+                        and int(row[row_key]) > result[result_key]):
+                keys = list(row.keys())
+                return {"max_val": int(row[row_key]), "day": row[keys[0]]}
+        elif operation == "<":
+            if (result_key not in result and row[row_key]) \
+                    or (row[row_key]
+                        and int(row[row_key]) < result[result_key]):
+                keys = list(row.keys())
+                return {"min_val": int(row[row_key]), "day": row[keys[0]]}
 
     @staticmethod
     def calculate_averages(file):
