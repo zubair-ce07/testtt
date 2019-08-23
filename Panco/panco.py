@@ -21,7 +21,7 @@ class PancoCrawlerSpider(CrawlSpider):
         next_page = response.css(".paginate-bottom a.js-pagination-next::attr(href)").get()
         page_num = re.findall("\\d+", next_page)
         if page_num:
-            url = w3lib.url.add_or_replace_parameter(response.request.url, 'page', page_num[0])
+            url = w3lib.url.add_or_replace_parameter(response.url, 'page', page_num[0])
             yield response.follow(url, self.parse_category)
 
         products = response.css(".product-item-info a::attr(href)").getall()
