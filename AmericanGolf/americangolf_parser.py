@@ -80,9 +80,8 @@ class AmericangolfParser(Spider):
         if sku_requests:
             product_item['meta'] = {'request_queue': sku_requests}
             return self.check_sku_requests(product_item)
-        else:
-            product_item['skus'] = self.get_varient_sku(response)
 
+        product_item['skus'] = self.get_varient_sku(response)
         return product_item
 
     def parse_hardware_skus(self, response):
@@ -122,9 +121,9 @@ class AmericangolfParser(Spider):
             request = product_item['meta']['request_queue'].pop()
             request.meta['product_item'] = product_item
             return request
-        else:
-            del product_item['meta']
-            return product_item
+
+        del product_item['meta']
+        return product_item
 
     def get_varient_sku(self, response):
         raw_varients = response.css(".product-variations .attribute").getall()

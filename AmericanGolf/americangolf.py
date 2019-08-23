@@ -3,7 +3,6 @@ import json
 
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
-import scrapy
 from scrapy import Request
 import w3lib.url
 
