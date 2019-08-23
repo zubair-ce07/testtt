@@ -23,7 +23,7 @@ class SiteKayakPageObject implements IFlight, IFlightSearchPage {
         await multiCity.click();
     }
 
-    async getOriginField(): Promise<ElementFinder>  {
+    async getOriginField(): Promise<ElementFinder> {
         const legNo = this.getLegNo();
         const originDisplayField = element(by.css(".js-searchForm")).element(by.css(`[id$=-origin${legNo}-airport-display]`));
         await originDisplayField.click();
@@ -34,7 +34,7 @@ class SiteKayakPageObject implements IFlight, IFlightSearchPage {
         return inputFieldContainer.element(by.name(`origin${this.getLegNo()}`));
     }
 
-    async getDestinationField(): Promise<ElementFinder>  {
+    async getDestinationField(): Promise<ElementFinder> {
         const legNo = this.getLegNo();
         const destinationDisplayField = element(by.css(".js-searchForm")).element(by.css(`[id$=-destination${legNo}-airport-display]`));
         await destinationDisplayField.click();
@@ -115,7 +115,7 @@ class SiteKayakPageObject implements IFlight, IFlightSearchPage {
         return element(by.css(".col-controls")).element(by.css(".js-label"));
     }
 
-    async getMultiCityFormOriginAndDestination(): Promise<{flightOrigin: string, flightDestination:string}> {
+    async getMultiCityFormOriginAndDestination(): Promise<{ flightOrigin: string, flightDestination: string }> {
         const originField = element(by.css(`[id$=-origin${this.getLegNo()}-airport-display-inner]`));
         const flightOrigin = await originField.getText();
 
@@ -132,6 +132,11 @@ class SiteKayakPageObject implements IFlight, IFlightSearchPage {
     async getMultiCityFormTraveler(): Promise<string> {
         const travelerField = element(by.css("[id$=-inlineSearch]")).element(by.css(".col.js-label"));
         return await travelerField.getText();
+    }
+
+    async getMultiCityFormDate(): Promise<string> {
+        const dateField = element(by.css(`[id$=-multiCityLeg${this.getLegNo()}]`)).element(by.css("[id$=-display-start-inner]"));
+        return await dateField.getText();
     }
 }
 

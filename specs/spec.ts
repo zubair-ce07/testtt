@@ -127,4 +127,58 @@ describe('Hotels Sanity -', () => {
         const travelerFilter = await flightSearchPage.getMultiCityFormTravelerFilter();
         expect(travelerFilter).to.have.string('1 Adult');
     });
+
+    it(`${PageName.FlightsSearch} Should display MC Form first flight date filter set to applied filter`, async function () {
+        const flightDateFilter = await flightPage.getFirstFlightDate();
+        const dateMatched = await flightSearchPage.isMCFormFilterFirstDateMatchAppliedFilterDate(flightDateFilter);
+        expect(dateMatched).to.be.true;
+    });
+
+    it(`${PageName.FlightsSearch} Should display MC Form second flight date filter set to applied filter`, async function () {
+        const flightDateFilter = await flightPage.getSecondFlightDate();
+        const dateMatched = await flightSearchPage.isMCFormFilterSecondDateMatchAppliedFilterDate(flightDateFilter);
+        expect(dateMatched).to.be.true;
+    });
+
+    if (flightPage.isKayakSite()) {
+        it(`${PageName.FlightsSearch} Clearing MC-Form filter should remove first origin and destination`, async function () {
+            await flightSearchPage.clearFilter();
+            const { flightOrigin, flightDestination } = await flightSearchPage.getMultiCityFormFirstAirportsFilter();
+            expect(flightOrigin).to.have.string("From");
+            expect(flightDestination).to.have.string("To");
+        });
+
+        it(`${PageName.FlightsSearch} Clearing MC-Form filter should remove first flight date`, async function () {
+            const flightDate = await flightSearchPage.getMultiCityFormFirstFlightDateFilter();
+            expect(flightDate).to.have.string("Depart");
+        });
+
+        it(`${PageName.FlightsSearch} Clearing MC-Form filter should remove second origin and destination`, async function () {
+            await flightSearchPage.clearFilter();
+            const { flightOrigin, flightDestination } = await flightSearchPage.getMultiCityFormSecondAirportsFilter();
+            expect(flightOrigin).to.have.string("From");
+            expect(flightDestination).to.have.string("To");
+        });
+
+        it(`${PageName.FlightsSearch} Clearing MC-Form filter should remove second flight date`, async function () {
+            const flightDate = await flightSearchPage.getMultiCityFormSecondFlightDateFilter();
+            expect(flightDate).to.have.string("Depart");
+        });
+
+        it(`${PageName.FlightsSearch} Clearing MC-Form filter should retain traveler filter`, async function () {
+            const travelerFilter = await flightSearchPage.getMultiCityFormTravelerFilter();
+            expect(travelerFilter).to.have.string('1 Adult');
+        });
+
+        it(`${PageName.FlightsSearch} Clearing MC-Form filter should retain first cabin class "Business"`, async function () {
+            const cabinClass = await flightSearchPage.getMultiCityFormFirstCabinClassFilter();
+            expect(cabinClass).to.have.string('Business');
+        });
+
+        it(`${PageName.FlightsSearch} Clearing MC-Form filter should retain second cabin class "Business"`, async function () {
+            const cabinClass = await flightSearchPage.getMultiCityFormSecondCabinClassFilter();
+            expect(cabinClass).to.have.string('Business');
+        });
+    }
+
 });

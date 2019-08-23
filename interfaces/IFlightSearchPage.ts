@@ -8,6 +8,8 @@ interface IFlightSearchPage {
     getMultiCityFormCabinClass(): Promise<string>;
 
     getMultiCityFormTraveler(): Promise<string>;
+
+    getMultiCityFormDate(): Promise<string>
 }
 
 export default IFlightSearchPage;

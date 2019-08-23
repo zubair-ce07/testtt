@@ -12,12 +12,16 @@ class BasePageObject {
     }
 
     setPage(): void {
-        if (this.currentSiteURL.includes("kayak")) {
+        if (this.isKayakSite()) {
             this.page = new SiteKayakPageObject();
         }
         else {
             this.page = new SiteMomontoPageObject();
         }
+    }
+
+    isKayakSite(): boolean {
+        return this.currentSiteURL.includes("kayak");
     }
 }
 

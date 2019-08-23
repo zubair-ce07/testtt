@@ -119,7 +119,7 @@ class SiteMomontoPageObject implements IFlight, IFlightSearchPage {
         await searchButton.click();
     }
 
-    async getMultiCityFormOriginAndDestination(): Promise<{flightOrigin: string, flightDestination:string}> {
+    async getMultiCityFormOriginAndDestination(): Promise<{ flightOrigin: string, flightDestination: string }> {
         const originField = element(by.css(".searchform.multicity")).element(by.name(`origin${this.getLegNo()}`));
         const flightOrigin = await originField.getAttribute("value");
 
@@ -137,6 +137,11 @@ class SiteMomontoPageObject implements IFlight, IFlightSearchPage {
         const travelerField = element.all(by.css('.travelersBlock')).first().all(by.css(".label"));
         const selectedTravelerFieldText = await travelerField.getText();
         return selectedTravelerFieldText;
+    }
+
+    async getMultiCityFormDate(): Promise<string> {
+        const dateField = element(by.css(`[id$=-depart_date${this.getLegNo()}-input]`));
+        return await dateField.getText();
     }
 }
 

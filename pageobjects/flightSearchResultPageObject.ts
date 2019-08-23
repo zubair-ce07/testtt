@@ -1,5 +1,6 @@
 import { browser, by, element, ElementArrayFinder } from "protractor";
 import BasePageObject from "./basePageObject";
+import { convertDateInFormatMonthInNumberSlashDayInNumber } from "../utils/common";
 
 class FlightSearchResultPageObject extends BasePageObject {
     async getAppliedAirportFilter(): Promise<string> {
@@ -104,6 +105,38 @@ class FlightSearchResultPageObject extends BasePageObject {
 
     async getMultiCityFormTravelerFilter(): Promise<string> {
         return await this.page.getMultiCityFormTraveler();
+    }
+
+    async getMultiCityFormFirstFlightDateFilter(): Promise<string> {
+        this.page.setLegNo(0);
+        return await this.page.getMultiCityFormDate();
+    }
+
+    async getMultiCityFormSecondFlightDateFilter(): Promise<string> {
+        this.page.setLegNo(1);
+        return await this.page.getMultiCityFormDate();
+    }
+
+    async isMCFormFilterFirstDateMatchAppliedFilterDate(flightDate): Promise<boolean> {
+        this.page.setLegNo(0);
+        return await this.isMCFormDateMatchedFlightDate(flightDate);
+    }
+
+    async isMCFormFilterSecondDateMatchAppliedFilterDate(flightDate): Promise<boolean> {
+        this.page.setLegNo(1);
+        return await this.isMCFormDateMatchedFlightDate(flightDate);
+    }
+
+    async isMCFormDateMatchedFlightDate(flightDate): Promise<boolean> {
+        const flightFilterDate = convertDateInFormatMonthInNumberSlashDayInNumber(flightDate);
+        const multiCityFormFilterDate = await this.page.getMultiCityFormDate();
+        return multiCityFormFilterDate.includes(flightFilterDate);
+    }
+
+
+    async clearFilter(): Promise<void> {
+        const clearAllButton = element(by.css("[id$=-clearAll]"));
+        await clearAllButton.click();
     }
 }
 
