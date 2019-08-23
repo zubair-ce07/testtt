@@ -35,7 +35,9 @@ class SpeedoParser(Spider):
         'USER_AGENT': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36'
     }
 
-    cookie = {'KP_UID': '4ed37e67-487e-f2fc-eef0-9a1e4e3b3da6'}
+    cookie = {
+        'KP_UID': '4ed37e67-487e-f2fc-eef0-9a1e4e3b3da6'
+    }
 
     def start_requests(self):
         yield Request(url='https://speedo.com.au/product/mariner-supreme/8_11317B972CB.html',
@@ -65,8 +67,7 @@ class SpeedoParser(Spider):
         item = response.meta['item']
         item['image_urls'].extend(self.get_image_urls(raw_product))
 
-        attrs = raw_product['product']['variationAttributes']
-        raw_sizes = next((a['values'] for a in attrs if a['attributeId'].lower() == 'size'), [])
+        raw_sizes = self.get_raw_attribute(raw_product, attribute='size')
         requests = [Request(s['url'], callback=self.parse_skus) for s in raw_sizes]
         item['requests'].extend(requests)
 
@@ -128,21 +129,25 @@ class SpeedoParser(Spider):
 
         sku = self.get_pricing_details(raw_product)
         if raw_colour:
-            sku['colour'] = raw_colour['displayValue']
-        sku['size'] = raw_size['displayValue'] if raw_size else 'One Size'
+            sku['colour'] = raw_colour
+        sku['size'] = raw_size or 'One Size'
         sku['sku_id'] = f'{sku.get("colour", "")}-{sku["size"]}'
         sku['out_of_stock'] = self.get_out_of_stock(raw_product)
 
         return sku
+
+    def get_raw_attribute(self, raw_product, attribute):
+        attrs = raw_product['product']['variationAttributes']
+        return next((a['values'] for a in attrs if a['attributeId'].lower() == attribute), [])
 
     def get_raw_colour_and_size(self, raw_product):
         raw_colour = raw_size = ''
 
         for attrs in raw_product['product']['variationAttributes']:
             if attrs['attributeId'].lower() in ('color', 'colour'):
-                raw_colour = attrs
+                raw_colour = attrs['displayValue']
             if attrs['attributeId'].lower() == 'size':
-                raw_size = attrs
+                raw_size = attrs['displayValue']
 
         return raw_colour, raw_size
 
@@ -183,13 +188,20 @@ class SpeedoCrawler(CrawlSpider):
         'USER_AGENT': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36'
     }
 
-    cookie = {'KP_UID': '4ed37e67-487e-f2fc-eef0-9a1e4e3b3da6'}
+    cookie = {
+        'KP_UID': '4ed37e67-487e-f2fc-eef0-9a1e4e3b3da6'
+    }
 
-    listing_css = ['.nav-item.dropdown', '.product-list-cards', '.show-more']
     product_css = '.product-grid'
+    listing_css = [
+        '.nav-item.dropdown',
+        '.product-list-cards',
+        '.show-more'
+    ]
+
     rules = [
         Rule(link_extractor=LinkExtractor(restrict_css=product_css), callback=speedo_parser.parse),
-        Rule(link_extractor=LinkExtractor(restrict_css=listing_css, tags=['a', 'button::attr(data-url)'],
+        Rule(link_extractor=LinkExtractor(restrict_css=listing_css, tags=['a', 'button'],
                                           attrs=['href', 'data-url']), callback='parse'),
     ]
 
