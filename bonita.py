@@ -89,9 +89,13 @@ class ParseSpider(BaseParseSpider):
 
 
 class CrawlSpider(BaseCrawlSpider):
-    listings_css = ["[data-category='Navigation Desktop']",
-                    ".m-pagination__btn:contains('Nächste')"]
-    product_css = [".m-product-tile__link", ".m-teaser-image"]
+    listings_css = [
+        "[data-category='Navigation Desktop']",
+        ".m-pagination__btn:contains('Nächste')"
+    ]
+    product_css = [
+        ".m-product-tile__link", ".m-teaser-image"
+    ]
 
     rules = (
         Rule(LinkExtractor(restrict_css=listings_css), callback="parse"),
