@@ -14,21 +14,17 @@ class MixinDE(Mixin):
     retailer = Mixin.retailer + "-de"
     market = "DE"
     allowed_domains = ["bonita.de"]
-    start_urls = ["https://www.bonita.de/"
-                  ]
+    start_urls = [
+        "https://www.bonita.de/"
+    ]
     gender = Gender.WOMEN.value
     one_sizes = ['ONESIZE']
 
 
-def get_prices_css():
-    previous_price_css = ".o-product-information__product-price del::text, "
-    price_css_t1 = ".o-product-information__product-price ins::text, "
-    price_css_t2 = ".o-product-information__product-price::text"
-    return f"{previous_price_css}{price_css_t1}{price_css_t2}"
-
-
 class ParseSpider(BaseParseSpider):
-    price_css = get_prices_css()
+    price_css = ".o-product-information__product-price del::text, " \
+                ".o-product-information__product-price ins::text, " \
+                ".o-product-information__product-price::text"
     care_css = ".m-product-details__wash-symbols ::attr(title)"
     description_css = "#productDetails ul ::text"
     raw_brand_css = "#concreteProducts::text"
@@ -42,11 +38,15 @@ class ParseSpider(BaseParseSpider):
         if not garment:
             return
 
-        self.boilerplate_normal(garment, response)
+        self.boilerplate(garment, response)
 
+        garment['name'] = self.product_name(response)
+        garment['description'] = self.product_description(response)
+        garment['care'] = self.product_care(response)
+        garment['category'] = self.product_category(raw_product, product_id)
+        garment['brand'] = self.product_brand(response)
         garment["image_urls"] = self.image_urls(response)
         garment["skus"] = self.skus(response, raw_product, product_id)
-        garment["category"] = self._product_category(raw_product, product_id)
 
         return garment
 
@@ -61,7 +61,7 @@ class ParseSpider(BaseParseSpider):
         name_css = ".o-product-information__product-name::text"
         return clean(response.css(name_css))[0]
 
-    def _product_category(self, raw_product, product_id):
+    def product_category(self, raw_product, product_id):
         return raw_product[product_id]["dimension35"].split("/")
 
     def image_urls(self, response):
