@@ -62,6 +62,23 @@ urlpatterns = [
         r'^api/v1/gigs/(?P<pk>[0-9]+)$$',
         seller_views.GigDetailsApi.as_view()
     ),
+    url(
+        r'^api/v1/gig_gallery/$',
+        seller_views.GalleryFilesApi.as_view()
+    ),
+    url(
+        r'^api/v1/gig_gallery/(?P<pk>[0-9]+)$$',
+        seller_views.GalleryFilesDetailsApi.as_view()
+    ),
+    url(
+        r'^api/v1/offers/$',
+        seller_views.OffersApi.as_view()
+    ),
+    url(
+        r'^api/v1/offers/(?P<pk>[0-9]+)$$',
+        seller_views.OfferDetailsApi.as_view()
+    ),
+
 
 ]
 

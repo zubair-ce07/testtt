@@ -41,3 +41,12 @@ class RequestFiles(models.Model):
 
     class Meta:
         verbose_name_plural = "Request Files"
+
+
+class Offers(models.Model):
+    seller = models.ForeignKey(User, on_delete=models.CASCADE)
+    buyer_request = models.ForeignKey(Requests, on_delete=models.DO_NOTHING)
+    description = models.TextField(max_length=1000)
+    offer_amount = models.IntegerField()
+    delivery_time = models.IntegerField()
+    revisions = models.IntegerField()

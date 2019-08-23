@@ -1,6 +1,10 @@
 from rest_framework import serializers
 
-from ..models import Category, Gig, Gallery, Package, Faq, Requirements
+from accounts.models import User
+from ..models import Category, Gig, Gallery, \
+    Package, Faq, Requirements
+
+from dashboard.models import Offers, Requests
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -77,4 +81,27 @@ class GallerySerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'gig_image'
+        )
+
+
+class OfferSerializer(serializers.ModelSerializer):
+
+    seller = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all()
+    )
+
+    buyer_request = serializers.PrimaryKeyRelatedField(
+        queryset=Requests.objects.all()
+    )
+
+    class Meta:
+        model = Offers
+        fields = (
+            'id',
+            'description',
+            'offer_amount',
+            'delivery_time',
+            'revisions',
+            'seller',
+            'buyer_request'
         )
