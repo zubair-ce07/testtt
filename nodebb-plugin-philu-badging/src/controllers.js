@@ -1,51 +1,102 @@
 var controllers = require.main.require("./src/controllers");
-var database = require.main.require('./src/database');
+var db = require.main.require('./src/database').client.collection("configuration");
 
-controllers.saveConfiguration = function (req, res, callback) {
-        /**
-         * save configuration from edX
-         * ***/
-        var requestBody = req.body;
-        var db = database.client.collection("configuration");
+const {
+    BADGE_CONFIG_KEY, 
+    BADGE_TYPES
+} = require('../constants');
 
 
-        if (requestBody != null) {
-            if(requestBody.philu_config != null){
-                try {
-                    var configuration = JSON.parse(requestBody.philu_config)
-                } catch (e) {
-                    res.status(400).json({e});
-                    return
-                }
-    
-                db.findOne({"key": "badge"}, function (err, response) {
-                    if (err) {
-                        res.status(400).json({message: err.message});
-                    } else if (!response) {
-                        db.insert(configuration, function (err, response) {
-                            if(err) {
-                                res.status(400).json({message: err.message});
-                            } else {
-                                res.status(200).json({message: "configuration saved successfully"});
-                            }
-                        })
-                    } else {
-                        db.replaceOne({"key": "badge"}, configuration, function(err, response) {
-                            if (err) {
-                                res.status(400).json({message: err.message});
-                            } else {
-                                res.status(200).json({message: "configuration replaced successfully"});
-                            }
-                        })
-                    }
-                })
+controllers.getAllConfig = function (req, res, callback) {
+    /**
+     * Return badging configuration from database
+     * ***/
+    new Promise ( async (resolve, reject) => {
+        let badgingConfig = await db.findOne({key: BADGE_CONFIG_KEY});
 
-            } else{
-                res.status(400).json({message: "Please use `philu_config` key to send data"});
-            }
+        if(badgingConfig) {
+            resolve(badgingConfig)
         } else {
-            res.status(400).json({message: "Please send some data for configuration"});
+            resolve({})
         }
+    })
+    .then((badgingConfig) => {
+        return res.status(200).json(badgingConfig);
+    })
+    .catch((err) => {
+        return res.status(500).json({ message: err.message });
+    })
+}
+
+controllers.updateConfigById = function (req, res, callback) {
+    /**
+     * save configuration to database by badgeID
+     * ***/
+    const { badgeId } = req.params;
+    const { type, threshold } = req.body;
+
+    if (!type || !threshold) {
+        return res.status(400).json({
+            message: 'Required parameters are missing',
+            requiredParams: ['badgeId', 'type', 'threshold']
+        });
+    }
+
+    const possibleTypeValues = Object.values(BADGE_TYPES);
+    if (!possibleTypeValues.includes(type)) {
+        return res.status(400).json({
+            message: 'Invalid badge type',
+            possibleTypeValues
+        });
+    }
+
+    new Promise ( async (badgeId, type, threshold) => {
+        const updateObj = { $set: {} };
+        updateObj.$set[`value.${badgeId}`] = { type, threshold };
+        await philuConfig.update({ _key: BADGE_CONFIG_KEY }, updateObj);
+        resolve()
+    })
+    .then((badgingConfig) => {
+        return res.status(200);
+    })
+    .catch((err) => {
+        return res.status(500).json({ message: err.message });
+    })
+
+    callback();
+};
+
+controllers.deleteConfigById = function (req, res, callback) {
+    /**
+     * delete configuration from database by badgeID
+     * ***/
+
+    const { badgeId } = req.params;
+
+    new Promise ( async (badgeId) => {
+        const updateObj = { $unset: {} };
+        updateObj.$unset[`value.${badgeId}`] = '';
+        let {
+            result: { nModified }
+        } = await philuConfig.update(
+            { _key: BADGE_CONFIG_KEY },
+            updateObj
+        );
+        resolve(!!nModified);
+    })
+    .then((keyRemoved) => {
+        if(keyRemoved) {
+            return res.status(200);
+        }
+        return res.status(204).json({
+            message: 'No config found against this ID'
+        });
+    })
+    .catch((err) => {
+        return res.status(500).json({ message: err.message });
+    })
+
+    callback();
 };
 
 module.exports = controllers;
