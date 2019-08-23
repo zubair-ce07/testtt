@@ -181,4 +181,31 @@ describe('Hotels Sanity -', () => {
         });
     }
 
+    it(`${PageName.FlightsSearch} Should display error modal on clicking search button without entering origin, destination and date`, async function () {
+        await flightSearchPage.clearFilter();
+        await flightSearchPage.searchFlightsWithoutFillingMCForm();
+        const isErrorModalDisplayed = await flightSearchPage.isErrorModalDisplayed();
+        expect(isErrorModalDisplayed).to.be.true;
+    });
+
+    it(`${PageName.FlightsSearch} Error modal should display first message "Please enter a 'From' airport for flight '1'."`, async function () {
+        const firstErrorMessage = await flightSearchPage.getErrorMessages(0);
+        expect(firstErrorMessage).to.have.string("Please enter a 'From' airport for flight '1'.");
+    });
+
+    it(`${PageName.FlightsSearch} Error modal should display second message "Please enter a 'To' airport for flight '1'."`, async function () {
+        const secondErrorMessage = await flightSearchPage.getErrorMessages(1);
+        expect(secondErrorMessage).to.have.string("Please enter a 'To' airport for flight '1'.");
+    });
+
+    it(`${PageName.FlightsSearch} Error modal should display third message "Please enter a valid 'Depart' date for flight '1'."`, async function () {
+        const thirdErrorMessage = await flightSearchPage.getErrorMessages(2);
+        expect(thirdErrorMessage).to.have.string("Please enter a valid 'Depart' date for flight '1'.");
+    });
+
+    it(`${PageName.FlightsSearch} Clicking "OK" button on error modal should close error modal`, async function () {
+        await flightSearchPage.closeErrorModal();
+        const isErrorModalDisplayed = await flightSearchPage.isErrorModalDisplayed();
+        expect(isErrorModalDisplayed).to.be.false;
+    });
 });

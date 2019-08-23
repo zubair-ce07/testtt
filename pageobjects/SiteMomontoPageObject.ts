@@ -134,7 +134,7 @@ class SiteMomontoPageObject implements IFlight, IFlightSearchPage {
     }
 
     async getMultiCityFormTraveler(): Promise<string> {
-        const travelerField = element.all(by.css('.travelersBlock')).first().all(by.css(".label"));
+        const travelerField = element.all(by.css('.travelersBlock')).first().all(by.css(".label")).first();
         const selectedTravelerFieldText = await travelerField.getText();
         return selectedTravelerFieldText;
     }

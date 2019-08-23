@@ -1,6 +1,6 @@
-import { browser, by, element, ElementArrayFinder } from "protractor";
+import { browser, by, element, ElementArrayFinder, ElementFinder, protractor } from "protractor";
 import BasePageObject from "./basePageObject";
-import { convertDateInFormatMonthInNumberSlashDayInNumber } from "../utils/common";
+import { convertDateInFormatMonthInNumberSlashDayInNumber, getTimeoutErrorMessage } from "../utils/common";
 
 class FlightSearchResultPageObject extends BasePageObject {
     async getAppliedAirportFilter(): Promise<string> {
@@ -133,10 +133,34 @@ class FlightSearchResultPageObject extends BasePageObject {
         return multiCityFormFilterDate.includes(flightFilterDate);
     }
 
-
     async clearFilter(): Promise<void> {
         const clearAllButton = element(by.css("[id$=-clearAll]"));
         await clearAllButton.click();
+    }
+
+    async searchFlightsWithoutFillingMCForm(): Promise<void> {
+        const searchButton = element(by.css("[id$=-submit-multi]"));
+        await searchButton.click();
+    }
+
+    async isErrorModalDisplayed(): Promise<boolean> {
+        const errorModal = element(by.css(".Common-Errors-ErrorDialog-Dialog")).element(by.css("[id$=-dialog-content]"));
+        return await errorModal.isDisplayed();
+    }
+
+    async getErrorMessages(messageNo: number): Promise<string> {
+        const errorMessageTag = await this.getErrorModalErrorMessage(messageNo);
+        return await errorMessageTag.getText();
+    }
+
+    async getErrorModalErrorMessage(messageNo: number): Promise<ElementFinder> {
+        const errorMessages = element(by.css(".Common-Errors-ErrorDialog-Dialog")).all(by.css("[id$=-messages] li"));
+        return await errorMessages.get(messageNo);
+    }
+
+    async closeErrorModal(): Promise<void> {
+        const errorModal = element(by.css(".Common-Errors-ErrorDialog-Dialog")).all(by.css(".errorDialogCloseButton"));
+        return await errorModal.click();
     }
 }
 
