@@ -1,7 +1,9 @@
 from math import ceil
 import itertools
+from requests import post
 from datetime import datetime
 
+from bs4 import BeautifulSoup
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 import ccy
@@ -14,7 +16,6 @@ class KhelfCrawler(CrawlSpider):
     start_urls = ['https://www.khelf.com.br/']
 
     listings_css = ['#nav > li > a']
-    products_css = ['#listProduct > li > div > div.figure > a']
 
     currency = 'BRL'
     retailer = 'khelf-br'
@@ -27,7 +28,6 @@ class KhelfCrawler(CrawlSpider):
 
     rules = (
         Rule(LinkExtractor(allow=('feminino', 'masculino', 'acessorios'), restrict_css=listings_css), callback='parse'),
-        Rule(LinkExtractor(restrict_css=products_css), callback='parse_product'),
     )
 
     def parse(self, response):
@@ -46,15 +46,23 @@ class KhelfCrawler(CrawlSpider):
                 link_trail = trail + [['>', link]]
                 yield response.follow(link, meta={'trail': link_trail})
 
+        # products requests
+        products_grid = response.css('#listProduct .hproduct')
+        for product in products_grid:
+            product_link = product.css('div.figure > a::attr("href")').get()
+            product_color_codes = product.css('ul a::attr("color-code")').getall()
+            yield response.follow(product_link, meta={'trail': trail, 'color_codes': product_color_codes},
+                                  callback=self.parse_product)
+
     def parse_product(self, response):
         product = {}
 
         product['retailer_sku'] = self.extract_retailer_sku(response)
-        product['trail'] = response.meta['trail'][:-1]
+        product['trail'] = response.meta['trail']
         product['description'] = self.extract_description(response)
-        product['gender'] = self.extract_gender(response.url)
+        product['gender'] = self.extract_gender(response)
         product['category'] = self.extract_category(product['trail'])
-        # product['brand'] = self.extract_brand(response)
+        product['brand'] = self.extract_brand(response)
         product['url'] = self.extract_url(response)
         product['date'] = self.extract_date(response)
         product['price'] = self.extract_price(response)
@@ -64,33 +72,59 @@ class KhelfCrawler(CrawlSpider):
         product['url_original'] = response.url
         product['name'] = self.extract_name(response)
         product['care'] = self.extract_care(response)
-        # product['image_urls'] = self.extract_image_urls(response)
-        # product['skus'] = self.extract_skus(response, product['price'])
+        product['image_urls'] = []  # self.extract_image_urls(response)
+        product['skus'] = []  # self.extract_skus(response, product['price'])
         product['spider_name'] = self.name
         product['crawl_start_time'] = self.extract_crawl_start_time()
 
-        yield product
+        product_id = response.css('meta[name="itemId"]::attr("content")').get()
+        headers = {
+            'X-AjaxPro-Method': 'DisponibilidadeSKU',
+            'Referer': response.url,
+        }
+        for color_code in response.meta['color_codes']:
+            data = (f'{{'
+                    f'"ProdutoCodigo":"{product_id}",'
+                    f'"CarValorCodigo1":"{color_code}",'
+                    f'"CarValorCodigo2":"0",'
+                    f'"CarValorCodigo3":"0",'
+                    f'"CarValorCodigo4":"0",'
+                    f'"CarValorCodigo5":"0"'
+                    f'}}')
+            color_information = post('https://www.khelf.com.br/ajaxpro/IKCLojaMaster.detalhes,Khelf.ashx',
+                                     headers=headers, data=data).json()['value']
+            # html = HTMLParser().feed(color_information[3])
+            images_information = color_information[1]
 
     def extract_retailer_sku(self, response):
         return response.css('#liCodigoInterno > span::text').get().strip()
 
-    def extract_gender(self, url):
+    def extract_gender(self, response):
         genders = {
             'masculina': {'masculina', 'masculino'},
             'feminina': {'feminina', 'feminino'},
-            'infantil': {'infantil', 'junior', 'baby'},
         }
 
-        url_lowercase = url.lower()
+        url_lowercase = response.url.lower()
         for gender in genders:
             if check_words_existence(genders[gender], url_lowercase):
                 return gender
         return 'unisex'
 
-    # def extract_brand(self, response):
-    #     brands_x = ('//*[@id="product-attribute-specs-table"]/tbody/tr/th[contains(text(),"Item Brand")]/'
-    #                 'following-sibling::td/text()')
-    #     return response.xpath().get()
+    def extract_brand(self, response):
+        brands = {'Moleskine': {'moleskine'},
+                  'Fiever': {'fiever'},
+                  'Converse': {'converse'},
+                  'Casio / G-Shock': {'casio', 'g-shock'},
+                  'Evoke': {'evoke'},
+                  'Guess': {'guess'},
+                  'Vert Shoes': {'vert'}
+                  }
+        url_lowercase = response.url.lower()
+        for brand in brands:
+            if check_words_existence(brands[brand], url_lowercase):
+                return brand
+        return ''
 
     def extract_category(self, trail):
         return [t[0] for t in itertools.islice(trail, 1, None)]
