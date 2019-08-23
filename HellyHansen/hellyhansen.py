@@ -24,7 +24,7 @@ class HellyhansenSpider(CrawlSpider):
         data_pages = response.css(".b-toolbar.b-toolbar--bottom .infinite-scrolling::attr(data-page-count)").get(default='1')
         if data_pages:
             for page_num in range(2, int(data_pages)+1):
-                url = w3lib.url.add_or_replace_parameter(response.request.url, 'p', page_num)
+                url = w3lib.url.add_or_replace_parameter(response.url, 'p', page_num)
                 request = Request(url, callback=self.product_requests)
                 yield request
 

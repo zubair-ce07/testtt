@@ -19,7 +19,7 @@ class HellyhansenParser(Spider):
         product_item['image_urls'] = self.parse_image_links(response)
         product_item['category'] = self.parse_categories(response)
         product_item['gender'] = self.parse_gender(response)
-        product_item['url'] = response.request.url
+        product_item['url'] = response.url
         product_item['skus'] = self.parse_skus(response)
         product_item['care'] = self.parse_care(response)
         
@@ -31,7 +31,7 @@ class HellyhansenParser(Spider):
     def parse_description(self, response):
         description1 = response.css('.nosto_product .description::text').getall()
         description2 = response.css('.nosto_product .description p::text').getall()
-        return list(map(str.strip, description1 + description2))   
+        return list(map(str.strip, description1 + description2))
 
     def parse_care(self, response):
         care1 = response.css(".nosto_product .features::text").getall()
