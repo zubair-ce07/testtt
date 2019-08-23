@@ -30,7 +30,7 @@ class AmericangolfSpider(CrawlSpider):
             page_size = pagging['pageSize']
             product_count = pagging['productCount']
             if product_count > page_size:
-                url = w3lib.url.add_or_replace_parameter(response.request.url, 'sz', product_count)
+                url = w3lib.url.add_or_replace_parameter(response.url, 'sz', product_count)
                 url = w3lib.url.add_or_replace_parameter(url, 'start', page_size)
                 yield Request(url, callback=self.product_requests)
 
