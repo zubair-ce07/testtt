@@ -1,0 +1,100 @@
+{% extends "customer/base.html" %}
+{% block content %}
+{% if not time_slots %}
+
+<div class="card" style="margin-bottom: 10px; margin-top: 10px">
+    <div class="card-header">
+        No Time Slots
+    </div>
+    <div class="card-body">
+        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModalCenter">
+            Add Schedule
+        </button>
+    </div>
+</div>
+
+<div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLongTitle">Add Schedule</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form action="" method="post">
+                    {% csrf_token %}
+                    {{ form }}
+                    <div class="form-group">
+                        <label for="start_date">Start Date</label>
+                        <input type="date" class="form-control" name="start_date" id="start_date"
+                            aria-describedby="start_date_help" required>
+                        <small id="Start_date_help" class="form-text text-muted">Start date for reservations.</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="end_date_help">End Date</label>
+                        <input type="date" class="form-control" name="end_date" id="end_date_help"
+                            aria-describedby="end_date_help_help" required>
+                        <small id="end_date_help_help" class="form-text text-muted">End date for reservations.</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="start_time">Start Time</label>
+                        <div>
+                            <input type="number" name="start_time" min="0" max="23" placeholder="00(hours)" required>
+                            <!-- <input type="number" min="0" name="minutes" max="59" placeholder="00(minutes)" required> -->
+                        </div>
+                        <small id="start_time_help" class="form-text text-muted">Shop reservations start time.</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="no_hours">Number of time slots</label>
+                        <input type="number" class="form-control" min="1" max="12" name="no_hours" id="no_hours"
+                            aria-describedby="no_hours_help" placeholder="Enter total reservations 24 hours." required>
+                        <small id="no_hours_help" class="form-text text-muted">Reservation time will be One
+                            hour.</small>
+                    </div>
+                    <!-- <div class="form-group">
+                        <label for="end_time">End Time</label>
+                        <input type="time" class="form-control" id="end_time" aria-describedby="end_time_help"
+                            placeholder="Enter email">
+                        <small id="end_time_help" class="form-text text-muted">Shop reservations start time.</small>
+                    </div> -->
+                    <input type="submit" class="submit_btn btn btn-primary" value="Add" />
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endif %}
+{% for time_slot in time_slots %}
+<div class="card" style="margin-bottom: 10px; margin-top: 10px">
+    <div class="card-header">
+        {{ time_slot.time }}
+    </div>
+</div>
+{% endfor %}
+
+{% if is_paginated %}
+
+{% if page_obj.has_previous %}
+<a class="btn btn-outline-info mb-4" href="?page=1">First</a>
+<a class="btn btn-outline-info mb-4" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+{% endif %}
+
+{% for num in page_obj.paginator.page_range %}
+{% if page_obj.number == num %}
+<a class="btn btn-info mb-4" href="?page={{ num }}">{{ num }}</a>
+{% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+<a class="btn btn-outline-info mb-4" href="?page={{ num }}">{{ num }}</a>
+{% endif %}
+{% endfor %}
+
+{% if page_obj.has_next %}
+<a class="btn btn-outline-info mb-4" href="?page={{ page_obj.next_page_number }}">Next</a>
+<a class="btn btn-outline-info mb-4" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+{% endif %}
+
+{% endif %}
+{% endblock content %}

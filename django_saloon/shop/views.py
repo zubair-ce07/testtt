@@ -1,6 +1,8 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
+from datetime import datetime, timedelta
 from django.views import View
 from django.utils.decorators import method_decorator
 from django.views.generic import ListView
@@ -8,7 +10,7 @@ from django.views.generic import ListView
 
 from customer.forms import UserRegisterForm, UserUpdateForm
 from .forms import ShopUpdateForm
-from .models import Saloon
+from .models import Saloon, TimeSlot
 
 
 class Register(View):
@@ -31,7 +33,7 @@ class Register(View):
             Saloon.objects.create(user=user)
             messages.success(request, f'Your account has been Created!')
             return redirect('login')
-        return render(request, 'customer/register.html', {'user_form': user_form})
+        return render(request, 'customer/register.html', {'user_form': user_form, 'form_title': 'Sign Up to add your saloon'})
 
     @staticmethod
     def get(request):
@@ -40,7 +42,7 @@ class Register(View):
         this method will save the user data when form is submitted
         """
         user_form = UserRegisterForm()
-        return render(request, 'customer/register.html', {'user_form': user_form})
+        return render(request, 'customer/register.html', {'user_form': user_form, 'form_title': 'Sign Up to add your saloon'})
 
 
 class Profile(View):
@@ -83,4 +85,44 @@ class SaloonListView(ListView):
     model = Saloon
     template_name = 'shop/saloons.html'  # <app>/<model>_<viewtype>.html
     context_object_name = 'saloons'
+    ordering = ['shop_name']
     paginate_by = 5
+
+
+class MyShopListView(LoginRequiredMixin, ListView, View):
+    model = TimeSlot
+    template_name = 'shop/mysaloon.html'  # <app>/<model>_<viewtype>.html
+    context_object_name = 'time_slots'
+    ordering = ['time']
+    paginate_by = 12
+
+    def get_queryset(self):
+        return TimeSlot.objects.filter(saloon=self.request.user.saloon).order_by('-time')
+
+    def post(self, request):
+        """POST method for Profile View.
+        This method will save profile data when profile form is submitted.
+        """
+        start_time = request.POST.get("start_time", " ")
+        # minutes = request.POST.get("minutes", " ")
+        no_hours = request.POST.get("no_hours", " ")
+        saloon = self.request.user.saloon
+        slots = []
+        print(start_time)
+        if int(start_time)+int(no_hours) > 24:
+            messages.warning(
+                request, f'Time slots are exceding one day after the start time!')
+            return redirect('my_shop')
+        else:
+            start_date = datetime.strptime(
+                request.POST.get("start_date", " "), '%Y-%m-%d')
+            end_date = datetime.strptime(
+                request.POST.get("end_date", " "), '%Y-%m-%d')
+            day_count = (end_date - start_date).days + 1
+            for single_date in (start_date + timedelta(n) for n in range(day_count)):
+                for slot in range(int(no_hours)):
+                    slots.append(
+                        TimeSlot(saloon=saloon, time=single_date + timedelta(hours=int(start_time)+slot)))
+            TimeSlot.objects.bulk_create(slots)
+
+        return redirect('my_shop')

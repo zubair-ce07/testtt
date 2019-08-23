@@ -8,6 +8,7 @@ class Saloon(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     shop_name = models.CharField(max_length=60)
     phone_no = models.IntegerField(blank=True, null=True)
+    address = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return f'{self.user.username} Saloon'

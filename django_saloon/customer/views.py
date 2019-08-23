@@ -29,7 +29,7 @@ class Register(View):
             Customer.objects.create(user=user)
             messages.success(request, f'Your account has been Created!')
             return redirect('login')
-        return render(request, 'customer/register.html', {'user_form': user_form})
+        return render(request, 'customer/register.html', {'user_form': user_form, 'form_title': 'Sign Up Today'})
 
     @staticmethod
     def get(request):
@@ -38,7 +38,7 @@ class Register(View):
         this method will save the user data when form is submitted
         """
         user_form = UserRegisterForm()
-        return render(request, 'customer/register.html', {'user_form': user_form})
+        return render(request, 'customer/register.html', {'user_form': user_form, 'form_title': 'Sign Up Today'})
 
 
 class Profile(View):

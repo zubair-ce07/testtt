@@ -6,7 +6,7 @@ from .models import Saloon
 class ShopUpdateForm(forms.ModelForm):
     class Meta:
         model = Saloon
-        fields = ['shop_name', 'phone_no']
+        fields = ['shop_name', 'phone_no', 'address']
 
     def __init__(self, *args, **kwargs):
         # first call parent's constructor
@@ -14,3 +14,4 @@ class ShopUpdateForm(forms.ModelForm):
         # there's a `fields` property now
         self.fields['phone_no'].required = True
         self.fields['shop_name'].required = True
+        self.fields['address'].required = True

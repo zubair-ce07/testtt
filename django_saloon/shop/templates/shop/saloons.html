@@ -1,12 +1,15 @@
 {% extends "customer/base.html" %}
 {% block content %}
 {% for saloon in saloons %}
-<div class="card" style="margin-bottom: 10px">
+{% if saloon.phone_no ==  None %}
+{% else %}
+<div class="card" style="margin-bottom: 10px; margin-top: 10px">
     <div class="card-header">
         {{ saloon.shop_name }}
     </div>
     <div class="card-body">
         <h5 class="card-title">Phone No : {{ saloon.phone_no }}</h5>
+        <p class="card-text">Address : {{ saloon.address }}</p>
         {% if user.is_authenticated %}
         {% if user.customer %}
         <a href="#" class="btn btn-primary">Reserve a time slot</a>
@@ -16,6 +19,7 @@
         {% endif %}
     </div>
 </div>
+{% endif %}
 
 
 {% endfor %}

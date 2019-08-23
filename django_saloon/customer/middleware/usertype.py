@@ -14,7 +14,7 @@ class UserProfileRedirect(object):
             if hasattr(request.user, 'saloon') and request.user.saloon.shop_name == '':
                 if not request.path == reverse('shop_profile'):
                     return redirect(reverse('shop_profile'))
-            if hasattr(request.user, 'customer') and request.user.customer.phone_no == '':
+            if hasattr(request.user, 'customer') and request.user.customer.phone_no == None:
                 if not request.path == reverse('customer_profile'):
                     return redirect('customer_profile')
 
