@@ -11,12 +11,16 @@ export let config: Config = {
             args: ['--headless']
         },
     },
-    framework: 'jasmine',
+    framework: 'mocha',
     specs: ['./specs/spec.js'],
-    jasmineNodeOpts: {
-        isVerbose: true,
+    mochaOpts: {
+        ui: 'bdd',
+        reporter: 'dot',
+        timeout: 60000,
+        bail: true
     },
     onPrepare: function () {
+        require('chai');
         require('babel-register');
         browser.ignoreSynchronization = true;
         browser.manage().window().maximize();
