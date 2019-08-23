@@ -5,7 +5,7 @@ import {
   DELETE_POST,
   FETCH_USER_POSTS,
   LOGOUT
-} from "../actions/types";
+} from "../actions/actions.types";
 
 const INITIAL_STATE = {};
 

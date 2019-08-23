@@ -1,4 +1,4 @@
-import { REGISTER_ERROR, REGISTER_SUCCESS } from "../actions/types";
+import { REGISTER_ERROR, REGISTER_SUCCESS } from "../actions/actions.types";
 
 const INITIAL_STATE = {
   status: "",

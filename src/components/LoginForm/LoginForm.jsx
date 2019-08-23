@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { Field, Form } from "react-final-form";
 import { connect } from "react-redux";
 
-import { loginUser } from "../../actions/user.action";
+import { loginUser } from "../../actions/user.actions";
 import history from "../../history";
 
 import "../RegisterForm/Form.sass";

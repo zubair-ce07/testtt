@@ -1,5 +1,5 @@
 import _ from "lodash";
-import { CREATE_COMMENT, FETCH_COMMENTS } from "../actions/types";
+import { CREATE_COMMENT, FETCH_COMMENTS } from "../actions/actions.types";
 
 const INITIAL_STATE = {};
 

@@ -7,8 +7,9 @@ import {
   CREATE_POST,
   DELETE_POST,
   FETCH_USER_POSTS
-} from "./types";
-import { fetchUser } from "./user.action";
+} from "./actions.types";
+import { fetchUser } from "./user.actions";
+import { fetchFollowing } from "./following.actions";
 
 export const fetchFeedAndUsers = () => async (dispatch, getState) => {
   await dispatch(fetchFeed());
@@ -21,7 +22,7 @@ export const fetchFeedAndUsers = () => async (dispatch, getState) => {
 };
 
 export const createPost = post => async (dispatch, getState) => {
-  post.author = getState().auth.user.id;
+  post.author = getState().auth.userId;
   post.time = moment().format();
 
   const response = await database.post("/posts", post);
@@ -41,7 +42,10 @@ export const fetchUserPosts = userId => async dispatch => {
 };
 
 export const fetchFeed = () => async (dispatch, getState) => {
-  const { id, following } = getState().auth.user;
+  const userId = getState().auth.userId;
+  await dispatch(fetchFollowing(userId));
+
+  const following = getState().followings[userId];
 
   /**
    * This step is server's responsibility but since we have
@@ -49,7 +53,7 @@ export const fetchFeed = () => async (dispatch, getState) => {
    */
 
   let query = "/posts?";
-  query += `author=${id}&`;
+  query += `author=${userId}&`;
 
   Object.keys(following).forEach(k => {
     if (following[k]) {
@@ -60,7 +64,6 @@ export const fetchFeed = () => async (dispatch, getState) => {
   query += "_sort=id&_order=desc";
 
   const response = await database.get(query);
-  console.log("posts", response.data);
   dispatch({
     type: FETCH_FEED,
     payload: response.data

@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import { Route, Redirect } from "react-router-dom";
 import { connect } from "react-redux";
-import { loginUser } from "../../actions/user.action";
+import { loginUser } from "../../actions/user.actions";
 
 import "./ProtectedRoute.css";
 

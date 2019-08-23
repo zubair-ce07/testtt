@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { connect } from "react-redux";
 
 import Comment from "../Comment/Comment";
-import { fetchCommentsAndUsers } from "../../actions/comment.action";
+import { fetchCommentsAndUsers } from "../../actions/comment.actions";
 
 import "./CommentList.sass";
 

@@ -1,5 +1,4 @@
 import faker from "faker";
-import _ from "lodash";
 
 import {
   LOGIN_ERROR,
@@ -8,10 +7,8 @@ import {
   REGISTER_ERROR,
   REGISTER_SUCCESS,
   FETCH_USER,
-  FETCH_ALL_USERS,
-  FOLLOW_USER,
-  UNFOLLOW_USER
-} from "./types";
+  FETCH_ALL_USERS
+} from "./actions.types";
 import database from "../apis/database";
 import history from "../history";
 
@@ -72,7 +69,7 @@ export const loginUser = userCedentials => async dispatch => {
     return;
   }
 
-  dispatch(loginSuccess(userDetails));
+  dispatch(loginSuccess(userDetails.id));
   dispatch({ type: FETCH_USER, payload: userDetails });
 
   /*
@@ -124,31 +121,4 @@ export const registerUser = newUser => async dispatch => {
   setTimeout(() => {
     history.push("/login");
   }, 1000);
-};
-
-// FOLLOW
-// ==============================================
-
-export const followUser = userId => async (dispatch, getState) => {
-  const followerId = getState().auth.user.id;
-  const oldFollowing = getState().auth.user.following;
-
-  const following = { ...oldFollowing, [userId]: true };
-
-  await database.patch(`/users/${followerId}`, { following });
-
-  const payload = { followerId, userId };
-  dispatch({ type: FOLLOW_USER, payload });
-};
-
-export const unfollowUser = userId => async (dispatch, getState) => {
-  const followerId = getState().auth.user.id;
-  const oldFollowing = getState().auth.user.following;
-
-  const following = _.omit(oldFollowing, userId);
-
-  await database.patch(`/users/${followerId}`, { following });
-
-  const payload = { followerId, userId };
-  dispatch({ type: UNFOLLOW_USER, payload });
 };

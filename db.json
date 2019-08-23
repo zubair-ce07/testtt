@@ -6,12 +6,7 @@
       "email": "ali@mail.com",
       "password": "123",
       "displayPicture": "https://s3.amazonaws.com/uifaces/faces/twitter/jeffgolenski/128.jpg",
-      "id": 1,
-      "following": {
-        "4": true,
-        "5": true,
-        "7": true
-      }
+      "id": 1
     },
     {
       "email": "tom@mail.com",
@@ -19,8 +14,7 @@
       "firstName": "Tom",
       "lastName": "Riddle",
       "displayPicture": "https://s3.amazonaws.com/uifaces/faces/twitter/hugocornejo/128.jpg",
-      "id": 2,
-      "following": {}
+      "id": 2
     },
     {
       "firstName": "Harry",
@@ -28,8 +22,7 @@
       "email": "harry@mail.com",
       "password": "123",
       "displayPicture": "https://s3.amazonaws.com/uifaces/faces/twitter/gusoto/128.jpg",
-      "id": 3,
-      "following": {}
+      "id": 3
     },
     {
       "firstName": "Ron",
@@ -37,8 +30,7 @@
       "email": "ron@mail.com",
       "password": "123",
       "displayPicture": "https://s3.amazonaws.com/uifaces/faces/twitter/aaroni/128.jpg",
-      "id": 4,
-      "following": {}
+      "id": 4
     },
     {
       "firstName": "Hermoine",
@@ -46,8 +38,7 @@
       "email": "hermoine@mail.com",
       "password": "123",
       "displayPicture": "https://s3.amazonaws.com/uifaces/faces/twitter/mgonto/128.jpg",
-      "id": 5,
-      "following": {}
+      "id": 5
     },
     {
       "firstName": "Draco",
@@ -55,8 +46,7 @@
       "email": "draco@mail.com",
       "password": "123",
       "displayPicture": "https://s3.amazonaws.com/uifaces/faces/twitter/xamorep/128.jpg",
-      "id": 6,
-      "following": {}
+      "id": 6
     },
     {
       "firstName": "Lord",
@@ -64,10 +54,7 @@
       "email": "lord@mail.com",
       "password": "123",
       "displayPicture": "https://s3.amazonaws.com/uifaces/faces/twitter/embrcecreations/128.jpg",
-      "id": 7,
-      "following": {
-        "1": true
-      }
+      "id": 7
     },
     {
       "firstName": "Umar",
@@ -75,9 +62,6 @@
       "email": "umar@mail.com",
       "password": "123",
       "displayPicture": "https://s3.amazonaws.com/uifaces/faces/twitter/jm_denis/128.jpg",
-      "following": {
-        "2": true
-      },
       "id": 8
     },
     {
@@ -86,7 +70,6 @@
       "email": "linus@mail.com",
       "password": "123",
       "displayPicture": "https://s3.amazonaws.com/uifaces/faces/twitter/josemarques/128.jpg",
-      "following": {},
       "id": 9
     },
     {
@@ -95,10 +78,23 @@
       "email": "satya@mail.com",
       "password": "123",
       "displayPicture": "https://s3.amazonaws.com/uifaces/faces/twitter/her_ruu/128.jpg",
-      "following": {
-        "3": true
-      },
       "id": 10
+    },
+    {
+      "firstName": "Hassan",
+      "lastName": "Khan",
+      "email": "hassan.khan@arbisoft.com",
+      "password": "123456",
+      "displayPicture": "https://s3.amazonaws.com/uifaces/faces/twitter/ryuchi311/128.jpg",
+      "id": 11
+    },
+    {
+      "firstName": "Asim",
+      "lastName": "Khan",
+      "email": "asim@gmail.com",
+      "password": "asim",
+      "displayPicture": "https://s3.amazonaws.com/uifaces/faces/twitter/marciotoledo/128.jpg",
+      "id": 12
     }
   ],
   "posts": [
@@ -161,6 +157,24 @@
       "author": 8,
       "time": "2019-08-19T12:48:02+05:00",
       "id": 11
+    },
+    {
+      "status": "asdasdasda",
+      "author": 11,
+      "time": "2019-08-22T14:24:09+05:00",
+      "id": 12
+    },
+    {
+      "status": "asdsad",
+      "author": 11,
+      "time": "2019-08-22T15:56:16+05:00",
+      "id": 13
+    },
+    {
+      "status": "Restructing `followings` api",
+      "author": 1,
+      "time": "2019-08-23T12:53:17+05:00",
+      "id": 14
     }
   ],
   "comments": [
@@ -233,6 +247,86 @@
       "time": "2019-08-19T12:32:22+05:00",
       "postId": 10,
       "id": 13
+    },
+    {
+      "message": "Do you like this site?",
+      "author": 10,
+      "time": "2019-08-19T13:04:47+05:00",
+      "postId": 3,
+      "id": 14
+    },
+    {
+      "message": "Hi Tom",
+      "author": 11,
+      "time": "2019-08-22T14:06:17+05:00",
+      "postId": 2,
+      "id": 15
+    },
+    {
+      "message": "testing",
+      "author": 11,
+      "time": "2019-08-22T14:23:15+05:00",
+      "postId": 2,
+      "id": 16
+    },
+    {
+      "message": "asdasd",
+      "author": 11,
+      "time": "2019-08-22T14:23:34+05:00",
+      "postId": 8,
+      "id": 17
+    },
+    {
+      "message": "dddddd",
+      "author": 11,
+      "time": "2019-08-22T14:23:43+05:00",
+      "postId": 10,
+      "id": 18
+    },
+    {
+      "message": "kkjh",
+      "author": 11,
+      "time": "2019-08-22T15:56:02+05:00",
+      "postId": 8,
+      "id": 19
+    },
+    {
+      "message": "Hello",
+      "author": 1,
+      "time": "2019-08-22T17:24:04+05:00",
+      "postId": 13,
+      "id": 20
+    },
+    {
+      "message": "AVS",
+      "author": 1,
+      "time": "2019-08-23T12:52:52+05:00",
+      "postId": 10,
+      "id": 21
+    },
+    {
+      "message": "Works so far",
+      "author": 1,
+      "time": "2019-08-23T12:53:22+05:00",
+      "postId": 14,
+      "id": 22
+    }
+  ],
+  "followings": [
+    {
+      "followerId": 1,
+      "followeeId": "2",
+      "id": 1
+    },
+    {
+      "followerId": 1,
+      "followeeId": "3",
+      "id": 2
+    },
+    {
+      "followerId": 1,
+      "followeeId": "7",
+      "id": 3
     }
   ]
 }

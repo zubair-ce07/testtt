@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
-import { fetchUser } from "../../actions/user.action";
+import { fetchUser } from "../../actions/user.actions";
 import UserWall from "../UserWall/UserWall";
 import Topbar from "../Topbar/Topbar";
 
@@ -34,8 +34,8 @@ class ProfilePage extends Component {
                 <li className="list-group-item">From Lahore</li>
               </ul>
             </div>
-            <UserWall userId={user.id} />
           </div>
+          <UserWall userId={user.id} />
         </>
       );
     } else return <h1>Loading</h1>;

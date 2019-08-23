@@ -5,11 +5,13 @@ import loginReducer from "./loginReducer";
 import postReducer from "./postReducer";
 import userReducer from "./userReducer";
 import commentReducer from "./commentReducer";
+import followingReducer from "./followingsReducer";
 
 export default combineReducers({
   registerStatus: registerReducer,
   auth: loginReducer,
   posts: postReducer,
   users: userReducer,
-  comments: commentReducer
+  comments: commentReducer,
+  followings: followingReducer
 });

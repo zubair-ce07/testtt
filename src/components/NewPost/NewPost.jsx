@@ -2,12 +2,17 @@ import React, { Component } from "react";
 import { Field, Form } from "react-final-form";
 import { connect } from "react-redux";
 
-import { createPost } from "../../actions/post.action";
+import { createPost } from "../../actions/post.actions";
 
 import "./NewPost.sass";
+import { fetchUser } from "../../actions/user.actions";
 
 class NewPost extends Component {
   state = {};
+
+  componentDidMount = () => {
+    fetchUser(this.props.userId);
+  };
 
   onSubmit = formValues => {
     this.props.createPost(formValues);
@@ -51,31 +56,36 @@ class NewPost extends Component {
   };
 
   render = () => {
-    return (
-      <div className="NewPost">
-        <div className="card">
-          <div className="prompt">
-            <img
-              className="profile-picture"
-              src={this.props.user.displayPicture}
-              alt=""
-            />
-            <Form
-              onSubmit={this.onSubmit}
-              validate={this.validate}
-              render={this.renderForm}
-            />
+    const { userId, users } = this.props;
+    const user = users[userId];
+    if (user)
+      return (
+        <div className="NewPost">
+          <div className="card">
+            <div className="prompt">
+              <img
+                className="profile-picture"
+                src={user.displayPicture}
+                alt=""
+              />
+              <Form
+                onSubmit={this.onSubmit}
+                validate={this.validate}
+                render={this.renderForm}
+              />
+            </div>
+            <hr />
+            <span className="post-prompt">Press Enter to post.</span>
           </div>
-          <hr />
-          <span className="post-prompt">Press Enter to post.</span>
         </div>
-      </div>
-    );
+      );
+
+    return "...";
   };
 }
 
 const mapStateToProps = state => {
-  return { user: state.auth.user };
+  return { userId: state.auth.userId, users: state.users };
 };
 
 export default connect(

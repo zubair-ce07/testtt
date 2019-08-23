@@ -2,8 +2,8 @@ import _ from "lodash";
 import moment from "moment";
 
 import database from "../apis/database";
-import { CREATE_COMMENT, FETCH_COMMENTS } from "./types";
-import { fetchUser } from "./user.action";
+import { CREATE_COMMENT, FETCH_COMMENTS } from "./actions.types";
+import { fetchUser } from "./user.actions";
 
 export const fetchCommentsAndUsers = postId => async (dispatch, getState) => {
   await dispatch(fetchComments(postId));
@@ -29,7 +29,7 @@ export const createComment = (comment, postId) => async (
   dispatch,
   getState
 ) => {
-  comment.author = getState().auth.user.id;
+  comment.author = getState().auth.userId;
   comment.time = moment().format();
   comment.postId = postId;
 

@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { Field, Form } from "react-final-form";
 import { connect } from "react-redux";
 
-import { createComment } from "../../actions/comment.action";
+import { createComment } from "../../actions/comment.actions";
 
 import "./AddComment.sass";
 
@@ -62,8 +62,8 @@ class AddComment extends Component {
   };
 }
 
-const mapStateToProps = ({ comments, auth }) => {
-  return { comments: comments, user: auth.user };
+const mapStateToProps = ({ comments, auth, users }) => {
+  return { comments: comments, user: users[auth.userId] };
 };
 
 export default connect(

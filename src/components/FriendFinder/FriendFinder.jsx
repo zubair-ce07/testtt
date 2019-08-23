@@ -1,10 +1,13 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
+
+import { fetchAllUsers } from "../../actions/user.actions";
 import {
-  fetchAllUsers,
+  fetchFollowing,
   followUser,
   unfollowUser
-} from "../../actions/user.action";
+} from "../../actions/following.actions";
+import history from "../../history";
 
 import "./FriendFinder.sass";
 
@@ -13,6 +16,7 @@ class FriendFinder extends Component {
 
   componentDidMount = () => {
     this.props.fetchAllUsers();
+    this.props.fetchFollowing();
   };
 
   follow = userId => {
@@ -23,12 +27,15 @@ class FriendFinder extends Component {
     this.props.unfollowUser(userId);
   };
 
-  renderFollow = (userId, myId) => {
-    const me = this.props.users[myId];
+  renderFollow = userId => {
     const classes = "btn btn-light ";
     const followingCss = `${classes} following`;
     const notFollowingCss = `${classes} not-following`;
-    if (me.following[userId]) {
+    const { myFollowing } = this.props;
+
+    if (!myFollowing) return <small>loading</small>;
+
+    if (this.props.myFollowing[userId]) {
       return (
         <button className={followingCss} onClick={() => this.unfollow(userId)}>
           Unfollow
@@ -47,8 +54,6 @@ class FriendFinder extends Component {
     if (users) {
       return Object.keys(users)
         .filter(userId => {
-          console.log("usreID", userId);
-
           const name = users[userId].firstName + users[userId].lastName;
           return name
             .toLowerCase()
@@ -65,10 +70,10 @@ class FriendFinder extends Component {
                 src={users[userId].displayPicture}
                 alt=""
               />
-              <span>
+              <span onClick={() => history.push(`/user/${userId}`)}>
                 {users[userId].firstName} {users[userId].lastName}
               </span>
-              {this.renderFollow(userId, me.id)}
+              {this.renderFollow(userId)}
             </div>
           );
         });
@@ -101,10 +106,15 @@ class FriendFinder extends Component {
 }
 
 const mapStateToProps = state => {
-  return { users: state.users, me: state.auth.user };
+  const { users, auth, followings } = state;
+  return {
+    users,
+    me: users[auth.userId],
+    myFollowing: followings[auth.userId]
+  };
 };
 
 export default connect(
   mapStateToProps,
-  { fetchAllUsers, followUser, unfollowUser }
+  { fetchAllUsers, fetchFollowing, followUser, unfollowUser }
 )(FriendFinder);

@@ -6,7 +6,7 @@ import history from "../../history";
 import AddComment from "../AddComment/AddComment";
 import CommentList from "../CommentList/CommentList";
 
-import { deletePost } from "../../actions/post.action";
+import { deletePost } from "../../actions/post.actions";
 
 import "./Post.sass";
 
@@ -73,7 +73,7 @@ class Post extends Component {
   };
 
   renderCross = (postId, authorId) => {
-    if (authorId === this.props.auth.user.id)
+    if (this.props.auth.isSignedIn && authorId === this.props.auth.userId)
       return (
         <>
           <button
@@ -98,7 +98,9 @@ class Post extends Component {
             <div>{this.renderUserPicture(post.author)}</div>
             <div className="name-time">
               <div
-                onClick={() => history.push(`/user/${post.id}`)}
+                onClick={() => {
+                  history.push(`/user/${post.author}`);
+                }}
                 className="profile-link"
               >
                 {this.renderUserName(post.author)}

@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
 
-import { fetchFeedAndUsers } from "../../actions/post.action";
+import { fetchFeedAndUsers } from "../../actions/post.actions";
 import Post from "../Post/Post";
 
 import "./Feed.css";
@@ -14,9 +14,11 @@ class Feed extends Component {
   };
 
   renderPosts = () => {
-    return this.props.posts.map(post => {
-      return <Post key={post.id} post={post} />;
-    });
+    return this.props.posts
+      .sort((a, b) => a.time < b.time)
+      .map(post => {
+        return <Post key={post.id} post={post} />;
+      });
   };
 
   render = () => {
