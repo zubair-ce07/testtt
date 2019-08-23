@@ -48,7 +48,7 @@ class MKCParser(Spider):
         item['image_urls'] = self.get_image_urls(response)
         item['description'] = self.get_description(response)
         item['retailer_sku'] = self.get_product_id(response)
-        item['skus'] = self.get_skus(response)
+        item['skus'] = [] if self.get_out_of_stock(response) else self.get_skus(response)
 
         if not item['skus']:
             item['out_of_stock'] = True
@@ -86,13 +86,9 @@ class MKCParser(Spider):
 
     def get_skus(self, response):
         skus = []
-        if self.get_out_of_stock(response):
-            return skus
-
-        raw_skus = self.get_raw_skus(response)
         pricing_details = self.get_pricing_details(response)
 
-        for colour, size in raw_skus:
+        for colour, size in self.get_raw_skus(response):
             if not(colour and size):
                 continue
 
