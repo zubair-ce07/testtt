@@ -7,10 +7,11 @@ const {
 } = require('../constants');
 
 
-controllers.getAllConfig = function (req, res, callback) {
+controllers.getAllConfig = function (req, res) {
     /**
      * Return badging configuration from database
      * ***/
+
     new Promise ( async (resolve, reject) => {
         let badgingConfig = await db.findOne({key: BADGE_CONFIG_KEY});
 
@@ -28,10 +29,11 @@ controllers.getAllConfig = function (req, res, callback) {
     })
 }
 
-controllers.updateConfigById = function (req, res, callback) {
+controllers.updateConfigById = function (req, res) {
     /**
      * save configuration to database by badgeID
      * ***/
+    
     const { badgeId } = req.params;
     const { type, threshold } = req.body;
 
@@ -50,53 +52,49 @@ controllers.updateConfigById = function (req, res, callback) {
         });
     }
 
-    new Promise ( async (badgeId, type, threshold) => {
+    new Promise ( async (resolve, reject) => {
         const updateObj = { $set: {} };
         updateObj.$set[`value.${badgeId}`] = { type, threshold };
-        await philuConfig.update({ _key: BADGE_CONFIG_KEY }, updateObj);
+        await db.update({ key: BADGE_CONFIG_KEY }, updateObj);
         resolve()
     })
     .then((badgingConfig) => {
-        return res.status(200);
+        return res.status(200).json({ message: "Key updated successfully!" });
     })
     .catch((err) => {
         return res.status(500).json({ message: err.message });
     })
-
-    callback();
 };
 
-controllers.deleteConfigById = function (req, res, callback) {
+controllers.deleteConfigById = function (req, res) {
     /**
      * delete configuration from database by badgeID
      * ***/
 
     const { badgeId } = req.params;
 
-    new Promise ( async (badgeId) => {
+    new Promise ( async (resolve, reject) => {
         const updateObj = { $unset: {} };
         updateObj.$unset[`value.${badgeId}`] = '';
         let {
             result: { nModified }
-        } = await philuConfig.update(
-            { _key: BADGE_CONFIG_KEY },
+        } = await db.update(
+            { key: BADGE_CONFIG_KEY },
             updateObj
         );
         resolve(!!nModified);
     })
     .then((keyRemoved) => {
         if(keyRemoved) {
-            return res.status(200);
+            return res.status(200).json({
+                message: 'Key deleted successfully!'
+            });
         }
-        return res.status(204).json({
-            message: 'No config found against this ID'
-        });
+        return res.status(204);
     })
     .catch((err) => {
         return res.status(500).json({ message: err.message });
     })
-
-    callback();
 };
 
 module.exports = controllers;

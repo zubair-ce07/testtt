@@ -1,7 +1,6 @@
 "use strict";
 
 var controllers = require("./src/controllers");
-// var routes = require("./src/routes");
 var utils = require("./src/utils");
 
 const {
@@ -19,12 +18,11 @@ library.handleNewRoutes = function (params, callback) {
     const router = params.router;
     const { requireUser, requireAdmin } = params.apiMiddleware;
     router.use(requireUser, requireAdmin);
-    
-    console.log("i was called------------------")
 
     router.get(BADGING_BASE_URL, controllers.getAllConfig);
     router.post(`${BADGING_BASE_URL}/:badgeId`, controllers.updateConfigById);
     router.delete(`${BADGING_BASE_URL}/:badgeId`, controllers.deleteConfigById);
+
     callback(null, params);
 }
 
