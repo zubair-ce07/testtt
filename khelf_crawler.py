@@ -1,9 +1,11 @@
 from math import ceil
 import itertools
-from requests import post
 from datetime import datetime
 from os.path import splitext
+from collections import deque
+from json import loads
 
+from scrapy import Request
 from scrapy.http import HtmlResponse
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
@@ -53,7 +55,7 @@ class KhelfCrawler(CrawlSpider):
         products_grid = response.css('#listProduct .hproduct')
         for product in products_grid:
             product_link = product.css('div.figure > a::attr("href")').get()
-            product_color_codes = product.css('ul a::attr("color-code")').getall()
+            product_color_codes = deque(product.css('ul a::attr("color-code")').getall())
             yield response.follow(product_link, meta={'trail': trail, 'color_codes': product_color_codes},
                                   callback=self.parse_product)
 
@@ -77,26 +79,47 @@ class KhelfCrawler(CrawlSpider):
         product['care'] = self.extract_care(response=response)
         product['spider_name'] = self.name
         product['crawl_start_time'] = self.extract_crawl_start_time()
+        product['image_urls'] = []
+        product['skus'] = []
 
-        product_id = response.css('meta[name="itemId"]::attr("content")').get()
-        colors_information = {}
-        for color_code in response.meta['color_codes']:
-            data = (f'{{'
-                    f'"ProdutoCodigo":"{product_id}",'
-                    f'"CarValorCodigo1":"{color_code}",'
-                    f'"CarValorCodigo2":"0",'
-                    f'"CarValorCodigo3":"0",'
-                    f'"CarValorCodigo4":"0",'
-                    f'"CarValorCodigo5":"0"'
-                    f'}}')
-            colors_information[color_code] = post('https://www.khelf.com.br/ajaxpro/IKCLojaMaster.detalhes,Khelf.ashx',
-                                                  headers=self.colors_request_headers, data=data).json()['value']
+        yield self.create_color_request(product=product, color_codes=response.meta['color_codes'],
+                                        product_id=response.css('meta[name="itemId"]::attr("content")').get())
 
-        product['image_urls'] = self.extract_image_urls(response=response, colors_information=colors_information)
-        product['skus'] = self.extract_skus(price=product['price'], product_id=product_id,
-                                            colors_information=colors_information)
+    def parse_color_data(self, response):
+        color_information = loads(response.body)['value']
 
-        yield product
+        product = response.meta['product']
+        color_codes = response.meta['color_codes']
+        product_id = response.meta['product_id']
+        response_color_code = response.meta['prev_color_code']
+
+        if product['url'] == 'https://www.khelf.com.br/bucket-bag-matelasse-com-amarracao-14516.aspx/p':
+            x = 1 + 1
+
+        self.extract_image_urls(response=response, color_information=color_information,
+                                image_urls=product['image_urls'])
+        self.extract_skus(price=product['price'], product_id=product_id, color_code=response_color_code,
+                          color_information=color_information, skus=product['skus'])
+
+        if len(color_codes) == 0:
+            yield product
+        else:
+            yield self.create_color_request(product=product, color_codes=color_codes, product_id=product_id)
+
+    def create_color_request(self, product, color_codes, product_id):
+        color_code = color_codes.popleft()
+        meta = {'product': product, 'color_codes': color_codes, 'product_id': product_id, 'prev_color_code': color_code}
+        body = (f'{{'
+                f'"ProdutoCodigo":"{product_id}",'
+                f'"CarValorCodigo1":"{color_code}",'
+                f'"CarValorCodigo2":"0",'
+                f'"CarValorCodigo3":"0",'
+                f'"CarValorCodigo4":"0",'
+                f'"CarValorCodigo5":"0"}}')
+        return Request('https://www.khelf.com.br/ajaxpro/IKCLojaMaster.detalhes,Khelf.ashx', method="POST",
+                       callback=self.parse_color_data, headers=self.colors_request_headers,
+                       meta=meta,
+                       body=body)
 
     def extract_retailer_sku(self, response):
         return response.css('#liCodigoInterno > span::text').get().strip()
@@ -150,36 +173,29 @@ class KhelfCrawler(CrawlSpider):
     def extract_care(self, response):
         return [c.strip() for c in response.css('#panCaracteristica > p::text').getall()]
 
-    def extract_image_urls(self, response, colors_information):
-        image_urls = []
-        for color_information in colors_information.values():
-            color_images_information = color_information[1]
+    def extract_image_urls(self, response, color_information, image_urls):
+        color_images_information = color_information[1]
 
-            # main image added
-            image_urls.append(response.urljoin(color_images_information[14]))
+        # main image added
+        image_urls.append(response.urljoin(color_images_information[14]))
 
-            images_url_prefix, extension = splitext(image_urls[-1])
-            gifs_index = [i for i in range(0, len(color_images_information), 2)
-                          if color_images_information[i].endswith('.gif')]
-            total_numbered_images = int((gifs_index[0] if gifs_index else 14) / 2) - 1
-            for number in range(1, total_numbered_images):
-                image_urls.append(''.join((images_url_prefix, str(number), extension)))
-        return image_urls
+        images_url_prefix, extension = splitext(image_urls[-1])
+        gifs_index = [i for i in range(0, len(color_images_information), 2)
+                      if color_images_information[i].endswith('.gif')]
+        total_images = int((gifs_index[0] if gifs_index else 14) / 2) - 1
+        for number in range(1, total_images):
+            image_urls.append(''.join((images_url_prefix, str(number), extension)))
 
-    def extract_skus(self, price, product_id, colors_information):
+    def extract_skus(self, price, product_id, color_code, color_information, skus):
         common_sku = {'price': price, 'currency': self.currency}
 
-        skus = []
-        for color_code, color_information in colors_information.items():
-            color_images_information = HtmlResponse(url='example.com', body=color_information[3], encoding='utf-8')
-            for size_tag in color_images_information.css('ul[class=""] > li'):
-                sku = common_sku.copy()
-                sku['size'] = size_tag.css('a::text').get()
-                sku['out_of_stock'] = size_tag.css('li::attr("class")').get() == 'warn'
-                sku['sku_id'] = f'{product_id}_{color_code}_{sku["size"]}'
-                skus.append(sku)
-
-        return skus
+        color_images_information = HtmlResponse(url='example.com', body=color_information[3], encoding='utf-8')
+        for size_tag in color_images_information.css('ul[class=""] > li'):
+            sku = common_sku.copy()
+            sku['size'] = size_tag.css('a::attr("title")').get()
+            sku['out_of_stock'] = size_tag.css('li::attr("class")').get() == 'warn'
+            sku['sku_id'] = f'{product_id}_{color_code}_{sku["size"]}'
+            skus.append(sku)
 
     def extract_price(self, response):
         return response.css('#lblPrecoPor > strong::text').get()
