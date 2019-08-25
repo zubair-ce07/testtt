@@ -2,8 +2,9 @@ from math import ceil
 import itertools
 from requests import post
 from datetime import datetime
+from os.path import splitext
 
-from bs4 import BeautifulSoup
+from scrapy.http import HtmlResponse
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 import ccy
@@ -25,6 +26,8 @@ class KhelfCrawler(CrawlSpider):
         'https://www.khelf.com.br/masculino-3.aspx/c': 3,
         'https://www.khelf.com.br/acessorios-4.aspx/c': 4
     }
+
+    colors_request_headers = {'X-AjaxPro-Method': 'DisponibilidadeSKU', 'Referer': 'https://www.khelf.com.br/'}
 
     rules = (
         Rule(LinkExtractor(allow=('feminino', 'masculino', 'acessorios'), restrict_css=listings_css), callback='parse'),
@@ -57,31 +60,26 @@ class KhelfCrawler(CrawlSpider):
     def parse_product(self, response):
         product = {}
 
-        product['retailer_sku'] = self.extract_retailer_sku(response)
+        product['retailer_sku'] = self.extract_retailer_sku(response=response)
         product['trail'] = response.meta['trail']
-        product['description'] = self.extract_description(response)
-        product['gender'] = self.extract_gender(response)
-        product['category'] = self.extract_category(product['trail'])
-        product['brand'] = self.extract_brand(response)
-        product['url'] = self.extract_url(response)
-        product['date'] = self.extract_date(response)
-        product['price'] = self.extract_price(response)
+        product['description'] = self.extract_description(response=response)
+        product['gender'] = self.extract_gender(response=response)
+        product['category'] = self.extract_category(trail=product['trail'])
+        product['brand'] = self.extract_brand(response=response)
+        product['url'] = self.extract_url(response=response)
+        product['date'] = self.extract_date(response=response)
+        product['price'] = self.extract_price(response=response)
         product['currency'] = self.currency
         product['market'] = self.extract_market()
         product['retailer'] = self.retailer
         product['url_original'] = response.url
-        product['name'] = self.extract_name(response)
-        product['care'] = self.extract_care(response)
-        product['image_urls'] = []  # self.extract_image_urls(response)
-        product['skus'] = []  # self.extract_skus(response, product['price'])
+        product['name'] = self.extract_name(response=response)
+        product['care'] = self.extract_care(response=response)
         product['spider_name'] = self.name
         product['crawl_start_time'] = self.extract_crawl_start_time()
 
         product_id = response.css('meta[name="itemId"]::attr("content")').get()
-        headers = {
-            'X-AjaxPro-Method': 'DisponibilidadeSKU',
-            'Referer': response.url,
-        }
+        colors_information = {}
         for color_code in response.meta['color_codes']:
             data = (f'{{'
                     f'"ProdutoCodigo":"{product_id}",'
@@ -91,10 +89,14 @@ class KhelfCrawler(CrawlSpider):
                     f'"CarValorCodigo4":"0",'
                     f'"CarValorCodigo5":"0"'
                     f'}}')
-            color_information = post('https://www.khelf.com.br/ajaxpro/IKCLojaMaster.detalhes,Khelf.ashx',
-                                     headers=headers, data=data).json()['value']
-            # html = HTMLParser().feed(color_information[3])
-            images_information = color_information[1]
+            colors_information[color_code] = post('https://www.khelf.com.br/ajaxpro/IKCLojaMaster.detalhes,Khelf.ashx',
+                                                  headers=self.colors_request_headers, data=data).json()['value']
+
+        product['image_urls'] = self.extract_image_urls(response=response, colors_information=colors_information)
+        product['skus'] = self.extract_skus(price=product['price'], product_id=product_id,
+                                            colors_information=colors_information)
+
+        yield product
 
     def extract_retailer_sku(self, response):
         return response.css('#liCodigoInterno > span::text').get().strip()
@@ -148,23 +150,36 @@ class KhelfCrawler(CrawlSpider):
     def extract_care(self, response):
         return [c.strip() for c in response.css('#panCaracteristica > p::text').getall()]
 
-    # def extract_image_urls(self, response):
-    #     image_urls = response.css('.product-image-wrapper a::attr("href")').getall()
-    #     return image_urls
-    #
-    # def extract_skus(self, response, price):
-    #     product_data = ast.literal_eval(response.css('div.product-data-mine::attr("data-lookup")').get())
-    #
-    #     common_sku = {'price': price, 'currency': JackLemkusCrawler.currency}
-    #     skus = []
-    #     for data in product_data.values():
-    #         sku = common_sku.copy()
-    #         sku['size'] = data.get('size')
-    #         sku['out_of_stock'] = not data['stock_status']
-    #         sku['sku_id'] = data.get('id')
-    #         skus.append(sku)
-    #
-    #     return skus
+    def extract_image_urls(self, response, colors_information):
+        image_urls = []
+        for color_information in colors_information.values():
+            color_images_information = color_information[1]
+
+            # main image added
+            image_urls.append(response.urljoin(color_images_information[14]))
+
+            images_url_prefix, extension = splitext(image_urls[-1])
+            gifs_index = [i for i in range(0, len(color_images_information), 2)
+                          if color_images_information[i].endswith('.gif')]
+            total_numbered_images = int((gifs_index[0] if gifs_index else 14) / 2) - 1
+            for number in range(1, total_numbered_images):
+                image_urls.append(''.join((images_url_prefix, str(number), extension)))
+        return image_urls
+
+    def extract_skus(self, price, product_id, colors_information):
+        common_sku = {'price': price, 'currency': self.currency}
+
+        skus = []
+        for color_code, color_information in colors_information.items():
+            color_images_information = HtmlResponse(url='example.com', body=color_information[3], encoding='utf-8')
+            for size_tag in color_images_information.css('ul[class=""] > li'):
+                sku = common_sku.copy()
+                sku['size'] = size_tag.css('a::text').get()
+                sku['out_of_stock'] = size_tag.css('li::attr("class")').get() == 'warn'
+                sku['sku_id'] = f'{product_id}_{color_code}_{sku["size"]}'
+                skus.append(sku)
+
+        return skus
 
     def extract_price(self, response):
         return response.css('#lblPrecoPor > strong::text').get()
@@ -175,4 +190,3 @@ class KhelfCrawler(CrawlSpider):
 
 def check_words_existence(words, text):
     return any(word in text for word in words)
-
