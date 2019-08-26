@@ -14,6 +14,17 @@ class isSameSeller(BasePermission):
 
 
 class isSameSellerGig(BasePermission):
+    def has_permission(self, request, view):
+        if request.method in SAFE_METHODS:
+            return True
+
+        same_gig = Gig.objects.filter(
+            id=request.data.get('gig_id'),
+            seller=request.user
+        ).exists()
+
+        return same_gig
+
     def has_object_permission(self, request, view, obj):
         same_gig = Gig.objects.filter(
             id=obj.gig.id,

@@ -1,7 +1,7 @@
 from django.db import models
 
 from accounts.models import User
-from seller.models import Category
+from seller.models import Category, Gig
 
 
 class Requests(models.Model):
@@ -44,9 +44,12 @@ class RequestFiles(models.Model):
 
 
 class Offers(models.Model):
-    seller = models.ForeignKey(User, on_delete=models.CASCADE)
+    gig = models.ForeignKey(Gig, on_delete=models.CASCADE)
     buyer_request = models.ForeignKey(Requests, on_delete=models.DO_NOTHING)
     description = models.TextField(max_length=1000)
     offer_amount = models.IntegerField()
     delivery_time = models.IntegerField()
     revisions = models.IntegerField()
+
+    class Meta:
+        unique_together = (('gig', 'buyer_request'),)

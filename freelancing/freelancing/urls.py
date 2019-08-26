@@ -33,6 +33,7 @@ urlpatterns = [
 
     # api
     url(r'^api/v1/api-token-auth/', obtain_auth_token),
+    url(r'^api/v1/change-role/', user_views.UserRolesApi.as_view()),
     url(r'^api/v1/users/$', user_views.UserApi.as_view()),
     url(
         r'^api/v1/users/(?P<pk>[0-9]+)$',

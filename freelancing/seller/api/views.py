@@ -134,19 +134,25 @@ class GalleryFilesDetailsApi(generics.RetrieveUpdateDestroyAPIView):
 
 class OffersApi(generics.ListCreateAPIView):
     """Rest api for offers
-    Seller sends offer to a buyer request
+    Seller sends offer to a buyer request by specifying his gig
     """
 
     queryset = Offers.objects.all()
     serializer_class = OfferSerializer
-    permission_classes = (IsAuthenticated, isAdminOrSellerOnly, )
+    permission_classes = (
+        IsAuthenticated,
+        isAdminOrSellerOnly,
+        isSameSellerGig,
+    )
 
     def create(self, request, *args, **kwargs):
         buyer_request_id = request.data.pop('buyer_request_id')
         buyer_request = get_object_or_404(Requests, id=buyer_request_id)
+        gig_id = request.data.pop('gig_id')
+        gig = get_object_or_404(Gig, id=gig_id)
         # setting the required json for serializer
         offer = {
-            "seller": request.user.id,
+            "gig": gig.id,
             "buyer_request": buyer_request.id,
             **request.data
         }

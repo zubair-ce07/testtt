@@ -88,8 +88,8 @@ class GallerySerializer(serializers.ModelSerializer):
 
 class OfferSerializer(serializers.ModelSerializer):
 
-    seller = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.all()
+    gig = serializers.PrimaryKeyRelatedField(
+        queryset=Gig.objects.all()
     )
 
     buyer_request = serializers.PrimaryKeyRelatedField(
@@ -104,6 +104,6 @@ class OfferSerializer(serializers.ModelSerializer):
             'offer_amount',
             'delivery_time',
             'revisions',
-            'seller',
+            'gig',
             'buyer_request'
         )

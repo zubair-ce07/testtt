@@ -21,8 +21,8 @@ class RequestApi(generics.ListCreateAPIView):
     permission_classes = (IsAuthenticated, isAdminOrBuyerOnly, )
 
     def create(self, request, *args, **kwargs):
-        categories = request.data.pop('categories', [])
-        if not categories:
+        request_categories = request.data.pop('categories', [])
+        if not request_categories:
             return missing_attribute_response('categories')
 
         request_serializer = RequestSerializer(
@@ -30,11 +30,19 @@ class RequestApi(generics.ListCreateAPIView):
         )
         if not request_serializer.is_valid():
             return invalid_serializer_response(request_serializer)
-        buyer_request = request_serializer.save()
 
-        for category in categories:
-            category = Category.objects.get(id=category["id"])
-            buyer_request.categories.add(category)
+        categories = []
+        for category in request_categories:
+            category = Category.objects.filter(id=category["id"])
+            if not category.exists():
+                return Response(
+                    {"error": "category does not exists"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            categories.append(category.get())
+
+        buyer_request = request_serializer.save()
+        buyer_request.categories.set(categories)
 
         return Response(
             request_serializer.data,
@@ -61,9 +69,16 @@ class RequestFilesApi(generics.ListCreateAPIView):
     def create(self, request, *args, **kwargs):
         buyer_request_id = request.data.get("buyer_request_id")
         if not buyer_request_id:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return missing_attribute_response('buyer_request_id')
 
-        buyer_request = Requests.objects.get(id=buyer_request_id)
+        buyer_request = Requests.objects.filter(id=buyer_request_id)
+        if not buyer_request.exists():
+            return Response(
+                {"error": "Buyer Request does not exists"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        buyer_request = buyer_request.get()
+
         request_files = []
         for uploaded_file in request.data.getlist('files'):
             request_file = RequestFiles.objects.create(
