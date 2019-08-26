@@ -53,9 +53,8 @@ class ParseSpider(BaseParseSpider):
         return self.gender_lookup(soup, True) or Gender.WOMEN.value
 
     def image_urls(self, response):
-        css = ".m-zoom__image::attr(srcset)"
-        images = clean(response.css(css))
-        return [image.split("1x, ")[1].split("2x")[0] for image in images]
+        raw_images = clean(response.css(".m-zoom__image::attr(srcset)"))
+        return [image.split("1x, ")[1].split("2x")[0] for image in raw_images]
 
     def skus(self, response):
         skus = {}
@@ -72,11 +71,13 @@ class ParseSpider(BaseParseSpider):
             if size_sel.css(".a-size__label--disabled"):
                 sku["out_of_stock"] = True
 
-            skus[f"{sku['colour']}_{sku['size']}" if colour else sku["size"]] = sku
+            sku_id = f"{sku['colour']}_{sku['size']}" if colour else sku["size"]
+            skus[sku_id] = sku
 
         if not skus:
             common_sku["size"] = self.one_size
-            skus[f"{common_sku['colour']}_{common_sku['size']}" if colour else common_sku["size"]] = common_sku
+            sku_id = f"{common_sku['colour']}_{common_sku['size']}" if colour else common_sku["size"]
+            skus[sku_id] = common_sku
 
         return skus
 
