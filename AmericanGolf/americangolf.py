@@ -13,11 +13,11 @@ class AmericangolfSpider(CrawlSpider):
     allowed_domains = ['americangolf.co.uk']
     start_urls = ['http://americangolf.co.uk/']
     product_parser = AmericangolfParser()
-    HN = '.header-navigation-left'
+    header_css = '.header-navigation-left'
 
     rules = (
         Rule(LinkExtractor(
-            restrict_css=(f"{HN} a.a-level-2, {HN} a.a-level-1, {HN} .fly-content")),
+            restrict_css=(f"{header_css} a.a-level-2, {header_css} a.a-level-1, {header_css} .fly-content")),
             callback='parse_category'),
     )
 
@@ -26,12 +26,12 @@ class AmericangolfSpider(CrawlSpider):
 
         infinite_scroll = response.css('.search-result-items::attr(data-infinitescroll)').get()
         if infinite_scroll:
-            pagging = json.loads(infinite_scroll)
-            page_size = pagging['pageSize']
-            product_count = pagging['productCount']
-            if product_count > page_size:
-                url = w3lib.url.add_or_replace_parameter(response.url, 'sz', product_count)
-                url = w3lib.url.add_or_replace_parameter(url, 'start', page_size)
+            raw_pagination = json.loads(infinite_scroll)
+            products_in_page = raw_pagination['pageSize']
+            total_products = raw_pagination['productCount']
+            if total_products > products_in_page:
+                url = w3lib.url.add_or_replace_parameter(response.url, 'sz', total_products)
+                url = w3lib.url.add_or_replace_parameter(url, 'start', products_in_page)
                 yield Request(url, callback=self.product_requests)
 
     def product_requests(self, response):
