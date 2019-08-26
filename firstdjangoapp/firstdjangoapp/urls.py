@@ -4,5 +4,5 @@ from django.contrib import admin
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    url('^uploadfiles/', include('uploadfiles.urls')),
+    url('^shopcity/', include('shopcity.urls')),
 ]
