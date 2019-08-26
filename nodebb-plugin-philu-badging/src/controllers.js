@@ -1,35 +1,62 @@
 var controllers = require.main.require("./src/controllers");
-var db = require.main.require('./src/database').client.collection("configuration");
 
 const {
     BADGE_CONFIG_KEY, 
     BADGE_TYPES
 } = require('../constants');
 
+const {
+	dbFindOne,
+	dbUpdate,
+    dbDeleteConfig,
+    dbCount,
+    dbInsert
+} = require('./dataLayerOps');
 
-controllers.getAllConfig = function (req, res) {
+
+const initializeConfigCollection = function () {
+
+    dbCount({ key: BADGE_CONFIG_KEY })
+    .then((countResult) => {
+        if (countResult) {
+            return "Already configured"
+        } else {
+            dbInsert({ key: BADGE_CONFIG_KEY, value: {} })
+            .then((insertionResult) => {
+                if (insertionResult) {
+                    return "Configuration successful"
+                } else {
+                    throw Error("Error", "Unknown insertion error occurredoccurred during configuration!")
+                }
+            })
+        }
+    })
+    .catch((error) => {
+        throw Error("Error", "Unknown count error occurred during configuration!")
+    })
+}
+
+
+const getAllConfig = function (req, res) {
     /**
      * Return badging configuration from database
      * ***/
 
-    new Promise ( async (resolve, reject) => {
-        let badgingConfig = await db.findOne({key: BADGE_CONFIG_KEY});
-
-        if(badgingConfig) {
-            resolve(badgingConfig)
+    dbFindOne({key: BADGE_CONFIG_KEY})
+    .then((badgingConfig) => {
+        if (badgingConfig) {
+            return res.status(200).json(badgingConfig);
         } else {
-            resolve({})
+            return {}
         }
     })
-    .then((badgingConfig) => {
-        return res.status(200).json(badgingConfig);
-    })
-    .catch((err) => {
+    .catch((error) => {
         return res.status(500).json({ message: err.message });
     })
 }
 
-controllers.updateConfigById = function (req, res) {
+
+const updateConfigById = function (req, res) {
     /**
      * save configuration to database by badgeID
      * ***/
@@ -52,13 +79,8 @@ controllers.updateConfigById = function (req, res) {
         });
     }
 
-    new Promise ( async (resolve, reject) => {
-        const updateObj = { $set: {} };
-        updateObj.$set[`value.${badgeId}`] = { type, threshold };
-        await db.update({ key: BADGE_CONFIG_KEY }, updateObj);
-        resolve()
-    })
-    .then((badgingConfig) => {
+    dbUpdate(badgeId, type, threshold)
+    .then((updateResult) => {
         return res.status(200).json({ message: "Key updated successfully!" });
     })
     .catch((err) => {
@@ -66,35 +88,32 @@ controllers.updateConfigById = function (req, res) {
     })
 };
 
-controllers.deleteConfigById = function (req, res) {
+
+const deleteConfigById = function (req, res) {
     /**
      * delete configuration from database by badgeID
      * ***/
 
     const { badgeId } = req.params;
 
-    new Promise ( async (resolve, reject) => {
-        const updateObj = { $unset: {} };
-        updateObj.$unset[`value.${badgeId}`] = '';
-        let {
-            result: { nModified }
-        } = await db.update(
-            { key: BADGE_CONFIG_KEY },
-            updateObj
-        );
-        resolve(!!nModified);
-    })
-    .then((keyRemoved) => {
-        if(keyRemoved) {
-            return res.status(200).json({
-                message: 'Key deleted successfully!'
-            });
+    dbDeleteConfig(badgeId)
+    .then((deleteResult) => {
+        console.log(deleteResult, typeof deleteResult)
+        if (deleteResult) {
+            return res.status(200).json({ message: 'Key deleted successfully!' });
+        } else {
+            return res.status(204);
         }
-        return res.status(204);
     })
     .catch((err) => {
         return res.status(500).json({ message: err.message });
     })
 };
 
-module.exports = controllers;
+
+module.exports = {
+	initializeConfigCollection,
+    getAllConfig,
+    updateConfigById,
+    deleteConfigById
+};

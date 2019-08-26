@@ -1,7 +1,11 @@
 "use strict";
 
-var controllers = require("./src/controllers");
-var utils = require("./src/utils");
+const {
+    initializeConfigCollection,
+    getAllConfig,
+    updateConfigById,
+    deleteConfigById
+} = require('./src/controllers')
 
 const {
     BADGING_BASE_URL
@@ -10,7 +14,7 @@ const {
 var library = {}; 
 
 library.init = function (params, callback) {
-    utils.initializeConfigCollection();
+    initializeConfigCollection();
     callback();
 };
 
@@ -19,11 +23,12 @@ library.handleNewRoutes = function (params, callback) {
     const { requireUser, requireAdmin } = params.apiMiddleware;
     router.use(requireUser, requireAdmin);
 
-    router.get(BADGING_BASE_URL, controllers.getAllConfig);
-    router.post(`${BADGING_BASE_URL}/:badgeId`, controllers.updateConfigById);
-    router.delete(`${BADGING_BASE_URL}/:badgeId`, controllers.deleteConfigById);
+    router.get(BADGING_BASE_URL, getAllConfig);
+    router.post(`${BADGING_BASE_URL}/:badgeId`, updateConfigById);
+    router.delete(`${BADGING_BASE_URL}/:badgeId`, deleteConfigById);
 
     callback(null, params);
 }
 
 module.exports = library;
+ 
