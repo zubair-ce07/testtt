@@ -23,7 +23,13 @@ class TimeSlot(models.Model):
     saloon = models.ForeignKey(Saloon, on_delete=models.CASCADE)
     time = models.DateTimeField()
 
+    def __str__(self):
+        return f'{self.time.strftime("%Y-%m-%d %H:%M")} - { self.saloon }'
+
 
 class Reservation(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
     time_slot = models.OneToOneField(TimeSlot, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'{self.customer.user.username} - { self.time_slot.saloon }'
