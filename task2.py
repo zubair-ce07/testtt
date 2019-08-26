@@ -1,31 +1,56 @@
 import keyboard
+from math import trunc
 from os import system
+
+from datetime import datetime
 
 
 class TaxiMeter:
-    total_fare = 0
+    pause_status = False
+    total_time = datetime.now()
     speed = 0
-    fare = 0.0005
-    cumulative_ideal_time = 0.0
+    total_distance = 0
+    ride_duration = 0
+    wait_duration = 0
+    ride_fare = 0.03
+    wait_fare = 0.01
 
     def calculate_fare(self):
-        if keyboard.is_pressed('up'):
-            self.speed += 0.01
-        elif keyboard.is_pressed('down') and self.speed > 0.1:
-            self.speed -= 0.01
-        elif self.speed <= 0.1:
-            self.cumulative_ideal_time += 0.01
+        if not self.pause_status:
+            if keyboard.is_pressed('up'):
+                self.speed += 0.01
+            elif keyboard.is_pressed('down') and self.speed > 0.1:
+                self.speed -= 0.01
 
-        if self.cumulative_ideal_time > 15:
-            self.cumulative_ideal_time = 0.0
-            self.total_fare += 0.5
+            self.ride_duration += 0.01
 
-        self.total_fare += (self.fare * self.speed)
+            self.total_distance += self.speed * 0.01
+        else:
+            self.wait_duration += 0.01
 
-    def display_fare(self):
-        print("Speed: %.1f m/s" % self.speed)
-        print("Total fare: %.2f Rs" % self.total_fare)
-        print("Idle Time: %.2f s" % self.cumulative_ideal_time)
+        if keyboard.is_pressed('p'):
+            self.pause_status = True
+        elif keyboard.is_pressed('r'):
+            self.pause_status = False
+        elif keyboard.is_pressed('e'):
+            return True
+
+        return False
+
+    def display_speed_and_distance(self):
+        print(f"Speed: {trunc(self.speed)} m/s")
+        print(f"Distance: {trunc(self.total_distance)} m")
+
+    def show_fare(self):
+        time = (datetime.now() - self.total_time).total_seconds()
+        time_ratio = time / (self.ride_duration + self.wait_duration)
+        fare = (trunc(self.total_distance) * self.ride_fare) + \
+               (trunc(time_ratio * self.wait_duration) * self.wait_fare)
+
+        print(f"Total Time: {trunc(time)} s")
+        print(f"Distance: {trunc(self.total_distance)} m")
+        print(f"Wait Duration:  {trunc(time_ratio * self.wait_duration)} s")
+        print(f"Fare {fare} Rs")
 
 
 def main():
@@ -34,9 +59,12 @@ def main():
 
 
 taxi_meter = TaxiMeter()
+end_ride = False
 
-while True:
-    taxi_meter.calculate_fare()
-    taxi_meter.display_fare()
+while not end_ride:
+    end_ride = taxi_meter.calculate_fare()
+    taxi_meter.display_speed_and_distance()
     system('clear')
+    if end_ride:
+        taxi_meter.show_fare()
 
