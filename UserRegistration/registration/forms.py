@@ -11,3 +11,8 @@ class UserCreationForm(forms.ModelForm):
         model = User
         fields = ('email', 'date_of_birth', 'gender', 'first_name', 'last_name')
 
+
+class UserLoginForm(forms.Form):
+    email = forms.EmailField(label='Email')
+    password = forms.CharField(label='Password', widget=forms.PasswordInput)
+
