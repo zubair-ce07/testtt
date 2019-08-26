@@ -1,0 +1,29 @@
+{
+  "name": "kayak_protractor",
+  "version": "1.0.0",
+  "description": "the-lab =======",
+  "main": "config.js",
+  "scripts": {
+    "test": "protractor config.js",
+    "tsc": "tsc",
+    "webdriver-update": "webdriver-manager update"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arbisoft/the-lab.git"
+  },
+  "author": "Junaid Nazir",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/arbisoft/the-lab/issues"
+  },
+  "homepage": "https://github.com/arbisoft/the-lab#readme",
+  "dependencies": {
+    "@types/jasmine": "^3.4.0",
+    "@types/node": "^10.14.16",
+    "jasmine": "^3.4.0",
+    "protractor": "^5.4.2",
+    "ts-node": "^8.3.0",
+    "typescript": "^3.5.3"
+  }
+}
