@@ -19,7 +19,6 @@ class MixinDE(Mixin):
 
 class ParseSpider(BaseParseSpider):
     raw_description_css = ".m-product-details__text ::text"
-    care_css = "#material .m-product-details__text ul li::text"
     price_css = ".o-product-information__product-price"
 
     def parse(self, response):
@@ -43,7 +42,7 @@ class ParseSpider(BaseParseSpider):
 
     def product_name(self, response):
         css = ".o-product-information__product-name::text"
-        return clean(response.css(css).get())
+        return clean(response.css(css))[0]
 
     def product_category(self, response):
         css = ".m-breadcrumb__nav ul li a::text"
@@ -65,21 +64,19 @@ class ParseSpider(BaseParseSpider):
 
         if colour:
             common_sku["colour"] = colour
-        else:
-            common_sku["colour"] = ""
 
         for size_sel in response.css(".a-size__label"):
             sku = common_sku.copy()
-            sku["size"] = size_sel.css("::text").get()
+            sku["size"] = clean(size_sel.css("::text"))[0]
 
             if size_sel.css(".a-size__label--disabled"):
                 sku["out_of_stock"] = True
 
-            skus[f"{sku['colour']}_{sku['size']}"] = sku
+            skus[f"{sku['colour']}_{sku['size']}" if colour else sku["size"]] = sku
 
         if not skus:
-            common_sku["size"] = "One Size"
-            skus[f"{common_sku['colour']}_{common_sku['size']}"] = common_sku
+            common_sku["size"] = self.one_size
+            skus[f"{common_sku['colour']}_{common_sku['size']}" if colour else common_sku["size"]] = common_sku
 
         return skus
 
