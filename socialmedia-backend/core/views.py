@@ -40,7 +40,7 @@ class RegistrationAPIView(APIView):
     queryset: User.objects.all()
 
     def post(self, request):
-        user = request.data.get('user', {})
+        user = request.data
 
         serializer = self.serializer_class(data=user)
         serializer.is_valid(raise_exception=True)

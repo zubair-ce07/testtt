@@ -27,6 +27,11 @@ class UserManager(BaseUserManager):
         user.save()
         return user
 
+    def create_user(self, email, password, **extra_fields):
+        extra_fields.setdefault('is_staff', False)
+        extra_fields.setdefault('is_superuser', False)
+        return self._create_user(email, password, **extra_fields)
+
     def create_superuser(self, email, password, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
@@ -87,7 +92,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         send_mail(subject, message, from_email, [self.email], **kwargs)
 
     def __str__(self):
-        return self.get_full_name()
+        return self.full_name
 
     @property
     def token(self):
