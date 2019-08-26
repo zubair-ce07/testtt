@@ -1,0 +1,95 @@
+{% extends "customer/base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+<div class="media-body">
+    <h2 class="account-heading">Reservations</h2>
+</div>
+
+{% if not reservations %}
+<div class="card" style="margin-bottom: 10px; margin-top: 10px">
+    <div class="card-header">
+        No Reservations
+    </div>
+    <div class="card-body">
+        <a href="{% url 'shop_list' %}" type="button" class="btn btn-primary">
+            Reserve Now
+        </a>
+    </div>
+</div>
+{% endif %}
+
+
+{% for reservation in reservations %}
+<div class="card" style="margin-bottom: 10px; margin-top: 10px">
+    <div class="card-header">
+        Reservation Time : {{reservation.time_slot.time}}
+    </div>
+    <div class="card-body">
+        <h5 class="card-title">Saloon Name : {{reservation.time_slot.saloon.shop_name}}</h5>
+        <p class="card-text">Contact No : {{reservation.time_slot.saloon.phone_no}}</p>
+        <a href="#" class="btn btn-outline-danger" data-toggle="modal" onclick="set_time_slot({{reservation.id}})"
+            data-target="#exampleModalCenter">Cancel
+            reservation</a>
+    </div>
+</div>
+
+{% endfor %}
+
+
+<div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLongTitle">Are you sure you wanted to cancel this reservation?
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form action="" method="post">
+                    {% csrf_token %}
+                    {{ form }}
+                    <div class="form-group">
+                        <input type="hidden" name="res_id" id="res_id">
+                        <label for="start_date">Reason for cancelation</label>
+                        <textarea class="form-control rounded-0" id="reason" name="reason" rows="3" required></textarea>
+                        <small id="reason_help" class="form-text text-muted">Reason of cancelation of reservation for
+                            customer.</small>
+                    </div>
+                    <input type="submit" class="submit_btn btn btn-outline-danger" value="Cancel Reservation" />
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        set_time_slot = (id) => {
+            document.getElementById('res_id').value = id
+        }
+    </script>
+
+
+    {% if is_paginated %}
+
+    {% if page_obj.has_previous %}
+    <a class="btn btn-outline-info mb-4" href="?page=1">First</a>
+    <a class="btn btn-outline-info mb-4" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+    {% endif %}
+
+    {% for num in page_obj.paginator.page_range %}
+    {% if page_obj.number == num %}
+    <a class="btn btn-info mb-4" href="?page={{ num }}">{{ num }}</a>
+    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+    <a class="btn btn-outline-info mb-4" href="?page={{ num }}">{{ num }}</a>
+    {% endif %}
+    {% endfor %}
+
+    {% if page_obj.has_next %}
+    <a class="btn btn-outline-info mb-4" href="?page={{ page_obj.next_page_number }}">Next</a>
+    <a class="btn btn-outline-info mb-4" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+    {% endif %}
+
+    {% endif %}
+    {% endblock content %}

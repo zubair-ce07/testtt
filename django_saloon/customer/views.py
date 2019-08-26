@@ -4,9 +4,12 @@ from django.contrib.auth.decorators import login_required
 from django.views import View
 from django.utils.decorators import method_decorator
 from django.contrib.auth import logout as auth_logout
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.views.generic import ListView
 
 from .forms import UserRegisterForm, UserUpdateForm, CustomerUpdateForm
 from .models import Customer
+from shop.models import Reservation
 
 
 class Register(View):
@@ -41,14 +44,13 @@ class Register(View):
         return render(request, 'customer/register.html', {'user_form': user_form, 'form_title': 'Sign Up Today'})
 
 
-class Profile(View):
+class Profile(LoginRequiredMixin, UserPassesTestMixin, View):
     """Render and Save Profile Form.
 
     This method renders the profile form and also save it's data
     when form is submitted
     """
 
-    @method_decorator(login_required)
     @staticmethod
     def post(request):
         """POST method for Profile View.
@@ -64,7 +66,6 @@ class Profile(View):
             return redirect('customer_profile')
         return render(request, 'customer/profile.html', {'user_form': user_update_form, 'customer_form': customer_update_form})
 
-    @method_decorator(login_required)
     @staticmethod
     def get(request):
         """GET method for Profile Form.
@@ -75,6 +76,9 @@ class Profile(View):
             instance=request.user.customer)
 
         return render(request, 'customer/profile.html', {'user_form': user_update_form, 'customer_form': customer_update_form})
+
+    def test_func(self):
+        return hasattr(self.request.user, 'customer')
 
 
 class LogoutView(View):
@@ -91,3 +95,27 @@ class LogoutView(View):
         """
         auth_logout(request)
         return redirect('login')
+
+
+class ReservationsListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+    model = Reservation
+    template_name = 'customer/myreservations.html'  # <app>/<model>_<viewtype>.html
+    context_object_name = 'reservations'
+    paginate_by = 8
+
+    def get_queryset(self):
+        return Reservation.objects.filter(customer=self.request.user.customer)
+
+    def post(self, request):
+        """POST method for Profile View.
+        This method will save profile data when profile form is submitted.
+        """
+        res_id = request.POST.get("res_id", " ")
+        reason = request.POST.get("reason", " ")
+        Reservation.objects.get(id=res_id).delete()
+        messages.success(
+            request, f'Reservation Cancelled!')
+        return redirect('customer_reservations')
+
+    def test_func(self):
+        return hasattr(self.request.user, 'customer')
