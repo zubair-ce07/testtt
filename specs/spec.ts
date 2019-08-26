@@ -82,8 +82,13 @@ describe('Hotels Sanity -', () => {
         expect(secondSliderLandingDestination).to.have.string('LON');
     });
 
-    it(`Select Take-off ZRH slider and slide filter`, function () {
-        // TODO: TO BE DONE: Task 6
+    it(`${PageName.FlightsSearch} Select Take-off ZRH slider and slide filter - This Should reflect flight result for second leg times (ZRH-LON) `, async function () {
+        const flightZRHTakeOffStartingTime = await flightSearchPage.slideTakeOffSliderForZRH();
+        const firstSearchedFlightTakeOffTime = await flightSearchPage.getTakeOffTimeForFlightZRH(0);
+        expect(firstSearchedFlightTakeOffTime >= flightZRHTakeOffStartingTime).to.be.true;
+
+        const secondSearchedFlightTakeOffTime = await flightSearchPage.getTakeOffTimeForFlightZRH(0);
+        expect(secondSearchedFlightTakeOffTime >= flightZRHTakeOffStartingTime).to.be.true;
     });
 
     it(`Click the "View Deal" button for the first result`, function () {

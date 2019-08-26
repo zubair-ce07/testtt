@@ -9,7 +9,9 @@ interface IFlightSearchPage {
 
     getMultiCityFormTraveler(): Promise<string>;
 
-    getMultiCityFormDate(): Promise<string>
+    getMultiCityFormDate(): Promise<string>;
+
+    getSearchedFlightTakeOffTime(flightResultNo: number): Promise<string>;
 }
 
 export default IFlightSearchPage;

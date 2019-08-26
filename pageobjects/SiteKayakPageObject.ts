@@ -138,6 +138,16 @@ class SiteKayakPageObject implements IFlight, IFlightSearchPage {
         const dateField = element(by.css(`[id$=-multiCityLeg${this.getLegNo()}]`)).element(by.css("[id$=-display-start-inner]"));
         return await dateField.getText();
     }
+
+    async getSearchedFlightTakeOffTime(flightResultNo: number): Promise<string> {
+        this.waitForFlightSearchResultToComplete();
+        const allFlights = element.all(by.css(".Flights-Results-ResultInfo"));
+        const flightItem = allFlights.get(flightResultNo);
+
+        const secondFlightTakeOffDetail = flightItem.element(by.css("[id$=-info-leg-1]")).element(by.css(".time-pair"));
+        const takeOffTime = await secondFlightTakeOffDetail.getText();
+        return takeOffTime.trim();
+    }
 }
 
 export default SiteKayakPageObject;

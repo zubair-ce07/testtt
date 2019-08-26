@@ -24,7 +24,7 @@ class FlightSearchResultPageObject extends BasePageObject {
     }
 
     async getAppliedCabinClass(): Promise<string> {
-        return await browser.executeScript('return document.querySelector("[id$=-cabin-content] ul li").querySelector(".label").innerText');
+        return await browser.executeScript('return document.querySelector("[id$=-cabin-content]").querySelector(".label").innerText');
     }
 
     async getCountOfDisplayedTakeOffSliders(): Promise<number> {
@@ -37,10 +37,20 @@ class FlightSearchResultPageObject extends BasePageObject {
     }
 
     async getCountOfDisplayedLandingSliders(): Promise<number> {
-        const landingSliderTab = element(by.css(".takeoffLandingTabs")).element(by.css("[id$=-times-Landing-label]"));
-        await landingSliderTab.click();
+        await this.selectLandingTab();
         const sliders = this.getLandingSliders();
         return await this.getSliders(sliders);
+    }
+
+    async selectTakeOffTab(): Promise<void> {
+        const selectedTab = element(by.css(".takeoffLandingTabs")).element(by.css("[id$=-times-Take-off-label]"));
+        ;
+        await selectedTab.click();
+    }
+
+    async selectLandingTab(): Promise<void> {
+        const selectedTab = element(by.css(".takeoffLandingTabs")).element(by.css("[id$=-times-Landing-label]"));
+        await selectedTab.click();
     }
 
     getLandingSliders(): ElementArrayFinder {
@@ -72,6 +82,28 @@ class FlightSearchResultPageObject extends BasePageObject {
         const slider = element(by.css("[id$=-times-timesSection]")).element(by.css(`[id$=-times-landing-label-${legNo}]`));
         return await slider.getText();
     }
+
+    async slideTakeOffSliderForZRH(): Promise<string> {
+        this.selectTakeOffTab();
+        return await this.slideSecondTakeOffSlider();
+    };
+
+    async slideSecondTakeOffSlider(): Promise<string> {
+        const slider = element(by.css("[id$=-times-takeoff-slider-1-sliderWidget-handle-0]"));
+        await browser.executeScript("arguments[0].style.left='20%'", slider);
+
+        let EC = protractor.ExpectedConditions;
+        await browser.wait(EC.invisibilityOf(element(by.css(".no-spin.loading"))), 20000, "Timeout Error! flights search loading spinner is taking too long to hide");
+
+        const takeoffTimeLabel = element(by.css("[id$=-times-takeoff-slider-1-rangeLabel]")).element(by.css(".min"));
+        const takeOffStartDayAndTime = await takeoffTimeLabel.getText();
+        const takeOffStartTime = takeOffStartDayAndTime.substr(takeOffStartDayAndTime.indexOf(" ") + 1).trim();
+        return takeOffStartTime;
+    }
+
+    async getTakeOffTimeForFlightZRH(flightResultNo: number): Promise<string> {
+        return this.page.getSearchedFlightTakeOffTime(flightResultNo);
+    };
 
     async searchFlightAgain(): Promise<void> {
         const searchButton = element(by.css(".Flights-Search-FlightInlineSearchForm")).element(by.css("[id$=-submit]"));

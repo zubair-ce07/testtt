@@ -97,12 +97,12 @@ class SiteMomontoPageObject implements IFlight, IFlightSearchPage {
     }
 
     async waitForFlightSearchResultToComplete(): Promise<void> {
-        const filterLeftColumn = element(by.css(".col-left-rail"));
-        const searchList = element(by.css(".Flights-Results-FlightResultsList"));
+        const searchProgressBarSelector = ".Common-Results-SpinnerWithProgressBar.finished";
+        const searchProgressBar = element(by.css(searchProgressBarSelector));
 
         let EC = protractor.ExpectedConditions;
-        await browser.wait(EC.visibilityOf(searchList), 20000, getTimeoutErrorMessage("Flights search result list"));
-        await browser.wait(EC.visibilityOf(filterLeftColumn), 20000, getTimeoutErrorMessage("Flights search result left column"));
+        await browser.wait(EC.visibilityOf(searchProgressBar), 20000, getTimeoutErrorMessage("Flights search progress bar"));
+        await browser.wait(EC.visibilityOf(element(by.cssContainingText(searchProgressBarSelector, "Search complete"))), 20000, "Timeout Error! Flights Search complete text 'Search complete' is taking too long to appear in DOM");
     }
 
     async isFlightsSearchPageDisplayed(): Promise<boolean> {
@@ -142,6 +142,15 @@ class SiteMomontoPageObject implements IFlight, IFlightSearchPage {
     async getMultiCityFormDate(): Promise<string> {
         const dateField = element(by.css(`[id$=-depart_date${this.getLegNo()}-input]`));
         return await dateField.getText();
+    }
+
+    async getSearchedFlightTakeOffTime(flightResultNo: number): Promise<string> {
+        const allFlights = element.all(by.css(".Flights-Results-FlightResultItem"));
+        const flightItem = allFlights.get(flightResultNo);
+
+        const secondFlightTakeOffDetail = flightItem.all(by.css("[id$=info-flights] li")).get(1).element(by.css(".top"));
+        const takeOffTime = await secondFlightTakeOffDetail.getText();
+        return takeOffTime.trim();
     }
 }
 
