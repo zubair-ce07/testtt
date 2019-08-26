@@ -45,7 +45,7 @@ class ParseSpider(BaseParseSpider):
         return clean(response.css(css))[0]
 
     def product_category(self, response):
-        css = ".m-breadcrumb__nav ul li a::text"
+        css = ".m-breadcrumb ::text"
         return clean(response.css(css))
 
     def product_gender(self, garment):
@@ -83,11 +83,11 @@ class ParseSpider(BaseParseSpider):
 
 
 class CrawlSpider(BaseCrawlSpider):
-    products_css = [".o-product-list"]
     listings_css = [
         ".o-header",
         ".m-pagination__pagination-list"
     ]
+    products_css = [".o-product-list"]
 
     rules = (
         Rule(LinkExtractor(restrict_css=listings_css), callback="parse"),
