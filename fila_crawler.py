@@ -27,6 +27,7 @@ class FilaCrawler(CrawlSpider):
 
     def parse(self, response):
         trail = response.meta.get('trail', [["", response.url]])
+
         for request in super().parse(response):
             request.meta['trail'] = trail + [[request.meta['link_text'].strip(), request.url]]
             yield request
@@ -38,12 +39,12 @@ class FilaCrawler(CrawlSpider):
         product['trail'] = response.meta['trail'][:-1]
         product['gender'] = self.extract_gender(response.url)
         product['category'] = self.extract_category(product['trail'])
-        product['brand'] = FilaCrawler.brand
+        product['brand'] = self.brand
         product['url'] = self.extract_url(response)
         product['date'] = self.extract_date(response)
-        product['currency'] = FilaCrawler.currency
+        product['currency'] = self.currency
         product['market'] = self.extract_market(product['currency'])
-        product['retailer'] = FilaCrawler.retailer
+        product['retailer'] = self.retailer
         product['url_original'] = response.url
         product['name'] = self.extract_name(response)
         product['description'] = self.extract_description(response)
@@ -51,7 +52,7 @@ class FilaCrawler(CrawlSpider):
         product['image_urls'] = self.extract_image_urls(response)
         product['price'] = self.extract_price(response)
         product['skus'] = self.extract_skus(response, product['retailer_sku'], product['price'])
-        product['spider_name'] = FilaCrawler.name
+        product['spider_name'] = self.name
         product['crawl_start_time'] = self.extract_crawl_start_time()
 
         yield product
@@ -69,17 +70,12 @@ class FilaCrawler(CrawlSpider):
 
         url_lowercase = url.lower()
         for gender in genders:
-            if check_existence(genders[gender], url_lowercase):
+            if self.check_existence(genders[gender], url_lowercase):
                 return gender
-        return ''
+        return 'unisex'
 
-    def extract_description(self, response):
-        description = response.css('div.wrap-long-description > p::text').get()
-        return [description] if description is not None else []
-
-    def extract_care(self, description):
-        care_words = {'sintética', 'composição'}
-        return description if len(description) != 0 and check_existence(care_words, description[0].lower()) else []
+    def check_existence(self, words, text):
+        return any(word in text for word in words)
 
     def extract_category(self, trail):
         return [t[0] for t in itertools.islice(trail, 1, None)]
@@ -94,34 +90,35 @@ class FilaCrawler(CrawlSpider):
     def extract_market(self, currency):
         return ccy.currency(currency).default_country
 
-    def extract_retailer(self, response, market):
-        return f'{urlparse(response.url).netloc.split(".")[1]}-{market.lower()}'
-
     def extract_name(self, response):
         return response.css('div.product-name h1::text').get().strip()
+
+    def extract_description(self, response):
+        description = response.css('div.wrap-long-description > p::text').get()
+        return [description] if description is not None else []
+
+    def extract_care(self, description):
+        care_words = {'sintética', 'composição'}
+        return description if len(description) != 0 and self.check_existence(care_words, description[0].lower()) else []
 
     def extract_image_urls(self, response):
         return list(set(response.css('.product-image-gallery > img::attr("src")').getall()))
 
-    def extract_skus(self, response, retailer_sku, price):
-        product_sizes = response.css('#configurable_swatch_size .swatch-label::text').getall()
-
-        common_sku = {'price': price, 'currency': FilaCrawler.currency}
-        skus = []
-        for product_size in product_sizes:
-            sku = common_sku.copy()
-            sku['size'] = product_size
-            sku['sku_id'] = f'{retailer_sku}-{product_size}'
-            skus.append(sku)
-
-        return skus
-
     def extract_price(self, response):
         return response.css('.normal_price_span::text').get()
 
+    def extract_skus(self, response, retailer_sku, price):
+        product_sizes = response.css('#configurable_swatch_size .swatch-label::text').getall()
+
+        common_sku = {'price': price, 'currency': self.currency}
+        skus = {}
+
+        for product_size in product_sizes:
+            sku = common_sku.copy()
+            sku['size'] = product_size
+            sku[f'{retailer_sku}-{product_size}'] = sku
+
+        return skus
+
     def extract_crawl_start_time(self):
         return self.crawler.stats._stats['start_time'].strftime('%Y-%m-%dT%H:%M:%S.%f')
-
-
-def check_existence(words, text):
-    return any(word in text for word in words)
