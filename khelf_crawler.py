@@ -7,8 +7,7 @@ from json import loads
 
 from scrapy import Request
 from scrapy.http import HtmlResponse
-from scrapy.spiders import CrawlSpider, Rule
-from scrapy.linkextractors import LinkExtractor
+from scrapy.spiders import CrawlSpider
 import ccy
 
 
@@ -16,33 +15,37 @@ class KhelfCrawler(CrawlSpider):
     name = 'khelf'
 
     allowed_domains = ['khelf.com.br']
-    start_urls = ['https://www.khelf.com.br/']
-
-    listings_css = ['#nav > li > a']
+    start_urls = [
+        'https://www.khelf.com.br/feminino-1.aspx/c',
+        'https://www.khelf.com.br/masculino-3.aspx/c',
+        'https://www.khelf.com.br/acessorios-4.aspx/c'
+    ]
 
     currency = 'BRL'
     retailer = 'khelf-br'
 
-    link_category_map = {
+    link_category_number_map = {
         'https://www.khelf.com.br/feminino-1.aspx/c': 1,
         'https://www.khelf.com.br/masculino-3.aspx/c': 3,
         'https://www.khelf.com.br/acessorios-4.aspx/c': 4
     }
 
+    link_category_title_map = {
+        'https://www.khelf.com.br/feminino-1.aspx/c': 'Feminino',
+        'https://www.khelf.com.br/masculino-3.aspx/c': 'Masculino',
+        'https://www.khelf.com.br/acessorios-4.aspx/c': 'Acessorios'
+    }
+
     colors_request_headers = {'X-AjaxPro-Method': 'DisponibilidadeSKU', 'Referer': 'https://www.khelf.com.br/'}
 
-    rules = (
-        Rule(LinkExtractor(allow=('feminino', 'masculino', 'acessorios'), restrict_css=listings_css), callback='parse'),
-    )
-
     def parse(self, response):
-        trail = response.meta.get('trail', [["", response.url]])
+        trail = response.meta.get('trail', [[self.link_category_title_map.get(response.url), response.url]])
         for request in super().parse(response):
             request.meta['trail'] = trail + [[request.meta['link_text'].strip(), request.url]]
             yield request
 
         # pagination
-        category = self.link_category_map.get(response.url)
+        category = self.link_category_number_map.get(response.url)
         if category is not None:
             category_products_count = int(response.css('.filter-details strong:last-child::text').get())
             for page_number in range(1, ceil(int(category_products_count) / 21) + 1):
@@ -57,9 +60,9 @@ class KhelfCrawler(CrawlSpider):
             product_link = product.css('div.figure > a::attr("href")').get()
             product_color_codes = deque(product.css('ul a::attr("color-code")').getall())
             yield response.follow(product_link, meta={'trail': trail, 'color_codes': product_color_codes},
-                                  callback=self.parse_product)
+                                  callback=self.parse_product_page)
 
-    def parse_product(self, response):
+    def parse_product_page(self, response):
         product = {}
 
         product['retailer_sku'] = self.extract_retailer_sku(response=response)
@@ -85,7 +88,7 @@ class KhelfCrawler(CrawlSpider):
         yield self.create_color_request(product=product, color_codes=response.meta['color_codes'],
                                         product_id=response.css('meta[name="itemId"]::attr("content")').get())
 
-    def parse_color_data(self, response):
+    def parse_product_color_information(self, response):
         color_information = loads(response.body)['value']
 
         product = response.meta['product']
@@ -117,7 +120,7 @@ class KhelfCrawler(CrawlSpider):
                 f'"CarValorCodigo4":"0",'
                 f'"CarValorCodigo5":"0"}}')
         return Request('https://www.khelf.com.br/ajaxpro/IKCLojaMaster.detalhes,Khelf.ashx', method="POST",
-                       callback=self.parse_color_data, headers=self.colors_request_headers,
+                       callback=self.parse_product_color_information, headers=self.colors_request_headers,
                        meta=meta,
                        body=body)
 
