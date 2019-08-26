@@ -12,6 +12,8 @@ interface IFlightSearchPage {
     getMultiCityFormDate(): Promise<string>;
 
     getSearchedFlightTakeOffTime(flightResultNo: number): Promise<string>;
+
+    getSearchedFlightsCount(): Promise<number>;
 }
 
 export default IFlightSearchPage;

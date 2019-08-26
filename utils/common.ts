@@ -61,6 +61,22 @@ function convertDateInFormatMonthInNumberSlashDayInNumber(dateInFormatMonthSpace
     return `${monthInNumber}/${dateParts[1]}`;
 }
 
+function convertTimeToMinutes(timeIn12HourFormat) {
+    const time = timeIn12HourFormat.match(/(\d+):(\d+) (\w)/);
+    const hours = Number(time[1]);
+    const minutes = Number(time[2]);
+    const meridian = time[3].toLowerCase();
+    let hoursIn24HourFormat = hours;
+    if (meridian == 'p' && hours < 12) {
+        hoursIn24HourFormat = hours + 12;
+    }
+    else if (meridian == 'a' && hours == 12) {
+        hoursIn24HourFormat = hours - 12;
+    }
+
+    return (hoursIn24HourFormat * 60) + minutes;
+}
+
 export
 {
     waitForElementPresence,
@@ -69,5 +85,6 @@ export
     getTimeoutErrorMessage,
     convertMonthNameToShortName,
     convertShortMonthNameToMonthNumber,
-    convertDateInFormatMonthInNumberSlashDayInNumber
+    convertDateInFormatMonthInNumberSlashDayInNumber,
+    convertTimeToMinutes
 }

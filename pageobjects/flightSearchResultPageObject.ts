@@ -1,6 +1,6 @@
 import { browser, by, element, ElementArrayFinder, ElementFinder, protractor } from "protractor";
 import BasePageObject from "./basePageObject";
-import { convertDateInFormatMonthInNumberSlashDayInNumber, getTimeoutErrorMessage } from "../utils/common";
+import { convertDateInFormatMonthInNumberSlashDayInNumber, convertTimeToMinutes } from "../utils/common";
 
 class FlightSearchResultPageObject extends BasePageObject {
     async getAppliedAirportFilter(): Promise<string> {
@@ -83,9 +83,10 @@ class FlightSearchResultPageObject extends BasePageObject {
         return await slider.getText();
     }
 
-    async slideTakeOffSliderForZRH(): Promise<string> {
+    async slideTakeOffSliderForZRH(): Promise<number> {
         this.selectTakeOffTab();
-        return await this.slideSecondTakeOffSlider();
+        const takeOffStartTime = await this.slideSecondTakeOffSlider();
+        return convertTimeToMinutes(takeOffStartTime);
     };
 
     async slideSecondTakeOffSlider(): Promise<string> {
@@ -97,13 +98,32 @@ class FlightSearchResultPageObject extends BasePageObject {
 
         const takeoffTimeLabel = element(by.css("[id$=-times-takeoff-slider-1-rangeLabel]")).element(by.css(".min"));
         const takeOffStartDayAndTime = await takeoffTimeLabel.getText();
-        const takeOffStartTime = takeOffStartDayAndTime.substr(takeOffStartDayAndTime.indexOf(" ") + 1).trim();
-        return takeOffStartTime;
+        return takeOffStartDayAndTime.substr(takeOffStartDayAndTime.indexOf(" ") + 1).trim();
     }
 
-    async getTakeOffTimeForFlightZRH(flightResultNo: number): Promise<string> {
-        return this.page.getSearchedFlightTakeOffTime(flightResultNo);
+    async getTotalSearchedFlightsCount(): Promise<number> {
+        return await this.page.getSearchedFlightsCount();
+    }
+
+    async getTakeOffTimeForFlightZRH(flightResultNo: number): Promise<number> {
+        const flightTakeOffTime = await this.page.getSearchedFlightTakeOffTime(flightResultNo);
+        return convertTimeToMinutes(flightTakeOffTime);
     };
+
+    async openDealPage(): Promise<number> {
+        await this.clickFirstFlightViewDealButton();
+        const handles = await browser.getAllWindowHandles();
+        await browser.switchTo().window(handles[0]);
+        return handles.length;
+    }
+
+    async clickFirstFlightViewDealButton(): Promise<void> {
+        const firstFlight = element.all(by.css("[id$=-mb-featuredFare]")).get(0).element(by.css(".booking-link"));
+        await firstFlight.click();
+
+        let EC = protractor.ExpectedConditions;
+        browser.wait(EC.urlContains('/book/flight'), 10000);
+    }
 
     async searchFlightAgain(): Promise<void> {
         const searchButton = element(by.css(".Flights-Search-FlightInlineSearchForm")).element(by.css("[id$=-submit]"));

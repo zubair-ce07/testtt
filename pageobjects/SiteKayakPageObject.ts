@@ -139,6 +139,12 @@ class SiteKayakPageObject implements IFlight, IFlightSearchPage {
         return await dateField.getText();
     }
 
+    async getSearchedFlightsCount(): Promise<number> {
+        this.waitForFlightSearchResultToComplete();
+        const allFlights = element.all(by.css(".Flights-Results-ResultInfo"));
+        return await allFlights.count();
+    }
+
     async getSearchedFlightTakeOffTime(flightResultNo: number): Promise<string> {
         this.waitForFlightSearchResultToComplete();
         const allFlights = element.all(by.css(".Flights-Results-ResultInfo"));

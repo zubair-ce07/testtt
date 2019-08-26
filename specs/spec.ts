@@ -83,27 +83,31 @@ describe('Hotels Sanity -', () => {
     });
 
     it(`${PageName.FlightsSearch} Select Take-off ZRH slider and slide filter - This Should reflect flight result for second leg times (ZRH-LON) `, async function () {
-        const flightZRHTakeOffStartingTime = await flightSearchPage.slideTakeOffSliderForZRH();
-        const firstSearchedFlightTakeOffTime = await flightSearchPage.getTakeOffTimeForFlightZRH(0);
-        expect(firstSearchedFlightTakeOffTime >= flightZRHTakeOffStartingTime).to.be.true;
+        const flightZRHTakeOffStartTime = await flightSearchPage.slideTakeOffSliderForZRH();
+        const searchedFlightsCount = await flightSearchPage.getTotalSearchedFlightsCount();
+        expect(searchedFlightsCount).to.be.above(0);
 
-        const secondSearchedFlightTakeOffTime = await flightSearchPage.getTakeOffTimeForFlightZRH(0);
-        expect(secondSearchedFlightTakeOffTime >= flightZRHTakeOffStartingTime).to.be.true;
+        if (searchedFlightsCount > 0) {
+            const firstSearchedFlightTakeOffTime = await flightSearchPage.getTakeOffTimeForFlightZRH(0);
+            expect(firstSearchedFlightTakeOffTime >= flightZRHTakeOffStartTime).to.be.true;
+
+        }
+        if (searchedFlightsCount > 1) {
+            const secondSearchedFlightTakeOffTime = await flightSearchPage.getTakeOffTimeForFlightZRH(1);
+            expect(secondSearchedFlightTakeOffTime >= flightZRHTakeOffStartTime).to.be.true;
+        }
     });
 
-    it(`Click the "View Deal" button for the first result`, function () {
-        // TODO:TO BE DONE: Task 7
+    it(`${PageName.FlightsSearch} Should open provider page`, async function () {
+        const totalOpenedTabsCount = await flightSearchPage.openDealPage();
+        expect(totalOpenedTabsCount).to.equal(2);
     });
 
-    it(`Go back to the flight result page`, function () {
-        // TODO:TO BE DONE: Task 8
-    });
 
     it(`${PageName.FlightsSearch} Should display Multi-City Form`, async function () {
         await flightSearchPage.searchFlightAgain();
         const isMultiCityFormDisplayed = await flightSearchPage.isMultiFormDisplayed();
         expect(isMultiCityFormDisplayed).to.be.true;
-
     });
 
     it(`${PageName.FlightsSearch} Should display MC Form first airport filter set to FRA-ZRH`, async function () {
