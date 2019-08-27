@@ -1,12 +1,5 @@
 from django.db import models
 
-GENDER_MAP = (
-        ('M', 'MALE'),
-        ('F', 'FEMALE'),
-        ('U', 'UNISEX'),
-        ('K', 'KIDS')
-    )
-
 
 class Brand(models.Model):
     name = models.CharField(max_length=20)
@@ -27,7 +20,6 @@ class Product(models.Model):
     category = models.ForeignKey(Category, related_name='category', on_delete=models.CASCADE)
     name = models.CharField(max_length=20)
     description = models.CharField(max_length=600)
-    gender = models.CharField(max_length=4, choices=GENDER_MAP)
 
     def __str__(self):
         return self.name

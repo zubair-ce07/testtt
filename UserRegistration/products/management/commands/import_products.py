@@ -6,10 +6,10 @@ from products.models import Brand, Category, Product, ProductArticle, ProductIma
 
 
 class Command(BaseCommand):
-    help = "load data to models."
+    help = "Import Products."
 
-    def save_product(self):
-        with open('products/static/product.json', 'r') as product_file:
+    def save_product(self, path):
+        with open(path, 'r') as product_file:
             products = json.load(product_file)
 
         for product in products:
@@ -17,7 +17,6 @@ class Command(BaseCommand):
             brand = product['brand']
             category = product['category']
             description = product['description']
-            gender = product['gender']
             images = product['img_urls']
             articles = product['skus']
             brand = Brand.objects.get_or_create(name=brand)[0]
@@ -26,8 +25,7 @@ class Command(BaseCommand):
                 name=name,
                 brand=brand,
                 category=category,
-                description=description,
-                gender=gender
+                description=description
             )[0]
             self.save_images(product, images)
             self.save_articles(product, articles)
@@ -51,6 +49,10 @@ class Command(BaseCommand):
                 product=product
             )
 
+    def add_arguments(self, parser):
+        parser.add_argument('path', type=str)
+
     def handle(self, *args, **kwargs):
-        self.save_product()
+        path = kwargs['path']
+        self.save_product(path)
 
