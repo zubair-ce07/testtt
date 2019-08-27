@@ -23,7 +23,7 @@ export default class HotelsFrontPage {
         return this.hotelsFrontPageElementsObj.getHotelsEndDateField().isDisplayed();
     }
     async getGuestFieldText(): Promise<string> {
-        return this.hotelsFrontPageElementsObj.getHotelsGuestField().getText();
+        return this.hotelsFrontPageElementsObj.getHotelsGuestField();
     }
     async searchByNewHotelsOrigin(): Promise<void> {
         this.hotelsFrontPageElementsObj.getHotelsOriginField().click();

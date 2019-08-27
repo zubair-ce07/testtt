@@ -1,23 +1,15 @@
 exports.config = {
     directConnect: true,
-    // Capabilities to be passed to the webdriver instance.
     capabilities: {
         'browserName': 'chrome'
     },
-    // Framework to use. Jasmine is recommended.
     framework: 'jasmine',
-    // Spec patterns are relative to the current working directory when
-    // protractor is called.
     specs: [
         'spec.ts'
     ],
     onPrepare() {
         require('ts-node').register({
-            project: require('path').join(__dirname, './tsconfig.json') // Relative path of tsconfig.json file
+            project: require('path').join(__dirname, './tsconfig.json')
         });
     },
-    // Options to be passed to Jasmine.
-    // jasmineNodeOpts: {
-    //     defaultTimeoutInterval: 30000
-    // }
 };

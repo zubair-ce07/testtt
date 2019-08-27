@@ -5,15 +5,15 @@ export default class HotelSearchResultsElements {
     allSearchedHotels: ElementArrayFinder = element.all(by.css('.resultWrapper'));
     allHotelNames: ElementArrayFinder = element.all(by.css("button[id*='-info-title']"));
     allHotelDetailsDropdown: ElementArrayFinder = element.all(by.css(".detailsContent"));
-    hotelDetailsDropDownTabList: ElementFinder = this.allHotelDetailsDropdown.first().element(by.css("div"));
-    activeTabContent: ElementFinder = this.hotelDetailsDropDownTabList.element(by.css('.tabContent')).element(by.css('.active'));
+    hotelDetailsDropDownTabList: ElementFinder = this.allHotelDetailsDropdown.first();
+    activeTabContent: ElementFinder = this.hotelDetailsDropDownTabList.element(by.css('.tabContent'));
     allDropdownDetailsTabPhotos: ElementArrayFinder = element.all(by.css('.photoGrid'));
     mapTabBtn: ElementFinder = this.hotelDetailsDropDownTabList.element(by.css("div[id*='-map']"));
     reviewsTabBtn: ElementFinder = this.hotelDetailsDropDownTabList.element(by.css("div[id*='-reviews']"));
     ratesTabBtn: ElementFinder = this.hotelDetailsDropDownTabList.element(by.css("div[id*='-rates']"));
-    mapInMapTab: ElementFinder = this.activeTabContent.element(by.css('.Hotels-Results-InlineTab')).element(by.css("div[class='map']"));
-    reviewsInReviewsTab: ElementFinder = this.activeTabContent.element(by.css('.Hotels-Results-InlineTab')).element(by.css('.topReviewGrid'));
-    ratesInRatesTab: ElementFinder= this.activeTabContent.element(by.css('.Hotels-Results-InlineTab')).element(by.css('div')).element(by.css('table'));
+    mapInMapTab: ElementFinder = this.activeTabContent.element(by.css("div[class='map']"));
+    reviewsInReviewsTab: ElementFinder = this.activeTabContent.element(by.css('.topReviewGrid'));
+    ratesInRatesTab: ElementFinder= this.activeTabContent.element(by.css('table'));
 
     getHotelsSearchResults(): ElementFinder {
         return this.hotelsSearchResults;

@@ -6,11 +6,10 @@ export default class HotelsFrontPageElements {
     hotelsOrigin: ElementFinder = element(by.css("div[id*='-fieldGridLocationCol']"));
     hotelsStartDate: ElementFinder = element(by.css("div[id*='-dateRangeInput-display-start-inner']"));
     hotelsEndDate: ElementFinder = element(by.css("div[id*='-dateRangeInput-display-end']"));
-    hotelsGuestField : ElementFinder = element(by.css("button[id*='-roomsGuestsDropdown-trigger']"))
-                                        .element(by.css('div')).element(by.css('div')).element(by.css('div')).element(by.css('div'));
+    hotelsGuestField : ElementFinder = element(by.css("span[id*='-roomsGuestsDropdown-trigger-display-text']"))
     hotelsOriginInput: ElementFinder = element(by.css("input[aria-label='Destination input']"));
     originDropdown: ElementFinder = element(by.css("div[id*='-location-smartbox-dropdown']"));
-    originFirstDropdownOption: ElementFinder = this.originDropdown.element(by.css('ul')).element(by.css('li'));
+    originFirstDropdownOption: ElementFinder = this.originDropdown.element(by.css('li'));
     searchHotelsBtn: ElementFinder = element(by.css("div[id*='-formGridButtonCol']"));
 
     getHotelsBtn (): ElementFinder {
@@ -25,8 +24,8 @@ export default class HotelsFrontPageElements {
     getHotelsEndDateField (): ElementFinder {
         return this.hotelsEndDate
     }
-    getHotelsGuestField (): ElementFinder {
-        return this.hotelsGuestField;
+    async getHotelsGuestField (): Promise<string> {
+        return await this.hotelsGuestField.getAttribute('aria-label');
     }
     getHotelsOriginInputField(): ElementFinder {
         return this.hotelsOriginInput;
