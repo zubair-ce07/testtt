@@ -1,7 +1,7 @@
 from rest_framework import views, viewsets, mixins, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-
+from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from .serializers import (UserSerializer, PostSerializer, CommentSerializer,
@@ -37,6 +37,17 @@ class FollowingViewSet(viewsets.ModelViewSet):
     serializer_class = FollowingSerializer
 
 
+class FeedAPIView(views.APIView):
+    serializer_class = PostSerializer
+
+    def get(self, request, user_id):
+        followees = [following.followee.id for following in Following.objects.filter(
+            follower_id=user_id)]
+        posts = Post.objects.filter(author__in=followees)
+        serializer = self.serializer_class(posts, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
 class RegistrationAPIView(views.APIView):
     permission_classes = [AllowAny]
     serializer_class = RegistrationSerializer
@@ -51,14 +62,15 @@ class RegistrationAPIView(views.APIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-# class LoginAPIView(views.APIView):
-#     permission_classes = [AllowAny]
-#     serializer_class = LoginSerializer
+class LoginAPIView(TokenObtainPairView):
+    serializer_class = LoginSerializer
+    #     permission_classes = [AllowAny]
+    #     serializer_class = LoginSerializer
 
-#     def post(self, request):
-#         user = request.data
+    #     def post(self, request):
+    #         user = request.data
 
-#         serializer = self.serializer_class(data=user)
-#         serializer.is_valid(raise_exception=True)
+    #         serializer = self.serializer_class(data=user)
+    #         serializer.is_valid(raise_exception=True)
 
-#         return Response(serializer.data, status=status.HTTP_200_OK)
+    #         return Response(serializer.data, status=status.HTTP_200_OK)

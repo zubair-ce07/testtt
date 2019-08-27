@@ -1,3 +1,5 @@
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 from django.contrib.auth import authenticate
 
@@ -26,7 +28,7 @@ class CommentSerializer(serializers.ModelSerializer):
 class FollowingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Following
-        fields = ['id', 'follower_id', 'followee_id']
+        fields = ['id', 'follower', 'followee']
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
@@ -46,30 +48,46 @@ class RegistrationSerializer(serializers.ModelSerializer):
         fields = ['email', 'first_name', 'last_name', 'password', 'token']
 
 
-class LoginSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-    password = serializers.CharField(max_length=128, write_only=True)
-    token = serializers.CharField(max_length=255, read_only=True)
+class LoginSerializer(TokenObtainPairSerializer):
+    default_error_messages = {
+        'no_active_account': _('The username and password you entered did not match our records. Please double-check and try again.')
+    }
 
-    def validate(self, data):
-        email = data.get('email', None)
-        password = data.get('password', None)
+    def validate(self, attrs):
+        data = super().validate(attrs)
 
-        if email is None:
-            raise serializers.ValidationError(
-                'An email address is required to log in.')
-        if password is None:
-            raise serializers.ValidationError(
-                'Password is required to log in.')
+        refresh = self.get_token(self.user)
 
-        user = authenticate(username=email, password=password)
+        data['refresh'] = str(refresh)
+        data['access'] = str(refresh.access_token)
+        data['user_id'] = self.user.id
 
-        if user is None:
-            raise serializers.ValidationError(
-                'A user with this email and password was not found.'
-            )
+        return data
 
-        return {
-            'email': user.email,
-            'token': user.token
-        }
+# class LoginSerializer(serializers.Serializer):
+#     email = serializers.EmailField()
+#     password = serializers.CharField(max_length=128, write_only=True)
+#     token = serializers.CharField(max_length=255, read_only=True)
+
+#     def validate(self, data):
+#         email = data.get('email', None)
+#         password = data.get('password', None)
+
+#         if email is None:
+#             raise serializers.ValidationError(
+#                 'An email address is required to log in.')
+#         if password is None:
+#             raise serializers.ValidationError(
+#                 'Password is required to log in.')
+
+#         user = authenticate(username=email, password=password)
+
+#         if user is None:
+#             raise serializers.ValidationError(
+#                 'A user with this email and password was not found.'
+#             )
+
+#         return {
+#             'email': user.email,
+#             'token': user.token
+#         }

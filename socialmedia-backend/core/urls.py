@@ -6,7 +6,7 @@ from django.urls import path, include
 from rest_framework import routers
 
 from .views import (UserViewSet, PostViewSet, CommentViewSet, FollowingViewSet,
-                    RegistrationAPIView)
+                    RegistrationAPIView, LoginAPIView, FeedAPIView)
 
 router = routers.DefaultRouter()
 router.register(r'users', UserViewSet)
@@ -18,7 +18,8 @@ app_name = 'core'
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('feed/<int:user_id>', FeedAPIView.as_view()),
     path('register', RegistrationAPIView.as_view()),
-    path('login', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('login', LoginAPIView.as_view(), name='token_obtain_pair'),
     path('login/refresh', TokenRefreshView.as_view(), name='token_refresh'),
 ]

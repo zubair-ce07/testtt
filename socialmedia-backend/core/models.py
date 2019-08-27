@@ -124,7 +124,7 @@ class Comment(models.Model):
 
 
 class Following(models.Model):
-    follower_id = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="follower_id")
-    followee_id = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="followee_id")
+    follower = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="follower")
+    followee = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="followee")
