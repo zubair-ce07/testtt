@@ -78,8 +78,8 @@ class SpeedoParser(Spider):
         return [Request(url=url, callback=self.parse_colour_requests) for url in urls]
 
     def get_size_requests(self, raw_product):
-        attrs = raw_product['product']['variationAttributes']
-        raw_sizes = next((a['values'] for a in attrs if a['attributeId'].lower() == 'size'), [])
+        attributes = raw_product['product']['variationAttributes']
+        raw_sizes = next((a['values'] for a in attributes if a['attributeId'].lower() == 'size'), [])
         return [Request(s['url'], callback=self.parse_skus) for s in raw_sizes]
 
     def get_name(self, response):
@@ -115,28 +115,25 @@ class SpeedoParser(Spider):
     def get_sku(self, response):
         raw_product = json.loads(response.text)
         raw_colour, raw_size = self.get_raw_colour_and_size(raw_product)
-
         sku = self.get_pricing_details(raw_product)
+
         if raw_colour:
             sku['colour'] = raw_colour
+
         sku['size'] = raw_size or 'One Size'
         sku['sku_id'] = f'{sku.get("colour", "")}-{sku["size"]}'
         sku['out_of_stock'] = self.get_out_of_stock(raw_product)
 
         return sku
 
-    def get_raw_attribute(self, raw_product, attribute):
-        attrs = raw_product['product']['variationAttributes']
-        return next((a['values'] for a in attrs if a['attributeId'].lower() == attribute), [])
-
     def get_raw_colour_and_size(self, raw_product):
         raw_colour = raw_size = ''
 
-        for attrs in raw_product['product']['variationAttributes']:
-            if attrs['attributeId'].lower() in ('color', 'colour'):
-                raw_colour = attrs['displayValue']
-            if attrs['attributeId'].lower() == 'size':
-                raw_size = attrs['displayValue']
+        for attribute in raw_product['product']['variationAttributes']:
+            if attribute['attributeId'].lower() in ('color', 'colour'):
+                raw_colour = attribute['displayValue']
+            if attribute['attributeId'].lower() == 'size':
+                raw_size = attribute['displayValue']
 
         return raw_colour, raw_size
 
@@ -151,8 +148,7 @@ class SpeedoParser(Spider):
         return pricing
 
     def get_out_of_stock(self, raw_product):
-        messages = raw_product['product']['availability']['messages']
-        return not bool(re.findall(r'>(.*?)</div>', messages[0]))
+        return 'In Stock' not in raw_product['product']['availability']['messages'][0]
 
     def sanitize_list(self, inputs):
         return [i.strip() for i in inputs if i and i.strip()]
@@ -174,7 +170,8 @@ class SpeedoCrawler(CrawlSpider):
     ]
 
     custom_settings = {
-        'USER_AGENT': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36'
+        'USER_AGENT': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 '
+                      '(KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36'
     }
 
     cookie = {
