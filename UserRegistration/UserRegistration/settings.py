@@ -20,7 +20,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '=0*iou9p@b3r_ocefj(3t#t*9yxmfa^maz2k*s7@j6fh#0!^78'
+SECRET_KEY = 'cj#kz_d@g_b#9-_x_&%ve4%a8j_w+cgvq(k75cdp^06%q)24a@'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
 
-    'registration'
+    'products',
+    'users',
 ]
 
 REST_FRAMEWORK = {
@@ -51,6 +52,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated', )
 }
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -132,7 +134,5 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+AUTH_USER_MODEL = 'users.User'
 
-AUTH_USER_MODEL = 'registration.User'
-#
-# LOGIN_REDIRECT_URL = '/registration/home'

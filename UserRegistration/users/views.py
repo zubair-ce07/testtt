@@ -9,12 +9,12 @@ from .serializers import UserFormSerializer
 
 
 def index(request):
-    return render(request, 'registration/base.html')
+    return render(request, 'users/base.html')
 
 
 @login_required
 def home(request):
-    return render(request, 'registration/home.html')
+    return render(request, 'users/home.html')
 
 
 def signup(request):
@@ -27,11 +27,11 @@ def signup(request):
             raw_password = user.validated_data.get('password_')
             user = authenticate(email=email, password=raw_password)
             token = Token.objects.get_or_create(user=user)[0]
-            return render(request, 'registration/home.html', {'token': token.key})
+            return render(request, 'users/home.html', {'token': token.key})
 
     else:
         user_creation_form = UserCreationForm()
-    return render(request, 'registration/signup.html', {'form': user_creation_form})
+    return render(request, 'users/signup.html', {'form': user_creation_form})
 
 
 def login(request):
@@ -45,6 +45,6 @@ def login(request):
                 return Response('Invalid Credentials')
 
             token = Token.objects.get_or_create(user=user)[0]
-            return render(request, 'registration/home.html', {'token': token.key})
-    return render(request, 'registration/login.html', {'form': UserLoginForm()})
+            return render(request, 'users/home.html', {'token': token.key})
+    return render(request, 'users/login.html', {'form': UserLoginForm()})
 

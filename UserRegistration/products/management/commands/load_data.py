@@ -2,14 +2,14 @@ import json
 
 from django.core.management.base import BaseCommand
 
-from registration.models import Brand, Category, Product, ProductArticle, ProductImage
+from products.models import Brand, Category, Product, ProductArticle, ProductImage
 
 
 class Command(BaseCommand):
     help = "load data to models."
 
     def save_product(self):
-        with open('registration/static/product.json', 'r') as product_file:
+        with open('products/static/product.json', 'r') as product_file:
             products = json.load(product_file)
 
         for product in products:

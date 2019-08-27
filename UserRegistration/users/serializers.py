@@ -3,7 +3,7 @@ from drf_braces.serializers.form_serializer import FormSerializer
 from rest_framework import serializers
 
 from .forms import UserCreationForm
-from .models import User, Product, ProductArticle, ProductImage
+from .models import User
 
 
 class UserFormSerializer(FormSerializer):
@@ -27,25 +27,4 @@ class UserFormSerializer(FormSerializer):
             raise ValidationError("passwords don't match")
 
         return data
-
-
-class ArticleSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ProductArticle
-        fields = ['color', 'size', 'price']
-
-
-class ImageSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ProductImage
-        fields = ['url']
-
-
-class ProductSerializer(serializers.ModelSerializer):
-    articles = ArticleSerializer(many=True)
-    images = ImageSerializer(many=True)
-
-    class Meta:
-        model = Product
-        fields = ['name', 'description', 'gender', 'category', 'brand', 'images', 'articles']
 
