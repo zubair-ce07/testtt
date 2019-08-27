@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import { Field, Form } from "react-final-form";
 import { connect } from "react-redux";
-import { registerUser } from "../../actions/user.actions";
+import { registerUser } from "../../actions/auth.actions";
 
 import "./Form.sass";
 import history from "../../history";

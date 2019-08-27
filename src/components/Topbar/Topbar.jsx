@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { connect } from "react-redux";
 
 import history from "../../history";
-import { logout } from "../../actions/user.actions";
+import { logout } from "../../actions/auth.actions";
 
 import "./Topbar.sass";
 
