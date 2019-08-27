@@ -19,6 +19,6 @@ urlpatterns = [
     path("tasks/task/", views.create_task, name="create_task"),
     path("tasks/<int:pk>/edit/", views.edit_task, name="edit_task"),
     path("tasks/<int:pk>/delete/", views.delete_task, name="delete_task"),
-    path('register/', views.register, name="register"),
+    path('register/', views.register, name="register" ),
     path('api/', include(router.urls))
 ]
