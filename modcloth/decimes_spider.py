@@ -1,117 +1,92 @@
+import json
 import re
+from w3lib.url import url_query_cleaner
 
 from scrapy.linkextractors import LinkExtractor
-from scrapy.spiders import Rule
+from scrapy.spiders import Request, Rule
 
-from skuscraper.parsers.genders import Gender
-from .base import BaseParseSpider, BaseCrawlSpider, clean, soupify
+from .base import BaseParseSpider, BaseCrawlSpider, clean
 
 
 class Mixin:
-    market = 'ES'
-    retailer = 'decimas-es'
-    default_brand = 'Decimas'
+    market = 'US'
+    gender = 'women'
+    default_brand = 'ModCloth'
+    retailer = 'modcloth-us'
 
-    allowed_domains = ['decimas.es']
-    start_urls = ['https://www.decimas.es/']
-
-    restrict_brand_map = True
-    spider_brand_map = {
-        'nike': ['nike'],
-        'adidas': ['adidas'],
-        'asics': ['asics'],
-        'reebok': ['reebok'],
-        'puma': ['puma'],
-        'head': ['head'],
-        '47': ['47 brand', '47'],
-        'tenth': ['tenth'],
-        'new balance': ['new balance'],
-        'ipanema': ['ipanema'],
-        'polinesia': ['polinesia'],
-        'PLNS': ['plns'],
-        'rider': ['rider'],
-        'arena': ['arena'],
-        'joma': ['joma']
-    }
+    allowed_domains = ['modcloth.com']
+    start_urls = ['https://www.modcloth.com/']
 
 
-class DecimesParseSpider(BaseParseSpider, Mixin):
+class ModClothParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
-    raw_description_css = '[itemprop="description"] ::text'
-    sku_re = r'"jsonConfig"\s*:\s*(.*),'
+    description_css = '.product-info .tab-content:last-child ::text'
+    care_css = '.product-main-attributes .value::text'
+    brand_css = '.mobile-only .product-brand a::text'
+    price_css = '.product-price ::text'
 
     def parse(self, response):
-        product_id = self.product_id(response)  # defined below
+        product_id = self.product_id(response)
 
-        # returns a new item, with lang, gender, outlet, skuid and also checks for duplication
         garment = self.new_unique_garment(product_id)
-
         if not garment:
             return
 
-        # extracts care, description, brand, category, requires a method product_name to extract name
         self.boilerplate_normal(garment, response)
-        garment['gender'] = self.product_gender(response)
-        garment['image_urls'] = self.image_urls(response)
+        garment['gender'] = Mixin.gender
         garment['skus'] = self.skus(response)
+        garment['meta'] = {
+            'requests_queue': self.image_requests(response)
+        }
 
-        return garment
+        return self.next_request_or_garment(garment)
+
+    def parse_image_urls(self, response):
+        garment = response.meta['garment']
+        urls = clean(response.css('.thumb img::attr(src)').getall())
+        garment['image_urls'] = garment.get('image_urls', []) + [url_query_cleaner(u) for u in urls]
+
+        return self.next_request_or_garment(garment)
 
     def product_id(self, response):
-        return response.css('script:contains(productID)').re_first('productID":\s*"(.*?)"')
-
-    def raw_name(self, response):
-        return clean(response.css('.name h1 ::text'))[0]
+        return response.css('input[name="pid"]::attr(value)').get()
 
     def product_name(self, response):
-        return self.remove_brand_from_text(self.product_brand(response), self.raw_name(response))
-
-    def brand_soup(self, response):
-        return self.raw_name(response)
+        return response.css('.product-name::text').get()
 
     def product_category(self, response):
-        return clean(response.css('.breadcrumbs .item:not(.home):not(.product) ::text'))
-
-    def product_gender(self, response):
-        trail = [t for t, _ in response.meta.get('trail') or []] or [response.url]
-        soup = soupify(self.product_description(response) + trail)
-        name_l = self.raw_name(response)
-        return self.gender_lookup(name_l) or self.gender_lookup(soup) or Gender.ADULTS.value
-
-    def image_urls(self, response):
-        product_data = self.magento_product_data(response, config='ezSwatchRenderer', regex=self.sku_re)
-        return [re.sub(r'_\d+', '', img['full']) for images in product_data['images'].values() for img in images]
+        return clean(response.css('.breadcrumb a::text').getall())
 
     def skus(self, response):
-        product_data = self.magento_product_data(response, config='jsonConfig', regex=self.sku_re)
-
+        raw_skus = clean(response.css('script:contains("mc_global.product")::text'))[0]
+        raw_skus = json.loads(re.findall(r'\[.*\]', raw_skus)[0])
+        pricing = self.product_pricing_common(response)
         skus = {}
-        for sku_id, raw_sku in self.magento_product_map(product_data).items():
-            money_strs = [
-                product_data['optionPrices'][sku_id]['finalPrice']['amount'],
-                product_data['optionPrices'][sku_id]['oldPrice']['amount'],
-                product_data['currencyFormat']
-            ]
 
-            sku = self.product_pricing_common(None, money_strs=money_strs)
-            sku['size'] = clean(raw_sku[0]['label'])
-            sku['colour'] = re.sub('(\d+\s)', '', clean(raw_sku[1]['label']))
-
-            skus[sku_id] = sku
+        for raw_sku in raw_skus:
+            colour = self.detect_colour(raw_sku['url'])
+            for raw_size in raw_sku['product_variants']:
+                sku = pricing.copy()
+                sku['colour'] = colour
+                sku['size'] = raw_size['size']
+                sku['out_of_stock'] = not(raw_size['units_available']) or raw_sku['archived']
+                skus[raw_size['upc']] = sku
 
         return skus
 
+    def image_requests(self, response):
+        urls = response.css('.swatches.color a::attr(href)').getall()
+        return [Request(url=url, callback=self.parse_image_urls) for url in urls]
 
-class DecimesCrawlSpider(BaseCrawlSpider, Mixin):
+
+class ModClothCrawlSpider(BaseCrawlSpider, Mixin):
     name = Mixin.retailer + '-crawl'
-    parse_spider = DecimesParseSpider()
+    parse_spider = ModClothParseSpider()
 
-    listings_css = ['.mobile-menu-body', '.pages']
-    products_css = ['.product-item-link']
-
-    deny = ['blog', 'campana']
+    listings_css = ['.menu-category', '.page-next']
+    products_css = ['.thumb-link']
 
     rules = (
-        Rule(LinkExtractor(restrict_css=listings_css, deny=deny), callback='parse'),
+        Rule(LinkExtractor(restrict_css=listings_css), callback='parse'),
         Rule(LinkExtractor(restrict_css=products_css), callback='parse_item'),
     )
