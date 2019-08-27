@@ -1,0 +1,12 @@
+{% extends "user_profile/base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+<div class="media-body">
+    <h2 class="account-heading">Update Profile</h2>
+    <a class="btn btn-outline-danger" href="{% url 'logout' %}">logout</a>
+</div>
+<form method="post">{% csrf_token %}
+    {{ form|crispy }}
+    <input type="submit" value="Update">
+</form>
+{% endblock content %}
