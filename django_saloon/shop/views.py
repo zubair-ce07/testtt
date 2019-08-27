@@ -12,7 +12,7 @@ from .forms import ShopUpdateForm
 from .models import Saloon, TimeSlot, Reservation
 
 
-class Register(View):
+class UserRegisterView(View):
     """Render and save shop user
 
     This method renders the user registration form and also save it's data
@@ -20,10 +20,7 @@ class Register(View):
     """
     @staticmethod
     def post(request):
-        """Register POST method.
-
-        This method will render the registration from
-        """
+        """UserRegisterView POST method."""
         user_form = UserRegisterForm(request.POST)
 
         if user_form.is_valid():
@@ -36,15 +33,12 @@ class Register(View):
 
     @staticmethod
     def get(request):
-        """Register GET method.
-
-        this method will save the user data when form is submitted
-        """
+        """UserRegisterView GET method."""
         user_form = UserRegisterForm()
         return render(request, 'customer/register.html', {'user_form': user_form, 'form_title': 'Sign Up to add your saloon'})
 
 
-class Profile(LoginRequiredMixin, UserPassesTestMixin, View):
+class ProfileView(LoginRequiredMixin, UserPassesTestMixin, View):
     """Render and Save Profile Form.
 
     This method renders the user and shop update form and also save it's data
@@ -182,9 +176,9 @@ class ReservationsListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         """POST method for shop ReservationsListView.
         This method will delete reservation.
         """
-        res_id = request.POST.get("res_id", " ")
+        reservation_id = request.POST.get("reservation_id", " ")
         reason = request.POST.get("reason", " ")
-        Reservation.objects.get(id=res_id).delete()
+        Reservation.objects.get(id=reservation_id).delete()
         messages.success(
             request, f'Reservation Cancelled!')
         return redirect('shop_reservations')

@@ -12,7 +12,7 @@ from .models import Customer
 from shop.models import Reservation
 
 
-class Register(View):
+class UserRegisterView(View):
     """Render and save customer user.
 
     This method renders the user registration form and also save it's data
@@ -20,10 +20,7 @@ class Register(View):
     """
     @staticmethod
     def post(request):
-        """Register POST method.
-
-        This method will render the registration from
-        """
+        """UserRegisterView POST method."""
         user_form = UserRegisterForm(request.POST)
 
         if user_form.is_valid():
@@ -36,15 +33,12 @@ class Register(View):
 
     @staticmethod
     def get(request):
-        """Register GET method.
-
-        this method will save the user data when form is submitted
-        """
+        """UserRegisterView GET method."""
         user_form = UserRegisterForm()
         return render(request, 'customer/register.html', {'user_form': user_form, 'form_title': 'Sign Up Today'})
 
 
-class Profile(LoginRequiredMixin, UserPassesTestMixin, View):
+class ProfileView(LoginRequiredMixin, UserPassesTestMixin, View):
     """Render and Save Profile Form.
 
     This method renders the user and customer update form and also save it's data
@@ -82,8 +76,7 @@ class Profile(LoginRequiredMixin, UserPassesTestMixin, View):
 
 
 class LogoutView(View):
-    """Log out User view.
-    """
+    """Log out User view."""
 
     @staticmethod
     def get(request):
@@ -111,9 +104,9 @@ class ReservationsListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         """POST method for Reservation View.
         This method will delete a reservation shich id is send through post request from template.
         """
-        res_id = request.POST.get("res_id", " ")
+        reservation_id = request.POST.get("reservation_id", " ")
         reason = request.POST.get("reason", " ")
-        Reservation.objects.get(id=res_id).delete()
+        Reservation.objects.get(id=reservation_id).delete()
         messages.success(
             request, f'Reservation Cancelled!')
         return redirect('customer_reservations')

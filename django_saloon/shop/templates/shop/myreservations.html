@@ -68,7 +68,7 @@
                     {% csrf_token %}
                     {{ form }}
                     <div class="form-group">
-                        <input type="hidden" name="res_id" id="res_id">
+                        <input type="hidden" name="reservation_id" id="reservation_id">
                         <label for="start_date">Reason for cancelation</label>
                         <textarea class="form-control rounded-0" id="reason" name="reason" rows="3" required></textarea>
                         <small id="reason_help" class="form-text text-muted">Reason of cancelation of reservation for
@@ -82,7 +82,7 @@
 
     <script>
         set_time_slot = (id) => {
-            document.getElementById('res_id').value = id
+            document.getElementById('reservation_id').value = id
         }
     </script>
 

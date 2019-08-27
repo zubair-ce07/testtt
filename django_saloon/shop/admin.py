@@ -1,3 +1,4 @@
+"""shop admin module"""
 from django.contrib import admin
 from .models import Saloon, TimeSlot, Reservation
 

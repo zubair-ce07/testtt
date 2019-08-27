@@ -9,6 +9,7 @@ class Customer(models.Model):
     phone_no = models.IntegerField(blank=True, null=True)
 
     def __str__(self):
+        """customer model str method"""
         return f'{self.user.username} Profile'
 
     def _get_full_name(self):
