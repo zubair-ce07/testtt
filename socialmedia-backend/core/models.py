@@ -94,18 +94,20 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.full_name
 
-    @property
-    def token(self):
-        return self._generate_jwt_token()
+#   NOTE: Code below manages creation of tokens itself.
+#         Using library for this. This was done for practice.
 
-    def _generate_jwt_token(self):
-        expiry_date = datetime.now() + timedelta(hours=1)
-        token = jwt.encode({
-            'id': self.pk,
-            'exp': int(expiry_date.strftime('%s'))
-        }, settings.SECRET_KEY, algorithm='HS256')
+    # @property
+    # def token(self):
+    #     return self._generate_jwt_token()
 
-        return token.decode('utf-8')
+    # def _generate_jwt_token(self):
+    #     expiry_date = datetime.now() + timedelta(hours=1)
+    #     token = jwt.encode({
+    #         'id': self.pk,
+    #         'exp': int(expiry_date.strftime('%s'))
+    #     }, settings.SECRET_KEY, algorithm='HS256')
+    #     return token.decode('utf-8')
 
 
 class Post(models.Model):
