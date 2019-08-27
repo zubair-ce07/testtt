@@ -30,19 +30,6 @@ class SpeedoParser(Spider):
         ('toddlers', 'unisex-kids'),
     ]
 
-    # TODO: Delete till start requests and add WIP if necessary
-    custom_settings = {
-        'USER_AGENT': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36'
-    }
-
-    cookie = {
-        'KP_UID': '4ed37e67-487e-f2fc-eef0-9a1e4e3b3da6'
-    }
-
-    def start_requests(self):
-        yield Request(url='https://speedo.com.au/product/mariner-supreme/8_11317B972CB.html',
-                      cookies=self.cookie)
-
     def parse(self, response):
         item = SpeedoItem()
         item['skus'] = []
@@ -66,10 +53,7 @@ class SpeedoParser(Spider):
         raw_product = json.loads(response.text)
         item = response.meta['item']
         item['image_urls'].extend(self.get_image_urls(raw_product))
-
-        raw_sizes = self.get_raw_attribute(raw_product, attribute='size')
-        requests = [Request(s['url'], callback=self.parse_skus) for s in raw_sizes]
-        item['requests'].extend(requests)
+        item['requests'].extend(self.get_size_requests(raw_product))
 
         return self.next_request_or_item(item)
 
@@ -92,6 +76,11 @@ class SpeedoParser(Spider):
     def get_colour_requests(self, response):
         urls = response.css('a.color-attribute::attr(href)').getall()
         return [Request(url=url, callback=self.parse_colour_requests) for url in urls]
+
+    def get_size_requests(self, raw_product):
+        attrs = raw_product['product']['variationAttributes']
+        raw_sizes = next((a['values'] for a in attrs if a['attributeId'].lower() == 'size'), [])
+        return [Request(s['url'], callback=self.parse_skus) for s in raw_sizes]
 
     def get_name(self, response):
         return response.css('.product-name::text').get()
@@ -189,7 +178,7 @@ class SpeedoCrawler(CrawlSpider):
     }
 
     cookie = {
-        'KP_UID': '4ed37e67-487e-f2fc-eef0-9a1e4e3b3da6'
+        'KP_UID': 'ac4118db-cae9-6512-6cba-df08719614e9'
     }
 
     product_css = '.product-grid'
