@@ -13,10 +13,11 @@ class Saloon(models.Model):
     address = models.TextField(blank=True, null=True)
 
     def __str__(self):
+        """str method for Saloon model"""
         return f'{self.user.username} Saloon'
 
     def _get_user_full_name(self):
-        # Returns the person's full name.
+        """prpety method for Saloon model"""
         return '%s %s' % (self.user.first_name, self.user.last_name)
 
     user_full_name = property(_get_user_full_name)
@@ -28,6 +29,7 @@ class TimeSlot(models.Model):
     time = models.DateTimeField()
 
     def __str__(self):
+        """str method for TimeSlot model"""
         return f'{self.time.strftime("%Y-%m-%d %H:%M")} - { self.saloon }'
 
 
@@ -37,4 +39,5 @@ class Reservation(models.Model):
     time_slot = models.OneToOneField(TimeSlot, on_delete=models.CASCADE)
 
     def __str__(self):
+        """str method for Reservation model"""
         return f'{self.customer.user.username} - { self.time_slot.saloon }'
