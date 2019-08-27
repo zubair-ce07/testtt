@@ -1,12 +1,10 @@
+"""shop views model"""
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from datetime import datetime, timedelta
 from django.views import View
-from django.utils.decorators import method_decorator
 from django.views.generic import ListView
-from django.conf import settings
 
 
 from customer.forms import UserRegisterForm, UserUpdateForm
@@ -15,7 +13,7 @@ from .models import Saloon, TimeSlot, Reservation
 
 
 class Register(View):
-    """Render and save user to profile
+    """Render and save shop user
 
     This method renders the user registration form and also save it's data
     when form is submitted
@@ -49,7 +47,7 @@ class Register(View):
 class Profile(LoginRequiredMixin, UserPassesTestMixin, View):
     """Render and Save Profile Form.
 
-    This method renders the profile form and also save it's data
+    This method renders the user and shop update form and also save it's data
     when form is submitted
     """
 
@@ -84,6 +82,7 @@ class Profile(LoginRequiredMixin, UserPassesTestMixin, View):
 
 
 class SaloonListView(ListView):
+    """list saloons"""
     model = Saloon
     template_name = 'shop/saloons.html'  # <app>/<model>_<viewtype>.html
     context_object_name = 'saloons'
@@ -92,6 +91,7 @@ class SaloonListView(ListView):
 
 
 class MyShopListView(LoginRequiredMixin, UserPassesTestMixin, ListView, View):
+    """lists timeslots of a user saloon"""
     model = TimeSlot
     template_name = 'shop/mysaloon.html'  # <app>/<model>_<viewtype>.html
     context_object_name = 'time_slots'
@@ -99,11 +99,13 @@ class MyShopListView(LoginRequiredMixin, UserPassesTestMixin, ListView, View):
     paginate_by = 12
 
     def get_queryset(self):
+        """filtering TimeSlot object for user saloon"""
         return TimeSlot.objects.filter(saloon=self.request.user.saloon).order_by('time')
 
     def post(self, request):
         """POST method for Profile View.
-        This method will save profile data when profile form is submitted.
+        This method will save profile data when profile form is submitted if
+        form is valid and then create timeslot object in db for given schedule.
         """
         start_time = request.POST.get("start_time", " ")
         # minutes = request.POST.get("minutes", " ")
@@ -131,23 +133,26 @@ class MyShopListView(LoginRequiredMixin, UserPassesTestMixin, ListView, View):
         return redirect('my_shop')
 
     def test_func(self):
+        """checks if user is saloon user"""
         return hasattr(self.request.user, 'saloon')
 
 
 class SaloonSlotListView(LoginRequiredMixin, UserPassesTestMixin, ListView, View):
+    """Lists a saloon time slots"""
     model = TimeSlot
     template_name = 'shop/shop_slot_list.html'  # <app>/<model>_<viewtype>.html
     context_object_name = 'time_slots'
     paginate_by = 12
 
     def get_queryset(self):
+        """filtering timeslots for the given saloon"""
         saloon = get_object_or_404(
             Saloon, shop_name=self.kwargs.get('shop_name'))
         return TimeSlot.objects.filter(saloon=saloon).order_by('time')
 
     def post(self, request, shop_name):
-        """POST method for Profile View.
-        This method will save profile data when profile form is submitted.
+        """POST method for SaloonSlotListView View.
+        This method will save create a reservation object and save it to db.
         """
         slot_id = request.POST.get("slot_id", " ")
         slot = TimeSlot.objects.get(id=slot_id)
@@ -158,21 +163,24 @@ class SaloonSlotListView(LoginRequiredMixin, UserPassesTestMixin, ListView, View
         return redirect('shop_list')
 
     def test_func(self):
+        """checks if user is customer user"""
         return hasattr(self.request.user, 'customer')
 
 
 class ReservationsListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+    """Lists a shop reserved slots"""
     model = Reservation
     template_name = 'shop/myreservations.html'  # <app>/<model>_<viewtype>.html
     context_object_name = 'reservations'
     paginate_by = 8
 
     def get_queryset(self):
+        """filtering a shop reserved slots"""
         return Reservation.objects.filter(time_slot__saloon=self.request.user.saloon)
 
     def post(self, request):
-        """POST method for Profile View.
-        This method will save profile data when profile form is submitted.
+        """POST method for shop ReservationsListView.
+        This method will delete reservation.
         """
         res_id = request.POST.get("res_id", " ")
         reason = request.POST.get("reason", " ")
@@ -182,4 +190,5 @@ class ReservationsListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         return redirect('shop_reservations')
 
     def test_func(self):
+        """checks if user is customer user"""
         return hasattr(self.request.user, 'saloon')

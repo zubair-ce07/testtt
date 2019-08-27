@@ -1,3 +1,4 @@
+"""customer forms module."""
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
@@ -6,6 +7,7 @@ from .models import Customer
 
 
 class UserRegisterForm(UserCreationForm):
+    """user creation form."""
     email = forms.EmailField()
 
     class Meta:
@@ -15,6 +17,7 @@ class UserRegisterForm(UserCreationForm):
 
 
 class UserUpdateForm(forms.ModelForm):
+    """user update form."""
     email = forms.EmailField()
 
     class Meta:
@@ -30,7 +33,7 @@ class UserUpdateForm(forms.ModelForm):
 
 
 class CustomerUpdateForm(forms.ModelForm):
-
+    """customer update from."""
     class Meta:
         model = Customer
         fields = ['phone_no']

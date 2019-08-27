@@ -1,8 +1,8 @@
+"""Customer app view module.
+"""
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
 from django.views import View
-from django.utils.decorators import method_decorator
 from django.contrib.auth import logout as auth_logout
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic import ListView
@@ -13,7 +13,7 @@ from shop.models import Reservation
 
 
 class Register(View):
-    """Render and save user to profile
+    """Render and save customer user.
 
     This method renders the user registration form and also save it's data
     when form is submitted
@@ -47,7 +47,7 @@ class Register(View):
 class Profile(LoginRequiredMixin, UserPassesTestMixin, View):
     """Render and Save Profile Form.
 
-    This method renders the profile form and also save it's data
+    This method renders the user and customer update form and also save it's data
     when form is submitted
     """
 
@@ -82,33 +82,34 @@ class Profile(LoginRequiredMixin, UserPassesTestMixin, View):
 
 
 class LogoutView(View):
-    """Log out User.
-
-    This logout user View
+    """Log out User view.
     """
 
     @staticmethod
     def get(request):
-        """Log out User.
-
-        This method logout user and redirect it to login page
+        """Log out User and clear it's session and cookies.
         """
         auth_logout(request)
         return redirect('login')
 
 
 class ReservationsListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+    """customer reservation list view.
+
+    this method list all the customer reservations.
+    """
     model = Reservation
     template_name = 'customer/myreservations.html'  # <app>/<model>_<viewtype>.html
     context_object_name = 'reservations'
     paginate_by = 8
 
     def get_queryset(self):
+        """customer list querry set filtering reservation for that customer only"""
         return Reservation.objects.filter(customer=self.request.user.customer)
 
     def post(self, request):
-        """POST method for Profile View.
-        This method will save profile data when profile form is submitted.
+        """POST method for Reservation View.
+        This method will delete a reservation shich id is send through post request from template.
         """
         res_id = request.POST.get("res_id", " ")
         reason = request.POST.get("reason", " ")
@@ -118,4 +119,5 @@ class ReservationsListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         return redirect('customer_reservations')
 
     def test_func(self):
+        """only customer can access this view"""
         return hasattr(self.request.user, 'customer')

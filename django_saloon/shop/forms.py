@@ -1,9 +1,11 @@
+"""shop forms module."""
 from django import forms
 
 from .models import Saloon
 
 
 class ShopUpdateForm(forms.ModelForm):
+    """shop update form."""
     class Meta:
         model = Saloon
         fields = ['shop_name', 'phone_no', 'address']
