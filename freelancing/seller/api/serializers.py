@@ -104,6 +104,8 @@ class OfferSerializer(serializers.ModelSerializer):
             'offer_amount',
             'delivery_time',
             'revisions',
+            'created_at',
+            'status',
             'gig',
             'buyer_request'
         )

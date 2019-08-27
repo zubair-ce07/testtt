@@ -51,6 +51,9 @@ class Offers(models.Model):
     delivery_time = models.IntegerField()
     revisions = models.IntegerField()
     status = models.TextField(max_length=20)
+    # FIXME: removed auto_now_add for testing purpose. Add it when done testing.
+    created_at = models.DateTimeField()
 
     class Meta:
         unique_together = (('gig', 'buyer_request'),)
+        verbose_name_plural = "Offers"
