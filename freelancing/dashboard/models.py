@@ -50,6 +50,7 @@ class Offers(models.Model):
     offer_amount = models.IntegerField()
     delivery_time = models.IntegerField()
     revisions = models.IntegerField()
+    status = models.TextField(max_length=20)
 
     class Meta:
         unique_together = (('gig', 'buyer_request'),)
