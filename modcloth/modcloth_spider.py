@@ -5,7 +5,7 @@ from w3lib.url import url_query_cleaner
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Request, Rule
 
-from .base import BaseParseSpider, BaseCrawlSpider, clean
+from .base import BaseCrawlSpider, BaseParseSpider, clean
 
 
 class Mixin:
@@ -43,19 +43,19 @@ class ModClothParseSpider(BaseParseSpider, Mixin):
 
     def parse_image_urls(self, response):
         garment = response.meta['garment']
-        urls = clean(response.css('.thumb img::attr(src)').getall())
+        urls = clean(response.css('.thumb img::attr(src)'))
         garment['image_urls'] = garment.get('image_urls', []) + [url_query_cleaner(u) for u in urls]
 
         return self.next_request_or_garment(garment)
 
     def product_id(self, response):
-        return response.css('input[name="pid"]::attr(value)').get()
+        return clean(response.css('input[name="pid"]::attr(value)'))[0]
 
     def product_name(self, response):
-        return response.css('.product-name::text').get()
+        return clean(response.css('.product-name::text'))[0]
 
     def product_category(self, response):
-        return clean(response.css('.breadcrumb a::text').getall())
+        return clean(response.css('.breadcrumb-element::text'))
 
     def skus(self, response):
         raw_skus = clean(response.css('script:contains("mc_global.product")::text'))[0]
@@ -75,7 +75,7 @@ class ModClothParseSpider(BaseParseSpider, Mixin):
         return skus
 
     def image_requests(self, response):
-        urls = response.css('.swatches.color a::attr(href)').getall()
+        urls = clean(response.css('.swatches.color a::attr(href)'))
         return [Request(url=url, callback=self.parse_image_urls) for url in urls]
 
 
