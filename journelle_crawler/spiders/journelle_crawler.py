@@ -68,31 +68,42 @@ class JournelleCrawler(CrawlSpider):
         product_information = json.loads(product_information)
 
         product['retailer_sku'] = self.extract_retailer_sku(product_information=product_information)
-        product['gender'] = 'Female'
-        product['category'] = self.extract_category(product_information=product_information)
-        product['brand'] = self.extract_brand(product_information=product_information)
-        product['url'] = response.url
-        product['date'] = self.extract_date(response=response)
-        product['currency'] = self.currency
-        product['market'] = self.market
-        product['retailer'] = self.retailer
-        product['url_original'] = response.url
-        product['name'] = self.extract_name(product_information=product_information)
-        product['description'] = self.extract_description(product_information=product_information)
-        product['care'] = self.extract_care(product_information=product_information)
-        product['image_urls'] = self.extract_image_urls(product_information=product_information)
-        product['price'] = self.extract_price(product_information=product_information)
-        product['skus'] = self.extract_skus(product_information=product_information)
-        product['spider_name'] = self.name
-        product['crawl_start_time'] = self.extract_crawl_start_time()
-        #
-        yield product
+        if product['retailer_sku'] != '':
+            product['gender'] = 'Female'
+            product['category'] = self.extract_category(product_information=product_information)
+            product['brand'] = self.extract_brand(product_information=product_information)
+            product['url'] = response.url
+            product['date'] = self.extract_date(response=response)
+            product['currency'] = self.currency
+            product['market'] = self.market
+            product['retailer'] = self.retailer
+            product['url_original'] = response.url
+            product['name'] = self.extract_name(product_information=product_information)
+            product['description'] = self.extract_description(product_information=product_information)
+            product['care'] = self.extract_care(product_information=product_information)
+            product['image_urls'] = self.extract_image_urls(product_information=product_information)
+            product['price'] = self.extract_price(product_information=product_information)
+            product['skus'] = self.extract_skus(product_information=product_information)
+            product['spider_name'] = self.name
+            product['crawl_start_time'] = self.extract_crawl_start_time()
+
+            yield product
 
     def extract_retailer_sku(self, product_information):
         return product_information[0]['sku']
 
+    def extract_category(self, product_information):
+        return product_information[0]['type']
+
     def extract_brand(self, product_information):
         return product_information[0]['vendor']
+
+    def extract_date(self, response):
+        date = response.headers["Date"].decode('utf-8')
+        return datetime.strptime(date, '%a, %d %b %Y %H:%M:%S GMT').strftime('%Y-%m-%dT%H:%M:%S.%f')
+
+    def extract_name(self, product_information):
+        return product_information[0]['title']
 
     def extract_description(self, product_information):
         description = HtmlResponse(url='example.com', body=product_information[0]['description'], encoding='utf-8')
@@ -102,22 +113,15 @@ class JournelleCrawler(CrawlSpider):
         care = HtmlResponse(url='example.com', body=product_information[0]['details'], encoding='utf-8')
         return care.css('*::text').getall()
 
-    def extract_category(self, product_information):
-        return product_information[0]['type']
-
-    def extract_date(self, response):
-        date = response.headers["Date"].decode('utf-8')
-        return datetime.strptime(date, '%a, %d %b %Y %H:%M:%S GMT').strftime('%Y-%m-%dT%H:%M:%S.%f')
-
-    def extract_name(self, product_information):
-        return product_information[0]['title']
-
     def extract_image_urls(self, product_information):
         image_urls = []
         for product_color_information in product_information:
             for image in product_color_information['images']:
                 image_urls.append(image['regular'])
         return image_urls
+
+    def extract_price(self, product_information):
+        return product_information[0]['price']
 
     def extract_skus(self, product_information):
         skus = {}
@@ -130,9 +134,6 @@ class JournelleCrawler(CrawlSpider):
                 sku['out_of_stock'] = variant['quantity'] == 0
                 skus[variant['variantId']] = sku
         return skus
-
-    def extract_price(self, product_information):
-        return product_information[0]['price']
 
     def extract_crawl_start_time(self):
         return self.crawler.stats._stats['start_time'].strftime('%Y-%m-%dT%H:%M:%S.%f')

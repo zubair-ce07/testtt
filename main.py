@@ -2,7 +2,7 @@ from scrapy import cmdline
 
 
 def main():
-    cmdline.execute("scrapy crawl journelle -o products.json".split())
+    cmdline.execute("scrapy crawl journelle".split())
 
 
 if __name__ == '__main__':
