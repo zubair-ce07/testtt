@@ -33,7 +33,6 @@ class UserRegisterView(View):
         user_type = request.POST.get("user_type", None)
         if user_form.is_valid():
             user = user_form.save()
-            print(user_type)
             if user_type == 'customer':
                 Customer.objects.create(user=user)
             else:
