@@ -1,0 +1,30 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}SignUp{% endblock %}
+
+{% block body %}
+    <div class="container-fluid">
+        <br><br><br><br>
+        <div class="row justify-content-center">
+            <div class="col-sm-8 col-md-6 col-lg-4 mydiv">
+                <div class="container">
+                    <br><br>
+                    <form class="" action="" method="post">
+                        {% csrf_token %}
+                        {% for field in form %}
+                            <div class="form-group">
+                                <div class="col-sm-offset-2 col-sm-10">
+                                    <span class="text-danger small">{{ field.errors }}</span>
+                                </div>
+                                <label class="control-label col-sm-2">{{ field.label_tag }}</label>
+                                <div class="col-sm-10">{{ field }}</div>
+                            </div>
+                        {% endfor %}
+                        <button type="submit" class="btn btn-primary btn-dark">SignUp</button>
+                    </form><br>
+                    <br>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

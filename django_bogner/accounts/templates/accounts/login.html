@@ -1,0 +1,27 @@
+{% extends 'accounts/base.html' %}
+
+
+{% block title %}Login{% endblock %}
+
+{% block body %}
+    <div class="container-fluid">
+        <br><br><br><br>
+        <div class="row justify-content-center">
+            <div class="col-sm-8 col-md-6 col-lg-4 mydiv">
+                <div class="container">
+                    <br><br>
+                    <form class="" action="" method="post">
+                        {% csrf_token %}
+                        {{ form.as_p }}
+                        <button type="submit" class="btn btn-primary btn-dark">Login</button>
+                    </form><br>
+                    <div class="">
+                        <a href="{% url 'accounts:signup' %}"> Not registered? </a>
+                    </div>
+                    <br>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
