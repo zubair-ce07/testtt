@@ -8,6 +8,16 @@ import ccy
 
 class FilaCrawler(CrawlSpider):
     name = 'fila'
+    currency = 'BRL'
+    brand = 'Fila'
+    retailer = 'fila-br'
+
+    genders = {
+        'masculina': {'masculina', 'masculino'},
+        'feminina': {'feminina', 'feminino'},
+        'infantil': {'infantil', 'junior', 'baby'},
+        'unisex': {'unisex'}
+    }
 
     allowed_domains = ['fila.com.br']
     start_urls = ['https://www.fila.com.br/']
@@ -15,17 +25,13 @@ class FilaCrawler(CrawlSpider):
     listings_css = ['ol.nav-primary > li > a', 'a.next']
     products_css = ['ul.products-grid.products-grid-comum > li div.container-info a']
 
-    currency = 'BRL'
-    brand = 'Fila'
-    retailer = 'fila-br'
-
     rules = (
         Rule(LinkExtractor(deny='outlet', restrict_css=listings_css), callback='parse'),
         Rule(LinkExtractor(restrict_css=products_css), callback='parse_product'),
     )
 
     def parse(self, response):
-        trail = response.meta.get('trail', [["", response.url]])
+        trail = response.meta.get('trail', [['', response.url]])
 
         for request in super().parse(response):
             request.meta['trail'] = trail + [[request.meta['link_text'].strip(), request.url]]
@@ -60,16 +66,9 @@ class FilaCrawler(CrawlSpider):
         return response.css('.wrap-sku > small::text').get().strip()
 
     def extract_gender(self, url):
-        genders = {
-            'masculina': {'masculina', 'masculino'},
-            'feminina': {'feminina', 'feminino'},
-            'infantil': {'infantil', 'junior', 'baby'},
-            'unisex': {'unisex'}
-        }
-
         url_lowercase = url.lower()
-        for gender in genders:
-            if self.check_existence(genders[gender], url_lowercase):
+        for gender in self.genders:
+            if self.check_existence(self.genders[gender], url_lowercase):
                 return gender
         return 'unisex'
 
@@ -83,7 +82,7 @@ class FilaCrawler(CrawlSpider):
         return response.css('head link[rel="canonical"]::attr("href")').get()
 
     def extract_date(self, response):
-        date = response.headers["Date"].decode('utf-8')
+        date = response.headers['Date'].decode('utf-8')
         return datetime.strptime(date, '%a, %d %b %Y %H:%M:%S GMT').strftime('%Y-%m-%dT%H:%M:%S.%f')
 
     def extract_market(self, currency):
