@@ -1,4 +1,4 @@
-{% extends "customer/base.html" %}
+{% extends "core/base.html" %}
 {% load crispy_forms_tags %}
 {% block content %}
 <form method="POST">
@@ -13,11 +13,7 @@
 </form>
 <div class="border-top pt-3">
     <small class="text-muted">
-        Need An Account? <a class="ml-2" href="{% url 'customer_register' %}">Sign Up Now</a>
-    </small>
-    <br>
-    <small class="text-muted">
-        Saloon Registration? <a class="ml-2" href="{% url 'shop_register' %}">Click Here</a>
+        Need An Account? <a class="ml-2" href="{% url 'register' %}">Sign Up Now</a>
     </small>
 </div>
 {% endblock content %}

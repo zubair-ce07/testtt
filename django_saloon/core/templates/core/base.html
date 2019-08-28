@@ -64,7 +64,7 @@
                         <a class="nav-link" href="{% url 'login' %}">Login <span class=" sr-only">(current)</span></a>
                     </li>
                     <li class="nav-item active">
-                        <a class="nav-link" href="#" data-toggle="modal" data-target="#exampleModalCenter">Register
+                        <a class="nav-link" href="{% url 'register' %}">Register
                             <span class=" sr-only">(current)</span></a>
                     </li>
                     {% endif %}
@@ -91,29 +91,6 @@
             <div class="col-md-2"></div>
         </div>
     </main>
-
-
-
-    <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog"
-        aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLongTitle">Register as</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body" style="text-align: center">
-                    <a style="width: 100%" href=" {% url 'customer_register' %}" type="button"
-                        class="btn btn-outline-primary">Customer</a>
-                    <hr>
-                    <a style="width: 100%" href=" {% url 'shop_register' %}" type="button"
-                        class="btn btn-outline-primary">Saloon</a>
-                </div>
-            </div>
-        </div>
-    </div>
 
 
 

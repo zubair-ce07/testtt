@@ -7,35 +7,9 @@ from django.views import View
 from django.views.generic import ListView
 
 
-from customer.forms import UserRegisterForm, UserUpdateForm
+from customer.forms import UserUpdateForm
 from .forms import ShopUpdateForm
 from .models import Saloon, TimeSlot, Reservation
-
-
-class UserRegisterView(View):
-    """Render and save shop user
-
-    This method renders the user registration form and also save it's data
-    when form is submitted
-    """
-    @staticmethod
-    def post(request):
-        """UserRegisterView POST method."""
-        user_form = UserRegisterForm(request.POST)
-
-        if user_form.is_valid():
-            user_form.instance.is_customer = True
-            user = user_form.save()
-            Saloon.objects.create(user=user)
-            messages.success(request, f'Your account has been Created!')
-            return redirect('login')
-        return render(request, 'customer/register.html', {'user_form': user_form, 'form_title': 'Sign Up to add your saloon'})
-
-    @staticmethod
-    def get(request):
-        """UserRegisterView GET method."""
-        user_form = UserRegisterForm()
-        return render(request, 'customer/register.html', {'user_form': user_form, 'form_title': 'Sign Up to add your saloon'})
 
 
 class ProfileView(LoginRequiredMixin, UserPassesTestMixin, View):

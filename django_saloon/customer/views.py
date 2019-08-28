@@ -3,39 +3,12 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.views import View
-from django.contrib.auth import logout as auth_logout
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic import ListView
 
 from .forms import UserRegisterForm, UserUpdateForm, CustomerUpdateForm
 from .models import Customer
 from shop.models import Reservation
-
-
-class UserRegisterView(View):
-    """Render and save customer user.
-
-    This method renders the user registration form and also save it's data
-    when form is submitted
-    """
-    @staticmethod
-    def post(request):
-        """UserRegisterView POST method."""
-        user_form = UserRegisterForm(request.POST)
-
-        if user_form.is_valid():
-            user_form.instance.is_customer = True
-            user = user_form.save()
-            Customer.objects.create(user=user)
-            messages.success(request, f'Your account has been Created!')
-            return redirect('login')
-        return render(request, 'customer/register.html', {'user_form': user_form, 'form_title': 'Sign Up Today'})
-
-    @staticmethod
-    def get(request):
-        """UserRegisterView GET method."""
-        user_form = UserRegisterForm()
-        return render(request, 'customer/register.html', {'user_form': user_form, 'form_title': 'Sign Up Today'})
 
 
 class ProfileView(LoginRequiredMixin, UserPassesTestMixin, View):
@@ -73,17 +46,6 @@ class ProfileView(LoginRequiredMixin, UserPassesTestMixin, View):
 
     def test_func(self):
         return hasattr(self.request.user, 'customer')
-
-
-class LogoutView(View):
-    """Log out User view."""
-
-    @staticmethod
-    def get(request):
-        """Log out User and clear it's session and cookies.
-        """
-        auth_logout(request)
-        return redirect('login')
 
 
 class ReservationsListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
