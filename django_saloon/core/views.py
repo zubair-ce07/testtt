@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.contrib.auth.models import User
 from rest_framework import generics
 from rest_framework.views import APIView
+
 from rest_framework import authentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -65,7 +66,7 @@ class ApiUserRegisteration(generics.CreateAPIView):
         password2 = request.data.get('password2')
         if password1 != password2:
             return Response(data="Password not match", status=400)
-        return super(ApiUserLogout, ApiUserLogout).post(request, *args, **kwargs)
+        return super().post(request, *args, **kwargs)
 
 
 class ApiUserLogout(APIView):
