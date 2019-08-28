@@ -2,14 +2,14 @@ from django.db import models
 
 
 class Brand(models.Model):
-    name = models.CharField(max_length=20)
+    name = models.CharField(max_length=100)
 
     def __str__(self):
         return self.name
 
 
 class Category(models.Model):
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=200)
 
     def __str__(self):
         return self.name
@@ -18,8 +18,8 @@ class Category(models.Model):
 class Product(models.Model):
     brand = models.ForeignKey(Brand, related_name='brand', on_delete=models.CASCADE)
     category = models.ForeignKey(Category, related_name='category', on_delete=models.CASCADE)
-    name = models.CharField(max_length=20)
-    description = models.CharField(max_length=600)
+    name = models.CharField(max_length=200)
+    description = models.TextField()
 
     def __str__(self):
         return self.name
@@ -32,7 +32,7 @@ class ProductImage(models.Model):
 
 class ProductArticle(models.Model):
     product = models.ForeignKey(Product, related_name='articles', on_delete=models.CASCADE)
-    color = models.CharField(max_length=30)
+    color = models.CharField(max_length=200)
     price = models.FloatField()
-    size = models.CharField(max_length=15)
+    size = models.CharField(max_length=100)
 
