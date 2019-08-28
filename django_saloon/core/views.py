@@ -4,9 +4,9 @@ from django.views import View
 from django.contrib.auth import logout as auth_logout
 from django.contrib import messages
 from django.contrib.auth.models import User
+from rest_framework import status
 from rest_framework import generics
 from rest_framework.views import APIView
-
 from rest_framework import authentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -58,21 +58,25 @@ class UserRegisterView(View):
 
 
 class ApiUserRegisteration(generics.CreateAPIView):
+    """User registration view for api"""
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
     def post(self, request, *args, **kwargs):
+        """post method for api user registration"""
         password1 = request.data.get('password1')
         password2 = request.data.get('password2')
         if password1 != password2:
-            return Response(data="Password not match", status=400)
+            return Response(data="Password not match", status=status.HTTP_400_BAD_REQUEST)
         return super().post(request, *args, **kwargs)
 
 
 class ApiUserLogout(APIView):
+    """User logout view for api."""
     authentication_classes = [authentication.TokenAuthentication]
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
+        """get method for api user logout"""
         request.user.auth_token.delete()
         return Response({"message": "loggedout sucessfully"})

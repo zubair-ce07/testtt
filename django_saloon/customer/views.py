@@ -5,9 +5,14 @@ from django.contrib import messages
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic import ListView
+from rest_framework.views import APIView
+from rest_framework import authentication
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
-from .forms import UserRegisterForm, UserUpdateForm, CustomerUpdateForm
-from .models import Customer
+
+from customer.forms import UserUpdateForm, CustomerUpdateForm
+from customer.serializers import CustomerUpdateSerializer
 from shop.models import Reservation
 
 
@@ -76,3 +81,17 @@ class ReservationsListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     def test_func(self):
         """only customer can access this view"""
         return hasattr(self.request.user, 'customer')
+
+
+class ApiCustomerUpdate(APIView):
+    """customer update view for api."""
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        """post method for customer update"""
+        customer_update_serializer = CustomerUpdateSerializer(
+            data=request.data)
+        if customer_update_serializer.is_valid(raise_exception=True):
+            customer_update_serializer.save()
+        return Response({"customer created successfully"})
