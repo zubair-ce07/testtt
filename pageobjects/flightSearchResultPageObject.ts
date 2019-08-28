@@ -3,9 +3,14 @@ import BasePageObject from "./basePageObject";
 import { convertDateInFormatMonthInNumberSlashDayInNumber, convertTimeToMinutes } from "../utils/common";
 
 class FlightSearchResultPageObject extends BasePageObject {
+    private multiCityBlock = element(by.css("[id$=-multiCityDisplay]"));
+    private multiCityDates= element(by.css("[id$=-multiCityDates]"));
+    private takeoffTab = element(by.css(".takeoffLandingTabs")).element(by.css("[id$=-times-Take-off-label]"));
+    private landingTab = element(by.css(".takeoffLandingTabs")).element(by.css("[id$=-times-Landing-label]"));
+    private cabinClass = element(by.css("[id$=-cabin-content]")).element(by.css(".label"));
+
     async getAppliedAirportFilter(): Promise<string> {
-        const airportFilterField = element(by.css("[id$=-multiCityDisplay]"));
-        return await airportFilterField.getText();
+        return await this.multiCityBlock.getText();
     }
 
     async getAppliedTravelerFilter(): Promise<string> {
@@ -14,8 +19,7 @@ class FlightSearchResultPageObject extends BasePageObject {
     }
 
     async getAppliedDateFilter(): Promise<string> {
-        const dateFilterField = element(by.css("[id$=-multiCityDates]"));
-        return await dateFilterField.getText();
+        return await this.multiCityDates.getText();
     }
 
     async doesFirstAppliedDateFilterMatchFlightDate(departureDate: string): Promise<boolean> {
@@ -24,7 +28,10 @@ class FlightSearchResultPageObject extends BasePageObject {
     }
 
     async getAppliedCabinClass(): Promise<string> {
-        return await browser.executeScript('return document.querySelector("[id$=-cabin-content]").querySelector(".label").innerText');
+        const cabinFilterHeader = element(by.css("[id$=-cabin-title]"));
+        browser.debugger();
+        await cabinFilterHeader.click();
+        return await this.cabinClass.getText();
     }
 
     async getCountOfDisplayedTakeOffSliders(): Promise<number> {
@@ -43,14 +50,11 @@ class FlightSearchResultPageObject extends BasePageObject {
     }
 
     async selectTakeOffTab(): Promise<void> {
-        const selectedTab = element(by.css(".takeoffLandingTabs")).element(by.css("[id$=-times-Take-off-label]"));
-        ;
-        await selectedTab.click();
+        await this.takeoffTab.click();
     }
 
     async selectLandingTab(): Promise<void> {
-        const selectedTab = element(by.css(".takeoffLandingTabs")).element(by.css("[id$=-times-Landing-label]"));
-        await selectedTab.click();
+        await this.landingTab.click();
     }
 
     getLandingSliders(): ElementArrayFinder {
