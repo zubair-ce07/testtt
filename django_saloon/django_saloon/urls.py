@@ -16,6 +16,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
+from rest_framework.authtoken.views import obtain_auth_token
 
 from core import views as core_views
 
@@ -26,5 +27,10 @@ urlpatterns = [
     path('login/', auth_views.LoginView.as_view(template_name='core/login.html'), name='login'),
     path('logout/', core_views.LogoutView.as_view(), name='logout'),
     path('register/', core_views.UserRegisterView.as_view(), name='register'),
+
+    path('api/login/', obtain_auth_token, name='api_login'),
+    path('api/register/', core_views.ApiUserRegisteration.as_view(),
+         name='api_register'),
+    path('api/logout/', core_views.ApiUserLogout.as_view(), name='api_logout'),
 
 ]

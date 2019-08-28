@@ -3,7 +3,14 @@ from django.shortcuts import render, redirect
 from django.views import View
 from django.contrib.auth import logout as auth_logout
 from django.contrib import messages
+from rest_framework import generics
+from rest_framework.views import APIView
+from django.contrib.auth.models import User
+from rest_framework import authentication
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
+from core.serializers import UserSerializer
 from core.forms import UserRegisterForm
 from shop.models import Saloon
 from customer.models import Customer
@@ -47,3 +54,17 @@ class UserRegisterView(View):
         """UserRegisterView GET method."""
         user_form = UserRegisterForm()
         return render(request, 'core/register.html', {'user_form': user_form})
+
+
+class ApiUserRegisteration(generics.CreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+
+class ApiUserLogout(APIView):
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        request.user.auth_token.delete()
+        return Response({"message": "loggedout sucessfully"})
