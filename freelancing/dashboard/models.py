@@ -21,6 +21,8 @@ def buyer_request_files_path(instance, filename):
         returns the path where the
         gig gallery images should be stored
     """
+    # TODO: add delete functionality to endpoint
+    # to remove deleted file from media
     return "files/requests/{0}_{1}_{2}".format(
         instance.request.id,
         instance.request.buyer.username,
@@ -51,8 +53,7 @@ class Offers(models.Model):
     delivery_time = models.IntegerField()
     revisions = models.IntegerField()
     status = models.TextField(max_length=20)
-    # FIXME: removed auto_now_add for testing purpose. Add it when done testing.
-    created_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         unique_together = (('gig', 'buyer_request'),)

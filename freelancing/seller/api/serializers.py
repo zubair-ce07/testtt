@@ -3,7 +3,6 @@ from rest_framework import serializers
 from accounts.models import User
 from ..models import Category, Gig, Gallery, \
     Package, Faq, Requirements
-
 from dashboard.models import Offers, Requests
 
 
