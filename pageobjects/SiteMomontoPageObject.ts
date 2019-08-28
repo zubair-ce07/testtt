@@ -1,9 +1,9 @@
 import { browser, by, element, ElementFinder, protractor } from "protractor";
-import IFlight from "../interfaces/IFlight";
+import Flight from "../interfaces/Flight";
 import { waitForElementVisibility, getTimeoutErrorMessage, convertMonthNameToShortName } from "../utils/common";
-import IFlightSearchPage from "../interfaces/IFlightSearchPage";
+import FlightSearchPage from "../interfaces/FlightSearchPage";
 
-class SiteMomontoPageObject implements IFlight, IFlightSearchPage {
+class SiteMomontoPageObject implements Flight, FlightSearchPage {
     readonly flightsPageURL: string = "https://global.momondo.com/";
     readonly multiCityLegsSelector: string = ".multiCityLeg";
     private legNo: number;

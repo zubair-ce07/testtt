@@ -1,6 +1,6 @@
 import { ElementFinder } from "protractor";
 
-interface IFlight {
+interface Flight {
     selectFlightTypeMultiCity(): Promise<void>;
 
     setLegNo(legNo: number): void;
@@ -24,4 +24,4 @@ interface IFlight {
     isFlightsSearchPageDisplayed(): Promise<boolean>;
 }
 
-export default IFlight;
+export default Flight;

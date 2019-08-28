@@ -1,9 +1,9 @@
 import { browser, by, element, ElementFinder, protractor } from "protractor";
-import IFlight from "../interfaces/IFlight";
+import Flight from "../interfaces/Flight";
 import { waitForElementVisibility, getTimeoutErrorMessage } from "../utils/common";
-import IFlightSearchPage from "../interfaces/IFlightSearchPage";
+import FlightSearchPage from "../interfaces/FlightSearchPage";
 
-class SiteKayakPageObject implements IFlight, IFlightSearchPage {
+class SiteKayakPageObject implements Flight, FlightSearchPage {
     readonly flightsPageURL: string = "https://www.kayak.com/flights";
     readonly multiCityLegsSelector: string = ".js-multiCityLeg";
     private legNo: number;

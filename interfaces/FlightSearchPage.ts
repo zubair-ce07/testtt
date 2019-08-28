@@ -1,6 +1,6 @@
 import { ElementFinder } from "protractor";
 
-interface IFlightSearchPage {
+interface FlightSearchPage {
     getAppliedTravelerFilterField(): ElementFinder;
 
     getMultiCityFormOriginAndDestination(): Promise<{ flightOrigin: string, flightDestination: string }>;
@@ -16,4 +16,4 @@ interface IFlightSearchPage {
     getSearchedFlightsCount(): Promise<number>;
 }
 
-export default IFlightSearchPage;
+export default FlightSearchPage;
