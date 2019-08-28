@@ -33,7 +33,7 @@ class ModClothParseSpider(BaseParseSpider, Mixin):
         garment['image_urls'] = []
         garment['skus'] = {}
         garment['meta'] = {
-            'requests_queue': self.product_colour_requests(response)
+            'requests_queue': self.colour_requests(response)
         }
 
         return self.next_request_or_garment(garment)
@@ -57,22 +57,18 @@ class ModClothParseSpider(BaseParseSpider, Mixin):
 
     def skus(self, response):
         skus = {}
-        colour = self.product_colour(response)
         common_sku = self.product_pricing_common(response)
+        common_sku['colour'] = clean(response.css('.swatches.color .selected img::attr(alt)'))[0]
 
         for size_s in response.css('.swatches.size li'):
             sku = common_sku.copy()
-            sku['colour'] = colour
             sku['size'] = clean(size_s.css('a::text'))[0]
             sku['out_of_stock'] = bool(size_s.css('.unselectable'))
             skus[f'{sku["colour"]}_{sku["size"]}'] = sku
 
         return skus
 
-    def product_colour(self, response):
-        return clean(response.css('.swatches.color .selected img::attr(alt)'))[0]
-
-    def product_colour_requests(self, response):
+    def colour_requests(self, response):
         urls = clean(response.css('.swatches.color a::attr(href)'))
         return [Request(url=url, callback=self.parse_colour_requests) for url in urls]
 
