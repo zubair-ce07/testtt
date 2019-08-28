@@ -5,12 +5,12 @@ from w3lib.url import url_query_cleaner
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Request, Rule
 
-from .base import BaseCrawlSpider, BaseParseSpider, clean
+from .base import BaseCrawlSpider, BaseParseSpider, clean, Gender
 
 
 class Mixin:
     market = 'US'
-    gender = 'women'
+    gender = Gender.WOMEN.value
     default_brand = 'ModCloth'
     retailer = 'modcloth-us'
 
@@ -26,25 +26,25 @@ class ModClothParseSpider(BaseParseSpider, Mixin):
     price_css = '.product-price ::text'
 
     def parse(self, response):
-        product_id = self.product_id(response)
+        garment = self.new_unique_garment(self.product_id(response))
 
-        garment = self.new_unique_garment(product_id)
         if not garment:
             return
 
         self.boilerplate_normal(garment, response)
-        garment['gender'] = Mixin.gender
-        garment['skus'] = self.skus(response)
+        garment['image_urls'] = []
+        garment['skus'] = {}
         garment['meta'] = {
-            'requests_queue': self.image_requests(response)
+            'requests_queue': self.product_colour_requests(response)
         }
 
         return self.next_request_or_garment(garment)
 
-    def parse_image_urls(self, response):
+    def parse_colour_requests(self, response):
         garment = response.meta['garment']
         urls = clean(response.css('.thumb img::attr(src)'))
-        garment['image_urls'] = garment.get('image_urls', []) + [url_query_cleaner(u) for u in urls]
+        garment['image_urls'] += [url_query_cleaner(u) for u in urls]
+        garment['skus'].update(self.skus(response))
 
         return self.next_request_or_garment(garment)
 
@@ -55,28 +55,32 @@ class ModClothParseSpider(BaseParseSpider, Mixin):
         return clean(response.css('.product-name::text'))[0]
 
     def product_category(self, response):
-        return clean(response.css('.breadcrumb-element::text'))
+        return clean(response.css('.breadcrumb-element::text'))[:-1]
 
     def skus(self, response):
         raw_skus = clean(response.css('script:contains("mc_global.product")::text'))[0]
         raw_skus = json.loads(re.findall(r'\[.*\]', raw_skus)[0])
-        pricing = self.product_pricing_common(response)
-        skus = {}
+        raw_sku = next(rs for rs in raw_skus if rs['variationGroupID'] == self.product_id(response))
 
-        for raw_sku in raw_skus:
-            colour = self.detect_colour(raw_sku['url'])
-            for raw_size in raw_sku['product_variants']:
-                sku = pricing.copy()
-                sku['colour'] = colour
-                sku['size'] = raw_size['size']
-                sku['out_of_stock'] = not(raw_size['units_available']) or raw_sku['archived']
-                skus[raw_size['upc']] = sku
+        skus = {}
+        colour = self.product_colour(response)
+        common_sku = self.product_pricing_common(response)
+
+        for raw_size in raw_sku['product_variants']:
+            sku = common_sku.copy()
+            sku['colour'] = colour
+            sku['size'] = raw_size['size']
+            sku['out_of_stock'] = not raw_size['units_available'] or raw_sku['archived']
+            skus[raw_size['upc']] = sku
 
         return skus
 
-    def image_requests(self, response):
+    def product_colour(self, response):
+        return clean(response.css('.swatches.color .selected img::attr(alt)'))[0]
+
+    def product_colour_requests(self, response):
         urls = clean(response.css('.swatches.color a::attr(href)'))
-        return [Request(url=url, callback=self.parse_image_urls) for url in urls]
+        return [Request(url=url, callback=self.parse_colour_requests) for url in urls]
 
 
 class ModClothCrawlSpider(BaseCrawlSpider, Mixin):
