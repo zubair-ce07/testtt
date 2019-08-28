@@ -20,6 +20,7 @@
   "homepage": "https://github.com/arbisoft/the-lab#readme",
   "dependencies": {
     "@types/chai": "^4.2.0",
+    "@types/chai-as-promised": "^7.1.2",
     "@types/jasmine": "^3.4.0",
     "@types/node": "^10.14.16",
     "chai": "^4.2.0",
