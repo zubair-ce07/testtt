@@ -10,4 +10,6 @@ min-public-methods=0
 disable=
     no-member,
     keyword-arg-before-vararg,
-    too-many-ancestors
+    too-many-ancestors,
+    invalid-name
+ignore=migrations

@@ -6,8 +6,7 @@ from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic import ListView
 
-from .forms import UserRegisterForm, UserUpdateForm, CustomerUpdateForm
-from .models import Customer
+from customer.forms import UserUpdateForm, CustomerUpdateForm
 from shop.models import Reservation
 
 
@@ -31,7 +30,8 @@ class ProfileView(LoginRequiredMixin, UserPassesTestMixin, View):
             customer_update_form.save()
             messages.success(request, f'Your account has been updated!')
             return redirect('customer_profile')
-        return render(request, 'customer/profile.html', {'user_form': user_update_form, 'customer_form': customer_update_form})
+        return render(request, 'customer/profile.html', {'user_form': user_update_form,
+                                                         'customer_form': customer_update_form})
 
     @staticmethod
     def get(request):
@@ -42,7 +42,8 @@ class ProfileView(LoginRequiredMixin, UserPassesTestMixin, View):
         customer_update_form = CustomerUpdateForm(
             instance=request.user.customer)
 
-        return render(request, 'customer/profile.html', {'user_form': user_update_form, 'customer_form': customer_update_form})
+        return render(request, 'customer/profile.html', {'user_form': user_update_form,
+                                                         'customer_form': customer_update_form})
 
     def test_func(self):
         return hasattr(self.request.user, 'customer')
@@ -62,12 +63,13 @@ class ReservationsListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         """customer list querry set filtering reservation for that customer only"""
         return Reservation.objects.filter(customer=self.request.user.customer)
 
-    def post(self, request):
+    @staticmethod
+    def post(request):
         """POST method for Reservation View.
         This method will delete a reservation shich id is send through post request from template.
         """
         reservation_id = request.POST.get("reservation_id", " ")
-        reason = request.POST.get("reason", " ")
+        _ = request.POST.get("reason", " ")
         Reservation.objects.get(id=reservation_id).delete()
         messages.success(
             request, f'Reservation Cancelled!')

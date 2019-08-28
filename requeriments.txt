@@ -10,6 +10,7 @@ cryptography==2.7
 cssselect==1.0.3
 Django==2.2.4
 django-crispy-forms==1.7.2
+djangorestframework==3.10.2
 hyperlink==19.0.0
 idna==2.8
 incremental==17.5.0
@@ -30,6 +31,8 @@ PyDispatcher==2.0.5
 pydocstyle==4.0.0
 PyHamcrest==1.9.0
 pylint==2.3.1
+pylint-django==2.0.11
+pylint-plugin-utils==0.5
 pyOpenSSL==19.0.0
 pytz==2019.2
 queuelib==1.5.0

@@ -1,7 +1,7 @@
 """customer django module"""
 from django.contrib import admin
 
-from .models import Customer
+from customer.models import Customer
 from shop.models import Reservation
 
 
