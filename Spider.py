@@ -7,7 +7,6 @@ from ..items import StartItem
 class FilasSpider(CrawlSpider):
 
     name = "Fila"
-    brand = "Flia"
     currency = 'Brazilian real'
     start_urls = ['https://www.fila.com.br/']
     listings_css = [".nav-primary", ".carrossel-thumb"]
@@ -18,22 +17,13 @@ class FilasSpider(CrawlSpider):
         Rule(LinkExtractor(restrict_css = products_css), callback = 'product_items'),
     )
 
-    gender_list = ["Masculina","Masculino","mulheres","infantial","Infantil","Feminino","Feminina"]
-    care_list = [
-        "malha de poliamida","poliéster","algodão","pele","Cuidado","resistência","sentindo-me",
-        "casual","confortável","couro","tecido","protecção","material","conforto","confortável"
-    ]
-    care = []
-    description = []
 
     def product_items(self, response):
 
         product = StartItem()
 
-        self.extract_description_care(response)
-
         product['retailer_sku'] = self.extract_retailer_sku(response)
-        product['brand'] = self.brand
+        product['brand'] = self.name
         product['url'] = response.url
         product['name'] = self.extract_name(response)
         product['gender'] = self.extract_gender(product['name'])
@@ -42,31 +32,32 @@ class FilasSpider(CrawlSpider):
         product['image_urls'] = self.extract_image_url(response)
         product['skus'] = self.extract_skus(response)
 
-        yield product
-
-    def extract_description_care(self,response):
-
         raw_description = self.extract_raw_description(response)
 
-        if raw_description is None:
-            return
+        if raw_description is not None:
+            product["care"] = self.extract_care(raw_description)
+            product["description"] = self.extract_description(raw_description)
 
-        flag_desrciption = True
-        self.care.clear()
-        self.description.clear()
+        yield product
 
-        for word_list in raw_description:
-            for raw in word_list.split(","):
-                for line in raw.split("."):
-                    flag_desrciption = True
-                    for care_word in self.care_list:
+    def extract_care(self,raw_description):
+    
+        care_list = [
+            "malha de poliamida","poliéster","algodão","pele","Cuidado","resistência","sentindo-me",
+            "casual","confortável","couro","tecido","protecção","material","conforto","confortável"
+        ]
 
-                        if care_word in line:
-                            self.care.append(line)
-                            flag_desrciption = False
-                    
-                    if flag_desrciption:
-                        self.description.append(line)
+        care_list = []
+
+        for line in raw_description:
+            for care in care_list:
+                if care in line:
+                    care_list.append(line)
+                    raw_description.replace(line,"")
+        return care_list
+
+    def extract_description(self,description):
+        return description
                             
     def extract_raw_description(self, response):
         return response.css(".wrap-long-description p::text").extract()
@@ -79,34 +70,29 @@ class FilasSpider(CrawlSpider):
 
     def extract_gender(self,product_name):
 
+        gender_list = ["Masculina","Masculino","mulheres","infantial","Infantil","Feminino","Feminina","FEMININO"]
+
         for gender in self.gender_list:
             if gender in product_name:
                 return gender
         return "unisex"
-
-    def extract_care(self, description):    
-        
-        for care in self.care_list:
-            if care in description:
-                return description
-        return None
 
     def extract_image_url(self, response):
         return  response.css(".product-image-gallery img::attr(src)").extract()
 
     def extract_skus(self, response):
 
-        skus = []
+        skus = {}
     
         price = response.css(".price::text").extract_first()
         currency = self.currency
         size_label =  response.css(".configurable-swatch-list.clearfix li::attr(data-size)").extract()
         sku_id = response.css(".no-display input[id = 'product-id']::attr(value)").extract_first()
 
-        common_sku = {
+        common_sku = {}
+        common_sku[str(sku_id)] = {
             "price": price,
-            "currency": currency,
-            "sku_id": sku_id
+            "currency": currency
         }
     
         if size_label is None:
@@ -121,7 +107,7 @@ class FilasSpider(CrawlSpider):
                 "size": size
             }
             sku.update(common_sku)              
-            skus.append(sku)
+            skus[str(sku_id)] = sku
 
         return skus
 
