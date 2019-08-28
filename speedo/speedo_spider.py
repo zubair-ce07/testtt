@@ -78,8 +78,8 @@ class SpeedoParser(Spider):
         return [Request(url=url, callback=self.parse_colour_requests) for url in urls]
 
     def get_size_requests(self, raw_product):
-        attributes = raw_product['product']['variationAttributes']
-        raw_sizes = next((a['values'] for a in attributes if a['attributeId'].lower() == 'size'), [])
+        product_variants = raw_product['product']['variationAttributes']
+        raw_sizes = next((pv['values'] for pv in product_variants if pv['attributeId'].lower() == 'size'), [])
         return [Request(s['url'], callback=self.parse_skus) for s in raw_sizes]
 
     def get_name(self, response):
@@ -129,11 +129,11 @@ class SpeedoParser(Spider):
     def get_raw_colour_and_size(self, raw_product):
         raw_colour = raw_size = ''
 
-        for attribute in raw_product['product']['variationAttributes']:
-            if attribute['attributeId'].lower() in ('color', 'colour'):
-                raw_colour = attribute['displayValue']
-            if attribute['attributeId'].lower() == 'size':
-                raw_size = attribute['displayValue']
+        for product_variant in raw_product['product']['variationAttributes']:
+            if product_variant['attributeId'].lower() in ('color', 'colour'):
+                raw_colour = product_variant['displayValue']
+            if product_variant['attributeId'].lower() == 'size':
+                raw_size = product_variant['displayValue']
 
         return raw_colour, raw_size
 
