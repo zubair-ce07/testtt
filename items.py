@@ -17,3 +17,4 @@ class StartItem(Item):
     description = Field()
     image_urls = Field()
     skus = Field()
+    out_of_stock = Field()
