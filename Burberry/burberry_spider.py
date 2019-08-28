@@ -5,7 +5,7 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
 
 from skuscraper.parsers.genders import Gender
-from .base import BaseParseSpider, BaseCrawlSpider, clean, soupify
+from .base import BaseParseSpider, BaseCrawlSpider, clean
 
 class Mixin:
     retailer = 'burberry'
@@ -17,7 +17,7 @@ class MixinCN(Mixin):
     market = "CN"
     start_urls = ['https://cn.burberry.com/']
 
-class BurberryLimitsParseSpider(BaseParseSpider):
+class BurberryParseSpider(BaseParseSpider):
     description_css = '.accordion-tab_content p::text'
     price_css = '.product-purchase_price::text'
     care_css = '.accordion-tab_sub-item li::text'
@@ -100,7 +100,7 @@ class BurberryLimitsParseSpider(BaseParseSpider):
             skus[f"{color}_{size}"] = sku
         return skus
 
-class BurberryCNParseSpider(BurberryLimitsParseSpider, MixinCN):
+class BurberryCNParseSpider(BurberryParseSpider, MixinCN):
     name = MixinCN.retailer + '-parse'
 
 class BurberryCrawlSpider(BaseCrawlSpider):
@@ -115,6 +115,7 @@ class BurberryCrawlSpider(BaseCrawlSpider):
         for product in products:
             yield response.follow(product, self.parse_item)
 
-class BurberryLimitsCNCrawlSpider(MixinCN, BurberryCrawlSpider):
+class BurberryCNCrawlSpider(MixinCN, BurberryCrawlSpider):
     name = MixinCN.retailer + '-crawl'
     parse_spider = BurberryCNParseSpider()
+
