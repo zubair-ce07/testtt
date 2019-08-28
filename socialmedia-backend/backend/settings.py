@@ -51,6 +51,11 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
+    # 'DEFAULT_RENDERER_CLASSES': [
+    # 'core.renderers.JSONRenderer'
+    # ],
+    # 'DEFAULT_PARSER_CLASSES': [
+    # ],
     # 'EXCEPTION_HANDLER': 'core.exceptions.exception_handler',
     'NON_FIELD_ERRORS_KEY': 'error',
 }

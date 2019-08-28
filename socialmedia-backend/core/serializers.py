@@ -22,7 +22,7 @@ class PostSerializer(serializers.ModelSerializer):
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
-        fields = ['id', 'post' 'author', 'time', 'message']
+        fields = ['id', 'post', 'author', 'time', 'message']
 
 
 class FollowingSerializer(serializers.ModelSerializer):
@@ -45,12 +45,13 @@ class RegistrationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['email', 'first_name', 'last_name', 'password', 'token']
+        fields = ['email', 'first_name', 'last_name',
+                  'password', 'token', 'display_picture']
 
 
 class LoginSerializer(TokenObtainPairSerializer):
     default_error_messages = {
-        'no_active_account': _('The username and password you entered did not match our records. Please double-check and try again.')
+        'no_active_account': _('The email and password you entered did not match our records. Please double-check and try again.')
     }
 
     def validate(self, attrs):
