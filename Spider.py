@@ -1,10 +1,11 @@
 from scrapy import Request, FormRequest, Selector
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
-from ..items import StartItem
-import json
+from json import loads, dumps
 
-class FilasSpider(CrawlSpider):
+from ..items import StartItem
+
+class Khelapider(CrawlSpider):
 
     name = "Khela"
     currency = 'Dollars'
@@ -14,9 +15,6 @@ class FilasSpider(CrawlSpider):
     rules = (
         Rule(LinkExtractor(restrict_css = listings_css),callback = "Parse"),
     )
-
-    care = []
-    description = []
 
     def Parse(self, response):
 
@@ -38,8 +36,8 @@ class FilasSpider(CrawlSpider):
         product['brand'] = self.name
         product['url'] = response.url
         product['name'] = self.extract_name(response)
-        product['care'] = self.care
         product["price"] = self.extract_price(response)
+        product["gender"] = self.extract_gender(product["name"])
         product["image_urls"] = []
         product['skus'] = []
         product["meta"] = self.extract_requests(product,response)
@@ -50,7 +48,27 @@ class FilasSpider(CrawlSpider):
             product["care"] = self.extract_care(raw_description)
             product["description"] = self.extract_description(raw_description)
 
-        yield self.check_request(product) 
+        yield self.check_request(product)
+
+    def extract_retailer_sku(self,response):
+        return response.css(".fab-cod span::attr(content)").extract_first().split(":")[1] 
+
+    def extract_name(self, response):
+        return response.css(".name.fn::text").extract_first("").strip()
+
+    def extract_price(self,response):
+        return response.css(".price.sale strong::text").extract_first()
+
+    def extract_gender(self,product_name):
+
+        gender_list = ["Masculina","Masculino","mulheres","infantial","Infantil","Feminino","Feminina","FEMININO"]
+
+        for gender in gender_list:
+
+            if gender in product_name:
+                return gender
+
+        return "unisex"
     
     def extract_requests(self,product,response):
 
@@ -72,16 +90,40 @@ class FilasSpider(CrawlSpider):
             color_data["ProdutoCodigo"] = self.extract_ProdutoCodigo(response)
 
             request = Request(url='https://www.khelf.com.br/ajaxpro/IKCLojaMaster.detalhes,Khelf.ashx',
-                        method='POST',headers = color_header, body=json.dumps(color_data), callback = self.update_product) 
+                        method='POST',headers = color_header, body=dumps(color_data), callback = self.update_product) 
             request.meta['product'] = product
             requets.append(request)
 
         return requets
+
+    def extract_raw_description(self, response):
+        return response.css(".section.about.description p::text").extract()
+
+    def extract_care(self,raw_description):
+    
+        care_list = [
+            "malha de poliamida","poliéster","algodão","pele","Cuidado","resistência","sentindo-me",
+            "casual","confortável","couro","tecido","protecção","material","conforto","confortável"
+        ]
+
+        care_list = []
+
+        for line in raw_description:
+            for care in care_list:
+
+                if care in line:
+                    care_list.append(line)
+                    raw_description.replace(line,"")
+
+        return care_list
+
+    def extract_description(self,description):
+        return description
         
     def update_product(self,response):
 
         product = response.meta["product"]
-        json_response = json.loads(response.text)
+        json_response = loads(response.text)
         new_response = Selector(text =json_response["value"][3])
 
         product['image_urls'] += self.extract_image_url(json_response)
@@ -104,50 +146,8 @@ class FilasSpider(CrawlSpider):
     def extract_ProdutoCodigo(self,response):
         return response.css("input[id='ProdutoCodigo']::attr(value)").extract_first()
 
-    def extract_care(self,raw_description):
-
-        care_list = [
-            "malha de poliamida","poliéster","algodão","pele","Cuidado","resistência","sentindo-me",
-            "casual","confortável","couro","tecido","protecção","material","conforto","confortável"
-        ]
-
-        care_list = []
-
-        for line in raw_description:
-            for care in care_list:
-                if care in line:
-                    care_list.append(line)
-                    raw_description.replace(line,"")
-        return care_list
-
-    def extract_price(self,response):
-            return response.css(".price.sale strong::text").extract_first()
-
-    def extract_description(self,description):
-        return description
-
-    def extract_raw_description(self, response):
-        return response.css(".section.about.description p::text").extract()
-
-    def extract_retailer_sku(self,response):
-        return response.css(".fab-cod span::attr(content)").extract_first().split(":")[1]
-
-    def extract_name(self, response):
-        return response.css(".name.fn::text").extract_first("").strip()
-
-    def extract_gender(self,product_name):
-
-        gender_list = ["Masculina","Masculino","mulheres","infantial","Infantil","Feminino","Feminina","FEMININO"]
-
-        for gender in gender_list:
-
-            if gender in product_name:
-                return gender
-
-        return "unisex"
-
     def extract_image_url(self, json_response):
-
+    
         imgs = []
 
         for img_url in json_response["value"][1]:
@@ -187,3 +187,4 @@ class FilasSpider(CrawlSpider):
             skus.append(sku)
 
         return skus
+
