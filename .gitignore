@@ -64,6 +64,6 @@ venv
 
 # django
 media
-dashboard/migrations/*
-seller/migrations/*
-accounts/migrations/*
+
+# extra files
+*.txt
