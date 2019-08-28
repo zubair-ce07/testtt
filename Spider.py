@@ -159,17 +159,17 @@ class Khelapider(CrawlSpider):
 
     def extract_skus(self,price,size):
 
-        skus = []
+        skus = {}
 
         price = price
         currency = self.currency
         size_label =  size.css(".select a::text").extract()
         sku_id = size_label
 
-        common_sku = {
+        common_sku = {}
+        common_sku[str(sku_id)] = {
             "price": price,
-            "currency": currency,
-            "sku_id": sku_id
+            "currency": currency
         }
 
         if size_label is None:
@@ -184,7 +184,7 @@ class Khelapider(CrawlSpider):
                 "size": size
             }
             sku.update(common_sku)
-            skus.append(sku)
+            skus[str(sku_id)] = sku
 
         return skus
 
