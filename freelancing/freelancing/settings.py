@@ -166,6 +166,6 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_BEAT_SCHEDULE = {
     'check_offers_for_expiry': {
         'task': 'seller.tasks.expire_offers_week_ago',
-        'schedule': crontab(minute=0, hour=0) # daily at midnight
+        'schedule': crontab(minute=0, hour=0)  # daily at midnight
     }
 }

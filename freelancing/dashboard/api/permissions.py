@@ -10,7 +10,6 @@ class isAdminOrBuyerOnly(BasePermission):
 
 class isSameBuyer(BasePermission):
     def has_object_permission(self, request, view, obj):
-
         return obj.buyer == request.user
 
 
