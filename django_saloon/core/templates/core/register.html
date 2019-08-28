@@ -1,0 +1,57 @@
+{% extends "core/base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+<div class="content-section">
+
+    <ul class="nav nav-tabs">
+        <li class="nav-item">
+            <a class="nav-link active" id="customer" href="#" onclick="set_user_type('customer')">Customer
+                Registeration</a>
+        </li>
+        <li class=" nav-item">
+            <a class="nav-link" id="shop" href="#" onclick="set_user_type('shop')">Saloon Registration</a>
+        </li>
+    </ul>
+    <br>
+
+
+    <form method="POST">
+        {% csrf_token %}
+        <fieldset class="form-group">
+            <legend class="border-bottom mb-4">Join Today</legend>
+            {{ user_form|crispy }}
+        </fieldset>
+        <input type="hidden" value="customer" name="user_type" id="user_type">
+        <div class="form-group">
+            <button class="btn btn-outline-info" type="submit">Sign Up</button>
+        </div>
+    </form>
+    <div class="border-top pt-3">
+        <small class="text-muted">
+            Already Have An Account? <a class="ml-2" href="{% url 'login' %}">Sign In</a>
+        </small>
+    </div>
+</div>
+
+<script>
+    set_user_type = (user_type) => {
+        document.getElementById('user_type').value = user_type
+        toggle_tab(user_type)
+    }
+    toggle_tab = (user_type) => {
+        var customer = document.getElementById("customer");
+        var shop = document.getElementById("shop");
+
+        if (user_type === 'customer') {
+            customer.classList.add("active");
+            shop.classList.remove("active");
+        }
+        else {
+            customer.classList.remove("active");
+            shop.classList.add("active");
+        }
+    }
+</script>
+
+
+{% endblock content %}

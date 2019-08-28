@@ -1,4 +1,4 @@
-"""django_profile URL Configuration
+"""django_saloon URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/2.2/topics/http/urls/
@@ -15,12 +15,16 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from user_profile import views as user_views
+from django.contrib.auth import views as auth_views
+
+from core import views as core_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('login/', user_views.LoginView.as_view(), name='login'),
-    path('register/', user_views.Register.as_view(), name='register'),
-    path('user/', include('user_profile.urls')),
-    path('logout/', user_views.LogoutView.as_view(), name='logout'),
+    path('customer/', include('customer.urls')),
+    path('shop/', include('shop.urls')),
+    path('login/', auth_views.LoginView.as_view(template_name='core/login.html'), name='login'),
+    path('logout/', core_views.LogoutView.as_view(), name='logout'),
+    path('register/', core_views.UserRegisterView.as_view(), name='register'),
+
 ]
