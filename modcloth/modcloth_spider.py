@@ -1,5 +1,3 @@
-import json
-import re
 from w3lib.url import url_query_cleaner
 
 from scrapy.linkextractors import LinkExtractor
@@ -58,20 +56,16 @@ class ModClothParseSpider(BaseParseSpider, Mixin):
         return clean(response.css('.breadcrumb-element::text'))[:-1]
 
     def skus(self, response):
-        raw_skus = clean(response.css('script:contains("mc_global.product")::text'))[0]
-        raw_skus = json.loads(re.findall(r'\[.*\]', raw_skus)[0])
-        raw_sku = next(rs for rs in raw_skus if rs['variationGroupID'] == self.product_id(response))
-
         skus = {}
         colour = self.product_colour(response)
         common_sku = self.product_pricing_common(response)
 
-        for raw_size in raw_sku['product_variants']:
+        for size_s in response.css('.swatches.size li'):
             sku = common_sku.copy()
             sku['colour'] = colour
-            sku['size'] = raw_size['size']
-            sku['out_of_stock'] = not raw_size['units_available'] or raw_sku['archived']
-            skus[raw_size['upc']] = sku
+            sku['size'] = clean(size_s.css('a::text'))[0]
+            sku['out_of_stock'] = bool(size_s.css('.unselectable'))
+            skus[f'{sku["colour"]}_{sku["size"]}'] = sku
 
         return skus
 
