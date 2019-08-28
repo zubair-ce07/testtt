@@ -10,12 +10,16 @@ from journelle_crawler.items import ProductItem
 
 class JournelleCrawler(CrawlSpider):
     name = 'journelle'
-
-    allowed_domains = ['algolianet.com', 'journelle.com']
-
     currency = 'EUR'
     market = 'EU'
     retailer = 'journelle-eu'
+    gender = 'Female'
+
+    products_grid_api_url = ('https://8n5kjnqkjm-2.algolianet.com/1/indexes/*/queries?x-algolia-agent=Algolia%20for%20'
+                             'vanilla%20JavaScript%20(lite)%203.24.5%3Binstantsearch.js%202.3.3%3BJS%20Helper%202.23.0&'
+                             'x-algolia-application-id=8N5KJNQKJM&x-algolia-api-key=d7f276337a47369d25c206dd1406d4e1')
+
+    allowed_domains = ['algolianet.com', 'journelle.com']
 
     categories_index_and_filter = {
         'lounge': ['shopify_products_primary-rank', 'lounge%20AND%20named_tags.price%3Afull-price'],
@@ -45,16 +49,13 @@ class JournelleCrawler(CrawlSpider):
                 yield Request(f'https://www.journelle.com/products/{product_canonical}', callback=self.parse_product)
 
     def create_products_grid_request(self, category_index, hits_per_page, category_filters):
-        url = ('https://8n5kjnqkjm-2.algolianet.com/1/indexes/*/queries?x-algolia-agent=Algolia%20for%20vanilla%20'
-               'JavaScript%20(lite)%203.24.5%3Binstantsearch.js%202.3.3%3BJS%20Helper%202.23.0&x-algolia-application-id'
-               '=8N5KJNQKJM&x-algolia-api-key=d7f276337a47369d25c206dd1406d4e1')
         body = (f'{{"requests":[{{"indexName":"{category_index}","params":"query=&numericFilters=inventory_quantity'
                 f'%3E%3D1&hitsPerPage={hits_per_page}&maxValuesPerFacet=1000&page=0&filters=named_tags.merch-department'
                 f'%3A{category_filters}&facets=%5B%22named_tags.type-filter%22%2C%22options.size%22%2C%22'
                 f'named_tags.base-color%22%2C%22named_tags.color-tone%22%2C%22named_tags.decorative%22%2C%22'
                 f'named_tags.material-type%22%2C%22named_tags.features%22%2C%22named_tags.cup-lining%22%2C%22vendor'
                 f'%22%5D&tagFilters="}}]}}')
-        return Request(url, method='POST', body=body)
+        return Request(self.products_grid_api_url, method='POST', body=body)
 
     def get_category_index_and_filters(self, super_key):
         for category, (index, filters) in self.categories_index_and_filter.items():
@@ -69,7 +70,7 @@ class JournelleCrawler(CrawlSpider):
 
         product['retailer_sku'] = self.extract_retailer_sku(product_information=product_information)
         if product['retailer_sku'] != '':
-            product['gender'] = 'Female'
+            product['gender'] = self.gender
             product['category'] = self.extract_category(product_information=product_information)
             product['brand'] = self.extract_brand(product_information=product_information)
             product['url'] = response.url
