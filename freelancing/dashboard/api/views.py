@@ -70,10 +70,7 @@ class RequestFilesApi(generics.ListCreateAPIView):
 
         buyer_request = Requests.objects.filter(id=buyer_request_id)
         if not buyer_request.exists():
-            return Response(
-                {"error": "Buyer Request does not exists"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return does_not_exists_response('Buyer Request')
         buyer_request = buyer_request.get()
 
         request_files = []
