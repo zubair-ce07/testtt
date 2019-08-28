@@ -34,7 +34,9 @@ urlpatterns = [
     # api
     url(r'^api/v1/api-token-auth/', obtain_auth_token),
     url(r'^api/v1/change-role/', user_views.UserRolesApi.as_view()),
-    url(r'^api/v1/users/$', user_views.UserApi.as_view()),
+    url(r'^api/v1/register/$', user_views.UserApiCreate.as_view()),
+    url(r'^api/v1/users/$', user_views.UserApiList.as_view()),
+    url(r'^api/v1/profile/$', user_views.UserProfileApi.as_view()),
     url(
         r'^api/v1/users/(?P<pk>[0-9]+)$',
         user_views.UserDetailsApi.as_view()

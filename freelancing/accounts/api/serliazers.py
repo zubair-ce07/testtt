@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from ..models import User
+from ..models import User, Profile
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -26,3 +26,10 @@ class UserSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'password': {'write_only': True}
         }
+
+
+class ProfileSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Profile
+        fields = '__all__'

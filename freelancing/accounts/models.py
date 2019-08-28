@@ -23,7 +23,7 @@ class Profile(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     description = models.TextField(max_length=800, blank=True)
     country = models.CharField(max_length=20, blank=True)
-    profile_image = models.ImageField(upload_to=profile_images_path)
+    profile_image = models.ImageField(upload_to=profile_images_path, blank=True)
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
