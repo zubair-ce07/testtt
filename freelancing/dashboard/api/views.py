@@ -9,7 +9,7 @@ from .serializers import RequestSerializer, RequestFilesSerializer
 from .permissions import isAdminOrBuyerOnly, \
     isSameBuyer, isSameBuyerRequest, isSameBuyerOffer
 from freelancing.utils.api.response import \
-    invalid_serializer_response, missing_attribute_response
+    invalid_serializer_response, missing_attribute_response, does_not_exists_response
 from seller.api.serializers import OfferSerializer
 
 
@@ -35,10 +35,7 @@ class RequestApi(generics.ListCreateAPIView):
         for category in request_categories:
             category = Category.objects.filter(id=category["id"])
             if not category.exists():
-                return Response(
-                    {"error": "category does not exists"},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+                return does_not_exists_response('category')
             categories.append(category.get())
 
         buyer_request = request_serializer.save()
