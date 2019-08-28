@@ -5,6 +5,8 @@ from scrapy import Request
 from scrapy.spiders import CrawlSpider
 from scrapy.http import HtmlResponse
 
+from journelle_crawler.items import ProductItem
+
 
 class JournelleCrawler(CrawlSpider):
     name = 'journelle'
@@ -60,7 +62,7 @@ class JournelleCrawler(CrawlSpider):
                 return index, filters
 
     def parse_product(self, response):
-        product = {}
+        product = ProductItem()
 
         product_information = response.css('div.main-content > script').get()[106:-11]
         product_information = json.loads(product_information)
