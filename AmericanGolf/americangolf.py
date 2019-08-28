@@ -36,4 +36,4 @@ class AmericangolfSpider(CrawlSpider):
 
     def product_requests(self, response):
         products = response.css('.search-result-items .product-name a.productlink::attr(href)').getall()
-        return [Request(url, callback=self.product_parser.parse_product) for url in products]
+        return [Request(url, callback=self.product_parser.parse) for url in products]

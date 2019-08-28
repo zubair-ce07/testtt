@@ -14,9 +14,6 @@ class AmericangolfParser(Spider):
     possible_genders = ['Female', 'Male', 'Unisex']
 
     def parse(self, response):
-        return self.parse_product(response)
-
-    def parse_product(self, response):
         product_item = Product()
         product_item['name'] = self.product_name(response)
         product_item['retailer_sku'] = self.product_retailer_sku(response)
@@ -30,28 +27,18 @@ class AmericangolfParser(Spider):
         product_item['url'] = response.url
         product_item['skus'] = {}
 
-        return self.handle_skus(response, product_item)
+        sku_requests = self.get_color_skus_requests(response)
+        sku_requests += self.get_varients_skus_requests(response)
+        if sku_requests:
+            product_item['meta'] = {'request_queue': sku_requests}
+            return self.yield_next_request_or_item(product_item)
+
+        product_item['skus'] = self.parse_varient_sku(response)
+        return product_item
 
     def parse_colour_skus(self, response):
         product_item = response.meta['product_item']
-        product_price = self.product_price(response)
-        previous_prices = self.product_previous_prices(response)
-        currency = self.product_currency(response)
-        product_sizes = response.css(".product-variations .size a::attr(data-variationvalue)").getall()
-        selected_colour = response.css(".product-variations .swatches-color .swatch.selected a::attr(data-variationvalue)").get()
-
-        colour_skus = {}
-        for size in product_sizes or [1]:
-            new_sku = {
-                "price": product_price,
-                "currency": currency,
-                "previous_prices": previous_prices,
-                "colour": selected_colour,
-                "size": size
-            }
-            colour_skus[f"{selected_colour}_{size}"] = new_sku
-
-        product_item['skus'].update(colour_skus)
+        product_item['skus'].update(self.color_skus(response))
         return self.yield_next_request_or_item(product_item)
 
     def parse_hardware_skus(self, response):
@@ -130,22 +117,32 @@ class AmericangolfParser(Spider):
 
     def product_currency(self, response):
         return response.css(".pdp-top .product-price-container span::text").get()
-
-    def handle_skus(self, response, product_item):
-        sku_requests = self.get_color_skus_requests(response)
-        sku_requests += self.get_varients_skus_requests(response)
-        if sku_requests:
-            product_item['meta'] = {'request_queue': sku_requests}
-            return self.yield_next_request_or_item(product_item)
-
-        product_item['skus'] = self.parse_varient_sku(response)
-        return product_item
     
     def get_color_skus_requests(self, response):
         urls = response.css(".product-variations .swatches-color a::attr(data-select-url)").getall()
         requests = [Request(url, callback=self.parse_colour_skus) for url in urls]
         return requests
-    
+
+    def color_skus(self, response):
+        product_price = self.product_price(response)
+        previous_prices = self.product_previous_prices(response)
+        currency = self.product_currency(response)
+        product_sizes = response.css(".product-variations .size a::attr(data-variationvalue)").getall()
+        selected_colour = response.css(".product-variations .swatches-color .swatch.selected a::attr(data-variationvalue)").get()
+
+        colour_skus = {}
+        for size in product_sizes or [1]:
+            new_sku = {
+                "price": product_price,
+                "currency": currency,
+                "previous_prices": previous_prices,
+                "colour": selected_colour,
+                "size": size
+            }
+            colour_skus[f"{selected_colour}_{size}"] = new_sku
+
+        return colour_skus
+
     def get_varients_skus_requests(self, response):
         urls = response.css(".product-variations .attribute.variant-hardware.pleaseselect option::attr(value)").getall()
         urls = list(filter(None, urls))
