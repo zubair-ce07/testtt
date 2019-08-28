@@ -24,8 +24,8 @@ export default class HotelsFrontPageElements {
     getHotelsEndDateField (): ElementFinder {
         return this.hotelsEndDate
     }
-    async getHotelsGuestField (): Promise<string> {
-        return await this.hotelsGuestField.getAttribute('aria-label');
+    getHotelsGuestField (): ElementFinder {
+        return this.hotelsGuestField;
     }
     getHotelsOriginInputField(): ElementFinder {
         return this.hotelsOriginInput;

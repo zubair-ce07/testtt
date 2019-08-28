@@ -5,16 +5,18 @@ import {Helper} from "./Helper";
 export default class HotelsFrontPage {
     helper = new Helper();
     hotelsFrontPageElementsObj = new HotelsFrontPageElements();
-    KAYAKHomePageAddress: string = 'https://www.kayak.com/';
-
-    async loadKAYAKHomePage() {
-        await browser.get(this.KAYAKHomePageAddress);
-    }
+    // KAYAKHomePageAddress: string = 'https://www.kayak.com/';
+    //
+    // async loadKAYAKHomePage() {
+    //     await browser.get(this.KAYAKHomePageAddress);
+    // }
     async goToHotelsFrontPage(): Promise<void> {
         await this.hotelsFrontPageElementsObj.getHotelsBtn().click();
     }
     async isHotelsOriginVisible(): Promise<boolean> {
-        return this.hotelsFrontPageElementsObj.getHotelsOriginField().isDisplayed();
+        const hotelOrigin = this.hotelsFrontPageElementsObj.getHotelsOriginField();
+        this.helper.waitForElementToBeVisible(hotelOrigin);
+        return hotelOrigin.isDisplayed();
     }
     async isHotelsStartDateVisible(): Promise<boolean> {
         return this.hotelsFrontPageElementsObj.getHotelsStartDateField().isDisplayed();
@@ -23,7 +25,7 @@ export default class HotelsFrontPage {
         return this.hotelsFrontPageElementsObj.getHotelsEndDateField().isDisplayed();
     }
     async getGuestFieldText(): Promise<string> {
-        return this.hotelsFrontPageElementsObj.getHotelsGuestField();
+        return await this.hotelsFrontPageElementsObj.getHotelsGuestField().getAttribute('aria-label');
     }
     async searchByNewHotelsOrigin(): Promise<void> {
         this.hotelsFrontPageElementsObj.getHotelsOriginField().click();

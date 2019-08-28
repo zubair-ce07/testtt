@@ -48,7 +48,7 @@ export class MapPage {
         viewDealBtn.click();
     }
     async isBookingProviderPageOpened(providerName: string): Promise<string> {
-        await browser.wait(this.helperObj.EC.urlContains(providerName), 10000);
+        await browser.wait(this.helperObj.EC.urlContains('kayak.com'), 10000);
         return await browser.getCurrentUrl();
     }
 }

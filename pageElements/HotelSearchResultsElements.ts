@@ -1,7 +1,7 @@
 import {by, element, ElementArrayFinder, ElementFinder} from "protractor";
 
 export default class HotelSearchResultsElements {
-    hotelsSearchResults: ElementFinder = element(by.css("div[id='searchResultsList']"));
+    hotelsSearchResult: ElementFinder = element(by.css("div[id='searchResultsList']"));
     allSearchedHotels: ElementArrayFinder = element.all(by.css('.resultWrapper'));
     allHotelNames: ElementArrayFinder = element.all(by.css("button[id*='-info-title']"));
     allHotelDetailsDropdown: ElementArrayFinder = element.all(by.css(".detailsContent"));
@@ -15,8 +15,8 @@ export default class HotelSearchResultsElements {
     reviewsInReviewsTab: ElementFinder = this.activeTabContent.element(by.css('.topReviewGrid'));
     ratesInRatesTab: ElementFinder= this.activeTabContent.element(by.css('table'));
 
-    getHotelsSearchResults(): ElementFinder {
-        return this.hotelsSearchResults;
+    getHotelsSearchResult(): ElementFinder {
+        return this.hotelsSearchResult;
     }
     getAllHotelsResults(): ElementArrayFinder {
         return this.allSearchedHotels;

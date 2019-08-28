@@ -6,7 +6,7 @@ export class HotelSearchResultsPage {
     helperObj = new Helper();
 
     async isHotelsResultPageLoaded(): Promise<boolean> {
-        const hotelsSearchResults = await this.hotelsSearchResultsElementsObj.getHotelsSearchResults();
+        const hotelsSearchResults = await this.hotelsSearchResultsElementsObj.getHotelsSearchResult();
         this.helperObj.waitForElementToBeVisible(hotelsSearchResults);
         return hotelsSearchResults.isDisplayed()
     }

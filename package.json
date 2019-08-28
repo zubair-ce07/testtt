@@ -1,7 +1,7 @@
 {
   "name": "kayak_protractor",
   "version": "1.0.0",
-  "description": "the-lab =======",
+  "description": "",
   "main": "config.js",
   "scripts": {
     "test": "protractor config.js",
@@ -19,9 +19,12 @@
   },
   "homepage": "https://github.com/arbisoft/the-lab#readme",
   "dependencies": {
+    "@types/chai": "^4.2.0",
     "@types/jasmine": "^3.4.0",
     "@types/node": "^10.14.16",
-    "jasmine": "^3.4.0",
+    "chai": "^4.2.0",
+    "chai-as-promised": "^7.1.1",
+    "mocha": "^6.2.0",
     "protractor": "^5.4.2",
     "ts-node": "^8.3.0",
     "typescript": "^3.5.3"
