@@ -1,3 +1,4 @@
+"""shop url module"""
 from django.urls import path
 
 from .views import (ProfileView, SaloonListView, MyShopListView,

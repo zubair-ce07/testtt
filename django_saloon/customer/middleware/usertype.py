@@ -3,7 +3,7 @@ from django.shortcuts import redirect, reverse
 from django.contrib import messages
 
 
-class UserProfileRedirect(object):
+class UserProfileRedirect:
     """Middleware for user profile.
 
         when profile is not completed,user will be redirected to profile page
@@ -22,7 +22,7 @@ class UserProfileRedirect(object):
                     messages.warning(
                         request, f'Complete your profile first!')
                     return redirect(reverse('shop_profile'))
-            if hasattr(request.user, 'customer') and request.user.customer.phone_no == None:
+            if hasattr(request.user, 'customer') and request.user.customer.phone_no is None:
                 if not request.path == reverse('customer_profile'):
                     messages.warning(
                         request, f'Complete your profile first!')

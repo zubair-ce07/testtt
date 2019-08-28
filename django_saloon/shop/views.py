@@ -1,15 +1,15 @@
 """shop views model"""
+from datetime import datetime, timedelta
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from datetime import datetime, timedelta
 from django.views import View
 from django.views.generic import ListView
 
-
 from customer.forms import UserUpdateForm
-from .forms import ShopUpdateForm
-from .models import Saloon, TimeSlot, Reservation
+from shop.forms import ShopUpdateForm
+from shop.models import Saloon, TimeSlot, Reservation
 
 
 class ProfileView(LoginRequiredMixin, UserPassesTestMixin, View):
@@ -84,20 +84,19 @@ class MyShopListView(LoginRequiredMixin, UserPassesTestMixin, ListView, View):
             messages.warning(
                 request, f'Time slots are exceding one day after the start time!')
             return redirect('my_shop')
-        else:
-            start_date = datetime.strptime(
-                request.POST.get("start_date", " "), '%Y-%m-%d')
-            end_date = datetime.strptime(
-                request.POST.get("end_date", " "), '%Y-%m-%d')
-            day_count = (end_date - start_date).days + 1
-            for single_date in (start_date + timedelta(n) for n in range(day_count)):
-                for slot in range(int(no_hours)):
-                    slots.append(
-                        TimeSlot(saloon=saloon, time=single_date + timedelta(hours=int(start_time)+slot)))
-            TimeSlot.objects.bulk_create(slots)
-            messages.success(
-                request, f'Time slots added!')
 
+        start_date = datetime.strptime(
+            request.POST.get("start_date", " "), '%Y-%m-%d')
+        end_date = datetime.strptime(
+            request.POST.get("end_date", " "), '%Y-%m-%d')
+        day_count = (end_date - start_date).days + 1
+        for single_date in (start_date + timedelta(n) for n in range(day_count)):
+            for slot in range(int(no_hours)):
+                slots.append(
+                    TimeSlot(saloon=saloon, time=single_date + timedelta(hours=int(start_time)+slot)))
+        TimeSlot.objects.bulk_create(slots)
+        messages.success(
+            request, f'Time slots added!')
         return redirect('my_shop')
 
     def test_func(self):
@@ -118,7 +117,8 @@ class SaloonSlotListView(LoginRequiredMixin, UserPassesTestMixin, ListView, View
             Saloon, shop_name=self.kwargs.get('shop_name'))
         return TimeSlot.objects.filter(saloon=saloon).order_by('time')
 
-    def post(self, request, shop_name):
+    @staticmethod
+    def post(request, _):
         """POST method for SaloonSlotListView View.
         This method will save create a reservation object and save it to db.
         """
@@ -146,12 +146,13 @@ class ReservationsListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         """filtering a shop reserved slots"""
         return Reservation.objects.filter(time_slot__saloon=self.request.user.saloon)
 
-    def post(self, request):
+    @staticmethod
+    def post(request):
         """POST method for shop ReservationsListView.
         This method will delete reservation.
         """
         reservation_id = request.POST.get("reservation_id", " ")
-        reason = request.POST.get("reason", " ")
+        _ = request.POST.get("reason", " ")
         Reservation.objects.get(id=reservation_id).delete()
         messages.success(
             request, f'Reservation Cancelled!')
