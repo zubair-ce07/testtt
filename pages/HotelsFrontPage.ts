@@ -5,11 +5,6 @@ import {Helper} from "./Helper";
 export default class HotelsFrontPage {
     helper = new Helper();
     hotelsFrontPageElementsObj = new HotelsFrontPageElements();
-    // KAYAKHomePageAddress: string = 'https://www.kayak.com/';
-    //
-    // async loadKAYAKHomePage() {
-    //     await browser.get(this.KAYAKHomePageAddress);
-    // }
     async goToHotelsFrontPage(): Promise<void> {
         await this.hotelsFrontPageElementsObj.getHotelsBtn().click();
     }
