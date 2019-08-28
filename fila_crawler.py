@@ -1,5 +1,4 @@
 import itertools
-from urllib.parse import urlparse
 from datetime import datetime
 
 from scrapy.spiders import CrawlSpider, Rule
@@ -116,7 +115,7 @@ class FilaCrawler(CrawlSpider):
         for product_size in product_sizes:
             sku = common_sku.copy()
             sku['size'] = product_size
-            sku[f'{retailer_sku}-{product_size}'] = sku
+            skus[f'{retailer_sku}-{product_size}'] = sku
 
         return skus
 
