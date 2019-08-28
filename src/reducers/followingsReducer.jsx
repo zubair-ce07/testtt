@@ -17,13 +17,13 @@ export default (state = INITIAL_STATE, action) => {
       };
     }
     case FOLLOW_USER: {
-      const { followerId, followeeId } = action.payload;
-      const oldFollowing = state[followerId];
+      const { follower, followee, id } = action.payload;
+      const oldFollowing = state[follower];
       const newState = {
         ...state,
-        [followerId]: {
+        [follower]: {
           ...oldFollowing,
-          [followeeId]: true
+          [followee]: id
         }
       };
       return newState;
@@ -46,7 +46,7 @@ export default (state = INITIAL_STATE, action) => {
 
 const indexById = array => {
   return array.reduce((dictionary, following) => {
-    dictionary[following["followeeId"]] = following["id"];
+    dictionary[following["followee"]] = following["id"];
     return dictionary;
   }, {});
 };

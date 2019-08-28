@@ -29,8 +29,8 @@ class UserWall extends Component {
   };
 }
 
-const mapStateToProps = (state, { userId }) => {
-  return { posts: Object.values(state.posts), id: userId };
+const mapStateToProps = (state, { user_id }) => {
+  return { posts: Object.values(state.posts), id: user_id };
 };
 
 export default connect(

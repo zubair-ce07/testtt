@@ -3,11 +3,16 @@ import { Field, Form } from "react-final-form";
 import { connect } from "react-redux";
 
 import { createComment } from "../../actions/comment.actions";
+import { fetchUser } from "../../actions/user.actions";
 
 import "./AddComment.sass";
 
 class AddComment extends Component {
   state = {};
+
+  componentDidMount = () => {
+    // this.props.fetchUser(this.props.auth.user_id);
+  };
 
   onSubmit = formValues => {
     this.props.createComment(formValues, this.props.postId);
@@ -43,16 +48,25 @@ class AddComment extends Component {
     );
   };
 
+  fetchUserImage = () => {
+    const { user } = this.props;
+    if (user)
+      return (
+        <img
+          className="profile-picture-small"
+          src={user.display_picture}
+          alt=""
+        />
+      );
+    else return <>Hello</>;
+  };
+
   render = () => {
     return (
       <div className="AddComment">
         <div className="card">
           <div className="prompt">
-            <img
-              className="profile-picture-small"
-              src={this.props.user.displayPicture}
-              alt=""
-            />
+            {this.fetchUserImage()}
             <Form onSubmit={this.onSubmit} render={this.renderForm} />
           </div>
           <span className="post-prompt">Press Enter to post.</span>
@@ -63,10 +77,10 @@ class AddComment extends Component {
 }
 
 const mapStateToProps = ({ comments, auth, users }) => {
-  return { comments: comments, user: users[auth.userId] };
+  return { comments: comments, user: users[auth.user_id], auth };
 };
 
 export default connect(
   mapStateToProps,
-  { createComment }
+  { createComment, fetchUser }
 )(AddComment);

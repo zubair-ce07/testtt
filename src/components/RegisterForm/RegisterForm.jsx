@@ -15,6 +15,25 @@ class RegisterForm extends Component {
     this.props.registerUser(newUser);
   };
 
+  renderStatusErrors = message => {
+    // Object.keys(message).map((key, i) => {
+    //   return (
+    //     <div key={i}>
+    //       {message[key].map((m, j) => {
+    //         return <div key={j}>{m}</div>;
+    //       })}
+    //     </div>
+    //   );
+    // });
+    // let errors = "";
+    // for (const key in message) {
+    //   errors += key + ": ";
+    //   message[key].forEach(m => (errors += m));
+    // }
+    // return errors;
+    return JSON.stringify(message);
+  };
+
   renderStatus = () => {
     const { status, message } = this.props.registerStatus;
     if (status === "") return <div />;
@@ -30,7 +49,7 @@ class RegisterForm extends Component {
     if (status === "Failure")
       return (
         <div className="alert alert-warning" role="alert">
-          {message}
+          {this.renderStatusErrors(message)}
         </div>
       );
   };
@@ -59,13 +78,13 @@ class RegisterForm extends Component {
     return (
       <form onSubmit={handleSubmit}>
         <Field
-          name="firstName"
+          name="first_name"
           type="text"
           label="First Name"
           component={this.renderInput}
         />
         <Field
-          name="lastName"
+          name="last_name"
           type="text"
           label="Last Name"
           component={this.renderInput}
@@ -119,9 +138,10 @@ class RegisterForm extends Component {
 const validate = formValues => {
   const errors = {};
 
-  if (!formValues.firstName) errors.firstName = "Please enter your first name";
+  if (!formValues.first_name)
+    errors.first_name = "Please enter your first name";
 
-  if (!formValues.lastName) errors.lastName = "Please enter your last name";
+  if (!formValues.last_name) errors.last_name = "Please enter your last name";
 
   if (!formValues.email) errors.email = "Please enter you email";
 

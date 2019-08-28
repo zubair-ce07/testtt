@@ -22,10 +22,12 @@ export const fetchFeedAndUsers = () => async (dispatch, getState) => {
 };
 
 export const createPost = post => async (dispatch, getState) => {
-  post.author = getState().auth.userId;
+  post.author = getState().auth.user_id;
   post.time = moment().format();
 
-  const response = await database.post("/posts", post);
+  console.log("ima post", post);
+
+  const response = await database.post("/posts/", post);
 
   dispatch({
     type: CREATE_POST,
@@ -33,8 +35,8 @@ export const createPost = post => async (dispatch, getState) => {
   });
 };
 
-export const fetchUserPosts = userId => async dispatch => {
-  const response = await database.get(`/posts?author=${userId}`);
+export const fetchUserPosts = user_id => async dispatch => {
+  const response = await database.get(`/posts?author=${user_id}`);
   dispatch({
     type: FETCH_USER_POSTS,
     payload: response.data
@@ -42,28 +44,9 @@ export const fetchUserPosts = userId => async dispatch => {
 };
 
 export const fetchFeed = () => async (dispatch, getState) => {
-  const userId = getState().auth.userId;
-  await dispatch(fetchFollowing(userId));
+  const user_id = getState().auth.user_id;
 
-  const following = getState().followings[userId];
-
-  /**
-   * This step is server's responsibility but since we have
-   * a thin server, it's been done here
-   */
-
-  let query = "/posts?";
-  query += `author=${userId}&`;
-
-  Object.keys(following).forEach(k => {
-    if (following[k]) {
-      query += `author=${k}&`;
-    }
-  });
-
-  query += "_sort=id&_order=desc";
-
-  const response = await database.get(query);
+  const response = await database.get(`/feed/${user_id}`);
   dispatch({
     type: FETCH_FEED,
     payload: response.data

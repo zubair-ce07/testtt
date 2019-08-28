@@ -15,7 +15,7 @@ class Comment extends Component {
 
   renderUserName = () => {
     const { author } = this.props;
-    if (author) return author.firstName + " " + author.lastName;
+    if (author) return author.first_name + " " + author.last_name;
     return "...";
   };
 
@@ -25,7 +25,7 @@ class Comment extends Component {
       return (
         <img
           className="profile-picture-small"
-          src={author.displayPicture}
+          src={author.display_picture}
           alt=""
         />
       );

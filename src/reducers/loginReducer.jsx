@@ -9,7 +9,7 @@ export default (state = INITIAL_STATE, action) => {
     case LOGIN_ERROR:
       return action.payload;
     case LOGIN_SUCCESS:
-      return { isSignedIn: true, userId: action.payload };
+      return { isSignedIn: true, user_id: action.payload };
     case LOGOUT:
       return INITIAL_STATE;
     default:

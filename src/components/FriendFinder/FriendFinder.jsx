@@ -19,15 +19,15 @@ class FriendFinder extends Component {
     this.props.fetchFollowing();
   };
 
-  follow = userId => {
-    this.props.followUser(userId);
+  follow = user_id => {
+    this.props.followUser(user_id);
   };
 
-  unfollow = userId => {
-    this.props.unfollowUser(userId);
+  unfollow = user_id => {
+    this.props.unfollowUser(user_id);
   };
 
-  renderFollow = userId => {
+  renderFollow = user_id => {
     const classes = "btn btn-light ";
     const followingCss = `${classes} following`;
     const notFollowingCss = `${classes} not-following`;
@@ -35,15 +35,15 @@ class FriendFinder extends Component {
 
     if (!myFollowing) return <small>loading</small>;
 
-    if (this.props.myFollowing[userId]) {
+    if (this.props.myFollowing[user_id]) {
       return (
-        <button className={followingCss} onClick={() => this.unfollow(userId)}>
+        <button className={followingCss} onClick={() => this.unfollow(user_id)}>
           Unfollow
         </button>
       );
     }
     return (
-      <button className={notFollowingCss} onClick={() => this.follow(userId)}>
+      <button className={notFollowingCss} onClick={() => this.follow(user_id)}>
         Follow
       </button>
     );
@@ -51,29 +51,29 @@ class FriendFinder extends Component {
 
   renderUsers = () => {
     const { users, me } = this.props;
-    if (users) {
+    if (users && me) {
       return Object.keys(users)
-        .filter(userId => {
-          const name = users[userId].firstName + users[userId].lastName;
+        .filter(user_id => {
+          const name = users[user_id].first_name + users[user_id].last_name;
           return name
             .toLowerCase()
             .includes(this.state.filterString.toLocaleLowerCase());
         })
-        .filter(userId => {
-          return !(parseInt(userId) === me.id);
+        .filter(user_id => {
+          return !(parseInt(user_id) === me.id);
         })
-        .map(userId => {
+        .map(user_id => {
           return (
-            <div className="contact" key={userId}>
+            <div className="contact" key={user_id}>
               <img
                 className="profile-picture"
-                src={users[userId].displayPicture}
+                src={users[user_id].display_picture}
                 alt=""
               />
-              <span onClick={() => history.push(`/user/${userId}`)}>
-                {users[userId].firstName} {users[userId].lastName}
+              <span onClick={() => history.push(`/user/${user_id}`)}>
+                {users[user_id].first_name} {users[user_id].last_name}
               </span>
-              {this.renderFollow(userId)}
+              {this.renderFollow(user_id)}
             </div>
           );
         });
@@ -109,8 +109,8 @@ const mapStateToProps = state => {
   const { users, auth, followings } = state;
   return {
     users,
-    me: users[auth.userId],
-    myFollowing: followings[auth.userId]
+    me: users[auth.user_id],
+    myFollowing: followings[auth.user_id]
   };
 };
 

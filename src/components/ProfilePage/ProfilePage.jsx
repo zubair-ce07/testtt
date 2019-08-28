@@ -18,13 +18,13 @@ class ProfilePage extends Component {
     if (user) {
       return (
         <>
-          <Topbar title={` ${user.firstName}'s Profile`} />
+          <Topbar title={` ${user.first_name}'s Profile`} />
           <div className="user-card">
             <div className="card">
-              <img className="card-img-top" src={user.displayPicture} alt="" />
+              <img className="card-img-top" src={user.display_picture} alt="" />
               <div className="card-body">
                 <h5 className="card-title">
-                  {user.firstName} {user.lastName}
+                  {user.first_name} {user.last_name}
                 </h5>
                 <p className="card-text">{user.email}</p>
               </div>
@@ -35,7 +35,7 @@ class ProfilePage extends Component {
               </ul>
             </div>
           </div>
-          <UserWall userId={user.id} />
+          <UserWall user_id={user.id} />
         </>
       );
     } else return <h1>Loading</h1>;

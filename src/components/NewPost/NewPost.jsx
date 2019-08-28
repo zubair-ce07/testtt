@@ -11,7 +11,7 @@ class NewPost extends Component {
   state = {};
 
   componentDidMount = () => {
-    fetchUser(this.props.userId);
+    fetchUser(this.props.user_id);
   };
 
   onSubmit = formValues => {
@@ -56,8 +56,8 @@ class NewPost extends Component {
   };
 
   render = () => {
-    const { userId, users } = this.props;
-    const user = users[userId];
+    const { user_id, users } = this.props;
+    const user = users[user_id];
     if (user)
       return (
         <div className="NewPost">
@@ -65,7 +65,7 @@ class NewPost extends Component {
             <div className="prompt">
               <img
                 className="profile-picture"
-                src={user.displayPicture}
+                src={user.display_picture}
                 alt=""
               />
               <Form
@@ -85,7 +85,7 @@ class NewPost extends Component {
 }
 
 const mapStateToProps = state => {
-  return { userId: state.auth.userId, users: state.users };
+  return { user_id: state.auth.user_id, users: state.users };
 };
 
 export default connect(

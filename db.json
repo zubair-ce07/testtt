@@ -1,99 +1,99 @@
 {
   "users": [
     {
-      "firstName": "Ali",
-      "lastName": "Azhar",
+      "first_name": "Ali",
+      "last_name": "Azhar",
       "email": "ali@mail.com",
       "password": "123",
-      "displayPicture": "https://s3.amazonaws.com/uifaces/faces/twitter/jeffgolenski/128.jpg",
+      "display_picture": "https://s3.amazonaws.com/uifaces/faces/twitter/jeffgolenski/128.jpg",
       "id": 1
     },
     {
       "email": "tom@mail.com",
       "password": "123",
-      "firstName": "Tom",
-      "lastName": "Riddle",
-      "displayPicture": "https://s3.amazonaws.com/uifaces/faces/twitter/hugocornejo/128.jpg",
+      "first_name": "Tom",
+      "last_name": "Riddle",
+      "display_picture": "https://s3.amazonaws.com/uifaces/faces/twitter/hugocornejo/128.jpg",
       "id": 2
     },
     {
-      "firstName": "Harry",
-      "lastName": "Potter",
+      "first_name": "Harry",
+      "last_name": "Potter",
       "email": "harry@mail.com",
       "password": "123",
-      "displayPicture": "https://s3.amazonaws.com/uifaces/faces/twitter/gusoto/128.jpg",
+      "display_picture": "https://s3.amazonaws.com/uifaces/faces/twitter/gusoto/128.jpg",
       "id": 3
     },
     {
-      "firstName": "Ron",
-      "lastName": "Weasely",
+      "first_name": "Ron",
+      "last_name": "Weasely",
       "email": "ron@mail.com",
       "password": "123",
-      "displayPicture": "https://s3.amazonaws.com/uifaces/faces/twitter/aaroni/128.jpg",
+      "display_picture": "https://s3.amazonaws.com/uifaces/faces/twitter/aaroni/128.jpg",
       "id": 4
     },
     {
-      "firstName": "Hermoine",
-      "lastName": "Granger",
+      "first_name": "Hermoine",
+      "last_name": "Granger",
       "email": "hermoine@mail.com",
       "password": "123",
-      "displayPicture": "https://s3.amazonaws.com/uifaces/faces/twitter/mgonto/128.jpg",
+      "display_picture": "https://s3.amazonaws.com/uifaces/faces/twitter/mgonto/128.jpg",
       "id": 5
     },
     {
-      "firstName": "Draco",
-      "lastName": "Malfoy",
+      "first_name": "Draco",
+      "last_name": "Malfoy",
       "email": "draco@mail.com",
       "password": "123",
-      "displayPicture": "https://s3.amazonaws.com/uifaces/faces/twitter/xamorep/128.jpg",
+      "display_picture": "https://s3.amazonaws.com/uifaces/faces/twitter/xamorep/128.jpg",
       "id": 6
     },
     {
-      "firstName": "Lord",
-      "lastName": "Voldemort",
+      "first_name": "Lord",
+      "last_name": "Voldemort",
       "email": "lord@mail.com",
       "password": "123",
-      "displayPicture": "https://s3.amazonaws.com/uifaces/faces/twitter/embrcecreations/128.jpg",
+      "display_picture": "https://s3.amazonaws.com/uifaces/faces/twitter/embrcecreations/128.jpg",
       "id": 7
     },
     {
-      "firstName": "Umar",
-      "lastName": "Azhar",
+      "first_name": "Umar",
+      "last_name": "Azhar",
       "email": "umar@mail.com",
       "password": "123",
-      "displayPicture": "https://s3.amazonaws.com/uifaces/faces/twitter/jm_denis/128.jpg",
+      "display_picture": "https://s3.amazonaws.com/uifaces/faces/twitter/jm_denis/128.jpg",
       "id": 8
     },
     {
-      "firstName": "Linus",
-      "lastName": "Torvald",
+      "first_name": "Linus",
+      "last_name": "Torvald",
       "email": "linus@mail.com",
       "password": "123",
-      "displayPicture": "https://s3.amazonaws.com/uifaces/faces/twitter/josemarques/128.jpg",
+      "display_picture": "https://s3.amazonaws.com/uifaces/faces/twitter/josemarques/128.jpg",
       "id": 9
     },
     {
-      "firstName": "Satya",
-      "lastName": "Nadella",
+      "first_name": "Satya",
+      "last_name": "Nadella",
       "email": "satya@mail.com",
       "password": "123",
-      "displayPicture": "https://s3.amazonaws.com/uifaces/faces/twitter/her_ruu/128.jpg",
+      "display_picture": "https://s3.amazonaws.com/uifaces/faces/twitter/her_ruu/128.jpg",
       "id": 10
     },
     {
-      "firstName": "Hassan",
-      "lastName": "Khan",
+      "first_name": "Hassan",
+      "last_name": "Khan",
       "email": "hassan.khan@arbisoft.com",
       "password": "123456",
-      "displayPicture": "https://s3.amazonaws.com/uifaces/faces/twitter/ryuchi311/128.jpg",
+      "display_picture": "https://s3.amazonaws.com/uifaces/faces/twitter/ryuchi311/128.jpg",
       "id": 11
     },
     {
-      "firstName": "Asim",
-      "lastName": "Khan",
+      "first_name": "Asim",
+      "last_name": "Khan",
       "email": "asim@gmail.com",
       "password": "asim",
-      "displayPicture": "https://s3.amazonaws.com/uifaces/faces/twitter/marciotoledo/128.jpg",
+      "display_picture": "https://s3.amazonaws.com/uifaces/faces/twitter/marciotoledo/128.jpg",
       "id": 12
     }
   ],

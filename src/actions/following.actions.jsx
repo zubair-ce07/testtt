@@ -9,27 +9,27 @@ import { fetchFeed } from "./post.actions";
 // FOLLOW
 // ==============================================
 
-export const fetchFollowing = followerId => async dispatch => {
-  const response = await database.get(`/followings?followerId=${followerId}`);
+export const fetchFollowing = () => async (dispatch, getState) => {
+  const followerId = getState().auth.user_id;
+  const response = await database.get(`/followings?follower_id=${followerId}`);
   const payload = { followerId, following: response.data };
   dispatch({ type: FETCH_FOLLOWING, payload });
 };
 
 export const followUser = followeeId => async (dispatch, getState) => {
-  const followerId = getState().auth.userId;
-  const newFollowing = { followerId, followeeId };
-  const response = await database.post(`/followings`, newFollowing);
+  const followerId = getState().auth.user_id;
+  const newFollowing = { follower: followerId, followee: followeeId };
+  const response = await database.post(`/followings/`, newFollowing);
   dispatch({ type: FOLLOW_USER, payload: response.data });
   dispatch(fetchFeed());
 };
 
 export const unfollowUser = followeeId => async (dispatch, getState) => {
-  const followerId = getState().auth.userId;
+  const followerId = getState().auth.user_id;
   const followingId = getState().followings[followerId][followeeId];
 
   await database.delete(`/followings/${followingId}`);
 
   const payload = { followerId, followeeId };
   dispatch({ type: UNFOLLOW_USER, payload });
-  // dispatch(fetchFeed());
 };

@@ -29,19 +29,19 @@ class Post extends Component {
     this.props.deletePost(postId);
   };
 
-  renderUserName = userId => {
-    const user = this.props.users[userId];
+  renderUserName = user_id => {
+    const user = this.props.users[user_id];
     if (user) {
-      return `${user.firstName} ${user.lastName}`;
+      return `${user.first_name} ${user.last_name}`;
     }
     return "...";
   };
 
-  renderUserPicture = userId => {
-    const user = this.props.users[userId];
+  renderUserPicture = user_id => {
+    const user = this.props.users[user_id];
     if (user) {
       return (
-        <img className="profile-picture" src={user.displayPicture} alt="" />
+        <img className="profile-picture" src={user.display_picture} alt="" />
       );
     }
     return "...";
@@ -73,7 +73,7 @@ class Post extends Component {
   };
 
   renderCross = (postId, authorId) => {
-    if (this.props.auth.isSignedIn && authorId === this.props.auth.userId)
+    if (this.props.auth.isSignedIn && authorId === this.props.auth.user_id)
       return (
         <>
           <button

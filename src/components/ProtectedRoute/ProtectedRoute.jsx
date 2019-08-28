@@ -13,23 +13,15 @@ class ProtectedRoute extends Component {
   state = { redirect: false };
 
   componentDidMount = () => {
-    const { loginUser } = this.props;
-    const email = localStorage.getItem("email");
-    const password = localStorage.getItem("password");
-    if (email) {
-      loginUser({ email, password });
-    } else this.setState({ redirect: true });
+    // this.props.loginUser({ email: "ali@mail.com", password: "12345678" });
   };
 
   render = () => {
     const { path, exact, component } = this.props;
 
-    if (this.props.auth.isSignedIn)
-      return <Route path={path} exact={exact} component={component} />;
+    if (!this.props.auth.isSignedIn) return <Redirect to="/login" />;
 
-    if (this.state.redirect) return <Redirect to="/login" />;
-
-    return <h2>Logging in..</h2>;
+    return <Route path={path} exact={exact} component={component} />;
   };
 }
 
@@ -39,7 +31,5 @@ const mapStateToProps = state => {
 
 export default connect(
   mapStateToProps,
-  {
-    loginUser
-  }
+  { loginUser }
 )(ProtectedRoute);
