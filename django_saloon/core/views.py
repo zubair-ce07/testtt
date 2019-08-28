@@ -3,9 +3,9 @@ from django.shortcuts import render, redirect
 from django.views import View
 from django.contrib.auth import logout as auth_logout
 from django.contrib import messages
+from django.contrib.auth.models import User
 from rest_framework import generics
 from rest_framework.views import APIView
-from django.contrib.auth.models import User
 from rest_framework import authentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -59,6 +59,13 @@ class UserRegisterView(View):
 class ApiUserRegisteration(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+    def post(self, request, *args, **kwargs):
+        password1 = request.data.get('password1')
+        password2 = request.data.get('password2')
+        if password1 != password2:
+            return Response(data="Password not match", status=400)
+        return super(ApiUserLogout, ApiUserLogout).post(request, *args, **kwargs)
 
 
 class ApiUserLogout(APIView):
