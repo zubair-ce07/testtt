@@ -18,6 +18,7 @@ class MixinCN(Mixin):
 
     start_urls = ["https://cn.burberry.com"]
     allowed_domains = ["cn.burberry.com"]
+    product_url_t = "https://cn.burberry.com/service/products"
 
 
 class ParseSpider(BaseParseSpider):
@@ -52,7 +53,7 @@ class ParseSpider(BaseParseSpider):
 
     def product_category(self, response):
         category = clean(response.css(".guest::attr(data-atg-category)"))[0]
-        return category.split("/") if category else ""
+        return category.split("/") if category else []
 
     def product_gender(self, garment):
         soup = soupify(garment["category"], garment["name"])
@@ -62,22 +63,20 @@ class ParseSpider(BaseParseSpider):
         return clean([image.get("img", {}).get("src") for image in raw_skus["hdCarousel"]])
 
     def color_requests(self, response):
-        urls = []
+        requests = []
         colours_css = ".product-purchase_option::attr(data-id), .guest::attr(data-product-id)"
-        base_url = "https://cn.burberry.com/service/products"
 
         colours = clean(response.css(colours_css))
         product_url = clean(response.css(".guest::attr(data-default-url)"))[0].rsplit("-", 1)[0]
         category_id = clean(response.css(".guest::attr(data-atg-category-id)"))[0]
-        csrf_token = clean(response.css(".csrf-token::attr(value)"))[0]
+        headers = {'x-csrf-token': clean(response.css(".csrf-token::attr(value)"))[0]}
 
         for colour in colours:
-            url = f"{base_url}{product_url}-p{colour}"
+            url = "{}{}-p{}".format(self.product_url_t, product_url, colour)
             add_or_replace_parameters(url, {'id': colour, 'categoryId': category_id})
-            urls.append(url)
+            requests.append(Request(url, callback=self.parse_color, dont_filter=True, headers=headers))
 
-        return [Request(url, callback=self.parse_color, dont_filter=True, headers={'x-csrf-token': csrf_token})
-                for url in urls]
+        return requests
 
     def parse_color(self, response):
         garment = response.meta["garment"]
@@ -88,31 +87,29 @@ class ParseSpider(BaseParseSpider):
 
     def skus(self, raw_skus):
         skus = {}
+        store = raw_skus["findInStore"]
         colour = raw_skus["dataDictionaryProductInfo"]["color"]
         money_strs = [
             raw_skus["currency"], raw_skus["dataDictionaryProductInfo"]["price"],
             raw_skus["dataDictionaryProductInfo"]["priceDiscount"]
         ]
 
+        if not colour:
+            colour = "One Colour"
+
         common_sku = self.product_pricing_common(None, money_strs=money_strs)
         common_sku["colour"] = colour
+        raw_sizes = store["size"]["items"] if "size" in store else [{"label": self.one_size}]
 
-        if "size" in raw_skus["findInStore"]:
-            for size in raw_skus["findInStore"]["size"]["items"]:
+        for size in raw_sizes:
+            sku = common_sku.copy()
+            sku["size"] = size["label"]
 
-                sku = common_sku.copy()
-                sku["size"] = size["label"]
+            if not size.get("isAvailable", True) or raw_skus["isOutOfStock"]:
+                sku["out_of_stock"] = True
 
-                if size["isAvailable"] == "false":
-                    sku["out of stock"] = True
-
-                sku_id = f"{sku['colour']}_{sku['size']}" if colour else sku["size"]
-                skus[sku_id] = sku
-
-        if not skus:
-            common_sku["size"] = self.one_size
-            sku_id = f"{common_sku['colour']}_{common_sku['size']}" if colour else common_sku["size"]
-            skus[sku_id] = common_sku
+            sku_id = f"{sku['colour']}_{sku['size']}" if colour else sku["size"]
+            skus[sku_id] = sku
 
         return skus
 
@@ -132,7 +129,8 @@ class CrawlSpider(BaseCrawlSpider):
         csrf_token = clean(response.css(".csrf-token::attr(value)"))[0]
 
         for pages in clean(response.css(pagination_url_css)):
-            yield Request(response.urljoin(pages), callback="parse", headers={'x-csrf-token': csrf_token})
+            meta = {'trail': self.add_trail(response)}
+            yield Request(response.urljoin(pages), callback="parse", headers={'x-csrf-token': csrf_token}, meta=meta.copy())
 
 
 class ParseSpiderCN(MixinCN, ParseSpider):
