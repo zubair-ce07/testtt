@@ -25,12 +25,6 @@ from dashboard.api import views as buyer_views
 from seller.api import views as seller_views
 
 urlpatterns = [
-    path('', include('dashboard.urls')),
-    path('admin/', admin.site.urls),
-    path('auth/', include('accounts.urls')),
-    path('user/', include('dashboard.urls')),
-    path('seller/', include('seller.urls')),
-
     # api
     url(r'^api/v1/api-token-auth/', obtain_auth_token),
     url(r'^api/v1/change-role/', user_views.UserRolesApi.as_view()),
