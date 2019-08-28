@@ -8,7 +8,16 @@
 import scrapy
 
 
-class CapucItem(scrapy.Item):
+class Docket(scrapy.Item):
     # define the fields for your item here like:
-    # name = scrapy.Field()
-    pass
+    major_parties = scrapy.Field()
+    assignees = scrapy.Field()
+    filed_on = scrapy.Field()
+    industries = scrapy.Field()
+    proceeding_type = scrapy.Field()
+    title = scrapy.Field()
+    status = scrapy.Field()
+    slug = scrapy.Field()
+    state = scrapy.Field()
+    state_id = scrapy.Field()
+    filings = scrapy.Field()

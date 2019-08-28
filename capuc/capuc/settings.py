@@ -64,9 +64,9 @@ DOWNLOAD_DELAY = 5
 
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
-#ITEM_PIPELINES = {
-#    'capuc.pipelines.CapucPipeline': 300,
-#}
+ITEM_PIPELINES = {
+   'capuc.pipelines.CapucPipeline': 300,
+}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html
