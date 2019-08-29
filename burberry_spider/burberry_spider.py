@@ -18,7 +18,7 @@ class MixinCN(Mixin):
 
     start_urls = ["https://cn.burberry.com"]
     allowed_domains = ["cn.burberry.com"]
-    product_url_t = "https://cn.burberry.com/service/products"
+    product_url_t = "https://cn.burberry.com/service/products{0}-{1}"
 
 
 class ParseSpider(BaseParseSpider):
@@ -72,7 +72,7 @@ class ParseSpider(BaseParseSpider):
         headers = {'x-csrf-token': clean(response.css(".csrf-token::attr(value)"))[0]}
 
         for colour in colours:
-            url = "{}{}-p{}".format(self.product_url_t, product_url, colour)
+            url = self.product_url_t.format(product_url, colour)
             add_or_replace_parameters(url, {'id': colour, 'categoryId': category_id})
             requests.append(Request(url, callback=self.parse_color, dont_filter=True, headers=headers))
 
@@ -94,12 +94,11 @@ class ParseSpider(BaseParseSpider):
             raw_skus["dataDictionaryProductInfo"]["priceDiscount"]
         ]
 
-        if not colour:
-            colour = "One Colour"
-
         common_sku = self.product_pricing_common(None, money_strs=money_strs)
-        common_sku["colour"] = colour
         raw_sizes = store["size"]["items"] if "size" in store else [{"label": self.one_size}]
+
+        if colour:
+            common_sku["colour"] = colour
 
         for size in raw_sizes:
             sku = common_sku.copy()
@@ -115,8 +114,8 @@ class ParseSpider(BaseParseSpider):
 
 
 class CrawlSpider(BaseCrawlSpider):
-    products_css = [".products_container"]
     listings_css = [".header-bar_container"]
+    products_css = [".products_container"]
 
     rules = (
         Rule(LinkExtractor(restrict_css=listings_css), callback="parse"),
@@ -126,11 +125,11 @@ class CrawlSpider(BaseCrawlSpider):
 
     def parse_pagination(self, response):
         pagination_url_css = ".shelf::attr(data-all-products)"
-        csrf_token = clean(response.css(".csrf-token::attr(value)"))[0]
+        headers = {'x-csrf-token': clean(response.css(".csrf-token::attr(value)"))[0]}
 
         for pages in clean(response.css(pagination_url_css)):
             meta = {'trail': self.add_trail(response)}
-            yield Request(response.urljoin(pages), callback="parse", headers={'x-csrf-token': csrf_token}, meta=meta.copy())
+            yield Request(response.urljoin(pages), callback="parse", headers=headers, meta=meta.copy())
 
 
 class ParseSpiderCN(MixinCN, ParseSpider):
