@@ -36,7 +36,7 @@ export const createPost = post => async (dispatch, getState) => {
 };
 
 export const fetchUserPosts = user_id => async dispatch => {
-  const response = await database.get(`/posts?author=${user_id}`);
+  const response = await database.get(`/users/${user_id}/posts/`);
   dispatch({
     type: FETCH_USER_POSTS,
     payload: response.data
@@ -46,7 +46,7 @@ export const fetchUserPosts = user_id => async dispatch => {
 export const fetchFeed = () => async (dispatch, getState) => {
   const user_id = getState().auth.user_id;
 
-  const response = await database.get(`/feed/${user_id}`);
+  const response = await database.get(`/feed/${user_id}/`);
   dispatch({
     type: FETCH_FEED,
     payload: response.data

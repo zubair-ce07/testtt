@@ -16,7 +16,7 @@ export const fetchCommentsAndUsers = postId => async (dispatch, getState) => {
 };
 
 export const fetchComments = postId => async dispatch => {
-  const response = await database.get(`/comments/?post=${postId}`);
+  const response = await database.get(`/posts/${postId}/comments/`);
   const payload = {
     comments: response.data,
     postId

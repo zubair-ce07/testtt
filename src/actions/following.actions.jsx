@@ -11,7 +11,7 @@ import { fetchFeed } from "./post.actions";
 
 export const fetchFollowing = () => async (dispatch, getState) => {
   const followerId = getState().auth.user_id;
-  const response = await database.get(`/followings?follower_id=${followerId}`);
+  const response = await database.get(`/users/${followerId}/followings/`);
   const payload = { followerId, following: response.data };
   dispatch({ type: FETCH_FOLLOWING, payload });
 };
