@@ -13,61 +13,47 @@ class UserViewSet(viewsets.GenericViewSet, mixins.UpdateModelMixin,
     serializer_class = serializers.UserSerializer
 
 
-class PostView(generics.GenericAPIView, mixins.CreateModelMixin,
-               mixins.DestroyModelMixin):
+class PostViewSet(viewsets.ModelViewSet):
     queryset = models.Post.objects.all()
     serializer_class = serializers.PostSerializer
 
-    def post(self, request):
-        return self.create(request)
 
-    def delete(self, request, pk):
-        return self.destroy(request)
-
-    def get(self, request):
-        author = self.request.query_params.get('author', None)
-        queryset = self.queryset.filter(author=author)
-        serializer = self.serializer_class(queryset, many=True)
-        return Response(serializer.data)
-
-
-class CommentView(generics.GenericAPIView, mixins.CreateModelMixin,
-                  mixins.DestroyModelMixin):
+class CommentViewSet(viewsets.ModelViewSet):
     queryset = models.Comment.objects.all()
     serializer_class = serializers.CommentSerializer
 
-    def post(self, request):
-        return self.create(request)
 
-    def delete(self, request):
-        return self.destroy(request)
+class FollowingViewSet(viewsets.ModelViewSet):
+    queryset = models.Following.objects.all()
+    serializer_class = serializers.FollowingSerializer
 
-    def get(self, request):
-        post = self.request.query_params.get('post', None)
-        queryset = self.queryset.filter(post=post)
+
+class UserPostView(views.APIView):
+    queryset = models.Post.objects.all()
+    serializer_class = serializers.PostSerializer
+
+    def get(self, request, pk):
+        queryset = self.queryset.filter(author=pk)
         serializer = self.serializer_class(queryset, many=True)
         return Response(serializer.data)
 
 
-class FollowingView(generics.GenericAPIView, mixins.CreateModelMixin,
-                    mixins.DestroyModelMixin):
+class PostCommentView(views.APIView):
+    queryset = models.Comment.objects.all()
+    serializer_class = serializers.CommentSerializer
+
+    def get(self, request, pk):
+        queryset = self.queryset.filter(post=pk)
+        serializer = self.serializer_class(queryset, many=True)
+        return Response(serializer.data)
+
+
+class UserFollowingView(views.APIView):
     queryset = models.Following.objects.all()
     serializer_class = serializers.FollowingSerializer
 
-    def post(self, request):
-        return self.create(request)
-
-    def delete(self, request, pk):
-        return self.destroy(request)
-
-    def get(self, request):
-        follower_id = self.request.query_params.get('follower_id', None)
-
-        if follower_id:
-            queryset = self.queryset.filter(follower_id=follower_id)
-        else:
-            queryset = self.queryset
-
+    def get(self, request, pk):
+        queryset = self.queryset.filter(follower=pk)
         serializer = self.serializer_class(queryset, many=True)
         return Response(serializer.data)
 

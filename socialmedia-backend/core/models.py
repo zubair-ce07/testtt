@@ -66,7 +66,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
 
     USERNAME_FIELD = 'email'
-    # these fields are used for creating super user
     REQUIRED_FIELDS = ['first_name', 'last_name']
     objects = UserManager()
 
@@ -93,21 +92,6 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.full_name
-
-#   NOTE: Code below manages creation of tokens itself.
-#         Using library for this. This was done for practice.
-
-    # @property
-    # def token(self):
-    #     return self._generate_jwt_token()
-
-    # def _generate_jwt_token(self):
-    #     expiry_date = datetime.now() + timedelta(hours=1)
-    #     token = jwt.encode({
-    #         'id': self.pk,
-    #         'exp': int(expiry_date.strftime('%s'))
-    #     }, settings.SECRET_KEY, algorithm='HS256')
-    #     return token.decode('utf-8')
 
 
 class Post(models.Model):
