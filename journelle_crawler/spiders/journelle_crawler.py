@@ -1,5 +1,6 @@
 from datetime import datetime
 import json
+from urllib.parse import urlencode
 
 from scrapy import Request
 from scrapy.spiders import CrawlSpider
@@ -22,8 +23,8 @@ class JournelleCrawler(CrawlSpider):
     allowed_domains = ['algolianet.com', 'journelle.com']
 
     categories_index_and_filter = {
-        'lounge': ['shopify_products_primary-rank', 'lounge%20AND%20named_tags.price%3Afull-price'],
-        'lingerie': ['shopify_products_primary-rank', 'lingerie%20AND%20named_tags.price%3Afull-price'],
+        'lounge': ['shopify_products_primary-rank', 'lounge AND named_tags.price:full-price'],
+        'lingerie': ['shopify_products_primary-rank', 'lingerie AND named_tags.price:full-price'],
         'accessories': ['shopify_products_custom-rank2', 'accessories']
     }
 
@@ -49,12 +50,23 @@ class JournelleCrawler(CrawlSpider):
                 yield Request(f'https://www.journelle.com/products/{product_canonical}', callback=self.parse_product)
 
     def create_products_grid_request(self, category_index, hits_per_page, category_filters):
-        body = (f'{{"requests":[{{"indexName":"{category_index}","params":"query=&numericFilters=inventory_quantity'
-                f'%3E%3D1&hitsPerPage={hits_per_page}&maxValuesPerFacet=1000&page=0&filters=named_tags.merch-department'
-                f'%3A{category_filters}&facets=%5B%22named_tags.type-filter%22%2C%22options.size%22%2C%22'
-                f'named_tags.base-color%22%2C%22named_tags.color-tone%22%2C%22named_tags.decorative%22%2C%22'
-                f'named_tags.material-type%22%2C%22named_tags.features%22%2C%22named_tags.cup-lining%22%2C%22vendor'
-                f'%22%5D&tagFilters="}}]}}')
+        body = json.dumps({
+            f'requests': [
+                {
+                    'indexName': category_index,
+                    'params': urlencode({
+                        'query': '',
+                        'numericFilters': 'inventory_quantity>=1',
+                        'hitsPerPage': hits_per_page,
+                        'maxValuesPerFacet': '1000',
+                        'page': '0',
+                        'filters': f'named_tags.merch-department:{category_filters}',
+                        'facets': [],
+                        'tagFilters': ''
+                    })
+                }
+            ]
+        })
         return Request(self.products_grid_api_url, method='POST', body=body)
 
     def get_category_index_and_filters(self, super_key):
