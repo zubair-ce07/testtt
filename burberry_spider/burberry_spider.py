@@ -1,5 +1,4 @@
 import json
-from urllib.parse import urljoin
 from w3lib.url import add_or_replace_parameters
 
 from scrapy.linkextractors import LinkExtractor
@@ -16,9 +15,9 @@ class Mixin:
 class MixinCN(Mixin):
     retailer = Mixin.retailer + "-cn"
     market = "CN"
-
     start_urls = ["https://cn.burberry.com"]
     allowed_domains = ["cn.burberry.com"]
+
     product_url_t = "https://cn.burberry.com/service/products{0}-p{1}"
 
 
@@ -126,14 +125,13 @@ class CrawlSpider(BaseCrawlSpider):
         headers = {'x-csrf-token': clean(response.css(".csrf-token::attr(value)"))[0]}
 
         for pages in pagination_urls:
-            yield Request(response.urljoin(pages), callback=self.parse_products, headers=headers)
+            yield response.follow(pages, callback=self.parse_category, headers=headers)
 
-    def parse_products(self, response):
+    def parse_category(self, response):
+        meta = {'trail': self.add_trail(response)}
+
         for product in json.loads(response.text):
-            meta = {'trail': self.add_trail(response)}
-            url = urljoin(self.start_urls[0], product["link"])
-
-            yield Request(url, callback=self.parse_item, meta=meta.copy())
+            yield response.follow(product["link"], callback=self.parse_item, meta=meta.copy())
 
 
 class ParseSpiderCN(MixinCN, ParseSpider):
