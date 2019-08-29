@@ -7,9 +7,9 @@ const backend = axios.create({
 backend.interceptors.response.use(
   response => response,
   error => {
-    const errorResponse = error.response;
+    // const errorResponse = error.response;
 
-    console.log("ima intevetpp", errorResponse);
+    // console.log("ima intevetpp", errorResponse);
 
     // if (isTokenExpired(errorResponse)) {
     //   return resetTokenAndReattempRequest();

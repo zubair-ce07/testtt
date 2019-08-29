@@ -9,7 +9,6 @@ import {
   FETCH_USER_POSTS
 } from "./actions.types";
 import { fetchUser } from "./user.actions";
-import { fetchFollowing } from "./following.actions";
 
 export const fetchFeedAndUsers = () => async (dispatch, getState) => {
   await dispatch(fetchFeed());

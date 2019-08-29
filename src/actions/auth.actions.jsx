@@ -21,10 +21,10 @@ export const loginError = message => {
   };
 };
 
-export const loginSuccess = user_id => {
+export const loginSuccess = (user_id, access) => {
   return {
     type: LOGIN_SUCCESS,
-    payload: user_id
+    payload: { user_id, access }
   };
 };
 
@@ -40,19 +40,26 @@ export const logout = () => {
   };
 };
 
-const verifyTokens = () => {
-  const { refresh, access } = retrieveTokens();
-  if (!refresh) return false;
+export const attemptLogin = () => async dispatch => {
+  try {
+    const { user_id, refresh } = retrieveAuthDetails();
+    if (!user_id || !refresh) return;
+
+    const { access } = await database.post("/login/refresh", { refresh });
+    dispatch(loginSuccess(user_id, access));
+  } catch (error) {
+    // console.log("error", error);
+  }
 };
 
-const retrieveTokens = () => {
+const retrieveAuthDetails = () => {
+  const user_id = localStorage.getItem("user_id") || undefined;
   const refresh = localStorage.getItem("refreshToken") || undefined;
-  const access = localStorage.getItem("accessToken") || undefined;
-  return { refresh, access };
+  return { user_id, refresh };
 };
 
-const storeTokens = (access, refresh) => {
-  localStorage.setItem("accessToken", access);
+const storeAuthDetails = (user_id, refresh) => {
+  localStorage.setItem("user_id", user_id);
   localStorage.setItem("refreshToken", refresh);
 };
 
@@ -60,9 +67,9 @@ export const loginUser = userCedentials => async dispatch => {
   try {
     const { data } = await database.post(`/login`, userCedentials);
     const { user_id, access, refresh } = data;
-    dispatch(loginSuccess(user_id));
+    dispatch(loginSuccess(user_id, access));
+    storeAuthDetails(user_id, refresh);
     dispatch(fetchUser(user_id));
-    storeTokens(access, refresh);
     history.push("/");
   } catch (error) {
     dispatch(loginError(error.data.detail));
@@ -102,7 +109,6 @@ export const registerSuccess = message => {
 export const registerUser = newUser => async dispatch => {
   newUser.display_picture = faker.image.avatar();
 
-  console.log("new user", newUser);
   try {
     await database.post("/register", newUser);
     dispatch(registerSuccess("Account created."));

@@ -9,7 +9,8 @@ export default (state = INITIAL_STATE, action) => {
     case LOGIN_ERROR:
       return action.payload;
     case LOGIN_SUCCESS:
-      return { isSignedIn: true, user_id: action.payload };
+      const { user_id, access } = action.payload;
+      return { isSignedIn: true, user_id: user_id, access: access };
     case LOGOUT:
       return INITIAL_STATE;
     default:
