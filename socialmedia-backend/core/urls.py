@@ -2,7 +2,7 @@ from rest_framework_simplejwt import views as jwt_views
 from django.urls import path, include
 from rest_framework import routers
 
-from . import views
+from core import views
 
 
 router = routers.DefaultRouter()

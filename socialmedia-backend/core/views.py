@@ -1,10 +1,9 @@
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.response import Response
 from rest_framework import views, viewsets, mixins, status
-from rest_framework.viewsets import generics
 
-from . import serializers
-from . import models
+from core import serializers
+from core import models
 
 
 class UserViewSet(viewsets.GenericViewSet, mixins.UpdateModelMixin,

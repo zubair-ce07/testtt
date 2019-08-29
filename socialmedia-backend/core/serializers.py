@@ -2,31 +2,31 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 
-from .models import User, Post, Comment, Following
+from core import models
 
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
+        model = models.User
         fields = ['id', 'first_name',
                   'last_name', 'email', 'display_picture']
 
 
 class PostSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Post
+        model = models.Post
         fields = ['id', 'author', 'time', 'status']
 
 
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Comment
+        model = models.Comment
         fields = ['id', 'post', 'author', 'time', 'message']
 
 
 class FollowingSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Following
+        model = models.Following
         fields = ['id', 'follower', 'followee']
 
 
@@ -40,10 +40,10 @@ class RegistrationSerializer(serializers.ModelSerializer):
     token = serializers.CharField(max_length=255, read_only=True)
 
     def create(self, validated_data):
-        return User.objects.create_user(**validated_data)
+        return models.User.objects.create_user(**validated_data)
 
     class Meta:
-        model = User
+        model = models.User
         fields = ['email', 'first_name', 'last_name',
                   'password', 'token', 'display_picture']
 
