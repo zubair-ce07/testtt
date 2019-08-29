@@ -21,7 +21,11 @@ class FilaSpider(CrawlSpider):
         "malha de poliamida","poliéster","algodão","pele","Cuidado","resistência","sentindo-me",
         "casual","confortável","couro","tecido","protecção","material","conforto","confortável"
     ]
-    gender_list = ["Masculina","Masculino","mulheres","infantial","Infantil","Feminino","Feminina","FEMININO"]
+    gender_dic = { 
+        "men": "masculina",
+        "women": "feminino",
+        "children": "infantial"
+    }
 
     def product_items(self, response):
 
@@ -33,16 +37,15 @@ class FilaSpider(CrawlSpider):
         product["name"] = self.extract_name(response)
         product["gender"] = self.extract_gender(product["name"])
         product["image_urls"] = self.extract_image_url(response)
-        product["skus"] = self.extract_skus(response)
 
-        if product["skus"]:
-            product["out_of_stock"] = False
-        else:
+        if self.check_instock(response):
             product["out_of_stock"] = True
+            product["skus"] = None
+        else:
+            product["skus"] = self.extract_skus(response)
 
-        raw_description = self.extract_raw_description(response)
-        product["care"] = self.extract_care(raw_description)
-        product["description"] = self.extract_description(raw_description)
+        product["care"] = self.extract_care(response)
+        product["description"] = self.extract_description(response)
 
         yield product
 
@@ -54,16 +57,18 @@ class FilaSpider(CrawlSpider):
 
     def extract_gender(self,product_name):
 
-        if product_name is None:
-            return "unisex"
+        for key, value in self.gender_dic.items():
 
-        for gender in self.gender_list:
-            if gender in product_name:
-                return gender
+            if (value in product_name) or (value.capitalize() in product_name):
+                return key
+
         return "unisex"
 
     def extract_image_url(self, response):
         return  response.css(".product-image-gallery img::attr(src)").extract()
+
+    def check_instock(self,response):
+        return response.css(".product-shop.unlogged div[class = 'unavailable-product-block']")
 
     def extract_skus(self, response):
 
@@ -71,58 +76,61 @@ class FilaSpider(CrawlSpider):
     
         price = response.css(".price::text").extract_first()
         currency = self.currency
-        sku_id = response.css(".no-display input[id = 'product-id']::attr(value)").extract_first()
-
-        common_sku = {
-            "price": price,
-            "currency": currency,
-            "sku_id" : sku_id
-        }
-
-        if response.css(".product-shop.unlogged div[class = 'unavailable-product-block']"):
-            return None
-
+        color = response.css(".wrap-sku small::text").extract()[1]
         size_label =  response.css(".configurable-swatch-list.clearfix li::attr(data-size)").extract()
 
+        sku = {
+            "price": price,
+            "currency": currency,
+            "color": color,
+            "size" : "one_size",
+            "sku_id": f"one_size{color}" 
+        }
     
         if size_label is None:
-            return common_sku
-    
-        if sku_id is None:
-            common_sku["sku_id"] = size_label
+            return sku    
 
-        for index,size in enumerate(size_label): 
-
-            sku = {
-                "size": size
+        for size in size_label: 
+            
+            sku_update = {
+                "size": size,
+                "sku_id": f"{size}{color}"
             }
-            sku.update(common_sku)              
-            skus[str(index)] = sku
 
+            sku.update(sku_update)
+
+            skus[sku["sku_id"]] = sku.copy()
+            
         return skus
 
     def extract_raw_description(self, response):
-        return response.css(".wrap-long-description p::text").extract()
+        return response.css(".wrap-long-description p::text").extract_first()
 
-    def extract_care(self,raw_description):
+    def extract_care(self,response):
+        
+        raw_description =  self.extract_raw_description(response)
         
         if raw_description is  None:
             return None
 
-        care = []
+        for care_word in self.care_list:
 
-        for index, line in enumerate(raw_description):
-            for care_words in self.care_list:
+            if care_word in raw_description:
+                return raw_description
 
-                if care_words in line:
-                    care.append(line)
-                    raw_description.pop(index)
-                break
+        return None
 
-        return care
+    def extract_description(self,response):
 
-    def extract_description(self,description):
+        raw_description = self.extract_raw_description(response)
+        
+        if raw_description is  None:
+            return None
 
-        if description :
-            return description  
+        for care_words in self.care_list:
+
+            if care_words in raw_description:
+                return None
+        
+        return raw_description
 
