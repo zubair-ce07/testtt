@@ -4,7 +4,7 @@ from scrapy.linkextractors import LinkExtractor
 
 from ..items import StartItem
 
-class FilasSpider(CrawlSpider):
+class FilaSpider(CrawlSpider):
 
     name = "Fila"
     currency = "Brazilian real"
@@ -17,6 +17,11 @@ class FilasSpider(CrawlSpider):
         Rule(LinkExtractor(restrict_css = products_css), callback = "product_items"),
     )
 
+    care_list = [
+        "malha de poliamida","poliéster","algodão","pele","Cuidado","resistência","sentindo-me",
+        "casual","confortável","couro","tecido","protecção","material","conforto","confortável"
+    ]
+    gender_list = ["Masculina","Masculino","mulheres","infantial","Infantil","Feminino","Feminina","FEMININO"]
 
     def product_items(self, response):
 
@@ -52,9 +57,7 @@ class FilasSpider(CrawlSpider):
         if product_name is None:
             return "unisex"
 
-        gender_list = ["Masculina","Masculino","mulheres","infantial","Infantil","Feminino","Feminina","FEMININO"]
-
-        for gender in gender_list:
+        for gender in self.gender_list:
             if gender in product_name:
                 return gender
         return "unisex"
@@ -105,28 +108,21 @@ class FilasSpider(CrawlSpider):
         
         if raw_description is  None:
             return None
-    
-        care_list = [
-            "malha de poliamida","poliéster","algodão","pele","Cuidado","resistência","sentindo-me",
-            "casual","confortável","couro","tecido","protecção","material","conforto","confortável"
-        ]
 
-        care_list = []
+        care = []
 
-        for idx, line in enumerate(raw_description):
-                for care_words in care_list:
+        for index, line in enumerate(raw_description):
+            for care_words in self.care_list:
 
-                    if care_words in line:
-                        care_list.append(line)
-                        raw_description.pop(idx)
-                    break
+                if care_words in line:
+                    care.append(line)
+                    raw_description.pop(index)
+                break
 
-        return care_list
+        return care
 
     def extract_description(self,description):
 
-        if description is  None:
-            return None
-
-        return description    
+        if description :
+            return description  
 
