@@ -16,6 +16,20 @@ class KhelfCrawler(CrawlSpider):
     currency = 'BRL'
     retailer = 'khelf-br'
 
+    genders = {
+        'masculina': {'masculina', 'masculino'},
+        'feminina': {'feminina', 'feminino'},
+    }
+
+    brands = {'Moleskine': {'moleskine'},
+              'Fiever': {'fiever'},
+              'Converse': {'converse'},
+              'Casio / G-Shock': {'casio', 'g-shock'},
+              'Evoke': {'evoke'},
+              'Guess': {'guess'},
+              'Vert Shoes': {'vert'}
+              }
+
     allowed_domains = ['khelf.com.br']
     start_urls = [
         'https://www.khelf.com.br/feminino-1.aspx/c',
@@ -42,12 +56,12 @@ class KhelfCrawler(CrawlSpider):
             request.meta['trail'] = trail + [[request.meta['link_text'].strip(), request.url]]
             yield request
 
-        # products requests
         products_grid = response.css('#listProduct .hproduct')
 
         for product in products_grid:
             product_link = product.css('div.figure > a::attr("href")').get()
             product_color_codes = deque(product.css('ul a::attr("color-code")').getall())
+
             yield response.follow(product_link, meta={'trail': trail, 'color_codes': product_color_codes},
                                   callback=self.parse_product_page)
 
@@ -72,7 +86,7 @@ class KhelfCrawler(CrawlSpider):
         product['spider_name'] = self.name
         product['crawl_start_time'] = self.extract_crawl_start_time()
         product['image_urls'] = []
-        product['skus'] = []
+        product['skus'] = {}
 
         yield self.create_color_request(product=product, color_codes=response.meta['color_codes'],
                                         product_id=response.css('meta[name="itemId"]::attr("content")').get())
@@ -117,14 +131,9 @@ class KhelfCrawler(CrawlSpider):
         return [data.strip() for data in response.css('#description > p::text').getall()]
 
     def extract_gender(self, response):
-        genders = {
-            'masculina': {'masculina', 'masculino'},
-            'feminina': {'feminina', 'feminino'},
-        }
-
         url_lowercase = response.url.lower()
-        for gender in genders:
-            if self.check_words_existence(genders[gender], url_lowercase):
+        for gender in self.genders:
+            if self.check_words_existence(self.genders[gender], url_lowercase):
                 return gender
         return 'unisex'
 
@@ -135,19 +144,11 @@ class KhelfCrawler(CrawlSpider):
         return [t[0] for t in trail]
 
     def extract_brand(self, response):
-        brands = {'Moleskine': {'moleskine'},
-                  'Fiever': {'fiever'},
-                  'Converse': {'converse'},
-                  'Casio / G-Shock': {'casio', 'g-shock'},
-                  'Evoke': {'evoke'},
-                  'Guess': {'guess'},
-                  'Vert Shoes': {'vert'}
-                  }
         url_lowercase = response.url.lower()
-        for brand in brands:
-            if self.check_words_existence(brands[brand], url_lowercase):
+        for brand in self.brands:
+            if self.check_words_existence(self.brands[brand], url_lowercase):
                 return brand
-        return ''
+        return 'Journelle'
 
     def extract_url(self, response):
         return response.css('head link[rel="canonical"]::attr("href")').get()
@@ -192,5 +193,4 @@ class KhelfCrawler(CrawlSpider):
             sku = common_sku.copy()
             sku['size'] = size_tag.css('a::attr("title")').get()
             sku['out_of_stock'] = size_tag.css('li::attr("class")').get() == 'warn'
-            sku['sku_id'] = f'{product_id}_{color_code}_{sku["size"]}'
-            skus.append(sku)
+            skus[f'{product_id}_{color_code}_{sku["size"]}'] = sku
