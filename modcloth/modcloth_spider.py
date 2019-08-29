@@ -7,13 +7,13 @@ from .base import BaseCrawlSpider, BaseParseSpider, clean, Gender
 
 
 class Mixin:
-    market = 'US'
-    gender = Gender.WOMEN.value
-    default_brand = 'ModCloth'
     retailer = 'modcloth-us'
-
+    market = 'US'
     allowed_domains = ['modcloth.com']
     start_urls = ['https://www.modcloth.com/']
+
+    gender = Gender.WOMEN.value
+    default_brand = 'ModCloth'
 
 
 class ModClothParseSpider(BaseParseSpider, Mixin):
@@ -40,8 +40,7 @@ class ModClothParseSpider(BaseParseSpider, Mixin):
 
     def parse_colour_requests(self, response):
         garment = response.meta['garment']
-        urls = clean(response.css('.thumb img::attr(src)'))
-        garment['image_urls'] += [url_query_cleaner(u) for u in urls]
+        garment['image_urls'] += self.image_urls(response)
         garment['skus'].update(self.skus(response))
 
         return self.next_request_or_garment(garment)
@@ -54,6 +53,9 @@ class ModClothParseSpider(BaseParseSpider, Mixin):
 
     def product_category(self, response):
         return clean(response.css('.breadcrumb-element::text'))[:-1]
+
+    def image_urls(self, response):
+        return [url_query_cleaner(u) for u in clean(response.css('.thumb img::attr(src)'))]
 
     def skus(self, response):
         skus = {}
