@@ -56,17 +56,25 @@ class KhelfCrawler(CrawlSpider):
             request.meta['trail'] = trail + [[request.meta['link_text'].strip(), request.url]]
             yield request
 
-        products_grid = response.css('#listProduct .hproduct')
+        products_grid = response.css('#listProduct > li')
 
-        for product in products_grid:
-            product_link = product.css('div.figure > a::attr("href")').get()
-            product_color_codes = deque(product.css('ul a::attr("color-code")').getall())
+        for product_information in products_grid:
+            product_id = product_information.css('input::attr("value")').get()
+            product_link = product_information.css('div.figure > a::attr("href")').get()
 
-            yield response.follow(product_link, meta={'trail': trail, 'color_codes': product_color_codes},
+            product = {}
+            product_color_requests = deque()
+            for color_code in product_information.css('ul a::attr("color-code")').getall():
+                product_color_requests.append(self.create_color_request(product=product, color_code=color_code,
+                                                                        color_requests=product_color_requests,
+                                                                        product_id=product_id))
+
+            yield response.follow(product_link, meta={'trail': trail, 'product': product,
+                                                      'color_requests': product_color_requests},
                                   callback=self.parse_product_page)
 
     def parse_product_page(self, response):
-        product = {}
+        product = response.meta['product']
 
         product['retailer_sku'] = self.extract_retailer_sku(response=response)
         product['trail'] = response.meta['trail']
@@ -88,30 +96,25 @@ class KhelfCrawler(CrawlSpider):
         product['image_urls'] = []
         product['skus'] = {}
 
-        yield self.create_color_request(product=product, color_codes=response.meta['color_codes'],
-                                        product_id=response.css('meta[name="itemId"]::attr("content")').get())
+        yield self.get_color_request_or_product(response)
 
     def parse_product_color_information(self, response):
         color_information = loads(response.body)['value']
 
         product = response.meta['product']
-        color_codes = response.meta['color_codes']
         product_id = response.meta['product_id']
-        response_color_code = response.meta['prev_color_code']
+        response_color_code = response.meta['color_code']
 
         self.extract_image_urls(response=response, color_information=color_information,
                                 image_urls=product['image_urls'])
         self.extract_skus(price=product['price'], product_id=product_id, color_code=response_color_code,
                           color_information=color_information, skus=product['skus'])
 
-        if len(color_codes) == 0:
-            yield product
-        else:
-            yield self.create_color_request(product=product, color_codes=color_codes, product_id=product_id)
+        yield self.get_color_request_or_product(response)
 
-    def create_color_request(self, product, color_codes, product_id):
-        color_code = color_codes.popleft()
-        meta = {'product': product, 'color_codes': color_codes, 'product_id': product_id, 'prev_color_code': color_code}
+    def create_color_request(self, product, color_code, color_requests, product_id):
+        meta = {'product': product, 'product_id': product_id, 'color_code': color_code,
+                'color_requests': color_requests}
         body = (f'{{'
                 f'"ProdutoCodigo":"{product_id}",'
                 f'"CarValorCodigo1":"{color_code}",'
@@ -124,8 +127,15 @@ class KhelfCrawler(CrawlSpider):
                        meta=meta,
                        body=body)
 
+    def get_color_request_or_product(self, response):
+        color_requests = response.meta['color_requests']
+        if len(color_requests) == 0:
+            return response.meta['product']
+        else:
+            return color_requests.popleft()
+
     def extract_retailer_sku(self, response):
-        return response.css('#liCodigoInterno > span::text').get().strip()
+        return response.css('meta[name="itemId"]::attr("content")').get()
 
     def extract_description(self, response):
         return [data.strip() for data in response.css('#description > p::text').getall()]
