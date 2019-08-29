@@ -59,24 +59,35 @@ class MySpider(CrawlSpider):
 
     def get_skus(self, response):
 
-        skus = []
+        skus = {}
 
         price = response.css(".price::text").extract_first()
         currency = 'GDP'
         size_label = response.css(".product-details__option-items a::attr(data-size-label)").extract()
         product_id = response.css(".product-details__option-items a::attr(data-product-id)").extract()
+        color = response.xpath('//th[contains(text(),"Colour")]/following-sibling::td/text()').extract_first()
         
-        for size,s_id in zip(size_label,product_id):
+        sku = {
+            "price": price,
+            "currency": currency,
+            "color": color,
+            "size" : "one_size",
+            "sku_id": None 
+        }
+    
+        if size_label is None:
+            return sku    
 
-            sku = {
-                "price": price,
-                "currency": currency,
+        for size, sku_id in zip(size_label,product_id): 
+            
+            sku_update = {
                 "size": size,
-                "sku-id": s_id
+                "sku_id": sku_id 
             }
-            skus.append(sku)
 
+            sku.update(sku_update)
 
-        return sku
-         
-        
+            skus[sku["sku_id"]] = sku.copy()
+            
+        return skus
+                 
