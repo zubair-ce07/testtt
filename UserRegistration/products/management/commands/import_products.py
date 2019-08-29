@@ -19,14 +19,14 @@ class Command(BaseCommand):
             description = product['description']
             images = product['img_urls']
             articles = product['skus']
-            brand = Brand.objects.get_or_create(name=brand)[0]
-            category = Category.objects.get_or_create(name=category)[0]
-            product = Product.objects.get_or_create(
+            brand, _ = Brand.objects.get_or_create(name=brand)
+            category, _ = Category.objects.get_or_create(name=category)
+            product, _ = Product.objects.get_or_create(
                 name=name,
                 brand=brand,
                 category=category,
                 description=description
-            )[0]
+            )
             self.save_images(product, images)
             self.save_articles(product, articles)
         self.stdout.write(self.style.SUCCESS("Products Loaded"))

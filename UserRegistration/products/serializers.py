@@ -6,25 +6,25 @@ from .models import Product, ProductArticle, ProductImage, Brand, Category
 class ArticleSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductArticle
-        fields = ['color', 'size', 'price']
+        fields = ['id', 'color', 'size', 'price']
 
 
 class ImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductImage
-        fields = ['url']
+        fields = ['id', 'url']
 
 
 class BrandSerializer(serializers.ModelSerializer):
     class Meta:
         model = Brand
-        fields = ['name']
+        fields = ['id', 'name']
 
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ['name']
+        fields = ['id', 'name']
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -35,5 +35,5 @@ class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ['name', 'description', 'category', 'brand', 'images', 'articles']
+        fields = ['id', 'name', 'description', 'category', 'brand', 'images', 'articles']
 
