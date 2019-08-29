@@ -3,19 +3,19 @@
 # Define here the models for your scraped items
 #
 # See documentation in:
-# https://docs.scrapy.org/en/latest/topics/items.html
+# https://docs.org/en/latest/topics/items.html
 
-import scrapy
+from scrapy import Item,Field
 
 
-class StartItem(scrapy.Item):
-    retailer_sku = scrapy.Field()
-    gender = scrapy.Field()
-    category = scrapy.Field()
-    brand = scrapy.Field()
-    url = scrapy.Field()
-    name = scrapy.Field()
-    description = scrapy.Field()
-    care = scrapy.Field()
-    image_urls = scrapy.Field()
-    skus = scrapy.Field()
+class StartItem(Item):
+    retailer_sku = Field()
+    gender = Field()
+    category = Field()
+    brand = Field()
+    url = Field()
+    name = Field()
+    description = Field()
+    care = Field()
+    image_urls = Field()
+    skus = Field()
