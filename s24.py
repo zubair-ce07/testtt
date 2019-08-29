@@ -185,7 +185,7 @@ class _24sCrawlSpider(CrawlSpider):
         return urllib.parse.quote(rule_context)
 
     def parse_pagination(self, response):
-        self.parse_products(response)
+        yield from self.parse_products(response)
         total_pages = json.loads(response.text)['results'][0]['nbPages'] + 1
 
         for page_number in range(1, total_pages):
@@ -217,5 +217,4 @@ class _24sCrawlSpider(CrawlSpider):
         raw_str = (c for c in unicodedata.normalize('NFD', raw_str) if unicodedata.category(c) != 'Mn')
         raw_str = ''.join(raw_str).lower()
         return re.sub(' |\/', '-', raw_str.replace('"', ''))
-
 
