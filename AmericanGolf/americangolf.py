@@ -32,7 +32,7 @@ class AmericangolfSpider(CrawlSpider):
             if total_products > products_in_page:
                 url = w3lib.url.add_or_replace_parameter(response.url, 'sz', total_products)
                 url = w3lib.url.add_or_replace_parameter(url, 'start', products_in_page)
-                yield Request(url, callback=self.product_requests)
+                yield Request(url, callback=self.parse)
 
     def product_requests(self, response):
         products = response.css('.search-result-items .product-name a.productlink::attr(href)').getall()

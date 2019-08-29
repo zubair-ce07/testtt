@@ -33,7 +33,7 @@ class AmericangolfParser(Spider):
             product_item['meta'] = {'request_queue': sku_requests}
             return self.yield_next_request_or_item(product_item)
 
-        product_item['skus'] = self.parse_varient_sku(response)
+        product_item['skus'] = self.varient_sku(response)
         return product_item
 
     def parse_colour_skus(self, response):
@@ -47,11 +47,11 @@ class AmericangolfParser(Spider):
         if sku_requests:
             product_item['meta']['request_queue'] += sku_requests
         else:
-            product_item['skus'].update(self.parse_varient_sku(response))
+            product_item['skus'].update(self.varient_sku(response))
 
         return self.yield_next_request_or_item(product_item)
 
-    def parse_varient_sku(self, response):
+    def varient_sku(self, response):
         raw_varients = response.css(".product-variations .attribute").getall()
         varient_titles = []
         varient_values = []
@@ -145,8 +145,7 @@ class AmericangolfParser(Spider):
 
     def get_varients_skus_requests(self, response):
         urls = response.css(".product-variations .attribute.variant-hardware.pleaseselect option::attr(value)").getall()
-        urls = list(filter(None, urls))
-        requests = [Request(url, callback=self.parse_hardware_skus) for url in urls]
+        requests = [Request(url, callback=self.parse_hardware_skus) for url in urls if url]
         return requests
 
     def yield_next_request_or_item(self, product_item):
