@@ -1,6 +1,5 @@
 from datetime import datetime
 from os.path import splitext
-from collections import deque
 from json import loads
 
 from scrapy import Request
@@ -62,15 +61,12 @@ class KhelfCrawler(CrawlSpider):
             product_id = product_information.css('input::attr("value")').get()
             product_link = product_information.css('div.figure > a::attr("href")').get()
 
-            product = {}
-            product_color_requests = deque()
+            product = {'meta': []}
             for color_code in product_information.css('ul a::attr("color-code")').getall():
-                product_color_requests.append(self.create_color_request(product=product, color_code=color_code,
-                                                                        color_requests=product_color_requests,
-                                                                        product_id=product_id))
+                product['meta'].append(self.create_color_request(product=product, color_code=color_code,
+                                                                 product_id=product_id))
 
-            yield response.follow(product_link, meta={'trail': trail, 'product': product,
-                                                      'color_requests': product_color_requests},
+            yield response.follow(product_link, meta={'trail': trail, 'product': product},
                                   callback=self.parse_product_page)
 
     def parse_product_page(self, response):
@@ -96,7 +92,7 @@ class KhelfCrawler(CrawlSpider):
         product['image_urls'] = []
         product['skus'] = {}
 
-        yield self.color_request_or_product(response)
+        yield self.color_request_or_product(product)
 
     def parse_product_color_information(self, response):
         color_information = loads(response.body)['value']
@@ -110,11 +106,10 @@ class KhelfCrawler(CrawlSpider):
         self.extract_skus(price=product['price'], product_id=product_id, color_code=response_color_code,
                           color_information=color_information, skus=product['skus'])
 
-        yield self.color_request_or_product(response)
+        yield self.color_request_or_product(product)
 
-    def create_color_request(self, product, color_code, color_requests, product_id):
-        meta = {'product': product, 'product_id': product_id, 'color_code': color_code,
-                'color_requests': color_requests}
+    def create_color_request(self, product, color_code, product_id):
+        meta = {'product': product, 'product_id': product_id, 'color_code': color_code}
         body = (f'{{'
                 f'"ProdutoCodigo":"{product_id}",'
                 f'"CarValorCodigo1":"{color_code}",'
@@ -127,12 +122,13 @@ class KhelfCrawler(CrawlSpider):
                        meta=meta,
                        body=body)
 
-    def color_request_or_product(self, response):
-        color_requests = response.meta['color_requests']
+    def color_request_or_product(self, product):
+        color_requests = product['meta']
         if len(color_requests) == 0:
-            return response.meta['product']
+            del product['meta']
+            return product
         else:
-            return color_requests.popleft()
+            return color_requests.pop()
 
     def extract_retailer_sku(self, response):
         return response.css('meta[name="itemId"]::attr("content")').get()
