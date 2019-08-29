@@ -1,11 +1,8 @@
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser, PermissionsMixin
 from django.utils.translation import gettext_lazy as _
-from datetime import datetime, timedelta
 from django.core.mail import send_mail
 from django.utils import timezone
 from django.db import models
-from django.conf import settings
-import jwt
 
 
 class UserManager(BaseUserManager):
@@ -54,8 +51,11 @@ class User(AbstractBaseUser, PermissionsMixin):
         _('staff status'),
         default=False,
         help_text=_(
-            'Designates django.utils.timezone.now()hether the user can log into this site.'),
+            'Designates whether the user can log into this admin site.'),
+        help_text=_(
+            'Designates whether the user can log into this admin site.'),
     )
+
     is_active = models.BooleanField(
         _('active'),
         default=True,
