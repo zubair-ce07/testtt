@@ -1,4 +1,5 @@
 import json
+from urllib.parse import urljoin
 from w3lib.url import add_or_replace_parameters
 
 from scrapy.linkextractors import LinkExtractor
@@ -18,7 +19,7 @@ class MixinCN(Mixin):
 
     start_urls = ["https://cn.burberry.com"]
     allowed_domains = ["cn.burberry.com"]
-    product_url_t = "https://cn.burberry.com/service/products{0}-{1}"
+    product_url_t = "https://cn.burberry.com/service/products{0}-p{1}"
 
 
 class ParseSpider(BaseParseSpider):
@@ -114,22 +115,25 @@ class ParseSpider(BaseParseSpider):
 
 
 class CrawlSpider(BaseCrawlSpider):
-    listings_css = [".header-bar_container"]
-    products_css = [".products_container"]
+    listings_css = [".nav-level2"]
 
     rules = (
-        Rule(LinkExtractor(restrict_css=listings_css), callback="parse"),
         Rule(LinkExtractor(restrict_css=listings_css), callback="parse_pagination"),
-        Rule(LinkExtractor(restrict_css=products_css), callback="parse_item")
     )
 
     def parse_pagination(self, response):
-        pagination_url_css = ".shelf::attr(data-all-products)"
+        pagination_urls = clean(response.css(".shelf::attr(data-all-products)"))
         headers = {'x-csrf-token': clean(response.css(".csrf-token::attr(value)"))[0]}
 
-        for pages in clean(response.css(pagination_url_css)):
+        for pages in pagination_urls:
+            yield Request(response.urljoin(pages), callback=self.parse_products, headers=headers)
+
+    def parse_products(self, response):
+        for product in json.loads(response.text):
             meta = {'trail': self.add_trail(response)}
-            yield Request(response.urljoin(pages), callback="parse", headers=headers, meta=meta.copy())
+            url = urljoin(self.start_urls[0], product["link"])
+
+            yield Request(url, callback=self.parse_item, meta=meta.copy())
 
 
 class ParseSpiderCN(MixinCN, ParseSpider):
