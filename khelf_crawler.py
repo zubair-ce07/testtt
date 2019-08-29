@@ -17,8 +17,8 @@ class KhelfCrawler(CrawlSpider):
     retailer = 'khelf-br'
 
     genders = {
-        'masculina': {'masculina', 'masculino'},
-        'feminina': {'feminina', 'feminino'},
+        'men': {'masculina', 'masculino'},
+        'women': {'feminina', 'feminino'},
     }
 
     brands = {'Moleskine': {'moleskine'},
@@ -96,7 +96,7 @@ class KhelfCrawler(CrawlSpider):
         product['image_urls'] = []
         product['skus'] = {}
 
-        yield self.get_color_request_or_product(response)
+        yield self.color_request_or_product(response)
 
     def parse_product_color_information(self, response):
         color_information = loads(response.body)['value']
@@ -110,7 +110,7 @@ class KhelfCrawler(CrawlSpider):
         self.extract_skus(price=product['price'], product_id=product_id, color_code=response_color_code,
                           color_information=color_information, skus=product['skus'])
 
-        yield self.get_color_request_or_product(response)
+        yield self.color_request_or_product(response)
 
     def create_color_request(self, product, color_code, color_requests, product_id):
         meta = {'product': product, 'product_id': product_id, 'color_code': color_code,
@@ -127,7 +127,7 @@ class KhelfCrawler(CrawlSpider):
                        meta=meta,
                        body=body)
 
-    def get_color_request_or_product(self, response):
+    def color_request_or_product(self, response):
         color_requests = response.meta['color_requests']
         if len(color_requests) == 0:
             return response.meta['product']
