@@ -6,11 +6,7 @@ from scrapy.link import Link
 
 class ProductLinkExtractor(LinkExtractor):
     def _extract_links(self, response_text, response_url, response_encoding, base_url=None):
-        links = []
+        raw_products = json.loads(response_text.response.body).get('results')[0]['hits']
 
-        products_data = json.loads(response_text.response.body).get('results')[0]['hits']
-        for product_data in products_data:
-            product_canonical = product_data["named_tags"]["canonical"]
-            links.append(Link(f'https://www.journelle.com/products/{product_canonical}'))
-
-        return links
+        return [Link(f'https://www.journelle.com/products/{raw_product["named_tags"]["canonical"]}')
+                for raw_product in raw_products]

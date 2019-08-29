@@ -17,9 +17,9 @@ class JournelleCrawler(CrawlSpider):
     retailer = 'journelle-eu'
     gender = 'Female'
 
-    products_grid_api_url = ('https://8n5kjnqkjm-2.algolianet.com/1/indexes/*/queries?x-algolia-agent=Algolia%20for%20'
-                             'vanilla%20JavaScript%20(lite)%203.24.5%3Binstantsearch.js%202.3.3%3BJS%20Helper%202.23.0&'
-                             'x-algolia-application-id=8N5KJNQKJM&x-algolia-api-key=d7f276337a47369d25c206dd1406d4e1')
+    products_api_url = ('https://8n5kjnqkjm-2.algolianet.com/1/indexes/*/queries?x-algolia-agent=Algolia%20for%20'
+                        'vanilla%20JavaScript%20(lite)%203.24.5%3Binstantsearch.js%202.3.3%3BJS%20Helper%202.23.0&'
+                        'x-algolia-application-id=8N5KJNQKJM&x-algolia-api-key=d7f276337a47369d25c206dd1406d4e1')
 
     categories_index_and_filter = {
         'lounge': ['shopify_products_primary-rank', 'lounge AND named_tags.price:full-price'],
@@ -70,7 +70,7 @@ class JournelleCrawler(CrawlSpider):
                 }
             ]
         })
-        return Request(self.products_grid_api_url, method='POST', body=body)
+        return Request(self.products_api_url, method='POST', body=body)
 
     def get_category_index_and_filters(self, super_key):
         for category, (index, filters) in self.categories_index_and_filter.items():

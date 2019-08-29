@@ -1,29 +1,22 @@
-# -*- coding: utf-8 -*-
-
-# Define here the models for your scraped items
-#
-# See documentation in:
-# https://docs.scrapy.org/en/latest/topics/items.html
-
-import scrapy
+from scrapy import Item, Field
 
 
-class ProductItem(scrapy.Item):
-    retailer_sku = scrapy.Field()
-    gender = scrapy.Field()
-    category = scrapy.Field()
-    brand = scrapy.Field()
-    url = scrapy.Field()
-    date = scrapy.Field()
-    currency = scrapy.Field()
-    market = scrapy.Field()
-    retailer = scrapy.Field()
-    url_original = scrapy.Field()
-    name = scrapy.Field()
-    description = scrapy.Field()
-    care = scrapy.Field()
-    image_urls = scrapy.Field()
-    price = scrapy.Field()
-    skus = scrapy.Field()
-    spider_name = scrapy.Field()
-    crawl_start_time = scrapy.Field()
+class ProductItem(Item):
+    retailer_sku = Field()
+    gender = Field()
+    category = Field()
+    brand = Field()
+    url = Field()
+    date = Field()
+    currency = Field()
+    market = Field()
+    retailer = Field()
+    url_original = Field()
+    name = Field()
+    description = Field()
+    care = Field()
+    image_urls = Field()
+    price = Field()
+    skus = Field()
+    spider_name = Field()
+    crawl_start_time = Field()
