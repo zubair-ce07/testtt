@@ -1,0 +1,31 @@
+{%extends 'base.html'%}
+{% block content %}
+
+<div class="container">
+<table id="example" class="table table-hover display">
+        <thead>
+          <tr>
+            <th>Question</th>
+            <th>Correct responses</th>
+          </tr>
+        </thead>
+        <tbody>
+    {%for ans, sub in report%}
+          <tr>
+            <td>{{ans.question.text}}</td>
+            <td>{{sub}}</td>
+          </tr>
+          {%endfor%}
+        </tbody>
+      </table>
+
+</div>
+
+{% endblock %}
+{%block js%}
+<script>
+$(document).ready( function () {
+    $('#example').DataTable();
+} );
+</script>
+{% endblock %}

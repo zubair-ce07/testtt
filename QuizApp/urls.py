@@ -21,4 +21,5 @@ urlpatterns = [
     path('result/<int:quiz_pk>/', views.quiz_result, name='quiz_result'),
     path('student_home', views.student_home, name='student_home'),
     path('result_view', views.result_view, name='result_view'),
+    path('report_view/<int:quiz_pk>/', views.report_view, name='report_view'),
 ]

@@ -207,3 +207,24 @@ def result_view(request):
 def result_details(request, quiz_pk, student_pk):
     result = AnswerOption.objects.filter(student_id=student_pk, question__in=get_object_or_404(Quiz, pk=quiz_pk).questions.all())
     return render(request, 'result_details.html', {'result': result})
+
+
+def report_view(request, quiz_pk):
+    questions = get_object_or_404(Quiz, pk=quiz_pk).questions.all()
+    correct_attempts = list()
+    correct_ans = list()
+
+    for question in questions:
+        correct_ans.append(question.answers.get(is_correct=True))
+
+    for ans in correct_ans:
+        correct_attempts.append(AnswerOption.objects.filter(answer_id=ans.pk).count())
+
+    report = zip(correct_ans, correct_attempts)
+    return render(request, 'report.html', {'report': report})
+
+
+
+
+
+    return 0;
