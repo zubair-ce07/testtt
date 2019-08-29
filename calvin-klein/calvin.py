@@ -18,7 +18,7 @@ def clean(raw_strs):
 
 
 class CalvinParseSpider(Spider):
-    name = 'calvinparsespider'
+    name = 'calvinparse'
 
     def parse_item(self, response):
         item = CalvinItem()
@@ -118,7 +118,7 @@ class CalvinCrawlSpider(CrawlSpider):
 
     def parse_categories(self, response):
         response.meta['trail'] = self.get_product_trail(response)
-        self.parse(response)
+        yield from self.parse(response)
 
         total_pages = int(response.css('.toolbar-number::text').get()) // self.PAGE_SIZE + 2
         for page_number in range(2, total_pages):
