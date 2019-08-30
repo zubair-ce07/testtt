@@ -19,3 +19,4 @@ class StartItem(Item):
     skus = Field()
     meta = Field()
     price = Field()
+    out_of_stock = Field()
