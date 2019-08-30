@@ -29,7 +29,6 @@ class ParseSpider(BaseParseSpider):
     description_css = '.intro-paragraph ::text'
     raw_brand_css = 'script:contains(ecommerce)'
     brand_re = 'brand\"\:\"(.+?)\",'
-    seen = []
 
     def parse(self, response):
         product_id = self.product_id(response)
@@ -55,20 +54,18 @@ class ParseSpider(BaseParseSpider):
         garment['meta'] = {
             'requests_queue': requests
         }
+
         return self.next_request_or_garment(garment)
 
     def parse_club_sku(self, response):
         variations = {}
         garment = response.meta['garment']
+        seen_requests = set(garment['meta'].get('seen', []))
 
-        requests = self.variation_requests(response, '#va-hand', variations)
-        requests.extend(self.variation_requests(response, '#va-setoptions', variations))
-        requests.extend(self.variation_requests(response, '#va-shafttype', variations))
-        requests.extend(self.variation_requests(response, '#va-flex', variations))
-        requests.extend(self.variation_requests(response, '#va-bounce', variations))
-        requests.extend(self.variation_requests(response, '#va-loft', variations))
-        requests_queue = [request for request in requests if request.url not in self.seen]
-        self.seen.extend([request.url for request in requests_queue])
+        variations_css = '#va-hand,#va-setoptions,#va-shafttype,#va-flex,#va-bounce,#va-loft'
+        requests = self.variation_requests(response, variations_css, variations)
+        requests_queue = [request for request in requests if request.url not in seen_requests]
+        seen_requests.update([request.url for request in requests_queue])
 
         cart_css = '#add-to-cart ::attr(disabled)'
         if not bool(clean(response.css(cart_css).get(''))):
@@ -84,16 +81,22 @@ class ParseSpider(BaseParseSpider):
 
         requests_queue.extend(garment['meta']['requests_queue'])
         garment['meta'] = {
-            'requests_queue': requests_queue
+            'requests_queue': requests_queue,
+            'seen': seen_requests
         }
+
         return self.next_request_or_garment(garment)
 
-    def variation_requests(self, response, variation_css, variations):
-        variation_key = variation_css.split('-')[1]
-        variations[variation_key] = clean(response.css(f'{variation_css} [selected]::text').get(''))
-        variation_urls = response.css(f'{variation_css} ::attr(value)').getall()
-        return [response.follow(url, callback=self.parse_club_sku, meta={'garment': response.meta['garment']})
-                for url in variation_urls if url not in response.url]
+    def variation_requests(self, response, variations_css, variations):
+        for variation in variations_css.split(','):
+            variation_key = variation.split('-')[1]
+            variations[variation_key] = clean(response.css(f'{variation} [selected]::text').get(''))
+
+        variations_css = variations_css.replace(',', ' ::attr(value), ')
+        variation_urls = response.css(variations_css).getall()
+
+        return [response.follow(url, callback=self.parse_club_sku) for url in variation_urls
+                if url not in response.url]
 
     def parse_sku(self, response):
         skus = {}
@@ -136,8 +139,6 @@ class ParseSpider(BaseParseSpider):
             request_url = add_or_replace_parameters(self.color_requests_t, args)
             request.append(response.follow(request_url, callback=self.parse_color))
 
-        if not request:
-            request.append(response.follow(response.url, callback=self.parse_color, dont_filter=True))
         return request
 
     def product_id(self, response):
