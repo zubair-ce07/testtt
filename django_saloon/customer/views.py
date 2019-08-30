@@ -18,7 +18,7 @@ from customer.serializers import CustomerUpdateSerializer
 from shop.serializers import ReservationSerializer
 from shop.models import Reservation
 from core.permissions import IsCustomer
-from core.constants import CUSTOMER
+from core.constants import CUSTOMER, RESERVATION_ID, REASON
 
 
 class ProfileView(LoginRequiredMixin, UserPassesTestMixin, View):
@@ -79,8 +79,8 @@ class ReservationsListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         """POST method for Reservation View.
         This method will delete a reservation shich id is send through post request from template.
         """
-        reservation_id = request.POST.get("reservation_id", " ")
-        _ = request.POST.get("reason", " ")
+        reservation_id = request.POST.get(RESERVATION_ID, None)
+        _ = request.POST.get(REASON, None)
         Reservation.objects.get(id=reservation_id).delete()
         messages.success(
             request, f'Reservation Cancelled!')

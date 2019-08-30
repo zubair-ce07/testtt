@@ -22,7 +22,11 @@ from shop.serializers import (
     ScheduleSerializer, ReservationSerializer
 )
 from core.permissions import IsCustomer, IsShop, IsShopOwnerOrReservedSloTCustomer
-from core.constants import CUSTOMER, SALOON
+from core.constants import (
+    CUSTOMER, SALOON, SHOP_NAME, TIME,
+    START_TIME, END_DATE, START_DATE,
+    NO_HOURS, REASON, SLOT_ID
+)
 
 
 class ProfileView(LoginRequiredMixin, UserPassesTestMixin, View):
@@ -67,7 +71,7 @@ class SaloonListView(ListView):
     model = Saloon
     template_name = 'shop/saloons.html'  # <app>/<model>_<viewtype>.html
     context_object_name = 'saloons'
-    ordering = ['shop_name']
+    ordering = [SHOP_NAME]
     paginate_by = 5
 
 
@@ -76,7 +80,7 @@ class MyShopListView(LoginRequiredMixin, UserPassesTestMixin, ListView, View):
     model = TimeSlot
     template_name = 'shop/mysaloon.html'  # <app>/<model>_<viewtype>.html
     context_object_name = 'time_slots'
-    ordering = ['time']
+    ordering = [TIME]
     paginate_by = 12
 
     def get_queryset(self):
@@ -88,9 +92,8 @@ class MyShopListView(LoginRequiredMixin, UserPassesTestMixin, ListView, View):
         This method will save profile data when profile form is submitted if
         form is valid and then create timeslot object in db for given schedule.
         """
-        start_time = request.POST.get("start_time", " ")
-        # minutes = request.POST.get("minutes", " ")
-        no_hours = request.POST.get("no_hours", " ")
+        start_time = request.POST.get(START_TIME, None)
+        no_hours = request.POST.get(NO_HOURS, None)
         saloon = self.request.user.saloon
         slots = []
         if int(start_time)+int(no_hours) > 24:
@@ -99,9 +102,9 @@ class MyShopListView(LoginRequiredMixin, UserPassesTestMixin, ListView, View):
             return redirect('my_shop')
 
         start_date = datetime.strptime(
-            request.POST.get("start_date", " "), '%Y-%m-%d')
+            request.POST.get(START_DATE, None), '%Y-%m-%d')
         end_date = datetime.strptime(
-            request.POST.get("end_date", " "), '%Y-%m-%d')
+            request.POST.get(END_DATE, None), '%Y-%m-%d')
         day_count = (end_date - start_date).days + 1
         for single_date in (start_date + timedelta(n) for n in range(day_count)):
             for slot in range(int(no_hours)):
@@ -127,15 +130,15 @@ class SaloonSlotListView(LoginRequiredMixin, UserPassesTestMixin, ListView, View
     def get_queryset(self):
         """filtering timeslots for the given saloon"""
         saloon = get_object_or_404(
-            Saloon, shop_name=self.kwargs.get('shop_name'))
-        return TimeSlot.objects.filter(saloon=saloon).order_by('time')
+            Saloon, shop_name=self.kwargs.get(SHOP_NAME))
+        return TimeSlot.objects.filter(saloon=saloon).order_by(TIME)
 
     @staticmethod
     def post(request, shop_name):
         """POST method for SaloonSlotListView View.
         This method will save create a reservation object and save it to db.
         """
-        slot_id = request.POST.get("slot_id", " ")
+        slot_id = request.POST.get(SLOT_ID, None)
         slot = TimeSlot.objects.get(id=slot_id)
 
         Reservation(customer=request.user.customer, time_slot=slot).save()
@@ -165,7 +168,7 @@ class ReservationsListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         This method will delete reservation.
         """
         reservation_id = request.POST.get("reservation_id", " ")
-        _ = request.POST.get("reason", " ")
+        _ = request.POST.get(REASON, None)
         Reservation.objects.get(id=reservation_id).delete()
         messages.success(
             request, f'Reservation Cancelled!')
@@ -236,10 +239,10 @@ class ApiListAddTimeSlots(generics.ListCreateAPIView):
         schedule_serializer = ScheduleSerializer(data=request.data)
         slots = []
         if schedule_serializer.is_valid(raise_exception=True):
-            start_date = schedule_serializer.validated_data["start_date"]
-            end_date = schedule_serializer.validated_data["end_date"]
-            start_time = schedule_serializer.validated_data["start_time"]
-            no_hours = schedule_serializer.validated_data["no_hours"]
+            start_date = schedule_serializer.validated_data[START_DATE]
+            end_date = schedule_serializer.validated_data[END_DATE]
+            start_time = schedule_serializer.validated_data[START_TIME]
+            no_hours = schedule_serializer.validated_data[NO_HOURS]
 
             if int(start_time)+int(no_hours) > 24:
                 return Response(
@@ -267,7 +270,7 @@ class ApiListSaloonSlots(generics.ListAPIView):
 
     def get_queryset(self):
         """queryset override"""
-        return TimeSlot.objects.filter(saloon__shop_name=self.kwargs.get('shop_name'))
+        return TimeSlot.objects.filter(saloon__shop_name=self.kwargs.get(SHOP_NAME))
 
 
 class ApiDeleteReservation(generics.DestroyAPIView):

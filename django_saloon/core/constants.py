@@ -1,5 +1,20 @@
 """constants module"""
 
-CUSTOMER = "customer"
-SALOON = "saloon"
-USER_TYPE = "user_type"
+CUSTOMER = 'customer'
+SALOON = 'saloon'
+USER_TYPE = 'user_type'
+USERNAME = 'username'
+PASSWORD1 = 'password1'
+PASSWORD2 = 'password2'
+PASSWORD = 'password'
+RESERVATION_ID = 'reservation_id'
+PHONE_NO = 'phone_no'
+SHOP_NAME = 'shop_name'
+ADDRESS = 'address'
+TIME = 'time'
+START_TIME = 'start_time'
+END_DATE = 'end_date'
+START_DATE = 'start_date'
+NO_HOURS = 'no_hours'
+SLOT_ID = 'slot_id',
+REASON = 'reason'

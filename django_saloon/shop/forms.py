@@ -1,7 +1,8 @@
 """shop forms module."""
 from django import forms
 
-from .models import Saloon
+from shop.models import Saloon
+from core.constants import SHOP_NAME, PHONE_NO, ADDRESS
 
 
 class ShopUpdateForm(forms.ModelForm):
@@ -16,6 +17,6 @@ class ShopUpdateForm(forms.ModelForm):
         # first call parent's constructor
         super(ShopUpdateForm, self).__init__(*args, **kwargs)
         # there's a `fields` property now
-        self.fields['phone_no'].required = True
-        self.fields['shop_name'].required = True
-        self.fields['address'].required = True
+        self.fields[PHONE_NO].required = True
+        self.fields[SHOP_NAME].required = True
+        self.fields[ADDRESS].required = True

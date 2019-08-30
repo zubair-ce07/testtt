@@ -17,7 +17,7 @@ from core.serializers import UserSerializer
 from core.forms import UserRegisterForm
 from shop.models import Saloon
 from customer.models import Customer
-from core.constants import USER_TYPE, SALOON, CUSTOMER
+from core.constants import USER_TYPE, SALOON, CUSTOMER, PASSWORD1, PASSWORD2
 
 
 class LogoutView(View):
@@ -75,8 +75,8 @@ class ApiUserRegisteration(generics.CreateAPIView):
 
     def post(self, request, *args, **kwargs):
         """post method for api user registration"""
-        password1 = request.data.get('password1')
-        password2 = request.data.get('password2')
+        password1 = request.data.get(PASSWORD1)
+        password2 = request.data.get(PASSWORD2)
         user_type = request.data.get(USER_TYPE)
         if password1 != password2:
             return Response(data="Password does not match", status=status.HTTP_400_BAD_REQUEST)

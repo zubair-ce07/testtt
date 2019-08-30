@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 
 from shop.models import Saloon
 from customer.models import Customer
-from core.constants import USER_TYPE, SALOON, CUSTOMER
+from core.constants import USER_TYPE, SALOON, CUSTOMER, PASSWORD2, PASSWORD
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -23,10 +23,10 @@ class UserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         """UserSerializer create method override"""
-        validated_data.pop('password2')
+        validated_data.pop(PASSWORD2)
         user_type = validated_data.pop(USER_TYPE)
         user = super(UserSerializer, self).create(validated_data)
-        user.set_password(validated_data['password'])
+        user.set_password(validated_data[PASSWORD])
         user.save()
         if user_type == CUSTOMER:
             Customer.objects.create(user=user)
