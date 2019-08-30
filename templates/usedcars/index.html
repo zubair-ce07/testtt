@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Wheels | Index</title>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+
+</head>
+<body>
+<!--    <div id="data_in"></div>-->
+    <button class="btn btn-outline-primary" type="button" onclick="showData()">Show Data</button>
+    <button class="btn btn-outline-info" type="button" onclick="hideData()">Hide Data</button>
+
+
+    <input type="text" placeholder="City" maxlength="10" id="cityValue">
+    <input type="text" placeholder="Make" maxlength="10" id="makeValue">
+    <input type="number" max="2020" min="1970" placeholder="Year" id="yearValue">
+    <button class="btn btn-outline-dark" type="button" onclick="filterByYear()">Filter</button>
+
+    <table class="table table-bordered" >
+      <thead class="thead-dark">
+        <tr>
+          <th>Make</th>
+          <th>Model</th>
+          <th>Year</th>
+          <th>Millage</th>
+          <th>Transmission</th>
+          <th>Register City</th>
+          <th>Assembly</th>
+          <th>Body Type</th>
+          <th>Engine Type</th>
+          <th>Engine Capacity</th>
+          <th>Features</th>
+          <th>Description</th>
+          <th>Image</th>
+        </tr>
+      </thead>
+      <tbody id="data_in" class="collapse show">
+        <!-- Data from JS will be added here       -->
+      </tbody>
+    </table>
+
+<script type="text/javascript">
+        let all_wheels = [
+            {% for car in wheels %}
+            wheel = [
+                make = "{{ car.make }}",
+                carmodel = "{{ car.carmodel }}",
+                year = "{{ car.year }}",
+                millage = "{{ car.millage }}",
+                transmission = "{{ car.transmission }}",
+                reg_city = "{{ car.reg_city }}",
+                assembly = "{{ car.assembly }}",
+                body_type = "{{ car.body_type }}",
+                engine_type = "{{ car.engine_type }}",
+                engine_capacity = "{{ car.engine_capacity }}",
+                features = "{{ car.features }}",
+                description = "{{ car.description }}",
+                image_url = "{{ car.image }}",
+                id = {{ car.id }},
+            ],
+            {% endfor %}
+        ];
+        let flag = 0;
+        let total_rows = all_wheels.length
+
+        function showData()
+        {
+            if(flag === 0)
+            {
+                document.getElementById("data_in").style.visibility = "visible";
+                let hele = document.getElementById('data_in');
+                for(let i=0; i < all_wheels.length ;i++)
+                {
+                    hele.innerHTML += "<tr id=row"+ i + ">"+
+                                        "<td id=make"+ i +">" + all_wheels[i][0] + "</td>" + // make
+                                        "<td>" + all_wheels[i][1] + "</td>" + // model
+                                        "<td id=year" + i + ">" + all_wheels[i][2] + "</td>" + // year
+                                        "<td>" + all_wheels[i][3] + "</td>" + // millage
+                                        "<td>" + all_wheels[i][4] + "</td>" + // transmission
+                                        "<td id=city"+ i +">" + all_wheels[i][5] + "</td>" + // register city
+                                        "<td>" + all_wheels[i][6] + "</td>" + // assembly
+                                        "<td>" + all_wheels[i][7] + "</td>" + // body type
+                                        "<td>" + all_wheels[i][8] + "</td>" + // engine type
+                                        "<td>" + all_wheels[i][9] + "</td>" + // engine capacity
+                                        "<td>" + all_wheels[i][10] + "</td>" + //features
+                                        "<td>" + all_wheels[i][11] + "</td>" + // description
+                                        "<td><a href='" + all_wheels[i][12] + "' target='_blank'>Image Link</a></td>" + // image url
+                                      "</tr>";
+                }
+                flag = 1
+            }
+            else{
+                document.getElementById("data_in").style.visibility = "visible";
+            }
+        }
+
+        function hideData()
+        {
+            document.getElementById("data_in").style.visibility = "hidden";
+        }
+
+        function checkNullAndCompare(val1, val2)
+        {
+            if(val1 !== ""){
+                if(val1 !== val2){
+                    return true;
+                }
+                return false;
+            }
+            return false;
+        }
+
+        function filterByYear()
+        {
+            let year = document.getElementById('yearValue').value;
+            let city = document.getElementById('cityValue').value;
+            let make = document.getElementById('makeValue').value;
+
+            for(let i=0; i < total_rows; ++i)
+            {
+                let flag = true;
+                if(checkNullAndCompare(year, document.getElementById('year' + i).innerHTML)
+                    || checkNullAndCompare(city, document.getElementById('city' + i).innerHTML)
+                    || checkNullAndCompare(make, document.getElementById('make' + i).innerHTML))
+                {
+                    document.getElementById('row'+i).style.visibility = "collapse";
+                    {#console.log(document.getElementById('year'+i).innerHTML + ' <--> ' + year)#}
+                    flag = false;
+                }
+
+                if(flag)
+                    document.getElementById('row'+i).style.visibility = "visible";
+            }
+        }
+
+    </script>
+</body>
+</html>
