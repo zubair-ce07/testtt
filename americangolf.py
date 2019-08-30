@@ -58,12 +58,11 @@ class ParseSpider(BaseParseSpider):
         return self.next_request_or_garment(garment)
 
     def parse_club_sku(self, response):
-        variations = {}
         garment = response.meta['garment']
         seen_requests = set(garment['meta'].get('seen', []))
 
         variations_css = '#va-hand,#va-setoptions,#va-shafttype,#va-flex,#va-bounce,#va-loft'
-        requests = self.variation_requests(response, variations_css, variations)
+        requests, variations = self.variation_requests(response, variations_css)
         requests_queue = [request for request in requests if request.url not in seen_requests]
         seen_requests.update([request.url for request in requests_queue])
 
@@ -75,7 +74,7 @@ class ParseSpider(BaseParseSpider):
                 currency_css = '[itemprop="priceCurrency"]::text'
                 sku['currency'] = clean(response.css(currency_css))[0]
 
-            sku['size'] = '_'.join([value for key, value in variations.items()])
+            sku['size'] = '_'.join([variation for variation in variations])
             sku_key = sku['size'].replace(' ', '')
             garment['skus'].update({sku_key: sku})
 
@@ -87,19 +86,18 @@ class ParseSpider(BaseParseSpider):
 
         return self.next_request_or_garment(garment)
 
-    def variation_requests(self, response, variations_css, variations):
+    def variation_requests(self, response, variations_css):
+        variations = []
         variation_sels = response.css('.product-content-ctr').css(variations_css)
 
         for dropdown_sel in variation_sels.css('select'):
             selected_value = clean(dropdown_sel.css('[selected]::text'))
-
             if selected_value:
-                key = clean(dropdown_sel.css('::attr(data-variationattribute)'))[0]
-                variations.update({key: selected_value[0]})
+                variations.append(selected_value[0])
 
         variation_urls = clean(variation_sels.css('::attr(value)'))
         return [response.follow(url, callback=self.parse_club_sku) for url in variation_urls
-                if url not in response.url]
+                if url not in response.url], variations
 
     def parse_sku(self, response):
         skus = {}
@@ -160,8 +158,8 @@ class ParseSpider(BaseParseSpider):
         return clean(response.css(images_css), '#')
 
     def product_gender(self, response):
-        raw_gender = clean(response.css('script:contains(ecomm_gender) ::text'))[0]
-        return self.gender_lookup(raw_gender) or Gender.ADULTS.value
+        soup = clean(response.css('script:contains(ecomm_gender) ::text'))[0]
+        return self.gender_lookup(soup) or Gender.ADULTS.value
 
 
 class CrawlSpider(BaseCrawlSpider):
