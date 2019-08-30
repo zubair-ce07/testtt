@@ -23,7 +23,7 @@ class ProceedingsSpider(scrapy.Spider):
     proceeding_details_url = proceeding_details_base_url.format('56')
     filings_url = proceeding_details_base_url.format('57')
     start_urls = [search_form_url]
-    
+
     def __init__(self, start_date, end_date):
         self.validate_date_arguments(start_date, end_date)
         self.start_date = start_date
@@ -32,6 +32,7 @@ class ProceedingsSpider(scrapy.Spider):
         self.p_flow_id = None
         self.p_flow_step_id = None
         self.proceeding_set = set()
+        self.cookiejar_count = 0
 
     def parse(self, response):
         """
@@ -48,8 +49,7 @@ class ProceedingsSpider(scrapy.Spider):
             response,
             url=self.search_form_url,
             formdata=form_data,
-            callback=self.parse_proceedings,
-            meta={'cookiejar': 'docs.cpuc.ca.gov'}
+            callback=self.parse_proceedings
         )
 
     def parse_proceedings(self, response):
@@ -66,13 +66,14 @@ class ProceedingsSpider(scrapy.Spider):
         lnkNextPage = response.xpath('//a[@id="lnkNextPage"]')
         if not lnkNextPage:
             self.proceeding_set = set(response.meta.get('proceeding_ids'))
+            self.cookiejar_count += 1
             return scrapy.Request(
                 url='{}{}'.format(
                     self.proceeding_details_url,
                     self.proceeding_set.pop()
                 ),
                 callback=self.parse_proceedings_details,
-                meta={'cookiejar': 'apps.cpuc.ca.gov'},
+                meta={'cookiejar': self.cookiejar_count},
             )
         # else:
         form_data = {
@@ -98,7 +99,6 @@ class ProceedingsSpider(scrapy.Spider):
 
             meta_data: loader:ItemLoader
         """
-        print("PROCEEDINGS LEFT", len(self.proceeding_set))
         loader = ItemLoader(item=CaPucItem(), response=response)
         loader.add_css('filed_on', '#P56_FILING_DATE::text')
         loader.add_css('assignees', '#P56_STAFF::text')
@@ -109,6 +109,7 @@ class ProceedingsSpider(scrapy.Spider):
         loader.add_css('status', '#P56_STATUS::text')
         loader.add_css('state_id', 'h1::text')
 
+        self.cookiejar_count += 1
         return scrapy.Request(
             url='{}{}'.format(
                 self.filings_url,
@@ -117,12 +118,11 @@ class ProceedingsSpider(scrapy.Spider):
             callback=self.parse_filings,
             meta={
                 'loader': loader,
-                'cookiejar': response.meta.get('cookiejar')
+                'cookiejar': self.cookiejar_count
             }
         )
 
     def parse_filings(self, response):
-        print("parse_filings")
         """
             maintains a list of filings by iterating
             through filing rows on the given filing page
@@ -153,12 +153,10 @@ class ProceedingsSpider(scrapy.Spider):
             }
 
             response.meta.setdefault('filing_list', []).append(filing)
-
         # Doing pagination for filings
         return self.do_filings_pagination(response)
 
     def do_filings_pagination(self, response):
-        print("do_filings_pagination")
         """
             Doing pagination for filings
             1. check if anchor exists for next page.
@@ -174,7 +172,7 @@ class ProceedingsSpider(scrapy.Spider):
             # Here we have all filings in a list we will fill them with
             # respective documents
             return self.scrap_filing_for_documents(response)
-        # else:
+
         widget_action_mod = next_page_anchor.split("'")[1]
         x01 = response.xpath(
             '//input[@id="apexir_WORKSHEET_ID"]/@value').get()
@@ -215,7 +213,6 @@ class ProceedingsSpider(scrapy.Spider):
         )
 
     def scrap_filing_for_documents(self, response):
-        print("scrap_filing_for_documents")
         """
             Check if all filings are processed
             then
@@ -229,27 +226,29 @@ class ProceedingsSpider(scrapy.Spider):
                 Collect documents for individual filings
 
         """
+        self.cookiejar_count += 1
         if not response.meta.get('filing_list'):
             if not self.proceeding_set:
                 return response.meta['loader'].load_item()
-            return [
+
+            return (
+                response.meta['loader'].load_item(),
                 scrapy.Request(
                     url='{}{}'.format(
                         self.proceeding_details_url,
                         self.proceeding_set.pop()
                     ),
                     callback=self.parse_proceedings_details,
-                    meta={'cookiejar': 'apps.cpuc.ca.gov'},
-                ),
-                response.meta['loader'].load_item()
-            ]
+                    meta={'cookiejar': self.cookiejar_count},
+                )
+            )
 
         filing = response.meta.get('filing_list').pop()
         return scrapy.Request(
             url=filing.get('documents_link'),
             callback=self.parse_documents,
             meta={
-                'cookiejar': 'apps.cpuc.ca.gov',
+                'cookiejar': self.cookiejar_count,
                 'filing': filing,
                 'filing_list': response.meta.get('filing_list'),
                 'loader': response.meta.get('loader')
@@ -258,7 +257,6 @@ class ProceedingsSpider(scrapy.Spider):
         )
 
     def parse_documents(self, response):
-        print("parse_documents")
         """
             Iterate through document rows on the given document page
             and update the filing with the respective documents.
