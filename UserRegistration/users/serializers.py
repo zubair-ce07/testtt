@@ -1,6 +1,5 @@
 from django.core.exceptions import ValidationError
 from drf_braces.serializers.form_serializer import FormSerializer
-from rest_framework import serializers
 
 from .forms import UserCreationForm
 from .models import User

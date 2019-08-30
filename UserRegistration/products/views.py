@@ -1,5 +1,7 @@
 import json
-from rest_framework import viewsets
+
+from django.db import transaction
+from rest_framework import viewsets, status
 from rest_framework.response import Response
 
 from .models import Product, Brand, Category, ProductArticle, ProductImage
@@ -11,24 +13,28 @@ class ProductsViewSet(viewsets.ModelViewSet):
     serializer_class = ProductSerializer
 
     def create(self, request, *args, **kwargs):
-        name = request.POST['name']
-        description = request.POST['description']
         brand = request.POST['brand']
         category = request.POST['category']
         images = json.loads(request.POST['images'])
         articles = json.loads(request.POST['articles'])
-        brand, _ = Brand.objects.get_or_create(name=brand)
-        category, _ = Category.objects.get_or_create(name=category)
-        product, _ = Product.objects.get_or_create(
-            name=name,
-            brand=brand,
-            category=category,
-            description=description
-        )
-        self.save_images(product, images)
-        self.save_articles(product, articles)
-        serializer = ProductSerializer(product)
-        return Response(serializer.data)
+        try:
+            brand = Brand.objects.get(name=brand)
+            category = Category.objects.get(name=category)
+        except Brand.DoesNotExist:
+            return Response({"not found": "brand not found"}, status=status.HTTP_404_NOT_FOUND)
+        except Category.DoesNotExist:
+            return Response({"not found": "category not found"}, status=status.HTTP_404_NOT_FOUND)
+        with transaction.atomic():
+            product, _ = Product.objects.get_or_create(
+                name=request.POST['name'],
+                brand=brand,
+                category=category,
+                description=request.POST['description']
+            )
+            self.save_images(product, images)
+            self.save_articles(product, articles)
+            serializer = ProductSerializer(product)
+            return Response(serializer.data)
 
     @staticmethod
     def save_images(product, images):
