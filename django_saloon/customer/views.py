@@ -18,6 +18,7 @@ from customer.serializers import CustomerUpdateSerializer
 from shop.serializers import ReservationSerializer
 from shop.models import Reservation
 from core.permissions import IsCustomer
+from core.constants import CUSTOMER
 
 
 class ProfileView(LoginRequiredMixin, UserPassesTestMixin, View):
@@ -56,7 +57,7 @@ class ProfileView(LoginRequiredMixin, UserPassesTestMixin, View):
                                                          'customer_form': customer_update_form})
 
     def test_func(self):
-        return hasattr(self.request.user, 'customer')
+        return hasattr(self.request.user, CUSTOMER)
 
 
 class ReservationsListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
@@ -87,7 +88,7 @@ class ReservationsListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
 
     def test_func(self):
         """only customer can access this view"""
-        return hasattr(self.request.user, 'customer')
+        return hasattr(self.request.user, CUSTOMER)
 
 
 class ApiCustomerUpdate(APIView):

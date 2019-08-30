@@ -17,6 +17,7 @@ from core.serializers import UserSerializer
 from core.forms import UserRegisterForm
 from shop.models import Saloon
 from customer.models import Customer
+from core.constants import USER_TYPE, SALOON, CUSTOMER
 
 
 class LogoutView(View):
@@ -40,12 +41,12 @@ class UserRegisterView(View):
     def post(request):
         """UserRegisterView POST method."""
         user_form = UserRegisterForm(request.POST)
-        user_type = request.POST.get("user_type", None)
+        user_type = request.POST.get(USER_TYPE, None)
         if user_form.is_valid():
             user = user_form.save()
-            if user_type == 'customer':
+            if user_type == CUSTOMER:
                 Customer.objects.create(user=user)
-            else:
+            if user_type == SALOON:
                 Saloon.objects.create(user=user)
 
             messages.success(request, f'Your account has been Created!')
@@ -76,10 +77,10 @@ class ApiUserRegisteration(generics.CreateAPIView):
         """post method for api user registration"""
         password1 = request.data.get('password1')
         password2 = request.data.get('password2')
-        user_type = request.data.get('user_type')
+        user_type = request.data.get(USER_TYPE)
         if password1 != password2:
-            return Response(data="Password not match", status=status.HTTP_400_BAD_REQUEST)
-        if user_type in ('customer', 'shop'):
+            return Response(data="Password does not match", status=status.HTTP_400_BAD_REQUEST)
+        if user_type in (CUSTOMER, SALOON):
             serializer = self.serializer_class(data=request.data)
             if serializer.is_valid(raise_exception=True):
                 serializer.save()

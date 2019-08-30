@@ -1,5 +1,6 @@
 """permission module"""
 from rest_framework import permissions
+from core.constants import CUSTOMER, SALOON
 
 
 class IsShop(permissions.BasePermission):
@@ -8,7 +9,7 @@ class IsShop(permissions.BasePermission):
      """
 
     def has_permission(self, request, view):
-        return hasattr(request.user, 'shop')
+        return hasattr(request.user, SALOON)
 
 
 class IsCustomer(permissions.BasePermission):
@@ -17,7 +18,7 @@ class IsCustomer(permissions.BasePermission):
     """
 
     def has_permission(self, request, view):
-        return hasattr(request.user, 'customer')
+        return hasattr(request.user, CUSTOMER)
 
 
 class IsShopOwnerOrReservedSloTCustomer(permissions.BasePermission):
@@ -27,8 +28,8 @@ class IsShopOwnerOrReservedSloTCustomer(permissions.BasePermission):
     """
 
     def has_object_permission(self, request, view, obj):
-        if hasattr(request.user, 'customer'):
+        if hasattr(request.user, CUSTOMER):
             return request.user.customer == obj.customer
-        if hasattr(request.user, 'shop'):
+        if hasattr(request.user, SALOON):
             return request.user.shop == obj.time_slot.saloon
         return False

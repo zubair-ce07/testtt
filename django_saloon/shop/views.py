@@ -22,6 +22,7 @@ from shop.serializers import (
     ScheduleSerializer, ReservationSerializer
 )
 from core.permissions import IsCustomer, IsShop, IsShopOwnerOrReservedSloTCustomer
+from core.constants import CUSTOMER, SALOON
 
 
 class ProfileView(LoginRequiredMixin, UserPassesTestMixin, View):
@@ -58,7 +59,7 @@ class ProfileView(LoginRequiredMixin, UserPassesTestMixin, View):
         return render(request, 'shop/profile.html', {'user_form': user_update_form, 'shop_form': shop_update_form})
 
     def test_func(self):
-        return hasattr(self.request.user, 'saloon')
+        return hasattr(self.request.user, SALOON)
 
 
 class SaloonListView(ListView):
@@ -113,7 +114,7 @@ class MyShopListView(LoginRequiredMixin, UserPassesTestMixin, ListView, View):
 
     def test_func(self):
         """checks if user is saloon user"""
-        return hasattr(self.request.user, 'saloon')
+        return hasattr(self.request.user, SALOON)
 
 
 class SaloonSlotListView(LoginRequiredMixin, UserPassesTestMixin, ListView, View):
@@ -144,7 +145,7 @@ class SaloonSlotListView(LoginRequiredMixin, UserPassesTestMixin, ListView, View
 
     def test_func(self):
         """checks if user is customer user"""
-        return hasattr(self.request.user, 'customer')
+        return hasattr(self.request.user, CUSTOMER)
 
 
 class ReservationsListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
@@ -172,7 +173,7 @@ class ReservationsListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
 
     def test_func(self):
         """checks if user is customer user"""
-        return hasattr(self.request.user, 'saloon')
+        return hasattr(self.request.user, SALOON)
 
 
 class ApiShopList(generics.ListAPIView):
