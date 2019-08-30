@@ -19,15 +19,14 @@ class HellyhansenSpider(CrawlSpider):
     )
 
     def parse_category(self, response):
-        yield from self.product_requests(response)
+        yield from self.parse_product_requests(response)
 
         data_pages = response.css(".b-toolbar.b-toolbar--bottom .infinite-scrolling::attr(data-page-count)").get(default='1')
-        if data_pages:
-            for page_num in range(2, int(data_pages)+1):
-                url = w3lib.url.add_or_replace_parameter(response.url, 'p', page_num)
-                request = Request(url, callback=self.product_requests)
-                yield request
+        for page_num in range(2, int(data_pages)+1):
+            url = w3lib.url.add_or_replace_parameter(response.url, 'p', page_num)
+            request = Request(url, callback=self.parse_product_requests)
+            yield request
 
-    def product_requests(self, response):
+    def parse_product_requests(self, response):
         products = response.css(".b-products__item.item.product.product-item a::attr(href)").getall()
-        return [Request(url, callback=self.product_parser.parse_product) for url in products]
+        return [Request(url, callback=self.product_parser.parse) for url in products]
