@@ -1,4 +1,5 @@
 import json
+from itertools import islice
 
 from django.db import transaction
 from rest_framework import viewsets, status
@@ -21,9 +22,9 @@ class ProductsViewSet(viewsets.ModelViewSet):
             brand = Brand.objects.get(name=brand)
             category = Category.objects.get(name=category)
         except Brand.DoesNotExist:
-            return Response({"not found": "brand not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'not found': 'brand not found'}, status=status.HTTP_400_BAD_REQUEST)
         except Category.DoesNotExist:
-            return Response({"not found": "category not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'not found': 'category not found'}, status=status.HTTP_400_BAD_REQUEST)
         with transaction.atomic():
             product, _ = Product.objects.get_or_create(
                 name=request.POST['name'],
@@ -38,21 +39,22 @@ class ProductsViewSet(viewsets.ModelViewSet):
 
     @staticmethod
     def save_images(product, images):
-        for image in images:
-            ProductImage.objects.get_or_create(
-                url=image['url'],
-                product=product
-            )
+        batch_size = len(images)
+        product_images = (ProductImage(url=image['url'], product=product) for image in images)
+        batch = list(islice(product_images, batch_size))
+        ProductImage.objects.bulk_create(batch, batch_size)
 
     @staticmethod
     def save_articles(product, articles):
-        for article in articles:
-            ProductArticle.objects.get_or_create(
-                color=article['color'],
-                price=article['price'],
-                size=article['size'],
-                product=product
-            )
+        batch_size = len(articles)
+        product_articles = (ProductArticle(
+            color=article['color'],
+            price=article['price'],
+            size=article['size'],
+            product=product
+        ) for article in articles)
+        batch = list(islice(product_articles, batch_size))
+        ProductImage.objects.bulk_create(batch, batch_size)
 
 
 class BrandViewSet(viewsets.ModelViewSet):

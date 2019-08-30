@@ -11,7 +11,7 @@ class UserManager(BaseUserManager):
         date_of_birth = kwargs['date_of_birth']
         gender = kwargs['gender']
         if not any([email, password, first_name, last_name, date_of_birth, gender]):
-            raise ValueError("Users must enter all the required fields! ")
+            raise ValueError('Users must enter all the required fields! ')
         user = self.model(
             email=self.normalize_email(email),
             first_name=first_name,

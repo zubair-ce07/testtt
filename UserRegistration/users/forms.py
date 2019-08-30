@@ -26,5 +26,5 @@ class UserChangeForm(forms.ModelForm):
         fields = ('email', 'password', 'date_of_birth', 'first_name', 'last_name', 'is_admin')
 
     def clean_password(self):
-        return self.initial["password"]
+        return self.initial['password']
 
