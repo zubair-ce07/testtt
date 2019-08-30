@@ -88,7 +88,6 @@ class ParseSpider(BaseParseSpider):
     def skus(self, raw_skus):
         skus = {}
         store = raw_skus["findInStore"]
-        colour = raw_skus["dataDictionaryProductInfo"]["color"]
         money_strs = [
             raw_skus["currency"], raw_skus["dataDictionaryProductInfo"]["price"],
             raw_skus["dataDictionaryProductInfo"]["priceDiscount"]
@@ -97,6 +96,7 @@ class ParseSpider(BaseParseSpider):
         common_sku = self.product_pricing_common(None, money_strs=money_strs)
         raw_sizes = store["size"]["items"] if "size" in store else [{"label": self.one_size}]
 
+        colour = raw_skus["dataDictionaryProductInfo"]["color"]
         if colour:
             common_sku["colour"] = colour
 
@@ -123,9 +123,10 @@ class CrawlSpider(BaseCrawlSpider):
     def parse_pagination(self, response):
         pagination_urls = clean(response.css(".shelf::attr(data-all-products)"))
         headers = {'x-csrf-token': clean(response.css(".csrf-token::attr(value)"))[0]}
+        meta = {'trail': self.add_trail(response)}
 
-        for pages in pagination_urls:
-            yield response.follow(pages, callback=self.parse_category, headers=headers)
+        for url in pagination_urls:
+            yield response.follow(url, callback=self.parse_category, headers=headers, meta=meta.copy())
 
     def parse_category(self, response):
         meta = {'trail': self.add_trail(response)}
