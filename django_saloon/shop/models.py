@@ -8,7 +8,7 @@ from customer.models import Customer
 class Saloon(models.Model):
     """saloo django model."""
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    shop_name = models.CharField(max_length=60)
+    shop_name = models.CharField(max_length=60, blank=True, null=True)
     phone_no = models.IntegerField(blank=True, null=True)
     address = models.TextField(blank=True, null=True)
 

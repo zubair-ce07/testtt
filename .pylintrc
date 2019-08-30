@@ -11,5 +11,7 @@ disable=
     no-member,
     keyword-arg-before-vararg,
     too-many-ancestors,
-    invalid-name
+    invalid-name,
+    abstract-method,
+    unused-argument
 ignore=migrations

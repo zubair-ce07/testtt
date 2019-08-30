@@ -9,11 +9,15 @@ from rest_framework.views import APIView
 from rest_framework import authentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework import generics
+from rest_framework import status
 
 
 from customer.forms import UserUpdateForm, CustomerUpdateForm
 from customer.serializers import CustomerUpdateSerializer
+from shop.serializers import ReservationSerializer
 from shop.models import Reservation
+from core.permissions import IsCustomer
 
 
 class ProfileView(LoginRequiredMixin, UserPassesTestMixin, View):
@@ -87,14 +91,46 @@ class ReservationsListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
 
 
 class ApiCustomerUpdate(APIView):
-    """customer update view for api."""
+    """customer update view for api.
+    post method data structure
+    {
+        "user":{
+        "username":"username",
+        "email":"abc@gmail.com",
+        "firstname":"abc",
+        "last_name":"xyz"
+        },
+        "phone_no":0051315
+    }
+    """
     authentication_classes = [authentication.TokenAuthentication]
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, IsCustomer)
 
-    def post(self, request):
+    @staticmethod
+    def post(request):
         """post method for customer update"""
+        instance = request.user
         customer_update_serializer = CustomerUpdateSerializer(
-            data=request.data)
+            instance=instance.customer, data=request.data
+        )
         if customer_update_serializer.is_valid(raise_exception=True):
             customer_update_serializer.save()
-        return Response({"customer created successfully"})
+        return Response(data={"customer updated successfully"}, status=status.HTTP_200_OK)
+
+
+class ApiMyReservations(generics.ListAPIView):
+    """customer reservation list api view"""
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = (IsAuthenticated, IsCustomer)
+
+    serializer_class = ReservationSerializer
+    queryset = Reservation.objects.all()
+
+    def get_queryset(self):
+        """queryset override"""
+        query_set = Reservation.objects.filter(
+            customer=self.request.user.customer)
+        if not query_set.exists():
+            return []
+
+        return query_set

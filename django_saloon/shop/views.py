@@ -6,10 +6,22 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views import View
 from django.views.generic import ListView
+from rest_framework import generics
+from rest_framework.views import APIView
+from rest_framework import authentication
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
 
 from customer.forms import UserUpdateForm
 from shop.forms import ShopUpdateForm
 from shop.models import Saloon, TimeSlot, Reservation
+from shop.serializers import ShopSerializer
+from shop.serializers import (
+    SaloonUpdateSerializer, TimeSlotSerializer,
+    ScheduleSerializer, ReservationSerializer
+)
+from core.permissions import IsCustomer, IsShop, IsShopOwnerOrReservedSloTCustomer
 
 
 class ProfileView(LoginRequiredMixin, UserPassesTestMixin, View):
@@ -118,7 +130,7 @@ class SaloonSlotListView(LoginRequiredMixin, UserPassesTestMixin, ListView, View
         return TimeSlot.objects.filter(saloon=saloon).order_by('time')
 
     @staticmethod
-    def post(request, _):
+    def post(request, shop_name):
         """POST method for SaloonSlotListView View.
         This method will save create a reservation object and save it to db.
         """
@@ -161,3 +173,140 @@ class ReservationsListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     def test_func(self):
         """checks if user is customer user"""
         return hasattr(self.request.user, 'saloon')
+
+
+class ApiShopList(generics.ListAPIView):
+    """api shop list view"""
+    queryset = Saloon.objects.all()
+    serializer_class = ShopSerializer
+
+
+class ApiShopUpdate(APIView):
+    """customer update view for api.
+     post method data structure
+    {
+        "user":{
+        "username":"username",
+        "email":"abc@gmail.com",
+        "firstname":"abc",
+        "last_name":"xyz"
+        },
+        "phone_no":0051315,
+        "address":"h_no 123, xyz city",
+        "shop_name":"xyz saloon"
+    }"""
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = (IsAuthenticated, IsShop)
+
+    @staticmethod
+    def post(request):
+        """post method for customer update"""
+        instance = request.user
+        saloon_update_serializer = SaloonUpdateSerializer(
+            instance=instance.saloon, data=request.data
+        )
+        if saloon_update_serializer.is_valid(raise_exception=True):
+            saloon_update_serializer.save()
+        return Response(data={"shop updated successfully"}, status=status.HTTP_200_OK)
+
+
+class ApiListAddTimeSlots(generics.ListCreateAPIView):
+    """list time slots of a saloon api view."""
+
+    serializer_class = TimeSlotSerializer
+    queryset = TimeSlot.objects.all()
+    permission_classes = (IsAuthenticated, IsShop)
+
+    def get_queryset(self):
+        """override queryset"""
+        return self.queryset.filter(saloon=self.request.user.saloon.id)
+
+    def post(self, request, *args, **kwargs):
+        """ApiListAddTimeSlots post method.
+            post request data format
+            {
+                "start_date":"2019-08-26",
+                "end_date":"2019-08-27",
+                "start_time":"08",
+                "no_hours":"08"
+            }
+        """
+        # schedule data from post request
+        schedule_serializer = ScheduleSerializer(data=request.data)
+        slots = []
+        if schedule_serializer.is_valid(raise_exception=True):
+            start_date = schedule_serializer.validated_data["start_date"]
+            end_date = schedule_serializer.validated_data["end_date"]
+            start_time = schedule_serializer.validated_data["start_time"]
+            no_hours = schedule_serializer.validated_data["no_hours"]
+
+            if int(start_time)+int(no_hours) > 24:
+                return Response(
+                    data={"Time slots are exceding one day after the start time!"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            day_count = (end_date - start_date).days + 1
+            for single_date in (start_date + timedelta(n) for n in range(day_count)):
+                for slot in range(int(no_hours)):
+                    slots.append(
+                        TimeSlot(
+                            saloon=self.request.user.saloon,
+                            time=single_date + timedelta(hours=int(start_time)+slot)))
+            TimeSlot.objects.bulk_create(slots)
+            return Response(data={"slots added  successfully"}, status=status.HTTP_200_OK)
+        return Response(data={"Data not valid!"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ApiListSaloonSlots(generics.ListAPIView):
+    """list saloon slots by name."""
+    serializer_class = TimeSlotSerializer
+    queryset = TimeSlot.objects.all()
+    permission_classes = (IsAuthenticated, IsCustomer)
+
+    def get_queryset(self):
+        """queryset override"""
+        return TimeSlot.objects.filter(saloon__shop_name=self.kwargs.get('shop_name'))
+
+
+class ApiDeleteReservation(generics.DestroyAPIView):
+    """delete reservation only by customer or shop"""
+
+    permission_classes = (IsAuthenticated, IsShopOwnerOrReservedSloTCustomer)
+    serializer_class = ReservationSerializer
+    queryset = Reservation.objects.all()
+
+
+class ApiShopReservations(generics.ListAPIView):
+    """lists a saloon reservations"""
+    serializer_class = ReservationSerializer
+    queryset = Reservation.objects.all()
+    permission_classes = (IsAuthenticated, IsShop)
+
+    def get_queryset(self):
+        query_set = Reservation.objects.filter(
+            time_slot__saloon=self.request.user.saloon)
+        if not query_set.exists():
+            return []
+
+        return query_set
+
+
+class ApiReserveTimeSlot(generics.CreateAPIView):
+    """reserve a slot by customer.
+    post request data format
+    {
+    "time_slot": 748
+    }
+    """
+    serializer_class = ReservationSerializer
+    queryset = Reservation.objects.all()
+    permission_classes = (IsAuthenticated, IsCustomer)
+
+    def post(self, request, *args, **kwargs):
+        """post method for reserve time slot"""
+        request.data['customer'] = request.user.customer.id
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+        return Response(data={"slot reserved successfully"}, status=status.HTTP_200_OK)
