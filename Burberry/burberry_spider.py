@@ -18,7 +18,6 @@ class MixinCN(Mixin):
 
 class BurberryParseSpider(BaseParseSpider):
     description_css = '.accordion-tab_content p::text'
-    price_css = '.product-purchase_price::text'
     care_css = '.accordion-tab_sub-item li::text'
 
     def parse(self, response):
