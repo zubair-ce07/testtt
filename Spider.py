@@ -71,15 +71,13 @@ class FilaSpider(CrawlSpider):
         return response.css(".product-shop.unlogged div[class = 'unavailable-product-block']")
 
     def extract_skus(self, response):
-
-        skus = {}
     
         price = response.css(".price::text").extract_first()
         currency = self.currency
         color = response.css(".wrap-sku small::text").extract()[1]
         size_label =  response.css(".configurable-swatch-list.clearfix li::attr(data-size)").extract()
 
-        sku = {
+        common_sku = {
             "price": price,
             "currency": currency,
             "color": color,
@@ -88,16 +86,15 @@ class FilaSpider(CrawlSpider):
         }
     
         if size_label is None:
-            return sku    
+            return common_sku  
+
+        skus = {}  
 
         for size in size_label: 
-            
-            sku_update = {
-                "size": size,
-                "sku_id": f"{size}{color}"
-            }
 
-            sku.update(sku_update)
+            sku = common_sku.copy()
+            sku["size"] = size
+            sku["sku_id"] = f"{size}{color}" 
 
             skus[sku["sku_id"]] = sku.copy()
             
