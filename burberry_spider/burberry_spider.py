@@ -1,8 +1,8 @@
 import json
-from w3lib.url import add_or_replace_parameters
 
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule, Request
+from w3lib.url import add_or_replace_parameters
 
 from .base import BaseCrawlSpider, BaseParseSpider, clean, Gender, soupify
 
@@ -43,6 +43,13 @@ class ParseSpider(BaseParseSpider):
 
         return self.next_request_or_garment(garment)
 
+    def parse_color(self, response):
+        garment = response.meta["garment"]
+        raw_skus = json.loads(response.text)
+        garment["skus"].update(self.skus(raw_skus))
+        garment["image_urls"] += self.image_urls(raw_skus)
+        return self.next_request_or_garment(garment)
+
     def product_id(self, response):
         css = ".accordion-tab_content ::text"
         return clean(response.css(css))[-1].split(" ")[1]
@@ -77,13 +84,6 @@ class ParseSpider(BaseParseSpider):
             requests.append(Request(url, callback=self.parse_color, dont_filter=True, headers=headers))
 
         return requests
-
-    def parse_color(self, response):
-        garment = response.meta["garment"]
-        raw_skus = json.loads(response.text)
-        garment["skus"].update(self.skus(raw_skus))
-        garment["image_urls"] += self.image_urls(raw_skus)
-        return self.next_request_or_garment(garment)
 
     def skus(self, raw_skus):
         skus = {}
@@ -124,15 +124,11 @@ class CrawlSpider(BaseCrawlSpider):
         pagination_urls = clean(response.css(".shelf::attr(data-all-products)"))
         headers = {'x-csrf-token': clean(response.css(".csrf-token::attr(value)"))[0]}
         meta = {'trail': self.add_trail(response)}
-
-        for url in pagination_urls:
-            yield response.follow(url, callback=self.parse_category, headers=headers, meta=meta.copy())
+        return [response.follow(url, callback=self.parse_category, headers=headers, meta=meta.copy()) for url in pagination_urls]
 
     def parse_category(self, response):
         meta = {'trail': self.add_trail(response)}
-
-        for product in json.loads(response.text):
-            yield response.follow(product["link"], callback=self.parse_item, meta=meta.copy())
+        return [response.follow(product["link"], callback=self.parse_item, meta=meta.copy()) for product in json.loads(response.text)]
 
 
 class ParseSpiderCN(MixinCN, ParseSpider):
