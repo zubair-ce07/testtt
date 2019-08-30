@@ -243,13 +243,12 @@ class ProceedingsSpider(scrapy.Spider):
                 )
             )
 
-        filing = response.meta.get('filing_list').pop()
         return scrapy.Request(
             url=filing.get('documents_link'),
             callback=self.parse_documents,
             meta={
                 'cookiejar': self.cookiejar_count,
-                'filing': filing,
+                'filing': response.meta.get('filing_list').pop(),
                 'filing_list': response.meta.get('filing_list'),
                 'loader': response.meta.get('loader')
             },
