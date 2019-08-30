@@ -16,26 +16,26 @@ class TaxiMeter:
     wait_fare = 0.01
 
     def calculate_fare(self):
-        if not self.pause_status:
+        if self.pause_status:
+            self.wait_duration += 0.01
+
+            if keyboard.is_pressed('r'):
+                self.pause_status = False
+            elif keyboard.is_pressed('e'):
+                return True
+        else:
             if keyboard.is_pressed('up'):
                 self.speed += 0.01
-            elif keyboard.is_pressed('down') and self.speed > 0.1:
+            elif keyboard.is_pressed('down') and self.speed > 0:
                 self.speed -= 0.01
 
             self.ride_duration += 0.01
-
             self.total_distance += self.speed * 0.01
-        else:
-            self.wait_duration += 0.01
 
-        if keyboard.is_pressed('p'):
-            self.pause_status = True
-        elif keyboard.is_pressed('r'):
-            self.pause_status = False
-        elif keyboard.is_pressed('e'):
-            return True
+            if keyboard.is_pressed('p'):
+                self.pause_status = False
 
-        return False
+        return True
 
     def display_speed_and_distance(self):
         print(f"Speed: {trunc(self.speed)} m/s")
@@ -59,12 +59,12 @@ def main():
 
 
 taxi_meter = TaxiMeter()
-end_ride = False
+ride_status = True
 
-while not end_ride:
-    end_ride = taxi_meter.calculate_fare()
+while ride_status:
+    ride_status = taxi_meter.calculate_fare()
     taxi_meter.display_speed_and_distance()
     system('clear')
-    if end_ride:
+    if not ride_status:
         taxi_meter.show_fare()
 
