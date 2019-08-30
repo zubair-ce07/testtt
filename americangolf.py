@@ -75,7 +75,7 @@ class ParseSpider(BaseParseSpider):
                 currency_css = '[itemprop="priceCurrency"]::text'
                 sku['currency'] = clean(response.css(currency_css))[0]
 
-            sku['size'] = '_'.join([value for key, value in variations.items() if value])
+            sku['size'] = '_'.join([value for key, value in variations.items()])
             sku_key = sku['size'].replace(' ', '')
             garment['skus'].update({sku_key: sku})
 
@@ -88,13 +88,16 @@ class ParseSpider(BaseParseSpider):
         return self.next_request_or_garment(garment)
 
     def variation_requests(self, response, variations_css, variations):
-        for variation in variations_css.split(','):
-            variation_key = variation.split('-')[1]
-            variations[variation_key] = clean(response.css(f'{variation} [selected]::text').get(''))
+        variation_sels = response.css('.product-content-ctr').css(variations_css)
 
-        variations_css = variations_css.replace(',', ' ::attr(value), ')
-        variation_urls = response.css(variations_css).getall()
+        for dropdown_sel in variation_sels.css('select'):
+            selected_value = clean(dropdown_sel.css('[selected]::text'))
 
+            if selected_value:
+                key = clean(dropdown_sel.css('::attr(data-variationattribute)'))[0]
+                variations.update({key: selected_value[0]})
+
+        variation_urls = clean(variation_sels.css('::attr(value)'))
         return [response.follow(url, callback=self.parse_club_sku) for url in variation_urls
                 if url not in response.url]
 
