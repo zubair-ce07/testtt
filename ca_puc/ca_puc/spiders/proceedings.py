@@ -75,7 +75,7 @@ class ProceedingsSpider(scrapy.Spider):
                 callback=self.parse_proceedings_details,
                 meta={'cookiejar': self.cookiejar_count},
             )
-        # else:
+
         form_data = {
             '__EVENTTARGET': 'lnkNextPage',
             '__EVENTARGUMENT': '',
