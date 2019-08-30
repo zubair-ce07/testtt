@@ -35,5 +35,5 @@ class MongoPipeline(object):
     def process_item(self, item, spider):
         # handling the proceeding
         self.db[self.collection_name].insert(dict(item))
-        logging.debug('Proceeding:' + item["state_id"] + 'added to MongoDB')
+        logging.debug('Proceeding:' + item["state_id"] + ' added to MongoDB')
         return item
