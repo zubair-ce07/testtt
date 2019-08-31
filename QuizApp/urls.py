@@ -22,4 +22,6 @@ urlpatterns = [
     path('student_home', views.student_home, name='student_home'),
     path('result_view', views.result_view, name='result_view'),
     path('report_view/<int:quiz_pk>/', views.report_view, name='report_view'),
+    path('publish_quiz/<int:quiz_pk>/', views.publish_quiz, name='publish_quiz'),
+    path('offline_quiz/<int:quiz_pk>/', views.offline_quiz, name='offline_quiz'),
 ]

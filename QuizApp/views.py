@@ -7,7 +7,7 @@ from django.views.decorators.cache import cache_control
 import random
 from QuizApp.forms import QuizForm, QuestionForm, CustomUserCreationForm
 from QuizApp.models import *
-
+import datetime
 
 def signup(request):
     if request.method == 'POST':
@@ -141,7 +141,7 @@ def edit_question(request, question_pk):
 
     if form.is_valid():
         form.save()
-        return redirect('question_detail', get_object_or_404(Question, pk=question_pk).quiz_id, question_pk)
+        return redirect('question_detail', question_pk)
     return render(request, 'edit_question.html', {'form': form})
 
 
@@ -190,7 +190,7 @@ def student_home(request):
     if request.user.is_teacher:
         return HttpResponseBadRequest(content='Not Authorized')
     student = request.user
-    quiz_list = Quiz.objects.exclude(
+    quiz_list = Quiz.objects.exclude(publish=False).exclude(
         id__in=[quiz.quiz_id for quiz in Result.objects.filter(taken_by=student)]).all().exclude(
         questions__isnull=True).exclude(id__in=[question.quiz_id for question in Question.objects.all() if question.answers.all().count() < 4])
     return render(request, 'student_home.html', {'quizzes': quiz_list})
@@ -200,7 +200,7 @@ def student_home(request):
 def result_view(request):
     if not request.user.is_student:
         return HttpResponseBadRequest(content='Not authorized')
-    results = Result.objects.all().filter(student=request.user)
+    results = Result.objects.all().filter(taken_by=request.user)
     return render(request, 'result_view.html', {'results': results})
 
 
@@ -215,7 +215,8 @@ def report_view(request, quiz_pk):
     correct_ans = list()
 
     for question in questions:
-        correct_ans.append(question.answers.get(is_correct=True))
+        if question.answers.exists():
+            correct_ans.append(question.answers.get(is_correct=True))
 
     for ans in correct_ans:
         correct_attempts.append(AnswerOption.objects.filter(answer_id=ans.pk).count())
@@ -224,7 +225,16 @@ def report_view(request, quiz_pk):
     return render(request, 'report.html', {'report': report})
 
 
+def publish_quiz(request, quiz_pk):
+    quiz = get_object_or_404(Quiz, pk=quiz_pk)
+    quiz.publish = True
+    quiz.date = datetime.datetime.now()
+    quiz.save()
+    return redirect('home')
 
 
-
-    return 0;
+def offline_quiz(request, quiz_pk):
+    quiz = get_object_or_404(Quiz, pk=quiz_pk)
+    quiz.publish = False
+    quiz.save()
+    return redirect('home')

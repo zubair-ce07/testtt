@@ -1,19 +1,27 @@
 {%extends 'base.html'%}
 {% block content %}
 <div class="container">
-    {% for item in result %}
 
-    <div class="list-group">
-        <a href="#" class="list-group-item list-group-item-action flex-column align-items-start">
-            <div class="d-flex w-100 justify-content-between">
-                <h5 class="mb-1">{{item.question.text}}</h5>
-            </div>
-            <p class="mb-1">{{item.answer.text}}</p>
-        </a>
-    </div>
-    <br>
-        {% endfor %}
+
+
+    <table id="example" class="table table-hover display ">
+        <thead  class="thead-primary">
+          <tr class="table-success">
+              <th >Questions</th>
+              <th>Attempt</th>
+          </tr>
+        </thead>
+        <tbody>
+                {%for item in result%}
+          <tr class="table-info">
+            <td>{{item.question.text}}</td>
+            <td>{{item.answer.text}}</td>
+          </tr>
+          {%endfor%}
+        </tbody>
+      </table>
 
 </div>
 
     {%endblock%}
+

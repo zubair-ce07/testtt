@@ -3,17 +3,17 @@
 
 <div class="container">
 <table id="example" class="table table-hover display">
-        <thead>
+        <thead class="thead-dark">
           <tr>
             <th>Question</th>
-            <th>Correct responses</th>
+            <th>Correct responses/Total responses</th>
           </tr>
         </thead>
         <tbody>
-    {%for ans, sub in report%}
+    {%for answer, response in report%}
           <tr>
-            <td>{{ans.question.text}}</td>
-            <td>{{sub}}</td>
+            <td>{{answer.question.text}}</td>
+            <td>{{response}}/{{answer.question.Attempted.count}}</td>
           </tr>
           {%endfor%}
         </tbody>

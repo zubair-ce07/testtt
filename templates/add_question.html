@@ -1,8 +1,10 @@
 {%extends 'base.html'%}
 {% block content %}
 <div class="container">
-    <p class="h4 text-primary">Add Question for Quiz  <strong class="text-success h1">{{quiz.name}}</strong> </p>
-    <p class="lead">Clicking Save and Continue will be redirected to Option page</p>
+        <div class="alert alert-info" role="alert">
+  <h4 class="alert-heading">{{quiz.name}}</h4>
+Enter Question and Click Save and Continue to be redirected to Option page
+    </div>
 
     <form class="form-group " method="POST">
         {% csrf_token %}

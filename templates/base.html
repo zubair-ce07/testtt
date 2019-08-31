@@ -10,14 +10,12 @@
     <link rel="stylesheet" href="{% static 'css/app.css' %}">
     <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.css">
-    <script src="{% static 'js/jquery.slim.min.js' %}"></script>
-        <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
 
     <title>{% block title %}Quiz App{% endblock %}</title>
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav class="navbar navbar-expand-lg navbar-light" style="background-color: #6e92cb;">
             <div class="container">
                 <a class="navbar-brand" href="{% url 'home' %}">Quiz</a>
     {%if user.is_authenticated %}
@@ -41,6 +39,8 @@
         
         {% block content %}
         {% endblock %}
+    <script src="https://code.jquery.com/jquery-3.3.1.js"></script>
+    <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
     <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
 {%block js%}
 {%endblock%}

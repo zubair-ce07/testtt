@@ -3,9 +3,11 @@
 
 <div class="container">
 
-    <p class="lead">Add options and marked the correct </p>
-    <mark class="h4 mark text-primary">{{question.text}}</mark>
-    <br>
+    <div class="alert alert-success" role="alert">
+  <h4 class="alert-heading">{{question.text}}</h4>
+Add options and marked the correct
+    </div>
+
     <br>
     <form method="POST" id="form_id" onsubmit="return validateForm()">
         {% csrf_token %}
