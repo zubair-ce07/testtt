@@ -2,6 +2,7 @@ import json
 
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
+from scrapy import Request
 
 from skuscraper.parsers.genders import Gender
 from .base import BaseParseSpider, BaseCrawlSpider, clean, soupify
@@ -9,13 +10,13 @@ from .base import BaseParseSpider, BaseCrawlSpider, clean, soupify
 class Mixin:
     retailer = 'burberry'
     default_brand = "Burberry"
-    product_url_t = 'https://cn.burberry.com/service/products{}'
 
 class MixinCN(Mixin):
     allowed_domains = ["cn.burberry.com"]
     retailer = Mixin.retailer + "-cn"
     market = "CN"
     start_urls = ['https://cn.burberry.com/']
+    product_url_t = 'https://cn.burberry.com/service/products{}'
 
 class BurberryParseSpider(BaseParseSpider):
     description_css = '.accordion-tab_content p::text'
@@ -63,25 +64,31 @@ class BurberryParseSpider(BaseParseSpider):
     def color_requests(self, response):
         urls = clean(response.css('.product-purchase_selector-colour a::attr(href)'))
         headers = {'x-csrf-token': clean(response.css('.csrf-token::attr(value)'))[0]}
-        return [response.follow(self.product_url_t.format(url), self.parse_color,
-        headers=headers) for url in urls]
+        return [Request(self.product_url_t.format(url), self.parse_color, headers=headers)
+                for url in urls]
 
     def skus(self, raw_data):
-        money_strs = [raw_data['price'], raw_data['currency'],
-        raw_data['dataDictionaryProductInfo']['priceDiscount']]
-        common_sku = self.product_pricing_common(None, money_strs)
-
         store = raw_data['findInStore']
-        raw_sizes = store["size"]["items"] if "size" in store else [{"label": self.one_size}]
+        skus = {}
+
+        money_strs = [
+            raw_data['price'], raw_data['currency'],
+            raw_data['dataDictionaryProductInfo']['priceDiscount']
+        ]
+        common_sku = self.product_pricing_common(None, money_strs)
         selected_colour = store['colour']['value']
         common_sku["colour"] = selected_colour
 
-        skus = {}
+        raw_sizes = store["size"]["items"] if "size" in store \
+            else [{"label": self.one_size}]
+
         for size in raw_sizes:
             sku = common_sku.copy()
             sku['size'] = size['label']
-            if not ((size.get('isAvailable', None) or raw_data['isOutOfStock'])):
+            if not ((size.get('isAvailable', None) or
+                raw_data['isOutOfStock'])):
                 sku['out_of_stock'] = True
+
             skus[f"{selected_colour}_{size['label']}"] = sku
 
         return skus
@@ -91,10 +98,13 @@ class BurberryCNParseSpider(BurberryParseSpider, MixinCN):
 
 class BurberryCrawlSpider(BaseCrawlSpider):
     listings_css = ['.nav-level2_main']
-    deny = [r'-looks']
+    deny_re = [r'-looks']
 
     rules = (
-        Rule(LinkExtractor(restrict_css=listings_css, deny=deny), callback='parse_pagination'),
+        Rule(
+            LinkExtractor(restrict_css=listings_css, deny=deny_re),
+            callback='parse_pagination'
+        ),
     )
 
     def parse_pagination(self, response):
@@ -104,8 +114,8 @@ class BurberryCrawlSpider(BaseCrawlSpider):
                 meta=self.get_meta_with_trail(response)) for url in pagging_urls]
 
     def parse_category(self, response):
-        for product in json.loads(response.text):
-            yield response.follow(product['link'], self.parse_item, meta=self.get_meta_with_trail(response))
+        return [response.follow(product['link'], meta=self.get_meta_with_trail(response),
+                callback=self.parse_item) for product in json.loads(response.text)]
 
 class BurberryCNCrawlSpider(MixinCN, BurberryCrawlSpider):
     name = MixinCN.retailer + '-crawl'
