@@ -129,12 +129,12 @@
             ],
             {% endfor %}
         ];
-        let isDataEntered = false;
+        let is_data_populated = false;
         let total_rows = all_wheels.length;
 
         function showData()
         {
-            if(!isDataEntered)
+            if(!is_data_populated)
             {
                 document.getElementById("data_in").style.visibility = "visible";
                 let table_element = document.getElementById('data_in');
@@ -156,7 +156,7 @@
                                         "<td><a href='" + all_wheels[i][12] + "' target='_blank'>Image Link</a></td>" +
                                       "</tr>";
                 }
-                isDataEntered = true;
+                is_data_populated = true;
             }
             else{
                 document.getElementById("data_in").style.visibility = "visible";
