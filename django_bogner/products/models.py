@@ -1,4 +1,3 @@
-from django.contrib.postgres.fields import ArrayField, JSONField
 from django.db import models
 
 

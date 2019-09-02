@@ -20,6 +20,7 @@ class BognerSpider(CrawlSpider):
     )
 
     gender_list = ['Men', 'Women', 'Kids', 'Unisex']
+    currency = "GBP"
 
     retailer_skus_all = set()
 
@@ -46,7 +47,7 @@ class BognerSpider(CrawlSpider):
         items['care'] = self.extract_care(response)
         items['image_urls'] = self.extract_image_urls(response)
         items['price'] = self.extract_price(response)
-        items['currency'] = "GBP"
+        items['currency'] = self.currency
         items['retailer'] = self.extract_retailer(response)
         items['market'] = items['retailer'].split(' ')[-1]
         items['skus'] = self.extract_skus(response, items['price'])
@@ -114,7 +115,7 @@ class BognerSpider(CrawlSpider):
                 sku = {
                     'sku_id': f'{colour}_{size}',
                     'price': price,
-                    'currency': 'GBP',
+                    'currency': self.currency,
                     'size': size,
                     'colour': colour
                 }
