@@ -67,7 +67,7 @@ class ApiUserRegisteration(generics.CreateAPIView):
         "username":"USERNAME",
         "password1":"password",
         "password2":"password",
-        "user_type":"shop or customer"
+        "user_type":"saloon or customer"
     }
     """
     queryset = User.objects.all()
