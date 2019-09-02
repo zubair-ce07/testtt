@@ -97,6 +97,14 @@ class Post(models.Model):
     time = models.DateTimeField(default=timezone.now)
     status = models.TextField()
 
+    def __str__(self):
+        return f'{self.author}: {self.status}'
+
+
+class PostMedia(models.Model):
+    post = models.ForeignKey(Post, on_delete=models.CASCADE)
+    file_name = models.FileField(upload_to="posts-media/")
+
 
 class Comment(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE)

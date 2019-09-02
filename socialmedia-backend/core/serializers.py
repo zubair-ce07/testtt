@@ -1,4 +1,5 @@
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt import serializers as jwt_serializers
+from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 
@@ -16,6 +17,12 @@ class PostSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Post
         fields = ['id', 'author', 'time', 'status']
+
+
+class PostMediaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.PostMedia
+        fields = ['id', 'post', 'file_name']
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -48,7 +55,7 @@ class RegistrationSerializer(serializers.ModelSerializer):
                   'password', 'token', 'display_picture']
 
 
-class LoginSerializer(TokenObtainPairSerializer):
+class LoginSerializer(jwt_serializers.TokenObtainPairSerializer):
     default_error_messages = {
         'no_active_account': _(
             f'The email and password you entered did not match our records.'
@@ -59,7 +66,25 @@ class LoginSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
         refresh = self.get_token(self.user)
+
         data['refresh'] = str(refresh)
         data['access'] = str(refresh.access_token)
         data['user_id'] = self.user.id
+
         return data
+
+
+class LoginRefreshSerializer(jwt_serializers.TokenRefreshSerializer):
+    pass
+    # refresh = serializers.CharField()
+
+    # def validate(self, attrs):
+    #     data = super().validate(attrs)
+    #     refresh = RefreshToken(attrs['refresh'])
+    #     data = {'access': str(refresh.access_token)}
+    #     refresh.set_jti()
+    #     refresh.set_exp()
+
+    #     data['user_id'] = self.user.id
+
+    #     return data

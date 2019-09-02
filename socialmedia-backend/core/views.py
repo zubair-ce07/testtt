@@ -1,6 +1,6 @@
-from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework import views, viewsets, mixins, status, generics
+from rest_framework_simplejwt import views as jwt_views
 from rest_framework.response import Response
-from rest_framework import views, viewsets, mixins, status
 
 from core import serializers
 from core import models
@@ -17,6 +17,11 @@ class PostViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.PostSerializer
 
 
+class PostMediaViewSet(viewsets.ModelViewSet):
+    queryset = models.PostMedia.objects.all()
+    serializer_class = serializers.PostMediaSerializer
+
+
 class CommentViewSet(viewsets.ModelViewSet):
     queryset = models.Comment.objects.all()
     serializer_class = serializers.CommentSerializer
@@ -25,6 +30,18 @@ class CommentViewSet(viewsets.ModelViewSet):
 class FollowingViewSet(viewsets.ModelViewSet):
     queryset = models.Following.objects.all()
     serializer_class = serializers.FollowingSerializer
+
+
+class PostMediaView(generics.ListAPIView):
+    queryset = models.PostMedia.objects.all()
+    serializer_class = serializers.PostMediaSerializer
+
+    def get(self, request, pk):
+        queryset = self.queryset.filter(post=pk)
+        # context is needed to get full URL
+        serializer = self.serializer_class(
+            queryset, context={"request": request}, many=True)
+        return Response(serializer.data)
 
 
 class UserPostView(views.APIView):
@@ -81,5 +98,9 @@ class RegistrationView(views.APIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-class LoginView(TokenObtainPairView):
+class LoginView(jwt_views.TokenObtainPairView):
     serializer_class = serializers.LoginSerializer
+
+
+class LoginRefreshView(jwt_views.TokenRefreshView):
+    serializer_class = serializers.LoginRefreshSerializer
