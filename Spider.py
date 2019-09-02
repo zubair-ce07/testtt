@@ -4,7 +4,7 @@ from scrapy.linkextractors import LinkExtractor
 
 from ..items import StartItem
 
-class MySpider(CrawlSpider):
+class DerekroseSpider(CrawlSpider):
 
     name = "derek-rose"
     start_urls = ["https://www.derek-rose.com/"]
@@ -56,7 +56,7 @@ class MySpider(CrawlSpider):
         price = response.css(".price::text").extract_first()
         currency = "GDP"
         size_label = response.css(".product-details__option-items a::attr(data-size-label)").extract()
-        product_id = response.css(".product-details__option-items a::attr(data-product-id)").extract()
+        sku_id = response.css(".product-details__option-items a::attr(data-product-id)").extract()
         color = response.xpath("//th[contains(text(),'Colour')]/following-sibling::td/text()").extract_first()
         
         common_sku = {
@@ -72,7 +72,7 @@ class MySpider(CrawlSpider):
 
         skus = {}
 
-        for size, sku_id in zip(size_label,product_id): 
+        for size, sku_id in zip(size_label,sku_id): 
             
             sku = common_sku.copy()
             sku["size"] = size
