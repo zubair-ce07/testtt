@@ -11,6 +11,7 @@ class Mixin:
     retailer = 'smilodox'
     default_brand = "Smilodox"
 
+
 class MixinUS(Mixin):
     allowed_domains = ["smilodox.com"]
     retailer = Mixin.retailer + "-us"
@@ -18,6 +19,7 @@ class MixinUS(Mixin):
     retailer_currency = 'USD'
     start_urls = ['https://www.smilodox.com/en/?Currency=USD']
     deny = [r'/de/']
+
 
 class SmilodoxParseSpider(BaseParseSpider):
     description_css = '.product_description h4 + p::text'
@@ -89,7 +91,8 @@ class SmilodoxParseSpider(BaseParseSpider):
     def raw_skus(self, raw_skus):
         skus = {}
         for sku_id, raw_sku in raw_skus.items():
-            money_strs = [raw_sku['variationPrice'], raw_sku['recommendedRetailPrice'], self.retailer_currency]
+            money_strs = [raw_sku['variationPrice'], raw_sku['recommendedRetailPrice'],
+            self.retailer_currency]
             sku = self.product_pricing_common(None, money_strs)
             sku['varient_ids'] = raw_sku['valueIds']
             skus.update({sku_id: sku})
@@ -120,8 +123,10 @@ class SmilodoxParseSpider(BaseParseSpider):
 
         return varients
 
+
 class SmilodoxUSParseSpider(MixinUS, SmilodoxParseSpider):
     name = MixinUS.retailer + '-parse'
+
 
 class SmilodoxCrawlSpider(BaseCrawlSpider):
     listings_css = ['.header-flex.header-flex--menu']
@@ -134,11 +139,13 @@ class SmilodoxCrawlSpider(BaseCrawlSpider):
     def parse_category(self, response):
         products = clean(response.css('.article_order_form article::attr(data-href)'))
         for product in products:
-            yield response.follow(product, self.parse_item, meta=self.get_meta_with_trail(response))
+            yield response.follow(product, self.parse_item,
+            meta=self.get_meta_with_trail(response))
 
         next_page = clean(response.css('.paginator1 a[rel="next"]::attr(href)'))
         if next_page:
             yield response.follow(next_page[0], self.parse_category)
+
 
 class SmilodoxUSCrawlSpider(MixinUS, SmilodoxCrawlSpider):
     name = MixinUS.retailer + '-crawl'
