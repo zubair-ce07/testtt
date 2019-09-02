@@ -1,6 +1,7 @@
 """core serializer module."""
 from rest_framework import serializers
 from django.contrib.auth.models import User
+from django.contrib.auth.validators import UnicodeUsernameValidator
 
 from shop.models import Saloon
 from customer.models import Customer
@@ -42,3 +43,16 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         model = User
         fields = ('first_name', 'last_name', 'email',
                   'username')
+        extra_kwargs = {
+            'username': {
+                'validators': [UnicodeUsernameValidator()],
+            }
+        }
+
+    def update(self, instance, validated_data):
+        """CustomerUpdateSerializer update method override"""
+        if User.objects.filter(username=validated_data.get('username')).exists() \
+                and instance.username != validated_data.get('username'):
+            raise serializers.ValidationError(
+                'username must be unique.')
+        return super(UserUpdateSerializer, self).update(instance, validated_data)

@@ -5,6 +5,8 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 from rest_framework.authtoken.models import Token
 
+from core.utils import create_user_instance
+
 
 class Test_Login_User(APITestCase):
     """test case class for api login"""
@@ -15,11 +17,8 @@ class Test_Login_User(APITestCase):
         self.email = "abbas@gmail.com"
         self.password = "abbas"
 
-        self.user = User.objects.create_user(
-            self.username, self.email
-        )
-        self.user.set_password(self.password)
-        self.user.save()
+        self.user = create_user_instance(
+            self.username, self.email, self.password)
 
     def test_sucessful_login_user(self):
         """test case for sucessful user login."""
@@ -56,11 +55,8 @@ class Test_Register_User(APITestCase):
         self.email = "abbas@gmail.com"
         self.password = "abbas"
 
-        self.user = User.objects.create_user(
-            self.username, self.email
-        )
-        self.user.set_password(self.password)
-        self.user.save()
+        self.user = create_user_instance(
+            self.username, self.email, self.password)
 
     def test_sucessful_register_saloon_user(self):
         """sucessful saloon user registration."""

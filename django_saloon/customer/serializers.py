@@ -17,6 +17,9 @@ class CustomerUpdateSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         """CustomerUpdateSerializer update method override"""
         user = validated_data.pop('user')
-        User.objects.update_or_create(id=instance.user.id, defaults=user)
+        user_serializer = UserUpdateSerializer(
+            data=user, instance=instance.user)
+        user_serializer.is_valid()
+        user_serializer.save()
 
         return super(CustomerUpdateSerializer, self).update(instance, validated_data)
