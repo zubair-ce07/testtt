@@ -6,7 +6,7 @@ from .controller import Controller
 
 
 class FileUpload(View):
-    template_name = "shopcity/uploadfile.html"
+    template_name = "uploadfile.html"
 
     def get(self, request):
         return render(request, self.template_name, {})
