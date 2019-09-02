@@ -30,19 +30,19 @@ export const MenuLink = styled.a`
     text-align: center;
 
     &:hover {
-        color: #fff;
+        color: ${props => props.theme.bg};
     }
 
     ${
     props => props.button &&
         css`
-            border: 2px solid #fffffa;
+            border: 2px solid ${props => props.theme.bg};
             border-radius: 5px;
             font-weight: 600;
             width: 50px;
             &:hover {
                 color: ${props => props.theme.accent};
-                background-color: #fffffa;
+                background-color: ${props => props.theme.bg};
             }
         `
     }
