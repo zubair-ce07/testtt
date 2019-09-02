@@ -1,5 +1,4 @@
 import json
-from itertools import islice
 
 from django.core.management.base import BaseCommand
 
@@ -34,22 +33,18 @@ class Command(BaseCommand):
 
     @staticmethod
     def save_images(product, images):
-        batch_size = len(images)
         product_images = (ProductImage(url=image, product=product) for image in images)
-        batch = list(islice(product_images, batch_size))
-        ProductImage.objects.bulk_create(batch, batch_size)
+        ProductImage.objects.bulk_create(product_images)
 
     @staticmethod
     def save_articles(product, articles):
-        batch_size = len(articles)
         product_articles = (ProductArticle(
             color=article['color'],
             price=article['price'],
             size=article['size'],
             product=product
         ) for article in articles.values())
-        batch = list(islice(product_articles, batch_size))
-        ProductImage.objects.bulk_create(batch, batch_size)
+        ProductImage.objects.bulk_create(product_articles)
 
     def add_arguments(self, parser):
         parser.add_argument('path', type=str)
