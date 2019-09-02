@@ -21,7 +21,7 @@ class FilaSpider(CrawlSpider):
         "malha de poliamida","poliéster","algodão","pele","Cuidado","resistência","sentindo-me",
         "casual","confortável","couro","tecido","protecção","material","conforto","confortável"
     ]
-    gender_dic = { 
+    gender_map = { 
         "men": "masculina",
         "women": "feminino",
         "children": "infantial"
@@ -57,7 +57,7 @@ class FilaSpider(CrawlSpider):
 
     def extract_gender(self,product_name):
 
-        for key, value in self.gender_dic.items():
+        for key, value in self.gender_map.items():
 
             if (value in product_name) or (value.capitalize() in product_name):
                 return key
