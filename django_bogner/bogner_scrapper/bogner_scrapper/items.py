@@ -1,18 +1,18 @@
-import scrapy
+from scrapy import Item, Field
 
 
-class BognerItem(scrapy.Item):
-    url = scrapy.Field()
-    retailer_sku = scrapy.Field()
-    category = scrapy.Field()
-    gender = scrapy.Field()
-    brand = scrapy.Field()
-    name = scrapy.Field()
-    description = scrapy.Field()
-    care = scrapy.Field()
-    image_urls = scrapy.Field()
-    market = scrapy.Field()
-    retailer = scrapy.Field()
-    skus = scrapy.Field()
-    price = scrapy.Field()
-    currency = scrapy.Field()
+class BognerItem(Item):
+    url = Field()
+    retailer_sku = Field()
+    category = Field()
+    gender = Field()
+    brand = Field()
+    name = Field()
+    description = Field()
+    care = Field()
+    image_urls = Field()
+    market = Field()
+    retailer = Field()
+    skus = Field()
+    price = Field()
+    currency = Field()

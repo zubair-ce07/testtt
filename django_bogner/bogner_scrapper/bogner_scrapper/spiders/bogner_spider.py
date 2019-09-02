@@ -5,41 +5,41 @@ from ..items import BognerItem
 
 class BognerSpider(CrawlSpider):
     name = "bogner"
+
     allowed_domains = ['bogner.com']
     start_urls = [
         'https://www.bogner.com/en-gb/women.html'
     ]
+
+    pagination_xpath = '//div[@class="toolbar-bottom"]//a[@class="next i-next"]'
+    navbar_xpath = '//nav[@id="nav"]//li[@class="level2   "]//a'
+    product_xpath = '//a[@class="product-image is-visible-default"]'
     rules = (
-        Rule(LinkExtractor(allow=("/women", "/men",), restrict_xpaths=['//nav[@id="nav"]//li[@class="level2   "]//a',
-                                                                       '//div[@class="toolbar-bottom"]'
-                                                                       '//a[@class="next i-next"]'])),
-        Rule(LinkExtractor(restrict_xpaths='//a[@class="product-image is-visible-default"]'), callback='parse_item'),
-        # Rule(LinkExtractor(allow='https://www.bogner.com/en-gb/parka-birdie-navy-blau-48265.html'), callback='parse_item'),
+        Rule(LinkExtractor(allow=("/women", "/men",), restrict_xpaths=[navbar_xpath, pagination_xpath])),
+        Rule(LinkExtractor(restrict_xpaths=product_xpath), callback='parse_item'),
     )
+
+    gender_list = ['Men', 'Women', 'Kids', 'Unisex']
+
     retailer_skus_all = set()
 
     def parse_item(self, response):
         retailer_sku = self.extract_retailer_sku(response)
-
-        if self.check_if_parsed(retailer_sku):
-            return
-        else:
-            items = self.make_new_item(response, retailer_sku)
-            yield items
+        if not self.check_if_parsed(retailer_sku):
+            yield self.make_new_item(response, retailer_sku)
 
     def check_if_parsed(self, retailer_sku):
         if retailer_sku in self.retailer_skus_all:
             return True
-        else:
-            self.retailer_skus_all.add(retailer_sku)
-            return False
+        self.retailer_skus_all.add(retailer_sku)
+        return False
 
     def make_new_item(self, response, retailer_sku):
         items = BognerItem()
         items['url'] = response.url
         items['retailer_sku'] = retailer_sku
         items['category'] = self.extract_category(response)
-        items['gender'] = items['category'][0] if items['category'] else None
+        items['gender'] = self.extract_gender(items['category'])
         items['brand'] = self.extract_brand(response)
         items['name'] = self.extract_name(response)
         items['description'] = self.extract_description(response)
@@ -63,6 +63,12 @@ class BognerSpider(CrawlSpider):
 
     def extract_name(self, response):
         return response.xpath('//h1[@class="product-name-text"]/text()').get().strip()
+
+    def extract_gender(self, category):
+        if category:
+            if category[0] in self.gender_list:
+                return category[0]
+        return 'Unisex'
 
     def extract_retailer(self, response):
         return response.xpath('//title/text()').re_first('\|.*').split('|')[-1].strip()
@@ -106,9 +112,9 @@ class BognerSpider(CrawlSpider):
         for colour in colours:
             for size, stock in zip(sizes, availability):
                 sku = {
-                    'sku_id': f"{colour}_{size}",
+                    'sku_id': f'{colour}_{size}',
                     'price': price,
-                    'currency': "GBP",
+                    'currency': 'GBP',
                     'size': size,
                     'colour': colour
                 }

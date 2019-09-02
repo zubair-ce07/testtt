@@ -3,13 +3,27 @@
 {% block title %}Home{% endblock %}
 
 {% block body %}
-
-<ul class="list-group">
+<h1 style="text-align: center">CATEGORIES</h1>
+<br>
+<div class="card-group">
 {% for cat in category_list %}
-    <li class="list-group-item">
-        <a  style="color: black;" href="#">{{ cat.category_name }}</a>
-    </li>
+<div class="col-sm-10 col-md-4 col-lg-3">
+      <div class="card shadow-lg" style="background-color: #e0ebeb">
+      <h4 style="text-align: center" class="card-title">{{ cat.category_name }}</h4>
+      <img style="height: 300px; width: 75%; margin: auto;" class="card-img-top img-thumbnail" src="{{ cat.image_url }}" alt="Card image cap">
+      <div class="card-body">
+        <p class="card-text">
+        </p>
+        <a href="{% url 'products:category_products' cat.id %}" class="btn btn-primary">Visit Products</a>
+      </div>
+    </div>
+    <br>
+</div>
 {% endfor %}
-</ul>
+</div>
+
+<br>
+{% include 'products/pagination.html' %}
+<br>
 
 {% endblock %}

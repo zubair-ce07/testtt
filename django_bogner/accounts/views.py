@@ -8,8 +8,7 @@ class SignUp(View):
     template_name = 'accounts/signup.html'
 
     def get(self, request):
-        form = SignUpForm()
-        return render(request, self.template_name, {'form': form})
+        return render(request, self.template_name, {'form': SignUpForm()})
 
     def post(self, request):
         form = SignUpForm(request.POST)
