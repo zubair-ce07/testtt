@@ -29,10 +29,6 @@ export const loginSuccess = (user_id, access) => {
 };
 
 export const logout = () => {
-  /*
-    No real authentication maintained at server side.
-    Simulating log in/out using local storage.
-  */
   localStorage.clear();
   history.push("/login");
   return {
@@ -74,19 +70,6 @@ export const loginUser = userCedentials => async dispatch => {
   } catch (error) {
     dispatch(loginError(error.data.detail));
   }
-
-  /*
-    No real authentication maintained at server side.
-    Simulating log in/out using local storage.
-  */
-
-  // localStorage.setItem("email", userCedentials.email);
-  // localStorage.setItem("password", userCedentials.password);
-  /*
-    Route to home page after login.
-    Some modifications needed in ProfilePage to enable this option here.
-    As of now, automatic reroute won't happen.
-  */
 };
 
 // REGISTER

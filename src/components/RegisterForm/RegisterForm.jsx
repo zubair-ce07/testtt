@@ -16,21 +16,6 @@ class RegisterForm extends Component {
   };
 
   renderStatusErrors = message => {
-    // Object.keys(message).map((key, i) => {
-    //   return (
-    //     <div key={i}>
-    //       {message[key].map((m, j) => {
-    //         return <div key={j}>{m}</div>;
-    //       })}
-    //     </div>
-    //   );
-    // });
-    // let errors = "";
-    // for (const key in message) {
-    //   errors += key + ": ";
-    //   message[key].forEach(m => (errors += m));
-    // }
-    // return errors;
     return JSON.stringify(message);
   };
 

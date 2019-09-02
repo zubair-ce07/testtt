@@ -24,8 +24,6 @@ export const createPost = post => async (dispatch, getState) => {
   post.author = getState().auth.user_id;
   post.time = moment().format();
 
-  console.log("ima post", post);
-
   const response = await database.post("/posts/", post);
 
   dispatch({

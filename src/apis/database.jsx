@@ -6,25 +6,7 @@ const backend = axios.create({
 
 backend.interceptors.response.use(
   response => response,
-  error => {
-    // const errorResponse = error.response;
-
-    // console.log("ima intevetpp", errorResponse);
-
-    // if (isTokenExpired(errorResponse)) {
-    //   return resetTokenAndReattempRequest();
-    // }
-
-    return Promise.reject(error.response);
-  }
+  error => Promise.reject(error.response)
 );
-
-// const isTokenExpired = response => {
-//   // console.log("response", response);
-// };
-
-// const resetTokenAndReattempRequest = () => {
-//   // console.log("reateempting request");
-// };
 
 export default backend;
