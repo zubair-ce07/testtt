@@ -21,9 +21,9 @@ class ProductsViewSet(viewsets.ModelViewSet):
             brand = Brand.objects.get(name=brand)
             category = Category.objects.get(name=category)
         except Brand.DoesNotExist:
-            return Response({'bad request': 'invalid brand'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'invalid brand'}, status=status.HTTP_400_BAD_REQUEST)
         except Category.DoesNotExist:
-            return Response({'bad request': 'invalid category'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'invalid category'}, status=status.HTTP_400_BAD_REQUEST)
         with transaction.atomic():
             product, _ = Product.objects.get_or_create(
                 name=request.POST['name'],
