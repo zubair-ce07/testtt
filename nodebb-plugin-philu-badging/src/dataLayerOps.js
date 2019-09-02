@@ -6,6 +6,9 @@ const {
 
 
 const dbFindOne = async (query) => {
+    /**
+     * Find first document as specified by the query
+     * ***/
     try {
         return await db.findOne(query);
     } catch (error) {
@@ -15,6 +18,10 @@ const dbFindOne = async (query) => {
 
 
 const dbUpdate = async (badgeId, type, threshold) => {
+    /**
+     * Update configuration document as specified by the badgeId
+     * ***/
+
     try {
         const updateObj = { $set: {} };
         updateObj.$set[`value.${badgeId}`] = { type, threshold };
@@ -26,6 +33,10 @@ const dbUpdate = async (badgeId, type, threshold) => {
 
 
 const dbDeleteConfig = async (badgeId) => {
+    /**
+     * Delete configuration document as specified by the badgeId
+     * ***/
+
     try {
         const updateObj = { $unset: {} };
         updateObj.$unset[`value.${badgeId}`] = '';
@@ -42,6 +53,10 @@ const dbDeleteConfig = async (badgeId) => {
 }
 
 const dbCount = async (countKey) => {
+    /**
+     * Count the number of documents with `countKey` as key
+     * ***/
+
     try {
         return await db.count(countKey)
     } catch (error) {
@@ -50,6 +65,10 @@ const dbCount = async (countKey) => {
 }
 
 const dbInsert = async (insertObj) => {
+    /**
+     * Insert document given in `insertObj`
+     * ***/
+
     try {
         return await db.insert(insertObj)
     } catch (error) {
