@@ -5,7 +5,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '_*)o%g1ykg*vex+lky5e8a$i^g2y%^lyi86)&uewx5x3j_+k&d'
 DEBUG = True
 ALLOWED_HOSTS = []
-FILE_UPLOAD_HANDLERS = ['django.core.files.uploadhandler.TemporaryFileUploadHandler', ]
+FILE_UPLOAD_HANDLERS = ['django.core.files.uploadhandler.TemporaryFileUploadHandler',]
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -28,7 +28,7 @@ ROOT_URLCONF = 'firstdjangoapp.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, "shopcity/templates/shopcity/")],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

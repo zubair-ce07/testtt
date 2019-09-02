@@ -13,12 +13,13 @@ class Product(models.Model):
     brand = models.CharField(blank=True, max_length=50)
     currency = models.CharField(max_length=10, choices=CURRENCY_CHOICES)
     price = models.IntegerField()
-    url = models.TextField()
+    url = models.URLField()
     description = models.TextField(blank=True)
     image_url = models.TextField()
     care = models.TextField(blank=True)
     gender = models.CharField(max_length=20)
     previous_prices = models.TextField(blank=True)
+    out_of_stock = models.BooleanField()
 
     def __str__(self):
         return self.retailer_sku
@@ -34,9 +35,9 @@ class Category(models.Model):
 
 class Skus(models.Model):
     CURRENCY_CHOICES = [
-        ('USD', "US_Dollar"),
-        ('EUR', "Euro"),
-        ('AUD', 'Australian_Dollar'),
+        ('USD', 'US Dollar'),
+        ('EUR', 'Euro'),
+        ('AUD', 'Australian Dollar'),
         ('GBP', 'Great Britain Pound'),
     ]
     sku_id = models.CharField(max_length=50)
