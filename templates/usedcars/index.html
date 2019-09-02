@@ -3,21 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <title>Wheels | Index</title>
-    <!-- Latest compiled and minified CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+{#    <link rel="stylesheet" href="./static/stylefile.css">#}
 
+    <style>
+        * {
+          box-sizing: border-box;
+        }
+
+        body {
+          font: 16px Arial;
+        }
+
+        .autocomplete {
+          position: relative;
+          display: inline-block;
+        }
+
+        input {
+          border: 1px solid transparent;
+          background-color: #f1f1f1;
+          padding: 10px;
+          font-size: 16px;
+        }
+
+        input[type=text] {
+          background-color: #f1f1f1;
+          width: 100%;
+        }
+
+        input[type=submit] {
+          background-color: DodgerBlue;
+          color: #fff;
+          cursor: pointer;
+        }
+
+        .autocomplete-items {
+          position: absolute;
+          border: 1px solid #d4d4d4;
+          border-bottom: none;
+          border-top: none;
+          z-index: 99;
+          top: 100%;
+          left: 0;
+          right: 0;
+        }
+
+        .autocomplete-items div {
+          padding: 10px;
+          cursor: pointer;
+          background-color: #fff;
+          border-bottom: 1px solid #d4d4d4;
+        }
+
+        .autocomplete-items div:hover {
+          background-color: #e9e9e9;
+        }
+
+        .autocomplete-active {
+          background-color: DodgerBlue !important;
+          color: #ffffff;
+        }
+    </style>
 </head>
 <body>
 <!--    <div id="data_in"></div>-->
     <button class="btn btn-outline-primary" type="button" onclick="showData()">Show Data</button>
     <button class="btn btn-outline-info" type="button" onclick="hideData()">Hide Data</button>
 
-
-    <input type="text" placeholder="City" maxlength="10" id="cityValue">
-    <input type="text" placeholder="Make" maxlength="10" id="makeValue">
-    <input type="number" max="2020" min="1970" placeholder="Year" id="yearValue">
+    <div class="autocomplete" style="width:300px;">
+        <input type="text" placeholder="Make" maxlength="10" id="makeValue">
+    </div>
+    <div class="autocomplete" style="width:300px;">
+         <input type="text" placeholder="Model" id="modelValue">
+    </div>
+    <div class="autocomplete" style="width:300px;">
+        <input type="text" placeholder="City" maxlength="10" id="cityValue">
+    </div>
+    <div class="autocomplete" style="width:300px;">
+         <input type="number" max="2020" min="1970" placeholder="Year" id="yearValue">
+    </div>
     <button class="btn btn-outline-dark" type="button" onclick="filterByYear()">Filter</button>
 
     <table class="table table-bordered" >
@@ -65,7 +130,7 @@
             {% endfor %}
         ];
         let flag = 0;
-        let total_rows = all_wheels.length
+        let total_rows = all_wheels.length;
 
         function showData()
         {
@@ -77,7 +142,7 @@
                 {
                     hele.innerHTML += "<tr id=row"+ i + ">"+
                                         "<td id=make"+ i +">" + all_wheels[i][0] + "</td>" + // make
-                                        "<td>" + all_wheels[i][1] + "</td>" + // model
+                                        "<td id=model" + i + ">" + all_wheels[i][1] + "</td>" + // model
                                         "<td id=year" + i + ">" + all_wheels[i][2] + "</td>" + // year
                                         "<td>" + all_wheels[i][3] + "</td>" + // millage
                                         "<td>" + all_wheels[i][4] + "</td>" + // transmission
@@ -88,7 +153,7 @@
                                         "<td>" + all_wheels[i][9] + "</td>" + // engine capacity
                                         "<td>" + all_wheels[i][10] + "</td>" + //features
                                         "<td>" + all_wheels[i][11] + "</td>" + // description
-                                        "<td><a href='" + all_wheels[i][12] + "' target='_blank'>Image Link</a></td>" + // image url
+                                        "<td><a href='" + all_wheels[i][12] + "' target='_blank'>Image Link</a></td>" +
                                       "</tr>";
                 }
                 flag = 1
@@ -114,17 +179,29 @@
             return false;
         }
 
+        function str_cmp(str1, str2) {
+            if(str1.length !== str2.length)
+                return false;
+            for(let i = 0; i<str1.length; i++){
+                if(str1[i] !== str2[i])
+                    return false;
+            }
+            return true;
+        }
+
         function filterByYear()
         {
             let year = document.getElementById('yearValue').value;
             let city = document.getElementById('cityValue').value;
             let make = document.getElementById('makeValue').value;
+            let model_var = document.getElementById('modelValue').value;
 
             for(let i=0; i < total_rows; ++i)
             {
                 let flag = true;
                 if(checkNullAndCompare(year, document.getElementById('year' + i).innerHTML)
                     || checkNullAndCompare(city, document.getElementById('city' + i).innerHTML)
+                    || checkNullAndCompare(model_var, document.getElementById('model' + i).innerHTML)
                     || checkNullAndCompare(make, document.getElementById('make' + i).innerHTML))
                 {
                     document.getElementById('row'+i).style.visibility = "collapse";
@@ -137,6 +214,113 @@
             }
         }
 
-    </script>
+    {#  ----------------------------------- AUTOCOMPLETE FUNC ----------------------------------- #}
+
+    function autocomplete(inp, arr)
+    {
+      let currentFocus;
+      inp.addEventListener("input", function(e)
+      {
+          let a, b, i, val = this.value;
+          closeAllLists();
+          if (!val) { return false;}
+          currentFocus = -1;
+          a = document.createElement("DIV");
+          a.setAttribute("id", this.id + "autocomplete-list");
+          a.setAttribute("class", "autocomplete-items");
+          this.parentNode.appendChild(a);
+          for (i = 0; i < arr.length; i++) {
+            if (arr[i].substr(0, val.length).toUpperCase() === val.toUpperCase()) {
+
+              b = document.createElement("DIV");
+
+              b.innerHTML = "<strong>" + arr[i].substr(0, val.length) + "</strong>";
+              b.innerHTML += arr[i].substr(val.length);
+              b.innerHTML += "<input type='hidden' value='" + arr[i] + "'>";
+
+              b.addEventListener("click", function(e) {
+
+                  inp.value = this.getElementsByTagName("input")[0].value;
+                  closeAllLists();
+              });
+              a.appendChild(b);
+            }
+          }
+      });
+
+      inp.addEventListener("keydown", function(e)
+      {
+          let x = document.getElementById(this.id + "autocomplete-list");
+          if (x) x = x.getElementsByTagName("div");
+          if (e.keyCode === 40) {
+
+
+            currentFocus++;
+
+            addActive(x);
+          } else if (e.keyCode === 38) { //up
+
+
+            currentFocus--;
+            addActive(x);
+          } else if (e.keyCode === 13) {
+            e.preventDefault();
+            if (currentFocus > -1) {
+              if (x) x[currentFocus].click();
+            }
+          }
+      });
+
+      function addActive(x)
+      {
+
+        if (!x) return false;
+        removeActive(x);
+        if (currentFocus >= x.length) currentFocus = 0;
+        if (currentFocus < 0) currentFocus = (x.length - 1);
+        x[currentFocus].classList.add("autocomplete-active");
+      }
+
+      function removeActive(x)
+      {
+
+        for (let i = 0; i < x.length; i++) {
+          x[i].classList.remove("autocomplete-active");
+        }
+      }
+
+      function closeAllLists(elmnt)
+      {
+
+        let x = document.getElementsByClassName("autocomplete-items");
+        for (let i = 0; i < x.length; i++) {
+          if (elmnt !== x[i] && elmnt !== inp) {
+            x[i].parentNode.removeChild(x[i]);
+          }
+        }
+      }
+      document.addEventListener("click", function (e)
+      {
+          closeAllLists(e.target);
+      });
+    }
+        let cities = new Set();
+        let makes = new Set();
+        let models = new Set();
+        {% for car in wheels %}
+        cities.add("{{ car.reg_city }}");
+        makes.add("{{ car.make }}");
+        models.add("{{ car.carmodel }}");
+        {% endfor %}
+
+        cities = [...cities];
+        makes = [...makes];
+        models = [...models];
+
+        autocomplete(document.getElementById("cityValue"), cities);
+        autocomplete(document.getElementById("makeValue"), makes);
+        autocomplete(document.getElementById("modelValue"), models);
+</script>
+
 </body>
 </html>
