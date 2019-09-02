@@ -83,7 +83,7 @@
     <div class="autocomplete" style="width:300px;">
          <input type="number" max="2020" min="1970" placeholder="Year" id="yearValue">
     </div>
-    <button class="btn btn-outline-dark" type="button" onclick="filterByYear()">Filter</button>
+    <button class="btn btn-outline-dark" type="button" onclick="filterData()">Filter</button>
 
     <table class="table table-bordered" >
       <thead class="thead-dark">
@@ -129,18 +129,18 @@
             ],
             {% endfor %}
         ];
-        let flag = 0;
+        let isDataEntered = false;
         let total_rows = all_wheels.length;
 
         function showData()
         {
-            if(flag === 0)
+            if(!isDataEntered)
             {
                 document.getElementById("data_in").style.visibility = "visible";
-                let hele = document.getElementById('data_in');
+                let table_element = document.getElementById('data_in');
                 for(let i=0; i < all_wheels.length ;i++)
                 {
-                    hele.innerHTML += "<tr id=row"+ i + ">"+
+                    table_element.innerHTML += "<tr id=row"+ i + ">"+
                                         "<td id=make"+ i +">" + all_wheels[i][0] + "</td>" + // make
                                         "<td id=model" + i + ">" + all_wheels[i][1] + "</td>" + // model
                                         "<td id=year" + i + ">" + all_wheels[i][2] + "</td>" + // year
@@ -156,7 +156,7 @@
                                         "<td><a href='" + all_wheels[i][12] + "' target='_blank'>Image Link</a></td>" +
                                       "</tr>";
                 }
-                flag = 1
+                isDataEntered = true;
             }
             else{
                 document.getElementById("data_in").style.visibility = "visible";
@@ -179,7 +179,7 @@
             return false;
         }
 
-        function filterByYear()
+        function filterData()
         {
             let year = document.getElementById('yearValue').value;
             let city = document.getElementById('cityValue').value;
@@ -188,7 +188,7 @@
 
             for(let i=0; i < total_rows; ++i)
             {
-                let flag = true;
+                let row_visibility = true;
                 if(checkNullAndCompare(year, document.getElementById('year' + i).innerHTML)
                     || checkNullAndCompare(city, document.getElementById('city' + i).innerHTML)
                     || checkNullAndCompare(model_var, document.getElementById('model' + i).innerHTML)
@@ -196,10 +196,10 @@
                 {
                     document.getElementById('row'+i).style.visibility = "collapse";
                     {#console.log(document.getElementById('year'+i).innerHTML + ' <--> ' + year)#}
-                    flag = false;
+                    row_visibility = false;
                 }
 
-                if(flag)
+                if(row_visibility)
                     document.getElementById('row'+i).style.visibility = "visible";
             }
         }
@@ -209,29 +209,29 @@
       let currentFocus;
       inp.addEventListener("input", function(e)
       {
-          let a, b, i, val = this.value;
+          let list_ele, in_tag_val, i, val = this.value;
           closeAllLists();
           if (!val) { return false;}
           currentFocus = -1;
-          a = document.createElement("DIV");
-          a.setAttribute("id", this.id + "autocomplete-list");
-          a.setAttribute("class", "autocomplete-items");
-          this.parentNode.appendChild(a);
+          list_ele = document.createElement("DIV");
+          list_ele.setAttribute("id", this.id + "autocomplete-list");
+          list_ele.setAttribute("class", "autocomplete-items");
+          this.parentNode.appendChild(list_ele);
           for (i = 0; i < arr.length; i++) {
             if (arr[i].substr(0, val.length).toUpperCase() === val.toUpperCase()) {
 
-              b = document.createElement("DIV");
+              in_tag_val = document.createElement("DIV");
 
-              b.innerHTML = "<strong>" + arr[i].substr(0, val.length) + "</strong>";
-              b.innerHTML += arr[i].substr(val.length);
-              b.innerHTML += "<input type='hidden' value='" + arr[i] + "'>";
+              in_tag_val.innerHTML = "<strong>" + arr[i].substr(0, val.length) + "</strong>";
+              in_tag_val.innerHTML += arr[i].substr(val.length);
+              in_tag_val.innerHTML += "<input type='hidden' value='" + arr[i] + "'>";
 
-              b.addEventListener("click", function(e) {
+              in_tag_val.addEventListener("click", function(e) {
 
                   inp.value = this.getElementsByTagName("input")[0].value;
                   closeAllLists();
               });
-              a.appendChild(b);
+              list_ele.appendChild(in_tag_val);
             }
           }
       });
