@@ -7,15 +7,16 @@ from .base import BaseCrawlSpider, BaseParseSpider, clean, Gender, soupify
 
 class Mixin:
     retailer = 'forumsport'
-    one_sizes = ['unica']
 
 
 class MixinES(Mixin):
     retailer = Mixin.retailer + '-es'
     market = 'ES'
     lang = 'es'
+
     allowed_domains = ['forumsport.com']
     start_urls = ['https://www.forumsport.com/ropa-calzado/']
+    one_sizes = ['unica']
 
 
 class ParseSpider(BaseParseSpider):
@@ -34,7 +35,6 @@ class ParseSpider(BaseParseSpider):
 
         self.boilerplate_normal(garment, response)
 
-        garment.update(self.product_reviews(response))
         garment['gender'] = self.product_gender(response)
         garment['image_urls'] = self.image_urls(response)
         garment['skus'] = self.skus(response)
@@ -56,19 +56,6 @@ class ParseSpider(BaseParseSpider):
     def product_gender(self, response):
         css = '.review.show-for-large-up::text, .product-name .description::text'
         return self.gender_lookup(soupify(clean(response.css(css)))) or Gender.ADULTS.value
-
-    def product_reviews(self, response):
-        css_t = '.ratings-overview .rating{}'
-        comments = response.css('comment')
-
-        if not comments:
-            return {}
-
-        return {
-            'total_score': float(clean(response.css(css_t.format('::text')))[0]),
-            'review_score': float(clean(response.css(css_t.format(' span::text')), pattern_re=r'/')[0]),
-            'number_of_reviews': len(comments)
-        }
 
     def colour_requests(self, response):
         css = 'a[style="enlaces_hermanos"]::attr(href)'
@@ -135,7 +122,7 @@ class CrawlSpider(BaseCrawlSpider):
 
 class ForumSportESParseSpider(MixinES, ParseSpider):
     name = MixinES.retailer + '-parse'
-
+    
 
 class ForumSportESCrawlSpider(MixinES, CrawlSpider):
     name = MixinES.retailer + '-crawl'
