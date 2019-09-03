@@ -9,19 +9,12 @@ import MediaUpload from "../MediaUpload/MediaUpload";
 import "./NewPost.sass";
 
 class NewPost extends Component {
-  state = {};
-
   componentDidMount = () => {
     fetchUser(this.props.user_id);
   };
 
   onSubmit = formValues => {
-    this.props.createPost(formValues, this.state.media);
-    this.setState({});
-  };
-
-  handleMediaAdd = media => {
-    this.setState({ media });
+    this.props.createPost(formValues);
   };
 
   renderInput = ({ input, placeholder, meta }) => {
@@ -84,7 +77,7 @@ class NewPost extends Component {
             </div>
             <hr />
             {/* <span className="post-prompt">Press Enter to post.</span> */}
-            <MediaUpload onMediaChange={this.handleMediaAdd}></MediaUpload>
+            <MediaUpload></MediaUpload>
           </div>
         </div>
       );

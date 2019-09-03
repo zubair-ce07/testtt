@@ -19,3 +19,7 @@ export const UNFOLLOW_USER = "UNFOLLOW_USER";
 
 export const CREATE_COMMENT = "CREATE_COMMENT";
 export const FETCH_COMMENTS = "FETCH_COMMENTS";
+
+export const ADD_MEDIA = "ADD_MEDIA";
+export const REMOVE_MEDIA = "REMOVE_MEDIA";
+export const CLEAR_MEDIA = "CLEAR_MEDIA";

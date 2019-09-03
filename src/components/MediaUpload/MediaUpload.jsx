@@ -1,28 +1,22 @@
 import React, { Component } from "react";
+import { connect } from "react-redux";
 
 import "./MediaUpload.sass";
 
 import uploadIcon from "./upload-icon.png";
+import { removeMedia, addMedia } from "../../actions/media.action";
 
 class MediaUpload extends Component {
-  state = { media: [] };
-
-  onChangeHandler = async event => {
-    await this.setState({
-      media: [...this.state.media, event.target.files[0]]
-    });
-    this.props.onMediaChange(this.state.media);
+  onChangeHandler = event => {
+    this.props.addMedia(event.target.files[0]);
   };
 
-  deleteUploadedImage = async imageToDelete => {
-    await this.setState({
-      media: this.state.media.filter(img => img !== imageToDelete)
-    });
-    this.props.onMediaChange(this.state.media);
+  deleteUploadedImage = imageToDelete => {
+    this.props.removeMedia(imageToDelete);
   };
 
   renderImages = () => {
-    return this.state.media.map((file, i) => {
+    return this.props.media.map((file, i) => {
       return (
         <div className="image-preview" key={i}>
           <div
@@ -38,7 +32,7 @@ class MediaUpload extends Component {
   };
 
   renderSquareLabel = () => {
-    if (this.state.media.length > 0)
+    if (this.props.media.length > 0)
       return (
         <label htmlFor="file-input">
           <div className="square-upload">
@@ -50,7 +44,7 @@ class MediaUpload extends Component {
   };
 
   renderLabel = () => {
-    if (this.state.media.length === 0) {
+    if (this.props.media.length === 0) {
       return (
         <label id="image-upload-label" htmlFor="file-input">
           <img className="upload-icon" src={uploadIcon} alt="#" />
@@ -75,5 +69,11 @@ class MediaUpload extends Component {
     );
   };
 }
+const mapStateToProps = state => {
+  return { media: state.media };
+};
 
-export default MediaUpload;
+export default connect(
+  mapStateToProps,
+  { addMedia, removeMedia }
+)(MediaUpload);

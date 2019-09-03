@@ -6,7 +6,8 @@ import {
   FETCH_FEED,
   CREATE_POST,
   DELETE_POST,
-  FETCH_USER_POSTS
+  FETCH_USER_POSTS,
+  CLEAR_MEDIA
 } from "./actions.types";
 import { fetchUser } from "./user.actions";
 
@@ -20,12 +21,11 @@ export const fetchFeedAndUsers = () => async (dispatch, getState) => {
     .value();
 };
 
-export const createPost = (post, mediaToUpload) => async (
-  dispatch,
-  getState
-) => {
+export const createPost = post => async (dispatch, getState) => {
   post.author = getState().auth.user_id;
   post.time = moment().format();
+
+  const { media: mediaToUpload } = getState();
 
   const { data: newPost } = await database.post("/posts/", post);
 
@@ -47,6 +47,10 @@ export const createPost = (post, mediaToUpload) => async (
   dispatch({
     type: CREATE_POST,
     payload: newPost
+  });
+
+  dispatch({
+    type: CLEAR_MEDIA
   });
 };
 

@@ -6,6 +6,7 @@ import postReducer from "./postReducer";
 import userReducer from "./userReducer";
 import commentReducer from "./commentReducer";
 import followingReducer from "./followingsReducer";
+import mediaReducer from "./mediaReducer";
 
 export default combineReducers({
   registerStatus: registerReducer,
@@ -13,5 +14,6 @@ export default combineReducers({
   posts: postReducer,
   users: userReducer,
   comments: commentReducer,
-  followings: followingReducer
+  followings: followingReducer,
+  media: mediaReducer
 });
