@@ -1,8 +1,7 @@
 import json
 
 from scrapy.linkextractors import LinkExtractor
-from scrapy.spiders import Rule
-from scrapy import Request
+from scrapy.spiders import Rule, Request
 
 from skuscraper.parsers.genders import Gender
 from .base import BaseParseSpider, BaseCrawlSpider, clean, soupify
@@ -16,6 +15,7 @@ class MixinCN(Mixin):
     retailer = Mixin.retailer + "-cn"
     market = "CN"
     start_urls = ['https://cn.burberry.com/']
+
     product_url_t = 'https://cn.burberry.com/service/products{}'
 
 class BurberryParseSpider(BaseParseSpider):
