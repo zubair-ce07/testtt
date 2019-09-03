@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <title>Wheels | Index</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-{#    <link rel="stylesheet" href="./static/stylefile.css">#}
 
     <style>
         * {
@@ -72,18 +71,17 @@
     <button class="btn btn-outline-info" type="button" onclick="hideData()">Hide Data</button>
 
     <div class="autocomplete" style="width:300px;">
-        <input type="text" placeholder="Make" maxlength="10" id="makeValue">
+        <input id="make" type="text" placeholder="Make" maxlength="10" onkeyup="filterUsedCars(this.value, 0)">
     </div>
     <div class="autocomplete" style="width:300px;">
-         <input type="text" placeholder="Model" id="modelValue">
+         <input id="model" type="text" placeholder="Model" onkeyup="filterUsedCars(this.value, 1)">
     </div>
     <div class="autocomplete" style="width:300px;">
-        <input type="text" placeholder="City" maxlength="10" id="cityValue">
+        <input id="city" type="text" placeholder="City" maxlength="10" onkeyup="filterUsedCars(this.value, 5)">
     </div>
     <div class="autocomplete" style="width:300px;">
-         <input type="number" max="2020" min="1970" placeholder="Year" id="yearValue">
+         <input id="year" type="number" max="2020" min="1970" placeholder="Year" onkeyup="filterUsedCars(this.value, 2)">
     </div>
-    <button class="btn btn-outline-dark" type="button" onclick="filterData()">Filter</button>
 
     <table class="table table-bordered" >
       <thead class="thead-dark">
@@ -103,211 +101,234 @@
           <th>Image</th>
         </tr>
       </thead>
-      <tbody id="data_in" class="collapse show">
+      <tbody id="UsedCars" class="collapse show">
         <!-- Data from JS will be added here       -->
       </tbody>
     </table>
 
 <script type="text/javascript">
-        let all_wheels = [
-            {% for car in wheels %}
-            wheel = [
-                make = "{{ car.make }}",
-                carmodel = "{{ car.carmodel }}",
-                year = "{{ car.year }}",
-                millage = "{{ car.millage }}",
-                transmission = "{{ car.transmission }}",
-                reg_city = "{{ car.reg_city }}",
-                assembly = "{{ car.assembly }}",
-                body_type = "{{ car.body_type }}",
-                engine_type = "{{ car.engine_type }}",
-                engine_capacity = "{{ car.engine_capacity }}",
-                features = "{{ car.features }}",
-                description = "{{ car.description }}",
-                image_url = "{{ car.image }}",
-                id = {{ car.id }},
-            ],
-            {% endfor %}
-        ];
-        let is_data_populated = false;
-        let total_rows = all_wheels.length;
+        let used_car = [];
+        let temp_var = {};
+        {% for car in wheels %}
+        temp_var = {
+                    'make': "{{ car.make }}",
+                    "model": "{{ car.carmodel }}",
+                    "year": {{ car.year }},
+                    'millage': "{{ car.millage }}",
+                    'transmission': "{{ car.transmission }}",
+                    'reg_city': "{{ car.reg_city }}",
+                    'assembly': "{{ car.assembly }}",
+                    'body_type': "{{ car.body_type }}",
+                    'engine_type': "{{ car.engine_type }}",
+                    'engine_capacity': "{{ car.engine_capacity }}",
+                    'features': "{{ car.features }}",
+                    'description': "{{ car.description }}",
+                    'image': "{{ car.image }}"
+                    };
+        used_car.push(temp_var);
+        {% endfor %}
 
+        let is_data_present = false;
         function showData()
         {
-            if(!is_data_populated)
+            if(!is_data_present)
             {
-                document.getElementById("data_in").style.visibility = "visible";
-                let table_element = document.getElementById('data_in');
-                for(let i=0; i < all_wheels.length ;i++)
+                let table = document.getElementById('UsedCars');
+                let row, cell;
+                for(let i=0; i<used_car.length; i++)
                 {
-                    table_element.innerHTML += "<tr id=row"+ i + ">"+
-                                        "<td id=make"+ i +">" + all_wheels[i][0] + "</td>" + // make
-                                        "<td id=model" + i + ">" + all_wheels[i][1] + "</td>" + // model
-                                        "<td id=year" + i + ">" + all_wheels[i][2] + "</td>" + // year
-                                        "<td>" + all_wheels[i][3] + "</td>" + // millage
-                                        "<td>" + all_wheels[i][4] + "</td>" + // transmission
-                                        "<td id=city"+ i +">" + all_wheels[i][5] + "</td>" + // register city
-                                        "<td>" + all_wheels[i][6] + "</td>" + // assembly
-                                        "<td>" + all_wheels[i][7] + "</td>" + // body type
-                                        "<td>" + all_wheels[i][8] + "</td>" + // engine type
-                                        "<td>" + all_wheels[i][9] + "</td>" + // engine capacity
-                                        "<td>" + all_wheels[i][10] + "</td>" + //features
-                                        "<td>" + all_wheels[i][11] + "</td>" + // description
-                                        "<td><a href='" + all_wheels[i][12] + "' target='_blank'>Image Link</a></td>" +
-                                      "</tr>";
+                    row = table.insertRow(i);
+
+                    cell = row.insertCell(0);
+                    cell.innerHTML = used_car[i].make;
+
+                    cell = row.insertCell(1);
+                    cell.innerHTML = used_car[i].model;
+
+                    cell = row.insertCell(2);
+                    cell.innerHTML = used_car[i].year;
+
+                    cell = row.insertCell(3);
+                    cell.innerHTML = used_car[i].millage;
+
+                    cell = row.insertCell(4);
+                    cell.innerHTML = used_car[i].transmission;
+
+                    cell = row.insertCell(5);
+                    cell.innerHTML = used_car[i].reg_city;
+
+                    cell = row.insertCell(6);
+                    cell.innerHTML = used_car[i].assembly;
+
+                    cell = row.insertCell(7);
+                    cell.innerHTML = used_car[i].body_type;
+
+                    cell = row.insertCell(8);
+                    cell.innerHTML = used_car[i].engine_type;
+
+                    cell = row.insertCell(9);
+                    cell.innerHTML = used_car[i].engine_capacity;
+
+                    cell = row.insertCell(10);
+                    cell.innerHTML = used_car[i].features;
+
+                    cell = row.insertCell(11);
+                    cell.innerHTML = used_car[i].description;
+
+                    cell = row.insertCell(12);
+                    cell.innerHTML = "<a href=" + used_car[i].image + " target='_blank'>Image Link</a>";
                 }
-                is_data_populated = true;
+                is_data_present = true;
             }
-            else{
-                document.getElementById("data_in").style.visibility = "visible";
+            else
+            {
+                document.getElementById("UsedCars").style.display = "";
             }
         }
 
         function hideData()
         {
-            document.getElementById("data_in").style.visibility = "hidden";
+            document.getElementById("UsedCars").style.display = "none";
         }
 
-        function checkNullAndCompare(val1, val2)
+        function filterUsedCars(input, ith_cell)
         {
-            if(val1 !== ""){
-                if(val1 !== val2){
-                    return true;
-                }
-                return false;
-            }
-            return false;
-        }
-
-        function filterData()
-        {
-            let year = document.getElementById('yearValue').value;
-            let city = document.getElementById('cityValue').value;
-            let make = document.getElementById('makeValue').value;
-            let model_var = document.getElementById('modelValue').value;
-
-            for(let i=0; i < total_rows; ++i)
+            if(is_data_present && input)
             {
-                let row_visibility = true;
-                if(checkNullAndCompare(year, document.getElementById('year' + i).innerHTML)
-                    || checkNullAndCompare(city, document.getElementById('city' + i).innerHTML)
-                    || checkNullAndCompare(model_var, document.getElementById('model' + i).innerHTML)
-                    || checkNullAndCompare(make, document.getElementById('make' + i).innerHTML))
+                let filter, table, tr, td, i, txtValue;
+
+                filter = input.toUpperCase();
+                table = document.getElementById("UsedCars");
+                tr = table.getElementsByTagName("tr");
+
+                for (i = 0; i < tr.length; i++)
                 {
-                    document.getElementById('row'+i).style.visibility = "collapse";
-                    {#console.log(document.getElementById('year'+i).innerHTML + ' <--> ' + year)#}
-                    row_visibility = false;
+                    td = tr[i].getElementsByTagName("td")[ith_cell];
+                    if (td)
+                    {
+                        txtValue = td.textContent;
+                        if (txtValue.toUpperCase().indexOf(filter) > -1)
+                        {
+                            tr[i].style.display = "";
+                        }
+                        else
+                        {
+                            tr[i].style.display = "none";
+                        }
+                    }
                 }
-
-                if(row_visibility)
-                    document.getElementById('row'+i).style.visibility = "visible";
             }
         }
 
-    function autocomplete(inp, arr)
-    {
-      let currentFocus;
-      inp.addEventListener("input", function(e)
-      {
-          let list_ele, in_tag_val, i, val = this.value;
-          closeAllLists();
-          if (!val) { return false;}
-          currentFocus = -1;
-          list_ele = document.createElement("DIV");
-          list_ele.setAttribute("id", this.id + "autocomplete-list");
-          list_ele.setAttribute("class", "autocomplete-items");
-          this.parentNode.appendChild(list_ele);
-          for (i = 0; i < arr.length; i++) {
-            if (arr[i].substr(0, val.length).toUpperCase() === val.toUpperCase()) {
 
-              in_tag_val = document.createElement("DIV");
+        // this is a third party function
+        function autocomplete(inp, arr)
+        {
+          let currentFocus;
+          inp.addEventListener("input", function(e)
+          {
+              let list_ele, in_tag_val, i, val = this.value;
+              closeAllLists();
+              if (!val) { return false;}
+              currentFocus = -1;
+              list_ele = document.createElement("DIV");
+              list_ele.setAttribute("id", this.id + "autocomplete-list");
+              list_ele.setAttribute("class", "autocomplete-items");
+              this.parentNode.appendChild(list_ele);
+              for (i = 0; i < arr.length; i++) {
+                if (arr[i].substr(0, val.length).toUpperCase() === val.toUpperCase()) {
 
-              in_tag_val.innerHTML = "<strong>" + arr[i].substr(0, val.length) + "</strong>";
-              in_tag_val.innerHTML += arr[i].substr(val.length);
-              in_tag_val.innerHTML += "<input type='hidden' value='" + arr[i] + "'>";
+                  in_tag_val = document.createElement("DIV");
 
-              in_tag_val.addEventListener("click", function(e) {
+                  in_tag_val.innerHTML = "<strong>" + arr[i].substr(0, val.length) + "</strong>";
+                  in_tag_val.innerHTML += arr[i].substr(val.length);
+                  in_tag_val.innerHTML += "<input type='hidden' value='" + arr[i] + "'>";
 
-                  inp.value = this.getElementsByTagName("input")[0].value;
-                  closeAllLists();
-              });
-              list_ele.appendChild(in_tag_val);
+                  in_tag_val.addEventListener("click", function(e) {
+
+                      inp.value = this.getElementsByTagName("input")[0].value;
+                      closeAllLists();
+                  });
+                  list_ele.appendChild(in_tag_val);
+                }
+              }
+          });
+
+          inp.addEventListener("keydown", function(e)
+          {
+              let x = document.getElementById(this.id + "autocomplete-list");
+              if (x) x = x.getElementsByTagName("div");
+              if (e.keyCode === 40) {
+
+
+                currentFocus++;
+
+                addActive(x);
+              } else if (e.keyCode === 38) { //up
+
+
+                currentFocus--;
+                addActive(x);
+              } else if (e.keyCode === 13) {
+                e.preventDefault();
+                if (currentFocus > -1) {
+                  if (x) x[currentFocus].click();
+                }
+              }
+          });
+
+          function addActive(x)
+          {
+
+            if (!x) return false;
+            removeActive(x);
+            if (currentFocus >= x.length) currentFocus = 0;
+            if (currentFocus < 0) currentFocus = (x.length - 1);
+            x[currentFocus].classList.add("autocomplete-active");
+          }
+
+          function removeActive(x)
+          {
+
+            for (let i = 0; i < x.length; i++) {
+              x[i].classList.remove("autocomplete-active");
             }
           }
-      });
 
-      inp.addEventListener("keydown", function(e)
-      {
-          let x = document.getElementById(this.id + "autocomplete-list");
-          if (x) x = x.getElementsByTagName("div");
-          if (e.keyCode === 40) {
+          function closeAllLists(elmnt)
+          {
 
-
-            currentFocus++;
-
-            addActive(x);
-          } else if (e.keyCode === 38) { //up
-
-
-            currentFocus--;
-            addActive(x);
-          } else if (e.keyCode === 13) {
-            e.preventDefault();
-            if (currentFocus > -1) {
-              if (x) x[currentFocus].click();
+            let x = document.getElementsByClassName("autocomplete-items");
+            for (let i = 0; i < x.length; i++) {
+              if (elmnt !== x[i] && elmnt !== inp) {
+                x[i].parentNode.removeChild(x[i]);
+              }
             }
           }
-      });
-
-      function addActive(x)
-      {
-
-        if (!x) return false;
-        removeActive(x);
-        if (currentFocus >= x.length) currentFocus = 0;
-        if (currentFocus < 0) currentFocus = (x.length - 1);
-        x[currentFocus].classList.add("autocomplete-active");
-      }
-
-      function removeActive(x)
-      {
-
-        for (let i = 0; i < x.length; i++) {
-          x[i].classList.remove("autocomplete-active");
+          document.addEventListener("click", function (e)
+          {
+              closeAllLists(e.target);
+          });
         }
-      }
 
-      function closeAllLists(elmnt)
-      {
-
-        let x = document.getElementsByClassName("autocomplete-items");
-        for (let i = 0; i < x.length; i++) {
-          if (elmnt !== x[i] && elmnt !== inp) {
-            x[i].parentNode.removeChild(x[i]);
-          }
-        }
-      }
-      document.addEventListener("click", function (e)
-      {
-          closeAllLists(e.target);
-      });
-    }
         let cities = new Set();
         let makes = new Set();
         let models = new Set();
-        {% for car in wheels %}
-        cities.add("{{ car.reg_city }}");
-        makes.add("{{ car.make }}");
-        models.add("{{ car.carmodel }}");
-        {% endfor %}
+
+        for(let i=0; i<used_car.length; i++)
+        {
+            cities.add(used_car[i].reg_city);
+            makes.add(used_car[i].make);
+            models.add(used_car[i].model);
+        }
 
         cities = [...cities];
         makes = [...makes];
         models = [...models];
 
-        autocomplete(document.getElementById("cityValue"), cities);
-        autocomplete(document.getElementById("makeValue"), makes);
-        autocomplete(document.getElementById("modelValue"), models);
+        autocomplete(document.getElementById("city"), cities);
+        autocomplete(document.getElementById("make"), makes);
+        autocomplete(document.getElementById("model"), models);
 </script>
 
 </body>
