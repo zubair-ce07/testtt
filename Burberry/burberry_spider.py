@@ -16,7 +16,7 @@ class MixinCN(Mixin):
     market = "CN"
     start_urls = ['https://cn.burberry.com/']
 
-    product_url_t = 'https://cn.burberry.com/service/products{}'
+    variant_url_t = 'https://cn.burberry.com/service/products{}'
 
 class BurberryParseSpider(BaseParseSpider):
     description_css = '.accordion-tab_content p::text'
@@ -51,20 +51,20 @@ class BurberryParseSpider(BaseParseSpider):
         return clean(response.css('.accordion-tab_item-number::text').re_first('\d+'))
 
     def image_urls(self, raw_product):
-        return [img['img']['src'] for img in raw_product['carousel'] if img.get('img', None)]
+        return [img['img']['src'] for img in raw_product['carousel'] if img.get('img')]
 
     def product_category(self, response):
-        raw_categories = clean(response.css('html::attr(data-atg-category)'))
-        return raw_categories[0].split("/") if raw_categories else []
+        return clean(response.css('html::attr(data-atg-category)') or [''])[0].split('/')
 
     def product_gender(self, response):
         soup = soupify(self.product_category(response))
         return self.gender_lookup(soup) or Gender.ADULTS.value
 
     def color_requests(self, response):
-        urls = clean(response.css('.product-purchase_selector-colour a::attr(href)'))
+        urls = clean(response.css('.product-purchase_selector-colour a::attr(href)')) or \
+               clean(response.css('html::attr(data-default-url)'))
         headers = {'x-csrf-token': clean(response.css('.csrf-token::attr(value)'))[0]}
-        return [Request(self.product_url_t.format(url), self.parse_color, headers=headers)
+        return [Request(self.variant_url_t.format(url), self.parse_color, headers=headers)
                 for url in urls]
 
     def skus(self, raw_data):
@@ -76,8 +76,7 @@ class BurberryParseSpider(BaseParseSpider):
             raw_data['dataDictionaryProductInfo']['priceDiscount']
         ]
         common_sku = self.product_pricing_common(None, money_strs)
-        selected_colour = store['colour']['value']
-        common_sku["colour"] = selected_colour
+        common_sku["colour"] = store['colour']['value']
 
         raw_sizes = store["size"]["items"] if "size" in store \
             else [{"label": self.one_size}]
@@ -89,7 +88,7 @@ class BurberryParseSpider(BaseParseSpider):
                 raw_data['isOutOfStock'])):
                 sku['out_of_stock'] = True
 
-            skus[f"{selected_colour}_{size['label']}"] = sku
+            skus[f"{sku['colour']}_{size['label']}"] = sku
 
         return skus
 
