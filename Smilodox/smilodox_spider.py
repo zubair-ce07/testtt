@@ -40,6 +40,9 @@ class SmilodoxParseSpider(BaseParseSpider):
         if url:
             request = response.follow(url[0], callback=self.parse_raw_skus)
             garment['meta'] = {'requests_queue': [request], 'varients': []}
+        else:
+            garment['skus'] = self.one_sku(response)
+
         return self.next_request_or_garment(garment)
 
     def parse_raw_skus(self, response):
@@ -50,18 +53,17 @@ class SmilodoxParseSpider(BaseParseSpider):
             garment['skus'] = self.raw_skus(raw_skus)
 
             urls = re.findall('scripts.push\("(.+?)"\);', response.text, re.MULTILINE | re.DOTALL)
-            requests = [response.follow(url, self.parse_varient) for url in urls if 'attribute_id' in url]
+            requests = [response.follow(url, self.parse_varient_map) for url in urls if 'attribute_id' in url]
             garment['meta']['requests_queue'] += requests
 
         return self.next_request_or_garment(garment)
 
-    def parse_varient(self, response):
+    def parse_varient_map(self, response):
         garment = response.meta['garment']
-        raw_varients = re.findall('] = (.+?);}', response.text, re.MULTILINE | re.DOTALL)
-        if raw_varients:
-            garment['meta']['varients'] += self.product_varients(json.loads(raw_varients[0]))
-            if not garment['meta']['requests_queue']:
-                self.skus(garment)
+        varient_map = re.findall('] = (.+?);}', response.text, re.MULTILINE | re.DOTALL)[0]
+        garment['meta']['varients'] += self.product_varients(json.loads(varient_map))
+        if not garment['meta']['requests_queue']:
+            self.skus(garment)
 
         return self.next_request_or_garment(garment)
 
@@ -88,6 +90,9 @@ class SmilodoxParseSpider(BaseParseSpider):
         soup += soupify(list(part[1] for part in self.add_trail(response)))
         return self.gender_lookup(soup.lower()) or Gender.ADULTS.value
 
+    def previous_prices(self, response):
+        return clean(response.css('.uvp.hidden-xs::text'))
+
     def raw_skus(self, raw_skus):
         skus = {}
         for sku_id, raw_sku in raw_skus.items():
@@ -99,29 +104,37 @@ class SmilodoxParseSpider(BaseParseSpider):
         return skus
 
     def skus(self, garment):
-        varients = garment['meta']['varients']
+        varient_map = garment['meta']['varients']
         skus = {}
         for _, sku in garment['skus'].items():
             sku_varients = []
             for varient_id in sku['varient_ids']:
-                varient = next((item for item in varients if item['id'] == str(varient_id)), None)
-                if varient:
-                    sku[varient['v_name']] = varient['name']
-                    sku_varients.append(varient['name'])
+                varient = next((item for item in varient_map if item['id'] == str(varient_id)))
+                sku[varient['v_name']] = varient['name']
+                sku_varients.append(varient['name'])
             del sku['varient_ids']
+            if 'size' not in sku_varients:
+                sku_varients.append(self.one_size)
+                sku['size'] = self.one_size
             skus.update({soupify(sku_varients, '_'): sku})
 
         garment['skus'] = skus
 
-    def product_varients(self, raw_varients):
-        k_list = ['id', 'name']
-        varients = []
-        for _, value in raw_varients['values'].items():
-            varient = dict((k, v) for k, v in value.items() if k in k_list)
-            varient['v_name'] = raw_varients['name'].lower()
-            varients.append(varient)
+    def one_sku(self, respons):
+        sku = self.product_pricing_common(respons)
+        sku['previous_prices'] = self.previous_prices(respons)
+        sku['size'] = self.one_size
+        return {self.one_size: sku}
 
-        return varients
+    def product_varients(self, raw_map):
+        k_list = ['id', 'name']
+        varient_map = []
+        for _, value in raw_map['values'].items():
+            varient = dict((k, v) for k, v in value.items() if k in k_list)
+            varient['v_name'] = raw_map['name'].lower()
+            varient_map.append(varient)
+
+        return varient_map
 
 
 class SmilodoxUSParseSpider(MixinUS, SmilodoxParseSpider):
