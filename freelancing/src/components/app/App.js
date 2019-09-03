@@ -1,13 +1,13 @@
 import React from 'react'
-import { ThemeProvider } from 'styled-components'
-import theme, { invertTheme } from './theme';
 import Navbar from '../navbar/Navbar';
+import SignUp from '../auth/SignUp';
 
 const App = () => {
   return (
-    <ThemeProvider theme={invertTheme}>
+    <div>
       <Navbar />
-    </ThemeProvider>
+      <SignUp />
+    </div>
   )
 }
 

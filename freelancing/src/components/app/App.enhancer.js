@@ -1,4 +1,4 @@
-import { simpleAction } from "../actions/simpleActions";
+import { simpleAction } from "../../actions/simpleActions";
 import { compose } from "redux";
 import { connect } from 'react-redux'
 
