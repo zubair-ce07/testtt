@@ -25,7 +25,7 @@ from core.permissions import IsCustomer, IsShop, IsShopOwnerOrReservedSloTCustom
 from core.constants import (
     CUSTOMER, SALOON, SHOP_NAME, TIME,
     START_TIME, END_DATE, START_DATE,
-    NO_HOURS, REASON, SLOT_ID
+    NUMBER_OF_SLOTS, REASON, SLOT_ID, SLOT_DURATION
 )
 
 
@@ -93,10 +93,11 @@ class MyShopListView(LoginRequiredMixin, UserPassesTestMixin, ListView, View):
         form is valid and then create timeslot object in db for given schedule.
         """
         start_time = request.POST.get(START_TIME, None)
-        no_hours = request.POST.get(NO_HOURS, None)
+        number_of_slots = request.POST.get(NUMBER_OF_SLOTS, None)
+        slot_duration = request.POST.get(SLOT_DURATION, None)
         saloon = self.request.user.saloon
         slots = []
-        if int(start_time)+int(no_hours) > 24:
+        if int(start_time)+((int(number_of_slots) * int(slot_duration))/60) > 24:
             messages.warning(
                 request, f'Time slots are exceding one day after the start time!')
             return redirect('my_shop')
@@ -105,11 +106,17 @@ class MyShopListView(LoginRequiredMixin, UserPassesTestMixin, ListView, View):
             request.POST.get(START_DATE, None), '%Y-%m-%d')
         end_date = datetime.strptime(
             request.POST.get(END_DATE, None), '%Y-%m-%d')
+
+        if start_date > end_date:
+            messages.warning(
+                request, f'start date is greater than end date!')
+            return redirect('my_shop')
+
         day_count = (end_date - start_date).days + 1
         for single_date in (start_date + timedelta(n) for n in range(day_count)):
-            for slot in range(int(no_hours)):
+            for slot in range(int(number_of_slots)):
                 slots.append(
-                    TimeSlot(saloon=saloon, time=single_date + timedelta(hours=int(start_time)+slot)))
+                    TimeSlot(saloon=saloon, time=single_date + timedelta(hours=int(start_time), minutes=slot*int(slot_duration))))
         TimeSlot.objects.bulk_create(slots)
         messages.success(
             request, f'Time slots added!')
@@ -179,13 +186,13 @@ class ReservationsListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         return hasattr(self.request.user, SALOON)
 
 
-class ApiShopList(generics.ListAPIView):
+class ShopListApiView(generics.ListAPIView):
     """api shop list view"""
     queryset = Saloon.objects.all()
     serializer_class = ShopSerializer
 
 
-class ApiShopUpdate(APIView):
+class ShopUpdateApiView(APIView):
     """customer update view for api.
      post method data structure
     {
@@ -214,7 +221,7 @@ class ApiShopUpdate(APIView):
         return Response(data={"shop updated successfully"}, status=status.HTTP_200_OK)
 
 
-class ApiListAddTimeSlots(generics.ListCreateAPIView):
+class ListAddTimeSlotsApiView(generics.ListCreateAPIView):
     """list time slots of a saloon api view."""
 
     serializer_class = TimeSlotSerializer
@@ -242,27 +249,36 @@ class ApiListAddTimeSlots(generics.ListCreateAPIView):
             start_date = schedule_serializer.validated_data[START_DATE]
             end_date = schedule_serializer.validated_data[END_DATE]
             start_time = schedule_serializer.validated_data[START_TIME]
-            no_hours = schedule_serializer.validated_data[NO_HOURS]
+            number_of_slots = schedule_serializer.validated_data[NUMBER_OF_SLOTS]
+            slot_duration = schedule_serializer.validated_data[SLOT_DURATION]
 
-            if int(start_time)+int(no_hours) > 24:
+            if int(start_time)+((int(number_of_slots) * int(slot_duration))/60) > 24:
                 return Response(
                     data={"Time slots are exceding one day after the start time!"},
                     status=status.HTTP_400_BAD_REQUEST
                 )
+            if start_date > end_date:
+                return Response(
+                    data={"start date is greater than end date!"},
+                    status=status.HTTP_400_BAD_REQUEST)
 
             day_count = (end_date - start_date).days + 1
             for single_date in (start_date + timedelta(n) for n in range(day_count)):
-                for slot in range(int(no_hours)):
+                for slot in range(int(number_of_slots)):
+                    slot_time = datetime.min + timedelta(hours=int(start_time),
+                                                         minutes=slot*int(slot_duration))
                     slots.append(
-                        TimeSlot(
-                            saloon=self.request.user.saloon,
-                            time=single_date + timedelta(hours=int(start_time)+slot)))
+                        TimeSlot(saloon=self.request.user.saloon,
+                                 time=datetime.combine(
+                                     single_date, slot_time.time())
+                                 )
+                    )
             TimeSlot.objects.bulk_create(slots)
             return Response(data={"slots added  successfully"}, status=status.HTTP_200_OK)
         return Response(data={"Data not valid!"}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ApiListSaloonSlots(generics.ListAPIView):
+class ListSaloonSlotsApiView(generics.ListAPIView):
     """list saloon slots by name."""
     serializer_class = TimeSlotSerializer
     queryset = TimeSlot.objects.all()
@@ -273,7 +289,7 @@ class ApiListSaloonSlots(generics.ListAPIView):
         return TimeSlot.objects.filter(saloon__shop_name=self.kwargs.get(SHOP_NAME))
 
 
-class ApiDeleteReservation(generics.DestroyAPIView):
+class DeleteReservationApiView(generics.DestroyAPIView):
     """delete reservation only by customer or shop"""
 
     permission_classes = (IsAuthenticated, IsShopOwnerOrReservedSloTCustomer)
@@ -281,22 +297,18 @@ class ApiDeleteReservation(generics.DestroyAPIView):
     queryset = Reservation.objects.all()
 
 
-class ApiShopReservations(generics.ListAPIView):
+class ShopReservationsApiView(generics.ListAPIView):
     """lists a saloon reservations"""
     serializer_class = ReservationSerializer
     queryset = Reservation.objects.all()
     permission_classes = (IsAuthenticated, IsShop)
 
     def get_queryset(self):
-        query_set = Reservation.objects.filter(
+        return Reservation.objects.filter(
             time_slot__saloon=self.request.user.saloon)
-        if not query_set.exists():
-            return []
-
-        return query_set
 
 
-class ApiReserveTimeSlot(generics.CreateAPIView):
+class ReserveTimeSlotApiView(generics.CreateAPIView):
     """reserve a slot by customer.
     post request data format
     {

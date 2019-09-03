@@ -54,4 +54,5 @@ class ScheduleSerializer(serializers.Serializer):
     start_date = serializers.DateField()
     end_date = serializers.DateField()
     start_time = serializers.IntegerField()
-    no_hours = serializers.IntegerField()
+    number_of_slots = serializers.IntegerField()
+    slot_duration = serializers.IntegerField()

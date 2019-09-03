@@ -91,7 +91,7 @@ class ReservationsListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         return hasattr(self.request.user, CUSTOMER)
 
 
-class ApiCustomerUpdate(APIView):
+class CustomerUpdateApiView(APIView):
     """customer update view for api.
     post method data structure
     {
@@ -119,7 +119,7 @@ class ApiCustomerUpdate(APIView):
         return Response(data={"customer updated successfully"}, status=status.HTTP_200_OK)
 
 
-class ApiMyReservations(generics.ListAPIView):
+class MyReservationsApiView(generics.ListAPIView):
     """customer reservation list api view"""
     authentication_classes = [authentication.TokenAuthentication]
     permission_classes = (IsAuthenticated, IsCustomer)
@@ -129,9 +129,5 @@ class ApiMyReservations(generics.ListAPIView):
 
     def get_queryset(self):
         """queryset override"""
-        query_set = Reservation.objects.filter(
+        return Reservation.objects.filter(
             customer=self.request.user.customer)
-        if not query_set.exists():
-            return []
-
-        return query_set

@@ -13,7 +13,7 @@ from rest_framework.response import Response
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 
-from core.serializers import UserSerializer
+from core.serializers import RegisterUserSerializer
 from core.forms import UserRegisterForm
 from shop.models import Saloon
 from customer.models import Customer
@@ -48,6 +48,7 @@ class UserRegisterView(View):
                 Customer.objects.create(user=user)
             if user_type == SALOON:
                 Saloon.objects.create(user=user)
+            print(user_type)
 
             messages.success(request, f'Your account has been Created!')
             return redirect('login')
@@ -60,7 +61,7 @@ class UserRegisterView(View):
         return render(request, 'core/register.html', {'user_form': user_form})
 
 
-class ApiUserRegisteration(generics.CreateAPIView):
+class UserRegisterationApiView(generics.CreateAPIView):
     """User registration view for api
     post request format
     {
@@ -71,7 +72,7 @@ class ApiUserRegisteration(generics.CreateAPIView):
     }
     """
     queryset = User.objects.all()
-    serializer_class = UserSerializer
+    serializer_class = RegisterUserSerializer
 
     def post(self, request, *args, **kwargs):
         """post method for api user registration"""
@@ -91,7 +92,7 @@ class ApiUserRegisteration(generics.CreateAPIView):
         )
 
 
-class ApiUserLogin(ObtainAuthToken):
+class UserLoginApiView(ObtainAuthToken):
     """User login view for api.
     post request format
     {
@@ -107,11 +108,11 @@ class ApiUserLogin(ObtainAuthToken):
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
         token, _ = Token.objects.get_or_create(user=user)
-        user_serializer = UserSerializer(user)
+        user_serializer = RegisterUserSerializer(user)
         return Response(data={'token': token.key, 'user': user_serializer.data}, status=status.HTTP_200_OK)
 
 
-class ApiUserLogout(APIView):
+class UserLogoutApiView(APIView):
     """User logout view for api."""
     authentication_classes = [authentication.TokenAuthentication]
     permission_classes = (IsAuthenticated,)

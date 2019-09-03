@@ -1,6 +1,7 @@
 """shop models module."""
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 from customer.models import Customer
 
@@ -41,3 +42,15 @@ class Reservation(models.Model):
     def __str__(self):
         """str method for Reservation model"""
         return f'{self.customer.user.username} - { self.time_slot.saloon }'
+
+
+class Review(models.Model):
+    """reservation django model"""
+    reservation = models.OneToOneField(TimeSlot, on_delete=models.CASCADE)
+    comment = models.TextField(blank=True, null=True)
+    rating = models.IntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(10)])
+
+    def __str__(self):
+        """str method for Reservation model"""
+        return f'{self.reservation.customer.username} review'

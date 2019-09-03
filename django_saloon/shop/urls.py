@@ -1,31 +1,27 @@
 """shop url module"""
 from django.urls import path
 
-from shop.views import (ProfileView, SaloonListView, MyShopListView,
-                        SaloonSlotListView, ReservationsListView, ApiShopList,
-                        ApiShopUpdate, ApiListAddTimeSlots, ApiListSaloonSlots,
-                        ApiDeleteReservation, ApiShopReservations,
-                        ApiReserveTimeSlot
-                        )
+from shop import views as shop_views
 
 urlpatterns = [
-    path('profile/', ProfileView.as_view(), name='shop_profile'),
-    path('api/profile/', ApiShopUpdate.as_view(),
+    path('profile/', shop_views.ProfileView.as_view(), name='shop_profile'),
+    path('api/profile/', shop_views.ShopUpdateApiView.as_view(),
          name='api_shop_profile'),
-    path('saloons/', SaloonListView.as_view(), name='shop_list'),
-    path('api/saloons/', ApiShopList.as_view(), name='api_shop_list'),
-    path('shop/<str:shop_name>', SaloonSlotListView.as_view(),
+    path('saloons/', shop_views.SaloonListView.as_view(), name='shop_list'),
+    path('api/saloons/', shop_views.ShopListApiView.as_view(), name='api_shop_list'),
+    path('shop/<str:shop_name>', shop_views.SaloonSlotListView.as_view(),
          name='shop_slots'),
-    path('api/shop/<str:shop_name>', ApiListSaloonSlots.as_view(),
+    path('api/shop/<str:shop_name>', shop_views.ListSaloonSlotsApiView.as_view(),
          name='api_shop_slots'),
-    path('api/cancel-reservation/<int:pk>', ApiDeleteReservation.as_view(),
+    path('api/cancel-reservation/<int:pk>', shop_views.DeleteReservationApiView.as_view(),
          name='api_delete_slots'),
-    path('mysaloon/', MyShopListView.as_view(), name='my_shop'),
-    path('api/mysaloon/', ApiListAddTimeSlots.as_view(), name='api_my_shop'),
-    path('myreservations/', ReservationsListView.as_view(),
+    path('mysaloon/', shop_views.MyShopListView.as_view(), name='my_shop'),
+    path('api/mysaloon/', shop_views.ListAddTimeSlotsApiView.as_view(),
+         name='api_my_shop'),
+    path('myreservations/', shop_views.ReservationsListView.as_view(),
          name='shop_reservations'),
-    path('api/myreservations/', ApiShopReservations.as_view(),
+    path('api/myreservations/', shop_views.ShopReservationsApiView.as_view(),
          name='api_shop_reservations'),
-    path('api/reserve_slot/', ApiReserveTimeSlot.as_view(),
+    path('api/reserve_slot/', shop_views.ReserveTimeSlotApiView.as_view(),
          name='api_reserve_slot')
 ]

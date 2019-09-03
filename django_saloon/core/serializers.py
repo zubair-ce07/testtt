@@ -8,7 +8,7 @@ from customer.models import Customer
 from core.constants import USER_TYPE, SALOON, CUSTOMER, PASSWORD2, PASSWORD
 
 
-class UserSerializer(serializers.ModelSerializer):
+class RegisterUserSerializer(serializers.ModelSerializer):
     """core app user serializer for user registration"""
 
     password1 = serializers.CharField(write_only=True, source='password')
@@ -26,7 +26,7 @@ class UserSerializer(serializers.ModelSerializer):
         """UserSerializer create method override"""
         validated_data.pop(PASSWORD2)
         user_type = validated_data.pop(USER_TYPE)
-        user = super(UserSerializer, self).create(validated_data)
+        user = super(RegisterUserSerializer, self).create(validated_data)
         user.set_password(validated_data[PASSWORD])
         user.save()
         if user_type == CUSTOMER:

@@ -47,11 +47,23 @@
                         <small id="start_time_help" class="form-text text-muted">Shop reservations start time.</small>
                     </div>
                     <div class="form-group">
-                        <label for="no_hours">Number of time slots</label>
-                        <input type="number" class="form-control" min="1" max="24" name="no_hours" id="no_hours"
-                            aria-describedby="no_hours_help" placeholder="Enter total reservations 24 hours." required>
-                        <small id="no_hours_help" class="form-text text-muted">Reservation time will be One
-                            hour.</small>
+                        <label for="slot_duration">Slot duration</label>
+                        <select class="form-control" name="slot_duration" id="slot_duration"
+                            aria-describedby="slot_duration_help">
+                            <option value="15">15 minutes</option>
+                            <option value="30">30 minutes</option>
+                            <option value="45">45 minutes</option>
+                            <option value="60">60 minutes</option>
+                        </select>
+                        <!-- <input type="number" class="form-control" min="15" max="60" name="slot_duration"
+                            id="slot_duration" aria-describedby="slot_duration_help"
+                            placeholder="Single slot duration in minutes." required> -->
+                    </div>
+                    <div class="form-group">
+                        <label for="number_of_slots">Number of time slots</label>
+                        <input type="number" class="form-control" min="1" max="24" name="number_of_slots"
+                            id="number_of_slots" aria-describedby="number_of_slots_help"
+                            placeholder="Enter total reservations 24 hours." required>
                     </div>
                     <input type="submit" class="submit_btn btn btn-primary" value="Add" />
                 </form>
