@@ -1,37 +1,50 @@
 .Post
-    margin-bottom: 15px 
+    margin-bottom: 15px
 
-    .card 
+    .card
         border-radius: 0.25rem 0.25rem 0px 0px
-        padding: 15px
 
     .close
         position: absolute
+        color: #4b4f56
         right: 14px
         top: 10px
-    
+        opacity: 0
+        transition: 300ms
+
+    .card:hover .close
+        opacity: 1
+
     .meta
         display: flex
         flex-direction: row
-    
+        margin: 10px 15px 0px 15px
+
     .name-time
         padding: 3px 0.75rem
 
-        .time 
+        .time
             color: #495057
             font-size: 0.8em
 
     .comments-toggle
         display: flex
         flex-direction: row-reverse
-        color: #495057;
-        font-size: 0.8em;
-        cursor: pointer;
-    
-        div:hover
-            text-decoration: underline
-    
-    .post-status 
-        margin-top: 10px
+        color: #495057
+        font-size: 0.8em
+        cursor: pointer
+        div: hover
+        text-decoration: underline
+        margin: 5px 15px 10px 15px
+
+    .post-status
+        margin: 10px 15px 0px 15px
         font-size: 14px
         line-height: 1.3
+
+    .post-media
+        margin: 10px 0px
+        position: relative
+
+    .images
+        width: 100%

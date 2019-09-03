@@ -20,15 +20,33 @@ export const fetchFeedAndUsers = () => async (dispatch, getState) => {
     .value();
 };
 
-export const createPost = post => async (dispatch, getState) => {
+export const createPost = (post, mediaToUpload) => async (
+  dispatch,
+  getState
+) => {
   post.author = getState().auth.user_id;
   post.time = moment().format();
 
-  const response = await database.post("/posts/", post);
+  const { data: newPost } = await database.post("/posts/", post);
+
+  const uploadedMedia = await Promise.all(
+    mediaToUpload.map(async image => {
+      const data = new FormData();
+      data.append("file_name", image);
+      data.append("post", newPost.id);
+      const { data: uploadedImage } = await database.post(
+        "/posts-media/",
+        data
+      );
+      return uploadedImage.file_name;
+    })
+  );
+
+  newPost.media = uploadedMedia;
 
   dispatch({
     type: CREATE_POST,
-    payload: response.data
+    payload: newPost
   });
 };
 
@@ -44,9 +62,19 @@ export const fetchFeed = () => async (dispatch, getState) => {
   const user_id = getState().auth.user_id;
 
   const response = await database.get(`/feed/${user_id}/`);
+
+  const posts = await Promise.all(
+    response.data.map(async post => {
+      const mediaResponse = await database.get(`/posts/${post.id}/media/`);
+      const media = mediaResponse.data.map(images => images.file_name);
+      post.media = media;
+      return post;
+    })
+  );
+
   dispatch({
     type: FETCH_FEED,
-    payload: response.data
+    payload: posts
   });
 };
 

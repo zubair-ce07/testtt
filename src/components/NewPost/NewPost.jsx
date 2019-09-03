@@ -3,9 +3,10 @@ import { Field, Form } from "react-final-form";
 import { connect } from "react-redux";
 
 import { createPost } from "../../actions/post.actions";
+import { fetchUser } from "../../actions/user.actions";
+import MediaUpload from "../MediaUpload/MediaUpload";
 
 import "./NewPost.sass";
-import { fetchUser } from "../../actions/user.actions";
 
 class NewPost extends Component {
   state = {};
@@ -15,17 +16,24 @@ class NewPost extends Component {
   };
 
   onSubmit = formValues => {
-    this.props.createPost(formValues);
+    this.props.createPost(formValues, this.state.media);
+    this.setState({});
+  };
+
+  handleMediaAdd = media => {
+    this.setState({ media });
   };
 
   renderInput = ({ input, placeholder, meta }) => {
     return (
-      <input
-        className="form-control"
-        {...input}
-        type={input.type}
-        placeholder={placeholder}
-      />
+      <>
+        <input
+          className="form-control"
+          {...input}
+          type={input.type}
+          placeholder={placeholder}
+        />
+      </>
     );
   };
 
@@ -75,7 +83,8 @@ class NewPost extends Component {
               />
             </div>
             <hr />
-            <span className="post-prompt">Press Enter to post.</span>
+            {/* <span className="post-prompt">Press Enter to post.</span> */}
+            <MediaUpload onMediaChange={this.handleMediaAdd}></MediaUpload>
           </div>
         </div>
       );

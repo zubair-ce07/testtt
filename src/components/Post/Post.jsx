@@ -73,19 +73,33 @@ class Post extends Component {
   };
 
   renderCross = (postId, authorId) => {
-    if (this.props.auth.isSignedIn && authorId === this.props.auth.user_id)
+    if (
+      this.props.auth.isSignedIn &&
+      authorId === parseInt(this.props.auth.user_id)
+    ) {
       return (
-        <>
-          <button
-            onClick={() => this.handleDeletePost(postId)}
-            type="button"
-            className="close"
-          >
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </>
+        <button
+          onClick={() => this.handleDeletePost(postId)}
+          type="button"
+          className="close"
+        >
+          <span aria-hidden="true">&times;</span>
+        </button>
       );
+    }
+    return null;
+  };
 
+  renderPostMedia = media => {
+    if (media.length > 0) {
+      return (
+        <div className="post-media">
+          {media.map((image, i) => (
+            <img key={i} className="images" src={image} alt="#"></img>
+          ))}
+        </div>
+      );
+    }
     return null;
   };
 
@@ -109,6 +123,7 @@ class Post extends Component {
             </div>
           </div>
           <div className="post-status">{post.status}</div>
+          {this.renderPostMedia(post.media)}
           <div className="comments-toggle">
             <div onClick={this.toggleComments}>{this.state.description}</div>
           </div>

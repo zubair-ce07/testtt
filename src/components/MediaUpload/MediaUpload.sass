@@ -1,0 +1,81 @@
+.images-to-upload
+    display: flex
+    flex-direction: row
+    flex-wrap: wrap
+
+.upload-icon
+    height: 20px
+    width: 20px
+    margin-right: 6px
+
+.square-upload
+    position: relative
+    height: 100px
+    width: 100px
+    border: dashed #ebedf0
+    border-radius: 10px
+    margin: 10px 10px 0px 0px
+
+.plus-image
+    color: #ebedf0
+    font-size: 70px
+    position: absolute
+    left: 26px
+    top: -5px
+    z-index: 2
+    transition: 100ms
+
+.square-upload:hover .plus-image
+    color: #b3b5b8
+
+#image-upload-label
+    cursor: pointer
+    background-color: #F5F6F8
+    padding: 6px 10px
+    border-radius: 50px
+    display: flex
+    flex-direction: row
+    align-items: center
+    max-width: max-content
+
+#image-upload-label-text
+    font-size: 12px
+    color: #4b4f56
+    font-weight: 600
+
+#file-input
+    display: none
+
+.image-preview
+    position: relative
+    margin: 10px 10px 0px 0px
+    transition: 100ms
+
+    img
+        height: 100px
+        width: 100px
+        border-radius: 10px
+        object-fit: cover
+        transition: 100ms
+
+.image-preview:hover img
+    opacity: 0.5
+
+.delete-image
+    visibility: hidden
+    color: rgb(202, 32, 85)
+    font-size: 70px
+    position: absolute
+    left: 27px
+    top: -5px
+    z-index: 2
+    cursor: pointer
+    transition: 100ms
+
+.delete-image:hover
+
+label
+    margin-bottom: 0px
+
+.image-preview:hover .delete-image
+    visibility: visible
