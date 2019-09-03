@@ -8,8 +8,3 @@ class IndexView(generic.ListView):
 
     def get_queryset(self):
         return UsedCars.objects.all()
-
-
-class DetailView(generic.ListView):
-    model = UsedCars
-    template_name = 'usedcars/temp.html'
