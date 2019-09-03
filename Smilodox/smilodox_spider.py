@@ -53,7 +53,8 @@ class SmilodoxParseSpider(BaseParseSpider):
             garment['skus'] = self.raw_skus(raw_skus)
 
             urls = re.findall('scripts.push\("(.+?)"\);', response.text, re.MULTILINE | re.DOTALL)
-            requests = [response.follow(url, self.parse_varient_map) for url in urls if 'attribute_id' in url]
+            requests = [response.follow(url, self.parse_varient_map, dont_filter=True)
+                        for url in urls if 'attribute_id' in url]
             garment['meta']['requests_queue'] += requests
 
         return self.next_request_or_garment(garment)
