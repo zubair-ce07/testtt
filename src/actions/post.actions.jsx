@@ -56,9 +56,19 @@ export const createPost = post => async (dispatch, getState) => {
 
 export const fetchUserPosts = user_id => async dispatch => {
   const response = await database.get(`/users/${user_id}/posts/`);
+
+  const posts = await Promise.all(
+    response.data.map(async post => {
+      const mediaResponse = await database.get(`/posts/${post.id}/media/`);
+      const media = mediaResponse.data.map(images => images.file_name);
+      post.media = media;
+      return post;
+    })
+  );
+
   dispatch({
     type: FETCH_USER_POSTS,
-    payload: response.data
+    payload: posts
   });
 };
 
