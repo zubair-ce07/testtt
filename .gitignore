@@ -59,8 +59,6 @@ target/
 # VSCode
 .vscode
 
-# json
-*.json
 
 # extra file
 *.txt
@@ -68,3 +66,4 @@ target/
 # reactjs
 node_modules/
 *.ico
+package-lock.json
