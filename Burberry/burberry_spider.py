@@ -54,7 +54,7 @@ class BurberryParseSpider(BaseParseSpider):
         return [img['img']['src'] for img in raw_product['carousel'] if img.get('img')]
 
     def product_category(self, response):
-        return clean(response.css('html::attr(data-atg-category)') or [''])[0].split('/')
+        return (clean(response.css('html::attr(data-atg-category)')) or [''])[0].split('/')
 
     def product_gender(self, response):
         soup = soupify(self.product_category(response))
