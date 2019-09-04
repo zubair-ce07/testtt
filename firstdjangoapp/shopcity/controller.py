@@ -54,4 +54,4 @@ def _skus(product, product_info):
 
 
 def _out_of_stock(skus):
-    return all([sku_info['out_of_stock'] for _, sku_info in skus.items()])
+    return all([sku_info['out_of_stock'] for sku_info in skus.values()])
