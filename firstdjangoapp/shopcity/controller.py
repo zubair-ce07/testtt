@@ -54,7 +54,4 @@ def _skus(product, product_info):
 
 
 def _out_of_stock(skus):
-    for sku_id, sku_info in skus.items():
-        if not sku_info['out_of_stock']:
-            return False
-    return True
+    return any([sku_info['out_of_stock'] for _, sku_info in skus.items()])
