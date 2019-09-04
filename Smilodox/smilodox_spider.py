@@ -36,11 +36,8 @@ class SmilodoxParseSpider(BaseParseSpider):
         garment['image_urls'] = self.image_urls(response)
         garment['gender'] = self.product_gender(response)
 
-        url = clean(response.css('.div_plenty_attribute_selection script::attr(src)'))
-        if url:
-            request = response.follow(url[0], callback=self.parse_raw_skus)
-            garment['meta'] = {'requests_queue': [request], 'varients': []}
-        else:
+        garment['meta'] = {'requests_queue': self.skus_requests(response), 'varients': []}
+        if not garment['meta']['requests_queue']:
             garment['skus'] = self.one_sku(response)
 
         return self.next_request_or_garment(garment)
@@ -51,11 +48,7 @@ class SmilodoxParseSpider(BaseParseSpider):
         if raw_skus:
             raw_skus = json.loads(raw_skus[0])
             garment['skus'] = self.raw_skus(raw_skus)
-
-            urls = re.findall('scripts.push\("(.+?)"\);', response.text, re.MULTILINE | re.DOTALL)
-            requests = [response.follow(url, self.parse_varient_map, dont_filter=True)
-                        for url in urls if 'attribute_id' in url]
-            garment['meta']['requests_queue'] += requests
+            garment['meta']['requests_queue'] += self.varient_requests(response)
 
         return self.next_request_or_garment(garment)
 
@@ -67,6 +60,15 @@ class SmilodoxParseSpider(BaseParseSpider):
             self.skus(garment)
 
         return self.next_request_or_garment(garment)
+
+    def skus_requests(self, response):
+        url = clean(response.css('.div_plenty_attribute_selection script::attr(src)'))
+        return [response.follow(url[0], callback=self.parse_raw_skus)] if url else []
+
+    def varient_requests(self, response):
+        urls = re.findall('scripts.push\("(.+?)"\);', response.text, re.MULTILINE | re.DOTALL)
+        return [response.follow(url, self.parse_varient_map, dont_filter=True)
+                for url in urls if 'attribute_id' in url]
 
     def product_name(self, response):
         return clean(response.css(".product-content .h3::text"))[0]
@@ -114,7 +116,7 @@ class SmilodoxParseSpider(BaseParseSpider):
                 sku[varient['v_name']] = varient['name']
                 sku_varients.append(varient['name'])
             del sku['varient_ids']
-            if 'size' not in sku_varients:
+            if 'size' not in sku:
                 sku_varients.append(self.one_size)
                 sku['size'] = self.one_size
             skus.update({soupify(sku_varients, '_'): sku})
