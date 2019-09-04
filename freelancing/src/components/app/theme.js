@@ -1,20 +1,11 @@
 const color = {
   tint: {
-    red: [
-      "#f22a2a",
-      "#f65858",
-      "#f68181",
-      "#f6c5c5",
-      "#f6dfdf",
-
-    ]
+    red: ["#f22a2a", "#f65858", "#f68181", "#f6c5c5", "#f6dfdf"]
   },
-  shade: {
-
-  }
-}
+  shade: {}
+};
 export default {
-  main: '#3cb371',
+  main: "#3cb371",
   tint: [
     "#3cb371",
     "#4fba7f",
@@ -27,13 +18,13 @@ export default {
     "#d8efe2",
     "#ebf7f0"
   ],
-  accent: '#70B14F',
-  bg: '#f0f0f0',
+  accent: "#70B14F",
+  bg: "#f0f0f0",
   color: { ...color }
-}
+};
 
 export const invertTheme = {
-  main: '#f0f0f0',
+  main: "#f0f0f0",
   tint: [
     "#3cb371",
     "#4fba7f",
@@ -46,7 +37,7 @@ export const invertTheme = {
     "#d8efe2",
     "#ebf7f0"
   ],
-  accent: '#ffffff',
-  bg: 'mediumseagreen',
+  accent: "#ffffff",
+  bg: "#3cb371",
   color: { ...color }
-}
+};

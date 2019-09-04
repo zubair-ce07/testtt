@@ -1,5 +1,5 @@
 import React from "react";
-import enhance from "./SignUp.enhancer";
+import enhance from "./SignIn.enhancer";
 import { Form, Field } from "react-final-form";
 import createDecorator from "final-form-focus";
 import {
@@ -43,46 +43,14 @@ const SignUp = ({ onSubmit, validate, title }) => {
             <FormErrorRow>
               <Field
                 component={renderInput}
-                name="firstname"
-                type="text"
-                placeholder="First Name"
-              />
-            </FormErrorRow>
-            <FormErrorRow>
-              <Field
-                component={renderInput}
-                name="lastname"
-                type="text"
-                placeholder="Last Name"
-              />
-            </FormErrorRow>
-            <FormErrorRow>
-              <Field
-                component={renderInput}
-                name="email"
-                type="email"
-                placeholder="martin@example.com"
-              />
-            </FormErrorRow>
-            <FormErrorRow>
-              <Field
-                component={renderInput}
                 name="password"
                 type="password"
                 placeholder="Password"
               />
             </FormErrorRow>
-            <FormErrorRow>
-              <Field
-                component={renderInput}
-                name="password2"
-                type="password"
-                placeholder="Confirm Password"
-              />
-            </FormErrorRow>
             <FormRow>
               <FormButton type="submit" disabled={submitting}>
-                Register Me
+                Log In
               </FormButton>
             </FormRow>
           </StyledForm>
