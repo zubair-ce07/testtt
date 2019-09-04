@@ -1,22 +1,24 @@
+import datetime
 import scrapy
 import urllib.parse as urlparse
-
-from capuc.items import Docket
 
 
 class CPUCSpider(scrapy.Spider):
     name = "cpuc"
-
+    proceeding_page = 1
     root_url = "http://docs.cpuc.ca.gov/advancedsearchform.aspx"
     result_url = "http://docs.cpuc.ca.gov/SearchRes.aspx"
-    result_page = 1
     filing_pagination_url = "https://apps.cpuc.ca.gov/apex/wwv_flow.show"
     dock_url = "https://apps.cpuc.ca.gov/apex/f?p=401:{}:6056676397617::NO:RP,57,RIR:P5_PROCEEDING_SELECT:{}"
 
     def start_requests(self):
+        # `start` and `end` being command line arguments here
+        self.validate_date(self.start)
+        self.validate_date(self.end)
         yield scrapy.Request(url=self.root_url, callback=self.parse)
 
     def parse(self, response):
+        # filling the search form and requesting
         form_data = {
             "__EVENTTARGET": "",
             "__EVENTARGUMENT": "",
@@ -29,8 +31,8 @@ class CPUCSpider(scrapy.Spider):
             "IndustryID": "-1",
             "ProcNum": "",
             "MeetDate": "",
-            "FilingDateFrom": "08/14/19",
-            "FilingDateTo": "08/18/19",
+            "FilingDateFrom": self.start,
+            "FilingDateTo": self.end,
             "PubDateFrom": "",
             "PubDateTo": "",
             "EfileConfirmNum": "",
@@ -38,35 +40,48 @@ class CPUCSpider(scrapy.Spider):
         }
         yield scrapy.FormRequest(url=self.root_url, callback=self.parse_results, formdata=form_data)
 
+    @staticmethod
+    def validate_date(date):
+        try:
+            datetime.datetime.strptime(date, '%m/%d/%y')
+        except ValueError:
+            raise ValueError("Incorrect date format, should be MM/DD/YY")
+
     def parse_results(self, response):
         proceedings = response.xpath('//td[@class="ResultTitleTD"]/text()[2]').getall()
         for proceeding in proceedings:
-            pros = proceeding[12:]
-            if ";" in pros:
-                prc_list = pros.split(": ")
-                for prc in prc_list:
+            proceeding = proceeding[12:]
+            if ";" in proceeding:
+                proc_list = proceeding.split("; ")
+                for prc in proc_list:
                     yield scrapy.Request(url=self.dock_url.format(56, prc), callback=self.parse_docket)
             else:
-                yield scrapy.Request(url=self.dock_url.format(56, pros), callback=self.parse_docket)
-            break
+                yield scrapy.Request(url=self.dock_url.format(56, proceeding), callback=self.parse_docket)
 
-        # next_id = "rptPages_btnPage_{}".format(self.result_page)
-        # event_target_text = response.xpath("//a[@id='{}']/@href".format(next_id)).get()
-        # if event_target_text is not None:
-        #     event_target = event_target_text.split("'")[1]
-        #     form_data = {
-        #         "__EVENTTARGET": event_target,
-        #         "__EVENTARGUMENT": "",
-        #         "__VIEWSTATE": response.xpath("//input[@name='__VIEWSTATE']/@value").get(),
-        #         "__VIEWSTATEGENERATOR": response.xpath("//input[@name='__VIEWSTATEGENERATOR']/@value").get(),
-        #         "__EVENTVALIDATION": response.xpath("//input[@name='__EVENTVALIDATION']/@value").get(),
-        #     }
-        #     self.result_page += 1
-        #     yield scrapy.FormRequest(url=self.result_url, callback=self.parse_results, formdata=form_data)
+        # running pagination on proceedings result pages
+        self.paginate_proceedings(response)
+
+    def paginate_proceedings(self, response):
+        next_id = "rptPages_btnPage_{}".format(self.proceeding_page)
+        event_target_text = response.xpath("//a[@id='{}']/@href".format(next_id)).get()
+        if event_target_text is not None:
+            event_target = event_target_text.split("'")[1]
+            form_data = {
+                "__EVENTTARGET": event_target,
+                "__EVENTARGUMENT": "",
+                "__VIEWSTATE": response.xpath("//input[@name='__VIEWSTATE']/@value").get(),
+                "__VIEWSTATEGENERATOR": response.xpath("//input[@name='__VIEWSTATEGENERATOR']/@value").get(),
+                "__EVENTVALIDATION": response.xpath("//input[@name='__EVENTVALIDATION']/@value").get(),
+            }
+            self.proceeding_page += 1
+            yield scrapy.FormRequest(url=self.result_url, callback=self.parse_results,
+                                     formdata=form_data)
 
     def parse_docket(self, response):
+        # extracting docket data against one proceeding and requesting for its filings
         proceeding = response.url.split(":")[-1]
         doc = {
+            "state_id": proceeding,
             "major_parties": response.xpath("//span[@id='P56_FILED_BY']/text()").extract(),
             "assignees": response.xpath("//span[@id='P56_STAFF']/text()").extract(),
             "filed_on": response.xpath("//span[@id='P56_FILING_DATE']/text()").get(),
@@ -76,12 +91,12 @@ class CPUCSpider(scrapy.Spider):
             "status": response.xpath("//span[@id='P56_STATUS']/text()").get(),
             "slug": "ca-{}".format(proceeding.lower()),
             "state": "ca",
-            "state_id": proceeding,
             "filings": []
         }
         yield scrapy.Request(url=self.dock_url.format(57, proceeding), callback=self.parse_docs, meta={"data": doc})
 
     def parse_docs(self, response):
+        # parsing the filings against one proceeding
         doc = response.meta["data"]
         sub_docs_urls = []
         if "urls" in response.meta:
@@ -104,11 +119,17 @@ class CPUCSpider(scrapy.Spider):
             }
             doc["filings"].append(file)
 
+        # running pagination on filings
+        self.paginate_filings(response, doc, sub_docs_urls)
+
+        # requesting for sub documents against one filing
         if sub_docs_urls:
             url = sub_docs_urls.pop()
             yield scrapy.Request(url=url, headers={"Referer": response.url},
-                                 callback=self.parse_sub_docs, meta={"data": doc, "urls": sub_docs_urls})
+                                 callback=self.parse_sub_docs,
+                                 meta={"data": doc, "urls": sub_docs_urls, "dont_merge_cookies": True})
 
+    def paginate_filings(self, response, doc, sub_docs_urls):
         next_link = response.xpath("//span[@class='fielddata']/a")
         if next_link:
             p_instance = response.xpath("//input[@name='p_instance']/@value").get() or response.meta["p_instance"]
@@ -125,8 +146,6 @@ class CPUCSpider(scrapy.Spider):
                 "x01": response.xpath("//input[@id='apexir_WORKSHEET_ID']/@value").get(),
                 "x02": response.xpath("//input[@id='apexir_REPORT_ID']/@value").get(),
             }
-            print("///////////////////formdata//////////////////////////")
-            print(form_data)
             yield scrapy.FormRequest(url=self.filing_pagination_url, callback=self.parse_docs,
                                      meta={"data": doc, "urls": sub_docs_urls, "p_instance": p_instance},
                                      formdata=form_data)
@@ -153,7 +172,7 @@ class CPUCSpider(scrapy.Spider):
         for filing in doc["filings"]:
             if filing["state_id"] is None:
                 filings.append(filing)
-                pass
+                continue
             if filing["state_id"] == doc_id:
                 filing["documents"] = sub_docs
             if "documents" not in filing:
@@ -163,7 +182,6 @@ class CPUCSpider(scrapy.Spider):
         if all_filled:
             yield doc
         else:
-            if next_url is None:
-                yield doc
             yield scrapy.Request(url=next_url, headers={"Referer": response.url},
-                                 callback=self.parse_sub_docs, meta={"data": doc, "urls": sub_docs_urls})
+                                 callback=self.parse_sub_docs,
+                                 meta={"data": doc, "urls": sub_docs_urls, "dont_merge_cookies": True})

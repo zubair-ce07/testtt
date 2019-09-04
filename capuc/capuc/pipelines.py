@@ -8,10 +8,13 @@ import json
 
 
 class CapucPipeline(object):
-    @staticmethod
-    def process_item(item, spider):
-        print("////////////////////////YIELDING_NOW/////////////////////")
-        file_name = "ca-{}.json".format(item["state_id"].lower())
-        with open(file_name, 'w') as json_file:
-            json.dump(item, json_file)
+    def __init__(self):
+        self.file = open('proceedings.jl', 'w')
+
+    def close_spider(self, spider):
+        self.file.close()
+
+    def process_item(self, item, spider):
+        line = json.dumps(dict(item)) + "\n"
+        self.file.write(line)
         return item

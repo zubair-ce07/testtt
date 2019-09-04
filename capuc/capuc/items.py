@@ -10,6 +10,7 @@ import scrapy
 
 class Docket(scrapy.Item):
     # define the fields for your item here like:
+    state_id = scrapy.Field()
     major_parties = scrapy.Field()
     assignees = scrapy.Field()
     filed_on = scrapy.Field()
@@ -19,5 +20,4 @@ class Docket(scrapy.Item):
     status = scrapy.Field()
     slug = scrapy.Field()
     state = scrapy.Field()
-    state_id = scrapy.Field()
     filings = scrapy.Field()
