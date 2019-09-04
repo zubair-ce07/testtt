@@ -1,4 +1,5 @@
 from django.views import generic
+from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import Category, Product, Image
 
 
@@ -26,7 +27,7 @@ class CategoryProducts(generic.ListView):
         return context
 
 
-class ProductDetail(generic.DetailView):
+class ProductDetail(LoginRequiredMixin, generic.DetailView):
     template_name = 'products/product_detail.html'
     context_object_name = 'product'
     model = Product
