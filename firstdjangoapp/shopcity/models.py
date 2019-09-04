@@ -31,6 +31,11 @@ class Product(models.Model):
     def __str__(self):
         return self.retailer_sku
 
+    def clean_fields(self, *args, **kwargs):
+        self.image_url = self.image_url.split(';')
+        self.description = self.description.split(';')
+        self.care = [c for c in self.care.split(';') if c != '']
+
 
 class Category(models.Model):
     category = models.CharField(blank=True, max_length=20)

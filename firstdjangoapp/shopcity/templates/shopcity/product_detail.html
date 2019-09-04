@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block content %}
+    <div class="flex-container justify-content-center justify-content-space-between" style="display:flex;">
+        <div class="col-3">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="/shopcity/">
+                            <font size="2">
+                                Home
+                            </font>
+                        </a>
+                    </li>
+                    {% for category in categories %}
+                    <li class="breadcrumb-item">
+                        <a href="#">
+                            <font size="2">
+                                {{category.category}}
+                            </font>
+                        </a>
+                    </li>
+                    {% endfor %}
+                    <li class="breadcrumb-item active" aria-current="page">
+                        <font size="2">
+                            {{ product.name }}
+                        </font>
+                    </li>
+                </ol>
+            </nav>
+            {% for image in images %}
+            <br>
+            <img src="{{ image }}" style="overflow: auto" class="rounded mx-auto d-block; margin:0" alt="{{ product.name }}" height="15%" width="80%"><br>
+            {% endfor %}
+        </div>
+        <div class="col-4">
+            <img src="{{ product.image_url|first }}" class="rounded mx-auto d-block" alt="{{ product.name }}" height="40%" width="100%">
+        </div>
+        <div class="col-5">
+            <br>
+            <h3>{{ product.name }}-{{ product.brand }} </h3>
+            <h5>Price: {{ product.price }}-{{ product.currency }} </h5>
+            {% for colour, sizes in colours_and_sizes.items %}
+            <p><b>Colour:</b> {{ colour }}</p>
+            <div class="btn-group" role="group" aria-label="Basic example">
+                <p style="display: inline;width: fit-content;"><b>Size:&nbsp;&nbsp;</b><p>
+                {% for size, out_of_stock in sizes %}
+                  {% if out_of_stock %}
+                    <button type="button" class="btn btn-dark" disabled>{{ size }}</button>
+                  {% else %}
+                    <button type="button" class="btn btn-dark">{{ size }}</button>
+                  {% endif %}
+                {% endfor %}
+            </div>
+            {% endfor %}
+            <div><br>
+                <h5>Description: </h5>
+                {% for d in description %}
+                  <p>{{ d }}</p>
+                {% endfor %}
+                {% if care %}
+                  <h5>Care: </h5>
+                {% endif %}
+                {% for c in care %}
+                  <p>{{ c }}</p>
+                {% endfor %}
+            </div>
+            <a href="{{product.url}}"> View Original </a>
+        </div>
+    </div>
+{% endblock content %}

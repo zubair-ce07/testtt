@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<button type="button" class="btn btn-secondary" onclick="window.location.href = '/shopcity/search/';">Filter Products</button><br><br>
+{% include "view_products.html" with products=products only %}
+{% load shopcity_extra %}
+<ul class="pagination justify-content-center">
+    {% if products.has_previous %}
+      <li class="page-item"><a class="page-link" href="?{% url_replace request 'page' 1 %}">First</a></li>
+      <li class="page-item"><a class="page-link" href="?{% url_replace request 'page' products.previous_page_number %}">Previous</a></li>
+    {% endif %}
+    <li class="page-item"><a class="page-link" href="#">Page {{ products.number }} of {{ products.paginator.num_pages }}</a></li>
+    {% if products.has_next %}
+      <li class="page-item"><a class="page-link" href="?{% url_replace request 'page' products.next_page_number %}">Next</a></li>
+      <li class="page-item"><a class="page-link" href="?{% url_replace request 'page' products.paginator.num_pages %}">Last</a></li>
+    {% endif %}
+</ul>
+
+{% endblock content %}
