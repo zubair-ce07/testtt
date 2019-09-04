@@ -4,47 +4,67 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Request, Rule
 from w3lib.url import add_or_replace_parameters
 
-from .base import BaseCrawlSpider, BaseParseSpider, clean, soupify
+from .base import BaseCrawlSpider, BaseParseSpider, clean, Gender, soupify
 
 
 class Mixin:
     retailer = 'uniqlo'
+    default_brand = 'ユニクロ'
+    allowed_domains = ['uniqlo.com']
 
 
 class MixinJP(Mixin):
     retailer = Mixin.retailer + '-jp'
     market = 'JP'
-    allowed_domains = ['uniqlo.com']
     start_urls = ['https://www.uniqlo.com/jp/']
 
     lang = 'ja'
-    default_brand = 'ユニクロ'
     listing_url = 'https://www.uniqlo.com/jp/store/feature/uq/alias/v2/ajaxAliasItem.jsp'
+    product_url = 'https://www.uniqlo.com/jp/spa-proxy/catalog/product/details'
 
 
 class ParseSpider(BaseParseSpider):
     description_css = 'meta[property="og:description"]::attr(content), p.about::text'
-    care_css = '.spec dd::text'
+    care_css_t = '.spec dt:contains("{}")+dd::text'
+    care_css = f'{care_css_t.format("素材")},{care_css_t.format("取扱い")}'
 
     def parse(self, response):
-        raw_product = self.raw_product(response)
-        garment = self.new_unique_garment(self.product_id(raw_product))
+        garment = self.new_unique_garment(self.product_id(response))
 
         if not garment:
             return
 
         self.boilerplate_normal(garment, response)
+        garment['gender'] = self.product_gender(response)
+        garment['meta'] = {
+            'requests_queue': self.product_request(response)
+        }
+
+        return self.next_request_or_garment(garment)
+
+    def parse_product(self, response):
+        garment = response.meta['garment']
+        raw_product = self.raw_product(response)
+        merch_info = self.merch_info(raw_product)
+
+        if merch_info:
+            garment['merch_info'] = merch_info
 
         garment['image_urls'] = self.image_urls(raw_product)
         garment['skus'] = self.skus(raw_product)
 
-        return garment
+        return self.next_request_or_garment(garment)
 
-    def raw_product(self, response):
-        return json.loads(response.css('script:contains("JSON_DATA")').re_first(r'=(.*?);<'))
+    def product_request(self, response):
+        params = {'products': self.product_id(response)}
+        return [
+            Request(url=add_or_replace_parameters(self.product_url, params),
+                    callback=self.parse_product)
+        ]
 
-    def product_id(self, raw_product):
-        return clean(raw_product['GoodsInfo']['goods']['l1GoodsCd'])
+    def product_id(self, response):
+        css = 'script:contains("mpn")::text'
+        return json.loads(response.css(css).re_first(r"{.*}"))['mpn']
 
     def product_name(self, response):
         return clean(response.css('#goodsNmArea::text'))[0]
@@ -52,40 +72,38 @@ class ParseSpider(BaseParseSpider):
     def product_category(self, response):
         return clean(response.css('.breadcrumbs a::text'))[:-1]
 
+    def product_gender(self, response):
+        soup = soupify(self.product_category(response))
+        return self.gender_lookup(soup) or Gender.ADULTS.value
+
+    def raw_product(self, response):
+        return json.loads(response.text)['products'][0]
+
+    def merch_info(self, raw_product):
+        return [raw_product['termsLimitMsg']] if raw_product['termsLimitFlag'] else None
+
     def image_urls(self, raw_product):
-        product_id = self.product_id(raw_product)
-        raw_images = raw_product["GoodsInfo"]["goods"]
-        image_urls = []
-
-        for raw_image in raw_images['goodsSubImageList'].split(';'):
-            image_urls.append(f'{raw_images["httpsImgDomain"]}/goods/'
-                              f'{product_id}/sub/{raw_image}.jpg')
-
-        for colour in raw_images['colorInfoList']:
-            image_urls.append(f'{raw_images["httpsImgDomain"]}/goods/'
-                              f'{product_id}/item/{colour}_{product_id}.jpg')
-
-        return image_urls
+        image_urls = [ri['zoom']['path'] for ri in raw_product['alternateImages']]
+        return image_urls + [ri['zoom']['path'] for _, ri in raw_product['images'].items()]
 
     def skus(self, raw_product):
         skus = {}
+        colours_map = raw_product.get('colorsList')
+        sizes_map = raw_product.get('sizesList')
 
-        raw_skus = raw_product['GoodsInfo']['goods']
-        colours_map = raw_skus['colorInfoList']
-        sizes_map = raw_skus['sizeInfoList']
-        lengths_map = raw_skus['lengthInfoList']
-        raw_skus = raw_skus['l2GoodsList']
+        for sku_id, raw_sku in raw_product['skus'].items():
+            money_strs = [  
+                raw_product['basePrice'], raw_sku['salesPrice'],
+            ]
+            sku = self.product_pricing_common(None, money_strs=money_strs)
+            sku['colour'] = self.detect_colour(colours_map.get('raw_sku["color"]', {}).get('name'))
+            sku['size'] = sizes_map[raw_sku['size']]['name']
+            sku['out_of_stock'] = not bool(int(raw_sku['sumStockCount']))
 
-        for sku_id, raw_sku in raw_skus.items():
-            raw_sku = raw_sku['L2GoodsInfo']
-            sku = self.product_pricing_common(None, money_strs=[raw_sku['salesPrice']])
-            sku['colour'] = self.detect_colour(colours_map[raw_sku['colorCd']])
-            sku['size'] = sizes_map[raw_sku['sizeCd']]
-            sku['out_of_stock'] = not bool(int(raw_sku['realStockCnt']))
-            length = lengths_map[raw_sku['lengthCd']]
-
-            if length:
-                sku['length'] = length
+            if raw_product.get('allLengthsList'):
+                length = raw_product['allLengthsList'][raw_sku['length']]['name']
+                if length:
+                    sku['length'] = length
 
             skus[sku_id] = sku
 
@@ -113,9 +131,9 @@ class CrawlSpider(BaseCrawlSpider):
 
 class UniqloJPParseSpider(MixinJP, ParseSpider):
     name = MixinJP.retailer + '-parse'
+    start_urls = ['https://www.uniqlo.com/jp/store/goods/418414-32']
 
 
 class UniqloJPCrawlSpider(MixinJP, CrawlSpider):
     name = MixinJP.retailer + '-crawl'
     parse_spider = UniqloJPParseSpider()
-
