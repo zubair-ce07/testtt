@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
 <form action="/shopcity/filterproducts/" method="get">
-
     <div class="form-group">
         <label for="brandSelect">Brand</label>
         <select name="brand" class="form-control" id="brandSelect">
@@ -64,9 +63,6 @@
             <option>Yes</option>
         </select>
     </div>
-
-
     <input type="submit" class="btn btn-outline-primary" value="Search">
 </form>
-
 {% endblock content %}
