@@ -1,1 +1,4 @@
-export const SIMPLE_ACTION = "SIMPLE_ACTION"
+export const SIMPLE_ACTION = "SIMPLE_ACTION";
+export const LOGGING_USER = "LOGGING_USER";
+export const LOGIN_SUCESS = "LOGIN_SUCESS";
+export const LOGIN_FAILED = "LOGIN_FAILED";

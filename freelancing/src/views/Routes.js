@@ -7,14 +7,8 @@ import SignUp from "../components/auth/SignUp";
 const Routes = () => {
   return (
     <React.Fragment>
-      <Route
-        path={ROUTES.SIGN_IN}
-        render={props => <SignIn {...props} title="Login To Fiverr" />}
-      />
-      <Route
-        path={ROUTES.SIGN_UP}
-        render={props => <SignUp {...props} title="Join Fiverr" />}
-      />
+      <Route path={ROUTES.SIGN_IN} component={SignIn} />
+      <Route path={ROUTES.SIGN_UP} component={SignUp} />
     </React.Fragment>
   );
 };

@@ -12,6 +12,7 @@ import {
   FormErrorText,
   FormErrorRow
 } from "./styles";
+import PropTypes from "prop-types";
 
 const renderInput = ({ input, meta, ...restProps }) => (
   <React.Fragment>
@@ -22,7 +23,7 @@ const renderInput = ({ input, meta, ...restProps }) => (
 
 const focusOnError = createDecorator();
 
-const SignUp = ({ onSubmit, validate, title }) => {
+const SignIn = ({ signingIn, onSubmit, validate }) => {
   return (
     <Wrapper>
       <Form
@@ -31,7 +32,7 @@ const SignUp = ({ onSubmit, validate, title }) => {
         decorators={[focusOnError]}
         render={({ handleSubmit, submitting }) => (
           <StyledForm onSubmit={handleSubmit}>
-            <FormTitle>{title}</FormTitle>
+            <FormTitle>Login To Fiverr</FormTitle>
             <FormErrorRow>
               <Field
                 component={renderInput}
@@ -49,9 +50,11 @@ const SignUp = ({ onSubmit, validate, title }) => {
               />
             </FormErrorRow>
             <FormRow>
-              <FormButton type="submit" disabled={submitting}>
-                Log In
-              </FormButton>
+              {!signingIn ? (
+                <FormButton type="submit" disabled={submitting}>
+                  Log In
+                </FormButton>
+              ) : null}
             </FormRow>
           </StyledForm>
         )}
@@ -60,4 +63,10 @@ const SignUp = ({ onSubmit, validate, title }) => {
   );
 };
 
-export default enhance(SignUp);
+SignIn.propTypes = {
+  signingIn: PropTypes.bool.isRequired,
+  onSubmit: PropTypes.func.isRequired,
+  validate: PropTypes.func.isRequired
+};
+
+export default enhance(SignIn);
