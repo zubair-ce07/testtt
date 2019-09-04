@@ -37,7 +37,7 @@ class Category(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="categories")
 
     def __str__(self):
-        return self.product.retailer_sku
+        return self.category
 
 
 class Skus(models.Model):
@@ -57,4 +57,4 @@ class Skus(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="skus")
 
     def __str__(self):
-        return self.product.retailer_sku
+        return self.sku_id
