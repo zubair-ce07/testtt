@@ -167,18 +167,14 @@ class CPUCSpider(scrapy.Spider):
                 "title": row.xpath("td[@class='ResultTitleTD']/text()[1]").get()
             }
             sub_docs.append(sub_doc)
-        filings = []
         all_filled = True
-        for filing in doc["filings"]:
-            if filing["state_id"] is None:
-                filings.append(filing)
+        for i, _ in enumerate(doc["filings"]):
+            if doc["filings"][i]["state_id"] is None:
                 continue
-            if filing["state_id"] == doc_id:
-                filing["documents"] = sub_docs
-            if "documents" not in filing:
+            if doc["filings"][i]["state_id"] == doc_id:
+                doc["filings"][i]["documents"] = sub_docs
+            if "documents" not in doc["filings"][i]:
                 all_filled = False
-            filings.append(filing)
-        doc["filings"] = filings
         if all_filled:
             yield doc
         else:
