@@ -1,0 +1,27 @@
+{
+  "name": "kayak_arline-fees",
+  "version": "1.0.0",
+  "description": "",
+  "main": "config.js",
+  "scripts": {
+    "test": "protractor config.js",
+    "tsc": "tsc",
+    "webdriver-update": "webdriver-manager update"
+  },
+  "author": "Junaid Nazir",
+  "license": "ISC",
+  "dependencies": {
+    "@types/chai": "^4.2.0",
+    "@types/chai-as-promised": "^7.1.2",
+    "@types/mocha": "^5.2.7",
+    "@types/node": "^10.14.16",
+    "@types/request": "^2.48.2",
+    "chai": "^4.2.0",
+    "chai-as-promised": "^7.1.1",
+    "mocha": "^6.2.0",
+    "protractor": "^5.4.2",
+    "protractor-http-client": "^1.0.4",
+    "ts-node": "^8.3.0",
+    "typescript": "^3.5.3"
+  }
+}
