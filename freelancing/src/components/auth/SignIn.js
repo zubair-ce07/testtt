@@ -23,7 +23,8 @@ const renderInput = ({ input, meta, ...restProps }) => (
 
 const focusOnError = createDecorator();
 
-const SignIn = ({ signingIn, onSubmit, validate }) => {
+const SignIn = ({ user, authErrors, isLogging, onSubmit, validate }) => {
+  console.log(user);
   return (
     <Wrapper>
       <Form
@@ -50,12 +51,16 @@ const SignIn = ({ signingIn, onSubmit, validate }) => {
               />
             </FormErrorRow>
             <FormRow>
-              {!signingIn ? (
+              {!isLogging ? (
                 <FormButton type="submit" disabled={submitting}>
                   Log In
                 </FormButton>
               ) : null}
             </FormRow>
+            {authErrors &&
+              authErrors.map((d, i) => (
+                <FormErrorText key={i}>{d}</FormErrorText>
+              ))}
           </StyledForm>
         )}
       />
@@ -64,7 +69,8 @@ const SignIn = ({ signingIn, onSubmit, validate }) => {
 };
 
 SignIn.propTypes = {
-  signingIn: PropTypes.bool.isRequired,
+  isLogging: PropTypes.bool.isRequired,
+  authErrors: PropTypes.array,
   onSubmit: PropTypes.func.isRequired,
   validate: PropTypes.func.isRequired
 };
