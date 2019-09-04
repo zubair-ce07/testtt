@@ -31,10 +31,19 @@ class Product(models.Model):
     def __str__(self):
         return self.retailer_sku
 
-    def clean_fields(self, *args, **kwargs):
-        self.image_url = self.image_url.split(';')
-        self.description = self.description.split(';')
-        self.care = [c for c in self.care.split(';') if c != '']
+    def as_dict(self, *args, **kwargs):
+        categories = self.categories.all()
+        skus = self.skus.all()
+        colours_and_sizes = defaultdict(lambda: [])
+        for sku in skus:
+            colours_and_sizes[sku.colour].append([sku.size, sku.out_of_stock])
+        return {
+            'images': self.image_url.split(';'),
+            'description': self.description.split(';'),
+            'care': [c for c in self.care.split(';') if c],
+            'colours_and_sizes': dict(colours_and_sizes),
+            'categories': categories[:1]
+        }
 
 
 class Category(models.Model):
