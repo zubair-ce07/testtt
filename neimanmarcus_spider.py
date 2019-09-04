@@ -18,77 +18,73 @@ class Mixin:
 class MixinCN(Mixin):
     retailer = Mixin.retailer + "-cn"
     market = "CN"
+    merch_title = "limited edition"
 
-    start_urls = [
-        "https://www.neimanmarcus.com",
-        ]
-
+    start_urls = ["https://www.neimanmarcus.com", ]
     allowed_domains = ["neimanmarcus.com"]
 
-    product_req_t = 'data={{"ProductSizeAndColor":{{"productIds":"{0}"}}}}&sid=getSizeAndColorData&bid=ProductSizeAndColor'
+    product_req_t = 'data={{"ProductSizeAndColor":{{"productIds":"{0}"}}}}'
     product_url = "https://www.neimanmarcus.com/en-cn/product.service"
     content_type = "application/x-www-form-urlencoded; charset=UTF-8"
-    body = {"country": "CN", "currency": "CNY"}
+    region_payload = {"country": "CN", "currency": "CNY"}
 
 
 class MixinJP(Mixin):
     retailer = Mixin.retailer + "-jp"
     market = "JP"
+    merch_title = "limited edition"
 
-    start_urls = [
-        "https://www.neimanmarcus.com",
-        ]
-
+    start_urls = ["https://www.neimanmarcus.com", ]
     allowed_domains = ["neimanmarcus.com"]
 
-    product_req_t = 'data={{"ProductSizeAndColor":{{"productIds":"{0}"}}}}&sid=getSizeAndColorData&bid=ProductSizeAndColor'
+    product_req_t = 'data={{"ProductSizeAndColor":{{"productIds":"{0}"}}}}'
     product_url = "https://www.neimanmarcus.com/en-cn/product.service"
     content_type = "application/x-www-form-urlencoded; charset=UTF-8"
-    body = {"country": "JP", "currency": "JPY"}
+    region_payload = {"country": "JP", "currency": "JPY"}
 
 
 class MixinHK(Mixin):
     retailer = Mixin.retailer + "-hk"
     market = "HK"
+    merch_title = "limited edition"
 
-    start_urls = [
-        "https://www.neimanmarcus.com",
-        ]
-
+    start_urls = ["https://www.neimanmarcus.com", ]
     allowed_domains = ["neimanmarcus.com"]
 
-    product_req_t = 'data={{"ProductSizeAndColor":{{"productIds":"{0}"}}}}&sid=getSizeAndColorData&bid=ProductSizeAndColor'
+    product_req_t = 'data={{"ProductSizeAndColor":{{"productIds":"{0}"}}}}'
     product_url = "https://www.neimanmarcus.com/en-cn/product.service"
     content_type = "application/x-www-form-urlencoded; charset=UTF-8"
-    body = {"country": "HK", "currency": "HKD"}
+    region_payload = {"country": "HK", "currency": "HKD"}
 
 
 class MixinTW(Mixin):
     retailer = Mixin.retailer + "-tw"
     market = "TW"
+    merch_title = "limited edition"
 
-    start_urls = [
-        "https://www.neimanmarcus.com",
-        ]
-
+    start_urls = ["https://www.neimanmarcus.com", ]
     allowed_domains = ["neimanmarcus.com"]
 
-    product_req_t = 'data={{"ProductSizeAndColor":{{"productIds":"{0}"}}}}&sid=getSizeAndColorData&bid=ProductSizeAndColor'
+    product_req_t = 'data={{"ProductSizeAndColor":{{"productIds":"{0}"}}}}'
     product_url = "https://www.neimanmarcus.com/en-cn/product.service"
     content_type = "application/x-www-form-urlencoded; charset=UTF-8"
-    body = {"country": "TW", "currency": "TWD"}
+    region_payload = {"country": "TW", "currency": "TWD"}
 
 
 class ParseSpider(BaseParseSpider):
     raw_description_css = ".productCutline ::text, .cutlineDetails ::text"
     price_css = ".product-details-source .item-price::text, .product-details-source .product-price::text"
 
-    def parse_individual_products(self, response):
+    def parse(self, response):
+        response.meta["response"] = response
+        yield self.sku_requests(response)
+
+    def parse_products(self, response):
         raw_skus = json.loads(response.text)["ProductSizeAndColor"]["productSizeAndColorJSON"]
         response_html = response.meta["response"]
 
-        for selectors, raw_json in zip(response_html.css(".hero-zoom-frame"), json.loads(raw_skus)):
-            product_id = self.product_id(selectors)
+        for product_sel, raw_json in zip(response_html.css(".hero-zoom-frame"), json.loads(raw_skus)):
+            product_id = self.product_id(product_sel)
             garment = self.new_unique_garment(product_id)
 
             if not garment:
@@ -96,34 +92,39 @@ class ParseSpider(BaseParseSpider):
 
             self.boilerplate_normal(garment, response_html)
 
-            garment["image_urls"] = self.image_urls(selectors)
-            garment["skus"] = {}
-            garment['category'] = self.product_category(response)
+            garment['name'] = self.product_name(product_sel)
+            garment['description'] = self.product_description(product_sel)
+            garment['care'] = self.product_care(product_sel)
+            garment["image_urls"] = self.image_urls(product_sel)
+            garment['category'] = self.product_category(response_html)
             garment["gender"] = self.product_gender(garment)
-            garment["skus"] = self.skus(raw_json, response_html)
-            yield garment
+            garment["merch_info"] = self.merch_info(garment)
+            garment["skus"] = self.skus(raw_json, product_sel)
 
-    def parse(self, response):
-        response.meta["response"] = response
-        yield self.sku_requests(response)
+            yield garment
 
     def product_id(self, response):
         css = ".prod-img::attr(prod-id)"
         return clean(response.css(css))[0]
+
+    def merch_info(self, garment):
+        soup = soupify([garment['name'].lower()] + [items.lower() for items in garment['description']])
+        return [self.merch_title if self.merch_title in soup else ""]
 
     def product_brand(self, response):
         css = ".prodDesignerName a::text, .prodDesignerName::text"
         return clean(response.css(css))[0]
 
     def product_name(self, response):
-        css = ".product-name span::text"
+        css = ".product-name span+span::text"
         return clean(response.css(css))[0]
 
     def product_category(self, response):
-        return ["Clothes"]
+        raw_category = response.css("script:contains('@graph')::text").re_first('category":"(.+?)"')
+        return raw_category.split("/") if raw_category else []
 
     def product_gender(self, garment):
-        soup = soupify(garment["name"], garment["trail"])
+        soup = soupify(garment["category"] + garment["description"] + [garment["name"]])
         return self.gender_lookup(soup, True) or Gender.ADULTS.value
 
     def image_urls(self, response):
@@ -131,21 +132,27 @@ class ParseSpider(BaseParseSpider):
 
     def sku_requests(self, response):
         headers = {"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
-        product_id = clean(response.css(".prod-img::attr(prod-id)"))
-        refined_product_id = ','.join(product_id) if len(product_id) > 1 else product_id[0]
-        payload_data = self.product_req_t.format(refined_product_id)
         meta = {'response': response.meta["response"]}
 
-        return Request(self.product_url, self.parse_individual_products, dont_filter=True, body=payload_data, method="POST", headers=headers, meta=meta)
+        raw_product_id = clean(response.css(".prod-img::attr(prod-id)"))
+        product_id = ','.join(raw_product_id) if len(raw_product_id) > 1 else raw_product_id[0]
+        payload = self.product_req_t.format(product_id)
 
-    def skus(self, raw_json, response_html):
+        return Request(self.product_url, self.parse_products, dont_filter=True, body=payload, method="POST",
+                       headers=headers, meta=meta)
+
+    def skus(self, raw_json, product_html):
         skus = {}
-        common_sku = self.product_pricing_common(response_html)
-        sku = common_sku.copy()
+        common_sku = self.product_pricing_common(product_html)
 
         for item in raw_json["skus"]:
-            sku["colour"] = item.get("color", "One color?").split("?")[0]
-            sku["size"] = item.get("size", "Single size")
+            sku = common_sku.copy()
+
+            color = item.get("color")
+            sku["colour"] = color.split("?")[0] if color else ""
+
+            size = item.get("size")
+            sku["size"] = size if size else self.one_size
 
             if item["status"] == "Out of Stock":
                 sku["out_of_stock"] = True
@@ -176,7 +183,7 @@ class CrawlSpider(BaseCrawlSpider):
         headers = {"content-type": "application/json;charset=UTF-8"}
         url = 'https://www.neimanmarcus.com/dt/api/profileCountryData?instart_disable_injection=true'
 
-        yield Request(url, self.parse_region, method='POST', body=json.dumps(self.body), headers=headers)
+        yield Request(url, self.parse_region, method='POST', body=json.dumps(self.region_payload), headers=headers)
 
     def parse_region(self, response):
         yield Request(self.start_urls[0], self.parse)
@@ -190,6 +197,7 @@ class CrawlSpider(BaseCrawlSpider):
 
     def parse_pagination(self, response):
         pages = clean(response.css("#epagingBottom li::attr(pagenum)"))
+
         if pages:
             url = "https://www.neimanmarcus.com/category.service"
             parameters = 'data={{"GenericSearchReq":{{"pageOffset":{0},"pageSize":"30","mobile":false,"definitionPath":"/nm/commerce/pagedef_' \
@@ -200,15 +208,17 @@ class CrawlSpider(BaseCrawlSpider):
             category_id = re.findall("cat(.+)", category)[0]
             meta = {'trail': self.add_trail(response)}
 
-            return [Request(url, self.parse_page, method="POST", body=parameters.format(page, category_id), headers=headers, meta=meta.copy()) for page in pages]
+            return [Request(url, self.parse_products, method="POST", body=parameters.format(page, category_id),
+                            headers=headers, meta=meta.copy()) for page in pages]
 
-    def parse_page(self, response):
-        raw_product_links = json.loads(response.text)["GenericSearchResp"]["productResults"]
-        url_html = Selector(text=raw_product_links)
-        urls = clean(url_html.css(".products .product .details a::attr(href)"))
+    def parse_products(self, response):
         meta = {'trail': self.add_trail(response)}
 
-        return [response.follow(url, self.parse_item,  meta=meta.copy()) for url in urls]
+        raw_product_links = json.loads(response.text)["GenericSearchResp"]["productResults"]
+        raw_products = Selector(text=raw_product_links)
+        products = clean(raw_products.css(".products .product .details a::attr(href)"))
+
+        return [response.follow(products, self.parse_item, meta=meta.copy()) for products in products]
 
 
 class ParseSpiderCN(MixinCN, ParseSpider):
