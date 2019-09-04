@@ -20,7 +20,18 @@ from django.urls import path, include
 
 from backend import settings
 
+from users.urls import router as users_router
+from core.urls import router as core_router
+from backend.routers import DefaultRouter
+
+
+router = DefaultRouter()
+router.extend(users_router)
+router.extend(core_router)
+
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('core.urls', namespace='core'))
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    path('', include(router.urls)),
+    path('', include('users.urls', namespace='users')),
+    path('', include('core.urls', namespace='core')),
+] + static(settings.base.MEDIA_URL, document_root=settings.base.MEDIA_ROOT)
