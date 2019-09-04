@@ -1,12 +1,6 @@
 from django.conf.urls import url
 
-from .views import (
-    FileUpload,
-    ProductSearch,
-    ViewAllProducts,
-    ViewResults,
-    ViewProduct,
-)
+from .views import FileUpload, ProductSearch, ViewAllProducts, ViewResults, ViewProduct
 
 
 urlpatterns = [
