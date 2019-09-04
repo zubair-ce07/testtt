@@ -39,7 +39,7 @@ class NewPost extends Component {
         }}
       >
         <Field
-          name="status"
+          name="content"
           placeholder="What's on your mind?"
           type="text"
           component={this.renderInput}
@@ -51,7 +51,7 @@ class NewPost extends Component {
   validate = formValues => {
     const errors = {};
 
-    if (!formValues.status) errors.status = "Cannot create empty post!";
+    if (!formValues.content) errors.content = "Cannot create empty post!";
 
     return errors;
   };
@@ -66,7 +66,7 @@ class NewPost extends Component {
             <div className="prompt">
               <img
                 className="profile-picture"
-                src={user.display_picture}
+                src={user.profile_picture}
                 alt=""
               />
               <Form

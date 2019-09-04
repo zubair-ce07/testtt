@@ -5,7 +5,7 @@ import loginReducer from "./loginReducer";
 import postReducer from "./postReducer";
 import userReducer from "./userReducer";
 import commentReducer from "./commentReducer";
-import followingReducer from "./followingsReducer";
+import friendsReducer from "./friendsReducer";
 import mediaReducer from "./mediaReducer";
 
 export default combineReducers({
@@ -14,6 +14,6 @@ export default combineReducers({
   posts: postReducer,
   users: userReducer,
   comments: commentReducer,
-  followings: followingReducer,
+  followings: friendsReducer,
   media: mediaReducer
 });

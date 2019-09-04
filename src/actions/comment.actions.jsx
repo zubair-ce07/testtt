@@ -30,10 +30,8 @@ export const createComment = (comment, postId) => async (
   getState
 ) => {
   comment.author = getState().auth.user_id;
-  comment.time = moment().format();
+  comment.created_at = moment().format();
   comment.post = postId;
-
-  console.log("ima comment", comment);
 
   const response = await database.post("/comments/", comment);
 

@@ -41,7 +41,7 @@ class Post extends Component {
     const user = this.props.users[user_id];
     if (user) {
       return (
-        <img className="profile-picture" src={user.display_picture} alt="" />
+        <img className="profile-picture" src={user.profile_picture} alt="" />
       );
     }
     return "...";
@@ -110,7 +110,7 @@ class Post extends Component {
           {this.renderCross(post.id, post.author)}
           <div className="meta">
             <div>{this.renderUserPicture(post.author)}</div>
-            <div className="name-time">
+            <div className="name-created_at">
               <div
                 onClick={() => {
                   history.push(`/user/${post.author}`);
@@ -119,10 +119,10 @@ class Post extends Component {
               >
                 {this.renderUserName(post.author)}
               </div>
-              <div className="time">{this.renderDate(post.time)}</div>
+              <div className="created_at">{this.renderDate(post.created_at)}</div>
             </div>
           </div>
-          <div className="post-status">{post.status}</div>
+          <div className="post-status">{post.content}</div>
           {this.renderPostMedia(post.media)}
           <div className="comments-toggle">
             <div onClick={this.toggleComments}>{this.state.description}</div>

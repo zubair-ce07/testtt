@@ -15,7 +15,7 @@ class Feed extends Component {
 
   renderPosts = () => {
     return this.props.posts
-      .sort((a, b) => a.time < b.time)
+      .sort((a, b) => a.created_at < b.created_at)
       .map(post => {
         return <Post key={post.id} post={post} />;
       });

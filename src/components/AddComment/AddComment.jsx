@@ -54,7 +54,7 @@ class AddComment extends Component {
       return (
         <img
           className="profile-picture-small"
-          src={user.display_picture}
+          src={user.profile_picture}
           alt=""
         />
       );

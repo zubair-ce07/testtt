@@ -5,7 +5,8 @@ import {
   LOGIN_SUCCESS,
   LOGOUT,
   REGISTER_ERROR,
-  REGISTER_SUCCESS
+  REGISTER_SUCCESS,
+  CLEAR_REGISTER_STATUS
 } from "./actions.types";
 import database from "../apis/database";
 import history from "../history";
@@ -89,14 +90,21 @@ export const registerSuccess = message => {
   };
 };
 
+export const clearRegisterStatus = () => {
+  return {
+    type: CLEAR_REGISTER_STATUS
+  };
+};
+
 export const registerUser = newUser => async dispatch => {
-  newUser.display_picture = faker.image.avatar();
+  newUser.profile_picture = faker.image.avatar();
 
   try {
     await database.post("/register", newUser);
     dispatch(registerSuccess("Account created."));
     setTimeout(() => {
       history.push("/login");
+      dispatch(clearRegisterStatus());
     }, 1000);
   } catch (error) {
     dispatch(registerError(error.data));

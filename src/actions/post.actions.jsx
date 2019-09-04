@@ -23,7 +23,7 @@ export const fetchFeedAndUsers = () => async (dispatch, getState) => {
 
 export const createPost = post => async (dispatch, getState) => {
   post.author = getState().auth.user_id;
-  post.time = moment().format();
+  post.created_at = moment().format();
 
   const { media: mediaToUpload } = getState();
 

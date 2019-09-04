@@ -3,10 +3,10 @@ import { connect } from "react-redux";
 
 import { fetchAllUsers } from "../../actions/user.actions";
 import {
-  fetchFollowing,
-  followUser,
-  unfollowUser
-} from "../../actions/following.actions";
+  fetchFriends,
+  addFriend,
+  removeFriend
+} from "../../actions/friends.actions";
 import history from "../../history";
 
 import "./FriendFinder.sass";
@@ -16,15 +16,15 @@ class FriendFinder extends Component {
 
   componentDidMount = () => {
     this.props.fetchAllUsers();
-    this.props.fetchFollowing();
+    this.props.fetchFriends();
   };
 
   follow = user_id => {
-    this.props.followUser(user_id);
+    this.props.addFriend(user_id);
   };
 
   unfollow = user_id => {
-    this.props.unfollowUser(user_id);
+    this.props.removeFriend(user_id);
   };
 
   renderFollow = user_id => {
@@ -67,7 +67,7 @@ class FriendFinder extends Component {
             <div className="contact" key={user_id}>
               <img
                 className="profile-picture"
-                src={users[user_id].display_picture}
+                src={users[user_id].profile_picture}
                 alt=""
               />
               <span onClick={() => history.push(`/user/${user_id}`)}>
@@ -116,5 +116,5 @@ const mapStateToProps = state => {
 
 export default connect(
   mapStateToProps,
-  { fetchAllUsers, fetchFollowing, followUser, unfollowUser }
+  { fetchAllUsers, fetchFriends, addFriend, removeFriend }
 )(FriendFinder);

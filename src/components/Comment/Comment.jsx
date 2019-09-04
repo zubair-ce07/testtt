@@ -25,7 +25,7 @@ class Comment extends Component {
       return (
         <img
           className="profile-picture-small"
-          src={author.display_picture}
+          src={author.profile_picture}
           alt=""
         />
       );

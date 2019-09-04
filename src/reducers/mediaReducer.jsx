@@ -7,7 +7,7 @@ export default (state = INITIAL_STATE, action) => {
     case ADD_MEDIA:
       return [...state, action.payload];
     case REMOVE_MEDIA:
-      return state.filter(state !== action.payload);
+      return state.filter(media => media !== action.payload);
     case CLEAR_MEDIA:
       return INITIAL_STATE;
     default:

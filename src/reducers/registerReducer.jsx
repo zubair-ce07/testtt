@@ -1,4 +1,8 @@
-import { REGISTER_ERROR, REGISTER_SUCCESS } from "../actions/actions.types";
+import {
+  REGISTER_ERROR,
+  REGISTER_SUCCESS,
+  CLEAR_REGISTER_STATUS
+} from "../actions/actions.types";
 
 const INITIAL_STATE = {
   status: "",
@@ -11,6 +15,8 @@ export default (state = INITIAL_STATE, action) => {
       return action.payload;
     case REGISTER_ERROR:
       return action.payload;
+    case CLEAR_REGISTER_STATUS:
+      return INITIAL_STATE;
     default:
       return state;
   }

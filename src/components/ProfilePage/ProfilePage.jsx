@@ -21,7 +21,7 @@ class ProfilePage extends Component {
           <Topbar title={` ${user.first_name}'s Profile`} />
           <div className="user-card">
             <div className="card">
-              <img className="card-img-top" src={user.display_picture} alt="" />
+              <img className="card-img-top" src={user.profile_picture} alt="" />
               <div className="card-body">
                 <h5 className="card-title">
                   {user.first_name} {user.last_name}
