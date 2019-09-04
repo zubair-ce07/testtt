@@ -29,7 +29,7 @@ export default class KayakAirlineFees {
     async getReportOfAllURLs(): Promise<object> {
         let allExternalURLs: any = await this.getAllExternalURLs();
         let index = 0;
-        while (index < 20) {
+        while (index < 10) {
             allExternalURLs[index] = await this.getRequest(allExternalURLs[index]).catch(error => {
                 return {url: allExternalURLs[index], statusCode: 400}
             });
