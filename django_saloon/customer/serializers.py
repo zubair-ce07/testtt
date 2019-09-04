@@ -1,6 +1,5 @@
 """customer app serializer"""
 from rest_framework import serializers
-from django.contrib.auth.models import User
 from customer.models import Customer
 from core.serializers import UserUpdateSerializer
 

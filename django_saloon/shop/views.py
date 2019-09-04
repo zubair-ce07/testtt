@@ -18,10 +18,10 @@ from shop.forms import ShopUpdateForm
 from shop.models import Saloon, TimeSlot, Reservation
 from shop.serializers import ShopSerializer
 from shop.serializers import (
-    SaloonUpdateSerializer, TimeSlotSerializer,
-    ScheduleSerializer, ReservationSerializer
+    SaloonUpdateSerializer, TimeSlotSerializer, TimeSlotSerializerForCustomers,
+    ScheduleSerializer, ReservationSerializer, AddReviewSerializer, ListReservationSerializer
 )
-from core.permissions import IsCustomer, IsShop, IsShopOwnerOrReservedSloTCustomer
+from core.permissions import IsCustomer, IsShop, IsShopOwnerOrReservedSloTCustomer, IsReservedSloTCustomerAndReviewNotAdded
 from core.constants import (
     CUSTOMER, SALOON, SHOP_NAME, TIME,
     START_TIME, END_DATE, START_DATE,
@@ -249,7 +249,7 @@ class ListAddTimeSlotsApiView(generics.ListCreateAPIView):
             start_date = schedule_serializer.validated_data[START_DATE]
             end_date = schedule_serializer.validated_data[END_DATE]
             start_time = schedule_serializer.validated_data[START_TIME]
-            number_of_slots = schedule_serializer.validated_data[NUMBER_OF_SLOTS]
+            number_of_slots = scheduleabc123_serializer.validated_data[NUMBER_OF_SLOTS]
             slot_duration = schedule_serializer.validated_data[SLOT_DURATION]
 
             if int(start_time)+((int(number_of_slots) * int(slot_duration))/60) > 24:
@@ -280,7 +280,7 @@ class ListAddTimeSlotsApiView(generics.ListCreateAPIView):
 
 class ListSaloonSlotsApiView(generics.ListAPIView):
     """list saloon slots by name."""
-    serializer_class = TimeSlotSerializer
+    serializer_class = TimeSlotSerializerForCustomers
     queryset = TimeSlot.objects.all()
     permission_classes = (IsAuthenticated, IsCustomer)
 
@@ -299,7 +299,7 @@ class DeleteReservationApiView(generics.DestroyAPIView):
 
 class ShopReservationsApiView(generics.ListAPIView):
     """lists a saloon reservations"""
-    serializer_class = ReservationSerializer
+    serializer_class = ListReservationSerializer
     queryset = Reservation.objects.all()
     permission_classes = (IsAuthenticated, IsShop)
 
@@ -326,3 +326,18 @@ class ReserveTimeSlotApiView(generics.CreateAPIView):
         if serializer.is_valid(raise_exception=True):
             serializer.save()
         return Response(data={"slot reserved successfully"}, status=status.HTTP_200_OK)
+
+
+class AddReviewApiView(generics.CreateAPIView):
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = (IsAuthenticated, IsCustomer,
+                          IsReservedSloTCustomerAndReviewNotAdded)
+
+    serializer_class = AddReviewSerializer
+
+    def post(self, request, *args, **kwargs):
+        """post method for add review"""
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+        return Response(data={"review added sucessfully"}, status=status.HTTP_200_OK)

@@ -2,23 +2,19 @@
 from django.urls import reverse
 from django.contrib.auth.models import User
 from rest_framework import status
-from rest_framework.test import APITestCase
 
-from core.utils import create_user_instance
+from core.tests.utils import User_Mixin_Test_Case
 
 
-class TestRegisterUser(APITestCase):
+class TestRegisterUser(User_Mixin_Test_Case):
     """test case class for api login"""
 
     def setUp(self):
-        """saving user for register test cases."""
-        self.url = reverse('api_register')
-        self.username = 'abbas'
-        self.email = 'abbas@gmail.com'
-        self.password = 'abbas'
+        """saving user for login test case."""
 
-        self.user = create_user_instance(
-            self.username, self.email, self.password)
+        self.url = reverse('api_register')
+
+        super(TestRegisterUser, self).setUp()
 
     def test_sucessful_register_saloon_user(self):
         """sucessful saloon user registration."""
@@ -30,7 +26,7 @@ class TestRegisterUser(APITestCase):
         }
         response = self.client.post(self.url, request_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTrue(User.objects.filter(username='abbas').exists())
+        self.assertTrue(User.objects.filter(username='rose').exists())
 
     def test_sucessful_register_customer_user(self):
         """sucessful customer user registration."""

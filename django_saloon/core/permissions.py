@@ -2,6 +2,8 @@
 from rest_framework import permissions
 from core.constants import CUSTOMER, SALOON
 
+from shop.models import Reservation
+
 
 class IsShop(permissions.BasePermission):
     """
@@ -9,6 +11,7 @@ class IsShop(permissions.BasePermission):
      """
 
     def has_permission(self, request, view):
+        """check if user is shop user"""
         return hasattr(request.user, SALOON)
 
 
@@ -18,6 +21,7 @@ class IsCustomer(permissions.BasePermission):
     """
 
     def has_permission(self, request, view):
+        """check if user is customer user"""
         return hasattr(request.user, CUSTOMER)
 
 
@@ -28,8 +32,29 @@ class IsShopOwnerOrReservedSloTCustomer(permissions.BasePermission):
     """
 
     def has_object_permission(self, request, view, obj):
+        """check if user has object writable permission or not"""
         if hasattr(request.user, CUSTOMER):
             return request.user.customer == obj.customer
         if hasattr(request.user, SALOON):
             return request.user.shop == obj.time_slot.saloon
         return False
+
+
+class IsReservedSloTCustomerAndReviewNotAdded(permissions.BasePermission):
+    """permission to check if a user is reserved slot customer and review
+    has not been added already"""
+
+    message = 'Adding Review not allowed.'
+
+    def has_permission(self, request, view):
+        """checks if user is slot reserved customer and review is not already present"""
+        try:
+            reservation = Reservation.objects.get(
+                id=request.data["reservation"])
+        except Reservation.DoesNotExist:
+            self.message = 'reservation id not valid'
+            return False
+        except KeyError:
+            self.message = 'reservation id not provided'
+            return False
+        return reservation.customer == request.user.customer and not hasattr(reservation, 'review')

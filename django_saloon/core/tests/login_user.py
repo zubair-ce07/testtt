@@ -1,26 +1,19 @@
-from django.urls import reverse
-from django.contrib.auth.models import User
-from rest_framework.test import APITestCase
+"""login user test case file."""
 from rest_framework import status
 from rest_framework.authtoken.models import Token
+from django.urls import reverse
+from django.contrib.auth.models import User
 
-from core.utils import create_user_instance
+from core.tests.utils import User_Mixin_Test_Case
 
 
-class TestLoginUser(APITestCase):
+class TestLoginUser(User_Mixin_Test_Case):
     """test case class for api login"""
 
     def setUp(self):
         """saving user for login test case."""
-
         self.url = reverse('api_login')
-
-        self.username = 'abbas'
-        self.email = 'abbas@gmail.com'
-        self.password = 'abbas'
-
-        self.user = create_user_instance(
-            self.username, self.email, self.password)
+        super(TestLoginUser, self).setUp()
 
     def test_sucessful_login_user(self):
         """test case for sucessful user login."""

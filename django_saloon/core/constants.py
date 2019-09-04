@@ -17,5 +17,5 @@ END_DATE = 'end_date'
 START_DATE = 'start_date'
 NUMBER_OF_SLOTS = 'number_of_slots'
 SLOT_DURATION = 'slot_duration'
-SLOT_ID = 'slot_id',
+SLOT_ID = 'slot_id'
 REASON = 'reason'

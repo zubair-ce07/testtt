@@ -23,5 +23,7 @@ urlpatterns = [
     path('api/myreservations/', shop_views.ShopReservationsApiView.as_view(),
          name='api_shop_reservations'),
     path('api/reserve_slot/', shop_views.ReserveTimeSlotApiView.as_view(),
-         name='api_reserve_slot')
+         name='api_reserve_slot'),
+    path('api/add_review/', shop_views.AddReviewApiView.as_view(),
+         name='api_add_review')
 ]

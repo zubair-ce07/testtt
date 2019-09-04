@@ -15,9 +15,9 @@ from rest_framework.authtoken.models import Token
 
 from core.serializers import RegisterUserSerializer
 from core.forms import UserRegisterForm
+from core.constants import USER_TYPE, SALOON, CUSTOMER, PASSWORD1, PASSWORD2
 from shop.models import Saloon
 from customer.models import Customer
-from core.constants import USER_TYPE, SALOON, CUSTOMER, PASSWORD1, PASSWORD2
 
 
 class LogoutView(View):

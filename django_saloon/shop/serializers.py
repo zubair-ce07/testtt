@@ -3,15 +3,17 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 
 from core.serializers import UserUpdateSerializer
-from shop.models import Saloon, TimeSlot, Reservation
+from shop.models import Saloon, TimeSlot, Reservation, Review
 
 
 class ShopSerializer(serializers.ModelSerializer):
     """shop seriliazer"""
+    rating = serializers.ReadOnlyField()
+
     class Meta:
         """ShopSerializer meta class"""
         model = Saloon
-        fields = ('id', 'shop_name', 'phone_no', 'address')
+        fields = ('id', 'shop_name', 'phone_no', 'address', 'rating')
 
 
 class SaloonUpdateSerializer(serializers.ModelSerializer):
@@ -26,23 +28,51 @@ class SaloonUpdateSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         """SaloonUpdateSerializer update override"""
         user = validated_data.pop('user')
-        User.objects.update_or_create(id=instance.user.id, defaults=user)
-
+        user_serializer = UserUpdateSerializer(
+            data=user, instance=instance.user)
+        user_serializer.is_valid()
+        user_serializer.save()
         return super(SaloonUpdateSerializer, self).update(instance, validated_data)
+
+
+class ListReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Review
+        fields = ('comment', 'rating')
+
+
+class ListReservationSerializer(serializers.ModelSerializer):
+    """reservation serializer"""
+
+    review = ListReviewSerializer(read_only=True)
+
+    class Meta:
+        """ReservationSerializer meta class"""
+        model = Reservation
+        fields = ('time_slot', 'customer', 'review')
 
 
 class ReservationSerializer(serializers.ModelSerializer):
     """reservation serializer"""
+
     class Meta:
         """ReservationSerializer meta class"""
         model = Reservation
-        fields = ('time_slot', 'customer')
+        fields = ('time_slot', 'customer', 'review')
 
 
 class TimeSlotSerializer(serializers.ModelSerializer):
     """time slot serializer"""
     reservation = ReservationSerializer()
 
+    class Meta:
+        """TimeSlotSerializer meta class"""
+        model = TimeSlot
+        fields = ('saloon', 'time', 'reservation')
+
+
+class TimeSlotSerializerForCustomers(serializers.ModelSerializer):
+    """time slot serializer"""
     class Meta:
         """TimeSlotSerializer meta class"""
         model = TimeSlot
@@ -56,3 +86,9 @@ class ScheduleSerializer(serializers.Serializer):
     start_time = serializers.IntegerField()
     number_of_slots = serializers.IntegerField()
     slot_duration = serializers.IntegerField()
+
+
+class AddReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Review
+        fields = '__all__'

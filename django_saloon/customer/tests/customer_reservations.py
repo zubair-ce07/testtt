@@ -3,28 +3,25 @@ from datetime import datetime
 
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APITestCase
 
 from shop.models import Reservation
-from core import utils
+from core.tests import utils
 
 
-class TestCustomerReservation(APITestCase):
+class TestCustomerReservation(utils.Customer_Mixin_Test_Case):
+    """customer reservation test class."""
 
     def setUp(self):
         """creating customer,saloon,timeslot and reservation for
         user reservation test case."""
         self.url = reverse('api_customer_reservations')
-        self.username = 'abbas'
-        self.email = 'abbas@gmail.com'
-        self.password = 'abbas'
-        self.user = utils.create_customer_user_instance(
-            self.username, self.email, self.password)
+        super(TestCustomerReservation, self).setUp()
         self.client.force_authenticate(user=self.user)
 
         self.username = 'rose'
         self.email = 'rose@gmail.com'
         self.password = 'rose'
+
         self.saloon_user = utils.create_shop_user_instance(
             self.username, self.email, self.password)
 

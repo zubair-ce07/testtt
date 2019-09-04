@@ -1,5 +1,6 @@
 """shop models module."""
 from django.db import models
+from django.db.models import Sum
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
 
@@ -18,8 +19,20 @@ class Saloon(models.Model):
         return f'{self.user.username} Saloon'
 
     def _get_user_full_name(self):
-        """prpety method for Saloon model"""
+        """prppety method for Saloon model"""
         return '%s %s' % (self.user.first_name, self.user.last_name)
+
+    @property
+    def rating(self):
+        query_set = Review.objects.filter(
+            reservation__time_slot__saloon=self)
+        print(query_set)
+        rating_count = query_set.count()
+        if rating_count:
+            total_rating = query_set.aggregate(
+                Sum('rating'))['rating__sum'] or 0.00
+            return total_rating/rating_count
+        return None
 
     user_full_name = property(_get_user_full_name)
 
@@ -46,11 +59,11 @@ class Reservation(models.Model):
 
 class Review(models.Model):
     """reservation django model"""
-    reservation = models.OneToOneField(TimeSlot, on_delete=models.CASCADE)
+    reservation = models.OneToOneField(Reservation, on_delete=models.CASCADE)
     comment = models.TextField(blank=True, null=True)
     rating = models.IntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(10)])
 
     def __str__(self):
         """str method for Reservation model"""
-        return f'{self.reservation.customer.username} review'
+        return f'{self.reservation} - {self.reservation.time_slot.time} review'
