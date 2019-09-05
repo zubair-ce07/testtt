@@ -6,8 +6,13 @@ import {
   isPasswordMatch,
   minLength
 } from "../../utils/formValidators";
+import withAuthorization from "../../hoc/withAuthorization";
+import { ROUTES } from "../../constants/routes";
+
+const condition = token => token === null;
 
 export default compose(
+  withAuthorization(condition, ROUTES.ROOT),
   withHandlers({
     onSubmit: () => values => {
       console.log(values);

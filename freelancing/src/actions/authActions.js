@@ -5,9 +5,9 @@ import {
   LOGGING_USER,
   FETCH_USER_SUCCESS
 } from "./types";
-import { API_ROUTES } from "../constants/routes";
+import { API_ROUTES, ROUTES } from "../constants/routes";
 
-export const fetchAuthUser = token => async dispatch => {
+export const fetchAuthUser = (token, history) => async dispatch => {
   api.setHeaders({ Authorization: `Token ${token}` });
   const response = await api.get(API_ROUTES.GET_USER);
 
@@ -21,9 +21,11 @@ export const fetchAuthUser = token => async dispatch => {
 
   dispatch({ type: FETCH_USER_SUCCESS, payload: response.data });
   dispatch({ type: LOGIN_SUCESS, payload: { token, uid: response.data.id } });
+  // redirect to buyer dashboard
+  history.replace(ROUTES.ROOT);
 };
 
-export const loginUser = (creds, setSigningIn) => async dispatch => {
+export const loginUser = (creds, history) => async dispatch => {
   // signing in the user started
   dispatch({ type: LOGGING_USER });
   // api request to get token
@@ -39,5 +41,5 @@ export const loginUser = (creds, setSigningIn) => async dispatch => {
     return;
   }
   // get user profile using token
-  dispatch(fetchAuthUser(response.data.token));
+  dispatch(fetchAuthUser(response.data.token, history));
 };

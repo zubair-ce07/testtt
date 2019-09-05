@@ -23,8 +23,7 @@ const renderInput = ({ input, meta, ...restProps }) => (
 
 const focusOnError = createDecorator();
 
-const SignIn = ({ user, authErrors, isLogging, onSubmit, validate }) => {
-  console.log(user);
+const SignIn = ({ authErrors, isLogging, onSubmit, validate }) => {
   return (
     <Wrapper>
       <Form
