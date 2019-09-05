@@ -1,4 +1,9 @@
-import { LOGGING_USER, LOGIN_SUCESS, LOGIN_FAILED } from "../actions/types";
+import {
+  LOGGING_USER,
+  LOGIN_SUCESS,
+  LOGIN_FAILED,
+  LOGOUT_USER
+} from "../actions/types";
 
 const initialState = {
   token: null,
@@ -34,6 +39,9 @@ export const authReducer = (state = initialState, action) => {
         authErrors: [],
         isLogging: true
       };
+    case LOGOUT_USER:
+      console.log("logout user");
+      return initialState;
 
     default:
       return state;

@@ -27,7 +27,7 @@ export const NavRight = styled.div`
 export const MenuLink = styled(NavLink)`
   margin-left: 10px;
   margin-right: 10px;
-  padding: 8px;
+  padding: 10px;
   text-align: center;
   text-decoration: none;
   color: inherit;

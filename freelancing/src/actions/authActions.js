@@ -3,13 +3,30 @@ import {
   LOGIN_FAILED,
   LOGIN_SUCESS,
   LOGGING_USER,
-  FETCH_USER_SUCCESS
+  FETCH_USER_SUCCESS,
+  LOGOUT_USER
 } from "./types";
 import { API_ROUTES, ROUTES } from "../constants/routes";
 
-export const fetchAuthUser = (token, history) => async dispatch => {
+export const loginUser = (creds, history) => async dispatch => {
+  // signing in the user started
+  dispatch({ type: LOGGING_USER });
+  // api request to get token
+  const data = JSON.stringify(creds);
+  const headers = { "Content-Type": "application/json" };
+  let response = await api.post(API_ROUTES.GET_TOKEN, data, { headers });
+
+  if (!response.ok) {
+    dispatch({
+      type: LOGIN_FAILED,
+      payload: "login failed"
+    });
+    return;
+  }
+  // get user profile using token
+  const token = response.data.token;
   api.setHeaders({ Authorization: `Token ${token}` });
-  const response = await api.get(API_ROUTES.GET_USER);
+  response = await api.get(API_ROUTES.USERS);
 
   if (!response.ok) {
     dispatch({
@@ -25,21 +42,29 @@ export const fetchAuthUser = (token, history) => async dispatch => {
   history.replace(ROUTES.ROOT);
 };
 
-export const loginUser = (creds, history) => async dispatch => {
+export const registerUser = (user, history) => async dispatch => {
   // signing in the user started
   dispatch({ type: LOGGING_USER });
   // api request to get token
-  const data = JSON.stringify(creds);
+  const data = JSON.stringify(user);
   const headers = { "Content-Type": "application/json" };
-  const response = await api.post(API_ROUTES.GET_TOKEN, data, { headers });
+  const response = await api.post(API_ROUTES.REGISTER, data, { headers });
 
   if (!response.ok) {
     dispatch({
       type: LOGIN_FAILED,
-      payload: response.data.non_field_errors[0]
+      payload: "registration failed"
     });
     return;
   }
-  // get user profile using token
-  dispatch(fetchAuthUser(response.data.token, history));
+  // logging user after successful registration
+  const creds = {
+    username: user.username,
+    password: user.password
+  };
+  dispatch(loginUser(creds, history));
+};
+
+export const logoutUser = () => dispatch => {
+  dispatch({ type: LOGOUT_USER });
 };

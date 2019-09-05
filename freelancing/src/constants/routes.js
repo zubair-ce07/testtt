@@ -6,5 +6,6 @@ export const ROUTES = {
 
 export const API_ROUTES = {
   GET_TOKEN: "/api-token-auth/",
-  GET_USER: "/users/"
+  USERS: "/users/",
+  REGISTER: "/register/"
 };

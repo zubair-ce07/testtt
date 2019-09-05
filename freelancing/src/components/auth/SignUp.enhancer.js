@@ -8,14 +8,36 @@ import {
 } from "../../utils/formValidators";
 import withAuthorization from "../../hoc/withAuthorization";
 import { ROUTES } from "../../constants/routes";
+import { withRouter } from "react-router";
+import { connect } from "react-redux";
+import { registerUser } from "../../actions/authActions";
+
+const mapStateToProps = state => ({
+  isLogging: state.auth.isLogging,
+  authErrors: state.auth.authErrors,
+  user: state.user.data
+});
+
+const mapDispatchToProps = dispatch => ({
+  registerUser: (user, history) => dispatch(registerUser(user, history))
+});
 
 const condition = token => token === null;
 
 export default compose(
+  withRouter,
   withAuthorization(condition, ROUTES.ROOT),
+  connect(
+    mapStateToProps,
+    mapDispatchToProps
+  ),
   withHandlers({
-    onSubmit: () => values => {
-      console.log(values);
+    onSubmit: ({ registerUser, history }) => values => {
+      const { password2, firstname, lastname, ...user } = values;
+      registerUser(
+        { first_name: firstname, last_name: lastname, ...user },
+        history
+      );
     },
     validate: () => values => {
       const errors = {};

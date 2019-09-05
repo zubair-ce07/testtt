@@ -1,8 +1,10 @@
 import React from "react";
+import enhance from "./Navbar.enhancer";
 import { Nav, NavHeader, NavRight, NavLeft, MenuLink, Logo } from "./styles";
-import { ROUTES } from "../../constants/routes";
+import SignedOutLinks from "./SignedOutLinks";
+import SignedInLinks from "./SignedInLinks";
 
-const Navbar = () => {
+const Navbar = ({ token, handleLogout }) => {
   return (
     <Nav>
       <NavHeader>
@@ -10,14 +12,15 @@ const Navbar = () => {
           <Logo>Fiverr</Logo>
         </NavLeft>
         <NavRight>
-          <MenuLink to={ROUTES.SIGN_IN}>Sign In</MenuLink>
-          <MenuLink to={ROUTES.SIGN_UP} button="true">
-            Join
-          </MenuLink>
+          {token === null ? (
+            <SignedOutLinks />
+          ) : (
+            <SignedInLinks handleLogout={handleLogout} />
+          )}
         </NavRight>
       </NavHeader>
     </Nav>
   );
 };
 
-export default Navbar;
+export default enhance(Navbar);
