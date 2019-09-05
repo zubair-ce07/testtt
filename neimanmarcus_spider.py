@@ -13,9 +13,6 @@ from .base import BaseCrawlSpider, BaseParseSpider, clean, soupify, Gender
 class Mixin:
     retailer = "neimanmarcus"
     default_brand = "Neiman Marcus"
-    merch_info_map = [
-        ('limited edition', 'Limited Edition')
-    ]
 
     headers = {"content-type": "application/x-www-form-urlencoded; charset=UTF-8"}
     sku_payload = 'data={{"ProductSizeAndColor":{{"productIds":"{0}"}}}}'
@@ -24,6 +21,10 @@ class Mixin:
     pagination_url = "https://www.neimanmarcus.com/category.service"
     region_url = 'https://www.neimanmarcus.com/dt/api/profileCountryData'
     image_url_t = "http://neimanmarcus.scene7.com/is/image/NeimanMarcus/{0}?&wid=1200&height=1500"
+
+    merch_info_map = [
+        ('limited edition', 'Limited Edition')
+    ]
 
 
 class MixinCN(Mixin):
@@ -70,6 +71,7 @@ class ParseSpider(BaseParseSpider):
     raw_description_css = ".productCutline ::text, .cutlineDetails ::text"
     price_css = ".product-details-source .item-price::text, " \
                 ".product-details-source .product-price::text"
+    brand_css = ".prodDesignerName a::text, .prodDesignerName::text, .product-designer a::text"
 
     def parse(self, response):
         response.meta["response"] = response
@@ -113,10 +115,6 @@ class ParseSpider(BaseParseSpider):
         soup = soupify([garment['name']] + garment['description']).lower()
         return [merch for merch_str, merch in self.merch_info_map if merch_str in soup]
 
-    def product_brand(self, response):
-        css = ".prodDesignerName a::text, .prodDesignerName::text, .product-designer a::text"
-        return clean(response.css(css))[0]
-
     def product_name(self, response):
         css = ".product-name span+span::text"
         return clean(response.css(css))[0]
@@ -133,9 +131,10 @@ class ParseSpider(BaseParseSpider):
 
     def image_urls(self, response):
         images = clean(response.css("#color-pickers .color-picker::attr(data-sku-img)"))
+        primary_images = clean(response.css(".img-wrap img::attr(data-zoom-url)"))
+
         return [self.image_url_t.format(image_id) for image in images
-                for image_id in json.loads(image).values()] or \
-                clean(response.css(".img-wrap img::attr(data-zoom-url)"))
+                for image_id in json.loads(image).values()] or primary_images
 
     def sku_requests(self, response):
         raw_product_id = clean(response.css(".prod-img::attr(prod-id)"))
@@ -143,8 +142,8 @@ class ParseSpider(BaseParseSpider):
         product_id = soupify(raw_product_id, ",")
         payload = self.sku_payload.format(product_id)
 
-        return Request(self.product_url, self.parse_products, dont_filter=True, body=payload,
-                       method="POST", headers=self.headers, meta=response.meta.copy())
+        return Request(self.product_url, self.parse_products, body=payload, method="POST",
+                       headers=self.headers, meta=response.meta.copy())
 
     def skus(self, raw_skus, product_sel):
         skus = {}
@@ -186,7 +185,8 @@ class CrawlSpider(BaseCrawlSpider):
 
     def start_requests(self):
         headers = {"content-type": "application/json;charset=UTF-8"}
-        yield Request(self.region_url, self.parse_region, method='POST', body=json.dumps(self.region_payload), headers=headers)
+        yield Request(self.region_url, self.parse_region, method='POST',
+                      body=json.dumps(self.region_payload), headers=headers)
 
     def parse_region(self, response):
         return [Request(url, self.parse) for url in self.start_urls]
@@ -205,9 +205,9 @@ class CrawlSpider(BaseCrawlSpider):
         category = url_query_cleaner(response.url)
         category_id = re.findall("cat(.+)", category)[0]
 
-        parameters = 'data={{{{"GenericSearchReq":{{{{"pageOffset":{{0}},"pageSize":"30","mobile":false,' \
-                     '"definitionPath":"/nm/commerce/pagedef rwd/template/EndecaDrivenHome","categoryId":' \
-                     '"cat{category}"}}}}}}}}&service=getCategoryGrid&sid=getCategoryGrid'.format(category=category_id)
+        parameters = f'data={{{{"GenericSearchReq":{{{{"pageOffset":{{0}},"pageSize":"30","mobile":false,' \
+                     f'"definitionPath":"/nm/commerce/pagedef rwd/template/EndecaDrivenHome","categoryId":' \
+                     f'"cat{category_id}"}}}}}}}}&service=getCategoryGrid&sid=getCategoryGrid'
 
         return [Request(self.pagination_url, self.product_requests, method="POST",
                         body=parameters.format(page), headers=self.headers, meta=meta) for page in total_pages]
