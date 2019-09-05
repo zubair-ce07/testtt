@@ -8,11 +8,11 @@ import glob
 class FileManager:
     @staticmethod
     def read(filename, mode):
-        csv_file = open(filename, mode)
-        csv_file.__next__()
-        dict_reader = csv.DictReader(csv_file)
-        for row in dict_reader:
-            yield row
+        with open(filename, mode) as csv_file:
+            csv_file.__next__()
+            dict_reader = csv.DictReader(csv_file)
+            for row in dict_reader:
+                yield row
 
 
 class Formatter:
