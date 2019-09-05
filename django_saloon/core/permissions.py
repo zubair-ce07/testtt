@@ -36,7 +36,7 @@ class IsShopOwnerOrReservedSloTCustomer(permissions.BasePermission):
         if hasattr(request.user, CUSTOMER):
             return request.user.customer == obj.customer
         if hasattr(request.user, SALOON):
-            return request.user.shop == obj.time_slot.saloon
+            return request.user.saloon == obj.time_slot.saloon
         return False
 
 

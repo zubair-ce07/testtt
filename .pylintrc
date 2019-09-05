@@ -13,5 +13,6 @@ disable=
     too-many-ancestors,
     invalid-name,
     abstract-method,
-    unused-argument
+    unused-argument,
+    too-many-locals
 ignore=migrations

@@ -5,7 +5,6 @@ from django.contrib.auth.models import User
 from rest_framework import status
 
 from core.tests import utils
-from shop.models import Saloon
 
 
 class TestShopUpdate(utils.Shop_Mixin_Test_Case):
@@ -66,26 +65,26 @@ class TestShopUpdate(utils.Shop_Mixin_Test_Case):
         response = self.client.post(self.url, request_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    # def test_customer_user_update_shop(self):
-    #     """Shop failed update test updated by shop user."""
-    #     user = utils.create_customer_user_instance(
-    #         'ali', 'ali@gmail.com', 'ali')
-    #     self.client.force_authenticate(user=user)
-    #     request_data = {
-    #         'user': {
-    #             'username': 'ali'
-    #         }
-    #     }
-    #     response = self.client.post(self.url, request_data, format='json')
-    #     self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+    def test_customer_user_update_shop(self):
+        """Shop failed update test updated by shop user."""
+        user = utils.create_customer_user_instance(
+            'abc123', 'ali@gmail.com', 'ali')
+        self.client.force_authenticate(user=user)
+        request_data = {
+            'user': {
+                'username': 'ali'
+            }
+        }
+        response = self.client.post(self.url, request_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    # def test_update_shop_without_logged_in(self):
-    #     """Shop failed update test without being logged in."""
-    #     self.client.logout()
-    #     request_data = {
-    #         'user': {
-    #             'username': 'ali'
-    #         }
-    #     }
-    #     response = self.client.post(self.url, request_data, format='json')
-    #     self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+    def test_update_shop_without_logged_in(self):
+        """Shop failed update test without being logged in."""
+        self.client.logout()
+        request_data = {
+            'user': {
+                'username': 'ali'
+            }
+        }
+        response = self.client.post(self.url, request_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)

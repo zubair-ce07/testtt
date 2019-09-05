@@ -18,10 +18,15 @@ from shop.forms import ShopUpdateForm
 from shop.models import Saloon, TimeSlot, Reservation
 from shop.serializers import ShopSerializer
 from shop.serializers import (
-    SaloonUpdateSerializer, TimeSlotSerializer, TimeSlotSerializerForCustomers,
-    ScheduleSerializer, ReservationSerializer, AddReviewSerializer, ListReservationSerializer
+    SaloonUpdateSerializer, TimeSlotSerializer,
+    TimeSlotSerializerForCustomers,
+    ScheduleSerializer, ReservationSerializer,
+    AddReviewSerializer, ListReservationSerializer
 )
-from core.permissions import IsCustomer, IsShop, IsShopOwnerOrReservedSloTCustomer, IsReservedSloTCustomerAndReviewNotAdded
+from core.permissions import (
+    IsCustomer, IsShop, IsShopOwnerOrReservedSloTCustomer,
+    IsReservedSloTCustomerAndReviewNotAdded
+)
 from core.constants import (
     CUSTOMER, SALOON, SHOP_NAME, TIME,
     START_TIME, END_DATE, START_DATE,
@@ -116,7 +121,9 @@ class MyShopListView(LoginRequiredMixin, UserPassesTestMixin, ListView, View):
         for single_date in (start_date + timedelta(n) for n in range(day_count)):
             for slot in range(int(number_of_slots)):
                 slots.append(
-                    TimeSlot(saloon=saloon, time=single_date + timedelta(hours=int(start_time), minutes=slot*int(slot_duration))))
+                    TimeSlot(
+                        saloon=saloon, time=single_date + timedelta(hours=int(start_time),
+                                                                    minutes=slot*int(slot_duration))))
         TimeSlot.objects.bulk_create(slots)
         messages.success(
             request, f'Time slots added!')
@@ -249,7 +256,7 @@ class ListAddTimeSlotsApiView(generics.ListCreateAPIView):
             start_date = schedule_serializer.validated_data[START_DATE]
             end_date = schedule_serializer.validated_data[END_DATE]
             start_time = schedule_serializer.validated_data[START_TIME]
-            number_of_slots = scheduleabc123_serializer.validated_data[NUMBER_OF_SLOTS]
+            number_of_slots = schedule_serializer.validated_data[NUMBER_OF_SLOTS]
             slot_duration = schedule_serializer.validated_data[SLOT_DURATION]
 
             if int(start_time)+((int(number_of_slots) * int(slot_duration))/60) > 24:
@@ -329,6 +336,7 @@ class ReserveTimeSlotApiView(generics.CreateAPIView):
 
 
 class AddReviewApiView(generics.CreateAPIView):
+    """add review api view."""
     authentication_classes = [authentication.TokenAuthentication]
     permission_classes = (IsAuthenticated, IsCustomer,
                           IsReservedSloTCustomerAndReviewNotAdded)

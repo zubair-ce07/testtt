@@ -24,9 +24,9 @@ class Saloon(models.Model):
 
     @property
     def rating(self):
+        """shop rating property"""
         query_set = Review.objects.filter(
             reservation__time_slot__saloon=self)
-        print(query_set)
         rating_count = query_set.count()
         if rating_count:
             total_rating = query_set.aggregate(

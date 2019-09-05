@@ -28,7 +28,7 @@ def create_customer_user_instance(username, email, password):
 def create_shop_user_instance(username, email, password):
     """create a shop user instance in db"""
     user = create_user_instance(username, email, password)
-    Saloon.objects.create(user=user)
+    Saloon.objects.create(shop_name='rose saloon', user=user)
     return user
 
 

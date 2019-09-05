@@ -1,6 +1,5 @@
 """shop app serializer module."""
 from rest_framework import serializers
-from django.contrib.auth.models import User
 
 from core.serializers import UserUpdateSerializer
 from shop.models import Saloon, TimeSlot, Reservation, Review
@@ -36,7 +35,9 @@ class SaloonUpdateSerializer(serializers.ModelSerializer):
 
 
 class ListReviewSerializer(serializers.ModelSerializer):
+    """review list serializer"""
     class Meta:
+        """"review list serializer meta class"""
         model = Review
         fields = ('comment', 'rating')
 
@@ -54,6 +55,7 @@ class ListReservationSerializer(serializers.ModelSerializer):
 
 class ReservationSerializer(serializers.ModelSerializer):
     """reservation serializer"""
+    review = serializers.ReadOnlyField()
 
     class Meta:
         """ReservationSerializer meta class"""
@@ -89,6 +91,8 @@ class ScheduleSerializer(serializers.Serializer):
 
 
 class AddReviewSerializer(serializers.ModelSerializer):
+    """add review serializer"""
     class Meta:
+        """add review serializer meta class"""
         model = Review
         fields = '__all__'
