@@ -48,7 +48,7 @@ class ViewResults(View):
             q.add(Q(categories__category=request.GET['category']), Q.AND)
         if request.GET['name']:
             q.add(Q(name__contains=request.GET['name']), Q.AND)
-        if int(maximum) != 0 and int(minimum) <= int(maximum):
+        if int(maximum) != 0 or int(minimum) != 0:
             q.add(Q(skus__price__range=(minimum, maximum)), Q.AND)
         return Product.objects.filter(q).distinct()
 
