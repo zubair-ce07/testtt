@@ -4,7 +4,7 @@ import urllib.parse as urlparse
 
 
 class CPUCSpider(scrapy.Spider):
-    name = "cpuc"
+    name = "capuc"
     proceeding_page = 1
     root_url = "http://docs.cpuc.ca.gov/advancedsearchform.aspx"
     result_url = "http://docs.cpuc.ca.gov/SearchRes.aspx"
@@ -59,7 +59,7 @@ class CPUCSpider(scrapy.Spider):
                 yield scrapy.Request(url=self.dock_url.format(56, proceeding), callback=self.parse_docket)
 
         # running pagination on proceedings result pages
-        self.paginate_proceedings(response)
+        yield from self.paginate_proceedings(response)
 
     def paginate_proceedings(self, response):
         next_id = "rptPages_btnPage_{}".format(self.proceeding_page)
@@ -120,7 +120,7 @@ class CPUCSpider(scrapy.Spider):
             doc["filings"].append(file)
 
         # running pagination on filings
-        self.paginate_filings(response, doc, sub_docs_urls)
+        yield from self.paginate_filings(response, doc, sub_docs_urls)
 
         # requesting for sub documents against one filing
         if sub_docs_urls:
