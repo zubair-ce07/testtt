@@ -79,7 +79,7 @@ class CPUCSpider(scrapy.Spider):
 
     def parse_docket(self, response):
         # extracting docket data against one proceeding and requesting for its filings
-        proceeding = response.url.split(":")[-1]
+        proceeding = response.url.rsplit(":", 1)[-1]
         doc = {
             "state_id": proceeding,
             "major_parties": response.xpath("//span[@id='P56_FILED_BY']/text()").extract(),
@@ -156,14 +156,14 @@ class CPUCSpider(scrapy.Spider):
         next_url = None
         if sub_docs_urls:
             next_url = sub_docs_urls.pop()
-        doc_id = response.url.split("=")[-1]
+        doc_id = response.url.rsplit("=", 1)[-1]
         rows = response.xpath("//table[@id='ResultTable']/tbody/tr[not(@style)]")
         sub_docs = []
         for row in rows:
             sub_doc = {
                 "blob_name": "CA-{}-{}".format(doc["state_id"], doc_id),
                 "extension": row.xpath("td[@class='ResultLinkTD']/a/text()").get(),
-                "name": row.xpath("td[@class='ResultLinkTD']/a/@href").get().split(".")[0].split("/")[-1],
+                "name": row.xpath("td[@class='ResultLinkTD']/a/@href").get().split(".")[0].rsplit("/", 1)[-1],
                 "title": row.xpath("td[@class='ResultTitleTD']/text()[1]").get()
             }
             sub_docs.append(sub_doc)
