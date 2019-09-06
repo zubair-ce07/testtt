@@ -1,0 +1,66 @@
+{
+  "Scenario 1": {
+    "Origin Input": "Hartsfield-Jackson",
+    "Origin Selection": "Hartsfield-Jackson Atlanta International Airport (ATL)",
+    "Destination Input": "Dubai Airport",
+    "Destination Selection": "Dubai International Airport (DXB)",
+    "Passengers": {
+      "Adults": 4,
+      "Seniors": 0,
+      "Youth": 0,
+      "Child": 0,
+      "Seat Infant": 0,
+      "Lap Infant": 0
+    },
+    "Departure": "9/10/2019",
+    "Arrival": "9/13/2019"
+  },
+  "Scenario 2": {
+    "Origin Input": "Tokyo Ha",
+    "Origin Selection": "Tokyo Haneda Airport (HND)",
+    "Destination Input": "Paris Charl",
+    "Destination Selection": "Paris Charles de Gaulle Airport (CDG)",
+    "Passengers": {
+      "Adults": 2,
+      "Seniors": 1,
+      "Youth": 1,
+      "Child": 1,
+      "Seat Infant": 0,
+      "Lap Infant": 0
+    },
+    "Departure": "10/10/2019",
+    "Arrival": "10/13/2019"
+  },
+  "Scenario 3": {
+    "Origin Input": "AMS",
+    "Origin Selection": "Amsterdam Airport Schiphol (AMS)",
+    "Destination Input": "CAN",
+    "Destination Selection": "Guangzhou, China (CAN)",
+    "Passengers": {
+      "Adults": 2,
+      "Seniors": 2,
+      "Youth": 2,
+      "Child": 2,
+      "Seat Infant": 0,
+      "Lap Infant": 0
+    },
+    "Departure": "10/10/2019",
+    "Arrival": "10/13/2019"
+  },
+  "Scenario 4": {
+    "Origin Input": "Frankfurt Airport",
+    "Origin Selection": "Frankfurt am Main, Germany (HNN)",
+    "Destination Input": "Schonefeld",
+    "Destination Selection": "Schonefeld (SXF)",
+    "Passengers": {
+      "Adults": 4,
+      "Seniors": 0,
+      "Youth": 0,
+      "Child": 1,
+      "Seat Infant": 1,
+      "Lap Infant": 1
+    },
+    "Departure": "10/10/2019",
+    "Arrival": "10/13/2019"
+  }
+}
