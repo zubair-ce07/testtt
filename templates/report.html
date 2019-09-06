@@ -2,22 +2,22 @@
 {% block content %}
 
 <div class="container">
-<table id="example" class="table table-hover display">
+    <table id="example" class="table table-hover display">
         <thead class="thead-dark">
-          <tr>
+        <tr>
             <th>Question</th>
             <th>Correct responses/Total responses</th>
-          </tr>
+        </tr>
         </thead>
         <tbody>
-    {%for answer, response in report%}
-          <tr>
+        {%for answer, response in report%}
+        <tr>
             <td>{{answer.question.text}}</td>
             <td>{{response}}/{{answer.question.Attempted.count}}</td>
-          </tr>
-          {%endfor%}
+        </tr>
+        {%endfor%}
         </tbody>
-      </table>
+    </table>
 
 </div>
 
@@ -27,5 +27,6 @@
 $(document).ready( function () {
     $('#example').DataTable();
 } );
+
 </script>
 {% endblock %}

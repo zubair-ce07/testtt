@@ -3,25 +3,23 @@
 <div class="container">
 
 
-
     <table id="example" class="table table-hover display ">
-        <thead  class="thead-primary">
-          <tr class="table-success">
-              <th >Questions</th>
-              <th>Attempt</th>
-          </tr>
+        <thead class="thead-primary">
+        <tr class="table-success">
+            <th>Questions</th>
+            <th>Attempt</th>
+        </tr>
         </thead>
         <tbody>
-                {%for item in result%}
-          <tr class="table-info">
+        {%for item in result%}
+        <tr class="table-info">
             <td>{{item.question.text}}</td>
             <td>{{item.answer.text}}</td>
-          </tr>
-          {%endfor%}
+        </tr>
+        {%endfor%}
         </tbody>
-      </table>
-
+    </table>
 </div>
 
-    {%endblock%}
+{%endblock%}
 

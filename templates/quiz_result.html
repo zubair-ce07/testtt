@@ -1,26 +1,27 @@
 {%extends 'base.html'%}
 {% block content %}
 <div class="container">
-        <table id="example" class="table table-hover">
-                <thead class="thead-dark">
-                  <tr>
-                    <th>Student</th>
-                    <th>Score</th>
-                    <th>Date</th>
-                      <th>Result</th>
-                  </tr>
-                </thead>
-                <tbody>
-                        {%for quiz in quizzes%}
-                  <tr>
-                    <td><a>{{quiz.taken_by.username}}</a></td>
-                    <td><kbd class="font-weight-bold">{{quiz.score}}</kbd></td>
-                    <td><a class="btn btn-info" href="{%url 'quiz_result' quiz.pk%}">{{quiz.date}}</a></td>
-                      <td><a class="btn btn-success" href="{%url 'result_details' quiz.quiz_id quiz.taken_by.id %}">Insights</a></td>
-                  </tr>
-                  {%endfor%}
-                </tbody>
-              </table>
+    <table id="example" class="table table-hover">
+        <thead class="thead-dark">
+        <tr>
+            <th>Student</th>
+            <th>Score</th>
+            <th>Date</th>
+            <th>Result</th>
+        </tr>
+        </thead>
+        <tbody>
+        {%for quiz in quizzes%}
+        <tr>
+            <td><a href="{%url 'result_details' quiz.quiz_id quiz.taken_by.id %}">{{quiz.taken_by.username}}</a></td>
+            <td><kbd class="font-weight-bold">{{quiz.score}}</kbd></td>
+            <td>{{quiz.date}}</td>
+            <td><a class="btn btn-outline-success" href="{%url 'result_details' quiz.quiz_id quiz.taken_by.id %}">Insights</a>
+            </td>
+        </tr>
+        {%endfor%}
+        </tbody>
+    </table>
 
 
 </div>
@@ -31,5 +32,7 @@
 $(document).ready( function () {
     $('#example').DataTable();
 } );
+
+
 </script>
 {% endblock %}

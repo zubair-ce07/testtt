@@ -13,10 +13,11 @@
         <div class="input-group form-group">
             <div class="input-group-prepend">
                 <div class="input-group-text">
-                    <input type="radio" aria-label="Radio button for following text input" id="{{question.pk}}" name="{{question.pk}}" value="{{answer.pk}}" required>
+                    <input type="radio" aria-label="Radio button for following text input" id="{{question.pk}}"
+                           name="{{question.pk}}" value="{{answer.pk}}" required>
                 </div>
             </div>
-            <label class="form-control" >{{answer.text}}</label>
+            <label class="form-control">{{answer.text}}</label>
         </div>
         {%endfor%}
         {%endfor%}

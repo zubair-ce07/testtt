@@ -4,13 +4,13 @@
     <h4>Enter The Name of Quiz</h4>
     <form class="form-group " method="POST">
         {% csrf_token %}
-          {% for field in form %}
-          <div class="form-group">
+        {% for field in form %}
+        <div class="form-group">
             <label>{{ field.label_tag }}</label><br>
             {{field}}
-          </div>
-          {% endfor %}
-                      <input type="submit" class="btn btn-primary" value="Save Quiz">
+        </div>
+        {% endfor %}
+        <input type="submit" class="btn btn-primary" value="Save Quiz">
 
     </form>
     <a href="{% url 'home'%}">Go back</a>

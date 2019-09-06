@@ -1,24 +1,24 @@
 {%extends 'base.html'%}
 {% block content %}
 <div class="container">
-        <table id="example" class="table table-hover">
-                <thead class="thead-dark">
-                  <tr>
-                    <th>Quiz</th>
-                    <th>Score</th>
-                      <th>Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                        {%for result in results%}
-                  <tr>
-                    <td>{{result.quiz.name}}</td>
-                    <td>{{result.score}}</td>
-                      <td>{{result.quiz.questions.count}}</td>
-                  </tr>
-                  {%endfor%}
-                </tbody>
-              </table>
+    <table id="example" class="table table-hover">
+        <thead class="thead-dark">
+        <tr>
+            <th>Quiz</th>
+            <th>Score</th>
+            <th>Total</th>
+        </tr>
+        </thead>
+        <tbody>
+        {%for result in results%}
+        <tr>
+            <td>{{result.quiz.name}}</td>
+            <td>{{result.score}}</td>
+            <td>{{result.quiz.questions.count}}</td>
+        </tr>
+        {%endfor%}
+        </tbody>
+    </table>
 </div>
 {%endblock%}
 {%block js%}
@@ -26,5 +26,6 @@
 $(document).ready( function () {
     $('#example').DataTable();
 } );
+
 </script>
 {% endblock %}

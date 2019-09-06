@@ -1,18 +1,21 @@
 {%extends 'base.html'%}
 {% block content %}
 <div class="container">
-        <div class="alert alert-primary" role="alert">
-  <h4 class="alert-heading">{{question.text}}</h4>
+    <div class="alert alert-primary" role="alert">
+        <h4 class="alert-heading">{{question.text}}</h4>
     </div>
     <ul>
-            {% for answer in answers %}
-            <code class="text-justify">{{answer.text}}{%if answer.is_correct%}<span style="all:initial"> &#x2714;</span>{%endif%}</code><br>
-            {% empty %}
-            <div class="alert alert-danger" role="alert">
-  <span class="alert-heading">No options added for this question.</span>
-    </div>
-            <a class="btn btn-outline-primary btn-lg" href="{%url 'add_options' question.pk %}">Add Options</a>
-            {%endfor%}
+        {% for answer in answers %}
+        <div class="alert alert-success" role="alert">
+            <strong>{{answer.text}}{%if answer.is_correct%}<span style="all:initial"> &#x2714;</span>{%endif%}</strong>
+        </div>
+
+        {% empty %}
+        <div class="alert alert-danger" role="alert">
+            <span class="alert-heading">No options added for this question.</span>
+        </div>
+        <a class="btn btn-outline-primary btn-lg" href="{%url 'add_options' question.pk %}">Add Options</a>
+        {%endfor%}
     </ul>
     <a class="btn btn-outline-dark" href="{%url 'edit_question' question.pk%}">Edit Question</a>
     {%if answers.count > 0%}

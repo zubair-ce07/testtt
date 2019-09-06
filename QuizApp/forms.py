@@ -5,7 +5,6 @@ from QuizApp.models import User, Question, Quiz
 
 
 class CustomUserCreationForm(UserCreationForm):
-
     class Meta(UserCreationForm):
         model = User
         fields = ('username', 'email', 'is_teacher', 'is_student', 'gender')

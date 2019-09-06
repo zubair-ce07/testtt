@@ -14,10 +14,11 @@
 
         <dt class="col-sm-3">Selected Option</dt>
         <dd class="col-sm-9"><p
-                class="{%if answer.text != selected.text%}lead text-danger{%else%}lead text-primary{%endif%}">{{selected.text}}</p></dd>
+                class="{%if answer.text != selected.text%}lead text-danger{%else%}lead text-primary{%endif%}">
+            {{selected.text}}</p></dd>
 
     </dl>
-        {% endfor %}
+    {% endfor %}
 </div>
 
-    {%endblock%}
+{%endblock%}

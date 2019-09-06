@@ -2,27 +2,27 @@
 {% block content %}
 
 <div class="container">
-    
-<table id="table_id" class="table table-hover display">
-        <thead  class="thead-dark">
-          <tr>
+
+    <table id="table_id" class="table table-hover display">
+        <thead class="thead-dark">
+        <tr>
             <th>Quiz</th>
             <th>Take</th>
             <th>Published Date</th>
-              <th>Created By</th>
-          </tr>
+            <th>Created By</th>
+        </tr>
         </thead>
         <tbody>
-                {%for quiz in quizzes%}
-          <tr>
+        {%for quiz in quizzes%}
+        <tr>
             <td>{{quiz.name}}</td>
             <td><a class="btn btn-dark" href="{%url 'take_quiz' quiz.pk%}">Take Quiz</a></td>
             <td>{{quiz.date}}</td>
-              <td>{{quiz.owner.username}}</td>
-          </tr>
-          {%endfor%}
+            <td>{{quiz.owner.username}}</td>
+        </tr>
+        {%endfor%}
         </tbody>
-      </table>
+    </table>
 </div>
 
 
@@ -32,5 +32,6 @@
 $(document).ready( function () {
     $('#table_id').DataTable();
 } );
+
 </script>
 {% endblock %}
