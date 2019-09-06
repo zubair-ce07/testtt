@@ -58,3 +58,6 @@ target/
 
 # VSCode
 .vscode
+
+# node modules
+node_modules/
