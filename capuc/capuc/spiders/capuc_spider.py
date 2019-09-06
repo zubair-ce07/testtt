@@ -1,11 +1,12 @@
 import datetime
+import re
+
 import scrapy
 import urllib.parse as urlparse
 
 
 class CPUCSpider(scrapy.Spider):
     name = "capuc"
-    proceeding_page = 1
     root_url = "http://docs.cpuc.ca.gov/advancedsearchform.aspx"
     result_url = "http://docs.cpuc.ca.gov/SearchRes.aspx"
     filing_pagination_url = "https://apps.cpuc.ca.gov/apex/wwv_flow.show"
@@ -20,25 +21,10 @@ class CPUCSpider(scrapy.Spider):
     def parse(self, response):
         # filling the search form and requesting
         form_data = {
-            "__EVENTTARGET": "",
-            "__EVENTARGUMENT": "",
-            "__VIEWSTATE": response.xpath("//input[@name='__VIEWSTATE']/@value").get(),
-            "__VIEWSTATEGENERATOR": response.xpath("//input[@name='__VIEWSTATEGENERATOR']/@value").get(),
-            "__EVENTVALIDATION": response.xpath("//input[@name='__EVENTVALIDATION']/@value").get(),
-            "DocTitle": "",
-            "ddlCpuc01Types": "-1",
-            "ddlEfileTypes": "-1",
-            "IndustryID": "-1",
-            "ProcNum": "",
-            "MeetDate": "",
             "FilingDateFrom": self.start,
             "FilingDateTo": self.end,
-            "PubDateFrom": "",
-            "PubDateTo": "",
-            "EfileConfirmNum": "",
-            "SearchButton": "Search"
         }
-        yield scrapy.FormRequest(url=self.root_url, callback=self.parse_results, formdata=form_data)
+        yield scrapy.FormRequest.from_response(response, callback=self.parse_results, formdata=form_data)
 
     @staticmethod
     def validate_date(date):
@@ -50,7 +36,9 @@ class CPUCSpider(scrapy.Spider):
     def parse_results(self, response):
         proceedings = response.xpath('//td[@class="ResultTitleTD"]/text()[2]').getall()
         for proceeding in proceedings:
-            proceeding = proceeding[12:]
+            # this regex extracts `R123456` from `Proceeding: R123456`
+            reg = r'(?<=: ).+'
+            proceeding = re.search(reg, proceeding).group()
             if ";" in proceeding:
                 proc_list = proceeding.split("; ")
                 for prc in proc_list:
@@ -62,24 +50,24 @@ class CPUCSpider(scrapy.Spider):
         yield from self.paginate_proceedings(response)
 
     def paginate_proceedings(self, response):
-        next_id = "rptPages_btnPage_{}".format(self.proceeding_page)
-        event_target_text = response.xpath("//a[@id='{}']/@href".format(next_id)).get()
-        if event_target_text is not None:
-            event_target = event_target_text.split("'")[1]
+        next_page = response.xpath("//a[@id='lnkNextPage']")
+        if next_page:
             form_data = {
-                "__EVENTTARGET": event_target,
+                "__EVENTTARGET": "lnkNextPage",
                 "__EVENTARGUMENT": "",
                 "__VIEWSTATE": response.xpath("//input[@name='__VIEWSTATE']/@value").get(),
                 "__VIEWSTATEGENERATOR": response.xpath("//input[@name='__VIEWSTATEGENERATOR']/@value").get(),
                 "__EVENTVALIDATION": response.xpath("//input[@name='__EVENTVALIDATION']/@value").get(),
             }
-            self.proceeding_page += 1
             yield scrapy.FormRequest(url=self.result_url, callback=self.parse_results,
                                      formdata=form_data)
 
     def parse_docket(self, response):
         # extracting docket data against one proceeding and requesting for its filings
-        proceeding = response.url.rsplit(":", 1)[-1]
+        proceeding = response.xpath("//h1/text()").get()
+        # this regex extracts `R123456` from `R123456 - Proceeding`
+        reg = r'.*(?= -)'
+        proceeding = re.search(reg, proceeding).group()
         doc = {
             "state_id": proceeding,
             "major_parties": response.xpath("//span[@id='P56_FILED_BY']/text()").extract(),
@@ -168,12 +156,12 @@ class CPUCSpider(scrapy.Spider):
             }
             sub_docs.append(sub_doc)
         all_filled = True
-        for i, _ in enumerate(doc["filings"]):
-            if doc["filings"][i]["state_id"] is None:
+        for filing in doc["filings"]:
+            if not filing["state_id"]:
                 continue
-            if doc["filings"][i]["state_id"] == doc_id:
-                doc["filings"][i]["documents"] = sub_docs
-            if "documents" not in doc["filings"][i]:
+            if filing["state_id"] == doc_id:
+                filing["documents"] = sub_docs
+            if "documents" not in filing:
                 all_filled = False
         if all_filled:
             yield doc
