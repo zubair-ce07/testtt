@@ -16,16 +16,14 @@ class MixinES(Mixin):
 
     allowed_domains = ['forumsport.com']
     start_urls = ['https://www.forumsport.com/ropa-calzado/']
-    one_sizes = ['unica']
 
 
 class ParseSpider(BaseParseSpider):
-    one_size = 'unica'
-
     description_css = '[itemprop="disambiguatingDescription"]::text'
     care_css = '.adv-feature-list strong::text'
-    brand_css = '.model-brand-card meta[itemprop="brand"]::attr(content)'
-    price_css = '.price-tag-big .previous-price,.price-tag-big .price::attr(content)'
+    brand_css = '.model-brand-card [itemprop="brand"]::attr(content)'
+    price_css = '.price-tag-big .previous-price, [itemprop=priceCurrency]::attr(content),' \
+                '[name="precio"]::attr(value)'
 
     def parse(self, response):
         garment = self.new_unique_garment(self.product_id(response))
@@ -50,7 +48,8 @@ class ParseSpider(BaseParseSpider):
 
     def product_category(self, response):
         trail = response.meta['trail']
-        categories = [t for t, _ in trail] + [clean(response.css('title::text'))[0].split('|')[1]]
+        category_in_title = [clean(response.css('title::text'))[0].split('|')[1]]
+        categories = [t for t, _ in trail] + category_in_title
         return clean(categories)
 
     def product_gender(self, response):
@@ -67,27 +66,25 @@ class ParseSpider(BaseParseSpider):
     def skus(self, response):
         skus = {}
         common_sku = self.product_pricing_common(response)
-        raw_colour = clean(response.css('.gallery-image img::attr(title)'))[0]
+        raw_colour = clean(response.css('[itemprop="color"]'))[0]
         colour = self.detect_colour(raw_colour)
 
         if colour:
             common_sku['colour'] = colour
 
         oos_css = '.size-selected span:contains("disponible")'
-        size_css = '.conver-sizes-items.active .size-item, script:contains("UNICA")'
+        size_css = '.conver-sizes-items.active .size-item'
 
         for size_s in response.css(size_css):
             sku = common_sku.copy()
-            size = size_s.re_first(r'"(.*?)"')
-
-            if size and size.lower() in self.one_sizes:
-                sku['size'] = self.one_size
-                sku['out_of_stock'] = not bool(response.css(oos_css))
-            else:
-                sku['size'] = clean(size_s.css('::text'))[0].lower()
-                sku['out_of_stock'] = bool(size_s.css('.off'))
-
+            sku['size'] = clean(size_s.css('::text'))[0]
+            sku['out_of_stock'] = bool(size_s.css('.off'))
             skus[f'{self.product_id(response)}_{sku["size"]}'] = sku
+
+        if not skus:
+            common_sku['size'] = self.one_size
+            common_sku['out_of_stock'] = not bool(response.css(oos_css))
+            skus[self.product_id(response)] = common_sku
 
         return skus
 
@@ -122,7 +119,7 @@ class CrawlSpider(BaseCrawlSpider):
 
 class ForumSportESParseSpider(MixinES, ParseSpider):
     name = MixinES.retailer + '-parse'
-    
+
 
 class ForumSportESCrawlSpider(MixinES, CrawlSpider):
     name = MixinES.retailer + '-crawl'
