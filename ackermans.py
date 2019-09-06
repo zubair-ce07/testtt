@@ -8,12 +8,13 @@ from .base import BaseCrawlSpider, BaseParseSpider, clean, Gender, soupify
 
 class Mixin:
     retailer = 'ackermans'
-    default_brand = "Ackermans"
+    default_brand = 'Ackermans'
 
 
 class MixinZA(Mixin):
     retailer = Mixin.retailer + '-za'
     market = 'ZA'
+    currency = 'ZAR'
     allowed_domains = ['ackermans.co.za', 'magento.ackermans.co.za']
     start_urls = [
         'https://www.ackermans.co.za/'
@@ -23,43 +24,31 @@ class MixinZA(Mixin):
     listing_url_t = 'https://magento.ackermans.co.za/rest/default/V1/pepkor/categoryapi/categories'
     products_page_url_t = 'https://magento.ackermans.co.za/rest/default/V1/pepkor/searchV2?'
     image_url_t = 'https://cdn.ackermans.co.za/product-images/prod/600_600_{}.webp'
-    path_url_t = 'https://www.ackermans.co.za/products'
+    path_url_t = 'https://www.ackermans.co.za/product'
 
-    size_maps = []
     headers = {
         'Accept': 'application/json, text/plain, */*',
-        'Referer': 'https://www.ackermans.co.za/',
-        'Origin': 'https://www.ackermans.co.za',
-        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) '
-                      'Chrome/75.0.3770.142 Safari/537.36',
         'Authorization': 'Bearer x3leg25sl1vvruoa6vr861vgus503cfq'
     }
     pagination_request_params = {
-        'search_criteria[filter_groups][0][filters][0][field]': 'status',
-        'search_criteria[filter_groups][0][filters][0][value]': '1',
-        'search_criteria[filter_groups][1][filters][0][field]': 'visibility',
-        'search_criteria[filter_groups][1][filters][0][value]': '4',
         'search_criteria[filter_groups][2][filters][0][field]': 'category_ids',
         'search_criteria[page_size]': '20',
-        'tracker': 'a2zxlqwzj6-1567316733-1'
     }
     product_request_params = {
         'search_criteria[filter_groups][0][filters][0][field]': 'sku',
         'search_criteria[filter_groups][1][filters][0][field]': 'status',
         'search_criteria[filter_groups][1][filters][0][value]': '1',
         'search_criteria[page_size]': '1',
-        'search_criteria[current_page]': '1',
-        'tracker': 'ormxxa2vwxm-1567410631-1'
     }
     size_map_request_params = {
-        'search_criteria[filter_groups][0][filters][0][condition_type]': 'in',
         'search_criteria[filter_groups][0][filters][0][field]': 'attribute_code',
         'search_criteria[filter_groups][0][filters][0][value]': 'size',
-        'tracker': 'elkc0x97qp9-1567485069-1'
     }
 
 
 class ParseSpider(BaseParseSpider):
+    size_maps = {}
+
     def parse(self, response):
         raw_product = self.raw_product(response)
         product_id = self.product_id(raw_product)
@@ -68,7 +57,8 @@ class ParseSpider(BaseParseSpider):
         if not garment:
             return
 
-        self.boilerplate_minimal(garment, response)
+        product_url = f'{response.meta["listing_url"]}/{raw_product["url_key"]}'
+        self.boilerplate(garment, response, product_url)
 
         garment['name'] = self.product_name(raw_product)
         garment['image_urls'] = self.image_urls(raw_product)
@@ -78,12 +68,10 @@ class ParseSpider(BaseParseSpider):
         garment['care'] = self.product_care(raw_product)
         garment['skus'] = self.product_skus(raw_product, response)
         garment['brand'] = self.product_brand(response)
-        garment['url'] = self.product_url(response, raw_product)
         yield garment
 
     def product_skus(self, raw_product, response):
-        money_strs = [raw_product['prices']['price'], 'ZAR']
-        size_maps = response.meta['size_maps']
+        money_strs = [raw_product['prices']['price'], self.currency]
         skus = {}
 
         common_sku = self.product_pricing_common(response, money_strs=money_strs)
@@ -94,7 +82,7 @@ class ParseSpider(BaseParseSpider):
         product_attributes = raw_product['custom_attributes']
         for size in product_attributes['size_ids']:
             sku = common_sku.copy()
-            sku['size'] = size_maps[str(size)]
+            sku['size'] = self.size_maps[str(size)]
             sku_key = f'{sku["colour"]}_{sku["size"]}' if sku.get('colour') else f'{sku["size"]}'
             skus[sku_key] = sku
 
@@ -119,17 +107,12 @@ class ParseSpider(BaseParseSpider):
     def product_category(self, raw_product):
         return clean(raw_product['custom_attributes']['meta_title'].split('|'))
 
-    def product_description(self, raw_product):
-        return clean(raw_product['custom_attributes']['meta_description'].split(','))
-
-    def product_care(self, raw_product):
-        description = self.product_description(raw_product)
-        return [raw_Care for raw_Care in description
-                if self.care_criteria(raw_Care)]
-
-    def product_url(self, response, raw_product):
-        url = f'{response.meta["listing_url"]}/{raw_product["url_key"]}'
-        return url.replace('products', 'product')
+    def raw_description(self, raw_product, **kwargs):
+        return [
+            raw_product['custom_attributes']['description'] +
+            raw_product['custom_attributes']['meta_title'] +
+            raw_product['custom_attributes']['meta_description']
+        ]
 
 
 class CrawlSpider(BaseCrawlSpider):
@@ -139,14 +122,12 @@ class CrawlSpider(BaseCrawlSpider):
 
     def parse_size_maps(self, response):
         size_maps = json.loads(response.text)['items'][0]['options']
-        self.size_maps = {size_map['value']: size_map['label'] for size_map in size_maps if size_map['value']}
+        self.parse_spider.size_maps = {size_map['value']: size_map['label'] for size_map in size_maps}
         return Request(self.listing_url_t, headers=self.headers, callback=self.parse)
 
     def parse(self, response):
         raw_categories = json.loads(response.text)
-        meta = {
-            'trail': self.add_trail(response)
-        }
+        meta = {'trail': self.add_trail(response)}
         yield from self.parse_categories(raw_categories, self.path_url_t, meta)
 
     def parse_categories(self, raw_categories, listing_url, meta, listing_id=''):
@@ -154,21 +135,22 @@ class CrawlSpider(BaseCrawlSpider):
             if listing['is_active'] and not any(deny_str in listing["url_key"] for deny_str in self.deny):
                 yield from self.parse_categories(listing, f'{listing_url}/{listing["url_key"]}', meta, listing['id'])
 
-        if listing_id:
-            meta['listing_id'] = listing_id
-            meta['listing_url'] = listing_url
-            meta['page_number'] = 1
+        if not listing_id:
+            return
 
-            product_page_url = self.pagination_request_url(meta)
-            yield Request(product_page_url, headers=self.headers, callback=self.parse_pagination, meta=meta)
+        meta['listing_id'] = listing_id
+        meta['listing_url'] = listing_url
+        meta['page_number'] = 1
+
+        product_page_url = self.pagination_request_url(meta)
+        yield Request(product_page_url, headers=self.headers, callback=self.parse_pagination, meta=meta)
 
     def parse_pagination(self, response):
         raw_products = json.loads(response.text)['product']
         meta = response.meta.copy()
-        meta['size_maps'] = self.size_maps
         meta['trail'] = self.add_trail(response)
 
-        yield from self.parse_products(raw_products, meta.copy())
+        yield from self.product_requests(raw_products, meta.copy())
 
         if raw_products['data']['next_page'] and raw_products['data']['total_count']:
             response.meta['page_number'] += 1
@@ -176,27 +158,25 @@ class CrawlSpider(BaseCrawlSpider):
             yield Request(next_page_url, headers=self.headers,
                           callback=self.parse_pagination, meta=response.meta)
 
-    def parse_products(self, raw_products, meta):
+    def product_requests(self, raw_products, meta):
         for raw_product in raw_products['docs']:
             product_page_url = self.product_request_url(raw_product)
             yield Request(product_page_url, headers=self.headers,
                           callback=self.parse_spider.parse, meta=meta)
 
     def pagination_request_url(self, meta):
-        self.pagination_request_params.update(
-            {
-                'search_criteria[filter_groups][2][filters][0][value]': str(meta["listing_id"]),
-                'search_criteria[current_page]': str(meta["page_number"])
-            }
-        )
+        params = {
+            'search_criteria[filter_groups][2][filters][0][value]': str(meta["listing_id"]),
+            'search_criteria[current_page]': str(meta["page_number"])
+        }
+        self.pagination_request_params.update(params)
         return add_or_replace_parameters(self.products_page_url_t, self.pagination_request_params)
 
     def product_request_url(self, raw_product):
-        self.product_request_params.update(
-            {
-                'search_criteria[filter_groups][0][filters][0][value]': str(raw_product["sku"]),
-            }
-        )
+        params = {
+            'search_criteria[filter_groups][0][filters][0][value]': str(raw_product["sku"]),
+        }
+        self.product_request_params.update(params)
         return add_or_replace_parameters(self.products_page_url_t, self.product_request_params)
 
 
