@@ -1,13 +1,14 @@
+import datetime
+import random
+
 from django.contrib import messages
 from django.contrib.auth import logout, authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.cache import cache_control
-import random
 from QuizApp.forms import QuizForm, QuestionForm, CustomUserCreationForm
-from QuizApp.models import *
-import datetime
+from QuizApp.models import Option, User, Question, AnswerOption, Result, Quiz
 
 
 def signup(request):
