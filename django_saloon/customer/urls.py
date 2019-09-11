@@ -1,4 +1,4 @@
-"""customer urls module."""
+"""Customer urls module."""
 from django.urls import path
 
 from customer.views import ProfileView, ReservationsListView, \

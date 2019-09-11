@@ -1,4 +1,4 @@
-"""core serializer module."""
+"""Core serializer module."""
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.contrib.auth.validators import UnicodeUsernameValidator
@@ -9,21 +9,21 @@ from core.constants import USER_TYPE, SALOON, CUSTOMER, PASSWORD2, PASSWORD
 
 
 class RegisterUserSerializer(serializers.ModelSerializer):
-    """core app user serializer for user registration"""
+    """Core app user serializer for user registration."""
 
     password1 = serializers.CharField(write_only=True, source='password')
     password2 = serializers.CharField(write_only=True)
     user_type = serializers.CharField(write_only=True)
 
     class Meta:
-        """UserSerializer meta class."""
+        """User Serializer meta class."""
 
         model = User
         fields = ('first_name', 'last_name', 'email',
                   'username', 'password1', 'password2', 'user_type')
 
     def create(self, validated_data):
-        """UserSerializer create method override"""
+        """User Serializer create method override."""
         validated_data.pop(PASSWORD2)
         user_type = validated_data.pop(USER_TYPE)
         user = super(RegisterUserSerializer, self).create(validated_data)
@@ -37,9 +37,11 @@ class RegisterUserSerializer(serializers.ModelSerializer):
 
 
 class UserUpdateSerializer(serializers.ModelSerializer):
-    """core app user serializer for user update"""
+    """Core app user serializer for user update."""
+
     class Meta:
-        """UserUpdateSerializer meta class"""
+        """UserUpdateSerializer meta class."""
+
         model = User
         fields = ('first_name', 'last_name', 'email',
                   'username')
@@ -50,7 +52,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         }
 
     def update(self, instance, validated_data):
-        """CustomerUpdateSerializer update method override"""
+        """Override Serializer update method."""
         if User.objects.filter(username=validated_data.get('username')).exists() \
                 and instance.username != validated_data.get('username'):
             raise serializers.ValidationError(

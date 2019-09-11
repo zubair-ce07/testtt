@@ -1,4 +1,4 @@
-"""shop views model"""
+"""Shop views model."""
 from datetime import datetime, timedelta
 
 from django.shortcuts import render, redirect, get_object_or_404
@@ -44,6 +44,7 @@ class ProfileView(LoginRequiredMixin, UserPassesTestMixin, View):
     @staticmethod
     def post(request):
         """POST method for Profile View.
+
         This method will save profile data when profile form is submitted.
         """
         user_update_form = UserUpdateForm(request.POST, instance=request.user)
@@ -59,6 +60,7 @@ class ProfileView(LoginRequiredMixin, UserPassesTestMixin, View):
     @staticmethod
     def get(request):
         """GET method for Profile Form.
+
         This method will render profile form.
         """
         user_update_form = UserUpdateForm(instance=request.user)
@@ -68,11 +70,13 @@ class ProfileView(LoginRequiredMixin, UserPassesTestMixin, View):
         return render(request, 'shop/profile.html', {'user_form': user_update_form, 'shop_form': shop_update_form})
 
     def test_func(self):
+        """Check if user is saloon user."""
         return hasattr(self.request.user, SALOON)
 
 
 class SaloonListView(ListView):
-    """list saloons"""
+    """List saloons."""
+
     model = Saloon
     template_name = 'shop/saloons.html'  # <app>/<model>_<viewtype>.html
     context_object_name = 'saloons'
@@ -81,7 +85,8 @@ class SaloonListView(ListView):
 
 
 class MyShopListView(LoginRequiredMixin, UserPassesTestMixin, ListView, View):
-    """lists timeslots of a user saloon"""
+    """Lists timeslots of a user saloon."""
+
     model = TimeSlot
     template_name = 'shop/mysaloon.html'  # <app>/<model>_<viewtype>.html
     context_object_name = 'time_slots'
@@ -89,11 +94,12 @@ class MyShopListView(LoginRequiredMixin, UserPassesTestMixin, ListView, View):
     paginate_by = 12
 
     def get_queryset(self):
-        """filtering TimeSlot object for user saloon"""
+        """Filter TimeSlot object for user saloon."""
         return TimeSlot.objects.filter(saloon=self.request.user.saloon).order_by('time')
 
     def post(self, request):
         """POST method for Profile View.
+
         This method will save profile data when profile form is submitted if
         form is valid and then create timeslot object in db for given schedule.
         """
@@ -130,19 +136,20 @@ class MyShopListView(LoginRequiredMixin, UserPassesTestMixin, ListView, View):
         return redirect('my_shop')
 
     def test_func(self):
-        """checks if user is saloon user"""
+        """Check if user is saloon user."""
         return hasattr(self.request.user, SALOON)
 
 
 class SaloonSlotListView(LoginRequiredMixin, UserPassesTestMixin, ListView, View):
-    """Lists a saloon time slots"""
+    """List a saloon time slots."""
+
     model = TimeSlot
     template_name = 'shop/shop_slot_list.html'  # <app>/<model>_<viewtype>.html
     context_object_name = 'time_slots'
     paginate_by = 12
 
     def get_queryset(self):
-        """filtering timeslots for the given saloon"""
+        """Filter timeslots for the given saloon."""
         saloon = get_object_or_404(
             Saloon, shop_name=self.kwargs.get(SHOP_NAME))
         return TimeSlot.objects.filter(saloon=saloon).order_by(TIME)
@@ -150,6 +157,7 @@ class SaloonSlotListView(LoginRequiredMixin, UserPassesTestMixin, ListView, View
     @staticmethod
     def post(request, shop_name):
         """POST method for SaloonSlotListView View.
+
         This method will save create a reservation object and save it to db.
         """
         slot_id = request.POST.get(SLOT_ID, None)
@@ -161,24 +169,26 @@ class SaloonSlotListView(LoginRequiredMixin, UserPassesTestMixin, ListView, View
         return redirect('shop_list')
 
     def test_func(self):
-        """checks if user is customer user"""
+        """Checks if user is customer user."""
         return hasattr(self.request.user, CUSTOMER)
 
 
 class ReservationsListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
-    """Lists a shop reserved slots"""
+    """Lists a shop reserved slots."""
+
     model = Reservation
     template_name = 'shop/myreservations.html'  # <app>/<model>_<viewtype>.html
     context_object_name = 'reservations'
     paginate_by = 8
 
     def get_queryset(self):
-        """filtering a shop reserved slots"""
+        """Filter a shop reserved slots."""
         return Reservation.objects.filter(time_slot__saloon=self.request.user.saloon)
 
     @staticmethod
     def post(request):
         """POST method for shop ReservationsListView.
+
         This method will delete reservation.
         """
         reservation_id = request.POST.get("reservation_id", " ")
@@ -189,18 +199,20 @@ class ReservationsListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         return redirect('shop_reservations')
 
     def test_func(self):
-        """checks if user is customer user"""
+        """Check if user is customer user."""
         return hasattr(self.request.user, SALOON)
 
 
 class ShopListApiView(generics.ListAPIView):
-    """api shop list view"""
+    """Api shop list view."""
+
     queryset = Saloon.objects.all()
     serializer_class = ShopSerializer
 
 
 class ShopUpdateApiView(APIView):
-    """customer update view for api.
+    """Customer update view for api.
+
      post method data structure
     {
         "user":{
@@ -212,13 +224,15 @@ class ShopUpdateApiView(APIView):
         "phone_no":0051315,
         "address":"h_no 123, xyz city",
         "shop_name":"xyz saloon"
-    }"""
+    }
+    """
+
     authentication_classes = [authentication.TokenAuthentication]
     permission_classes = (IsAuthenticated, IsShop)
 
     @staticmethod
     def post(request):
-        """post method for customer update"""
+        """Post method for customer update."""
         instance = request.user
         saloon_update_serializer = SaloonUpdateSerializer(
             instance=instance.saloon, data=request.data
@@ -229,25 +243,26 @@ class ShopUpdateApiView(APIView):
 
 
 class ListAddTimeSlotsApiView(generics.ListCreateAPIView):
-    """list time slots of a saloon api view."""
+    """List time slots of a saloon api view."""
 
     serializer_class = TimeSlotSerializer
     queryset = TimeSlot.objects.all()
     permission_classes = (IsAuthenticated, IsShop)
 
     def get_queryset(self):
-        """override queryset"""
+        """Override queryset."""
         return self.queryset.filter(saloon=self.request.user.saloon.id)
 
     def post(self, request, *args, **kwargs):
-        """ApiListAddTimeSlots post method.
-            post request data format
-            {
-                "start_date":"2019-08-26",
-                "end_date":"2019-08-27",
-                "start_time":"08",
-                "no_hours":"08"
-            }
+        """List Add TimeSlots post method.
+
+        post request data format
+        {
+            "start_date":"2019-08-26",
+            "end_date":"2019-08-27",
+            "start_time":"08",
+            "no_hours":"08"
+        }
         """
         # schedule data from post request
         schedule_serializer = ScheduleSerializer(data=request.data)
@@ -286,18 +301,19 @@ class ListAddTimeSlotsApiView(generics.ListCreateAPIView):
 
 
 class ListSaloonSlotsApiView(generics.ListAPIView):
-    """list saloon slots by name."""
+    """List saloon slots by name."""
+
     serializer_class = TimeSlotSerializerForCustomers
     queryset = TimeSlot.objects.all()
     permission_classes = (IsAuthenticated, IsCustomer)
 
     def get_queryset(self):
-        """queryset override"""
+        """Override queryset."""
         return TimeSlot.objects.filter(saloon__shop_name=self.kwargs.get(SHOP_NAME))
 
 
 class DeleteReservationApiView(generics.DestroyAPIView):
-    """delete reservation only by customer or shop"""
+    """Delete reservation only by customer or shop."""
 
     permission_classes = (IsAuthenticated, IsShopOwnerOrReservedSloTCustomer)
     serializer_class = ReservationSerializer
@@ -305,29 +321,33 @@ class DeleteReservationApiView(generics.DestroyAPIView):
 
 
 class ShopReservationsApiView(generics.ListAPIView):
-    """lists a saloon reservations"""
+    """List a saloon reservations."""
+
     serializer_class = ListReservationSerializer
     queryset = Reservation.objects.all()
     permission_classes = (IsAuthenticated, IsShop)
 
     def get_queryset(self):
+        """Override querset."""
         return Reservation.objects.filter(
             time_slot__saloon=self.request.user.saloon)
 
 
 class ReserveTimeSlotApiView(generics.CreateAPIView):
-    """reserve a slot by customer.
+    """Reserve a slot by customer.
+
     post request data format
     {
     "time_slot": 748
     }
     """
+
     serializer_class = ReservationSerializer
     queryset = Reservation.objects.all()
     permission_classes = (IsAuthenticated, IsCustomer)
 
     def post(self, request, *args, **kwargs):
-        """post method for reserve time slot"""
+        """Post method for reserve time slot."""
         request.data['customer'] = request.user.customer.id
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
@@ -336,7 +356,8 @@ class ReserveTimeSlotApiView(generics.CreateAPIView):
 
 
 class AddReviewApiView(generics.CreateAPIView):
-    """add review api view."""
+    """Add review api view."""
+
     authentication_classes = [authentication.TokenAuthentication]
     permission_classes = (IsAuthenticated, IsCustomer,
                           IsReservedSloTCustomerAndReviewNotAdded)
@@ -344,7 +365,7 @@ class AddReviewApiView(generics.CreateAPIView):
     serializer_class = AddReviewSerializer
 
     def post(self, request, *args, **kwargs):
-        """post method for add review"""
+        """Post method for add review."""
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             serializer.save()

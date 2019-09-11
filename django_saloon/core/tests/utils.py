@@ -1,4 +1,4 @@
-"""core utils file."""
+"""Core utils file."""
 from datetime import datetime
 
 from django.contrib.auth.models import User
@@ -9,7 +9,7 @@ from customer.models import Customer
 
 
 def create_user_instance(username, email, password):
-    """create a user instance in db"""
+    """Create a user instance in db."""
     user = User.objects.create_user(
         username, email
     )
@@ -19,21 +19,21 @@ def create_user_instance(username, email, password):
 
 
 def create_customer_user_instance(username, email, password):
-    """create a customer user instance in db"""
+    """Create a customer user instance in db."""
     user = create_user_instance(username, email, password)
     Customer.objects.create(user=user)
     return user
 
 
 def create_shop_user_instance(username, email, password):
-    """create a shop user instance in db"""
+    """Create a shop user instance in db."""
     user = create_user_instance(username, email, password)
     Saloon.objects.create(shop_name='rose saloon', user=user)
     return user
 
 
 def create_time_slot_instance(saloon, time):
-    """create a time_slot instance in db"""
+    """Create a time_slot instance in db."""
     time_slot = TimeSlot(
         saloon=saloon, time=time)
     time_slot.save()
@@ -41,7 +41,7 @@ def create_time_slot_instance(saloon, time):
 
 
 def create_reservation_instance(time_slot, customer):
-    """create a reservation instance in db"""
+    """Create a reservation instance in db."""
     reservation = Reservation(
         time_slot=time_slot, customer=customer)
     reservation.save()
@@ -52,8 +52,7 @@ class User_Mixin_Test_Case(APITestCase):
     """User test mixin class."""
 
     def setUp(self):
-        """saving user for test case."""
-
+        """Save user for test case."""
         self.username = 'abbas'
         self.email = 'abbas@gmail.com'
         self.password = 'abbas'
@@ -68,8 +67,7 @@ class Customer_Mixin_Test_Case(APITestCase):
     """User test mixin class."""
 
     def setUp(self):
-        """saving user for test case."""
-
+        """Save user for test case."""
         self.username = 'abbas'
         self.email = 'abbas@gmail.com'
         self.password = 'abbas'
@@ -82,8 +80,7 @@ class Shop_Mixin_Test_Case(APITestCase):
     """User test mixin class."""
 
     def setUp(self):
-        """creating saloons shop list test case."""
-
+        """Create saloons shop list test case."""
         self.username = "rose"
         self.email = "rose@gmail.com"
         self.password = "rose"

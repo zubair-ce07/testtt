@@ -1,4 +1,4 @@
-"""delete reservation test file"""
+"""Delete reservation test file."""
 from django.urls import reverse
 from rest_framework import status
 
@@ -6,10 +6,10 @@ from core.tests import utils
 
 
 class TestDeleteReservation(utils.Shop_Mixin_Test_Case):
-    """delete reservation class."""
+    """Delete reservation class."""
 
     def setUp(self):
-        """creating saloons delete reservation test case."""
+        """Create saloons delete reservation test case."""
         self.url_name = 'api_delete_slots'
         super(TestDeleteReservation, self).setUp()
         self.client.force_authenticate(user=self.user)

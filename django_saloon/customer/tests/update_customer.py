@@ -1,4 +1,4 @@
-"""customer test module."""
+"""Customer test module."""
 
 from django.urls import reverse
 from django.contrib.auth.models import User
@@ -10,11 +10,10 @@ from core.tests.utils import (Customer_Mixin_Test_Case,
 
 
 class TestCustomerUpdate(Customer_Mixin_Test_Case):
-    """"customer update test class."""
+    """Customer update test class."""
 
     def setUp(self):
-        """creating customer,saloon,timeslot and reservation for
-        user reservation test case."""
+        """Create customer,saloon,timeslot and reservation."""
         self.url = reverse('api_customer_profile')
 
         super(TestCustomerUpdate, self).setUp()

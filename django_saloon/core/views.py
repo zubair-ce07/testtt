@@ -1,4 +1,4 @@
-"""core view module"""
+"""Core view module."""
 from django.shortcuts import render, redirect
 from django.views import View
 from django.contrib.auth import logout as auth_logout
@@ -25,30 +25,29 @@ class LogoutView(View):
 
     @staticmethod
     def get(request):
-        """Log out User and clear it's session and cookies.
-        """
+        """Log out User and clear it's session and cookies."""
         auth_logout(request)
         return redirect('login')
 
 
 class UserRegisterView(View):
-    """Render and save shop user
+    """Render and save shop user.
 
     This method renders the user registration form and also save it's data
-    when form is submitted
+    when form is submitted.
     """
+
     @staticmethod
     def post(request):
-        """UserRegisterView POST method."""
+        """User Register View POST method."""
         user_form = UserRegisterForm(request.POST)
         user_type = request.POST.get(USER_TYPE, None)
         if user_form.is_valid():
             user = user_form.save()
             if user_type == CUSTOMER:
                 Customer.objects.create(user=user)
-            if user_type == SALOON:
+            elif user_type == SALOON:
                 Saloon.objects.create(user=user)
-            print(user_type)
 
             messages.success(request, f'Your account has been Created!')
             return redirect('login')
@@ -56,13 +55,14 @@ class UserRegisterView(View):
 
     @staticmethod
     def get(request):
-        """UserRegisterView GET method."""
+        """User Register View GET method."""
         user_form = UserRegisterForm()
         return render(request, 'core/register.html', {'user_form': user_form})
 
 
 class UserRegisterationApiView(generics.CreateAPIView):
-    """User registration view for api
+    """User registration view for api.
+
     post request format
     {
         "username":"USERNAME",
@@ -71,11 +71,12 @@ class UserRegisterationApiView(generics.CreateAPIView):
         "user_type":"saloon or customer"
     }
     """
+
     queryset = User.objects.all()
     serializer_class = RegisterUserSerializer
 
     def post(self, request, *args, **kwargs):
-        """post method for api user registration"""
+        """Post method for api user registration."""
         password1 = request.data.get(PASSWORD1)
         password2 = request.data.get(PASSWORD2)
         user_type = request.data.get(USER_TYPE)
@@ -87,13 +88,14 @@ class UserRegisterationApiView(generics.CreateAPIView):
                 serializer.save()
                 return Response(data={'user': serializer.data, 'user_type': user_type}, status=status.HTTP_200_OK)
         return Response(
-            data="User type not valid! only customer and shop are allowed",
+            data='User type not valid! only customer and shop are allowed',
             status=status.HTTP_400_BAD_REQUEST
         )
 
 
 class UserLoginApiView(ObtainAuthToken):
     """User login view for api.
+
     post request format
     {
         "username":"username",
@@ -102,7 +104,7 @@ class UserLoginApiView(ObtainAuthToken):
     """
 
     def post(self, request, *args, **kwargs):
-        """post method for ApiUserLogin"""
+        """Post method for ApiUserLogin."""
         serializer = self.serializer_class(data=request.data,
                                            context={'request': request})
         serializer.is_valid(raise_exception=True)
@@ -114,11 +116,12 @@ class UserLoginApiView(ObtainAuthToken):
 
 class UserLogoutApiView(APIView):
     """User logout view for api."""
+
     authentication_classes = [authentication.TokenAuthentication]
     permission_classes = (IsAuthenticated,)
 
     @staticmethod
     def get(request):
-        """get method for api user logout"""
+        """Get method for api user logout."""
         request.user.auth_token.delete()
-        return Response(data={"message": "loggedout sucessfully"}, status=status.HTTP_200_OK)
+        return Response(data={'message': 'loggedout sucessfully'}, status=status.HTTP_200_OK)

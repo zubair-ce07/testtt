@@ -1,4 +1,4 @@
-"""shop url module"""
+"""Shop url module."""
 from django.urls import path
 
 from shop import views as shop_views

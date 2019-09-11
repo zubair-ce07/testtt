@@ -1,38 +1,31 @@
-"""permission module"""
+"""Permission module."""
 from rest_framework import permissions
-from core.constants import CUSTOMER, SALOON
 
+from core.constants import CUSTOMER, SALOON
 from shop.models import Reservation
 
 
 class IsShop(permissions.BasePermission):
-    """
-     Global permission to check if user is Shop.
-     """
+    """Global permission to check if user is Shop."""
 
     def has_permission(self, request, view):
-        """check if user is shop user"""
+        """Check if user is shop user."""
         return hasattr(request.user, SALOON)
 
 
 class IsCustomer(permissions.BasePermission):
-    """
-    Global permission to check if user is Customer.
-    """
+    """Global permission to check if user is Customer."""
 
     def has_permission(self, request, view):
-        """check if user is customer user"""
+        """Check if user is customer user."""
         return hasattr(request.user, CUSTOMER)
 
 
 class IsShopOwnerOrReservedSloTCustomer(permissions.BasePermission):
-    """
-    Object-level permission to only allow shop owners or reservation
-    customer of an object to edit it.
-    """
+    """It allow shop owners or reservation customer of an object to edit it."""
 
     def has_object_permission(self, request, view, obj):
-        """check if user has object writable permission or not"""
+        """Check if user has object writable permission or not."""
         if hasattr(request.user, CUSTOMER):
             return request.user.customer == obj.customer
         if hasattr(request.user, SALOON):
@@ -41,13 +34,12 @@ class IsShopOwnerOrReservedSloTCustomer(permissions.BasePermission):
 
 
 class IsReservedSloTCustomerAndReviewNotAdded(permissions.BasePermission):
-    """permission to check if a user is reserved slot customer and review
-    has not been added already"""
+    """Check if a user is reserved slot customer and review has not been added already."""
 
     message = 'Adding Review not allowed.'
 
     def has_permission(self, request, view):
-        """checks if user is slot reserved customer and review is not already present"""
+        """Check if user is slot reserved customer and review is not already present."""
         try:
             reservation = Reservation.objects.get(
                 id=request.data["reservation"])

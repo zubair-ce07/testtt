@@ -1,4 +1,4 @@
-"""test case file for add slot"""
+"""Test case file for add slot."""
 from django.urls import reverse
 from rest_framework import status
 
@@ -7,11 +7,10 @@ from shop.models import TimeSlot
 
 
 class TestAddTimeSlots(utils.Shop_Mixin_Test_Case):
-    """"shop update test class."""
+    """Shop update test class."""
 
     def setUp(self):
-        """creating customer,saloon,timeslot and reservation for
-        user add time slot test case."""
+        """Create customer,saloon,timeslot and reservation."""
         self.url = reverse('api_my_shop')
 
         super(TestAddTimeSlots, self).setUp()
@@ -45,8 +44,7 @@ class TestAddTimeSlots(utils.Shop_Mixin_Test_Case):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_add_time_slots_wrong_start_end_dates(self):
-        """Shop failed add time slots where start date is
-        greater then end date test."""
+        """Shop failed add time slots where start date is greater then end date test."""
         request_data = {
             'start_date': '2019-08-27',
             'end_date': '2019-08-26',
@@ -58,8 +56,7 @@ class TestAddTimeSlots(utils.Shop_Mixin_Test_Case):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_add_time_slots_dates_not_provided(self):
-        """Shop failed add time slots when dates
-        are not provided."""
+        """Shop failed add time slots when dates are not provided."""
         request_data = {
             'start_time': '10',
             'number_of_slots': '10',
@@ -69,8 +66,7 @@ class TestAddTimeSlots(utils.Shop_Mixin_Test_Case):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_add_time_slots_start_time_not_provided(self):
-        """Shop failed add time slots when start time is
-        not provided."""
+        """Shop failed add time slots when start time is not provided."""
         request_data = {
             'start_date': '2019-08-26',
             'end_date': '2019-08-27',
@@ -81,8 +77,7 @@ class TestAddTimeSlots(utils.Shop_Mixin_Test_Case):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_add_time_slots_number_of_slots_not_provided(self):
-        """Shop failed add time slots when number of slots are
-        not provided."""
+        """Shop failed add time slots when number of slots are not provided."""
         request_data = {
             'start_date': '2019-08-26',
             'end_date': '2019-08-27',
@@ -93,8 +88,7 @@ class TestAddTimeSlots(utils.Shop_Mixin_Test_Case):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_add_time_slots_slot_duration_not_provided(self):
-        """Shop failed add time slots when slot duaration is
-        not provided."""
+        """Shop failed add time slots when slot duaration is not provided."""
         request_data = {
             'start_date': '2019-08-27',
             'end_date': '2019-08-26',
@@ -105,8 +99,7 @@ class TestAddTimeSlots(utils.Shop_Mixin_Test_Case):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_add_time_slots_slot_date_format_not_correct(self):
-        """Shop failed add time slots when date format is
-        not correct."""
+        """Shop failed add time slots when date format is not correct."""
         request_data = {
             'start_date': '2019-08',
             'end_date': '2019-08',

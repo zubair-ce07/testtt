@@ -1,4 +1,4 @@
-"""list saloon test file."""
+"""List saloon test file."""
 from rest_framework import status
 from django.urls import reverse
 
@@ -8,10 +8,10 @@ from shop.serializers import TimeSlotSerializerForCustomers
 
 
 class TestSaloonSlotsList(utils.Shop_Mixin_Test_Case):
-    """list saloon test class."""
+    """List saloon test class."""
 
     def setUp(self):
-        """creating saloons shop list test case."""
+        """Create saloons shop list test case."""
         self.url_name = 'api_shop_slots'
         super(TestSaloonSlotsList, self).setUp()
         self.client.force_authenticate(user=self.customer_user)
@@ -32,7 +32,7 @@ class TestSaloonSlotsList(utils.Shop_Mixin_Test_Case):
 
 
 def create_response_data(shop_name):
-    """creating response data"""
+    """Create response data."""
     response_query_set = TimeSlot.objects.filter(
         saloon__shop_name=shop_name)
     serializer = TimeSlotSerializerForCustomers(response_query_set, many=True)

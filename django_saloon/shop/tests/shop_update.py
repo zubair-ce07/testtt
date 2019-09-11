@@ -1,4 +1,4 @@
-"""shop test module."""
+"""Shop test module."""
 
 from django.urls import reverse
 from django.contrib.auth.models import User
@@ -8,11 +8,10 @@ from core.tests import utils
 
 
 class TestShopUpdate(utils.Shop_Mixin_Test_Case):
-    """"shop update test class."""
+    """Shop update test class."""
 
     def setUp(self):
-        """creating customer,saloon,timeslot and reservation for
-        user reservation test case."""
+        """Create customer,saloon,timeslot and reservation."""
         self.url = reverse('api_shop_profile')
 
         super(TestShopUpdate, self).setUp()

@@ -1,4 +1,4 @@
-"""login user test case file."""
+"""Login user test case file."""
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from django.urls import reverse
@@ -8,15 +8,15 @@ from core.tests.utils import User_Mixin_Test_Case
 
 
 class TestLoginUser(User_Mixin_Test_Case):
-    """test case class for api login"""
+    """Test case class for api login."""
 
     def setUp(self):
-        """saving user for login test case."""
+        """Save user for login test case."""
         self.url = reverse('api_login')
         super(TestLoginUser, self).setUp()
 
     def test_sucessful_login_user(self):
-        """test case for sucessful user login."""
+        """Test case for sucessful user login."""
         request_data = {'username': 'abbas',
                         'password': 'abbas'}
         response = self.client.post(self.url, request_data, format='json')
@@ -25,14 +25,14 @@ class TestLoginUser(User_Mixin_Test_Case):
             username='abbas')).key, response.data.get('token'))
 
     def test_wrong_username_login_user(self):
-        """test case for failed user login with wrong username."""
+        """Test case for failed user login with wrong username."""
         request_data = {'username': 'abbas121',
                         'password': 'abbas'}
         response = self.client.post(self.url, request_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_wrong_password_login_user(self):
-        """test case for user login with wrong password."""
+        """Test case for user login with wrong password."""
         request_data = {'username': 'abbas',
                         'password': 'abbas123'}
         response = self.client.post(self.url, request_data, format='json')

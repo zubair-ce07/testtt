@@ -1,4 +1,4 @@
-"""customer test module."""
+"""Customer test module."""
 from datetime import datetime
 
 from django.urls import reverse
@@ -9,11 +9,10 @@ from core.tests import utils
 
 
 class TestCustomerReservation(utils.Customer_Mixin_Test_Case):
-    """customer reservation test class."""
+    """Customer reservation test class."""
 
     def setUp(self):
-        """creating customer,saloon,timeslot and reservation for
-        user reservation test case."""
+        """Create customer,saloon,timeslot and reservation."""
         self.url = reverse('api_customer_reservations')
         super(TestCustomerReservation, self).setUp()
         self.client.force_authenticate(user=self.user)
@@ -32,7 +31,7 @@ class TestCustomerReservation(utils.Customer_Mixin_Test_Case):
             self.time_slot, self.user.customer)
 
     def test_customer_reservations_sucessful(self):
-        """testing api customer list reservations."""
+        """Test api customer list reservations."""
         response = self.client.get(self.url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(Reservation.objects.get(

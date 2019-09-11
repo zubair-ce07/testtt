@@ -1,4 +1,4 @@
-"""reserve time slot test file."""
+"""Reserve time slot test file."""
 from datetime import datetime
 
 from django.urls import reverse
@@ -9,10 +9,10 @@ from shop.models import Reservation
 
 
 class TestReserveTimeSlot(utils.Shop_Mixin_Test_Case):
-    """reserve time slot test class."""
+    """Reserve time slot test class."""
 
     def setUp(self):
-        """creating saloons reserve time slot test cases."""
+        """Create saloons reserve time slot test cases."""
         self.url_name = 'api_reserve_slot'
         super(TestReserveTimeSlot, self).setUp()
         utils.create_time_slot_instance(
@@ -20,7 +20,7 @@ class TestReserveTimeSlot(utils.Shop_Mixin_Test_Case):
         self.client.force_authenticate(user=self.customer_user)
 
     def test_reserve_time_slot(self):
-        """reserve time slot by customer."""
+        """Reserve time slot by customer."""
         url = reverse(self.url_name)
         request_data = {
             'time_slot': 2
@@ -31,7 +31,7 @@ class TestReserveTimeSlot(utils.Shop_Mixin_Test_Case):
             id=1).customer, self.customer_user.customer)
 
     def test_reserve_time_slot_by_shop(self):
-        """reserve time slot by shop."""
+        """Reserve time slot by shop."""
         self.client.force_authenticate(user=self.user)
         url = reverse(self.url_name)
         request_data = {
@@ -41,7 +41,7 @@ class TestReserveTimeSlot(utils.Shop_Mixin_Test_Case):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_reserve_already_reserved_time_slot(self):
-        """reserve already reserved time slot."""
+        """Reserve already reserved time slot."""
         url = reverse(self.url_name)
         request_data = {
             'time_slot': 1
@@ -50,7 +50,7 @@ class TestReserveTimeSlot(utils.Shop_Mixin_Test_Case):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_reserve_time_slot_time_slot_id_not_provided(self):
-        """reserve time slot but time slot id not provided."""
+        """Reserve time slot but time slot id not provided."""
         url = reverse(self.url_name)
         request_data = {
         }

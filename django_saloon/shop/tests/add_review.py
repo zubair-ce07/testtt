@@ -1,4 +1,4 @@
-"""add review test class file"""
+"""Add review test class file."""
 from datetime import datetime
 
 from django.urls import reverse
@@ -9,10 +9,10 @@ from shop.models import Review
 
 
 class TestAddReview(utils.Shop_Mixin_Test_Case):
-    """add review test class."""
+    """Add review test class."""
 
     def setUp(self):
-        """creating saloons for add review test cases."""
+        """Create saloons for add review test cases."""
         self.url_name = 'api_add_review'
         super(TestAddReview, self).setUp()
         utils.create_time_slot_instance(
@@ -20,7 +20,7 @@ class TestAddReview(utils.Shop_Mixin_Test_Case):
         self.client.force_authenticate(user=self.customer_user)
 
     def test_add_review(self):
-        """add review by customer."""
+        """Add review by customer."""
         url = reverse(self.url_name)
         request_data = {
             'reservation': 1,
@@ -33,7 +33,7 @@ class TestAddReview(utils.Shop_Mixin_Test_Case):
             reservation_id=1).reservation.customer, self.customer_user.customer)
 
     def test_add_review_wihtout_comment(self):
-        """add review by customer without comment."""
+        """Add review by customer without comment."""
         url = reverse(self.url_name)
         request_data = {
             'reservation': 1,
@@ -45,7 +45,7 @@ class TestAddReview(utils.Shop_Mixin_Test_Case):
             reservation_id=1).reservation.customer, self.customer_user.customer)
 
     def test_add_review_by_shop(self):
-        """add review by shop."""
+        """Add review by shop."""
         self.client.force_authenticate(user=self.user)
         url = reverse(self.url_name)
         request_data = {
@@ -57,7 +57,7 @@ class TestAddReview(utils.Shop_Mixin_Test_Case):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_add_review_by_another_customer(self):
-        """add review by another customer."""
+        """Add review by another customer."""
         another_customer = utils.create_customer_user_instance(
             'abc', 'acb@gmail.com', 'abc')
         self.client.force_authenticate(user=another_customer)
@@ -71,7 +71,7 @@ class TestAddReview(utils.Shop_Mixin_Test_Case):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_add_review_by_not_providing_reservation_id(self):
-        """add review by not providing reservation id."""
+        """Add review by not providing reservation id."""
         url = reverse(self.url_name)
         request_data = {
             'comment': 'sdasdas',
@@ -81,7 +81,7 @@ class TestAddReview(utils.Shop_Mixin_Test_Case):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_add_review_by_not_providing_rating(self):
-        """add review by not providing rating."""
+        """Add review by not providing rating."""
         url = reverse(self.url_name)
         request_data = {
             'reservation': 1,
@@ -91,7 +91,7 @@ class TestAddReview(utils.Shop_Mixin_Test_Case):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_add_review_of_already_reviewed_reservation(self):
-        """add review of already reviewed reservation."""
+        """Add review of already reviewed reservation."""
         url = reverse(self.url_name)
         request_data = {
             'reservation': 1,

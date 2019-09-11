@@ -1,4 +1,4 @@
-"""init file for shop tests module"""
+"""init file for shop tests module."""
 from shop.tests.shop_list import TestShopList
 from shop.tests.shop_update import TestShopUpdate
 from shop.tests.add_time_slots import TestAddTimeSlots

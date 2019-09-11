@@ -1,20 +1,22 @@
-"""customer app serializer"""
+"""Customer app serializer."""
 from rest_framework import serializers
 from customer.models import Customer
 from core.serializers import UserUpdateSerializer
 
 
 class CustomerUpdateSerializer(serializers.ModelSerializer):
-    """customer serializer for customer update"""
+    """Customer serializer for customer update."""
+
     user = UserUpdateSerializer()
 
     class Meta:
-        """CustomerUpdateSerializer meta class"""
+        """Customer Update Serializer meta class."""
+
         model = Customer
         fields = ('phone_no', 'user')
 
     def update(self, instance, validated_data):
-        """CustomerUpdateSerializer update method override"""
+        """Override Customer Update Serializer update method."""
         user = validated_data.pop('user')
         user_serializer = UserUpdateSerializer(
             data=user, instance=instance.user)
