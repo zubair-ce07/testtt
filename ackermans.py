@@ -8,7 +8,7 @@ from .base import BaseCrawlSpider, BaseParseSpider, clean, Gender, soupify
 
 class Mixin:
     retailer = 'ackermans'
-    default_brand = 'Ackermans'
+    default_brand = "Ackermans"
 
 
 class MixinZA(Mixin):
@@ -21,7 +21,7 @@ class MixinZA(Mixin):
     ]
     deny = ['cellular', 'luggage-accessories', 'deals', 'toys', 'bra-guide']
     size_map_url_t = 'https://magento.ackermans.co.za/rest/default/V1/products/attributes?'
-    listing_url_t = 'https://magento.ackermans.co.za/rest/default/V1/pepkor/categoryapi/categories'
+    categories_url_t = 'https://magento.ackermans.co.za/rest/default/V1/pepkor/categoryapi/categories'
     products_page_url_t = 'https://magento.ackermans.co.za/rest/default/V1/pepkor/searchV2?'
     image_url_t = 'https://cdn.ackermans.co.za/product-images/prod/600_600_{}.webp'
     path_url_t = 'https://www.ackermans.co.za/product'
@@ -68,7 +68,7 @@ class ParseSpider(BaseParseSpider):
         garment['care'] = self.product_care(raw_product)
         garment['skus'] = self.product_skus(raw_product, response)
         garment['brand'] = self.product_brand(response)
-        yield garment
+        return garment
 
     def product_skus(self, raw_product, response):
         money_strs = [raw_product['prices']['price'], self.currency]
@@ -101,7 +101,7 @@ class ParseSpider(BaseParseSpider):
         return [self.image_url_t.format(raw_product['custom_attributes']['image_name'])]
 
     def product_gender(self, raw_product):
-        soup = soupify(raw_product['name'] + raw_product['custom_attributes']['meta_description'])
+        soup = soupify(raw_product['name'] + self.raw_description(raw_product)[0])
         return self.gender_lookup(soup) or Gender.ADULTS.value
 
     def product_category(self, raw_product):
@@ -123,17 +123,17 @@ class CrawlSpider(BaseCrawlSpider):
     def parse_size_maps(self, response):
         size_maps = json.loads(response.text)['items'][0]['options']
         self.parse_spider.size_maps = {size_map['value']: size_map['label'] for size_map in size_maps}
-        return Request(self.listing_url_t, headers=self.headers, callback=self.parse)
+        return Request(self.categories_url_t, headers=self.headers, callback=self.parse_categories)
 
-    def parse(self, response):
+    def parse_categories(self, response):
         raw_categories = json.loads(response.text)
         meta = {'trail': self.add_trail(response)}
-        yield from self.parse_categories(raw_categories, self.path_url_t, meta)
+        yield from self.parse_subcategories(raw_categories, self.path_url_t, meta)
 
-    def parse_categories(self, raw_categories, listing_url, meta, listing_id=''):
+    def parse_subcategories(self, raw_categories, listing_url, meta, listing_id=''):
         for listing in raw_categories['children_data']:
             if listing['is_active'] and not any(deny_str in listing["url_key"] for deny_str in self.deny):
-                yield from self.parse_categories(listing, f'{listing_url}/{listing["url_key"]}', meta, listing['id'])
+                yield from self.parse_subcategories(listing, f'{listing_url}/{listing["url_key"]}', meta, listing['id'])
 
         if not listing_id:
             return
@@ -142,8 +142,8 @@ class CrawlSpider(BaseCrawlSpider):
         meta['listing_url'] = listing_url
         meta['page_number'] = 1
 
-        product_page_url = self.pagination_request_url(meta)
-        yield Request(product_page_url, headers=self.headers, callback=self.parse_pagination, meta=meta)
+        products_page_url = self.pagination_request_url(meta)
+        yield Request(products_page_url, headers=self.headers, callback=self.parse_pagination, meta=meta)
 
     def parse_pagination(self, response):
         raw_products = json.loads(response.text)['product']
@@ -162,7 +162,7 @@ class CrawlSpider(BaseCrawlSpider):
         for raw_product in raw_products['docs']:
             product_page_url = self.product_request_url(raw_product)
             yield Request(product_page_url, headers=self.headers,
-                          callback=self.parse_spider.parse, meta=meta)
+                          callback=self.parse_item, meta=meta)
 
     def pagination_request_url(self, meta):
         params = {
