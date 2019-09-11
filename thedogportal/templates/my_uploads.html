@@ -4,13 +4,31 @@
 
 
 {% block content %}
-<h1> Django Image Uploading </h1>
+{% comment %} <h1> Django Image Uploading </h1> {% endcomment %}
 
     <ul>
-    {% for upload in object_list %}
-        <h2>{{ upload.title }}</h2>
-        <img src={{upload.image.url}} alt="{{ upload.title }}">
-    {% endfor %}
+    {% if not uploads %}
+        <h2> You have no uploads yet. </h2>
+        <br>
+        <br>
+        <button href="{% url 'upload' %}" class="btn btn-large waves-effect waves-light" name="upload">
+            Upload Now
+        </button>
+    {% else %}
+        {% for upload in uploads %}
+            <div>
+                <form method="POST" class="single_image">
+                    {% csrf_token %}
+                    <h2>{{ upload.title }}</h2>
+                    <img src={{upload.image.url}} alt="{{ upload.title }}">
+                    <br>
+                    <button class="btn waves-effect waves-light" type="submit" name="delete_image" value="{{ upload.pk }}">
+                        Delete
+                    </button>
+                </form>
+            </div>
+        {% endfor %}
+    {% endif %}
     </ul>
   
 {% endblock %}
