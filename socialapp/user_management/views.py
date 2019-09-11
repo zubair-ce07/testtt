@@ -10,24 +10,25 @@ from rest_framework.viewsets import ViewSet
 from user_management.models import UserProfile, WorkInformation, AcademicInformation, SocialGroup, GroupRequest, \
     FriendRequest
 
-from user_management.serializers import BasicUserSerializer, AcademicInformationPostSerializer, \
+from user_management.serializers import (
+    UserProfileSerializer, AcademicInformationPostSerializer, \
     UserDetailSerializer, WorkInformationPostSerializer, UserFriendsSerializer, \
     GroupSerializer, UserSocialGroupsSerializer, NotificationSerializer, GroupRequestSerializer, \
     FriendRequestSerializer
-
+)
 
 class UsersListCreateView(APIView):
     def get(self, request):
         users = UserProfile.objects.all()
-        users_serializer = BasicUserSerializer(users, many=True)
+        users_serializer = UserProfileSerializer(users, many=True)
         return Response(users_serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request):
-        serializer = BasicUserSerializer(data=request.data)
+        serializer = UserProfileSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
             if user:
-                token = Token.objects.create(user=user.auth_user)
+                token = Token.objects.create(user=user)
                 return Response({'token': token.key}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -63,7 +64,7 @@ class WorkInformationView(ViewSet):
     def list(self, request):
         username = request.query_params.get('username', None)
         if username:
-            work_informations = WorkInformation.objects.filter(user_profile__auth_user__username=username)
+            work_informations = WorkInformation.objects.filter(user_profile__username=username)
         else:
             work_informations = WorkInformation.objects.all()
         work_information_serializer = WorkInformationPostSerializer(work_informations, many=True)
@@ -96,7 +97,7 @@ class AcademicInformationView(ViewSet):
     def list(self, request):
         username = request.query_params.get('username', None)
         if username:
-            academic_informations = AcademicInformation.objects.filter(user_profile__auth_user__username=username)
+            academic_informations = AcademicInformation.objects.filter(user_profile__username=username)
         else:
             academic_informations = AcademicInformation.objects.all()
         work_informations_serializer = AcademicInformationPostSerializer(academic_informations, many=True)
@@ -308,7 +309,7 @@ class FriendsView(ViewSet):
     def retrieve(self, request, **kwargs):
         user_from = UserProfile.objects.filter(friends__user_from__id=kwargs['pk_friend'])
         if user_from:
-            friend_serializer = BasicUserSerializer(user_from)
+            friend_serializer = UserProfileSerializer(user_from)
             return Response(friend_serializer.data, status=status.HTTP_200_OK)
         return Response(user_from, status=status.HTTP_404_NOT_FOUND)
 

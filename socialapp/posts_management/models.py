@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
@@ -15,11 +17,10 @@ class TextPost(Post):
     text = models.TextField()
 
 
-def get_image_filename(instance):
-    return "post_images/{}_{}".format(instance.post.id, instance.post.created_at)
-
-
 class Picture(models.Model):
+    def get_image_filename(self, instance):
+        return "post_images/{}_{}".format(instance.post.id, instance.post.created_at)
+
     image = models.ImageField(upload_to=get_image_filename)
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
@@ -27,8 +28,7 @@ class Picture(models.Model):
 
 
 class EventPost(Post):
-    date = models.DateField(default='')
-    time = models.TimeField(default='')
+    event_datetime = models.DateField(default=datetime.now())
     description = models.TextField()
 
 
@@ -41,3 +41,5 @@ class Comment(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)

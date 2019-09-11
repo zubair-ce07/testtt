@@ -2,46 +2,40 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 from rest_framework import serializers
 
-from user_management.models import AcademicInformation, UserProfile, SocialGroup, WorkInformation, Friend, Notification, \
-    UserGroup, GroupRequest, FriendRequest
+from user_management.models import (
+    AcademicInformation,
+    UserProfile,
+    SocialGroup,
+    WorkInformation,
+    Friend,
+    Notification,
+    UserGroup,
+    GroupRequest,
+    FriendRequest
+)
 
 
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['username', 'email', 'first_name', 'last_name', 'password']
-
-
-class BasicUserSerializer(serializers.ModelSerializer):
-    auth_user = UserSerializer()
-
-    def create(self, validated_data):
-        auth_user = validated_data.pop('auth_user', None)
-        user_created = User.objects.create_user(**auth_user)
-        validated_data['auth_user'] = user_created
-        profile_data = UserProfile.objects.create(**validated_data)
-        return profile_data
-
+class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
-        fields = ['auth_user', 'date_of_birth', 'phone', 'address']
+        fields = ['username', 'email', 'first_name', 'last_name', 'password', 'date_of_birth', 'phone',
+                  'address']
 
 
 class UserDetailSerializer(serializers.HyperlinkedModelSerializer):
-    auth_user = UserSerializer()
-
     def get_work_information_url(self, obj):
-        return reverse(viewname='work-information') + "?username={}".format(obj.auth_user.username)
+        return reverse(viewname='work-information') + "?username={}".format(obj.username)
 
     def get_academic_information_url(self, obj):
-        return reverse(viewname='academic-information') + "?username={}".format(obj.auth_user.username)
+        return reverse(viewname='academic-information') + "?username={}".format(obj.username)
 
     work_information_url = serializers.SerializerMethodField(read_only=True)
     academic_information_url = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = UserProfile
-        fields = ['auth_user', 'date_of_birth', 'phone', 'address', 'academic_information_url', 'work_information_url']
+        fields = ['username', 'email', 'first_name', 'last_name', 'date_of_birth', 'phone',
+                  'address', 'academic_information_url', 'work_information_url']
 
 
 class WorkInformationGetSerializer(serializers.ModelSerializer):
@@ -87,7 +81,7 @@ class FriendRequestSerializer(serializers.ModelSerializer):
 
 
 class UserGroupSerializer(serializers.ModelSerializer):
-    username = serializers.StringRelatedField(source='user.auth_user.username')
+    username = serializers.StringRelatedField(source='user.username')
     name = serializers.StringRelatedField(source='group.name', read_only=True, )
 
     class Meta:
@@ -104,7 +98,7 @@ class UserSocialGroupsSerializer(serializers.ModelSerializer):
 
 
 class UserFriendsSerializer(serializers.ModelSerializer):
-    username = serializers.StringRelatedField(source='auth_user.username')
+    username = serializers.StringRelatedField()
     user_friends = serializers.SerializerMethodField()
 
     class Meta:
@@ -112,7 +106,7 @@ class UserFriendsSerializer(serializers.ModelSerializer):
         fields = ['username', 'user_friends']
 
     def get_user_friends(self, obj):
-        friends = [UserSerializer(user.auth_user).data for user in obj.user_friends.all()]
+        friends = [UserProfileSerializer(user).data for user in obj.user_friends.all()]
         return friends
 
 

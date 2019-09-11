@@ -12,8 +12,7 @@ class SocialGroup(models.Model):
         return self.name
 
 
-class UserProfile(models.Model):
-    auth_user = models.OneToOneField(User, on_delete=models.CASCADE)
+class UserProfile(User):
     date_of_birth = models.DateField()
     phone = PhoneField(blank=True, )
     address = models.TextField()
@@ -23,7 +22,7 @@ class UserProfile(models.Model):
     friends = models.ManyToManyField('self', through='Friend', symmetrical=False, related_name='user_friends')
 
     def __str__(self):
-        return self.auth_user.username
+        return self.username
 
 
 class UserGroup(models.Model):
@@ -83,4 +82,4 @@ class GroupRequest(models.Model):
 class Notification(models.Model):
     text = models.CharField(max_length=50)
     status = models.BooleanField(default=False)
-    type = models.CharField(max_length=20, )
+    notification_type = models.CharField(max_length=20, )
