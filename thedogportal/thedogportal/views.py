@@ -9,6 +9,8 @@ def index(request):
 
 
 def register(request):
+    if request.user.is_authenticated:
+        return redirect('/portal')
     if request.method == 'POST':
         f = UserCreationForm(request.POST)
         if f.is_valid():

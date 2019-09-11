@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block title %}Django Image Uploading{% endblock %}
+
+
+{% block content %}
+<h1> Django Image Uploading </h1>
+
+    <ul>
+    {% for upload in object_list %}
+        <h2>{{ upload.title }}</h2>
+        <img src={{upload.image.url}} alt="{{ upload.title }}">
+    {% endfor %}
+    </ul>
+  
+{% endblock %}
