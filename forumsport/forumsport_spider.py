@@ -32,7 +32,6 @@ class ParseSpider(BaseParseSpider):
             return
 
         self.boilerplate_normal(garment, response)
-
         garment['gender'] = self.product_gender(response)
         garment['image_urls'] = self.image_urls(response)
         garment['skus'] = self.skus(response)
@@ -47,10 +46,8 @@ class ParseSpider(BaseParseSpider):
         return self.remove_brand_from_text(self.product_brand(response), raw_product_name)
 
     def product_category(self, response):
-        trail = response.meta['trail']
         category_in_title = [clean(response.css('title::text'))[0].split('|')[1]]
-        categories = [t for t, _ in trail] + category_in_title
-        return clean(categories)
+        return clean([t for t, _ in response.meta['trail']] + category_in_title)
 
     def product_gender(self, response):
         css = '.review.show-for-large-up::text, .product-name .description::text'
@@ -58,7 +55,7 @@ class ParseSpider(BaseParseSpider):
 
     def colour_requests(self, response):
         css = 'a[style="enlaces_hermanos"]::attr(href)'
-        return [response.follow(url=url) for url in clean(response.css(css))]
+        return [response.follow(url) for url in clean(response.css(css))]
 
     def image_urls(self, response):
         return clean(response.css('.gallery-image img::attr(src)'))
@@ -114,7 +111,7 @@ class CrawlSpider(BaseCrawlSpider):
 
         for page_num in range(2, total_products // self.page_size + 2):
             params['paginacion[pagina]'] = page_num
-            yield Request(url=add_or_replace_parameters(self.pagination_url, params), meta=meta.copy())
+            yield Request(add_or_replace_parameters(self.pagination_url, params), meta=meta.copy())
 
 
 class ForumSportESParseSpider(MixinES, ParseSpider):
