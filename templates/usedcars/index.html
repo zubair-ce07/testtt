@@ -2,276 +2,175 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Temp Page</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-    <link rel = "stylesheet" type = "text/css" href = "./style.css" />
+    <title>Wheels | Index</title>
+
+    {% load static %}
+    <link rel = "stylesheet" type = "text/css" href = "{% static "css/bootstrap.min.css" %}" />
+    <link rel = "stylesheet" type = "text/css" href = "{% static "style.css" %}" />
 
 </head>
-<body>
-<!--    <div id="data_in"></div>-->
-    <button class="btn btn-outline-primary" type="button" onclick="showUsedCars()">Show Data</button>
-    <button class="btn btn-outline-info" type="button" onclick="hideUsedCars()">Hide Data</button>
+<body background= "{% static 'images/honey-comb-bg.jpg' %}">
 
-    <div class="autocomplete" style="width:300px;">
-        <input id="make" type="text" placeholder="Make" maxlength="10" onkeyup="filterUsedCars(this.value, 0)">
-    </div>
-    <div class="autocomplete" style="width:300px;">
-         <input id="model" type="text" placeholder="Model" onkeyup="filterUsedCars(this.value, 1)">
-    </div>
-    <div class="autocomplete" style="width:300px;">
-        <input id="city" type="text" placeholder="City" maxlength="10" onkeyup="filterUsedCars(this.value, 5)">
-    </div>
-    <div class="autocomplete" style="width:300px;">
-         <input id="year" type="number" max="2020" min="1970" placeholder="Year" onkeyup="filterUsedCars(this.value, 2)">
-    </div>
+    <a href="{% url 'usedcars:table' %}" target="_blank"><button class="btn btn-info" type="button" >Show in table</button></a>
 
-    <table class="table table-bordered" >
-      <thead class="thead-dark">
-        <tr>
-          <th>Make</th>
-          <th>Model</th>
-          <th>Year</th>
-          <th>Millage</th>
-          <th>Transmission</th>
-          <th>Register City</th>
-          <th>Assembly</th>
-          <th>Body Type</th>
-          <th>Engine Type</th>
-          <th>Engine Capacity</th>
-          <th>Features</th>
-          <th>Description</th>
-          <th>Image</th>
-        </tr>
-      </thead>
-      <tbody id="UsedCars" class="collapse show">
-        <!-- Data from JS will be added here       -->
-      </tbody>
-    </table>
+<!-- ******************************************************************************************** -->
+<hr>
+<div class="container">
+	<div class="row">
+		<div class="col-xs-18 col-sm-4 col-md-3">
+			<div class="productbox">
+				<div class="imgthumb img-responsive">
+					<a href="Subaru" target="_blank">
+                  <img class="card-img" src="{% static 'images/subaru-logo.png' %}" alt="Card image" style="width:150px;height:150px;">
+                </a>
+				</div>
+			</div>
+		</div>
 
-<script type="text/javascript">
-        let used_car = [];
-        let temp_var = {};
-        {% for car in wheels %}
-        temp_var = {
-                    'make': "{{ car.make }}",
-                    "model": "{{ car.carmodel }}",
-                    "year": {{ car.year }},
-                    'millage': "{{ car.millage }}",
-                    'transmission': "{{ car.transmission }}",
-                    'reg_city': "{{ car.reg_city }}",
-                    'assembly': "{{ car.assembly }}",
-                    'body_type': "{{ car.body_type }}",
-                    'engine_type': "{{ car.engine_type }}",
-                    'engine_capacity': "{{ car.engine_capacity }}",
-                    'features': "{{ car.features }}",
-                    'description': "{{ car.description }}",
-                    'image': "{{ car.image }}"
-                    };
-        used_car.push(temp_var);
-        {% endfor %}
+        <div class="col-xs-18 col-sm-4 col-md-3">
+			<div class="productbox">
+				<div class="imgthumb img-responsive">
+					<a href="Chevrolet" target="_blank">
+                  <img class="card-img" src="{% static 'images/chevrolet-logo.png' %}" alt="Card image" style="width:150px;height:150px;">
+                </a>
+				</div>
+			</div>
+		</div>
 
-        let is_data_present = false;
-        function showUsedCars()
-        {
-            if(!is_data_present)
-            {
-                let table = document.getElementById('UsedCars');
-                let row, cell;
-                for(let i=0; i<used_car.length; i++)
-                {
-                    row = table.insertRow(i);
+        <div class="col-xs-18 col-sm-4 col-md-3">
+			<div class="productbox">
+				<div class="imgthumb img-responsive">
+					<a href="Mazda" target="_blank">
+                  <img class="card-img" src="{% static 'images/mazda-logo.png' %}" alt="Card image" style="width:150px;height:150px;">
+                </a>
+				</div>
+			</div>
+		</div>
 
-                    cell = row.insertCell();
-                    cell.innerHTML = used_car[i].make;
+        <div class="col-xs-18 col-sm-4 col-md-3">
+			<div class="productbox">
+				<div class="imgthumb img-responsive">
+					<a href="Hyundai" target="_blank">
+                  <img class="card-img" src="{% static 'images/hyundai-logo.png' %}" alt="Card image" style="width:150px;height:150px;">
+                </a>
+				</div>
+			</div>
+		</div>
 
-                    cell = row.insertCell();
-                    cell.innerHTML = used_car[i].model;
+        <div class="col-xs-18 col-sm-4 col-md-3">
+			<div class="productbox">
+				<div class="imgthumb img-responsive">
+					<a href="Mitsubishi" target="_blank">
+                  <img class="card-img" src="{% static 'images/mitsubishi-logo.png' %}" alt="Card image" style="width:150px;height:150px;">
+                  </a>
+				</div>
+			</div>
+		</div>
 
-                    cell = row.insertCell();
-                    cell.innerHTML = used_car[i].year;
+        <div class="col-xs-18 col-sm-4 col-md-3">
+			<div class="productbox">
+				<div class="imgthumb img-responsive">
+					<a href="Toyota" target="_blank">
+                  <img class="card-img" src="{% static 'images/toyota-logo.png' %}" alt="Card image" style="width:150px;height:150px;">
+                </a>
+				</div>
+			</div>
+		</div>
 
-                    cell = row.insertCell();
-                    cell.innerHTML = used_car[i].millage;
+        <div class="col-xs-18 col-sm-4 col-md-3">
+			<div class="productbox">
+				<div class="imgthumb img-responsive">
+					<a href="Audi" target="_blank">
+                  <img class="card-img" src="{% static 'images/audi-logo.png' %}" alt="Card image" style="width:200px;height:150px;">
+              </a>
+				</div>
+			</div>
+		</div>
 
-                    cell = row.insertCell();
-                    cell.innerHTML = used_car[i].transmission;
+        <div class="col-xs-18 col-sm-4 col-md-3">
+			<div class="productbox">
+				<div class="imgthumb img-responsive">
+					<a href="Honda" target="_blank">
+                  <img class="card-img" src="{% static 'images/honda-logo.png' %}" alt="Card image" style="width:150px;height:150px;">
+                </a>
+				</div>
+			</div>
+		</div>
 
-                    cell = row.insertCell();
-                    cell.innerHTML = used_car[i].reg_city;
+        <div class="col-xs-18 col-sm-4 col-md-3">
+			<div class="productbox">
+				<div class="imgthumb img-responsive">
+					<a href="FAW" target="_blank">
+                  <img class="card-img" src="{% static 'images/faw-logo.png' %}" alt="Card image" style="width:200px;height:150px;">
+              </a>
+				</div>
+			</div>
+		</div>
 
-                    cell = row.insertCell();
-                    cell.innerHTML = used_car[i].assembly;
+        <div class="col-xs-18 col-sm-4 col-md-3">
+			<div class="productbox">
+				<div class="imgthumb img-responsive">
+					<a href="Nissan" target="_blank">
+                  <img class="card-img" src="{% static 'images/nissan-logo.png' %}" alt="Card image" style="width:150px;height:150px;">
+              </a>
+				</div>
+			</div>
+		</div>
 
-                    cell = row.insertCell();
-                    cell.innerHTML = used_car[i].body_type;
+        <div class="col-xs-18 col-sm-4 col-md-3">
+			<div class="productbox">
+				<div class="imgthumb img-responsive">
+					<a href="Suzuki" target="_blank">
+                  <img class="card-img" src="{% static 'images/suzuki-logo.png' %}" alt="Card image" style="width:150px;height:150px;">
+              </a>
+				</div>
+			</div>
+		</div>
 
-                    cell = row.insertCell();
-                    cell.innerHTML = used_car[i].engine_type;
+        <div class="col-xs-18 col-sm-4 col-md-3">
+			<div class="productbox">
+				<div class="imgthumb img-responsive">
+					<a href="Daihatsu" target="_blank">
+                  <img class="card-img" src="{% static 'images/daihatsu-logo.png' %}" alt="Card image" style="width:200px;height:150px;">
+              </a>
+				</div>
+			</div>
+		</div>
 
-                    cell = row.insertCell();
-                    cell.innerHTML = used_car[i].engine_capacity;
+        <div class="col-xs-18 col-sm-4 col-md-3">
+			<div class="productbox">
+				<div class="imgthumb img-responsive">
+					<a href="BMW" target="_blank">
+                  <img class="card-img" src="{% static 'images/bmw-logo.png' %}" alt="Card image" style="width:200px;height:150px;">
+              </a>
+				</div>
+			</div>
+		</div>
 
-                    cell = row.insertCell();
-                    cell.innerHTML = used_car[i].features;
+        <div class="col-xs-18 col-sm-4 col-md-3">
+			<div class="productbox">
+				<div class="imgthumb img-responsive">
+					<a href="KIA" target="_blank">
+                  <img class="card-img" src="{% static 'images/kia-logo.png' %}" alt="Card image" style="width:200px;height:150px;">
+              </a>
+				</div>
+			</div>
+		</div>
 
-                    cell = row.insertCell();
-                    cell.innerHTML = used_car[i].description;
-
-                    cell = row.insertCell();
-                    cell.innerHTML = "<a href=" + used_car[i].image + " target='_blank'>Image Link</a>";
-                }
-                is_data_present = true;
-            }
-            else
-            {
-                document.getElementById("UsedCars").style.display = "";
-            }
-        }
-
-        function hideUsedCars()
-        {
-            document.getElementById("UsedCars").style.display = "none";
-        }
-
-        function filterUsedCars(input, ith_cell)
-        {
-            if(is_data_present && input)
-            {
-                let filter, table, tr, td, i, txtValue;
-
-                filter = input.toUpperCase();
-                table = document.getElementById("UsedCars");
-                tr = table.getElementsByTagName("tr");
-
-                for (i = 0; i < tr.length; i++)
-                {
-                    td = tr[i].getElementsByTagName("td")[ith_cell];
-                    if (td)
-                    {
-                        txtValue = td.textContent;
-                        if (txtValue.toUpperCase().indexOf(filter) > -1)
-                        {
-                            tr[i].style.display = "";
-                        }
-                        else
-                        {
-                            tr[i].style.display = "none";
-                        }
-                    }
-                }
-            }
-        }
-
-
-        // this is a third party function
-        function autocomplete(inp, arr)
-        {
-          let currentFocus;
-          inp.addEventListener("input", function(e)
-          {
-              let list_ele, in_tag_val, i, val = this.value;
-              closeAllLists();
-              if (!val) { return false;}
-              currentFocus = -1;
-              list_ele = document.createElement("DIV");
-              list_ele.setAttribute("id", this.id + "autocomplete-list");
-              list_ele.setAttribute("class", "autocomplete-items");
-              this.parentNode.appendChild(list_ele);
-              for (i = 0; i < arr.length; i++) {
-                if (arr[i].substr(0, val.length).toUpperCase() === val.toUpperCase()) {
-
-                  in_tag_val = document.createElement("DIV");
-
-                  in_tag_val.innerHTML = "<strong>" + arr[i].substr(0, val.length) + "</strong>";
-                  in_tag_val.innerHTML += arr[i].substr(val.length);
-                  in_tag_val.innerHTML += "<input type='hidden' value='" + arr[i] + "'>";
-
-                  in_tag_val.addEventListener("click", function(e) {
-
-                      inp.value = this.getElementsByTagName("input")[0].value;
-                      closeAllLists();
-                  });
-                  list_ele.appendChild(in_tag_val);
-                }
-              }
-          });
-
-          inp.addEventListener("keydown", function(e)
-          {
-              let x = document.getElementById(this.id + "autocomplete-list");
-              if (x) x = x.getElementsByTagName("div");
-              if (e.keyCode === 40) {
+        <div class="col-xs-18 col-sm-4 col-md-3">
+			<div class="productbox">
+				<div class="imgthumb img-responsive">
+					<a href="Mercedes Benz" target="_blank">
+                  <img class="card-img" src="{% static 'images/mercedes-logo.png' %}" alt="Card image" style="width:200px;height:150px;">
+              </a>
+				</div>
+			</div>
+		</div>
 
 
-                currentFocus++;
 
-                addActive(x);
-              } else if (e.keyCode === 38) { //up
-
-
-                currentFocus--;
-                addActive(x);
-              } else if (e.keyCode === 13) {
-                e.preventDefault();
-                if (currentFocus > -1) {
-                  if (x) x[currentFocus].click();
-                }
-              }
-          });
-
-          function addActive(x)
-          {
-
-            if (!x) return false;
-            removeActive(x);
-            if (currentFocus >= x.length) currentFocus = 0;
-            if (currentFocus < 0) currentFocus = (x.length - 1);
-            x[currentFocus].classList.add("autocomplete-active");
-          }
-
-          function removeActive(x)
-          {
-
-            for (let i = 0; i < x.length; i++) {
-              x[i].classList.remove("autocomplete-active");
-            }
-          }
-
-          function closeAllLists(elmnt)
-          {
-
-            let x = document.getElementsByClassName("autocomplete-items");
-            for (let i = 0; i < x.length; i++) {
-              if (elmnt !== x[i] && elmnt !== inp) {
-                x[i].parentNode.removeChild(x[i]);
-              }
-            }
-          }
-          document.addEventListener("click", function (e)
-          {
-              closeAllLists(e.target);
-          });
-        }
-
-        let cities = new Set();
-        let makes = new Set();
-        let models = new Set();
-
-        for(let i=0; i<used_car.length; i++)
-        {
-            cities.add(used_car[i].reg_city);
-            makes.add(used_car[i].make);
-            models.add(used_car[i].model);
-        }
-
-        cities = [...cities];
-        makes = [...makes];
-        models = [...models];
-
-        autocomplete(document.getElementById("city"), cities);
-        autocomplete(document.getElementById("make"), makes);
-        autocomplete(document.getElementById("model"), models);
-</script>
+	</div><!--/row-->
+</div><!--/container -->
 
 </body>
 </html>

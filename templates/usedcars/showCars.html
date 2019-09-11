@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <title>Wheels | Attr</title>
+
+    <link rel = "stylesheet" type = "text/css" href = "{% static "css/bootstrap.min.css" %}" />
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+
+    <style>
+        img{
+            width: 300px;
+            height: 250px;
+            color: whitesmoke;
+        }
+        h5{
+            color: whitesmoke;
+        }
+    </style>
+</head>
+<body background="{% static 'images/honey-comb-bg.jpg' %}">
+
+<a href="{% url 'usedcars:index' %}" target="_blank"><button class="btn btn-info" type="button" >Go to HomePage</button></a>
+
+<hr>
+<div class="container">
+	<div class="row">
+		{% for car in usedCars %}
+            {% if car.make == company_name %}
+                <div class="col-xs-18 col-sm-4 col-md-3">
+                    <div class="productbox">
+                        <div class="imgthumb img-responsive">
+                            <img title="{{ car.make }} - {{ car.carmodel }}" src="{{ car.image }}" onError="this.onerror=null;this.src='{% static "images/noimage.jpg" %}';">
+                        </div>
+                        <div class="caption">
+                            <h5>{{ car.make }} - {{ car.carmodel }} - {{ car.reg_city }} - {{ car.year }}</h5>
+                            <a href="singleCar/{{ car.id }}"  class="btn btn-info btn-xs" role="button">Show {{ car.carmodel }} Details</a>
+                        </div>
+                    </div>
+                </div>
+                <hr>
+            {% endif %}
+        {% endfor %}
+
+
+
+	</div><!--/row-->
+</div><!--/container -->
+
+<script type="text/javascript">
+        let test_cars = [];
+        {% for car in usedCars %}
+        temp_var = {
+                    'id': {{ car.id }},
+                    'make': "{{ car.make }}",
+                    "model": "{{ car.carmodel }}",
+                    "year": {{ car.year }},
+                    'millage': "{{ car.millage }}",
+                    'transmission': "{{ car.transmission }}",
+                    'reg_city': "{{ car.reg_city }}",
+                    'assembly': "{{ car.assembly }}",
+                    'body_type': "{{ car.body_type }}",
+                    'engine_type': "{{ car.engine_type }}",
+                    'engine_capacity': "{{ car.engine_capacity }}",
+                    'features': "{{ car.features }}",
+                    'description': "{{ car.description }}",
+                    'image': "{{ car.image }}"
+                    };
+        test_cars.push(temp_var);
+        {% endfor %}
+
+        let filterValue = "{{ company_name }}";
+        console.log(filterValue);
+</script>
+
+</body>
+</html>
