@@ -17,7 +17,7 @@ class UserProfileRedirect:
     def __call__(self, request):
         """call method of UserProfileredirect class"""
         if not request.path == reverse('logout'):
-            if hasattr(request.user, 'saloon') and request.user.saloon.shop_name == '':
+            if hasattr(request.user, 'saloon') and request.user.saloon.shop_name is None:
                 if not request.path == reverse('shop_profile'):
                     messages.warning(
                         request, f'Complete your profile first!')

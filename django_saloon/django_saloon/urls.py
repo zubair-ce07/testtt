@@ -27,4 +27,9 @@ urlpatterns = [
     path('logout/', core_views.LogoutView.as_view(), name='logout'),
     path('register/', core_views.UserRegisterView.as_view(), name='register'),
 
+    path('api/login/', core_views.UserLoginApiView.as_view(), name='api_login'),
+    path('api/register/', core_views.UserRegisterationApiView.as_view(),
+         name='api_register'),
+    path('api/logout/', core_views.UserLogoutApiView.as_view(), name='api_logout'),
+
 ]
