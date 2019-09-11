@@ -19,6 +19,7 @@ class MixinZA(Mixin):
     start_urls = [
         'https://www.ackermans.co.za/'
     ]
+
     deny = ['cellular', 'luggage-accessories', 'deals', 'toys', 'bra-guide']
     size_map_url_t = 'https://magento.ackermans.co.za/rest/default/V1/products/attributes?'
     categories_url_t = 'https://magento.ackermans.co.za/rest/default/V1/pepkor/categoryapi/categories'
@@ -132,8 +133,9 @@ class CrawlSpider(BaseCrawlSpider):
 
     def parse_subcategories(self, raw_categories, listing_url, meta, listing_id=''):
         for listing in raw_categories['children_data']:
-            if listing['is_active'] and not any(deny_str in listing["url_key"] for deny_str in self.deny):
-                yield from self.parse_subcategories(listing, f'{listing_url}/{listing["url_key"]}', meta, listing['id'])
+            if not listing['is_active'] or any(deny_str in listing["url_key"] for deny_str in self.deny):
+                continue
+            yield from self.parse_subcategories(listing, f'{listing_url}/{listing["url_key"]}', meta, listing['id'])
 
         if not listing_id:
             return
@@ -150,7 +152,7 @@ class CrawlSpider(BaseCrawlSpider):
         meta = response.meta.copy()
         meta['trail'] = self.add_trail(response)
 
-        yield from self.product_requests(raw_products, meta.copy())
+        yield from self.product_requests(raw_products, meta)
 
         if raw_products['data']['next_page'] and raw_products['data']['total_count']:
             response.meta['page_number'] += 1
