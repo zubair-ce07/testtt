@@ -2,7 +2,7 @@
   "name": "weathermanjs",
   "version": "1.0.0",
   "description": "",
-  "main": "weatherman.js",
+  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -10,7 +10,6 @@
   "license": "ISC",
   "dependencies": {
     "csvtojson": "^2.0.10",
-    "moment": "^2.24.0",
     "yargs": "^14.0.0"
   }
 }
