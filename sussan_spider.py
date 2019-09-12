@@ -51,28 +51,31 @@ class ParseSpider(BaseParseSpider):
         return self.next_request_or_garment(garment)
 
     def product_id(self, response):
-        return clean(response.css(".product-ids::text"))[0].split("-")[0]
+        css = ".product-ids::text"
+        return clean(response.css(css))[0].split("-")[0]
 
     def product_name(self, response):
-        css = ".product-name h1::text"
-        return clean(response.css(css))[0]
+        return clean(response.css(".product-name h1::text"))[0]
 
     def product_category(self, response):
         return clean(response.css(".breadcrumb ::text"))[1:]
 
     def image_urls(self, response):
-        return clean(response.css(".flexslider .slides li::attr(data-thumb)"))
+        css = ".flexslider .slides li::attr(data-thumb)"
+        return clean(response.css(css))
 
     def color_requests(self, response):
-        colors = clean(response.css(".colourSwatch option::attr(value)")) or [response.url]
+        color_css = ".colourSwatch option::attr(value)"
+        colors = clean(response.css(color_css)) or [response.url]
         return [Request(color, self.parse_color, meta=response.meta.copy(), dont_filter=True) for color in colors]
 
     def skus(self, response):
         skus = {}
-        sizes_css = "script:contains('attributes')"
         sizes_regex = 'label":"(.+?)"'
+        sizes_css = "script:contains('attributes')"
+        colours_css = ".colourSwatchWrapper option[selected='selected']::text"
 
-        colour = clean(response.css(".colourSwatchWrapper option[selected='selected']::text"))
+        colour = clean(response.css(colours_css))
         sizes = re.findall(sizes_regex, clean(response.css(sizes_css))[0])[1:]
         common_sku = self.product_pricing_common(response)
 
@@ -107,7 +110,9 @@ class CrawlSpider(BaseCrawlSpider):
     )
 
     def parse_pagination(self, response):
-        product_count = clean(response.css(".pager .amount .numberOfResults::text"))[0].split("(")[1].split(")")[0]
+        product_count_css = ".pager .amount .numberOfResults::text"
+
+        product_count = clean(response.css(product_count_css))[0].split("(")[1].split(")")[0]
         page_count = int(int(product_count)/self.page_size) + 1
         meta = self.get_meta_with_trail(response)
 
@@ -115,8 +120,10 @@ class CrawlSpider(BaseCrawlSpider):
                         callback=self.product_requests, meta=meta) for page in range(page_count)]
 
     def product_requests(self, response):
+        product_css = ".product-name a::attr(href)"
+
         product_sel = Selector(text=json.loads(response.text)["product_list"])
-        products = product_sel.css(".product-name a::attr(href)").getall()
+        products = product_sel.css(product_css).getall()
         meta = self.get_meta_with_trail(response)
 
         return [Request(product_url, callback=self.parse_item, meta=meta) for product_url in products]
