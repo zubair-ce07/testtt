@@ -27,9 +27,9 @@ class DvfParseSpider(BaseParseSpider):
     def parse(self, response):
         product_id = self.product_id(response)
         garment = self.new_unique_garment(product_id)
-
         if not garment:
             return
+
         self.boilerplate_normal(garment, response)
         garment['gender'] = self.product_gender(response)
         garment['image_urls'] = []
