@@ -8,12 +8,12 @@
 
     <ul>
     {% if not uploads %}
-        <h2> You have no uploads yet. </h2>
+        <h2 class="heading"> You have no uploads yet. </h2>
         <br>
         <br>
-        <button href="{% url 'upload' %}" class="btn btn-large waves-effect waves-light" name="upload">
+        <a href="{% url 'upload' %}" class="btn btn-large waves-effect waves-light" name="upload">
             Upload Now
-        </button>
+        </a>
     {% else %}
         {% for upload in uploads %}
             <div>

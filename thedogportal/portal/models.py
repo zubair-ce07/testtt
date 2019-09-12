@@ -37,3 +37,13 @@ class Uploads(models.Model):
     def __str__(self):
         return self.title
 
+class Upvotes(models.Model):
+    owner = models.ForeignKey(Profile, on_delete=models.CASCADE)
+    upvoter = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='upload_upvoter')
+    photo = models.ForeignKey(Uploads, on_delete=models.CASCADE)
+
+
+class Downvotes(models.Model):
+    owner = models.ForeignKey(Profile, on_delete=models.CASCADE)
+    downvoter = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='upload_downvoter')
+    photo = models.ForeignKey(Uploads, on_delete=models.CASCADE)

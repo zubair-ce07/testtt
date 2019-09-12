@@ -3,12 +3,12 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
-<h1> Home </h1>
-{% if user.is_authenticated %}
-  Hi {{ user.username }} {{ user.id }}!
-  <a href="{% url 'logout'%}?next={{request.path}}">Logout</a>
-{% else %}
-  <p>You are not logged in</p>
-  <a href="{% url 'login' %}">login</a>
-{% endif %}
+
+<img src={{random_image.image.url}} alt="{{ random_image.title }}">
+<form method="POST">
+{% csrf_token %}
+  <button class="btn waves-effect waves-light" type="submit" name="upvote" value="{{ random_image.pk }}">
+      Upvote
+  </button>
+</form>
 {% endblock %}
