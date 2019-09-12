@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Bootstrap Example</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</head>
+<body background ='https://www.google.com/imgres?imgurl=https%3A%2F%2Fimage.shutterstock.com%2Fimage-photo%2Forganic-faded-grey-crumpled-back-260nw-572177245.jpg&imgrefurl=https%3A%2F%2Fwww.shutterstock.com%2Fsearch%2Fmatte%2Bbackground&docid=FqkoAYcpHVel1M&tbnid=LbkX5hQzTItj5M%3A&vet=10ahUKEwj8irmZkcvkAhUFsaQKHY6wCC8QMwh8KAswCw..i&w=390&h=280&bih=981&biw=1853&q=matte%20color%20background&ved=0ahUKEwj8irmZkcvkAhUFsaQKHY6wCC8QMwh8KAswCw&iact=mrc&uact=8'>
+{% if products%}
+        {% for product in products %}        
+                {% if forloop.first %}
+                        <div class="container-fluid">
+                        <div class="row">
+                {% endif %}
+                {% if forloop.counter0|divisibleby:'3' %}  
+                        </div>
+                        </div>
+                        <div class="container-fluid">
+                        <div class="row">
+                 {% else %}
+                        <div class="col-sm-3 mx-auto">
+                                <img class="product_image" src={{ product.Image_url.0 }} alt="Card image cap" height="300" width="400">
+                                <div class="card-body">
+                                        <h4 class="product_title">{{ product.Name }}</h4>
+                                        <a href={{product.id}} class="btn btn-primary">product details</a>
+                                </div>
+                        </div>
+                {% endif %}          
+        {% endfor%}
+{% endif%}
+</body>
+</html>
