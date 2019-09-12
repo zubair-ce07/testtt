@@ -1,6 +1,6 @@
 const csv = require('csvtojson')
 
-var csvToJson = async filename => {
+const csvToJson = async filename => {
     try {
         const result = await csv().fromFile(filename)
         return result
