@@ -10,6 +10,7 @@ from .base import BaseCrawlSpider, BaseParseSpider, clean, Gender, soupify
 class Mixin:
     retailer = 'uniqlo'
     default_brand = 'ユニクロ'
+    
     allowed_domains = ['uniqlo.com']
 
 
@@ -26,7 +27,6 @@ class ParseSpider(BaseParseSpider):
     description_css = 'meta[property="og:description"]::attr(content), p.about::text'
     care_css_t = '.spec dt:contains("{}")+dd::text'
     care_css = f'{care_css_t.format("素材")},{care_css_t.format("取扱い")}'
-    one_size = 'one size'
 
     def parse(self, response):
         raw_product = self.raw_product(response)
@@ -42,7 +42,7 @@ class ParseSpider(BaseParseSpider):
         merch_info = self.merch_info(raw_product)
 
         if merch_info:
-            garment['merch_info'] = self.merch_info(raw_product)
+            garment['merch_info'] = merch_info
 
         return garment
 
@@ -60,7 +60,12 @@ class ParseSpider(BaseParseSpider):
         return clean(response.css('.breadcrumbs a::text'))[:-1]
 
     def product_gender(self, response):
-        return soupify(self.product_category(response)) or Gender.ADULTS.value
+        title = clean(response.css('title::text'))
+        description = self.product_description(response)
+        name = self.product_name(response)
+        soup = soupify(self.product_category(response) + title + description + [name])
+        
+        return self.gender_lookup(soup) or Gender.ADULTS.value
 
     def merch_info(self, raw_product):
         for raw_sku in raw_product['l2GoodsList'].values():
