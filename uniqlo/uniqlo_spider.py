@@ -9,8 +9,8 @@ from .base import BaseCrawlSpider, BaseParseSpider, clean, Gender, soupify
 
 class Mixin:
     retailer = 'uniqlo'
-    default_brand = 'ユニクロ'
-    
+    default_brand = 'Uniqlo'
+
     allowed_domains = ['uniqlo.com']
 
 
@@ -24,7 +24,7 @@ class MixinJP(Mixin):
 
 
 class ParseSpider(BaseParseSpider):
-    description_css = 'meta[property="og:description"]::attr(content), p.about::text'
+    description_css = '[property="og:description"]::attr(content), p.about::text'
     care_css_t = '.spec dt:contains("{}")+dd::text'
     care_css = f'{care_css_t.format("素材")},{care_css_t.format("取扱い")}'
 
@@ -39,10 +39,7 @@ class ParseSpider(BaseParseSpider):
         garment['gender'] = self.product_gender(response)
         garment['image_urls'] = self.image_urls(raw_product)
         garment['skus'] = self.skus(raw_product)
-        merch_info = self.merch_info(raw_product)
-
-        if merch_info:
-            garment['merch_info'] = merch_info
+        garment['merch_info'] = self.merch_info(raw_product)
 
         return garment
 
@@ -64,13 +61,15 @@ class ParseSpider(BaseParseSpider):
         description = self.product_description(response)
         name = self.product_name(response)
         soup = soupify(self.product_category(response) + title + description + [name])
-        
+
         return self.gender_lookup(soup) or Gender.ADULTS.value
 
     def merch_info(self, raw_product):
         for raw_sku in raw_product['l2GoodsList'].values():
             if int(raw_sku['L2GoodsInfo']['termLimitSalesFlg']):
                 return [raw_sku['L2GoodsInfo']['termLimitSalesEndMsg']]
+
+        return []
 
     def image_urls(self, raw_product):
         product_id = self.product_id(raw_product)
@@ -96,15 +95,10 @@ class ParseSpider(BaseParseSpider):
         for sku_id, raw_sku in raw_product['l2GoodsList'].items():
             raw_sku = raw_sku['L2GoodsInfo']
             sku = self.product_pricing_common(None, money_strs=[raw_sku['salesPrice']])
-            sku['colour'] = self.detect_colour(colours_map[raw_sku['colorCd']])
+            sku['colour'] = colours_map[raw_sku['colorCd']]
             sku['size'] = sizes_map[raw_sku['sizeCd']] or self.one_size
             sku['out_of_stock'] = not bool(int(raw_sku['sumStockCnt']))
-            length = lengths_map[raw_sku['lengthCd']]
-
-            if length:
-                sku['length'] = length
-
-            skus[sku_id] = sku
+            skus[f'{sku_id}_{lengths_map[raw_sku["lengthCd"]]}'] = sku
 
         return skus
 
