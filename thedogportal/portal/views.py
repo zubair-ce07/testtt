@@ -1,11 +1,13 @@
 from django.http import HttpResponse
 from django.template import loader
-from django.shortcuts import redirect
+from django.shortcuts import redirect, get_object_or_404
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 
 from django.views.generic import ListView, CreateView
+from django.views.generic.edit import UpdateView
 from django.urls import reverse_lazy
+
 
 from .models  import Profile, Uploads
 from .forms import UploadForm
@@ -43,10 +45,12 @@ def MyUploadsView(request):
     else:
         return redirect('login')
 
-def DeleteImageView(request):
-#     if request.user.is_authenticated:
-#         template = loader.get_template('my_uploads.html')
-#         list_of_images = Uploads.objects.filter(owner=request.user.id)
-#         return HttpResponse(template.render({'uploads': list_of_images}, request))
-#     else:
-        return redirect('login')
+class MySettings(LoginRequiredMixin, UpdateView):
+    login_url = reverse_lazy('login')
+    model = Profile
+    fields = ['bio', 'location', 'birth_date']
+    template_name = 'settings.html'
+    success_url = reverse_lazy('index')
+
+    def get_object(self):
+        return get_object_or_404(Profile, pk=self.request.user.id)
