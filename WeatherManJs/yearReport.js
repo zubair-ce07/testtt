@@ -1,9 +1,9 @@
 const fs = require('fs')
-var csvToJson = require('./csvToJson.js')
+const csvToJson = require('./csvToJson.js')
 
 const WEATHER_FILES = fs.readdirSync('weatherfiles')
-var generateYearReport = async (year) =>{
-    const YEAR_RECORDS = []
+const generateYearReport = async year =>{
+    const yearRecords = []
     for (file of WEATHER_FILES) {
         if (file.includes(year)) {
             try {
@@ -14,52 +14,50 @@ var generateYearReport = async (year) =>{
             }
             for (record of weatherRecords) {
                 if (record['Max TemperatureC'] && record['Min TemperatureC'] && record['Max Humidity']) {
-                    YEAR_RECORDS.push(record)
+                    yearRecords.push(record)
                 }
             }
         }
     }
-    if (!YEAR_RECORDS.length) {
+    if (!yearRecords.length) {
         return
     }
-    let result = getYearReport(YEAR_RECORDS)
+    let result = getYearReport(yearRecords)
     printYearReport(result)
 }
 
-var getYearReport = (records) => {
-    let maxTemp = getMaxTemp(records)
-    let minTemp = getMinTemp(records)
-    let maxHumid = getMaxHumidty(records)
-    return { 'maxTemp': maxTemp, 'minTemp': minTemp, 'maxHumid': maxHumid }
+const getYearReport = records => {
+    const maxTemp = getMaxTemp(records)
+    const minTemp = getMinTemp(records)
+    const maxHumid = getMaxHumidty(records)
+    return { maxTemp, minTemp, maxHumid }
 }
 
-var printYearReport = (report) => {
-    let maxTemp = report.maxTemp
-    let minTemp = report.minTemp
-    let maxHumid = report.maxHumid
-    console.log(`Highest: ${maxTemp['Max TemperatureC']}C on ${maxTemp.PKT}`)
-    console.log(`Lowest: ${minTemp['Min TemperatureC']}C on ${minTemp.PKT}`)
-    console.log(`Humidity: ${maxHumid['Max Humidity']}% on ${maxHumid.PKT}`)
+const printYearReport = report => {
+    console.log(`Highest: ${report.maxTemp['Max TemperatureC']}C on ${report.maxTemp.PKT}`)
+    console.log(`Lowest: ${report.minTemp['Min TemperatureC']}C on ${report.minTemp.PKT}`)
+    console.log(`Humidity: ${report.maxHumid['Max Humidity']}% on ${report.maxHumid.PKT}`)
 }
 
-var getMaxTemp = (weatherRecords) => {
+const getMaxTemp = weatherRecords => {
     let maxTemp = weatherRecords.reduce((previous, current) => {
         return (+previous['Max TemperatureC'] > +current['Max TemperatureC']) ? previous : current
     })
     return maxTemp
 }
 
-var getMinTemp = (weatherRecords) => {
+const getMinTemp = weatherRecords => {
     let minTemp = weatherRecords.reduce((previous, current) => {
         return (+previous['Min TemperatureC'] < +current['Min TemperatureC']) ? previous : current
     })
     return minTemp
 }
 
-var getMaxHumidty = (weatherRecords) => {
+const getMaxHumidty = weatherRecords => {
     let maxHumid = weatherRecords.reduce((previous, current) => {
         return (+previous['Max Humidty'] > +current['Max Humidity']) ? previous : current
     })
     return maxHumid
 }
+
 module.exports = generateYearReport

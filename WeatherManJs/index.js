@@ -1,22 +1,16 @@
 const yargs = require('yargs')
-var generateMonthReport = require('./monthReport.js')
-var generateYearReport = require('./yearReport.js')
+const generateMonthReport = require('./monthReport.js')
+const generateYearReport = require('./yearReport.js')
 
-var isValidYear = (year) => {
-    if (year === undefined || year < 2000 || year > 2100) {
-        return false
-    }
-    return true
+const isValidYear = year => {
+    return !(year === undefined || year < 2000 || year > 2100)
 }
 
-var isValidMonth = (month) => {
-    if (month === undefined || month < 1 || month > 12) {
-        return false
-    }
-    return true
+const isValidMonth = month => {
+    return !(month === undefined || month < 1 || month > 12)
 }
 
-var parseArguments = () => {
+const parseArguments = () => {
     yargs.command(
         ['yearly', '-y'],
         'Generate yearly report',
@@ -29,6 +23,7 @@ var parseArguments = () => {
         argv => {
             if (!isValidYear(argv.year)) {
                 console.error('Please specify a valid date!')
+                return
             }
             generateYearReport(argv.year)
         }
@@ -50,6 +45,7 @@ var parseArguments = () => {
         argv => {
             if (!(isValidYear(argv.year) && isValidMonth(argv.month))) {
                 console.error('Please specify a valid date!')
+                return
             }
             generateMonthReport(argv.year, argv.month)
         }

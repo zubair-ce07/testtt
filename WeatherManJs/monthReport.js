@@ -1,9 +1,9 @@
 const fs = require('fs')
-var csvToJson = require('./csvToJson.js')
+const csvToJson = require('./csvToJson.js')
 
 const WEATHER_FILES = fs.readdirSync('weatherfiles')
-var generateMonthReport = async (year, month) => {
-    const MONTH_RECORDS = []
+const generateMonthReport = async (year, month) => {
+    const monthRecords = []
     const MONTH_NAMES = {
         '1': 'Jan',
         '2': 'Feb',
@@ -29,50 +29,47 @@ var generateMonthReport = async (year, month) => {
             }
             for (record of weatherRecords) {
                 if (record['Max TemperatureC'] && record['Min TemperatureC'] && record['Mean Humidity']) {
-                    MONTH_RECORDS.push(record)
+                    monthRecords.push(record)
                 }
             }
         }
     }
-    if (!MONTH_RECORDS.length) {
+    if (!monthRecords.length) {
         return
     }
-    let result = getMonthReport(MONTH_RECORDS)
+    let result = getMonthReport(monthRecords)
     printMonthReport(result)
 }
 
-var getMonthReport = (records) => {
-    let highestAvg = getHighestAvg(records)
-    let lowestAvg = getLowestAvg(records)
-    let avgHumidity = getAvgHumidity(records)
-    return { 'highestAvg': highestAvg, 'lowestAvg': lowestAvg, 'avgHumidity': avgHumidity }
+const getMonthReport = records => {
+    const highestAvg = getHighestAvg(records)
+    const lowestAvg = getLowestAvg(records)
+    const avgHumidity = getAvgHumidity(records)
+    return { highestAvg, lowestAvg, avgHumidity }
 }
 
-var printMonthReport = (report) => {
-    let highestAvg = report.highestAvg
-    let lowestAvg = report.lowestAvg
-    let avgHumidity = report.avgHumidity
-    console.log(`Highest Average: ${highestAvg}C`)
-    console.log(`Lowest Average: ${lowestAvg}C`)
-    console.log(`Average Mean Humidity: ${avgHumidity}%`)
+const printMonthReport = report => {
+    console.log(`Highest Average: ${report.highestAvg}C`)
+    console.log(`Lowest Average: ${report.lowestAvg}C`)
+    console.log(`Average Mean Humidity: ${report.avgHumidity}%`)
 }
 
-var getHighestAvg = (weatherRecords) => {
-    var highestAvg = (weatherRecords.reduce((previous, current) => {
+const getHighestAvg = weatherRecords => {
+    const highestAvg = (weatherRecords.reduce((previous, current) => {
         return previous + +current['Max TemperatureC']
     }, 0) / weatherRecords.length)
     return Math.round(highestAvg)
 }
 
-var getLowestAvg = (weatherRecords) => {
-    var lowestAvg = (weatherRecords.reduce((previous, current) => {
+const getLowestAvg = weatherRecords => {
+    const lowestAvg = (weatherRecords.reduce((previous, current) => {
         return previous + +current['Min TemperatureC']
     }, 0) / weatherRecords.length)
     return Math.round(lowestAvg)
 }
 
-var getAvgHumidity = (weatherRecords) => {
-    var avgHumidity = (weatherRecords.reduce((previous, current) => {
+const getAvgHumidity = weatherRecords => {
+    const avgHumidity = (weatherRecords.reduce((previous, current) => {
         return previous + +current['Mean Humidity']
     }, 0) / weatherRecords.length)
     return Math.round(avgHumidity)
