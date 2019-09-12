@@ -30,7 +30,6 @@ class DvfParseSpider(BaseParseSpider):
 
         if not garment:
             return
-
         self.boilerplate_normal(garment, response)
         garment['gender'] = self.product_gender(response)
         garment['image_urls'] = []
@@ -88,7 +87,7 @@ class DvfParseSpider(BaseParseSpider):
         return clean(response.css('.pdp-original-price::text'))
 
     def is_available(self, response):
-        return not response.css('.soldout-title')
+        return not clean(response.css('.soldout-title'))
 
     def skus(self, response):
         raw_product = self.raw_product(response)
