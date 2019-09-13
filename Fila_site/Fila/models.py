@@ -4,7 +4,7 @@ from django.db.models import Count, Max
 
 class Product(models.Model):
 
-    retailer_Sku = models.CharField(max_length=50)
+    retailer_sku = models.CharField(max_length=50)
 
     CHOICES = (
         (1, "Men's"),
@@ -13,14 +13,15 @@ class Product(models.Model):
         (4, "Girls"),
     )
 
-    gender = models.CharField(max_length = 50, choices = CHOICES, default = "unisex")
+    gender = models.CharField(max_length = 50, choices = CHOICES, default = CHOICES)
 
     brand = models.CharField(max_length = 50)
     url = models.URLField(max_length = 100)
     name = models.CharField(max_length = 100)
-    description = models.CharField(null = True, blank = True, max_length = 1000)
-    care = models.CharField(null = True, blank= True,max_length = 1000)
-    image_url = models.CharField(max_length = 9000)
+    description = models.TextField(blank=True, null=True)
+    care = models.TextField(blank=True, null=True)
+    image_url = models.TextField(blank=True, null=True)
+
 
 
 class Skus(models.Model):

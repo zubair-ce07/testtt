@@ -18,12 +18,15 @@ th, td {
   padding: 5px;
   text-align: left;    
 }
+body {
+  background-color: lightblue;
+}
 </style>
 <div class="container">
   <div class="row">
     <div class="col-2">
       {% if product%}
-        <p><b>Retailer_Sku</b>: {{ product.retailer_Sku }}</p><br>
+        <p><b>Retailer_Sku</b>: {{ product.retailer_sku }}</p><br>
         <p><b>Gender:</b> {{ product.gender }}</p><br>
         <p><b>Brand:</b> {{ product.brand }}</p><br>
         <p><b>URl:</b><a href = {{ product.url }}> {{ product.url }} </a><br>
