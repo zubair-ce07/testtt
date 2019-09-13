@@ -98,18 +98,19 @@ class ParseSpider(BaseParseSpider):
 
 
 class PaginationLE:
+    PAGE_SIZE = 24
 
     def extract_links(self, response):
-        page_size = 24
         product_count_css = '.numberOfResults::text'
+        product_count = response.css(product_count_css).re_first("(\d+)")
 
-        if not (response.css(product_count_css)):
+        if not product_count:
             return []
 
-        product_count = response.css(product_count_css).re_first("(\d+)")
-        page_count = (int(product_count) // page_size) + 2
+        page_count = (int(product_count) // self.PAGE_SIZE) + 2
 
-        return [Link(add_or_replace_parameters(response.url, {'ajax': 1, 'p': page})) for page in range(1, page_count)]
+        return [Link(add_or_replace_parameters(response.url, {'ajax': 1, 'p': page}))
+                for page in range(1, page_count)]
 
 
 class CrawlSpider(BaseCrawlSpider):
@@ -126,7 +127,7 @@ class CrawlSpider(BaseCrawlSpider):
         product_sel = Selector(text=json.loads(response.text)['product_list'])
         meta = self.get_meta_with_trail(response)
 
-        return [Request(product_url, callback=self.parse_item, meta=meta, dont_filter=True)
+        return [Request(product_url, callback=self.parse_item, meta=meta,)
                 for product_url in clean(product_sel.css(products_css))]
 
 
