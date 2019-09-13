@@ -1,8 +1,7 @@
 from django.contrib import admin
 
-from QuizApp.models import *
+from QuizApp.models import  Option, User, Question, AnswerOption, Result, Quiz
 
-admin.site.register(User)
 
 
 class QuizAdmin(admin.ModelAdmin):
@@ -40,3 +39,4 @@ admin.site.register(Question, QuestionAdmin)
 admin.site.register(Result, ResultAdmin)
 admin.site.register(Option, OptionAdmin)
 admin.site.register(AnswerOption, AnswerOptionAdmin)
+admin.site.register(User)

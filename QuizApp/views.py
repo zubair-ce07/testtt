@@ -114,14 +114,13 @@ def question_detail(request, question_pk):
 
 
 @login_required
-@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def take_quiz(request, quiz_pk):
     if not request.user.is_student:
         return HttpResponseBadRequest(content='Not Authorized')
     if Result.objects.filter(taken_by=request.user, quiz_id=quiz_pk).exists():
         return HttpResponseBadRequest(content='Already Taken, Cannot Retake')
     quiz_questions = [question for question in get_object_or_404(Quiz, pk=quiz_pk).questions.all() if
-                      question.answers.all().count() == 4 and question.answers.filter(is_correct=True).count() == 1]
+                      question.answers.all().count() == 4]
     if request.method == 'POST':
         submitted_ans = Option.objects.filter(pk__in=[request.POST.get(str(quiz.pk)) for quiz in quiz_questions])
         score = Option.objects.filter(id__in=[ans.id for ans in submitted_ans]).filter(is_correct=True).count()
@@ -194,9 +193,7 @@ def student_home(request):
         return HttpResponseBadRequest(content='Not Authorized')
     student = request.user
     quiz_list = Quiz.objects.exclude(publish=False).exclude(
-        id__in=[quiz.quiz_id for quiz in Result.objects.filter(taken_by=student)]).all().exclude(
-        questions__isnull=True).exclude(
-        id__in=[question.quiz_id for question in Question.objects.all() if question.answers.all().count() < 4])
+        id__in=[quiz.quiz_id for quiz in Result.objects.filter(taken_by=student)])
     return render(request, 'student_home.html', {'quizzes': quiz_list})
 
 
@@ -204,7 +201,7 @@ def student_home(request):
 def result_view(request):
     if not request.user.is_student:
         return HttpResponseBadRequest(content='Not authorized')
-    results = Result.objects.all().filter(taken_by=request.user)
+    results = Result.objects.filter(taken_by=request.user)
     return render(request, 'result_view.html', {'results': results})
 
 
