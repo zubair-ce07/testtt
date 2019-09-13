@@ -3,21 +3,31 @@ from django.db.models import Count, Max
 
 
 class Product(models.Model):
-    Retailer_Sku = models.CharField(max_length=50)
-    Gender = models.CharField(max_length = 50)
-    Brand = models.CharField(max_length = 50)
-    Url = models.CharField(max_length = 100)
-    Name = models.CharField(max_length = 100)
-    Description = models.CharField(null = True, blank= True, max_length = 1000)
-    Care = models.CharField(null = True, blank= True,max_length = 1000)
-    Image_url = models.CharField(max_length = 9000)
+
+    retailer_Sku = models.CharField(max_length=50)
+
+    CHOICES = (
+        (1, "Men's"),
+        (2, "Women's"),
+        (3, "Boys"),
+        (4, "Girls"),
+    )
+
+    gender = models.CharField(max_length = 50, choices = CHOICES, default = "unisex")
+
+    brand = models.CharField(max_length = 50)
+    url = models.URLField(max_length = 100)
+    name = models.CharField(max_length = 100)
+    description = models.CharField(null = True, blank = True, max_length = 1000)
+    care = models.CharField(null = True, blank= True,max_length = 1000)
+    image_url = models.CharField(max_length = 9000)
 
 
 class Skus(models.Model):
-    Retailer_Sku = models.ForeignKey(Product,on_delete = models.CASCADE)
-    Sku_id = models.CharField(max_length = 1000)
-    Size = models.CharField(max_length = 50) 
-    Color = models.CharField(max_length = 100) 
-    Currency = models.CharField(max_length = 50) 
-    Price = models.CharField(max_length = 1000)
 
+    retailer_Sku = models.ForeignKey(Product, on_delete = models.CASCADE)
+    sku_id = models.CharField(max_length = 1000)
+    size = models.CharField(max_length = 50) 
+    color = models.CharField(max_length = 100) 
+    currency = models.CharField(max_length = 50) 
+    price = models.CharField(max_length = 1000)

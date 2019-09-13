@@ -23,22 +23,18 @@ th, td {
   <div class="row">
     <div class="col-2">
       {% if product%}
-        <p><b>Retailer_Sku</b>: {{product.Retailer_Sku}}</p><br>
-        <p><b>Gender:</b> {{product.Gender}}</p><br>
-        <p><b>Brand:</b> {{product.Brand}}</p><br>
-        <p><b>URl:</b><a href = {{product.Url}}> {{product.Url}} </a><br>
-        <p><b>Name:</b> {{product.Name}}</p><br>
-        <p><b>Description:</b> {{product.Description}}</p><br>
-        <p><b>Care:</b> {{product.Care}}</p><br>   
+        <p><b>Retailer_Sku</b>: {{ product.retailer_Sku }}</p><br>
+        <p><b>Gender:</b> {{ product.gender }}</p><br>
+        <p><b>Brand:</b> {{ product.brand }}</p><br>
+        <p><b>URl:</b><a href = {{ product.url }}> {{ product.url }} </a><br>
+        <p><b>Name:</b> {{ product.name }}</p><br>
+        <p><b>Description:</b> {{ product.description }}</p><br>
+        <p><b>Care:</b> {{ product.care }}</p><br>   
         <h4>Image_urls: </h4><br>
-
-        <table style="width:100%">    
-            {% for img_url in product.Image_url %}   
-                <tr>
-                    <td><img src={{img_url}} alt="img url" style="width:500px;height:600px;" ></td>
-                </tr>     
-            {% endfor%}  
-        </table>
+  
+        {% for img_url in product.image_url %}   
+          <img src={{ img_url }} alt="img url" style="width:500px;height:600px;" >
+        {% endfor%}  
 
     {% endif%}
     </div>
@@ -56,11 +52,11 @@ th, td {
                 {% for sku in skus %}
 
                 <tr>
-                    <td>{{sku.Sku_id}}</td>
-                    <td>{{sku.Size}}</td>
-                    <td>{{sku.Color}}</td>
-                    <td>{{sku.Currency}}</td>
-                    <td>{{sku.Price}}</td>
+                    <td>{{ sku.sku_id }}</td>
+                    <td>{{ sku.size }}</td>
+                    <td>{{ sku.color }}</td>
+                    <td>{{ sku.currency }}</td>
+                    <td>{{ sku.price }}</td>
                 </tr>
                 
                 {% endfor %}
@@ -70,7 +66,3 @@ th, td {
     </div>
   </div>
 </div>
-
-
-
-
