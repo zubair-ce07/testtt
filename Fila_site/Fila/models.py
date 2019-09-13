@@ -13,7 +13,7 @@ class Product(models.Model):
         (4, "Girls"),
     )
 
-    gender = models.CharField(max_length = 50, choices = CHOICES, default = CHOICES)
+    gender = models.CharField(max_length = 50, choices = CHOICES)
 
     brand = models.CharField(max_length = 50)
     url = models.URLField(max_length = 100)
@@ -26,7 +26,7 @@ class Product(models.Model):
 
 class Skus(models.Model):
 
-    retailer_Sku = models.ForeignKey(Product, on_delete = models.CASCADE)
+    retailer_Sku = models.ForeignKey(Product,related_name='skus',on_delete = models.CASCADE)
     sku_id = models.CharField(max_length = 1000)
     size = models.CharField(max_length = 50) 
     color = models.CharField(max_length = 100) 
