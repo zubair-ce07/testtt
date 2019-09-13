@@ -3,7 +3,7 @@ from asics_spider.items import ProductItem
 from scrapy.spiders import CrawlSpider
 
 
-class AsicsSpider(CrawlSpider):
+class AsicsSpider(scrapy.Spider):
     name = 'asics'
     item = ProductItem()
     allowed_domains = ["asics.com"]
@@ -73,7 +73,7 @@ class AsicsSpider(CrawlSpider):
     def requests(self, response):
         products_urls = response.xpath(
             '//div[@id="variant-choices"]/div[not(contains(@class,"active"))]/a/@href').extract()
-        return [response.follow(url=url, callback=self.update_skus, dont_filter=True) for url in products_urls]
+        return [response.follow(url=url, callback=self.update_skus) for url in products_urls]
 
     def update_skus(self, response):
         self.item['skus'].append(self.product_skus(response))
