@@ -24,16 +24,13 @@ export default class KayakCarsHomepage {
 
     async getDropOffStatus(): Promise<string> {
         await this.commonHelperObj.waitForElementToBeVisible(this.dropOffStatus);
-        return await this.dropOffStatus.getText();
+        return await this.dropOffStatus.getAttribute('data-title');
     }
     async clickDropOffLabel(): Promise<void> {
         await this.dropOffLabel.click();
     }
-    async isDifferentDropOffOptionClickable(): Promise<any> {
+    async clickDifferentDropOffOption(): Promise<any> {
         await this.commonHelperObj.waitForElementToBeClickable(this.differentDropOffOption);
-        return await this.differentDropOffOption.isDisplayed();
-    }
-    async clickDifferentDropOffOption(): Promise<void> {
         await this.differentDropOffOption.click();
     }
     async isDestinationFieldVisible(): Promise<boolean> {

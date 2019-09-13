@@ -1,17 +1,20 @@
-import * as chai from 'chai';
-import * as chaiAsPromised from "chai-as-promised";
 import {browser} from "protractor";
-import * as moment from 'moment';
+import * as chai from "chai";
+import * as chaiAsPromised from "chai-as-promised";
+import CarResultPage from "./pages/CarResultPage";
 import KayakHomepage from "./pages/KayakHomepage";
 import KayakCarsHomepage from "./pages/KayakCarsHomepage";
-import CarResultPage from "./pages/CarResultPage";
+import * as moment from "moment";
+
 chai.use(chaiAsPromised);
+
 const expect = chai.expect;
 
 describe('Kayak cars',() => {
     const kayakHomepageObj = new KayakHomepage();
     const kayakCarsHomepage = new KayakCarsHomepage();
     const carResultPageObj = new CarResultPage();
+
     before(async () => {
         await browser.get('https://www.kayak.com/');
     });
@@ -21,12 +24,12 @@ describe('Kayak cars',() => {
     it('Should have "Same drop-off" search option selected by default',  () => {
         expect(kayakCarsHomepage.getDropOffStatus()).to.eventually.equal('Same drop-off');
     });
-    it('Should be able to select "different drop-off" search option',async () => {
+    it('Should be able to select "Different drop-off" search option',async () => {
         await kayakCarsHomepage.clickDropOffLabel();
-        expect(kayakCarsHomepage.isDifferentDropOffOptionClickable()).to.eventually.equal(true);
+        await kayakCarsHomepage.clickDifferentDropOffOption();
+        expect(kayakCarsHomepage.getDropOffStatus()).to.eventually.equal('Different drop-off');
     });
     it('Should display destination input field after selecting "different drop-off" search option', async () => {
-        await kayakCarsHomepage.clickDifferentDropOffOption();
         expect(kayakCarsHomepage.isDestinationFieldVisible()).to.eventually.equal(true);
     });
     it('Should have departure date selected to current date + 1', async () => {
@@ -50,7 +53,7 @@ describe('Kayak cars',() => {
     });
     it('Should be able to click search button and redirect to result page', async () => {
         await kayakCarsHomepage.clickSearchBtn();
-        expect(await carResultPageObj.isCarResultsLoaded()).to.equal(true);
+        expect(await carResultPageObj.isCarResultsLoaded());
     });
     it('should not have map view on CRP', async () => {
         expect(await carResultPageObj.isMapVisible()).to.equal(false);

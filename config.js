@@ -1,7 +1,13 @@
 exports.config = {
     directConnect: true,
     capabilities: {
-        'browserName': 'chrome'
+        'browserName': 'chrome',
+        // 'chromeOptions': {
+        //     // 'args': ['show-fps-counter=true'],
+        //     'mobileEmulation' : {
+        //         'deviceName': 'Nexus 7'
+        //     }
+        // }
     },
     specs: [
         'spec.ts'

@@ -8,11 +8,10 @@ export default class CarResultPage {
     carResults = element.all(by.css('.js-result'));
     map = element(by.css("div[id*='-map']"));
 
-    async isCarResultsLoaded(): Promise<boolean> {
+    async isCarResultsLoaded(): Promise<void> {
         const allWindows = await browser.getAllWindowHandles();
         await browser.switchTo().window(allWindows[1]);
-        await this.commonHelperObj.waitForElementToBeVisible(this.carResultList);
-        return await this.carResultList.isDisplayed();
+        await this.commonHelperObj.waitForURLToBeLoaded('LHR');
     }
     async getCarResultCount(): Promise<number> {
         await this.commonHelperObj.waitForElementToBeVisible(this.carResults.first());
