@@ -6,7 +6,6 @@ from django.dispatch import receiver
 import os
 from datetime import datetime
 
-# Create your models here.
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -14,19 +13,27 @@ class Profile(models.Model):
     location = models.CharField(max_length=30, blank=True)
     birth_date = models.DateField(null=True, blank=True)
 
+
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
         Profile.objects.create(user=instance)
 
+
 @receiver(post_save, sender=User)
 def save_user_profile(sender, instance, **kwargs):
     instance.profile.save()
 
-def update_filename(instance, filename):
+
+def update_filename(instance, fname):
     path = "uploads/"
-    formatting = str(instance.owner_id) + '_' + str(datetime.now()).split('.')[0] + '_' + filename
+    time_now = str(datetime.now()).split('.')[0]
+    owner = str(instance.owner_id)
+
+    formatting = owner + '_' + timenow + '_' + fname
+
     return os.path.join(path, formatting)
+
 
 class Uploads(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -37,20 +44,26 @@ class Uploads(models.Model):
     def __str__(self):
         return self.title
 
+
 class Upvotes(models.Model):
     owner = models.ForeignKey(Profile, on_delete=models.CASCADE)
-    upvoter = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='upload_upvoter')
+    upvoter = models.ForeignKey(Profile,
+                                on_delete=models.CASCADE,
+                                related_name='upload_upvoter')
     photo = models.ForeignKey(Uploads, on_delete=models.CASCADE)
 
 
 class Downvotes(models.Model):
     owner = models.ForeignKey(Profile, on_delete=models.CASCADE)
-    downvoter = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='upload_downvoter')
+    downvoter = models.ForeignKey(Profile,
+                                  on_delete=models.CASCADE,
+                                  related_name='upload_downvoter')
     photo = models.ForeignKey(Uploads, on_delete=models.CASCADE)
 
 
 class Favorites(models.Model):
     owner = models.ForeignKey(Profile, on_delete=models.CASCADE)
-    favoriter = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='upload_favoriter')
+    favoriter = models.ForeignKey(Profile,
+                                  on_delete=models.CASCADE,
+                                  related_name='upload_favoriter')
     photo = models.ForeignKey(Uploads, on_delete=models.CASCADE)
-
