@@ -1,10 +1,11 @@
 import json
 
 from scrapy.linkextractors import LinkExtractor
+from scrapy.link import Link
 from scrapy.spiders import Rule, Request
 
 from skuscraper.parsers.genders import Gender
-from .base import BaseParseSpider, BaseCrawlSpider, clean, soupify
+from .base import BaseParseSpider, BaseCrawlSpider, clean
 
 class Mixin:
     retailer = 'dvf'
@@ -105,24 +106,27 @@ class DvfUSParseSpider(MixinUS, DvfParseSpider):
     name = MixinUS.retailer + '-parse'
 
 
-class DvfCrawlSpider(BaseCrawlSpider):
-    listings_css = ['.category-menu__sub-menu-list-item']
+class DvfLinkExtractor(LinkExtractor):
 
-    rules = (
-        Rule(LinkExtractor(restrict_css=listings_css), callback='parse_category'),
-    )
-
-    def parse_category(self, response):
-        products = clean(response.css('.grid-tile.item .product-info a::attr(href)'))
-        for product in products:
-            yield response.follow(product, self.parse_item,
-            meta=self.get_meta_with_trail(response))
-
+    def extract_links(self, response):
+        links =super(DvfLinkExtractor, self).extract_links(response)
         next_page = clean(response.css('.infinite-scroll-placeholder::attr(data-grid-url)'))
         if next_page:
-            yield response.follow(next_page[0], self.parse_category)
+            links.append(Link(next_page[0]))
+        return links
+
+
+class DvfCrawlSpider(BaseCrawlSpider):
+    listings_css = ['.category-menu__sub-menu-list-item']
+    products_css = ['.grid-tile.item .product-info a']
+
+    rules = (
+        Rule(DvfLinkExtractor(restrict_css=listings_css), callback='parse'),
+        Rule(LinkExtractor(restrict_css=products_css), callback='parse_item')
+    )
 
 
 class DvfUSCrawlSpider(MixinUS, DvfCrawlSpider):
     name = MixinUS.retailer + '-crawl'
     parse_spider = DvfUSParseSpider()
+
