@@ -30,6 +30,7 @@ class WeatherParser:
     def __init__(self):
         os.chdir('/home/ali/PycharmProjects/hello-world/weatherdata')
         self.weather_reading_files = os.listdir()
+        self.weather_reading = self.read_records()
 
     def get_headers(self, data_file):
         headers = []
@@ -52,21 +53,19 @@ class WeatherParser:
         return weather_readings
 
     def read_monthly_report(self, date):
-        monthly_report = self.read_records()
-        monthly_report = [
-            monthly_weather_reading for monthly_weather_reading in monthly_report
+        self.weather_reading = [
+            monthly_weather_reading for monthly_weather_reading in self.weather_reading
             if 'PKT' in monthly_weather_reading and date in monthly_weather_reading['PKT']
         ]
-        monthly_report = self.format_record(monthly_report)
+        monthly_report = self.format_record(self.weather_reading)
         return monthly_report
 
     def read_yearly_report(self, date):
-        yearly_report = self.read_records()
-        yearly_report = [
-            yearly_weather_reading for yearly_weather_reading in yearly_report
+        self.weather_reading = [
+            yearly_weather_reading for yearly_weather_reading in self.weather_reading
             if 'PKT' in yearly_weather_reading and date in yearly_weather_reading['PKT']
         ]
-        yearly_report = self.format_record(yearly_report)
+        yearly_report = self.format_record(self.weather_reading)
         return yearly_report
 
     def format_record(self, records):
