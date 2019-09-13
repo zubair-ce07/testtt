@@ -189,7 +189,7 @@ class CrawlSpider(BaseCrawlSpider):
                       body=json.dumps(self.region_payload), headers=headers)
 
     def parse_region(self, response):
-        return [Request(url, self.parse) for url in self.start_urls]
+        yield from super().start_requests()
 
     def parse(self, response):
         yield from super().parse(response)
