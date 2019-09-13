@@ -52,18 +52,18 @@ class WeatherParser:
 
         return weather_readings
 
-    def read_monthly_report(self, date):
+    def read_monthly_report(self, month):
         self.weather_reading = [
             monthly_weather_reading for monthly_weather_reading in self.weather_reading
-            if 'PKT' in monthly_weather_reading and date in monthly_weather_reading['PKT']
+            if 'PKT' in monthly_weather_reading and month in monthly_weather_reading['PKT']
         ]
         monthly_report = self.format_record(self.weather_reading)
         return monthly_report
 
-    def read_yearly_report(self, date):
+    def read_yearly_report(self, year):
         self.weather_reading = [
             yearly_weather_reading for yearly_weather_reading in self.weather_reading
-            if 'PKT' in yearly_weather_reading and date in yearly_weather_reading['PKT']
+            if 'PKT' in yearly_weather_reading and year in yearly_weather_reading['PKT']
         ]
         yearly_report = self.format_record(self.weather_reading)
         return yearly_report
