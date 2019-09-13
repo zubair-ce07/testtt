@@ -81,8 +81,8 @@ class ParseProducts:
         return raw_size.split('_')[-1]
 
 
-class BrothersSpider(CrawlSpider, ParseProducts):  # crawl
-    name = 'brothers_spider'
+class BrothersSpider(CrawlSpider, ParseProducts):
+    name = 'brothers'
 
     allowed_domains = ["brothers.se"]
     start_urls = ['https://www.brothers.se']
@@ -94,7 +94,7 @@ class BrothersSpider(CrawlSpider, ParseProducts):  # crawl
         '//div[@class="product-image"]',
     ]
     rules = (
-        Rule(LinkExtractor(restrict_xpaths=listings_x)),  # callback parse
+        Rule(LinkExtractor(restrict_xpaths=listings_x)),
         Rule(LinkExtractor(restrict_xpaths=products_x),
              callback='parse_items', follow=True)
     )
