@@ -3,6 +3,8 @@ from django.db import models
 from django.db.models import SET_NULL
 from phone_field import PhoneField
 
+from user_management.utils import NOTIFICATION_CHOICE_FIELDS
+
 
 class SocialGroup(models.Model):
     name = models.CharField(max_length=50)
@@ -82,4 +84,4 @@ class GroupRequest(models.Model):
 class Notification(models.Model):
     text = models.CharField(max_length=50)
     status = models.BooleanField(default=False)
-    notification_type = models.CharField(max_length=20, )
+    notification_type = models.CharField(max_length=20, choices=NOTIFICATION_CHOICE_FIELDS)

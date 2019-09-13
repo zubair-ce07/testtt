@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User
 from django.urls import reverse
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from user_management.models import (
     AcademicInformation,
@@ -16,10 +17,32 @@ from user_management.models import (
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
+    password2 = serializers.CharField(style={'input_type': 'password'}, write_only=True)
+
     class Meta:
         model = UserProfile
-        fields = ['username', 'email', 'first_name', 'last_name', 'password', 'date_of_birth', 'phone',
+        fields = ['username', 'email', 'first_name', 'last_name', 'password', 'password2', 'date_of_birth', 'phone',
                   'address']
+
+    def save(self, **kwargs):
+        userprofile = UserProfile(
+            username=self.validated_data['username'],
+            email=self.validated_data['email'],
+            first_name=self.validated_data['first_name'],
+            last_name=self.validated_data['last_name'],
+            address=self.validated_data['address'],
+            phone=self.validated_data['phone'],
+            date_of_birth=self.validated_data['date_of_birth'],
+        )
+
+        password = self.validated_data['password']
+        password2 = self.validated_data['password2']
+        if password != password2:
+            raise ValidationError({'password': 'passwords must match'})
+
+        userprofile.set_password(password)
+        userprofile.save()
+        return userprofile
 
 
 class UserDetailSerializer(serializers.HyperlinkedModelSerializer):

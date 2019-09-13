@@ -1,11 +1,9 @@
-from django.http import Http404
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
-from rest_framework.views import APIView
-from rest_framework.viewsets import ViewSet
+from rest_framework.viewsets import ViewSet, ModelViewSet
 
 from user_management.models import UserProfile, WorkInformation, AcademicInformation, SocialGroup, GroupRequest, \
     FriendRequest
@@ -14,17 +12,22 @@ from user_management.serializers import (
     UserProfileSerializer, AcademicInformationPostSerializer, \
     UserDetailSerializer, WorkInformationPostSerializer, UserFriendsSerializer, \
     GroupSerializer, UserSocialGroupsSerializer, NotificationSerializer, GroupRequestSerializer, \
-    FriendRequestSerializer
+    FriendRequestSerializer, WorkInformationGetSerializer, AcademicInformationGetSerializer
 )
 
-class UsersListCreateView(APIView):
-    def get(self, request):
-        users = UserProfile.objects.all()
-        users_serializer = UserProfileSerializer(users, many=True)
-        return Response(users_serializer.data, status=status.HTTP_200_OK)
+from user_management.utils import get_notification_text
 
-    def post(self, request):
-        serializer = UserProfileSerializer(data=request.data)
+from user_management.utils import NOTIFICATION_CHOICE_FIELDS
+
+
+class UsersListCreateView(ModelViewSet):
+    serializer_class = UserProfileSerializer
+    queryset = UserProfile.objects.all()
+
+    def create(self, request, *args, **kwargs):
+        print(request.data)
+
+        serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
             if user:
@@ -33,131 +36,38 @@ class UsersListCreateView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class UserDetailView(APIView):
-    def get_object(self, pk):
-        try:
-            return UserProfile.objects.get(pk=pk)
-        except UserProfile.DoesNotExist:
-            raise Http404
-
-    def get(self, request, pk=None):
-        user = self.get_object(pk=pk)
-        user_serializer = UserDetailSerializer(user)
-        return Response(user_serializer.data, status=status.HTTP_200_OK)
-
-    def put(self, request, pk):
-        user = self.get_object(pk=pk)
-        user_serializer = UserDetailSerializer(data=user)
-        if user_serializer.is_valid():
-            user_serializer.save()
-            return Response(user_serializer.data, status=status.HTTP_202_ACCEPTED)
-
-    def delete(self, request, pk):
-        user = get_object_or_404(UserProfile, pk=pk)
-        if user:
-            user.delete()
-            return Response(status=status.HTTP_202_ACCEPTED)
-        return Response(status=status.HTTP_404_NOT_FOUND)
+class UserDetailView(ModelViewSet):
+    queryset = UserProfile.objects.all()
+    serializer_class = UserDetailSerializer
 
 
-class WorkInformationView(ViewSet):
-    def list(self, request):
+class WorkInformationView(ModelViewSet):
+    queryset = WorkInformation.objects.all()
+    serializer_class = WorkInformationPostSerializer
+
+    def list(self, request, *args, **kwargs):
         username = request.query_params.get('username', None)
         if username:
             work_informations = WorkInformation.objects.filter(user_profile__username=username)
         else:
             work_informations = WorkInformation.objects.all()
-        work_information_serializer = WorkInformationPostSerializer(work_informations, many=True)
+
+        work_information_serializer = WorkInformationGetSerializer(work_informations, many=True)
         return Response(work_information_serializer.data, status=status.HTTP_200_OK)
 
-    def create(self, request):
-        work_information_serializer = WorkInformationPostSerializer(data=request.data)
-        if work_information_serializer.is_valid():
-            work_information_serializer.save()
-            return Response(work_information_serializer.data, status=status.HTTP_201_CREATED)
-        return Response(work_information_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def update(self, request, pk=None):
-        work_information = WorkInformation.objects.get(id=pk)
-        work_information_serializer = WorkInformationPostSerializer(work_information, data=request.data)
-        if work_information_serializer.is_valid():
-            work_information_serializer.save()
-            return Response(work_information_serializer.data, status=status.HTTP_202_ACCEPTED)
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+class AcademicInformationView(ModelViewSet):
+    queryset = AcademicInformation.objects.all()
+    serializer_class = AcademicInformationPostSerializer
 
-    def destroy(self, request, pk=None):
-        work_information = get_object_or_404(WorkInformation, pk=pk)
-        if work_information:
-            work_information.delete()
-            return Response(work_information, status=status.HTTP_202_ACCEPTED)
-        return Response(work_information, status=status.HTTP_404_NOT_FOUND)
-
-
-class AcademicInformationView(ViewSet):
-    def list(self, request):
+    def list(self, request, *args, **kwargs):
         username = request.query_params.get('username', None)
         if username:
             academic_informations = AcademicInformation.objects.filter(user_profile__username=username)
         else:
             academic_informations = AcademicInformation.objects.all()
-        work_informations_serializer = AcademicInformationPostSerializer(academic_informations, many=True)
+        work_informations_serializer = AcademicInformationGetSerializer(academic_informations, many=True)
         return Response(work_informations_serializer.data, status=status.HTTP_200_OK)
-
-    def create(self, request):
-        academic_information_serializer = AcademicInformationPostSerializer(data=request.data)
-        if academic_information_serializer.is_valid():
-            academic_information_serializer.save()
-            return Response(academic_information_serializer.data, status=status.HTTP_201_CREATED)
-        return Response(academic_information_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def update(self, request, pk=None):
-        academic_information = AcademicInformation.objects.get(id=pk)
-        academic_information_serializer = AcademicInformationPostSerializer(academic_information, data=request.data)
-        if academic_information_serializer.is_valid():
-            academic_information_serializer.save()
-            return Response(academic_information_serializer.data, status=status.HTTP_202_ACCEPTED)
-        return Response(status=status.HTTP_400_BAD_REQUEST)
-
-    def destroy(self, request, pk=None):
-        academic_information = get_object_or_404(AcademicInformation, pk=pk)
-        if academic_information:
-            academic_information.delete()
-            return Response('deleted', status=status.HTTP_202_ACCEPTED)
-        return Response('deleted', status=status.HTTP_404_NOT_FOUND)
-
-
-class GroupsView(ViewSet):
-    def list(self, request):
-        groups = SocialGroup.objects.all()
-        groups_serializer = GroupSerializer(groups, many=True)
-        return Response(groups_serializer.data, status=status.HTTP_200_OK)
-
-    def retrieve(self, request, pk=None):
-        group = get_object_or_404(SocialGroup, pk=pk)
-        group_serializer = GroupSerializer(group)
-        return Response(group_serializer.data, status=status.HTTP_200_OK)
-
-    def create(self, request):
-        group_serializer = GroupSerializer(data=request.data)
-        if group_serializer.is_valid():
-            group_serializer.save()
-            return Response(group_serializer.validated_data, status=status.HTTP_201_CREATED)
-        return Response('invalid data', status=status.HTTP_400_BAD_REQUEST)
-
-    def update(self, request, pk=None):
-        group = SocialGroup.objects.get(id=pk)
-        group_serializer = GroupSerializer(group, request.data)
-        if group_serializer.is_valid():
-            group_serializer.save()
-            return Response(group_serializer.validated_data, status=status.HTTP_202_ACCEPTED)
-        return Response('invalid data', status=status.HTTP_400_BAD_REQUEST)
-
-    def destroy(self, request, pk=None):
-        group = get_object_or_404(SocialGroup, pk=pk)
-        if group:
-            group.delete()
-            return Response(group, status=status.HTTP_202_ACCEPTED)
-        return Response(group, status=status.HTTP_202_ACCEPTED)
 
 
 class GroupRequestView(ViewSet):
@@ -174,10 +84,11 @@ class GroupRequestView(ViewSet):
             'group': pk_group,
             'status': False
         }
+        notification_type = NOTIFICATION_CHOICE_FIELDS.__dict__['group']
         notification = {
-            "text": "You Have a new group join request",
+            "text": get_notification_text(notification_type),
             "status": False,
-            "type": "group"
+            "type": notification_type
         }
         group_request_serializer = GroupRequestSerializer(data=group_request)
         notification_serializer = NotificationSerializer(data=notification)
@@ -205,6 +116,11 @@ class GroupRequestView(ViewSet):
         return Response(group_request, status=status.HTTP_200_OK)
 
 
+class GroupsView(ModelViewSet):
+    queryset = SocialGroup.objects.all()
+    serializer_class = GroupSerializer
+
+
 class FriendRequestView(ViewSet):
     def list(self, request, **kwargs):
         friend_requests = FriendRequest.objects.filter(status=False, request_to__id=kwargs['pk'])
@@ -222,10 +138,11 @@ class FriendRequestView(ViewSet):
                 'request_from': pk_user_from,
                 'status': False
             }
+            notification_type = NOTIFICATION_CHOICE_FIELDS.__dict__['friend']
             notification = {
-                "text": "You Have a new friend request",
+                "text": get_notification_text(notification_type),
                 "status": False,
-                "type": "friend"
+                "type": notification_type
             }
             friend_request_serializer = FriendRequestSerializer(data=friend_request)
             notification_serializer = NotificationSerializer(data=notification)
@@ -247,10 +164,8 @@ class FriendRequestView(ViewSet):
 
     def destroy(self, request, **kwargs):
         friend_request = get_object_or_404(GroupRequest, **kwargs)
-        if friend_request:
-            friend_request.delete()
-            return Response(friend_request, status=status.HTTP_200_OK)
-        return Response(friend_request, status=status.HTTP_404_NOT_FOUND)
+        friend_request.delete()
+        return Response(friend_request, status=status.HTTP_200_OK)
 
 
 class JoinGroupsView(ViewSet):

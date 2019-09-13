@@ -4,9 +4,16 @@ from user_management import views
 urlpatterns = [
     path('rest-auth/', include('rest_auth.urls')),
 
-    path('', views.UsersListCreateView.as_view()),
+    path('', views.UsersListCreateView.as_view({
+        'post': 'create',
+        'get': 'list',
+    })),
 
-    path('<int:pk>/', views.UserDetailView.as_view()),
+    path('<int:pk>/', views.UserDetailView.as_view({
+        'get': 'retrieve',
+        'put': 'update',
+        'delete': 'destroy'
+    })),
 
 
     path('work-information/(?P<username>/w+|)/$', views.WorkInformationView.as_view({
@@ -22,7 +29,7 @@ urlpatterns = [
     })),
 
 
-    path('academic-information/(?P<username>/w+|)/$', views.AcademicInformationView.as_view({
+    path('academic-information/(?P< username>/w+|)/$', views.AcademicInformationView.as_view({
         'get': 'list',
     })),
     path('academic-information/', views.AcademicInformationView.as_view({
