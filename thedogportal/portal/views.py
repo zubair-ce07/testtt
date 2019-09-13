@@ -76,7 +76,11 @@ def HomepageView(request):
         if (not user_profile.location or not user_profile.bio or not user_profile.birth_date):
             messages.add_message(request, messages.WARNING, 'Please complete you profile by going to settings!')
 
-        return HttpResponse(template.render({"random_image": random_image}, request))
+        upvoted = random_image.upvotes_set.filter(upvoter=request.user.id)
+        downvoted = random_image.downvotes_set.filter(downvoter=request.user.id)
+        favorited = random_image.favorites_set.filter(favoriter=request.user.id)
+
+        return HttpResponse(template.render({"random_image": random_image, 'upvoted': upvoted, 'downvoted': downvoted, 'favorited': favorited}, request))
     else:
         return redirect('login')
 

@@ -4,8 +4,6 @@
 
 
 {% block content %}
-{% comment %} <h1> Django Image Uploading </h1> {% endcomment %}
-
     <ul>
     {% if not uploads %}
         <h2 class="heading"> You have no uploads yet. </h2>
@@ -15,7 +13,7 @@
             Upload Now
         </a>
     {% else %}
-            <div class="row">
+        <div class="row">
         {% for upload in uploads %}
                 <form method="POST">
                 {% csrf_token %}
@@ -37,6 +35,9 @@
             
         {% endfor %}
         </div>
+        <a href="{% url 'upload' %}" class="btn btn-large waves-effect waves-light" name="upload">
+            Upload
+        </a>
     {% endif %}
     </ul>
   

@@ -12,6 +12,10 @@ body{
   font-style: italic;
 }
 
+.pressed {
+  background-color: blue !important;
+}
+
 .btn input{
   color: white !important;
 }
