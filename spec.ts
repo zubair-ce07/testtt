@@ -22,12 +22,12 @@ describe('Kayak cars',() => {
         await kayakHomepageObj.clickCarsBtn();
     });
     it('Should have "Same drop-off" search option selected by default',  () => {
-        expect(kayakCarsHomepage.getDropOffStatus()).to.eventually.equal('Same drop-off');
+        expect(kayakCarsHomepage.getDropOffStatus()).to.eventually.equal('roundtrip');
     });
     it('Should be able to select "Different drop-off" search option',async () => {
         await kayakCarsHomepage.clickDropOffLabel();
         await kayakCarsHomepage.clickDifferentDropOffOption();
-        expect(kayakCarsHomepage.getDropOffStatus()).to.eventually.equal('Different drop-off');
+        expect(kayakCarsHomepage.getDropOffStatus()).to.eventually.equal('oneway');
     });
     it('Should display destination input field after selecting "different drop-off" search option', async () => {
         expect(kayakCarsHomepage.isDestinationFieldVisible()).to.eventually.equal(true);

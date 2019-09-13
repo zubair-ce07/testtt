@@ -24,7 +24,7 @@ export default class KayakCarsHomepage {
 
     async getDropOffStatus(): Promise<string> {
         await this.commonHelperObj.waitForElementToBeVisible(this.dropOffStatus);
-        return await this.dropOffStatus.getAttribute('data-title');
+        return await this.dropOffStatus.getAttribute('data-value');
     }
     async clickDropOffLabel(): Promise<void> {
         await this.dropOffLabel.click();
