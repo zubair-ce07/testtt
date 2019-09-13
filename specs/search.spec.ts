@@ -1,11 +1,11 @@
-import { browser }                from 'protractor';
-import { use }                    from 'chai';
-import chaiAsPromised             from "chai-as-promised";
-import { parse }                  from "../utils/scenario.util";
-import { all, getAirportCode }    from "../utils/specs.util";
-import { LandingPage }            from "../pages/Flights";
+import { browser } from 'protractor';
+import { use } from 'chai';
+import chaiAsPromised from "chai-as-promised";
+import { parse } from "../utils/scenario.util";
+import { all, getAirportCode } from "../utils/specs.util";
+import { FlightsPage } from "../pages/Flights";
 import { switchToNewTabIfOpened } from "../utils/browser.util";
-import { FlightsResultsPage }     from "../pages/FlightsResults";
+import { FlightsResultsPage } from "../pages/FlightsResults";
 
 const scenarios = parse(require('../scenarios/search.scenario.json'));
 
@@ -17,43 +17,41 @@ describe('Flights Search Scenarios', () => {
     browser.waitForAngularEnabled(false).then(done);
   });
   
-  let page: LandingPage;
+  let flightsPage: FlightsPage;
   beforeEach(async (done) => {
-    page = new LandingPage();
-    await page.load();
-    await page.searchForm.passengers.reset();
+    flightsPage = new FlightsPage();
+    await flightsPage.load();
     done();
   });
   
   all(scenarios, (scenario) => {
-    it(`${scenario.title}`, async function () {
-      
-      await page.searchForm.origin.type(scenario.origin.input);
+    it(`${scenario.title}`, async () => {
+      await flightsPage.form.origin.type(scenario.origin.input);
       
       const originAirportCode = getAirportCode(scenario.origin.selection);
       browser.sleep(1000);
-      await page.searchForm.origin.getSearchResults().then(async airports => {
+      await flightsPage.form.origin.getSearchResults().then(async airports => {
         const idx = airports.findIndex(airport => airport.code == originAirportCode);
         browser.sleep(1000);
-        await page.searchForm.origin.select(idx + 1);
+        await flightsPage.form.origin.select(idx + 1);
       });
-      
-      await page.searchForm.destination.type(scenario.destination.input);
+    
+      await flightsPage.form.destination.type(scenario.destination.input);
       const destinationAirportCode = getAirportCode(scenario.destination.selection);
       browser.sleep(2000);
-      await page.searchForm.destination.getSearchResults().then(airports => {
+      await flightsPage.form.destination.getSearchResults().then(airports => {
         const idx = airports.findIndex(airport => airport.code == destinationAirportCode);
         browser.sleep(1000);
-        return page.searchForm.destination.select(idx + 1);
+        return flightsPage.form.destination.select(idx + 1);
       });
       
       for (const passenger of Object.keys(scenario.passengers)) {
         const value = scenario.passengers[passenger];
-        await page.searchForm.passengers.set(passenger, value);
+        await flightsPage.form.passengers.set(passenger, value);
         browser.sleep(1000);
       }
-      
-      await page.searchForm.submit();
+    
+      await flightsPage.form.submit();
       
       await switchToNewTabIfOpened();
       

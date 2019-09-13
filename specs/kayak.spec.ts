@@ -1,9 +1,13 @@
-import { browser }                                                from "protractor";
-import { expect, use }                                            from "chai";
-import chaiAsPromised                                             from "chai-as-promised";
-import { FlightFilterType, LandingPage, PassengerType, TripType } from "../pages/Flights";
-import { formatDate, removeNonNumericValues }                     from "../utils/specs.util";
-import { FlightsResultsPage }                                     from "../pages/FlightsResults";
+import { browser } from "protractor";
+import { expect, use } from "chai";
+import chaiAsPromised from "chai-as-promised";
+import { FlightsPage } from "../pages/Flights";
+import { formatDate, removeNonNumericValues, toTimeString } from "../utils/specs.util";
+import { FlightsResultsPage } from "../pages/FlightsResults";
+import { switchToNewTabIfOpened } from "../utils/browser.util";
+import { TripType } from "../components/Trip";
+import { PassengerType } from "../components/Passenger";
+import { FlightFilters } from "../components/Flights";
 
 use(chaiAsPromised);
 
@@ -12,106 +16,115 @@ describe('Kayak.com', function () {
     browser.waitForAngularEnabled(false).then(() => done())
   });
   
-  let page: LandingPage;
+  let flightsPage: FlightsPage;
+  let flightsResultsPage: FlightsResultsPage;
   
-  beforeEach(done => {
-    page = new LandingPage();
-    page.load().then(done)
+  it('should open Kayak.com', async () => {
+    flightsPage = new FlightsPage();
+    await flightsPage.load();
+    
+    expect(flightsPage.form.origin.getDialog().isPresent()).eventually.to.be.true;
+    expect(flightsPage.form.destination.getDialog().isPresent()).eventually.to.be.true;
+    expect(flightsPage.form.dateRange.getDepartureDateDisplayValue()).eventually.to.be.not.null;
+    expect(flightsPage.form.dateRange.getReturnDateDisplayValue()).eventually.to.be.not.null;
+    expect(flightsPage.form.trip.value()).eventually.to.equal('Round-trip');
   });
   
-  it('should visit flights page', async function () {
-    // step-1
-    expect(page.searchForm.origin.get().isPresent()).eventually.to.be.true;
-    expect(page.searchForm.destination.get().isPresent()).eventually.to.be.true;
-    expect(page.searchForm.dateRange.getDepartureDateDisplayValue()).eventually.to.be.not.null;
-    expect(page.searchForm.dateRange.getReturnDateDisplayValue()).eventually.to.be.not.null;
-    expect(page.searchForm.trip.value()).eventually.to.equal('Round-trip');
+  it('should switch to "one-way" trip-type mode', async () => {
+    await flightsPage.form.trip.select(TripType.OneWay);
+    expect(flightsPage.form.trip.value()).eventually.to.equal('One-way');
+  });
+  
+  it('should switch to "multi-city" trip-type mode', async () => {
+    await flightsPage.form.trip.select(TripType.MultiCity);
+    expect(flightsPage.form.trip.value()).eventually.to.equal('Multi-city');
+  });
+  
+  it('should switch to "round-trip" trip-type mode', async () => {
+    await flightsPage.form.trip.select(TripType.RoundTrip);
+    expect(flightsPage.form.trip.value()).eventually.to.equal('Round-trip');
+  });
+  
+  it('should set 9 adults in passengers field', async () => {
+    await flightsPage.form.passengers.openDialogWindow();
+    await flightsPage.form.passengers.increment(PassengerType.Adults, 9);
+    expect(flightsPage.form.passengers.errorMessage()).eventually.to.equal('Searches cannot have more than 9 adults');
+    await flightsPage.form.passengers.closeDialogWindow();
+  });
+  
+  it('should type "PAR" in origin and select first result', async () => {
+    await flightsPage.form.origin.type('PAR');
+    await flightsPage.form.origin.select(1);
+    expect(flightsPage.form.origin.getSelectedValue()).eventually.to.equal('Paris (PAR)');
+  });
+  
+  it('should type "NYC" in destination and select first result', async () => {
+    await flightsPage.form.destination.type('NYC');
+    await flightsPage.form.destination.select(1);
+    expect(flightsPage.form.destination.getSelectedValue()).eventually.to.equal('New York (NYC)');
+  });
+  
+  it('should set 4 adults in passengers field', async () => {
+    await flightsPage.form.passengers.set(PassengerType.Adults, 4);
+    expect(flightsPage.form.passengers.value()).eventually.to.equal('4 Travelers');
+  });
+  
+  it('should set 2 children in passengers field', async () => {
+    await flightsPage.form.passengers.set(PassengerType.Child, 2);
+    await flightsPage.form.passengers.closeDialogWindow();
+    expect(flightsPage.form.passengers.value()).eventually.to.equal('6 Travelers');
+  });
+  
+  it('should set departure and arrival date', async () => {
+    await flightsPage.form.dateRange.openDialogWindow();
     
-    // step-2
-    await page.searchForm.trip.select(TripType.OneWay);
-    expect(page.searchForm.trip.value()).eventually.to.equal('One-way');
-    
-    // step-3
-    await page.searchForm.trip.select(TripType.MultiCity);
-    expect(page.searchForm.trip.value()).eventually.to.equal('Multi-city');
-    //
-    // step-4
-    await page.searchForm.trip.select(TripType.RoundTrip);
-    expect(page.searchForm.trip.value()).eventually.to.equal('Round-trip');
-    
-    // step-5
-    await page.searchForm.passengers.openDialog();
-    page.searchForm.passengers.increment(PassengerType.Adults, 9);
-    browser.sleep(1000);
-    expect(page.searchForm.passengers.errorMessage()).eventually.to.equal('Searches cannot have more than 9 adults');
-    await page.searchForm.passengers.closeDialog();
-    
-    // step-6
-    await page.searchForm.origin.type('PAR');
-    await page.searchForm.origin.select(1);
-    browser.sleep(2000);
-    expect(page.searchForm.origin.getSelectedValue()).eventually.to.equal('Paris (PAR)');
-    
-    // step-7
-    await page.searchForm.destination.type('NYC');
-    await page.searchForm.destination.select(1);
-    browser.sleep(2000);
-    expect(page.searchForm.destination.getSelectedValue()).eventually.to.equal('New York (NYC)');
-    
-    // step-8
-    await page.searchForm.passengers.set(PassengerType.Adults, 4);
-    expect(page.searchForm.passengers.value()).eventually.to.equal('4 Travelers');
-    
-    // step-9
-    await page.searchForm.passengers.set(PassengerType.Child, 2);
-    page.searchForm.passengers.closeDialog();
-    expect(page.searchForm.passengers.value()).eventually.to.equal('6 Travelers');
-    
-    // step-{10,11}
-    await page.searchForm.dateRange.open();
     const date = new Date();
     const currentDate = new Date(`${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`);
     const departureDate = new Date(currentDate.setDate(currentDate.getDate() + 3));
     const returnDate = new Date(currentDate.setDate(currentDate.getDate() + 6));
-    await page.searchForm.dateRange.selectDate(departureDate, returnDate);
+    await flightsPage.form.dateRange.selectDate(departureDate, returnDate);
     
-    expect(page.searchForm.dateRange.getDepartureDateDisplayValue())
+    expect(flightsPage.form.dateRange.getDepartureDateDisplayValue())
       .eventually.to.equal(formatDate(departureDate));
     
-    expect(page.searchForm.dateRange.getReturnDateDisplayValue())
+    expect(flightsPage.form.dateRange.getReturnDateDisplayValue())
       .eventually.to.equal(formatDate(returnDate));
+  });
+  
+  it('should un-select all compare-to options by clicking "none"', async () => {
+    await flightsPage.form.compare.selectNone();
+  });
+  
+  it('should click search button and load flight search page', async () => {
+    flightsResultsPage = await flightsPage.form.submit();
+    await switchToNewTabIfOpened();
+    await flightsResultsPage.load();
+    await flightsResultsPage.dialog.closeIfOpen();
+    expect(browser.getCurrentUrl()).eventually.to.contain('flights')
+  });
+  
+  it('should display correctly filled search form', function () {
+    const date = new Date();
+    const currentDate = new Date(`${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`);
+    const departureDate = new Date(currentDate.setDate(currentDate.getDate() + 3));
+    const returnDate = new Date(currentDate.setDate(currentDate.getDate() + 6));
     
-    // step-12
-    await page.searchForm.compare.selectNone();
-    
-    // step-13
-    const results: FlightsResultsPage = await page.searchForm.submit();
-    await results.load();
-    await results.dialog.closeIfOpen();
-    
-    const cheapestPrice: any = await results.header.getCost(FlightFilterType.Cheapest).then(price => {
-      return Number(price.replace('$', ''))
-    });
-    const bestPrice: any = await results.header.getCost(FlightFilterType.Best).then(price => {
-      return Number(price.replace('$', ''))
-    });
-    
-    expect(results.form.trip.value()).eventually.to.equal('Round-trip');
-    expect(results.form.passengers.value()).eventually.to.equal('6 Travelers');
-    expect(results.form.dateRange.getReturnDateDisplayValue()).eventually.to.equal(formatDate(returnDate));
-    expect(results.form.dateRange.getDepartureDateDisplayValue()).eventually.to.equal(formatDate(departureDate));
-    expect(cheapestPrice).to.be.lte(bestPrice);
-    
-    const quickestTime = await results.header.getDuration(FlightFilterType.Quickest).then(toTimeString);
-    const slowestTime = await results.header.getDuration(FlightFilterType.Cheapest).then(toTimeString);
-    const isLessThanOrEqual: boolean = Date.parse(`01/01/1990 ${quickestTime}`) <= Date.parse(`01/01/1990 ${slowestTime}`);
-    expect(isLessThanOrEqual).to.be.true;
-    
+    expect(flightsResultsPage.form.trip.value()).eventually.to.equal('Round-trip');
+    expect(flightsResultsPage.form.passengers.value()).eventually.to.equal('6 Travelers');
+    expect(flightsResultsPage.form.dateRange.getReturnDateDisplayValue()).eventually.to.equal(formatDate(returnDate));
+    expect(flightsResultsPage.form.dateRange.getDepartureDateDisplayValue()).eventually.to.equal(formatDate(departureDate));
+  });
+  
+  it('should show least price in slowest sort option than other options', async () => {
+    const cheapestPrice: any = await flightsResultsPage.header.getCost(FlightFilters.Cheapest).then(removeNonNumericValues);
+    const bestPrice: any = await flightsResultsPage.header.getCost(FlightFilters.Best).then(removeNonNumericValues);
+    expect(Number(cheapestPrice)).to.be.lte(Number(bestPrice));
+  });
+  
+  it('should show least time in quickest sort option than other options', async () => {
+    const quickestTime = await flightsResultsPage.header.getDuration(FlightFilters.Quickest).then(toTimeString);
+    const slowestTime = await flightsResultsPage.header.getDuration(FlightFilters.Cheapest).then(toTimeString);
+    expect(Date.parse(`01/01/1990 ${quickestTime}`)).to.be.lte(Date.parse(`01/01/1990 ${slowestTime}`));
   });
   
 });
-
-function toTimeString(timestring: string) {
-  const [hours, minutes]: any = timestring.trim().split(' ').map(removeNonNumericValues).map(Number);
-  return `${hours}:${minutes}:00`
-}

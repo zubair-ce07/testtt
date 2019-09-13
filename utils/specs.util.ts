@@ -17,3 +17,8 @@ export function dayNumberToName(day) {
 export function removeNonNumericValues(string): string {
   return string.replace(/[^0-9]+/, '');
 }
+
+export function toTimeString(timestring: string) {
+  const [hours, minutes]: any = timestring.trim().split(' ').map(removeNonNumericValues).map(Number);
+  return `${hours}:${minutes}:00`
+}

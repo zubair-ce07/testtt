@@ -12,6 +12,7 @@
     "chai-as-promised": "^7.1.1",
     "dotenv": "^8.1.0",
     "jasmine": "^3.4.0",
+    "jasmine-spec-reporter": "^4.2.1",
     "mocha": "^6.2.0",
     "protractor": "^5.4.2"
   },

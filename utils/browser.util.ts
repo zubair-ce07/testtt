@@ -24,3 +24,10 @@ export function switchToNewTabIfOpened() {
       }
     })
 }
+
+export function clearStorage() {
+  browser.executeScript(() => {
+    window.localStorage.clear();
+    window.sessionStorage.clear();
+  });
+}
