@@ -10,7 +10,7 @@ class Validator:
     def valid_date(date):
         try:
             date = date.split('/')
-            date = '{}-{}'.format(date[0], date[1])
+            date = '{}-{}'.format(date[0], date[1][1])
             return date
         except ValueError:
             msg = "Not a valid date: '{0}'.".format(date)
@@ -26,7 +26,7 @@ class Validator:
             raise argparse.ArgumentTypeError(msg)
 
 
-class ReportReader:
+class WeatherParser:
     def __init__(self):
         os.chdir('/home/ali/PycharmProjects/hello-world/weatherdata')
         self.weather_reading_files = os.listdir()
@@ -86,7 +86,7 @@ class ReportReader:
 
 class ReportGenerator:
     def __init__(self):
-        self.report_reader = ReportReader()
+        self.report_reader = WeatherParser()
 
     def generate_reports(self, arguments):
         if arguments.e:
@@ -104,9 +104,9 @@ class ReportGenerator:
 
     def generate_yearly_report(self, year):
         records = self.report_reader.read_yearly_report(year)
-        max_temp = max(records, key=lambda x: x['Max TemperatureC'])
-        min_temp = min(records, key=lambda x: x['Min TemperatureC'])
-        max_humidity = max(records, key=lambda x: x['Max Humidity'])
+        max_temp = max(records, key=lambda record: record['Max TemperatureC'])
+        min_temp = min(records, key=lambda record: record['Min TemperatureC'])
+        max_humidity = max(records, key=lambda record: record['Max Humidity'])
         self.display_yearly_report(max_temp, min_temp, max_humidity)
 
     def display_montly_report(self, max_temp, min_temp, mean_humidity):
@@ -131,11 +131,12 @@ class ReportGenerator:
         print(max_temp, min_temp, max_humidity, sep="\n")
 
 
-def get_arguments_list():
+def parse_arguments():
     parser = argparse.ArgumentParser()
     if len(sys.argv) > 1:
         parser.add_argument('-e', type=Validator.valid_year)
         parser.add_argument('-a', type=Validator.valid_date)
+        parser.add_argument('-c', type=Validator.valid_date)
         args = parser.parse_args()
     else:
         parser.error('No arguments provided.')
@@ -144,7 +145,7 @@ def get_arguments_list():
 
 
 def main():
-    arguments = get_arguments_list()
+    arguments = parse_arguments()
     report = ReportGenerator()
     report.generate_reports(arguments)
 
