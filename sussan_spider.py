@@ -35,7 +35,7 @@ class ParseSpider(BaseParseSpider):
 
         self.boilerplate_normal(garment, response)
 
-        garment['image_urls'] = []
+        garment['image_urls'] = self.image_urls(response)
         garment['skus'] = self.skus(response)
 
         garment['meta'] = {
@@ -44,7 +44,7 @@ class ParseSpider(BaseParseSpider):
 
         return self.next_request_or_garment(garment)
 
-    def parse_color(self, response):
+    def parse_colour(self, response):
         garment = response.meta['garment']
         garment['skus'].update(self.skus(response))
         garment['image_urls'] += self.image_urls(response)
@@ -58,15 +58,15 @@ class ParseSpider(BaseParseSpider):
         return clean(response.css('.product-name h1::text'))[0]
 
     def product_category(self, response):
-        return clean(response.css('.breadcrumb ::text'))[1:]
+        return clean(response.css('.breadcrumb a ::text'))[1:]
 
     def image_urls(self, response):
-        return clean(response.css('.fancybox::attr(href)'))[:-2]
+        return clean(response.css('.flexslider .slides li::attr(data-thumb)'))
 
     def color_requests(self, response):
         colours_css = '.colourSwatch option::attr(value)'
         colours = clean(response.css(colours_css))
-        return [Request(colour, self.parse_color) for colour in colours]
+        return [Request(colour, self.parse_colour) for colour in colours]
 
     def skus(self, response):
         skus = {}
@@ -98,21 +98,22 @@ class ParseSpider(BaseParseSpider):
 
 
 class PaginationLE:
+
     def extract_links(self, response):
         page_size = 24
-        product_count_css = '.pager .amount .numberOfResults::text'
+        product_count_css = '.numberOfResults::text'
 
         if not (response.css(product_count_css)):
             return []
 
         product_count = response.css(product_count_css).re_first("(\d+)")
-        page_count = (int(product_count) // page_size) + 1
+        page_count = (int(product_count) // page_size) + 2
 
-        return [Link(add_or_replace_parameters(response.url, {'ajax': 1, 'p': page})) for page in range(page_count)]
+        return [Link(add_or_replace_parameters(response.url, {'ajax': 1, 'p': page})) for page in range(1, page_count)]
 
 
 class CrawlSpider(BaseCrawlSpider):
-    listings_css = ['.collapse.navbar-collapse.navbar-main-collapse']
+    listings_css = ['[role="navigation"]']
 
     rules = (
         Rule(LinkExtractor(restrict_css=listings_css), callback='parse'),
@@ -123,10 +124,10 @@ class CrawlSpider(BaseCrawlSpider):
         products_css = '.product-name a::attr(href)'
 
         product_sel = Selector(text=json.loads(response.text)['product_list'])
-        products = clean(product_sel.css(products_css))
         meta = self.get_meta_with_trail(response)
 
-        return [Request(product_url, callback=self.parse_item, meta=meta, dont_filter=True) for product_url in products]
+        return [Request(product_url, callback=self.parse_item, meta=meta, dont_filter=True)
+                for product_url in clean(product_sel.css(products_css))]
 
 
 class ParseSpiderAU(MixinAU, ParseSpider):
