@@ -30,7 +30,7 @@ def update_filename(instance, fname):
     time_now = str(datetime.now()).split('.')[0]
     owner = str(instance.owner_id)
 
-    formatting = owner + '_' + timenow + '_' + fname
+    formatting = owner + '_' + time_now + '_' + fname
 
     return os.path.join(path, formatting)
 

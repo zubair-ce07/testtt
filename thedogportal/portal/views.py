@@ -54,7 +54,7 @@ def HomepageView(request):
 
                 if(not dbUtils.get_downvotes_object(downvoter, image, owner)):
                     dbUtils.delete_upvotes_object(downvoter, image, owner)
-                    downvoted = new_downvotes_instance(downvoter, image, owner)
+                    downvoted = dbUtils.new_downvotes_instance(downvoter, image, owner)
                     downvoted.save()
 
                     messages.add_message(request,
@@ -69,7 +69,7 @@ def HomepageView(request):
                 favoriter = dbUtils.get_user_by_id(userid)
                 owner = dbUtils.get_user_by_id(image.owner_id)
 
-                if(not get_favorites_object(favoriter, image, owner)):
+                if(not dbUtils.get_favorites_object(favoriter, image, owner)):
                     favorited = dbUtils.new_favorites_instance(favoriter, image, owner)
                     favorited.save()
 
@@ -135,8 +135,8 @@ def MyUploadsView(request):
         template = loader.get_template('my_uploads.html')
 
         if request.method == "POST":
-            items_to_delete = request.POST.getlist('delete_image')
-            dbUtils.delete_single_upload_by_id(items_to_delete)
+            id_to_delete = request.POST.getlist('delete_image')[0]
+            dbUtils.delete_single_upload_by_id(id_to_delete)
             messages.add_message(request,
                                  messages.SUCCESS,
                                  responses["posts"]["deleted"])

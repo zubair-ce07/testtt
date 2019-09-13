@@ -1,41 +1,43 @@
 {% extends 'base.html' %}
 
-{% block title %}My Favorites{% endblock %}
-
+{% block title %}
+	My Favorites
+{% endblock %}
 
 {% block content %}
-    <ul>
-    {% if not favorites %}
-        <h2 class="heading"> You have no favorites yet. </h2>
-        <br>
-        <br>
-        <a href="{% url 'index' %}" class="btn btn-large waves-effect waves-light" name="index">
-            Add Stuff
-        </a>
-    {% else %}
-        {% for fav in favorites %}
-                <form method="POST">
-                    {% csrf_token %}
-                    <div class="row">
-                        <div class="col s12 m6">
-                            <div class="card">
-                                <div class="card-image">
-                                    <img src={{fav.photo.image.url}}>
-                                    <span class="card-title">{{ fav.photo.title }}</span>
-                                    <button class="btn-floating halfway-fab waves-effect waves-light red" name="favorite" value="{{ fav.photo.pk }}"><i class="material-icons">delete</i></button>
-                                </div>
-                                <div class="card-action">
-                                            <a> Upvotes: {{fav.photo.upvotes_set.all.count}} </a>
-                                            <a> Downvotes: {{fav.photo.downvotes_set.all.count}} </a>
-                                            <a> Favorites: {{fav.photo.favorites_set.all.count}} </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        {% endfor %}
-    {% endif %}
-    </ul>
-  
+
+<ul>
+	{% if not favorites %}
+		<h2 class="heading"> You have no favorites yet. </h2>
+		<br> <br>
+		<a href="{% url 'index' %}" class="btn btn-large waves-effect waves-light" name="index">
+			Add Stuff
+		</a>
+	{% else %}
+
+	{% for fav in favorites %}
+		<form method="POST">
+			{% csrf_token %}
+			<div class="row">
+				<div class="col s12 m6">
+					<div class="card">
+						<div class="card-image">
+							<img src={{fav.photo.image.url}}>
+							<span class="card-title">{{ fav.photo.title }}</span>
+							<button class="btn-floating halfway-fab waves-effect waves-light red" name="favorite" value="{{ fav.photo.pk }}"><i class="material-icons">delete</i></button>
+						</div>
+
+						<div class="card-action">
+							<a> Upvotes: {{fav.photo.upvotes_set.all.count}} </a>
+							<a> Downvotes: {{fav.photo.downvotes_set.all.count}} </a>
+							<a> Favorites: {{fav.photo.favorites_set.all.count}} </a>
+						</div>
+					</div>
+				</div>
+			</div>
+		</form>
+	{% endfor %}
+	{% endif %}
+</ul>
+
 {% endblock %}

@@ -1,44 +1,51 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-  <meta charset="utf-8">
-  <title>{% block title %}The Dog Portal{% endblock %}</title>
-  {% load static %}
-  <link rel="stylesheet" type="text/css" href="{% static "style.css" %}" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <meta charset="utf-8">
+    <title>{% block title %}The Dog Portal{% endblock %}</title>
+
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static "style.css" %}" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
+
 <body>
-  <nav>
-    <div class="nav-wrapper">
-      <a href="{% if user.is_authenticated %} /portal {% else %} / {% endif %}" class="brand-logo"><i class="material-icons">chevron_right</i> <span class="heading"> Dog Portal </span></a>
+	<nav>
+		<div class="nav-wrapper">
+			<a href="{% if user.is_authenticated %} /portal {% else %} / {% endif %}" class="brand-logo"><i class="material-icons">chevron_right</i> <span class="heading"> Dog Portal </span></a>
+			<ul class="right hide-on-med-and-down">
+				{% if user.is_authenticated %}
+					<li><a href="{% url 'upload' %}"><i class="material-icons">file_upload</i></a></li>
+					<li><a href="{% url 'favorites' %}"><i class="material-icons">favorite</i></a></li>
+					<li><a href="{% url 'my_uploads' %}"><i class="material-icons">view_module</i></a></li>
+					<li><a href="{% url 'settings' %}"><i class="material-icons">settings</i></a></li>
+					<li><a href="{% url 'logout'%}?next={{request.path}}">Logout</a></li>
+				{% else %}
+					<li><a href="{% url 'login' %}">Login</a></li>
+					<li><a href="{% url 'register' %}">Register</a></li>
+				{% endif %}
+			</ul>
+		</div>
+	</nav>
 
-      <ul class="right hide-on-med-and-down">
-        {% if user.is_authenticated %}
-          <li><a href="{% url 'upload' %}"><i class="material-icons">file_upload</i></a></li>
-          <li><a href="{% url 'favorites' %}"><i class="material-icons">favorite</i></a></li>
-          <li><a href="{% url 'my_uploads' %}"><i class="material-icons">view_module</i></a></li>
-          <li><a href="{% url 'settings' %}"><i class="material-icons">settings</i></a></li>
-          <li><a href="{% url 'logout'%}?next={{request.path}}">Logout</a></li>
-        {% else %}
-          <li><a href="{% url 'login' %}">Login</a></li>
-          <li><a href="{% url 'register' %}">Register</a></li>
-        {% endif %}
-      </ul>
-    </div>
-  </nav>
-  <main class="main-div">
-    {% if messages %}
-      <ul class="messages">
-          {% for message in messages %}
-          <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-          {% endfor %}
-      </ul>
-    {% endif %}
+	<main class="main-div">
+		{% if messages %}
+			<ul class="messages">
+				{% for message in messages %}
+				<li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+				{% endfor %}
+			</ul>
+		{% endif %}
 
-    {% block content %}
-    {% endblock %}
-  </main>
+		{% block content %}
+
+		{% endblock %}
+	</main>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
 </body>
+
 </html>

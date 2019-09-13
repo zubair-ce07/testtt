@@ -1,25 +1,30 @@
 {% extends 'base.html' %}
 
-{% block title %}Dog Portal{% endblock %}
-
+{% block title %}
+	Dog Portal
+{% endblock %}
 
 {% block content %}
-<h1> Welcome to the <span class="heading"> Dog Portal! </span> </h1>
-<br>
-<h5> Join now to get involved in a community that loves dogs!
-     Upload your pet dog's own photos to get response from the community 
-</h5>
-<h5> 
-    <ul> 
-        <li> <i class="x-small material-icons">file_upload</i> Upload </li>
-        <li> <i class="x-small material-icons">import_export</i> Upvote/Downvote </li>
-        <li> <i class="x-small material-icons">add</i> Save to favorites </li>
-        <li> <i class="x-small material-icons">delete_sweep</i> Delete </li>
-    </ul>
-</h5>
-{% if user.is_authenticated %}
-    <a href="{% url 'index' %}" class="btn btn-large waves-effect waves-light" name="upload">
-        Go to Portal
-    </a>
-{% endif %}
+	<h1> Welcome to the <span class="heading"> Dog Portal! </span> </h1>
+	<br>
+
+	<h5> Join now to get involved in a community that loves dogs!
+		Upload your pet dog's own photos to get response from the community 
+	</h5>
+
+	<h5> 
+		<ul> 
+			<li> <i class="x-small material-icons">file_upload</i> Upload </li>
+			<li> <i class="x-small material-icons">import_export</i> Upvote/Downvote </li>
+			<li> <i class="x-small material-icons">add</i> Save to favorites </li>
+			<li> <i class="x-small material-icons">delete_sweep</i> Delete </li>
+		</ul>
+	</h5>
+
+	{% if user.is_authenticated %}
+		<a href="{% url 'index' %}" class="btn btn-large waves-effect waves-light" name="upload">
+			Go to Portal
+		</a>
+	{% endif %}
+
 {% endblock %}

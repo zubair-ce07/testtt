@@ -1,44 +1,42 @@
 {% extends 'base.html' %}
 
-{% block title %}My Uploads{% endblock %}
-
+{% block title %}
+	My Uploads
+{% endblock %}
 
 {% block content %}
     <ul>
-    {% if not uploads %}
-        <h2 class="heading"> You have no uploads yet. </h2>
-        <br>
-        <br>
-        <a href="{% url 'upload' %}" class="btn btn-large waves-effect waves-light" name="upload">
-            Upload Now
-        </a>
-    {% else %}
-        <div class="row">
-        {% for upload in uploads %}
-                <form method="POST">
-                {% csrf_token %}
-                    <div class="col s12 m6">
-                        <div class="card">
-                            <div class="card-image">
-                                <img src={{upload.image.url}} alt="{{ upload.title }}">
-                                <span class="card-title">{{ upload.title }}</span>
-                                <button class="btn-floating halfway-fab waves-effect waves-light red" name="delete_image" value="{{ upload.pk }}"><i class="material-icons">delete</i></button>
-                            </div>
-                            <div class="card-action">
-                                <a> Upvotes: {{upload.upvotes_set.all.count}} </a>
-                                <a> Downvotes: {{upload.downvotes_set.all.count}} </a>
-                                <a> Favorites: {{upload.favorites_set.all.count}} </a>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            
-        {% endfor %}
-        </div>
-        <a href="{% url 'upload' %}" class="btn btn-large waves-effect waves-light" name="upload">
-            Upload
-        </a>
-    {% endif %}
+		{% if not uploads %}
+			<h2 class="heading"> You have no uploads yet. </h2>
+			<br> <br>
+			<a href="{% url 'upload' %}" class="btn btn-large waves-effect waves-light" name="upload">
+				Upload Now
+			</a>
+		{% else %}
+			<div class="row">
+				{% for upload in uploads %}
+					<form method="POST">
+					{% csrf_token %}
+						<div class="col s12 m6">
+							<div class="card">
+								<div class="card-image">
+									<img src={{upload.image.url}} alt="{{ upload.title }}">
+									<span class="card-title">{{ upload.title }}</span>
+									<button class="btn-floating halfway-fab waves-effect waves-light red" name="delete_image" value="{{ upload.pk }}"><i class="material-icons">delete</i></button>
+								</div>
+								<div class="card-action">
+									<a> Upvotes: {{upload.upvotes_set.all.count}} </a>
+									<a> Downvotes: {{upload.downvotes_set.all.count}} </a>
+									<a> Favorites: {{upload.favorites_set.all.count}} </a>
+								</div>
+							</div>
+						</div>
+					</form>
+				{% endfor %}
+			</div>
+			<a href="{% url 'upload' %}" class="btn btn-large waves-effect waves-light" name="upload">
+				Upload
+			</a>
+		{% endif %}
     </ul>
-  
 {% endblock %}

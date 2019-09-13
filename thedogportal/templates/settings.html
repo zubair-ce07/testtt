@@ -5,14 +5,14 @@
 {% endblock %}
  
 {% block content %}
-  <h1 class="heading">My Settings</h1>
-  <form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form.as_table }}
-    <br> <br>
-    <button class="btn btn-large waves-effect waves-light" type="submit" name="action">Submit
-      <i class="material-icons right">send</i>
-    </button>
-  </form>
+	<h1 class="heading">My Settings</h1>
+	<form method="post" enctype="multipart/form-data">
+		{% csrf_token %}
+		{{ form.as_table }}
+		<br> <br>
+		<button class="btn btn-large waves-effect waves-light" type="submit" name="action">Submit
+			<i class="material-icons right">send</i>
+		</button>
+	</form>
 
 {% endblock %}

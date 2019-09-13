@@ -72,6 +72,6 @@ def new_downvotes_instance(downvoter, photo, owner):
 
 
 def new_favorites_instance(favoriter, photo, owner):
-    return Downvotes(favoriter=favoriter,
+    return Favorites(favoriter=favoriter,
                      photo=photo,
                      owner=owner)
