@@ -4,11 +4,26 @@
 
 {% block content %}
 
-<img src={{random_image.image.url}} alt="{{ random_image.title }}">
-<form method="POST">
-{% csrf_token %}
-  <button class="btn waves-effect waves-light" type="submit" name="upvote" value="{{ random_image.pk }}">
-      Upvote
-  </button>
-</form>
+  {% if random_image %}
+    <img src={{random_image.image.url}} alt="{{ random_image.title }}">
+    <form method="POST">
+    {% csrf_token %}
+      <button class="btn waves-effect waves-light" type="submit" name="upvote" value="{{ random_image.pk }}">
+          Upvote {{random_image.upvotes_set.all.count}}
+      </button>
+      <button class="btn waves-effect waves-light" type="submit" name="downvote" value="{{ random_image.pk }}">
+          Downvote {{random_image.downvotes_set.all.count}}
+      </button>
+      <button class="btn waves-effect waves-light" type="submit" name="favorite" value="{{ random_image.pk }}">
+          <i class="material-icons">favorite</i> {{random_image.favorites_set.all.count}}
+      </button>
+    </form>
+  {% else %}
+    <h2 class="heading"> There are no images to respond to yet. </h2>
+    <br>
+    <br>
+    <a href="{% url 'upload' %}" class="btn btn-large waves-effect waves-light" name="upload">
+        Upload Yours Now
+    </a>
+  {% endif %}
 {% endblock %}

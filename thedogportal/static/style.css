@@ -18,7 +18,7 @@ body{
 
 .main-div {
     padding: 20px;
-    width: 60%;
+    width: 70%;
     margin: 0 auto;
     margin-top: 20px;
     text-align: center;
@@ -78,7 +78,8 @@ body{
 
 .single_image {
   border: 1px dashed black;
-  margin: 10px auto
+  margin: 10px auto;
+  padding: 10px;
 }
 
 label {

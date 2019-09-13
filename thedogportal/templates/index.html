@@ -17,4 +17,9 @@
         <li> <i class="x-small material-icons">delete_sweep</i> Delete </li>
     </ul>
 </h5>
+{% if user.is_authenticated %}
+    <a href="{% url 'index' %}" class="btn btn-large waves-effect waves-light" name="upload">
+        Go to Portal
+    </a>
+{% endif %}
 {% endblock %}

@@ -16,7 +16,7 @@
       <ul class="right hide-on-med-and-down">
         {% if user.is_authenticated %}
           <li><a href="{% url 'upload' %}"><i class="material-icons">file_upload</i></a></li>
-          {% comment %} <li><a href="{% url 'favorites' %}"><i class="material-icons">favorite</i></a></li> {% endcomment %}
+          <li><a href="{% url 'favorites' %}"><i class="material-icons">favorite</i></a></li>
           <li><a href="{% url 'my_uploads' %}"><i class="material-icons">view_module</i></a></li>
           <li><a href="{% url 'settings' %}"><i class="material-icons">settings</i></a></li>
           <li><a href="{% url 'logout'%}?next={{request.path}}">Logout</a></li>

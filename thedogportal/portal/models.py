@@ -47,3 +47,10 @@ class Downvotes(models.Model):
     owner = models.ForeignKey(Profile, on_delete=models.CASCADE)
     downvoter = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='upload_downvoter')
     photo = models.ForeignKey(Uploads, on_delete=models.CASCADE)
+
+
+class Favorites(models.Model):
+    owner = models.ForeignKey(Profile, on_delete=models.CASCADE)
+    favoriter = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='upload_favoriter')
+    photo = models.ForeignKey(Uploads, on_delete=models.CASCADE)
+
