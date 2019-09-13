@@ -111,7 +111,15 @@ class UserLoginApiView(ObtainAuthToken):
         user = serializer.validated_data['user']
         token, _ = Token.objects.get_or_create(user=user)
         user_serializer = RegisterUserSerializer(user)
-        return Response(data={'token': token.key, 'user': user_serializer.data}, status=status.HTTP_200_OK)
+        if hasattr(user, SALOON):
+            user_type = SALOON
+        elif hasattr(user, CUSTOMER):
+            user_type = CUSTOMER
+        else:
+            user_type = 'none'
+        context = {'token': token.key,
+                   'user': user_serializer.data, 'user_type': user_type}
+        return Response(data=context, status=status.HTTP_200_OK)
 
 
 class UserLogoutApiView(APIView):
