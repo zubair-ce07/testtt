@@ -106,14 +106,11 @@ class DvfUSParseSpider(MixinUS, DvfParseSpider):
     name = MixinUS.retailer + '-parse'
 
 
-class DvfLinkExtractor(LinkExtractor):
+class DvfLinkExtractor():
 
     def extract_links(self, response):
-        links =super(DvfLinkExtractor, self).extract_links(response)
         next_page = clean(response.css('.infinite-scroll-placeholder::attr(data-grid-url)'))
-        if next_page:
-            links.append(Link(next_page[0]))
-        return links
+        return [Link(next_page[0])] if next_page else []
 
 
 class DvfCrawlSpider(BaseCrawlSpider):
@@ -121,7 +118,8 @@ class DvfCrawlSpider(BaseCrawlSpider):
     products_css = ['.grid-tile.item .product-info a']
 
     rules = (
-        Rule(DvfLinkExtractor(restrict_css=listings_css), callback='parse'),
+        Rule(LinkExtractor(restrict_css=listings_css), callback='parse'),
+        Rule(DvfLinkExtractor(), callback='parse'),
         Rule(LinkExtractor(restrict_css=products_css), callback='parse_item')
     )
 
