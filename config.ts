@@ -1,8 +1,6 @@
-'use strict';
+import { Config, browser } from 'protractor';
 
-require('babel-register');
-
-exports.config = {
+export let config: Config = {
     seleniumAddress: 'http://localhost:4444/wd/hub',
     capabilities: {
         'browserName': 'firefox',
@@ -10,7 +8,7 @@ exports.config = {
             args: ['--headless']
         },
         'moz:firefoxOptions': {
-            args: [ '--headless' ]
+            args: ['--headless']
         },
     },
     framework: 'jasmine',
@@ -19,6 +17,7 @@ exports.config = {
         isVerbose: true,
     },
     onPrepare: function () {
+        require('babel-register');
         browser.ignoreSynchronization = true;
         browser.manage().window().maximize();
     }

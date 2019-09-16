@@ -1,29 +1,30 @@
-import { waitForElementPresence } from './../utils/common';
+import { protractor, browser, element, by, ElementArrayFinder, ElementFinder } from "protractor";
+import { waitForElementPresence } from '../utils/common';
 
-let mapPage = function () {
+class mapPageObject {
+    readonly hotelMarkerSelector: string = ".hotel-marker";
+    private hotelMarkerId: string;
 
-    this.hotelMarkerSelector = ".hotel-marker";
-
-    this.setHotelMarkerId = (hotelMarkerId) => {
+    setHotelMarkerId = (hotelMarkerId: string) => {
         this.hotelMarkerId = hotelMarkerId;
     };
 
-    this.getHotelMarkerId = () => {
+    getHotelMarkerId = (): string => {
         return this.hotelMarkerId;
     };
 
-    this.getAllHotelMarkers = () => {
+    getAllHotelMarkers = (): ElementArrayFinder => {
         return element.all(by.css(this.hotelMarkerSelector));
     };
 
-    this.getHotelInfo = async () => {
+    getHotelInfo = async (): Promise<ElementFinder> => {
         const hotelMarker = await this.getSingleHotelMarker();
         await this.moveMouseOverHotelMarker(hotelMarker);
         await this.saveHoveredBoxDOMId(hotelMarker);
         return this.getHotelInfoHoverBox();
     };
 
-    this.getSingleHotelMarker = async () => {
+    getSingleHotelMarker = async (): Promise<ElementFinder> => {
         const hotelMarkers = this.getAllHotelMarkers();
         const totalHotelMarkers = await hotelMarkers.count();
         console.log(`total hotel markers found: ${totalHotelMarkers}`);
@@ -32,8 +33,8 @@ let mapPage = function () {
         for (let markerIndex = 0; markerIndex < totalHotelMarkers; markerIndex++) {
             const currentMarker = hotelMarkers.get(markerIndex);
             let top = await currentMarker.getCssValue('top');
-            top = top.replace(/\D/g, '');
-            if (top > 0) {
+            top = top.replace(/[a-z]/g, '');
+            if (parseFloat(top) > 0) {
                 selectedHotelMarker = currentMarker;
                 break;
             }
@@ -42,44 +43,44 @@ let mapPage = function () {
         return selectedHotelMarker;
     };
 
-    this.moveMouseOverHotelMarker = async (hotelMarker) => {
+    moveMouseOverHotelMarker = async (hotelMarker): Promise<void> => {
         await browser.actions().mouseMove(hotelMarker).perform()
     };
 
-    this.saveHoveredBoxDOMId = async (hotelMarker) => {
+    saveHoveredBoxDOMId = async (hotelMarker): Promise<void> => {
         let hoverBoxId = await hotelMarker.getAttribute("id");
         hoverBoxId = hoverBoxId.replace(/^\D+/g, '');
         this.setHotelMarkerId(hoverBoxId);
     };
 
-    this.getHotelInfoHoverBox = () => {
+    getHotelInfoHoverBox = (): ElementFinder => {
         const hoverBoxSelector = `summaryCard-${this.getHotelMarkerId()}`;
         return element(by.css(`[id=${hoverBoxSelector}]`));
     };
 
-    this.getHotelCard = async () => {
+    getHotelCard = async (): Promise<ElementFinder> => {
         await this.getHotelInfoHoverBox().click();
         return this.getHotelCardImage();
     };
 
-    this.getHotelCardImage = () => {
+    getHotelCardImage = (): ElementFinder => {
         const hotelCardImage = element(by.css(`[id='${this.getHotelMarkerId()}-photo']`));
         waitForElementPresence(hotelCardImage, 1000, 'Timeout error! Hotel card image is taking too long to appear');
         return hotelCardImage;
     };
 
-    this.openDealPage = async () => {
+    openDealPage = async (): Promise<string> => {
         await this.clickViewDealButton();
         return await this.getDealPageURL();
     };
 
-    this.clickViewDealButton = async () => {
+    clickViewDealButton = async (): Promise<void> => {
         const dealBtnSelector = `[id='${this.getHotelMarkerId()}-booking-bookButton']`;
         const viewDealBtn = element(by.css(dealBtnSelector));
         await viewDealBtn.click();
     };
 
-    this.getDealPageURL = async () => {
+    getDealPageURL = async (): Promise<string> => {
         await this.switchToNewTab();
         let EC = protractor.ExpectedConditions;
         browser.wait(EC.urlContains('kayak.com'), 5000);
@@ -88,10 +89,10 @@ let mapPage = function () {
         return dealPageUrl;
     };
 
-    this.switchToNewTab = async () => {
+    switchToNewTab = async () => {
         const handles = await browser.getAllWindowHandles();
         await browser.switchTo().window(handles[1]);
     }
-};
+}
 
-export default mapPage;
+export default mapPageObject;

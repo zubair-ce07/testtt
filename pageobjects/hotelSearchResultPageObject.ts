@@ -1,46 +1,46 @@
+import { protractor, browser, element, by, ElementFinder, ElementArrayFinder } from "protractor";
 import {
     waitForElementPresence,
     waitForElementVisibility,
     getElementByCSS
-} from './../utils/common';
+} from '../utils/common';
 
-let HotelSearchResultPage = function () {
+class HotelSearchResultPageObject {
+    readonly searchResultPageSelector: string = ".Base-Results-ResultsPage";
+    readonly searchResultListSelector: string = ".resultsContainer";
+    readonly searchResultListSelector2: string = ".finished";
+    readonly singleHotelSelector: string = ".resultWrapper";
+    readonly singleHotelDetailSelector: string = ".Hotels-Results-InlineDetailTabs";
+    readonly singleHotelTitleSelector: string = "[id$=info-title]";
+    readonly singleHotelAllPhotosSelector: string = ".photoGrid";
+    readonly singleHotelSinglePhotoSelector: string = ".col-1-3";
+    readonly mapContentSelector: string = ".Hotels-Results-InlineTab.Hotels-Results-InlineMap";
+    readonly reviewSelector: string = ".Hotels-Results-InlineTab.Hotels-Results-InlineReviews";
+    readonly ratesSelector: string = ".Hotels-Results-InlineTab.Hotels-Results-InlineRates";
+    readonly goToMapButtonContainerSelector: string = ".collapsible-wrapper";
+    readonly goToMapButtonSelector: string = "[id$=-map]";
+    readonly goToMapSelector: string = ".Hotels-Results-HotelRightRailMap.open";
 
-    this.searchResultPageSelector = ".Base-Results-ResultsPage";
-    this.searchResultListSelector = ".resultsContainer";
-    this.searchResultListSelector2 = ".finished";
-    this.singleHotelSelector = ".resultWrapper";
-    this.singleHotelDetailSelector = ".Hotels-Results-InlineDetailTabs";
-    this.singleHotelTitleSelector = "[id$=info-title]";
-    this.singleHotelAllPhotosSelector = ".photoGrid";
-    this.singleHotelSinglePhotoSelector = ".col-1-3";
-    this.mapContentSelector = ".Hotels-Results-InlineTab.Hotels-Results-InlineMap";
-    this.reviewSelector = ".Hotels-Results-InlineTab.Hotels-Results-InlineReviews";
-    this.ratesSelector = ".Hotels-Results-InlineTab.Hotels-Results-InlineRates";
-    this.goToMapButtonContainerSelector = ".collapsible-wrapper";
-    this.goToMapButtonSelector = "[id$=-map]";
-    this.goToMapSelector = ".Hotels-Results-HotelRightRailMap.open";
-
-    this.waitForSearchCompletion = () => {
+    waitForSearchCompletion = (): void => {
         const { searchResultListSelector, searchResultListSelector2 } = this;
         let EC = protractor.ExpectedConditions;
         browser.wait(EC.visibilityOf(element(by.css(searchResultListSelector)).element(by.css(searchResultListSelector2))), 100000, 'Error! Unable to load hotels list in selected origin');
     };
 
-    this.getHotelSearchResultPage = () => {
+    getHotelSearchResultPage = (): ElementFinder => {
         return getElementByCSS(this.searchResultPageSelector);
     };
 
-    this.getHotelSearchResult = () => {
+    getHotelSearchResult = (): ElementArrayFinder => {
         return element.all(by.css(this.singleHotelSelector));
     };
 
-    this.openSingleHotelDetail = async () => {
+    openSingleHotelDetail = async (): Promise<ElementFinder> => {
         await this.clickFirstHotelTitle();
         return this.getFirstHotelDetail();
     };
 
-    this.clickFirstHotelTitle = async () => {
+    clickFirstHotelTitle = async (): Promise<void> => {
         const titleLink = this.getFirstHotelTitle();
         await titleLink.click();
         const clickedHotelTitle = await titleLink.getText();
@@ -50,37 +50,37 @@ let HotelSearchResultPage = function () {
         waitForElementPresence(hotelDetailSection, 10000, 'Timeout Error! Unable to load first hotel detail in selected origin');
     };
 
-    this.getFirstHotelFromHotelsList = () => {
+    getFirstHotelFromHotelsList = (): ElementFinder => {
         return this.getHotelSearchResult().first();
     };
 
-    this.getFirstHotelDetail = () => {
+    getFirstHotelDetail = (): ElementFinder => {
         return element.all(by.css(this.singleHotelDetailSelector)).first();
     };
 
-    this.getFirstHotelTitle = () => {
+    getFirstHotelTitle = (): ElementArrayFinder => {
         return this.getFirstHotelFromHotelsList().all(by.css(this.singleHotelTitleSelector));
     };
 
-    this.getFirstHotelPhotos = () => {
+    getFirstHotelPhotos = (): ElementArrayFinder => {
         const { singleHotelAllPhotosSelector, singleHotelSinglePhotoSelector } = this;
         const firstHotelDetail = this.getFirstHotelDetail();
         return firstHotelDetail.all(by.css(singleHotelAllPhotosSelector)).first().all(by.css(singleHotelSinglePhotoSelector));
     };
 
-    this.openTab = async (tabName) => {
+    openTab = async (tabName): Promise<ElementFinder> => {
         await this.clickHotelTab(tabName);
         return this.getTabContent(tabName);
     };
 
-    this.clickHotelTab = async (tabName) => {
+    clickHotelTab = async (tabName): Promise<void> => {
         const tab = this.getFirstHotelTab(tabName);
         const tabId = await tab.getAttribute("id");
         await element(by.css(`[id=${tabId}]`)).click();
         console.log(`${tabName} tab is clicked"`);
     };
 
-    this.getTabContent = (tabName) => {
+    getTabContent = (tabName): ElementFinder => {
         const tabContent = element.all(by.css(this.singleHotelSelector))
             .first()
             .all(by.css(this.getTabContentSelectorByTabName(tabName))).first();
@@ -88,8 +88,8 @@ let HotelSearchResultPage = function () {
         return tabContent;
     };
 
-    this.getTabId = function (tabName) {
-        let tabId = '';
+    getTabId = (tabName): string => {
+        let tabId: string = '';
         switch (tabName) {
             case 'map':
                 tabId = 'map';
@@ -104,7 +104,7 @@ let HotelSearchResultPage = function () {
         return tabId;
     };
 
-    this.getTabContentSelectorByTabName = function (tabName) {
+    getTabContentSelectorByTabName = (tabName): string => {
         if (tabName === 'map') {
             return this.mapContentSelector;
         }
@@ -116,7 +116,7 @@ let HotelSearchResultPage = function () {
         }
     };
 
-    this.getFirstHotelTab = function (tabName) {
+    getFirstHotelTab = (tabName): ElementFinder => {
         const tabId = this.getTabId(tabName);
         const tabSelector = `[id$=-${tabId}]`;
         return this.getFirstHotelDetail()
@@ -126,23 +126,23 @@ let HotelSearchResultPage = function () {
             .first();
     };
 
-    this.getGoToMap = async () => {
+    getGoToMap = async (): Promise<ElementFinder> => {
         await this.clickGoToMapButton();
         this.waitForGoToMapVisibility();
         return getElementByCSS(this.goToMapSelector);
     };
 
-    this.clickGoToMapButton = async () => {
+    clickGoToMapButton = async (): Promise<void> => {
         const { goToMapButtonContainerSelector, goToMapButtonSelector } = this;
         const goToMapButton = element(by.css(goToMapButtonContainerSelector)).element(by.css(goToMapButtonSelector));
         await goToMapButton.click();
     };
 
-    this.waitForGoToMapVisibility = () => {
+    waitForGoToMapVisibility = (): void => {
         const mapContent = getElementByCSS(this.goToMapSelector);
         waitForElementVisibility(mapContent, 10000, `Timeout Error! Large Map is taking too long to appear`);
         console.log('map content displayed');
     };
-};
+}
 
-export default HotelSearchResultPage;
+export default HotelSearchResultPageObject;
