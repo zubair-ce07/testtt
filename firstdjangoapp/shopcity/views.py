@@ -3,7 +3,7 @@ import json
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import HttpResponse
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import get_object_or_404, render
 from django.views import View
 
 from .controller import save_products
@@ -35,30 +35,29 @@ class ViewResults(View):
         if not request.GET or (len(request.GET) == 1 and 'page' in request.GET.keys()):
             return Product.objects.filter(Q(out_of_stock=False))
 
-        minimum = request.GET['minimum'] if request.GET['minimum'] else 0
-        maximum = request.GET['maximum'] if request.GET['maximum'] else 0
+        minimum = int(request.GET['minimum']) if request.GET['minimum'] else 0
+        maximum = int(request.GET['maximum']) if request.GET['maximum'] else 0
+        brand = request.GET['brand']
+        size = request.GET['size']
+        colour = request.GET['colour']
+        category = request.GET['category']
+        name = request.GET['name']
         q = Q(out_of_stock=request.GET['out_of_stock'])
-        if request.GET['brand']:
-            q.add(Q(brand=request.GET['brand']), Q.AND)
-        if request.GET['size']:
-            q.add(Q(skus__size=request.GET['size']), Q.AND)
-        if request.GET['colour']:
-            q.add(Q(skus__colour=request.GET['colour']), Q.AND)
-        if request.GET['category']:
-            q.add(Q(categories__category=request.GET['category']), Q.AND)
-        if request.GET['name']:
-            q.add(Q(name__contains=request.GET['name']), Q.AND)
-        if int(maximum) != 0 or int(minimum) != 0:
-            q.add(Q(skus__price__range=(minimum, maximum)), Q.AND)
+        if brand:
+            q = q & Q(brand=brand)
+        if size:
+            q = q & Q(skus__size=size)
+        if colour:
+            q = q & Q(skus__colour=colour)
+        if category:
+            q = q & Q(categories__category=category)
+        if name:
+            q = q & Q(name__contains=name)
+        if maximum != 0 or minimum != 0:
+            q = q & Q(skus__price__range=(minimum, maximum))
         return Product.objects.filter(q).distinct()
 
     def get(self, request):
-        if len(request.GET) == 1 and 'id' in request.GET.keys():
-            product = get_object_or_404(Product, retailer_sku=request.GET.get('id'))
-            context = product.as_dict()
-            context['product'] = product
-            return render(request, "product_detail.html", context)
-
         product_list = self.get_queryset(request)
         paginator = Paginator(product_list, 20)
         page = request.GET.get('page', 1)
@@ -73,4 +72,14 @@ class ViewResults(View):
                 flat=True
             ).distinct().order_by('category'))
         }
+        return render(request, self.template_name, context)
+
+
+class ProductView(View):
+    template_name = 'product_detail.html'
+
+    def get(self, request, product_id):
+        product = get_object_or_404(Product, retailer_sku=product_id)
+        context = product.as_dict()
+        context['product'] = product
         return render(request, self.template_name, context)

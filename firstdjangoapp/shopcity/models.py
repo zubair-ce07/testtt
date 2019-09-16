@@ -1,4 +1,7 @@
+from collections import defaultdict
+
 from django.db import models
+from django.conf import settings
 
 
 class Product(models.Model):
@@ -42,7 +45,7 @@ class Product(models.Model):
             'description': self.description.split(';'),
             'care': [c for c in self.care.split(';') if c],
             'colours_and_sizes': dict(colours_and_sizes),
-            'categories': categories[:1]
+            'categories': categories[:settings.NUMBER_OF_CATEGORIES_BREADCRUMB]
         }
 
 

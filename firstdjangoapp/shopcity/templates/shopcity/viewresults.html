@@ -1,7 +1,8 @@
 {% extends "base.html" %}
 {% load shopcity_extra %}
 {% block content %}
-<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal" data-whatever="@mdo">Filter Products</button>
+
+<button type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#exampleModal" data-whatever="@mdo">Filter Products</button>
 <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -84,7 +85,7 @@
         <div class="card-body d-flex flex-column">
           <h5 class="card-title">{{ product.name }}-{{ product.brand }}</h5>
           <p class="card-text">{{ product.price }} {{ product.currency }}</p>
-          <a href="/shopcity/search?id={{ product.retailer_sku }}" class="align-self-end btn btn-block btn-outline-primary" style="margin-top: auto;">View Details</a>
+          <a href="/shopcity/{{ product.retailer_sku }}/" class="align-self-end btn btn-block btn-outline-primary" style="margin-top: auto;">View Details</a>
         </div>
       </div>
     {% endfor %}
