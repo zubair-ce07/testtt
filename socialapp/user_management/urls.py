@@ -20,7 +20,6 @@ urlpatterns = [
         'get': 'list',
     })),
     path('work-information/', views.WorkInformationView.as_view({
-        'get': 'list',
         'post':  'create',
     }), name='work-information'),
     path('work-information/<int:pk>/', views.WorkInformationView.as_view({
@@ -33,7 +32,6 @@ urlpatterns = [
         'get': 'list',
     })),
     path('academic-information/', views.AcademicInformationView.as_view({
-        'get': 'list',
         'post':  'create',
     }), name='academic-information'),
     path('academic-information/<int:pk>/', views.AcademicInformationView.as_view({
