@@ -7,7 +7,7 @@ from datetime import datetime
 
 class Validator:
     @staticmethod
-    def valid_date(date):
+    def validate_date(date):
         try:
             date = date.split('/')
             date = '{}-{}'.format(date[0], date[1][1])
@@ -17,7 +17,7 @@ class Validator:
             raise argparse.ArgumentTypeError(msg)
 
     @staticmethod
-    def valid_year(year):
+    def validate_year(year):
         try:
             datetime.strptime(year, "%Y")
             return year
@@ -27,8 +27,8 @@ class Validator:
 
 
 class WeatherParser:
-    def __init__(self):
-        os.chdir('/home/ali/PycharmProjects/hello-world/weatherdata')
+    def __init__(self, path):
+        os.chdir(os.getcwd() + '/' + path)
         self.weather_reading_files = os.listdir()
         self.weather_reading = self.read_records()
 
@@ -52,21 +52,13 @@ class WeatherParser:
 
         return weather_readings
 
-    def read_monthly_report(self, month):
+    def read_report(self, month):
         self.weather_reading = [
             monthly_weather_reading for monthly_weather_reading in self.weather_reading
             if 'PKT' in monthly_weather_reading and month in monthly_weather_reading['PKT']
         ]
         monthly_report = self.format_record(self.weather_reading)
         return monthly_report
-
-    def read_yearly_report(self, year):
-        self.weather_reading = [
-            yearly_weather_reading for yearly_weather_reading in self.weather_reading
-            if 'PKT' in yearly_weather_reading and year in yearly_weather_reading['PKT']
-        ]
-        yearly_report = self.format_record(self.weather_reading)
-        return yearly_report
 
     def format_record(self, records):
         monthly_report = []
@@ -83,38 +75,53 @@ class WeatherParser:
         return monthly_report
 
 
-class ReportGenerator:
-    def __init__(self):
-        self.report_reader = WeatherParser()
+class WeatherAnalyzer:
+    def __init__(self, path):
+        self.report_reader = WeatherParser(path)
 
     def generate_reports(self, arguments):
         if arguments.e:
-            self.generate_yearly_report(arguments.e)
+            self.analyze_yearly_report(arguments.e)
         if arguments.a:
-            self.generate_monthly_report(arguments.a)
+            self.analyze_monthly_report(arguments.a)
+        if arguments.c:
+            self.analyze_single_bar_chart_report(arguments.c)
 
-    def generate_monthly_report(self, month):
-        records = self.report_reader.read_monthly_report(month)
+    def analyze_monthly_report(self, month):
+        records = self.report_reader.read_report(month)
         length = len(records)
         avg_max_temp = round(sum(daily_record['Max TemperatureC'] for daily_record in records) / length)
         avg_min_temp = round(sum(daily_record['Min TemperatureC'] for daily_record in records) / length)
         avg_mean_humidity = round(sum(daily_record[' Mean Humidity'] for daily_record in records) / length)
-        self.display_montly_report(avg_max_temp, avg_min_temp, avg_mean_humidity)
+        WeatherReportGenerator.display_montly_report(avg_max_temp, avg_min_temp, avg_mean_humidity)
 
-    def generate_yearly_report(self, year):
-        records = self.report_reader.read_yearly_report(year)
+    def analyze_yearly_report(self, year):
+        records = self.report_reader.read_report(year)
         max_temp = max(records, key=lambda record: record['Max TemperatureC'])
         min_temp = min(records, key=lambda record: record['Min TemperatureC'])
         max_humidity = max(records, key=lambda record: record['Max Humidity'])
-        self.display_yearly_report(max_temp, min_temp, max_humidity)
+        WeatherReportGenerator.display_yearly_report(max_temp, min_temp, max_humidity)
 
-    def display_montly_report(self, max_temp, min_temp, mean_humidity):
+    def analyze_single_bar_chart_report(self, month):
+        month_records = self.report_reader.read_report(month)
+        if not month_records:
+            return
+
+        for daily_record in month_records:
+            WeatherReportGenerator.display_single_bar_chart_report(daily_record)
+
+
+class WeatherReportGenerator:
+
+    @staticmethod
+    def display_montly_report(max_temp, min_temp, mean_humidity):
         highest_avg = "Highest Average: {}C".format(max_temp)
         lowest_avg = "Lowest Average: {}C".format(min_temp)
         avg_humidity = "Average Mean Humidity: {}%".format(mean_humidity)
         print(highest_avg, lowest_avg, avg_humidity, sep="\n")
 
-    def display_yearly_report(self, max_temp, min_temp, max_humidity):
+    @staticmethod
+    def display_yearly_report(max_temp, min_temp, max_humidity):
         max_temp = "Highest: {}C on {}".format(
             max_temp["Max TemperatureC"],
             max_temp["PKT"].strftime("%B %d")
@@ -129,13 +136,23 @@ class ReportGenerator:
         )
         print(max_temp, min_temp, max_humidity, sep="\n")
 
+    @staticmethod
+    def display_single_bar_chart_report(daily_record):
+        print(daily_record['PKT'].strftime("%d")
+              + '+' * daily_record['Max TemperatureC'] + ' '
+              + '\033[91m {}C\033[00m'.format(str(daily_record['Max TemperatureC'])) + '\n' +
+              daily_record['PKT'].strftime("%d")
+              + '+' * daily_record['Min TemperatureC'] + ' '
+              + '\033[34m{}C\033[00m'.format(str(daily_record['Min TemperatureC'])))
+
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
     if len(sys.argv) > 1:
-        parser.add_argument('-e', type=Validator.valid_year)
-        parser.add_argument('-a', type=Validator.valid_date)
-        parser.add_argument('-c', type=Validator.valid_date)
+        parser.add_argument("path", type=str)
+        parser.add_argument('-e', type=Validator.validate_year)
+        parser.add_argument('-a', type=Validator.validate_date)
+        parser.add_argument('-c', type=Validator.validate_date)
         args = parser.parse_args()
     else:
         parser.error('No arguments provided.')
@@ -145,8 +162,9 @@ def parse_arguments():
 
 def main():
     arguments = parse_arguments()
-    report = ReportGenerator()
+    report = WeatherAnalyzer(arguments.path)
     report.generate_reports(arguments)
+    
 
 
 if __name__ == "__main__":
