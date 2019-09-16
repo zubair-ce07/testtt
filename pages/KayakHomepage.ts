@@ -1,48 +1,36 @@
-import {by, element, ElementFinder} from "protractor";
+import {browser, by, element, ElementFinder} from "protractor";
 import CommonHelper from "../helper/CommonHelper";
 
 export default class KayakHomepage {
     commonHelperObj = new CommonHelper();
 
-    hotelsBtn = element(by.css('.TopNavLinks__vertical--hotels'));
-    flightsBtn = element(by.css('.TopNavLinks__vertical--flights'));
-    carsBtn = element(by.css('.TopNavLinks__vertical--cars'));
-
-    async isFlightsBtnVisible(): Promise<boolean> {
-        return await this.flightsBtn.isDisplayed();
+    getTabsBtn(btnType: string): ElementFinder {
+        return element(by.css('.TopNavLinks__vertical--'+btnType));
     }
-    async isHotelsBtnVisible(): Promise<boolean> {
-        return await this.hotelsBtn.isDisplayed();
+    async isBtnVisible(btnName): Promise<boolean> {
+        return await this.getTabsBtn(btnName).isDisplayed();
     }
-    async isCarsBtnVisible(): Promise<boolean> {
-        return await this.carsBtn.isDisplayed();
-    }
-    async clickFlightsBtn(): Promise<void> {
-        await this.flightsBtn.click();
-    }
-    async isFlightsBtnHighlighted(): Promise<boolean> {
-        return await this.isHighlighted(this.flightsBtn);
-    }
-    async clickHotelsBtn(): Promise<void> {
-        await this.clickBtn(this.hotelsBtn);
-    }
-    async isHotelsBtnHighlighted(): Promise<boolean> {
-        return await this.isHighlighted(this.hotelsBtn);
-    }
-    async clickCarsBtn(): Promise<void> {
-        await this.clickBtn(this.carsBtn);
-    }
-    async isCarsBtnHighlighted(): Promise<boolean> {
-        return await this.isHighlighted(this.carsBtn);
-    }
-
-    async isHighlighted(element: ElementFinder): Promise<boolean> {
-        const elementClass = await element.getAttribute('class');
-        return elementClass.includes('active');
+    async isHighlighted(btnName: string): Promise<boolean> {
+        const btn = await this.getTabsBtn(btnName);
+        const btnClass = await btn.getAttribute('class');
+        return btnClass.includes('active');
     }
     async clickBtn(btn: ElementFinder): Promise<void> {
         const btnClassName = await btn.getAttribute('class');
         await btn.click();
-        await this.commonHelperObj.waitForElementToBeActive(btnClassName);
+        await this.waitForElementToBeActive(btnClassName);
+    }
+    async loadPage(pageName: string) {
+        const btn = await this.getTabsBtn(pageName);
+        await this.clickBtn(btn);
+        await this.commonHelperObj.waitForURLToBeLoaded(pageName);
+    }
+    async waitForElementToBeActive(className: string) {
+        await browser.wait(async () => {
+            const currentElement = element(by.className(className));
+            await this.commonHelperObj.waitForElementToBeVisible(currentElement);
+            const attribute = await element(by.className(className)).getAttribute('class');
+            return attribute.includes('active');
+        }, 5000)
     }
 }

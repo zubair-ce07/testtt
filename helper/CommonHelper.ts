@@ -11,12 +11,4 @@ export default class CommonHelper {
     async getCurrentURL(): Promise<string> {
         return await browser.getCurrentUrl();
     }
-    async waitForElementToBeActive(className: string) {
-        await browser.wait(async () => {
-            const currentElement = element(by.className(className));
-            await this.waitForElementToBeVisible(currentElement);
-            const attribute = await element(by.className(className)).getAttribute('class');
-            return attribute.includes('active');
-        }, 10000)
-    }
 }

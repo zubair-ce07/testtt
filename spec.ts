@@ -1,44 +1,42 @@
 import {browser} from "protractor";
 import KayakHomepage from "./pages/KayakHomepage";
 import chai from "chai";
+import chaiAsPromised from "chai-as-promised";
 import CommonHelper from "./helper/CommonHelper";
+chai.use(chaiAsPromised);
+chai.should();
 const expect = chai.expect;
 
-const commonHelperObj = new CommonHelper();
-const kayakHomepageObj = new KayakHomepage();
 describe('Testing for Kayak.com', () => {
-    before(async () => {
-        browser.get('https://www.kayak.com/');
-    });
-    it('Should show "Flights"', async () => {
-        expect(await kayakHomepageObj.isFlightsBtnVisible()).to.equal(true);
-    });
-    it('Should show "Hotels"', async () => {
-        expect(await kayakHomepageObj.isHotelsBtnVisible()).to.equal(true);
-    });
-    it('Should show "Cars"', async () => {
-        expect(await kayakHomepageObj.isCarsBtnVisible()).to.equal(true);
-    });
+    const commonHelperObj = new CommonHelper();
+    const kayakHomepageObj = new KayakHomepage();
+
+    before(async () => browser.get('https://www.kayak.com/'));
+
+    it('Should show "Flights"', () =>  kayakHomepageObj.isBtnVisible('flights').should.eventually.equal(true));
+
+    it('Should show "Hotels"', () => kayakHomepageObj.isBtnVisible('hotels').should.eventually.equal(true));
+
+    it('Should show "Cars"',() => kayakHomepageObj.isBtnVisible('cars').should.eventually.equal(true));
+
     it('Should load FFD once tapping on "Flights" ',async () => {
-        await kayakHomepageObj.clickFlightsBtn();
-        await commonHelperObj.waitForURLToBeLoaded('flights');
+        await kayakHomepageObj.loadPage('flights');
         expect(await commonHelperObj.getCurrentURL()).to.contain('flights');
-        expect(await kayakHomepageObj.isFlightsBtnHighlighted()).to.equal(true);
     });
+
+    it('Should highlight the Flights btn',() => kayakHomepageObj.isHighlighted('flights').should.eventually.equal(true));
+
     it('should load /hotels once tapping on "Hotels" ',async () => {
-        await kayakHomepageObj.clickHotelsBtn();
-        await commonHelperObj.waitForURLToBeLoaded('hotels');
+        await kayakHomepageObj.loadPage('hotels');
         expect(await commonHelperObj.getCurrentURL()).to.contain('hotels');
     });
-    it('Should highlight the Hotels btn', async () => {
-        expect(await kayakHomepageObj.isHotelsBtnHighlighted()).to.equal(true);
-    });
+
+    it('Should highlight the Hotels btn', () => kayakHomepageObj.isHighlighted('hotels').should.eventually.equal(true));
+
     it('Should load /car-rental once tapping on "Cars" ',async () => {
-        await kayakHomepageObj.clickCarsBtn();
-        await commonHelperObj.waitForURLToBeLoaded('cars');
+        await kayakHomepageObj.loadPage('cars');
         expect(await commonHelperObj.getCurrentURL()).to.contain('cars');
     });
-    it('Should highlight the Cars Btn', async () => {
-        expect(await kayakHomepageObj.isCarsBtnHighlighted()).to.equal(true);
-    });
+
+    it('Should highlight the Cars Btn',() => kayakHomepageObj.isHighlighted('cars').should.eventually.equal(true));
 });
