@@ -4,12 +4,12 @@ from user_management import views
 urlpatterns = [
     path('rest-auth/', include('rest_auth.urls')),
 
-    path('', views.UsersListCreateView.as_view({
+    path('', views.UsersView.as_view({
         'post': 'create',
         'get': 'list',
     })),
 
-    path('<int:pk>/', views.UserDetailView.as_view({
+    path('<int:pk>/', views.UsersView.as_view({
         'get': 'retrieve',
         'put': 'update',
         'delete': 'destroy'

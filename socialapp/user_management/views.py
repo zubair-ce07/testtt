@@ -9,24 +9,26 @@ from user_management.models import UserProfile, WorkInformation, AcademicInforma
     FriendRequest
 
 from user_management.serializers import (
-    UserProfileSerializer, AcademicInformationPostSerializer, \
-    UserDetailSerializer, WorkInformationPostSerializer, UserFriendsSerializer, \
-    GroupSerializer, UserSocialGroupsSerializer, NotificationSerializer, GroupRequestSerializer, \
+    UserProfileSerializer, AcademicInformationPostSerializer,
+    UserDetailSerializer, WorkInformationPostSerializer, UserFriendsSerializer,
+    GroupSerializer, UserSocialGroupsSerializer, NotificationSerializer, GroupRequestSerializer,
     FriendRequestSerializer, WorkInformationGetSerializer, AcademicInformationGetSerializer
 )
 
-from user_management.utils import get_notification_text
+from user_management.utils import get_request_notification_text, NOTIFICATION_CHOICE_FIELDS
 
-from user_management.utils import NOTIFICATION_CHOICE_FIELDS
+from user_management.utils import GROUP, FRIEND
 
 
-class UsersListCreateView(ModelViewSet):
-    serializer_class = UserProfileSerializer
+class UsersView(ModelViewSet):
     queryset = UserProfile.objects.all()
 
-    def create(self, request, *args, **kwargs):
-        print(request.data)
+    def get_serializer_class(self):
+        if self.action == 'retrieve' or self.action == 'update' or self.action == 'destroy':
+            return UserDetailSerializer
+        return UserProfileSerializer
 
+    def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
@@ -36,38 +38,30 @@ class UsersListCreateView(ModelViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class UserDetailView(ModelViewSet):
-    queryset = UserProfile.objects.all()
-    serializer_class = UserDetailSerializer
-
-
 class WorkInformationView(ModelViewSet):
-    queryset = WorkInformation.objects.all()
     serializer_class = WorkInformationPostSerializer
+    queryset = WorkInformation.objects.all()
 
     def list(self, request, *args, **kwargs):
         username = request.query_params.get('username', None)
         if username:
             work_informations = WorkInformation.objects.filter(user_profile__username=username)
-        else:
-            work_informations = WorkInformation.objects.all()
-
-        work_information_serializer = WorkInformationGetSerializer(work_informations, many=True)
-        return Response(work_information_serializer.data, status=status.HTTP_200_OK)
+            work_information_serializer = WorkInformationGetSerializer(work_informations, many=True)
+            return Response(work_information_serializer.data, status=status.HTTP_200_OK)
+        return Response('No username provided', status=status.HTTP_400_BAD_REQUEST)
 
 
 class AcademicInformationView(ModelViewSet):
-    queryset = AcademicInformation.objects.all()
     serializer_class = AcademicInformationPostSerializer
+    queryset = AcademicInformation.objects.all()
 
     def list(self, request, *args, **kwargs):
         username = request.query_params.get('username', None)
         if username:
             academic_informations = AcademicInformation.objects.filter(user_profile__username=username)
-        else:
-            academic_informations = AcademicInformation.objects.all()
-        work_informations_serializer = AcademicInformationGetSerializer(academic_informations, many=True)
-        return Response(work_informations_serializer.data, status=status.HTTP_200_OK)
+            academic_informations_serializer = AcademicInformationGetSerializer(academic_informations, many=True)
+            return Response(academic_informations_serializer.data, status=status.HTTP_200_OK)
+        return Response('No username provided', status=status.HTTP_400_BAD_REQUEST)
 
 
 class GroupRequestView(ViewSet):
@@ -84,11 +78,10 @@ class GroupRequestView(ViewSet):
             'group': pk_group,
             'status': False
         }
-        notification_type = NOTIFICATION_CHOICE_FIELDS.__dict__['group']
         notification = {
-            "text": get_notification_text(notification_type),
+            "text": get_request_notification_text(notification_type=GROUP),
             "status": False,
-            "type": notification_type
+            "type": GROUP
         }
         group_request_serializer = GroupRequestSerializer(data=group_request)
         notification_serializer = NotificationSerializer(data=notification)
@@ -138,11 +131,10 @@ class FriendRequestView(ViewSet):
                 'request_from': pk_user_from,
                 'status': False
             }
-            notification_type = NOTIFICATION_CHOICE_FIELDS.__dict__['friend']
             notification = {
-                "text": get_notification_text(notification_type),
+                "text": get_request_notification_text(notification_type=FRIEND),
                 "status": False,
-                "type": notification_type
+                "type": FRIEND
             }
             friend_request_serializer = FriendRequestSerializer(data=friend_request)
             notification_serializer = NotificationSerializer(data=notification)
