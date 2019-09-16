@@ -1,3 +1,7 @@
+LOGIN_URL = 'login'
+MY_UPLOADS_URL = 'my_uploads'
+FAVORITE_ID_NAME = 'favorite'
+
 RESPONSES = {
     "upvotes": {
         "success": "Post upvoted successfully!",
@@ -21,9 +25,3 @@ RESPONSES = {
     },
     "unhandled": "Unhandled request error!",
 }
-
-LOGIN_URL = 'login'
-
-MY_UPLOADS_URL = 'my_uploads'
-
-FAVORITE_ID_NAME = 'favorite'

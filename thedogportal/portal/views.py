@@ -9,6 +9,7 @@ from django.views import View
 from django.views.generic import ListView, CreateView
 from django.views.generic.edit import UpdateView
 
+from portal.utils import profile_info_incomplete
 from .models import (Profile,
                      Uploads,
                      Upvotes,
@@ -23,7 +24,7 @@ from portal.constants import (RESPONSES,
                               FAVORITE_ID_NAME)
 
 
-class HomepageView(View, LoginRequiredMixin):
+class HomepageView(LoginRequiredMixin, View):
     login_url = reverse_lazy(LOGIN_URL)
     template_name = "home.html"
 
@@ -96,9 +97,7 @@ class HomepageView(View, LoginRequiredMixin):
         upload_count = Uploads.get_id_excluded_upload_count(userid)
         user_profile = Profile.objects.filter(pk=userid)[0]
 
-        if (not user_profile.location or not
-                user_profile.bio or not
-                user_profile.birth_date):
+        if (profile_info_incomplete(user_profile)):
             messages.add_message(request,
                                  messages.WARNING,
                                  RESPONSES["settings"]["warning"])
@@ -120,7 +119,7 @@ class HomepageView(View, LoginRequiredMixin):
         return render(request, self.template_name, homepage_context_dict)
 
 
-class UploadsView(CreateView, LoginRequiredMixin):
+class UploadsView(LoginRequiredMixin, CreateView):
     login_url = reverse_lazy(LOGIN_URL)
     model = Uploads
     form = UploadForm()
@@ -138,7 +137,7 @@ class UploadsView(CreateView, LoginRequiredMixin):
         return super(UploadsView, self).form_valid(form)
 
 
-class MyUploadsView(View, LoginRequiredMixin, SuccessMessageMixin):
+class MyUploadsView(LoginRequiredMixin, View, SuccessMessageMixin):
     login_url = reverse_lazy(LOGIN_URL)
     template_name = "my_uploads.html"
     success_message = RESPONSES["posts"]["deleted"]
@@ -156,7 +155,7 @@ class MyUploadsView(View, LoginRequiredMixin, SuccessMessageMixin):
         return render(request, self.template_name, my_uploads_context_dict)
 
 
-class MyFavoritesView(View, LoginRequiredMixin, SuccessMessageMixin):
+class MyFavoritesView(LoginRequiredMixin, View, SuccessMessageMixin):
     login_url = reverse_lazy(LOGIN_URL)
     template_name = "my_favorites.html"
     success_message = RESPONSES["favorites"]["remove"]
@@ -176,7 +175,7 @@ class MyFavoritesView(View, LoginRequiredMixin, SuccessMessageMixin):
         return render(request, self.template_name, my_favs_context_dict)
 
 
-class MySettings(UpdateView, LoginRequiredMixin, SuccessMessageMixin):
+class MySettings(LoginRequiredMixin, UpdateView, SuccessMessageMixin):
     login_url = reverse_lazy(LOGIN_URL)
     model = Profile
     fields = ["bio", "location", "birth_date"]
