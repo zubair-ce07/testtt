@@ -13,7 +13,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'crispy_forms',
     'shopcity',
+    'users',
 ]
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -29,7 +31,8 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            os.path.join(BASE_DIR, "shopcity/templates/shopcity/")
+            os.path.join(BASE_DIR, "shopcity/templates/shopcity/"),
+            os.path.join(BASE_DIR, "users/templates/users/")
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -64,6 +67,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+CRISPY_TEMPLATE_PACK = 'bootstrap4'
+LOGIN_REDIRECT_URL = '/shopcity/search/'
+LOGIN_URL = '/shopcity/login/'
 NUMBER_OF_CATEGORIES_BREADCRUMB = 3
 
 LANGUAGE_CODE = 'en-us'

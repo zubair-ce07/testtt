@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<ul class="list-group">
+    {% for cart_item in cart_items %}
+    <li class="media list-group-item">
+        <img src="{{ cart_item.product.image_url}}" class="mr-3" height="5%" width="10%">
+        <div class="media-body">
+            <h3 class="mt-0 mb-1">{{ cart_item.product.name }}</h3>
+            <h5>{{ cart_item.product.brand }}</h5>
+            <h5>{{ cart_item.sku_price }}-{{ cart_item.product.currency }}</h5>
+            <h5>Quantity: {{cart_item.quantity}}</h5>
+            <form action="" method="post">
+                {% csrf_token %}
+                <button class="btn btn-block btn-outline-primary" value="{{ cart_item.product.retailer_sku }}" name="id">
+                    Remove
+                </button>
+            </form>
+        </div>
+    </li>
+    <br>
+    {% endfor %}
+</ul>
+{% if number_of_products %}
+<h4>
+    Total Products: {{number_of_products}}
+</h4>
+<h4>
+    Cart Total: {{cart_total}}-GBP
+</h4>
+{% else %}
+<h4>Cart is Empty.... Add some products</h4>
+{% endif %}
+<a href="/shopcity/" class="btn btn-outline-primary">Continue Shopping</a>
+<a href="" class="btn btn-outline-secondary">Proceed To Checkout</a>
+{% endblock content %}

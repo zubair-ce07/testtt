@@ -29,29 +29,58 @@
             </nav>
             {% for image in images %}
             <br>
-            <img src="{{ image }}" style="overflow: auto" class="rounded mx-auto d-block; margin:0" alt="{{ product.name }}" height="15%" width="80%"><br>
+                        <img src="..." style="overflow: auto" class="rounded mx-auto d-block; margin:0" alt="{{ product.name }}" height="15%" width="80%"><br>
+
+<!--            <img src="{{ image }}" style="overflow: auto" class="rounded mx-auto d-block; margin:0" alt="{{ product.name }}" height="15%" width="80%"><br>-->
             {% endfor %}
         </div>
         <div class="col-4">
-            <img src="{{ images|first }}" class="rounded mx-auto d-block" alt="{{ product.name }}" height="40%" width="100%">
+                        <img src="..." class="rounded mx-auto d-block" alt="{{ product.name }}" height="40%" width="100%">
+
+<!--            <img src="{{ images|first }}" class="rounded mx-auto d-block" alt="{{ product.name }}" height="40%" width="100%">-->
         </div>
         <div class="col-5">
             <br>
             <h3>{{ product.name }}-{{ product.brand }} </h3>
             <h5>Price: {{ product.price }}-{{ product.currency }} </h5>
-            {% for colour, sizes in colours_and_sizes.items %}
-            <p><b>Colour:</b> {{ colour }}</p>
-            <div class="btn-group" role="group" aria-label="Basic example">
-                <p style="display: inline;width: fit-content;"><b>Size:&nbsp;&nbsp;</b><p>
-                {% for size, out_of_stock in sizes %}
-                  {% if out_of_stock %}
-                    <button type="button" class="btn btn-dark" disabled>{{ size }}</button>
-                  {% else %}
-                    <button type="button" class="btn btn-dark">{{ size }}</button>
-                  {% endif %}
+
+            <form method="post">{% csrf_token %}
+                {% for colour, sizes in colours_and_sizes.items %}
+                <p><b>Colour:</b> {{ colour }}</p>
+                <div class="form-group row">
+                    <p><b>&nbsp;&nbsp;&nbsp;Size:&nbsp;&nbsp;</b><p>
+                        <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                        {% for size, out_of_stock in sizes %}
+                            {% if out_of_stock %}
+                                <label class="btn btn-secondary">
+                                <input type="radio" name="sku_id" id="option1" autocomplete="off" disabled>
+                                {{ size }}
+                                </label>
+                            {% else %}
+                                <label class="btn btn-dark">
+                                    <input type="radio" name="sku_id" id="option2" value="{{ colour|add:'_'|add:size }}" autocomplete="off" required>
+                                    {{ size }}
+                                </label>
+                            {% endif %}
+                        {% endfor %}
+                        </div>
+                </div>
                 {% endfor %}
-            </div>
-            {% endfor %}
+                {% if user.is_superuser %}
+                    <input type="submit" class="btn btn-outline-primary btn-lg btn-block" value="Set Out Of Stock">
+                {% else %}
+                    <div class="form-group row">
+                        <br><p><b>&nbsp;&nbsp;&nbsp;Quantity: &nbsp;</b></p>
+                        <input type="number" name="quantity" min="1" max="10000" required>
+                    </div>
+                    {% if product.out_of_stock %}
+                        <input type="submit" class="btn btn-outline-primary btn-lg btn-block" value="Add To Cart" disabled>
+                    {% else %}
+                        <input type="submit" class="btn btn-outline-primary btn-lg btn-block" value="Add To Cart">
+                    {% endif %}
+                {% endif %}
+            </form>
+
             <div><br>
                 <h5>Description: </h5>
                 {% for d in description %}

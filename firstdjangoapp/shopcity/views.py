@@ -8,6 +8,7 @@ from django.views import View
 
 from .controller import save_products
 from .models import Category, Product, Skus
+from users.models import Cart, CartItem
 
 
 class FileUpload(View):
@@ -74,6 +75,9 @@ class ViewResults(View):
         }
         return render(request, self.template_name, context)
 
+    def post(self, request):
+        return self.get(request)
+
 
 class ProductView(View):
     template_name = 'product_detail.html'
@@ -83,3 +87,34 @@ class ProductView(View):
         context = product.as_dict()
         context['product'] = product
         return render(request, self.template_name, context)
+
+    def post(self, request, product_id):
+        product = get_object_or_404(Product, retailer_sku=product_id)
+        if request.user.is_superuser:
+            product.skus.filter(sku_id=request.POST['sku_id']).update(out_of_stock=True)
+            skus = product.skus.all()
+            Product.objects.filter(retailer_sku=product_id).update(
+                out_of_stock=all([sku.out_of_stock for sku in skus])
+            )
+        else:
+            if hasattr(request.user, 'cart'):
+                cart_item = CartItem(
+                    cart=request.user.cart,
+                    product=product,
+                    quantity=request.POST['quantity'],
+                    sku_id=request.POST['sku_id'],
+                    sku_price=product.skus.get(sku_id=request.POST['sku_id']).price
+                )
+                cart_item.save()
+            else:
+                c = Cart(user=request.user)
+                c.save()
+                cart_item = CartItem(
+                    cart=c,
+                    product=product,
+                    quantity=request.POST['quantity'],
+                    sku_id=request.POST['sku_id'],
+                    sku_price=product.skus.get(sku_id=request.POST['sku_id']).price
+                )
+                cart_item.save()
+        return self.get(request, product_id)
