@@ -88,7 +88,7 @@ class UserRegisterationApiView(generics.CreateAPIView):
                 serializer.save()
                 return Response(data={'user': serializer.data, 'user_type': user_type}, status=status.HTTP_200_OK)
         return Response(
-            data='User type not valid! only customer and shop are allowed',
+            data='User type not valid! only customer and saloon are allowed',
             status=status.HTTP_400_BAD_REQUEST
         )
 

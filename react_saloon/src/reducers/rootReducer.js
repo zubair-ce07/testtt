@@ -1,9 +1,5 @@
 const initState = {
-    saloons: [
-        { id: '1', title: 'hello', body: 'asjdasd' },
-        { id: '2', title: 'hello2', body: 'asjdasdaasdasasd' },
-        { id: '3 ', title: 'hello3', body: 'asjaa232323dasd' }
-    ],
+    saloons: [],
     LoginFailed: false
 }
 const rootReducers = (state = initState, action) => {
@@ -29,6 +25,42 @@ const rootReducers = (state = initState, action) => {
             return {
                 ...state,
                 LoginFailed: true
+            }
+        case 'LOGOUT_SUCESSFUL':
+            return {
+                ...state,
+            }
+        case 'LOGOUT_FAILED':
+            return {
+                ...state,
+            }
+        case 'SIGNUP_SUCESSFUL':
+            return {
+                ...state,
+                signup_failed: false
+            }
+        case 'SIGNUP_FAILED':
+            return {
+                ...state,
+                signup_failed: true
+            }
+        case 'CUSTOMER_PROFILE_SUCESSFUL':
+            return {
+                ...state,
+                user: action.payload
+            }
+        case 'CUSTOMER_PROFILE_FAILED':
+            return {
+                ...state
+            }
+        case 'SALOON_PROFILE_SUCESSFUL':
+            return {
+                ...state,
+                user: action.payload
+            }
+        case 'SALOON_PROFILE_FAILED':
+            return {
+                ...state
             }
 
         default:

@@ -3,6 +3,7 @@ import { connect } from 'react-redux'
 import { Link } from 'react-router-dom'
 import { login } from '../actions/saloon_action'
 
+
 class Login extends React.Component {
     card_style = {
         marginTop: '15%'
