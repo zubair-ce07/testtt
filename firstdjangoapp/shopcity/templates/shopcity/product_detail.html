@@ -29,15 +29,11 @@
             </nav>
             {% for image in images %}
             <br>
-                        <img src="..." style="overflow: auto" class="rounded mx-auto d-block; margin:0" alt="{{ product.name }}" height="15%" width="80%"><br>
-
-<!--            <img src="{{ image }}" style="overflow: auto" class="rounded mx-auto d-block; margin:0" alt="{{ product.name }}" height="15%" width="80%"><br>-->
+           <img src="{{ image }}" style="overflow: auto" class="rounded mx-auto d-block; margin:0" alt="{{ product.name }}" height="15%" width="80%"><br>
             {% endfor %}
         </div>
         <div class="col-4">
-                        <img src="..." class="rounded mx-auto d-block" alt="{{ product.name }}" height="40%" width="100%">
-
-<!--            <img src="{{ images|first }}" class="rounded mx-auto d-block" alt="{{ product.name }}" height="40%" width="100%">-->
+           <img src="{{ images|first }}" class="rounded mx-auto d-block" alt="{{ product.name }}" height="40%" width="100%">
         </div>
         <div class="col-5">
             <br>
