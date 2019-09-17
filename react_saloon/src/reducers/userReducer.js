@@ -1,21 +1,10 @@
 const initState = {
-    saloons: [],
+    user: {},
     LoginFailed: false
 }
-const rootReducers = (state = initState, action) => {
+let response_data
+const userReducer = (state = initState, action) => {
     switch (action.type) {
-        case 'FETCH_SALOON_SUCESSFUL':
-            return {
-                ...state,
-                saloons: action.payload,
-                successStatus: true
-            }
-
-        case 'FETCH_SALOON_FAILED':
-            return {
-                ...state,
-                successStatus: false
-            }
         case 'LOGIN_SUCESSFUL':
             return {
                 ...state,
@@ -45,47 +34,46 @@ const rootReducers = (state = initState, action) => {
                 signup_failed: true
             }
         case 'CUSTOMER_PROFILE_SUCESSFUL':
+            response_data = {
+                'phone_no': action.payload.phone_no
+            }
+            response_data = Object.assign(response_data, action.payload.user)
             return {
                 ...state,
-                user: action.payload
+                user: response_data,
+                update_status: true
             }
         case 'CUSTOMER_PROFILE_FAILED':
             return {
-                ...state
+                ...state,
+                update_status: false
             }
         case 'SALOON_PROFILE_SUCESSFUL':
+            response_data = {
+                'phone_no': action.payload.phone_no,
+                'address': action.payload.address,
+                'shop_name': action.payload.shop_name
+            }
+            response_data = Object.assign(response_data, action.payload.user)
             return {
                 ...state,
-                user: action.payload
+                user: response_data,
+                update_status: true
             }
         case 'SALOON_PROFILE_FAILED':
             return {
-                ...state
+                ...state,
+                update_status: false
             }
-
+        case 'USER_VALUE_UPDATE':
+            const user_data = { ...state.user }
+            user_data[action.payload.key] = action.payload.value
+            return {
+                ...state,
+                user: user_data
+            }
         default:
             return state;
     }
-    // if (action.type === 'DELETE_POST') {
-    //     let newPosts = state.posts.filter((post) => action.id !== post.id)
-    //     return {
-    //         ...state,
-    //         posts: newPosts,
-    //         successStatus: true
-    //     }
-    // }
-    // if (action.type === 'DELETE_POST_FAILED') {
-    //     return {
-    //         ...state,
-    //         successStatus: false
-    //     }
-    // }
-    // if (action.type === 'FETCH_POST') {
-    //     return {
-    //         ...state,
-    //         posts: action.payload
-    //     }
-    // }
-    // return state;
 }
-export default rootReducers
+export default userReducer

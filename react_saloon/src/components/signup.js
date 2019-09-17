@@ -1,7 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { connect } from 'react-redux'
-import { signup } from '../actions/saloon_action'
+import { signup } from '../actions/user_actions'
 
 class Signup extends React.Component {
 
@@ -95,7 +95,7 @@ class Signup extends React.Component {
 
 const mapStateToPropos = (state) => {
     return {
-        signup_failed: state.signup_failed
+        signup_failed: state.user.signup_failed
     }
 }
 

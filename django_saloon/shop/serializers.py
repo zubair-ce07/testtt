@@ -60,16 +60,39 @@ class ListReservationSerializer(serializers.ModelSerializer):
         fields = ('time_slot', 'customer', 'review')
 
 
+class SaloonSerializerForTimeSlotCustomer(serializers.ModelSerializer):
+    """Shop seriliazer for update."""
+
+    class Meta:
+        """Saloon Update Serializer meta class."""
+
+        model = Saloon
+        fields = ('shop_name', 'phone_no', 'address', 'user')
+
+
+class TimeSlotSerializerForCustomers(serializers.ModelSerializer):
+    """Time slot serializer."""
+
+    saloon = SaloonSerializerForTimeSlotCustomer(read_only=True)
+
+    class Meta:
+        """TimeSlotSerializer meta class."""
+
+        model = TimeSlot
+        fields = ('saloon', 'time', 'reservation')
+
+
 class ReservationSerializer(serializers.ModelSerializer):
     """Reservation serializer."""
 
     review = serializers.ReadOnlyField()
+    time_slot = TimeSlotSerializerForCustomers()
 
     class Meta:
         """Reservation Serializer meta class."""
 
         model = Reservation
-        fields = ('time_slot', 'customer', 'review')
+        fields = ('id', 'time_slot', 'customer', 'review')
 
 
 class TimeSlotSerializer(serializers.ModelSerializer):
@@ -79,16 +102,6 @@ class TimeSlotSerializer(serializers.ModelSerializer):
 
     class Meta:
         """Time Slot Serializer meta class."""
-
-        model = TimeSlot
-        fields = ('saloon', 'time', 'reservation')
-
-
-class TimeSlotSerializerForCustomers(serializers.ModelSerializer):
-    """Time slot serializer."""
-
-    class Meta:
-        """TimeSlotSerializer meta class."""
 
         model = TimeSlot
         fields = ('saloon', 'time', 'reservation')

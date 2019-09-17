@@ -1,18 +1,6 @@
 import axios from 'axios'
 import ls from 'local-storage'
 
-// export const deletePost = (id) => {
-//     return dispatch => {
-//         return axios.delete('https://jsonplaceholder.typicode.com/posts/id').then((response) => {
-//             dispatch({ type: 'DELETE_POST', id });
-//             return response
-//         }).catch(function (error) {
-//             dispatch({ type: 'DELETE_POST_FAILED' })
-//             return error
-//         })
-//     }
-// }
-
 export const fetchSaloons = () => {
 
     return dispatch => {
@@ -20,19 +8,6 @@ export const fetchSaloons = () => {
             dispatch({ type: 'FETCH_SALOON_SUCESSFUL', payload: response.data });
         }).catch((err) => {
             dispatch({ type: 'FETCH_SALOON_FAILED' });
-        })
-    }
-
-}
-
-export const customer_profile = () => {
-
-    return dispatch => {
-        const AuthStr = 'Token '.concat(ls.get('token'));
-        return axios.get('http://localhost:8000/customer/api/profile/', { headers: { Authorization: AuthStr } }).then((response) => {
-            dispatch({ type: 'CUSTOMER_PROFILE_SUCESSFUL', payload: response.data });
-        }).catch((err) => {
-            dispatch({ type: 'CUSTOMER_PROFILE_FAILED' });
         })
     }
 
@@ -51,44 +26,79 @@ export const saloon_profile = () => {
 
 }
 
-export const login = (username, password) => {
+export const add_time_slots = (data) => {
     return dispatch => {
-        return axios.post('http://localhost:8000/api/login/', { username, password }).then((response) => {
-            ls.set('username', response.data.user.username)
-            ls.set('email', response.data.user.email)
-            ls.set('token', response.data.token)
-            ls.set('user_type', response.data.user_type)
-            dispatch({ type: 'LOGIN_SUCESSFUL', payload: response.data });
-            return response
-        }).catch((err) => {
-            dispatch({ type: 'LOGIN_FAILED' });
-            return err
-        })
-    }
-}
-
-export const logout = () => {
-    return dispatch => {
-        return axios.get('http://localhost:8000/api/logout/').then((response) => {
-            ls.clear()
-            dispatch({ type: 'LOGOUT_SUCESSFUL' });
-            return response
-        }).catch((err) => {
-            dispatch({ type: 'LOGOUT_FAILED' });
-            return err
-        })
-    }
-}
-
-export const signup = (username, email, password1, password2, user_type) => {
-    return dispatch => {
-        return axios.post('http://localhost:8000/api/register/', { username, email, password1, password2, user_type }).then((response) => {
-            dispatch({ type: 'SIGNUP_SUCESSFUL', payload: response.data });
-            return response
+        const AuthStr = 'Token '.concat(ls.get('token'));
+        return axios.post('http://localhost:8000/shop/api/mysaloon/', data, { headers: { Authorization: AuthStr } }).then((response) => {
+            console.log(response)
+            dispatch({ type: 'ADD_SLOTS_SUCESSFUL', payload: response.data });
         }).catch((err) => {
             console.log(err.response)
-            dispatch({ type: 'SIGNUP_FAILED' });
-            return err
+            dispatch({ type: 'ADD_SLOTS_FAILED' });
         })
     }
+
+}
+
+export const get_time_slots = () => {
+    return dispatch => {
+        const AuthStr = 'Token '.concat(ls.get('token'));
+        return axios.get('http://localhost:8000/shop/api/mysaloon/', { headers: { Authorization: AuthStr } }).then((response) => {
+            dispatch({ type: 'GET_SLOTS_SUCESSFUL', payload: response.data });
+        }).catch((err) => {
+            dispatch({ type: 'GET_SLOTS_FAILED' });
+        })
+    }
+
+}
+
+export const get_time_slots_for_user = (shop_name) => {
+    return dispatch => {
+        const AuthStr = 'Token '.concat(ls.get('token'));
+        return axios.get('http://localhost:8000/shop/api/shop/' + shop_name, { headers: { Authorization: AuthStr } }).then((response) => {
+            dispatch({ type: 'GET_SLOTS_FOR_USER_SUCESSFUL', payload: response.data });
+        }).catch((err) => {
+            dispatch({ type: 'GET_SLOTS_FOR_USER_FAILED' });
+        })
+    }
+
+}
+
+export const get_reservations_for_user = () => {
+    return dispatch => {
+        const AuthStr = 'Token '.concat(ls.get('token'));
+        return axios.get('http://localhost:8000/customer/api/myreservations/', { headers: { Authorization: AuthStr } }).then((response) => {
+            console.log(response)
+            dispatch({ type: 'GET_RESERVATION_FOR_USER_SUCESSFUL', payload: response.data });
+        }).catch((err) => {
+            console.log(err.response)
+            dispatch({ type: 'GET_RESERVATION_FOR_USER_FAILED' });
+        })
+    }
+
+}
+
+export const update_saloon_profile = (data) => {
+    const request_data = {
+        'user': {},
+        'phone_no': data.phone_no,
+        'address': data.address
+    }
+    request_data['user'] = {
+        'first_name': data.first_name,
+        'last_name': data.last_name,
+        'email': data.email,
+        'username': data.username
+    }
+    return dispatch => {
+        const AuthStr = 'Token '.concat(ls.get('token'));
+        return axios.post('http://localhost:8000/shop/api/profile/', request_data, { headers: { Authorization: AuthStr } }).then((response) => {
+            console.log(response)
+            dispatch({ type: 'SALOON_UPDATE_PROFILE_SUCESSFUL', payload: response.data });
+        }).catch((err) => {
+            console.log(err.response)
+            dispatch({ type: 'SALOON_UPDATE_PROFILE_FAILED' });
+        })
+    }
+
 }

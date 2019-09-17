@@ -2,7 +2,9 @@ import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import ls from 'local-storage'
 
-import { customer_profile, saloon_profile } from '../actions/saloon_action'
+import { saloon_profile, update_saloon_profile } from '../actions/saloon_action'
+import { customer_profile, update_customer_profile } from '../actions/customer_actions'
+import { user_value_update } from '../actions/user_actions'
 
 export class profile extends Component {
 
@@ -16,58 +18,67 @@ export class profile extends Component {
     }
 
     handleChange = (e) => {
-        let nam = e.target.name;
+        let key = e.target.name;
         let val = e.target.value;
-        this.setState({ [nam]: val });
+        this.props.user_value_update(key, val)
     }
     handleSubmit = (e) => {
         e.preventDefault();
+        const user_type = ls.get('user_type')
+        if (user_type === 'customer') {
+            this.props.update_customer_profile(this.props.user)
+        } else if (user_type === 'saloon') {
+            this.props.update_saloon_profile(this.props.user)
+        }
 
     }
 
     render() {
         const { user } = this.props
-        console.log(user)
         const user_type = ls.get('user_type')
         const user_profile = (user && <div style={{ width: '100%' }}>
             <center><h2>Profile</h2></center>
             <form onSubmit={this.handleSubmit}>
                 <div className="form-group">
                     <label htmlFor="exampleInputEmail1">Email address</label>
-                    <input type="email" onChange={this.handleChange} value={user.user.email} className="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Enter email" />
+                    <input required type="email" name='email' onChange={this.handleChange} value={user.email} className="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Enter email" />
                 </div>
                 <div className="form-group">
                     <label htmlFor="username">Username</label>
-                    <input type="text" onChange={this.handleChange} value={user.user.username} className="form-control" id="usename" placeholder="Enter Username" />
+                    <input required type="text" name='username' onChange={this.handleChange} value={user.username} className="form-control" id="usename" placeholder="Enter Username" />
                 </div>
                 <div className="form-group">
                     <label htmlFor="first_name">First Name</label>
-                    <input type="text" onChange={this.handleChange} value={user.user.first_name} className="form-control" id="first_name" placeholder="Enter First Name" />
+                    <input required type="text" name='first_name' onChange={this.handleChange} value={user.first_name} className="form-control" id="first_name" placeholder="Enter First Name" />
                 </div>
                 <div className="form-group">
                     <label htmlFor="last_name">Last Name</label>
-                    <input type="text" onChange={this.handleChange} value={user.user.last_name} className="form-control" id="last_name" placeholder="Enter Last Name" />
+                    <input required type="text" name='last_name' onChange={this.handleChange} value={user.last_name} className="form-control" id="last_name" placeholder="Enter Last Name" />
                 </div>
                 <div className="form-group">
                     <label htmlFor="phone_no">Phone No</label>
-                    <input type="number" onChange={this.handleChange} value={user.phone_no} className="form-control" id="phone_no" placeholder="Enter Phone No" />
+                    <input required type="number" name='phone_no' onChange={this.handleChange} value={user.phone_no} className="form-control" id="phone_no" placeholder="Enter Phone No" />
                 </div>
                 {user_type === 'saloon' &&
                     <React.Fragment>
                         <div className="form-group">
                             <label htmlFor="shop_name">Shop Name</label>
-                            <input type="text" onChange={this.handleChange} value={user.shop_name} className="form-control" id="shop_name" placeholder="Enter Shop Name" />
+                            <input required type="text" name='shop_name' onChange={this.handleChange} value={user.shop_name} className="form-control" id="shop_name" placeholder="Enter Shop Name" />
                         </div>
                         <div className="form-group">
                             <label htmlFor="shop_name">Address</label>
-                            <textarea type="text" onChange={this.handleChange} value={user.address} className="form-control" id="address" placeholder="Enter Shop Address"></textarea>
+                            <textarea required type="text" name='address' onChange={this.handleChange} value={user.address} className="form-control" id="address" placeholder="Enter Shop Address"></textarea>
                         </div>
                     </React.Fragment>}
                 <button type="submit" className="btn btn-primary">Submit</button>
             </form>
         </div>)
+        // const sucess_message = this.props.update_status &&
+        //     <div className="alert alert-success" role="alert" >
+        //         Profile Updated!</div>
         return (
             <div className='container' >
+                {/* {sucess_message} */}
                 {user_profile}
             </div >
         )
@@ -76,14 +87,18 @@ export class profile extends Component {
 
 const mapStateToProps = (state) => {
     return {
-        user: state.user
+        user: state.user.user,
+        update_status: state.user.update_status
     }
 }
 
 const mapDispatchToProps = dispatch => {
     return {
         customer_profile: () => dispatch(customer_profile()),
-        saloon_profile: () => dispatch(saloon_profile())
+        update_customer_profile: (data) => dispatch(update_customer_profile(data)),
+        saloon_profile: () => dispatch(saloon_profile()),
+        update_saloon_profile: (data) => dispatch(update_saloon_profile(data)),
+        user_value_update: (key, val) => dispatch(user_value_update(key, val))
     };
 }
 

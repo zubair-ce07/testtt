@@ -16,11 +16,6 @@ class ListSaloon extends React.Component {
 
     render() {
         const { saloons } = this.props
-        const reseeve_slot = ls.get('token') ? (
-            ls.get('user_type') === 'customer' ? (<Link to="/login" className="btn btn-primary" >Reserve a time slot</Link>) : (false)
-        ) : (
-                <Link to="/login" className="btn btn-primary" >Login to Reserve a time slot</Link>
-            )
         const saloonsList = saloons.length > 0 ? (
             saloons.map((saloon) => {
                 return (
@@ -31,9 +26,15 @@ class ListSaloon extends React.Component {
                         <div className="card-body">
                             <h5 className="card-title">Phone No : {saloon.phone_no}</h5>
                             <p className="card-text">Address : {saloon.address}</p>
-                            {reseeve_slot}
+                            {
+                                ls.get('token') ? (
+                                    ls.get('user_type') === 'customer' ? (<Link to={'/' + saloon.shop_name} className="btn btn-primary" >Reserve a time slot</Link>) : (false)
+                                ) : (
+                                        <Link to="/login" className="btn btn-primary" >Login to Reserve a time slot</Link>
+                                    )
+                            }
                         </div>
-                    </div>) : (false)
+                    </div >) : (false)
                 )
             })
         ) : (
@@ -61,8 +62,8 @@ class ListSaloon extends React.Component {
 
 const mapStateToPropos = (state) => {
     return {
-        saloons: state.saloons,
-        successStatus: state.successStatus
+        saloons: state.saloon.saloons,
+        successStatus: state.saloon.successStatus
     }
 }
 

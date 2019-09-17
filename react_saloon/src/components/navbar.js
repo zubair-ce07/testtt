@@ -4,6 +4,9 @@ import ls from 'local-storage'
 
 import ListSaloon from './list_saloon'
 import Profile from './profile'
+import my_saloon from './my_saloon'
+import SlotList from './slot_list'
+import MyReservations from './my_reservations'
 
 class Navbar extends React.Component {
     nar_bar_style = {
@@ -20,7 +23,13 @@ class Navbar extends React.Component {
     nav_bar_elements = this.token ? (
         <React.Fragment>
             <li className="nav-item active">
-                <Link className="nav-link" to='/login'> Profile <span className=" sr-only">(current)</span></Link>
+                <Link className="nav-link" to='/myreservations'> My Reservations <span className=" sr-only">(current)</span></Link>
+            </li>
+            {this.user_type === 'saloon' && <li className="nav-item active">
+                <Link className="nav-link" to='/mysaloon'> My Saloon <span className=" sr-only">(current)</span></Link>
+            </li>}
+            <li className="nav-item active">
+                <Link className="nav-link" to='/profile'> Profile <span className=" sr-only">(current)</span></Link>
             </li>
             <li className="nav-item active">
                 <Link className="btn btn-outline-danger" onClick={this.logout} to='/login'> Logout <span className=" sr-only">(current)</span></Link>
@@ -62,6 +71,9 @@ class Navbar extends React.Component {
                 <Switch>
                     <Route exact path='/' component={ListSaloon} />
                     <Route exact path='/profile/' component={Profile} />
+                    <Route exact path='/mysaloon/' component={my_saloon} />
+                    <Route exact path='/myreservations/' component={MyReservations} />
+                    <Route path="/:shop_name/" component={SlotList} />
                 </Switch>
             </div >
 
