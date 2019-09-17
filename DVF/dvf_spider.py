@@ -75,7 +75,6 @@ class DvfParseSpider(BaseParseSpider):
         return self.gender_lookup(soup) or Gender.ADULTS.value
 
     def skus(self, response):
-        raw_product = self.raw_product(response)
         skus = {}
 
         sizes = clean(response.css('.pdp-size-qty-container .sizeText::text'))
@@ -83,7 +82,7 @@ class DvfParseSpider(BaseParseSpider):
         for size in sizes:
             sku = self.product_pricing_common(response)
             sku['size'] = size
-            sku['colour'] = raw_product['dimension19']
+            sku['colour'] = self.raw_product(response)['dimension19']
             if not size in available_sizes:
                 sku['out_of_stock'] = True
             skus[f"{sku['colour']}_{sku['size']}"] = sku
