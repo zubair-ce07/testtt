@@ -17,6 +17,8 @@ class MixinFR(Mixin):
     market = 'FR'
     start_urls = ['https://www.chausport.com']
 
+    size_labels = ['taille vêtement', 'pointures']
+
 
 class ParseSpider(BaseParseSpider):
     attribute_css_t = '.left-col .catalog_product_attribute_label{}' \
@@ -25,7 +27,7 @@ class ParseSpider(BaseParseSpider):
     description_css = '[itemprop="description"] p::text, .short-description ::text'
     care_css = attribute_css_t.format(':not(:contains("ouleur"))')
     brand_css = '.product-name .brand::text'
-    price_css = '.left-col .price-box ::text'
+    price_css = '.left-col .price-box :not(.reduction-percentage)::text'
 
     def parse(self, response):
         garment = self.new_unique_garment(self.product_id(response))
@@ -42,18 +44,23 @@ class ParseSpider(BaseParseSpider):
         return garment
 
     def product_id(self, response):
-        return re.findall(r'-(\d+?)\.html', response.url)[0]
+        product_id_match = re.findall(r'-(\d+?)\.html', response.url)
 
-    def product_raw_name(self, response):
+        if product_id_match:
+            return product_id_match[0]
+
+        return json.loads(clean(response.css('#optionsPrice::attr(value)'))[0])['productId']
+
+    def raw_name(self, response):
         return clean(response.css('.product-name .model::text'))[0]
 
     def product_name(self, response):
-        return self.remove_colours_from_text(self.product_raw_name(response))
+        return self.remove_colours_from_text(self.raw_name(response))
 
     def product_category(self, response):
         css = self.attribute_css_t.format(':contains("Style")')
-        category_in_features = clean(response.css(css))
-        return category_in_features + [clean(response.css('title::text'))[0].split('-')[1]]
+        category = clean(response.css(css))
+        return category + [clean(response.css('title::text'))[0].split('-')[1]]
 
     def product_gender(self, response):
         return self.gender_lookup(clean(response.css('title::text'))[0]) or Gender.ADULTS.value
@@ -73,21 +80,20 @@ class ParseSpider(BaseParseSpider):
             sku = common_sku.copy()
             sku['size'] = raw_size['label']
             sku['out_of_stock'] = not bool(raw_size['saleable'][0])
-            skus[f'{sku.get("colour", "")}_{sku["size"]}'] = sku
+            sku_id = f'{colour}_{sku["size"]}' if colour else sku['size']
+            skus[sku_id] = sku
 
         return skus
 
     def get_raw_sizes(self, response):
         raw_attributes = clean(response.css('#optionsConfig::attr(value)'))
 
-        if raw_attributes:
-            raw_attributes = json.loads(raw_attributes[0])['attributes']
+        if not raw_attributes:
+            return [{'label': self.one_size, 'saleable': [True]}]
 
-            for attribute_key in raw_attributes.keys():
-                if raw_attributes[attribute_key]['label'].lower() == 'pointures':
-                    return raw_attributes[attribute_key]['options']
-
-        return [{'label': self.one_size, 'saleable': [True]}]
+        raw_attributes = json.loads(raw_attributes[0])['attributes']
+        return [ra['options'] for ra in raw_attributes.values()
+                if ra['label'].lower() in self.size_labels][0]
 
     def merch_info(self, response):
         return clean(response.css('.right-col .flag::text'))
@@ -95,7 +101,7 @@ class ParseSpider(BaseParseSpider):
 
 class CrawlSpider(BaseCrawlSpider):
     listing_css = [
-        '.main-nav-item .inner',
+        '.menu__sub-item-link',
         '.next-products-link'
     ]
     product_css = ['.product-item .product-link']
