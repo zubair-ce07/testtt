@@ -97,24 +97,17 @@ class ProductView(View):
                 out_of_stock=all([sku.out_of_stock for sku in skus])
             )
         else:
-            if hasattr(request.user, 'cart'):
-                cart_item = CartItem(
-                    cart=request.user.cart,
-                    product=product,
-                    quantity=request.POST['quantity'],
-                    sku_id=request.POST['sku_id'],
-                    sku_price=product.skus.get(sku_id=request.POST['sku_id']).price
-                )
-                cart_item.save()
-            else:
+            if not hasattr(request.user, 'cart'):
                 c = Cart(user=request.user)
                 c.save()
-                cart_item = CartItem(
-                    cart=c,
-                    product=product,
-                    quantity=request.POST['quantity'],
-                    sku_id=request.POST['sku_id'],
-                    sku_price=product.skus.get(sku_id=request.POST['sku_id']).price
-                )
-                cart_item.save()
+            cart_item = CartItem(
+                cart=request.user.cart,
+                product=product,
+                quantity=request.POST['quantity'],
+                sku_id=request.POST['sku_id'],
+                sku_price=product.skus.get(sku_id=request.POST['sku_id']).price,
+                sku_colour=product.skus.get(sku_id=request.POST['sku_id']).colour,
+                sku_size=product.skus.get(sku_id=request.POST['sku_id']).size
+            )
+            cart_item.save()
         return self.get(request, product_id)

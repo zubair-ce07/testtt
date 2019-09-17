@@ -1,7 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.forms import AuthenticationForm
-from django.db.models import Sum
 from django.shortcuts import redirect, render
 from django.views import View
 
@@ -49,6 +48,11 @@ class ProfileView(View):
             p_form.save()
             messages.success(request, 'Account Updated!!!')
             return redirect('/shopcity/profile')
+        context = {
+            'u_form': u_form,
+            'p_form': p_form
+        }
+        return render(request, "profile.html", context)
 
 
 class CartView(View):
@@ -57,28 +61,11 @@ class CartView(View):
     def get(self, request):
         context = {}
         if hasattr(request.user, 'cart'):
-            cart_items = request.user.cart.cart_items.all()
-            cart_total = 0
-            for cart_item in cart_items:
-                cart_total += (cart_item.product.skus.get(sku_id=cart_item.sku_id).price * cart_item.quantity)
-            context = {
-                "cart_items": cart_items.all(),
-                "number_of_products": cart_items.aggregate(Sum('quantity'))['quantity__sum'],
-                "cart_total": cart_total
-            }
+            context = request.user.cart.as_dict()
         return render(request, self.template_name, context)
 
     def post(self, request):
         cart_items = request.user.cart.cart_items.all()
         cart_items.filter(product__retailer_sku=request.POST['id']).delete()
-        context = {}
-        if hasattr(request.user, 'cart'):
-            cart_total = 0
-            for cart_item in cart_items:
-                cart_total += (cart_item.product.skus.get(sku_id=cart_item.sku_id).price * cart_item.quantity)
-            context = {
-                "cart_items": cart_items.all(),
-                "number_of_products": cart_items.aggregate(Sum('quantity'))['quantity__sum'],
-                "cart_total": cart_total
-            }
+        context = request.user.cart.as_dict()
         return render(request, self.template_name, context)

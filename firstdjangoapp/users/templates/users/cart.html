@@ -5,9 +5,13 @@
     <li class="media list-group-item">
         <img src="{{ cart_item.product.image_url}}" class="mr-3" height="5%" width="10%">
         <div class="media-body">
-            <h3 class="mt-0 mb-1">{{ cart_item.product.name }}</h3>
+            <a href="/shopcity/{{ cart_item.product.retailer_sku }}/">
+                <h3 class="mt-0 mb-1" style="color: #000;">{{ cart_item.product.name }}</h3>
+            </a>
             <h5>{{ cart_item.product.brand }}</h5>
-            <h5>{{ cart_item.sku_price }}-{{ cart_item.product.currency }}</h5>
+            <h5>Colour: {{ cart_item.sku_colour }}</h5>
+            <h5>Size: {{ cart_item.sku_size }}</h5>
+            <h5>Price: {{ cart_item.sku_price }}-{{ cart_item.product.currency }}</h5>
             <h5>Quantity: {{cart_item.quantity}}</h5>
             <form action="" method="post">
                 {% csrf_token %}
@@ -31,5 +35,7 @@
 <h4>Cart is Empty.... Add some products</h4>
 {% endif %}
 <a href="/shopcity/" class="btn btn-outline-primary">Continue Shopping</a>
-<a href="" class="btn btn-outline-secondary">Proceed To Checkout</a>
+{% if number_of_products %}
+<a href="/payment/" class="btn btn-outline-secondary">Proceed To Checkout</a>
+{% endif %}
 {% endblock content %}
