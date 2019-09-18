@@ -5,7 +5,7 @@ import urllib.parse
 from scrapy.spiders import Request
 
 from skuscraper.parsers.genders import Gender
-from .base import BaseParseSpider, BaseCrawlSpider, soupify
+from .base import BaseParseSpider, BaseCrawlSpider, soupify, clean
 
 class Mixin:
     retailer = 'coach'
@@ -60,19 +60,19 @@ class CoachParseSpider(BaseParseSpider):
         return json.loads(response.text)['data']
 
     def product_name(self, raw_product):
-        return raw_product['name']
+        return clean(raw_product['name'])
 
     def product_description(self, raw_product):
-        return [raw_product['shortDesc'] or '']
+        return clean((raw_product['shortDesc'] or '').split('.'))
 
     def product_care(self, raw_product):
-        return [raw_product['description'] or '']
+        return clean((raw_product['description'] or '').split('<br/>'))
 
     def product_id(self, response):
-        return response.url.split('/')[-1].replace('.html','')
+        return clean(response.url.split('/')[-1].replace('.html',''))
 
     def product_brand(self, raw_product):
-        return raw_product['brand']['label']
+        return clean(raw_product['brand']['label'])
 
     def image_urls(self, raw_product):
         image_urls = []
@@ -126,11 +126,10 @@ class CoachCrawlSpider(BaseCrawlSpider):
 
     def category_links(self, raw_data):
         if raw_data['level'] == 3:
-            return [self.category_url_t.format(raw_data['id'])]
-        links = []
+            yield self.category_url_t.format(raw_data['id'])
+
         for item in raw_data['items']:
-            links += self.category_links(item)
-        return links
+            yield from self.category_links(item)
 
 
 class CoachCNCrawlSpider(MixinCN, CoachCrawlSpider):
