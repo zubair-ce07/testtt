@@ -1,12 +1,25 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import './index.css';
-import App from './App';
-import * as serviceWorker from './serviceWorker';
+import React from "react";
+import ReactDOM from "react-dom";
+import "./index.css";
+import * as serviceWorker from "./serviceWorker";
+import {Container} from "@material-ui/core";
+import AppSidebar from "./SharedComponents/AppSidebar/AppSidebar";
+import Profile from "./UserComponents/Profile/profile";
 
-ReactDOM.render(<App />, document.getElementById('root'));
+class AppRoot extends React.Component {
+    render() {
+        return (
+            <div style={{backgroundColor: '#EBEBEB'}}>
+                <AppSidebar />
 
-// If you want your app to work offline and load faster, you can change
-// unregister() to register() below. Note this comes with some pitfalls.
-// Learn more about service workers: https://bit.ly/CRA-PWA
-serviceWorker.unregister();
+                <Container style={{backgroundColor: '#EBEBEB'}}>
+                    <Profile />
+                </Container>
+
+            </div>
+        );
+    }
+}
+
+ReactDOM.render(<AppRoot/>, document.getElementById("root"));
+serviceWorker.register();
