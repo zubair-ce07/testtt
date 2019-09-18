@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% load shopcity_extra %}
+{% block content %}
+
+<button type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#exampleModal" data-whatever="@mdo">Filter Products</button>
+<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                <form action="/shopcity/search/" method="get">
+                    <div class="form-group">
+                        <label for="brandSelect">Brand</label>
+                        <select name="brand" class="form-control" id="brandSelect">
+                            <option selected="selected" value="">All</option>
+                            {% for brand in brand_choices %}
+                              <option>{{ brand }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <br><br>
+                    <div class="form-group">
+                        <label for="sizeSelect">Size</label>
+                        <select name="size" class="form-control" id="sizeSelect">
+                            <option selected="selected" value="">All</option>
+                            {% for size in size_choices %}
+                              <option>{{ size }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <br><br>
+                    <div class="form-group">
+                        <label for="colourSelect">Colour</label>
+                        <select name="colour" class="form-control" id="colourSelect">
+                            <option selected="selected" value="">All</option>
+                            {% for colour in colour_choices %}
+                              <option>{{ colour }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <br><br>
+                    <div class="form-group">
+                        <label for="categorySelect">Category</label>
+                        <select name="category" class="form-control" id="categorySelect">
+                            <option selected="selected" value="">All</option>
+                            {% for category in category_choices %}
+                              <option>{{ category }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <br><p>Minimum: </p>
+                    <input type="number" name="minimum" min="0" max="10000">
+                    <br><br><p>Maximum: </p>
+                    <input type="number" name="maximum" min="0" max="10000">
+
+                    <br><br>
+                    <div class="form-group">
+                        <label for="nameSearch">Name</label>
+                        <input name="name" type="text" class="form-control" id="nameSearch">
+                    </div>
+
+                    <br><br>
+                    <div class="form-group">
+                        <label for="outOfStockSelect">Out of Stock</label>
+                        <select name="out_of_stock" class="form-control" id="outOfStockSelect">
+                            <option selected="selected" value="False">No</option>
+                            <option value="True">Yes</option>
+                        </select>
+                    </div>
+                    <input type="submit" class="btn btn-outline-primary" value="Search">
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<br>
+<br>
+<div class="row">
+    {% for product in products %}
+      <div class="card" style="width: 18rem; padding:10px">
+        <img src="{{ product.image_url }}" class="card-img-top" alt="...">
+        <div class="card-body d-flex flex-column">
+          <h5 class="card-title">{{ product.name }}-{{ product.brand }}</h5>
+          <p class="card-text">{{ product.price }} {{ product.currency }}</p>
+          <a href="/shopcity/{{ product.retailer_sku }}/" class="align-self-end btn btn-block btn-outline-primary" style="margin-top: auto;">View Details</a>
+        </div>
+      </div>
+    {% endfor %}
+</div>
+
+<ul class="pagination justify-content-center">
+    {% if products.has_previous %}
+      <li class="page-item"><a class="page-link" href="?{% url_replace request 'page' 1 %}">First</a></li>
+      <li class="page-item"><a class="page-link" href="?{% url_replace request 'page' products.previous_page_number %}">Previous</a></li>
+    {% endif %}
+    <li class="page-item"><a class="page-link" href="#">Page {{ products.number }} of {{ products.paginator.num_pages }}</a></li>
+    {% if products.has_next %}
+      <li class="page-item"><a class="page-link" href="?{% url_replace request 'page' products.next_page_number %}">Next</a></li>
+      <li class="page-item"><a class="page-link" href="?{% url_replace request 'page' products.paginator.num_pages %}">Last</a></li>
+    {% endif %}
+</ul>
+{% endblock content %}
