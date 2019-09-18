@@ -44,12 +44,8 @@ class ParseSpider(BaseParseSpider):
         return garment
 
     def product_id(self, response):
-        product_id_match = re.findall(r'-(\d+?)\.html', response.url)
-
-        if product_id_match:
-            return product_id_match[0]
-
-        return json.loads(clean(response.css('#optionsPrice::attr(value)'))[0])['productId']
+        url = clean(response.css('#product_addtocart_form::attr(action)'))[0]
+        return re.findall(r'product/(.*?)/form', url)[0]
 
     def raw_name(self, response):
         return clean(response.css('.product-name .model::text'))[0]
