@@ -12,7 +12,7 @@ class Profile(models.Model):
     address = models.CharField(max_length=500)
     city = models.CharField(max_length=200)
     state = models.CharField(max_length=200)
-    zip = models.CharField(max_length=50)
+    zip_code = models.CharField(max_length=50)
     contact = PhoneField(null=True)
 
     def __str__(self):
@@ -46,11 +46,3 @@ class CartItem(models.Model):
     sku_price = models.IntegerField()
     sku_size = models.CharField(null=True, blank=True, max_length=10)
     sku_colour = models.CharField(null=True, blank=True, max_length=20)
-
-
-def create_user_profile(sender, instance, created, **kwargs):
-    if created:
-        profile, created = Profile.objects.get_or_create(user=instance)
-
-
-post_save.connect(create_user_profile, sender=User)

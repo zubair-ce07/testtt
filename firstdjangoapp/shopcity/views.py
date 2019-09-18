@@ -75,9 +75,6 @@ class ViewResults(View):
         }
         return render(request, self.template_name, context)
 
-    def post(self, request):
-        return self.get(request)
-
 
 class ProductView(View):
     template_name = 'product_detail.html'

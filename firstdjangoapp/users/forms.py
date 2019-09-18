@@ -30,9 +30,9 @@ class ProfileUpdateForm(forms.ModelForm):
     address = forms.CharField(max_length=500, required=True)
     city = forms.CharField(max_length=200, required=True)
     state = forms.CharField(max_length=200, required=True)
-    zip = forms.CharField(max_length=50, required=True)
+    zip_code = forms.CharField(max_length=50, required=True)
     contact = PhoneField()
 
     class Meta:
         model = Profile
-        fields = ['address', 'city', 'state', 'zip', 'contact']
+        fields = ['address', 'city', 'state', 'zip_code', 'contact']

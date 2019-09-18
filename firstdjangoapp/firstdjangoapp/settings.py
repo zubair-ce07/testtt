@@ -69,7 +69,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 LOGIN_REDIRECT_URL = '/shopcity/search/'
-LOGIN_URL = '/shopcity/login/'
+LOGIN_URL = '/user/login/'
 NUMBER_OF_CATEGORIES_BREADCRUMB = 3
 
 LANGUAGE_CODE = 'en-us'
