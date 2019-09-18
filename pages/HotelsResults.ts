@@ -1,11 +1,11 @@
-import { browser, by, element, ExpectedConditions as EC } from "protractor";
+import { browser, by, element, ElementArrayFinder, ElementFinder, ExpectedConditions as EC } from "protractor";
 import { HotelResult } from "../elements/HotelResult";
 import { RailMap } from "../elements/RailMap";
 
 export class HotelsResults {
   readonly railMap = new RailMap();
   
-  load() {
+  load(): void {
     const progressBar = element(by.className('Common-Results-ProgressBar'));
     browser.wait(EC.invisibilityOf(progressBar));
   }
@@ -16,7 +16,7 @@ export class HotelsResults {
     )
   }
   
-  getExpandedSearchResult(index: number) {
+  getExpandedSearchResult(index: number): HotelResult {
     const result = this.getSearchResults()
       .filter(elm => new HotelResult(elm).isDetailsWrapperDisplayed())
       .get(index);
@@ -24,7 +24,7 @@ export class HotelsResults {
     return new HotelResult(result);
   }
   
-  getSearchResults() {
+  getSearchResults(): ElementArrayFinder {
     const elm = element(by.id('searchResultsList'));
     browser.wait(EC.presenceOf(elm));
     browser.wait(EC.visibilityOf(elm));
@@ -32,7 +32,7 @@ export class HotelsResults {
     return element.all(by.className('Hotels-Results-HotelResultItem'));
   }
   
-  getHorizontalFiltersContainer() {
+  getHorizontalFiltersContainer(): ElementFinder {
     return element(by.className(`horizontal-filters-wrapper`))
   }
   

@@ -8,7 +8,7 @@ export class Hotels {
   readonly travellers: Travellers = new Travellers();
   readonly destination: Destination = new Destination();
   
-  clickSearch() {
+  clickSearch(): void {
     const submit = element(by.css(`div[id$='-formGridSearchBtn']`)).element(by.css(`button[id$='-submit']`));
     browser.wait(EC.visibilityOf(submit));
     browser.wait(EC.elementToBeClickable(submit));

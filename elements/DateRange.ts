@@ -1,11 +1,11 @@
-import { by, element } from "protractor";
+import { by, element, ElementFinder } from "protractor";
 
 export class DateRange {
-  getStartDateElement() {
+  getStartDateElement(): ElementFinder {
     return element(by.css(`div[id$='-dateRangeInput-display-start']`))
   }
   
-  getEndDateElement() {
+  getEndDateElement(): ElementFinder {
     return element(by.css(`div[id$='-dateRangeInput-display-end']`))
   }
 }

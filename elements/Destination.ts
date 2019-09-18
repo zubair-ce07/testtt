@@ -1,23 +1,23 @@
-import { browser, by, element, ExpectedConditions as EC } from "protractor"
+import { browser, by, element, ElementFinder, ExpectedConditions as EC } from "protractor"
 
 export class Destination {
-  getDialog() {
+  getDialog(): ElementFinder {
     return element.all(by.css(`div[id$='-location-display']`)).first();
   }
   
-  getDialogWindow() {
+  getDialogWindow(): ElementFinder {
     return element.all(by.css(`div[id$='-location-smarty-window']`)).first();
   }
   
-  getInputElement() {
+  getInputElement(): ElementFinder {
     return element.all(by.css(`input[id$='-location']`)).first();
   }
   
-  getSearchResultsElement() {
+  getSearchResultsElement(): ElementFinder {
     return element.all(by.css(`div[id$='-location-smartbox-dropdown']`)).first();
   }
   
-  type(text: string) {
+  type(text: string): void {
     const dialog = this.getDialog();
     const dialogWindow = this.getDialogWindow();
     
@@ -37,7 +37,7 @@ export class Destination {
     browser.wait(EC.textToBePresentInElementValue(input, text));
   }
   
-  selectSearchResult(index: number) {
+  selectSearchResult(index: number): void {
     const results = this.getSearchResultsElement();
     browser.wait(EC.presenceOf(results));
     browser.wait(EC.visibilityOf(results));

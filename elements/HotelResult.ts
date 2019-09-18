@@ -1,32 +1,32 @@
-import { browser, by, element, ElementFinder, ExpectedConditions as EC } from 'protractor';
+import { browser, by, element, ElementArrayFinder, ElementFinder, ExpectedConditions as EC } from 'protractor';
 import { MapMarker } from "./MapMarker";
 
 export class HotelResult {
   constructor(readonly elm: ElementFinder) {
   }
   
-  static async findFromMapMarker(marker: MapMarker) {
+  static async findFromMapMarker(marker: MapMarker): Promise<HotelResult> {
     const markerId = await marker.elm.getAttribute('id');
     const [ignore, id] = markerId.split('-');
     return new HotelResult(element(by.id(id)));
   }
   
-  openDetailsWrapper() {
+  openDetailsWrapper(): void {
     this.elm.click();
     const wrapper = this.getDetailsWrapper();
     browser.wait(EC.presenceOf(wrapper));
     browser.wait(EC.visibilityOf(wrapper));
   }
   
-  isDetailsWrapperDisplayed() {
+  async isDetailsWrapperDisplayed(): Promise<boolean> {
     return this.getDetailsWrapper().isDisplayed()
   }
   
-  getDetailsWrapper() {
+  getDetailsWrapper(): ElementFinder {
     return this.elm.element(by.css(`div[id$='-detailsWrapper']`))
   }
   
-  switchToTab(tab: 'Details' | 'Map' | 'Reviews' | 'Rates' | 'Overview') {
+  switchToTab(tab: 'Details' | 'Map' | 'Reviews' | 'Rates' | 'Overview'): void {
     tab = tab === 'Details' ? 'Overview' : tab;
     
     const tabToSwitch = this.elm
@@ -39,7 +39,7 @@ export class HotelResult {
     tabToSwitch.click();
   }
   
-  async closeDetailsWrapper() {
+  async closeDetailsWrapper(): Promise<void> {
     const isWrapperOpen = await this.isDetailsWrapperDisplayed();
     if (isWrapperOpen) {
       const closeButton = this.elm
@@ -53,25 +53,25 @@ export class HotelResult {
     }
   }
   
-  getHotelImages() {
+  getHotelImages(): ElementArrayFinder {
     return this.getTabContainer('Details')
       .element(by.className('col-photos'))
       .all(by.tagName('img'));
   }
   
-  getHotelMap() {
+  getHotelMap(): ElementFinder {
     return this.getTabContainer('Map').element(by.className('map'));
   }
   
-  getHotelReviews() {
+  getHotelReviews(): ElementFinder {
     return this.getTabContainer('Reviews').element(by.className('Hotels-Results-InlineReviews'))
   }
   
-  getHotelRates() {
+  getHotelRates(): ElementFinder {
     return this.getTabContainer('Rates').element(by.className('Hotels-Results-HotelRoomTypeRatesTable'))
   }
   
-  getTabContainer(tab: 'Details' | 'Map' | 'Reviews' | 'Rates' | 'Overview') {
+  getTabContainer(tab: 'Details' | 'Map' | 'Reviews' | 'Rates' | 'Overview'): ElementFinder {
     tab = tab === 'Details' ? 'Overview' : tab;
     
     return this.elm
@@ -79,7 +79,7 @@ export class HotelResult {
       .element(by.css(`div[id$='-${tab.toLowerCase()}Container']`))
   }
   
-  viewDeal() {
+  async viewDeal(): Promise<void> {
     return this.elm.element(by.css(`button[id$='-booking-bookButton']`)).click();
   }
 }
