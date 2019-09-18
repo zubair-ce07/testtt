@@ -1,13 +1,11 @@
 import React from "react";
-import * as serviceWorker from "./serviceWorker";
-import {Container} from "@material-ui/core";
-import AppSidebar from "./SharedComponents/AppSidebar/AppSidebar";
 import UserLoginRegistrationForm from "./UserComponents/LoginRegistrationForm/FormContainer/FormContainer";
+import './App.css'
 
 class App extends React.Component {
   render() {
     return (
-        <div style={{backgroundColor: '#EBEBEB'}}>
+        <div id='app' >
             <UserLoginRegistrationForm />
         </div>
     );
