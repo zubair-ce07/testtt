@@ -2,6 +2,7 @@ import argparse
 import csv
 import os
 from datetime import datetime
+
 from weatherreading import WeatherReading
 
 
@@ -30,12 +31,17 @@ class WeatherParser:
     def __init__(self, path):
         os.chdir(os.getcwd() + '/' + path)
         self.weather_readings = []
+
+    def read_readings(self):
         for readings_file in os.listdir():
             with open(readings_file, 'r') as readings_csv_file:
                 for row in csv.DictReader(readings_csv_file, fieldnames=self.get_headers(readings_file)):
                     if not any(garbage in (row.get('PKT') or row.get('PKST'))
                                for garbage in ['PKT', 'PKST', '<!--']):
-                        self.weather_readings.append(WeatherReading(row))
+                        if row["Max TemperatureC"] and row["Min TemperatureC"] \
+                                and row["Max Humidity"] and row[" Mean Humidity"]:
+                            self.weather_readings.append(WeatherReading(row))
+        return self.weather_readings
 
     def get_headers(self, data_file):
         headers = []
@@ -47,78 +53,79 @@ class WeatherParser:
                     break
         return headers
 
-    def filter_reports(self, year, month=None):
-        filter_readings = []
-        for reading in self.weather_readings:
-            try:
-                if month == reading.date.month and reading.date.year == year:
-                    filter_readings.append(reading)
-                elif not month and year == reading.date.year:
-                    filter_readings.append(reading)
-            except AttributeError:
-                pass
-        return filter_readings
-
 
 class WeatherAnalyzer:
     def __init__(self, path):
         self.report_reader = WeatherParser(path)
 
+    def filter_monthly_reports(self, year, month):
+        filter_readings = []
+        for reading in self.report_reader.read_readings():
+            if month == reading.date.month and reading.date.year == year:
+                filter_readings.append(reading)
+        return filter_readings
+
+    def filter_yearly_reports(self, year):
+        filter_readings = []
+        for reading in self.report_reader.read_readings():
+            if year == reading.date.year:
+                filter_readings.append(reading)
+        return filter_readings
+
     def analyze_monthly_report(self, date):
-        year = date.year
-        month = date.month
-        monthly_records = self.report_reader.filter_reports(year, month)
-        length = len(monthly_records)
-        avg_max_temp = round(sum(daily_record.max_temp for daily_record in monthly_records) / length)
-        avg_min_temp = round(sum(daily_record.min_temp for daily_record in monthly_records) / length)
-        avg_mean_humidity = round(sum(daily_record.mean_humidity for daily_record in monthly_records) / length)
-        WeatherReportGenerator.display_monthly_report(avg_max_temp, avg_min_temp, avg_mean_humidity)
+        monthly_records = self.filter_monthly_reports(date.year, date.month)
+        avg_max_temp = self.calculate_average(monthly_records, 'max_temp')
+        avg_min_temp = self.calculate_average(monthly_records, 'min_temp')
+        avg_mean_humidity = self.calculate_average(monthly_records, 'mean_humidity')
+        return {'avg_max_temp': avg_max_temp, 'avg_min_temp': avg_min_temp, 'avg_mean_humidity': avg_mean_humidity}
+
+    def calculate_average(self, records, key):
+        length = len(records)
+        avg_record_value = round(sum(getattr(record, key) for record in records) / length)
+        return avg_record_value
 
     def analyze_yearly_report(self, year):
-        yearly_records = self.report_reader.filter_reports(year)
+        yearly_records = self.filter_yearly_reports(year)
         max_temp_record = max(yearly_records, key=lambda record: record.max_temp)
         min_temp_record = min(yearly_records, key=lambda record: record.min_temp)
         max_humidity_record = max(yearly_records, key=lambda record: record.mean_humidity)
-        WeatherReportGenerator.display_yearly_report(max_temp_record, min_temp_record, max_humidity_record)
+        return {'max_temp_record': max_temp_record,
+                'min_temp_record': min_temp_record,
+                'max_humidity_record': max_humidity_record
+                }
 
     def analyze_single_bar_chart_report(self, date):
-        year = date.year
-        month = date.month
-        monthly_records = self.report_reader.filter_reports(year, month)
-        if not monthly_records:
-            return
-
-        for daily_record in monthly_records:
-            WeatherReportGenerator.display_single_bar_chart_report(daily_record)
+        monthly_records = self.filter_monthly_reports(date.year, date.month)
+        return monthly_records
 
 
-class WeatherReportGenerator:
+class WeatherReporter:
 
-    @staticmethod
-    def display_monthly_report(max_temp, min_temp, mean_humidity):
-        highest_avg = "Highest Average: {}C".format(max_temp)
-        lowest_avg = "Lowest Average: {}C".format(min_temp)
-        avg_humidity = "Average Mean Humidity: {}%".format(mean_humidity)
-        print(highest_avg, lowest_avg, avg_humidity, sep="\n")
+    def report_monthly_analysis(self, monthly_reports):
+        report_statements = [
+            f"Highest Average: {monthly_reports['avg_max_temp']}C",
+            f"Lowest Average: {monthly_reports['avg_min_temp']}C",
+            f"Average Mean Humidity: {monthly_reports['avg_mean_humidity']}%"
+        ]
+        self.print_reports_statements(report_statements)
 
     @staticmethod
-    def display_yearly_report(max_temp_record, min_temp_record, max_humidity_record):
-        max_temp = "Highest: {}C on {}".format(
-            max_temp_record.max_temp,
-            min_temp_record.date.strftime("%B %d")
-        )
-        min_temp = "Lowest: {}C on {}".format(
-            min_temp_record.min_temp,
-            min_temp_record.date.strftime("%B %d")
-        )
-        max_humidity = "Humidity: {}% on {}".format(
-            max_humidity_record.max_humidity,
-            max_humidity_record.date.strftime("%B %d")
-        )
-        print(max_temp, min_temp, max_humidity, sep="\n")
+    def print_reports_statements(report_statements):
+        for report_statement in report_statements:
+            print(report_statement)
 
-    @staticmethod
-    def display_single_bar_chart_report(daily_record):
+    def report_yearly_analysis(self, yearly_reports):
+        reports_statements = [
+            f"Highest: {yearly_reports['max_temp_record'].max_temp}C "
+            f"on {yearly_reports['max_temp_record'].date.strftime('%B %d')}",
+            f"Highest: {yearly_reports['min_temp_record'].min_temp}C "
+            f"on {yearly_reports['min_temp_record'].date.strftime('%B %d')}",
+            f"Highest: {yearly_reports['max_humidity_record'].max_humidity}C "
+            f"on {yearly_reports['max_humidity_record'].date.strftime('%B %d')}",
+        ]
+        self.print_reports_statements(reports_statements)
+
+    def display_single_bar_chart_report(self, daily_record):
         print(daily_record.date.strftime("%d")
               + '+' * daily_record.max_temp + ' '
               + '\033[91m {}C\033[00m'.format(daily_record.max_temp) + '\n' +
@@ -139,16 +146,21 @@ def parse_arguments():
 
 def main():
     arguments = parse_arguments()
-    report = WeatherAnalyzer(arguments.path)
+    analyzer = WeatherAnalyzer(arguments.path)
+    reporter = WeatherReporter()
     if arguments.e:
         for e in arguments.e:
-            report.analyze_yearly_report(e)
+            yearly_results = analyzer.analyze_yearly_report(e)
+            reporter.report_yearly_analysis(yearly_results)
     if arguments.a:
         for a in arguments.a:
-            report.analyze_monthly_report(a)
+            monthly_results = analyzer.analyze_monthly_report(a)
+            reporter.report_monthly_analysis(monthly_results)
     if arguments.c:
         for c in arguments.c:
-            report.analyze_single_bar_chart_report(c)
+            daily_results = analyzer.analyze_single_bar_chart_report(c)
+            for daily_record in daily_results:
+                reporter.display_single_bar_chart_report(daily_record)
 
 
 if __name__ == "__main__":
