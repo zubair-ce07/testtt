@@ -19,16 +19,20 @@ from django.urls import include, path
 
 from django.conf import settings
 from django.conf.urls.static import static
+from django.conf.urls import url
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 from . import views
+from portal import urls as portal_urls
+from portal import api_urls
 
 urlpatterns = [
     path('', views.index),
     path('register/', views.register, name="register"),
-    path('portal/', include('portal.urls')),
+    path('portal/', include(portal_urls)),
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),
+    path('api/portal/', include(api_urls)),
 ]
 
 

@@ -5,23 +5,23 @@
 {% endblock %}
 
 {% block content %}
-
 	{% if random_image %}
-
-		<img src={{random_image.image.url}} alt="{{ random_image.title }}">
+		<h3 id="home-img-title"> {{random_image.title}} </h3>
+		<br>
+		<img id="home-img" src={{random_image.image.url}} alt="{{ random_image.title }}">
 
 		<form method="POST">
 			{% csrf_token %}
-			<button class="btn waves-effect waves-light {% if upvoted %}pressed{% endif %}" type="submit" name="upvote" value="{{ random_image.pk }}">
-				Upvote {{random_image.upvotes_set.all.count}}
+			<button id="home-up-btn" class="btn waves-effect waves-light {% if upvoted %}pressed{% endif %}" type="submit" name="upvote" value="{{ random_image.pk }}">
+				Upvote <span id="home-img-upvotes">{{random_image.upvotes_set.all.count}} </span>
 			</button>
 
-			<button class="btn waves-effect waves-light {% if downvoted %}pressed{% endif %}" type="submit" name="downvote" value="{{ random_image.pk }}">
-				Downvote {{random_image.downvotes_set.all.count}}
+			<button id="home-dwn-btn" class="btn waves-effect waves-light {% if downvoted %}pressed{% endif %}" type="submit" name="downvote" value="{{ random_image.pk }}">
+				Downvote <span id="home-img-downvotes">{{random_image.downvotes_set.all.count}}</span>
 			</button>
 
-			<button class="btn waves-effect waves-light {% if favorited %}pressed{% endif %}" type="submit" name="favorite" value="{{ random_image.pk }}">
-				<i class="material-icons">favorite</i> {{random_image.favorites_set.all.count}}
+			<button id="home-fav-btn" class="btn waves-effect waves-light {% if favorited %}pressed{% endif %}" type="submit" name="favorite" value="{{ random_image.pk }}">
+				<i class="material-icons">favorite</i> <span id="home-img-favorites">{{random_image.favorites_set.all.count}} </span>
 			</button>
 		</form>
 
@@ -34,5 +34,6 @@
 		</a>
 
   	{% endif %}
-
+	{% load static %}
+	<script src="{% static "js/main.js" %}"></script>
 {% endblock %}

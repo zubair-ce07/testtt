@@ -4,7 +4,7 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import redirect, render, get_object_or_404
 from django.template import loader
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.views import View
 from django.views.generic import ListView, CreateView
 from django.views.generic.edit import UpdateView
@@ -23,6 +23,82 @@ from portal.constants import (RESPONSES,
                               MY_UPLOADS_URL,
                               FAVORITE_ID_NAME)
 
+from rest_framework.views import APIView
+from rest_framework.response import Response
+
+
+class ReactionView(APIView):
+    def post(self, request):
+        userid = request.user.id
+        upvote_id = request.data.get("upvote", False)
+        downvote_id = request.data.get("downvote", False)
+        favorite_id = request.data.get(FAVORITE_ID_NAME, False)
+        print(favorite_id)
+
+        if(upvote_id):
+            image = Uploads.get_single_upload_by_id(upvote_id)
+            upvoter = Profile.get_user_by_id(userid)
+            owner = Profile.get_user_by_id(image.owner_id)
+
+            if(not Upvotes.get_upvotes_object(upvoter, image, owner)):
+                Downvotes.delete_downvotes_object(upvoter, image, owner)
+                upvoted = Upvotes.new_upvotes_instance(upvoter, image, owner)
+                upvoted.save()
+
+        elif (downvote_id):
+            image = Uploads.get_single_upload_by_id(downvote_id)
+            downvoter = Profile.get_user_by_id(userid)
+            owner = Profile.get_user_by_id(image.owner_id)
+
+            if(not Downvotes.get_downvotes_object(downvoter, image, owner)):
+                Upvotes.delete_upvotes_object(downvoter, image, owner)
+                downvoted = Downvotes.new_downvotes_instance(downvoter, image, owner)
+                downvoted.save()
+
+        elif(favorite_id):
+            image = Uploads.get_single_upload_by_id(favorite_id)
+            favoriter = Profile.get_user_by_id(userid)
+            owner = Profile.get_user_by_id(image.owner_id)
+
+            if(not Favorites.get_favorites_object(favoriter, image, owner)):
+                favorited = Favorites.new_favorites_instance(favoriter, image, owner)
+                favorited.save()
+            else:
+                Favorites.delete_favorites_object(favoriter, image, owner)
+
+        api_response_context = get_random_image(userid)
+        random_image = api_response_context.pop("random_image")
+        downvoted = 1 if api_response_context.get("downvoted") else 0
+        upvoted = 1 if api_response_context.get("upvoted") else 0
+        favorited = 1 if api_response_context.get("favorited") else 0
+
+        update_dict = {"title": random_image.title,
+                       "url": random_image.image.url,
+                       "upvotes": random_image.upvotes_set.all().count(),
+                       "downvotes": random_image.downvotes_set.all().count(),
+                       "favorites": random_image.favorites_set.all().count(),
+                       "pk": random_image.pk,
+                       "downvoted": downvoted,
+                       "upvoted": upvoted,
+                       "favorited": favorited}
+
+        return Response(update_dict)
+
+
+class DeleteFavorite(APIView):
+    def post(self, request):
+        userid = request.user.id
+        favorite_id = request.data.get(FAVORITE_ID_NAME)
+
+        if (favorite_id):
+            image = Uploads.get_single_upload_by_id(favorite_id)
+            favoriter = Profile.get_user_by_id(userid)
+            owner = Profile.get_user_by_id(image.owner_id)
+
+            Favorites.delete_favorites_object(favoriter, image, owner)
+            return Response(data={}, status=200)
+        else:
+            return Response(data={}, status=400)
 
 class HomepageView(LoginRequiredMixin, View):
     login_url = reverse_lazy(LOGIN_URL)
@@ -85,6 +161,7 @@ class HomepageView(LoginRequiredMixin, View):
                 messages.add_message(request,
                                      messages.SUCCESS,
                                      RESPONSES["favorites"]["remove"])
+            return redirect(self.request.path_info, args={}, kwargs={'fav_id': image})
         else:
             messages.add_message(request,
                                  messages.DANGER,
@@ -93,30 +170,37 @@ class HomepageView(LoginRequiredMixin, View):
         return HttpResponseRedirect(self.request.path_info)
 
     def get(self, request, *args, **kwargs):
-        userid = request.user.id
-        upload_count = Uploads.get_id_excluded_upload_count(userid)
-        user_profile = Profile.objects.filter(pk=userid)[0]
-
-        if (profile_info_incomplete(user_profile)):
-            messages.add_message(request,
-                                 messages.WARNING,
-                                 RESPONSES["settings"]["warning"])
-
-        if upload_count:
-            random_image = Uploads.get_id_excluded_random_upload(userid, upload_count)
+        if("fav_id" in kwargs):
+            random_image = Uploads.get_single_upload_by_id(kwargs["fav_id"])
         else:
-            random_image = None
+            userid = request.user.id
+            homepage_context_dict = get_random_image(userid)
 
-        upvoted = random_image.upvotes_set.filter(upvoter=userid)
-        downvoted = random_image.downvotes_set.filter(downvoter=userid)
-        favorited = random_image.favorites_set.filter(favoriter=userid)
-
-        homepage_context_dict = {"random_image": random_image,
-                                 "upvoted": upvoted,
-                                 "downvoted": downvoted,
-                                 "favorited": favorited}
+            user_profile = Profile.objects.filter(pk=userid)[0]
+            if (profile_info_incomplete(user_profile)):
+                messages.add_message(request,
+                                        messages.WARNING,
+                                        RESPONSES["settings"]["warning"])
 
         return render(request, self.template_name, homepage_context_dict)
+
+
+def get_random_image(userid):
+    upload_count = Uploads.get_id_excluded_upload_count(userid)
+
+    if upload_count:
+        random_image = Uploads.get_id_excluded_random_upload(userid, upload_count)
+    else:
+        random_image = None
+
+    upvoted = random_image.upvotes_set.filter(upvoter=userid)
+    downvoted = random_image.downvotes_set.filter(downvoter=userid)
+    favorited = random_image.favorites_set.filter(favoriter=userid)
+
+    return {"random_image": random_image,
+            "upvoted": upvoted,
+            "downvoted": downvoted,
+            "favorited": favorited}
 
 
 class UploadsView(LoginRequiredMixin, CreateView):
@@ -160,13 +244,13 @@ class MyFavoritesView(LoginRequiredMixin, View, SuccessMessageMixin):
     template_name = "my_favorites.html"
     success_message = RESPONSES["favorites"]["remove"]
 
-    def post(self, request, *args, **kwargs):
-        favorite_id = request.POST.get(FAVORITE_ID_NAME, False)
-        image = Uploads.get_single_upload_by_id(favorite_id)
-        owner = Profile.get_user_by_id(image.owner_id)
-        Favorites.delete_favorites_object(request.user.id, favorite_id, owner)
+    # def post(self, request, *args, **kwargs):
+    #     favorite_id = request.POST.get(FAVORITE_ID_NAME, False)
+    #     image = Uploads.get_single_upload_by_id(favorite_id)
+    #     owner = Profile.get_user_by_id(image.owner_id)
+    #     Favorites.delete_favorites_object(request.user.id, favorite_id, owner)
 
-        return HttpResponseRedirect(self.request.path_info)
+    #     return HttpResponseRedirect(self.request.path_info)
 
     def get(self, request, *args, **kwargs):
         list_of_images = Favorites.objects.filter(favoriter=request.user.id)
