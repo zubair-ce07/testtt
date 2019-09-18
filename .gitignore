@@ -20,6 +20,7 @@
 /.idea
 .package.json
 .package-lock.json
+/src/assets
 
 npm-debug.log*
 yarn-debug.log*
