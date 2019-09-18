@@ -2,7 +2,6 @@ const path = require('path');
 const env = require('dotenv');
 const {SpecReporter} = require('jasmine-spec-reporter');
 
-// load environment variables
 env.config({path: path.join(__dirname, '.env')});
 
 exports.config = {
