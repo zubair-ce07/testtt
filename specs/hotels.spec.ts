@@ -31,8 +31,8 @@ describe('Kayak.com/hotels', () => {
     const hotelsPage = Pages.hotels;
     expect(browser.getCurrentUrl()).eventually.to.equal('https://www.kayak.com/hotels');
     expect(hotelsPage.travellers.getDisplayText()).eventually.to.equal('1 room, 2 guests');
-    expect(hotelsPage.dataRange.getStartDateElement().isPresent()).eventually.to.be.true;
-    expect(hotelsPage.dataRange.getEndDateElement().isPresent()).eventually.to.be.true;
+    expect(hotelsPage.dateRange.getStartDateElement().isPresent()).eventually.to.be.true;
+    expect(hotelsPage.dateRange.getEndDateElement().isPresent()).eventually.to.be.true;
     expect(hotelsPage.destination.getDialog().isPresent()).eventually.to.be.true;
   });
   
@@ -111,7 +111,7 @@ describe('Kayak.com/hotels', () => {
   
   it('should open provider page when "View Deal" is clicked', async () => {
     const hotelSearchResult = Pages.hotelsResults.getExpandedSearchResult(0);
-    hotelSearchResult.viewDeal();
+    await hotelSearchResult.viewDeal();
     
     const windows = await browser.driver.getAllWindowHandles();
     expect(windows.length).to.equal(2);

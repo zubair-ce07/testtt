@@ -4,7 +4,7 @@ import { DateRange } from "../elements/DateRange";
 import { Destination } from "../elements/Destination";
 
 export class Hotels {
-  readonly dataRange: DateRange = new DateRange();
+  readonly dateRange: DateRange = new DateRange();
   readonly travellers: Travellers = new Travellers();
   readonly destination: Destination = new Destination();
   
