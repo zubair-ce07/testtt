@@ -30,56 +30,60 @@ describe('Kayak.com/hotels', () => {
     Pages.kayak.navigation.to('hotels');
     const hotelsPage = Pages.hotels;
     expect(browser.getCurrentUrl()).eventually.to.equal('https://www.kayak.com/hotels');
-    expect(hotelsPage.travellers.getDisplayText()).eventually.to.equal('1 room, 2 guests');
-    expect(hotelsPage.dateRange.getStartDateElement().isPresent()).eventually.to.be.true;
-    expect(hotelsPage.dateRange.getEndDateElement().isPresent()).eventually.to.be.true;
     expect(hotelsPage.destination.getDialog().isPresent()).eventually.to.be.true;
   });
   
-  it('should load hotels results for search string BCN', async () => {
-    const text = 'BCN';
-    Pages.hotels.destination.type(text);
+  it('should show "1 room, 2 guests" in guests field"', () => {
+    expect(Pages.hotels.travellers.getDisplayText()).eventually.to.equal('1 room, 2 guests');
+  });
+  
+  it('should have start-date field', () => {
+    expect(Pages.hotels.dateRange.getStartDateElement().isPresent()).eventually.to.be.true;
+  });
+  
+  it('should have end-date field', () => {
+    expect(Pages.hotels.dateRange.getEndDateElement().isPresent()).eventually.to.be.true;
+  });
+  
+  it('should load hotels results for search string NYC', async () => {
+    Pages.hotels.destination.type('NYC');
     Pages.hotels.destination.selectSearchResult(0);
     Pages.hotels.clickSearch();
     await Pages.hotelsResults.load();
+    expect(Pages.hotelsResults.getSearchResults().count()).eventually.to.be.greaterThan(0);
+  });
+  
+  it('should display at least 5 search results', () => {
     expect(Pages.hotelsResults.getSearchResults().count()).eventually.to.be.gte(5);
   });
   
   it('should open details of first search result', async () => {
     const resultsPage = Pages.hotelsResults;
     const searchResult = resultsPage.getSearchResult(0);
-    searchResult.openDetailsWrapper();
-    expect(searchResult.isDetailsWrapperDisplayed()).eventually.to.be.true;
-    
-    expect(searchResult.getHotelImages().count(), 'details tab should contain hotel images')
-      .eventually.to.be.greaterThan(0);
+    searchResult.openTabs();
+    expect(searchResult.getTabsContainer().isDisplayed()).eventually.to.be.true;
   });
   
-  it('should switch to "Map" tab', () => {
-    const resultsPage = Pages.hotelsResults;
-    const tab = 'Map';
-    const searchResult = resultsPage.getSearchResult(0);
-    searchResult.switchToTab(tab);
-    expect(searchResult.getTabContainer(tab).isDisplayed()).eventually.to.be.true;
+  it('should display hotel images in "Details" section', async () => {
+    const searchResult = Pages.hotelsResults.getSearchResult(0);
+    expect(searchResult.getHotelImages().count()).eventually.to.be.greaterThan(0);
+  });
+  
+  it('should switch to "Map" tab', async () => {
+    const searchResult = Pages.hotelsResults.getSearchResult(0);
+    searchResult.switchToTab('Map');
     expect(searchResult.getHotelMap().isDisplayed()).eventually.to.be.true;
   });
   
   it('should switch to "Reviews" tab', async () => {
-    const resultsPage = Pages.hotelsResults;
-    const tab = 'Reviews';
-    const searchResult = resultsPage.getSearchResult(0);
-    searchResult.switchToTab(tab);
-    expect(searchResult.getTabContainer(tab).isDisplayed()).eventually.to.be.true;
+    const searchResult = Pages.hotelsResults.getSearchResult(0);
+    searchResult.switchToTab('Reviews');
     expect(searchResult.getHotelReviews().isDisplayed()).eventually.to.be.true;
   });
   
   it('should switch to "Rates" tab', async () => {
-    const resultsPage = Pages.hotelsResults;
-    const tab = 'Rates';
-    const searchResult = resultsPage.getSearchResult(0);
-    searchResult.openDetailsWrapper();
-    searchResult.switchToTab(tab);
-    expect(searchResult.getTabContainer(tab).isDisplayed()).eventually.to.be.true;
+    const searchResult = Pages.hotelsResults.getSearchResult(0);
+    searchResult.switchToTab('Rates');
     expect(searchResult.getHotelRates().isDisplayed()).eventually.to.be.true;
   });
   
@@ -87,7 +91,10 @@ describe('Kayak.com/hotels', () => {
     const resultsPage = Pages.hotelsResults;
     resultsPage.railMap.show();
     expect(resultsPage.railMap.getContainer().isDisplayed()).eventually.to.be.true;
-    expect(resultsPage.getHorizontalFiltersContainer().isDisplayed()).eventually.to.be.true;
+  });
+  
+  it('should show horizontal filters', () => {
+    expect(Pages.hotelsResults.getHorizontalFiltersContainer().isDisplayed()).eventually.to.be.true;
   });
   
   it('should show map marker details when mouse hovered', async () => {

@@ -18,7 +18,7 @@ export class HotelsResults {
   
   getExpandedSearchResult(index: number): HotelResult {
     const result = this.getSearchResults()
-      .filter(elm => new HotelResult(elm).isDetailsWrapperDisplayed())
+      .filter(elm => new HotelResult(elm).getTabsContainer().isDisplayed())
       .get(index);
     
     return new HotelResult(result);

@@ -6,24 +6,25 @@ export class HotelResult {
   }
   
   static async findFromMapMarker(marker: MapMarker): Promise<HotelResult> {
+    const placeholder = element(by.className('Hotels-Results-HotelResultItemPlaceholder'));
+    browser.wait(EC.invisibilityOf(placeholder));
+    
     const markerId = await marker.elm.getAttribute('id');
     const [ignore, id] = markerId.split('-');
-    return new HotelResult(element(by.id(id)));
+    const $elm = element(by.id(id));
+  
+    browser.wait(EC.presenceOf($elm));
+    browser.wait(EC.visibilityOf($elm));
+    browser.wait(EC.elementToBeClickable($elm));
+  
+    return new HotelResult($elm);
   }
   
-  openDetailsWrapper(): void {
+  openTabs(): void {
     this.elm.click();
-    const wrapper = this.getDetailsWrapper();
+    const wrapper = this.getTabsContainer();
     browser.wait(EC.presenceOf(wrapper));
     browser.wait(EC.visibilityOf(wrapper));
-  }
-  
-  async isDetailsWrapperDisplayed(): Promise<boolean> {
-    return this.getDetailsWrapper().isDisplayed()
-  }
-  
-  getDetailsWrapper(): ElementFinder {
-    return this.elm.element(by.css(`div[id$='-detailsWrapper']`))
   }
   
   switchToTab(tab: 'Details' | 'Map' | 'Reviews' | 'Rates' | 'Overview'): void {
@@ -37,11 +38,15 @@ export class HotelResult {
     browser.wait(EC.visibilityOf(tabToSwitch));
     browser.wait(EC.elementToBeClickable(tabToSwitch));
     tabToSwitch.click();
+  
+    const tabContainer = this.getTabContainer(tab);
+    browser.wait(EC.presenceOf(tabContainer));
+    browser.wait(EC.visibilityOf(tabContainer));
   }
   
-  async closeDetailsWrapper(): Promise<void> {
-    const isWrapperOpen = await this.isDetailsWrapperDisplayed();
-    if (isWrapperOpen) {
+  async closeTabs(): Promise<void> {
+    const isTabsContainerOpen = await this.getTabsContainer().isDisplayed();
+    if (isTabsContainerOpen) {
       const closeButton = this.elm
         .element(by.className(`Hotels-Results-InlineDetailTabs`))
         .element(by.css(`div[id$='-close']`));
@@ -60,15 +65,28 @@ export class HotelResult {
   }
   
   getHotelMap(): ElementFinder {
-    return this.getTabContainer('Map').element(by.className('map'));
+    const map = this.getTabContainer('Map').element(by.className('map'));
+    browser.wait(EC.presenceOf(map));
+    browser.wait(EC.visibilityOf(map));
+    return map;
   }
   
   getHotelReviews(): ElementFinder {
-    return this.getTabContainer('Reviews').element(by.className('Hotels-Results-InlineReviews'))
+    const reviews = this.getTabContainer('Reviews').element(by.className('Hotels-Results-InlineReviews'));
+    browser.wait(EC.presenceOf(reviews));
+    browser.wait(EC.visibilityOf(reviews));
+    return reviews
   }
   
   getHotelRates(): ElementFinder {
-    return this.getTabContainer('Rates').element(by.className('Hotels-Results-HotelRoomTypeRatesTable'))
+    const rates = this.getTabContainer('Rates').element(by.className('Hotels-Results-HotelRoomTypeRatesTable'));
+    browser.wait(EC.presenceOf(rates));
+    browser.wait(EC.visibilityOf(rates));
+    return rates
+  }
+  
+  getTabsContainer(): ElementFinder {
+    return this.elm.element(by.css(`div[id$='-detailsWrapper']`))
   }
   
   getTabContainer(tab: 'Details' | 'Map' | 'Reviews' | 'Rates' | 'Overview'): ElementFinder {
