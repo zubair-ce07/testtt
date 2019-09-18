@@ -11,9 +11,6 @@ exports.config = {
   multiCapabilities: [
     {
       browserName: 'chrome',
-      chromeOptions: {
-        args: ["--blink-settings=imagesEnabled=false"],
-      }
     }
   ],
   onPrepare: function () {
@@ -25,6 +22,8 @@ exports.config = {
         displaySpecDuration: true
       })
     );
+
+    return browser.driver.manage().window().maximize();
   },
   beforeLaunch: () => {
     require('ts-node').register({
