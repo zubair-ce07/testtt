@@ -1,8 +1,11 @@
-import React, { Component } from 'react'
-import { connect } from 'react-redux'
-import { add_time_slots, get_time_slots } from '../actions/saloon_action'
+import React, { Component } from 'react';
+import { connect } from 'react-redux';
+import { compose } from 'redux';
+import PropTypes from 'prop-types';
+import { add_time_slots, get_time_slots } from '../actions/saloon_action';
+import isAuthneticated from '../hoc/isAuthenticated';
 
-export class my_saloon extends Component {
+class my_saloon extends Component {
 
     componentDidMount() {
         this.props.get_time_slots();
@@ -10,51 +13,51 @@ export class my_saloon extends Component {
 
     handleSubmit = (e) => {
         e.preventDefault();
-        this.props.add_time_slots(this.state)
+        this.props.add_time_slots(this.state);
 
     }
 
     handleChange = (e) => {
         let key = e.target.name;
         let val = e.target.value;
-        this.setState({ [key]: val })
+        this.setState({ [key]: val });
     }
 
     render() {
 
-        const { time_slots } = this.props
+        const { time_slots } = this.props;
 
         const time_slots_list = time_slots ? (
             time_slots.map((time_slot, index) => {
-                const slot_date = new Date(time_slot.time)
+                const slot_date = new Date(time_slot.time);
                 return (
                     <div className="card" style={{ margin: '10px', width: '100%' }} key={index}>
                         <div className="card-header">
                             {slot_date.toDateString().concat(' at ', slot_date.toLocaleTimeString())}
                         </div>
                     </div>
-                )
+                );
             })
         ) : (
-                false
-            )
+            false
+        );
 
 
-        const no_time_slots = ((!time_slots || time_slots.length === 0) && <div className='container'>
+        const no_time_slots = ((!time_slots || time_slots.length === 0) && <div className='container'>;
             <div className="card" style={{ margin: '10px', width: '100%' }}>
                 <div className="card-header">
                     No Time Slots
-            </div>
+                </div>
                 <div className="card-body">
                     <button type="button" className="btn btn-primary" data-toggle="modal" data-target="#exampleModalCenter">
                         Add Schedule
-                </button>
+                    </button>
                 </div>
             </div>
-        </div >)
+        </div >);
 
         const add_slots_modal = ((!time_slots || time_slots.length === 0) && <div className="modal fade" id="exampleModalCenter" tabIndex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
-            aria-hidden="true">
+            aria-hidden="true">;
             <div className="modal-dialog modal-dialog-centered" role="document">
                 <div className="modal-content">
                     <div className="modal-header">
@@ -106,7 +109,7 @@ export class my_saloon extends Component {
                     </div>
                 </div>
             </div>
-        </div>)
+        </div>);
 
         return (
             <React.Fragment>
@@ -118,21 +121,32 @@ export class my_saloon extends Component {
                 {add_slots_modal}
 
             </React.Fragment>
-        )
+        );
     }
 }
+
+my_saloon.propTypes = {
+    add_time_slots: PropTypes.func.isRequired,
+    get_time_slots: PropTypes.func.isRequired,
+    time_slots: PropTypes.array.isRequired
+};
 
 const mapStateToProps = (state) => {
     return {
         time_slots: state.saloon.time_slots
-    }
-}
+    };
+};
 
 const mapDispatchToProps = dispatch => {
     return {
         add_time_slots: (data) => dispatch(add_time_slots(data)),
         get_time_slots: () => dispatch(get_time_slots())
     };
-}
+};
 
-export default connect(mapStateToProps, mapDispatchToProps)(my_saloon)
+
+
+export default compose(
+    isAuthneticated,
+    connect(mapStateToProps, mapDispatchToProps)
+)(my_saloon);

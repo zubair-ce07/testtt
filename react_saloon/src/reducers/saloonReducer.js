@@ -45,6 +45,47 @@ const saloonReducer = (state = initState, action) => {
                 ...state,
                 successStatus: false
             }
+        case 'GET_SALOON_RESERVATION_SUCESSFUL':
+            return {
+                ...state,
+                reservations: action.payload
+            }
+        case 'GET_SALOON_RESERVATION_FAILED':
+            return {
+                ...state,
+                successStatus: false
+            }
+        case 'DELETE_RESERVATION_SUCESSFUL':
+            let newReservations = [...state.reservations]
+            newReservations = newReservations.filter((reservation) => reservation.id !== action.id)
+            return {
+                ...state,
+                successStatus: false,
+                reservations: newReservations
+            }
+        case 'DELETE_RESERVATION_FAILED':
+            return {
+                ...state,
+                successStatus: false
+            }
+        case 'SLOTS_RESERVED_SUCESSFUL':
+            let newTimeSlots = [...state.time_slots]
+            newTimeSlots.forEach(element => {
+                if (action.time_slot === element.id) {
+                    element.reservation = true
+                }
+            });
+
+            return {
+                ...state,
+                time_slots: newTimeSlots,
+                successStatus: true
+            }
+        case 'SLOTS_RESERVED_FAILED':
+            return {
+                ...state,
+                successStatus: false
+            }
 
         default:
             return state;

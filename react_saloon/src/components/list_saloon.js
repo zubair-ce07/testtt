@@ -1,21 +1,22 @@
-import React from 'react'
-import ls from 'local-storage'
-import { Link } from 'react-router-dom'
-import { connect } from 'react-redux'
-import { fetchSaloons } from '../actions/saloon_action'
+import React from 'react';
+import ls from 'local-storage';
+import PropTypes from 'prop-types';
+import { Link } from 'react-router-dom';
+import { connect } from 'react-redux';
+import { fetchSaloons } from '../actions/saloon_action';
 
 class ListSaloon extends React.Component {
     card_style = {
         margin: '10px',
         width: '100%'
-    }
+    };
 
     componentDidMount() {
         this.props.fetchSaloons();
     }
 
     render() {
-        const { saloons } = this.props
+        const { saloons } = this.props;
         const saloonsList = saloons.length > 0 ? (
             saloons.map((saloon) => {
                 return (
@@ -30,42 +31,48 @@ class ListSaloon extends React.Component {
                                 ls.get('token') ? (
                                     ls.get('user_type') === 'customer' ? (<Link to={'/' + saloon.shop_name} className="btn btn-primary" >Reserve a time slot</Link>) : (false)
                                 ) : (
-                                        <Link to="/login" className="btn btn-primary" >Login to Reserve a time slot</Link>
-                                    )
+                                    <Link to="/login" className="btn btn-primary" >Login to Reserve a time slot</Link>
+                                )
                             }
                         </div>
                     </div >) : (false)
-                )
+                );
             })
         ) : (
-                this.props.successStatus ? (
-                    <div className="card-header" style={this.card_style}>
+            this.props.successStatus ? (
+                <div className="card-header" style={this.card_style}>
                         No Saloon To be Listed
-                            </div>
-                ) : (
-                        <div className="card" style={this.card_style}>
-                            <div className="card-header" style={this.card_style}>
-                                Error getting Saloons
-                            </div>
-                        </div>
-                    )
+                </div>
+            ) : (
+                <div className="card" style={this.card_style}>
+                    <div className="card-header" style={this.card_style}>
+                        Error getting Saloons
+                    </div>
+                </div>
             )
+        );
 
         return (
             <div className="container">
                 {saloonsList}
             </div>
 
-        )
+        );
     }
 }
+
+ListSaloon.propTypes = {
+    saloons: PropTypes.array.isRequired,
+    successStatus: PropTypes.bool.isRequired,
+    fetchSaloons: PropTypes.func.isRequired
+};
 
 const mapStateToPropos = (state) => {
     return {
         saloons: state.saloon.saloons,
         successStatus: state.saloon.successStatus
-    }
-}
+    };
+};
 
 const mapDispatchToProps = dispatch => {
     return {
@@ -75,4 +82,4 @@ const mapDispatchToProps = dispatch => {
     };
 };
 
-export default connect(mapStateToPropos, mapDispatchToProps)(ListSaloon)
+export default connect(mapStateToPropos, mapDispatchToProps)(ListSaloon);

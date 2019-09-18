@@ -3,6 +3,7 @@ from rest_framework import serializers
 
 from core.serializers import UserUpdateSerializer
 from shop.models import Saloon, TimeSlot, Reservation, Review
+from customer.serializers import CustomerUpdateSerializer
 
 
 class ShopSerializer(serializers.ModelSerializer):
@@ -48,18 +49,6 @@ class ListReviewSerializer(serializers.ModelSerializer):
         fields = ('comment', 'rating')
 
 
-class ListReservationSerializer(serializers.ModelSerializer):
-    """Reservation serializer."""
-
-    review = ListReviewSerializer(read_only=True)
-
-    class Meta:
-        """Reservation Serializer meta class."""
-
-        model = Reservation
-        fields = ('time_slot', 'customer', 'review')
-
-
 class SaloonSerializerForTimeSlotCustomer(serializers.ModelSerializer):
     """Shop seriliazer for update."""
 
@@ -79,10 +68,22 @@ class TimeSlotSerializerForCustomers(serializers.ModelSerializer):
         """TimeSlotSerializer meta class."""
 
         model = TimeSlot
-        fields = ('saloon', 'time', 'reservation')
+        fields = ('id', 'saloon', 'time', 'reservation')
 
 
 class ReservationSerializer(serializers.ModelSerializer):
+    """Reservation serializer."""
+
+    review = serializers.ReadOnlyField()
+
+    class Meta:
+        """Reservation Serializer meta class."""
+
+        model = Reservation
+        fields = ('id', 'time_slot', 'customer', 'review')
+
+
+class ReservationSerializerForCustomer(serializers.ModelSerializer):
     """Reservation serializer."""
 
     review = serializers.ReadOnlyField()
@@ -105,6 +106,20 @@ class TimeSlotSerializer(serializers.ModelSerializer):
 
         model = TimeSlot
         fields = ('saloon', 'time', 'reservation')
+
+
+class ListReservationSerializer(serializers.ModelSerializer):
+    """Reservation serializer."""
+
+    review = ListReviewSerializer(read_only=True)
+    customer = CustomerUpdateSerializer()
+    time_slot = TimeSlotSerializer()
+
+    class Meta:
+        """Reservation Serializer meta class."""
+
+        model = Reservation
+        fields = ('id', 'time_slot', 'customer', 'review')
 
 
 class ScheduleSerializer(serializers.Serializer):

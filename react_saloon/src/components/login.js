@@ -1,7 +1,8 @@
-import React from 'react'
-import { connect } from 'react-redux'
-import { Link } from 'react-router-dom'
-import { login } from '../actions/user_actions'
+import React from 'react';
+import { connect } from 'react-redux';
+import { Link } from 'react-router-dom';
+import { login } from '../actions/user_actions';
+import PropTypes from 'prop-types';
 
 
 class Login extends React.Component {
@@ -21,11 +22,10 @@ class Login extends React.Component {
         e.preventDefault();
         this.props.login(this.state.username, this.state.password).then(() => {
             if (!this.props.LoginFailed) {
-                this.props.history.push('/')
+                this.props.history.push('/');
             }
-
-        })
-    }
+        });
+    };
 
     render() {
 
@@ -54,15 +54,23 @@ class Login extends React.Component {
                     </div>
                 </div>
             </div>
-        )
+        );
     }
 }
+
+Login.propTypes = {
+    LoginFailed: PropTypes.bool.isRequired,
+    login: PropTypes.func.isRequired,
+    history:PropTypes.object.isRequired,
+    'history.push':PropTypes.func.isRequired
+
+};
 
 const mapStateToPropos = (state) => {
     return {
         LoginFailed: state.user.LoginFailed
-    }
-}
+    };
+};
 
 const mapDispatchToProps = dispatch => {
     return {
@@ -70,4 +78,4 @@ const mapDispatchToProps = dispatch => {
     };
 };
 
-export default connect(mapStateToPropos, mapDispatchToProps)(Login)
+export default connect(mapStateToPropos, mapDispatchToProps)(Login);

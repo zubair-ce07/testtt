@@ -1,12 +1,16 @@
-import React from 'react'
-import { Route, Switch, Link } from 'react-router-dom'
-import ls from 'local-storage'
+import React from 'react';
+import { Route, Switch, Link } from 'react-router-dom';
+import { connect } from 'react-redux';
+import ls from 'local-storage';
+import PropTypes from 'prop-types';
 
-import ListSaloon from './list_saloon'
-import Profile from './profile'
-import my_saloon from './my_saloon'
-import SlotList from './slot_list'
-import MyReservations from './my_reservations'
+import ListSaloon from './list_saloon';
+import Profile from './profile';
+import my_saloon from './my_saloon';
+import SlotList from './slot_list';
+import MyReservations from './my_reservations';
+
+import { logout } from '../actions/user_actions';
 
 class Navbar extends React.Component {
     nar_bar_style = {
@@ -14,7 +18,7 @@ class Navbar extends React.Component {
     }
 
     logout = () => {
-        ls.clear()
+        this.props.logout();
     }
 
     user_type = ls.get('user_type')
@@ -41,7 +45,7 @@ class Navbar extends React.Component {
         </li>
         <li className="nav-item active">
             <Link className="nav-link" to='/signup'>Register
-    <span className=" sr-only">(current)</span></Link>
+                <span className=" sr-only">(current)</span></Link>
         </li>
     </React.Fragment>)
 
@@ -77,10 +81,20 @@ class Navbar extends React.Component {
                 </Switch>
             </div >
 
-        )
+        );
     }
 
 
 }
 
-export default Navbar
+Navbar.propTypes = {
+    logout: PropTypes.func.isRequired
+};
+
+const mapDispatchToProps = dispatch => {
+    return {
+        logout: () => dispatch(logout())
+    };
+};
+
+export default connect(null, mapDispatchToProps)(Navbar);

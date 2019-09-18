@@ -1,41 +1,43 @@
-import React, { Component } from 'react'
-import { connect } from 'react-redux'
-import ls from 'local-storage'
+import React, { Component } from 'react';
+import { compose } from 'redux';
+import { connect } from 'react-redux';
+import ls from 'local-storage';
+import PropTypes from 'prop-types';
 
-import { saloon_profile, update_saloon_profile } from '../actions/saloon_action'
-import { customer_profile, update_customer_profile } from '../actions/customer_actions'
-import { user_value_update } from '../actions/user_actions'
-
-export class profile extends Component {
+import { saloon_profile, update_saloon_profile } from '../actions/saloon_action';
+import { customer_profile, update_customer_profile } from '../actions/customer_actions';
+import { user_value_update } from '../actions/user_actions';
+import isAuthneticated from '../hoc/isAuthenticated';
+class profile extends Component {
 
     componentDidMount() {
-        const user_type = ls.get('user_type')
+        const user_type = ls.get('user_type');
         user_type === 'customer' ? (
             this.props.customer_profile()
         ) : (
-                this.props.saloon_profile()
-            )
+            this.props.saloon_profile()
+        );
     }
 
     handleChange = (e) => {
         let key = e.target.name;
         let val = e.target.value;
-        this.props.user_value_update(key, val)
+        this.props.user_value_update(key, val);
     }
     handleSubmit = (e) => {
         e.preventDefault();
-        const user_type = ls.get('user_type')
+        const user_type = ls.get('user_type');
         if (user_type === 'customer') {
-            this.props.update_customer_profile(this.props.user)
+            this.props.update_customer_profile(this.props.user);
         } else if (user_type === 'saloon') {
-            this.props.update_saloon_profile(this.props.user)
+            this.props.update_saloon_profile(this.props.user);
         }
 
     }
 
     render() {
-        const { user } = this.props
-        const user_type = ls.get('user_type')
+        const { user } = this.props;
+        const user_type = ls.get('user_type');
         const user_profile = (user && <div style={{ width: '100%' }}>
             <center><h2>Profile</h2></center>
             <form onSubmit={this.handleSubmit}>
@@ -72,7 +74,7 @@ export class profile extends Component {
                     </React.Fragment>}
                 <button type="submit" className="btn btn-primary">Submit</button>
             </form>
-        </div>)
+        </div>);
         // const sucess_message = this.props.update_status &&
         //     <div className="alert alert-success" role="alert" >
         //         Profile Updated!</div>
@@ -81,16 +83,26 @@ export class profile extends Component {
                 {/* {sucess_message} */}
                 {user_profile}
             </div >
-        )
+        );
     }
 }
+
+profile.propTypes = {
+    user: PropTypes.object.isRequired,
+    update_status:PropTypes.bool.isRequired,
+    customer_profile: PropTypes.func.isRequired,
+    update_customer_profile: PropTypes.func.isRequired,
+    saloon_profile: () => PropTypes.func.isRequired,
+    update_saloon_profile: PropTypes.func.isRequired,
+    user_value_update: PropTypes.func.isRequired
+};
 
 const mapStateToProps = (state) => {
     return {
         user: state.user.user,
         update_status: state.user.update_status
-    }
-}
+    };
+};
 
 const mapDispatchToProps = dispatch => {
     return {
@@ -100,6 +112,8 @@ const mapDispatchToProps = dispatch => {
         update_saloon_profile: (data) => dispatch(update_saloon_profile(data)),
         user_value_update: (key, val) => dispatch(user_value_update(key, val))
     };
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(profile)
+};
+export default compose(
+    isAuthneticated,
+    connect(mapStateToProps, mapDispatchToProps)
+)(profile);

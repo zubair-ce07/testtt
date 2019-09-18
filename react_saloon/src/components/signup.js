@@ -1,7 +1,8 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
-import { connect } from 'react-redux'
-import { signup } from '../actions/user_actions'
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { connect } from 'react-redux';
+import { signup } from '../actions/user_actions';
+import PropTypes from 'prop-types';
 
 class Signup extends React.Component {
 
@@ -21,24 +22,24 @@ class Signup extends React.Component {
         e.preventDefault();
         this.props.signup(this.state.username, this.state.email, this.state.password1, this.state.password2, this.state.user_type).then(() => {
             if (!this.props.signup_failed) {
-                this.props.history.push('/login')
+                this.props.history.push('/login');
             }
 
-        })
+        });
     }
     handleTabClick = (e) => {
-        this.setState({ user_type: e.target.id })
+        this.setState({ user_type: e.target.id });
 
     }
 
     render() {
-        let tab_class_customer = ["nav-link"];
-        let tab_class_saloon = ["nav-link"];
+        let tab_class_customer = ['nav-link'];
+        let tab_class_saloon = ['nav-link'];
         if (this.state.user_type === 'customer') {
             tab_class_customer.push('active');
         }
         else {
-            tab_class_saloon.push('active')
+            tab_class_saloon.push('active');
         }
         return (
             <div className='container'>
@@ -88,16 +89,23 @@ class Signup extends React.Component {
                     </div>
                 </div>
             </div >
-        )
+        );
     }
 
 }
+
+Signup.propTypes = {
+    signup_failed: PropTypes.bool.isRequired,
+    signup: PropTypes.func.isRequired,
+    history:PropTypes.object.isRequired,
+    'history.psuh':PropTypes.func.isRequired
+};
 
 const mapStateToPropos = (state) => {
     return {
         signup_failed: state.user.signup_failed
-    }
-}
+    };
+};
 
 const mapDispatchToProps = dispatch => {
     return {
@@ -105,4 +113,4 @@ const mapDispatchToProps = dispatch => {
     };
 };
 
-export default connect(mapStateToPropos, mapDispatchToProps)(Signup)
+export default connect(mapStateToPropos, mapDispatchToProps)(Signup);

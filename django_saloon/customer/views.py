@@ -15,7 +15,7 @@ from rest_framework import status
 
 from customer.forms import UserUpdateForm, CustomerUpdateForm
 from customer.serializers import CustomerUpdateSerializer
-from shop.serializers import ReservationSerializer
+from shop.serializers import ReservationSerializerForCustomer
 from shop.models import Reservation
 from core.permissions import IsCustomer
 from core.constants import CUSTOMER, RESERVATION_ID, REASON
@@ -143,7 +143,7 @@ class MyReservationsApiView(generics.ListAPIView):
     authentication_classes = [authentication.TokenAuthentication]
     permission_classes = (IsAuthenticated, IsCustomer)
 
-    serializer_class = ReservationSerializer
+    serializer_class = ReservationSerializerForCustomer
     queryset = Reservation.objects.all()
 
     def get_queryset(self):
