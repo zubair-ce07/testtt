@@ -18,7 +18,8 @@ class MixinCN(Mixin):
     market = 'CN'
     start_urls = ['https://china.coach.com/rest/default/V1/applet/categories']
 
-    category_url_t = 'https://china.coach.com/rest/default/V2/applet/products/?catId={}&isInStock=1&page=1&pageSize=1000&sort=position&sortDir=asc'
+    category_url_t = 'https://china.coach.com/rest/default/V2/applet/products/?'\
+            'catId={}&isInStock=1&page=1&pageSize=1000&sort=position&sortDir=asc'
     product_url_t = 'https://china.coach.com/rest/default/V1/applet/product/{}'
 
 
@@ -52,7 +53,8 @@ class CoachParseSpider(BaseParseSpider):
     def raw_product_request(self, response):
         data_re = 'window.D1M =\s*(.*);'
         raw_data = json.loads(re.search(data_re, response.text).group(1))
-        return Request(self.product_url_t.format(urllib.parse.quote(raw_data['params']['sku'], safe='')), callback=self.parse_raw_product)
+        return Request(self.product_url_t.format(urllib.parse.quote(raw_data['params']['sku'], safe='')),
+                       callback=self.parse_raw_product)
 
     def raw_product(self, response):
         return json.loads(response.text)['data']
@@ -134,3 +136,4 @@ class CoachCrawlSpider(BaseCrawlSpider):
 class CoachCNCrawlSpider(MixinCN, CoachCrawlSpider):
     name = MixinCN.retailer + '-crawl'
     parse_spider = CoachCNParseSpider()
+
