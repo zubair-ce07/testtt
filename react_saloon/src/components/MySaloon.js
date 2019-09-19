@@ -4,8 +4,14 @@ import { compose } from 'redux';
 import PropTypes from 'prop-types';
 import { add_time_slots, get_time_slots } from '../actions/saloonActions';
 import IsAuthenticated from '../hoc/isAuthenticated';
+import $ from 'jquery';
 
 class MySaloon extends Component {
+
+    state = {
+        start_date : '',
+        end_date : ''
+    }
 
     componentDidMount() {
         this.props.get_time_slots();
@@ -13,7 +19,12 @@ class MySaloon extends Component {
 
     handleSubmit = (e) => {
         e.preventDefault();
-        this.props.add_time_slots(this.state);
+        this.props.add_time_slots(this.state).then(()=>{
+            if(this.props.addTimeSlotSuccessStatus){
+                this.props.get_time_slots();
+                $(this.refs.modalClose).click();
+            }
+        });
 
     }
 
@@ -26,6 +37,8 @@ class MySaloon extends Component {
     render() {
 
         const { time_slots } = this.props;
+
+        let date_check = this.state.start_date < this.state.end_date;
 
         const time_slots_list = time_slots ? (
             time_slots.map((time_slot, index) => {
@@ -57,13 +70,13 @@ class MySaloon extends Component {
         </div >);
 
         const add_slots_modal = ((!time_slots || time_slots.length === 0) && <div className="modal fade" id="exampleModalCenter" tabIndex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
-            aria-hidden="true">;
+            aria-hidden="true">
             <div className="modal-dialog modal-dialog-centered" role="document">
                 <div className="modal-content">
                     <div className="modal-header">
                         <h5 className="modal-title" id="exampleModalLongTitle">Add Schedule</h5>
                         <button type="button" className="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
+                            <span ref="modalClose" aria-hidden="true">&times;</span>
                         </button>
                     </div>
                     <div className="modal-body">
@@ -79,6 +92,7 @@ class MySaloon extends Component {
                                 <input type="date" onChange={this.handleChange} className="form-control" name="end_date" id="end_date_help"
                                     aria-describedby="end_date_help_help" required />
                                 <small id="end_date_help_help" className="form-text text-muted">End date for reservations.</small>
+                                { !date_check && <small style={{color:'red'}}>Start date should be greater then end date.</small> }
                             </div>
                             <div className="form-group">
                                 <label htmlFor="start_time">Start Time</label>
@@ -103,8 +117,13 @@ class MySaloon extends Component {
                                     id="number_of_slots" aria-describedby="number_of_slots_help"
                                     placeholder="Enter total reservations 24 hours." onChange={this.handleChange}
                                     required />
+                                { !this.props.addTimeSlotSuccessStatus && <small style={{color:'red'}}>Number of slots selected exceeds one day.</small> }
                             </div>
-                            <input type="submit" className="submit_btn btn btn-primary" value="Add" />
+                            { date_check?(
+                                <input type="submit" className="submit_btn btn btn-primary" value="Add"/>
+                            ):(
+                                <input type="submit" disabled className="submit_btn btn btn-primary" value="Add" />
+                            ) }
                         </form>
                     </div>
                 </div>
@@ -128,12 +147,14 @@ class MySaloon extends Component {
 MySaloon.propTypes = {
     add_time_slots: PropTypes.func.isRequired,
     get_time_slots: PropTypes.func.isRequired,
-    time_slots: PropTypes.array.isRequired
+    time_slots: PropTypes.array.isRequired,
+    addTimeSlotSuccessStatus :PropTypes.bool.isRequired
 };
 
 const mapStateToProps = (state) => {
     return {
-        time_slots: state.saloon.time_slots
+        time_slots: state.saloon.time_slots,
+        addTimeSlotSuccessStatus : state.saloon.addTimeSlotSuccessStatus
     };
 };
 

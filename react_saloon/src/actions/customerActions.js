@@ -35,8 +35,10 @@ export const update_customer_profile = (data) => {
         const AuthStr = 'Token '.concat(ls.get('token'));
         return axios.post(REACT_APP_API_ENDPOINT_BASE_URL+'customer/api/profile/', request_data, { headers: { Authorization: AuthStr } }).then((response) => {
             dispatch({ type: CUSTOMER_UPDATE_PROFILE_SUCCESSFUL, payload: response.data });
-        }).catch(() => {
+            return response;
+        }).catch((err) => {
             dispatch({ type: CUSTOMER_UPDATE_PROFILE_FAILED });
+            return err;
         });
     };
 

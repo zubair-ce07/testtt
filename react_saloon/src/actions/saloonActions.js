@@ -3,11 +3,11 @@ import ls from 'local-storage';
 import { REACT_APP_API_ENDPOINT_BASE_URL } from '../constants/config';
 
 import { FETCH_SALOON_SUCCESSFUL,FETCH_SALOON_FAILED,SALOON_PROFILE_SUCCESSFUL,
-    SALOON_PROFILE_FAILED,ADD_SLOTS_SUCCESSFUL,ADD_SLOTS_FAILED,GET_SLOTS_SUCCESSFUL,
+    SALOON_PROFILE_FAILED,ADD_SLOTS_FAILED,GET_SLOTS_SUCCESSFUL,
     GET_SLOTS_FAILED,GET_SLOTS_FOR_USER_SUCCESSFUL,GET_SLOTS_FOR_USER_FAILED,GET_RESERVATION_FOR_USER_SUCCESSFUL,GET_RESERVATION_FOR_USER_FAILED,
     GET_SALOON_RESERVATION_SUCCESSFUL,GET_SALOON_RESERVATION_FAILED,SLOTS_RESERVED_SUCCESSFUL,
     SLOTS_RESERVED_FAILED,DELETE_RESERVATION_SUCCESSFUL,DELETE_RESERVATION_FAILED,
-    SALOON_UPDATE_PROFILE_SUCCESSFUL,SALOON_UPDATE_PROFILE_FAILED} from '../constants/actionsTypeConstants';
+    SALOON_UPDATE_PROFILE_SUCCESSFUL,SALOON_UPDATE_PROFILE_FAILED, ADD_SLOTS_SUCCESSFUL} from '../constants/actionsTypeConstants';
 
 export const fetchSaloons = () => {
 
@@ -38,11 +38,11 @@ export const add_time_slots = (data) => {
     return dispatch => {
         const AuthStr = 'Token '.concat(ls.get('token'));
         return axios.post(REACT_APP_API_ENDPOINT_BASE_URL+'shop/api/mysaloon/', data, { headers: { Authorization: AuthStr } }).then((response) => {
-            console.log(response);
-            dispatch({ type: ADD_SLOTS_SUCCESSFUL, payload: response.data });
+            dispatch({ type: ADD_SLOTS_SUCCESSFUL });
+            return response;
         }).catch((err) => {
-            console.log(err.response);
             dispatch({ type: ADD_SLOTS_FAILED });
+            return err;
         });
     };
 

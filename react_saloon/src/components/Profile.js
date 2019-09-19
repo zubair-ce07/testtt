@@ -11,6 +11,10 @@ import IsAuthenticated from '../hoc/isAuthenticated';
 
 class Profile extends Component {
 
+    state = {
+        update_sucess:false,
+    }
+
     componentDidMount() {
         const user_type = ls.get('user_type');
         user_type === 'customer' ? (
@@ -29,7 +33,9 @@ class Profile extends Component {
         e.preventDefault();
         const user_type = ls.get('user_type');
         if (user_type === 'customer') {
-            this.props.update_customer_profile(this.props.user);
+            this.props.update_customer_profile(this.props.user).then(() => {
+                this.props.update_sucess && this.setState({update_sucess:true});
+            });
         } else if (user_type === 'saloon') {
             this.props.update_saloon_profile(this.props.user);
         }
@@ -44,7 +50,7 @@ class Profile extends Component {
             <form onSubmit={this.handleSubmit}>
                 <div className="fouser_actionsm-group">
                     <label htmlFor="exampleInputEmail1">Email address</label>
-                    <input requireuser_actions type="email" name='email' onChange={this.handleChange} value={user.email || ''} className="form-control" id="exampleInputEmail1" placeholder="Enter email" />
+                    <input required type="email" name='email' onChange={this.handleChange} value={user.email || ''} className="form-control" id="exampleInputEmail1" placeholder="Enter email" />
                 </div>
                 <div className="form-group">
                     <label htmlFor="username">Username</label>
@@ -76,12 +82,15 @@ class Profile extends Component {
                 <button type="submit" className="btn btn-primary">Submit</button>
             </form>
         </div>);
-        // const sucess_message = this.props.update_status &&
-        //     <div className="alert alert-success" role="alert" >
-        //         Profile Updated!</div>
+        const success_message = this.state.update_sucess &&
+            <div className="alert alert-success" role="alert" >
+                Profile Updated!</div>;
+        // const error_message = this.state.update_error &&
+        // <div className="alert alert-error" role="alert" >
+        //     Error Updating Profile!</div>
         return (
             <div className='container' >
-                {/* {sucess_message} */}
+                {success_message}
                 {user_profile}
             </div >
         );
@@ -95,7 +104,8 @@ Profile.propTypes = {
     update_customer_profile: PropTypes.func.isRequired,
     saloon_profile:PropTypes.func.isRequired,
     update_saloon_profile: PropTypes.func.isRequired,
-    user_value_update: PropTypes.func.isRequired
+    user_value_update: PropTypes.func.isRequired,
+    update_sucess:PropTypes.bool.isRequired
 };
 
 const mapStateToProps = (state) => {
