@@ -1,0 +1,6 @@
+.health-status {
+    display: flex;
+    margin-top: 60px;
+    margin-bottom: 20px;
+    place-content: space-evenly;
+}
