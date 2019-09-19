@@ -22,7 +22,7 @@ class MySaloon extends Component {
         this.props.add_time_slots(this.state).then(()=>{
             if(this.props.addTimeSlotSuccessStatus){
                 this.props.get_time_slots();
-                $(this.refs.modalClose).click();
+                $('#modalClose').click();
             }
         });
 
@@ -76,7 +76,7 @@ class MySaloon extends Component {
                     <div className="modal-header">
                         <h5 className="modal-title" id="exampleModalLongTitle">Add Schedule</h5>
                         <button type="button" className="close" data-dismiss="modal" aria-label="Close">
-                            <span ref="modalClose" aria-hidden="true">&times;</span>
+                            <span id="modalClose" aria-hidden="true">&times;</span>
                         </button>
                     </div>
                     <div className="modal-body">
