@@ -9,9 +9,13 @@
                 <h3 class="mt-0 mb-1" style="color: #000;">{{ cart_item.product.name }}</h3>
             </a>
             <h5>{{ cart_item.product.brand }}</h5>
-            <h5>Colour: {{ cart_item.sku_colour }}</h5>
-            <h5>Size: {{ cart_item.sku_size }}</h5>
-            <h5>Price: {{ cart_item.sku_price }}-{{ cart_item.product.currency }}</h5>
+            {% for sku in cart_item.product.skus.all %}
+                {% if sku.sku_id == cart_item.sku_id %}
+                    <h5>Colour: {{ sku.colour }}</h5>
+                    <h5>Size: {{ sku.size }}</h5>
+                    <h5>Price: {{ sku.price }}-{{ sku.currency }}</h5>
+                {% endif %}
+            {% endfor %}
             <h5>Quantity: {{cart_item.quantity}}</h5>
             <form action="" method="post">
                 {% csrf_token %}

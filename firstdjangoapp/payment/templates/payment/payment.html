@@ -15,7 +15,11 @@
       <td>{{ forloop.counter }}</td>
       <td>{{ cart_item.product.name }}</td>
       <td>{{ cart_item.quantity }}</td>
-      <td>{{ cart_item.sku_price }}</td>
+      {% for sku in cart_item.product.skus.all %}
+        {% if sku.sku_id == cart_item.sku_id %}
+          <td>{{ sku.price }}</td>
+        {% endif %}
+      {% endfor %}
     </tr>
   {% endfor %}
   </tbody>

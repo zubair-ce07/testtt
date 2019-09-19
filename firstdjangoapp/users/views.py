@@ -5,6 +5,7 @@ from django.shortcuts import redirect, render
 from django.views import View
 
 from .forms import ProfileUpdateForm, SignUpForm, UserUpdateForm
+from .models import Profile
 
 
 class SignUpView(View):
@@ -21,6 +22,7 @@ class SignUpView(View):
             form.save()
             messages.success(request, 'Account Created Successfully!!')
             user = authenticate(request, username=request.POST['username'], password=request.POST['password1'])
+            profile, created = Profile.objects.get_or_create(user=user)
             if user:
                 login(request, user)
                 return redirect('/shopcity/search/')
@@ -47,7 +49,7 @@ class ProfileView(View):
             u_form.save()
             p_form.save()
             messages.success(request, 'Account Updated!!!')
-            return redirect('/shopcity/profile')
+            return redirect('/user/profile')
         context = {
             'u_form': u_form,
             'p_form': p_form
@@ -60,12 +62,13 @@ class CartView(View):
 
     def get(self, request):
         context = {}
-        if hasattr(request.user, 'cart'):
-            context = request.user.cart.as_dict()
+        if request.user.cart.filter(state='Current').exists():
+            context = request.user.cart.get(state='Current').as_dict()
         return render(request, self.template_name, context)
 
     def post(self, request):
-        cart_items = request.user.cart.cart_items.all()
+        cart = request.user.cart.get(state='Current')
+        cart_items = cart.cart_items.all()
         cart_items.filter(product__retailer_sku=request.POST['id']).delete()
-        context = request.user.cart.as_dict()
+        context = cart.as_dict()
         return render(request, self.template_name, context)

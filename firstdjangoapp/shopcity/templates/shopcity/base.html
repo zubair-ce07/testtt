@@ -19,22 +19,22 @@
             {% if user.is_authenticated %}
             <div class="login-view row">
                 {% if not user.is_superuser %}
-                <a class="nav-item nav-link" href="/shopcity/cart">View Cart</a>
+                <a class="nav-item nav-link" href="/user/cart">View Cart</a>
                                     &nbsp;&nbsp;
                 {% endif %}
-                <a class="nav-item nav-link" href="/shopcity/profile">Profile</a>
+                <a class="nav-item nav-link" href="/user/profile">Profile</a>
                 &nbsp;&nbsp;
-                <a class="nav-item nav-link" href="/shopcity/logout">Logout</a>
+                <a class="nav-item nav-link" href="/user/logout">Logout</a>
             </div>
             {% else %}
                 <div class="login-view row">
                     {% if not user.is_superuser %}
-                    <a class="nav-item nav-link" href="/shopcity/profile">View Cart</a>
+                    <a class="nav-item nav-link" href="/user/profile">View Cart</a>
                                         &nbsp;&nbsp;
                     {% endif %}
-                    <a class="nav-item nav-link" href="/shopcity/login">Login</a>
+                    <a class="nav-item nav-link" href="/user/login">Login</a>
                     &nbsp;&nbsp;
-                    <a class="nav-item nav-link" href="/shopcity/signup">Register</a>
+                    <a class="nav-item nav-link" href="/user/signup">Register</a>
                 </div>
             {% endif %}
         </div>
