@@ -3,7 +3,7 @@ import ls from 'local-storage';
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
-import { fetchSaloons } from '../actions/saloon_action';
+import { fetchSaloons } from '../actions/saloonActions';
 
 class ListSaloon extends React.Component {
     card_style = {

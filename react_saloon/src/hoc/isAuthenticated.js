@@ -1,28 +1,36 @@
-import React from 'react'
-import ls from 'local-storage'
+import React from 'react';
+import ls from 'local-storage';
+import PropTypes from 'prop-types';
 
-const Rainbow = (WrappedComponent) => {
+const IsAuthenticated = (WrappedComponent) => {
 
-    return (props) => {
-        console.log(props)
+    const checkIsAuthenticated = (props) => {
         if (!ls.get('token')) {
-            props.history.push('/')
+            props.history.push('/');
         }
         else {
             if (props.match.path === '/mysaloon/' && ls.get('user_type') !== 'saloon') {
-                props.history.push('/')
+                props.history.push('/');
             }
             else if (props.match.path === '/:shop_name/' && ls.get('user_type') !== 'customer') {
-                props.history.push('/')
+                props.history.push('/');
             }
         }
         return (
             <React.Fragment>
                 <WrappedComponent {...props} />
             </React.Fragment>
-        )
-    }
+        );
+    };
 
-}
+    checkIsAuthenticated.propTypes = {
+        history: PropTypes.object.isRequired,
+        match:PropTypes.object.isRequired,
+    
+    };
 
-export default Rainbow
+    return checkIsAuthenticated;
+
+};
+
+export default IsAuthenticated;

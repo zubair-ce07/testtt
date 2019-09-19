@@ -4,13 +4,13 @@ import { connect } from 'react-redux';
 import ls from 'local-storage';
 import PropTypes from 'prop-types';
 
-import ListSaloon from './list_saloon';
-import Profile from './profile';
-import my_saloon from './my_saloon';
-import SlotList from './slot_list';
-import MyReservations from './my_reservations';
+import ListSaloon from './ListSaloon';
+import Profile from './Profile';
+import MySaloon from './MySaloon';
+import SlotList from './SlotList';
+import MyReservations from './MyReservations';
 
-import { logout } from '../actions/user_actions';
+import { logout } from '../actions/userActions';
 
 class Navbar extends React.Component {
     nar_bar_style = {
@@ -75,7 +75,7 @@ class Navbar extends React.Component {
                 <Switch>
                     <Route exact path='/' component={ListSaloon} />
                     <Route exact path='/profile/' component={Profile} />
-                    <Route exact path='/mysaloon/' component={my_saloon} />
+                    <Route exact path='/mysaloon/' component={MySaloon} />
                     <Route exact path='/myreservations/' component={MyReservations} />
                     <Route path="/:shop_name/" component={SlotList} />
                 </Switch>

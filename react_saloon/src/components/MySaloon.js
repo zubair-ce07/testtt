@@ -2,10 +2,10 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import PropTypes from 'prop-types';
-import { add_time_slots, get_time_slots } from '../actions/saloon_action';
-import isAuthneticated from '../hoc/isAuthenticated';
+import { add_time_slots, get_time_slots } from '../actions/saloonActions';
+import IsAuthenticated from '../hoc/isAuthenticated';
 
-class my_saloon extends Component {
+class MySaloon extends Component {
 
     componentDidMount() {
         this.props.get_time_slots();
@@ -43,7 +43,7 @@ class my_saloon extends Component {
         );
 
 
-        const no_time_slots = ((!time_slots || time_slots.length === 0) && <div className='container'>;
+        const no_time_slots = ((!time_slots || time_slots.length === 0) && <div className='container'>
             <div className="card" style={{ margin: '10px', width: '100%' }}>
                 <div className="card-header">
                     No Time Slots
@@ -125,7 +125,7 @@ class my_saloon extends Component {
     }
 }
 
-my_saloon.propTypes = {
+MySaloon.propTypes = {
     add_time_slots: PropTypes.func.isRequired,
     get_time_slots: PropTypes.func.isRequired,
     time_slots: PropTypes.array.isRequired
@@ -147,6 +147,6 @@ const mapDispatchToProps = dispatch => {
 
 
 export default compose(
-    isAuthneticated,
+    IsAuthenticated,
     connect(mapStateToProps, mapDispatchToProps)
-)(my_saloon);
+)(MySaloon);

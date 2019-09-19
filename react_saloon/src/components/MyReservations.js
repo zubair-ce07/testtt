@@ -5,8 +5,8 @@ import { Link } from 'react-router-dom';
 import ls from 'local-storage';
 import PropTypes from 'prop-types';
 
-import isAuthneticated from '../hoc/isAuthenticated';
-import { get_reservations_for_user, cancel_reservation, get_saloon_reservations } from '../actions/saloon_action';
+import IsAuthenticated from '../hoc/isAuthenticated';
+import { get_reservations_for_user, cancel_reservation, get_saloon_reservations } from '../actions/saloonActions';
 
 class MyReservations extends Component {
 
@@ -59,13 +59,13 @@ class MyReservations extends Component {
 
 
 
-        const no_reservations = ((!reservations || reservations.length === 0) && < div className="card" style={{ margin: '10px', width: '100%' }}>;
+        const no_reservations = ((!reservations || reservations.length === 0) && < div className="card" style={{ margin: '10px', width: '100%' }}>
             <div className="card-header">
                 No Reservations
             </div>
 
             {user_type === 'customer' && <div className="card-body">
-                <Link to='/' type="button" className="btn btn-primary">
+                <Link to='/' className="btn btn-primary">
                     Reserve Now</Link>
             </div>}
         </div >);
@@ -106,6 +106,6 @@ const mapDispatchToProps = dispatch => {
 };
 
 export default compose(
-    isAuthneticated,
+    IsAuthenticated,
     connect(mapStateToProps, mapDispatchToProps)
 )(MyReservations);

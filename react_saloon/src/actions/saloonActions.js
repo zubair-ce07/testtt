@@ -1,10 +1,11 @@
 import axios from 'axios';
 import ls from 'local-storage';
+import { REACT_APP_API_ENDPOINT_BASE_URL } from '../constants/config';
 
 export const fetchSaloons = () => {
 
     return dispatch => {
-        return axios.get('http://localhost:8000/shop/api/saloons/').then((response) => {
+        return axios.get(REACT_APP_API_ENDPOINT_BASE_URL+'shop/api/saloons/').then((response) => {
             dispatch({ type: 'FETCH_SALOON_SUCESSFUL', payload: response.data });
         }).catch(() => {
             dispatch({ type: 'FETCH_SALOON_FAILED' });
@@ -17,7 +18,7 @@ export const saloon_profile = () => {
 
     return dispatch => {
         const AuthStr = 'Token '.concat(ls.get('token'));
-        return axios.get('http://localhost:8000/shop/api/profile/', { headers: { Authorization: AuthStr } }).then((response) => {
+        return axios.get(REACT_APP_API_ENDPOINT_BASE_URL+'shop/api/profile/', { headers: { Authorization: AuthStr } }).then((response) => {
             dispatch({ type: 'SALOON_PROFILE_SUCESSFUL', payload: response.data });
         }).catch(() => {
             dispatch({ type: 'SALOON_PROFILE_FAILED' });
@@ -29,7 +30,7 @@ export const saloon_profile = () => {
 export const add_time_slots = (data) => {
     return dispatch => {
         const AuthStr = 'Token '.concat(ls.get('token'));
-        return axios.post('http://localhost:8000/shop/api/mysaloon/', data, { headers: { Authorization: AuthStr } }).then((response) => {
+        return axios.post(REACT_APP_API_ENDPOINT_BASE_URL+'shop/api/mysaloon/', data, { headers: { Authorization: AuthStr } }).then((response) => {
             console.log(response);
             dispatch({ type: 'ADD_SLOTS_SUCESSFUL', payload: response.data });
         }).catch((err) => {
@@ -43,7 +44,7 @@ export const add_time_slots = (data) => {
 export const get_time_slots = () => {
     return dispatch => {
         const AuthStr = 'Token '.concat(ls.get('token'));
-        return axios.get('http://localhost:8000/shop/api/mysaloon/', { headers: { Authorization: AuthStr } }).then((response) => {
+        return axios.get(REACT_APP_API_ENDPOINT_BASE_URL+'shop/api/mysaloon/', { headers: { Authorization: AuthStr } }).then((response) => {
             dispatch({ type: 'GET_SLOTS_SUCESSFUL', payload: response.data });
         }).catch(() => {
             dispatch({ type: 'GET_SLOTS_FAILED' });
@@ -55,7 +56,7 @@ export const get_time_slots = () => {
 export const get_time_slots_for_user = (shop_name) => {
     return dispatch => {
         const AuthStr = 'Token '.concat(ls.get('token'));
-        return axios.get('http://localhost:8000/shop/api/shop/' + shop_name, { headers: { Authorization: AuthStr } }).then((response) => {
+        return axios.get(REACT_APP_API_ENDPOINT_BASE_URL+'shop/api/shop/' + shop_name, { headers: { Authorization: AuthStr } }).then((response) => {
             dispatch({ type: 'GET_SLOTS_FOR_USER_SUCESSFUL', payload: response.data });
         }).catch(() => {
             dispatch({ type: 'GET_SLOTS_FOR_USER_FAILED' });
@@ -67,7 +68,7 @@ export const get_time_slots_for_user = (shop_name) => {
 export const get_reservations_for_user = () => {
     return dispatch => {
         const AuthStr = 'Token '.concat(ls.get('token'));
-        return axios.get('http://localhost:8000/customer/api/myreservations/', { headers: { Authorization: AuthStr } }).then((response) => {
+        return axios.get(REACT_APP_API_ENDPOINT_BASE_URL+'customer/api/myreservations/', { headers: { Authorization: AuthStr } }).then((response) => {
             console.log(response);
             dispatch({ type: 'GET_RESERVATION_FOR_USER_SUCESSFUL', payload: response.data });
         }).catch((err) => {
@@ -81,7 +82,7 @@ export const get_reservations_for_user = () => {
 export const get_saloon_reservations = () => {
     return dispatch => {
         const AuthStr = 'Token '.concat(ls.get('token'));
-        return axios.get('http://localhost:8000/shop/api/myreservations/', { headers: { Authorization: AuthStr } }).then((response) => {
+        return axios.get(REACT_APP_API_ENDPOINT_BASE_URL+'shop/api/myreservations/', { headers: { Authorization: AuthStr } }).then((response) => {
             dispatch({ type: 'GET_SALOON_RESERVATION_SUCESSFUL', payload: response.data });
         }).catch(() => {
             dispatch({ type: 'GET_SALOON_RESERVATION_FAILED' });
@@ -93,7 +94,7 @@ export const get_saloon_reservations = () => {
 export const reserve_slot_for_user = (time_slot) => {
     return dispatch => {
         const AuthStr = 'Token '.concat(ls.get('token'));
-        return axios.post('http://localhost:8000/shop/api/reserve_slot/', { time_slot }, { headers: { Authorization: AuthStr } }).then((response) => {
+        return axios.post(REACT_APP_API_ENDPOINT_BASE_URL+'shop/api/reserve_slot/', { time_slot }, { headers: { Authorization: AuthStr } }).then((response) => {
             console.log(response);
             dispatch({ type: 'SLOTS_RESERVED_SUCESSFUL', time_slot });
         }).catch(() => {
@@ -106,7 +107,7 @@ export const reserve_slot_for_user = (time_slot) => {
 export const cancel_reservation = (id) => {
     return dispatch => {
         const AuthStr = 'Token '.concat(ls.get('token'));
-        return axios.delete('http://localhost:8000/shop/api/cancel-reservation/' + id, { headers: { Authorization: AuthStr } }).then(() => {
+        return axios.delete(REACT_APP_API_ENDPOINT_BASE_URL+'shop/api/cancel-reservation/' + id, { headers: { Authorization: AuthStr } }).then(() => {
             dispatch({ type: 'DELETE_RESERVATION_SUCESSFUL', id });
         }).catch(() => {
             dispatch({ type: 'DELETE_SALOON_RESERVATION_FAILED' });
@@ -128,7 +129,7 @@ export const update_saloon_profile = (data) => {
     };
     return dispatch => {
         const AuthStr = 'Token '.concat(ls.get('token'));
-        return axios.post('http://localhost:8000/shop/api/profile/', request_data, { headers: { Authorization: AuthStr } }).then((response) => {
+        return axios.post(REACT_APP_API_ENDPOINT_BASE_URL+'shop/api/profile/', request_data, { headers: { Authorization: AuthStr } }).then((response) => {
             console.log(response);
             dispatch({ type: 'SALOON_UPDATE_PROFILE_SUCESSFUL', payload: response.data });
         }).catch((err) => {

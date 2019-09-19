@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { login } from '../actions/user_actions';
+import { login } from '../actions/userActions';
 import PropTypes from 'prop-types';
 
 
@@ -61,8 +61,7 @@ class Login extends React.Component {
 Login.propTypes = {
     LoginFailed: PropTypes.bool.isRequired,
     login: PropTypes.func.isRequired,
-    history:PropTypes.object.isRequired,
-    'history.push':PropTypes.func.isRequired
+    history:PropTypes.object.isRequired
 
 };
 

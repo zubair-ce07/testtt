@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
-import { signup } from '../actions/user_actions';
+import { signup } from '../actions/userActions';
 import PropTypes from 'prop-types';
 
 class Signup extends React.Component {
@@ -97,8 +97,7 @@ class Signup extends React.Component {
 Signup.propTypes = {
     signup_failed: PropTypes.bool.isRequired,
     signup: PropTypes.func.isRequired,
-    history:PropTypes.object.isRequired,
-    'history.psuh':PropTypes.func.isRequired
+    history:PropTypes.object.isRequired
 };
 
 const mapStateToPropos = (state) => {

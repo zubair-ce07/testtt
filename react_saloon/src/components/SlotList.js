@@ -3,8 +3,8 @@ import { connect } from 'react-redux';
 import { compose } from 'redux';
 import PropTypes from 'prop-types';
 
-import isAuthneticated from '../hoc/isAuthenticated';
-import { get_time_slots_for_user, reserve_slot_for_user } from '../actions/saloon_action';
+import IsAuthenticated from '../hoc/isAuthenticated';
+import { get_time_slots_for_user, reserve_slot_for_user } from '../actions/saloonActions';
 
 export class SlotList extends Component {
 
@@ -60,18 +60,14 @@ export class SlotList extends Component {
 
 SlotList.propTypes = {
     time_slots: PropTypes.array.isRequired,
-    successStatus: PropTypes.bool.isRequired,
     get_time_slots_for_user:PropTypes.func.isRequired,
     reserve_slot_for_user:PropTypes.func.isRequired,
-    match:PropTypes.object.isRequired,
-    'match.params':PropTypes.object.isRequired,
-    'match.params.shop_name':PropTypes.isRequired
+    match:PropTypes.object.isRequired
 };
 
 const mapStateToProps = (state) => {
     return {
         time_slots: state.saloon.time_slots,
-        successStatus: state.successStatus
     };
 };
 
@@ -83,6 +79,6 @@ const mapDispatchToProps = dispatch => {
 };
 
 export default compose(
-    isAuthneticated,
+    IsAuthenticated,
     connect(mapStateToProps, mapDispatchToProps)
 )(SlotList);
