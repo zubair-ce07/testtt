@@ -8,15 +8,7 @@ const HOME_IMG_DOWNVOTES = document.getElementById("home-img-downvotes");
 const HOME_IMG_FAVORITES = document.getElementById("home-img-favorites");
 const BTN_NORMAL_CLASS_LIST = "btn waves-effect waves-light"
 const BTN_PRESSED_CLASS_LIST = "btn waves-effect waves-light pressed"
-
-const REQ_METHOD = 'POST'
-const RES_TYPE = 'json'
-const ASYNC_API_CALL = true;
-const API_REQUEST_SUCCESSFUL = 200;
-const REQUEST_FAILED_MESSAGE = "Failed 200 OK => API Request was not successful!";
-
-
-let base_url = window.location.origin
+const QUERY = `${BASE_URL}/api/portal/post_reaction/`
 
 
 function getCookie(name) {
@@ -36,11 +28,9 @@ function getCookie(name) {
 }
 
 HOME_UP_BTN.addEventListener('click', (e) => {
-    console.log("UP ", e.target.value)
-    let query = `${base_url}/api/portal/post_reaction/`
-    let params = `upvote=${e.target.value}`;
+    let params = `upvote=${e.currentTarget.value}`;
     let csrftoken = getCookie('csrftoken')
-    portalAPICaller(query, params, csrftoken)
+    portalAPICaller(QUERY, params, csrftoken)
     .then((returnedJsonData) => {
         render_new_image(returnedJsonData);
     })
@@ -52,11 +42,9 @@ HOME_UP_BTN.addEventListener('click', (e) => {
 
 
 HOME_DWN_BTN.addEventListener('click', (e) => {
-    console.log("DOWN ", e.target.value)
-    let query = `${base_url}/api/portal/post_reaction/`
-    let params = `downvote=${e.target.value}`;
+    let params = `downvote=${e.currentTarget.value}`;
     let csrftoken = getCookie('csrftoken')
-    portalAPICaller(query, params, csrftoken)
+    portalAPICaller(QUERY, params, csrftoken)
     .then((returnedJsonData) => {
         render_new_image(returnedJsonData);
     })
@@ -68,11 +56,9 @@ HOME_DWN_BTN.addEventListener('click', (e) => {
 
 
 HOME_FAV_BTN.addEventListener('click', (e) => {
-    console.log("FAV ", e.currentTarget.value)
-    let query = `${base_url}/api/portal/post_reaction/`
     let params = `favorite=${e.currentTarget.value}`;
     let csrftoken = getCookie('csrftoken')
-    portalAPICaller(query, params, csrftoken)
+    portalAPICaller(QUERY, params, csrftoken)
     .then((returnedJsonData) => {
         render_new_image(returnedJsonData);
     })
@@ -113,10 +99,10 @@ function render_new_image(data) {
 }
 
 
-function portalAPICaller(query, params, csrftoken) {
+function portalAPICaller(QUERY, params, csrftoken) {
     return new Promise(function(resolve, reject) {
         let clientRequest = new XMLHttpRequest();
-        clientRequest.open(REQ_METHOD, query, ASYNC_API_CALL);
+        clientRequest.open(REQ_METHOD, QUERY, ASYNC_API_CALL);
         clientRequest.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
         clientRequest.setRequestHeader("X-CSRFToken", csrftoken);
         clientRequest.responseType = RES_TYPE;

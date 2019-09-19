@@ -244,14 +244,6 @@ class MyFavoritesView(LoginRequiredMixin, View, SuccessMessageMixin):
     template_name = "my_favorites.html"
     success_message = RESPONSES["favorites"]["remove"]
 
-    # def post(self, request, *args, **kwargs):
-    #     favorite_id = request.POST.get(FAVORITE_ID_NAME, False)
-    #     image = Uploads.get_single_upload_by_id(favorite_id)
-    #     owner = Profile.get_user_by_id(image.owner_id)
-    #     Favorites.delete_favorites_object(request.user.id, favorite_id, owner)
-
-    #     return HttpResponseRedirect(self.request.path_info)
-
     def get(self, request, *args, **kwargs):
         list_of_images = Favorites.objects.filter(favoriter=request.user.id)
         my_favs_context_dict = {"favorites": list_of_images}
