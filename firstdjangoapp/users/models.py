@@ -1,6 +1,5 @@
 from django.contrib.auth.models import User
 from django.db import models
-from django.db.models.signals import post_save
 from django.db.models import Sum
 from phone_field import PhoneField
 
@@ -20,7 +19,13 @@ class Profile(models.Model):
 
 
 class Cart(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='cart')
+    STATE_CHOICES = [
+        ('Current', 'Current'),
+        ('Processed', 'Processed'),
+        ('Canceled', 'Canceled'),
+    ]
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='cart')
+    state = models.CharField(max_length=20, choices=STATE_CHOICES)
 
     def __str__(self):
         return f"{self.user} Cart"
@@ -40,9 +45,6 @@ class Cart(models.Model):
 
 class CartItem(models.Model):
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name="cart_items")
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="products")
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="cart_products")
     quantity = models.IntegerField()
     sku_id = models.CharField(max_length=50)
-    sku_price = models.IntegerField()
-    sku_size = models.CharField(null=True, blank=True, max_length=10)
-    sku_colour = models.CharField(null=True, blank=True, max_length=20)

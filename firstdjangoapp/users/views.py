@@ -62,12 +62,13 @@ class CartView(View):
 
     def get(self, request):
         context = {}
-        if hasattr(request.user, 'cart'):
-            context = request.user.cart.as_dict()
+        if request.user.cart.filter(state='Current').exists():
+            context = request.user.cart.get(state='Current').as_dict()
         return render(request, self.template_name, context)
 
     def post(self, request):
-        cart_items = request.user.cart.cart_items.all()
+        cart = request.user.cart.get(state='Current')
+        cart_items = cart.cart_items.all()
         cart_items.filter(product__retailer_sku=request.POST['id']).delete()
-        context = request.user.cart.as_dict()
+        context = cart.as_dict()
         return render(request, self.template_name, context)
