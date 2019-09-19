@@ -35,6 +35,7 @@ class Signup extends React.Component {
     render() {
         let tab_class_customer = ['nav-link'];
         let tab_class_saloon = ['nav-link'];
+        let passwordCheck = this.state.password1 === this.state.password2;
         if (this.state.user_type === 'customer') {
             tab_class_customer.push('active');
         }
@@ -80,9 +81,13 @@ class Signup extends React.Component {
                             <div className="form-group">
                                 <label htmlFor="exampleInputPassword2">Confrim Password</label>
                                 <input required type="password" className="form-control" onChange={this.handleChange} name='password2' id="exampleInputPassword2" placeholder="Password" />
-                                <small></small>
+                                { !passwordCheck && <small style={{color:'red'}}>Password Does not match</small> }
                             </div>
-                            <button type="submit" value='customer' className="btn btn-primary">Sign Up</button>
+                            { passwordCheck?(
+                                <button type="submit" value='customer' className="btn btn-primary">Sign Up</button>
+                            ):(
+                                <button type="submit" value='customer' disabled className="btn btn-primary">Sign Up</button>
+                            ) }
                             <br /><br />
                             <Link to='/login'>Login</Link>
                         </form>

@@ -2,13 +2,20 @@ import axios from 'axios';
 import ls from 'local-storage';
 import { REACT_APP_API_ENDPOINT_BASE_URL } from '../constants/config';
 
+import { FETCH_SALOON_SUCCESSFUL,FETCH_SALOON_FAILED,SALOON_PROFILE_SUCCESSFUL,
+    SALOON_PROFILE_FAILED,ADD_SLOTS_SUCCESSFUL,ADD_SLOTS_FAILED,GET_SLOTS_SUCCESSFUL,
+    GET_SLOTS_FAILED,GET_SLOTS_FOR_USER_SUCCESSFUL,GET_SLOTS_FOR_USER_FAILED,GET_RESERVATION_FOR_USER_SUCCESSFUL,GET_RESERVATION_FOR_USER_FAILED,
+    GET_SALOON_RESERVATION_SUCCESSFUL,GET_SALOON_RESERVATION_FAILED,SLOTS_RESERVED_SUCCESSFUL,
+    SLOTS_RESERVED_FAILED,DELETE_RESERVATION_SUCCESSFUL,DELETE_RESERVATION_FAILED,
+    SALOON_UPDATE_PROFILE_SUCCESSFUL,SALOON_UPDATE_PROFILE_FAILED} from '../constants/actionsTypeConstants';
+
 export const fetchSaloons = () => {
 
     return dispatch => {
         return axios.get(REACT_APP_API_ENDPOINT_BASE_URL+'shop/api/saloons/').then((response) => {
-            dispatch({ type: 'FETCH_SALOON_SUCESSFUL', payload: response.data });
+            dispatch({ type: FETCH_SALOON_SUCCESSFUL, payload: response.data });
         }).catch(() => {
-            dispatch({ type: 'FETCH_SALOON_FAILED' });
+            dispatch({ type: FETCH_SALOON_FAILED });
         });
     };
 
@@ -19,9 +26,9 @@ export const saloon_profile = () => {
     return dispatch => {
         const AuthStr = 'Token '.concat(ls.get('token'));
         return axios.get(REACT_APP_API_ENDPOINT_BASE_URL+'shop/api/profile/', { headers: { Authorization: AuthStr } }).then((response) => {
-            dispatch({ type: 'SALOON_PROFILE_SUCESSFUL', payload: response.data });
+            dispatch({ type: SALOON_PROFILE_SUCCESSFUL, payload: response.data });
         }).catch(() => {
-            dispatch({ type: 'SALOON_PROFILE_FAILED' });
+            dispatch({ type: SALOON_PROFILE_FAILED });
         });
     };
 
@@ -32,10 +39,10 @@ export const add_time_slots = (data) => {
         const AuthStr = 'Token '.concat(ls.get('token'));
         return axios.post(REACT_APP_API_ENDPOINT_BASE_URL+'shop/api/mysaloon/', data, { headers: { Authorization: AuthStr } }).then((response) => {
             console.log(response);
-            dispatch({ type: 'ADD_SLOTS_SUCESSFUL', payload: response.data });
+            dispatch({ type: ADD_SLOTS_SUCCESSFUL, payload: response.data });
         }).catch((err) => {
             console.log(err.response);
-            dispatch({ type: 'ADD_SLOTS_FAILED' });
+            dispatch({ type: ADD_SLOTS_FAILED });
         });
     };
 
@@ -45,9 +52,9 @@ export const get_time_slots = () => {
     return dispatch => {
         const AuthStr = 'Token '.concat(ls.get('token'));
         return axios.get(REACT_APP_API_ENDPOINT_BASE_URL+'shop/api/mysaloon/', { headers: { Authorization: AuthStr } }).then((response) => {
-            dispatch({ type: 'GET_SLOTS_SUCESSFUL', payload: response.data });
+            dispatch({ type: GET_SLOTS_SUCCESSFUL, payload: response.data });
         }).catch(() => {
-            dispatch({ type: 'GET_SLOTS_FAILED' });
+            dispatch({ type: GET_SLOTS_FAILED });
         });
     };
 
@@ -57,9 +64,9 @@ export const get_time_slots_for_user = (shop_name) => {
     return dispatch => {
         const AuthStr = 'Token '.concat(ls.get('token'));
         return axios.get(REACT_APP_API_ENDPOINT_BASE_URL+'shop/api/shop/' + shop_name, { headers: { Authorization: AuthStr } }).then((response) => {
-            dispatch({ type: 'GET_SLOTS_FOR_USER_SUCESSFUL', payload: response.data });
+            dispatch({ type: GET_SLOTS_FOR_USER_SUCCESSFUL, payload: response.data });
         }).catch(() => {
-            dispatch({ type: 'GET_SLOTS_FOR_USER_FAILED' });
+            dispatch({ type: GET_SLOTS_FOR_USER_FAILED });
         });
     };
 
@@ -70,10 +77,10 @@ export const get_reservations_for_user = () => {
         const AuthStr = 'Token '.concat(ls.get('token'));
         return axios.get(REACT_APP_API_ENDPOINT_BASE_URL+'customer/api/myreservations/', { headers: { Authorization: AuthStr } }).then((response) => {
             console.log(response);
-            dispatch({ type: 'GET_RESERVATION_FOR_USER_SUCESSFUL', payload: response.data });
+            dispatch({ type: GET_RESERVATION_FOR_USER_SUCCESSFUL, payload: response.data });
         }).catch((err) => {
             console.log(err.response);
-            dispatch({ type: 'GET_RESERVATION_FOR_USER_FAILED' });
+            dispatch({ type: GET_RESERVATION_FOR_USER_FAILED });
         });
     };
 
@@ -83,9 +90,9 @@ export const get_saloon_reservations = () => {
     return dispatch => {
         const AuthStr = 'Token '.concat(ls.get('token'));
         return axios.get(REACT_APP_API_ENDPOINT_BASE_URL+'shop/api/myreservations/', { headers: { Authorization: AuthStr } }).then((response) => {
-            dispatch({ type: 'GET_SALOON_RESERVATION_SUCESSFUL', payload: response.data });
+            dispatch({ type: GET_SALOON_RESERVATION_SUCCESSFUL, payload: response.data });
         }).catch(() => {
-            dispatch({ type: 'GET_SALOON_RESERVATION_FAILED' });
+            dispatch({ type: GET_SALOON_RESERVATION_FAILED });
         });
     };
 
@@ -96,9 +103,9 @@ export const reserve_slot_for_user = (time_slot) => {
         const AuthStr = 'Token '.concat(ls.get('token'));
         return axios.post(REACT_APP_API_ENDPOINT_BASE_URL+'shop/api/reserve_slot/', { time_slot }, { headers: { Authorization: AuthStr } }).then((response) => {
             console.log(response);
-            dispatch({ type: 'SLOTS_RESERVED_SUCESSFUL', time_slot });
+            dispatch({ type: SLOTS_RESERVED_SUCCESSFUL, time_slot });
         }).catch(() => {
-            dispatch({ type: 'SLOTS_RESERVED_FAILED' });
+            dispatch({ type: SLOTS_RESERVED_FAILED });
         });
     };
 
@@ -108,9 +115,9 @@ export const cancel_reservation = (id) => {
     return dispatch => {
         const AuthStr = 'Token '.concat(ls.get('token'));
         return axios.delete(REACT_APP_API_ENDPOINT_BASE_URL+'shop/api/cancel-reservation/' + id, { headers: { Authorization: AuthStr } }).then(() => {
-            dispatch({ type: 'DELETE_RESERVATION_SUCESSFUL', id });
+            dispatch({ type: DELETE_RESERVATION_SUCCESSFUL, id });
         }).catch(() => {
-            dispatch({ type: 'DELETE_SALOON_RESERVATION_FAILED' });
+            dispatch({ type: DELETE_RESERVATION_FAILED });
         });
     };
 };
@@ -131,10 +138,10 @@ export const update_saloon_profile = (data) => {
         const AuthStr = 'Token '.concat(ls.get('token'));
         return axios.post(REACT_APP_API_ENDPOINT_BASE_URL+'shop/api/profile/', request_data, { headers: { Authorization: AuthStr } }).then((response) => {
             console.log(response);
-            dispatch({ type: 'SALOON_UPDATE_PROFILE_SUCESSFUL', payload: response.data });
+            dispatch({ type: SALOON_UPDATE_PROFILE_SUCCESSFUL, payload: response.data });
         }).catch((err) => {
             console.log(err.response);
-            dispatch({ type: 'SALOON_UPDATE_PROFILE_FAILED' });
+            dispatch({ type: SALOON_UPDATE_PROFILE_FAILED });
         });
     };
 
