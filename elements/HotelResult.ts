@@ -8,16 +8,16 @@ export class HotelResult {
   
   static async findFromMapMarker(marker: MapMarker): Promise<HotelResult> {
     const placeholder = element(by.className('Hotels-Results-HotelResultItemPlaceholder'));
-    browser.wait(EC.invisibilityOf(placeholder));
-  
+    await browser.wait(EC.invisibilityOf(placeholder), 10 * 1000, 'Waiting for placeholder to hide');
+    
     const markerId = await marker.marker.getAttribute('id');
     const [ignore, id] = markerId.split('-');
     const hotelResultContainer = element(by.id(id));
   
-    browser.wait(EC.presenceOf(hotelResultContainer));
-    browser.wait(EC.visibilityOf(hotelResultContainer));
-    browser.wait(EC.elementToBeClickable(hotelResultContainer));
-  
+    await browser.wait(EC.presenceOf(hotelResultContainer));
+    await browser.wait(EC.visibilityOf(hotelResultContainer));
+    await browser.wait(EC.elementToBeClickable(hotelResultContainer));
+    
     return new HotelResult(hotelResultContainer);
   }
   
