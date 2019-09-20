@@ -114,7 +114,7 @@ describe('Kayak.com/hotels', () => {
     
     await marker.click();
     const result = await HotelResult.findFromMapMarker(marker);
-    expect(result.elm.isPresent()).eventually.to.be.true;
+    expect(result.container.isPresent()).eventually.to.be.true;
   });
   
   it('should open provider page when "View Deal" is clicked', async () => {

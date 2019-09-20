@@ -2,23 +2,23 @@ import { browser, by, element, ElementFinder, ExpectedConditions as EC } from "p
 import { scrollElementIntoView } from "../utils/browser.utils";
 
 export class MapMarker {
-  constructor(readonly elm: ElementFinder) {
+  constructor(readonly marker: ElementFinder) {
   }
   
   async click(): Promise<void> {
-    browser.wait(EC.presenceOf(this.elm));
-    browser.wait(EC.visibilityOf(this.elm));
-    await scrollElementIntoView(this.elm);
-    browser.wait(EC.elementToBeClickable(this.elm));
-    return this.elm.click();
+    browser.wait(EC.presenceOf(this.marker));
+    browser.wait(EC.visibilityOf(this.marker));
+    await scrollElementIntoView(this.marker);
+    browser.wait(EC.elementToBeClickable(this.marker));
+    return this.marker.click();
   }
   
   async hoverMouse(): Promise<void> {
-    await scrollElementIntoView(this.elm);
-    browser.wait(EC.presenceOf(this.elm));
-    browser.wait(EC.visibilityOf(this.elm));
-    browser.wait(EC.elementToBeClickable(this.elm));
-    await browser.actions().mouseMove(this.elm).perform();
+    await scrollElementIntoView(this.marker);
+    browser.wait(EC.presenceOf(this.marker));
+    browser.wait(EC.visibilityOf(this.marker));
+    browser.wait(EC.elementToBeClickable(this.marker));
+    await browser.actions().mouseMove(this.marker).perform();
   }
   
   async isSummaryCardDisplayed(): Promise<boolean> {
@@ -28,7 +28,7 @@ export class MapMarker {
   }
   
   async getSummaryCardContainer(): Promise<ElementFinder> {
-    const markerId: string = await this.elm.getAttribute('id');
+    const markerId: string = await this.marker.getAttribute('id');
     const [ignored, id] = markerId.split('-');
     return element(by.id(`summaryCard-${id}`))
   }

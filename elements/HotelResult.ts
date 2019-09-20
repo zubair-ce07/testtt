@@ -3,33 +3,33 @@ import { MapMarker } from "./MapMarker";
 import { TabType } from "./TabType";
 
 export class HotelResult {
-  constructor(readonly elm: ElementFinder) {
+  constructor(readonly container: ElementFinder) {
   }
   
   static async findFromMapMarker(marker: MapMarker): Promise<HotelResult> {
     const placeholder = element(by.className('Hotels-Results-HotelResultItemPlaceholder'));
     browser.wait(EC.invisibilityOf(placeholder));
-    
-    const markerId = await marker.elm.getAttribute('id');
+  
+    const markerId = await marker.marker.getAttribute('id');
     const [ignore, id] = markerId.split('-');
-    const $elm = element(by.id(id));
+    const hotelResultContainer = element(by.id(id));
   
-    browser.wait(EC.presenceOf($elm));
-    browser.wait(EC.visibilityOf($elm));
-    browser.wait(EC.elementToBeClickable($elm));
+    browser.wait(EC.presenceOf(hotelResultContainer));
+    browser.wait(EC.visibilityOf(hotelResultContainer));
+    browser.wait(EC.elementToBeClickable(hotelResultContainer));
   
-    return new HotelResult($elm);
+    return new HotelResult(hotelResultContainer);
   }
   
   openTabs(): void {
-    this.elm.click();
+    this.container.click();
     const wrapper = this.getTabsContainer();
     browser.wait(EC.presenceOf(wrapper));
     browser.wait(EC.visibilityOf(wrapper));
   }
   
   switchToTab(tab: TabType): void {
-    const tabToSwitch = this.elm
+    const tabToSwitch = this.container
       .element(by.className(`Hotels-Results-InlineDetailTabs`))
       .element(by.css(`div[id$='-${tab}']`));
     
@@ -46,7 +46,7 @@ export class HotelResult {
   async closeTabs(): Promise<void> {
     const isTabsContainerOpen = await this.getTabsContainer().isDisplayed();
     if (isTabsContainerOpen) {
-      const closeButton = this.elm
+      const closeButton = this.container
         .element(by.className(`Hotels-Results-InlineDetailTabs`))
         .element(by.css(`div[id$='-close']`));
       
@@ -85,16 +85,16 @@ export class HotelResult {
   }
   
   getTabsContainer(): ElementFinder {
-    return this.elm.element(by.css(`div[id$='-detailsWrapper']`))
+    return this.container.element(by.css(`div[id$='-detailsWrapper']`))
   }
   
   getTabContainer(tab: TabType): ElementFinder {
-    return this.elm
+    return this.container
       .element(by.className(`Hotels-Results-InlineDetailTabs`))
       .element(by.css(`div[id$='-${tab}Container']`))
   }
   
   async viewDeal(): Promise<void> {
-    return this.elm.element(by.css(`button[id$='-booking-bookButton']`)).click();
+    return this.container.element(by.css(`button[id$='-booking-bookButton']`)).click();
   }
 }
