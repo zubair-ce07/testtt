@@ -58,9 +58,13 @@ export class HotelResult {
   }
   
   getHotelImages(): ElementArrayFinder {
-    return this.getTabContainer(TabType.DETAILS)
+    const images = this.getTabContainer(TabType.DETAILS)
       .element(by.className('col-photos'))
       .all(by.tagName('img'));
+  
+    browser.wait(EC.presenceOf(images.first()));
+  
+    return images
   }
   
   getHotelMap(): ElementFinder {
