@@ -5,9 +5,15 @@ import { RailMap } from "../elements/RailMap";
 export class HotelsResults {
   readonly railMap = new RailMap();
   
-  load(): void {
+  async load(): Promise<void> {
     const progressBar = element(by.className('Common-Results-ProgressBar'));
-    browser.wait(EC.invisibilityOf(progressBar));
+    await browser.wait(EC.invisibilityOf(progressBar));
+    
+    await browser.wait(
+      EC.presenceOf(element(by.id('inline-3'))),
+      15 * 1000,
+      'Wait for advertisements to load'
+    ).catch(error => console.error(error.message));
   }
   
   getSearchResult(index: number): HotelResult {
