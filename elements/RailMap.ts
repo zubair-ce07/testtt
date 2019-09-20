@@ -1,36 +1,25 @@
-import { browser, by, element, ElementArrayFinder, ElementFinder, ExpectedConditions as EC } from "protractor";
-
+import { by, element, ElementArrayFinder, ElementFinder } from "protractor";
+import { waitForElementToBeInteractive } from "../utils/browser.utils";
 
 export class RailMap {
-  show(): void {
-    const map = element(by.className('Hotels-Results-Filters-HotelFilterList'))
+  async show(): Promise<void> {
+    const showMap = element(by.className('Hotels-Results-Filters-HotelFilterList'))
       .element(by.className('Common-Results-MapToggle'));
     
-    browser.wait(EC.visibilityOf(map));
-    browser.wait(EC.elementToBeClickable(map));
-    
-    map.click();
-    
-    const mapContainer = this.getContainer();
-    browser.wait(EC.presenceOf(mapContainer));
-    browser.wait(EC.visibilityOf(mapContainer));
+    await waitForElementToBeInteractive(showMap);
+    return showMap.click();
   }
   
   getContainer(): ElementFinder {
     return element(by.className('rail-map-container')).element(by.className('gm-style'))
   }
   
-  hide(): void {
-    const map = element(by.className('Hotels-Results-Filters-HorizontalHotelFilterList'))
+  async hide(): Promise<void> {
+    const hideMap = element(by.className('Hotels-Results-Filters-HorizontalHotelFilterList'))
       .element(by.className('Common-Results-MapToggle'));
     
-    browser.wait(EC.visibilityOf(map));
-    browser.wait(EC.elementToBeClickable(map));
-    
-    map.click();
-    
-    const mapContainer = this.getContainer();
-    browser.wait(EC.invisibilityOf(mapContainer));
+    await waitForElementToBeInteractive(hideMap);
+    return hideMap.click();
   }
   
   getMarkers(): ElementArrayFinder {

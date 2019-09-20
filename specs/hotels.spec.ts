@@ -7,6 +7,8 @@ import { HotelsResults } from "../pages/HotelsResults";
 import { MapMarker } from "../elements/MapMarker";
 import { HotelResult } from "../elements/HotelResult";
 import { TabType } from "../elements/TabType";
+import { waitForElementToBeInteractive } from "../utils/browser.utils";
+import { switchTabAndLoadItsContainer } from "../utils/specs.utils";
 
 use(chaiAsPromised);
 
@@ -31,7 +33,7 @@ describe('Kayak.com/hotels', () => {
     Pages.kayak.navigation.to('hotels');
     const hotelsPage = Pages.hotels;
     expect(browser.getCurrentUrl()).eventually.to.equal('https://www.kayak.com/hotels');
-    expect(hotelsPage.destination.getDialog().isPresent()).eventually.to.be.true;
+    expect(hotelsPage.destination.getDisplayField().isPresent()).eventually.to.be.true;
   });
   
   it('should show "1 room, 2 guests" in guests field"', () => {
@@ -47,8 +49,10 @@ describe('Kayak.com/hotels', () => {
   });
   
   it('should load hotels results for search string NYC', async () => {
-    Pages.hotels.destination.type('NYC');
-    Pages.hotels.destination.selectSearchResult(0);
+    Pages.hotels.destination.getDisplayField().click();
+    await waitForElementToBeInteractive(Pages.hotels.destination.getInputField());
+    Pages.hotels.destination.getInputField().sendKeys('NYC');
+    await Pages.hotels.destination.selectSearchResult(0);
     Pages.hotels.clickSearch();
     await Pages.hotelsResults.load();
     expect(Pages.hotelsResults.getSearchResults().count()).eventually.to.be.greaterThan(0);
@@ -72,25 +76,29 @@ describe('Kayak.com/hotels', () => {
   
   it('should switch to "Map" tab', async () => {
     const searchResult = Pages.hotelsResults.getSearchResult(0);
-    searchResult.switchToTab(TabType.MAP);
+    await switchTabAndLoadItsContainer(searchResult, TabType.MAP);
+    await waitForElementToBeInteractive(searchResult.getHotelMap());
     expect(searchResult.getHotelMap().isDisplayed()).eventually.to.be.true;
   });
   
   it('should switch to "Reviews" tab', async () => {
     const searchResult = Pages.hotelsResults.getSearchResult(0);
-    searchResult.switchToTab(TabType.REVIEWS);
+    await switchTabAndLoadItsContainer(searchResult, TabType.REVIEWS);
+    await waitForElementToBeInteractive(searchResult.getHotelReviews());
     expect(searchResult.getHotelReviews().isDisplayed()).eventually.to.be.true;
   });
   
   it('should switch to "Rates" tab', async () => {
     const searchResult = Pages.hotelsResults.getSearchResult(0);
-    searchResult.switchToTab(TabType.RATES);
+    await switchTabAndLoadItsContainer(searchResult, TabType.RATES);
+    await waitForElementToBeInteractive(searchResult.getHotelRates());
     expect(searchResult.getHotelRates().isDisplayed()).eventually.to.be.true;
   });
   
-  it('should open "map view" ', () => {
+  it('should open "map view" ', async () => {
     const resultsPage = Pages.hotelsResults;
-    resultsPage.railMap.show();
+    await resultsPage.railMap.show();
+    await waitForElementToBeInteractive(resultsPage.railMap.getContainer());
     expect(resultsPage.railMap.getContainer().isDisplayed()).eventually.to.be.true;
   });
   
