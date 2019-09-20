@@ -3,17 +3,34 @@ from django.db import models
 from django.db.models import SET_NULL
 from phone_field import PhoneField
 
+from user_management.utils import NOTIFICATION_CHOICE_FIELDS
 
-class Group(models.Model):
+
+class SocialGroup(models.Model):
     name = models.CharField(max_length=50)
     description = models.TextField(blank=True)
 
+    def __str__(self):
+        return self.name
 
-class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    group = models.ForeignKey(Group, on_delete=models.DO_NOTHING, blank=True, default=SET_NULL)
+
+class UserProfile(User):
+    date_of_birth = models.DateField()
     phone = PhoneField(blank=True, )
     address = models.TextField()
+
+    social_groups = models.ManyToManyField(SocialGroup, blank=True, default=SET_NULL, symmetrical=True,
+                                           through='UserGroup')
+    friends = models.ManyToManyField('self', through='Friend', symmetrical=False, related_name='user_friends')
+
+    def __str__(self):
+        return self.username
+
+
+class UserGroup(models.Model):
+    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    group = models.ForeignKey(SocialGroup, on_delete=models.CASCADE)
+    is_admin = models.BooleanField(default=False)
 
 
 class WorkInformation(models.Model):
@@ -40,7 +57,31 @@ class AcademicInformation(models.Model):
     end_date = models.DateField(default='')
 
 
-class Friends(models.Model):
-    user1 = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='user1')
-    user2 = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='user2')
+class Friend(models.Model):
+    user_to = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='user_to')
+    user_from = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='user_from')
     close_friend = models.BooleanField(default=False)
+
+
+class FriendRequest(models.Model):
+    request_from = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='request_from')
+    request_to = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='request_to')
+    status = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ('request_from', 'request_to', )
+
+
+class GroupRequest(models.Model):
+    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='member')
+    group = models.ForeignKey(SocialGroup, on_delete=models.CASCADE, related_name='associated_group')
+    status = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ('user', 'group', )
+
+
+class Notification(models.Model):
+    text = models.CharField(max_length=50)
+    status = models.BooleanField(default=False)
+    notification_type = models.CharField(max_length=20, choices=NOTIFICATION_CHOICE_FIELDS)
