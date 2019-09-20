@@ -6,7 +6,7 @@ from datetime import datetime
 from weatherreading import WeatherReading
 
 
-class Validator:
+class Utilities:
     @staticmethod
     def validate_date(date):
         try:
@@ -25,6 +25,10 @@ class Validator:
         except ValueError:
             msg = "Not a valid year: '{0}'.".format(year)
             raise argparse.ArgumentTypeError(msg)
+
+    @staticmethod
+    def average(records, key=lambda monthly_record: monthly_record):
+        return round(sum([key(record) for record in records if key(record) is not None]) / len(records))
 
 
 class WeatherParser:
@@ -72,18 +76,14 @@ class WeatherAnalyzer:
 
     def analyze_monthly_report(self, date):
         monthly_records = self.filter_monthly_reports(date.year, date.month)
-        avg_max_temp = self.average(monthly_records, key=lambda monthly_record: monthly_record.max_temp)
-        avg_min_temp = self.average(monthly_records, key=lambda monthly_record: monthly_record.min_temp)
-        avg_mean_humidity = self.average(monthly_records, key=lambda monthly_record: monthly_record.mean_humidity)
+        avg_max_temp = Utilities.average(monthly_records, key=lambda monthly_record: monthly_record.max_temp)
+        avg_min_temp = Utilities.average(monthly_records, key=lambda monthly_record: monthly_record.min_temp)
+        avg_mean_humidity = Utilities.average(monthly_records, key=lambda monthly_record: monthly_record.mean_humidity)
         return {
             'avg_max_temp': avg_max_temp,
             'avg_min_temp': avg_min_temp,
             'avg_mean_humidity': avg_mean_humidity
         }
-
-    def average(self, records, key):
-        avg_record_value = round(sum([key(record) for record in records if key(record) is not None]) / len(records))
-        return avg_record_value
 
     def analyze_yearly_report(self, year):
         yearly_records = self.filter_yearly_reports(year)
@@ -111,7 +111,7 @@ class WeatherAnalyzer:
 
 class WeatherReporter:
 
-    def report_monthly_analysis(self, monthly_reports):
+    def monthly_report(self, monthly_reports):
         report_statements = [
             f"Highest Average: {monthly_reports['avg_max_temp']}C",
             f"Lowest Average: {monthly_reports['avg_min_temp']}C",
@@ -124,7 +124,7 @@ class WeatherReporter:
         for report_statement in report_statements:
             print(report_statement)
 
-    def report_yearly_analysis(self, yearly_reports):
+    def yearly_report(self, yearly_reports):
         reports_statements = [
             f"Highest: {yearly_reports['max_temp_record'].max_temp}C "
             f"on {yearly_reports['max_temp_record'].date.strftime('%B %d')}",
@@ -135,7 +135,7 @@ class WeatherReporter:
         ]
         self.print_reports_statements(reports_statements)
 
-    def report_single_bar_chart_analysis(self, daily_record):
+    def barchart_report(self, daily_record):
         print(daily_record.date.strftime("%d")
               + '+' * daily_record.max_temp + ' '
               + '\033[91m {}C\033[00m'.format(daily_record.max_temp) + '\n' +
@@ -147,9 +147,9 @@ class WeatherReporter:
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("path", type=str)
-    parser.add_argument('-e', type=Validator.validate_year, nargs='*')
-    parser.add_argument('-a', type=Validator.validate_date, nargs='*')
-    parser.add_argument('-c', type=Validator.validate_date, nargs='*')
+    parser.add_argument('-e', type=Utilities.validate_year, nargs='*')
+    parser.add_argument('-a', type=Utilities.validate_date, nargs='*')
+    parser.add_argument('-c', type=Utilities.validate_date, nargs='*')
     args = parser.parse_args()
     return args
 
@@ -161,16 +161,16 @@ def main():
     if arguments.e:
         for e in arguments.e:
             yearly_results = analyzer.analyze_yearly_report(e)
-            reporter.report_yearly_analysis(yearly_results)
+            reporter.yearly_report(yearly_results)
     if arguments.a:
         for a in arguments.a:
             monthly_results = analyzer.analyze_monthly_report(a)
-            reporter.report_monthly_analysis(monthly_results)
+            reporter.monthly_report(monthly_results)
     if arguments.c:
         for c in arguments.c:
             daily_results = analyzer.filter_monthly_reports(c.year, c.month)
             for daily_record in daily_results:
-                reporter.report_single_bar_chart_analysis(daily_record)
+                reporter.barchart_report(daily_record)
 
 
 if __name__ == "__main__":
