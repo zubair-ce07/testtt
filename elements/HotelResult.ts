@@ -1,5 +1,6 @@
 import { browser, by, element, ElementArrayFinder, ElementFinder, ExpectedConditions as EC } from 'protractor';
 import { MapMarker } from "./MapMarker";
+import { TabType } from "./TabType";
 
 export class HotelResult {
   constructor(readonly elm: ElementFinder) {
@@ -27,18 +28,16 @@ export class HotelResult {
     browser.wait(EC.visibilityOf(wrapper));
   }
   
-  switchToTab(tab: 'Details' | 'Map' | 'Reviews' | 'Rates' | 'Overview'): void {
-    tab = tab === 'Details' ? 'Overview' : tab;
-    
+  switchToTab(tab: TabType): void {
     const tabToSwitch = this.elm
       .element(by.className(`Hotels-Results-InlineDetailTabs`))
-      .element(by.css(`div[id$='-${tab.toLowerCase()}']`));
+      .element(by.css(`div[id$='-${tab}']`));
     
     browser.wait(EC.presenceOf(tabToSwitch));
     browser.wait(EC.visibilityOf(tabToSwitch));
     browser.wait(EC.elementToBeClickable(tabToSwitch));
     tabToSwitch.click();
-  
+    
     const tabContainer = this.getTabContainer(tab);
     browser.wait(EC.presenceOf(tabContainer));
     browser.wait(EC.visibilityOf(tabContainer));
@@ -59,27 +58,27 @@ export class HotelResult {
   }
   
   getHotelImages(): ElementArrayFinder {
-    return this.getTabContainer('Details')
+    return this.getTabContainer(TabType.DETAILS)
       .element(by.className('col-photos'))
       .all(by.tagName('img'));
   }
   
   getHotelMap(): ElementFinder {
-    const map = this.getTabContainer('Map').element(by.className('map'));
+    const map = this.getTabContainer(TabType.MAP).element(by.className('map'));
     browser.wait(EC.presenceOf(map));
     browser.wait(EC.visibilityOf(map));
     return map;
   }
   
   getHotelReviews(): ElementFinder {
-    const reviews = this.getTabContainer('Reviews').element(by.className('Hotels-Results-InlineReviews'));
+    const reviews = this.getTabContainer(TabType.REVIEWS).element(by.className('Hotels-Results-InlineReviews'));
     browser.wait(EC.presenceOf(reviews));
     browser.wait(EC.visibilityOf(reviews));
     return reviews
   }
   
   getHotelRates(): ElementFinder {
-    const rates = this.getTabContainer('Rates').element(by.className('Hotels-Results-HotelRoomTypeRatesTable'));
+    const rates = this.getTabContainer(TabType.RATES).element(by.className('Hotels-Results-HotelRoomTypeRatesTable'));
     browser.wait(EC.presenceOf(rates));
     browser.wait(EC.visibilityOf(rates));
     return rates
@@ -89,12 +88,10 @@ export class HotelResult {
     return this.elm.element(by.css(`div[id$='-detailsWrapper']`))
   }
   
-  getTabContainer(tab: 'Details' | 'Map' | 'Reviews' | 'Rates' | 'Overview'): ElementFinder {
-    tab = tab === 'Details' ? 'Overview' : tab;
-    
+  getTabContainer(tab: TabType): ElementFinder {
     return this.elm
       .element(by.className(`Hotels-Results-InlineDetailTabs`))
-      .element(by.css(`div[id$='-${tab.toLowerCase()}Container']`))
+      .element(by.css(`div[id$='-${tab}Container']`))
   }
   
   async viewDeal(): Promise<void> {

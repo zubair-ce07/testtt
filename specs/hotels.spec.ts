@@ -6,6 +6,7 @@ import { Hotels } from "../pages/Hotels";
 import { HotelsResults } from "../pages/HotelsResults";
 import { MapMarker } from "../elements/MapMarker";
 import { HotelResult } from "../elements/HotelResult";
+import { TabType } from "../elements/TabType";
 
 use(chaiAsPromised);
 
@@ -71,19 +72,19 @@ describe('Kayak.com/hotels', () => {
   
   it('should switch to "Map" tab', async () => {
     const searchResult = Pages.hotelsResults.getSearchResult(0);
-    searchResult.switchToTab('Map');
+    searchResult.switchToTab(TabType.MAP);
     expect(searchResult.getHotelMap().isDisplayed()).eventually.to.be.true;
   });
   
   it('should switch to "Reviews" tab', async () => {
     const searchResult = Pages.hotelsResults.getSearchResult(0);
-    searchResult.switchToTab('Reviews');
+    searchResult.switchToTab(TabType.REVIEWS);
     expect(searchResult.getHotelReviews().isDisplayed()).eventually.to.be.true;
   });
   
   it('should switch to "Rates" tab', async () => {
     const searchResult = Pages.hotelsResults.getSearchResult(0);
-    searchResult.switchToTab('Rates');
+    searchResult.switchToTab(TabType.RATES);
     expect(searchResult.getHotelRates().isDisplayed()).eventually.to.be.true;
   });
   
