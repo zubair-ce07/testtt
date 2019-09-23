@@ -35,7 +35,7 @@ try:
             + "*.txt"
         )
         if mode == "-a":
-            print_mode = "temperature"
+            print_mode = "temperature_average"
 
         elif mode == "-c":
             print_mode = "graph"
@@ -48,6 +48,15 @@ try:
         )
         return date_string
 
+    def find_average(dictionary):
+        length = len(dictionary.values())
+        sum_of_values = 0
+        for values in dictionary.values():
+            sum_of_values = sum_of_values + values
+        average_of_values = int(sum_of_values/length)
+        return average_of_values
+
+
     for file in files:
         if fnmatch.fnmatch(file, regex):
             with open(path + "/" + file, mode="r") as csv_file:
@@ -55,7 +64,6 @@ try:
                 line_count = 0
                 for row in csv_reader:
                     if line_count == 0:
-                        # (f'Column names are {", ".join(row)}')
                         first_key = list(row.keys())[0]
                         line_count += 1
 
@@ -99,6 +107,26 @@ try:
             + str(max_humid[max_humid_value])
             + "% on "
             + format_date(max_humid_value)
+        )
+        
+    elif print_mode == "temperature_average":
+        average_highest_temp = find_average(highest_temp)
+        average_lowest_temp = find_average(min_temp)
+        average_humidity = find_average(max_humid)
+        print(
+            "Highest Average: "
+            + str(average_highest_temp)
+            + "C"
+        )
+        print(
+            "Lowest Average: "
+            + str(average_lowest_temp)
+            + "C"
+        )
+        print(
+            "Average Humidity: "
+            + str(average_humidity)
+            + "%"
         )
 
     elif print_mode == "graph":
