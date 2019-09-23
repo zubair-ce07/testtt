@@ -1,5 +1,5 @@
 .button-view {
-    margin-left: 400px;
-    margin-top: 40px;
+    margin: 0 auto;
     text-align: center;
+    width: 300px;
 }

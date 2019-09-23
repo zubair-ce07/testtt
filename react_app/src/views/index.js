@@ -1,8 +1,8 @@
 import React from "react";
-import { GAME_STATUS } from "../utils/constants";
+import { GAME_STATUS, GAME_ACTION } from "../utils/constants";
 import { HealthStatus } from "../views/HealthStatus";
-import {ListView} from "./ListView";
-import {ButtonView} from "./ButtonView";
+import { ListView } from "./ListView";
+import { ButtonView } from "./ButtonView";
 
 class App extends React.Component {
   constructor(props) {
@@ -13,24 +13,15 @@ class App extends React.Component {
       status: GAME_STATUS.start,
       moves: []
     };
-
-    this.health = 100;
-    this.isWinner = false;
-    this.handleAttack = this.handleAttack.bind(this);
-    this.handleHeal = this.handleHeal.bind(this);
-    this.handleGiveUp = this.handleGiveUp.bind(this);
-    this.handleStartGame = this.handleStartGame.bind(this);
-    this.handleRestart = this.handleRestart.bind(this);
-    this.resetState = this.resetState.bind(this);
   }
 
-  getRandomNumber() {
+  getRandomNumber = () => {
     return Math.floor(Math.random() * (10 - 1 + 1)) + 1;
-  }
+  };
 
-  handleAttack() {
+  handleAction = action => {
     const userDamage = this.getRandomNumber();
-    const opponentDamage = this.getRandomNumber();
+    let heal = this.getRandomNumber();
 
     if (this.state.userPercentage - userDamage <= 0) {
       this.setState({
@@ -40,7 +31,20 @@ class App extends React.Component {
       return;
     }
 
-    if (this.state.opponentPercentage - opponentDamage <= 0) {
+    if (action === "Heal") {
+      if (this.state.userPercentage + heal - userDamage > 100) {
+        heal -= this.state.userPercentage + heal - userDamage - 100;
+      }
+
+      const moves = [{ userDamage, userHeal: heal }, ...this.state.moves];
+      this.setState(state => ({
+        userPercentage: state.userPercentage + heal - userDamage,
+        moves
+      }));
+      return;
+    }
+
+    if (this.state.opponentPercentage - heal <= 0) {
       this.setState({
         status: GAME_STATUS.end,
         opponentPercentage: 0
@@ -48,83 +52,50 @@ class App extends React.Component {
       this.isWinner = true;
       return;
     }
-    const moves = [{ opponentDamage, userDamage }, ...this.state.moves];
-    this.setState(state => ({
-      userPercentage: state.userPercentage - userDamage,
-      opponentPercentage: state.opponentPercentage - opponentDamage,
-      moves: moves
-    }));
-  }
 
-  handleHeal() {
-    let userHeal = this.getRandomNumber();
-    const userDamage = this.getRandomNumber();
+    const moves = [{ opponentDamage: heal, userDamage }, ...this.state.moves];
+    this.setState({
+      opponentPercentage: this.state.opponentPercentage - heal,
+      userPercentage: this.state.userPercentage - userDamage,
+      moves
+    });
+  };
 
-    if (this.state.userPercentage - userDamage < 0) {
-      this.setState({ status: GAME_STATUS.end });
-      return;
-    }
-
-    if (this.state.userPercentage + userHeal - userDamage > this.health) {
-      userHeal -=
-        this.state.userPercentage + userHeal - userDamage - this.health;
-    }
-    const moves = [{ userDamage, userHeal }, ...this.state.moves];
-    this.setState(state => ({
-      userPercentage: state.userPercentage + userHeal - userDamage,
-      moves: moves
-    }));
-  }
-
-  handleGiveUp() {
-    this.setState({ status: GAME_STATUS.end });
-    this.isWinner = false;
-  }
-
-  handleStartGame() {
-    this.resetState();
-    this.setState({ status: GAME_STATUS.playing });
-  }
-
-  handleRestart() {
-    this.resetState();
-    this.setState({ status: GAME_STATUS.start });
-  }
-
-  resetState() {
-    this.isWinner = false;
+  handleGame = action => {
+    const status =
+      action === GAME_ACTION.start ? GAME_STATUS.playing : GAME_STATUS.start;
     this.setState({
       userPercentage: this.health,
       opponentPercentage: this.health,
-      moves: []
+      moves: [],
+      status
     });
-  }
+  };
 
   render() {
     return (
-      <div>
+      <React.Fragment>
         <HealthStatus
-          user={{
-            content: "User",
-            percentage: this.state.userPercentage
-          }}
-          opponent={{
-            content: "Opponent",
-            percentage: this.state.opponentPercentage
+          data={{
+            user: {
+              content: "User",
+              percentage: this.state.userPercentage
+            },
+            opponent: {
+              content: "Opponent",
+              percentage: this.state.opponentPercentage
+            }
           }}
         />
         <ButtonView
-        status={this.state.status}
-        handleAttack={this.handleAttack}
-        handleGiveUp={this.handleGiveUp}
-        handleHeal={this.handleHeal}
-        handleStartGame={this.handleStartGame}
-        handleRestart={this.handleRestart}
-        isWinner={this.isWinner}
+          status={this.state.status}
+          opponentPercentage={this.state.opponentPercentage}
+          handleAction={this.handleAction}
+          handleGame={this.handleGame}
+          handleGiveUp={() => this.setState({ status: GAME_STATUS.end })}
         />
-        
-        <ListView moves={this.state.moves}/>
-      </div>
+        <ListView moves={this.state.moves} />
+      </React.Fragment>
     );
   }
 }

@@ -1,11 +1,9 @@
 import React from "react";
 
-const Button = props => {
-  return (
-    <button className="ui basic button" onClick={props.action}>
-      {props.content}
-    </button>
-  );
-};
+const Button = props => (
+  <button className="ui basic button" onClick={props.onClick}>
+    {props.text}
+  </button>
+);
 
 export { Button };

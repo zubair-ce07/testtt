@@ -4,4 +4,8 @@ const GAME_STATUS = {
   end: 2
 };
 
-export { GAME_STATUS };
+const GAME_ACTION = {
+  start: 0,
+  continue: 1
+}
+export { GAME_STATUS, GAME_ACTION };
