@@ -46,12 +46,9 @@ describe('Kayak.com/hotels', () => {
   });
   
   it('should load hotels results for search string NYC', async () => {
-    hotelsPage.destination.getDisplayField().click();
-    await waitForElementToBeInteractive(hotelsPage.destination.getInputField());
-    hotelsPage.destination.getInputField().sendKeys('NYC');
+    await hotelsPage.destination.type('NYC');
     await hotelsPage.destination.selectSearchResult(0);
-    hotelsPage.clickSearch();
-    await hotelsResultsPage.load();
+    await hotelsPage.clickSearch();
     expect(hotelsResultsPage.getSearchResults().count()).eventually.to.be.greaterThan(0);
   });
   

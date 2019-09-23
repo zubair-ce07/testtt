@@ -5,7 +5,7 @@ import { RailMap } from "../elements/RailMap";
 export class HotelsResults {
   readonly railMap = new RailMap();
   
-  async load(): Promise<void> {
+  static async loadResults() {
     const progressBar = element(by.className('Common-Results-ProgressBar'));
     await browser.wait(EC.invisibilityOf(progressBar));
     
