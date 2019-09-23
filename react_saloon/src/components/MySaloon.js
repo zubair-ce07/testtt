@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import PropTypes from 'prop-types';
-import { add_time_slots, get_time_slots } from '../actions/saloonActions';
+import { addTimeSlots, getTimeSlots } from '../actions/saloonActions';
 import IsAuthenticated from '../hoc/isAuthenticated';
 import $ from 'jquery';
 
@@ -14,21 +14,21 @@ class MySaloon extends Component {
     }
 
     componentDidMount() {
-        this.props.get_time_slots();
+        this.props.getTimeSlots();
     }
 
-    handleSubmit = (e) => {
+    handleSubmit = e => {
         e.preventDefault();
-        this.props.add_time_slots(this.state).then(()=>{
+        this.props.addTimeSlots(this.state).then(()=>{
             if(this.props.addTimeSlotSuccessStatus){
-                this.props.get_time_slots();
+                this.props.getTimeSlots();
                 $('#modalClose').click();
             }
         });
 
     }
 
-    handleChange = (e) => {
+    handleChange = e => {
         let key = e.target.name;
         let val = e.target.value;
         this.setState({ [key]: val });
@@ -36,27 +36,22 @@ class MySaloon extends Component {
 
     render() {
 
-        const { time_slots } = this.props;
+        const { timeSlots } = this.props;
 
         let date_check = this.state.start_date < this.state.end_date;
-
-        const time_slots_list = time_slots ? (
-            time_slots.map((time_slot, index) => {
-                const slot_date = new Date(time_slot.time);
-                return (
-                    <div className="card" style={{ margin: '10px', width: '100%' }} key={index}>
-                        <div className="card-header">
-                            {slot_date.toDateString().concat(' at ', slot_date.toLocaleTimeString())}
-                        </div>
+        const timeSlots_list = timeSlots.map((time_slot, index) => {
+            const slot_date = new Date(time_slot.time);
+            return (
+                <div className="card" style={{ margin: '10px', width: '100%' }} key={index}>
+                    <div className="card-header">
+                        {slot_date.toDateString().concat(' at ', slot_date.toLocaleTimeString())}
                     </div>
-                );
-            })
-        ) : (
-            false
-        );
+                </div>
+            );
+        });
 
 
-        const no_time_slots = ((!time_slots || time_slots.length === 0) && <div className='container'>
+        const noTimeSlots = ((!timeSlots || timeSlots.length === 0) && <div className='container'>
             <div className="card" style={{ margin: '10px', width: '100%' }}>
                 <div className="card-header">
                     No Time Slots
@@ -69,7 +64,7 @@ class MySaloon extends Component {
             </div>
         </div >);
 
-        const add_slots_modal = ((!time_slots || time_slots.length === 0) && <div className="modal fade" id="exampleModalCenter" tabIndex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
+        const add_slots_modal = ((!timeSlots || timeSlots.length === 0) && <div className="modal fade" id="exampleModalCenter" tabIndex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
             aria-hidden="true">
             <div className="modal-dialog modal-dialog-centered" role="document">
                 <div className="modal-content">
@@ -134,9 +129,9 @@ class MySaloon extends Component {
             <React.Fragment>
                 <div className='container'>
                     <h2 style={{ width: '100%', textAlign: 'center' }}>Time Slots</h2>
-                    {time_slots_list}
+                    {timeSlots_list}
                 </div>
-                {no_time_slots}
+                {noTimeSlots}
                 {add_slots_modal}
 
             </React.Fragment>
@@ -145,25 +140,27 @@ class MySaloon extends Component {
 }
 
 MySaloon.propTypes = {
-    add_time_slots: PropTypes.func.isRequired,
-    get_time_slots: PropTypes.func.isRequired,
-    time_slots: PropTypes.array.isRequired,
+    addTimeSlots: PropTypes.func.isRequired,
+    getTimeSlots: PropTypes.func.isRequired,
+    timeSlots: PropTypes.array.isRequired,
     addTimeSlotSuccessStatus :PropTypes.bool.isRequired
 };
 
-const mapStateToProps = (state) => {
-    return {
-        time_slots: state.saloon.time_slots,
-        addTimeSlotSuccessStatus : state.saloon.addTimeSlotSuccessStatus
-    };
-};
+const mapStateToProps = state =>
+    (
+        {
+            timeSlots: state.saloon.timeSlots,
+            addTimeSlotSuccessStatus : state.saloon.addTimeSlotSuccessStatus
+        }
+    );
 
-const mapDispatchToProps = dispatch => {
-    return {
-        add_time_slots: (data) => dispatch(add_time_slots(data)),
-        get_time_slots: () => dispatch(get_time_slots())
-    };
-};
+const mapDispatchToProps = dispatch =>
+    (
+        {
+            addTimeSlots: (data) => dispatch(addTimeSlots(data)),
+            getTimeSlots: () => dispatch(getTimeSlots())
+        }
+    );
 
 
 

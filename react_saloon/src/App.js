@@ -5,7 +5,7 @@ import Signup from './components/Signup';
 import Login from './components/Login';
 import Navbar from './components/Navbar';
 
-function App() {
+const App = ()=> {
     return (
         <BrowserRouter >
             <div className="App">
@@ -17,6 +17,5 @@ function App() {
             </div>
         </BrowserRouter>
     );
-}
-
+};
 export default App;

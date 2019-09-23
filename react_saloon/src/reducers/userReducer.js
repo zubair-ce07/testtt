@@ -1,100 +1,95 @@
-import { LOGIN_SUCCESSFUL , LOGIN_FAILED , LOGOUT_SUCCESSFUL , 
-    LOGOUT_FAILED , SIGNUP_SUCCESSFUL, SIGNUP_FAILED, 
-    USER_VALUE_UPDATE, CUSTOMER_PROFILE_SUCCESSFUL, CUSTOMER_PROFILE_FAILED ,
-    SALOON_PROFILE_FAILED,SALOON_PROFILE_SUCCESSFUL,CUSTOMER_UPDATE_PROFILE_SUCCESSFUL,
-    CUSTOMER_UPDATE_PROFILE_FAILED,SALOON_UPDATE_PROFILE_SUCCESSFUL,
-    SALOON_UPDATE_PROFILE_FAILED} from '../constants/actionsTypeConstants';
+import { actionTypes } from '../constants/actionsTypeConstants';
 
 const initState = {
     user: {},
     LoginFailed: false,
-    signup_failed:false,
-    update_status:false,
+    signupFailed:false,
+    updateStatus:false,
 };
 const userReducer = (state = initState, action) => {
-    let response_data;
+    let responseData;
     switch (action.type) {
-    case LOGIN_SUCCESSFUL:
+    case actionTypes.LOGIN_SUCCESSFUL:
         return {
             ...state,
             LoginFailed: false
         };
-    case LOGIN_FAILED:
+    case actionTypes.LOGIN_FAILED:
         return {
             ...state,
             LoginFailed: true
         };
-    case LOGOUT_SUCCESSFUL:
+    case actionTypes.LOGOUT_SUCCESSFUL:
         return {
             ...state,
         };
-    case LOGOUT_FAILED:
+    case actionTypes.LOGOUT_FAILED:
         return {
             ...state,
         };
-    case SIGNUP_SUCCESSFUL:
+    case actionTypes.SIGNUP_SUCCESSFUL:
         return {
             ...state,
-            signup_failed: false
+            signupFailed: false
         };
-    case SIGNUP_FAILED:
+    case actionTypes.SIGNUPFAILED:
         return {
             ...state,
-            signup_failed: true
+            signupFailed: true
         };
-    case CUSTOMER_PROFILE_SUCCESSFUL:
-        response_data = {
+    case actionTypes.CUSTOMER_PROFILE_SUCCESSFUL:
+        responseData = {
             'phone_no': action.payload.phone_no
         };
-        response_data = Object.assign(response_data, action.payload.user);
+        responseData = Object.assign(responseData, action.payload.user);
         return {
             ...state,
-            user: response_data,
-            update_status: true
+            user: responseData,
+            updateStatus: true
         };
-    case CUSTOMER_PROFILE_FAILED:
+    case actionTypes.CUSTOMER_PROFILE_FAILED:
         return {
             ...state,
-            update_status: false
+            updateStatus: false
         };
-    case CUSTOMER_UPDATE_PROFILE_SUCCESSFUL:
+    case actionTypes.CUSTOMER_UPDATE_PROFILE_SUCCESSFUL:
         return {
             ...state,
-            update_status: true
+            updateStatus: true
         };
-    case CUSTOMER_UPDATE_PROFILE_FAILED:
+    case actionTypes.CUSTOMER_UPDATE_PROFILE_FAILED:
         return {
             ...state,
-            update_status: false
+            updateStatus: false
         };
-    case SALOON_UPDATE_PROFILE_SUCCESSFUL:
+    case actionTypes.SALOON_UPDATE_PROFILE_SUCCESSFUL:
         return {
             ...state,
-            update_status: true
+            updateStatus: true
         };
-    case SALOON_UPDATE_PROFILE_FAILED:
+    case actionTypes.SALOON_UPDATE_PROFILE_FAILED:
         return {
             ...state,
-            update_status: false
+            updateStatus: false
         };
-    case SALOON_PROFILE_SUCCESSFUL:
-        response_data = {
+    case actionTypes.SALOON_PROFILE_SUCCESSFUL:
+        responseData = {
             'phone_no': action.payload.phone_no,
             'address': action.payload.address,
             'shop_name': action.payload.shop_name
         };
-        response_data = Object.assign(response_data, action.payload.user);
+        responseData = Object.assign(responseData, action.payload.user);
         return {
             ...state,
-            user: response_data,
-            update_status: true
+            user: responseData,
+            updateStatus: true
         };
-    case SALOON_PROFILE_FAILED:
+    case actionTypes.SALOON_PROFILE_FAILED:
         return {
             ...state,
-            update_status: false
+            updateStatus: false
         };
-    case USER_VALUE_UPDATE:{
+    case actionTypes.USER_VALUE_UPDATE:{
         let user_data = { ...state.user };
         user_data[action.payload.key] = action.payload.value;
         return {

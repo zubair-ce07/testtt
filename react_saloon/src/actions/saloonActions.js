@@ -1,148 +1,102 @@
-import axios from 'axios';
-import ls from 'local-storage';
 import { REACT_APP_API_ENDPOINT_BASE_URL } from '../constants/config';
+import { getTokenHeader,makeApiUrl,makeGetCall,makeGetCallWithHeader,makeDeleteCallWithHeader,makePostCallWithHeader } from '../actions/utils';
+import { apiEndPoints } from '../constants/apiEndPoints';
+import { actionTypes} from '../constants/actionsTypeConstants';
+import { reactAppConstants } from '../constants/constants';
 
-import { FETCH_SALOON_SUCCESSFUL,FETCH_SALOON_FAILED,SALOON_PROFILE_SUCCESSFUL,
-    SALOON_PROFILE_FAILED,ADD_SLOTS_FAILED,GET_SLOTS_SUCCESSFUL,
-    GET_SLOTS_FAILED,GET_SLOTS_FOR_USER_SUCCESSFUL,GET_SLOTS_FOR_USER_FAILED,GET_RESERVATION_FOR_USER_SUCCESSFUL,GET_RESERVATION_FOR_USER_FAILED,
-    GET_SALOON_RESERVATION_SUCCESSFUL,GET_SALOON_RESERVATION_FAILED,SLOTS_RESERVED_SUCCESSFUL,
-    SLOTS_RESERVED_FAILED,DELETE_RESERVATION_SUCCESSFUL,DELETE_RESERVATION_FAILED,
-    SALOON_UPDATE_PROFILE_SUCCESSFUL,SALOON_UPDATE_PROFILE_FAILED, ADD_SLOTS_SUCCESSFUL} from '../constants/actionsTypeConstants';
-
-export const fetchSaloons = () => {
-
-    return dispatch => {
-        return axios.get(REACT_APP_API_ENDPOINT_BASE_URL+'shop/api/saloons/').then((response) => {
-            dispatch({ type: FETCH_SALOON_SUCCESSFUL, payload: response.data });
+export const fetchSaloons = () =>  
+    dispatch => {
+        makeGetCall(makeApiUrl(REACT_APP_API_ENDPOINT_BASE_URL,apiEndPoints.SHOP_API_SALOONS)).then((response) => {
+            dispatch({ type: actionTypes.FETCH_SALOON_SUCCESSFUL, payload: response.data });
         }).catch(() => {
-            dispatch({ type: FETCH_SALOON_FAILED });
+            dispatch({ type: actionTypes.FETCH_SALOON_FAILED });
         });
+
     };
 
-};
-
-export const saloon_profile = () => {
-
-    return dispatch => {
-        const AuthStr = 'Token '.concat(ls.get('token'));
-        return axios.get(REACT_APP_API_ENDPOINT_BASE_URL+'shop/api/profile/', { headers: { Authorization: AuthStr } }).then((response) => {
-            dispatch({ type: SALOON_PROFILE_SUCCESSFUL, payload: response.data });
+export const saloonProfile = () =>
+    dispatch =>
+        makeGetCallWithHeader(makeApiUrl(REACT_APP_API_ENDPOINT_BASE_URL,apiEndPoints.SHOP_API_PROFILE), { headers: { [reactAppConstants.AUTHORIZATION]: getTokenHeader() } }).then((response) => {
+            dispatch({ type: actionTypes.SALOON_PROFILE_SUCCESSFUL, payload: response.data });
         }).catch(() => {
-            dispatch({ type: SALOON_PROFILE_FAILED });
+            dispatch({ type: actionTypes.SALOON_PROFILE_FAILED });
         });
-    };
 
-};
-
-export const add_time_slots = (data) => {
-    return dispatch => {
-        const AuthStr = 'Token '.concat(ls.get('token'));
-        return axios.post(REACT_APP_API_ENDPOINT_BASE_URL+'shop/api/mysaloon/', data, { headers: { Authorization: AuthStr } }).then((response) => {
-            dispatch({ type: ADD_SLOTS_SUCCESSFUL });
+export const addTimeSlots = (data) =>
+    dispatch =>
+        makePostCallWithHeader(makeApiUrl(REACT_APP_API_ENDPOINT_BASE_URL,apiEndPoints.SHOP_API_MYSALOON), data, { headers: { [reactAppConstants.AUTHORIZATION]: getTokenHeader() } }).then((response) => {
+            dispatch({ type: actionTypes.ADD_SLOTS_SUCCESSFUL });
             return response;
         }).catch((err) => {
-            dispatch({ type: ADD_SLOTS_FAILED });
+            dispatch({ type: actionTypes.ADD_SLOTS_FAILED });
             return err;
         });
-    };
 
-};
-
-export const get_time_slots = () => {
-    return dispatch => {
-        const AuthStr = 'Token '.concat(ls.get('token'));
-        return axios.get(REACT_APP_API_ENDPOINT_BASE_URL+'shop/api/mysaloon/', { headers: { Authorization: AuthStr } }).then((response) => {
-            dispatch({ type: GET_SLOTS_SUCCESSFUL, payload: response.data });
+export const getTimeSlots = () =>
+    dispatch => 
+        makeGetCallWithHeader(makeApiUrl(REACT_APP_API_ENDPOINT_BASE_URL,apiEndPoints.SHOP_API_MYSALOON), { headers: { [reactAppConstants.AUTHORIZATION]: getTokenHeader() } }).then((response) => {
+            dispatch({ type: actionTypes.GET_SLOTS_SUCCESSFUL, payload: response.data });
         }).catch(() => {
-            dispatch({ type: GET_SLOTS_FAILED });
+            dispatch({ type: actionTypes.GET_SLOTS_FAILED });
         });
-    };
 
-};
-
-export const get_time_slots_for_user = (shop_name) => {
-    return dispatch => {
-        const AuthStr = 'Token '.concat(ls.get('token'));
-        return axios.get(REACT_APP_API_ENDPOINT_BASE_URL+'shop/api/shop/' + shop_name, { headers: { Authorization: AuthStr } }).then((response) => {
-            dispatch({ type: GET_SLOTS_FOR_USER_SUCCESSFUL, payload: response.data });
+export const getTimeSlotsForUser = shop_name =>
+    dispatch =>
+        makeGetCallWithHeader(makeApiUrl(REACT_APP_API_ENDPOINT_BASE_URL,apiEndPoints.SHOP_API_SHOP) + shop_name, { headers: { [reactAppConstants.AUTHORIZATION]: getTokenHeader() } }).then((response) => {
+            dispatch({ type: actionTypes.GET_SLOTS_FOR_USER_SUCCESSFUL, payload: response.data });
         }).catch(() => {
-            dispatch({ type: GET_SLOTS_FOR_USER_FAILED });
+            dispatch({ type: actionTypes.GET_SLOTS_FOR_USER_FAILED });
         });
-    };
 
-};
-
-export const get_reservations_for_user = () => {
-    return dispatch => {
-        const AuthStr = 'Token '.concat(ls.get('token'));
-        return axios.get(REACT_APP_API_ENDPOINT_BASE_URL+'customer/api/myreservations/', { headers: { Authorization: AuthStr } }).then((response) => {
-            console.log(response);
-            dispatch({ type: GET_RESERVATION_FOR_USER_SUCCESSFUL, payload: response.data });
-        }).catch((err) => {
-            console.log(err.response);
-            dispatch({ type: GET_RESERVATION_FOR_USER_FAILED });
-        });
-    };
-
-};
-
-export const get_saloon_reservations = () => {
-    return dispatch => {
-        const AuthStr = 'Token '.concat(ls.get('token'));
-        return axios.get(REACT_APP_API_ENDPOINT_BASE_URL+'shop/api/myreservations/', { headers: { Authorization: AuthStr } }).then((response) => {
-            dispatch({ type: GET_SALOON_RESERVATION_SUCCESSFUL, payload: response.data });
+export const getReservationsForUser = () =>
+    dispatch =>
+        makeGetCallWithHeader(makeApiUrl(REACT_APP_API_ENDPOINT_BASE_URL,apiEndPoints.CUSTOMER_API_MYRESERVATIONS), { headers: { [reactAppConstants.AUTHORIZATION]: getTokenHeader() } }).then((response) => {
+            dispatch({ type: actionTypes.GET_RESERVATION_FOR_USER_SUCCESSFUL, payload: response.data });
         }).catch(() => {
-            dispatch({ type: GET_SALOON_RESERVATION_FAILED });
+            dispatch({ type: actionTypes.GET_RESERVATION_FOR_USER_FAILED });
         });
-    };
 
-};
 
-export const reserve_slot_for_user = (time_slot) => {
-    return dispatch => {
-        const AuthStr = 'Token '.concat(ls.get('token'));
-        return axios.post(REACT_APP_API_ENDPOINT_BASE_URL+'shop/api/reserve_slot/', { time_slot }, { headers: { Authorization: AuthStr } }).then((response) => {
-            console.log(response);
-            dispatch({ type: SLOTS_RESERVED_SUCCESSFUL, time_slot });
+export const getSaloonReservations = () => 
+    dispatch =>
+        makeGetCallWithHeader(makeApiUrl(REACT_APP_API_ENDPOINT_BASE_URL,apiEndPoints.SHOP_API_MYRESERVATIONS), { headers: { [reactAppConstants.AUTHORIZATION]: getTokenHeader() } }).then((response) => {
+            dispatch({ type: actionTypes.GET_SALOON_RESERVATION_SUCCESSFUL, payload: response.data });
         }).catch(() => {
-            dispatch({ type: SLOTS_RESERVED_FAILED });
+            dispatch({ type: actionTypes.GET_SALOON_RESERVATION_FAILED });
         });
-    };
 
-};
-
-export const cancel_reservation = (id) => {
-    return dispatch => {
-        const AuthStr = 'Token '.concat(ls.get('token'));
-        return axios.delete(REACT_APP_API_ENDPOINT_BASE_URL+'shop/api/cancel-reservation/' + id, { headers: { Authorization: AuthStr } }).then(() => {
-            dispatch({ type: DELETE_RESERVATION_SUCCESSFUL, id });
+export const reserveSlotForUser = time_slot =>
+    dispatch =>
+        makePostCallWithHeader(makeApiUrl(REACT_APP_API_ENDPOINT_BASE_URL,apiEndPoints.SHOP_API_RESERVE_SLOT), { time_slot }, { headers: { [reactAppConstants.AUTHORIZATION]: getTokenHeader() } }).then(() => {
+            dispatch({ type: actionTypes.SLOTS_RESERVED_SUCCESSFUL, time_slot });
         }).catch(() => {
-            dispatch({ type: DELETE_RESERVATION_FAILED });
+            dispatch({ type: actionTypes.SLOTS_RESERVED_FAILED });
         });
-    };
-};
 
-export const update_saloon_profile = (data) => {
-    const request_data = {
-        'user': {},
+export const cancelReservation = id =>
+    dispatch =>
+        makeDeleteCallWithHeader(makeApiUrl(REACT_APP_API_ENDPOINT_BASE_URL,apiEndPoints.SHOP_API_CANCEL_RESERVATION) + id, { headers: { [reactAppConstants.AUTHORIZATION]: getTokenHeader() } }).then(() => {
+            dispatch({ type: actionTypes.DELETE_RESERVATION_SUCCESSFUL, id });
+        }).catch(() => {
+            dispatch({ type: actionTypes.DELETE_RESERVATION_FAILED });
+        });
+
+export const updateSaloonProfile = data => {
+    const requestData = {
+        'user': {
+            'first_name': data.first_name,
+            'last_name': data.last_name,
+            'email': data.email,
+            'username': data.username
+        },
         'phone_no': data.phone_no,
         'address': data.address
     };
-    request_data['user'] = {
-        'first_name': data.first_name,
-        'last_name': data.last_name,
-        'email': data.email,
-        'username': data.username
-    };
-    return dispatch => {
-        const AuthStr = 'Token '.concat(ls.get('token'));
-        return axios.post(REACT_APP_API_ENDPOINT_BASE_URL+'shop/api/profile/', request_data, { headers: { Authorization: AuthStr } }).then((response) => {
-            console.log(response);
-            dispatch({ type: SALOON_UPDATE_PROFILE_SUCCESSFUL, payload: response.data });
-        }).catch((err) => {
-            console.log(err.response);
-            dispatch({ type: SALOON_UPDATE_PROFILE_FAILED });
+    return dispatch =>
+        makePostCallWithHeader(makeApiUrl(REACT_APP_API_ENDPOINT_BASE_URL,apiEndPoints.SHOP_API_PROFILE), requestData, { headers: { [reactAppConstants.AUTHORIZATION]: getTokenHeader() } }).then((response) => {
+            dispatch({ type: actionTypes.SALOON_UPDATE_PROFILE_SUCCESSFUL, payload: response.data });
+        }).catch(() => {
+            dispatch({ type: actionTypes.SALOON_UPDATE_PROFILE_FAILED });
         });
-    };
 
 };

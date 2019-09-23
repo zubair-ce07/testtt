@@ -1,71 +1,67 @@
-import { FETCH_SALOON_SUCCESSFUL,FETCH_SALOON_FAILED,GET_SLOTS_SUCCESSFUL,
-    GET_SLOTS_FAILED,GET_SLOTS_FOR_USER_SUCCESSFUL,GET_SLOTS_FOR_USER_FAILED,GET_RESERVATION_FOR_USER_SUCCESSFUL,GET_RESERVATION_FOR_USER_FAILED,
-    GET_SALOON_RESERVATION_SUCCESSFUL,GET_SALOON_RESERVATION_FAILED,SLOTS_RESERVED_SUCCESSFUL,
-    SLOTS_RESERVED_FAILED,DELETE_RESERVATION_SUCCESSFUL,DELETE_RESERVATION_FAILED,ADD_SLOTS_SUCESSFUL,
-    ADD_SLOTS_FAILED} from '../constants/actionsTypeConstants';
+import { actionTypes } from '../constants/actionsTypeConstants';
 
 const initState = {
     saloons: [],
     successStatus:true,
     reservations:[],
-    time_slots:[],
+    timeSlots:[],
     addTimeSlotSuccessStatus:true
 };
 const saloonReducer = (state = initState, action) => {
     switch (action.type) {
-    case FETCH_SALOON_SUCCESSFUL:
+    case actionTypes.FETCH_SALOON_SUCCESSFUL:
         return {
             ...state,
             saloons: action.payload,
             successStatus: true
         };
 
-    case FETCH_SALOON_FAILED:
+    case actionTypes.FETCH_SALOON_FAILED:
         return {
             ...state,
             successStatus: false
         };
-    case GET_SLOTS_SUCCESSFUL:
+    case actionTypes.GET_SLOTS_SUCCESSFUL:
         return {
             ...state,
-            time_slots: action.payload
+            timeSlots: action.payload
         };
-    case GET_SLOTS_FAILED:
-        return {
-            ...state,
-            successStatus: false
-        };
-    case GET_SLOTS_FOR_USER_SUCCESSFUL:
-        return {
-            ...state,
-            time_slots: action.payload
-        };
-    case GET_SLOTS_FOR_USER_FAILED:
+    case actionTypes.GET_SLOTS_FAILED:
         return {
             ...state,
             successStatus: false
         };
-    case GET_RESERVATION_FOR_USER_SUCCESSFUL:
+    case actionTypes.GET_SLOTS_FOR_USER_SUCCESSFUL:
+        return {
+            ...state,
+            timeSlots: action.payload
+        };
+    case actionTypes.GET_SLOTS_FOR_USER_FAILED:
+        return {
+            ...state,
+            successStatus: false
+        };
+    case actionTypes.GET_RESERVATION_FOR_USER_SUCCESSFUL:
         return {
             ...state,
             reservations: action.payload
         };
-    case GET_RESERVATION_FOR_USER_FAILED:
+    case actionTypes.GET_RESERVATION_FOR_USER_FAILED:
         return {
             ...state,
             successStatus: false
         };
-    case GET_SALOON_RESERVATION_SUCCESSFUL:
+    case actionTypes.GET_SALOON_RESERVATION_SUCCESSFUL:
         return {
             ...state,
             reservations: action.payload
         };
-    case GET_SALOON_RESERVATION_FAILED:
+    case actionTypes.GET_SALOON_RESERVATION_FAILED:
         return {
             ...state,
             successStatus: false
         };
-    case DELETE_RESERVATION_SUCCESSFUL:{
+    case actionTypes.DELETE_RESERVATION_SUCCESSFUL:{
         let newReservations = [...state.reservations];
         newReservations = newReservations.filter((reservation) => reservation.id !== action.id);
         return {
@@ -74,13 +70,13 @@ const saloonReducer = (state = initState, action) => {
             reservations: newReservations
         };
     }
-    case DELETE_RESERVATION_FAILED:
+    case actionTypes.DELETE_RESERVATION_FAILED:
         return {
             ...state,
             successStatus: false
         };
-    case SLOTS_RESERVED_SUCCESSFUL:{
-        let newTimeSlots = [...state.time_slots];
+    case actionTypes.SLOTS_RESERVED_SUCCESSFUL:{
+        let newTimeSlots = [...state.timeSlots];
         newTimeSlots.forEach(element => {
             if (action.time_slot === element.id) {
                 element.reservation = true;
@@ -89,21 +85,21 @@ const saloonReducer = (state = initState, action) => {
 
         return {
             ...state,
-            time_slots: newTimeSlots,
+            timeSlots: newTimeSlots,
             successStatus: true
         };
     }
-    case SLOTS_RESERVED_FAILED:
+    case actionTypes.SLOTS_RESERVED_FAILED:
         return {
             ...state,
             successStatus: false
         };
-    case ADD_SLOTS_SUCESSFUL:
+    case actionTypes.ADD_SLOTS_SUCESSFUL:
         return {
             ...state,
             addTimeSlotSuccessStatus: false
         };
-    case ADD_SLOTS_FAILED:
+    case actionTypes.ADD_SLOTS_FAILED:
         return {
             ...state,
             addTimeSlotSuccessStatus: false

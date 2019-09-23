@@ -2,7 +2,7 @@ import React from 'react';
 import ls from 'local-storage';
 import PropTypes from 'prop-types';
 
-const IsAuthenticated = (WrappedComponent) => {
+const IsAuthenticated = WrappedComponent => {
 
     const checkIsAuthenticated = (props) => {
         if (!ls.get('token')) {

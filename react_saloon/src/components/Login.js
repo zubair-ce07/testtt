@@ -6,7 +6,7 @@ import PropTypes from 'prop-types';
 
 
 class Login extends React.Component {
-    card_style = {
+    cardStyle = {
         marginTop: '15%'
     }
     state = {
@@ -35,7 +35,7 @@ class Login extends React.Component {
                 {this.props.LoginFailed &&
                     <div className="alert alert-danger" role="alert" >
                         Login Failed!</div>}
-                <div className="card" style={this.card_style}>
+                <div className="card" style={this.cardStyle}>
                     <div className="card-body">
                         <center><h2>Login</h2></center>
                         <form onSubmit={this.handleSubmit}>
@@ -65,16 +65,19 @@ Login.propTypes = {
 
 };
 
-const mapStateToPropos = (state) => {
-    return {
-        LoginFailed: state.user.LoginFailed
-    };
-};
+const mapStateToPropos = state => 
+    (
+        {
+            LoginFailed: state.user.LoginFailed
+        }
+    );
 
-const mapDispatchToProps = dispatch => {
-    return {
-        login: (username, password) => dispatch(login(username, password))
-    };
-};
+
+const mapDispatchToProps = dispatch =>
+    (
+        {
+            login: (username, password) => dispatch(login(username, password))
+        }
+    );
 
 export default connect(mapStateToPropos, mapDispatchToProps)(Login);

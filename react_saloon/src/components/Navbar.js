@@ -11,9 +11,10 @@ import SlotList from './SlotList';
 import MyReservations from './MyReservations';
 
 import { logout } from '../actions/userActions';
+import { reactAppConstants } from '../constants/constants';
 
 class Navbar extends React.Component {
-    nar_bar_style = {
+    navBarStyle = {
         width: '100%'
     }
 
@@ -21,7 +22,7 @@ class Navbar extends React.Component {
         this.props.logout();
     }
 
-    user_type = ls.get('user_type')
+    userType = ls.get(reactAppConstants.USER_TYPE)
     token = ls.get('token')
 
     nav_bar_elements = this.token ? (
@@ -29,7 +30,7 @@ class Navbar extends React.Component {
             <li className="nav-item active">
                 <Link className="nav-link" to='/myreservations'> My Reservations <span className=" sr-only">(current)</span></Link>
             </li>
-            {this.user_type === 'saloon' && <li className="nav-item active">
+            {this.userType === reactAppConstants.SALOON && <li className="nav-item active">
                 <Link className="nav-link" to='/mysaloon'> My Saloon <span className=" sr-only">(current)</span></Link>
             </li>}
             <li className="nav-item active">
@@ -52,7 +53,7 @@ class Navbar extends React.Component {
     render() {
         return (
             <div className='navbar compoent_container' >
-                <nav className="navbar navbar-expand-lg navbar-primary bg-light" style={this.nar_bar_style}>
+                <nav className="navbar navbar-expand-sm bg-primary navbar-dark" style={this.navBarStyle}>
                     <Link className="navbar-brand" to="/">Saloons</Link>
                     <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
                         aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -91,10 +92,11 @@ Navbar.propTypes = {
     logout: PropTypes.func.isRequired
 };
 
-const mapDispatchToProps = dispatch => {
-    return {
-        logout: () => dispatch(logout())
-    };
-};
+const mapDispatchToProps = dispatch => 
+    (
+        {
+            logout: () => dispatch(logout())
+        }
+    );
 
 export default connect(null, mapDispatchToProps)(Navbar);

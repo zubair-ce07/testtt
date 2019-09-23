@@ -4,48 +4,52 @@ import { connect } from 'react-redux';
 import ls from 'local-storage';
 import PropTypes from 'prop-types';
 
-import { saloon_profile, update_saloon_profile } from '../actions/saloonActions';
-import { customer_profile, update_customer_profile } from '../actions/customerActions';
-import { user_value_update } from '../actions/userActions';
+import { saloonProfile, updateSaloonProfile } from '../actions/saloonActions';
+import { customerProfile, updateCustomerProfile } from '../actions/customerActions';
+import { userValueUpdate } from '../actions/userActions';
 import IsAuthenticated from '../hoc/isAuthenticated';
+import { reactAppConstants } from '../constants/constants';
 
 class Profile extends Component {
 
     state = {
-        update_sucess:false,
+        updateSuccess:false
     }
 
     componentDidMount() {
-        const user_type = ls.get('user_type');
-        user_type === 'customer' ? (
-            this.props.customer_profile()
+        const userType = ls.get(reactAppConstants.USER_TYPE);
+        userType === reactAppConstants.CUSTOMER ? (
+            this.props.customerProfile()
         ) : (
-            this.props.saloon_profile()
+            this.props.saloonProfile()
         );
     }
 
-    handleChange = (e) => {
+    handleChange = e => {
         let key = e.target.name;
         let val = e.target.value;
-        this.props.user_value_update(key, val);
+        this.props.userValueUpdate(key, val);
     }
-    handleSubmit = (e) => {
+    handleSubmit = e => {
+        this.setState({updateSuccess:false});
         e.preventDefault();
-        const user_type = ls.get('user_type');
-        if (user_type === 'customer') {
-            this.props.update_customer_profile(this.props.user).then(() => {
-                this.props.update_sucess && this.setState({update_sucess:true});
+        const userType = ls.get(reactAppConstants.USER_TYPE);
+        if (userType === reactAppConstants.CUSTOMER) {
+            this.props.updateCustomerProfile(this.props.user).then(() => {
+                this.props.updateStatus && this.setState({updateSuccess:true});
             });
-        } else if (user_type === 'saloon') {
-            this.props.update_saloon_profile(this.props.user);
+        } else if (userType === reactAppConstants.SALOON) {
+            this.props.updateSaloonProfile(this.props.user).then(() => {
+                this.props.updateStatus && this.setState({updateSuccess:true});
+            });
         }
 
     }
 
     render() {
         const { user } = this.props;
-        const user_type = ls.get('user_type');
-        const user_profile = (user && <div style={{ width: '100%' }}>
+        const userType = ls.get(reactAppConstants.USER_TYPE);
+        const userProfile = (user && <div style={{ width: '100%' }}>
             <center><h2>Profile</h2></center>
             <form onSubmit={this.handleSubmit}>
                 <div className="fouser_actionsm-group">
@@ -68,7 +72,7 @@ class Profile extends Component {
                     <label htmlFor="phone_no">Phone No</label>
                     <input required type="number" name='phone_no' onChange={this.handleChange} value={user.phone_no || ''} className="form-control" id="phone_no" placeholder="Enter Phone No" />
                 </div>
-                {user_type === 'saloon' &&
+                {userType === reactAppConstants.SALOON &&
                     <React.Fragment>
                         <div className="form-group">
                             <label htmlFor="shop_name">Shop Name</label>
@@ -82,7 +86,7 @@ class Profile extends Component {
                 <button type="submit" className="btn btn-primary">Submit</button>
             </form>
         </div>);
-        const success_message = this.state.update_sucess &&
+        const successMessage = this.state.updateSuccess &&
             <div className="alert alert-success" role="alert" >
                 Profile Updated!</div>;
         // const error_message = this.state.update_error &&
@@ -90,8 +94,8 @@ class Profile extends Component {
         //     Error Updating Profile!</div>
         return (
             <div className='container' >
-                {success_message}
-                {user_profile}
+                {successMessage}
+                {userProfile}
             </div >
         );
     }
@@ -99,31 +103,33 @@ class Profile extends Component {
 
 Profile.propTypes = {
     user: PropTypes.object.isRequired,
-    update_status:PropTypes.bool.isRequired,
-    customer_profile: PropTypes.func.isRequired,
-    update_customer_profile: PropTypes.func.isRequired,
-    saloon_profile:PropTypes.func.isRequired,
-    update_saloon_profile: PropTypes.func.isRequired,
-    user_value_update: PropTypes.func.isRequired,
-    update_sucess:PropTypes.bool.isRequired
+    updateStatus:PropTypes.bool.isRequired,
+    customerProfile: PropTypes.func.isRequired,
+    updateCustomerProfile: PropTypes.func.isRequired,
+    saloonProfile:PropTypes.func.isRequired,
+    updateSaloonProfile: PropTypes.func.isRequired,
+    userValueUpdate: PropTypes.func.isRequired
 };
 
-const mapStateToProps = (state) => {
-    return {
-        user: state.user.user,
-        update_status: state.user.update_status
-    };
-};
+const mapStateToProps = state =>
+    (
+        {
+            user: state.user.user,
+            updateStatus: state.user.updateStatus
+        }
+    );
 
-const mapDispatchToProps = dispatch => {
-    return {
-        customer_profile: () => dispatch(customer_profile()),
-        update_customer_profile: (data) => dispatch(update_customer_profile(data)),
-        saloon_profile: () => dispatch(saloon_profile()),
-        update_saloon_profile: (data) => dispatch(update_saloon_profile(data)),
-        user_value_update: (key, val) => dispatch(user_value_update(key, val))
-    };
-};
+const mapDispatchToProps = dispatch => 
+    (
+        {
+            customerProfile: () => dispatch(customerProfile()),
+            updateCustomerProfile: (data) => dispatch(updateCustomerProfile(data)),
+            saloonProfile: () => dispatch(saloonProfile()),
+            updateSaloonProfile: (data) => dispatch(updateSaloonProfile(data)),
+            userValueUpdate: (key, val) => dispatch(userValueUpdate(key, val))
+        }   
+    );
+    
 export default compose(
     IsAuthenticated,
     connect(mapStateToProps, mapDispatchToProps)

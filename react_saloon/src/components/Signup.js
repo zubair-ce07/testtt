@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { signup } from '../actions/userActions';
 import PropTypes from 'prop-types';
+import { reactAppConstants } from '../constants/constants';
 
 class Signup extends React.Component {
 
@@ -11,40 +12,40 @@ class Signup extends React.Component {
         password1: null,
         password2: null,
         email: null,
-        user_type: 'customer'
+        user_type: reactAppConstants.CUSTOMER
     }
-    handleChange = (e) => {
+    handleChange = e => {
         let nam = e.target.name;
         let val = e.target.value;
         this.setState({ [nam]: val });
     }
-    handleSubmit = (e) => {
+    handleSubmit = e => {
         e.preventDefault();
         this.props.signup(this.state.username, this.state.email, this.state.password1, this.state.password2, this.state.user_type).then(() => {
-            if (!this.props.signup_failed) {
+            if (!this.props.signupFailed) {
                 this.props.history.push('/login');
             }
 
         });
     }
-    handleTabClick = (e) => {
-        this.setState({ user_type: e.target.id });
+    handleTabClick = e => {
+        this.setState({ [reactAppConstants.USER_TYPE]: e.target.id });
 
     }
 
     render() {
-        let tab_class_customer = ['nav-link'];
-        let tab_class_saloon = ['nav-link'];
+        let tabClassCustomer = ['nav-link'];
+        let tabClassSaloon = ['nav-link'];
         let passwordCheck = this.state.password1 === this.state.password2;
-        if (this.state.user_type === 'customer') {
-            tab_class_customer.push('active');
+        if (this.state.user_type === reactAppConstants.CUSTOMER) {
+            tabClassCustomer.push('active');
         }
         else {
-            tab_class_saloon.push('active');
+            tabClassSaloon.push('active');
         }
         return (
             <div className='container'>
-                {this.props.signup_failed &&
+                {this.props.signupFailed &&
                     <div className="alert alert-danger" role="alert" >
                         Sign Up Failed!</div>}
 
@@ -55,13 +56,13 @@ class Signup extends React.Component {
                             <li style={{
                                 width: '50%'
                             }} className="nav-item">
-                                <Link className={tab_class_customer.join(' ')} onClick={this.handleTabClick} id="customer" to="#">Customer
+                                <Link className={tabClassCustomer.join(' ')} onClick={this.handleTabClick} id="customer" to="#">Customer
                                 Registeration</Link>
                             </li>
                             <li style={{
                                 width: '50%'
                             }} className=" nav-item">
-                                <Link className={tab_class_saloon.join(' ')} id="saloon" onClick={this.handleTabClick} to="#">Saloon Registration</Link>
+                                <Link className={tabClassSaloon.join(' ')} id="saloon" onClick={this.handleTabClick} to="#">Saloon Registration</Link>
                             </li>
                         </ul>
                         <br />
@@ -100,21 +101,24 @@ class Signup extends React.Component {
 }
 
 Signup.propTypes = {
-    signup_failed: PropTypes.bool.isRequired,
+    signupFailed: PropTypes.bool.isRequired,
     signup: PropTypes.func.isRequired,
     history:PropTypes.object.isRequired
 };
 
-const mapStateToPropos = (state) => {
-    return {
-        signup_failed: state.user.signup_failed
-    };
-};
+const mapStateToPropos = state =>
+    (
+        {
+            signupFailed: state.user.signupFailed
+        }
+    );
 
-const mapDispatchToProps = dispatch => {
-    return {
-        signup: (username, email, password1, password2, user_type) => dispatch(signup(username, email, password1, password2, user_type))
-    };
-};
+
+const mapDispatchToProps = dispatch =>
+    (
+        {
+            signup: (username, email, password1, password2, user_type) => dispatch(signup(username, email, password1, password2, user_type))
+        }
+    );
 
 export default connect(mapStateToPropos, mapDispatchToProps)(Signup);
