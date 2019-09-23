@@ -1,13 +1,13 @@
 import React from "react";
 import "./ListItem.css";
 
-const ListItem = props => (
+const ListItem = ({ item: { userDamage, userHeal, opponentDamage } }) => (
   <div className="list-item">
     <li className="list-group-item">
-      {`Damage Recieved: ${props.item.userDamage}  `}
-      {props.item.opponentDamage
-        ? `Damage Given: ${props.item.opponentDamage}`
-        : `Healed: ${props.item.userHeal}`}
+      {`Damage Recieved: ${userDamage}  `}
+      {opponentDamage
+        ? `Damage Given: ${opponentDamage}`
+        : `Healed: ${userHeal}`}
     </li>
   </div>
 );

@@ -1,9 +1,9 @@
 import React from "react";
 import "./ProgressBar.css";
 
-const ProgressBar = props => (
+const ProgressBar = ({percentage}) => (
   <div className="progress-bar">
-    <div className="filler" style={{ width: `${props.percentage}%` }} />
+    <div className="filler" style={{ width: `${percentage}%` }} />
   </div>
 );
 

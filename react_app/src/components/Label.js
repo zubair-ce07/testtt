@@ -1,5 +1,5 @@
 import React from "react";
 
-const Label = props => <label>{props.text}</label>;
+const Label = ({text}) => <label>{text}</label>;
 
 export { Label };
