@@ -31,9 +31,9 @@ export class HotelsResults {
   }
   
   getSearchResults(): ElementArrayFinder {
-    const elm = element(by.id('searchResultsList'));
-    browser.wait(EC.presenceOf(elm));
-    browser.wait(EC.visibilityOf(elm));
+    const searchResultsContainer = element(by.id('searchResultsList'));
+    browser.wait(EC.presenceOf(searchResultsContainer));
+    browser.wait(EC.visibilityOf(searchResultsContainer));
     
     return element.all(by.className('Hotels-Results-HotelResultItem'));
   }

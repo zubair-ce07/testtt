@@ -29,7 +29,7 @@ export class HotelResult {
       .click();
   }
   
-  async closeTabs(): Promise<void> {
+  closeTabs(): void {
     this.container
       .element(by.className(`Hotels-Results-InlineDetailTabs`))
       .element(by.css(`div[id$='-close']`))
