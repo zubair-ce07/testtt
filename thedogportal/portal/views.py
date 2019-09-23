@@ -52,7 +52,9 @@ class ReactionView(APIView):
 
             if(not Downvotes.get_downvotes_object(downvoter, image, owner)):
                 Upvotes.delete_upvotes_object(downvoter, image, owner)
-                downvoted = Downvotes.new_downvotes_instance(downvoter, image, owner)
+                downvoted = Downvotes.new_downvotes_instance(downvoter,
+                                                             image,
+                                                             owner)
                 downvoted.save()
 
         elif(favorite_id):
@@ -61,7 +63,9 @@ class ReactionView(APIView):
             owner = Profile.get_user_by_id(image.owner_id)
 
             if(not Favorites.get_favorites_object(favoriter, image, owner)):
-                favorited = Favorites.new_favorites_instance(favoriter, image, owner)
+                favorited = Favorites.new_favorites_instance(favoriter,
+                                                             image,
+                                                             owner)
                 favorited.save()
             else:
                 Favorites.delete_favorites_object(favoriter, image, owner)
@@ -100,6 +104,7 @@ class DeleteFavorite(APIView):
         else:
             return Response(data={}, status=400)
 
+
 class HomepageView(LoginRequiredMixin, View):
     login_url = reverse_lazy(LOGIN_URL)
     template_name = "home.html"
@@ -134,7 +139,9 @@ class HomepageView(LoginRequiredMixin, View):
 
             if(not Downvotes.get_downvotes_object(downvoter, image, owner)):
                 Upvotes.delete_upvotes_object(downvoter, image, owner)
-                downvoted = Downvotes.new_downvotes_instance(downvoter, image, owner)
+                downvoted = Downvotes.new_downvotes_instance(downvoter,
+                                                             image,
+                                                             owner)
                 downvoted.save()
 
                 messages.add_message(request,
@@ -150,7 +157,9 @@ class HomepageView(LoginRequiredMixin, View):
             owner = Profile.get_user_by_id(image.owner_id)
 
             if(not Favorites.get_favorites_object(favoriter, image, owner)):
-                favorited = Favorites.new_favorites_instance(favoriter, image, owner)
+                favorited = Favorites.new_favorites_instance(favoriter,
+                                                             image,
+                                                             owner)
                 favorited.save()
 
                 messages.add_message(request,
@@ -161,7 +170,9 @@ class HomepageView(LoginRequiredMixin, View):
                 messages.add_message(request,
                                      messages.SUCCESS,
                                      RESPONSES["favorites"]["remove"])
-            return redirect(self.request.path_info, args={}, kwargs={'fav_id': image})
+            return redirect(self.request.path_info,
+                            args={},
+                            kwargs={'fav_id': image})
         else:
             messages.add_message(request,
                                  messages.DANGER,
@@ -179,8 +190,8 @@ class HomepageView(LoginRequiredMixin, View):
             user_profile = Profile.objects.filter(pk=userid)[0]
             if (profile_info_incomplete(user_profile)):
                 messages.add_message(request,
-                                        messages.WARNING,
-                                        RESPONSES["settings"]["warning"])
+                                     messages.WARNING,
+                                     RESPONSES["settings"]["warning"])
 
         return render(request, self.template_name, homepage_context_dict)
 
@@ -189,7 +200,8 @@ def get_random_image(userid):
     upload_count = Uploads.get_id_excluded_upload_count(userid)
 
     if upload_count:
-        random_image = Uploads.get_id_excluded_random_upload(userid, upload_count)
+        random_image = Uploads.get_id_excluded_random_upload(userid,
+                                                             upload_count)
     else:
         random_image = None
 
