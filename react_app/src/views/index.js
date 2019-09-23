@@ -31,7 +31,7 @@ class App extends React.Component {
       return;
     }
 
-    if (action === "Heal") {
+    if (action === GAME_ACTION.heal) {
       if (this.state.userPercentage + heal - userDamage > 100) {
         heal -= this.state.userPercentage + heal - userDamage - 100;
       }

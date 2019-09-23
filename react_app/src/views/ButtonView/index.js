@@ -7,8 +7,8 @@ const ButtonView = props => (
   <div className="button-view">
     {props.status === GAME_STATUS.playing ? (
       <Card>
-        <Button onClick={() => props.handleAction("Attack")} text="Attack" />
-        <Button onClick={() => props.handleAction("Heal")} text="Heal" />
+        <Button onClick={() => props.handleAction(GAME_ACTION.attack)} text="Attack" />
+        <Button onClick={() => props.handleAction(GAME_ACTION.heal)} text="Heal" />
         <Button onClick={props.handleGiveUp} text="Give Up" />
       </Card>
     ) : (
