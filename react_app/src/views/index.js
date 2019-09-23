@@ -65,8 +65,8 @@ class App extends React.Component {
     const status =
       action === GAME_ACTION.start ? GAME_STATUS.playing : GAME_STATUS.start;
     this.setState({
-      userPercentage: this.health,
-      opponentPercentage: this.health,
+      userPercentage: 100,
+      opponentPercentage: 100,
       moves: [],
       status
     });
