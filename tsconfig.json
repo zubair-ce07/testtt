@@ -8,7 +8,7 @@
     "removeComments": false,
     "noImplicitAny": false,
     "outDir": "dist",
-    "types": ["jasmine", "node"]
+    "types": ["mocha", "node"]
   },
   "exclude": [
     "node_modules"

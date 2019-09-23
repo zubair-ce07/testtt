@@ -1,31 +1,36 @@
 {
-  "name": "the-lab",
+  "name": "flight-search",
   "version": "1.0.0",
   "description": "kayak sanity app",
   "main": "config.js",
   "scripts": {
     "pretest": "npm run tsc",
-    "test": "protractor dist/config.js",
+    "test": "protractor dist/config.js --params.site_url=$site_url",
     "tsc": "tsc"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/arbisoft/the-lab.git"
   },
-  "author": "",
+  "author": "sehrish naveed",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/arbisoft/the-lab/issues"
   },
   "homepage": "https://github.com/arbisoft/the-lab#readme",
   "dependencies": {
-    "@types/jasmine": "^3.4.0",
+    "@types/mocha": "^5.2.7",
     "@types/node": "^12.7.2",
     "babel": "^6.23.0",
     "babel-polyfill": "^6.26.0",
     "babel-preset-env": "^1.7.0",
     "babel-preset-es2015": "^6.24.1",
     "babel-register": "^6.26.0",
+    "chai-as-promised": "^7.1.1",
     "protractor": "^5.4.2"
+  },
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "mocha": "^6.2.0"
   }
 }

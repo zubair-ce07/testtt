@@ -44,7 +44,6 @@ class HotelSearchResultPageObject {
         const titleLink = this.getFirstHotelTitle();
         await titleLink.click();
         const clickedHotelTitle = await titleLink.getText();
-        console.log(`hotel title clicked: "${clickedHotelTitle}"`);
 
         const hotelDetailSection = getElementByCSS(this.singleHotelSelector);
         waitForElementPresence(hotelDetailSection, 10000, 'Timeout Error! Unable to load first hotel detail in selected origin');
@@ -77,7 +76,6 @@ class HotelSearchResultPageObject {
         const tab = this.getFirstHotelTab(tabName);
         const tabId = await tab.getAttribute("id");
         await element(by.css(`[id=${tabId}]`)).click();
-        console.log(`${tabName} tab is clicked"`);
     };
 
     getTabContent = (tabName): ElementFinder => {
@@ -141,7 +139,6 @@ class HotelSearchResultPageObject {
     waitForGoToMapVisibility = (): void => {
         const mapContent = getElementByCSS(this.goToMapSelector);
         waitForElementVisibility(mapContent, 10000, `Timeout Error! Large Map is taking too long to appear`);
-        console.log('map content displayed');
     };
 }
 
