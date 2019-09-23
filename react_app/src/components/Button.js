@@ -1,9 +1,12 @@
 import React from "react";
 
-const Button = props => (
-  <button className="ui basic button" onClick={props.onClick}>
-    {props.text}
-  </button>
-);
+const Button = props => {
+  const { onClick, text } = props;
+  return (
+    <button className="ui basic button" onClick={onClick}>
+      {text}
+    </button>
+  );
+};
 
 export { Button };
