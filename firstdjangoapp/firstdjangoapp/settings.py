@@ -16,6 +16,7 @@ INSTALLED_APPS = [
     'crispy_forms',
     'shopcity',
     'users',
+    'payment',
 ]
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -32,7 +33,8 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
             os.path.join(BASE_DIR, "shopcity/templates/shopcity/"),
-            os.path.join(BASE_DIR, "users/templates/users/")
+            os.path.join(BASE_DIR, "users/templates/users/"),
+            os.path.join(BASE_DIR, "payment/templates/payment/")
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -71,6 +73,8 @@ CRISPY_TEMPLATE_PACK = 'bootstrap4'
 LOGIN_REDIRECT_URL = '/shopcity/search/'
 LOGIN_URL = '/user/login/'
 NUMBER_OF_CATEGORIES_BREADCRUMB = 3
+STRIPE_SECRET_KEY = 'sk_test_zoLG0SUH6VmaPxUPwbK9ERwd00YxITlV5k'
+STRIPE_PUBLISHABLE_KEY = 'pk_test_JGbAtkVRuLW3TiCOLZWlHYE400UQhxK4Yq'
 
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
