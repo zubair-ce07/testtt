@@ -12,6 +12,7 @@ import MyReservations from './MyReservations';
 
 import { logout } from '../actions/userActions';
 import { reactAppConstants } from '../constants/constants';
+import { routeConstants } from '../constants/routeConstants';
 
 class Navbar extends React.Component {
     navBarStyle = {
@@ -28,24 +29,24 @@ class Navbar extends React.Component {
     nav_bar_elements = this.token ? (
         <React.Fragment>
             <li className="nav-item active">
-                <Link className="nav-link" to='/myreservations'> My Reservations <span className=" sr-only">(current)</span></Link>
+                <Link className="nav-link" to={routeConstants.MY_RESERVATIONS_ROUTE}> My Reservations <span className=" sr-only">(current)</span></Link>
             </li>
             {this.userType === reactAppConstants.SALOON && <li className="nav-item active">
-                <Link className="nav-link" to='/mysaloon'> My Saloon <span className=" sr-only">(current)</span></Link>
+                <Link className="nav-link" to={routeConstants.MY_SALOON_ROUTE}> My Saloon <span className=" sr-only">(current)</span></Link>
             </li>}
             <li className="nav-item active">
-                <Link className="nav-link" to='/profile'> Profile <span className=" sr-only">(current)</span></Link>
+                <Link className="nav-link" to={routeConstants.PORFILE_ROUTE}> Profile <span className=" sr-only">(current)</span></Link>
             </li>
             <li className="nav-item active">
-                <Link className="btn btn-outline-danger" onClick={this.logout} to='/login'> Logout <span className=" sr-only">(current)</span></Link>
+                <Link className="btn btn-outline-danger" onClick={this.logout} to={routeConstants.LOGIN_ROUTE}> Logout <span className=" sr-only">(current)</span></Link>
             </li>
         </React.Fragment>
     ) : (<React.Fragment>
         <li className="nav-item active">
-            <Link className="nav-link" to='/login'> Login <span className=" sr-only">(current)</span></Link>
+            <Link className="nav-link" to={routeConstants.LOGIN_ROUTE}> Login <span className=" sr-only">(current)</span></Link>
         </li>
         <li className="nav-item active">
-            <Link className="nav-link" to='/signup'>Register
+            <Link className="nav-link" to={routeConstants.SIGNUP_ROUTE}>Register
                 <span className=" sr-only">(current)</span></Link>
         </li>
     </React.Fragment>)
@@ -54,7 +55,7 @@ class Navbar extends React.Component {
         return (
             <div className='navbar compoent_container' >
                 <nav className="navbar navbar-expand-sm bg-primary navbar-dark" style={this.navBarStyle}>
-                    <Link className="navbar-brand" to="/">Saloons</Link>
+                    <Link className="navbar-brand" to={routeConstants.LIST_SALOONS_ROUTE}>Saloons</Link>
                     <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
                         aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                         <span className="navbar-toggler-icon"></span>
@@ -74,11 +75,11 @@ class Navbar extends React.Component {
                     </div>
                 </nav >
                 <Switch>
-                    <Route exact path='/' component={ListSaloon} />
-                    <Route exact path='/profile/' component={Profile} />
-                    <Route exact path='/mysaloon/' component={MySaloon} />
-                    <Route exact path='/myreservations/' component={MyReservations} />
-                    <Route path="/:shop_name/" component={SlotList} />
+                    <Route exact path={routeConstants.LIST_SALOONS_ROUTE} component={ListSaloon} />
+                    <Route exact path={routeConstants.PORFILE_ROUTE} component={Profile} />
+                    <Route exact path={routeConstants.MY_SALOON_ROUTE} component={MySaloon} />
+                    <Route exact path={routeConstants.MY_RESERVATIONS_ROUTE} component={MyReservations} />
+                    <Route path={routeConstants.SLOT_LIST_ROUTE} component={SlotList} />
                 </Switch>
             </div >
 
@@ -89,10 +90,11 @@ class Navbar extends React.Component {
 }
 
 Navbar.propTypes = {
-    logout: PropTypes.func.isRequired
+    logout: PropTypes.func.isRequired,
+    match: PropTypes.object.isRequired
 };
 
-const mapDispatchToProps = dispatch => 
+const mapDispatchToProps = dispatch =>
     (
         {
             logout: () => dispatch(logout())

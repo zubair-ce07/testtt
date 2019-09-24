@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { login } from '../actions/userActions';
 import PropTypes from 'prop-types';
+import { routeConstants } from '../constants/routeConstants';
 
 
 class Login extends React.Component {
@@ -22,7 +23,7 @@ class Login extends React.Component {
         e.preventDefault();
         this.props.login(this.state.username, this.state.password).then(() => {
             if (!this.props.LoginFailed) {
-                this.props.history.push('/');
+                this.props.history.push(routeConstants.LIST_SALOONS_ROUTE);
             }
         });
     };
@@ -49,7 +50,7 @@ class Login extends React.Component {
                             </div>
                             <button type="submit" className="btn btn-primary">Login</button>
                             <br /><br />
-                            <Link to='signup'>Signup</Link>
+                            <Link to={routeConstants.SIGNUP_ROUTE}>Signup</Link>
                         </form>
                     </div>
                 </div>
