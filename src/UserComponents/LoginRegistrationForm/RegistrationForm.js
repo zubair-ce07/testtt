@@ -41,12 +41,6 @@ class SignUpForm extends React.Component {
         });
     };
 
-    handleChange = event => {
-        event.preventDefault();
-        const {value, name} = event.target;
-        this.setState({[name]: value});
-    };
-
     render() {
         const {classes} = this.props;
 

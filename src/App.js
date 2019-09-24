@@ -3,13 +3,13 @@ import UserLoginRegistrationForm from './UserComponents/LoginRegistrationForm/Fo
 import './App.css'
 
 class App extends React.Component {
-  render() {
-    return (
-        <div id='app' >
-            <UserLoginRegistrationForm />
-        </div>
-    );
-  }
+    render() {
+        return (
+            <div id='app'>
+                <UserLoginRegistrationForm/>
+            </div>
+        );
+    }
 }
 
 export default App;
