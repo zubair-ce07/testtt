@@ -12,6 +12,7 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import withStyles from "@material-ui/core/styles/withStyles";
 import PropTypes from "prop-types";
+import {formatDate} from "../../Utils/Utils";
 
 const styles = theme => ({
     card: {
@@ -41,17 +42,12 @@ class profileHeader extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            'open': false,
+            open: false,
         }
     }
 
     handleClick = () => {
-        this.setState({'open': !this.state.open});
-    };
-
-    formatDate = date => {
-        const options = {year: 'numeric', month: 'long', day: 'numeric'};
-        return 'Born: ' + date.toLocaleDateString('en-US', options);
+        this.setState({open: !this.state.open});
     };
 
     header = (name, classes) => {
@@ -64,7 +60,7 @@ class profileHeader extends React.Component {
                 }
 
                 title={name}
-                subheader={this.formatDate(new Date(this.props.profileInfo.date_of_birth))}
+                subheader={formatDate(new Date(this.props.profileInfo.date_of_birth))}
             />
         )
     };

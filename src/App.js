@@ -1,11 +1,10 @@
 import React from 'react';
-import './App.css';
+import Container from '@material-ui/core/Container'
 import AppSidebar from './SharedComponents/AppSidebar/AppSidebar'
 import Profile from './UserComponents/Profile/profile'
-import Container from '@material-ui/core/Container'
+import './App.css';
 
-
-function App() {
+const App = () => {
     return (
         <div className="App">
             <AppSidebar/>
@@ -14,6 +13,6 @@ function App() {
             </Container>
         </div>
     );
-}
+};
 
 export default App;

@@ -1,11 +1,11 @@
 import React from 'react';
-import axios from 'axios';
-import ProfileHeader from './ProfileHeader/profileHeader'
-import withStyles from "@material-ui/core/styles/withStyles";
-import SideInformationBar from "./SideBar/SideInformationBar";
-import NewPost from "../../PostComponents/NewPost/NewPost";
-import {CircularProgress} from "@material-ui/core";
-import PropTypes from "prop-types";
+import PropTypes from 'prop-types';
+import {CircularProgress} from '@material-ui/core';
+import withStyles from '@material-ui/core/styles/withStyles';
+import SideInformationBar from './SideInformationBar';
+import ProfileHeader from './profileHeader'
+import NewPost from '../../PostComponents/NewPost/NewPost';
+import {UserProfileAPI} from '../../APIClient/APIClient';
 
 const styles = theme => ({
     header: {
@@ -29,13 +29,13 @@ class Profile extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            'userprofile': null,
-            'links': null
+            userprofile: null,
+            links: null
         }
     }
 
     getUserData = () => {
-        axios.get('http://localhost:8000/api/users/6/')
+        UserProfileAPI()
             .then(response => {
                 let links = {
                     'academic_information_url': response.data['academic_information_url'],
@@ -45,8 +45,8 @@ class Profile extends React.Component {
                 delete response.data['work_information_url'];
 
                 this.setState({
-                    'userprofile': response.data,
-                    'links': links
+                    userprofile: response.data,
+                    links: links
                 });
             })
     };

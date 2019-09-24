@@ -19,7 +19,6 @@ import Avatar from "@material-ui/core/Avatar";
 import Container from "@material-ui/core/Container";
 
 import Image from 'material-ui-image'
-import ImageUploader from 'react-images-upload';
 
 const styles = theme => ({
     card: {

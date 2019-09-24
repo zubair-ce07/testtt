@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from "prop-types";
 import axios from 'axios';
 import {withStyles} from '@material-ui/core/styles';
 import ListSubheader from '@material-ui/core/ListSubheader';
@@ -13,9 +14,9 @@ import WorkIcon from '@material-ui/icons/Work';
 import ExpandLess from '@material-ui/icons/ExpandLess';
 import ExpandMore from '@material-ui/icons/ExpandMore';
 import FriendIcon from '@material-ui/icons/EmojiPeople';
-import {Card, CircularProgress, Typography} from "@material-ui/core";
+import {Card, Typography} from "@material-ui/core";
 import CardContent from "@material-ui/core/CardContent";
-import PropTypes from "prop-types";
+import {AcademicInformationAPI, FriendListAPI, GroupDataAPI, WorkInformationAPI} from "../../APIClient/APIClient";
 
 const styles = theme => ({
     root: {
@@ -32,67 +33,67 @@ class SideInformationBar extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            'Groups': false,
-            'WorkInformations': false,
-            'AcademicInformations': false,
-            'Friends': false,
-            'groups': [],
-            'work_informations': [],
-            'academic_informations': [],
-            'friends': [],
+            Groups: false,
+            WorkInformations: false,
+            AcademicInformations: false,
+            Friends: false,
+            groups: [],
+            work_informations: [],
+            academic_informations: [],
+            friends: [],
         }
     }
 
     handleClickGroup = () => {
-        this.setState({'Groups': !this.state.Groups});
+        this.setState({Groups: !this.state.Groups});
     };
 
     handleClickAcademicInformation = () => {
-        this.setState({'AcademicInformations': !this.state.AcademicInformations});
+        this.setState({AcademicInformations: !this.state.AcademicInformations});
     };
 
     handleClickWorkInformation = () => {
-        this.setState({'WorkInformations': !this.state.WorkInformations});
+        this.setState({WorkInformations: !this.state.WorkInformations});
     };
 
     handleClickFriend = () => {
-        this.setState({'Friends': !this.state.Friends});
+        this.setState({Friends: !this.state.Friends});
     };
 
     fetchGroupData = () => {
-        axios.get('http://localhost:8000/api/users/6/group-join/')
+        GroupDataAPI()
             .then(response => {
                 this.setState({
-                    'groups': response.data
+                    groups: response.data
                 });
             })
     };
     fetchWorkInformationData = link => {
-        axios.get('http://localhost:8000' + link)
+        WorkInformationAPI(link)
             .then(response => {
                 this.setState({
-                    'work_informations': response.data
+                    work_informations: response.data
                 });
             });
     };
     fetchAcademicInformationData = link => {
-        axios.get('http://localhost:8000' + link)
+        AcademicInformationAPI(link)
             .then(response => {
                 this.setState({
-                    'academic_informations': response.data
+                    academic_informations: response.data
                 });
             })
     };
     fetchFriendListData = () => {
-        axios.get('http://localhost:8000/api/users/6/friends/')
+        FriendListAPI()
             .then(response => {
                 this.setState({
-                    'friends': response.data
+                    friends: response.data
                 });
             })
     };
 
-    UNSAFE_componentWillMount() {
+    componentDidMount() {
         this.fetchGroupData();
         this.fetchFriendListData();
         this.fetchWorkInformationData(this.props.links['work_information_url']);
