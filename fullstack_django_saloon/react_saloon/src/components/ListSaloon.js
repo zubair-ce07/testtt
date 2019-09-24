@@ -5,6 +5,12 @@ import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { fetchSaloons } from '../actions/saloonActions';
 import { reactAppConstants } from '../constants/constants';
+import { routeConstants } from '../constants/routeConstants';
+import Typography from '@material-ui/core/Typography';
+import Button from '@material-ui/core/Button';
+import Card from '@material-ui/core/Card';
+import CardContent from '@material-ui/core/CardContent';
+import CardActions from '@material-ui/core/CardActions';
 
 class ListSaloon extends React.Component {
     cardStyle = {
@@ -20,22 +26,35 @@ class ListSaloon extends React.Component {
         const { saloons } = this.props;
         const saloonsList = saloons.length > 0 ? (
             saloons.map(saloon => saloon.shop_name ? (
-                <div className="card" style={this.cardStyle} key={saloon.id}>
-                    <div className="card-header">
-                        {saloon.shop_name}
-                    </div>
-                    <div className="card-body">
-                        <h5 className="card-title">Phone No : {saloon.phone_no}</h5>
-                        <p className="card-text">Address : {saloon.address}</p>
+                <Card style={this.cardStyle} key={saloon.id}>
+                    <CardContent>
+                        <Typography gutterBottom variant="h5" component="h2">
+                            {saloon.shop_name}
+                        </Typography>
+                        <Typography variant="h6" component="h2">
+                            Phone No : {saloon.phone_no}
+                        </Typography>
+                        <Typography variant="h6" component="h2">
+                            Address : {saloon.address}
+                        </Typography>
+                    </CardContent>
+                    <CardActions>
                         {
                             ls.get('token') ? (
-                                ls.get(reactAppConstants.USER_TYPE) === reactAppConstants.CUSTOMER ? (<Link to={'/' + saloon.shop_name} className="btn btn-primary" >Reserve a time slot</Link>) : (false)
+                                ls.get(reactAppConstants.USER_TYPE) === reactAppConstants.CUSTOMER ? (
+                                    <Button size="small" color="primary">
+                                        <Link to={routeConstants.LIST_SALOONS_ROUTE+ saloon.shop_name} >Reserve a time slot</Link>
+                                    </Button>) : (false)
                             ) : (
-                                <Link to="/login" className="btn btn-primary" >Login to Reserve a time slot</Link>
+                                <Button size="small" color="primary">
+                                    <Link to={routeConstants.LOGIN_ROUTE} >Login to Reserve a time slot</Link>
+                                </Button>
                             )
                         }
-                    </div>
-                </div >) : (false)
+                    </CardActions>
+                </Card>
+
+            ) : (false)
             )
         ) : (
             this.props.successStatus ? (

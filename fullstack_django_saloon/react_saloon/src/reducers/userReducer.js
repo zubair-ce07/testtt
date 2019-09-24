@@ -32,7 +32,7 @@ const userReducer = (state = initState, action) => {
             ...state,
             signupFailed: false
         };
-    case actionTypes.SIGNUPFAILED:
+    case actionTypes.SIGNUP_FAILED:
         return {
             ...state,
             signupFailed: true

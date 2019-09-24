@@ -4,6 +4,7 @@ import { REACT_APP_API_ENDPOINT_BASE_URL } from '../constants/config';
 import { actionTypes } from '../constants/actionsTypeConstants';
 import { apiEndPoints } from '../constants/apiEndPoints';
 import { reactAppConstants } from '../constants/constants';
+import { routeConstants } from '../constants/routeConstants';
 
 export const login = (username, password) =>
     dispatch =>
@@ -19,11 +20,12 @@ export const login = (username, password) =>
             return err;
         });
 
-export const logout = () =>
+export const logout = (history) =>
     dispatch =>
         makeGetCallWithHeader(makeApiUrl(REACT_APP_API_ENDPOINT_BASE_URL,apiEndPoints.API_LOGOUT), { headers: { [reactAppConstants.AUTHORIZATION]: getTokenHeader() } }).then((response) => {
             ls.clear();
             dispatch({ type: actionTypes.LOGOUT_SUCCESSFUL });
+            history.push(routeConstants.LOGIN_ROUTE);
             return response;
         }).catch((err) => {
             dispatch({ type: actionTypes.LOGOUT_FAILED });

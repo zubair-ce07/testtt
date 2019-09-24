@@ -4,6 +4,15 @@ import { Link } from 'react-router-dom';
 import { login } from '../actions/userActions';
 import PropTypes from 'prop-types';
 import { routeConstants } from '../constants/routeConstants';
+import { Container } from '@material-ui/core';
+import Card from '@material-ui/core/Card';
+import TextField from '@material-ui/core/TextField';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import Button from '@material-ui/core/Button';
+import Typography from '@material-ui/core/Typography';
+
+
 
 
 class Login extends React.Component {
@@ -14,6 +23,12 @@ class Login extends React.Component {
         username: null,
         password: null
     }
+
+    textieldStyle = {
+        width: '100%'
+    }
+      
+
     handleChange = (e) => {
         let nam = e.target.name;
         let val = e.target.value;
@@ -25,6 +40,9 @@ class Login extends React.Component {
             if (!this.props.LoginFailed) {
                 this.props.history.push(routeConstants.LIST_SALOONS_ROUTE);
             }
+            else{
+                toast.error('Login Failed!');
+            }
         });
     };
 
@@ -32,29 +50,45 @@ class Login extends React.Component {
 
 
         return (
-            <div className='container'>
-                {this.props.LoginFailed &&
-                    <div className="alert alert-danger" role="alert" >
-                        Login Failed!</div>}
-                <div className="card" style={this.cardStyle}>
+            <Container maxWidth="sm">
+                <ToastContainer />
+                <Card style={this.cardStyle}>
                     <div className="card-body">
-                        <center><h2>Login</h2></center>
+                        <Typography variant="h4">
+                                Login
+                        </Typography>
                         <form onSubmit={this.handleSubmit}>
-                            <div className="form-group">
-                                <label htmlFor="exampleInputEmail1">Username</label>
-                                <input name='username' required type="text" onChange={this.handleChange} className="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Enter email" />
-                            </div>
-                            <div className="form-group">
-                                <label htmlFor="exampleInputPassword1">Password</label>
-                                <input name='password' required type="password" onChange={this.handleChange} className="form-control" id="exampleInputPassword1" placeholder="Password" />
-                            </div>
-                            <button type="submit" className="btn btn-primary">Login</button>
+                            <TextField
+                                id="outlined-username"
+                                label="Username"
+                                name="username"
+                                style={this.textieldStyle}
+                                required
+                                onChange={this.handleChange}
+                                margin="normal"
+                                variant="outlined"
+                                type='text'
+                            />
+                            <TextField
+                                id="outlined-password"
+                                label="Password"
+                                required
+                                name="password"
+                                style={this.textieldStyle}
+                                onChange={this.handleChange}
+                                margin="normal"
+                                variant="outlined"
+                                type='password'
+                            />
+                            <Button type="submit" variant="contained" color="primary">
+                                Login
+                            </Button>
                             <br /><br />
                             <Link to={routeConstants.SIGNUP_ROUTE}>Signup</Link>
                         </form>
                     </div>
-                </div>
-            </div>
+                </Card>
+            </Container>
         );
     }
 }
