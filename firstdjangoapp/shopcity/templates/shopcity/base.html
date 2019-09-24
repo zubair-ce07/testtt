@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>ShopCity</title>
 </head>
+
 <body>
 <header>
   <div class="navbar navbar-dark bg-dark shadow-sm">
@@ -13,9 +15,33 @@
         <a href="/shopcity/search/" class="navbar-brand d-flex align-items-center">
             <strong>ShopCity</strong>
         </a>
+        <div class="navbar-nav my-2 my-lg-0">
+            {% if user.is_authenticated %}
+            <div class="login-view row">
+                {% if not user.is_superuser %}
+                <a class="nav-item nav-link" href="/user/cart">View Cart</a>
+                                    &nbsp;&nbsp;
+                {% endif %}
+                <a class="nav-item nav-link" href="/user/profile">Profile</a>
+                &nbsp;&nbsp;
+                <a class="nav-item nav-link" href="/user/logout">Logout</a>
+            </div>
+            {% else %}
+                <div class="login-view row">
+                    {% if not user.is_superuser %}
+                    <a class="nav-item nav-link" href="/user/profile">View Cart</a>
+                                        &nbsp;&nbsp;
+                    {% endif %}
+                    <a class="nav-item nav-link" href="/user/login">Login</a>
+                    &nbsp;&nbsp;
+                    <a class="nav-item nav-link" href="/user/signup">Register</a>
+                </div>
+            {% endif %}
+        </div>
     </div>
   </div>
 </header>
+
 <main role="main">
   <div class="shopcity py-5 bg-light">
     <div class="container-fluid">
@@ -25,6 +51,13 @@
         <div class="col-10">
           <div class="card mb-4 shadow-sm">
             <div class="card-body">
+                {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+                {% endif %}
                 {% block content %}
                 <h1> ShopCity </h1>
                 {% endblock content %}
@@ -37,8 +70,10 @@
     </div>
   </div>
 </main>
+
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
 </body>
 </html>
