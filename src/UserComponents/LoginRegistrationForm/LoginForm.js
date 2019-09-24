@@ -1,28 +1,9 @@
 import React from 'react';
-import axios from 'axios';
-import Button from '@material-ui/core/Button';
-import CssBaseline from '@material-ui/core/CssBaseline';
-import TextField from '@material-ui/core/TextField';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
-import Checkbox from '@material-ui/core/Checkbox';
-import Link from '@material-ui/core/Link';
-import Grid from '@material-ui/core/Grid';
-import Box from '@material-ui/core/Box';
-import Typography from '@material-ui/core/Typography';
-import Container from '@material-ui/core/Container';
 import PropTypes from "prop-types";
+import {Box, Button, Container, CssBaseline, Grid, Link, TextField} from '@material-ui/core';
 import withStyles from "@material-ui/core/styles/withStyles";
-
-function Copyright() {
-    return (
-        <Typography variant="body2" color="textSecondary" align="center">
-            {'Copyright © '}
-            Social App
-            {new Date().getFullYear()}
-            {'.'}
-        </Typography>
-    );
-}
+import {Copyright} from "../../Utils/Utils";
+import {loginAPI} from "../../APIClient/APIClient";
 
 const styles = theme => ({
     '@global': {
@@ -50,14 +31,6 @@ const styles = theme => ({
 });
 
 class LoginForm extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            'username': '',
-            'password': ''
-        }
-    }
-
     handleSubmit = event => {
         event.preventDefault();
         const body = new FormData(event.target);
@@ -65,16 +38,9 @@ class LoginForm extends React.Component {
         body.forEach((value, name) => {
             data[name] = value;
         });
-        axios.post('http://localhost:8000/api/users/rest-auth/login/', data
-        ).then(response => {
+        loginAPI.then(response => {
             console.log(response.data);
         });
-    };
-
-    handleChange = event => {
-        event.preventDefault();
-        const {value, name} = event.target;
-        this.setState({[name]: value});
     };
 
     render() {
@@ -94,8 +60,6 @@ class LoginForm extends React.Component {
                             name="username"
                             autoComplete="email"
                             autoFocus
-                            value={this.state.username}
-                            onChange={this.handleChange}
                         />
                         <TextField
                             variant="outlined"
@@ -107,12 +71,6 @@ class LoginForm extends React.Component {
                             type="password"
                             id="password"
                             autoComplete="current-password"
-                            value={this.state.password}
-                            onChange={this.handleChange}
-                        />
-                        <FormControlLabel
-                            control={<Checkbox value="remember" color="primary"/>}
-                            label="Remember me"
                         />
                         <Button
                             type="submit"

@@ -1,31 +1,12 @@
-import React from 'react';
-import Button from '@material-ui/core/Button';
-import CssBaseline from '@material-ui/core/CssBaseline';
-import TextField from '@material-ui/core/TextField';
-import Grid from '@material-ui/core/Grid';
-import Box from '@material-ui/core/Box';
-import Typography from '@material-ui/core/Typography';
-import Container from '@material-ui/core/Container';
-import PropTypes from "prop-types";
-import withStyles from "@material-ui/core/styles/withStyles";
 import 'date-fns';
 import DateFnsUtils from '@date-io/date-fns';
-import {
-    MuiPickersUtilsProvider,
-    KeyboardDatePicker,
-} from '@material-ui/pickers';
-import axios from "axios";
-
-function Copyright() {
-    return (
-        <Typography variant="body2" color="textSecondary" align="center">
-            {'Copyright © '}
-            Social App
-            {new Date().getFullYear()}
-            {'.'}
-        </Typography>
-    );
-}
+import React from 'react';
+import PropTypes from "prop-types";
+import {Box, Button, Container, CssBaseline, Grid, TextField,} from '@material-ui/core';
+import withStyles from "@material-ui/core/styles/withStyles";
+import {KeyboardDatePicker, MuiPickersUtilsProvider,} from '@material-ui/pickers';
+import {Copyright} from "../../Utils/Utils";
+import {registerAPI} from "../../APIClient/APIClient";
 
 const styles = theme => ({
     '@global': {
@@ -48,12 +29,6 @@ const styles = theme => ({
 });
 
 class SignUpForm extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-        }
-    }
-
     handleSubmit = event => {
         event.preventDefault();
         const body = new FormData(event.target);
@@ -61,16 +36,15 @@ class SignUpForm extends React.Component {
         body.forEach((value, name) => {
             data[name] = value;
         });
-        axios.post('http://localhost:8000/api/users/', data
-        ).then(response => {
-            alert(response);
+        registerAPI.then(response => {
+            console.log(response.data);
         });
     };
 
     handleChange = event => {
         event.preventDefault();
         const {value, name} = event.target;
-        this.setState({ [name]: value});
+        this.setState({[name]: value});
     };
 
     render() {
