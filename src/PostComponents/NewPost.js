@@ -8,7 +8,7 @@ const styles = theme => ({
         width: 460,
         padding: '2%',
     },
-    post_button: {
+    postButton: {
         marginLeft: 'auto',
         color: '#F3FDF9',
         backgroundColor: '#4AA8E0'
@@ -24,7 +24,7 @@ const styles = theme => ({
         marginRight: '5%',
         marginBottom: 'auto',
     },
-    text_field: {
+    textField: {
         margin: 'auto',
     },
     form: {
@@ -45,26 +45,26 @@ class NewPost extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            post_text: '',
+            postText: '',
         }
     }
 
     handlePostTextChange = event => {
         event.preventDefault();
         this.setState({
-            post_text: event.target.value
+            postText: event.target.value
         })
     };
 
     createPost = event => {
         event.preventDefault();
-        if (this.state.post_text.length > 0) {
-            let post_data = new FormData();
-            post_data.append('user', '6');
-            post_data.append('text', this.state.post_text);
-            this.props.addPost(post_data);
+        if (this.state.postText.length > 0) {
+            let postData = new FormData();
+            postData.append('user', '6');
+            postData.append('text', this.state.postText);
+            this.props.addPost(postData);
             this.setState({
-                post_text: ''
+                postText: ''
             });
         }
     };
@@ -84,7 +84,7 @@ class NewPost extends React.Component {
                             R
                         </Avatar>
                         <TextField
-                            className={classes.text_field}
+                            className={classes.textField}
                             variant="outlined"
                             fullWidth
                             multiline
@@ -92,14 +92,14 @@ class NewPost extends React.Component {
                             onChange={this.handlePostTextChange}
                             label="Whats on your mind..."
                             name="post"
-                            value={this.state.post_text}
+                            value={this.state.postText}
                         />
                     </Container>
                 </CardContent>
 
 
                 <CardActions disableSpacing>
-                    <Button className={classes.post_button} onClick={this.createPost}>
+                    <Button className={classes.postButton} onClick={this.createPost}>
                         Post
                     </Button>
                 </CardActions>

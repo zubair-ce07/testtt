@@ -69,8 +69,8 @@ class NewsFeed extends React.Component {
     deletePost = post => {
         deletePostDB(post).then(response => {
             this.setState(state => {
-                const posts = state.posts.filter(existing_post => {
-                    return post.id !== existing_post.id
+                const posts = state.posts.filter(existingPost => {
+                    return post.id !== existingPost.id
                 });
                 return {
                     posts

@@ -75,8 +75,8 @@ class Post extends React.Component {
     deleteComment = comment => {
         deleteCommentDB(comment).then(response => {
             this.setState(state => {
-                const comments = state.comments.filter(existing_comment => {
-                    return comment.id !== existing_comment.id
+                const comments = state.comments.filter(existingComment => {
+                    return comment.id !== existingComment.id
                 });
                 return {
                     comments: comments
