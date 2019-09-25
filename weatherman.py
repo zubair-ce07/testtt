@@ -1,123 +1,152 @@
+import os
 import csv
 import glob
 from datetime import datetime
 
 
+class WeatherAnalysis:
+    
+    def __init__(self, weather_reading):
+        if weather_reading:
+            if weather_reading['PKT']:
+                self.full_date = weather_reading['PKT'] 
+                self.date_split = weather_reading['PKT'].split('-')
+                self.day = int(self.date_split[2])
+            if weather_reading['Max TemperatureC']:
+                self.max_temp = int(weather_reading['Max TemperatureC'])
+            
+            if weather_reading['Min TemperatureC']:
+                self.min_temp = int(weather_reading['Min TemperatureC'])
+            if weather_reading[' Mean Humidity']:
+                self.mean_humidity = int(weather_reading[' Mean Humidity'])
+            if weather_reading['Max Humidity']:
+                self.max_humidity = int(weather_reading['Max Humidity'])
 
-
+        
 class WeatherReport:
     def __init__(self):
         print('')
 
-    def chart_report_bonus(self, file_data):
-
-        for file_rows in file_data:
-            file_value = 0
-            file_value2 = 0
-            if file_rows["Max TemperatureC"] != "":
-                to_convert = file_rows["Max TemperatureC"]
-                file_value = int(to_convert)
-                split_date = file_rows["PKT"].split("-")
-                get_day = split_date[2]
-                print(get_day, end="")
-                for max_temp_count in range(file_value):
-                    print("\033[1;31m+\033[1;m", end="")
-            if file_rows["Min TemperatureC"] != "":
-                to_convert = file_rows["Min TemperatureC"]
-                file_value2 = int(to_convert)
-                if file_value2 < 0:
-                    for min_temp_count in range(abs(file_value2)):
-                        print("\033[1;34m-\033[1;m", end="")
+    def display_month_bar_chart(self, file_data):
+         
+        for data_row in file_data:
+            max_value = data_row.max_temp
+            min_value = data_row.min_temp
+            date = data_row.day
+            print(date, end="")
+            for value in range(max_value):
+                print("\033[1;31m+\033[1;m", end="")
+            
+            if min_value < 0:
+                for value in range(abs(min_value)):
+                    print("\033[1;34m-\033[1;m", end="")
                     
-                for min_temp_count in range(file_value2):
-                    print("\033[1;34m+\033[1;m", end="")
-            print(file_value, end="")
+            for value in range(min_value):
+                print("\033[1;34m+\033[1;m", end="")
+            print(max_value, end="")
             print("C- ", end="")
-            print(file_value2, end="")
+            print(min_value, end="")
             print("C")
 
-    def monthly_report(self, file_data):
-        high_temp = self.required_info_from_file(file_data, "Mean TemperatureC", True)
-        print("Highest Average : {}C".format(high_temp["Mean TemperatureC"]))
+    def display_monthly_report(self, file_data):
+        high_temp = self.get_max_temp(file_data)
+        print("Highest Average : {}C".format(high_temp))
 
-        low_temp = self.required_info_from_file(file_data, "Mean TemperatureC", False)
-        print("Lowest Average : {}C".format(low_temp["Mean TemperatureC"]))
+        low_temp = self.get_min_temp(file_data)
+        print("Lowest Average : {}C".format(low_temp))
 
-        mean_humidity = self.required_info_from_file(file_data, " Mean Humidity", True)
-        print("Average Mean Humidity : {}% ".format(mean_humidity[" Mean Humidity"]))
+        mean_humidity = int(self.get_mean_humidity(file_data))
+        print("Average Mean Humidity : {}% ".format(mean_humidity))
 
-    def chart_report(self, file_data):
+    def display_month_chart_report(self, file_data):
         self.file_data = file_data
         for file_row in file_data:
-            if file_row["Max TemperatureC"] != "":
-                to_convert = file_row["Max TemperatureC"]
-                file_value = int(to_convert)
-                split_date = file_row["PKT"].split("-")
-                get_day = split_date[2]
+            
+                max_value = file_row.max_temp
+                min_value = file_row.min_temp
+                get_day = file_row.day
                 print(get_day, end="")
-                for max_temp_count in range(file_value):
+                for max_temp_count in range(max_value):
                     print("\033[1;31m+\033[1;m", end="")
-                print(" ", file_value, "C")
-
-            if file_row["Min TemperatureC"] != "":
-                to_convert = file_row["Min TemperatureC"]
-                file_value2 = int(to_convert)
-                split_date = file_row["PKT"].split("-")
-                get_day = split_date[2]
+                print(" ", max_value, "C")
+                get_day = file_row.day
                 print(get_day, end="")
-                if file_value2 < 0:
-                    for min_temp_count in range(abs(file_value2)):
+                if min_value < 0:
+                    for min_temp_count in range(abs(min_value)):
                         print("\033[1;34m-\033[1;m", end="")
-                    print(" {}C".format(file_value2))
+                    print(" {}C".format(min_value))
                 else:
-                    for min_temp_count in range(file_value2):
+                    for min_temp_count in range(min_value):
                         print("\033[1;34m+\033[1;m", end="")
-                    print(" {}C".format(file_value2))
+                    print(" {}C".format(min_value))
         
-    def yearly_report(self, file_data):
+    def display_yearly_report(self, file_data):
+        high_temp = self.get_max_average(file_data)
+        date = self.get_required_date(file_data,file_data.high_temp,reverse_flag=True)
+        print("Highest: {}C on {} {}".format(high_temp,date.strftime("%B"),date.day))
+        
+        date = self.get_required_date(file_data,file_data.min_temp,reverse_flag=False)
+        low_temp = self.get_min_average(file_data)
+        print("Lowest: {}C on {} {}".format(low_temp,date.strftime("%B"),date.day))
 
-        high_temp = self.required_info_from_file(
-            file_data, "Max TemperatureC", reverse_flag=True
-        )
-        temperature = high_temp["Max TemperatureC"]
-        date_key = "PKT" if "PKT" in high_temp else "PKST"
-        date_to_parse = high_temp.get(date_key)
-        date = datetime.strptime(date_to_parse, "%Y-%m-%d")
-        print("Highest: {}C on {} {}".format(temperature,date.strftime("%B"),date.day))
-       
-        low_temp = self.required_info_from_file(
-            file_data, "Min TemperatureC", reverse_flag=False
-        )
-        temperature = low_temp["Min TemperatureC"]
-        min_temp_key = "PKT" if "PKT" in high_temp else "PKST"
-        date_to_parse = high_temp.get(min_temp_key)
-        date = datetime.strptime(date_to_parse, "%Y-%m-%d")
-        print("Lowest: {}C on {} {}".format(temperature,date.strftime("%B"),date.day))
+        date = self.get_required_date(file_data,file_data.average_humidity,reverse_flag=True)
+        mean_humidity = self.get_mean_humidity(file_data)
+        print("Humidity: {} on {} {}%".format(mean_humidity,date.strftime("%B"),date.day))
 
-        mean_humidity = self.required_info_from_file(
-            file_data, " Mean Humidity", reverse_flag=True
-        )
-        temperature = mean_humidity[" Mean Humidity"]
-        humidity_key = "PKT" if "PKT" in high_temp else "PKST"
-        date_to_parse = high_temp.get(humidity_key)
-        date = datetime.strptime(date_to_parse, "%Y-%m-%d")
-        print("Humidity: {}% on {} {}".format(temperature,date.strftime("%B"),date.day))
+    def get_max_temp(self, file_data):
+        max_list = []
+        for file_rows in file_data:
+            if file_rows.max_temp !='' or not file_rows:
+                max_list.append(file_rows.max_temp)
+            
+        return max(max_list)
 
-    def required_info_from_file(self, file_data, col_name, reverse_flag):
-        file_data = [file_rows for file_rows in file_data if file_rows[col_name] != ""]
+    def get_min_temp(self, file_data):
+        min_list = []
+        for file_rows in file_data:
+            min_list.append(file_rows.min_temp)
+            
+        return min(min_list)
 
-        file_data.sort(key=lambda x: int(x[col_name]), reverse=reverse_flag)
+    def get_mean_humidity(self, file_data):
+        mean_list = []
+        for file_rows in file_data:
+            mean_list.append(file_rows.max_temp)
+            
+        return (sum(mean_list)/len(mean_list))
+    
+    def get_max_average(self, file_data):
+        mean_list_max = []
+        
+        for file_rows in file_data:
+            mean_list_max.append(file_rows.max_temp)
+            
+        return (sum(mean_list_max)/len(mean_list_max))
+
+    def get_min_average(self, file_data):
+        mean_list_min = []
+        for file_rows in file_data:
+            mean_list_min.append(file_rows.min_temp)
+            
+        return (sum(mean_list_min)/len(mean_list_min))    
+
+    def get_required_date(self, file_data,required_value,reverse_flag):
+        file_data = [file_row.full_date for file_row in file_data if required_value ]
+        file_data.sort(key=lambda x: int(required_value), reverse=reverse_flag)
         return file_data[0]
 
 class FileData:
     def reading_file(self,file_names):
-        files_data = []
-        for file in file_names:
-            with open(file, newline="") as csvfile:
-                file_data = csv.DictReader(csvfile)
-                for row in file_data:
-                    files_data.append(row)
-        return files_data
+        weather_readings = []
+        for file_name in file_names:
+            with open(file_name, 'r') as csvfile:
+                weather_file_readings = csv.DictReader(csvfile)
+                
+                for row in weather_file_readings:
+                    weather_readings.append(WeatherAnalysis(row)) 
+                   
+        return weather_readings            
+        
 
 
     def get_file_name(self,arguments, file_name, file_path):
