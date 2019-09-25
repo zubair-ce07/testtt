@@ -17,7 +17,8 @@ import Typography from '@material-ui/core/Typography';
 
 class Login extends React.Component {
     cardStyle = {
-        marginTop: '15%'
+        marginTop: '15%',
+        padding: '20px'
     }
     state = {
         username: null,
@@ -53,40 +54,40 @@ class Login extends React.Component {
             <Container maxWidth="sm">
                 <ToastContainer />
                 <Card style={this.cardStyle}>
-                    <div className="card-body">
-                        <Typography variant="h4">
-                                Login
+                    <Typography variant="h4">
+                            Login
+                    </Typography>
+                    <form onSubmit={this.handleSubmit}>
+                        <TextField
+                            id="outlined-username"
+                            label="Username"
+                            name="username"
+                            style={this.textieldStyle}
+                            required
+                            onChange={this.handleChange}
+                            margin="normal"
+                            variant="outlined"
+                            type='text'
+                        />
+                        <TextField
+                            id="outlined-password"
+                            label="Password"
+                            required
+                            name="password"
+                            style={this.textieldStyle}
+                            onChange={this.handleChange}
+                            margin="normal"
+                            variant="outlined"
+                            type='password'
+                        />
+                        <Button type="submit" variant="contained" color="primary">
+                            Login
+                        </Button>
+                        <br /><br />
+                        <Typography variant="h6">
+                            <Link to={routeConstants.SIGNUP_ROUTE} style={{ textDecoration: 'none'}}>Signup</Link>
                         </Typography>
-                        <form onSubmit={this.handleSubmit}>
-                            <TextField
-                                id="outlined-username"
-                                label="Username"
-                                name="username"
-                                style={this.textieldStyle}
-                                required
-                                onChange={this.handleChange}
-                                margin="normal"
-                                variant="outlined"
-                                type='text'
-                            />
-                            <TextField
-                                id="outlined-password"
-                                label="Password"
-                                required
-                                name="password"
-                                style={this.textieldStyle}
-                                onChange={this.handleChange}
-                                margin="normal"
-                                variant="outlined"
-                                type='password'
-                            />
-                            <Button type="submit" variant="contained" color="primary">
-                                Login
-                            </Button>
-                            <br /><br />
-                            <Link to={routeConstants.SIGNUP_ROUTE}>Signup</Link>
-                        </form>
-                    </div>
+                    </form>
                 </Card>
             </Container>
         );

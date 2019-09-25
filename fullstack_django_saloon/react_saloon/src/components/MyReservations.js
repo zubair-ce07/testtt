@@ -5,6 +5,12 @@ import { Link } from 'react-router-dom';
 import ls from 'local-storage';
 import PropTypes from 'prop-types';
 import { reactAppConstants } from '../constants/constants';
+import { routeConstants } from '../constants/routeConstants';
+import Typography from '@material-ui/core/Typography';
+import Button from '@material-ui/core/Button';
+import Card from '@material-ui/core/Card';
+import CardContent from '@material-ui/core/CardContent';
+import { Container } from '@material-ui/core';
 
 import IsAuthenticated from '../hoc/isAuthenticated';
 import { getReservationsForUser, cancelReservation, getSaloonReservations } from '../actions/saloonActions';
@@ -31,51 +37,62 @@ class MyReservations extends Component {
         const reservation_list = reservations.map((reservation, index) => {
             const slot_date = new Date(reservation.time_slot.time);
             return (
-                <div className="card" style={{ margin: '10px', width: '100%' }} key={index}>
-                    <div className="card-header">
-                        Reservation Time : {slot_date.toDateString().concat(' at ', slot_date.toLocaleTimeString())}
-                    </div>
-                    <div className="card-body">
-
-                        {userType === 'customer' ? (
+                <Card style={{ margin: '10px', width: '100%' }} key={index}>
+                    <CardContent>
+                        <Typography gutterBottom variant="h5" component="h2">
+                        Reservation Time : {slot_date.toDateString().concat(' at ', slot_date.getUTCHours(),':',slot_date.getUTCMinutes())}
+                        </Typography>
+                        {userType === reactAppConstants.CUSTOMER ? (
                             <React.Fragment>
-                                <h5 className="card-title">Saloon Name : {reservation.time_slot.saloon.shop_name}</h5>
-                                <p className="card-text">Contact No : {reservation.time_slot.saloon.phone_no}</p>
+                                <Typography variant="h6" component="h2">
+                                    Saloon Name : {reservation.time_slot.saloon.shop_name}
+                                </Typography>
+                                <Typography variant="h6" component="h2">
+                                    Contact No : {reservation.time_slot.saloon.phone_no}
+                                </Typography>
                             </React.Fragment>
                         ) : (
                             <React.Fragment>
-                                <h5 className="card-title">Customer Name : {reservation.customer.user.first_name}</h5>
-                                <p className="card-text">Contact No : {reservation.customer.phone_no}</p>
+                                <Typography variant="h6" component="h2">
+                                    Customer Name : {reservation.customer.user.first_name}
+                                </Typography>
+                                <Typography variant="h6" component="h2">
+                                    Contact No : {reservation.customer.phone_no}
+                                </Typography>
                             </React.Fragment>
                         )}
 
-                        <button className="btn btn-outline-danger" onClick={() => this.handleCancelReservation(reservation.id)}>Cancel reservation</button>
-                    </div>
-                </div >
+                        <Button size="small" variant="contained" color="secondary" onClick={() => this.handleCancelReservation(reservation.id)}>Cancel reservation</Button>
+                    </CardContent>
+                </Card >
             );
         });
 
 
-        const no_reservations = ((!reservations || reservations.length === 0) && < div className="card" style={{ margin: '10px', width: '100%' }}>
-            <div className="card-header">
+        const no_reservations = ((!reservations || reservations.length === 0) && <Card style={{ margin: '10px', width: '100%' }}>
+            <Typography variant="h6" component="h2">
                 No Reservations
-            </div>
+            </Typography>
 
-            {userType === 'customer' && <div className="card-body">
-                <Link to='/' className="btn btn-primary">
-                    Reserve Now</Link>
-            </div>}
-        </div >);
+            {userType === 'customer' &&<CardContent>
+                <Button to={routeConstants.LIST_SALOONS_ROUTE} variant='contained' color='primary'>
+                    <Link to={routeConstants.LIST_SALOONS_ROUTE}
+                        style={{ textDecoration: 'none',color:'white' }}>
+                        Reserve Now
+                    </Link>
+                </Button>
+            </CardContent>}
+        </Card >);
 
 
         return (
-            <div className="container">
-                <div className="media-body">
-                    <h2 className="account-heading" style={{ textAlign: 'center' }}>My Reservations</h2>
-                </div>
+            <Container>
+                <Typography variant="h4" style={{textAlign:'center'}} component="h2">
+                    My Reservations
+                </Typography>
                 {no_reservations}
                 {reservation_list}
-            </div>
+            </Container>
         );
     }
 }

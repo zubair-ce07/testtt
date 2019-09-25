@@ -31,13 +31,13 @@ class Navbar extends React.Component {
     nav_bar_elements = this.token ? (
         <React.Fragment>
             <Typography variant="h6" color="inherit" style={{float: 'right'},{marginRight:'5px'}}>
-                <Link to={routeConstants.MY_RESERVATIONS_ROUTE}> My Reservations</Link>
+                <Link style={{ textDecoration: 'none',color:'white' }} to={routeConstants.MY_RESERVATIONS_ROUTE}> My Reservations</Link>
             </Typography>
             {this.userType === reactAppConstants.SALOON && <Typography variant="h6" color="inherit" style={{float: 'right'},{marginRight:'5px'}}>
-                <Link to={routeConstants.MY_SALOON_ROUTE}> My Saloon</Link>
+                <Link to={routeConstants.MY_SALOON_ROUTE} style={{ textDecoration: 'none',color:'white' }}> My Saloon</Link>
             </Typography>}
             <Typography variant="h6" color="inherit" style={{float: 'right'},{marginRight:'5px'}}>
-                <Link to={routeConstants.PORFILE_ROUTE}>Profile</Link>
+                <Link to={routeConstants.PORFILE_ROUTE} style={{ textDecoration: 'none',color:'white' }}>Profile</Link>
             </Typography>
             <Button variant="contained" color="secondary" onClick={this.logout}>
                 Logout
@@ -45,20 +45,20 @@ class Navbar extends React.Component {
         </React.Fragment>
     ) : (<React.Fragment>
         <Typography variant="h6" color="inherit" style={{float: 'right'},{marginRight:'5px'}}>
-            <Link to={routeConstants.LOGIN_ROUTE}> Login</Link>
+            <Link to={routeConstants.LOGIN_ROUTE} style={{ textDecoration: 'none',color:'white' }}> Login</Link>
         </Typography>
         <Typography variant="h6" color="inherit" style={{float: 'right'},{marginRight:'5px'}}>
-            <Link to={routeConstants.SIGNUP_ROUTE}> Register</Link>
+            <Link to={routeConstants.SIGNUP_ROUTE} style={{ textDecoration: 'none',color:'white' }}> Register</Link>
         </Typography>
     </React.Fragment>)
 
     render() {
         return (
-            <div className='navbar compoent_container' >
+            <React.Fragment>
                 <AppBar position="static">
                     <Toolbar>
                         <Typography variant="h6" color="inherit" style={{flex: 1}}>
-                            Saloons
+                            <Link to={routeConstants.LIST_SALOONS_ROUTE} style={{ textDecoration: 'none',color:'white' }}>Saloons</Link>
                         </Typography>
                         {this.nav_bar_elements}
                     </Toolbar>
@@ -70,7 +70,7 @@ class Navbar extends React.Component {
                     <Route exact path={routeConstants.MY_RESERVATIONS_ROUTE} component={MyReservations} />
                     <Route path={routeConstants.SLOT_LIST_ROUTE} component={SlotList} />
                 </Switch>
-            </div >
+            </React.Fragment >
 
         );
     }

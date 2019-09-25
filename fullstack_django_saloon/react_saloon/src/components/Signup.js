@@ -27,7 +27,8 @@ class Signup extends React.Component {
     }
 
     cardStyle = {
-        marginTop: '15%'
+        marginTop: '15%',
+        padding: '20px'
     }
 
     textieldStyle = {
@@ -76,80 +77,80 @@ class Signup extends React.Component {
             <Container maxWidth="sm">
                 <ToastContainer />
                 <Card style={this.cardStyle}>
-                    <div className="card-body">
-                        <Typography variant="h4">
-                                Sign Up
+                    <Typography variant="h4">
+                            Sign Up
+                    </Typography>
+                    <Tabs
+                        value={this.state.userTypeIndex}
+                        indicatorColor="primary"
+                        textColor="primary"
+                        variant="fullWidth"
+                    >
+                        <Tab label="Customer" onClick={()=>this.handleTabClick('customer')} />
+                        <Tab label="Saloon" onClick={()=>this.handleTabClick('saloon')}/>
+                    </Tabs>
+                    <form onSubmit={this.handleSubmit}>
+                        <TextField
+                            id="outlined-username"
+                            label="Username"
+                            name="username"
+                            style={this.textieldStyle}
+                            required
+                            onChange={this.handleChange}
+                            margin="normal"
+                            variant="outlined"
+                            type='text'
+                        />
+                        <TextField
+                            id="outlined-email"
+                            label="email"
+                            required
+                            name="email"
+                            style={this.textieldStyle}
+                            onChange={this.handleChange}
+                            margin="normal"
+                            variant="outlined"
+                            type='email'
+                        />
+                        <TextField
+                            id="outlined-password2"
+                            label="Confrim Password"
+                            required
+                            name="password2"
+                            style={this.textieldStyle}
+                            onChange={this.handleChange}
+                            margin="normal"
+                            variant="outlined"
+                            type='password'
+                        />
+                        <TextField
+                            id="outlined-password1"
+                            label="Password"
+                            required
+                            name="password1"
+                            style={this.textieldStyle}
+                            onChange={this.handleChange}
+                            margin="normal"
+                            variant="outlined"
+                            type='password'
+                        />
+                        {!passwordCheck && <Typography variant="h6" style={{color:'red'}}>
+                            Password does not match
+                        </Typography>}
+                        {passwordCheck ? (
+                            <Button type="submit" variant="contained" color="primary">
+                            Sign up
+                            </Button>
+                        ) : (
+                            <Button type="submit" disabled variant="contained" color="primary">
+                            Sign up
+                            </Button>
+                        )}
+                        <br /><br />
+                        <Typography variant="h6">
+                            <Link to={routeConstants.LOGIN_ROUTE} style={{ textDecoration: 'none'}}>Login</Link>
                         </Typography>
-                        <Tabs
-                            value={this.state.userTypeIndex}
-                            indicatorColor="primary"
-                            textColor="primary"
-                            variant="fullWidth"
-                        >
-                            <Tab label="Customer" onClick={()=>this.handleTabClick('customer')} />
-                            <Tab label="Saloon" onClick={()=>this.handleTabClick('saloon')}/>
-                        </Tabs>
-                        <form onSubmit={this.handleSubmit}>
-                            <TextField
-                                id="outlined-username"
-                                label="Username"
-                                name="username"
-                                style={this.textieldStyle}
-                                required
-                                onChange={this.handleChange}
-                                margin="normal"
-                                variant="outlined"
-                                type='text'
-                            />
-                            <TextField
-                                id="outlined-email"
-                                label="email"
-                                required
-                                name="email"
-                                style={this.textieldStyle}
-                                onChange={this.handleChange}
-                                margin="normal"
-                                variant="outlined"
-                                type='email'
-                            />
-                            <TextField
-                                id="outlined-password2"
-                                label="Confrim Password"
-                                required
-                                name="password2"
-                                style={this.textieldStyle}
-                                onChange={this.handleChange}
-                                margin="normal"
-                                variant="outlined"
-                                type='password'
-                            />
-                            <TextField
-                                id="outlined-password1"
-                                label="Password"
-                                required
-                                name="password1"
-                                style={this.textieldStyle}
-                                onChange={this.handleChange}
-                                margin="normal"
-                                variant="outlined"
-                                type='password'
-                            />
-                            {!passwordCheck && <Typography variant="h6" style={{color:'red'}}>
-                                Password does not match
-                            </Typography>}
-                            {passwordCheck ? (
-                                <Button type="submit" variant="contained" color="primary">
-                                Sign up
-                                </Button>
-                            ) : (
-                                <Button type="submit" disabled variant="contained" color="primary">
-                                Sign up
-                                </Button>
-                            )}
-                            <br /><br />
-                            <Link to={routeConstants.LOGIN_ROUTE}>Login</Link>
-                        </form>
-                    </div>
+                    </form>
                 </Card>
             </Container>
         );

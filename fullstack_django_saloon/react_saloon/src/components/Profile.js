@@ -10,10 +10,22 @@ import { userValueUpdate } from '../actions/userActions';
 import IsAuthenticated from '../hoc/isAuthenticated';
 import { reactAppConstants } from '../constants/constants';
 
-class Profile extends Component {
+import { Container } from '@material-ui/core';
+import Card from '@material-ui/core/Card';
+import TextField from '@material-ui/core/TextField';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import Button from '@material-ui/core/Button';
+import Typography from '@material-ui/core/Typography';
 
-    state = {
-        updateSuccess:false
+class Profile extends Component {
+    cardStyle = {
+        marginTop: '15%',
+        padding: '20px'
+    }
+
+    textieldStyle = {
+        width: '100%'
     }
 
     componentDidMount() {
@@ -31,16 +43,15 @@ class Profile extends Component {
         this.props.userValueUpdate(key, val);
     }
     handleSubmit = e => {
-        this.setState({updateSuccess:false});
         e.preventDefault();
         const userType = ls.get(reactAppConstants.USER_TYPE);
         if (userType === reactAppConstants.CUSTOMER) {
             this.props.updateCustomerProfile(this.props.user).then(() => {
-                this.props.updateStatus && this.setState({updateSuccess:true});
+                this.props.updateStatus && toast.success('Profile Updated');
             });
         } else if (userType === reactAppConstants.SALOON) {
             this.props.updateSaloonProfile(this.props.user).then(() => {
-                this.props.updateStatus && this.setState({updateSuccess:true});
+                this.props.updateStatus && toast.success('Profile Updated');
             });
         }
 
@@ -49,54 +60,108 @@ class Profile extends Component {
     render() {
         const { user } = this.props;
         const userType = ls.get(reactAppConstants.USER_TYPE);
-        const userProfile = (user && <div style={{ width: '100%' }}>
-            <center><h2>Profile</h2></center>
-            <form onSubmit={this.handleSubmit}>
-                <div className="fouser_actionsm-group">
-                    <label htmlFor="exampleInputEmail1">Email address</label>
-                    <input required type="email" name='email' onChange={this.handleChange} value={user.email || ''} className="form-control" id="exampleInputEmail1" placeholder="Enter email" />
-                </div>
-                <div className="form-group">
-                    <label htmlFor="username">Username</label>
-                    <input required type="text" name='username' onChange={this.handleChange} value={user.username || ''} className="form-control" id="usename" placeholder="Enter Username" />
-                </div>
-                <div className="form-group">
-                    <label htmlFor="first_name">First Name</label>
-                    <input required type="text" name='first_name' onChange={this.handleChange} value={user.first_name || ''} className="form-control" id="first_name" placeholder="Enter First Name" />
-                </div>
-                <div className="form-group">
-                    <label htmlFor="last_name">Last Name</label>
-                    <input required type="text" name='last_name' onChange={this.handleChange} value={user.last_name || ''} className="form-control" id="last_name" placeholder="Enter Last Name" />
-                </div>
-                <div className="form-group">
-                    <label htmlFor="phone_no">Phone No</label>
-                    <input required type="number" name='phone_no' onChange={this.handleChange} value={user.phone_no || ''} className="form-control" id="phone_no" placeholder="Enter Phone No" />
-                </div>
-                {userType === reactAppConstants.SALOON &&
-                    <React.Fragment>
-                        <div className="form-group">
-                            <label htmlFor="shop_name">Shop Name</label>
-                            <input required type="text" name='shop_name' onChange={this.handleChange} value={user.shop_name || ''} className="form-control" id="shop_name" placeholder="Enter Shop Name" />
-                        </div>
-                        <div className="form-group">
-                            <label htmlFor="shop_name">Address</label>
-                            <textarea required type="text" name='address' onChange={this.handleChange} value={user.address || ''} className="form-control" id="address" placeholder="Enter Shop Address"></textarea>
-                        </div>
-                    </React.Fragment>}
-                <button type="submit" className="btn btn-primary">Submit</button>
-            </form>
-        </div>);
-        const successMessage = this.state.updateSuccess &&
-            <div className="alert alert-success" role="alert" >
-                Profile Updated!</div>;
-        // const error_message = this.state.update_error &&
-        // <div className="alert alert-error" role="alert" >
-        //     Error Updating Profile!</div>
+        const userProfile = (user && <Container maxWidth="sm" style={{ width: '100%' }}>
+            <ToastContainer />
+            <Card style={this.cardStyle}>
+                <Typography variant="h4">
+                        Profile
+                </Typography>
+                <form onSubmit={this.handleSubmit}>
+                    <TextField
+                        id="outlined-email"
+                        label="Email"
+                        name="email"
+                        value={user.email || ''}
+                        style={this.textieldStyle}
+                        required
+                        onChange={this.handleChange}
+                        margin="normal"
+                        variant="outlined"
+                        type='email'
+                    />
+                    <TextField
+                        id="outlined-username"
+                        label="Username"
+                        name="username"
+                        value={user.username || ''}
+                        style={this.textieldStyle}
+                        required
+                        onChange={this.handleChange}
+                        margin="normal"
+                        variant="outlined"
+                        type='text'
+                    />
+                    <TextField
+                        id="outlined-first_name"
+                        label="First Name"
+                        name="first_name"
+                        value={user.first_name || ''}
+                        style={this.textieldStyle}
+                        required
+                        onChange={this.handleChange}
+                        margin="normal"
+                        variant="outlined"
+                        type='text'
+                    />
+                    <TextField
+                        id="outlined-last_name"
+                        label="Last Name"
+                        name="last_name"
+                        value={user.last_name || ''}
+                        style={this.textieldStyle}
+                        required
+                        onChange={this.handleChange}
+                        margin="normal"
+                        variant="outlined"
+                        type='text'
+                    />
+                    <TextField
+                        id="outlined-phone_no"
+                        label="Phone No"
+                        name="phone_no"
+                        value={user.phone_no || ''}
+                        style={this.textieldStyle}
+                        required
+                        onChange={this.handleChange}
+                        margin="normal"
+                        variant="outlined"
+                        type='number'
+                    />
+                    {userType === reactAppConstants.SALOON &&
+                        <React.Fragment>
+                            <TextField
+                                id="outlined-shop_name"
+                                label="Shop Name"
+                                name="shop_name"
+                                value={user.shop_name || ''}
+                                style={this.textieldStyle}
+                                required
+                                onChange={this.handleChange}
+                                margin="normal"
+                                variant="outlined"
+                                type='text'
+                            />
+                            <TextField
+                                id="outlined-address"
+                                label="Address"
+                                name="address"
+                                value={user.address || ''}
+                                style={this.textieldStyle}
+                                required
+                                onChange={this.handleChange}
+                                margin="normal"
+                                variant="outlined"
+                                type='textarea'
+                            />
+                        </React.Fragment>}
+                    <Button type="submit" variant="contained" color="primary">Submit</Button>
+                </form>
+            </Card>
+        </Container>);
         return (
-            <div className='container' >
-                {successMessage}
+            <React.Fragment>
                 {userProfile}
-            </div >
+            </React.Fragment>
         );
     }
 }

@@ -11,6 +11,7 @@ import Button from '@material-ui/core/Button';
 import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
 import CardActions from '@material-ui/core/CardActions';
+import { Container } from '@material-ui/core';
 
 class ListSaloon extends React.Component {
     cardStyle = {
@@ -42,12 +43,18 @@ class ListSaloon extends React.Component {
                         {
                             ls.get('token') ? (
                                 ls.get(reactAppConstants.USER_TYPE) === reactAppConstants.CUSTOMER ? (
-                                    <Button size="small" color="primary">
-                                        <Link to={routeConstants.LIST_SALOONS_ROUTE+ saloon.shop_name} >Reserve a time slot</Link>
+                                    <Button size="small" variant="contained" color="primary">
+                                        <Link to={routeConstants.LIST_SALOONS_ROUTE+ saloon.shop_name}
+                                            style={{ textDecoration: 'none',color:'white' }}>
+                                            Reserve a time slot
+                                        </Link>
                                     </Button>) : (false)
                             ) : (
-                                <Button size="small" color="primary">
-                                    <Link to={routeConstants.LOGIN_ROUTE} >Login to Reserve a time slot</Link>
+                                <Button size="small" variant="contained" color="primary">
+                                    <Link to={routeConstants.LOGIN_ROUTE}
+                                        style={{ textDecoration: 'none',color:'white' }}>
+                                        Login to Reserve a time slot
+                                    </Link>
                                 </Button>
                             )
                         }
@@ -58,22 +65,28 @@ class ListSaloon extends React.Component {
             )
         ) : (
             this.props.successStatus ? (
-                <div className="card-header" style={this.cardStyle}>
-                        No Saloon To be Listed
-                </div>
+                <Card style={this.cardStyle}>
+                    <CardContent>
+                        <Typography gutterBottom variant="h5" component="h2">
+                            No Saloons To be Listed
+                        </Typography>
+                    </CardContent>
+                </Card>
             ) : (
-                <div className="card" style={this.cardStyle}>
-                    <div className="card-header" style={this.cardStyle}>
-                        Error getting Saloons
-                    </div>
-                </div>
+                <Card style={this.cardStyle}>
+                    <CardContent>
+                        <Typography gutterBottom variant="h5" component="h2">
+                            Errors Getting Saloons List
+                        </Typography>
+                    </CardContent>
+                </Card>
             )
         );
 
         return (
-            <div className="container">
+            <Container>
                 {saloonsList}
-            </div>
+            </Container>
 
         );
     }

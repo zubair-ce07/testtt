@@ -3,8 +3,14 @@ import { connect } from 'react-redux';
 import { compose } from 'redux';
 import PropTypes from 'prop-types';
 
+import Typography from '@material-ui/core/Typography';
+import Button from '@material-ui/core/Button';
+import Card from '@material-ui/core/Card';
+import CardContent from '@material-ui/core/CardContent';
+
 import IsAuthenticated from '../hoc/isAuthenticated';
 import { getTimeSlotsForUser, reserveSlotForUser } from '../actions/saloonActions';
+import { Container } from '@material-ui/core';
 
 export class SlotList extends Component {
 
@@ -19,37 +25,37 @@ export class SlotList extends Component {
     render() {
         const { timeSlots } = this.props;
 
-        const noTimeSlots = ((!timeSlots || timeSlots.length === 0) && <div className="card" style={{ margin: '10px' }}>
-            <div className="card-header">
-                No Time Slots avalable
-            </div>
-        </div >);
+        const noTimeSlots = ((!timeSlots || timeSlots.length === 0) && <Card style={{ margin: '10px' }}>
+            <CardContent className="card-header">
+                <Typography gutterBottom variant="h5" component="h2">
+                    No Time Slots Available
+                </Typography>
+            </CardContent>
+        </Card >);
 
         const timeSlotsList = timeSlots.map((time_slot, index) => {
             const slot_date = new Date(time_slot.time);
             return (
-                <div className="card" style={{ margin: '10px', width: '100%' }} key={index}>
-                    <div className="card-header">
-                        {slot_date.toDateString().concat(' at ', slot_date.toLocaleTimeString())}
-                    </div>
-                    {time_slot.reservation === null ? (
-                        <div className="card-body">
-                            <button onClick={() => this.handleReserveClick(time_slot.id)} className="btn btn-primary">Reserve</button>
-                        </div>
-                    ) : (
-                        <div className="card-body">
-                            <button className="btn btn-primary disabled">Reserved</button>
-                        </div>
-                    )}
-                </div>
+                <Card style={{ margin: '10px', width: '100%' }} key={index}>
+                    <CardContent className="card-header">
+                        <Typography gutterBottom variant="h5" component="h2">
+                            {slot_date.toDateString().concat(' at ', slot_date.getUTCHours(),':',slot_date.getUTCMinutes())}
+                        </Typography>
+                        {time_slot.reservation === null ? (
+                            <Button onClick={() => this.handleReserveClick(time_slot.id)} variant="contained" size="small" color="primary" >Reserve</Button>
+                        ) : (
+                            <Button size="small" variant="contained" disabled color="primary" >Reserved</Button>
+                        )}
+                    </CardContent>
+                </Card>
             );
         });
 
         return (
-            <div className='container'>
+            <Container>
                 {noTimeSlots}
                 {timeSlotsList}
-            </div>
+            </Container>
         );
     }
 }

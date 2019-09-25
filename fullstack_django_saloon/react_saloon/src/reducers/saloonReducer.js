@@ -94,10 +94,10 @@ const saloonReducer = (state = initState, action) => {
             ...state,
             successStatus: false
         };
-    case actionTypes.ADD_SLOTS_SUCESSFUL:
+    case actionTypes.ADD_SLOTS_SUCCESSFUL:
         return {
             ...state,
-            addTimeSlotSuccessStatus: false
+            addTimeSlotSuccessStatus: true
         };
     case actionTypes.ADD_SLOTS_FAILED:
         return {
