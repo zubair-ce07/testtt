@@ -20,4 +20,3 @@ def get_user_jwt(request):
 class JWTAuthenticationMiddleware(MiddlewareMixin):
     def process_request(self, request):
         request.user = get_user_jwt(request)
-        print(request.user)
