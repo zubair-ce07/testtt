@@ -38,7 +38,7 @@ const useStyles = makeStyles(theme => ({
     },
 }));
 
-export default function UserLoginRegistrationForm() {
+const UserLoginRegistrationForm = () => {
     const classes = useStyles();
     const theme = useTheme();
     const [value, setValue] = React.useState(0);
@@ -80,4 +80,6 @@ export default function UserLoginRegistrationForm() {
             </SwipeableViews>
         </Box>
     );
-}
+};
+
+export default UserLoginRegistrationForm;
