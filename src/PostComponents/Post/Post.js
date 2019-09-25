@@ -24,7 +24,7 @@ import {
 import {Comment, MoreVert,} from '@material-ui/icons';
 import withStyles from "@material-ui/core/styles/withStyles";
 import CommentListItem from './CommentListItem'
-import {createCommentDB, deleteCommentDB, fetchCommentsFromDB} from '../../APIClient/APIClient'
+import {createCommentDB, deleteCommentDB, fetchCommentsDB} from '../../APIClient/APIClient'
 import Vote from "./Vote";
 import {formatDate} from "../../Utils/Utils";
 
@@ -148,7 +148,7 @@ class Post extends React.Component {
     };
 
     fetchComments = () => {
-        fetchCommentsFromDB(this.props.data).then(response => {
+        fetchCommentsDB(this.props.data).then(response => {
             this.setState({
                 comments: response.data
             });
