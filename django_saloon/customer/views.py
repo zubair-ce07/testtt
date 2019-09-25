@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic import ListView
+from django.contrib.auth.models import User
 from rest_framework.views import APIView
 from rest_framework import authentication
 from rest_framework.permissions import IsAuthenticated
@@ -14,7 +15,7 @@ from rest_framework import status
 
 from customer.forms import UserUpdateForm, CustomerUpdateForm
 from customer.serializers import CustomerUpdateSerializer
-from shop.serializers import ReservationSerializer
+from shop.serializers import ReservationSerializerForCustomer
 from shop.models import Reservation
 from core.permissions import IsCustomer
 from core.constants import CUSTOMER, RESERVATION_ID, REASON
@@ -124,6 +125,17 @@ class CustomerUpdateApiView(APIView):
             customer_update_serializer.save()
         return Response(data={"customer updated successfully"}, status=status.HTTP_200_OK)
 
+    @staticmethod
+    def get(request):
+        """get method for customer update."""
+        instance = request.user
+        customer_update_serializer = CustomerUpdateSerializer(
+            instance=instance.customer
+        )
+        customer_data = customer_update_serializer.data
+        customer_data['user'] = dict(customer_update_serializer.data['user'])
+        return Response(data=customer_data, status=status.HTTP_200_OK)
+
 
 class MyReservationsApiView(generics.ListAPIView):
     """Customer reservation list api view."""
@@ -131,7 +143,7 @@ class MyReservationsApiView(generics.ListAPIView):
     authentication_classes = [authentication.TokenAuthentication]
     permission_classes = (IsAuthenticated, IsCustomer)
 
-    serializer_class = ReservationSerializer
+    serializer_class = ReservationSerializerForCustomer
     queryset = Reservation.objects.all()
 
     def get_queryset(self):

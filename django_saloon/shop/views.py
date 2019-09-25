@@ -241,6 +241,17 @@ class ShopUpdateApiView(APIView):
             saloon_update_serializer.save()
         return Response(data={"shop updated successfully"}, status=status.HTTP_200_OK)
 
+    @staticmethod
+    def get(request):
+        """get method for customer update."""
+        instance = request.user
+        saloon_update_serializer = SaloonUpdateSerializer(
+            instance=instance.saloon
+        )
+        saloon_data = saloon_update_serializer.data
+        saloon_data['user'] = dict(saloon_update_serializer.data['user'])
+        return Response(data=saloon_data, status=status.HTTP_200_OK)
+
 
 class ListAddTimeSlotsApiView(generics.ListCreateAPIView):
     """List time slots of a saloon api view."""
