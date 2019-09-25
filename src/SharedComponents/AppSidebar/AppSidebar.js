@@ -5,19 +5,11 @@ import CssBaseline from '@material-ui/core/CssBaseline';
 import Drawer from '@material-ui/core/Drawer';
 import Hidden from '@material-ui/core/Hidden';
 import IconButton from '@material-ui/core/IconButton';
-import List from '@material-ui/core/List';
-import ListItem from '@material-ui/core/ListItem';
-import ListItemIcon from '@material-ui/core/ListItemIcon';
-import ListItemText from '@material-ui/core/ListItemText';
 import MenuIcon from '@material-ui/icons/Menu';
-import HomeIcon from '@material-ui/icons/Home'
-import PeopleIcon from '@material-ui/icons/Contacts'
-import ProfileIcon from '@material-ui/icons/Person'
-import GroupIcon from '@material-ui/icons/Group'
-import MessagesIcon from '@material-ui/icons/Email'
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import {makeStyles, useTheme} from '@material-ui/core/styles';
+import {drawer} from "../../Utils/Utils";
 
 const drawerWidth = 300;
 
@@ -66,33 +58,6 @@ function AppSidebar(props) {
     function handleDrawerToggle() {
         setMobileOpen(!mobileOpen);
     }
-
-    const drawer = (
-        <div>
-            <List>
-                <ListItem button>
-                    <ListItemIcon><HomeIcon/></ListItemIcon>
-                    <ListItemText primary={'Home'}/>
-                </ListItem>
-                <ListItem button>
-                    <ListItemIcon><PeopleIcon/></ListItemIcon>
-                    <ListItemText primary={'People'}/>
-                </ListItem>
-                <ListItem button>
-                    <ListItemIcon><GroupIcon/></ListItemIcon>
-                    <ListItemText primary={'Groups'}/>
-                </ListItem>
-                <ListItem button>
-                    <ListItemIcon><ProfileIcon /></ListItemIcon>
-                    <ListItemText primary={'Profile'}/>
-                </ListItem>
-                <ListItem button>
-                    <ListItemIcon><MessagesIcon/></ListItemIcon>
-                    <ListItemText primary={'Messages'}/>
-                </ListItem>
-            </List>
-        </div>
-    );
 
     return (
         <div className={classes.root}>
