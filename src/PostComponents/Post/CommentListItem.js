@@ -36,7 +36,6 @@ class CommentListItem extends React.Component {
     };
 
     render() {
-        console.log(this.props.comment);
         return (
             <ListItem>
                 <Grid

@@ -11,7 +11,7 @@ import Typography from '@material-ui/core/Typography';
 import {makeStyles, useTheme} from '@material-ui/core/styles';
 import {drawer} from "../../Utils/Utils";
 
-const drawerWidth = 300;
+const DRAWER_WIDTh = 300;
 
 const useStyles = makeStyles(theme => ({
     root: {
@@ -19,7 +19,7 @@ const useStyles = makeStyles(theme => ({
     },
     drawer: {
         [theme.breakpoints.up('sm')]: {
-            width: drawerWidth,
+            width: DRAWER_WIDTh,
             flexShrink: 0,
         },
     },
@@ -34,11 +34,11 @@ const useStyles = makeStyles(theme => ({
     },
     toolbar: theme.mixins.toolbar,
     drawerPaper: {
-        width: drawerWidth,
+        width: DRAWER_WIDTh,
         marginTop: theme.spacing(8),
     },
     drawerPaperMobile: {
-        width: drawerWidth,
+        width: DRAWER_WIDTh,
     },
     content: {
         flexGrow: 1,

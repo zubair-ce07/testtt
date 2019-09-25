@@ -1,25 +1,25 @@
-export const fetchcomments_url = post => {
+export const fetchCommentsUrl = post => {
     return 'http://localhost:8000/api/posts/' + post.id + '/comments/'
 };
-export const deletecomment_url = comment => {
+export const deleteCommentUrl = comment => {
     return 'http://localhost:8000/api/posts/comments/' + comment.id + '/'
 };
-export const createcomment_url = post => {
+export const createCommentUrl = post => {
     return 'http://localhost:8000/api/posts/' + post.id + '/comments/'
 };
-export const deletepost_url = post => {
+export const deletePostUrl = post => {
     return 'http://localhost:8000/api/posts/' + post.id + '/'
 };
-export const fetchcreateposts_url = 'http://localhost:8000/api/posts/';
-export const fetchcreateupvote_url = post => {
+export const fetchCreatePostsUrl = 'http://localhost:8000/api/posts/';
+export const fetchCreateUpvoteUrl = post => {
     return 'http://localhost:8000/api/posts/' + post.id + '/upvotes/'
 };
-export const deleteupvote_url = (post, user) => {
+export const deleteUpvoteUrl = (post, user) => {
     return 'http://localhost:8000/api/posts/' + post.id + '/upvotes/' + user + '/'
 };
-export const fetchcreatedownvote_url = post => {
+export const fetchCreateDownvoteUrl = post => {
     return 'http://localhost:8000/api/posts/' + post.id + '/downvotes/'
 };
-export const deletedownvote_url = (post, user) => {
+export const deleteDownvoteUrl = (post, user) => {
     return 'http://localhost:8000/api/posts/' + post.id + '/downvotes/' + user + '/'
 };

@@ -15,41 +15,45 @@ class Vote extends React.Component {
         super(props);
         this.state = {
             upvotes: [],
-            upvote_check: false,
+            upvoteCheck: false,
             downvotes: [],
-            downvote_check: false,
+            downvoteCheck: false,
         }
     }
 
-
-    setUpvote = (update = false) => {
+    setVote = (voteType, update = false) => {
+        const secondaryVote = voteType === 'upvote' ? 'downvote' : 'upvote';
+        const name = voteType + 'Check';
+        const secondaryName = secondaryVote + 'Check';
         if (update)
             this.setState({
-                upvote_check: true,
-                downvote_check: false
+                [name]: true,
+                [secondaryName]: false
             });
         else
+        {
             this.setState({
-                upvote_check: !this.state.upvote_check,
-                downvote_check: false
+                [name]: !this.state[name],
+                [secondaryName]: false
             });
+        }
     };
 
     handleUpvoteClick = () => {
         let data = {
-            'user': 6
+            user: 6
         };
-        if (this.state.upvote_check) {
+        if (this.state.upvoteCheck) {
             deleteUpvoteDB(this.props.data, 6).then(response => {
                 this.setState({
                     upvotes: this.state.upvotes.filter(vote => {
                         return vote.post !== response.data.post && vote.user === 6
                     })
                 });
-                this.setUpvote()
+                this.setVote('upvote')
             });
         } else {
-            if (this.state.downvote_check) {
+            if (this.state.downvoteCheck) {
                 this.handleDownvoteClick()
             }
             createUpvoteDB(this.props.data, data).then(response => {
@@ -59,39 +63,26 @@ class Vote extends React.Component {
                         upvotes: upvotes,
                     }
                 });
-                this.setUpvote()
+                this.setVote('upvote')
             });
         }
     };
 
-    setDownvote = (update = false) => {
-        if (update)
-            this.setState({
-                downvote_check: true,
-                upvote_check: false
-            });
-        else
-            this.setState({
-                downvote_check: !this.state.downvote_check,
-                upvote_check: false
-            });
-    };
-
     handleDownvoteClick = () => {
         let data = {
-            'user': 6
+            user: 6
         };
-        if (this.state.downvote_check) {
+        if (this.state.downvoteCheck) {
             deleteDownvoteDB(this.props.data, 6).then(response => {
                 this.setState({
                     downvotes: this.state.downvotes.filter(vote => {
                         return vote.post !== response.data.post && vote.user === 6
                     })
                 });
-                this.setDownvote()
+                this.setVote('downvote')
             });
         } else {
-            if (this.state.upvote_check) {
+            if (this.state.upvoteCheck) {
                 this.handleUpvoteClick()
             }
             createDownvotevoteDB(this.props.data, data).then(response => {
@@ -101,7 +92,7 @@ class Vote extends React.Component {
                         downvotes: downvotes,
                     }
                 });
-                this.setDownvote()
+                this.setVote('downvote')
             });
         }
     };
@@ -113,7 +104,7 @@ class Vote extends React.Component {
                 upvotes: response.data
             });
             if (this.state.upvotes.filter(vote => vote.user === 6).length > 0)
-                this.setUpvote(true)
+                this.setVote('upvote', true)
         });
     };
 
@@ -123,7 +114,7 @@ class Vote extends React.Component {
                 downvotes: response.data
             });
             if (this.state.downvotes.filter(vote => vote.user === 6).length > 0)
-                this.setDownvote(true)
+                this.setVote('downvote', true)
         });
     };
 
@@ -144,13 +135,13 @@ class Vote extends React.Component {
         return (
             <div>
                 <IconButton aria-label="upvote" title='Upvote' onClick={this.handleUpvoteClick}>
-                    <ArrowUpward color={this.state.upvote_check ? 'primary' : 'inherit'}/>
+                    <ArrowUpward color={this.state.upvoteCheck ? 'primary' : 'inherit'}/>
                 </IconButton>
                 <Link href='/' color='inherit'>
                     {this.state.upvotes.length}
                 </Link>
                 <IconButton aria-label="downvote" title='Downvote' onClick={this.handleDownvoteClick}>
-                    <ArrowDownward color={this.state.downvote_check ? 'error' : 'inherit'}/>
+                    <ArrowDownward color={this.state.downvoteCheck ? 'error' : 'inherit'}/>
                 </IconButton>
                 <Link href='/' color='inherit'>
                     {this.state.downvotes.length}

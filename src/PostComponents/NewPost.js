@@ -1,25 +1,7 @@
 import React from 'react';
 import PropTypes from "prop-types";
-import {
-    Avatar,
-    Button,
-    Card,
-    CardActions,
-    CardContent,
-    Container,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogTitle,
-    IconButton,
-    TextField,
-    Typography
-} from '@material-ui/core';
-import {AddPhotoAlternate,} from '@material-ui/icons';
+import {Avatar, Button, Card, CardActions, CardContent, Container, TextField, Typography} from '@material-ui/core';
 import withStyles from "@material-ui/core/styles/withStyles";
-import Image from 'material-ui-image'
-import {Media} from "../Utils/Utils";
-import Grid from "@material-ui/core/Grid";
 
 const styles = theme => ({
     card: {

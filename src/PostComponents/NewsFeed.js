@@ -79,7 +79,7 @@ class NewsFeed extends React.Component {
         })
     };
 
-    UNSAFE_componentWillMount() {
+    componentDidMount() {
         setInterval(() => {
             this.fetchPosts();
         }, 5000);

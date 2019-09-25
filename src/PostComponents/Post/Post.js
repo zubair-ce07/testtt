@@ -57,63 +57,19 @@ class Post extends React.Component {
 
     }
 
-    handleOptionsClickOpen = event => {
+    handleStateChange = (newValue) => {
         this.setState({
-            openOptions: true,
-            anchorEl: event.currentTarget
-        })
-    };
-
-    handleOptionsClickClose = () => {
-        this.setState({
-            openOptions: false,
-            anchorEl: null
-        })
-    };
-
-    handleCommentDialogOpen = () => {
-        this.setState({dialog: true});
-    };
-
-    handleCommentDialogClose = () => {
-        this.setState({dialog: false});
-    };
-
-    handleShowCommentsDialogOpen = () => {
-        this.setState({
-            showCommentsDialog: true
-        });
-    };
-
-    handleShowCommentsDialogClose = () => {
-        this.setState({
-            showCommentsDialog: false
-        });
-    };
-
-    handleCommentTextChange = event => {
-        event.preventDefault();
-        this.setState({
-            commentText: event.target.value
-        });
-    };
-
-    handleDeleteConfirmationDialogOpen = () => {
-        this.setState({
-            openConfirmation: true
-        })
-    };
-
-    handleDeleteConfirmationDialogClose = () => {
-        this.setState({
-            openConfirmation: false
+            ...newValue
         })
     };
 
     deletePost = () => {
         this.props.removePost(this.props.data);
-        this.handleDeleteConfirmationDialogClose();
-        this.handleOptionsClickClose()
+        this.handleStateChange({openConfirmation: false});
+        this.handleStateChange({
+            openOptions: false,
+            anchorEl: null
+        })
     };
 
     deleteComment = comment => {
@@ -143,7 +99,7 @@ class Post extends React.Component {
                     commentText: ''
                 }
             });
-            this.handleCommentDialogClose();
+            this.handleStateChange({dialog: false});
         })
     };
 
@@ -177,12 +133,23 @@ class Post extends React.Component {
                     }
                     action={
                         <div>
-                            <IconButton aria-label="settings" onClick={this.handleOptionsClickOpen}>
+                            <IconButton aria-label="settings" onClick={event => {
+                                event.preventDefault();
+                                this.handleStateChange({
+                                    openOptions: true,
+                                    anchorEl: event.currentTarget
+                                })
+                            }}>
                                 <MoreVert/>
                             </IconButton>
                             <Popover
                                 open={this.state.openOptions}
-                                onClose={this.handleOptionsClickClose}
+                                onClose={() => {
+                                    this.handleStateChange({
+                                        openOptions: false,
+                                        anchorEl: null
+                                    })
+                                }}
                                 anchorEl={this.state.anchorEl}
                                 anchorOrigin={{
                                     vertical: 'bottom',
@@ -194,7 +161,9 @@ class Post extends React.Component {
                                 }}>
                                 <List>
                                     <ListItem>
-                                        <Button onClick={this.handleDeleteConfirmationDialogOpen}>
+                                        <Button onClick={() => {
+                                            this.handleStateChange({openConfirmation: true})
+                                        }}>
                                             Delete
                                         </Button>
                                     </ListItem>
@@ -203,7 +172,9 @@ class Post extends React.Component {
 
                             <Dialog
                                 open={this.state.openConfirmation}
-                                onClose={this.handleDeleteConfirmationDialogClose}
+                                onClose={() => {
+                                    this.handleStateChange({openConfirmation: false})
+                                }}
                                 fullWidth
                                 maxWidth='xs'
                                 aria-labelledby="alert-dialog-title"
@@ -211,7 +182,9 @@ class Post extends React.Component {
                             >
                                 <DialogTitle id="alert-dialog-title">{"Delete Post?"}</DialogTitle>
                                 <DialogActions>
-                                    <Button onClick={this.handleDeleteConfirmationDialogClose} color="primary"
+                                    <Button onClick={() => {
+                                        this.handleStateChange({openConfirmation: false})
+                                    }} color="primary"
                                             autoFocus>
                                         Cancel
                                     </Button>
@@ -233,11 +206,15 @@ class Post extends React.Component {
                     <br/>
                     <Typography variant="overline" color="textSecondary" display="block" gutterBottom>
                         <Link color='inherit' component="button" variant="overline"
-                              onClick={this.handleShowCommentsDialogOpen}>
+                              onClick={() => {
+                                  this.handleStateChange({showCommentsDialog: true})
+                              }}>
                             {this.state.comments.length} Comment{this.state.comments.length > 1 || this.state.comments.length === 0 ? 's' : null}
                         </Link>
 
-                        <Dialog open={this.state.showCommentsDialog} onClose={this.handleShowCommentsDialogClose}
+                        <Dialog open={this.state.showCommentsDialog} onClose={() => {
+                            this.handleStateChange({showCommentsDialog: false})
+                        }}
                                 aria-labelledby="form-dialog-title"
                                 maxWidth='xs'
                                 fullWidth
@@ -278,12 +255,14 @@ class Post extends React.Component {
                         <Grid
                             item
                         >
-                            <IconButton aria-label="comment" title='Comment' onClick={this.handleCommentDialogOpen}>
+                            <IconButton aria-label="comment" title='Comment' onClick={() => {
+                                this.handleStateChange({dialog: true})
+                            }}>
                                 <Comment/>
                             </IconButton>
                         </Grid>
                     </Grid>
-                    <Dialog open={this.state.dialog} onClose={this.handleCommentDialogClose}
+                    <Dialog open={this.state.dialog} onClose={() => (this.handleStateChange({dialog: false}))}
                             aria-labelledby="form-dialog-title"
                             maxWidth='sm' fullWidth={true}>
                         <DialogTitle id="form-dialog-title">Comment</DialogTitle>
@@ -294,11 +273,16 @@ class Post extends React.Component {
                                 label="Comment"
                                 fullWidth
                                 value={this.state.commentText}
-                                onChange={this.handleCommentTextChange}
+                                onChange={event => {
+                                    event.preventDefault();
+                                    this.handleStateChange({
+                                        commentText: event.target.value
+                                    });
+                                }}
                             />
                         </DialogContent>
                         <DialogActions>
-                            <Button onClick={this.handleCommentDialogClose} color="primary">
+                            <Button onClick={() => (this.handleStateChange({dialog: false}))} color="primary">
                                 Cancel
                             </Button>
                             <Button onClick={this.createComment} color="primary">

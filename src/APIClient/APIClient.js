@@ -1,57 +1,57 @@
-import axios from "axios"
+import axios from "axios";
 import {
-    createcomment_url,
-    deletecomment_url,
-    deletepost_url,
-    fetchcomments_url, fetchcreateupvote_url,
-    fetchcreateposts_url, deleteupvote_url, fetchcreatedownvote_url, deletedownvote_url
+    createCommentUrl,
+    deleteCommentUrl,
+    deletePostUrl,
+    fetchCommentsUrl, fetchCreateUpvoteUrl,
+    fetchCreatePostsUrl, deleteUpvoteUrl, fetchCreateDownvoteUrl, deleteDownvoteUrl
 } from "../Utils/constants";
 
 
 export const fetchCommentsDB = post => {
-    return axios.get(fetchcomments_url(post));
+    return axios.get(fetchCommentsUrl(post));
 };
 
 export const createCommentDB = (post, data) => {
-    return axios.post(createcomment_url(post), data)
+    return axios.post(createCommentUrl(post), data)
 };
 
 export const deleteCommentDB = comment => {
-    return axios.delete(deletecomment_url(comment));
+    return axios.delete(deleteCommentUrl(comment));
 };
 
 export const fetchPostsDB = () => {
-    return axios.get(fetchcreateposts_url)
+    return axios.get(fetchCreatePostsUrl)
 };
 
 export const createPostDB = data => {
-    return axios.post(fetchcreateposts_url, data)
+    return axios.post(fetchCreatePostsUrl, data)
 };
 
 export const deletePostDB = post => {
-    return axios.delete(deletepost_url(post))
+    return axios.delete(deletePostUrl(post))
 };
 
 export const fetchUpvotesDB = post => {
-    return axios.get(fetchcreateupvote_url(post))
+    return axios.get(fetchCreateUpvoteUrl(post))
 };
 
 export const createUpvoteDB = (post, data) => {
-    return axios.post(fetchcreateupvote_url(post), data)
+    return axios.post(fetchCreateUpvoteUrl(post), data)
 };
 
 export const deleteUpvoteDB = (post, user) => {
-    return axios.delete(deleteupvote_url(post, user))
+    return axios.delete(deleteUpvoteUrl(post, user))
 };
 
 export const fetchDownVotesDB = post => {
-    return axios.get(fetchcreatedownvote_url(post))
+    return axios.get(fetchCreateDownvoteUrl(post))
 };
 
 export const createDownvotevoteDB = (post, data) => {
-    return axios.post(fetchcreatedownvote_url(post), data)
+    return axios.post(fetchCreateDownvoteUrl(post), data)
 };
 
 export const deleteDownvoteDB = (post, user) => {
-    return axios.delete(deletedownvote_url(post, user))
+    return axios.delete(deleteDownvoteUrl(post, user))
 };
