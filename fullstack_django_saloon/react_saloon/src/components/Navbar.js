@@ -84,11 +84,8 @@ Navbar.propTypes = {
     history : PropTypes.object.isRequired
 };
 
-const mapDispatchToProps = dispatch =>
-    (
-        {
-            logout: (history) => dispatch(logout(history))
-        }
-    );
+const mapDispatchToProps = dispatch => ({
+    logout: (history) => dispatch(logout(history))
+});
 
 export default connect(null, mapDispatchToProps)(Navbar);

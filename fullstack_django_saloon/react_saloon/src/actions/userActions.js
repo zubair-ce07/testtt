@@ -1,4 +1,4 @@
-import ls from 'local-storage';
+import localStorage from 'local-storage';
 import { getTokenHeader,makeApiUrl, makeGetCallWithHeader,makePostCall } from './utils';
 import { REACT_APP_API_ENDPOINT_BASE_URL } from '../constants/config';
 import { actionTypes } from '../constants/actionsTypeConstants';
@@ -9,10 +9,10 @@ import { routeConstants } from '../constants/routeConstants';
 export const login = (username, password) =>
     dispatch =>
         makePostCall(makeApiUrl(REACT_APP_API_ENDPOINT_BASE_URL,apiEndPoints.API_LOGIN), { username, password }).then((response) => {
-            ls.set(reactAppConstants.USERNAME, response.data.user.username);
-            ls.set(reactAppConstants.EMAIL, response.data.user.email);
-            ls.set(reactAppConstants.TOKEN, response.data.token);
-            ls.set(reactAppConstants.USER_TYPE, response.data.user_type);
+            localStorage.set(reactAppConstants.USERNAME, response.data.user.username);
+            localStorage.set(reactAppConstants.EMAIL, response.data.user.email);
+            localStorage.set(reactAppConstants.TOKEN, response.data.token);
+            localStorage.set(reactAppConstants.USER_TYPE, response.data.user_type);
             dispatch({ type: actionTypes.LOGIN_SUCCESSFUL, payload: response.data });
             return response;
         }).catch((err) => {
@@ -23,7 +23,7 @@ export const login = (username, password) =>
 export const logout = (history) =>
     dispatch =>
         makeGetCallWithHeader(makeApiUrl(REACT_APP_API_ENDPOINT_BASE_URL,apiEndPoints.API_LOGOUT), { headers: { [reactAppConstants.AUTHORIZATION]: getTokenHeader() } }).then((response) => {
-            ls.clear();
+            localStorage.clear();
             dispatch({ type: actionTypes.LOGOUT_SUCCESSFUL });
             history.push(routeConstants.LOGIN_ROUTE);
             return response;

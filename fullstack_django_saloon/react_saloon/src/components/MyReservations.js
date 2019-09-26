@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import { Link } from 'react-router-dom';
-import ls from 'local-storage';
+import localStorage from 'local-storage';
 import PropTypes from 'prop-types';
 import { reactAppConstants } from '../constants/constants';
 import { routeConstants } from '../constants/routeConstants';
@@ -10,7 +10,7 @@ import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
 import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
-import { Container } from '@material-ui/core';
+import Container from '@material-ui/core/Container';
 
 import IsAuthenticated from '../hoc/isAuthenticated';
 import { getReservationsForUser, cancelReservation, getSaloonReservations } from '../actions/saloonActions';
@@ -18,7 +18,7 @@ import { getReservationsForUser, cancelReservation, getSaloonReservations } from
 class MyReservations extends Component {
 
     componentDidMount() {
-        const userType = ls.get(reactAppConstants.USER_TYPE);
+        const userType = localStorage.get(reactAppConstants.USER_TYPE);
         if (userType === reactAppConstants.CUSTOMER) {
             this.props.getReservationsForUser();
         } else if (userType === reactAppConstants.SALOON) {
@@ -32,7 +32,7 @@ class MyReservations extends Component {
 
     render() {
         const { reservations } = this.props;
-        const userType = ls.get(reactAppConstants.USER_TYPE);
+        const userType = localStorage.get(reactAppConstants.USER_TYPE);
 
         const reservation_list = reservations.map((reservation, index) => {
             const slot_date = new Date(reservation.time_slot.time);
@@ -105,21 +105,15 @@ MyReservations.propTypes = {
 
 };
 
-const mapStateToProps = (state) =>
-    (
-        {
-            reservations: state.saloon.reservations
-        }
-    );
+const mapStateToProps = (state) => ({
+    reservations: state.saloon.reservations
+});
 
-const mapDispatchToProps = dispatch =>
-    (    
-        {
-            getReservationsForUser: () => dispatch(getReservationsForUser()),
-            getSaloonReservations: () => dispatch(getSaloonReservations()),
-            cancelReservation: (id) => dispatch(cancelReservation(id))
-        }
-    );
+const mapDispatchToProps = dispatch => ({
+    getReservationsForUser: () => dispatch(getReservationsForUser()),
+    getSaloonReservations: () => dispatch(getSaloonReservations()),
+    cancelReservation: (id) => dispatch(cancelReservation(id))
+});
 
 export default compose(
     IsAuthenticated,

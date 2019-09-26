@@ -15,7 +15,6 @@ const saloonReducer = (state = initState, action) => {
             saloons: action.payload,
             successStatus: true
         };
-
     case actionTypes.FETCH_SALOON_FAILED:
         return {
             ...state,
@@ -82,7 +81,6 @@ const saloonReducer = (state = initState, action) => {
                 element.reservation = true;
             }
         });
-
         return {
             ...state,
             timeSlots: newTimeSlots,
@@ -104,10 +102,8 @@ const saloonReducer = (state = initState, action) => {
             ...state,
             addTimeSlotSuccessStatus: false
         };
-
     default:
         return state;
     }
-
 };
 export default saloonReducer;

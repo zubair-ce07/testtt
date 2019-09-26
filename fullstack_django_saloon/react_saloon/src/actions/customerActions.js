@@ -1,10 +1,8 @@
 import { actionTypes } from '../constants/actionsTypeConstants';
-import { getTokenHeader,makeApiUrl, makeGetCallWithHeader,makePostCallWithHeader } from './utils';
 import { REACT_APP_API_ENDPOINT_BASE_URL } from '../constants/config';
 import { apiEndPoints } from '../constants/apiEndPoints';
 import { reactAppConstants } from '../constants/constants';
-
-
+import { getTokenHeader,makeApiUrl, makeGetCallWithHeader,makePostCallWithHeader } from './utils';
 
 export const customerProfile = () => 
     dispatch =>
@@ -13,9 +11,7 @@ export const customerProfile = () =>
         }).catch(() => {
             dispatch({ type: actionTypes.CUSTOMER_PROFILE_FAILED });
         });
-
-
-
+        
 export const updateCustomerProfile = data => {
     const requestData = {
         'user': {

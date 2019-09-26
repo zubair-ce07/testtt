@@ -2,15 +2,13 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import PropTypes from 'prop-types';
-
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
 import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
-
+import Container from '@material-ui/core/Container';
 import IsAuthenticated from '../hoc/isAuthenticated';
 import { getTimeSlotsForUser, reserveSlotForUser } from '../actions/saloonActions';
-import { Container } from '@material-ui/core';
 
 export class SlotList extends Component {
 
@@ -67,20 +65,14 @@ SlotList.propTypes = {
     match:PropTypes.object.isRequired
 };
 
-const mapStateToProps = state =>
-    (
-        {
-            timeSlots: state.saloon.timeSlots
-        }
-    );
+const mapStateToProps = state => ({
+    timeSlots: state.saloon.timeSlots
+});
 
-const mapDispatchToProps = dispatch => 
-    (
-        {
-            getTimeSlotsForUser: (shop_name) => dispatch(getTimeSlotsForUser(shop_name)),
-            reserveSlotForUser: (id) => dispatch(reserveSlotForUser(id))
-        }
-    );
+const mapDispatchToProps = dispatch => ({
+    getTimeSlotsForUser: (shop_name) => dispatch(getTimeSlotsForUser(shop_name)),
+    reserveSlotForUser: (id) => dispatch(reserveSlotForUser(id))
+});
 
 export default compose(
     IsAuthenticated,

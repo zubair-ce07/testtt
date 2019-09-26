@@ -1,5 +1,6 @@
+import localStorage from 'local-storage';
 import React from 'react';
-import ls from 'local-storage';
+import { compose } from 'redux';
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
@@ -11,23 +12,21 @@ import Button from '@material-ui/core/Button';
 import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
 import CardActions from '@material-ui/core/CardActions';
-import { Container } from '@material-ui/core';
+import Container from '@material-ui/core/Container';
+import {withStyles} from '@material-ui/core';
+import { appStyles } from '../styles/appStyles';
 
 class ListSaloon extends React.Component {
-    cardStyle = {
-        margin: '10px',
-        width: '100%'
-    };
 
     componentDidMount() {
         this.props.fetchSaloons();
     }
-
     render() {
+        const { classes } = this.props;
         const { saloons } = this.props;
         const saloonsList = saloons.length > 0 ? (
             saloons.map(saloon => saloon.shop_name ? (
-                <Card style={this.cardStyle} key={saloon.id}>
+                <Card className={classes.cardStyle} key={saloon.id}>
                     <CardContent>
                         <Typography gutterBottom variant="h5" component="h2">
                             {saloon.shop_name}
@@ -41,8 +40,8 @@ class ListSaloon extends React.Component {
                     </CardContent>
                     <CardActions>
                         {
-                            ls.get('token') ? (
-                                ls.get(reactAppConstants.USER_TYPE) === reactAppConstants.CUSTOMER ? (
+                            localStorage.get('token') ? (
+                                localStorage.get(reactAppConstants.USER_TYPE) === reactAppConstants.CUSTOMER ? (
                                     <Button size="small" variant="contained" color="primary">
                                         <Link to={routeConstants.LIST_SALOONS_ROUTE+ saloon.shop_name}
                                             style={{ textDecoration: 'none',color:'white' }}>
@@ -82,12 +81,10 @@ class ListSaloon extends React.Component {
                 </Card>
             )
         );
-
         return (
             <Container>
                 {saloonsList}
             </Container>
-
         );
     }
 }
@@ -95,22 +92,20 @@ class ListSaloon extends React.Component {
 ListSaloon.propTypes = {
     saloons: PropTypes.array.isRequired,
     successStatus: PropTypes.bool.isRequired,
-    fetchSaloons: PropTypes.func.isRequired
+    fetchSaloons: PropTypes.func.isRequired,
+    classes: PropTypes.object.isRequired
 };
 
-const mapStateToPropos = state =>
-    (
-        {
-            saloons: state.saloon.saloons,
-            successStatus: state.saloon.successStatus
-        }
-    );
+const mapStateToProps = state =>({
+    saloons: state.saloon.saloons,
+    successStatus: state.saloon.successStatus
+});
 
-const mapDispatchToProps = dispatch => 
-    (
-        {
-            fetchSaloons: () =>dispatch(fetchSaloons())
-        }
-    );
+const mapDispatchToProps = dispatch => ({
+    fetchSaloons: () => dispatch(fetchSaloons())
+});
 
-export default connect(mapStateToPropos, mapDispatchToProps)(ListSaloon);
+export default compose(
+    withStyles(appStyles),
+    connect(mapStateToProps, mapDispatchToProps)
+)(ListSaloon);

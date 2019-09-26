@@ -5,7 +5,6 @@ import { routeConstants } from '../constants/routeConstants';
 import { reactAppConstants } from '../constants/constants';
 
 const IsAuthenticated = WrappedComponent => {
-
     const checkIsAuthenticated = (props) => {
         if (!ls.get('token')) {
             props.history.push(routeConstants.LIST_SALOONS_ROUTE);
@@ -22,15 +21,10 @@ const IsAuthenticated = WrappedComponent => {
             </React.Fragment>
         );
     };
-
     checkIsAuthenticated.propTypes = {
         history: PropTypes.object.isRequired,
         match: PropTypes.object.isRequired,
-
     };
-
     return checkIsAuthenticated;
-
 };
-
 export default IsAuthenticated;

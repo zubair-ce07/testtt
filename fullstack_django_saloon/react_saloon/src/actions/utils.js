@@ -1,9 +1,9 @@
+import localStorage from 'local-storage';
 import axios from 'axios';
-import ls from 'local-storage';
 import { reactAppConstants } from '../constants/constants';
 
 export const getTokenHeader = ()=>
-    'Token '.concat(ls.get(reactAppConstants.TOKEN));
+    'Token '.concat(localStorage.get(reactAppConstants.TOKEN));
 
 export const makeApiUrl = (baseApiUrl,apiEndpoint)=>
     baseApiUrl+apiEndpoint;

@@ -25,7 +25,7 @@ class Profile extends Component {
         padding: '20px'
     }
 
-    textieldStyle = {
+    textFieldStyle = {
         width: '100%'
     }
 
@@ -69,7 +69,7 @@ class Profile extends Component {
                         id="outlined-email"
                         label="Email"
                         name="email"
-                        style={this.textieldStyle}
+                        style={this.textFieldStyle}
                         required
                         component={renderField}
                         type='email'
@@ -78,7 +78,7 @@ class Profile extends Component {
                         id="outlined-username"
                         label="Username"
                         name="username"
-                        style={this.textieldStyle}
+                        style={this.textFieldStyle}
                         required
                         component={renderField}
                         type='text'
@@ -87,7 +87,7 @@ class Profile extends Component {
                         id="outlined-first_name"
                         label="First Name"
                         name="first_name"
-                        style={this.textieldStyle}
+                        style={this.textFieldStyle}
                         required
                         component={renderField}
                         type='text'
@@ -96,7 +96,7 @@ class Profile extends Component {
                         id="outlined-last_name"
                         label="Last Name"
                         name="last_name"
-                        style={this.textieldStyle}
+                        style={this.textFieldStyle}
                         required
                         component={renderField}
                         type='text'
@@ -105,7 +105,7 @@ class Profile extends Component {
                         id="outlined-phone_no"
                         label="Phone No"
                         name="phone_no"
-                        style={this.textieldStyle}
+                        style={this.textFieldStyle}
                         required
                         component={renderField}
                         type='number'
@@ -116,7 +116,7 @@ class Profile extends Component {
                                 id="outlined-shop_name"
                                 label="Shop Name"
                                 name="shop_name"
-                                style={this.textieldStyle}
+                                style={this.textFieldStyle}
                                 required
                                 component={renderField}
                                 onChange={this.handleChange}
@@ -128,7 +128,7 @@ class Profile extends Component {
                                 id="outlined-address"
                                 label="Address"
                                 name="address"
-                                style={this.textieldStyle}
+                                style={this.textFieldStyle}
                                 required
                                 component={renderField}
                                 onChange={this.handleChange}
@@ -161,24 +161,18 @@ Profile.propTypes = {
     invalid:PropTypes.bool.isRequired
 };
 
-const mapStateToProps = state =>
-    (
-        {
-            initialValues: state.user.user,
-            updateStatus: state.user.updateStatus
-        }
-    );
+const mapStateToProps = state => ({
+    initialValues: state.user.user,
+    updateStatus: state.user.updateStatus
+});
 
-const mapDispatchToProps = dispatch => 
-    (
-        {
-            customerProfile: () => dispatch(customerProfile()),
-            updateCustomerProfile: (data) => dispatch(updateCustomerProfile(data)),
-            saloonProfile: () => dispatch(saloonProfile()),
-            updateSaloonProfile: (data) => dispatch(updateSaloonProfile(data)),
-            userValueUpdate: (key, val) => dispatch(userValueUpdate(key, val))
-        }   
-    );
+const mapDispatchToProps = dispatch => ({
+    customerProfile: () => dispatch(customerProfile()),
+    updateCustomerProfile: (data) => dispatch(updateCustomerProfile(data)),
+    saloonProfile: () => dispatch(saloonProfile()),
+    updateSaloonProfile: (data) => dispatch(updateSaloonProfile(data)),
+    userValueUpdate: (key, val) => dispatch(userValueUpdate(key, val))
+});
     
 export default compose(
     connect(mapStateToProps, mapDispatchToProps),

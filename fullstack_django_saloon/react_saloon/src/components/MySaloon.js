@@ -8,22 +8,24 @@ import IsAuthenticated from '../hoc/isAuthenticated';
 import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
 import Typography from '@material-ui/core/Typography';
-import { Container } from '@material-ui/core';
-import {
-    Button,
-    Dialog,
-    DialogContent,
-    DialogContentText,
-    DialogTitle
-} from '@material-ui/core';
+import Container from '@material-ui/core/Container';
+import Button from '@material-ui/core/Button';
+import Dialog from '@material-ui/core/Dialog';
+import DialogContent from '@material-ui/core/DialogContent';
+import DialogContentText from '@material-ui/core/DialogContentText';
+import DialogTitle from '@material-ui/core/DialogTitle';
 import InputLabel from '@material-ui/core/InputLabel';
 import FormControl from '@material-ui/core/FormControl';
 import { Field, reduxForm } from 'redux-form';
 import {renderField,renderSelectField,validate} from './RenderField';
 
 class MySaloon extends Component {
-    state = {
-        open:false
+
+    constructor(props) {
+        super(props);
+        this.state = {
+            open:false
+        };
     }
     textFiledStyle = {
         width: '100%'
@@ -34,7 +36,7 @@ class MySaloon extends Component {
     }
 
     formSubmit = values => {
-        this.props.addTimeSlots(values).then(()=>{
+        this.props.addTimeSlots(values).then(() => {
             if(this.props.addTimeSlotSuccessStatus){
                 this.props.getTimeSlots();
                 this.setState({open:false});
@@ -173,21 +175,15 @@ MySaloon.propTypes = {
     invalid:PropTypes.bool.isRequired
 };
 
-const mapStateToProps = state =>
-    (
-        {
-            timeSlots: state.saloon.timeSlots,
-            addTimeSlotSuccessStatus : state.saloon.addTimeSlotSuccessStatus
-        }
-    );
+const mapStateToProps = state => ({
+    timeSlots: state.saloon.timeSlots,
+    addTimeSlotSuccessStatus : state.saloon.addTimeSlotSuccessStatus
+});
 
-const mapDispatchToProps = dispatch =>
-    (
-        {
-            addTimeSlots: (data) => dispatch(addTimeSlots(data)),
-            getTimeSlots: () => dispatch(getTimeSlots())
-        }
-    );
+const mapDispatchToProps = dispatch => ({
+    addTimeSlots: (data) => dispatch(addTimeSlots(data)),
+    getTimeSlots: () => dispatch(getTimeSlots())
+});
 
 
 

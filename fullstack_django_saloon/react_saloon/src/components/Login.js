@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import { login } from '../actions/userActions';
 import PropTypes from 'prop-types';
 import { routeConstants } from '../constants/routeConstants';
-import { Container } from '@material-ui/core';
+import Container from '@material-ui/core/Container';
 import Card from '@material-ui/core/Card';
 import { ToastContainer,toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -91,20 +91,15 @@ Login.propTypes = {
 
 };
 
-const mapStateToProps = state => 
-    (
-        {
-            LoginFailed: state.user.LoginFailed
-        }
-    );
+const mapStateToProps = state => ({
+    LoginFailed: state.user.LoginFailed
+});
 
 
-const mapDispatchToProps = dispatch =>
-    (
-        {
-            login: (username, password) => dispatch(login(username, password))
-        }
-    );
+const mapDispatchToProps = dispatch => ({
+    login: (username, password) => dispatch(login(username, password))
+});
+
 export default compose(
     connect(mapStateToProps, mapDispatchToProps),
     reduxForm({

@@ -6,7 +6,7 @@ import { signup } from '../actions/userActions';
 import PropTypes from 'prop-types';
 import { reactAppConstants } from '../constants/constants';
 import { routeConstants } from '../constants/routeConstants';
-import { Container } from '@material-ui/core';
+import Container from '@material-ui/core/Container';
 import Card from '@material-ui/core/Card';
 import { ToastContainer,toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -19,11 +19,13 @@ import {renderField,validate} from './RenderField';
 
 class Signup extends React.Component {
 
-    state = {
-        user_type: reactAppConstants.CUSTOMER,
-        userTypeIndex:0
+    constructor(props) {
+        super(props);
+        this.state = {
+            user_type: reactAppConstants.CUSTOMER,
+            userTypeIndex:0
+        };
     }
-
     cardStyle = {
         marginTop: '15%',
         padding: '20px'
