@@ -2,29 +2,37 @@ import weatherman as weatherman
 import argparse
 import datetime
 
-def validate_year(argument_string): 
-    if len(argument_string) == 4 and argument_string.isdigit(): 
+
+def validate_year(argument_string):
+    if len(argument_string) == 4 and argument_string.isdigit():
         return argument_string
     raise ValueError('Not a valid year format')
 
-def validate_month(argument_string): 
+
+def validate_month(argument_string):
     date_arg = argument_string.split('/')
-    year_arg = date_arg[0] 
+    year_arg = date_arg[0]
     month_arg = date_arg[1]
-    if len(year_arg) == 4 and len(month_arg) > 0 and year_arg.isdigit() and month_arg.isdigit(): 
-        return argument_string
+    if len(year_arg) == 4 and len(month_arg) > 0 \
+       and year_arg.isdigit() and month_arg.isdigit():
+            return argument_string
     raise ValueError('Not a valid year or month format')
+
 
 def get_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("path", type=str)
-    parser.add_argument("-a", help="Format should be like yyyy/m", type=validate_month)
-    parser.add_argument("-c", help="Format should be like yyyy/m", type=validate_month)
-    parser.add_argument("-e", help="Format should be like yyyy", type=validate_year)
+    parser.add_argument("-a", help="Format should be like yyyy/m",
+                        type=validate_month)
+    parser.add_argument("-c", help="Format should be like yyyy/m",
+                        type=validate_month)
+    parser.add_argument("-e", help="Format should be like yyyy",
+                        type=validate_year)
     args = parser.parse_args()
     if not (args.a or args.c or args.e):
         parser.error('No arguments provided!')
     return args
+
 
 def generate_reports(args):
     report = weatherman.WeatherAnalyze()
@@ -50,7 +58,8 @@ def generate_reports(args):
             report.display_yearly_report(file_data)
         else:
             print("File may not be available against -e argument!")
-    
+
+
 def main():
     arguments = get_arguments()
     generate_reports(arguments)
