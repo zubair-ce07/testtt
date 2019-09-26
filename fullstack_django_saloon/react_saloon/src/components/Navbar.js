@@ -26,7 +26,7 @@ class Navbar extends React.Component {
     }
 
     userType = ls.get(reactAppConstants.USER_TYPE)
-    token = ls.get('token')
+    token = ls.get(reactAppConstants.TOKEN)
 
     nav_bar_elements = this.token ? (
         <React.Fragment>

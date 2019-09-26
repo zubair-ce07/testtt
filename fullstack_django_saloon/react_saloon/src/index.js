@@ -10,10 +10,12 @@ import ls from 'local-storage';
 
 import saloonReducer from './reducers/saloonReducer';
 import userReducer from './reducers/userReducer';
+import { reducer as formReducer } from 'redux-form';
 
 const reducer = combineReducers({
     user: userReducer,
-    saloon: saloonReducer
+    saloon: saloonReducer,
+    form: formReducer
 });
 
 const rootReducer = (state, action) => {

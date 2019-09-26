@@ -12,11 +12,12 @@ import { reactAppConstants } from '../constants/constants';
 
 import { Container } from '@material-ui/core';
 import Card from '@material-ui/core/Card';
-import TextField from '@material-ui/core/TextField';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
+import { Field, reduxForm } from 'redux-form';
+import {renderField,validate} from './RenderField';
 
 class Profile extends Component {
     cardStyle = {
@@ -28,6 +29,7 @@ class Profile extends Component {
         width: '100%'
     }
 
+
     componentDidMount() {
         const userType = ls.get(reactAppConstants.USER_TYPE);
         userType === reactAppConstants.CUSTOMER ? (
@@ -37,20 +39,14 @@ class Profile extends Component {
         );
     }
 
-    handleChange = e => {
-        let key = e.target.name;
-        let val = e.target.value;
-        this.props.userValueUpdate(key, val);
-    }
-    handleSubmit = e => {
-        e.preventDefault();
+    formSubmit = values => {
         const userType = ls.get(reactAppConstants.USER_TYPE);
         if (userType === reactAppConstants.CUSTOMER) {
-            this.props.updateCustomerProfile(this.props.user).then(() => {
+            this.props.updateCustomerProfile(values).then(() => {
                 this.props.updateStatus && toast.success('Profile Updated');
             });
         } else if (userType === reactAppConstants.SALOON) {
-            this.props.updateSaloonProfile(this.props.user).then(() => {
+            this.props.updateSaloonProfile(values).then(() => {
                 this.props.updateStatus && toast.success('Profile Updated');
             });
         }
@@ -58,103 +54,90 @@ class Profile extends Component {
     }
 
     render() {
-        const { user } = this.props;
+        const { initialValues } = this.props;
+        const { handleSubmit} = this.props;
+        const { invalid } = this.props;
         const userType = ls.get(reactAppConstants.USER_TYPE);
-        const userProfile = (user && <Container maxWidth="sm" style={{ width: '100%' }}>
+        const userProfile = (initialValues && <Container maxWidth="sm" style={{ width: '100%' }}>
             <ToastContainer />
             <Card style={this.cardStyle}>
                 <Typography variant="h4">
                         Profile
                 </Typography>
-                <form onSubmit={this.handleSubmit}>
-                    <TextField
+                <form onSubmit={handleSubmit(this.formSubmit)}>
+                    <Field
                         id="outlined-email"
                         label="Email"
                         name="email"
-                        value={user.email || ''}
                         style={this.textieldStyle}
                         required
-                        onChange={this.handleChange}
-                        margin="normal"
-                        variant="outlined"
+                        component={renderField}
                         type='email'
                     />
-                    <TextField
+                    <Field
                         id="outlined-username"
                         label="Username"
                         name="username"
-                        value={user.username || ''}
                         style={this.textieldStyle}
                         required
-                        onChange={this.handleChange}
-                        margin="normal"
-                        variant="outlined"
+                        component={renderField}
                         type='text'
                     />
-                    <TextField
+                    <Field
                         id="outlined-first_name"
                         label="First Name"
                         name="first_name"
-                        value={user.first_name || ''}
                         style={this.textieldStyle}
                         required
-                        onChange={this.handleChange}
-                        margin="normal"
-                        variant="outlined"
+                        component={renderField}
                         type='text'
                     />
-                    <TextField
+                    <Field
                         id="outlined-last_name"
                         label="Last Name"
                         name="last_name"
-                        value={user.last_name || ''}
                         style={this.textieldStyle}
                         required
-                        onChange={this.handleChange}
-                        margin="normal"
-                        variant="outlined"
+                        component={renderField}
                         type='text'
                     />
-                    <TextField
+                    <Field
                         id="outlined-phone_no"
                         label="Phone No"
                         name="phone_no"
-                        value={user.phone_no || ''}
                         style={this.textieldStyle}
                         required
-                        onChange={this.handleChange}
-                        margin="normal"
-                        variant="outlined"
+                        component={renderField}
                         type='number'
                     />
                     {userType === reactAppConstants.SALOON &&
                         <React.Fragment>
-                            <TextField
+                            <Field
                                 id="outlined-shop_name"
                                 label="Shop Name"
                                 name="shop_name"
-                                value={user.shop_name || ''}
                                 style={this.textieldStyle}
                                 required
+                                component={renderField}
                                 onChange={this.handleChange}
                                 margin="normal"
                                 variant="outlined"
                                 type='text'
                             />
-                            <TextField
+                            <Field
                                 id="outlined-address"
                                 label="Address"
                                 name="address"
-                                value={user.address || ''}
                                 style={this.textieldStyle}
                                 required
+                                component={renderField}
                                 onChange={this.handleChange}
                                 margin="normal"
                                 variant="outlined"
                                 type='textarea'
                             />
                         </React.Fragment>}
-                    <Button type="submit" variant="contained" color="primary">Submit</Button>
+                    <Button type="submit" disabled={invalid} variant="contained" color="primary">Submit</Button>
                 </form>
             </Card>
         </Container>);
@@ -167,19 +150,21 @@ class Profile extends Component {
 }
 
 Profile.propTypes = {
-    user: PropTypes.object.isRequired,
+    initialValues: PropTypes.object.isRequired,
     updateStatus:PropTypes.bool.isRequired,
     customerProfile: PropTypes.func.isRequired,
     updateCustomerProfile: PropTypes.func.isRequired,
     saloonProfile:PropTypes.func.isRequired,
     updateSaloonProfile: PropTypes.func.isRequired,
-    userValueUpdate: PropTypes.func.isRequired
+    userValueUpdate: PropTypes.func.isRequired,
+    handleSubmit:PropTypes.func.isRequired,
+    invalid:PropTypes.bool.isRequired
 };
 
 const mapStateToProps = state =>
     (
         {
-            user: state.user.user,
+            initialValues: state.user.user,
             updateStatus: state.user.updateStatus
         }
     );
@@ -196,6 +181,11 @@ const mapDispatchToProps = dispatch =>
     );
     
 export default compose(
+    connect(mapStateToProps, mapDispatchToProps),
     IsAuthenticated,
-    connect(mapStateToProps, mapDispatchToProps)
+    reduxForm({
+        form: 'signupForm',
+        validate:validate,
+        enableReinitialize: true
+    })
 )(Profile);

@@ -16,17 +16,13 @@ import {
     DialogContentText,
     DialogTitle
 } from '@material-ui/core';
-import TextField from '@material-ui/core/TextField';
 import InputLabel from '@material-ui/core/InputLabel';
-import MenuItem from '@material-ui/core/MenuItem';
 import FormControl from '@material-ui/core/FormControl';
-import Select from '@material-ui/core/Select';
+import { Field, reduxForm } from 'redux-form';
+import {renderField,renderSelectField,validate} from './RenderField';
 
 class MySaloon extends Component {
     state = {
-        start_date :'',
-        end_date : '',
-        slot_duration: '60',
         open:false
     }
     textFiledStyle = {
@@ -37,22 +33,14 @@ class MySaloon extends Component {
         this.props.getTimeSlots();
     }
 
-    handleSubmit = e => {
-        e.preventDefault();
-        this.props.addTimeSlots(this.state).then(()=>{
-            console.log(this.props.addTimeSlotSuccessStatus);
+    formSubmit = values => {
+        this.props.addTimeSlots(values).then(()=>{
             if(this.props.addTimeSlotSuccessStatus){
                 this.props.getTimeSlots();
                 this.setState({open:false});
             }
         });
 
-    }
-
-    handleChange = e => {
-        let key = e.target.name;
-        let val = e.target.value;
-        this.setState({ [key]: val });
     }
 
     handleToggle = () => {
@@ -64,8 +52,8 @@ class MySaloon extends Component {
     render() {
 
         const { timeSlots } = this.props;
-
-        let date_check = this.state.start_date <= this.state.end_date;
+        const { handleSubmit} = this.props;
+        const { invalid } = this.props;
         const timeSlots_list = timeSlots.map((time_slot, index) => {
             const slot_date = new Date(time_slot.time);
             return (
@@ -105,86 +93,60 @@ class MySaloon extends Component {
                     <DialogContentText>
                         Please fill out the form below.
                     </DialogContentText>
-                    <form onSubmit={this.handleSubmit}>
-                        <TextField
+                    <form onSubmit={handleSubmit(this.formSubmit)}>
+                        <Field
                             id="start_date"
                             label="Start Date"
                             name="start_date"
-                            style={this.textFiledStyle}
                             required
+                            component={renderField}
                             value={this.state.start_date}
-                            onChange={this.handleChange}
-                            margin="normal"
-                            variant="outlined"
                             type='date'
                         />
-                        <TextField
+                        <Field
                             id="end_date"
                             label="End Date"
                             name="end_date"
-                            style={this.textFiledStyle}
                             required
-                            onChange={this.handleChange}
-                            margin="normal"
-                            variant="outlined"
+                            component={renderField}
                             type='date'
                         />
-                        { !date_check && <Typography variant="h6" style={{color:'red'}}>
-                            Start date should be greater then end date.
-                        </Typography>}
-                        <TextField
+                        <Field
                             id="start_time"
                             label="Start Time"
                             name="start_time"
                             required
-                            style={this.textFiledStyle}
-                            onChange={this.handleChange}
-                            margin="normal"
-                            variant="outlined"
+                            component={renderField}
                             min='0'
                             max = '23'
                             type='number'
                         />
                         <FormControl style={this.textFiledStyle}>
                             <InputLabel htmlFor="slot_duration">Slot Duration</InputLabel>
-                            <Select
-                                required
-                                value={this.state.slot_duration}
-                                name="slot_duration"
+                            <Field
                                 id="slot_duration"
-                                onChange={this.handleChange}
-                            >
-                                <MenuItem value={'15'}>15 minutes</MenuItem>
-                                <MenuItem value={'30'}>30 minutes</MenuItem>
-                                <MenuItem value={'45'}>45 minutes</MenuItem>
-                                <MenuItem value={'60'}>60 minutes</MenuItem>
-                            </Select>
+                                name="slot_duration"
+                                required
+                                component={renderSelectField}
+                            />
                         </FormControl>
 
-                        <TextField
+                        <Field
                             id="number_of_slots"
                             label="Number of slots in a day"
                             name="number_of_slots"
-                            style={this.textFiledStyle}
                             required
-                            onChange={this.handleChange}
-                            margin="normal"
-                            variant="outlined"
+                            component={renderField}
+
                             type='number'
                         />
                         { !this.props.addTimeSlotSuccessStatus && <Typography variant="h6" style={{color:'red'}}>
                             Number of slots selected exceeds one day.
                         </Typography>}
                         
-                        { date_check?(
-                            <Button type="submit" variant="contained" color="primary">
-                            Add
-                            </Button>
-                        ):(
-                            <Button type="submit" variant="contained" disabled color="primary">
-                            Add
-                            </Button>
-                        ) }
+                        <Button type="submit" disabled={invalid} variant="contained" color="primary">
+                        Add
+                        </Button>
                     </form>
                 </DialogContent>
             </Dialog>);
@@ -206,7 +168,9 @@ MySaloon.propTypes = {
     addTimeSlots: PropTypes.func.isRequired,
     getTimeSlots: PropTypes.func.isRequired,
     timeSlots: PropTypes.array.isRequired,
-    addTimeSlotSuccessStatus :PropTypes.bool.isRequired
+    addTimeSlotSuccessStatus :PropTypes.bool.isRequired,
+    handleSubmit:PropTypes.func.isRequired,
+    invalid:PropTypes.bool.isRequired
 };
 
 const mapStateToProps = state =>
@@ -228,6 +192,10 @@ const mapDispatchToProps = dispatch =>
 
 
 export default compose(
+    connect(mapStateToProps, mapDispatchToProps),
     IsAuthenticated,
-    connect(mapStateToProps, mapDispatchToProps)
+    reduxForm({
+        form: 'signupForm',
+        validate:validate,
+    })
 )(MySaloon);
