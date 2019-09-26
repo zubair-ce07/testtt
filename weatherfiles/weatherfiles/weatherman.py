@@ -224,7 +224,7 @@ def main():
         if weather_man.check_year_info(argument.e):
             weather_man.year_temperature_print(argument.e)
         else:
-            print('Enter a valid year')
+            print('Year format is not correct.')
     if argument.a:
         weather_man.check_file_info(argument.a)
         weather_man.year_month_average_temperature_print(argument.a)
