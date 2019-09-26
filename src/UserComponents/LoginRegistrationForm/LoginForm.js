@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import {Box, Button, Container, CssBaseline, Grid, Link, TextField} from '@material-ui/core';
 import withStyles from "@material-ui/core/styles/withStyles";
 import {Copyright} from "../../Utils/Utils";
-import {loginAPI} from "../../APIClient/APIClient";
+import {loginAPI, logoutAPI} from "../../APIClient/APIClient";
 
 const styles = theme => ({
     '@global': {
@@ -38,7 +38,7 @@ class LoginForm extends React.Component {
         body.forEach((value, name) => {
             data[name] = value;
         });
-        loginAPI.then(response => {
+        loginAPI(data).then(response => {
             console.log(response.data);
         });
     };
@@ -83,7 +83,7 @@ class LoginForm extends React.Component {
                         </Button>
                         <Grid container>
                             <Grid item xs>
-                                <Link href="#" variant="body2">
+                                <Link href="#" variant="body2" >
                                     Forgot password?
                                 </Link>
                             </Grid>

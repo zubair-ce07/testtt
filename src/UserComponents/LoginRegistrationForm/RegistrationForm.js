@@ -6,7 +6,7 @@ import {Box, Button, Container, CssBaseline, Grid, TextField,} from '@material-u
 import withStyles from "@material-ui/core/styles/withStyles";
 import {KeyboardDatePicker, MuiPickersUtilsProvider,} from '@material-ui/pickers';
 import {Copyright} from "../../Utils/Utils";
-import {registerAPI} from "../../APIClient/APIClient";
+import {registerAPI} from '../../APIClient/APIClient'
 
 const styles = theme => ({
     '@global': {
@@ -29,6 +29,13 @@ const styles = theme => ({
 });
 
 class SignUpForm extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            selectedDate: new Date()
+        }
+    }
+
     handleSubmit = event => {
         event.preventDefault();
         const body = new FormData(event.target);
@@ -36,9 +43,15 @@ class SignUpForm extends React.Component {
         body.forEach((value, name) => {
             data[name] = value;
         });
-        registerAPI.then(response => {
+        registerAPI(data).then(response => {
             console.log(response.data);
         });
+    };
+
+    handleChangeDate = event => {
+        this.setState({
+            selectedDate: event
+        })
     };
 
     render() {
@@ -93,13 +106,14 @@ class SignUpForm extends React.Component {
                             <MuiPickersUtilsProvider utils={DateFnsUtils}>
                                 <Grid item xs={12}>
                                     <KeyboardDatePicker
-                                        disableToolbar
-                                        variant="inline"
                                         format="yyyy-MM-dd"
                                         margin="normal"
+                                        variant="inline"
                                         fullWidth
                                         name='date_of_birth'
                                         label="Date of Birth"
+                                        value={this.state.selectedDate}
+                                        onChange={this.handleChangeDate}
                                         KeyboardButtonProps={{
                                             'aria-label': 'change date',
                                         }}
