@@ -34,7 +34,7 @@ class WeatherMan:
         This function takes file path as
         an input.
         """
-        self.__path = file_path + '//'
+        self.__path_to_file = file_path + '//'
 
     @staticmethod
     def check_file_info(file_info):
@@ -74,8 +74,8 @@ class WeatherMan:
         inside a list.
         """
         year_files = []
-        directory_files = glob.glob('{}Murree_weather_{}*'.format(self.__path, year))
-        for file in directory_files:
+        files = glob.glob('{}Murree_weather_{}*'.format(self.__path_to_file, year))
+        for file in files:
             if str(year) in file:
                 year_files.append(file)
         return year_files
@@ -143,7 +143,7 @@ class WeatherMan:
         file_info = datetime.strptime(file_info, '%Y/%m')
         month = file_info.strftime('%b')
         year = file_info.strftime('%Y')
-        file = '{}Murree_weather_{}_{}.txt'.format(self.__path, year, month)
+        file = '{}Murree_weather_{}_{}.txt'.format(self.__path_to_file, year, month)
         read = FileReader([file])
         data = read.read_file()
         WeatherMan.check_data(data)
@@ -165,7 +165,7 @@ class WeatherMan:
         print(date.strftime('%B %Y'))
         month = date.strftime('%b')
         year = date.strftime('%Y')
-        file = '{}Murree_weather_{}_{}.txt'.format(self.__path, year, month)
+        file = '{}Murree_weather_{}_{}.txt'.format(self.__path_to_file, year, month)
         read = FileReader([file])
         data = read.read_file()
         WeatherMan.check_data(data)
