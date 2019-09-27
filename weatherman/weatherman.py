@@ -11,12 +11,41 @@ import argparse
 from datetime import datetime
 from file_reader import FileReader
 from utils import Utils
-from weather_data import WeatherData
 
 
 BLUE = "\033[34m"
 RED = "\033[31m"
 WHITE = "\033[37m"
+
+    #@staticmethod
+def validate_date(file_info):
+    """
+    File year and month check.
+
+    This method returns True if the
+    file year and month input is in
+    the correct format.
+    """
+    expression = re.compile(r'^[1-9]\d{3}/((0)?\d|1[0-2])$')
+    if expression.search(str(file_info)):
+        return file_info
+    raise ValueError('File year and month format not correct. Example: 2014/2')
+    #exit()
+
+    #@staticmethod
+def validate_year(year):
+    """
+    File Year check.
+
+    This method returns True if
+    the file year is in the
+    correct format.
+    """
+    expression = re.compile(r'^[1-2]\d{3}$')
+    if expression.search(str(year)):
+        return year
+    raise ValueError('Year not valid.')
+    #return False
 
 
 class WeatherMan:
@@ -34,36 +63,8 @@ class WeatherMan:
         This function takes file path as
         an input.
         """
-        self.__path_to_file = file_path + '//'
+        self.__path_to_file = '{}//'.format(file_path)
 
-    @staticmethod
-    def check_file_info(file_info):
-        """
-        File year and month check.
-
-        This method returns True if the
-        file year and month input is in
-        the correct format.
-        """
-        expression = re.compile(r'^[1-2][0-9]{3}/((0)?[1-9]|1[0-2])$')
-        if expression.search(str(file_info)):
-            return
-        print('File year and month format not correct. Example: 2014/2')
-        exit()
-
-    @staticmethod
-    def check_year_info(year):
-        """
-        File Year check.
-
-        This method returns True if
-        the file year is in the
-        correct format.
-        """
-        expression = re.compile(r'^[1-2][0-9]{3}$')
-        if expression.search(str(year)):
-            return True
-        return False
 
     def year_files(self, year):
         """
@@ -75,9 +76,7 @@ class WeatherMan:
         """
         year_files = []
         files = glob.glob('{}Murree_weather_{}*'.format(self.__path_to_file, year))
-        for file in files:
-            if str(year) in file:
-                year_files.append(file)
+        year_files = [file for file in files if str(year)]
         return year_files
 
     @staticmethod
@@ -90,12 +89,6 @@ class WeatherMan:
         """
         return "+" * int(multiplication_range)
 
-    @staticmethod
-    def check_data(data):
-        """Check if data is empty return error."""
-        if data == "File not found Error.":
-            print("File not found Error.")
-            exit()
 
 
     def year_temperature_print(self, year):
@@ -109,27 +102,26 @@ class WeatherMan:
         """
         data = []
         year_files = self.year_files(year)
+        if not year_files:
+            print('Data not available.')
+            return
 
         read = FileReader(year_files)
         data = read.read_file()
-        WeatherMan.check_data(data)
 
-        max_temp_value = Utils.get_max_temperature(data.highest_temp)
-        min_temp_value = Utils.get_min_temperature(data.min_temp)
-        max_humid_value = Utils.get_max_humidity(data.max_humidity)
+        max_temp_object = Utils.get_max_temperature(data)
+        min_temp_object = Utils.get_min_temperature(data)
+        max_humid_object = Utils.get_max_humidity(data)
 
         print('Highest: {}C on {}'.format(
-            str(max_temp_value),
-            WeatherData.format_date(
-                data.date[data.highest_temp.index(max_temp_value)])))
+            str(max_temp_object.highest_temp),
+            Utils.format_date(max_temp_object.weather_date)))
         print('Lowest: {}C on {}'.format(
-            str(min_temp_value),
-            WeatherData.format_date(
-                data.date[data.min_temp.index(min_temp_value)])))
+            str(min_temp_object.min_temp),
+            Utils.format_date(min_temp_object.weather_date)))
         print('Humid: {}% on {}'.format(
-            str(max_humid_value),
-            WeatherData.format_date(
-                data.date[data.max_humidity.index(max_humid_value)])))
+            str(max_humid_object.max_humidity),
+            Utils.format_date(max_humid_object.weather_date)))
 
     def year_month_average_temperature_print(self, file_info):
         """File year/month input command.
@@ -146,11 +138,36 @@ class WeatherMan:
         file = '{}Murree_weather_{}_{}.txt'.format(self.__path_to_file, year, month)
         read = FileReader([file])
         data = read.read_file()
-        WeatherMan.check_data(data)
-        print(
-            "Highest Average: %sC" % Utils.get_average(data.highest_temp))
-        print("Lowest Average: %sC" % Utils.get_average(data.min_temp))
-        print("Average Humidity: {}%".format(Utils.get_average(data.max_humidity)))
+        highest_temp_sum = 0
+        min_temp_sum = 0
+        average_humidity_sum = 0
+        highest_temp_count = 0
+        min_temp_count = 0
+        average_humidity_count = 0
+
+
+        for weather in data:
+            if weather.highest_temp:
+                highest_temp_sum += weather.highest_temp
+                highest_temp_count += 1
+            if weather.min_temp:
+                min_temp_sum += weather.min_temp
+                min_temp_count += 1
+            if weather.max_humidity:
+                average_humidity_sum += weather.max_humidity
+                average_humidity_count += 1
+
+
+        highest_temp_average = highest_temp_sum // \
+            highest_temp_count
+        min_temp_average = min_temp_sum// \
+            min_temp_count
+        average_humidity_average = average_humidity_sum // \
+            average_humidity_count
+
+        print("Highest Average: %sC" % highest_temp_average)
+        print("Lowest Average: %sC" % min_temp_average)
+        print("Average Humidity: {}%".format(average_humidity_average))
 
     def horizontal_graph_print(self, file_info):
         """File year/month input command.
@@ -167,29 +184,28 @@ class WeatherMan:
         year = date.strftime('%Y')
         file = '{}Murree_weather_{}_{}.txt'.format(self.__path_to_file, year, month)
         read = FileReader([file])
-        data = read.read_file()
-        WeatherMan.check_data(data)
+        weather_data = read.read_file()
 
-        for day in range(len(data.date)):
-            date = data.date[day]
-            date = date.split('-')[2]
-            if len(date) == 1:
-                date = "0%s" % date
+        for data in weather_data:
+            date = data.weather_date
+            day = date.split('-')[2]
+            if len(day) == 1:
+                day = "0%s" % day
             min_temp_graph = ""
             max_temp_graph = ""
             min_display = ""
             max_display = ""
-            min_temp_graph = self.graph_print(data.min_temp[day])
-            max_temp_graph = self.graph_print(data.highest_temp[day])
-            if len(str(data.min_temp[day])) == 1:
-                min_display = "0%s" % data.min_temp[day]
-            elif str(data.min_temp[day]).find("-") == 0:
-                min_display = str(data.min_temp[day]).replace("-", "")
+            min_temp_graph = self.graph_print(data.min_temp)
+            max_temp_graph = self.graph_print(data.highest_temp)
+            if len(str(data.min_temp)) == 1:
+                min_display = "0%s" % data.min_temp
+            elif str(data.min_temp).find("-") == 0:
+                min_display = str(data.min_temp).replace("-", "")
                 min_display = "-0%s" % min_display
-            if len(str(data.highest_temp[day])) == 1:
-                max_display = "0%s" % data.highest_temp[day]
+            if len(str(data.highest_temp)) == 1:
+                max_display = "0%s" % data.highest_temp
             else:
-                max_display = "%s" % data.highest_temp[day]
+                max_display = "%s" % data.highest_temp
             if file_info.split("/")[1][0] == "0":
                 print("%s %s%s%s%sC" % (str(day), RED, max_temp_graph, WHITE, max_display))
                 print("%s %s%s%s%sC" % (str(day), BLUE, min_temp_graph, WHITE, min_display))
@@ -210,26 +226,21 @@ def main():
     parser.add_argument('files_path', type=str,
                         help='File path')
     parser.add_argument(
-        '-e', type=int, help='format is  for example = 2014')
+        '-e', type=validate_year, help='format is  for example = 2014')
     parser.add_argument(
-        '-a', type=str, help='format is for example = 2014/02')
+        '-a', type=validate_date, help='format is for example = 2014/02')
     parser.add_argument(
-        '-c', type=str, help='format is for example = 2014/02 or 2014/2')
+        '-c', type=validate_date, help='format is for example = 2014/02 or 2014/2')
     argument = parser.parse_args()
 
     path = argument.files_path
     weather_man = WeatherMan(path)
 
     if argument.e:
-        if weather_man.check_year_info(argument.e):
-            weather_man.year_temperature_print(argument.e)
-        else:
-            print('Year format is not correct.')
+        weather_man.year_temperature_print(argument.e)
     if argument.a:
-        weather_man.check_file_info(argument.a)
         weather_man.year_month_average_temperature_print(argument.a)
     if argument.c:
-        weather_man.check_file_info(argument.c)
         weather_man.horizontal_graph_print(argument.c)
 
 
