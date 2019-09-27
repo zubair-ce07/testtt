@@ -1,25 +1,37 @@
-
-class CalculateResults:
-
-    def yearly_highest_temp(self, highest_temp_yearly_days, highest_temp_year):
-
-        sorted_highest_temps=sorted(highest_temp_yearly_days.items(), key=lambda kv: kv[1])
-
-        highest_temp_year[sorted_highest_temps[len(sorted_highest_temps)-1][0]]=\
-                    sorted_highest_temps[len(sorted_highest_temps)-1][1]
-
-    def yearly_lowest_temp(self, lowest_temp_yearly_days, lowest_temp_year):
-        sorted_lowest_temps = sorted(lowest_temp_yearly_days.items(), key=lambda kv: kv[1])
-        lowest_temp_year[sorted_lowest_temps[0][0]]=sorted_lowest_temps[0][1]
-
-    def yearly_most_humid_day(self, highest_humid_yearly_days, most_humid_day_year):
-
-        sorted_humid_days = sorted(highest_humid_yearly_days.items(), key=lambda kv: kv[1])
-
-        most_humid_day_year[sorted_humid_days[len(sorted_humid_days)-1][0]]=\
-            sorted_humid_days[len(sorted_humid_days)-1][1]
+from yearly_temp import YearlyTempResultData
+from monthlyAvgs import MonthlyAvgs
 
 
-    def avg(self, temps):
-        average=sum(temps.values()) / float(len(temps))
-        return int(average)
+class ResultCalculator:
+
+    def Calculate_yearly_results(self, temp_readings):
+        final_result = YearlyTempResultData(temp_readings[0].date, temp_readings[0].high_temp, temp_readings[0].date,
+                                            temp_readings[0].low_temp, temp_readings[0].date, temp_readings[0].humidity)
+        for reading in temp_readings:
+            if reading.high_temp and int(reading.high_temp) > int(final_result.highest_temp):
+                final_result.date_highest_temp = reading.date
+                final_result.highest_temp = reading.high_temp
+            if reading.low_temp and int(reading.low_temp) < int(final_result.lowest_temp):
+                final_result.date_lowest_temp = reading.date
+                final_result.lowest_temp = reading.low_temp
+            if reading.humidity and int(reading.humidity) > int(final_result.top_humidity):
+                final_result.date_humidity = reading.date
+                final_result.top_humidity = reading.humidity
+        return final_result
+
+    def calculate_avg(self, readings):
+        high_sum = 0
+        low_sum = 0
+        humidity_sum = 0
+        for reading in readings:
+            if reading.high_temp:
+                high_sum += int(reading.high_temp)
+            if reading.low_temp:
+                low_sum += int(reading.low_temp)
+            if reading.mean_humidity:
+                humidity_sum += int(reading.mean_humidity)
+        high_avg = high_sum / len(readings)
+        low_avg = low_sum / len(readings)
+        avg_humid = humidity_sum / len(readings)
+        avg_monthly_result = MonthlyAvgs(high_avg, low_avg, avg_humid)
+        return avg_monthly_result

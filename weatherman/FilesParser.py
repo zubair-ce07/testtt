@@ -1,37 +1,29 @@
 import calendar
 import csv
+import datetime
+import os
+from temperatureResults import TempResult
 
 
 class FilesParser:
 
-    def populate_yearly_temps(self, highest_temp_yearly_days, lowest_temp_yearly_days, highest_humid_yearly_days, path,
-                              year):
-        for i in range(1, 13):
-            month = calendar.month_abbr[int(i)]
-            temp_path = path + "/Murree_weather_" + year + "_" + month + ".txt"
-            try:
-                csv_file = open(temp_path)
-                csv_reader = csv.DictReader(csv_file, delimiter=',')
-                for day in csv_reader:
-                    if day['Max TemperatureC'] != "":
-                        highest_temp_yearly_days[day.get('PKT',day.get('PKST'))] = int(day['Max TemperatureC'])
-                    if day['Min TemperatureC'] != "":
-                        lowest_temp_yearly_days[day.get('PKT',day.get('PKST'))] = int(day['Min TemperatureC'])
-                    if day['Max Humidity'] != "":
-                        highest_humid_yearly_days[day.get('PKT',day.get('PKST'))] = int(day['Max Humidity'])
-            except:
-                continue
+    def populate_yearly_temps(self, path, year):
+        temp_readings = []
+        for month in range(1, 13):
+            temp_path = year + "/" + str(month)
+            temp_readings += self.populate_monthly_temps(path, temp_path)
+        return temp_readings
 
-    def populate_monthly_avgs(self, highest_mnthly_for_avg, lowest_mnthly_for_avg, mean_humidity_monthly_days,
-                              path, month):
+    def populate_monthly_temps(self, path, month):
         month_n = month.split('/')[1]
+        temp_readings = []
         temp_path = path + "/Murree_weather_" + month.split('/')[0] + "_" + calendar.month_abbr[int(month_n)] + ".txt"
-        csv_file = open(temp_path)
-        csv_reader = csv.DictReader(csv_file, delimiter=',')
-        for day in csv_reader:
-            if day['Max TemperatureC'] != "":
-                highest_mnthly_for_avg[day.get('PKT',day.get('PKST'))] = int(day['Max TemperatureC'])
-            if day['Min TemperatureC'] != "":
-                lowest_mnthly_for_avg[day.get('PKT',day.get('PKST'))] = int(day['Min TemperatureC'])
-            if day[' Mean Humidity'] != "":
-                mean_humidity_monthly_days[day.get('PKT',day.get('PKST'))] = int(day[' Mean Humidity'])
+        if os.path.isfile(temp_path):
+            temperature_file = open(temp_path)
+            temperature_file_reader = csv.DictReader(temperature_file)
+            for day in temperature_file_reader:
+                reading = TempResult(datetime.datetime.strptime(day.get('PKT', day.get('PKST')), '%Y-%m-%d'),
+                                     day['Max TemperatureC'], day['Min TemperatureC'], day['Max Humidity'],
+                                     day[' Mean Humidity'])
+                temp_readings.append(reading)
+        return temp_readings

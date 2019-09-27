@@ -1,52 +1,27 @@
 import calendar
-import csv
-import datetime
 
 
-class Reports:
+class Report:
 
-    def show_yearly_results(self, highest_temp_year, lowest_temp_year, most_humid_day_year):
+    def show_yearly_results(self, result):
+        print("Highest: %sC on %s %s" % (result.highest_temp, calendar.month_name[result.date_highest_temp.month],
+                                         result.date_highest_temp.day))
+        print("Lowest: %sC on %s %s" % (result.lowest_temp, calendar.month_name[result.date_lowest_temp.month],
+                                        result.date_lowest_temp.day))
+        print("Humidity: %s%% on %s %s" % (result.top_humidity, calendar.month_name[result.date_humidity.month],
+                                           result.date_humidity.day))
 
-        print("Highest: " + str(highest_temp_year.values()[0]) + "C on "
-              + calendar.month_name[datetime.datetime.strptime(str(highest_temp_year.keys()[0]), '%Y-%m-%d').month]
-              + " " + str(datetime.datetime.strptime(str(highest_temp_year.keys()[0]), '%Y-%m-%d').day))
+    def show_monthly_avgs(self, result_avgs):
+        print("Highest Average: %sC" % result_avgs.avg_highest)
+        print("Lowest Average: %sC" % result_avgs.avg_lowest)
+        print("Average Mean Humidity: %s%%" % result_avgs.avg_mean_humidity)
 
-        print("Lowest: " + str(lowest_temp_year.values()[0]) + "C on "
-              + calendar.month_name[datetime.datetime.strptime(str(lowest_temp_year.keys()[0]), '%Y-%m-%d').month]
-              + " " + str(datetime.datetime.strptime(str(lowest_temp_year.keys()[0]), '%Y-%m-%d').day))
-
-        print("Humidity: " + str(most_humid_day_year.values()[0]) + "% on "
-              + calendar.month_name[datetime.datetime.strptime(most_humid_day_year.keys()[0], '%Y-%m-%d').month]
-              + " " + str(datetime.datetime.strptime(str(most_humid_day_year.keys()[0]), '%Y-%m-%d').day))
-
-    def show_monthly_avgs(self, avg_highest_monthly, avg_lowest_monthly, avg_mean_humidity):
-
-        print("Highest Average: " + str(avg_highest_monthly) + "C")
-        print("Lowest Average: " + str(avg_lowest_monthly) + "C")
-        print("Average Mean Humidity: " + str(avg_mean_humidity) + "%")
-
-    def show_monthly_temps(self, path, month, bonus):
-
-        month_n = month.split('/')[1]
-        temp_path = path + "/Murree_weather_" + month.split('/')[0] + "_" + calendar.month_abbr[int(month_n)] + ".txt"
-        csv_file = open(temp_path)
-        csv_reader = csv.DictReader(csv_file, delimiter=',')
-        for day in csv_reader:
-            high = ""
-            low = ""
-            if (day['Max TemperatureC'] != ""):
-                for t_max in range(0, int(day['Max TemperatureC'])):
-                    high = high + "+"
-            if (day['Min TemperatureC'] != ""):
-                for t_min in range(0, int(day['Min TemperatureC'])):
-                    low = low + "+"
-            low = '\033[34m' + low + '\033[30m'
-            high = '\033[31m' + high + '\033[30m'
-            if (bonus):
-                print(str(datetime.datetime.strptime(day.get('PKT', day.get('PKST')), '%Y-%m-%d').day) + " " + high +
-                      low + day['Max TemperatureC'] + "C - " + day['Min TemperatureC'] + "C ")
+    def show_monthly_temps(self, readings, bonus):
+        for day in readings:
+            if bonus:
+                print("%s %s%s%sC - %sC " % (day.date.day, '\033[31m' + "+" * int(day.high_temp) + '\033[30m',
+                                             '\033[34m' + "+" * int(day.low_temp) + '\033[30m',
+                                             day.high_temp, day.low_temp))
             else:
-                print(str(datetime.datetime.strptime(day.get('PKT', day.get('PKST')), '%Y-%m-%d').day) + " " + high +
-                      day['Max TemperatureC'] + "C")
-                print(str(datetime.datetime.strptime(day.get('PKT', day.get('PKST')), '%Y-%m-%d').day) + " " + low +
-                      day['Min TemperatureC'] + "C")
+                print("%s %s%sC" % (day.date.day, '\033[31m' + "+" * int(day.high_temp) + '\033[30m', day.high_temp))
+                print("%s %s%sC" % (day.date.day, '\033[34m' + "+" * int(day.low_temp) + '\033[30m', day.low_temp))
