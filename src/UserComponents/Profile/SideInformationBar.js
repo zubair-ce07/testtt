@@ -38,8 +38,8 @@ class SideInformationBar extends React.Component {
             AcademicInformations: false,
             Friends: false,
             groups: [],
-            work_informations: [],
-            academic_informations: [],
+            workInformationList: [],
+            academicInformationList: [],
             friends: [],
         }
     }
@@ -72,7 +72,7 @@ class SideInformationBar extends React.Component {
         WorkInformationAPI(link)
             .then(response => {
                 this.setState({
-                    work_informations: response.data
+                    workInformationList: response.data
                 });
             });
     };
@@ -80,7 +80,7 @@ class SideInformationBar extends React.Component {
         AcademicInformationAPI(link)
             .then(response => {
                 this.setState({
-                    academic_informations: response.data
+                    academicInformationList: response.data
                 });
             })
     };
@@ -178,8 +178,8 @@ class SideInformationBar extends React.Component {
                         <Collapse in={this.state.WorkInformations} timeout="auto" unmountOnExit>
                             <List component="div" disablePadding>
                                 {
-                                    this.state.work_informations.length > 0 ?
-                                        this.state.work_informations.map((data, index) => {
+                                    this.state.workInformationList.length > 0 ?
+                                        this.state.workInformationList.map((data, index) => {
                                             return (
                                                 <ListItem key={index} button className={classes.nested}>
                                                     <ListItemText primary={data.job_title}/>
@@ -204,8 +204,8 @@ class SideInformationBar extends React.Component {
                         <Collapse in={this.state.AcademicInformations} timeout="auto" unmountOnExit>
                             <List component="div" disablePadding>
                                 {
-                                    this.state.academic_informations.length > 0 ?
-                                        this.state.academic_informations.map((data, index) => {
+                                    this.state.academicInformationList.length > 0 ?
+                                        this.state.academicInformationList.map((data, index) => {
                                             return (
                                                 <ListItem key={index} button className={classes.nested}>
                                                     <ListItemText primary={data.institution_name}/>

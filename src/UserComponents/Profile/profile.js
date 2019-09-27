@@ -51,7 +51,7 @@ class Profile extends React.Component {
             })
     };
 
-    UNSAFE_componentWillMount() {
+    componentDidMount() {
         this.getUserData()
     }
 
