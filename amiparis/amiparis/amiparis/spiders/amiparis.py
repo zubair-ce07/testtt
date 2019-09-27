@@ -48,15 +48,13 @@ class BeginningBoutique(CrawlSpider):
             return req
 
     def parse_items(self, response):
-        skus = []
         item = response.meta['item']
         sizes = response.css('.size__list a::text').getall()
         colour = response.css('a.color__link--isActive::attr(data-tooltip)').get()
+        item['skus'] = {}
         for size in sizes:
-            skus.append({colour + '_' + size: {'size': size, 'colour': colour, 'price': item['price'],
-                                               'currency': item['currency']}})
-
-        item['skus'] = skus
+            item['skus'][colour + '_' + size] = {'size': size, 'colour': colour, 'price': item['price'],
+                                                 'currency': item['currency']}
         yield self.next_request_or_product(self.request_urls, item)
 
     def extract_product(self, response):
