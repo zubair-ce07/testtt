@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { compose } from 'redux';
 import { Link } from 'react-router-dom';
 import localStorage from 'local-storage';
 import PropTypes from 'prop-types';
@@ -11,6 +10,8 @@ import Button from '@material-ui/core/Button';
 import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
 import Container from '@material-ui/core/Container';
+import withStyles from '@material-ui/styles/withStyles';
+import { appStyles } from '../styles/appStyles';
 
 import IsAuthenticated from '../hoc/isAuthenticated';
 import { getReservationsForUser, cancelReservation, getSaloonReservations } from '../actions/saloonActions';
@@ -31,13 +32,14 @@ class MyReservations extends Component {
     }
 
     render() {
+        const { classes } = this.props;
         const { reservations } = this.props;
         const userType = localStorage.get(reactAppConstants.USER_TYPE);
 
         const reservation_list = reservations.map((reservation, index) => {
             const slot_date = new Date(reservation.time_slot.time);
             return (
-                <Card style={{ margin: '10px', width: '100%' }} key={index}>
+                <Card className={classes.cardStyle} key={index}>
                     <CardContent>
                         <Typography gutterBottom variant="h5" component="h2">
                         Reservation Time : {slot_date.toDateString().concat(' at ', slot_date.getUTCHours(),':',slot_date.getUTCMinutes())}
@@ -69,7 +71,7 @@ class MyReservations extends Component {
         });
 
 
-        const no_reservations = ((!reservations || reservations.length === 0) && <Card style={{ margin: '10px', width: '100%' }}>
+        const no_reservations = ((!reservations || reservations.length === 0) && <Card className={classes.cardStyle}>
             <Typography variant="h6" component="h2">
                 No Reservations
             </Typography>
@@ -77,7 +79,7 @@ class MyReservations extends Component {
             {userType === 'customer' &&<CardContent>
                 <Button to={routeConstants.LIST_SALOONS_ROUTE} variant='contained' color='primary'>
                     <Link to={routeConstants.LIST_SALOONS_ROUTE}
-                        style={{ textDecoration: 'none',color:'white' }}>
+                        className={classes.navBarLink}>
                         Reserve Now
                     </Link>
                 </Button>
@@ -87,7 +89,7 @@ class MyReservations extends Component {
 
         return (
             <Container>
-                <Typography variant="h4" style={{textAlign:'center'}} component="h2">
+                <Typography variant="h4" className={classes.timeSlotHeading} component="h2">
                     My Reservations
                 </Typography>
                 {no_reservations}
@@ -101,7 +103,8 @@ MyReservations.propTypes = {
     reservations: PropTypes.array.isRequired,
     getReservationsForUser: PropTypes.func.isRequired,
     getSaloonReservations:PropTypes.func.isRequired,
-    cancelReservation:PropTypes.func.isRequired
+    cancelReservation:PropTypes.func.isRequired,
+    classes:PropTypes.object.isRequired
 
 };
 
@@ -115,7 +118,4 @@ const mapDispatchToProps = dispatch => ({
     cancelReservation: (id) => dispatch(cancelReservation(id))
 });
 
-export default compose(
-    IsAuthenticated,
-    connect(mapStateToProps, mapDispatchToProps)
-)(MyReservations);
+export default connect(mapStateToProps, mapDispatchToProps)((IsAuthenticated)((withStyles(appStyles))(MyReservations)));

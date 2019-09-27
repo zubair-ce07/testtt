@@ -11,21 +11,12 @@ import { ToastContainer,toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
+import withStyles from '@material-ui/styles/withStyles';
+import { appStyles } from '../styles/appStyles';
 import { Field, reduxForm } from 'redux-form';
 import {renderField,validate} from './RenderField';
 
-
-
-
 class Login extends React.Component {
-    cardStyle = {
-        marginTop: '15%',
-        padding: '20px'
-    }
-
-    textFieldStyle = {
-        width: '100%'
-    }
     
     formSubmit = values => {
         this.props.login(values.username, values.password).then(() => {
@@ -39,13 +30,14 @@ class Login extends React.Component {
     };
 
     render() {
+        const { classes } = this.props;
         const { handleSubmit} = this.props;
         const { invalid } = this.props;
 
         return (
             <Container maxWidth="sm">
                 <ToastContainer />
-                <Card style={this.cardStyle}>
+                <Card className={classes.authCard}>
                     <Typography variant="h4">
                             Login
                     </Typography>
@@ -56,7 +48,7 @@ class Login extends React.Component {
                             required
                             name="username"
                             component={renderField}
-                            style={this.textFieldStyle}
+                            className={classes.textFieldStyle}
                             type='text'
                         />
                         <Field
@@ -65,7 +57,7 @@ class Login extends React.Component {
                             required
                             name="password"
                             component={renderField}
-                            style={this.textFieldStyle}
+                            className={classes.textFieldStyle}
                             type='password'
                         />
                         <Button type="submit" disabled={invalid} variant="contained" color="primary">
@@ -73,7 +65,7 @@ class Login extends React.Component {
                         </Button>
                         <br /><br />
                         <Typography variant="h6">
-                            <Link to={routeConstants.SIGNUP_ROUTE} style={{ textDecoration: 'none'}}>Signup</Link>
+                            <Link to={routeConstants.SIGNUP_ROUTE} className={classes.routeLink}>Signup</Link>
                         </Typography>
                     </form>
                 </Card>
@@ -85,9 +77,10 @@ class Login extends React.Component {
 Login.propTypes = {
     LoginFailed: PropTypes.bool.isRequired,
     login: PropTypes.func.isRequired,
-    history:PropTypes.object.isRequired,
-    handleSubmit:PropTypes.func.isRequired,
-    invalid:PropTypes.bool.isRequired
+    history: PropTypes.object.isRequired,
+    handleSubmit: PropTypes.func.isRequired,
+    invalid: PropTypes.bool.isRequired,
+    classes: PropTypes.object.isRequired
 
 };
 
@@ -100,10 +93,12 @@ const mapDispatchToProps = dispatch => ({
     login: (username, password) => dispatch(login(username, password))
 });
 
+//multiple hoc with compose
 export default compose(
     connect(mapStateToProps, mapDispatchToProps),
     reduxForm({
         form: 'loginForm',
         validate:validate,
-    })
+    }),
+    withStyles(appStyles)
 )(Login);

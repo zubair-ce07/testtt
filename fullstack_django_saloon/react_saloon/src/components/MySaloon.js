@@ -16,6 +16,8 @@ import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import InputLabel from '@material-ui/core/InputLabel';
 import FormControl from '@material-ui/core/FormControl';
+import withStyles from '@material-ui/styles/withStyles';
+import { appStyles } from '../styles/appStyles';
 import { Field, reduxForm } from 'redux-form';
 import {renderField,renderSelectField,validate} from './RenderField';
 
@@ -26,9 +28,6 @@ class MySaloon extends Component {
         this.state = {
             open:false
         };
-    }
-    textFiledStyle = {
-        width: '100%'
     }
 
     componentDidMount() {
@@ -52,14 +51,14 @@ class MySaloon extends Component {
     };
 
     render() {
-
+        const { classes } = this.props;
         const { timeSlots } = this.props;
         const { handleSubmit} = this.props;
         const { invalid } = this.props;
         const timeSlots_list = timeSlots.map((time_slot, index) => {
             const slot_date = new Date(time_slot.time);
             return (
-                <Card style={{ margin: '10px', width: '100%' }} key={index}>
+                <Card className={classes.cardStyle} key={index}>
                     <CardContent className="card-header">
                         <Typography gutterBottom variant="h5" component="h2">
                             {slot_date.toDateString().concat(' at ', slot_date.getUTCHours(),':',slot_date.getUTCMinutes())}
@@ -69,9 +68,8 @@ class MySaloon extends Component {
             );
         });
 
-
         const noTimeSlots = ((!timeSlots || timeSlots.length === 0) && <React.Fragment>
-            <Card style={{ margin: '10px', width: '100%' }}>
+            <Card className={classes.cardStyle}>
                 <CardContent className="card-header">
                     <Typography gutterBottom variant="h5" component="h2">
                         Time Slots Not Available
@@ -100,6 +98,7 @@ class MySaloon extends Component {
                             id="start_date"
                             label="Start Date"
                             name="start_date"
+                            className={classes.textFieldStyle}
                             required
                             component={renderField}
                             value={this.state.start_date}
@@ -109,6 +108,7 @@ class MySaloon extends Component {
                             id="end_date"
                             label="End Date"
                             name="end_date"
+                            className={classes.textFieldStyle}
                             required
                             component={renderField}
                             type='date'
@@ -117,13 +117,14 @@ class MySaloon extends Component {
                             id="start_time"
                             label="Start Time"
                             name="start_time"
+                            className={classes.textFieldStyle}
                             required
                             component={renderField}
                             min='0'
                             max = '23'
                             type='number'
                         />
-                        <FormControl style={this.textFiledStyle}>
+                        <FormControl className={classes.textFieldStyle}>
                             <InputLabel htmlFor="slot_duration">Slot Duration</InputLabel>
                             <Field
                                 id="slot_duration"
@@ -139,7 +140,7 @@ class MySaloon extends Component {
                             name="number_of_slots"
                             required
                             component={renderField}
-
+                            className={classes.textFieldStyle}
                             type='number'
                         />
                         { !this.props.addTimeSlotSuccessStatus && <Typography variant="h6" style={{color:'red'}}>
@@ -156,7 +157,7 @@ class MySaloon extends Component {
         return (
             <React.Fragment>
                 <Container>
-                    <h2 style={{ width: '100%', textAlign: 'center' }}>Time Slots</h2>
+                    <h2 className={classes.timeSlotHeading}>Time Slots</h2>
                     {timeSlots_list}
                     {noTimeSlots}
                     {add_slots_modal}
@@ -172,7 +173,8 @@ MySaloon.propTypes = {
     timeSlots: PropTypes.array.isRequired,
     addTimeSlotSuccessStatus :PropTypes.bool.isRequired,
     handleSubmit:PropTypes.func.isRequired,
-    invalid:PropTypes.bool.isRequired
+    invalid:PropTypes.bool.isRequired,
+    classes:PropTypes.object.isRequired
 };
 
 const mapStateToProps = state => ({
@@ -185,13 +187,12 @@ const mapDispatchToProps = dispatch => ({
     getTimeSlots: () => dispatch(getTimeSlots())
 });
 
-
-
 export default compose(
     connect(mapStateToProps, mapDispatchToProps),
     IsAuthenticated,
     reduxForm({
         form: 'signupForm',
         validate:validate,
-    })
+    }),
+    withStyles(appStyles)
 )(MySaloon);

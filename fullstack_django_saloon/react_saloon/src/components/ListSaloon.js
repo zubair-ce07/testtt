@@ -1,6 +1,5 @@
 import localStorage from 'local-storage';
 import React from 'react';
-import { compose } from 'redux';
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
@@ -13,7 +12,7 @@ import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
 import CardActions from '@material-ui/core/CardActions';
 import Container from '@material-ui/core/Container';
-import {withStyles} from '@material-ui/core';
+import withStyles from '@material-ui/styles/withStyles';
 import { appStyles } from '../styles/appStyles';
 
 class ListSaloon extends React.Component {
@@ -44,14 +43,14 @@ class ListSaloon extends React.Component {
                                 localStorage.get(reactAppConstants.USER_TYPE) === reactAppConstants.CUSTOMER ? (
                                     <Button size="small" variant="contained" color="primary">
                                         <Link to={routeConstants.LIST_SALOONS_ROUTE+ saloon.shop_name}
-                                            style={{ textDecoration: 'none',color:'white' }}>
+                                            className={classes.navBarLink}>
                                             Reserve a time slot
                                         </Link>
                                     </Button>) : (false)
                             ) : (
                                 <Button size="small" variant="contained" color="primary">
                                     <Link to={routeConstants.LOGIN_ROUTE}
-                                        style={{ textDecoration: 'none',color:'white' }}>
+                                        className={classes.navBarLink}>
                                         Login to Reserve a time slot
                                     </Link>
                                 </Button>
@@ -64,7 +63,7 @@ class ListSaloon extends React.Component {
             )
         ) : (
             this.props.successStatus ? (
-                <Card style={this.cardStyle}>
+                <Card className={classes.cardStyle}>
                     <CardContent>
                         <Typography gutterBottom variant="h5" component="h2">
                             No Saloons To be Listed
@@ -72,7 +71,7 @@ class ListSaloon extends React.Component {
                     </CardContent>
                 </Card>
             ) : (
-                <Card style={this.cardStyle}>
+                <Card className={classes.cardStyle}>
                     <CardContent>
                         <Typography gutterBottom variant="h5" component="h2">
                             Errors Getting Saloons List
@@ -105,7 +104,5 @@ const mapDispatchToProps = dispatch => ({
     fetchSaloons: () => dispatch(fetchSaloons())
 });
 
-export default compose(
-    withStyles(appStyles),
-    connect(mapStateToProps, mapDispatchToProps)
-)(ListSaloon);
+//multiple hoc without compose
+export default (connect(mapStateToProps, mapDispatchToProps))(withStyles(appStyles)(ListSaloon));

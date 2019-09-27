@@ -1,15 +1,13 @@
 import React, { Component } from 'react';
 import { compose } from 'redux';
 import { connect } from 'react-redux';
-import ls from 'local-storage';
+import localStorage from 'local-storage';
 import PropTypes from 'prop-types';
-
 import { saloonProfile, updateSaloonProfile } from '../actions/saloonActions';
 import { customerProfile, updateCustomerProfile } from '../actions/customerActions';
 import { userValueUpdate } from '../actions/userActions';
 import IsAuthenticated from '../hoc/isAuthenticated';
 import { reactAppConstants } from '../constants/constants';
-
 import { Container } from '@material-ui/core';
 import Card from '@material-ui/core/Card';
 import { ToastContainer, toast } from 'react-toastify';
@@ -18,20 +16,13 @@ import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 import { Field, reduxForm } from 'redux-form';
 import {renderField,validate} from './RenderField';
+import withStyles from '@material-ui/styles/withStyles';
+import { appStyles } from '../styles/appStyles';
 
 class Profile extends Component {
-    cardStyle = {
-        marginTop: '15%',
-        padding: '20px'
-    }
-
-    textFieldStyle = {
-        width: '100%'
-    }
-
 
     componentDidMount() {
-        const userType = ls.get(reactAppConstants.USER_TYPE);
+        const userType = localStorage.get(reactAppConstants.USER_TYPE);
         userType === reactAppConstants.CUSTOMER ? (
             this.props.customerProfile()
         ) : (
@@ -40,7 +31,7 @@ class Profile extends Component {
     }
 
     formSubmit = values => {
-        const userType = ls.get(reactAppConstants.USER_TYPE);
+        const userType = localStorage.get(reactAppConstants.USER_TYPE);
         if (userType === reactAppConstants.CUSTOMER) {
             this.props.updateCustomerProfile(values).then(() => {
                 this.props.updateStatus && toast.success('Profile Updated');
@@ -54,13 +45,14 @@ class Profile extends Component {
     }
 
     render() {
+        const { classes } = this.props;
         const { initialValues } = this.props;
         const { handleSubmit} = this.props;
         const { invalid } = this.props;
-        const userType = ls.get(reactAppConstants.USER_TYPE);
-        const userProfile = (initialValues && <Container maxWidth="sm" style={{ width: '100%' }}>
+        const userType = localStorage.get(reactAppConstants.USER_TYPE);
+        const userProfile = (initialValues && <Container maxWidth="sm">
             <ToastContainer />
-            <Card style={this.cardStyle}>
+            <Card className={classes.authCard}>
                 <Typography variant="h4">
                         Profile
                 </Typography>
@@ -69,7 +61,7 @@ class Profile extends Component {
                         id="outlined-email"
                         label="Email"
                         name="email"
-                        style={this.textFieldStyle}
+                        className={classes.textFieldStyle}
                         required
                         component={renderField}
                         type='email'
@@ -78,7 +70,7 @@ class Profile extends Component {
                         id="outlined-username"
                         label="Username"
                         name="username"
-                        style={this.textFieldStyle}
+                        className={classes.textFieldStyle}
                         required
                         component={renderField}
                         type='text'
@@ -87,7 +79,7 @@ class Profile extends Component {
                         id="outlined-first_name"
                         label="First Name"
                         name="first_name"
-                        style={this.textFieldStyle}
+                        className={classes.textFieldStyle}
                         required
                         component={renderField}
                         type='text'
@@ -96,7 +88,7 @@ class Profile extends Component {
                         id="outlined-last_name"
                         label="Last Name"
                         name="last_name"
-                        style={this.textFieldStyle}
+                        className={classes.textFieldStyle}
                         required
                         component={renderField}
                         type='text'
@@ -105,7 +97,7 @@ class Profile extends Component {
                         id="outlined-phone_no"
                         label="Phone No"
                         name="phone_no"
-                        style={this.textFieldStyle}
+                        className={classes.textFieldStyle}
                         required
                         component={renderField}
                         type='number'
@@ -116,7 +108,7 @@ class Profile extends Component {
                                 id="outlined-shop_name"
                                 label="Shop Name"
                                 name="shop_name"
-                                style={this.textFieldStyle}
+                                className={classes.textFieldStyle}
                                 required
                                 component={renderField}
                                 onChange={this.handleChange}
@@ -128,7 +120,7 @@ class Profile extends Component {
                                 id="outlined-address"
                                 label="Address"
                                 name="address"
-                                style={this.textFieldStyle}
+                                className={classes.textFieldStyle}
                                 required
                                 component={renderField}
                                 onChange={this.handleChange}
@@ -158,7 +150,8 @@ Profile.propTypes = {
     updateSaloonProfile: PropTypes.func.isRequired,
     userValueUpdate: PropTypes.func.isRequired,
     handleSubmit:PropTypes.func.isRequired,
-    invalid:PropTypes.bool.isRequired
+    invalid:PropTypes.bool.isRequired,
+    classes:PropTypes.object.isRequired
 };
 
 const mapStateToProps = state => ({
@@ -181,5 +174,6 @@ export default compose(
         form: 'signupForm',
         validate:validate,
         enableReinitialize: true
-    })
+    }),
+    withStyles(appStyles)
 )(Profile);

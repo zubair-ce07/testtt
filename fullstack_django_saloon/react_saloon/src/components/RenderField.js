@@ -1,17 +1,14 @@
 import React from 'react';
 import TextField from '@material-ui/core/TextField';
+import FormHelperText from '@material-ui/core/FormHelperText';
 import MenuItem from '@material-ui/core/MenuItem';
 import Select from '@material-ui/core/Select';
 import PropTypes from 'prop-types';
 
-const textFieldStyle = {
-    width: '100%'
-};
-
 export const  renderField = ({ input,label, type,meta: { touched, error },...custom}) => (
+    <>
     <TextField
-        label={touched && error!==undefined?(error):(label)}
-        style={textFieldStyle}
+        label={label}
         error={touched && error !== undefined}
         margin="normal"
         variant="outlined"
@@ -19,6 +16,8 @@ export const  renderField = ({ input,label, type,meta: { touched, error },...cus
         {...input}
         {...custom}
     />
+    <FormHelperText>{touched && error}</FormHelperText>
+    </>
 );
 
 export const  renderSelectField = ({ input,...custom}) => (

@@ -7,6 +7,8 @@ import Button from '@material-ui/core/Button';
 import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
 import Container from '@material-ui/core/Container';
+import withStyles from '@material-ui/styles/withStyles';
+import { appStyles } from '../styles/appStyles';
 import IsAuthenticated from '../hoc/isAuthenticated';
 import { getTimeSlotsForUser, reserveSlotForUser } from '../actions/saloonActions';
 
@@ -22,8 +24,8 @@ export class SlotList extends Component {
 
     render() {
         const { timeSlots } = this.props;
-
-        const noTimeSlots = ((!timeSlots || timeSlots.length === 0) && <Card style={{ margin: '10px' }}>
+        const { classes } = this.props;
+        const noTimeSlots = ((!timeSlots || timeSlots.length === 0) && <Card className={classes.cardStyle}>
             <CardContent className="card-header">
                 <Typography gutterBottom variant="h5" component="h2">
                     No Time Slots Available
@@ -34,7 +36,7 @@ export class SlotList extends Component {
         const timeSlotsList = timeSlots.map((time_slot, index) => {
             const slot_date = new Date(time_slot.time);
             return (
-                <Card style={{ margin: '10px', width: '100%' }} key={index}>
+                <Card className={classes.cardStyle} key={index}>
                     <CardContent className="card-header">
                         <Typography gutterBottom variant="h5" component="h2">
                             {slot_date.toDateString().concat(' at ', slot_date.getUTCHours(),':',slot_date.getUTCMinutes())}
@@ -62,7 +64,8 @@ SlotList.propTypes = {
     timeSlots: PropTypes.array.isRequired,
     getTimeSlotsForUser:PropTypes.func.isRequired,
     reserveSlotForUser:PropTypes.func.isRequired,
-    match:PropTypes.object.isRequired
+    match:PropTypes.object.isRequired,
+    classes:PropTypes.object.isRequired
 };
 
 const mapStateToProps = state => ({
@@ -76,5 +79,6 @@ const mapDispatchToProps = dispatch => ({
 
 export default compose(
     IsAuthenticated,
-    connect(mapStateToProps, mapDispatchToProps)
+    connect(mapStateToProps, mapDispatchToProps),
+    withStyles(appStyles)
 )(SlotList);

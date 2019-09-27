@@ -14,6 +14,8 @@ import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
+import withStyles from '@material-ui/styles/withStyles';
+import { appStyles } from '../styles/appStyles';
 import { Field, reduxForm } from 'redux-form';
 import {renderField,validate} from './RenderField';
 
@@ -25,14 +27,6 @@ class Signup extends React.Component {
             user_type: reactAppConstants.CUSTOMER,
             userTypeIndex:0
         };
-    }
-    cardStyle = {
-        marginTop: '15%',
-        padding: '20px'
-    }
-
-    textFieldStyle = {
-        width: '100%'
     }
 
     formSubmit = values => {
@@ -58,12 +52,13 @@ class Signup extends React.Component {
     }
 
     render() {
+        const { classes } = this.props;
         const { handleSubmit} = this.props;
         const { invalid } = this.props;
         return (
             <Container maxWidth="sm">
                 <ToastContainer />
-                <Card style={this.cardStyle}>
+                <Card className={classes.authCard}>
                     <Typography variant="h4">
                             Sign Up
                     </Typography>
@@ -81,7 +76,7 @@ class Signup extends React.Component {
                             id="outlined-username"
                             label="Username"
                             name="username"
-                            style={this.textFieldStyle}
+                            className={classes.textFieldStyle}
                             component={renderField}
                             required
                             type='text'
@@ -91,7 +86,7 @@ class Signup extends React.Component {
                             label="email"
                             required
                             name="email"
-                            style={this.textFieldStyle}
+                            className={classes.textFieldStyle}
                             component={renderField}
                             type='email'
                         />
@@ -100,7 +95,7 @@ class Signup extends React.Component {
                             label="Password"
                             required
                             name="password1"
-                            style={this.textFieldStyle}
+                            className={classes.textFieldStyle}
                             component={renderField}
                             type='password'
                         />
@@ -109,7 +104,7 @@ class Signup extends React.Component {
                             label="Confrim Password"
                             required
                             name="password2"
-                            style={this.textFieldStyle}
+                            className={classes.textFieldStyle}
                             component={renderField}
                             type='password'
                         />
@@ -119,7 +114,7 @@ class Signup extends React.Component {
                         </Button>
                         <br /><br />
                         <Typography variant="h6">
-                            <Link to={routeConstants.LOGIN_ROUTE} style={{ textDecoration: 'none'}}>Login</Link>
+                            <Link to={routeConstants.LOGIN_ROUTE} className={classes.routeLink}>Login</Link>
                         </Typography>
                     </form>
                 </Card>
@@ -134,7 +129,8 @@ Signup.propTypes = {
     signup: PropTypes.func.isRequired,
     history: PropTypes.object.isRequired,
     handleSubmit:PropTypes.func.isRequired,
-    invalid:PropTypes.bool.isRequired
+    invalid:PropTypes.bool.isRequired,
+    classes:PropTypes.object.isRequired
 };
 
 const mapStateToProps = state =>
@@ -157,5 +153,6 @@ export default compose(
     reduxForm({
         form: 'signupForm',
         validate:validate,
-    })
+    }),
+    withStyles(appStyles)
 )(Signup);
