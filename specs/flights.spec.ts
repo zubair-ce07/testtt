@@ -1,19 +1,16 @@
 import { expect } from "chai";
 import { browser } from "protractor";
-import { FlightsPageKayak } from "../../src/brands/kayak/pages/flights";
-import { FlightsResultsPageKayak } from "../../src/brands/kayak/pages/flightsResults";
-import { MultiCityForm } from "../../src/core/elements/forms/multiCity";
-import { TripType } from "../../src/core/elements/selectors/tripType";
-import { DragHandle } from "../../src/core/elements/sliders/time";
-import { FlightsPage } from "../../src/core/pages/flights";
-import { FlightsResultsPage } from "../../src/core/pages/flightsResults";
-import { formatDate } from "../../src/utils/specs.utils";
+import { TripType } from "../src/core/elements/selectors/tripType";
+import { DragHandle } from "../src/core/elements/sliders/time";
+import { BrandPagesFactory } from "../src/factory/brand";
+import { formatDate } from "../src/utils/specs.utils";
 
-describe('Kayak Flights Search', () => {
-  const Flights: FlightsPage = new FlightsPageKayak();
-  const FlightsResults: FlightsResultsPage = new FlightsResultsPageKayak();
+const BRAND_NAME = process.env.RUN_TESTS_FOR_BRAND;
+const {flightsPage, flightsResultsPage} = BrandPagesFactory.getPages(BRAND_NAME);
+
+describe(`${BRAND_NAME} Flights Search`, () => {
   
-  const URL = `https://www.kayak.com/flights`;
+  const URL = flightsPage.getURL();
   const CABIN_TYPE = 'Business';
   const TRIP_TYPE = TripType.MULTI_CITY;
   const DATE_1 = new Date();
@@ -31,14 +28,14 @@ describe('Kayak Flights Search', () => {
   });
   
   it('should set trip type to "multi-city"', async () => {
-    const tripSelector = Flights.getTripSelector();
-    await Flights.getTripSelector().select(TRIP_TYPE);
+    const tripSelector = flightsPage.getTripSelector();
+    await flightsPage.getTripSelector().select(TRIP_TYPE);
     expect(tripSelector.getCurrentTripType()).eventually.to.equal(TRIP_TYPE);
-    expect(Flights.getMultiCityTripForm().getDisplayedLegsCount()).eventually.to.be.gte(2);
+    expect(flightsPage.getMultiCityTripForm().getDisplayedLegsCount()).eventually.to.be.gte(2);
   });
   
   it('should set origin and destination for two flights', async () => {
-    const multiCityTripForm: MultiCityForm = Flights.getMultiCityTripForm();
+    const multiCityTripForm = flightsPage.getMultiCityTripForm();
     const flightLeg1 = multiCityTripForm.getFlightSelector(0);
     const flightLeg2 = multiCityTripForm.getFlightSelector(1);
     
@@ -55,8 +52,8 @@ describe('Kayak Flights Search', () => {
   });
   
   it('should set departure date for two flights', async () => {
-    const dateSelector1 = Flights.getMultiCityTripForm().getDateSelector(0);
-    const dateSelector2 = Flights.getMultiCityTripForm().getDateSelector(1);
+    const dateSelector1 = flightsPage.getMultiCityTripForm().getDateSelector(0);
+    const dateSelector2 = flightsPage.getMultiCityTripForm().getDateSelector(1);
     
     await dateSelector1.selectDate(DATE_1);
     expect(dateSelector1.getDisplayText()).eventually.to.equal(formatDate(DATE_1));
@@ -66,7 +63,7 @@ describe('Kayak Flights Search', () => {
   });
   
   it('should set cabin type to "Business" for two flights', async () => {
-    const form = Flights.getMultiCityTripForm();
+    const form = flightsPage.getMultiCityTripForm();
     
     const cabinSelector1 = form.getCabinSelector(0);
     await cabinSelector1.select(CABIN_TYPE);
@@ -78,26 +75,26 @@ describe('Kayak Flights Search', () => {
   });
   
   it('should click "Search" and load results page', async () => {
-    await Flights.clickSearch();
-    expect(FlightsResults.getSearchResults().count()).eventually.to.greaterThan(0);
+    await flightsPage.clickSearch();
+    expect(flightsResultsPage.getSearchResults().count()).eventually.to.greaterThan(0);
   });
   
   it('should contain two "time-off" sliders on search page', async () => {
-    expect(FlightsResults.getTimeSliders().count()).eventually.to.be.equal(2);
-    expect(FlightsResults.getTimeSlider(0).getDisplayText()).eventually.to.contain(ORIGIN_1);
-    expect(FlightsResults.getTimeSlider(1).getDisplayText()).eventually.to.contain(ORIGIN_2);
+    expect(flightsResultsPage.getTimeSliders().count()).eventually.to.be.equal(2);
+    expect(flightsResultsPage.getTimeSlider(0).getDisplayText()).eventually.to.contain(ORIGIN_1);
+    expect(flightsResultsPage.getTimeSlider(1).getDisplayText()).eventually.to.contain(ORIGIN_2);
   });
   
   it('should slide "time-off" slider and update results', async () => {
-    await FlightsResults.getTimeSlider(0).drag(DragHandle.LEFT, 50);
-    expect(FlightsResults.getSearchResults().count()).eventually.to.be.greaterThan(0);
-    
-    await FlightsResults.getTimeSlider(1).drag(DragHandle.LEFT, 50);
-    expect(FlightsResults.getSearchResults().count()).eventually.to.be.greaterThan(0);
+    await flightsResultsPage.getTimeSlider(0).drag(DragHandle.LEFT, 50);
+    expect(flightsResultsPage.getSearchResults().count()).eventually.to.be.greaterThan(0);
+  
+    await flightsResultsPage.getTimeSlider(1).drag(DragHandle.LEFT, 50);
+    expect(flightsResultsPage.getSearchResults().count()).eventually.to.be.greaterThan(0);
   });
   
   it('should open provider page when "view deal" is clicked', async () => {
-    const flightResult = FlightsResults.getSearchResult(0);
+    const flightResult = flightsResultsPage.getSearchResult(0);
     await flightResult.clickViewDeal();
     const windows = await browser.getAllWindowHandles();
     expect(windows.length).to.be.greaterThan(1);
@@ -110,14 +107,14 @@ describe('Kayak Flights Search', () => {
   });
   
   it('should show search form', async () => {
-    const form = FlightsResults.getMultiCityTripForm();
+    const form = flightsResultsPage.getMultiCityTripForm();
     expect(form.isFormVisible()).eventually.to.be.false;
     await form.makeFormVisible();
     expect(form.isFormVisible()).eventually.to.be.true;
   });
   
   it('should show correct values on search form', async () => {
-    const form = FlightsResults.getMultiCityTripForm();
+    const form = flightsResultsPage.getMultiCityTripForm();
     
     const flightSelector1 = form.getFlightSelector(0);
     const flightSelector2 = form.getFlightSelector(1);
@@ -135,8 +132,8 @@ describe('Kayak Flights Search', () => {
   });
   
   it('should clear flight legs', async () => {
-    await FlightsResults.getMultiCityTripForm().clearAll();
-    const form = FlightsResults.getMultiCityTripForm();
+    await flightsResultsPage.getMultiCityTripForm().clearAll();
+    const form = flightsResultsPage.getMultiCityTripForm();
     const flightSelector1 = form.getFlightSelector(0);
     const flightSelector2 = form.getFlightSelector(1);
     
@@ -150,14 +147,14 @@ describe('Kayak Flights Search', () => {
   });
   
   it('should open error dialog when "search" is clicked', async () => {
-    await FlightsResults.getMultiCityTripForm().clickSearch();
-    expect(FlightsResults.getErrorDialog().isDisplayed(), 'error should be visible').eventually.to.be.true;
-    expect(await FlightsResults.getErrorDialog().getErrorMessages()).length.greaterThan(0);
+    await flightsResultsPage.getMultiCityTripForm().clickSearch();
+    expect(flightsResultsPage.getErrorDialog().isDisplayed(), 'error should be visible').eventually.to.be.true;
+    expect(await flightsResultsPage.getErrorDialog().getErrorMessages()).length.greaterThan(0);
   });
   
   it('should close error dialog when "okay" is clicked', async () => {
-    await FlightsResults.getErrorDialog().clickOkay();
-    expect(FlightsResults.getErrorDialog().isDisplayed()).eventually.to.be.false;
+    await flightsResultsPage.getErrorDialog().clickOkay();
+    expect(flightsResultsPage.getErrorDialog().isDisplayed()).eventually.to.be.false;
   });
   
 });
