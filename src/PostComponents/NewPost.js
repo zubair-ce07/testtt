@@ -60,7 +60,7 @@ class NewPost extends React.Component {
         event.preventDefault();
         if (this.state.postText.length > 0) {
             let postData = new FormData();
-            postData.append('user', '6');
+            postData.append('user', '2');
             postData.append('text', this.state.postText);
             this.props.addPost(postData);
             this.setState({

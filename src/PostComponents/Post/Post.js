@@ -87,7 +87,7 @@ class Post extends React.Component {
 
     createComment = () => {
         let data = {
-            user: 6,
+            user: 2,
             post: this.props.data.id,
             text: this.state.commentText
         };
@@ -120,6 +120,8 @@ class Post extends React.Component {
 
     componentWillUnmount() {
         clearInterval();
+        let abortCotroller = new AbortController();
+        abortCotroller.abort();
     }
 
     render() {

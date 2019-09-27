@@ -70,7 +70,7 @@ class CommentListItem extends React.Component {
                         </Typography>
                     </Grid>
                     {
-                        this.props.comment.user.id === 6 ?
+                        this.props.comment.user.id === 2 ?
                             <Button onClick={this.handleDeleteConfirmationDialogOpen}>
                                 Delete
                             </Button> :

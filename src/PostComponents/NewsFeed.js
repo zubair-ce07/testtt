@@ -47,11 +47,15 @@ class NewsFeed extends React.Component {
         }
     }
 
+    setPosts = posts => {
+        this.setState({
+            posts: posts
+        });
+    };
+
     fetchPosts = () => {
         fetchPostsDB().then(response => {
-            this.setState({
-                posts: response.data
-            });
+            this.setPosts(response.data)
         })
     };
 

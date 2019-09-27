@@ -18,6 +18,7 @@ class Vote extends React.Component {
             upvoteCheck: false,
             downvotes: [],
             downvoteCheck: false,
+            voteInProgress: false
         }
     }
 
@@ -28,26 +29,29 @@ class Vote extends React.Component {
         if (update)
             this.setState({
                 [name]: true,
-                [secondaryName]: false
+                [secondaryName]: false,
             });
-        else
-        {
+        else {
             this.setState({
                 [name]: !this.state[name],
-                [secondaryName]: false
+                [secondaryName]: false,
+                voteInProgress: false
             });
         }
     };
 
     handleUpvoteClick = () => {
         let data = {
-            user: 6
+            user: 2
         };
+        this.setState({
+            voteInProgress: true
+        });
         if (this.state.upvoteCheck) {
-            deleteUpvoteDB(this.props.data, 6).then(response => {
+            deleteUpvoteDB(this.props.data, 2).then(response => {
                 this.setState({
                     upvotes: this.state.upvotes.filter(vote => {
-                        return vote.post !== response.data.post && vote.user === 6
+                        return vote.post !== response.data.post && vote.user === 2
                     })
                 });
                 this.setVote('upvote')
@@ -70,13 +74,16 @@ class Vote extends React.Component {
 
     handleDownvoteClick = () => {
         let data = {
-            user: 6
+            user: 2
         };
+        this.setState({
+            voteInProgress: true
+        });
         if (this.state.downvoteCheck) {
-            deleteDownvoteDB(this.props.data, 6).then(response => {
+            deleteDownvoteDB(this.props.data, 2).then(response => {
                 this.setState({
                     downvotes: this.state.downvotes.filter(vote => {
-                        return vote.post !== response.data.post && vote.user === 6
+                        return vote.post !== response.data.post && vote.user === 2
                     })
                 });
                 this.setVote('downvote')
@@ -103,7 +110,7 @@ class Vote extends React.Component {
             this.setState({
                 upvotes: response.data
             });
-            if (this.state.upvotes.filter(vote => vote.user === 6).length > 0)
+            if (this.state.upvotes.filter(vote => vote.user === 2).length > 0)
                 this.setVote('upvote', true)
         });
     };
@@ -113,7 +120,7 @@ class Vote extends React.Component {
             this.setState({
                 downvotes: response.data
             });
-            if (this.state.downvotes.filter(vote => vote.user === 6).length > 0)
+            if (this.state.downvotes.filter(vote => vote.user === 2).length > 0)
                 this.setVote('downvote', true)
         });
     };
@@ -134,13 +141,15 @@ class Vote extends React.Component {
     render() {
         return (
             <div>
-                <IconButton aria-label="upvote" title='Upvote' onClick={this.handleUpvoteClick}>
+                <IconButton aria-label="upvote" title='Upvote' onClick={this.handleUpvoteClick}
+                            disabled={this.state.voteInProgress}>
                     <ArrowUpward color={this.state.upvoteCheck ? 'primary' : 'inherit'}/>
                 </IconButton>
                 <Link href='/' color='inherit'>
                     {this.state.upvotes.length}
                 </Link>
-                <IconButton aria-label="downvote" title='Downvote' onClick={this.handleDownvoteClick}>
+                <IconButton aria-label="downvote" title='Downvote' onClick={this.handleDownvoteClick}
+                            disabled={this.state.voteInProgress}>
                     <ArrowDownward color={this.state.downvoteCheck ? 'error' : 'inherit'}/>
                 </IconButton>
                 <Link href='/' color='inherit'>

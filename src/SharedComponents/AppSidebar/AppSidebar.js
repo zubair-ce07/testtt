@@ -10,8 +10,9 @@ import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import {makeStyles, useTheme} from '@material-ui/core/styles';
 import {drawer} from "../../Utils/Utils";
+import UserLoginRegistrationForm from "../../UserComponents/LoginRegistrationForm/FormContainer";
 
-const DRAWER_WIDTh = 300;
+const DRAWER_WIDTh = 240;
 
 const useStyles = makeStyles(theme => ({
     root: {
@@ -24,7 +25,7 @@ const useStyles = makeStyles(theme => ({
         },
     },
     appBar: {
-        backgroundColor: '#4AA8E0',
+        color: '#FFFFFF',
     },
     menuButton: {
         marginRight: theme.spacing(2),
@@ -49,7 +50,7 @@ const useStyles = makeStyles(theme => ({
     }
 }));
 
-function AppSidebar(props) {
+const AppSidebar = props => {
     const {container} = props;
     const classes = useStyles();
     const theme = useTheme();
@@ -78,36 +79,43 @@ function AppSidebar(props) {
                     </Typography>
                 </Toolbar>
             </AppBar>
-            <nav className={classes.drawer} aria-label="mailbox folders">
-                <Hidden smUp implementation="css">
-                    <Drawer
-                        container={container}
-                        variant="temporary"
-                        anchor={theme.direction === 'rtl' ? 'right' : 'left'}
-                        open={mobileOpen}
-                        onClose={handleDrawerToggle}
-                        classes={{
-                            paper: classes.drawerPaperMobile,
-                        }}
-                        ModalProps={{
-                            keepMounted: true, // Better open performance on mobile.
-                        }}
-                    >
-                        {drawer}
-                    </Drawer>
-                </Hidden>
-                <Hidden xsDown implementation="css">
-                    <Drawer
-                        classes={{
-                            paper: classes.drawerPaper,
-                        }}
-                        variant="permanent"
-                        open
-                    >
-                        {drawer}
-                    </Drawer>
-                </Hidden>
-            </nav>
+
+            {
+                props.user ?
+                    <nav className={classes.drawer} aria-label="mailbox folders">
+                        <Hidden smUp implementation="css">
+                            <Drawer
+                                container={container}
+                                variant="temporary"
+                                anchor={theme.direction === 'rtl' ? 'right' : 'left'}
+                                open={mobileOpen}
+                                onClose={handleDrawerToggle}
+                                classes={{
+                                    paper: classes.drawerPaperMobile,
+                                }}
+                                ModalProps={{
+                                    keepMounted: true, // Better open performance on mobile.
+                                }}
+                            >
+                                {drawer}
+                            </Drawer>
+                        </Hidden>
+                        <Hidden xsDown implementation="css">
+                            <Drawer
+                                classes={{
+                                    paper: classes.drawerPaper,
+                                }}
+                                variant="permanent"
+                                open
+                            >
+                                {drawer}
+                            </Drawer>
+                        </Hidden>
+                    </nav>
+                    :
+                    <UserLoginRegistrationForm handleUser={props.handleUser}/>
+            }
+
         </div>
     );
 }
