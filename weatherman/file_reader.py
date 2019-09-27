@@ -35,7 +35,7 @@ class FileReader:
             print("File not found Error.")
             exit()
         weather_records = []
-        highest_temp, min_temp, max_humidity, weather_date = '' * 4
+        highest_temp, min_temp, max_humidity, weather_date = [''] * 4
         for file in self.filenames:      
             with open(file, mode="r") as csv_file:
                 csv_reader = csv.DictReader(csv_file)
