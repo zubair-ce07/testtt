@@ -5,8 +5,10 @@ This module returns the weather data
 for the speficied file paths.
 """
 import csv
+from datetime import datetime
 import constants
 from weather_data import WeatherData
+
 
 
 class FileReader:
@@ -18,10 +20,9 @@ class FileReader:
     returns an error if file not found.
     """
 
-    def __init__(self, directory_file):
+    def __init__(self, directory_files):
         """Initilizing attributes required for the class."""
-        self.filenames = directory_file
-
+        self.filenames = directory_files
 
     def read_file(self):
         """
@@ -30,43 +31,23 @@ class FileReader:
         This method returns the weather data for
         the specified input files.
         """
-        
-        if  self.filenames:
-            try:
-                weather_records = []
-                for file in self.filenames:
-                    
-                    with open(file, mode="r") as csv_file:
-                        csv_reader = csv.DictReader(csv_file)
-                        for index, row in enumerate(csv_reader):
-                            weather_data = WeatherData()
-
-                            if index == 0:
-                                first_key = list(row.keys())[0]
-
-                            weather_data.weather_date = row[first_key]
-                            if not row[constants.max_temp]:
-                                weather_data.highest_temp = 0
-                            else:
-                                weather_data.highest_temp = int(row[constants.max_temp])
-
-                            if not row[constants.min_temp]:
-                                weather_data.min_temp = 0
-                            else:
-                                weather_data.min_temp = int(row[constants.min_temp])
-   
-                            if not row[constants.max_humid]:
-                                weather_data.max_humidity = 0
-                            else:
-                                weather_data.max_humidity = int(row[constants.max_humid])
-                            weather_records.append(weather_data)   
-                return weather_records
-            except FileNotFoundError:
-                print("File not found Error.")
-                exit()
-
-        else:
+        if  not self.filenames:
             print("File not found Error.")
             exit()
+        weather_records = []
+        highest_temp, min_temp, max_humidity, weather_date = [''] * 4
+        for file in self.filenames:      
+            with open(file, mode="r") as csv_file:
+                csv_reader = csv.DictReader(csv_file)
+                for row in csv_reader:
+                    weather_data = WeatherData(highest_temp, min_temp, max_humidity, weather_date)
+                    weather_data.weather_date = datetime.strptime(row.get("PKT" if row.get("PKT") else "PKST"), '%Y-%m-%d')
+                    weather_data.highest_temp = int(row.get(constants.MAX_TEMP)) if row.get(constants.MAX_TEMP) else 0
+                    weather_data.min_temp = int(row.get(constants.MIN_TEMP)) if row.get(constants.MIN_TEMP) else 0
+                    weather_data.max_humidity = int(row.get(constants.MAX_HUMID)) if row.get(constants.MAX_HUMID) else 0
+                    weather_records.append(weather_data)
+        return weather_records
+
+            
 
     

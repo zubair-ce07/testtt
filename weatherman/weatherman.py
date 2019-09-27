@@ -9,7 +9,7 @@ import re
 import glob
 import argparse
 from datetime import datetime
-import utils
+from weather_data import WeatherData
 from file_reader import FileReader
 
 
@@ -30,7 +30,7 @@ def validate_date(file_info):
     expression = re.compile(r'^[1-9]\d{3}/((0)?\d|1[0-2])$')
     if expression.search(str(file_info)):
         return file_info
-    raise ValueError('File year and month format not correct. Example: 2014/2')
+    raise argparse.ArgumentTypeError('File year and month format not correct. Example: 2014/2')
     #exit()
 
     #@staticmethod
@@ -42,10 +42,10 @@ def validate_year(year):
     the file year is in the
     correct format.
     """
-    expression = re.compile(r'^[1-2]\d{3}$')
+    expression = re.compile(r'^[1-9]\d{3}$')
     if expression.search(str(year)):
         return year
-    raise ValueError('Year not valid.')
+    raise argparse.ArgumentTypeError('Year not valid.')
     #return False
 
 
@@ -110,19 +110,23 @@ class WeatherMan:
         read = FileReader(year_files)
         data = read.read_file()
 
-        max_temp_object = utils.get_max_temperature(data)
-        min_temp_object = utils.get_min_temperature(data)
-        max_humid_object = utils.get_max_humidity(data)
+        weather_date_list = [weather_data.weather_date for weather_data in data]
+        max_temp_list = [weather_data.highest_temp for weather_data in data]
+        max_temp_value = max(max_temp_list)
+        min_temp_list = [weather_data.min_temp for weather_data in data]
+        min_temp_value = min(min_temp_list)
+        max_humid_list = [weather_data.max_humidity for weather_data in data]
+        max_humid_value = max(max_humid_list)
 
         print('Highest: {}C on {}'.format(
-            str(max_temp_object.highest_temp),
-            utils.format_date(max_temp_object.weather_date)))
+                str(max_temp_value),
+                weather_date_list[max_temp_list.index(max_temp_value)].strftime('%B %d')))
         print('Lowest: {}C on {}'.format(
-            str(min_temp_object.min_temp),
-            utils.format_date(min_temp_object.weather_date)))
+                str(min_temp_value),
+                weather_date_list[min_temp_list.index(min_temp_value)].strftime('%B %d')))
         print('Humid: {}% on {}'.format(
-            str(max_humid_object.max_humidity),
-            utils.format_date(max_humid_object.weather_date)))
+                str(max_humid_value),
+                weather_date_list[max_humid_list.index(max_humid_value)].strftime('%B %d')))
 
     def year_month_average_temperature_print(self, file_info):
         """File year/month input command.
@@ -133,9 +137,9 @@ class WeatherMan:
         that specific year and month.
         """
         data = []
-        file_info = datetime.strptime(file_info, '%Y/%m')
-        month = file_info.strftime('%b')
-        year = file_info.strftime('%Y')
+        weather_reading_date = datetime.strptime(file_info, '%Y/%m')
+        month = weather_reading_date.strftime('%b')
+        year = weather_reading_date.strftime('%Y')
         file = '{}Murree_weather_{}_{}.txt'.format(self.__path_to_file, year, month)
         read = FileReader([file])
         data = read.read_file()
@@ -189,7 +193,7 @@ class WeatherMan:
 
         for data in weather_data:
             date = data.weather_date
-            day = date.split('-')[2]
+            day = date.strftime('%d')
             if len(day) == 1:
                 day = "0%s" % day
             min_temp_graph = ""

@@ -6,6 +6,6 @@ csv file can be done directly from
 this module.
 """
 
-max_temp = "Max TemperatureC"
-min_temp = "Min TemperatureC"
-max_humid = "Max Humidity"
+MAX_TEMP = "Max TemperatureC"
+MIN_TEMP = "Min TemperatureC"
+MAX_HUMID = "Max Humidity"
