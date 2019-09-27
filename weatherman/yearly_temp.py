@@ -1,4 +1,4 @@
-class YearlyTempResultData:
+class TemperatureResults:
 
     def __init__(self, date_highest, highest_temp, date_lowest, lowest_temp, date_humid, high_humid):
         self.date_highest_temp = date_highest

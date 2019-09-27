@@ -1,11 +1,10 @@
-from yearly_temp import YearlyTempResultData
-from monthlyAvgs import MonthlyAvgs
+from yearly_temp import TemperatureResults
 
 
-class ResultCalculator:
+class Results:
 
     def Calculate_yearly_results(self, temp_readings):
-        final_result = YearlyTempResultData(temp_readings[0].date, temp_readings[0].high_temp, temp_readings[0].date,
+        final_result = TemperatureResults(temp_readings[0].date, temp_readings[0].high_temp, temp_readings[0].date,
                                             temp_readings[0].low_temp, temp_readings[0].date, temp_readings[0].humidity)
         for reading in temp_readings:
             if reading.high_temp and int(reading.high_temp) > int(final_result.highest_temp):
@@ -20,10 +19,10 @@ class ResultCalculator:
         return final_result
 
     def calculate_avg(self, readings):
-        high_avg = sum(map(self.give_high_temp, [reading for reading in readings])) / len(readings)
-        low_avg = sum(map(self.give_low_temp, [reading for reading in readings])) / len(readings)
-        avg_humid = sum(map(self.give_humidity, [reading for reading in readings])) / len(readings)
-        avg_monthly_result = MonthlyAvgs(high_avg, low_avg, avg_humid)
+        high_avg = int(sum(map(self.give_high_temp, [reading for reading in readings])) / len(readings))
+        low_avg = int(sum(map(self.give_low_temp, [reading for reading in readings])) / len(readings))
+        avg_humid = int(sum(map(self.give_humidity, [reading for reading in readings])) / len(readings))
+        avg_monthly_result = TemperatureResults("", high_avg, "", low_avg, "", avg_humid)
         return avg_monthly_result
 
     def give_high_temp(self, reading):

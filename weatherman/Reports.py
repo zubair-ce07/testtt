@@ -4,17 +4,17 @@ import calendar
 class Report:
 
     def show_yearly_results(self, result):
-        print("Highest: %sC on %s %s" % (result.highest_temp, calendar.month_name[result.date_highest_temp.month],
-                                         result.date_highest_temp.day))
-        print("Lowest: %sC on %s %s" % (result.lowest_temp, calendar.month_name[result.date_lowest_temp.month],
-                                        result.date_lowest_temp.day))
-        print("Humidity: %s%% on %s %s" % (result.top_humidity, calendar.month_name[result.date_humidity.month],
-                                           result.date_humidity.day))
+        print(f"Highest: {result.highest_temp}C on { calendar.month_name[result.date_highest_temp.month]} "
+              f"{result.date_highest_temp.day}")
+        print(f"Lowest: {result.lowest_temp}C on {calendar.month_name[result.date_lowest_temp.month]} "
+              f"{result.date_lowest_temp.day}")
+        print(f"Humidity: {result.top_humidity}% on {calendar.month_name[result.date_humidity.month]} "
+              f"{result.date_humidity.day}")
 
     def show_monthly_avgs(self, result_avgs):
-        print("Highest Average: %sC" % result_avgs.avg_highest)
-        print("Lowest Average: %sC" % result_avgs.avg_lowest)
-        print("Average Mean Humidity: %s%%" % result_avgs.avg_mean_humidity)
+        print("Highest Average: %sC" % result_avgs.highest_temp)
+        print("Lowest Average: %sC" % result_avgs.lowest_temp)
+        print("Average Mean Humidity: %s%%" % result_avgs.top_humidity)
 
     def show_monthly_temps(self, readings, bonus):
         for day in readings:
