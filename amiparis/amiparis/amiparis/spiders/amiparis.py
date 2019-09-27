@@ -53,7 +53,8 @@ class BeginningBoutique(CrawlSpider):
         sizes = response.css('.size__list a::text').getall()
         colour = response.css('a.color__link--isActive::attr(data-tooltip)').get()
         for size in sizes:
-            skus.append({'size': size, 'colour': colour, 'price': item['price'], 'currency': item['currency']})
+            skus.append({colour + '_' + size: {'size': size, 'colour': colour, 'price': item['price'],
+                                               'currency': item['currency']}})
 
         item['skus'] = skus
         yield self.next_request_or_product(self.request_urls, item)
