@@ -9,7 +9,6 @@ import re
 import glob
 import argparse
 from datetime import datetime
-from weather_data import WeatherData
 from file_reader import FileReader
 
 
@@ -18,7 +17,7 @@ BLUE = "\033[34m"
 RED = "\033[31m"
 WHITE = "\033[37m"
 
-    #@staticmethod
+
 def validate_date(file_info):
     """
     File year and month check.
@@ -31,9 +30,9 @@ def validate_date(file_info):
     if expression.search(str(file_info)):
         return file_info
     raise argparse.ArgumentTypeError('File year and month format not correct. Example: 2014/2')
-    #exit()
 
-    #@staticmethod
+
+
 def validate_year(year):
     """
     File Year check.
@@ -46,7 +45,6 @@ def validate_year(year):
     if expression.search(str(year)):
         return year
     raise argparse.ArgumentTypeError('Year not valid.')
-    #return False
 
 
 class WeatherMan:
