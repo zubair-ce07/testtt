@@ -20,18 +20,26 @@ class ResultCalculator:
         return final_result
 
     def calculate_avg(self, readings):
-        high_sum = 0
-        low_sum = 0
-        humidity_sum = 0
-        for reading in readings:
-            if reading.high_temp:
-                high_sum += int(reading.high_temp)
-            if reading.low_temp:
-                low_sum += int(reading.low_temp)
-            if reading.mean_humidity:
-                humidity_sum += int(reading.mean_humidity)
-        high_avg = high_sum / len(readings)
-        low_avg = low_sum / len(readings)
-        avg_humid = humidity_sum / len(readings)
+        high_avg = sum(map(self.give_high_temp, [reading for reading in readings])) / len(readings)
+        low_avg = sum(map(self.give_low_temp, [reading for reading in readings])) / len(readings)
+        avg_humid = sum(map(self.give_humidity, [reading for reading in readings])) / len(readings)
         avg_monthly_result = MonthlyAvgs(high_avg, low_avg, avg_humid)
         return avg_monthly_result
+
+    def give_high_temp(self, reading):
+        if reading.high_temp:
+            return int(reading.high_temp)
+        else:
+            return 0
+
+    def give_low_temp(self, reading):
+        if reading.low_temp:
+            return int(reading.low_temp)
+        else:
+            return 0
+
+    def give_humidity(self, reading):
+        if reading.mean_humidity:
+            return int(reading.mean_humidity)
+        else:
+            return 0
