@@ -2,79 +2,72 @@ import argparse
 import calendar
 from datetime import datetime
 
-from data_reader import DataReader
+import error_messages
+from weather_files_reader import WeatherDataReader
 from reports_calculator import ReportsCalculator
 from reports_generator import ReportsGenerator
 
 
-def year_validator(year):
+def validate_year(year):
     try:
         return datetime.strptime(year, '%Y').strftime('%Y')
     except ValueError:
-        print('Please enter a valid year, like 2012')
+        print(error_messages.YEAR_VALIDATION_ERROR)
 
-
-def date_validator(date):
+def validate_year_month(date):
     try:
         return datetime.strptime(date, '%Y/%m').strftime('%Y/%m')
     except ValueError:
-        print('Please enter a valid year and month, like 2015/6')
+        print(error_messages.MONTH_VALIDATION_ERROR)
 
-
-def date_parser(year_month):
+def parse_date(year_month):    
     date = year_month.split('/')
     year, month = date[0], date[1]
     month_name = calendar.month_abbr[int(month)]
 
     return {'year': year, 'month': month_name}
 
-
 def main():
     parser = argparse.ArgumentParser(description='Weatherman app')
     parser.add_argument('path')
-    parser.add_argument('-e')
-    parser.add_argument('-a')
-    parser.add_argument('-c')
+    parser.add_argument('-e', type=validate_year, nargs='+')
+    parser.add_argument('-a', type=validate_year_month, nargs='+')
+    parser.add_argument('-c', type=validate_year_month, nargs='+')
     args = parser.parse_args()
 
-    weather_reader = DataReader()
+    weather_reader = WeatherDataReader()
+    args_dict = vars(args)
+                   
+    if  args_dict['e']  != None:          
+        file_names_e = WeatherDataReader.read_yearly_file_names(args_dict['path'], args_dict['e'][0])
 
-    if args.e:
-        year = year_validator(args.e)
-        if year:
-            file_names_e = DataReader.yearly_file_names(args.path, year)
+        if file_names_e:
+            weather_data = weather_reader.read_files(file_names_e)
+            min_and_max_values = ReportsCalculator.calculate_min_max(weather_data)
+            ReportsGenerator.display_min_max(min_and_max_values)                           
+        else:
+            print(error_messages.YEAR_FILE_NOT_FOUND_ERROR)                
 
-            if file_names_e:
-                data = weather_reader.read_files(file_names_e)
-                extremes = ReportsCalculator.extreme_values(data)
-                ReportsGenerator.display_extrems(extremes)
-            else:
-                print('No file found for given year')
+    if  args_dict['a']  != None:        
+        date = parse_date(args_dict['a'][0])
+        file_names_a = WeatherDataReader.read_monthly_file_names(args_dict['path'], date['year'], date['month'])
 
-    elif args.a:
-        year_month = date_validator(args.a)
-        if year_month:
-            date = date_parser(year_month)
-            file_names_a = DataReader.monthly_file_names(args.path, date['year'], date['month'])
+        if file_names_a:
+            weather_data = weather_reader.read_files(file_names_a)
+            avg_values = ReportsCalculator.calculate_averages(weather_data)
+            ReportsGenerator.display_averages(avg_values)                            
+        else:
+            print(error_messages.MONTH_FILE_NOT_FOUND_ERROR)
 
-            if file_names_a:
-                data = weather_reader.read_files(file_names_a)
-                avg_values = ReportsCalculator.average_values(data)
-                ReportsGenerator.display_averages(avg_values)
-            else:
-                print('No file found for given year and month')
-
-    elif args.c:
-        year_month = date_validator(args.c)
-
-        if year_month:
-            date = date_parser(year_month)
-            file_names_c = DataReader.monthly_file_names(args.path, date['year'], date['month'])
-            if file_names_c:
-                data = weather_reader.read_files(file_names_c)
-                ReportsGenerator.bonus_chart(data)
-            else:
-                print('No file found for given year and month')
+    if  args_dict['c']  != None:        
+        date = parse_date(args_dict['c'][0])
+        file_names_c = WeatherDataReader.read_monthly_file_names(args_dict['path'], date['year'], date['month'])
+        
+        if file_names_c:
+            weather_data = weather_reader.read_files(file_names_c)
+            ReportsGenerator.display_month_bar_chart(weather_data)                           
+        else:
+            print(error_messages.MONTH_FILE_NOT_FOUND_ERROR)
 
 
 if __name__ == '__main__':
