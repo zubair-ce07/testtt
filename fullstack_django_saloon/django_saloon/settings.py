@@ -23,9 +23,10 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'lu3+ewom@4l(7+yhxb%w-n79xvqmlwby&d3c)7-@c5hbyx(qi8'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
+PROD = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -51,12 +52,23 @@ INSTALLED_APPS = [
     'shop.apps.ShopConfig'
 ]
 
-WEBPACK_LOADER = {
-    'DEFAULT': {
+if PROD:
+    STATICFILES_DIRS = [
+        os.path.join(BASE_DIR, "assets"),
+    ]
+    WEBPACK_LOADER = {
+        'DEFAULT': {
             'BUNDLE_DIR_NAME': 'bundles/',
-            'STATS_FILE': os.path.join(BASE_DIR, 'webpack-stats.dev.json'),
-        }
-}
+            'STATS_FILE': os.path.join(BASE_DIR, 'webpack-stats.prod.json')
+            }
+    }
+else:
+    WEBPACK_LOADER = {
+        'DEFAULT': {
+            'BUNDLE_DIR_NAME': 'bundles/',
+            'STATS_FILE': os.path.join(BASE_DIR, 'webpack-stats.dev.json')
+            }
+    }
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -148,6 +160,7 @@ CRISPY_TEMPLATE_PACK = 'bootstrap4'
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = 'assets/bundles'
 
 # AUTH_USER_MODEL = 'customer.SaloonUser'
 
