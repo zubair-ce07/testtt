@@ -3,13 +3,16 @@ from rest_framework import generics
 
 from shopcity.models import Product
 from .permissions import AllowAnyOrAdmin, IsLoggedInUserOrAdmin, IsAdmin, ReadOnly
+from .redis_cache import cache_products_queryset, cache_users_queryset
 from .serializers import ProductSerializer, UserSerializer
 
 
 class ProductList(generics.ListCreateAPIView):
     permission_classes = [IsAdmin | ReadOnly]
-    queryset = Product.objects.all()
     serializer_class = ProductSerializer
+
+    def get_queryset(self):
+        return cache_products_queryset()
 
 
 class ProductDetail(generics.RetrieveAPIView):
@@ -27,8 +30,7 @@ class UserList(generics.ListCreateAPIView):
     serializer_class = UserSerializer
 
     def get_queryset(self):
-        queryset = User.objects.all()
-        return queryset
+        return cache_users_queryset()
 
 
 class UserDetail(generics.RetrieveAPIView):

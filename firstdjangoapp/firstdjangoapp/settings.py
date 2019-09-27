@@ -20,8 +20,10 @@ INSTALLED_APPS = [
     'api',
     'rest_framework',
     'rest_framework_swagger',
+    'debug_toolbar',
 ]
 MIDDLEWARE = [
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'api.middleware.JWTAuthenticationMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -30,6 +32,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+INTERNAL_IPS = [
+    '127.0.0.1',
 ]
 ROOT_URLCONF = 'firstdjangoapp.urls'
 TEMPLATES = [
@@ -89,6 +94,15 @@ SWAGGER_SETTINGS = {
     },
     'REFETCH_SCHEMA_WITH_AUTH': True,
     'USE_SESSION_AUTH': False,
+}
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/1",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient"
+        },
+    }
 }
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
