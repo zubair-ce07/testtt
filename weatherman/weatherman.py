@@ -9,8 +9,9 @@ import re
 import glob
 import argparse
 from datetime import datetime
+import utils
 from file_reader import FileReader
-from utils import Utils
+
 
 
 BLUE = "\033[34m"
@@ -109,19 +110,19 @@ class WeatherMan:
         read = FileReader(year_files)
         data = read.read_file()
 
-        max_temp_object = Utils.get_max_temperature(data)
-        min_temp_object = Utils.get_min_temperature(data)
-        max_humid_object = Utils.get_max_humidity(data)
+        max_temp_object = utils.get_max_temperature(data)
+        min_temp_object = utils.get_min_temperature(data)
+        max_humid_object = utils.get_max_humidity(data)
 
         print('Highest: {}C on {}'.format(
             str(max_temp_object.highest_temp),
-            Utils.format_date(max_temp_object.weather_date)))
+            utils.format_date(max_temp_object.weather_date)))
         print('Lowest: {}C on {}'.format(
             str(min_temp_object.min_temp),
-            Utils.format_date(min_temp_object.weather_date)))
+            utils.format_date(min_temp_object.weather_date)))
         print('Humid: {}% on {}'.format(
             str(max_humid_object.max_humidity),
-            Utils.format_date(max_humid_object.weather_date)))
+            utils.format_date(max_humid_object.weather_date)))
 
     def year_month_average_temperature_print(self, file_info):
         """File year/month input command.
