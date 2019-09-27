@@ -141,35 +141,14 @@ class WeatherMan:
         file = '{}Murree_weather_{}_{}.txt'.format(self.__path_to_file, year, month)
         read = FileReader([file])
         data = read.read_file()
-        highest_temp_sum = 0
-        min_temp_sum = 0
-        average_humidity_sum = 0
-        highest_temp_count = 0
-        min_temp_count = 0
-        average_humidity_count = 0
 
+        max_temp_list = [weather_data.highest_temp for weather_data in data]
+        min_temp_list = [weather_data.min_temp for weather_data in data]
+        max_humid_list = [weather_data.max_humidity for weather_data in data]
+        average_humidity_average = sum(max_humid_list)//len(max_humid_list)
 
-        for weather in data:
-            if weather.highest_temp:
-                highest_temp_sum += weather.highest_temp
-                highest_temp_count += 1
-            if weather.min_temp:
-                min_temp_sum += weather.min_temp
-                min_temp_count += 1
-            if weather.max_humidity:
-                average_humidity_sum += weather.max_humidity
-                average_humidity_count += 1
-
-
-        highest_temp_average = highest_temp_sum // \
-            highest_temp_count
-        min_temp_average = min_temp_sum// \
-            min_temp_count
-        average_humidity_average = average_humidity_sum // \
-            average_humidity_count
-
-        print("Highest Average: %sC" % highest_temp_average)
-        print("Lowest Average: %sC" % min_temp_average)
+        print("Highest Average: %sC" % str(sum(max_temp_list) //len(max_temp_list)))
+        print("Lowest Average: %sC" % str(sum(min_temp_list)//len(min_temp_list)))
         print("Average Humidity: {}%".format(average_humidity_average))
 
     def horizontal_graph_print(self, file_info):
