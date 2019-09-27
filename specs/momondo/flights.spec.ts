@@ -1,8 +1,12 @@
 import { expect } from "chai";
 import { browser } from "protractor";
-import { FlightsPageMomondo, FlightsResultsPageMomondo } from "../../src/brands/momondo/pages";
-import { DragHandle, MultiCityForm, TripType } from "../../src/core/elements";
-import { FlightsPage, FlightsResultsPage } from '../../src/core/pages';
+import { FlightsPageMomondo } from "../../src/brands/momondo/pages/flights";
+import { FlightsResultsPageMomondo } from "../../src/brands/momondo/pages/flightsResults";
+import { MultiCityForm } from "../../src/core/elements/forms/multiCity";
+import { TripType } from "../../src/core/elements/selectors/tripType";
+import { DragHandle } from "../../src/core/elements/sliders/time";
+import { FlightsPage } from "../../src/core/pages/flights";
+import { FlightsResultsPage } from "../../src/core/pages/flightsResults";
 import { formatDate } from "../../src/utils/specs.utils";
 
 describe('Momondo Flights Search', () => {

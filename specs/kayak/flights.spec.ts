@@ -1,8 +1,12 @@
 import { expect } from "chai";
 import { browser } from "protractor";
-import { FlightsPageKayak, FlightsResultsPageKayak } from "../../src/brands/kayak/pages";
-import { DragHandle, MultiCityForm, TripType } from "../../src/core/elements";
-import { FlightsPage, FlightsResultsPage } from '../../src/core/pages'
+import { FlightsPageKayak } from "../../src/brands/kayak/pages/flights";
+import { FlightsResultsPageKayak } from "../../src/brands/kayak/pages/flightsResults";
+import { MultiCityForm } from "../../src/core/elements/forms/multiCity";
+import { TripType } from "../../src/core/elements/selectors/tripType";
+import { DragHandle } from "../../src/core/elements/sliders/time";
+import { FlightsPage } from "../../src/core/pages/flights";
+import { FlightsResultsPage } from "../../src/core/pages/flightsResults";
 import { formatDate } from "../../src/utils/specs.utils";
 
 describe('Kayak Flights Search', () => {
