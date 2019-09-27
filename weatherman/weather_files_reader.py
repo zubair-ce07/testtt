@@ -1,76 +1,54 @@
 import csv
-import fnmatch
-import os
+from fnmatch import fnmatch
+from os import listdir
 
 from weather_record import WeatherRecord
 
 
-class WeatherDataReader:
-    
-   
+class WeatherDataReader:       
     @staticmethod
     def read_yearly_file_names(path, year):
-
-        """ Returns list of file names for given year """
-
         file_names = []
 
-        for file in os.listdir(path):
-            if fnmatch.fnmatch(file, f'*_{year}_*'):
-                file_names.append(path + '/' + file)
+        for weather_file in listdir(path):
+            if fnmatch(weather_file, f'*_{year}_*'):
+                full_path = f'{path}/{weather_file}'
+                file_names.append(full_path)
 
         return file_names
 
     @staticmethod
-    def read_monthly_file_names(path, year, month):
-
-        """ Returns file name for given month """
-
+    def read_monthly_file_names(path, date):
         files_names = []
+        year = date['year']
+        month = date['month']
 
-        for file in os.listdir(path):
-            if fnmatch.fnmatch(file, f'*_{year}_{month}.txt'):
-                full_path = path + '/' + file
+        for weather_file in listdir(path):
+            if fnmatch(weather_file, f'*_{year}_{month}.txt'):
+                full_path = f'{path}/{weather_file}'
                 files_names.append(full_path)
 
         return files_names
-
-    def validate_record_value(self, weather_record):
-        if weather_record != '':
-            return weather_record  
-   
-    def required_data(self, record):
-        weather_record = {
-            'max_temp':record['Max TemperatureC']
-        }
-        return weather_record
-
-
-    def read_files(self, files):
-
-        """ Reads weather files and returns dictionary containing required weather records """
-
+                      
+    def read_files(self, weather_files):
         max_temperature = []
         min_temperature = []
         max_humidity = []
         mean_humidity = []
-        max_temp_date = []
-        min_temp_date = []        
-        max_humidity_date = []
-        for file in files:
-            with open(file) as weather_file:
+        weather_record_date = []       
+
+        for weather_file in weather_files:
+            with open(weather_file) as weather_file:
                 reader = csv.DictReader(weather_file)                
-                for row in reader:
-                    max_temperature.append(int(self.validate_record_value(int(row['Max TemperatureC']))))
-                    max_temp_date.append(self.validate_record_value(row['PKT']))                
-                    min_temperature.append(int(self.validate_record_value(int(row['Min TemperatureC']))))
-                    min_temp_date.append(self.validate_record_value(row['PKT']))                
-                    max_humidity.append(int(self.validate_record_value(int(row['Max Humidity']))))
-                    max_humidity_date.append(self.validate_record_value(row['PKT']))                
-                    mean_humidity.append(int(self.validate_record_value(int(row[' Mean Humidity']))))
+                for row in reader:                                                         
+                    max_temperature.append(row['Max TemperatureC'])
+                    weather_record_date.append(row.get('PKT') or row.get('PKST'))             
+                    min_temperature.append(row['Min TemperatureC'])                   
+                    max_humidity.append(row['Max Humidity'])                 
+                    mean_humidity.append(row[' Mean Humidity'])
 
-        weather_record = WeatherRecord(max_temperature, min_temperature,
-            max_humidity, mean_humidity,max_temp_date, min_temp_date, max_humidity_date)
-        weather_record_dict = weather_record.__dict__   
+        weather_data = WeatherRecord(max_temperature, min_temperature,
+            max_humidity, mean_humidity, weather_record_date)
+        weather_record = weather_data.weather_record
 
-        return weather_record_dict['weather_record']
+        return weather_record
