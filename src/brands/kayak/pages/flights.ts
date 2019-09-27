@@ -8,6 +8,10 @@ import { TripSelectorKayak } from "../elements/selectors/trip";
 import { FlightsResultsPageKayak } from "./flightsResults";
 
 export class FlightsPageKayak implements FlightsPage {
+  getURL(): string {
+    return "https://www.kayak.com/flights";
+  }
+  
   async clickSearch(): Promise<void> {
     const button = element(by.css(`button[id$='-submit-multi']`));
     await waitUntilInteractive(button);

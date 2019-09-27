@@ -7,6 +7,10 @@ import { TripSelectorMomondo } from "../elements/selectors/trip";
 import { FlightsResultsPageMomondo } from "./flightsResults";
 
 export class FlightsPageMomondo implements FlightsPage {
+  getURL(): string {
+    return "https://global.momondo.com";
+  }
+  
   async clickSearch(): Promise<void> {
     element(by.css(`button[id$='-submit-multi']`)).click();
     await FlightsResultsPageMomondo.loadResults();
