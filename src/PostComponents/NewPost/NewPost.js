@@ -67,21 +67,9 @@ class NewPost extends React.Component {
         }
     }
 
-
-    handleImageUploadDialogOpen = () => {
-        this.setState({dialog: true});
-    };
-
-    handleImageUploadDialogClose = () => {
+    handleStateChange = object => {
         this.setState({
-            dialog: false,
-            image: null
-        });
-    };
-
-    handleImageAdd = event => {
-        this.setState({
-            image: URL.createObjectURL(event.target.files[0])
+            ...object
         })
     };
 
@@ -118,10 +106,14 @@ class NewPost extends React.Component {
                 </CardContent>
 
                 <CardActions disableSpacing>
-                    <IconButton aria-label="upload" title='Upload' onClick={this.handleImageUploadDialogOpen}>
+                    <IconButton aria-label="upload" title='Upload'
+                                onClick={() => this.handleStateChange({dialog: true})}>
                         <AddPhotoAlternate/>
                     </IconButton>
-                    <Dialog open={this.state.dialog} onClose={this.handleImageUploadDialogClose}
+                    <Dialog open={this.state.dialog} onClose={() => this.handleStateChange({
+                        dialog: false,
+                        image: null
+                    })}
                             aria-labelledby="form-dialog-title"
                             maxWidth='sm' fullWidth={true}>
                         <DialogTitle id="form-dialog-title">Upload a Picture</DialogTitle>
@@ -129,19 +121,27 @@ class NewPost extends React.Component {
 
                             {this.state.image != null ?
                                 <div>
-                                    <Image src={this.state.image} aspectRatio={4/3} />
+                                    <Image src={this.state.image} aspectRatio={4 / 3}/>
                                     <br/>
                                 </div>
-                                  : null}
+                                : null}
 
-                            <input type='file' onChange={this.handleImageAdd} />
+                            <input type='file' onChange={event => this.handleStateChange({
+                                image: URL.createObjectURL(event.target.files[0])
+                            })}/>
 
                         </DialogContent>
                         <DialogActions>
-                            <Button onClick={this.handleImageUploadDialogClose} color="primary">
+                            <Button onClick={() => this.handleStateChange({
+                                dialog: false,
+                                image: null
+                            })} color="primary">
                                 Cancel
                             </Button>
-                            <Button onClick={this.handleImageUploadDialogClose} color="primary">
+                            <Button onClick={() => this.handleStateChange({
+                                dialog: false,
+                                image: null
+                            })} color="primary">
                                 Upload
                             </Button>
                         </DialogActions>
