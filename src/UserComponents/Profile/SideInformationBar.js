@@ -43,21 +43,11 @@ class SideInformationBar extends React.Component {
             friends: [],
         }
     }
-
-    handleClickGroup = () => {
-        this.setState({Groups: !this.state.Groups});
-    };
-
-    handleClickAcademicInformation = () => {
-        this.setState({AcademicInformations: !this.state.AcademicInformations});
-    };
-
-    handleClickWorkInformation = () => {
-        this.setState({WorkInformations: !this.state.WorkInformations});
-    };
-
-    handleClickFriend = () => {
-        this.setState({Friends: !this.state.Friends});
+    
+    handleStateChange = (key, value) => {
+        this.setState({
+            [key]: value
+        })  
     };
 
     fetchGroupData = () => {
@@ -115,7 +105,7 @@ class SideInformationBar extends React.Component {
                             </ListSubheader>
                         }
                     >
-                        <ListItem button onClick={this.handleClickGroup}>
+                        <ListItem button onClick={() => this.handleStateChange('Groups', !this.state.Groups)}>
                             <ListItemIcon>
                                 <GroupIcon/>
                             </ListItemIcon>
@@ -142,7 +132,7 @@ class SideInformationBar extends React.Component {
                             </List>
                         </Collapse>
 
-                        <ListItem button onClick={this.handleClickFriend}>
+                        <ListItem button onClick={() => this.handleStateChange('Friends', !this.state.Friends)}>
                             <ListItemIcon>
                                 <FriendIcon/>
                             </ListItemIcon>
@@ -168,7 +158,7 @@ class SideInformationBar extends React.Component {
                                 }
                             </List>
                         </Collapse>
-                        <ListItem button onClick={this.handleClickWorkInformation}>
+                        <ListItem button onClick={() => this.handleStateChange('WorkInformations', !this.state.WorkInformations)}>
                             <ListItemIcon>
                                 <WorkIcon/>
                             </ListItemIcon>
@@ -194,7 +184,7 @@ class SideInformationBar extends React.Component {
                                 }
                             </List>
                         </Collapse>
-                        <ListItem button onClick={this.handleClickAcademicInformation}>
+                        <ListItem button onClick={() => this.handleStateChange('AcademicInformations', !this.state.AcademicInformations)}>
                             <ListItemIcon>
                                 <SchoolIcon/>
                             </ListItemIcon>
