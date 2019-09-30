@@ -1,8 +1,16 @@
 import scrapy
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
+import re
 
 from ..items import ProductsItem
+
+categories = []
+
+
+def process_links(value):
+    categories.append(value.split('/')[-1])
+    return value
 
 
 class BeginningBoutique(CrawlSpider):
@@ -11,9 +19,11 @@ class BeginningBoutique(CrawlSpider):
     retailer = 'beginningboutique-au'
     start_urls = ['https://www.beginningboutique.com.au/']
     rules = [
-           Rule(LinkExtractor(restrict_css=['.site-nav', '.pagination']), callback='parse'),
-           Rule(LinkExtractor(restrict_css=['.product-card']), callback='parse_product'),
-         ]
+        Rule(LinkExtractor(restrict_css=['.site-nav', '.pagination'], process_value=process_links),
+             callback='parse'),
+        Rule(LinkExtractor(restrict_css=['.product-card'], process_value=process_links),
+             callback='parse_product'),
+    ]
 
     def parse_product(self, response):
         item = ProductsItem()
@@ -22,13 +32,14 @@ class BeginningBoutique(CrawlSpider):
         item['url_original'] = response.url
         item['market'] = self.market
         item['retailer'] = self.retailer
-        item['brand'] = response.css('.product-heading__vendor a::text')[0].extract()
-        item['name'] = response.css('.product-heading__title::text')[0].extract()
-        item['price'] = response.css('.product__price').xpath("//span[@class='money']/text()").extract_first()
+        item['brand'] = response.css('.product-heading__vendor a::text').get()
+        item['name'] = response.css('.product-heading__title::text').get()
+        item['price'] = response.css('.product__price').xpath("//span[@class='money']/text()").get()
         product_spec = response.css('.product__specs-detail')
-        item['care'] = product_spec[1].css(".product__specs-detail ::text").extract()
-        item['description'] = product_spec[0].css(".product__specs-detail ::text").extract()
-        item['image_urls'] = response.css('.product-images__slide').xpath(".//img/@src").extract()
+        item['categories'] = categories
+        item['care'] = product_spec[1].css(".product__specs-detail ::text").getall()
+        item['description'] = product_spec[0].css(".product__specs-detail ::text").getall()
+        item['image_urls'] = response.css('.product-images__slide').xpath(".//img/@src").getall()
         item['skus'] = dict()
         sizes = response.css('.input--full option::attr(value)').getall()
         for size in sizes:
@@ -40,5 +51,3 @@ class BeginningBoutique(CrawlSpider):
                                       'currency': item['currency']}
 
         yield item
-
-
