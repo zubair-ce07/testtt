@@ -1,2 +1,2 @@
-export * from "./login/loginView";
-export * from "./signupView";
+export * from "./auth";
+export * from "./home";

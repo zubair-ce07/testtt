@@ -1,12 +1,9 @@
 import React from "react";
-import PropTypes from "prop-types";
 
-const Button = ({ text, onClick}) => (
-  <button className="btn btn-primary" onClick={onClick}>{text}</button>
+const Button = ({ text, onClick, type }) => (
+  <button className={`btn btn-block ${type}`} onClick={onClick}>
+    {text}
+  </button>
 );
-
-Button.PropTypes = {
-  text: PropTypes.string.isRequired
-};
 
 export { Button };
