@@ -1,31 +1,38 @@
 import weatherman as weatherman
 import argparse
 import datetime
+import re
+import os
 
 
-def validate_year(argument_string):
-    if len(argument_string) == 4 and argument_string.isdigit():
-        return argument_string
-    raise ValueError('Not a valid year format')
+def validate_month_and_year(date):
+    month_format = re.compile(r"\d{4}/\d{1,2}$")
+    if not month_format.match(date):
+        raise argparse.ArgumentTypeError
+    return date
 
 
-def validate_month(argument_string):
-    date_arg = argument_string.split('/')
-    year_arg = date_arg[0]
-    month_arg = date_arg[1]
-    if len(year_arg) == 4 and len(month_arg) > 0 \
-       and year_arg.isdigit() and month_arg.isdigit():
-            return argument_string
-    raise ValueError('Not a valid year or month format')
+def validate_year(year):
+    if re.match("\\d{4}$", year):
+        return year
+    else:
+        raise argparse.ArgumentTypeError(f"Invalid format: {year}")
+
+
+def validate_path(argument):
+    if os.path.exists(argument):
+        return argument
+    else:
+        raise argparse.ArgumentTypeError(f"Invalid Path: {argument}")
 
 
 def get_arguments():
     parser = argparse.ArgumentParser()
-    parser.add_argument("path", type=str)
+    parser.add_argument("path", type=validate_path)
     parser.add_argument("-a", help="Format should be like yyyy/m",
-                        type=validate_month)
+                        type=validate_month_and_year)
     parser.add_argument("-c", help="Format should be like yyyy/m",
-                        type=validate_month)
+                        type=validate_month_and_year)
     parser.add_argument("-e", help="Format should be like yyyy",
                         type=validate_year)
     args = parser.parse_args()
@@ -35,27 +42,30 @@ def get_arguments():
 
 
 def generate_reports(args):
-    report = weatherman.WeatherAnalyze()
+
+    report = weatherman.WeatherAnalysis()
     if args.a:
-        file_names = report.get_file_name("a", args.a, args.path)
+        file_names = report.get_files(args.path)
         if file_names:
-            file_data = report.reading_file(file_names)
-            report.display_monthly_report(file_data)
+            date = args.a.replace("/", "-")
+            file_records = report.reading_file(file_names, date)
+            report.display_monthly_report(file_records)
         else:
             print("File may not be available against -a argument!")
     if args.c:
-        file_names = report.get_file_name("c", args.c, args.path)
+        file_names = report.get_files(args.path)
         if file_names:
-            file_data = report.reading_file(file_names)
-            report.display_month_chart_report(file_data)
-            report.display_month_bar_chart(file_data)
+            date = args.c.replace('/', '-')
+            file_records = report.reading_file(file_names, date)
+            report.display_month_chart_report(file_records)
+            report.display_month_bar_chart(file_records)
         else:
             print("File may not be available against -c argument!")
     if args.e:
-        file_names = report.get_file_name("e", args.e, args.path)
+        file_names = report.get_files(args.path)
         if file_names:
-            file_data = report.reading_file(file_names)
-            report.display_yearly_report(file_data)
+            file_records = report.reading_file(file_names, args.e)
+            report.display_yearly_report(file_records)
         else:
             print("File may not be available against -e argument!")
 
