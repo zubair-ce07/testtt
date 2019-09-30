@@ -14,6 +14,7 @@ class ProductsItem(scrapy.Item):
     gender = scrapy.Field()
     name = scrapy.Field()
     price = scrapy.Field()
+    skus = scrapy.Field()
     care = scrapy.Field()
     currency = scrapy.Field()
     market = scrapy.Field()
