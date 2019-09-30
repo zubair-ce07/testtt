@@ -1,61 +1,69 @@
 import scrapy
-from scrapy.spiders import CrawlSpider
+from scrapy.spiders import Spider
 
 import json
 
 from ..items import AmiparisItem
 
 
-class BeginningBoutique(CrawlSpider):
+class BeginningBoutique(Spider):
     name = "amiparis"
     market = 'us'
     retailer = 'amiparis-us'
-    base_url = 'https://www.amiparis.com/'
+    base_url = 'https://www.amiparis.com/us/'
     start_urls = ['https://www.amiparis.com/us/']
-    request_urls = []
+    prouduct_url_format = "{}/shopping/{}?StoreId={}?gender={}"
+    nav_url_format = "{}api{}"
+    skus_url_format = "{}/shopping/{}"
 
     def parse(self, response):
         nav_list = response.css('.navSub-ul li>a::attr(href)').extract()
         for nav in nav_list:
-            yield scrapy.Request(self.base_url + 'api' + nav[3:], method='GET',
+            yield scrapy.Request(self.nav_url_format.format(self.base_url, nav[3:]), method='GET',
                                  headers={'Content-Type': 'application/json'},
                                  callback=self.parse_categories)
 
     def parse_categories(self, response):
-        body = json.loads(response.body)
-        for entry in body['products']['entries']:
-            entry['slug'] = self.base_url + 'us/shopping/' + entry['slug'] + '?StoreId=' + str(
-                entry['merchantId']) + '?gender=' + str(entry['gender'])
+        category_body = json.loads(response.body)
+        category_entries = category_body['products']['entries']
+        for entry in category_entries:
+            entry['slug'] = self.prouduct_url_format.format(self.base_url, entry['slug'], str(entry['merchantId']),
+                                                            str(entry['gender']))
             yield scrapy.Request(entry['slug'], callback=self.parse_product)
 
     def parse_product(self, response):
         item = self.extract_product(response)
-        items_urls = response.css('.color__list  a::attr(href)').extract()
-        for item_url in items_urls:
-            self.request_urls.append(
-                scrapy.Request(self.base_url + item_url, callback=self.parse_items))
+        skus_urls = []
+        colors_urls = response.css('.color__list  a::attr(href)').extract()
+        for color_url in colors_urls:
+            skus_urls.append(
+                scrapy.Request(self.skus_url_format.format(self.base_url, color_url.split('/')[-1]),
+                               callback=self.parse_items))
 
-        req = self.request_urls.pop()
-        req.meta['item'] = item
-        yield req
+        yield self.next_request_or_product(skus_urls, item)
 
-    def next_request_or_product(self, items_urls, item):
-        if len(items_urls) == 0:
+    def next_request_or_product(self, skus_urls, item):
+        if len(skus_urls) == 0:
             return item
         else:
-            req = items_urls.pop()
+            req = skus_urls.pop()
             req.meta['item'] = item
+            req.meta['req_urls'] = skus_urls
             return req
 
     def parse_items(self, response):
         item = response.meta['item']
         sizes = response.css('.size__list a::text').getall()
         colour = response.css('a.color__link--isActive::attr(data-tooltip)').get()
-        item['skus'] = {}
         for size in sizes:
-            item['skus'][colour + '_' + size] = {'size': size, 'colour': colour, 'price': item['price'],
-                                                 'currency': item['currency']}
-        yield self.next_request_or_product(self.request_urls, item)
+            if colour + '_' + size in item['skus'].keys():
+                item['skus'][colour + '_' + size].append({'size': size, 'colour': colour, 'price': item['price'],
+                                                          'currency': item['currency']})
+            else:
+                item['skus'][colour + '_' + size] = {'size': size, 'colour': colour, 'price': item['price'],
+                                                     'currency': item['currency']}
+
+        yield self.next_request_or_product(response.meta['req_urls'], item)
 
     def extract_product(self, response):
         item = AmiparisItem()
@@ -65,6 +73,7 @@ class BeginningBoutique(CrawlSpider):
         item['url_original'] = response.url
         item['market'] = self.market
         item['retailer'] = self.retailer
+        item['skus'] = dict()
         item['brand'] = response.css('.product-scale-description::text').get()
         item['price'] = response.css('.product-price::text').get()[2:]
         item['image_urls'] = response.css('.swiper-wrapper')[0].xpath(".//img/@src").getall()
