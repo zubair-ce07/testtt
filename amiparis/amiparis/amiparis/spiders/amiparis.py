@@ -14,6 +14,7 @@ class BeginningBoutique(Spider):
     start_urls = ['https://www.amiparis.com/us/']
     prouduct_url_format = "{}/shopping/{}?StoreId={}?gender={}"
     nav_url_format = "{}api{}"
+    nav_page_url_format = "{}?pageindex={}&pagesize={}"
     skus_url_format = "{}/shopping/{}"
 
     def parse(self, response):
@@ -21,7 +22,17 @@ class BeginningBoutique(Spider):
         for nav in nav_list:
             yield scrapy.Request(self.nav_url_format.format(self.base_url, nav[3:]), method='GET',
                                  headers={'Content-Type': 'application/json'},
+                                 callback=self.parse_nav_page)
+
+    def parse_nav_page(self, response):
+        total_pages = json.loads(response.body)['products']['totalPages']
+        page_number = 1
+        while page_number == total_pages:
+            yield scrapy.Request(self.nav_page_url_format.format(response.url, str(page_number), str(page_number)),
+                                 method='GET',
+                                 headers={'Content-Type': 'application/json'},
                                  callback=self.parse_categories)
+            page_number += 1
 
     def parse_categories(self, response):
         category_body = json.loads(response.body)
