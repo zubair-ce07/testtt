@@ -1,8 +1,8 @@
 import { REACT_APP_API_ENDPOINT_BASE_URL } from '../constants/config';
-import { getTokenHeader,makeApiUrl,makeGetCall,makeGetCallWithHeader,makeDeleteCallWithHeader,makePostCallWithHeader } from '../actions/utils';
 import { apiEndPoints } from '../constants/apiEndPoints';
 import { actionTypes} from '../constants/actionsTypeConstants';
 import { reactAppConstants } from '../constants/constants';
+import { getTokenHeader,makeApiUrl,makeGetCall,makeGetCallWithHeader,makeDeleteCallWithHeader,makePostCallWithHeader } from '../actions/utils';
 
 export const fetchSaloons = () =>  
     dispatch => {
@@ -56,7 +56,6 @@ export const getReservationsForUser = () =>
             dispatch({ type: actionTypes.GET_RESERVATION_FOR_USER_FAILED });
         });
 
-
 export const getSaloonReservations = () => 
     dispatch =>
         makeGetCallWithHeader(makeApiUrl(REACT_APP_API_ENDPOINT_BASE_URL,apiEndPoints.SHOP_API_MYRESERVATIONS), { headers: { [reactAppConstants.AUTHORIZATION]: getTokenHeader() } }).then((response) => {
@@ -99,5 +98,4 @@ export const updateSaloonProfile = data => {
         }).catch(() => {
             dispatch({ type: actionTypes.SALOON_UPDATE_PROFILE_FAILED });
         });
-
 };
