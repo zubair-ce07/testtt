@@ -1,9 +1,11 @@
-class WeatherRecord:
-    def __init__(self, max_temp, min_temp, max_humidity, mean_humidity, weather_record_date):
-        self.weather_record = {
-            'max_temperature': [int(max_temp_value) for max_temp_value in max_temp if max_temp is not ''],
-            'min_temperature': [int(min_temp_value) for min_temp_value in min_temp if min_temp is not ''],
-            'max_humidity': [int(max_humidity_value) for max_humidity_value in max_humidity if max_humidity is not ''],
-            'mean_humidity': [int(mean_humidity_value) for mean_humidity_value in max_humidity if max_humidity is not ''],
-            'weather_record_date': weather_record_date       
-        }
+from datetime import datetime
+
+
+class WeatherRecord:    
+    def __init__(self, weather_record):          
+            date = weather_record.get('PKT') or weather_record.get('PKST')             
+            self.max_temperature = int(weather_record.get('Max TemperatureC'))
+            self.min_temperature = int(weather_record.get('Min TemperatureC'))
+            self.max_humidity = int(weather_record.get('Max Humidity'))
+            self.mean_humidity = int(weather_record.get(' Mean Humidity'))
+            self.weather_record_date = datetime.strptime(date, '%Y-%m-%d')            

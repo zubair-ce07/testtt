@@ -1,37 +1,56 @@
-class ReportsCalculator:    
-    def calculate_min_max(self, weather_data):        
-        max_temperature = max(weather_data['max_temperature'])
-        min_temperature = min(weather_data['min_temperature'])
-        max_humidity = max(weather_data['max_humidity'])
+def calculate_min_max(weather_yearly_data):    
+        max_temp = weather_yearly_data[0].max_temperature
+        min_temp = weather_yearly_data[0].min_temperature
+        max_humidity = weather_yearly_data[0].max_humidity
 
-        max_temperature_index = weather_data['max_temperature'].index(max_temperature)
-        min_temperature_index = weather_data['min_temperature'].index(min_temperature)
-        max_humidity_index = weather_data['max_humidity'].index(max_humidity)
+        for weather_record in weather_yearly_data:
+            if weather_record.max_temperature > max_temp:
+                max_temperature_record = weather_record
 
-        max_temp_date = weather_data['weather_record_date'][max_temperature_index]
-        min_temp_date = weather_data['weather_record_date'][min_temperature_index]
-        max_humidity_date = weather_data['weather_record_date'][max_humidity_index]
+            if weather_record.min_temperature < min_temp:
+                min_temperature_record = weather_record
 
-        min_max_values = {
-            'max_temperature': max_temperature,
-            'max_humidity': max_humidity,
-            'min_temperature': min_temperature,
-            'max_temp_date': max_temp_date,
-            'min_temp_date': min_temp_date,
-            'max_humidity_date': max_humidity_date
+            if weather_record.max_humidity > max_humidity:
+                max_humidity_record = weather_record         
+
+        min_max_yearly_record = {
+            'max_temp_record': max_temperature_record,
+            'max_humidity_record': max_humidity_record,
+            'min_temp_record': min_temperature_record, 
         }
+        
+        return min_max_yearly_record
 
-        return min_max_values
 
-    def calculate_averages(self, weather_data):
-        average_max_temp = sum(weather_data['max_temperature']) // len(weather_data['max_temperature'])
-        average_min_temp = sum(weather_data['min_temperature']) // len(weather_data['min_temperature'])
-        average_mean_humidity = sum(weather_data['mean_humidity']) // len(weather_data['mean_humidity'])
+def filter_values(weather_data):
+    validated_values = [value for value in weather_data if value != '']
 
-        average_weather_record = {
-            'avg_max_temperature': average_max_temp,
-            'avg_min_temperature': average_min_temp,
-            'avg_mean_humidity': average_mean_humidity
-        }
+    return validated_values
 
-        return average_weather_record
+
+def calculate_averages(weather_data):
+    max_temp_validated = filter_values([record.max_temperature for record in weather_data])
+    min_temp_validated = filter_values([record.min_temperature for record in weather_data])
+    mean_humidity_validated = filter_values([record.mean_humidity for record in weather_data])
+
+    average_max_temp = sum(max_temp_validated) // len(max_temp_validated)
+    average_min_temp = sum(min_temp_validated) // len(min_temp_validated)
+    average_mean_humidity = sum(mean_humidity_validated) // len(mean_humidity_validated)
+
+    average_weather_record = {
+        'avg_max_temperature': average_max_temp,
+        'avg_min_temperature': average_min_temp,
+        'avg_mean_humidity': average_mean_humidity
+    }
+   
+    return average_weather_record
+
+
+def calculate_monthly_chart_values(weather_data):
+    max_temp = [record.max_temperature for record in weather_data]
+    min_temp = [record.min_temperature for record in weather_data]
+
+    return {
+        'max_temp': max_temp,
+        'min_temp': min_temp
+    }
