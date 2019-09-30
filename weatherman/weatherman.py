@@ -1,40 +1,7 @@
 import argparse
 
-from FilesParser import FilesParser
 from CalculateResults import Results
 from Reports import Report
-
-
-def process_yearly_temperatures(path, year):
-    f_parser = FilesParser()
-    result_calculator = Results()
-    results = Report()
-    readings = f_parser.populate_temperatures(path, year)
-    final_result = result_calculator.Calculate_yearly_results(readings)
-    results.show_yearly_results(final_result)
-
-
-def process_monthly_avgs(path, month):
-    f_parser = FilesParser()
-    result_calculator = Results()
-    results = Report()
-    temp_readings = f_parser.populate_temperatures(path, month)
-    avg_result = result_calculator.calculate_avg(temp_readings)
-    results.show_monthly_avgs(avg_result)
-
-
-def process_monthly_temperatures(path, month):
-    f_parser = FilesParser()
-    temp_readings = f_parser.populate_temperatures(path, month)
-    results = Report()
-    results.show_monthly_temps(temp_readings, False)
-
-
-def process_monthly_temps_bonus(path, month):
-    f_parser = FilesParser()
-    temp_readings = f_parser.populate_temperatures(path, month)
-    results = Report()
-    results.show_monthly_temps(temp_readings, True)
 
 
 def arg_parser():
@@ -47,16 +14,25 @@ def arg_parser():
     return arguments.parse_args()
 
 
-if __name__ == "__main__":
+def main():
     args = arg_parser()
+    result_calculator = Results()
+    temperature_readings = result_calculator.parse_files(args.Path)
+    show_results = Report()
     if args.e:
-        process_yearly_temperatures(args.Path, args.e)
+        yearly_temperatures_results = result_calculator.calculate_yearly_results(temperature_readings, args.e)
+        show_results.show_yearly_results(yearly_temperatures_results)
 
     if args.a:
-        process_monthly_avgs(args.Path, args.a)
+        monthly_avg_result = result_calculator.calculate_avg(temperature_readings, args.a)
+        show_results.show_monthly_avgs(monthly_avg_result)
 
     if args.c:
-        process_monthly_temperatures(args.Path, args.c)
+        show_results.show_monthly_temps(temperature_readings, args.c, False)
 
     if args.d:
-        process_monthly_temps_bonus(args.Path, args.d)
+        show_results.show_monthly_temps(temperature_readings, args.c, True)
+
+
+if __name__ == "__main__":
+    main()
