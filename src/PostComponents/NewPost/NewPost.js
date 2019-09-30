@@ -62,33 +62,29 @@ class NewPost extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            'dialog': false,
-            'image': null,
+            dialog: false,
+            image: null,
         }
     }
 
 
     handleImageUploadDialogOpen = () => {
-        this.setState({'dialog': true});
+        this.setState({dialog: true});
     };
 
     handleImageUploadDialogClose = () => {
         this.setState({
-            'dialog': false,
-            'image': null
+            dialog: false,
+            image: null
         });
     };
 
     handleImageAdd = event => {
         this.setState({
-            'image': URL.createObjectURL(event.target.files[0])
+            image: URL.createObjectURL(event.target.files[0])
         })
     };
 
-
-    handleAttachPicture = () => {
-
-    };
 
     render() {
         const {classes} = this.props;
