@@ -22,6 +22,22 @@ def cached_users_queryset():
     return queryset
 
 
+def cached_product(product_id):
+    product = cache.get(f'product_{product_id}')
+    if not product:
+        product = Product.objects.filter(retailer_sku=product_id)
+        cache.set(f'product_{product[0].retailer_sku}', product)
+    return product
+
+
+def cached_user(user_id):
+    user = cache.get(f'user_{user_id}')
+    if not user:
+        user = User.objects.filter(id=user_id)
+        cache.set(f'user_{user[0].id}', user)
+    return user
+
+
 def clear_products_cache():
     cache.delete('products')
 

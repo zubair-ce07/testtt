@@ -1,13 +1,13 @@
-from django.contrib.auth.models import User
 from rest_framework import generics
 
-from shopcity.models import Product
+from .backends import SimpleFilterBackend
 from .permissions import AllowAnyOrAdmin, IsLoggedInUserOrAdmin, IsAdmin, ReadOnly
-from .redis_cache import cached_products_queryset, cached_users_queryset
+from .redis_cache import cached_products_queryset, cached_product, cached_user, cached_users_queryset
 from .serializers import ProductSerializer, UserSerializer
 
 
 class ProductList(generics.ListCreateAPIView):
+    filter_backends = (SimpleFilterBackend,)
     permission_classes = [IsAdmin | ReadOnly]
     serializer_class = ProductSerializer
 
@@ -21,8 +21,8 @@ class ProductDetail(generics.RetrieveAPIView):
     lookup_field = 'retailer_sku'
 
     def get_queryset(self):
-        queryset = Product.objects.filter(retailer_sku=self.kwargs['retailer_sku'])
-        return queryset
+        product = cached_product(self.kwargs['retailer_sku'])
+        return product
 
 
 class UserList(generics.ListCreateAPIView):
@@ -39,5 +39,5 @@ class UserDetail(generics.RetrieveAPIView):
     lookup_field = 'id'
 
     def get_queryset(self):
-        queryset = User.objects.filter(id=self.kwargs['id'])
+        queryset = cached_user(self.kwargs['id'])
         return queryset

@@ -8,7 +8,7 @@ def get_user_jwt(request):
     user = None
     try:
         user_jwt = JWTTokenUserAuthentication().authenticate(Request(request))
-        if user_jwt is not None:
+        if user_jwt:
             token_user = user_jwt[0]
             user_id = token_user.pk
             user = User.objects.get(id=user_id)
