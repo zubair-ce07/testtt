@@ -1,5 +1,5 @@
 import React from "react";
-import {Redirect} from "react-router-dom";
+import { Redirect } from "react-router-dom";
 import { FormField, Button } from "../../components";
 import { Select, DatePicker } from "./components";
 import { GENDER } from "../../utils/constants";
@@ -16,13 +16,14 @@ class Auth extends React.Component {
     user[event.target.name] = event.target.value;
     this.props.updateUser(user);
   };
+
   handleSubmit = event => {
     event.preventDefault();
-    console.log(this.props.user);
     this.props.isLoginForm
       ? this.props.loginUser(this.props.user)
       : this.props.registerUser(this.props.user);
   };
+
   render() {
     if (this.props.isAuthenticated) return <Redirect to="/" />;
     return (

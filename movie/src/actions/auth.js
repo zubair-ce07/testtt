@@ -1,6 +1,6 @@
-import axios from "axios";
 import { types } from "./types";
-import { LOGIN_API, SIGNUP_API } from "../utils/constants";
+import { LOGIN_API, SIGNUP_API, requestTypes } from "../utils/constants";
+import { apiCaller } from "../utils/helpers/api";
 
 const authUserStarted = () => ({
   type: types.AUTH_USER_STARTED
@@ -20,13 +20,23 @@ const authUserFailure = error => ({
   }
 });
 
+export const logoutUser = () => ({
+  type: types.LOGOUT_USER
+});
+
 export const loginUser = ({ email, password }) => {
-  return dispatch => {
+  return async dispatch => {
     dispatch(authUserStarted());
-    axios
-      .post(LOGIN_API, { email, password })
-      .then(res => dispatch(authUserSuccess(res.data)))
-      .catch(err => dispatch(authUserFailure(err.message)));
+    try {
+      const response = await apiCaller({
+        method: requestTypes.POST,
+        url: LOGIN_API,
+        data: { email, password }
+      });
+      dispatch(authUserSuccess(response));
+    } catch (err) {
+      dispatch(authUserFailure(err.message));
+    }
   };
 };
 
@@ -39,22 +49,29 @@ export const registerUser = ({
   gender,
   date_of_birth
 }) => {
-  return dispatch => {
+  return async dispatch => {
     if (password !== confirm_password) {
       dispatch(authUserFailure("Passwords don't match"));
       return;
     }
+
     dispatch(authUserStarted());
-    axios
-      .post(SIGNUP_API, {
-        email,
-        password,
-        first_name,
-        last_name,
-        gender,
-        date_of_birth
-      })
-      .then(res => dispatch(authUserSuccess(res.data)))
-      .catch(err => dispatch(authUserFailure(err.message)));
+    try {
+      const response = await apiCaller({
+        method: requestTypes.POST,
+        url: SIGNUP_API,
+        data: {
+          email,
+          password,
+          first_name,
+          last_name,
+          gender,
+          date_of_birth
+        }
+      });
+      dispatch(authUserSuccess(response));
+    } catch (err) {
+      dispatch(authUserFailure(err.message));
+    }
   };
 };

@@ -2,18 +2,9 @@ import { types } from "../actions/types";
 
 const initailState = {
   loading: false,
-  user: {
-    email: "",
-    first_name: "",
-    last_name: "",
-    gender: "",
-    date_of_birth:  "",
-    password: "",
-    confirm_password: ""
-  },
+  user: {},
   isAuthenticated: false,
-  error: null,
-  isLoginForm: true
+  error: null
 };
 
 const authReducer = (state = initailState, action) => {
@@ -28,14 +19,23 @@ const authReducer = (state = initailState, action) => {
         ...state,
         loading: false,
         user: action.payload.user,
-        isAuthenticated: true
+        isAuthenticated: true,
+        error: null
       };
     case types.AUTH_USER_FAILURE:
       return {
         ...state,
         loading: false,
         error: action.payload.error,
-        isAuthenticated: false
+        isAuthenticated: false,
+        user: {}
+      };
+    case types.LOGOUT_USER:
+      return {
+        ...state,
+        isAuthenticated: false,
+        user: {},
+        error: false
       };
     default:
       return state;

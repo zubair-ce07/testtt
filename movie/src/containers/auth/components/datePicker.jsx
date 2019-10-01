@@ -1,6 +1,6 @@
 import React from "react";
 
-const DatePicker = ({name, onChange}) => (
+const DatePicker = ({ name, onChange }) => (
   <div className="form-group">
     <input
       type="date"

@@ -1,7 +1,7 @@
-import {types} from "./types";
+import { types } from "./types";
 
 const loginForm = () => ({
-    type: types.LOGIN_FORM
+  type: types.LOGIN_FORM
 });
 
-export {loginForm};
+export { loginForm };
