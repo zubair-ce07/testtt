@@ -1,0 +1,23 @@
+{
+  "name": "weathermanjs",
+  "version": "1.0.0",
+  "description": "Read the required weather files to generate requested report.",
+  "main": "weatherMan.js",
+  "scripts": {
+    "weatherman": "babel-node weatherMan.js /home/ahsan/the-lab/weather-files/ --extremes='2010'",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Ahsan Malik",
+  "license": "ISC",
+  "dependencies": {
+    "csvtojson": "^2.0.10",
+    "glob": "^7.1.4",
+    "yargs": "^14.0.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.6.2",
+    "@babel/core": "^7.6.2",
+    "@babel/node": "^7.6.2",
+    "@babel/preset-env": "^7.6.2"
+  }
+}
