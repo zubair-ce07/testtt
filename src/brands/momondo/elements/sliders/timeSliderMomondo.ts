@@ -12,7 +12,7 @@ export class TimeSliderMomondo implements TimeSlider {
       .element(by.css(`div[id$='-sliderWidget-handle-${handle}']`));
     waitUntilInteractive(sliderHandle);
     scrollIntoView(sliderHandle);
-    await browser.driver.actions().dragAndDrop(sliderHandle, {x, y}).perform();
+    await browser.driver.actions().dragAndDrop(sliderHandle, { x, y }).perform();
     await this.waitLoadingCoverToHide();
   }
   

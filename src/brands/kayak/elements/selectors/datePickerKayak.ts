@@ -1,8 +1,8 @@
 import { by, element, ElementFinder } from "protractor";
-import { DateSelector } from "../../../../core/elements/selectors/dateSelector";
+import { DatePicker } from "../../../../core/elements/selectors/datePicker";
 import { waitUntilInteractive } from "../../../../utils/browser.utils";
 
-export class DateSelectorKayak implements DateSelector {
+export class DatePickerKayak implements DatePicker {
   constructor(readonly container: ElementFinder) {
   }
   

@@ -1,5 +1,5 @@
 import { CabinSelector } from "../selectors/cabinSelector";
-import { DateSelector } from "../selectors/dateSelector";
+import { DatePicker } from "../selectors/datePicker";
 import { FlightSelector } from "../selectors/flightSelector";
 
 export interface MultiCityForm {
@@ -7,7 +7,7 @@ export interface MultiCityForm {
   
   clickSearch(): Promise<void>;
   
-  getDateSelector(leg: number): DateSelector;
+  getDatePicker(leg: number): DatePicker;
   
   getCabinSelector(leg: number): CabinSelector;
   

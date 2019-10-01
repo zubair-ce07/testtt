@@ -1,11 +1,11 @@
 import { $$, by, element, ElementFinder } from "protractor";
 import { MultiCityForm } from "../../../../core/elements/forms/multiCityForm";
 import { CabinSelector } from "../../../../core/elements/selectors/cabinSelector";
-import { DateSelector } from "../../../../core/elements/selectors/dateSelector";
+import { DatePicker } from "../../../../core/elements/selectors/datePicker";
 import { FlightSelector } from "../../../../core/elements/selectors/flightSelector";
 import { waitUntilInteractive } from "../../../../utils/browser.utils";
 import { CabinSelectorKayak } from "../selectors/cabinSelectorKayak";
-import { DateSelectorKayak } from "../selectors/dateSelectorKayak";
+import { DatePickerKayak } from "../selectors/datePickerKayak";
 import { FlightSelectorKayak } from "../selectors/flightSelectorKayak";
 
 export class MultiCityFormKayak implements MultiCityForm {
@@ -40,8 +40,8 @@ export class MultiCityFormKayak implements MultiCityForm {
     return new CabinSelectorKayak(leg);
   }
   
-  getDateSelector(leg: number): DateSelector {
-    return new DateSelectorKayak(
+  getDatePicker(leg: number): DatePicker {
+    return new DatePickerKayak(
       element(by.css(`div[id$='multiCityLeg${leg}']`))
     );
   }

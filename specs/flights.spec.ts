@@ -66,13 +66,13 @@ describe(`${BRAND_NAME} Flights Search`, () => {
   });
   
   it(`should set departure date as "${CURRENT_DATE.toDateString()}" for flight 1`, async () => {
-    const dateSelector = multiCityTripForm.getDateSelector(0);
+    const dateSelector = multiCityTripForm.getDatePicker(0);
     await dateSelector.selectDate(CURRENT_DATE);
     expect(dateSelector.getDisplayText()).eventually.to.equal(formatDate(CURRENT_DATE));
   });
   
   it(`should set departure date as "${CURRENT_DATE_PLUS_FIVE_DAYS.toDateString()}" for flight 2`, async () => {
-    const dateSelector = multiCityTripForm.getDateSelector(0);
+    const dateSelector = multiCityTripForm.getDatePicker(0);
     await dateSelector.selectDate(CURRENT_DATE);
     expect(dateSelector.getDisplayText()).eventually.to.equal(formatDate(CURRENT_DATE));
   });
@@ -152,11 +152,11 @@ describe(`${BRAND_NAME} Flights Search`, () => {
   });
   
   it('should show correct date on flight 1', async () => {
-    expect(multiCityTripForm.getDateSelector(0).getDisplayText()).eventually.to.equal(formatDate(CURRENT_DATE));
+    expect(multiCityTripForm.getDatePicker(0).getDisplayText()).eventually.to.equal(formatDate(CURRENT_DATE));
   });
   
   it('should show correct date on flight 2', async () => {
-    expect(multiCityTripForm.getDateSelector(1).getDisplayText()).eventually.to.equal(formatDate(CURRENT_DATE_PLUS_FIVE_DAYS));
+    expect(multiCityTripForm.getDatePicker(1).getDisplayText()).eventually.to.equal(formatDate(CURRENT_DATE_PLUS_FIVE_DAYS));
   });
   
   it('should show correct cabin type on flight 1', async () => {

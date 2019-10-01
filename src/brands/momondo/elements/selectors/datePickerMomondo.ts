@@ -1,8 +1,8 @@
 import { by, element } from "protractor";
-import { DateSelector } from "../../../../core/elements/selectors/dateSelector";
+import { DatePicker } from "../../../../core/elements/selectors/datePicker";
 import { waitUntilInteractive } from "../../../../utils/browser.utils";
 
-export class DateSelectorMomondo implements DateSelector {
+export class DatePickerMomondo implements DatePicker {
   constructor(readonly leg: number) {
   }
   
