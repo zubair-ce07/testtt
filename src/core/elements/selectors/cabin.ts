@@ -1,5 +1,7 @@
+import { CabinType } from "./cabinType";
+
 export interface CabinSelector {
-  select(option: 'Economy' | 'Business' | 'Premium Economy' | 'First'): Promise<void>;
+  select(option: CabinType): Promise<void>;
   
   getDisplayText(): Promise<string>;
 }

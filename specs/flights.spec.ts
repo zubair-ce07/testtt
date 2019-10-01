@@ -1,5 +1,6 @@
 import { expect } from "chai";
 import { browser } from "protractor";
+import { CabinType } from '../src/core/elements/selectors/cabinType';
 import { TripType } from "../src/core/elements/selectors/tripType";
 import { DragHandle } from "../src/core/elements/sliders/time";
 import { BrandPagesFactory } from "../src/factory/brand";
@@ -11,7 +12,7 @@ const {flightsPage, flightsResultsPage} = BrandPagesFactory.getPages(BRAND_NAME)
 describe(`${BRAND_NAME} Flights Search`, () => {
   
   const URL = flightsPage.getURL();
-  const CABIN_TYPE = 'Business';
+  const CABIN_TYPE = CabinType.BUSINESS;
   const TRIP_TYPE = TripType.MULTI_CITY;
   const DATE_1 = new Date();
   const DATE_2 = new Date();
