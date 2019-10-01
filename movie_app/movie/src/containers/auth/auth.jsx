@@ -12,7 +12,7 @@ class Auth extends React.Component {
   };
 
   handleChange = event => {
-    let user = this.props.user;
+    let { user } = this.props;
     user[event.target.name] = event.target.value;
     this.props.updateUser(user);
   };
@@ -103,7 +103,7 @@ class Auth extends React.Component {
                     ? "Not have an account? Register here!"
                     : "Already have an account? Login!"
                 }
-                type="btn-link"
+                type="btn-link btn-block"
                 onClick={this.register}
               />
             </form>

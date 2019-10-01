@@ -7,6 +7,7 @@ const FormField = ({ field, type, icon, name, onChange, ...rest }) => (
       <i className={`fa ${icon} icon`} />
       <input
         {...rest}
+        required
         type={type}
         name={name}
         className="form-control"

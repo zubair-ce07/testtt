@@ -25,10 +25,10 @@ export const logoutUser = () => ({
 });
 
 export const loginUser = data => {
-  return dispatch => {
+  return async dispatch => {
     dispatch(authUserStarted());
     try {
-      const response = apiCaller({
+      const response = await apiCaller({
         method: requestTypes.POST,
         url: LOGIN_API,
         data: data
@@ -41,7 +41,7 @@ export const loginUser = data => {
 };
 
 export const registerUser = data => {
-  return dispatch => {
+  return async dispatch => {
     if (data.password !== data.confirm_password) {
       dispatch(authUserFailure("Passwords don't match"));
       return;
@@ -49,7 +49,7 @@ export const registerUser = data => {
 
     dispatch(authUserStarted());
     try {
-      const response = apiCaller({
+      const response = await apiCaller({
         method: requestTypes.POST,
         url: SIGNUP_API,
         data: data
