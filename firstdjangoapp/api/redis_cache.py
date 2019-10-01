@@ -6,12 +6,12 @@ from django.dispatch import receiver
 from shopcity.models import Product
 
 
-def cached_products_queryset():
-    queryset = cache.get('products')
-    if not queryset:
-        queryset = Product.objects.all()
-        cache.set('products', queryset)
-    return queryset
+def cached_filter_products(q):
+    query_set = cache.get(f'products_{q}')
+    if not query_set:
+        query_set = Product.objects.filter(q).distinct()
+        cache.set(f'products_{q}', query_set)
+    return query_set
 
 
 def cached_users_queryset():

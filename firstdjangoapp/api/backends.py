@@ -1,39 +1,11 @@
 import coreapi
-from django.db.models import Q
 from rest_framework.filters import BaseFilterBackend
-
-from shopcity.models import Product
 
 
 class SimpleFilterBackend(BaseFilterBackend):
 
     def filter_queryset(self, request, queryset, view):
-        query_params = request.GET
-        brand = query_params.get('Brand', None)
-        size = query_params.get('Size', None)
-        colour = query_params.get('Colour', None)
-        category = query_params.get('Category', None)
-        name = query_params.get('Name', None)
-        minimum_price = query_params.get('Minimum Price', None)
-        maximum_price = query_params.get('Maximum Price', None)
-        out_of_stock = query_params.get('Out of Stock', False)
-
-        if out_of_stock == 'false' or out_of_stock == 'true':
-            out_of_stock = False if out_of_stock == 'false' else True
-        q = Q(out_of_stock=out_of_stock)
-        if brand:
-            q = q & Q(brand__iexact=brand)
-        if size:
-            q = q & Q(skus__size=size)
-        if colour:
-            q = q & Q(skus__colour=colour)
-        if category:
-            q = q & Q(categories__category=category)
-        if name:
-            q = q & Q(name__contains=name)
-        if maximum_price and minimum_price:
-            q = q & Q(skus__price__range=(int(minimum_price), int(maximum_price)))
-        return Product.objects.filter(q).distinct()
+        return queryset
 
     def get_schema_fields(self, view):
         fields = [
