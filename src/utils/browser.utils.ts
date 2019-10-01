@@ -15,3 +15,8 @@ export async function waitUntilInteractive(element: ElementFinder, timeout?: num
 export function scrollIntoView(element: ElementFinder): void {
   browser.executeScript((element: HTMLElement) => element.scrollIntoView(false), element)
 }
+
+export async function switchToTab(index: number): Promise<void> {
+  const windows = await browser.getAllWindowHandles();
+  await browser.switchTo().window(windows[index]);
+}

@@ -6,6 +6,7 @@ import { DragHandle } from "../src/core/elements/sliders/dragHandle";
 import { FlightsPageFactory } from "../src/factory/flightsPageFactory";
 import { FlightsResultsPageFactory } from "../src/factory/flightsResultsPageFactory";
 import { addDays, formatDate } from "../src/utils/specs.utils";
+import { switchToTab } from "../src/utils/browser.utils";
 
 const BRAND_NAME = process.env.RUN_TESTS_FOR_BRAND;
 
@@ -124,8 +125,7 @@ describe(`${BRAND_NAME} Flights Search`, () => {
   });
   
   it('should switch back to search results page', async () => {
-    const windows = await browser.getAllWindowHandles();
-    browser.switchTo().window(windows[0]);
+    await switchToTab(0);
     expect(browser.getCurrentUrl()).eventually.to.contain(URL);
   });
   
