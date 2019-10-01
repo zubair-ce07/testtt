@@ -117,7 +117,7 @@ describe(`${BRAND_NAME} Flights Search`, () => {
     expect(flightsResultsPage.getSearchResults().count()).eventually.to.be.greaterThan(0);
   });
   
-  it('should open provider page when "view deal" is clicked', async () => {
+  it('should open provider page', async () => {
     const flightResult = flightsResultsPage.getSearchResult(0);
     await flightResult.openProviderPage();
     const windows = await browser.getAllWindowHandles();
@@ -204,7 +204,7 @@ describe(`${BRAND_NAME} Flights Search`, () => {
     expect(await flightsResultsPage.getErrorDialog().getErrorMessages()).length.greaterThan(2);
   });
   
-  it('should close error dialog when "okay" is clicked', async () => {
+  it('should close error dialog', async () => {
     await flightsResultsPage.getErrorDialog().closeDialog();
     expect(flightsResultsPage.getErrorDialog().isDisplayed()).eventually.to.be.false;
   });
