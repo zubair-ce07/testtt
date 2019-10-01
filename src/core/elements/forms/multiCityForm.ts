@@ -11,7 +11,9 @@ export interface MultiCityForm {
   
   getCabinSelector(leg: number): CabinSelector;
   
-  getFlightSelector(leg: number): FlightSelector;
+  getOriginSelector(leg: number): FlightSelector;
+  
+  getDestinationSelector(leg: number): FlightSelector;
   
   getDisplayedLegsCount(): Promise<number>;
   

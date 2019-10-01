@@ -1,6 +1,6 @@
 import { by, element, ElementFinder } from "protractor";
 import { TripSelector } from "../../../../core/elements/selectors/tripSelector";
-import { TripType } from "../../../../core/elements/selectors/tripType";
+import { TripType } from "../../../../core/elements/types/tripType";
 import { waitUntilInteractive } from "../../../../utils/browser.utils";
 
 export class TripSelectorKayak implements TripSelector {

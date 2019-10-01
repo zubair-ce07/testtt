@@ -2,11 +2,12 @@ import { by, element, ElementFinder } from "protractor";
 import { MultiCityForm } from "../../../../core/elements/forms/multiCityForm";
 import { CabinSelector } from "../../../../core/elements/selectors/cabinSelector";
 import { DatePicker } from "../../../../core/elements/selectors/datePicker";
-import { FlightSelector } from "../../../../core/elements/selectors/flightSelector";
 import { waitUntilInteractive } from "../../../../utils/browser.utils";
 import { CabinSelectorMomondo } from "../selectors/cabinSelectorMomondo";
 import { DatePickerMomondo } from "../selectors/datePickerMomondo";
+import { FlightSelector } from "../../../../core/elements/selectors/flightSelector";
 import { FlightSelectorMomondo } from "../selectors/flightSelectorMomondo";
+import { FlightType } from "../../../../core/elements/types/flightType";
 
 export class MultiCityFormMomondo implements MultiCityForm {
   async clearAllLegs(): Promise<void> {
@@ -36,10 +37,6 @@ export class MultiCityFormMomondo implements MultiCityForm {
     return new DatePickerMomondo(leg);
   }
   
-  getFlightSelector(leg: number): FlightSelector {
-    return new FlightSelectorMomondo(leg);
-  }
-  
   async getDisplayedLegsCount(): Promise<number> {
     return element.all(by.css(`div[id*='multiCityLeg']`)).filter(element => element.isDisplayed()).count();
   }
@@ -59,6 +56,14 @@ export class MultiCityFormMomondo implements MultiCityForm {
     return this.getMultiFormContainer().isDisplayed();
   }
   
+  getOriginSelector(leg: number): FlightSelector {
+    return new FlightSelectorMomondo(leg, FlightType.ORIGIN);
+  }
+  
+  getDestinationSelector(leg: number): FlightSelector {
+    return new FlightSelectorMomondo(leg, FlightType.DESTINATION);
+  }
+  
   getMultiFormContainer(): ElementFinder {
     return element(by.css(`form[name='mc-searchform']`))
   }
@@ -68,8 +73,9 @@ export class MultiCityFormMomondo implements MultiCityForm {
   }
   
   private async clearOriginAndDestination(leg: number): Promise<void> {
-    const flightSelector = this.getFlightSelector(leg);
-    await flightSelector.setOrigin('');
-    await flightSelector.setDestination('')
+    const origin = this.getOriginSelector(leg);
+    const destination = this.getDestinationSelector(0);
+    await origin.set('');
+    await destination.set('');
   }
 }

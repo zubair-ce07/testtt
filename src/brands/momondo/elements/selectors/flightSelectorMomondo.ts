@@ -1,25 +1,18 @@
 import { browser, by, element, ElementFinder, ExpectedConditions as EC, Key } from "protractor";
-import { FlightSelector } from "../../../../core/elements/selectors/flightSelector";
 import { waitUntilInteractive } from "../../../../utils/browser.utils";
+import { FlightSelector } from "../../../../core/elements/selectors/flightSelector";
+import { FlightType } from "../../../../core/elements/types/flightType";
 
 export class FlightSelectorMomondo implements FlightSelector {
-  constructor(readonly leg: number) {
+  constructor(readonly leg: number, readonly type: FlightType) {
   }
   
-  setDestination(text: string): Promise<void> {
-    return this.set('destination', text);
+  async getDisplayText(): Promise<string> {
+    return element(by.css(`input[name='${this.type}${this.leg}']`)).getAttribute('value');
   }
   
-  setOrigin(text: string): Promise<void> {
-    return this.set('origin', text);
-  }
-  
-  async getDisplayText(type: 'origin' | 'destination'): Promise<string> {
-    return element(by.css(`input[name='${type}${this.leg}']`)).getAttribute('value');
-  }
-  
-  async set(type: string, text: string): Promise<void> {
-    const input = await this.getInputElement(type);
+  async set(text: string): Promise<void> {
+    const input = await this.getInputElement();
     
     await waitUntilInteractive(input);
     await input.click();
@@ -31,10 +24,10 @@ export class FlightSelectorMomondo implements FlightSelector {
     await input.sendKeys(Key.ESCAPE);
   }
   
-  async getInputElement(type: string): Promise<ElementFinder> {
-    const input = element(by.css(`input[id$='-${type}${this.leg}']`));
+  async getInputElement(): Promise<ElementFinder> {
+    const input = element(by.css(`input[id$='-${this.type}${this.leg}']`));
     const inputIsPresent = await input.isPresent();
-    return inputIsPresent ? input : element(by.css(`input[id$='-${type}${this.leg}-airport']`))
+    return inputIsPresent ? input : element(by.css(`input[id$='-${this.type}${this.leg}-airport']`))
   }
   
 }

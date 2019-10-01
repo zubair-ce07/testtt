@@ -1,6 +1,6 @@
 import { by, element, ElementFinder } from "protractor";
 import { CabinSelector } from "../../../../core/elements/selectors/cabinSelector";
-import { CabinType } from "../../../../core/elements/selectors/cabinType";
+import { CabinType } from "../../../../core/elements/types/cabinType";
 
 export class CabinSelectorMomondo implements CabinSelector {
   constructor(readonly leg: number) {

@@ -2,11 +2,12 @@ import { $$, by, element, ElementFinder } from "protractor";
 import { MultiCityForm } from "../../../../core/elements/forms/multiCityForm";
 import { CabinSelector } from "../../../../core/elements/selectors/cabinSelector";
 import { DatePicker } from "../../../../core/elements/selectors/datePicker";
-import { FlightSelector } from "../../../../core/elements/selectors/flightSelector";
 import { waitUntilInteractive } from "../../../../utils/browser.utils";
 import { CabinSelectorKayak } from "../selectors/cabinSelectorKayak";
 import { DatePickerKayak } from "../selectors/datePickerKayak";
+import { FlightSelector } from "../../../../core/elements/selectors/flightSelector";
 import { FlightSelectorKayak } from "../selectors/flightSelectorKayak";
+import { FlightType } from "../../../../core/elements/types/flightType";
 
 export class MultiCityFormKayak implements MultiCityForm {
   async isFormVisible(): Promise<boolean> {
@@ -46,8 +47,12 @@ export class MultiCityFormKayak implements MultiCityForm {
     );
   }
   
-  getFlightSelector(leg: number): FlightSelector {
-    return new FlightSelectorKayak(leg);
+  getOriginSelector(leg: number): FlightSelector {
+    return new FlightSelectorKayak(leg, FlightType.ORIGIN);
+  }
+  
+  getDestinationSelector(leg: number): FlightSelector {
+    return new FlightSelectorKayak(leg, FlightType.DESTINATION);
   }
   
   async getDisplayedLegsCount(): Promise<number> {

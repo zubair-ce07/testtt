@@ -1,6 +1,6 @@
 import { by, element } from "protractor";
 import { CabinSelector } from "../../../../core/elements/selectors/cabinSelector";
-import { CabinType } from "../../../../core/elements/selectors/cabinType";
+import { CabinType } from "../../../../core/elements/types/cabinType";
 import { waitUntilInteractive } from "../../../../utils/browser.utils";
 
 export class CabinSelectorKayak implements CabinSelector {

@@ -1,5 +1,5 @@
 import { browser, by, element, ExpectedConditions as EC } from "protractor";
-import { DragHandle } from "../../../../core/elements/sliders/dragHandle";
+import { HandleType } from "../../../../core/elements/types/handleType";
 import { TimeSlider } from "../../../../core/elements/sliders/timeSlider";
 import { scrollIntoView, waitUntilInteractive } from "../../../../utils/browser.utils";
 
@@ -7,10 +7,10 @@ export class TimeSliderMomondo implements TimeSlider {
   constructor(readonly leg: number) {
   }
   
-  async drag(handle: DragHandle, x: number, y?: number): Promise<void> {
+  async drag(handle: HandleType, x: number, y?: number): Promise<void> {
     const sliderHandle = element(by.css(`div[id$='-times-takeoff-slider-${this.leg}']`))
       .element(by.css(`div[id$='-sliderWidget-handle-${handle}']`));
-    waitUntilInteractive(sliderHandle);
+    await waitUntilInteractive(sliderHandle);
     scrollIntoView(sliderHandle);
     await browser.driver.actions().dragAndDrop(sliderHandle, { x, y }).perform();
     await this.waitLoadingCoverToHide();

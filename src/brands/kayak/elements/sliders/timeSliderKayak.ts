@@ -1,5 +1,5 @@
 import { browser, by, element, ElementFinder, ExpectedConditions as EC } from "protractor";
-import { DragHandle } from "../../../../core/elements/sliders/dragHandle";
+import { HandleType } from "../../../../core/elements/types/handleType";
 import { TimeSlider } from "../../../../core/elements/sliders/timeSlider";
 import { scrollIntoView, waitUntilInteractive } from "../../../../utils/browser.utils";
 
@@ -7,9 +7,9 @@ export class TimeSliderKayak implements TimeSlider {
   constructor(readonly container: ElementFinder) {
   }
   
-  async drag(handle: DragHandle, x: number, y: number = 0): Promise<void> {
+  async drag(handle: HandleType, x: number, y: number = 0): Promise<void> {
     const sliderHandle = this.container.element(by.css(`div[id$='-sliderWidget-handle-${handle}']`));
-    waitUntilInteractive(sliderHandle);
+    await waitUntilInteractive(sliderHandle);
     scrollIntoView(sliderHandle);
     await browser.driver.actions().dragAndDrop(sliderHandle, { x, y }).perform();
     await this.waitLoadingCoverToHide();

@@ -1,4 +1,4 @@
-import { CabinType } from "./cabinType";
+import { CabinType } from "../types/cabinType";
 
 export interface CabinSelector {
   select(option: CabinType): Promise<void>;

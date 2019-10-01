@@ -1,4 +1,4 @@
-import { TripType } from "./tripType";
+import { TripType } from "../types/tripType";
 
 export interface TripSelector {
   select(type: TripType): Promise<void>;

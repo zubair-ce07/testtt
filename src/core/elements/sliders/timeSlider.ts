@@ -1,7 +1,7 @@
-import { DragHandle } from "./dragHandle";
+import { HandleType } from "../types/handleType";
 
 export interface TimeSlider {
-  drag(handle: DragHandle, x: number, y?: number): Promise<void>;
+  drag(handle: HandleType, x: number, y?: number): Promise<void>;
   
   getDisplayText(): Promise<string>;
 }
