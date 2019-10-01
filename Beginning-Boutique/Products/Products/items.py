@@ -15,7 +15,7 @@ class ProductsItem(scrapy.Item):
     name = scrapy.Field()
     price = scrapy.Field()
     skus = scrapy.Field()
-    categories = scrapy.Field()
+    category = scrapy.Field()
     care = scrapy.Field()
     currency = scrapy.Field()
     market = scrapy.Field()
