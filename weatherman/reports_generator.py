@@ -1,6 +1,6 @@
 def display_month_bar_chart(min_max_record):        
-    max_temp_values = min_max_record['max_temp']
-    min_temp_values = min_max_record['min_temp']
+    max_temp_values = min_max_record['max_temperatures']
+    min_temp_values = min_max_record['min_temperatures']
     day_counter = 1
 
     print('\n ************************************************************* \n')
@@ -25,9 +25,9 @@ def display_yearly_report(min_max_record):
     print('\n ************************************************************* \n')
 
 
-def display_averages(avg_values):        
+def display_monthly_report(average_values):        
     print('\n ************************************************************* \n')
-    print(f'Highest Average: {avg_values["avg_max_temperature"]}C')
-    print(f'Lowest Average: {avg_values["avg_min_temperature"]}C')
-    print(f'Average Mean Humidity: {avg_values["avg_mean_humidity"]}%')
+    print(f'Highest Average: {average_values["avg_max_temperature"]}C')
+    print(f'Lowest Average: {average_values["avg_min_temperature"]}C')
+    print(f'Average Mean Humidity: {average_values["avg_mean_humidity"]}%')
     print('\n ************************************************************* \n')
