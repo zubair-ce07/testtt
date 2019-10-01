@@ -129,12 +129,9 @@ describe(`${BRAND_NAME} Flights Search`, () => {
     expect(browser.getCurrentUrl()).eventually.to.contain(FLIGHTS_PAGE_URL);
   });
   
-  it('should show search form', async () => {
-    await multiCityTripForm.makeFormVisible();
-    expect(multiCityTripForm.isFormVisible()).eventually.to.be.true;
-  });
   
   it('should show correct origin on flight 1', async () => {
+    await multiCityTripForm.makeFormVisible();
     expect(multiCityTripForm.getOriginSelector(0).getDisplayText()).eventually.to.contain(ORIGIN_1);
   });
   
