@@ -1,5 +1,5 @@
 export interface ErrorDialog {
-  clickOkay(): Promise<void>;
+  closeDialog(): Promise<void>;
   
   getErrorMessages(): Promise<string[]>;
   

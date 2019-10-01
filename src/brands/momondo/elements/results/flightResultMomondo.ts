@@ -6,7 +6,7 @@ export class FlightResultMomondo implements FlightResult {
   constructor(readonly container: ElementFinder) {
   }
   
-  async clickViewDeal(): Promise<void> {
+  async openProviderPage(): Promise<void> {
     const viewDealButton = this.container.element(by.css(`a[id$='-booking-link']`));
     await waitUntilInteractive(viewDealButton);
     return viewDealButton.click();

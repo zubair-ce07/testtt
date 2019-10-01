@@ -6,7 +6,7 @@ export class FlightResultKayak implements FlightResult {
   constructor(readonly container: ElementFinder) {
   }
   
-  async clickViewDeal(): Promise<void> {
+  async openProviderPage(): Promise<void> {
     const button = this.container.element(by.cssContainingText(`.Common-Booking-MultiBookProvider`, 'View Deal'));
     await waitUntilInteractive(button);
     return button.click();

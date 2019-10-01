@@ -15,7 +15,7 @@ const flightsResultsPage = new FlightsResultsPageFactory().create(BRAND_NAME);
 
 describe(`${BRAND_NAME} Flights Search`, () => {
   
-  const URL = flightsPage.getURL();
+  const FLIGHTS_PAGE_URL = flightsPage.getURL();
   const CABIN_TYPE = CabinType.BUSINESS;
   const TRIP_TYPE = TripType.MULTI_CITY;
   const CURRENT_DATE = new Date();
@@ -28,8 +28,8 @@ describe(`${BRAND_NAME} Flights Search`, () => {
   const multiCityTripForm = flightsPage.getMultiCityTripForm();
   
   it(`should visit "Flights" page`, async () => {
-    await browser.get(URL);
-    expect(browser.getCurrentUrl()).eventually.to.contain(URL);
+    await browser.get(FLIGHTS_PAGE_URL);
+    expect(browser.getCurrentUrl()).eventually.to.contain(FLIGHTS_PAGE_URL);
   });
   
   it(`should set trip type to "${TRIP_TYPE}"`, async () => {
@@ -67,15 +67,15 @@ describe(`${BRAND_NAME} Flights Search`, () => {
   });
   
   it(`should set departure date as "${CURRENT_DATE.toDateString()}" for flight 1`, async () => {
-    const dateSelector = multiCityTripForm.getDatePicker(0);
-    await dateSelector.selectDate(CURRENT_DATE);
-    expect(dateSelector.getDisplayText()).eventually.to.equal(formatDate(CURRENT_DATE));
+    const datePicker = multiCityTripForm.getDatePicker(0);
+    await datePicker.selectDate(CURRENT_DATE);
+    expect(datePicker.getDisplayText()).eventually.to.equal(formatDate(CURRENT_DATE));
   });
   
   it(`should set departure date as "${CURRENT_DATE_PLUS_FIVE_DAYS.toDateString()}" for flight 2`, async () => {
-    const dateSelector = multiCityTripForm.getDatePicker(0);
-    await dateSelector.selectDate(CURRENT_DATE);
-    expect(dateSelector.getDisplayText()).eventually.to.equal(formatDate(CURRENT_DATE));
+    const datePicker = multiCityTripForm.getDatePicker(0);
+    await datePicker.selectDate(CURRENT_DATE);
+    expect(datePicker.getDisplayText()).eventually.to.equal(formatDate(CURRENT_DATE));
   });
   
   it(`should set cabin type to "${CABIN_TYPE}" of flight 1`, async () => {
@@ -91,7 +91,7 @@ describe(`${BRAND_NAME} Flights Search`, () => {
   });
   
   it(`should click "Search" and load results page`, async () => {
-    await flightsPage.clickSearch();
+    await flightsPage.loadSearchResults();
     expect(flightsResultsPage.getSearchResults().count()).eventually.to.greaterThan(0);
   });
   
@@ -119,18 +119,17 @@ describe(`${BRAND_NAME} Flights Search`, () => {
   
   it('should open provider page when "view deal" is clicked', async () => {
     const flightResult = flightsResultsPage.getSearchResult(0);
-    await flightResult.clickViewDeal();
+    await flightResult.openProviderPage();
     const windows = await browser.getAllWindowHandles();
     expect(windows.length).to.be.greaterThan(1);
   });
   
   it('should switch back to search results page', async () => {
     await switchToTab(0);
-    expect(browser.getCurrentUrl()).eventually.to.contain(URL);
+    expect(browser.getCurrentUrl()).eventually.to.contain(FLIGHTS_PAGE_URL);
   });
   
   it('should show search form', async () => {
-    expect(multiCityTripForm.isFormVisible()).eventually.to.be.false;
     await multiCityTripForm.makeFormVisible();
     expect(multiCityTripForm.isFormVisible()).eventually.to.be.true;
   });
@@ -168,7 +167,7 @@ describe(`${BRAND_NAME} Flights Search`, () => {
   });
   
   it('should clear flight legs', async () => {
-    await flightsResultsPage.getMultiCityTripForm().clearAll();
+    await multiCityTripForm.clearAllLegs();
     expect(multiCityTripForm.isFormVisible()).eventually.to.be.true;
   });
   
@@ -206,7 +205,7 @@ describe(`${BRAND_NAME} Flights Search`, () => {
   });
   
   it('should close error dialog when "okay" is clicked', async () => {
-    await flightsResultsPage.getErrorDialog().clickOkay();
+    await flightsResultsPage.getErrorDialog().closeDialog();
     expect(flightsResultsPage.getErrorDialog().isDisplayed()).eventually.to.be.false;
   });
   

@@ -2,7 +2,7 @@ import { by, element, ElementFinder } from "protractor";
 import { ErrorDialog } from "../../../../core/elements/dialogs/errorDialog";
 
 export class ErrorDialogMomondo implements ErrorDialog {
-  async clickOkay(): Promise<void> {
+  async closeDialog(): Promise<void> {
     return this.getErrorContainer().element(by.className(`errorDialogCloseButton`)).click();
   }
   

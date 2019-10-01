@@ -1,3 +1,3 @@
 export interface FlightResult {
-  clickViewDeal(): Promise<void>;
+  openProviderPage(): Promise<void>;
 }

@@ -9,7 +9,7 @@ import { DatePickerMomondo } from "../selectors/datePickerMomondo";
 import { FlightSelectorMomondo } from "../selectors/flightSelectorMomondo";
 
 export class MultiCityFormMomondo implements MultiCityForm {
-  async clearAll(): Promise<void> {
+  async clearAllLegs(): Promise<void> {
     await this.makeFormVisible();
     
     const clearAll = element(by.css(`button[id$='-clearAll']`));

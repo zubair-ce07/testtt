@@ -11,7 +11,7 @@ export class FlightsPageMomondo implements FlightsPage {
     return "https://global.momondo.com";
   }
   
-  async clickSearch(): Promise<void> {
+  async loadSearchResults(): Promise<void> {
     element(by.css(`button[id$='-submit-multi']`)).click();
     await FlightsResultsPageMomondo.loadResults();
   }

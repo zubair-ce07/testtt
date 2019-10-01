@@ -24,7 +24,7 @@ export class MultiCityFormKayak implements MultiCityForm {
     await waitUntilInteractive(multiSearchForm);
   }
   
-  async clearAll(): Promise<void> {
+  async clearAllLegs(): Promise<void> {
     const clearLegs = element(by.className(`col-clear-legs`)).element(by.tagName('button'));
     await waitUntilInteractive(clearLegs);
     await clearLegs.click();

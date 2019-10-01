@@ -4,7 +4,7 @@ import { TripSelector } from "../elements/selectors/tripSelector";
 export interface FlightsPage {
   getURL(): string;
   
-  clickSearch(): Promise<void>;
+  loadSearchResults(): Promise<void>;
   
   getTripSelector(): TripSelector;
   

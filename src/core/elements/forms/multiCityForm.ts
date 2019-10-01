@@ -3,7 +3,7 @@ import { DatePicker } from "../selectors/datePicker";
 import { FlightSelector } from "../selectors/flightSelector";
 
 export interface MultiCityForm {
-  clearAll(): Promise<void>;
+  clearAllLegs(): Promise<void>;
   
   clickSearch(): Promise<void>;
   
