@@ -49,7 +49,7 @@ describe(`${BRAND_NAME} Flights Search`, () => {
   
   it(`should set destination to "${DESTINATION_1}" of flight 1`, async () => {
     const flightSelector = multiCityTripForm.getFlightSelector(0);
-    await flightSelector.setOrigin(DESTINATION_1);
+    await flightSelector.setDestination(DESTINATION_1);
     expect(flightSelector.getDisplayText('destination')).eventually.to.contain(DESTINATION_1);
   });
   
@@ -61,7 +61,7 @@ describe(`${BRAND_NAME} Flights Search`, () => {
   
   it(`should set destination to "${DESTINATION_2}" of flight 2`, async () => {
     const flightSelector = multiCityTripForm.getFlightSelector(1);
-    await flightSelector.setOrigin(DESTINATION_2);
+    await flightSelector.setDestination(DESTINATION_2);
     expect(flightSelector.getDisplayText('destination')).eventually.to.contain(DESTINATION_2);
   });
   
