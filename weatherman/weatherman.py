@@ -1,7 +1,8 @@
 import argparse
 
-from CalculateResults import Results
-from Reports import Report
+from CalculateResults import WeatherResultsCalculator
+from Reports import WeatherReportGenerator
+from WeatherFilesParser import WeatherFilesParser
 
 
 def arg_parser():
@@ -16,22 +17,26 @@ def arg_parser():
 
 def main():
     args = arg_parser()
-    result_calculator = Results()
-    temperature_readings = result_calculator.parse_files(args.Path)
-    show_results = Report()
+    file_parser = WeatherFilesParser()
+    result_calculator = WeatherResultsCalculator()
+    show_results = WeatherReportGenerator()
     if args.e:
-        yearly_temperatures_results = result_calculator.calculate_yearly_results(temperature_readings, args.e)
-        show_results.show_yearly_results(yearly_temperatures_results)
+        weather_readings = file_parser.parse_files(args.Path, args.e)
+        yearly_temperatures_results = result_calculator.calculate_yearly_high_low_weather(weather_readings)
+        show_results.generate_yearly_report(yearly_temperatures_results)
 
     if args.a:
-        monthly_avg_result = result_calculator.calculate_avg(temperature_readings, args.a)
-        show_results.show_monthly_avgs(monthly_avg_result)
+        weather_readings = file_parser.parse_files(args.Path, args.a)
+        monthly_avg_result = result_calculator.calculate_monthly_avg_weather(weather_readings)
+        show_results.generate_monthly_avg_report(monthly_avg_result)
 
     if args.c:
-        show_results.show_monthly_temps(temperature_readings, args.c, False)
+        weather_readings = file_parser.parse_files(args.Path, args.c)
+        show_results.generate_monthly_temperatures_report(weather_readings, False)
 
     if args.d:
-        show_results.show_monthly_temps(temperature_readings, args.c, True)
+        weather_readings = file_parser.parse_files(args.Path, args.d)
+        show_results.generate_monthly_temperatures_report(weather_readings, True)
 
 
 if __name__ == "__main__":
