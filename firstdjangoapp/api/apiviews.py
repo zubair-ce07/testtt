@@ -30,11 +30,11 @@ class ProductList(generics.ListCreateAPIView):
         if brand:
             q = q & Q(brand__iexact=brand)
         if size:
-            q = q & Q(skus__size=size)
+            q = q & Q(skus__size__iexact=size)
         if colour:
-            q = q & Q(skus__colour=colour)
+            q = q & Q(skus__colour__iexact=colour)
         if category:
-            q = q & Q(categories__category=category)
+            q = q & Q(categories__category__iexact=category)
         if name:
             q = q & Q(name__contains=name)
         if maximum_price and minimum_price:
