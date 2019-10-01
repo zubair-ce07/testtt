@@ -3,11 +3,14 @@ import { browser } from "protractor";
 import { CabinType } from '../src/core/elements/selectors/cabinType';
 import { TripType } from "../src/core/elements/selectors/tripType";
 import { DragHandle } from "../src/core/elements/sliders/time";
-import { BrandPagesFactory } from "../src/factory/brand";
+import { FlightsPageFactory } from "../src/factory/flightsPage";
+import { FlightsResultsPageFactory } from "../src/factory/flightsResultsPage";
 import { addDays, formatDate } from "../src/utils/specs.utils";
 
 const BRAND_NAME = process.env.RUN_TESTS_FOR_BRAND;
-const {flightsPage, flightsResultsPage} = BrandPagesFactory.getPages(BRAND_NAME);
+
+const flightsPage = new FlightsPageFactory().create(BRAND_NAME);
+const flightsResultsPage = new FlightsResultsPageFactory().create(BRAND_NAME);
 
 describe(`${BRAND_NAME} Flights Search`, () => {
   
