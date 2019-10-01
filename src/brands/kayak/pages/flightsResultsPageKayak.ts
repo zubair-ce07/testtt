@@ -1,16 +1,16 @@
 import { by, element, ElementArrayFinder } from "protractor";
-import { ErrorDialog } from "../../../core/elements/dialogs/error";
-import { MultiCityForm } from "../../../core/elements/forms/multiCity";
-import { FlightResult } from "../../../core/elements/results/flight";
-import { TripSelector } from "../../../core/elements/selectors/trip";
-import { TimeSlider } from "../../../core/elements/sliders/time";
-import { FlightsResultsPage } from "../../../core/pages/flightsResults";
+import { ErrorDialog } from "../../../core/elements/dialogs/errorDialog";
+import { MultiCityForm } from "../../../core/elements/forms/multiCityForm";
+import { FlightResult } from "../../../core/elements/results/flightResult";
+import { TripSelector } from "../../../core/elements/selectors/tripSelector";
+import { TimeSlider } from "../../../core/elements/sliders/timeSlider";
+import { FlightsResultsPage } from "../../../core/pages/flightsResultsPage";
 import { waitUntilInteractive } from "../../../utils/browser.utils";
-import { ErrorDialogKayak } from "../elements/dialogs/error";
-import { MultiCityFormKayak } from "../elements/forms/multiCity";
-import { FlightResultKayak } from "../elements/results/flight";
-import { TripSelectorKayak } from "../elements/selectors/trip";
-import { TimeSliderKayak } from "../elements/sliders/time";
+import { ErrorDialogKayak } from "../elements/dialogs/errorDialogKayak";
+import { MultiCityFormKayak } from "../elements/forms/multiCityFormKayak";
+import { FlightResultKayak } from "../elements/results/flightResultKayak";
+import { TripSelectorKayak } from "../elements/selectors/tripSelectorKayak";
+import { TimeSliderKayak } from "../elements/sliders/timeSliderKayak";
 
 export class FlightsResultsPageKayak implements FlightsResultsPage {
   static async loadResults() {

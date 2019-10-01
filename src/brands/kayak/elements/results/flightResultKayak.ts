@@ -1,5 +1,5 @@
 import { by, ElementFinder } from "protractor";
-import { FlightResult } from "../../../../core/elements/results/flight";
+import { FlightResult } from "../../../../core/elements/results/flightResult";
 import { waitUntilInteractive } from "../../../../utils/browser.utils";
 
 export class FlightResultKayak implements FlightResult {

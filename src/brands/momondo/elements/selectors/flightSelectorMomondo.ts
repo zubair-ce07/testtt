@@ -1,5 +1,5 @@
 import { browser, by, element, ElementFinder, ExpectedConditions as EC, Key } from "protractor";
-import { FlightSelector } from "../../../../core/elements/selectors/flight";
+import { FlightSelector } from "../../../../core/elements/selectors/flightSelector";
 import { waitUntilInteractive } from "../../../../utils/browser.utils";
 
 export class FlightSelectorMomondo implements FlightSelector {

@@ -1,12 +1,12 @@
 import { by, element, ElementFinder } from "protractor";
-import { MultiCityForm } from "../../../../core/elements/forms/multiCity";
-import { CabinSelector } from "../../../../core/elements/selectors/cabin";
-import { DateSelector } from "../../../../core/elements/selectors/date";
-import { FlightSelector } from "../../../../core/elements/selectors/flight";
+import { MultiCityForm } from "../../../../core/elements/forms/multiCityForm";
+import { CabinSelector } from "../../../../core/elements/selectors/cabinSelector";
+import { DateSelector } from "../../../../core/elements/selectors/dateSelector";
+import { FlightSelector } from "../../../../core/elements/selectors/flightSelector";
 import { waitUntilInteractive } from "../../../../utils/browser.utils";
-import { CabinSelectorMomondo } from "../selectors/cabin";
-import { DateSelectorMomondo } from "../selectors/date";
-import { FlightSelectorMomondo } from "../selectors/flight";
+import { CabinSelectorMomondo } from "../selectors/cabinSelectorMomondo";
+import { DateSelectorMomondo } from "../selectors/dateSelectorMomondo";
+import { FlightSelectorMomondo } from "../selectors/flightSelectorMomondo";
 
 export class MultiCityFormMomondo implements MultiCityForm {
   async clearAll(): Promise<void> {

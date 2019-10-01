@@ -1,9 +1,9 @@
 import { ElementArrayFinder } from "protractor";
-import { ErrorDialog } from "../elements/dialogs/error";
-import { MultiCityForm } from "../elements/forms/multiCity";
-import { FlightResult } from "../elements/results/flight";
-import { TripSelector } from "../elements/selectors/trip";
-import { TimeSlider } from "../elements/sliders/time";
+import { ErrorDialog } from "../elements/dialogs/errorDialog";
+import { MultiCityForm } from "../elements/forms/multiCityForm";
+import { FlightResult } from "../elements/results/flightResult";
+import { TripSelector } from "../elements/selectors/tripSelector";
+import { TimeSlider } from "../elements/sliders/timeSlider";
 
 export interface FlightsResultsPage {
   getTimeSlider(leg: number): TimeSlider;

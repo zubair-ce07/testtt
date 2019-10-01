@@ -1,12 +1,12 @@
 import { $$, by, element, ElementFinder } from "protractor";
-import { MultiCityForm } from "../../../../core/elements/forms/multiCity";
-import { CabinSelector } from "../../../../core/elements/selectors/cabin";
-import { DateSelector } from "../../../../core/elements/selectors/date";
-import { FlightSelector } from "../../../../core/elements/selectors/flight";
+import { MultiCityForm } from "../../../../core/elements/forms/multiCityForm";
+import { CabinSelector } from "../../../../core/elements/selectors/cabinSelector";
+import { DateSelector } from "../../../../core/elements/selectors/dateSelector";
+import { FlightSelector } from "../../../../core/elements/selectors/flightSelector";
 import { waitUntilInteractive } from "../../../../utils/browser.utils";
-import { CabinSelectorKayak } from "../selectors/cabin";
-import { DateSelectorKayak } from "../selectors/date";
-import { FlightSelectorKayak } from "../selectors/flight";
+import { CabinSelectorKayak } from "../selectors/cabinSelectorKayak";
+import { DateSelectorKayak } from "../selectors/dateSelectorKayak";
+import { FlightSelectorKayak } from "../selectors/flightSelectorKayak";
 
 export class MultiCityFormKayak implements MultiCityForm {
   async isFormVisible(): Promise<boolean> {

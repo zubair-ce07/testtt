@@ -1,5 +1,6 @@
 import { browser, by, element, ElementFinder, ExpectedConditions as EC } from "protractor";
-import { DragHandle, TimeSlider } from "../../../../core/elements/sliders/time";
+import { DragHandle } from "../../../../core/elements/sliders/dragHandle";
+import { TimeSlider } from "../../../../core/elements/sliders/timeSlider";
 import { scrollIntoView, waitUntilInteractive } from "../../../../utils/browser.utils";
 
 export class TimeSliderKayak implements TimeSlider {

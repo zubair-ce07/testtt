@@ -1,5 +1,5 @@
 import { by, element, ElementFinder } from "protractor";
-import { CabinSelector } from "../../../../core/elements/selectors/cabin";
+import { CabinSelector } from "../../../../core/elements/selectors/cabinSelector";
 import { CabinType } from "../../../../core/elements/selectors/cabinType";
 
 export class CabinSelectorMomondo implements CabinSelector {

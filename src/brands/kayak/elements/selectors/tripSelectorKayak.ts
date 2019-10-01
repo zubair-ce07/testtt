@@ -1,5 +1,5 @@
 import { by, element, ElementFinder } from "protractor";
-import { TripSelector } from "../../../../core/elements/selectors/trip";
+import { TripSelector } from "../../../../core/elements/selectors/tripSelector";
 import { TripType } from "../../../../core/elements/selectors/tripType";
 import { waitUntilInteractive } from "../../../../utils/browser.utils";
 

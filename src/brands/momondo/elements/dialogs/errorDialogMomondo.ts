@@ -1,9 +1,9 @@
 import { by, element, ElementFinder } from "protractor";
-import { ErrorDialog } from "../../../../core/elements/dialogs/error";
+import { ErrorDialog } from "../../../../core/elements/dialogs/errorDialog";
 
-export class ErrorDialogKayak implements ErrorDialog {
+export class ErrorDialogMomondo implements ErrorDialog {
   async clickOkay(): Promise<void> {
-    await this.getErrorContainer().element(by.className(`errorDialogCloseButton`)).click();
+    return this.getErrorContainer().element(by.className(`errorDialogCloseButton`)).click();
   }
   
   async getErrorMessages(): Promise<string[]> {

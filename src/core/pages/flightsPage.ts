@@ -1,5 +1,5 @@
-import { MultiCityForm } from "../elements/forms/multiCity";
-import { TripSelector } from "../elements/selectors/trip";
+import { MultiCityForm } from "../elements/forms/multiCityForm";
+import { TripSelector } from "../elements/selectors/tripSelector";
 
 export interface FlightsPage {
   getURL(): string;

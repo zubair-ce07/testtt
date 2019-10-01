@@ -1,5 +1,5 @@
 import { browser, by, element, ExpectedConditions as EC } from "protractor";
-import { TripSelector } from "../../../../core/elements/selectors/trip";
+import { TripSelector } from "../../../../core/elements/selectors/tripSelector";
 import { TripType } from "../../../../core/elements/selectors/tripType";
 
 export class TripSelectorMomondo implements TripSelector {

@@ -1,6 +1,6 @@
-import { CabinSelector } from "../selectors/cabin";
-import { DateSelector } from "../selectors/date";
-import { FlightSelector } from "../selectors/flight";
+import { CabinSelector } from "../selectors/cabinSelector";
+import { DateSelector } from "../selectors/dateSelector";
+import { FlightSelector } from "../selectors/flightSelector";
 
 export interface MultiCityForm {
   clearAll(): Promise<void>;

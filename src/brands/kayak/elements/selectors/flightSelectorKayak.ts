@@ -1,6 +1,6 @@
 import { browser, by, element, ElementFinder, ExpectedConditions as EC } from "protractor";
 import { Key } from "selenium-webdriver";
-import { FlightSelector } from "../../../../core/elements/selectors/flight";
+import { FlightSelector } from "../../../../core/elements/selectors/flightSelector";
 import { waitUntilInteractive } from "../../../../utils/browser.utils";
 
 export class FlightSelectorKayak implements FlightSelector {

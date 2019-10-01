@@ -1,10 +1,10 @@
 import { by, element } from "protractor";
-import { MultiCityForm } from "../../../core/elements/forms/multiCity";
-import { TripSelector } from "../../../core/elements/selectors/trip";
-import { FlightsPage } from "../../../core/pages/flights";
-import { MultiCityFormMomondo } from "../elements/forms/multiCity";
-import { TripSelectorMomondo } from "../elements/selectors/trip";
-import { FlightsResultsPageMomondo } from "./flightsResults";
+import { MultiCityForm } from "../../../core/elements/forms/multiCityForm";
+import { TripSelector } from "../../../core/elements/selectors/tripSelector";
+import { FlightsPage } from "../../../core/pages/flightsPage";
+import { MultiCityFormMomondo } from "../elements/forms/multiCityFormMomondo";
+import { TripSelectorMomondo } from "../elements/selectors/tripSelectorMomondo";
+import { FlightsResultsPageMomondo } from "./flightsResultsPageMomondo";
 
 export class FlightsPageMomondo implements FlightsPage {
   getURL(): string {

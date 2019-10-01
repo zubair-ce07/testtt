@@ -2,9 +2,9 @@ import { expect } from "chai";
 import { browser } from "protractor";
 import { CabinType } from '../src/core/elements/selectors/cabinType';
 import { TripType } from "../src/core/elements/selectors/tripType";
-import { DragHandle } from "../src/core/elements/sliders/time";
-import { FlightsPageFactory } from "../src/factory/flightsPage";
-import { FlightsResultsPageFactory } from "../src/factory/flightsResultsPage";
+import { DragHandle } from "../src/core/elements/sliders/dragHandle";
+import { FlightsPageFactory } from "../src/factory/flightsPageFactory";
+import { FlightsResultsPageFactory } from "../src/factory/flightsResultsPageFactory";
 import { addDays, formatDate } from "../src/utils/specs.utils";
 
 const BRAND_NAME = process.env.RUN_TESTS_FOR_BRAND;

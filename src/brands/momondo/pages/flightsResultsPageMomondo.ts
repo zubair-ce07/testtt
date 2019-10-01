@@ -1,16 +1,16 @@
 import { by, element, ElementArrayFinder } from "protractor";
-import { ErrorDialog } from "../../../core/elements/dialogs/error";
-import { MultiCityForm } from "../../../core/elements/forms/multiCity";
-import { FlightResult } from "../../../core/elements/results/flight";
-import { TripSelector } from "../../../core/elements/selectors/trip";
-import { TimeSlider } from "../../../core/elements/sliders/time";
-import { FlightsResultsPage } from "../../../core/pages/flightsResults";
+import { ErrorDialog } from "../../../core/elements/dialogs/errorDialog";
+import { MultiCityForm } from "../../../core/elements/forms/multiCityForm";
+import { FlightResult } from "../../../core/elements/results/flightResult";
+import { TripSelector } from "../../../core/elements/selectors/tripSelector";
+import { TimeSlider } from "../../../core/elements/sliders/timeSlider";
+import { FlightsResultsPage } from "../../../core/pages/flightsResultsPage";
 import { waitUntilInteractive } from "../../../utils/browser.utils";
-import { ErrorDialogMomondo } from "../elements/dialogs/error";
-import { MultiCityFormMomondo } from "../elements/forms/multiCity";
-import { FlightResultMomondo } from "../elements/results/flight";
-import { TripSelectorMomondo } from "../elements/selectors/trip";
-import { TimeSliderMomondo } from "../elements/sliders/time";
+import { ErrorDialogMomondo } from "../elements/dialogs/errorDialogMomondo";
+import { MultiCityFormMomondo } from "../elements/forms/multiCityFormMomondo";
+import { FlightResultMomondo } from "../elements/results/flightResultMomondo";
+import { TripSelectorMomondo } from "../elements/selectors/tripSelectorMomondo";
+import { TimeSliderMomondo } from "../elements/sliders/timeSliderMomondo";
 
 export class FlightsResultsPageMomondo implements FlightsResultsPage {
   static async loadResults() {

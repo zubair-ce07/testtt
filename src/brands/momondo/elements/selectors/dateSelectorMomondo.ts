@@ -1,5 +1,5 @@
 import { by, element } from "protractor";
-import { DateSelector } from "../../../../core/elements/selectors/date";
+import { DateSelector } from "../../../../core/elements/selectors/dateSelector";
 import { waitUntilInteractive } from "../../../../utils/browser.utils";
 
 export class DateSelectorMomondo implements DateSelector {
