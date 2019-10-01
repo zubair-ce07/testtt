@@ -42,6 +42,7 @@ class Auth extends React.Component {
                 icon="fa-envelope-o"
                 name="email"
                 onChange={this.handleChange}
+                required
               />
               <FormField
                 field="Password"
@@ -49,6 +50,7 @@ class Auth extends React.Component {
                 icon="fa-key"
                 name="password"
                 onChange={this.handleChange}
+                required
               />
               {!this.props.isLoginForm && (
                 <React.Fragment>
@@ -58,6 +60,7 @@ class Auth extends React.Component {
                     icon="fa-key"
                     name="confirm_password"
                     onChange={this.handleChange}
+                    required
                   />
                   <FormField
                     field="First Name"
@@ -65,6 +68,7 @@ class Auth extends React.Component {
                     icon="fa-user-o"
                     name="first_name"
                     onChange={this.handleChange}
+                    required
                   />
                   <FormField
                     field="Last Name"
@@ -72,23 +76,26 @@ class Auth extends React.Component {
                     icon="fa-user-o"
                     name="last_name"
                     onChange={this.handleChange}
+                    required
                   />
                   <Select
                     items={GENDER}
                     name="gender"
                     field="Gender"
                     onChange={this.handleChange}
+                    required
                   />
                   <DatePicker
                     name="date_of_birth"
                     onChange={this.handleChange}
+                    required
                   />
                 </React.Fragment>
               )}
 
               <Button
                 text={this.props.isLoginForm ? "Login" : "Register"}
-                type="btn-primary"
+                type="btn-primary btn-block"
               />
               <Button
                 text={
