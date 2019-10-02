@@ -98,23 +98,23 @@ def cached_user(user_id):
     return user
 
 
-def clear_products_cache():
-    cache.delete('products_*')
+def clear_products_cache(kwargs):
+    cache.delete_pattern('products_*')
+    cache.delete(f'product_{kwargs["instance"].retailer_sku}')
 
 
 @receiver(post_delete, sender=Product)
 def product_post_delete_handler(sender, **kwargs):
-    clear_products_cache()
+    clear_products_cache(kwargs)
 
 
 @receiver(post_save, sender=Product)
 def product_post_save_handler(sender, **kwargs):
-    if kwargs['created']:
-        clear_products_cache()
+    clear_products_cache(kwargs)
 
 
 def clear_users_cache():
-    cache.delete('users*')
+    cache.delete_pattern('users*')
 
 
 @receiver(post_delete, sender=User)
