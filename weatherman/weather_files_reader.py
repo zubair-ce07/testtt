@@ -3,7 +3,7 @@ from fnmatch import fnmatch
 from os import listdir
 
 from weather_record import WeatherRecord
-
+from constants import REQUIRED_COLUMNS
 
 def read_weather_files(path):       
     weather_data = []
@@ -20,8 +20,8 @@ def read_weather_files(path):
 
 
 def is_valid_record(weather_record):
-    weather_data = [weather_record.get('Max TemperatureC'), weather_record.get(
-            'Min TemperatureC'), weather_record.get('Max Humidity'), weather_record.get(
-                    ' Mean Humidity'), weather_record.get('PKT') or weather_record.get('PKST')]
-
+    weather_data = [weather_record.get(column) for column in REQUIRED_COLUMNS]
+    valid_date = [weather_record.get('PKT') or weather_record.get('PKST')]
+    weather_data.extend(valid_date)
+    
     return all(weather_data)

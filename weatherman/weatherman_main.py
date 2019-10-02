@@ -16,13 +16,13 @@ def main():
     
     weather_data = read_weather_files(args.path)
 
-    if args.e:               
+    if args.e:                 
         yearly_report = calculate_yearly_report(weather_data, args.e)
         display_yearly_report(yearly_report)
               
     if args.a:                                                       
-        average_report = calculate_monthly_report(weather_data, args.a)
-        display_monthly_report(average_report) 
+        monthly_report = calculate_monthly_report(weather_data, args.a)
+        display_monthly_report(monthly_report) 
        
     if args.c:                               
         chart_values = calculate_monthly_chart_values(weather_data, args.c)
