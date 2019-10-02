@@ -7,9 +7,9 @@ import os
 
 def validate_month_and_year(date):
     month_format = re.compile(r'\d{4}/\d{1,2}$')
-    if not month_format.match(date):
-        raise argparse.ArgumentTypeError
-    return date
+    if month_format.match(date):
+        return date
+    raise argparse.ArgumentTypeError(f'Invalid format: {date}')
 
 
 def validate_year(year):
