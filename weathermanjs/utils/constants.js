@@ -1,3 +1,5 @@
+export const plusSymbol = '+';
+export const minusSymbol = '-';
 export const months = [
     'Jan',
     'Feb',

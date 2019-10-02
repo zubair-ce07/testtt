@@ -4,7 +4,7 @@
   "description": "Read the required weather files to generate requested report.",
   "main": "weatherMan.js",
   "scripts": {
-    "weatherman": "babel-node weatherMan.js /home/ahsan/the-lab/weather-files/ --extremes='2010'",
+    "weatherman": "babel-node weatherMan.js /home/ahsan/the-lab/weather-files/ --extremes='2010' --averages=2010/06 --chart=2010/06",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Ahsan Malik",

@@ -1,5 +1,5 @@
-import glob from 'glob';
-import { months } from '../utils/constants'
+import {months} from "./constants";
+import glob from "glob";
 
 export const getFileNames = (path, raw_date) => {
     const date = new Date(raw_date);

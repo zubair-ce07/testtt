@@ -1,23 +1,26 @@
 import { args } from './parsers/argsParser';
-import { parseCSVFiles } from './parsers/csvParser'
-import { getFileNames } from './parsers/filesFetcher'
+import { getFileNames } from './utils/fileNamesFetcher'
 import { getReport as getMonthlyAvgsReport } from './reports/monthlyAvgsReport'
-import { getReport as getYearlyExtremesReport } from './reports/yearlyExtremesReport'
-import {filterRecords} from "./utils/helper";
+import { getReport as getYearlyExtremesReport } from './reports/yearlyExtremesReport';
+import { getReport as getMonthlyChartReport } from './reports/monthlyChartsReport';
+import { getWeatherRecords } from "./utils/weaatherRecordsFetcher";
 
-const getWeatherRecords = async (fileNames) => {
-    return filterRecords(await parseCSVFiles(args.path, fileNames));
+const getReport = (report, arg) => {
+    const fileNames = getFileNames(args.path, arg);
+    getWeatherRecords(fileNames)
+        .then(report)
+        .then(console.log)
+        .catch(console.log);
 };
 
 if (args.a != null) {
-    const fileNames = getFileNames(args.path, args.a);
-    getWeatherRecords(fileNames)
-        .then(getMonthlyAvgsReport)
-        .then(console.log);
+    getReport(getMonthlyAvgsReport, args.a);
 }
+
 if (args.e != null) {
-    const fileNames = getFileNames(args.path, args.e);
-    getWeatherRecords(fileNames)
-        .then(getYearlyExtremesReport)
-        .then(console.log);
+    getReport(getYearlyExtremesReport, args.e);
+}
+
+if (args.c != null) {
+    getReport(getMonthlyChartReport, args.c);
 }
