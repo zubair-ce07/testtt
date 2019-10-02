@@ -8,7 +8,7 @@ import { FlightsResultsPageFactory } from "../src/factory/flightsResultsPageFact
 import { addDays, formatDate } from "../src/utils/specs.utils";
 import { switchToTab } from "../src/utils/browser.utils";
 
-const BRAND_NAME = process.env.RUN_TESTS_FOR_BRAND;
+const BRAND_NAME = process.env.BRAND_NAME;
 
 const flightsPage = new FlightsPageFactory().create(BRAND_NAME);
 const flightsResultsPage = new FlightsResultsPageFactory().create(BRAND_NAME);
