@@ -1,37 +1,41 @@
 import calendar
-import glob
 import csv
-from temperatureResults import WeatherReading
+import re
+
+from glob import glob
+from temperatureResults import DayReading
 
 
 class WeatherFilesParser:
     def parse_files(self, path, year):
         weather_readings = []
-        complete_path = self.get_full_path(path, year)
-        self.check_valid_path_name(complete_path)
-        for temp_file_of_month in glob.glob(complete_path + "*"):
-            temperature_file = open(temp_file_of_month)
+        weather_files = self.get_valid_files(path, year)
+        if not weather_files:
+            self.invalid_input(year)
+        for weather_file in weather_files:
+            temperature_file = open(weather_file)
             temperature_file_reader = csv.DictReader(temperature_file)
-            for day in temperature_file_reader:
-                weather_readings += [self.validate_weather_readings(day)]
-        return list(filter(None.__ne__, weather_readings))
+            for day_reading in temperature_file_reader:
+                if self.validate_weather_readings(day_reading):
+                    weather_readings += [DayReading(day_reading)]
+        return weather_readings
 
-    def validate_weather_readings(self, weather_reading):
-        if weather_reading['Max TemperatureC'] and weather_reading['Min TemperatureC'] and \
-                weather_reading['Max Humidity'] and weather_reading[' Mean Humidity']:
-            return WeatherReading(weather_reading)
+    def validate_weather_readings(self, day_reading):
+        if all([day_reading['Max TemperatureC'], day_reading['Min TemperatureC'], day_reading['Max Humidity'],
+                day_reading[' Mean Humidity']]):
+            return True
+        return False
 
-    def get_full_path(self, path, year):
-        complete_path = ""
+    def get_valid_files(self, path, year):
         if len(year.split('/')) > 1:
-            complete_path = path + "/Murree_weather_" + year.split('/')[0] + "_" + \
-                            calendar.month_abbr[int(year.split('/')[1])]
-        else:
-            complete_path = path + "/Murree_weather_" + year
-        return complete_path
+            re_year = re.compile(year.split('/')[0])
+            re_month = re.compile(calendar.month_abbr[int(year.split('/')[1])])
+            return [file_name for file_name in glob(path + "/*") if all([re_year.search(file_name),
+                                                                              re_month.search(file_name)])]
+        re_year = re.compile(year)
+        return [file_name for file_name in glob(path + "/*") if re_year.search(file_name)]
 
-    def check_valid_path_name(self, complete_path):
-        if len(glob.glob(complete_path + "*")) <= 0:
-            print(f"No File for specified year/month")
-            print(f"please provide valid input")
-            exit()
+    def invalid_input(self, year):
+        print(f"No File for specified year/month {year}")
+        print(f"please provide valid input")
+        exit()
