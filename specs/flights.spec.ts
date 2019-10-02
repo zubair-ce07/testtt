@@ -10,8 +10,8 @@ import { switchToTab } from "../src/utils/browser.utils";
 
 const BRAND_NAME = process.env.BRAND_NAME;
 
-const flightsPage = new FlightsPageFactory().create(BRAND_NAME);
-const flightsResultsPage = new FlightsResultsPageFactory().create(BRAND_NAME);
+const flightsPage = FlightsPageFactory.create();
+const flightsResultsPage = FlightsResultsPageFactory.create();
 
 describe(`${BRAND_NAME} Flights Search`, () => {
   

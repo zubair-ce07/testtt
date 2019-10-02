@@ -1,10 +1,11 @@
 import { FlightsPageKayak } from "../brands/kayak/pages/flightsPageKayak";
 import { FlightsPageMomondo } from "../brands/momondo/pages/flightsPageMomondo";
 import { FlightsPage } from "../core/pages/flightsPage";
-import { PageFactory } from "./pageFactory";
 
-export class FlightsPageFactory implements PageFactory<FlightsPage> {
-  create(brand: string): FlightsPage {
+export class FlightsPageFactory {
+  static create(): FlightsPage {
+    const brand = process.env.BRAND_NAME;
+    
     switch (brand.toLowerCase()) {
       case 'kayak':
         return new FlightsPageKayak();
