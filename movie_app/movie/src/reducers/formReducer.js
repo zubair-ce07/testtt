@@ -1,15 +1,15 @@
 import { types } from "../actions/types";
 
 const initialState = {
-  isLoginForm: true
+  form: {}
 };
 
 const formReducer = (state = initialState, action) => {
   switch (action.type) {
-    case types.LOGIN_FORM:
+    case types.UPDATE_FORM:
       return {
         ...state,
-        isLoginForm: !state.isLoginForm
+        form: action.payload.form
       };
     default:
       return state;

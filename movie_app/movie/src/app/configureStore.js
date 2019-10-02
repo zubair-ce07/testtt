@@ -1,32 +1,18 @@
 import { createStore, applyMiddleware, compose } from "redux";
 import thunk from "redux-thunk";
+import { persistStore, persistReducer } from "redux-persist";
+import storage from "redux-persist/lib/storage";
 import rootReducer from "../reducers";
 
-const saveToLocalStorage = state => {
-  try {
-    const serializedState = JSON.stringify(state);
-    localStorage.setItem("state", serializedState);
-  } catch (e) {
-    return;
-  }
+const persistConfig = {
+  key: "root",
+  storage,
+  blacklist: ['formReducer']
 };
 
-const loadFromLocalStorage = () => {
-  try {
-    const serializedState = localStorage.getItem("state");
-    if (serializedState === null) return;
-    return JSON.parse(serializedState);
-  } catch (e) {
-    return;
-  }
-};
+const persistedReducer = persistReducer(persistConfig, rootReducer);
 
-const persistedState = loadFromLocalStorage();
-const store = createStore(
-  rootReducer,
-  persistedState,
-  compose(applyMiddleware(thunk))
-);
-store.subscribe(() => saveToLocalStorage(store.getState()));
+const store = createStore(persistedReducer, compose(applyMiddleware(thunk)));
+const persistor = persistStore(store);
 
-export { store };
+export { store, persistor };

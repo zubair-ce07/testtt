@@ -1,7 +1,10 @@
 import { types } from "./types";
 
-const loginForm = () => ({
-  type: types.LOGIN_FORM
+const updateForm = form => ({
+  type: types.UPDATE_FORM,
+  payload: {
+    form
+  }
 });
 
-export { loginForm };
+export { updateForm };

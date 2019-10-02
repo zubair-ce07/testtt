@@ -1,18 +1,27 @@
 import { connect } from "react-redux";
 import { Auth } from "./auth";
-import { loginUser, registerUser } from "../../actions/auth";
-import { updateUser } from "../../actions/user";
-import { loginForm } from "../../actions/form";
+import { loginUser, registerUser, authUserFailure } from "../../actions/auth";
+import { updateForm } from "../../actions/form";
 
-const mapStateToProps = state => ({
-  user: state.authReducer.user,
-  isLoginForm: state.formReducer.isLoginForm,
-  error: state.authReducer.error,
-  isAuthenticated: state.authReducer.isAuthenticated
+const mapStateToProps = ({
+  authReducer: { user, error, isAuthenticated }, formReducer: {form}
+}) => ({
+  user,
+  error,
+  form,
+  isAuthenticated
 });
+
+const mapDispatchToProps = {
+  loginUser,
+  updateForm,
+  registerUser,
+  authUserFailure
+};
+
 const AuthContainer = connect(
   mapStateToProps,
-  { loginUser, updateUser, loginForm, registerUser }
+  mapDispatchToProps
 )(Auth);
 
 export { AuthContainer };

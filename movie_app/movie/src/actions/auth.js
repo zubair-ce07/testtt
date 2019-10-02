@@ -6,14 +6,14 @@ const authUserStarted = () => ({
   type: types.AUTH_USER_STARTED
 });
 
-const authUserSuccess = state => ({
+const authUserSuccess = ({user}) => ({
   type: types.AUTH_USER_SUCCESS,
   payload: {
-    user: state.user
+    user
   }
 });
 
-const authUserFailure = error => ({
+export const authUserFailure = error => ({
   type: types.AUTH_USER_FAILURE,
   payload: {
     error
@@ -25,38 +25,27 @@ export const logoutUser = () => ({
 });
 
 export const loginUser = data => {
-  return async dispatch => {
+  return dispatch => {
     dispatch(authUserStarted());
-    try {
-      const response = await apiCaller({
-        method: requestTypes.POST,
-        url: LOGIN_API,
-        data: data
-      });
-      dispatch(authUserSuccess(response));
-    } catch (err) {
-      dispatch(authUserFailure(err.message));
-    }
+    apiCaller({
+      method: requestTypes.POST,
+      url: LOGIN_API,
+      data
+    })
+      .then(response => dispatch(authUserSuccess(response.data)))
+      .catch(error => dispatch(authUserFailure(error.message)));
   };
 };
 
 export const registerUser = data => {
-  return async dispatch => {
-    if (data.password !== data.confirm_password) {
-      dispatch(authUserFailure("Passwords don't match"));
-      return;
-    }
-
+  return dispatch => {
     dispatch(authUserStarted());
-    try {
-      const response = await apiCaller({
-        method: requestTypes.POST,
-        url: SIGNUP_API,
-        data: data
-      });
-      dispatch(authUserSuccess(response));
-    } catch (err) {
-      dispatch(authUserFailure(err.message));
-    }
+    apiCaller({
+      method: requestTypes.POST,
+      url: SIGNUP_API,
+      data
+    })
+      .then(response => dispatch(authUserSuccess(response.data)))
+      .catch(err => dispatch(authUserFailure(err.message)));
   };
 };

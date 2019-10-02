@@ -2,13 +2,15 @@ import { connect } from "react-redux";
 import { Home } from "./home";
 import { logoutUser } from "../../actions/auth";
 
-const mapStateToProps = state => ({
-  user: state.authReducer.user
+const mapStateToProps = ({ authReducer: { user } }) => ({
+  user
 });
+
+const mapDispatchToProps = { logoutUser };
 
 const HomeContainer = connect(
   mapStateToProps,
-  { logoutUser }
+  mapDispatchToProps
 )(Home);
 
 export { HomeContainer };

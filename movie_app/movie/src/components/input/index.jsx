@@ -1,7 +1,7 @@
 import React from "react";
-import "./formField.css";
+import "./input.css";
 
-const FormField = ({ field, type, icon, name, onChange, ...rest }) => (
+const Input = ({ field, type, icon, name, onChange, ...rest }) => (
   <div className="form-group">
     <div className="input-container">
       <i className={`fa ${icon} icon`} />
@@ -18,4 +18,4 @@ const FormField = ({ field, type, icon, name, onChange, ...rest }) => (
   </div>
 );
 
-export { FormField };
+export { Input };

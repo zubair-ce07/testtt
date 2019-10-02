@@ -1,27 +1,35 @@
 import React from "react";
 import { Redirect } from "react-router-dom";
-import { FormField, Button } from "../../components";
-import { Select, DatePicker } from "./components";
+import { Input, Button, Select, DatePicker } from "../../components";
 import { GENDER } from "../../utils/constants";
-import "./auth.css";
 
 class Auth extends React.Component {
+  state = {
+    isLoginForm: true
+  }
+
   register = event => {
     event.preventDefault();
-    this.props.loginForm();
+    this.setState({
+      isLoginForm: !this.state.isLoginForm
+    });
   };
 
   handleChange = event => {
-    let { user } = this.props;
-    user[event.target.name] = event.target.value;
-    this.props.updateUser(user);
+    const { form } = this.props;
+    this.props.updateForm({...form, [event.target.name]: event.target.value});
   };
 
   handleSubmit = event => {
     event.preventDefault();
-    this.props.isLoginForm
-      ? this.props.loginUser(this.props.user)
-      : this.props.registerUser(this.props.user);
+    const {form} = this.props;
+    if (!this.state.isLoginForm && form.password !== form.confirm_password) {
+      this.props.authUserFailure("Passwords don't match");
+      return;
+    }
+    this.state.isLoginForm
+      ? this.props.loginUser(form)
+      : this.props.registerUser(form);
   };
 
   render() {
@@ -29,14 +37,14 @@ class Auth extends React.Component {
     return (
       <div className="container">
         <div className="row">
-          <div className="col-sm-4 auth">
+          <div className="col-sm-4 offset-sm-4">
             <form onSubmit={this.handleSubmit}>
               {this.props.error && (
                 <div className="alert alert-danger" role="alert">
                   {this.props.error}
                 </div>
               )}
-              <FormField
+              <Input
                 field="Email"
                 type="email"
                 icon="fa-envelope-o"
@@ -44,7 +52,7 @@ class Auth extends React.Component {
                 onChange={this.handleChange}
                 required
               />
-              <FormField
+              <Input
                 field="Password"
                 type="password"
                 icon="fa-key"
@@ -52,9 +60,9 @@ class Auth extends React.Component {
                 onChange={this.handleChange}
                 required
               />
-              {!this.props.isLoginForm && (
+              {!this.state.isLoginForm && (
                 <React.Fragment>
-                  <FormField
+                  <Input
                     field="Confirm Password"
                     type="password"
                     icon="fa-key"
@@ -62,7 +70,7 @@ class Auth extends React.Component {
                     onChange={this.handleChange}
                     required
                   />
-                  <FormField
+                  <Input
                     field="First Name"
                     type="text"
                     icon="fa-user-o"
@@ -70,7 +78,7 @@ class Auth extends React.Component {
                     onChange={this.handleChange}
                     required
                   />
-                  <FormField
+                  <Input
                     field="Last Name"
                     type="text"
                     icon="fa-user-o"
@@ -94,17 +102,19 @@ class Auth extends React.Component {
               )}
 
               <Button
-                text={this.props.isLoginForm ? "Login" : "Register"}
-                type="btn-primary btn-block"
+                text={this.state.isLoginForm ? "Login" : "Register"}
+                className="btn-primary btn-block"
+                type="submit"
               />
               <Button
                 text={
-                  this.props.isLoginForm
+                  this.state.isLoginForm
                     ? "Not have an account? Register here!"
                     : "Already have an account? Login!"
                 }
-                type="btn-link btn-block"
+                className="btn-link btn-block"
                 onClick={this.register}
+                type="button"
               />
             </form>
           </div>
