@@ -5,17 +5,14 @@ from os import listdir
 from weather_record import WeatherRecord
 
 
-def read_weather_files(path):    
-    weather_files = []
+def read_weather_files(path):       
     weather_data = []
 
-    for csv_file in listdir(path):
-        if fnmatch(csv_file, '*.txt'):
-            full_path = f'{path}/{csv_file}'
-            weather_files.append(full_path)
-
-    for weather_file in weather_files:
-        with open(weather_file) as weather_file:
+    for weather_record_file in listdir(path):
+        if fnmatch(weather_record_file, '*.txt'):
+            weather_record_file_path = f'{path}/{weather_record_file}'
+            
+        with open(weather_record_file_path) as weather_file:
             reader = csv.DictReader(weather_file)
             weather_data.extend([WeatherRecord(row) for row in reader if is_valid_record(row)])
                                                   
