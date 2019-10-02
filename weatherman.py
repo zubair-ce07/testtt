@@ -23,59 +23,59 @@ class WeatherAnalysis:
             min_value = file_row.min_temp
             date = file_row.date
             if min_value < 0:
-                print("{}".format(date.day),
-                      "\033[1;34m-\033[1;m" * abs(min_value),
-                      "\033[1;31m+\033[1;m" * max_value,
-                      "{}C - {}C".format(min_value, max_value))
+                print('{}'.format(date.day),
+                      '\033[1;34m-\033[1;m' * abs(min_value),
+                      '\033[1;31m+\033[1;m' * max_value,
+                      '{}C - {}C'.format(min_value, max_value))
             else:
-                print("{}".format(date.day),
-                      "\033[1;34m+\033[1;m" * min_value,
-                      "\033[1;31m+\033[1;m" * max_value,
-                      "{}C - {}C".format(min_value, max_value))
+                print('{}'.format(date.day),
+                      '\033[1;34m+\033[1;m' * min_value,
+                      '\033[1;31m+\033[1;m' * max_value,
+                      '{}C - {}C'.format(min_value, max_value))
 
     def display_monthly_report(self, file_records):
         high_temp = self.get_max_temp(file_records)
-        print("Highest Average : {}C".format(high_temp))
+        print('Highest Average : {}C'.format(high_temp))
 
         low_temp = self.get_min_temp(file_records)
-        print("Lowest Average : {}C".format(low_temp))
+        print('Lowest Average : {}C'.format(low_temp))
 
         mean_humidity = int(self.get_mean_average_humidity(file_records))
-        print("Average Mean Humidity : {}% ".format(mean_humidity))
+        print('Average Mean Humidity : {}% '.format(mean_humidity))
 
     def display_month_chart_report(self, file_records):
         for file_row in file_records:
                 max_temp_value = int(file_row.max_temp)
                 min_temp_value = int(file_row.min_temp)
                 get_day = file_row.date
-                print("{}".format(get_day.day),
-                      "\033[1;31m+\033[1;m" * max_temp_value,
-                      "{}C".format(max_temp_value))
+                print('{}'.format(get_day.day),
+                      '\033[1;31m+\033[1;m' * max_temp_value,
+                      '{}C'.format(max_temp_value))
                 if min_temp_value < 0:
-                    print("{}".format(get_day.day),
-                          "\033[1;34m-\033[1;m" * abs(min_temp_value),
-                          "{}C".format(min_temp_value))
+                    print('{}'.format(get_day.day),
+                          '\033[1;34m-\033[1;m' * abs(min_temp_value),
+                          '{}C'.format(min_temp_value))
                 else:
-                    print("{}".format(get_day.day),
-                          "\033[1;34m+\033[1;m" * abs(min_temp_value),
-                          "{}C".format(min_temp_value))
+                    print('{}'.format(get_day.day),
+                          '\033[1;34m+\033[1;m' * abs(min_temp_value),
+                          '{}C'.format(min_temp_value))
 
     def display_yearly_report(self, file_records):
         high_temp = self.get_highest_average_temp(file_records)
         date = self.get_required_date(file_records, high_temp,
                                       reverse_flag=True)
-        print("Highest: {}C on {} {}".format(
-              high_temp, date.strftime("%B"), date.day))
+        print('Highest: {}C on {} {}'.format(
+              high_temp, date.strftime('%B'), date.day))
         low_temp = self.get_lowest_average_temp(file_records)
         date = self.get_required_date(file_records, low_temp,
                                       reverse_flag=False)
-        print("Lowest: {}C on {} {}".format(
-              low_temp, date.strftime("%B"), date.day))
+        print('Lowest: {}C on {} {}'.format(
+              low_temp, date.strftime('%B'), date.day))
         mean_humidity = self.get_mean_average_humidity(file_records)
         date = self.get_required_date(
                file_records, mean_humidity, reverse_flag=True)
-        print("Humidity: {}% on {} {}".format(
-              mean_humidity, date.strftime("%B"), date.day))
+        print('Humidity: {}% on {} {}'.format(
+              mean_humidity, date.strftime('%B'), date.day))
 
     def get_max_temp(self, file_records):
         maximum_temperature_list = [file_rows.max_temp
@@ -118,8 +118,7 @@ class WeatherAnalysis:
     def check_valid_date(self, file_row, date):
         if str(file_row.get('PKT') or file_row.get('PKST')).find(date):
             return True
-        else:
-            return False
+        return False
 
     def reading_file(self, file_names, date):
         for file_name in file_names:
