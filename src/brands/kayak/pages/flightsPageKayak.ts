@@ -23,7 +23,7 @@ export class FlightsPageKayak implements FlightsPage {
     return new MultiCityFormKayak();
   }
   
-  getTripSelector(): TripSelector {
+  getTrip(): TripSelector {
     return new TripSelectorKayak();
   }
   

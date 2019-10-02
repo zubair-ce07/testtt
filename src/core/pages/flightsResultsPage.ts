@@ -16,7 +16,7 @@ export interface FlightsResultsPage {
   
   getMultiCityTripForm(): MultiCityForm;
   
-  getTripSelector(): TripSelector;
+  getTrip(): TripSelector;
   
   getErrorDialog(): ErrorDialog;
 }

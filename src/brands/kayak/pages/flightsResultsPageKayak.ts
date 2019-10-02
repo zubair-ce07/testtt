@@ -51,7 +51,7 @@ export class FlightsResultsPageKayak implements FlightsResultsPage {
     return element.all(by.className(`timesFilterSection`)).filter(section => section.isDisplayed());
   }
   
-  getTripSelector(): TripSelector {
+  getTrip(): TripSelector {
     return new TripSelectorKayak();
   }
   

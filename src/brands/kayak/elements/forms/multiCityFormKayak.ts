@@ -37,7 +37,7 @@ export class MultiCityFormKayak implements MultiCityForm {
     return submit.click();
   }
   
-  getCabinSelector(leg: number): CabinSelector {
+  getCabin(leg: number): CabinSelector {
     return new CabinSelectorKayak(leg);
   }
   
@@ -47,11 +47,11 @@ export class MultiCityFormKayak implements MultiCityForm {
     );
   }
   
-  getOriginSelector(leg: number): FlightSelector {
+  getOrigin(leg: number): FlightSelector {
     return new FlightSelectorKayak(leg, FlightType.ORIGIN);
   }
   
-  getDestinationSelector(leg: number): FlightSelector {
+  getDestination(leg: number): FlightSelector {
     return new FlightSelectorKayak(leg, FlightType.DESTINATION);
   }
   

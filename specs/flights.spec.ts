@@ -33,9 +33,9 @@ describe(`${BRAND_NAME} Flights Search`, () => {
   });
   
   it(`should set trip type to "${TRIP_TYPE}"`, async () => {
-    const tripSelector = flightsPage.getTripSelector();
-    await flightsPage.getTripSelector().select(TRIP_TYPE);
-    expect(tripSelector.getCurrentTripType()).eventually.to.equal(TRIP_TYPE)
+    const trip = flightsPage.getTrip();
+    await flightsPage.getTrip().select(TRIP_TYPE);
+    expect(trip.getCurrentTripType()).eventually.to.equal(TRIP_TYPE)
   });
   
   it('should show at least two flight legs on multi-city flight form', async () => {
@@ -43,27 +43,27 @@ describe(`${BRAND_NAME} Flights Search`, () => {
   });
   
   it(`should set origin to "${ORIGIN_1}" of flight 1`, async () => {
-    const flightSelector = multiCityTripForm.getOriginSelector(0);
-    await flightSelector.set(ORIGIN_1);
-    expect(flightSelector.getDisplayText()).eventually.to.contain(ORIGIN_1);
+    const flight = multiCityTripForm.getOrigin(0);
+    await flight.setText(ORIGIN_1);
+    expect(flight.getDisplayText()).eventually.to.contain(ORIGIN_1);
   });
   
   it(`should set destination to "${DESTINATION_1}" of flight 1`, async () => {
-    const flightSelector = multiCityTripForm.getDestinationSelector(0);
-    await flightSelector.set(DESTINATION_1);
-    expect(flightSelector.getDisplayText()).eventually.to.contain(DESTINATION_1);
+    const flight = multiCityTripForm.getDestination(0);
+    await flight.setText(DESTINATION_1);
+    expect(flight.getDisplayText()).eventually.to.contain(DESTINATION_1);
   });
   
   it(`should set origin to "${ORIGIN_2}" of flight 2`, async () => {
-    const flightSelector = multiCityTripForm.getOriginSelector(1);
-    await flightSelector.set(ORIGIN_2);
-    expect(flightSelector.getDisplayText()).eventually.to.contain(ORIGIN_2);
+    const flight = multiCityTripForm.getOrigin(1);
+    await flight.setText(ORIGIN_2);
+    expect(flight.getDisplayText()).eventually.to.contain(ORIGIN_2);
   });
   
   it(`should set destination to "${DESTINATION_2}" of flight 2`, async () => {
-    const flightSelector = multiCityTripForm.getDestinationSelector(1);
-    await flightSelector.set(DESTINATION_2);
-    expect(flightSelector.getDisplayText()).eventually.to.contain(DESTINATION_2);
+    const flight = multiCityTripForm.getDestination(1);
+    await flight.setText(DESTINATION_2);
+    expect(flight.getDisplayText()).eventually.to.contain(DESTINATION_2);
   });
   
   it(`should set departure date as "${CURRENT_DATE.toDateString()}" for flight 1`, async () => {
@@ -79,15 +79,15 @@ describe(`${BRAND_NAME} Flights Search`, () => {
   });
   
   it(`should set cabin type to "${CABIN_TYPE}" of flight 1`, async () => {
-    const cabinSelector = multiCityTripForm.getCabinSelector(0);
-    await cabinSelector.select(CABIN_TYPE);
-    expect(cabinSelector.getDisplayText()).eventually.to.equal(CABIN_TYPE);
+    const cabin = multiCityTripForm.getCabin(0);
+    await cabin.setType(CABIN_TYPE);
+    expect(cabin.getDisplayText()).eventually.to.equal(CABIN_TYPE);
   });
   
   it(`should set cabin type to "${CABIN_TYPE}" of flight 2`, async () => {
-    const cabinSelector = multiCityTripForm.getCabinSelector(1);
-    await cabinSelector.select(CABIN_TYPE);
-    expect(cabinSelector.getDisplayText()).eventually.to.equal(CABIN_TYPE);
+    const cabin = multiCityTripForm.getCabin(1);
+    await cabin.setType(CABIN_TYPE);
+    expect(cabin.getDisplayText()).eventually.to.equal(CABIN_TYPE);
   });
   
   it(`should click "Search" and load results page`, async () => {
@@ -132,19 +132,19 @@ describe(`${BRAND_NAME} Flights Search`, () => {
   
   it('should show correct origin on flight 1', async () => {
     await multiCityTripForm.makeFormVisible();
-    expect(multiCityTripForm.getOriginSelector(0).getDisplayText()).eventually.to.contain(ORIGIN_1);
+    expect(multiCityTripForm.getOrigin(0).getDisplayText()).eventually.to.contain(ORIGIN_1);
   });
   
   it('should show correct origin on flight 2', async () => {
-    expect(multiCityTripForm.getOriginSelector(1).getDisplayText()).eventually.to.contain(ORIGIN_2);
+    expect(multiCityTripForm.getOrigin(1).getDisplayText()).eventually.to.contain(ORIGIN_2);
   });
   
   it('should show correct destination on flight 1', async () => {
-    expect(multiCityTripForm.getDestinationSelector(0).getDisplayText()).eventually.to.contain(DESTINATION_1);
+    expect(multiCityTripForm.getDestination(0).getDisplayText()).eventually.to.contain(DESTINATION_1);
   });
   
   it('should show correct destination on flight 2', async () => {
-    expect(multiCityTripForm.getDestinationSelector(1).getDisplayText()).eventually.to.contain(DESTINATION_2);
+    expect(multiCityTripForm.getDestination(1).getDisplayText()).eventually.to.contain(DESTINATION_2);
   });
   
   it('should show correct date on flight 1', async () => {
@@ -156,11 +156,11 @@ describe(`${BRAND_NAME} Flights Search`, () => {
   });
   
   it('should show correct cabin types on flight 1', async () => {
-    expect(multiCityTripForm.getCabinSelector(0).getDisplayText()).eventually.to.equal(CABIN_TYPE);
+    expect(multiCityTripForm.getCabin(0).getDisplayText()).eventually.to.equal(CABIN_TYPE);
   });
   
   it('should show correct cabin types on flight 2', async () => {
-    expect(multiCityTripForm.getCabinSelector(1).getDisplayText()).eventually.to.equal(CABIN_TYPE);
+    expect(multiCityTripForm.getCabin(1).getDisplayText()).eventually.to.equal(CABIN_TYPE);
   });
   
   it('should clear flight legs', async () => {
@@ -169,27 +169,27 @@ describe(`${BRAND_NAME} Flights Search`, () => {
   });
   
   it(`should clear "${ORIGIN_1}" in  flight 1 origin`, async () => {
-    expect(multiCityTripForm.getOriginSelector(0).getDisplayText()).eventually.to.not.contain(ORIGIN_1);
+    expect(multiCityTripForm.getOrigin(0).getDisplayText()).eventually.to.not.contain(ORIGIN_1);
   });
   
   it(`should clear "${DESTINATION_1}" in  flight 1 destination`, async () => {
-    expect(multiCityTripForm.getDestinationSelector(0).getDisplayText()).eventually.to.not.contain(DESTINATION_1);
+    expect(multiCityTripForm.getDestination(0).getDisplayText()).eventually.to.not.contain(DESTINATION_1);
   });
   
   it(`should clear "${ORIGIN_2}" in  flight 2 origin`, async () => {
-    expect(multiCityTripForm.getOriginSelector(1).getDisplayText()).eventually.to.not.contain(ORIGIN_2);
+    expect(multiCityTripForm.getOrigin(1).getDisplayText()).eventually.to.not.contain(ORIGIN_2);
   });
   
   it(`should clear "${DESTINATION_2}" in  flight 2 destination`, async () => {
-    expect(multiCityTripForm.getDestinationSelector(1).getDisplayText()).eventually.to.not.contain(DESTINATION_2);
+    expect(multiCityTripForm.getDestination(1).getDisplayText()).eventually.to.not.contain(DESTINATION_2);
   });
   
   it(`should still show cabin type as "${CABIN_TYPE}" on flight 1`, async () => {
-    expect(multiCityTripForm.getCabinSelector(0).getDisplayText()).eventually.to.equal(CABIN_TYPE);
+    expect(multiCityTripForm.getCabin(0).getDisplayText()).eventually.to.equal(CABIN_TYPE);
   });
   
   it(`should still show cabin type as "${CABIN_TYPE}" on flight 2`, async () => {
-    expect(multiCityTripForm.getCabinSelector(1).getDisplayText()).eventually.to.equal(CABIN_TYPE);
+    expect(multiCityTripForm.getCabin(1).getDisplayText()).eventually.to.equal(CABIN_TYPE);
   });
   
   it('should open error dialog when "search" is clicked', async () => {

@@ -9,11 +9,11 @@ export interface MultiCityForm {
   
   getDatePicker(leg: number): DatePicker;
   
-  getCabinSelector(leg: number): CabinSelector;
+  getCabin(leg: number): CabinSelector;
   
-  getOriginSelector(leg: number): FlightSelector;
+  getOrigin(leg: number): FlightSelector;
   
-  getDestinationSelector(leg: number): FlightSelector;
+  getDestination(leg: number): FlightSelector;
   
   getDisplayedLegsCount(): Promise<number>;
   

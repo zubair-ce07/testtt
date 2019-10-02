@@ -8,7 +8,7 @@ export class FlightSelectorKayak implements FlightSelector {
   constructor(readonly leg: number, readonly type: FlightType) {
   }
   
-  async set(text: string): Promise<void> {
+  async setText(text: string): Promise<void> {
     await this.makeInputInteractive();
     const input = this.getInputElement();
     await input.sendKeys(Key.BACK_SPACE);

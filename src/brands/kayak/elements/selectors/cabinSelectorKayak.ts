@@ -7,7 +7,7 @@ export class CabinSelectorKayak implements CabinSelector {
   constructor(private readonly leg: number) {
   }
   
-  async select(option: CabinType): Promise<void> {
+  async setType(option: CabinType): Promise<void> {
     const li = element(by.css(`ul[id$='-cabin_type${this.leg}-list']`)).element(by.css(`li[data-title='${option}']`));
     await this.makeOptionsInteractive();
     await waitUntilInteractive(li);

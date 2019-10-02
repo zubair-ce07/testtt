@@ -6,7 +6,7 @@ export class CabinSelectorMomondo implements CabinSelector {
   constructor(readonly leg: number) {
   }
   
-  async select(option: CabinType): Promise<void> {
+  async setType(option: CabinType): Promise<void> {
     return this.getSelectElement().element(by.css(`option[title=${option}]`)).click();
   }
   

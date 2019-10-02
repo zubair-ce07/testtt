@@ -49,7 +49,7 @@ export class FlightsResultsPageMomondo implements FlightsResultsPage {
     return element.all(by.className(`timesFilterSection`)).filter(element => element.isDisplayed());
   }
   
-  getTripSelector(): TripSelector {
+  getTrip(): TripSelector {
     return new TripSelectorMomondo();
   }
   

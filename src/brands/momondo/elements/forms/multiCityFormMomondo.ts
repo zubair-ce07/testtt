@@ -29,7 +29,7 @@ export class MultiCityFormMomondo implements MultiCityForm {
     return element(by.css(`[id$='-submit-multi']`)).click();
   }
   
-  getCabinSelector(leg: number): CabinSelector {
+  getCabin(leg: number): CabinSelector {
     return new CabinSelectorMomondo(leg);
   }
   
@@ -56,11 +56,11 @@ export class MultiCityFormMomondo implements MultiCityForm {
     return this.getMultiFormContainer().isDisplayed();
   }
   
-  getOriginSelector(leg: number): FlightSelector {
+  getOrigin(leg: number): FlightSelector {
     return new FlightSelectorMomondo(leg, FlightType.ORIGIN);
   }
   
-  getDestinationSelector(leg: number): FlightSelector {
+  getDestination(leg: number): FlightSelector {
     return new FlightSelectorMomondo(leg, FlightType.DESTINATION);
   }
   
@@ -73,9 +73,9 @@ export class MultiCityFormMomondo implements MultiCityForm {
   }
   
   private async clearOriginAndDestination(leg: number): Promise<void> {
-    const origin = this.getOriginSelector(leg);
-    const destination = this.getDestinationSelector(0);
-    await origin.set('');
-    await destination.set('');
+    const origin = this.getOrigin(leg);
+    const destination = this.getDestination(0);
+    await origin.setText('');
+    await destination.setText('');
   }
 }

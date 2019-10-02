@@ -20,7 +20,7 @@ export class FlightsPageMomondo implements FlightsPage {
     return new MultiCityFormMomondo();
   }
   
-  getTripSelector(): TripSelector {
+  getTrip(): TripSelector {
     return new TripSelectorMomondo();
   }
   

@@ -11,7 +11,7 @@ export class FlightSelectorMomondo implements FlightSelector {
     return element(by.css(`input[name='${this.type}${this.leg}']`)).getAttribute('value');
   }
   
-  async set(text: string): Promise<void> {
+  async setText(text: string): Promise<void> {
     const input = await this.getInputElement();
     
     await waitUntilInteractive(input);

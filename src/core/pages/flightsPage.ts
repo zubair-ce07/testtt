@@ -6,7 +6,7 @@ export interface FlightsPage {
   
   loadSearchResults(): Promise<void>;
   
-  getTripSelector(): TripSelector;
+  getTrip(): TripSelector;
   
   getMultiCityTripForm(): MultiCityForm;
 }
