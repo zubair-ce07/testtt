@@ -71,3 +71,4 @@ class ApcSpider(scrapy.Spider):
             'skus': product_variants_sku,
             'gender': response.css('nav span.has-separator a::text').get(),
         }
+
