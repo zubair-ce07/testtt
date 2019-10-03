@@ -1,4 +1,2 @@
-YEAR_DATA_NOT_FOUND_ERROR = 'No data found for given year'
-MONTH_DATA_NOT_FOUND_ERROR = 'No data found for given year and month'
-
-REQUIRED_COLUMNS = ['Max TemperatureC', 'Min TemperatureC', 'Max Humidity', ' Mean Humidity' ]
+YEAR_RECORD_NOT_FOUND_ERROR = 'No record found for given year'
+MONTH_RECORD_NOT_FOUND_ERROR = 'No record found for given year and month'

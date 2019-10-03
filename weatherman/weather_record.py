@@ -8,5 +8,5 @@ class WeatherRecord:
         self.min_temperature = int(weather_record.get('Min TemperatureC'))
         self.max_humidity = int(weather_record.get('Max Humidity'))
         self.mean_humidity = int(weather_record.get(' Mean Humidity'))
-        self.weather_record_date = datetime.strptime(date, '%Y-%m-%d')
+        self.record_date = datetime.strptime(date, '%Y-%m-%d')
     

@@ -3,10 +3,10 @@ from fnmatch import fnmatch
 from os import listdir
 
 from weather_record import WeatherRecord
-from constants import REQUIRED_COLUMNS
+
 
 def read_weather_files(path):       
-    weather_data = []
+    weather_records = []
 
     for weather_record_file in listdir(path):
         if fnmatch(weather_record_file, '*.txt'):
@@ -14,14 +14,14 @@ def read_weather_files(path):
             
         with open(weather_record_file_path) as weather_file:
             reader = csv.DictReader(weather_file)
-            weather_data.extend([WeatherRecord(row) for row in reader if is_valid_record(row)])
+            weather_records.extend([WeatherRecord(row) for row in reader if is_valid_record(row)])
                                                   
-    return weather_data
+    return weather_records
 
 
 def is_valid_record(weather_record):
-    weather_data = [weather_record.get(column) for column in REQUIRED_COLUMNS]
-    valid_date = [weather_record.get('PKT') or weather_record.get('PKST')]
-    weather_data.extend(valid_date)
+    required_fields = ['Max TemperatureC', 'Min TemperatureC', 'Max Humidity', ' Mean Humidity']
+    weather_records = [weather_record.get(column) for column in required_fields] \
+                    + [weather_record.get('PKT') or weather_record.get('PKST')]
     
-    return all(weather_data)
+    return all(weather_records)
