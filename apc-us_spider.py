@@ -1,6 +1,5 @@
 import scrapy
 import json
-import requests
 
 
 class ApcSpider(scrapy.Spider):
@@ -14,25 +13,25 @@ class ApcSpider(scrapy.Spider):
 
     def parse(self, response):
         navigation_links = response.css('.nav-primary-item a::attr(href)').getall()
+        meta = {'dont_merge_cookies': True}
         for url in navigation_links:
             listing_url = response.urljoin(url)
-            yield scrapy.Request(listing_url,
+            yield scrapy.Request(url=listing_url,
                                  callback=self.parse_products_url,
-                                 meta= {'dont_merge_cookies': True})
+                                 meta=meta)
 
     def parse_products_url(self, response):
-        product_links = response.css('a.item::attr(href)').getall() or \
-                                     response.css('.colorama-product-link-wrapper::attr(href)').getall()
+        product_links = response.css('a.item::attr(href)').getall() \
+                        or response.css('.colorama-product-link-wrapper::attr(href)').getall()
         for product_url in product_links:
             listing_url = response.urljoin(product_url)
-            yield scrapy.Request(listing_url,
+            yield scrapy.Request(url=listing_url,
                                  callback=self.parse_detail_page_info,
-                                 meta= {'dont_merge_cookies': True})
+                                 meta=response.meta)
 
     def get_product_category(self, response, json_response):
         product_category = []
-        gender = response.css('nav span.has-separator a::text').get()
-        product_category.extend([gender, json_response['type']])
+        product_category.extend([response.meta['gender'], json_response['type']])
         return product_category
 
     def get_all_variants(self, json_response, product_price, product_currency):
@@ -51,12 +50,20 @@ class ApcSpider(scrapy.Spider):
 
     def parse_detail_page_info(self, response):
         url = '{}.js' .format(response.url.split('?')[0])
-        api_response = requests.request('GET', url)
-        json_response = json.loads(api_response.text)
-        product_category = self.get_product_category(response, json_response)
-        product_price = response.css('span#variantPrice::text').get().strip('$')
-        product_currency = response.css('meta#in-context-paypal-metadata::attr(data-currency)').get()
+        response.meta['product_price'] = response.css('span#variantPrice::text').get().strip('$')
+        response.meta['product_currency'] = \
+            response.css('meta#in-context-paypal-metadata::attr(data-currency)').get()
+        response.meta['url'] = response.url
+        response.meta['gender'] = response.css('nav span.has-separator a::text').get()
+        yield scrapy.Request(url=url, callback=self.parse_product_api,
+                             meta=response.meta)
+
+    def parse_product_api(self, response):
+        json_response = json.loads(response.text)
+        product_price = response.meta['product_price']
+        product_currency = response.meta['product_currency']
         product_variants_sku = self.get_all_variants(json_response, product_price, product_currency)
+        product_category = self.get_product_category(response, json_response)
         prod_desc_from_response = json_response['description']
         product_description = prod_desc_from_response.replace('<p>', '').replace('</p>', '')
 
@@ -67,8 +74,8 @@ class ApcSpider(scrapy.Spider):
             'image_urls': json_response['images'],
             'brand': 'A.P.C',
             'retailer_sku': json_response['id'],
-            'url': response.url,
+            'url': response.meta['url'],
             'skus': product_variants_sku,
-            'gender': response.css('nav span.has-separator a::text').get(),
+            'gender': response.meta['gender'],
         }
-
+ 
