@@ -1,6 +1,5 @@
 import csv
 import re
-
 from glob import glob
 
 from temperatureResults import DayReading
@@ -19,13 +18,10 @@ class WeatherFilesParser:
         return weather_readings
 
     def validate_weather_readings(self, day_reading):
-        return all([day_reading['Max TemperatureC'], day_reading['Min TemperatureC'], day_reading['Max Humidity'],
-                    day_reading[' Mean Humidity']])
+        return all([day_reading.get('Max TemperatureC'), day_reading.get('Min TemperatureC'),
+                    day_reading.get('Max Humidity'), day_reading.get(' Mean Humidity')])
 
     def get_weather_files(self, path, year):
-        all_weather_files = glob(path + "/*")
-        return self.get_required_files(all_weather_files, year)
-
-    def get_required_files(self, all_weather_files, year):
         re_year = re.compile(str(year))
-        return [file_name for file_name in all_weather_files if re_year.search(file_name)]
+        return [file_name for file_name in glob(path + "/*") if re_year.search(file_name)]
+

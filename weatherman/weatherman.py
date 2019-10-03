@@ -1,7 +1,7 @@
 import argparse
 import calendar
-
 from datetime import datetime
+
 from CalculateResults import WeatherResultsCalculator
 from Reports import WeatherReportGenerator
 from WeatherFilesParser import WeatherFilesParser
@@ -9,14 +9,15 @@ from WeatherFilesParser import WeatherFilesParser
 
 def validate_input_year(input_year):
     try:
-        year= datetime.strptime(input_year, '%Y')
-        return str(year.year)
+        year = datetime.strptime(input_year, '%Y')
+        return year.year
     except:
         raise argparse.ArgumentTypeError
 
+
 def validate_input_month(input_month):
     try:
-        month= datetime.strptime(input_month, '%Y/%m')
+        month = datetime.strptime(input_month, '%Y/%m')
         return f"{month.year}_{calendar.month_abbr[month.month]}"
     except:
         raise argparse.ArgumentTypeError
