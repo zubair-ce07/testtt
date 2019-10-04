@@ -10,11 +10,11 @@ class WeatherFilesParser:
         weather_readings = []
         weather_files = self.get_weather_files(path, year)
         for weather_file in weather_files:
-            monthly_weather_file = open(weather_file)
-            monthly_weather_file_reader = csv.DictReader(monthly_weather_file)
-            for day_reading in monthly_weather_file_reader:
-                if self.validate_weather_readings(day_reading):
-                    weather_readings += [DayReading(day_reading)]
+            with open(weather_file, 'r') as monthly_weather_file:
+                monthly_weather_file_reader = csv.DictReader(monthly_weather_file)
+                for day_reading in monthly_weather_file_reader:
+                    if self.validate_weather_readings(day_reading):
+                        weather_readings += [DayReading(day_reading)]
         return weather_readings
 
     def validate_weather_readings(self, day_reading):
