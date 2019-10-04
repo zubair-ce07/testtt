@@ -46,14 +46,15 @@ class ApcSpider(Spider):
 
     def parse_detail_page_info(self, response):
         url = '{}.js'.format(response.url.split('?')[0])
-        response.meta['price'] = response.css('span#variantPrice::text') \
+        currency = response.css('meta#in-context-paypal-'
+                                'metadata::attr(data-currency)').get()
+        price = response.css('span#variantPrice::text') \
             .get().strip('$')
-        response.meta['currency'] = \
-            response.css('meta#in-context-paypal-metadata::attr(data-currency)') \
-            .get()
+        gender = response.css('nav span.has-separator a::text').get()
+        response.meta['price'] = price
+        response.meta['currency'] = currency
         response.meta['url'] = response.url
-        response.meta['gender'] = response.css('nav span.has-separator a::text') \
-            .get()
+        response.meta['gender'] = gender
         yield response.follow(url, callback=self.parse_api,
                               meta=response.meta)
 
@@ -66,7 +67,7 @@ class ApcSpider(Spider):
         desc_from_response = raw_product['description']
         description_selector = Selector(text=desc_from_response)
         description = description_selector.css('p::text').get()
-	yield {
+        yield {
                'product_name': raw_product['title'],
                'category': category,
                'description': description,
