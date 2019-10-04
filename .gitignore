@@ -58,3 +58,6 @@ target/
 
 # VSCode
 .vscode
+
+# Ignore file named 'files.zip'
+files.zip
