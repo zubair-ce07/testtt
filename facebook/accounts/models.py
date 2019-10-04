@@ -1,17 +1,15 @@
+from django.contrib.auth.models import AbstractUser
 from django.db import models
-
-# Create your models here.
-
-
-def images_path():
-    return "profile_pictures"
+from .utils.storage import OverwriteStorage
 
 
-class User(models.Model):
-    name = models.CharField(max_length=200)
-    username = models.CharField(max_length=200)
-    email = models.CharField(max_length=200)
-    profile_picture = models.ImageField(upload_to=images_path)
+def upload_location(instance, filename):
+    _, extension = filename.split('.')
+    return 'profile_pictures/{}.{}'.format(instance.username, extension)
+
+
+class FBUser(AbstractUser):
+    profile_picture = models.ImageField(storage=OverwriteStorage(), upload_to=upload_location)
 
     def __str__(self):
         return self.username
