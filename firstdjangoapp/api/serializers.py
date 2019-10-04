@@ -19,8 +19,8 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class ProductSerializer(serializers.ModelSerializer):
-    skus = SkusSerializer(many=True, required=False)
-    category = CategorySerializer(many=True, required=False)
+    skus = SkusSerializer(many=True, required=False, read_only=True)
+    category = CategorySerializer(many=True, required=False, read_only=True)
 
     class Meta:
         model = Product
@@ -34,7 +34,7 @@ class CartItemSerializer(serializers.ModelSerializer):
 
 
 class CartSerializer(serializers.ModelSerializer):
-    cart_item = CartItemSerializer(many=True, required=False)
+    cart_item = CartItemSerializer(many=True, required=False, read_only=True)
 
     class Meta:
         model = Cart
@@ -48,7 +48,7 @@ class ProfileSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    profile = ProfileSerializer(many=False, required=True)
+    profile = ProfileSerializer(many=False, required=False)
     cart = CartSerializer(many=True, required=False)
 
     class Meta:
@@ -57,11 +57,10 @@ class UserSerializer(serializers.ModelSerializer):
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
-        profile_data = validated_data.pop('profile')
+        profile_data = validated_data.pop('profile', None)
         password = validated_data.pop('password')
         user = User(**validated_data)
         user.set_password(password)
         user.save()
         Profile.objects.create(user=user, **profile_data)
-        Token.objects.create(user=user)
         return user

@@ -3,6 +3,7 @@ from django.core.cache import cache
 from django.db.models import Q
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
+from rest_framework import status
 
 from shopcity.models import Product
 
@@ -86,16 +87,23 @@ def cached_product(product_id):
     product = cache.get(f'product_{product_id}')
     if not product:
         product = Product.objects.prefetch_related('skus').filter(retailer_sku=product_id)
-        cache.set(f'product_{product[0].retailer_sku}', product)
-    return product
+        if product:
+            cache.set(f'product_{product[0].retailer_sku}', product)
+    if product:
+        return product
+    return status.HTTP_404_NOT_FOUND
 
 
 def cached_user(user_id):
     user = cache.get(f'user_{user_id}')
     if not user:
         user = User.objects.filter(id=user_id)
-        cache.set(f'user_{user[0].id}', user)
-    return user
+        if user:
+            cache.set(f'user_{user[0].id}', user)
+    if user:
+        return user
+    else:
+        status.HTTP_404_NOT_FOUND
 
 
 def clear_products_cache(kwargs):

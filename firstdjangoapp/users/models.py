@@ -7,7 +7,7 @@ from shopcity.models import Product
 
 
 class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True)
     address = models.CharField(max_length=500)
     city = models.CharField(max_length=200)
     state = models.CharField(max_length=200)

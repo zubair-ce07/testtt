@@ -1,6 +1,10 @@
+from django.contrib.auth.models import User
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
+
 from rest_framework import generics
+from rest_framework import status
+from rest_framework.response import Response
 
 from .backends import SimpleFilterBackend
 from .redis_cache import cached_product, cached_filtered_products, cached_user, cached_users_queryset
@@ -32,6 +36,13 @@ class UserList(generics.ListCreateAPIView):
 
     def get_queryset(self):
         return cached_users_queryset()
+
+    def post(self, request, *args, **kwargs):
+        serializer = UserSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @method_decorator(csrf_exempt, name='dispatch')
