@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from datetime import datetime
 
 # Scrapy settings for tausendkind project
 #
@@ -21,13 +22,18 @@ NEWSPIDER_MODULE = 'tausendkind.spiders'
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = True
 
+#FEED FORMAT
+FEED_FORMAT = "json"
+spider_name = "product_details"
+FEED_URI = "{}_{}.json".format(spider_name, datetime.now())
+
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 #CONCURRENT_REQUESTS = 32
 
 # Configure a delay for requests for the same website (default: 0)
 # See https://docs.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-#DOWNLOAD_DELAY = 3
+DOWNLOAD_DELAY = 0.5
 # The download delay setting will honor only one of:
 #CONCURRENT_REQUESTS_PER_DOMAIN = 16
 #CONCURRENT_REQUESTS_PER_IP = 16

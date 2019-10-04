@@ -5,8 +5,52 @@ This module outputs a json format file
 for the website's product details.
 """
 import re
-from datetime import datetime
+
 import scrapy
+
+
+def get_sku(response):
+    """Return product's sku."""
+    return re.findall(r'"sku":\"(.*?)\"', response.css(
+        "#catalog-product-view > script:nth-child(2)::text").get())[0]
+
+
+def get_product_name(response):
+    """Return product's name."""
+    return response.css("#product-name::text").get()
+
+
+def get_description(response):
+    """Return product's description."""
+    return response.css("div.pdp-description-container div:nth-child(2) p::text").get().strip()
+
+
+def get_price(response):
+    """Return product's price."""
+    return re.findall(r"\d+,\d+", response.css("strong.pdp-price::text").get())[0]
+
+
+def get_original_price(response):
+    """Return product's original price if discounted."""
+    return re.findall(r"\d+,\d+", response.css("del.pdp-reduction strong::text").get())[0]
+
+
+def get_currency(response):
+    """Return product's currency."""
+    return re.findall(r"[A-Z]{3}", response.css("strong.pdp-price::text").get())[0]
+
+
+def get_variant_sizes(response):
+    """Return product's variant sizes in a list."""
+    variant_sizes = response.css("li.select__option::attr(data-sizeval)").extract()
+    return variant_sizes if not variant_sizes == '[]' else ''
+
+
+def get_variant_sizes_out_of_stock(response):
+    """Return product's sizes out of stock in a list."""
+    sizes_out_of_stock = response.css(
+        "li.select__option.disabled::attr(data-sizeval)").extract()
+    return sizes_out_of_stock if not sizes_out_of_stock == '[]' else ''
 
 
 class ProductDetailsSpider(scrapy.Spider):
@@ -20,12 +64,6 @@ class ProductDetailsSpider(scrapy.Spider):
 
     name = "product_details"
     start_urls = ["https://www.tausendkind.de/"]
-
-    custom_settings = {
-        "DOWNLOAD_DELAY": 0.5,
-        "FEED_FORMAT": "json",
-        "FEED_URI": "{}_{}.json".format(name, datetime.now()),
-    }
 
     def parse(self, response):
         """
@@ -77,30 +115,15 @@ class ProductDetailsSpider(scrapy.Spider):
         include Sku, Name, description, price,
         currency, sizes and sizes out of stock.
         """
-        description = (
-            response.css(
-                "div.pdp-description-container div div:nth-child(2)::text")
-            .get().replace("\n", "").replace("\r", "").replace("  ", "")
-        )
-        description = (
-            response.css(
-                "div.pdp-description-container div:nth-child(2) p::text")
-            .get().replace("\n", "").replace("\r", "").replace("  ", "")
-            if not description else description
-        )
-        price = response.css("strong.pdp-price::text").re_first(r"\d+,\d+")
-        original_price = response.css(
-            "del.pdp-reduction strong::text").re_first(r"\d+,\d+")
+        price = get_price(response)
+        original_price = get_original_price(response)
         yield {
-            "Sku": response.css("#catalog-product-view > script:nth-child(2)").re_first(
-                r'"sku":\"(.*?)\"'),
-            "product_name": response.css("#product-name::text").get(),
-            "description": description,
+            "Sku": get_sku(response),
+            "product_name": get_product_name(response),
+            "description": get_description(response),
             "price": price,
             "original_price": original_price if not price == original_price else "",
-            "currency": response.css("strong.pdp-price::text").re_first(r"[A-Z]{3}"),
-            "variant_sizes": response.css(
-                "li.select__option::attr(data-sizeval)").extract(),
-            "variant_sizes_out_of_stock": response.css(
-                "li.select__option.disabled::attr(data-sizeval)").extract(),
+            "currency": get_currency(response),
+            "variant_sizes": get_variant_sizes(response),
+            "variant_sizes_out_of_stock": get_variant_sizes_out_of_stock(response),
         }
