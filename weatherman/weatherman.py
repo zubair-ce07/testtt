@@ -10,7 +10,7 @@ from WeatherFilesParser import WeatherFilesParser
 def arg_parser():
     arguments = argparse.ArgumentParser(description='Arguments for weatherman.py')
     arguments.add_argument('Path', metavar='path', type=str, help='the path to the files')
-    arguments.add_argument('-e', type=lambda year: datetime.strptime(year, '%Y').year,  # validate_input_year,
+    arguments.add_argument('-e', type=lambda year: datetime.strptime(year, '%Y').year,
                            help='Display Highest, Lowest temperatures and most humid day of given year')
     arguments.add_argument('-a', type=lambda m: f"{datetime.strptime(m,'%Y/%m').year}_"
                                                 f"{calendar.month_abbr[datetime.strptime(m,'%Y/%m').month]}",
