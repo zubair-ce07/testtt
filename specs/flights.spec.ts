@@ -107,7 +107,7 @@ describe(`${BRAND_NAME} SEM Flights Search`, () => {
     await flightsPage.getTile(0).triggerHotels();
     const dialog = flightsPage.getTilesHotelDialog();
     expect(await dialog.isDisplayed()).is.true;
-    await flightsPage.getHotelsSearchDialog().close();
+    await dialog.close();
   });
   
   it('should select at least one compare to option if not selected already', async () => {
