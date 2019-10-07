@@ -1,8 +1,8 @@
+import { $, $$, browser, ElementArrayFinder, ElementFinder } from "protractor";
 import { FlightsPage } from "../../../pages/flightsPage";
 import { CompareTo } from "../../../elements/compareTo";
 import { MobilePromo } from "../../../elements/promos/mobilePromo";
 import { SearchPromo } from "../../../elements/promos/searchPromo";
-import { ElementArrayFinder } from "protractor";
 import { Subscription } from "../../../elements/subscription";
 import { Tile } from "../../../elements/tile";
 import { SearchForm } from "../../../elements/forms/searchForm";
@@ -12,19 +12,24 @@ import { SearchFormKayak } from "../elements/forms/searchFormKayak";
 import { SearchPromoKayak } from "../elements/promos/searchPromoKayak";
 import { SubscriptionKayak } from "../elements/subscriptionKayak";
 import { TileKayak } from "../elements/tileKayak";
-import { FlightsSearchOverlay } from "../../../elements/overlays/flightsSearchOverlay";
-import { FlightsSearchOverlayKayak } from "../elements/overlays/flightsSearchOverlayKayak";
-import { HotelsSearchOverlay } from "../../../elements/overlays/hotelsSearchOverlay";
-import { HotelsSearchOverlayKayak } from "../elements/overlays/hotelsSearchOverlayKayak";
+import { HotelsSearchDialog } from "../../../elements/dialogs/hotelsSearchDialog";
+import { HotelsSearchDialogKayak } from "../elements/dialogs/hotelsSearchDialogKayak";
 import { DestinationSwitcher } from "../../../elements/switch/destinationSwitcher";
+import { DestinationSwitcherKayak } from "../elements/switch/destinationSwitcherKayak";
+import { FlightsResultsPageKayak } from "./flightsResultsPageKayak";
+import { click, switchToNewTabIfOpened } from "../../../utils/specs.utils";
+import { TilesFlightDialog } from "../../../elements/dialogs/tilesFlightDialog";
+import { TilesHotelDialog } from "../../../elements/dialogs/tilesHotelDialog";
+import { TilesFlightDialogKayak } from "../elements/dialogs/tilesFlightDialogKayak";
+import { TilesHotelDialogKayak } from "../elements/dialogs/tilesHotelDialogKayak";
 
 export class FlightsPageKayak implements FlightsPage {
   getCompareTo(): CompareTo {
     return new CompareToKayak();
   }
   
-  getHeaderText(): Promise<string> {
-    return undefined;
+  async getHeaderText(): Promise<string> {
+    return $(`.Common-Frontdoor-PixelCoverPhoto`).$('h1').getText();
   }
   
   getMobilePromo(): MobilePromo {
@@ -40,7 +45,7 @@ export class FlightsPageKayak implements FlightsPage {
   }
   
   getSlotAds(): ElementArrayFinder {
-    return undefined;
+    return $$(`.col-fd-display-kn`);
   }
   
   getSubscription(): Subscription {
@@ -48,39 +53,52 @@ export class FlightsPageKayak implements FlightsPage {
   }
   
   getTile(index: number): Tile {
-    return new TileKayak(index);
+    return new TileKayak(this.getTilesContainer().$$(`.tile`).get(index));
   }
   
   getTiles(): ElementArrayFinder {
-    return undefined;
+    return this.getTilesContainer().$$(`.destinationTile`);
   }
   
   getURL(): string {
-    return "";
+    return "https://www.kayak.com/horizon/sem/hotels/general/";
   }
   
-  visit(): Promise<void> {
-    return undefined;
+  async visit(): Promise<void> {
+    await browser.get(this.getURL());
   }
   
-  getHotelsSearchOverlay(): HotelsSearchOverlay {
-    return new HotelsSearchOverlayKayak();
+  getHotelsSearchDialog(): HotelsSearchDialog {
+    return new HotelsSearchDialogKayak();
   }
   
-  getFlightsSearchOverlay(): FlightsSearchOverlay {
-    return new FlightsSearchOverlayKayak();
-  }
-  
-  search(): Promise<void> {
-    return undefined;
+  async search(): Promise<void> {
+    const searchButton = $(`form[name='searchform']`).$(`button[id$='submit']`);
+    await switchToNewTabIfOpened(click.bind(this, searchButton));
+    await FlightsResultsPageKayak.load();
   }
   
   getSearchFormBanners(): ElementArrayFinder {
-    return undefined;
+    return new ElementArrayFinder(browser, async () => [
+      $(`div[id$='leftImage']`),
+      $(`div[id$='rightImage']`)
+    ]);
   }
   
   getDestinationSwitcher(): DestinationSwitcher {
-    return undefined;
+    return new DestinationSwitcherKayak();
+  }
+  
+  getTilesHotelDialog(): TilesHotelDialog {
+    return new TilesHotelDialogKayak();
+  }
+  
+  getTilesFlightDialog(): TilesFlightDialog {
+    return new TilesFlightDialogKayak();
+  }
+  
+  private getTilesContainer(): ElementFinder {
+    return $(`.tilesWrapper`)
   }
   
 }

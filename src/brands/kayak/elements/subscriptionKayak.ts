@@ -1,7 +1,8 @@
 import { Subscription } from "../../../elements/subscription";
+import { $ } from "protractor";
 
 export class SubscriptionKayak implements Subscription {
-  isPresent(): Promise<boolean> {
-    return undefined;
+  async isPresent(): Promise<boolean> {
+    return $(`form[id$='signupForm']`).$(`input`).isPresent();
   }
 }

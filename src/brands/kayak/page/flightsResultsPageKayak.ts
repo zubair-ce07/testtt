@@ -1,13 +1,17 @@
+import { $, $$, browser, ElementArrayFinder, ExpectedConditions as EC } from "protractor";
 import { FlightsResultsPage } from "../../../pages/flightsResultsPage";
 import { SearchForm } from "../../../elements/forms/searchForm";
-import { ElementArrayFinder } from "protractor";
 
 export class FlightsResultsPageKayak implements FlightsResultsPage {
+  static async load(): Promise<void> {
+    await browser.wait(EC.invisibilityOf($(`.Hotels-Results-PlaceholderList`)));
+  }
+  
   getSearchForm(): SearchForm {
     return undefined;
   }
   
   getSearchResults(): ElementArrayFinder {
-    return undefined;
+    return $$(`.Base-Results-HorizonResult`);
   }
 }

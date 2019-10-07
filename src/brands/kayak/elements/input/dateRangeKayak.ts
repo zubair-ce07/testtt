@@ -1,15 +1,16 @@
 import { DateRange } from "../../../../elements/input/dateRange";
+import { $ } from "protractor";
 
 export class DateRangeKayak implements DateRange {
   select(start: Date, end: Date): Promise<void> {
     return undefined;
   }
   
-  getEndDateText(): Promise<string> {
-    return undefined;
+  async getEndDateText(): Promise<string> {
+    return $(`div[id$='dateRangeInput-display-end-inner']`).getText();
   }
   
-  getStartDateText(): Promise<string> {
-    return undefined;
+  async getStartDateText(): Promise<string> {
+    return $(`div[id$='dateRangeInput-display-start-inner']`).getText();
   }
 }

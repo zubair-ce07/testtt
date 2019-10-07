@@ -1,15 +1,19 @@
 import { Tile } from "../../../elements/tile";
+import { ElementFinder } from "protractor";
+import { focusCursor } from "../../../utils/specs.utils";
 
 export class TileKayak implements Tile {
-  constructor(readonly index: number) {
+  constructor(readonly tile: ElementFinder) {
   }
   
-  triggerFlights(): Promise<void> {
-    return undefined;
+  async triggerHotels(): Promise<void> {
+    await focusCursor(this.tile);
+    this.tile.$(`.hotelTrigger`).click();
   }
   
-  triggerHotels(): Promise<void> {
-    return undefined;
+  async triggerFlights(): Promise<void> {
+    await focusCursor(this.tile);
+    this.tile.$(`.flightTrigger`).click();
   }
   
 }
