@@ -24,8 +24,8 @@ ROBOTSTXT_OBEY = True
 
 #FEED FORMAT
 FEED_FORMAT = "json"
-spider_name = "product_details"
-FEED_URI = "{}_{}.json".format(spider_name, datetime.now())
+SPIDER_NAME = "tausendkind"
+FEED_URI = "{}_{}.json".format(SPIDER_NAME, datetime.now())
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 #CONCURRENT_REQUESTS = 32

@@ -1,5 +1,5 @@
 """
-Product details module.
+Tausendkind details module.
 
 This module outputs a json format file
 for the website's product details.
@@ -8,6 +8,15 @@ import re
 
 import scrapy
 
+
+def get_product_url(response):
+    """Return product's url."""
+    return response.url
+
+def get_image_urls(response):
+    """Return product's images urls."""
+    return response.css(
+        "div #product-photo-container div div img::attr(data-lazy)").getall()
 
 def get_sku(response):
     """Return product's sku."""
@@ -42,27 +51,25 @@ def get_currency(response):
 
 def get_variant_sizes(response):
     """Return product's variant sizes in a list."""
-    variant_sizes = response.css("li.select__option::attr(data-sizeval)").extract()
-    return variant_sizes if not variant_sizes == '[]' else ''
+    return response.css("li.select__option::attr(data-sizeval)").getall()
 
 
 def get_variant_sizes_out_of_stock(response):
     """Return product's sizes out of stock in a list."""
-    sizes_out_of_stock = response.css(
-        "li.select__option.disabled::attr(data-sizeval)").extract()
-    return sizes_out_of_stock if not sizes_out_of_stock == '[]' else ''
+    return response.css(
+        "li.select__option.disabled::attr(data-sizeval)").getall()
 
 
-class ProductDetailsSpider(scrapy.Spider):
+class Tausendkind(scrapy.Spider):
     """
-    Product Details Spider Class.
+    Tausendkind Spider Class.
 
     This class initializes a spider and has
     all the required methods to display
     each product's details.
     """
 
-    name = "product_details"
+    name = "tausendkind"
     start_urls = ["https://www.tausendkind.de/"]
 
     def parse(self, response):
@@ -118,7 +125,9 @@ class ProductDetailsSpider(scrapy.Spider):
         price = get_price(response)
         original_price = get_original_price(response)
         yield {
-            "Sku": get_sku(response),
+            "product_url": get_product_url(response),
+            "image_urls": get_image_urls(response),
+            "sku": get_sku(response),
             "product_name": get_product_name(response),
             "description": get_description(response),
             "price": price,
