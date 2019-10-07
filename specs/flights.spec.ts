@@ -79,7 +79,13 @@ describe(`${BRAND_NAME} SEM Flights Search`, () => {
   
   it('should select at least one compare to option if not selected already', async () => {
     const compareTo = flightsPage.getSearchForm().getCompareTo();
-    const selected = await compareTo.getSelected();
+    let selected = await compareTo.getSelected();
+  
+    if (selected.length === 0) {
+      await compareTo.select(0);
+      selected = await compareTo.getSelected();
+    }
+    
     expect(selected.length).is.greaterThan(0);
   });
   
