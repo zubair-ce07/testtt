@@ -1,32 +1,12 @@
 import {browser, $, element, by, protractor, promise, ElementFinder, ProtractorExpectedConditions} from 'protractor';
 
 export class FlightsPageObject {
-  departureField: ElementFinder = element(by.css('div[id$="origin-airport-display"]'));
-  returnField: ElementFinder = element(by.css('div[id$="destination-airport-display"]'));
-  departureDateText: ElementFinder = element(by.css("div[id$='dateRangeInput-display-start']"));
-  returnDateText: ElementFinder = element(by.css("div[id$='dateRangeInput-display-end']"));
   cheapestPrice: ElementFinder = element(by.css("a[id$='price_aTab']"));
   bestPrice: ElementFinder = element(by.css("a[id$='bestflight_aTab']"));
   quickestPrice: ElementFinder = element(by.css("a[id$='duration_aTab']"));
   cheapestTime: ElementFinder = element(by.css("a[id$='price_aTab'] .js-duration"));
   bestTime: ElementFinder = element(by.css("a[id$='bestflight_aTab'] .js-duration"));
   quickestTime: ElementFinder = element(by.css("a[id$='duration_aTab'] .js-duration"));
-
-  async getDeparture(): Promise<string> {
-    return await this.departureField.getText();
-  }
-
-  async getDestination(): Promise<string> {
-    return await this.returnField.getText();
-  }
-
-  getDepartureDate(): promise.Promise<string> {
-    return this.departureDateText.getText();
-  }
-
-  getReturnDate(): promise.Promise<string> {
-    return this.returnDateText.getText();
-  }
 
   getTripDates(tripDaysNumber: number): string {
     const todaysDate = new Date();
