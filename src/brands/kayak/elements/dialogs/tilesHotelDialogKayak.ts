@@ -1,12 +1,11 @@
 import { TilesHotelDialog } from "../../../../elements/dialogs/tilesHotelDialog";
-import { $, browser, ElementFinder, ExpectedConditions as EC } from "protractor";
-import { click } from "../../../../utils/specs.utils";
+import { $, browser, ElementFinder, ExpectedConditions as EC, Key } from "protractor";
 
 export class TilesHotelDialogKayak implements TilesHotelDialog {
   async close(): Promise<void> {
-    const closeButton = this.getDialogContainer().$(`button[id$='destination_tiles_hotel_dialog-dialog-close']`);
-    await click(closeButton);
-    await browser.wait(EC.invisibilityOf(this.getDialogContainer()));
+    const closeButton = this.getDialogContainer().$(`.close`);
+    await closeButton.sendKeys(Key.ESCAPE);
+    await browser.wait(EC.invisibilityOf(this.getDialogContainer()))
   }
   
   async isDisplayed(): Promise<boolean> {
@@ -14,6 +13,6 @@ export class TilesHotelDialogKayak implements TilesHotelDialog {
   }
   
   private getDialogContainer(): ElementFinder {
-    return $(`.Sem-Hotels-Search-SEMHotelSearchDialog`)
+    return $(`div[id$='destination_tiles_hotel_dialog-dialog-content']`)
   }
 }

@@ -1,10 +1,10 @@
 import { TilesFlightDialog } from "../../../../elements/dialogs/tilesFlightDialog";
-import { $, browser, ElementFinder, ExpectedConditions as EC } from "protractor";
+import { $, browser, ElementFinder, ExpectedConditions as EC, Key } from "protractor";
 
 export class TilesFlightDialogKayak implements TilesFlightDialog {
   async close(): Promise<void> {
-    const closeButton = this.getDialogContainer().$(`button[id$='destination_tiles_flight_dialog-dialog-close']`);
-    await closeButton.click();
+    const closeButton = this.getDialogContainer().$(`.close`);
+    await closeButton.sendKeys(Key.ESCAPE);
     await browser.wait(EC.invisibilityOf(this.getDialogContainer()));
   }
   
@@ -13,6 +13,6 @@ export class TilesFlightDialogKayak implements TilesFlightDialog {
   }
   
   private getDialogContainer(): ElementFinder {
-    return $(`.Sem-Flights-Search-SEMFlightSearchDialog`)
+    return $(`div[id$='destination_tiles_flight_dialog-dialog-content']`)
   }
 }
