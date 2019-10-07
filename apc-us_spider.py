@@ -1,5 +1,6 @@
 from scrapy import Spider, Selector
 import json
+from urllib.parse import urlparse
 
 
 class ApcSpider(Spider):
@@ -19,50 +20,51 @@ class ApcSpider(Spider):
                                   meta=meta)
 
     def parse_product_page_links(self, response):
-        for product_link in response.css('.colorama-product-link-wrapper' or
-                                         'a.item'):
+        for product_link in response.css('.colorama-product-link-wrapper, \
+                                         a.item'):
             yield response.follow(product_link,
                                   callback=self.parse_detail_page_info,
                                   meta=response.meta)
 
     def get_category(self, response, raw_product):
-        category = []
-        category.extend([response.meta['gender'], raw_product['type']])
-        return category
+        return [response.meta['required_details']['gender'],
+                raw_product['type']]
 
-    def get_all_variants(self, raw_products, price, currency):
-        variants_sku = []
-        for raw_product in raw_products['variants']:
-            variants_sku.append(
-                                {'sku_id': raw_product['sku'],
-                                 'color': raw_product['option1'],
-                                 'currency': currency,
-                                 'size': raw_product['option2'],
-                                 'out_of_stock': not raw_product['available'],
-                                 'price': price,
-                                 'previous_price': price}
+    def get_all_skus(self, raw_product, price, currency):
+        skus = []
+        for variant in raw_product['variants']:
+            skus.append(
+                        {'sku_id': variant['sku'],
+                         'color': variant['option1'],
+                         'currency': currency,
+                         'size': variant['option2'],
+                         'out_of_stock': not variant['available'],
+                         'price': price,
+                         'previous_price': price}
             )
-        return variants_sku
+        return skus
 
     def parse_detail_page_info(self, response):
-        url = '{}.js'.format(response.url.split('?')[0])
+        url = '{}.js'.format(urlparse(response.url).path)
         currency = response.css('meta#in-context-paypal-'
                                 'metadata::attr(data-currency)').get()
         price = response.css('span#variantPrice::text') \
             .get().strip('$')
         gender = response.css('nav span.has-separator a::text').get()
-        response.meta['price'] = price
-        response.meta['currency'] = currency
-        response.meta['url'] = response.url
-        response.meta['gender'] = gender
-        yield response.follow(url, callback=self.parse_api,
+        response.meta['required_details'] = {
+            'price': price,
+            'currency': currency,
+            'url': response.url,
+            'gender': gender
+        }
+        yield response.follow(url, callback=self.parse_product_response,
                               meta=response.meta)
 
-    def parse_api(self, response):
+    def parse_product_response(self, response):
         raw_product = json.loads(response.text)
-        price = response.meta['price']
-        currency = response.meta['currency']
-        variants_sku = self.get_all_variants(raw_product, price, currency)
+        price = response.meta['required_details']['price']
+        currency = response.meta['required_details']['currency']
+        skus = self.get_all_skus(raw_product, price, currency)
         category = self.get_category(response, raw_product)
         desc_from_response = raw_product['description']
         description_selector = Selector(text=desc_from_response)
@@ -74,7 +76,7 @@ class ApcSpider(Spider):
                'image_urls': raw_product['images'],
                'brand': 'A.P.C',
                'retailer_sku': raw_product['id'],
-               'url': response.meta['url'],
-               'skus': variants_sku,
-               'gender': response.meta['gender'],
+               'url': response.meta['required_details']['url'],
+               'skus': skus,
+               'gender': response.meta['required_details']['gender'],
         }
