@@ -103,7 +103,7 @@ def cached_user(user_id):
     if user:
         return user
     else:
-        status.HTTP_404_NOT_FOUND
+        return status.HTTP_404_NOT_FOUND
 
 
 def clear_products_cache(kwargs):
