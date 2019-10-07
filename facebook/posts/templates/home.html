@@ -4,14 +4,28 @@
 
 {% block content %}
 {% if user.is_authenticated %}
-  Hi {{ user.username }}!
-    <br>
+    =================================================== <br>
+    Hi {{ user.username }}! Got something on your mind? Add here
     <form method="post" enctype="multipart/form-data">
       {% csrf_token %}
       {{ form.as_p }}
-      <button type="submit">Update</button>
+      <button type="submit">Post</button>
     </form>
-
+    ===================================================
+    <div>
+        <h2>Newsfeed</h2>
+        {% for post in posts %}
+            <p><b>{{ post.fb_user.username }}</b>
+            <img src="{{ post.fb_user.profile_picture.url }}" alt="user profile picture" width="30" height="30">
+            <br><br>
+            "<i>{{ post.description }}</i>"</p>
+            {% if post.picture %}
+                <img src="{{ post.picture.url }}" alt="post_picture" width="200" height="200">
+                <br>
+            {% endif %}
+            ----------------------------------------
+        {% endfor %}
+    </div>
 {% else %}
   <p>You are not logged in</p>
 {% endif %}

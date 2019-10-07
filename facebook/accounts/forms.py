@@ -6,7 +6,7 @@ class FBUserCreationForm(UserCreationForm):
 
     class Meta:
         model = FBUser
-        fields = ('username', 'email', 'profile_picture')
+        fields = ('first_name', 'last_name', 'username', 'email', 'profile_picture')
 
 
 class FBUserChangeForm(UserChangeForm):
@@ -14,4 +14,4 @@ class FBUserChangeForm(UserChangeForm):
 
     class Meta:
         model = FBUser
-        fields = ('email', 'profile_picture')
+        fields = ('first_name', 'last_name', 'email', 'profile_picture')

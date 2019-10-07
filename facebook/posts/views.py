@@ -1,5 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
+from .models import Post
+
 from .forms import CreatePostForm
 
 
@@ -15,4 +17,5 @@ def post(request):
             form = CreatePostForm()
     else:
         form = CreatePostForm()
-    return render(request, 'home.html', {'form': form})
+    posts = Post.objects.all().order_by("id").reverse()
+    return render(request, 'home.html', {'form': form, 'posts' : posts})
