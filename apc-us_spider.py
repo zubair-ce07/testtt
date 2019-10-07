@@ -16,10 +16,10 @@ class ApcSpider(Spider):
         meta = {'dont_merge_cookies': True}
         for product_listing in response.css('.nav-primary-item a'):
             yield response.follow(product_listing,
-                                  callback=self.parse_products_link,
+                                  callback=self.parse_product_listing,
                                   meta=meta)
 
-    def parse_products_link(self, response):
+    def parse_product_listing(self, response):
         for product_link in response.css('.colorama-product-link-wrapper, \
                                          a.item'):
             yield response.follow(product_link,
@@ -57,26 +57,26 @@ class ApcSpider(Spider):
             'url': response.url,
             'gender': gender
         }
-        yield response.follow(url, callback=self.parse_product_api,
+        yield response.follow(url, callback=self.parse_product,
                               meta=response.meta)
 
-    def parse_product_api(self, response):
+    def parse_product(self, response):
         raw_product = json.loads(response.text)
         price = response.meta['required_details']['price']
         currency = response.meta['required_details']['currency']
         skus = self.get_skus(raw_product, price, currency)
         category = self.get_categories(response, raw_product)
-        desc_from_response = raw_product['description']
-        description_selector = Selector(text=desc_from_response)
+        raw_description = raw_product['description']
+        description_selector = Selector(text=raw_description)
         description = description_selector.css('p::text').get()
-        yield {
-               'product_name': raw_product['title'],
-               'category': category,
-               'description': description,
-               'image_urls': raw_product['images'],
-               'brand': 'A.P.C',
-               'retailer_sku': raw_product['id'],
-               'url': response.meta['required_details']['url'],
-               'skus': skus,
-               'gender': response.meta['required_details']['gender'],
+        return {
+                'product_name': raw_product['title'],
+                'category': category,
+                'description': description,
+                'image_urls': raw_product['images'],
+                'brand': 'A.P.C',
+                'retailer_sku': raw_product['id'],
+                'url': response.meta['required_details']['url'],
+                'skus': skus,
+                'gender': response.meta['required_details']['gender'],
         }
