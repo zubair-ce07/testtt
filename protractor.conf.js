@@ -1,18 +1,19 @@
 const path = require('path');
 const env = require('dotenv');
+const chai = require('chai');
+const chaiAsPromised = require('chai-as-promised');
 const {SpecReporter} = require('jasmine-spec-reporter');
 
 env.config({path: path.join(__dirname, '.env')});
 
 exports.config = {
   seleniumAddress: process.env.SELENIUM_ADDRESS,
-  specs: [`${__dirname}/specs/**/**.spec.ts`],
+  specs: [
+    `${__dirname}/specs/**/**.spec.ts`,
+  ],
   multiCapabilities: [
     {
       browserName: 'chrome',
-      chromeOptions: {
-        args: ["--blink-settings=imagesEnabled=false"],
-      }
     }
   ],
   onPrepare: function () {
@@ -24,6 +25,11 @@ exports.config = {
         displaySpecDuration: true
       })
     );
+  
+    chai.use(chaiAsPromised);
+  
+    browser.waitForAngularEnabled(false);
+    browser.driver.manage().window().maximize();
   },
   beforeLaunch: () => {
     require('ts-node').register({
