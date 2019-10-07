@@ -17,6 +17,7 @@ INSTALLED_APPS = [
     'users',
     'payment',
     'api',
+    'commands',
     'rest_framework',
     'rest_framework_swagger',
     'debug_toolbar',
