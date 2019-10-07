@@ -43,6 +43,7 @@ describe(`${BRAND_NAME} SEM Flights Search`, () => {
   });
   
   it('should show no "Compare To" section while destination value is empty', async () => {
+    await flightsPage.getSearchForm().getDestination().type('');
     expect(await flightsPage.getSearchForm().getCompareTo().isDisplayed()).is.false;
   });
   
