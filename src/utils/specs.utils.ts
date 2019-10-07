@@ -44,6 +44,11 @@ export async function click(element: ElementFinder): Promise<void> {
   await element.click();
 }
 
+export async function focusCursor(element: ElementFinder): Promise<void> {
+  await makeInteractive(element);
+  await browser.actions().mouseUp(element).perform();
+}
+
 export function scrollIntoView(element: ElementFinder): void {
   browser.executeScript((element: HTMLElement) => element.scrollIntoView(false), element)
 }
