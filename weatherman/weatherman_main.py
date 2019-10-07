@@ -6,14 +6,19 @@ from reports_calculator import *
 from reports_generator import *
 
 
-def main():
+def parse_arguments():
     parser = argparse.ArgumentParser(description='Weatherman app')
+
     parser.add_argument('path')
     parser.add_argument('-e', type=lambda year: datetime.strptime(year, '%Y'), nargs='?')
     parser.add_argument('-a', type=lambda date: datetime.strptime(date, '%Y/%m'), nargs='?')
     parser.add_argument('-c', type=lambda date: datetime.strptime(date, '%Y/%m'), nargs='?')
-    args = parser.parse_args()
     
+    return parser.parse_args()
+
+
+def main():
+    args = parse_arguments()
     weather_records = read_weather_files(args.path)
 
     if args.e:                        
