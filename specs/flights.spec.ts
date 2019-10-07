@@ -99,6 +99,7 @@ describe(`${BRAND_NAME} SEM Flights Search`, () => {
   });
   
   it('should return to SEM landing page', async () => {
+    await flightsPage.visit();
     expect(await browser.getCurrentUrl()).is.equal(flightsPage.getURL());
   });
   
@@ -124,6 +125,7 @@ describe(`${BRAND_NAME} SEM Flights Search`, () => {
   });
   
   it('should return to SEM landing page', async () => {
+    await flightsPage.visit();
     expect(await browser.getCurrentUrl()).is.equal(flightsPage.getURL());
   });
   
@@ -149,6 +151,7 @@ describe(`${BRAND_NAME} SEM Flights Search`, () => {
   });
   
   it('should return to SEM landing page', async () => {
+    await flightsPage.visit();
     expect(await browser.getCurrentUrl()).is.equal(flightsPage.getURL());
   });
   
