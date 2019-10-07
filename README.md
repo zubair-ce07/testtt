@@ -6,6 +6,6 @@ To Run this project us these command.
 
 `cd boutique `
 
-`scrapy crawl products -o products.json`
+`scrapy crawl boutiqueItem -o products.json`
 
 This products will be stored in products.json file in boutique directory.
