@@ -30,6 +30,8 @@ class Globals(object):
     FRONT_DOOR_ACTIVITY_NAME = '.streamingsearch.params.SearchFormsPagerActivity'
     SEARCH_FLIGHT_RESULT_ACTIVITY = '.streamingsearch.results.list.flight.StreamingFlightSearchResultsActivity'
     search_results_details_activity = '.streamingsearch.results.details.flight.StreamingFlightResultDetailsActivity'
+    FLIGHTS_SMARTY_ACTIVITY = '.smarty.SmartyActivity'
+    FLIGHTS_TRAVELER_ACTIVITY = '.streamingsearch.params.ptc.FlightSearchOptionsActivity'
 
     def __init__(self, project_log):
         self.medium_timeout = 5

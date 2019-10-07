@@ -30,13 +30,13 @@ flights_travelers = 'com.kayak.android:id/travelers'
 flights_search = 'com.kayak.android:id/searchImage'
 date_25_september = '25 SEPTEMBER'
 apply_selected_date = 'com.kayak.android:id/doneTextView'
-flights_swap_button = 'com.kayak.android:id/swapOriginDestinationButton'
+flights_swap = 'com.kayak.android:id/swapOriginDestinationButton'
 
 # my code
 
 flights_origin_search_bar = 'com.kayak.android:id/smartySearchText'
 # first_result_againts_search = 'com.kayak.android:id/smarty_current_location_text_view'
-first_result_againts_search = 'com.kayak.android:id/smarty_location_text'
+smarty_result_against_search = 'com.kayak.android:id/smarty_location_text'
 search_result_origin_code = 'com.kayak.android:id/originCode'
 
 # Cabin type
@@ -80,6 +80,6 @@ flights_result_details_cabin = 'com.kayak.android:id/collapsedCabinClass'
 flights_search_result_origin = 'com.kayak.android:id/expandedOriginAirportName'
 flights_results_airport_name_detination = 'com.kayak.android:id/expandedDestinationAirportName'
 flight_result_search_message = 'com.kayak.android:id/expandedEquipmentMessage'
-flights_search_traveller_limit = 'com.kayak.android:id/increment'
-flights_traveller_count_negative = 'com.kayak.android:id/decrement'
+flights_traveller_count_plus = 'com.kayak.android:id/increment'
+flights_traveller_count_minus = 'com.kayak.android:id/decrement'
 flights_travelers_count_value = 'com.kayak.android:id/count'

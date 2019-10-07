@@ -2,52 +2,47 @@
 """
     New Landing Test Module
 """
-
+from android.pages.android_flights import AndroidFlights
 from common.globals import Globals
-from android.pages.android_load_app import AndroidLoadApp
 
 
 class TestAndroidLoadApp(object):
-
     """
     Load App
     """
 
-    def test_check_origin_text(self, set_capabilities, setup_logging):
-
+    def test_flights_check_text(self, set_capabilities, setup_logging):
         """
-              Go to FFD
-              Tap Round-trip tab
-              Tap Origin Picker
-              Type "NYC"
-                  Smarty shows "NYC" metro code
-                  Smarty shows below: "JFK", "LGA" and "EWR"
-              Tap "NYC"
-                  Origin field shows "NYC"
-              Tap Destination Picker
-              Type LAX
-                  Smarty shows "LAX" specific airport
-              Tap "LAX"
-                  Destination field shows "LAX"
-        """
-        global_contents = Globals(setup_logging)
-        android_load_app = AndroidLoadApp(set_capabilities, setup_logging)
+               Go to FFD
+               Tap Round-trip tab
+               Tap Origin Picker
+               Type "NYC"
+                   Smarty shows "NYC" metro code
+                   Smarty shows below: "JFK", "LGA" and "EWR"
+               Tap "NYC"
+                   Origin field shows "NYC"
+               Tap Destination Picker
+               Type LAX
+                   Smarty shows "LAX" specific airport
+               Tap "LAX"
+                   Destination field shows "LAX"
+               """
+        smarty_text_list = ["NYC", "JFK", "LGA", "EWR"]
+        origin_code_text = 'NYC'
+        destination_code_text = 'LAX'
+        Globals(setup_logging)
+        android_flights_app = AndroidFlights(set_capabilities, setup_logging)
+        assert android_flights_app.flights_launch_app()
 
-        assert android_load_app.on_screen() == global_contents.LAUNCH_ACTIVITY_NAME
-        assert android_load_app.skip_login_screen() == global_contents.FRONT_DOOR_ACTIVITY_NAME
-        assert android_load_app.skip_alert_front_door() == global_contents.FRONT_DOOR_ACTIVITY_NAME
-        assert android_load_app.load_flights_round_trip_tab()
-        assert (global_contents.FRONT_DOOR_ACTIVITY_NAME
-                == android_load_app.flights_select_departure("NYC", "yes"))
-        assert android_load_app.compare_text_departure("NYC")
-        assert (android_load_app.flights_select_destination("LAX")
-                == global_contents.FRONT_DOOR_ACTIVITY_NAME)
-        assert android_load_app.compare_text_destination("LAX")
-        assert (android_load_app.flights_search_button()
-                == global_contents.SEARCH_FLIGHT_RESULT_ACTIVITY)
+        assert android_flights_app.load_flights_tab()
+        assert android_flights_app.load_flights_round_trip_tab()
+
+        assert android_flights_app.load_origin_code(origin_text=origin_code_text, smarty_list=smarty_text_list)
+        assert android_flights_app.compare_text_origin_code(origin_text=origin_code_text)
+        assert android_flights_app.load_destination(destination_text=destination_code_text)
+        assert android_flights_app.compare_text_destination_code(destination_text=destination_code_text)
 
     def test_first_check_text_than_swap(self, set_capabilities, setup_logging):
-
         """
                Go to FFD
                Tap Round-trip tab
@@ -60,33 +55,37 @@ class TestAndroidLoadApp(object):
                    Destination field shows BOS
         """
 
-        global_contents = Globals(setup_logging)
-        android_load_app = AndroidLoadApp(set_capabilities, setup_logging)
-        android_load_app.reset_app()
-        assert android_load_app.on_screen() == global_contents.LAUNCH_ACTIVITY_NAME
-        assert android_load_app.skip_login_screen() == global_contents.FRONT_DOOR_ACTIVITY_NAME
-        assert android_load_app.skip_alert_front_door() == global_contents.FRONT_DOOR_ACTIVITY_NAME
-        assert android_load_app.load_flights_round_trip_tab()
-        assert (android_load_app.flights_select_departure("BOS", "no")
-                == global_contents.FRONT_DOOR_ACTIVITY_NAME)
-        assert android_load_app.compare_text_departure("BOS")
-        assert (android_load_app.flights_select_destination("SFO")
-                == global_contents.FRONT_DOOR_ACTIVITY_NAME)
-        assert android_load_app.compare_text_destination("SFO")
-        assert android_load_app.flights_swap_button()
-        assert android_load_app.compare_text_departure("SFO")
-        assert android_load_app.compare_text_destination("BOS")
+        origin_code_text = 'BOS'
+        destination_code_text = 'SFO'
+        Globals(setup_logging)
+        android_flights_app = AndroidFlights(set_capabilities, setup_logging)
+        assert android_flights_app.flights_launch_app()
 
-    def test_pass_value_of_traveller(self, set_capabilities, setup_logging):
+        assert android_flights_app.load_flights_tab()
+        assert android_flights_app.load_flights_round_trip_tab()
+
+        assert android_flights_app.load_origin_code(origin_text=origin_code_text)
+        assert android_flights_app.compare_text_origin_code(origin_text=origin_code_text)
+        assert android_flights_app.load_destination(destination_text=destination_code_text)
+        assert android_flights_app.compare_text_destination_code(destination_text=destination_code_text)
+
+        assert android_flights_app.load_swap_button()
+        assert android_flights_app.compare_text_origin_code(origin_text=destination_code_text)
+        assert android_flights_app.compare_text_destination_code(destination_text=origin_code_text)
+
+    def test_pass_the_value_of_travellers(self, set_capabilities, setup_logging):
         """
-         set traveler
+        Go to FFD
+        Tap Round-trip tab
+        Set traveler
         """
-        global_contents = Globals(setup_logging)
-        android_load_app = AndroidLoadApp(set_capabilities, setup_logging)
-        android_load_app.reset_app()
-        assert android_load_app.on_screen() == global_contents.LAUNCH_ACTIVITY_NAME
-        assert android_load_app.skip_login_screen() == global_contents.FRONT_DOOR_ACTIVITY_NAME
-        assert android_load_app.skip_alert_front_door() == global_contents.FRONT_DOOR_ACTIVITY_NAME
-        assert android_load_app.load_flights_round_trip_tab()
-        android_load_app.flights_select_traveler()
-        android_load_app.flights_traveler_increment_decrement(adult=3, senior=0, youth=1)
+        Globals(setup_logging)
+        android_flights_app = AndroidFlights(set_capabilities, setup_logging)
+
+        assert android_flights_app.flights_launch_app()
+
+        assert android_flights_app.load_flights_tab()
+        assert android_flights_app.load_flights_round_trip_tab()
+        android_flights_app.load_traveler_button()
+        android_flights_app.flights_traveler_increment_decrement(adult=2, senior=3, youth=3, child=2, infant=2)
+
