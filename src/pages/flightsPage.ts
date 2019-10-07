@@ -7,9 +7,10 @@ import { Tile } from "../elements/tile";
 import { Subscription } from "../elements/subscription";
 import { Page } from "./page";
 import { SearchForm } from "../elements/forms/searchForm";
-import { FlightsSearchDialog } from "../elements/dialogs/flightsSearchDialog";
 import { HotelsSearchDialog } from "../elements/dialogs/hotelsSearchDialog";
 import { DestinationSwitcher } from "../elements/switch/destinationSwitcher";
+import { TilesHotelDialog } from "../elements/dialogs/tilesHotelDialog";
+import { TilesFlightDialog } from "../elements/dialogs/tilesFlightDialog";
 
 export interface FlightsPage extends Page {
   search(): Promise<void>;
@@ -32,11 +33,14 @@ export interface FlightsPage extends Page {
   
   getSubscription(): Subscription;
   
+  getTilesHotelDialog(): TilesHotelDialog;
+  
+  getTilesFlightDialog(): TilesFlightDialog;
+  
   getSearchFormBanners(): ElementArrayFinder;
   
-  getHotelsSearchOverlay(): HotelsSearchDialog;
+  getHotelsSearchDialog(): HotelsSearchDialog;
   
   getDestinationSwitcher(): DestinationSwitcher;
   
-  getFlightsSearchOverlay(): FlightsSearchDialog;
 }
