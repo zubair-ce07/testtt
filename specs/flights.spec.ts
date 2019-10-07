@@ -72,6 +72,8 @@ describe(`${BRAND_NAME} SEM Flights Search`, () => {
   });
   
   it('should set destination until compare to appear', async () => {
+    const location = await findCurrentLocation();
+    await flightsPage.getSearchForm().getDestination().type(location);
     expect(await flightsPage.getSearchForm().getCompareTo().isDisplayed()).is.true;
   });
   
