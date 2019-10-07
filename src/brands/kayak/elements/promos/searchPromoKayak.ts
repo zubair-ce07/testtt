@@ -3,7 +3,7 @@ import { SearchPromo } from "../../../../elements/promos/searchPromo";
 import { click } from "../../../../utils/specs.utils";
 
 export class SearchPromoKayak implements SearchPromo {
-  async isPresent(): Promise<boolean> {
+  async isDisplayed(): Promise<boolean> {
     return $(`.Sem-Common-Landing-SearchPromo`).isPresent();
   }
   

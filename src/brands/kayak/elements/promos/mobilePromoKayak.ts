@@ -1,8 +1,8 @@
 import { $ } from "protractor";
-import { MobilePromo } from "../../../../elements/promos/mobilePromo";
+import { Promo } from "../../../../elements/promos/promo";
 
-export class MobilePromoKayak implements MobilePromo {
-  async isPresent(): Promise<boolean> {
+export class MobilePromoKayak implements Promo {
+  async isDisplayed(): Promise<boolean> {
     return $(`.Sem-Common-Landing-MobileAppPromo`).isPresent();
   }
 }

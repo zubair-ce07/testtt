@@ -1,17 +1,15 @@
 import { expect } from "chai";
 import { browser } from "protractor";
 import { FlightsPage } from "../src/pages/flightsPage";
-import { FlightsPageFactory } from "../src/factory/flightsPageFactory";
 import { diffInDays, findCurrentLocation } from "../src/utils/specs.utils";
 import { FlightsResultsPage } from "../src/pages/flightsResultsPage";
-import { FlightsResultsPageFactory } from "../src/factory/flightsResultsPageFactory";
+import { FlightsPageKayak } from "../src/brands/kayak/page/flightsPageKayak";
+import { FlightsResultsPageKayak } from "../src/brands/kayak/page/flightsResultsPageKayak";
 
-const BRAND_NAME = process.env.BRAND_NAME;
+const flightsPage: FlightsPage = new FlightsPageKayak();
+const flightsResultsPage: FlightsResultsPage = new FlightsResultsPageKayak();
 
-const flightsPage: FlightsPage = FlightsPageFactory.create();
-const flightsResultsPage: FlightsResultsPage = FlightsResultsPageFactory.create();
-
-describe(`${BRAND_NAME} SEM Flights Search`, () => {
+describe(`Kayak SEM Flights Search`, () => {
   beforeAll(async (done) => {
     await flightsPage.visit();
     done();
@@ -48,7 +46,7 @@ describe(`${BRAND_NAME} SEM Flights Search`, () => {
   });
   
   it('should show email subscription field', async () => {
-    expect(await flightsPage.getSubscription().isPresent()).is.true;
+    expect(await flightsPage.getSubscription().isDisplayed()).is.true;
   });
   
   it('should show 3 ad slots', async () => {
@@ -64,11 +62,11 @@ describe(`${BRAND_NAME} SEM Flights Search`, () => {
   });
   
   it('should show Find the perfect hotel section with search button', async () => {
-    expect(await flightsPage.getSearchPromo().isPresent()).is.true;
+    expect(await flightsPage.getSearchPromo().isDisplayed()).is.true;
   });
   
   it('should show mobile app section', async () => {
-    expect(await flightsPage.getMobilePromo().isPresent()).is.true;
+    expect(await flightsPage.getMobilePromo().isDisplayed()).is.true;
   });
   
   it('should set destination until compare to appear', async () => {
@@ -79,14 +77,8 @@ describe(`${BRAND_NAME} SEM Flights Search`, () => {
   
   it('should select at least one compare to option if not selected already', async () => {
     const compareTo = flightsPage.getSearchForm().getCompareTo();
-    let selected = await compareTo.getSelected();
-    
-    if (selected.length === 0) {
-      await compareTo.select(0);
-      selected = await compareTo.getSelected();
-    }
-    
-    expect(selected.length).is.greaterThan(0);
+    await compareTo.selectAtLeast(1);
+    expect(await compareTo.getSelected()).length.is.greaterThan(0);
   });
   
   it('should be able to perform search, and load results page', async () => {
@@ -112,8 +104,8 @@ describe(`${BRAND_NAME} SEM Flights Search`, () => {
   
   it('should select at least one compare to option if not selected already', async () => {
     const compareTo = flightsPage.getSearchForm().getCompareTo();
-    const selected = await compareTo.getSelected();
-    expect(selected.length).is.greaterThan(0);
+    await compareTo.selectAtLeast(1);
+    expect(await compareTo.getSelected()).length.is.greaterThan(0);
   });
   
   it('should be able to perform search, and load results page', async () => {
@@ -139,8 +131,8 @@ describe(`${BRAND_NAME} SEM Flights Search`, () => {
   
   it('should select at least one compare to option if not selected already', async () => {
     const compareTo = flightsPage.getSearchForm().getCompareTo();
-    const selected = await compareTo.getSelected();
-    expect(selected.length).is.greaterThan(0);
+    await compareTo.selectAtLeast(1);
+    expect(await compareTo.getSelected()).length.is.greaterThan(0);
   });
   
   it('should be able to perform search, and load results page', async () => {
@@ -165,8 +157,8 @@ describe(`${BRAND_NAME} SEM Flights Search`, () => {
   
   it('should select at least one compare to option if not selected already', async () => {
     const compareTo = flightsPage.getSearchForm().getCompareTo();
-    const selected = await compareTo.getSelected();
-    expect(selected.length).is.greaterThan(0);
+    await compareTo.selectAtLeast(1);
+    expect(await compareTo.getSelected()).length.is.greaterThan(0);
   });
   
   it('should be able to perform search, and load results page', async () => {

@@ -2,7 +2,6 @@ import { ElementArrayFinder } from "protractor";
 
 import { CompareTo } from "../elements/compareTo";
 import { SearchPromo } from "../elements/promos/searchPromo";
-import { MobilePromo } from "../elements/promos/mobilePromo";
 import { Tile } from "../elements/tile";
 import { Subscription } from "../elements/subscription";
 import { Page } from "./page";
@@ -11,6 +10,7 @@ import { HotelsSearchDialog } from "../elements/dialogs/hotelsSearchDialog";
 import { DestinationSwitcher } from "../elements/switch/destinationSwitcher";
 import { TilesHotelDialog } from "../elements/dialogs/tilesHotelDialog";
 import { TilesFlightDialog } from "../elements/dialogs/tilesFlightDialog";
+import { Promo } from "../elements/promos/promo";
 
 export interface FlightsPage extends Page {
   search(): Promise<void>;
@@ -29,7 +29,7 @@ export interface FlightsPage extends Page {
   
   getSearchPromo(): SearchPromo;
   
-  getMobilePromo(): MobilePromo;
+  getMobilePromo(): Promo;
   
   getSubscription(): Subscription;
   

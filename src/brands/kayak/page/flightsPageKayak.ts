@@ -1,7 +1,6 @@
 import { $, $$, browser, ElementArrayFinder, ElementFinder } from "protractor";
 import { FlightsPage } from "../../../pages/flightsPage";
 import { CompareTo } from "../../../elements/compareTo";
-import { MobilePromo } from "../../../elements/promos/mobilePromo";
 import { SearchPromo } from "../../../elements/promos/searchPromo";
 import { Subscription } from "../../../elements/subscription";
 import { Tile } from "../../../elements/tile";
@@ -22,6 +21,7 @@ import { TilesFlightDialog } from "../../../elements/dialogs/tilesFlightDialog";
 import { TilesHotelDialog } from "../../../elements/dialogs/tilesHotelDialog";
 import { TilesFlightDialogKayak } from "../elements/dialogs/tilesFlightDialogKayak";
 import { TilesHotelDialogKayak } from "../elements/dialogs/tilesHotelDialogKayak";
+import { Promo } from "../../../elements/promos/promo";
 
 export class FlightsPageKayak implements FlightsPage {
   getCompareTo(): CompareTo {
@@ -32,7 +32,7 @@ export class FlightsPageKayak implements FlightsPage {
     return $(`.Common-Frontdoor-PixelCoverPhoto`).$('h1').getText();
   }
   
-  getMobilePromo(): MobilePromo {
+  getMobilePromo(): Promo {
     return new MobilePromoKayak();
   }
   
