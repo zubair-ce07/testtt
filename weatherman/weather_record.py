@@ -9,4 +9,3 @@ class WeatherRecord:
         self.max_humidity = int(weather_record.get('Max Humidity'))
         self.mean_humidity = int(weather_record.get(' Mean Humidity'))
         self.record_date = datetime.strptime(date, '%Y-%m-%d')
-    

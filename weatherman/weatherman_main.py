@@ -6,15 +6,6 @@ from reports_calculator import *
 from reports_generator import *
 
 
-def extract_year_records(weather_records, date):           
-    return [record for record in weather_records if date.year == record.record_date.year]        
-
-
-def extract_month_records(weather_records, date):   
-    return [record for record in weather_records if date.year == record.record_date.year
-            and date.month == record.record_date.month]  
-
-
 def main():
     parser = argparse.ArgumentParser(description='Weatherman app')
     parser.add_argument('path')
@@ -25,20 +16,17 @@ def main():
     
     weather_records = read_weather_files(args.path)
 
-    if args.e:
-        year_records = extract_year_records(weather_records, args.e)                 
-        yearly_report = calculate_yearly_report(year_records)
+    if args.e:                        
+        yearly_report = calculate_yearly_report(weather_records, args.e)
         display_yearly_report(yearly_report)
               
-    if args.a:
-        month_records = extract_month_records(weather_records, args.a)                                                       
-        monthly_report = calculate_monthly_report(month_records)
+    if args.a:                                                               
+        monthly_report = calculate_monthly_report(weather_records, args.a)
         display_monthly_report(monthly_report) 
        
     if args.c:                               
-        month_records = extract_month_records(weather_records, args.a)        
+        month_records = extract_month_records(weather_records, args.c)        
         display_month_bar_chart(month_records)                             
        
 if __name__ == '__main__':
     main()
-    
