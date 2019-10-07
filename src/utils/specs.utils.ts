@@ -1,11 +1,8 @@
 import axios from 'axios';
 
-export async function getCurrentIPLocation(): Promise<any> {
-  return axios.get('http://ip-api.com/json').then(response => response.data);
-}
-
 export async function findCurrentLocation(): Promise<string> {
-  const { city, country } = await getCurrentIPLocation();
+  const response = await axios.get('http://ip-api.com/json');
+  const { city, country } = response.data;
   return [city, country].join(', ');
 }
 
