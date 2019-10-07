@@ -14,23 +14,23 @@ class ApcSpider(Spider):
 
     def parse(self, response):
         meta = {'dont_merge_cookies': True}
-        for navigation_link in response.css('.nav-primary-item a'):
-            yield response.follow(navigation_link,
-                                  callback=self.parse_product_page_links,
+        for product_listing in response.css('.nav-primary-item a'):
+            yield response.follow(product_listing,
+                                  callback=self.parse_products_link,
                                   meta=meta)
 
-    def parse_product_page_links(self, response):
+    def parse_products_link(self, response):
         for product_link in response.css('.colorama-product-link-wrapper, \
                                          a.item'):
             yield response.follow(product_link,
-                                  callback=self.parse_detail_page_info,
+                                  callback=self.parse_product_details,
                                   meta=response.meta)
 
-    def get_category(self, response, raw_product):
+    def get_categories(self, response, raw_product):
         return [response.meta['required_details']['gender'],
                 raw_product['type']]
 
-    def get_all_skus(self, raw_product, price, currency):
+    def get_skus(self, raw_product, price, currency):
         skus = []
         for variant in raw_product['variants']:
             skus.append(
@@ -44,7 +44,7 @@ class ApcSpider(Spider):
             )
         return skus
 
-    def parse_detail_page_info(self, response):
+    def parse_product_details(self, response):
         url = '{}.js'.format(urlparse(response.url).path)
         currency = response.css('meta#in-context-paypal-'
                                 'metadata::attr(data-currency)').get()
@@ -57,15 +57,15 @@ class ApcSpider(Spider):
             'url': response.url,
             'gender': gender
         }
-        yield response.follow(url, callback=self.parse_product_response,
+        yield response.follow(url, callback=self.parse_product_api,
                               meta=response.meta)
 
-    def parse_product_response(self, response):
+    def parse_product_api(self, response):
         raw_product = json.loads(response.text)
         price = response.meta['required_details']['price']
         currency = response.meta['required_details']['currency']
-        skus = self.get_all_skus(raw_product, price, currency)
-        category = self.get_category(response, raw_product)
+        skus = self.get_skus(raw_product, price, currency)
+        category = self.get_categories(response, raw_product)
         desc_from_response = raw_product['description']
         description_selector = Selector(text=desc_from_response)
         description = description_selector.css('p::text').get()
