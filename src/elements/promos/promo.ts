@@ -1,3 +1,3 @@
 export interface Promo {
-  isDisplayed(): Promise<boolean>
+  isPresent(): Promise<boolean>
 }

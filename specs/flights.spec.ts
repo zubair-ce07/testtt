@@ -64,11 +64,11 @@ describe(`${BRAND_NAME} SEM Flights Search`, () => {
   });
   
   it('should show Find the perfect hotel section with search button', async () => {
-    expect(await flightsPage.getSearchPromo().isDisplayed()).is.true;
+    expect(await flightsPage.getSearchPromo().isPresent()).is.true;
   });
   
   it('should show mobile app section', async () => {
-    expect(await flightsPage.getMobilePromo().isDisplayed()).is.true;
+    expect(await flightsPage.getMobilePromo().isPresent()).is.true;
   });
   
   it('should set destination until compare to appear', async () => {
