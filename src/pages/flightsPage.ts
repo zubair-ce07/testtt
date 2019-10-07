@@ -7,8 +7,8 @@ import { Tile } from "../elements/tile";
 import { Subscription } from "../elements/subscription";
 import { Page } from "./page";
 import { SearchForm } from "../elements/forms/searchForm";
-import { FlightsSearchOverlay } from "../elements/overlays/flightsSearchOverlay";
-import { HotelsSearchOverlay } from "../elements/overlays/hotelsSearchOverlay";
+import { FlightsSearchDialog } from "../elements/dialogs/flightsSearchDialog";
+import { HotelsSearchDialog } from "../elements/dialogs/hotelsSearchDialog";
 import { DestinationSwitcher } from "../elements/switch/destinationSwitcher";
 
 export interface FlightsPage extends Page {
@@ -34,9 +34,9 @@ export interface FlightsPage extends Page {
   
   getSearchFormBanners(): ElementArrayFinder;
   
-  getHotelsSearchOverlay(): HotelsSearchOverlay;
+  getHotelsSearchOverlay(): HotelsSearchDialog;
   
   getDestinationSwitcher(): DestinationSwitcher;
   
-  getFlightsSearchOverlay(): FlightsSearchOverlay;
+  getFlightsSearchOverlay(): FlightsSearchDialog;
 }
