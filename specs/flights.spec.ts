@@ -104,8 +104,9 @@ describe(`${BRAND_NAME} SEM Flights Search`, () => {
   });
   
   it('should open hotels search overlay after clicking on hotels link in a tile', async () => {
-    await flightsPage.getSearchPromo().searchNow();
-    expect(await flightsPage.getHotelsSearchDialog().isDisplayed()).is.true;
+    await flightsPage.getTile(0).triggerHotels();
+    const dialog = flightsPage.getTilesHotelDialog();
+    expect(await dialog.isDisplayed()).is.true;
     await flightsPage.getHotelsSearchDialog().close();
   });
   
@@ -131,9 +132,9 @@ describe(`${BRAND_NAME} SEM Flights Search`, () => {
   
   it('should open flights search overlay after clicking on flights link in a tile', async () => {
     await flightsPage.getTile(0).triggerFlights();
-    const tilesFlightDialog = flightsPage.getTilesFlightDialog();
-    expect(await tilesFlightDialog.isDisplayed()).is.true;
-    await tilesFlightDialog.close();
+    const dialog = flightsPage.getTilesFlightDialog();
+    expect(await dialog.isDisplayed()).is.true;
+    await dialog.close();
   });
   
   it('should select at least one compare to option if not selected already', async () => {
