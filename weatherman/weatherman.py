@@ -7,19 +7,23 @@ from Reports import WeatherReportGenerator
 from WeatherFilesParser import WeatherFilesParser
 
 
+def validate_input_month(input_month):
+    try:
+        month = datetime.strptime(input_month, '%Y/%m')
+        return f"{month.year}_{calendar.month_abbr[month.month]}"
+    except:
+        raise argparse.ArgumentTypeError
+
 def arg_parser():
     arguments = argparse.ArgumentParser(description='Arguments for weatherman.py')
     arguments.add_argument('Path', metavar='path', type=str, help='the path to the files')
     arguments.add_argument('-e', type=lambda year: datetime.strptime(year, '%Y').year,
                            help='Display Highest, Lowest temperatures and most humid day of given year')
-    arguments.add_argument('-a', type=lambda m: f"{datetime.strptime(m,'%Y/%m').year}_"
-                                                f"{calendar.month_abbr[datetime.strptime(m,'%Y/%m').month]}",
+    arguments.add_argument('-a', type=validate_input_month,
                            help='Average highest and lowest temps for given month')
-    arguments.add_argument('-c', type=lambda m: f"{datetime.strptime(m,'%Y/%m').year}_"
-                                                f"{calendar.month_abbr[datetime.strptime(m,'%Y/%m').month]}",
+    arguments.add_argument('-c', type=validate_input_month,
                            help='Display bars of temps of warmest and coldest days of given month')
-    arguments.add_argument('-d', type=lambda m: f"{datetime.strptime(m,'%Y/%m').year}_"
-                                                f"{calendar.month_abbr[datetime.strptime(m,'%Y/%m').month]}",
+    arguments.add_argument('-d', type=validate_input_month,
                            help='[BONUS] Display bars of temps of warmest and coldest days of given month')
     return arguments.parse_args()
 
