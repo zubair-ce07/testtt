@@ -14,9 +14,6 @@ exports.config = {
   multiCapabilities: [
     {
       browserName: 'chrome',
-      chromeOptions: {
-        args: ["--blink-settings=imagesEnabled=false"],
-      }
     }
   ],
   onPrepare: function () {
