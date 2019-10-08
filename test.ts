@@ -2,7 +2,6 @@ import { browser, element, by, promise} from 'protractor';
 import { HomePageObject } from './homePageObject';
 import { FlightsPageObject } from './flightsPageObject';
 import { SearchFormObject } from './searchFormObject';
-import { async } from 'q';
 
 var chai = require('chai');
 var chaiAsPromised = require('chai-as-promised');
@@ -25,116 +24,98 @@ describe("kayak Automation", async function() {
     url.includes('flights');
   });
 
-  it("Should display the origin field", async function() {
-    const departureDisplay = await searchFormObject.getDepartureDisplay();
-    departureDisplay.should.equal(true);
-  });
+  // it("Should display the origin field", async function() {
+  //   searchFormObject.getDepartureDisplay().should.eventually.be.equal(true);
+  // });
 
-  it("Should display the destination field", async function() {
-    const destinationDisplay = await  searchFormObject.getDestinationDisplay();
-    destinationDisplay.should.equal(true);
-  });
+  // it("Should display the destination field", async function() {
+  //   await searchFormObject.getDestinationDisplay().should.eventually.be.equal(true);
+  // });
 
-  it("Should display the departure date field", async function() {
-    const departureDateDispalay = await searchFormObject.departureDateFieldDisplay();
-    departureDateDispalay.should.equal(true);
-  });
+  // it("Should display the departure date field", async function() {
+  //   await searchFormObject.departureDateFieldDisplay().should.eventually.be.equal(true);
+  // });
 
-  it("Should display the return date field", async function() {
-    const returnDateDisplay = await searchFormObject.returnDateFieldDisplay();
-    returnDateDisplay.should.equal(true); 
-  });
+  // it("Should display the return date field", async function() {
+  //   await searchFormObject.returnDateFieldDisplay().should.eventually.be.equal(true);
+  // });
 
-  it("Should display ‘Round-trip’ in trip type field", async function() {
-    const roundTripType = await homePageObject.roundTripTypeField();
-    roundTripType.should.equal(true); 
-  });
+  // it("Should display ‘Round-trip’ in trip type field", async function() {
+  //   await homePageObject.roundTripTypeField().should.eventually.be.equal(true);
+  // });
 
-  it("Switch to ‘One-way’ trip type mode", async function() {
-    homePageObject.changeToOneWayTrip();
-    const departureDateDispalay = await searchFormObject.departureDateFieldDisplay();
-    departureDateDispalay.should.equal(true); 
-  });
+  // it("Switch to ‘One-way’ trip type mode", async function() {
+  //   homePageObject.changeToOneWayTrip();
+  //   await searchFormObject.departureDateFieldDisplay().should.eventually.be.equal(true);
+  // });
   
-  it("Switch to ‘Multi-city’ trip type mode", async function() {
-    homePageObject.changeToMulticityTrip();
-    const multicityTripType = await homePageObject.multiCities();
-    multicityTripType.should.equal(true);
-  });
+  // it("Switch to ‘Multi-city’ trip type mode", async function() {
+  //   homePageObject.changeToMulticityTrip();
+  //   await homePageObject.multiCities().should.eventually.be.equal(true);
+  // });
 
-  it("Switch to ‘Round-trip’ trip type mode", async function() {
-    await homePageObject.changeToRoundTrip();
-    const roundTripType = await searchFormObject.returnDateFieldDisplay();
-    roundTripType.should.equal(true);
-  });
+  // it("Switch to ‘Round-trip’ trip type mode", async function() {
+  //   homePageObject.changeToRoundTrip();
+  //   await searchFormObject.returnDateFieldDisplay().should.eventually.be.equal(true);
+  // });
 
-  it("Change number of ‘adults’ from travelers field to 9", async function() {
-    await homePageObject.addAdultPassengers(10);
-    const adultLimitMessage = await homePageObject.getAdultsLimitMessage();
-    adultLimitMessage.should.equal("Searches cannot have more than 9 adults");
-  });
+  // it("Change number of ‘adults’ from travelers field to 9", async function() {
+  //   await homePageObject.addAdultPassengers(10);
+  //   await homePageObject.getAdultsLimitMessage().should.eventually.be.equal("Searches cannot have more than 9 adults");
+  // });
 
   it("Should display ‘Paris (PAR)’ in origin field", async function() {
     await homePageObject.setDeparture("PAR");
-    const departure = await homePageObject.getDepartureValue();
-    departure.should.equal("Paris (PAR)");
+    await homePageObject.getDepartureValue().should.eventually.be.equal("Paris (PAR)");
   });
 
   it("Should display ‘New York (NYC)’ in the destination field", async function() {
     await homePageObject.setDestination("NYC");
-    const destination = await homePageObject.getDestinationValue();
-    destination.should.equal("New York (NYC)");
+    await homePageObject.getDestinationValue().should.eventually.be.equal("New York (NYC)");
   });
 
   it("Should display accurate date in departure field", async function() {
     await homePageObject.fillDatesDeparture();
-    expect(homePageObject.getDepartureDate()).to.eventually.equal(homePageObject.getTripDates(3));
+    homePageObject.getDepartureDate().should.eventually.be.equal(homePageObject.getTripDates(3));
   });
 
   it("Should display accurate date in return date field", async function() {
     await homePageObject.fillDatesReturn();
-    expect(homePageObject.getReturnDate()).to.eventually.equal(homePageObject.getTripDates(6));
+    homePageObject.getReturnDate().should.eventually.be.equal(homePageObject.getTripDates(6));
   });
 
   it("Should display all unchecked checkboxes in compare-to block", function() {
     homePageObject.uncheckAllCheckBox();
   });
 
-  it("Should display ‘4 Travelers’ in the travelers field", async function() {
-    homePageObject.decreaseAdultPassengers(6);
-    const adultPassengers = await homePageObject.getAdultPassenger();
-    adultPassengers.should.equal(4);
-  });
+  // it("Should display ‘4 Travelers’ in the travelers field", async function() {
+  //   homePageObject.decreaseAdultPassengers(6);
+  //   await homePageObject.getAdultPassenger().should.eventually.be.equal(4);
+  // });
 
-  it("Should display ‘6 Travelers’ in the travelers field", function() {
-    homePageObject.addChildPassengers(2);
-    const childPassengers = homePageObject.getChildPassenger();
-    childPassengers.should.equal(2);
-  });
+  // it("Should display ‘6 Travelers’ in the travelers field", async function() {
+  //   homePageObject.addChildPassengers(2);
+  //   await homePageObject.getChildPassenger().should.eventually.be.equal(2);
+  // });
 
   it("Should display correct filled-in search form on results page", async function() {
-    let searchUrl = await homePageObject.clickSearch();
-    searchUrl.includes('sort=bestflight_a');
-    });
+    await homePageObject.clickSearch().should.eventually.be.includes('sort=bestflight_a');
+  });
 
   it("Should display the origin field", async function() {
-    const departureDisplay = await searchFormObject.getDepartureDisplay();
-    departureDisplay.should.equal(true);
+    searchFormObject.getDepartureDisplay().should.eventually.be.equal(true);
   });
 
   it("Should display the destination field", async function() {
-    const destinationDisplay = await  searchFormObject.getDestinationDisplay();
-    destinationDisplay.should.equal(true);
+    await searchFormObject.getDestinationDisplay().should.eventually.be.equal(true);
   });
 
   it("Should display the departure date field", async function() {
-    const departureDateDispalay = await searchFormObject.departureDateFieldDisplay();
-    departureDateDispalay.should.equal(true); 
+    await searchFormObject.departureDateFieldDisplay().should.eventually.equal(true);
   });
 
   it("Should display the return date field", async function() {
-    const returnDateDisplay = await searchFormObject.returnDateFieldDisplay();
-    returnDateDisplay.should.equal(true);
+    await searchFormObject.returnDateFieldDisplay().should.eventually.be.equal(true);
   });
 
   it("Should display least price in ‘Cheapest’ sort option compared to ‘Best’ and ‘Quickest’ sort options", async function() {
