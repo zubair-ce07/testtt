@@ -4,13 +4,12 @@ import calendar
 class WeatherReportGenerator:
     def generate_yearly_report(self, yearly_result):
         highest_temperature, lowest_temperature, highest_humidity = yearly_result
-        print(
-            f"Highest: {highest_temperature.high_temperature}C on {calendar.month_name[highest_temperature.date.month]}"
-            f" {highest_temperature.date.day}")
-        print(f"Lowest: {lowest_temperature.low_temperature}C on {calendar.month_name[lowest_temperature.date.month]} "
-              f"{lowest_temperature.date.day}")
-        print(f"Humidity: {highest_humidity.humidity}% on {calendar.month_name[highest_humidity.date.month]} "
-              f"{highest_humidity.date.day}")
+        print( f"Highest: {highest_temperature.high_temperature}C on "
+               f"{calendar.month_name[highest_temperature.date.month]} {highest_temperature.date.day}")
+        print(f"Lowest: {lowest_temperature.low_temperature}C on "
+              f"{calendar.month_name[lowest_temperature.date.month]} {lowest_temperature.date.day}")
+        print(f"Humidity: {highest_humidity.humidity}% on "
+              f"{calendar.month_name[highest_humidity.date.month]} {highest_humidity.date.day}")
 
     def generate_monthly_avg_report(self, result_avgs):
         high_avg_temperature, low_avg_temperature, avg_mean_humidity = result_avgs
