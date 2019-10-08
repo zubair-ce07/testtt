@@ -62,7 +62,9 @@ describe(`Kayak SEM Flights Search`, () => {
   });
   
   it('should show Find the perfect hotel section with search button', async () => {
-    expect(await flightsPage.getSearchPromo().isDisplayed()).is.true;
+    const promo = flightsPage.getSearchPromo();
+    await promo.focus();
+    expect(await promo.isDisplayed()).is.true;
   });
   
   it('should show mobile app section', async () => {

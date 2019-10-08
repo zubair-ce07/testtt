@@ -1,3 +1,5 @@
 export interface Promo {
-  isDisplayed(): Promise<boolean>
+  isDisplayed(): Promise<boolean>;
+  
+  focus(): Promise<void>;
 }

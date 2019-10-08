@@ -9,7 +9,7 @@ export class TilesFlightDialogKayak implements TilesFlightDialog {
   }
   
   async isDisplayed(): Promise<boolean> {
-    return this.getDialogContainer().isPresent();
+    return this.getDialogContainer().isDisplayed();
   }
   
   private getDialogContainer(): ElementFinder {

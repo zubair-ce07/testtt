@@ -4,9 +4,9 @@ import { CompareTo } from "../../../elements/compareTo";
 export class CompareToKayak implements CompareTo {
   async selectAtLeast(count: number): Promise<void> {
     const selected = await this.getSelected();
-    
-    if (selected.length === 0) {
-      for (let index = 0; index < count; index++) {
+  
+    if (selected.length < count) {
+      for (let index = selected.length; index < count; index++) {
         await this.select(index);
       }
     }

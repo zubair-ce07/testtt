@@ -9,7 +9,7 @@ export class TilesHotelDialogKayak implements TilesHotelDialog {
   }
   
   async isDisplayed(): Promise<boolean> {
-    return this.getDialogContainer().isPresent();
+    return this.getDialogContainer().isDisplayed();
   }
   
   private getDialogContainer(): ElementFinder {
