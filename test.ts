@@ -24,45 +24,45 @@ describe("kayak Automation", async function() {
     url.includes('flights');
   });
 
-  // it("Should display the origin field", async function() {
-  //   searchFormObject.getDepartureDisplay().should.eventually.be.equal(true);
-  // });
+  it("Should display the origin field", async function() {
+    searchFormObject.getDepartureDisplay().should.eventually.be.equal(true);
+  });
 
-  // it("Should display the destination field", async function() {
-  //   await searchFormObject.getDestinationDisplay().should.eventually.be.equal(true);
-  // });
+  it("Should display the destination field", async function() {
+    await searchFormObject.getDestinationDisplay().should.eventually.be.equal(true);
+  });
 
-  // it("Should display the departure date field", async function() {
-  //   await searchFormObject.departureDateFieldDisplay().should.eventually.be.equal(true);
-  // });
+  it("Should display the departure date field", async function() {
+    await searchFormObject.departureDateFieldDisplay().should.eventually.be.equal(true);
+  });
 
-  // it("Should display the return date field", async function() {
-  //   await searchFormObject.returnDateFieldDisplay().should.eventually.be.equal(true);
-  // });
+  it("Should display the return date field", async function() {
+    await searchFormObject.returnDateFieldDisplay().should.eventually.be.equal(true);
+  });
 
-  // it("Should display ‘Round-trip’ in trip type field", async function() {
-  //   await homePageObject.roundTripTypeField().should.eventually.be.equal(true);
-  // });
+  it("Should display ‘Round-trip’ in trip type field", async function() {
+    await homePageObject.roundTripTypeField().should.eventually.be.equal(true);
+  });
 
-  // it("Switch to ‘One-way’ trip type mode", async function() {
-  //   homePageObject.changeToOneWayTrip();
-  //   await searchFormObject.departureDateFieldDisplay().should.eventually.be.equal(true);
-  // });
+  it("Switch to ‘One-way’ trip type mode", async function() {
+    homePageObject.changeToOneWayTrip();
+    await searchFormObject.departureDateFieldDisplay().should.eventually.be.equal(true);
+  });
   
-  // it("Switch to ‘Multi-city’ trip type mode", async function() {
-  //   homePageObject.changeToMulticityTrip();
-  //   await homePageObject.multiCities().should.eventually.be.equal(true);
-  // });
+  it("Switch to ‘Multi-city’ trip type mode", async function() {
+    homePageObject.changeToMulticityTrip();
+    await homePageObject.multiCities().should.eventually.be.equal(true);
+  });
 
-  // it("Switch to ‘Round-trip’ trip type mode", async function() {
-  //   homePageObject.changeToRoundTrip();
-  //   await searchFormObject.returnDateFieldDisplay().should.eventually.be.equal(true);
-  // });
+  it("Switch to ‘Round-trip’ trip type mode", async function() {
+    homePageObject.changeToRoundTrip();
+    await searchFormObject.returnDateFieldDisplay().should.eventually.be.equal(true);
+  });
 
-  // it("Change number of ‘adults’ from travelers field to 9", async function() {
-  //   await homePageObject.addAdultPassengers(10);
-  //   await homePageObject.getAdultsLimitMessage().should.eventually.be.equal("Searches cannot have more than 9 adults");
-  // });
+  it("Change number of ‘adults’ from travelers field to 9", async function() {
+    await homePageObject.addAdultPassengers(10);
+    await homePageObject.getAdultsLimitMessage().should.eventually.be.equal("Searches cannot have more than 9 adults");
+  });
 
   it("Should display ‘Paris (PAR)’ in origin field", async function() {
     await homePageObject.setDeparture("PAR");
@@ -88,15 +88,15 @@ describe("kayak Automation", async function() {
     homePageObject.uncheckAllCheckBox();
   });
 
-  // it("Should display ‘4 Travelers’ in the travelers field", async function() {
-  //   homePageObject.decreaseAdultPassengers(6);
-  //   await homePageObject.getAdultPassenger().should.eventually.be.equal(4);
-  // });
+  it("Should display ‘4 Travelers’ in the travelers field", async function() {
+    homePageObject.decreaseAdultPassengers(6);
+    await homePageObject.getAdultPassenger().should.eventually.be.equal(4);
+  });
 
-  // it("Should display ‘6 Travelers’ in the travelers field", async function() {
-  //   homePageObject.addChildPassengers(2);
-  //   await homePageObject.getChildPassenger().should.eventually.be.equal(2);
-  // });
+  it("Should display ‘6 Travelers’ in the travelers field", async function() {
+    homePageObject.addChildPassengers(2);
+    await homePageObject.getChildPassenger().should.eventually.be.equal(2);
+  });
 
   it("Should display correct filled-in search form on results page", async function() {
     await homePageObject.clickSearch().should.eventually.be.includes('sort=bestflight_a');
