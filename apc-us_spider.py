@@ -45,10 +45,8 @@ class ApcSpider(Spider):
         return skus
 
     def get_image_urls(self, raw_product):
-        image_urls = []
-        [image_urls.append('https:{}'.format(image_url))
-         for image_url in raw_product['images']]
-        return image_urls
+        return ['https:{}'.format(image_url)
+                for image_url in raw_product['images']]
 
     def get_description(self, raw_product):
         raw_description = raw_product['description']
