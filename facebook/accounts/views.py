@@ -1,25 +1,32 @@
-from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
+from django.views import View
 from .forms import FBUserCreationForm, FBUserChangeForm
 
 
-def signup(request):
-    if request.method == 'POST':
+class SignupView(View):
+    @staticmethod
+    def get(request):
+        form = FBUserCreationForm()
+        return render(request, 'registration/signup.html', {'form': form})
+
+    @staticmethod
+    def post(request):
         form = FBUserCreationForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
             return redirect('login')
-    else:
-        form = FBUserCreationForm()
-    return render(request, 'registration/signup.html', {'form': form})
+        return render(request, 'registration/signup.html', {'form': form})
 
 
-@login_required
-def profile(request):
-    if request.method == 'POST':
+class ProfileView(View):
+    @staticmethod
+    def get(request):
+        form = FBUserChangeForm(instance=request.user)
+        return render(request, 'profile/info.html', {'form': form})
+
+    @staticmethod
+    def post(request):
         form = FBUserChangeForm(request.POST, request.FILES, instance=request.user)
         if form.is_valid():
             form.save()
-    else:
-        form = FBUserChangeForm(instance=request.user)
-    return render(request, 'profile/info.html', {'form': form})
+        return render(request, 'profile/info.html', {'form': form})
