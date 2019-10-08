@@ -34,22 +34,33 @@ class ApcSpider(Spider):
         skus = []
         for variant in raw_product['variants']:
             skus.append(
-                        {'sku_id': variant['sku'],
+                        {'sku_id': variant['id'],
                          'color': variant['option1'],
                          'currency': currency,
                          'size': variant['option2'],
                          'out_of_stock': not variant['available'],
                          'price': price,
-                         'previous_price': price}
+                         'previous_price': [price]}
             )
         return skus
+
+    def get_image_urls(self, raw_product):
+        image_urls = []
+        for image_url in raw_product['images']:
+            image_urls.append('https:{}'.format(image_url))
+        return image_urls
+
+    def get_description(self, raw_product):
+        raw_description = raw_product['description']
+        description_selector = Selector(text=raw_description)
+        return description_selector.css('p::text').get().split('. ')
 
     def parse_product_details(self, response):
         url = '{}.js'.format(urlparse(response.url).path)
         currency = response.css('meta#in-context-paypal-'
                                 'metadata::attr(data-currency)').get()
-        price = response.css('span#variantPrice::text') \
-            .get().strip('$')
+        price = int(response.css('span#variantPrice::text')
+                    .get().strip('$'))
         gender = response.css('nav span.has-separator a::text').get()
         response.meta['required_details'] = {
             'price': price,
@@ -65,15 +76,15 @@ class ApcSpider(Spider):
         price = response.meta['required_details']['price']
         currency = response.meta['required_details']['currency']
         skus = self.get_skus(raw_product, price, currency)
+        image_urls = self.get_image_urls(raw_product)
         category = self.get_categories(response, raw_product)
-        raw_description = raw_product['description']
-        description_selector = Selector(text=raw_description)
-        description = description_selector.css('p::text').get()
+        description = self.get_description(raw_product)
+
         return {
-                'product_name': raw_product['title'],
+                'name': raw_product['title'],
                 'category': category,
                 'description': description,
-                'image_urls': raw_product['images'],
+                'image_urls': image_urls,
                 'brand': 'A.P.C',
                 'retailer_sku': raw_product['id'],
                 'url': response.meta['required_details']['url'],
