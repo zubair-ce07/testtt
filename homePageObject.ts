@@ -1,12 +1,12 @@
 import {browser, element, by, protractor, promise, ElementFinder, ProtractorExpectedConditions, Key} from 'protractor';
-import { CommonPageObject } from './commonPageObject';
+import { SearchFormObject } from './searchFormObject';
 import { escape } from 'querystring';
 
 export class HomePageObject {
-	commonPageObject: CommonPageObject = new CommonPageObject();
+	searchFormObject : SearchFormObject = new SearchFormObject();
 	flights: ElementFinder = element(by.className("js-vertical-flights"));
 	roundTripField: ElementFinder = element(by.css('div[id$="switch-option-1"]'));
-	switchOptions: ElementFinder = element(by.css("div[id$=switch-display]"));
+	switchOptions: ElementFinder = element.all(by.css("div[id$=switch-display]")).first();
 	switchOneWayOption: ElementFinder = element.all(by.css("li[id$=switch-option-2]")).first();
 	switchMultiCityOption: ElementFinder = element.all(by.css("li[id$=switch-option-3]")).first();
 	multiCitiesGrid: ElementFinder = element(by.css("div[id$=mf8B-cabin_type0-display-status]"));
@@ -17,9 +17,9 @@ export class HomePageObject {
 	passengerErrorText: ElementFinder = element(by.css("div[id$=travelersAboveForm-errorMessage]"));
 	originInput: ElementFinder = element.all(by.name('origin')).first();
 	originSelect: ElementFinder = element(by.css("ul[class='flight-smarty'] li"));
-	originText: ElementFinder = element(by.css('div[id$="origin-airport-display-inner"]'));
+	departureText: ElementFinder = element(by.css('div[id$="origin-airport-display-inner"]'));
 	destinationInput: ElementFinder = element.all(by.name('destination')).first();
-	destinationSelect: ElementFinder = element(by.css("div[id$='destination-airport-smartbox-dropdown'] li"));
+	destinationSelect: ElementFinder = element.all(by.css("div[id$='destination-airport-smartbox-dropdown'] li")).first();
 	destinationText: ElementFinder = element(by.css('div[id$="destination-airport-display-inner"]'));
 	passengersDropdown: ElementFinder = element(by.className("Flights-Search-StyleJamFlightTravelerDropdown"));
 	passengerAdultDecrement: ElementFinder =  element(by.css("div[id$='travelersAboveForm-adults'] .decrementor-js"));
@@ -31,12 +31,8 @@ export class HomePageObject {
 	searchButton: ElementFinder = element(by.css("button[aria-label='Search flights']"));
 	checkbox: ElementFinder = element(by.css("button[aria-label='Disable results comparison for this search']"));
 
-	destinationList: ElementFinder = element.all(by.className('item-info')).first();
-	EC = protractor.ExpectedConditions;
-
 	async clickFlights(): Promise<string> {
 		this.flights.click();
-		var url = await browser.getCurrentUrl();
 		return await browser.getCurrentUrl();
 	}
 
@@ -45,23 +41,23 @@ export class HomePageObject {
 	}
 	
 	changeToOneWayTrip() {
-		this.commonPageObject.waitUntillElementAppears(this.switchOptions);
+		this.searchFormObject.waitUntillElementAppears(this.switchOptions);
 		this.switchOptions.click();
-		this.commonPageObject.waitUntillElementAppears(this.switchOneWayOption);
+		this.searchFormObject.waitUntillElementAppears(this.switchOneWayOption);
 		this.switchOneWayOption.click();
 	}
 
 	changeToMulticityTrip() {
-		this.commonPageObject.waitUntillElementAppears(this.switchOptions);
+		this.searchFormObject.waitUntillElementAppears(this.switchOptions);
 		this.switchOptions.click();
-		this.commonPageObject.waitUntillElementAppears(this.switchMultiCityOption);
+		this.searchFormObject.waitUntillElementAppears(this.switchMultiCityOption);
 		this.switchMultiCityOption.click();
 	}
 
 	changeToRoundTrip() {
-		this.commonPageObject.waitUntillElementAppears(this.switchOptions);
+		this.searchFormObject.waitUntillElementAppears(this.switchOptions);
 		this.switchOptions.click();
-		this.commonPageObject.waitUntillElementAppears(this.switchRoundTripOption);
+		this.searchFormObject.waitUntillElementAppears(this.switchRoundTripOption);
 		this.switchRoundTripOption.click();
 	}
 
@@ -78,44 +74,44 @@ export class HomePageObject {
 	}
 
 	async addAdultPassengers(adult: number): Promise<void> {
-		await this.commonPageObject.waitUntillElementAppears(this.travelersGrid);
+		await this.searchFormObject.waitUntillElementAppears(this.travelersGrid);
 		await this.travelersGrid.click();
-		await this.commonPageObject.waitUntillElementAppears(this.addAdultButton);
+		await this.searchFormObject.waitUntillElementAppears(this.addAdultButton);
 		for(let i: number = 0; i < adult - 1; i++) {
 			await this.addAdultButton.click();
 		}
 	}
 
 	async getAdultsLimitMessage(): Promise<string> {
-		this.commonPageObject.waitUntillElementAppears(this.passengerErrorText);
+		await this.searchFormObject.waitUntillElementAppears(this.passengerErrorText);
 		const errorMsg =  this.passengerErrorText.getText();
-		await this.travelersGrid.sendKeys(Key.ESCAPE);
-		return errorMsg;
+		this.passengerErrorText.sendKeys(Key.ESCAPE);
+		return await errorMsg;
 	}
 
-	async setDeparture() {
-		await this.commonPageObject.waitUntillElementAppears(this.commonPageObject.departureField);
-		await this.commonPageObject.departureField.click();
-		await this.commonPageObject.waitUntillElementAppears(this.originInput);
+	async setDeparture(departure: string) {
+		await this.searchFormObject.waitUntillElementAppears(this.searchFormObject.departureField);
+		await this.searchFormObject.departureField.click();
+		await this.searchFormObject.waitUntillElementAppears(this.originInput);
 		await this.originInput.clear();
-		await this.originInput.sendKeys("PAR");
-		await this.commonPageObject.waitUntillElementAppears(this.originSelect);
+		await this.originInput.sendKeys(departure);
+		await this.searchFormObject.waitUntillElementAppears(this.originSelect);
 		await this.originSelect.click();
 	}
 
-	async setDestination() {
-		await this.commonPageObject.waitUntillElementAppears(this.commonPageObject.destinationField);
-		await this.commonPageObject.destinationField.click();
-		await this.commonPageObject.waitUntillElementAppears(this.destinationInput);
+	async setDestination(destination: string) {
+		await this.searchFormObject.waitUntillElementAppears(this.searchFormObject.destinationField);
+		await this.searchFormObject.destinationField.click();
+		await this.searchFormObject.waitUntillElementAppears(this.destinationInput);
 		await this.destinationInput.clear();
-		await this.destinationInput.sendKeys("NYC");
-		await this.commonPageObject.waitUntillElementAppears(this.destinationSelect);
+		await this.destinationInput.sendKeys(destination);
+		await this.searchFormObject.waitUntillElementAppears(this.destinationSelect);
 		await this.destinationSelect.click();
 	}
 
-	async getOriginValue(): Promise<string> {
-		this.commonPageObject.waitUntillElementAppears(this.originText);
-		return await this.originText.getText();
+	async getDepartureValue(): Promise<string> {
+		await this.searchFormObject.waitUntillElementAppears(this.departureText);
+		return await this.departureText.getText();
 	}
 
 	fillDestination(destination: string): void {
@@ -129,7 +125,7 @@ export class HomePageObject {
 	}
 
 	 async getDestinationValue(): Promise<string> {
-		this.commonPageObject.waitUntillElementAppears(this.destinationText);
+		await this.searchFormObject.waitUntillElementAppears(this.destinationText);
 		return await this.destinationText.getText();
 	}
 
@@ -138,21 +134,21 @@ export class HomePageObject {
 	}
 
 	decreaseAdultPassengers(adult: number): void {
-		this.commonPageObject.waitUntillElementAppears(this.passengersDropdown);
+		this.searchFormObject.waitUntillElementAppears(this.passengersDropdown);
 		this.passengersDropdown.click();
-		this.commonPageObject.waitUntillElementAppears(this.passengerAdultDecrement);
+		this.searchFormObject.waitUntillElementAppears(this.passengerAdultDecrement);
 		for(let i: number = 0; i < adult - 1; i++) {
 			this.passengerAdultDecrement.click();
 		}
 	}
 
 	async getAdultPassenger(): Promise<string> {
-		this.commonPageObject.waitUntillElementAppears(this.passengerAdultText);
+		this.searchFormObject.waitUntillElementAppears(this.passengerAdultText);
 		return this.passengerAdultText.getAttribute("aria-valuenow");
 	}
 
 	addChildPassengers(child: number): void {
-		this.commonPageObject.waitUntillElementAppears(this.passengerChildInput);
+		this.searchFormObject.waitUntillElementAppears(this.passengerChildInput);
 		for(let i: number = 0; i < child; i++) {
 			this.passengerChildInput.click();
 		}
@@ -163,19 +159,19 @@ export class HomePageObject {
 	}
 
 	clickDepartureField(): void {
-		this.commonPageObject.departureDateField.click();
+		this.searchFormObject.departureDateField.click();
 	}
 
 	fillDatesDeparture(): void {
-		this.commonPageObject.waitUntillElementAppears(this.commonPageObject.departureDateField);
-		this.commonPageObject.departureDateField.click();
-		this.commonPageObject.waitUntillElementAppears(this.departureDateInput);
+		this.searchFormObject.waitUntillElementAppears(this.searchFormObject.departureDateField);
+		this.searchFormObject.departureDateField.click();
+		this.searchFormObject.waitUntillElementAppears(this.departureDateInput);
 		this.departureDateInput.clear();
 		this.departureDateInput.sendKeys(this.setTripDates(3));
 	}
 
 	async getDepartureDate(): Promise<string> {
-		return await this.commonPageObject.departureDateField.getText();
+		return await this.searchFormObject.departureDateField.getText();
 	}
 
 	getTripDates(tripDate: number): string {
@@ -187,7 +183,7 @@ export class HomePageObject {
 	}
 
 	fillDatesReturn(): void {
-		this.commonPageObject.waitUntillElementAppears(this.returnDateInput);
+		this.searchFormObject.waitUntillElementAppears(this.returnDateInput);
 		this.returnDateInput.click();
 		this.returnDateInput.clear();
 		this.returnDateInput.sendKeys(this.setTripDates(6));
@@ -209,12 +205,12 @@ export class HomePageObject {
 	}
 	
 	async getReturnDate(): Promise<string> {
-		return this.commonPageObject.returnDateField.getText();
+		return this.searchFormObject.returnDateField.getText();
 	}
 
 	async clickSearch(): Promise<string> {
 		this.searchButton.click();
-		await this.commonPageObject.waitUntillElementAppears(browser.getCurrentUrl());
+		await this.searchFormObject.waitUntillElementAppears(browser.getCurrentUrl());
 		return await browser.getCurrentUrl();
 	}
 
@@ -229,7 +225,7 @@ export class HomePageObject {
 	}
 
 	async uncheckAllCheckBox() {
-	 	this.commonPageObject.waitUntillElementAppears(this.checkbox);
+	 	this.searchFormObject.waitUntillElementAppears(this.checkbox);
 		this.checkbox.click();
 	}
 }

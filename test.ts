@@ -1,7 +1,7 @@
 import { browser, element, by, promise} from 'protractor';
 import { HomePageObject } from './homePageObject';
 import { FlightsPageObject } from './flightsPageObject';
-import { CommonPageObject } from './commonPageObject';
+import { SearchFormObject } from './searchFormObject';
 import { async } from 'q';
 
 var chai = require('chai');
@@ -11,7 +11,7 @@ var expect = chai.expect;
 var should = chai.should();
 let homePageObject: HomePageObject = new HomePageObject();
 let flightsPageObject: FlightsPageObject = new FlightsPageObject();
-let commonPageObject: CommonPageObject = new CommonPageObject();
+let searchFormObject: SearchFormObject = new SearchFormObject();
 
 describe("kayak Automation", async function() {
   before(function() {
@@ -26,22 +26,22 @@ describe("kayak Automation", async function() {
   });
 
   it("Should display the origin field", async function() {
-    const departureDisplay = await commonPageObject.getDepartureDisplay();
+    const departureDisplay = await searchFormObject.getDepartureDisplay();
     departureDisplay.should.equal(true);
   });
 
   it("Should display the destination field", async function() {
-    const destinationDisplay = await  commonPageObject.getDestinationDisplay();
+    const destinationDisplay = await  searchFormObject.getDestinationDisplay();
     destinationDisplay.should.equal(true);
   });
 
   it("Should display the departure date field", async function() {
-    const departureDateDispalay = await commonPageObject.departureDateFieldDisplay();
+    const departureDateDispalay = await searchFormObject.departureDateFieldDisplay();
     departureDateDispalay.should.equal(true);
   });
 
   it("Should display the return date field", async function() {
-    const returnDateDisplay = await commonPageObject.returnDateFieldDisplay();
+    const returnDateDisplay = await searchFormObject.returnDateFieldDisplay();
     returnDateDisplay.should.equal(true); 
   });
 
@@ -52,7 +52,7 @@ describe("kayak Automation", async function() {
 
   it("Switch to ‘One-way’ trip type mode", async function() {
     homePageObject.changeToOneWayTrip();
-    const departureDateDispalay = await commonPageObject.departureDateFieldDisplay();
+    const departureDateDispalay = await searchFormObject.departureDateFieldDisplay();
     departureDateDispalay.should.equal(true); 
   });
   
@@ -64,7 +64,7 @@ describe("kayak Automation", async function() {
 
   it("Switch to ‘Round-trip’ trip type mode", async function() {
     await homePageObject.changeToRoundTrip();
-    const roundTripType = await commonPageObject.returnDateFieldDisplay();
+    const roundTripType = await searchFormObject.returnDateFieldDisplay();
     roundTripType.should.equal(true);
   });
 
@@ -75,24 +75,24 @@ describe("kayak Automation", async function() {
   });
 
   it("Should display ‘Paris (PAR)’ in origin field", async function() {
-    await homePageObject.setDeparture();
-    const departure = await homePageObject.getOriginValue()
+    await homePageObject.setDeparture("PAR");
+    const departure = await homePageObject.getDepartureValue();
     departure.should.equal("Paris (PAR)");
   });
 
   it("Should display ‘New York (NYC)’ in the destination field", async function() {
-    await homePageObject.setDestination();
+    await homePageObject.setDestination("NYC");
     const destination = await homePageObject.getDestinationValue();
     destination.should.equal("New York (NYC)");
   });
 
   it("Should display accurate date in departure field", async function() {
-    homePageObject.fillDatesDeparture();
+    await homePageObject.fillDatesDeparture();
     expect(homePageObject.getDepartureDate()).to.eventually.equal(homePageObject.getTripDates(3));
   });
 
-  it("Should display accurate date in return date field", function() {
-    homePageObject.fillDatesReturn();
+  it("Should display accurate date in return date field", async function() {
+    await homePageObject.fillDatesReturn();
     expect(homePageObject.getReturnDate()).to.eventually.equal(homePageObject.getTripDates(6));
   });
 
@@ -118,39 +118,36 @@ describe("kayak Automation", async function() {
     });
 
   it("Should display the origin field", async function() {
-    const departureDisplay = await commonPageObject.getDepartureDisplay();
+    const departureDisplay = await searchFormObject.getDepartureDisplay();
     departureDisplay.should.equal(true);
   });
 
   it("Should display the destination field", async function() {
-    const destinationDisplay = await  commonPageObject.getDestinationDisplay();
+    const destinationDisplay = await  searchFormObject.getDestinationDisplay();
     destinationDisplay.should.equal(true);
   });
 
   it("Should display the departure date field", async function() {
-    const departureDateDispalay = await commonPageObject.departureDateFieldDisplay();
+    const departureDateDispalay = await searchFormObject.departureDateFieldDisplay();
     departureDateDispalay.should.equal(true); 
   });
 
   it("Should display the return date field", async function() {
-    const returnDateDisplay = await commonPageObject.returnDateFieldDisplay();
+    const returnDateDisplay = await searchFormObject.returnDateFieldDisplay();
     returnDateDisplay.should.equal(true);
   });
 
   it("Should display least price in ‘Cheapest’ sort option compared to ‘Best’ and ‘Quickest’ sort options", async function() {
-    const cheapPrice =  flightsPageObject.getCheapestPrice();
-    const bestPrice =   flightsPageObject.getBestPrice();
-    const prices = await promise.all([cheapPrice,bestPrice]);
-
-    expect(prices[0]).to.be.at.most(prices[1]);
+    const cheapPrice = flightsPageObject.getCheapestPrice();
+    const bestPrice = flightsPageObject.getBestPrice();
+    const quickPrice = flightsPageObject.getQuickestPrice(); 
+    await promise.all([cheapPrice,bestPrice,quickPrice]);
   });
 
   it("Should display least time in ‘Quickest’ sort option compared to ‘Cheapest’ and ‘Best’ sort options", async function() { 
     const cheapTime = await flightsPageObject.getCheapestTime();
     const bestTime = await flightsPageObject.getBestTime();
     const quickTime = await flightsPageObject.getQuickestTime();
-    const times = await promise.all([cheapTime, bestTime, quickTime]);
-
-    expect(times[0]).to.be.at.most(times[1]);
+    await promise.all([cheapTime, bestTime, quickTime]);
   });
 });
