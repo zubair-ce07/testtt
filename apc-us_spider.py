@@ -21,7 +21,7 @@ class ApcSpider(Spider):
 
     def parse_product_listing(self, response):
         for product_link in response.css('.colorama-product-link-wrapper, \
-                                         a.item'):
+                                         .item'):
             yield response.follow(product_link,
                                   callback=self.parse_product_details,
                                   meta=response.meta)
@@ -57,11 +57,11 @@ class ApcSpider(Spider):
 
     def parse_product_details(self, response):
         url = '{}.js'.format(urlparse(response.url).path)
-        currency = response.css('meta#in-context-paypal-'
+        currency = response.css('#in-context-paypal-'
                                 'metadata::attr(data-currency)').get()
-        price = int(response.css('span#variantPrice::text')
+        price = int(response.css('#variantPrice::text')
                     .get().strip('$'))
-        gender = response.css('nav span.has-separator a::text').get()
+        gender = response.css('.has-separator a::text').get()
         response.meta['required_details'] = {
             'price': price,
             'currency': currency,
