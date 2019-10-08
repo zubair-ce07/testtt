@@ -13,6 +13,6 @@ export class TilesFlightDialogKayak implements TilesFlightDialog {
   }
   
   private getDialogContainer(): ElementFinder {
-    return $(`div[id$='destination_tiles_flight_dialog-dialog-content']`)
+    return $(`[id$='destination_tiles_flight_dialog-dialog-content']`)
   }
 }

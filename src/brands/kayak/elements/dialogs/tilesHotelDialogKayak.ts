@@ -13,6 +13,6 @@ export class TilesHotelDialogKayak implements TilesHotelDialog {
   }
   
   private getDialogContainer(): ElementFinder {
-    return $(`div[id$='destination_tiles_hotel_dialog-dialog-content']`)
+    return $(`[id$='destination_tiles_hotel_dialog-dialog-content']`)
   }
 }

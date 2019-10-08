@@ -14,11 +14,11 @@ export class CompareToKayak implements CompareTo {
   }
   
   async getSelected(): Promise<string[]> {
-    return this.getContainer().$$(`span[aria-checked='true']`).map(finder => finder.getText());
+    return this.getContainer().$$(`.item[aria-checked='true']`).map(finder => finder.getText());
   }
   
   async select(index: number): Promise<void> {
-    return this.getContainer().$$('span').get(index).click();
+    return this.getContainer().$$('.item').get(index).click();
   }
   
   selectAll(): Promise<void> {
@@ -30,6 +30,6 @@ export class CompareToKayak implements CompareTo {
   }
   
   private getContainer(): ElementFinder {
-    return $(`div[id$='compareTo-checkbox-row']`)
+    return $(`[id$='compareTo-checkbox-row']`)
   }
 }

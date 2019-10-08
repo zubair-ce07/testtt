@@ -3,7 +3,7 @@ import { HotelsSearchDialog } from "../../../../elements/dialogs/hotelsSearchDia
 
 export class HotelsSearchDialogKayak implements HotelsSearchDialog {
   async close(): Promise<void> {
-    await $(`button[id$='searchDialog-dialog-close']`).click();
+    await $(`[id$='searchDialog-dialog-close']`).click();
     await browser.wait(EC.invisibilityOf(this.getDialogContainer()));
   }
   
@@ -12,6 +12,6 @@ export class HotelsSearchDialogKayak implements HotelsSearchDialog {
   }
   
   private getDialogContainer(): ElementFinder {
-    return $(`div[id$='searchDialog-dialog']`)
+    return $(`[id$='searchDialog-dialog']`)
   }
 }

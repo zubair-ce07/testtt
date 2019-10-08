@@ -73,15 +73,15 @@ export class FlightsPageKayak implements FlightsPage {
   }
   
   async search(): Promise<void> {
-    const searchButton = $(`form[name='searchform']`).$(`button[id$='submit']`);
+    const searchButton = $(`[name='searchform']`).$(`[id$='submit']`);
     await switchToNewTabIfOpened(click.bind(this, searchButton));
     await FlightsResultsPageKayak.load();
   }
   
   getSearchFormBanners(): ElementArrayFinder {
     return new ElementArrayFinder(browser, async () => [
-      $(`div[id$='leftImage']`),
-      $(`div[id$='rightImage']`)
+      $(`[id$='leftImage']`),
+      $(`[id$='rightImage']`)
     ]);
   }
   

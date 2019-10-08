@@ -26,7 +26,7 @@ export class DestinationKayak implements Destination {
   }
   
   private getInputContainer(): ElementFinder {
-    return $(`div[id$='location-display-inner']`);
+    return $(`[id$='location-display-inner']`);
   }
   
   private async hideInput() {
@@ -36,6 +36,6 @@ export class DestinationKayak implements Destination {
   }
   
   private getInputElement(): ElementFinder {
-    return $(`input[id$='location']`);
+    return $(`[id$='location-textInputWrapper']`).$(`[id$='location']`);
   }
 }

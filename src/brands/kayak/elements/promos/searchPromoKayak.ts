@@ -8,7 +8,7 @@ export class SearchPromoKayak implements SearchPromo {
   }
   
   async searchNow(): Promise<void> {
-    await click($(`button[id$='search-promo-search']`));
+    await click($(`[id$='search-promo-search']`));
   }
   
 }
