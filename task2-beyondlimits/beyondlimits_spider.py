@@ -9,7 +9,6 @@ from ..items import BeyondLimitItem
 class BeyondLimitsExtractor:
     def parse_details(self, response):
         product_details = BeyondLimitItem()
-
         product_details['retailer_sku'] = self.extract_retailor_sku(response)
         product_details['url'] = self.extract_url(response)
         product_details['gender'] = self.extract_gender(response)
@@ -86,7 +85,8 @@ class BeyondLimitsSpider(CrawlSpider):
 
 
 
-class DetailsItems(scrapy.Item):
+
+class BeyondLimitItem(scrapy.Item):
     retailer_sku = scrapy.Field()
     gender = scrapy.Field()
     category = scrapy.Field()
