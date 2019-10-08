@@ -79,7 +79,6 @@ class ApcSpider(Spider):
         image_urls = self.get_image_urls(raw_product)
         category = self.get_categories(response, raw_product)
         description = self.get_description(raw_product)
-
         return {
                 'name': raw_product['title'],
                 'category': category,
