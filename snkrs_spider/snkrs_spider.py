@@ -1,16 +1,11 @@
 import scrapy
+
 from snkrs.items import SnkrsItem
 
 
 class SnkrsParseSpider():
     one_size = ['oneSize']
-
-    def parse_listings(self, response):
-        product_urls = response.css('div.product-container a::attr(href)').extract()
-
-        for url in product_urls:
-            yield scrapy.Request(url, callback=self.parse_product) 
-
+     
     def get_retailer_sku(self, response):
         return response.css('span[itemprop="sku"]::text').extract_first()
 
@@ -23,18 +18,14 @@ class SnkrsParseSpider():
     def get_gender(self, response):
         category = self.get_category(response) 
         
-        if 'men' in category.lower():
-            gender = category.split(' ')[0]
-        else:
-            gender = 'Unisex adult'
-
-        return gender    
+        return category.split(' ')[0] if 'men' in category.lower() else 'Unisex adult'     
 
     def get_url(self, response):
         return response.css('span.url::text').extract_first()
 
     def get_description(self, response):
-        product_reference = response.css('p#product_reference label::text').extract() + [self.get_retailer_sku(response)]
+        retailer_sku = self.get_retailer_sku(response)
+        product_reference = response.css('p#product_reference label::text').extract() + [retailer_sku]
         return product_reference + response.css('div#short_description_content p::text').extract()
 
     def get_name(self, response):
@@ -45,9 +36,8 @@ class SnkrsParseSpider():
 
     def get_skus(self, response):
         colour = response.css('h1[itemprop="name"]::text').extract_first().split(' - ')[1]
-        shoes_size_selector = 'span.units_container span.size_EU::text'
-        clothing_size_selector = 'li:not(.hidden) span.units_container::text'                               
-        sizes = response.css(shoes_size_selector).extract() or response.css(clothing_size_selector).extract() or one_size         
+        size_css = 'span.units_container span.size_EU::text, li:not(.hidden) span.units_container::text'
+        sizes = list(filter(lambda size: size != ' ', response.css(size_css).extract())) or self.one_size         
         skus = {}
 
         for size in sizes:
@@ -83,8 +73,15 @@ class CrawlSpider(scrapy.Spider):
     allowed_domains = ['snkrs.com']
     start_urls = ['http://www.snkrs.com/en/']
 
-    def parse(self, response):
-        snkrs_parser = SnkrsParseSpider()
-        category_urls = response.css('ul.sf-menu li a::attr(href)').extract()        
+    def parse(self, response):        
+        category_urls = response.css('ul.sf-menu li a::attr(href)').extract() 
+
         for url in category_urls:
-            yield scrapy.Request(url, callback=snkrs_parser.parse_listings)         
+            yield scrapy.Request(url, callback=self.parse_listings)
+
+    def parse_listings(self, response):
+        snkrs_parser = SnkrsParseSpider()
+        product_urls = response.css('div.product-container a::attr(href)').extract()
+
+        for url in product_urls:
+            yield scrapy.Request(url, callback=snkrs_parser.parse_product)                 
