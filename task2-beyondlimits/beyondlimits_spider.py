@@ -1,5 +1,4 @@
 import re
-import unicodedata
 
 from scrapy.spiders import CrawlSpider
 
@@ -19,8 +18,7 @@ class BeyondLimitsExtractor:
         product_details['care'] = self.extract_care(response)
         product_details['img_urls'] = self.extract_img_urls(response)
         product_details['skus'] = self.extract_skus(response)
-
-        yield product_details
+        return product_details
 
     def extract_retailor_sku(self, response):
         return response.css('[itemprop="productID"]::text').get()
@@ -29,10 +27,13 @@ class BeyondLimitsExtractor:
         return response.url
 
     def extract_gender(self, response):
-        return re.search(r'(?<=/)(Wo|wo)?(M|m)en?(?=/)', response.url).group()
+        gender = re.search(r'(?<=/)(Wo|wo)?(M|m)en(?=/)', response.url)
+        if gender:
+            return gender.group()
+        return
 
     def extract_category(self, response):
-        categories = response.css('.bb_breadcrumb--inner span a ::text').getall()
+        categories = response.css('[itemprop=title]::text').getall()
         return [category.strip() for category in categories if category.strip() != 'Home' and category.strip()]
 
     def extract_brand(self, response):
@@ -42,28 +43,28 @@ class BeyondLimitsExtractor:
         return response.css(".bb_art--title::text").get()
 
     def extract_description(self, response):
-        return response.css('#description p::text').getall()
+        desc = [desc.strip() for desc in response.css('#description ::text').getall()[:2]]
+        return filter(None, desc)
 
     def extract_care(self, response):
-        return response.css('#description ul li::text')[1].getall()
+        return response.css('#description li::text')[1].getall()
 
     def extract_img_urls(self, response):
-        return response.css(".bb_pic--nav li a::attr(href)").getall()
+        return response.css(".bb_pic--nav ::attr(href)").getall()
 
     def extract_skus(self, response):
-        colour = response.css('#description ul li::text')[0].get().split(': ', 1)[1]
-        price = response.css('[itemprop="price"]::attr(content)').get()
-        currency = response.css('[itemprop="priceCurrency"]::attr(content)').get()
-        previous_prices = response.css('.oldPrice del::text').get()
-        if previous_prices:
-            previous_prices = unicodedata.normalize('NFKD', previous_prices).encode('ascii', 'ignore').split()
-        sizes = response.css('#bb-variants--0 option')
         skus = []
-        for size in sizes:
+
+        for size in response.css('#bb-variants--0 option'):
             if size.css("option::attr(value)").get():
-                skus.append({'colour': colour, 'price': price, 'currency': currency, 'previous_prices': previous_prices,
-                             'size': size.css("option::text").get(),
-                             'sku_id': colour + "_" + size.css("option::text").get()})
+                sku = {'colour': response.css('#description li::text')[0].get().split(':')[1],
+                       'price': response.css('[itemprop="price"]::attr(content)').get(),
+                       'currency': response.css('[itemprop="priceCurrency"]::attr(content)').get(),
+                       'previous_prices': response.css('.oldPrice del::text').get(default='').split()[:-1],
+                       'size': size.css("option::text").get(),
+                       'sku_id': response.css('#description li::text')[0].get().split(':', 1)[1]
+                                 + "_" + size.css("option::text").get()}
+                skus.append(sku)
         return skus
 
 
@@ -82,6 +83,7 @@ class BeyondLimitsSpider(CrawlSpider):
         details_extractor = BeyondLimitsExtractor()
         for detail_url in response.css('.bb_product--link.bb_product--imgsizer::attr(href)'):
             yield response.follow(detail_url.get(), callback=details_extractor.parse_details)
+
 
 
 
