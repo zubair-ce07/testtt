@@ -11,5 +11,4 @@ class DuplicatesPipeline(object):
             raise DropItem(f'Duplicate item found: {item}')
         else:
             self.retailer_sku_seen.add(item['retailer_sku'])
-
             return item
