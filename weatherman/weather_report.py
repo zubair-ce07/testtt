@@ -7,10 +7,12 @@ from constants import WEATHER_FILE_HEADERS
 from constants import MONTHS
 from constants import COLORS
 from constants import TEMPERATURE_SYMBOL
+from constants import CITY_NAME
 
 from helper import calculate_avg
 from helper import file_handle
 from helper import colored_string
+from helper import check_blank_line
 
 @dataclass
 class Stat:
@@ -21,6 +23,13 @@ class WeatherReport:
     def __init__(self,  _date, _files_path):
         self.files_path = _files_path
         self.date = _date
+
+    def read_date(self, row):
+        if(WEATHER_FILE_HEADERS['Date'] in row):
+            return row[WEATHER_FILE_HEADERS['Date']]
+        else:
+            return row[WEATHER_FILE_HEADERS['Date_S']]
+
 
     def print_bar_chart(self, day, max_temperature, min_temperature):
         def print_temperature(day, color, temp):
@@ -54,13 +63,13 @@ class WeatherReport:
             if(int(month) > 12 or int(month) < 1):
                 print("Invalid month", int(month))
                 return
-        except:
-            print("Unexpected error:", sys.exc_info()[0])
+        except Exception as exp:
+            print("Unexpected error:", str(exp))
             return
 
         short_month = MONTHS[int(month)][1]
         full_month =  MONTHS[int(month)][0]
-        file_name = f"{self.files_path}/lahore_weather_{year}_{short_month}.txt"
+        file_name = f"{self.files_path}/{CITY_NAME}_weather_{year}_{short_month}.txt"
         file_path = glob.glob(file_name)
 
         if not file_path:
@@ -72,11 +81,12 @@ class WeatherReport:
         f = file_handle(file_path)
         with f:
             try:
-                f.readline() # Skip empty line on start
+                if(check_blank_line(f)):
+                    f.readline() # Skip empty line on start of file
                 reader = csv.DictReader(f, delimiter=',')
                 print(f"{full_month} {year}")
                 for row in reader:
-                    date = row[WEATHER_FILE_HEADERS['Date']].split('-')[-1]
+                    date = self.read_date(row).split('-')[-1]
                     max_temperature = row[WEATHER_FILE_HEADERS['MaxTemperatureC']]
                     min_temperature = row[WEATHER_FILE_HEADERS['MinTemperatureC']]
 
@@ -92,12 +102,12 @@ class WeatherReport:
             if(int(month) > 12 or int(month) < 1):
                 print("Invalid month", int(month))
                 return
-        except:
-            print("Unexpected error:", sys.exc_info()[0])
+        except Exception as exp:
+            print("Unexpected error:", str(exp))
             return
 
         short_month = MONTHS[int(month)][1]
-        file_name = f"{self.files_path}/lahore_weather_{year}_{short_month}.txt"
+        file_name = f"{self.files_path}/{CITY_NAME}_weather_{year}_{short_month}.txt"
         file_path = glob.glob(file_name)
 
         if not file_path:
@@ -118,7 +128,9 @@ class WeatherReport:
         f = file_handle(file_path)
         with f:
             try:
-                f.readline() # Skip empty line on start
+                if(check_blank_line(f)):
+                    f.readline() # Skip empty line on start of file
+
                 reader = csv.DictReader(f, delimiter=',')
                 for row in reader:
                     max_temperature = row[WEATHER_FILE_HEADERS['MaxTemperatureC']]
@@ -149,7 +161,7 @@ class WeatherReport:
 
     def calculate_year_stats(self):
         year = self.date.split('/')[0]
-        file_names = f"{self.files_path}/lahore_weather_{year}_*.txt"
+        file_names = f"{self.files_path}/{CITY_NAME}_weather_{year}_*.txt"
         month_files_list = glob.glob(file_names)
 
         if(not(month_files_list)):
@@ -160,15 +172,16 @@ class WeatherReport:
         min_temperature = Stat(None, None)
         max_humidity = Stat(None, None)
 
-
         for month_file in month_files_list:
             f = file_handle(month_file)
             with f:
                 try:
-                    f.readline() # Skip empty line on start
+                    if(check_blank_line(f)):
+                        f.readline() # Skip empty line on start of file
+
                     reader = csv.DictReader(f, delimiter=',')
                     for row in reader:
-                        date = row[WEATHER_FILE_HEADERS['Date']]
+                        date = self.read_date(row)
                         current_max_temperature = row[WEATHER_FILE_HEADERS['MaxTemperatureC']]
                         current_min_temperature = row[WEATHER_FILE_HEADERS['MinTemperatureC']]
                         current_max_humidity = row[WEATHER_FILE_HEADERS['MaxHumidity']]

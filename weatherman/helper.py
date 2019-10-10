@@ -21,3 +21,12 @@ def file_handle(file_path):
 
 def colored_string(str, color, times = 1):
     return f"{color}{str*int(times)}{COLORS['RESET']}"
+
+def check_blank_line(f):
+    pos = f.tell()
+    line = f.readline()
+    f.seek(pos)
+    if (line.strip()):
+        return False
+    else:
+        return True

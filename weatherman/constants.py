@@ -1,5 +1,7 @@
 TEMPERATURE_SYMBOL = '+'
 
+CITY_NAME = '*'
+
 COLORS = {
     'RED': '\033[31m',
     'BLUE': '\033[94m',
@@ -8,6 +10,7 @@ COLORS = {
 
 WEATHER_FILE_HEADERS = {
     "Date": "PKT",
+    "Date_S": "PKST",
     "MaxTemperatureC": "Max TemperatureC",
     "MeanTemperatureC": "Mean TemperatureC",
     "MinTemperatureC": "Min TemperatureC",
