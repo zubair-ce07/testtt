@@ -18,19 +18,19 @@ export class HomePageObject {
   moreInspirationButton: ElementFinder = this.travelInspirationSection.element(by.className("Common-Widgets-Button-StyleJamButton"));
   closePopupButton: ElementFinder = element.all(by.className("Button-No-Standard-Style close")).last();
 
-  travelSection(): promise.Promise<boolean> {
+  travelSection(): ElementFinder {
     browser.actions().mouseMove(this.travelInspirationSection).perform();
-    return this.travelInspirationSection.isDisplayed();
+    return this.travelInspirationSection;
   }
 
-  citiesSection(): promise.Promise<boolean> {
+  citiesSection(): ElementFinder {
     browser.actions().mouseMove(this.trendingCitiesSection).perform();
-    return this.trendingCitiesSection.isDisplayed();
+    return this.trendingCitiesSection;
   }
 
-  countriesSection(): promise.Promise<boolean> {
+  countriesSection(): ElementFinder {
     browser.actions().mouseMove(this.trendingCountriesSection).perform();
-    return this.trendingCountriesSection.isDisplayed();
+    return this.trendingCountriesSection;
   }
 
   async getTilesInTravelInspiration(): Promise<boolean> {
@@ -96,13 +96,13 @@ export class HomePageObject {
 
   async clearCookies() {
     let until: ProtractorExpectedConditions = await protractor.ExpectedConditions;
-    browser.wait(
+    await browser.wait(
     until.visibilityOf(this.closePopupButton),
-    4000, `${this.closePopupButton} not appeared in expected time`)
-    this.closePopupButton.click();
+    4000, `${this.closePopupButton} not appeared in expected time`);
+    await this.closePopupButton.click();
   }
 
-  navigateToHomePage() {
-    browser.get(this.url);
+  async navigateToHomePage() {
+    await browser.get(this.url);
   }
 }

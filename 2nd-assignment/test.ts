@@ -18,15 +18,15 @@ describe("kayak Automation", async function() {
   });
 
   it("should display the 'Travel Inspiration' section", function() {
-    homePageObject.travelSection().should.eventually.be.equal(true);
+    homePageObject.travelSection().isDisplayed().should.eventually.be.equal(true);
   });
 
   it("should display the 'Trending Cities' section", function() {
-    homePageObject.citiesSection().should.eventually.be.equal(true);
+    homePageObject.citiesSection().isDisplayed().should.eventually.be.equal(true);
   });
 
   it("should display the 'Trending Countries' section", function() {
-    homePageObject.countriesSection().should.eventually.be.equal(true);
+    homePageObject.countriesSection().isDisplayed().should.eventually.equal(true);
   });
 
   it("Should display at least 2 tiles under 'Travel Inspiration' ", function() {
