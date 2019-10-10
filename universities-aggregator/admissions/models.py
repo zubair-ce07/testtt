@@ -16,7 +16,7 @@ class Institute(models.Model):
 class Campus(models.Model):
     name = models.CharField(max_length=100)
     slug = models.SlugField()
-    institute = models.ForeignKey(Institute, on_delete=models.CASCADE)
+    institute = models.ForeignKey(Institute, related_name='institute_campuses', on_delete=models.CASCADE)
 
     class Meta:
         unique_together = ('name', 'institute')
@@ -35,7 +35,7 @@ class Program(models.Model):
     category = models.IntegerField(default=1, choices=PROGRAM_CHOICES)
     name = models.CharField(max_length=100)
     slug = models.SlugField()
-    campus = models.ForeignKey(Campus, on_delete=models.CASCADE)
+    campus = models.ForeignKey(Campus, related_name='campus_programs', on_delete=models.CASCADE)
 
     class Meta:
         unique_together = ('name', 'campus')
@@ -62,8 +62,8 @@ class Course(models.Model):
     name = models.CharField(max_length=200)
     credit_hour = models.FloatField()
     code = models.CharField(max_length=10)
-    semester = models.ForeignKey(Semester, on_delete=models.CASCADE)
-    program = models.ForeignKey(Program, on_delete=models.CASCADE)
+    semester = models.ForeignKey(Semester, related_name='semester_courses', on_delete=models.CASCADE)
+    program = models.ForeignKey(Program, related_name='program_courses', on_delete=models.CASCADE)
 
     class Meta:
         unique_together = ('name', 'program')
