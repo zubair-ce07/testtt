@@ -20,10 +20,10 @@ class NnnowSpider(Spider):
             'module': "odin",
     }
     base_url = 'https://www.nnnow.com'
-    navigation_links = '/men', '/women', '/kids', '/footwear'
+    product_listing = '.nw-productlist'
 
     rules = (
-        Rule(LinkExtractor(allow=navigation_links))
+        Rule(LinkExtractor(restrict_css=product_listing), callback='parse_product_listing')
     )
 
     def parse(self, response):
