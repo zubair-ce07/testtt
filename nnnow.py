@@ -21,11 +21,10 @@ class NnnowSpider(Spider):
     }
     base_url = 'https://www.nnnow.com'
     product_listing = '.nw-productlist'
-
     rules = (
         Rule(LinkExtractor(restrict_css=product_listing), callback='parse_product_listing')
     )
-
+    
     def parse(self, response):
         meta = {'dont_merge_cookies': True}
         required_info = response.css('script').re_first('DATA=(.+)</script>')
