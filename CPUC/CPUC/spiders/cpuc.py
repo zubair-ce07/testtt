@@ -271,15 +271,15 @@ class CpucSpider(scrapy.Spider):
         proceeding_document = response.meta['proceeding_document']
         proceeding_document.add_value('document_url', response.url)
 
-        files = response.selector.xpath(
+        tables = response.selector.xpath(
             '//table[@id="ResultTable"]/tbody/tr')
-        for file in files:
-            if file.css('.ResultTitleTD').get():
-                document = DocumentLoader(selector=file)
+        for row in tables:
+            if row.css('.ResultTitleTD').get():
+                document = DocumentLoader(selector=row)
                 document.add_css('title', '.ResultTitleTD')
                 document.add_css('doc_type', '.ResultTypeTD::text')
                 pdf_link = urljoin('http://docs.cpuc.ca.gov',
-                                   file.css('.ResultLinkTD > a::attr(href)').get())
+                                   row.css('.ResultLinkTD > a::attr(href)').get())
                 document.add_value('pdf_link', pdf_link)
                 document.add_css('published_date', '.ResultDateTD::text')
                 proceeding_document.add_value('files', document.load_item())
