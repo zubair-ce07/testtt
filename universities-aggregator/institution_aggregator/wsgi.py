@@ -1,5 +1,5 @@
 """
-WSGI config for universitiesaggregator project.
+WSGI config for institution_aggregator project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 
@@ -11,6 +11,6 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'universitiesaggregator.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'institution_aggregator.settings')
 
 application = get_wsgi_application()

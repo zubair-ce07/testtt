@@ -4,22 +4,28 @@ from django.utils.text import slugify
 
 # Create your models here.
 
-class Institute(models.Model):
+class Institution(models.Model):
     name = models.CharField(max_length=100)
-    slug = models.SlugField(unique=True)
+    slug = models.SlugField(unique=True, blank=True)
+
+    def __str__(self):
+        return self.name
 
     def save(self, *args, **kwargs):
         self.slug = slugify(self.name)
-        super(Institute, self).save(*args, **kwargs)
+        super(Institution, self).save(*args, **kwargs)
 
 
 class Campus(models.Model):
     name = models.CharField(max_length=100)
-    slug = models.SlugField()
-    institute = models.ForeignKey(Institute, related_name='institute_campuses', on_delete=models.CASCADE)
+    slug = models.SlugField(blank=True)
+    institute = models.ForeignKey(Institution, related_name='institute_campuses', on_delete=models.CASCADE)
 
     class Meta:
         unique_together = ('name', 'institute')
+
+    def __str__(self):
+        return f'{self.name} / {self.institute.name}'
 
     def save(self, *args, **kwargs):
         self.slug = slugify(self.name)
@@ -34,11 +40,14 @@ class Program(models.Model):
     )
     category = models.IntegerField(default=1, choices=PROGRAM_CHOICES)
     name = models.CharField(max_length=100)
-    slug = models.SlugField()
+    slug = models.SlugField(blank=True)
     campus = models.ForeignKey(Campus, related_name='campus_programs', on_delete=models.CASCADE)
 
     class Meta:
         unique_together = ('name', 'campus')
+
+    def __str__(self):
+        return f'{self.name} / {self.campus.institute.name}'
 
     def save(self, *args, **kwargs):
         self.slug = slugify(self.name)
@@ -56,6 +65,9 @@ class Semester(models.Model):
         (7, '7th'),
         (8, '8th'))
     number = models.IntegerField(default=0, choices=SEMESTER_CHOICES)
+
+    def __str__(self):
+        return f'{self.number}'
 
 
 class Course(models.Model):
