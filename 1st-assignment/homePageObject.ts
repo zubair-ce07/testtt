@@ -57,7 +57,7 @@ export class HomePageObject {
 	}
 
 	clickSwitch(): void {
-		this.switchOptions.click();
+	  this.switchOptions.click();
 	}
 
 	async multiCities(): Promise<boolean> {
@@ -119,9 +119,9 @@ export class HomePageObject {
 		this.destinationSelect.click();
 	}
 
-	 async getDestinationValue(): Promise<string> {
-		await this.searchFormObject.waitUntillElementAppears(this.destinationText);
-		return await this.destinationText.getText();
+  async getDestinationValue(): Promise<string> {
+    await this.searchFormObject.waitUntillElementAppears(this.destinationText);
+    return await this.destinationText.getText();
 	}
 
 	clickPassengersDropdown(): void {
@@ -185,15 +185,15 @@ export class HomePageObject {
 	}
 
 	setTripDates(daysToTrip: number): string {
-		const todaysDate: Date = new Date();
+    const todaysDate: Date = new Date();
     todaysDate.setDate(todaysDate.getDate() + daysToTrip); 
     let dd: string = todaysDate.getDate().toString();
     let mm: string = (todaysDate.getMonth()+1).toString();
     let yyyy: string = todaysDate.getFullYear().toString();
     if(todaysDate.getDate() < 10) {
       dd = "0" + dd;
-		}
-		if(mm < '10') {
+    }
+    if(mm < '10') {
       mm = "0" + mm;
     }
     return (mm + "/" + dd + "/" + yyyy);
