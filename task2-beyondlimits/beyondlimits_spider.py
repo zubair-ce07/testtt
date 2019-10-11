@@ -68,19 +68,26 @@ class BeyondLimitsSpider(CrawlSpider):
     name = "beyondlimits"
     allowed_domains = ['beyondlimits.com']
     start_urls = [
-        'https://www.beyondlimits.com/',
+        'https://www.beyondlimits.com/Women/',
+        'https://www.beyondlimits.com/Women/Sports-Bra/',
+        'https://www.beyondlimits.com/Women/T-Shirts-Tops/',
+        'https://www.beyondlimits.com/Women/Hoodies-Jackets/',
+        'https://www.beyondlimits.com/Women/Bottoms-Leggings/',
+        'https://www.beyondlimits.com/Women/Swimwear/',
+        'https://www.beyondlimits.com/Women/Accessories/',
+        'https://www.beyondlimits.com/Men/',
+        'https://www.beyondlimits.com/Men/Tank-Tops/',
+        'https://www.beyondlimits.com/Men/T-Shirts/',
+        'https://www.beyondlimits.com/Men/Hoodies-Jackets/',
+        'https://www.beyondlimits.com/Men/Bottoms/',
+        'https://www.beyondlimits.com/Men/Swimwear-up-to-40/',
+        'https://www.beyondlimits.com/Men/Accessories/',
     ]
-
+    
     def parse(self, response):
-        for category in response.css('.bb_catnav--link'):
-            if category.css('::text').get().strip() in ['New In', 'Sale']:
-                continue
-            yield response.follow(category.attrib['href'], callback=self.parse_category)
-
-    def parse_category(self, response):
-        if response.css('.bb_pagination--item.current::text') == 1:
-            for page in response.css('bb_pagination--item::attr(href)').getall():
-                yield response.follow(page, callback=self.parse_category)
+        if response.css('.bb_pagination--item.current::text').get() == '1':
+            for page in response.css('.bb_pagination--item::attr(href)').getall():
+                yield response.follow(page, callback=self.parse)
         details_extractor = BeyondLimitsExtractor()
         for detail_url in response.css('.bb_product--link.bb_product--imgsizer::attr(href)'):
             yield response.follow(detail_url.get(), callback=details_extractor.parse_details)
