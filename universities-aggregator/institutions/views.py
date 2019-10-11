@@ -1,8 +1,8 @@
 # Create your views here.
-from rest_framework import viewsets
-
 from .models import Program, Institution, Campus, Course
 from .serializers import ProgramSerializer, InstitutionSerializer, CampusSerializer, CourseSerializer
+
+from rest_framework import viewsets
 
 
 class InstitutionViewSet(viewsets.ModelViewSet):

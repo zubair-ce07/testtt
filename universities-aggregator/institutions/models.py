@@ -33,12 +33,12 @@ class Campus(models.Model):
 
 
 class Program(models.Model):
-    PROGRAM_CHOICES = (
+    CATEGORY_CHOICES = (
         (1, 'UnderGraduate'),
         (2, 'Graduate'),
         (3, 'Phd')
     )
-    category = models.IntegerField(default=1, choices=PROGRAM_CHOICES)
+    category = models.IntegerField(default=1, choices=CATEGORY_CHOICES)
     name = models.CharField(max_length=100)
     slug = models.SlugField(blank=True)
     campus = models.ForeignKey(Campus, related_name='campus_programs', on_delete=models.CASCADE)
