@@ -33,19 +33,4 @@ WEATHER_FILE_HEADERS = {
     "CloudCover": " CloudCover",
     "Events": " Events",
     "WindDirDegree": " WindDirDegree"
-    }
-
-MONTHS = {
-    1: ['January', 'Jan'],
-    2: ['February', 'Feb'],
-    3: ['March', 'Mar'],
-    4: ['April', 'Apr'],
-    5: ['May', 'May'],
-    6: ['June', 'Jun'],
-    7: ['July', 'Jul'],
-    8: ['August', 'Aug'],
-    9: ['September', 'Sep'],
-    10: ['October', 'Oct'],
-    11: ['November', 'Nov'],
-    12: ['December', 'Dec'],
-    }
+}

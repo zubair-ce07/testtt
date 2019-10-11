@@ -1,9 +1,9 @@
 import argparse
-import glob
 import sys
-import csv
+import logging
 
 from weather_report import WeatherReport
+
 
 def main(argv):
     parser = argparse.ArgumentParser()
@@ -14,17 +14,19 @@ def main(argv):
 
     args = parser.parse_args()
 
-    if(not(args.month_avg_stats or args.month_min_max_bar_stats or args.year_min_max_stats)):
-        print("Specify a flag and date")
+    if not (args.month_avg_stats or args.month_min_max_bar_stats
+            or args.year_min_max_stats):
+        logging.error("Specify a flag and date")
         return
 
-    if(args.month_avg_stats):
+    if args.month_avg_stats:
         report = WeatherReport(args.month_avg_stats, args.path_to_files)
         report.calc_month_avg_stats()
-    elif(args.month_min_max_bar_stats):
-        report = WeatherReport(args.month_min_max_bar_stats, args.path_to_files)
+    elif args.month_min_max_bar_stats:
+        report = WeatherReport(args.month_min_max_bar_stats,
+                               args.path_to_files)
         report.calc_month_min_max_stats()
-    elif(args.year_min_max_stats):
+    elif args.year_min_max_stats:
         report = WeatherReport(args.year_min_max_stats, args.path_to_files)
         report.calculate_year_stats()
 
