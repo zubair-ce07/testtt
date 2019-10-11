@@ -1,4 +1,4 @@
-from scrapy import Spider, Selector, Request, Field, Item
+from scrapy import Spider, Request, Field, Item
 from scrapy.loader import ItemLoader
 import json
 from urllib.parse import urljoin
