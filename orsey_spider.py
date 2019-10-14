@@ -1,3 +1,5 @@
+import scrapy
+
 from scrapy.spiders import CrawlSpider
 
 from ..items import OrsayItem
@@ -6,18 +8,37 @@ from ..items import OrsayItem
 class OrsayExtractor:
 
     def parse_details(self, response):
-        osray_details = OrsayItem()
-        osray_details['retailer_sku'] = self.extract_sku(response)
-        osray_details['gender'] = self.extract_gender()
-        osray_details['category'] = self.extract_category(response)
-        osray_details['brand'] = self.extract_brand()
-        osray_details['url'] = self.extract_url(response)
-        osray_details['name'] = self.extract_name(response)
-        osray_details['description'] = self.extract_description(response)
-        osray_details['care'] = self.extract_care(response)
-        osray_details['img_urls'] = self.extract_img_url(response)
-        osray_details['skus'] = self.extract_skus(response)
-        return osray_details
+        orsay_details = OrsayItem()
+        orsay_details['retailer_sku'] = self.extract_sku(response)
+        orsay_details['gender'] = self.extract_gender()
+        orsay_details['category'] = self.extract_category(response)
+        orsay_details['brand'] = self.extract_brand()
+        orsay_details['url'] = self.extract_url(response)
+        orsay_details['name'] = self.extract_name(response)
+        orsay_details['description'] = self.extract_description(response)
+        orsay_details['care'] = self.extract_care(response)
+        orsay_details['img_urls'] = self.extract_img_url(response)
+        orsay_details['skus'] = self.extract_skus(response)
+        orsay_details['request_queue'] = []
+        colors = response.css('.color .selectable ::attr(href)').getall()
+
+        for color in colors:
+            orsay_details['request_queue'].append(
+                scrapy.Request(color, callback=self.parse_colors, meta={'item': orsay_details}))
+
+        if orsay_details['request_queue']:
+            yield orsay_details['request_queue'].pop()
+        else:
+            yield orsay_details
+
+    def parse_colors(self, response):
+        orsay_details = response.meta['item']
+        orsay_details['img_urls'] += self.extract_img_url(response)
+        orsay_details['skus'] += self.extract_skus(response)
+        if orsay_details['request_queue']:
+            yield orsay_details['request_queue'].pop()
+        else:
+            yield orsay_details
 
     def extract_sku(self, response):
         return response.css('.product-sku::text').get().split()[-1]
@@ -29,7 +50,7 @@ class OrsayExtractor:
         return [category for category in response.css('.breadcrumb-element-link ::text').getall() if category.strip()]
 
     def extract_brand(self):
-        return 'Oslay'
+        return 'Orsay'
 
     def extract_url(self, response):
         return response.url
@@ -63,30 +84,29 @@ class OrsayExtractor:
         price = self.extract_price(response)
         previous_price = self.extract_previous_price(response)
         currency = self.extract_currency(response)
-        colours_list = response.css('.color a::attr(title)').getall()
+        color = response.css('.color .selected ::attr(title)').get().split('-')[1].strip()
         sizes_list = response.css('.size li')
         skus = []
-        for color in colours_list:
-            if not sizes_list:
-                sku = {'Price': price,
-                       'previous_price': previous_price,
-                       'Currency': currency,
-                       'Colour': color.split('-')[1].strip(),
-                       'out_of_stock': 'False',
-                       'size': '',
-                       'sku_id': color.split('-')[1].strip()}
-                skus.append(sku)
-            for size_attr in sizes_list:
-                size = size_attr.css('a::text').get().strip()
-                out_of_stock = True if size_attr.css('.unselectable') else False
-                sku = {'Price': price,
-                       'previous_price': previous_price,
-                       'Currency': currency,
-                       'Colour': color.split('-')[1].strip(),
-                       'out_of_stock': out_of_stock,
-                       'size': size,
-                       'sku_id': color.split('-')[1].strip() + "_" + size}
-                skus.append(sku)
+        if not sizes_list:
+            sku = {'Price': price,
+                   'previous_price': previous_price,
+                   'Currency': currency,
+                   'Colour': color,
+                   'out_of_stock': 'False',
+                   'size': '',
+                   'sku_id': color}
+            skus.append(sku)
+        for size_attr in sizes_list:
+            size = size_attr.css('a::text').get().strip()
+            out_of_stock = True if size_attr.css('.unselectable') else False
+            sku = {'Price': price,
+                   'previous_price': previous_price,
+                   'Currency': currency,
+                   'Colour': color,
+                   'out_of_stock': out_of_stock,
+                   'size': size,
+                   'sku_id': color + "_" + size}
+            skus.append(sku)
         return skus
 
 
@@ -112,3 +132,19 @@ class OrsaySpider(CrawlSpider):
                 yield response.follow(url, callback=self.parse_category)
         for detail_url in response.css('.thumb-link::attr(href)'):
             yield response.follow(detail_url.get(), callback=orsay_extraxtor.parse_details)
+
+
+
+class OrsayItem(scrapy.Item):
+    retailer_sku = scrapy.Field()
+    gender = scrapy.Field()
+    category = scrapy.Field()
+    brand = scrapy.Field()
+    url = scrapy.Field()
+    name = scrapy.Field()
+    description = scrapy.Field()
+    care = scrapy.Field()
+    img_urls = scrapy.Field()
+    skus = scrapy.Field()
+    request_queue = scrapy.Field()
+
