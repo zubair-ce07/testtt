@@ -3,10 +3,10 @@
 Module to initialize items and
 itemloaders.
 """
-import re
 import scrapy
+
 from scrapy.loader import ItemLoader
-from scrapy.loader.processors import Identity, TakeFirst, Compose
+from scrapy.loader.processors import Identity, TakeFirst
 
 
 class Proceeding(scrapy.Item):
@@ -28,12 +28,6 @@ class Proceeding(scrapy.Item):
     documents = scrapy.Field()
     total_documents = scrapy.Field()
 
-shorten_proceeding_number = Compose(
-    lambda p: p[0].split('-')[0].strip())
-shorten_title = Compose(
-    lambda p: re.sub(re.compile(r'<[^>]+>'), '', p[0]))
-
-
 class ProceedingLoader(ItemLoader):
     """Proceeding Item loader.
 
@@ -43,7 +37,6 @@ class ProceedingLoader(ItemLoader):
 
     default_item_class = Proceeding
     default_output_processor = TakeFirst()
-    proceeding_number_out = shorten_proceeding_number
     documents_out = Identity()
 
 
@@ -72,7 +65,6 @@ class ProceedingDocumentLoader(ItemLoader):
 
     default_item_class = ProceedingDocument
     default_output_processor = TakeFirst()
-    proceeding_number_out = shorten_proceeding_number
     files_out = Identity()
 
 
@@ -99,4 +91,3 @@ class DocumentLoader(ItemLoader):
 
     default_item_class = Document
     default_output_processor = TakeFirst()
-    title_out = shorten_title

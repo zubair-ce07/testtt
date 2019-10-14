@@ -5,14 +5,19 @@ CPUC Module to extract data from
 cpuc website according to the date
 ranges given.
 """
+import re
 
 from datetime import datetime
 from urllib.parse import urljoin
+
 import scrapy
 
-from CPUC.items import ProceedingLoader, \
-                       ProceedingDocumentLoader, \
-                       DocumentLoader
+from scrapy.linkextractors import LinkExtractor
+
+from CPUC.items import (ProceedingLoader,
+                        ProceedingDocumentLoader,
+                        DocumentLoader
+                       )
 
 
 class CpucSpider(scrapy.Spider):
@@ -27,7 +32,6 @@ class CpucSpider(scrapy.Spider):
     name = 'cpuc'
     start_urls = ['https://apps.cpuc.ca.gov/apex/f?p=401:1:0::NO:RP']
     PAGNITION_URL = "https://apps.cpuc.ca.gov/apex/wwv_flow.show"
-    URL_JOIN_PART = 'https://apps.cpuc.ca.gov/apex/'
     P_WIDGET_NUM_RETURN = '100'
     P_WIDGET_NAME = 'worksheet'
     P_WIDGET_MOD = 'ACTION'
@@ -76,7 +80,7 @@ class CpucSpider(scrapy.Spider):
                 form_data = {'p_t05': self.low_date_range,
                              'p_t06': self.high_date_range}
         else:
-            form_data = {'p_t05': '09/01/2019',
+            form_data = {'p_t05': '10/01/2019',
                          'p_t06': '10/09/2019'
                         }
 
@@ -92,11 +96,10 @@ class CpucSpider(scrapy.Spider):
         Method to capture proceeding urls from
         main page and following pagnition pages.
         """
-        proceeding_urls = response.css("table.apexir_WORKSHEET_DATA tr a::attr(href)").getall()
+        proceeding_urls = LinkExtractor(allow=r"f?p=401:56:0").extract_links(response)
         for url in proceeding_urls:
             self.cookie_count += 1
-            proceeding_url = self.URL_JOIN_PART + url
-            yield scrapy.Request(url=proceeding_url,
+            yield scrapy.Request(url=url.url,
                                  callback=self.parse_proceeding_data,
                                  meta={'cookiejar': self.cookie_count})
 
@@ -146,7 +149,7 @@ class CpucSpider(scrapy.Spider):
         if proceeding_number:
             proceeding_number = proceeding_number.split(' ')[0]
         proceeding = ProceedingLoader(selector=response)
-        proceeding.add_css("proceeding_number", '.rc-content-main > h1::text')
+        proceeding.add_value("proceeding_number", proceeding_number)
         proceeding.add_css("filed_by", '#P56_FILED_BY::text')
         proceeding.add_css(
             "filed_by", '#P56_SERVICE_LISTS > span > a::attr(href)')
@@ -180,17 +183,17 @@ class CpucSpider(scrapy.Spider):
         """
         proceeding = response.meta['proceeding']
         documents_table = response.css('#apexir_WORKSHEET_ID::attr(value)').get()
-        document_urls = []
         documents = response.css("#{} > tr + tr".format(documents_table)).getall()
-        for document in documents:
+        document_urls = LinkExtractor(
+            r"http://docs.cpuc.ca.gov/SearchRes.aspx?").extract_links(response)
+
+        for document, document_url in zip(documents, document_urls):
             document = scrapy.Selector(text=document)
-            document_url = document.css("tr > td[headers*='DOCUMENT_TYPE'] > a::attr(href)").get()
-            if document_url:
+            if document_url.url:
                 proceeding_document = self.parse_documents_data(document)
                 proceeding.replace_value('total_documents',
                                          proceeding.get_collected_values("total_documents")[0]+1)
-                document_urls.append(document_url)
-                scrapy_request = scrapy.Request(document_url,
+                scrapy_request = scrapy.Request(document_url.url,
                                                 callback=self.parse_document,
                                                 meta={'cookiejar': response.meta['cookiejar']})
                 scrapy_request.meta['proceeding'] = proceeding
@@ -246,16 +249,15 @@ class CpucSpider(scrapy.Spider):
         Method to extract document's data
         and return a proceeding_document item.
         """
-        proceeding_document = ProceedingDocumentLoader(
-            selector=document_row)
-        proceeding_document.add_css(
-            'document_filing_date', "tr > td[headers*='FILING_DATE']::text")
-        proceeding_document.add_css(
-            'document_type', "tr > td[headers*='DOCUMENT_TYPE'] > a > span > u::text")
-        proceeding_document.add_css(
-            'filed_by', "tr > td[headers*='FILED_BY']::text")
-        proceeding_document.add_css(
-            'description', "tr > td[headers*='DESCRIPTION']::text")
+        proceeding_document = ProceedingDocumentLoader()
+        filing_date = re.findall(r"headers=\"FILING_DATE\">(.*?)</td>", document_row.get())[0]
+        proceeding_document.add_value('document_filing_date', filing_date)
+        document_type = re.findall(r'blue"><u>(.*?)</u>', document_row.get())[0]
+        proceeding_document.add_value('document_type', document_type)
+        filed_by = re.findall(r"headers=\"FILED_BY\">(.*?)</td>", document_row.get())[0]
+        proceeding_document.add_value('filed_by', filed_by)
+        description = re.findall(r"headers=\"DESCRIPTION\">(.*?)</td>", document_row.get())[0]
+        proceeding_document.add_value('description', description)
         return proceeding_document
 
     @staticmethod
@@ -270,18 +272,20 @@ class CpucSpider(scrapy.Spider):
         proceeding = response.meta['proceeding']
         proceeding_document = response.meta['proceeding_document']
         proceeding_document.add_value('document_url', response.url)
-
         tables = response.selector.xpath(
             '//table[@id="ResultTable"]/tbody/tr')
         for row in tables:
             if row.css('.ResultTitleTD').get():
-                document = DocumentLoader(selector=row)
-                document.add_css('title', '.ResultTitleTD')
-                document.add_css('doc_type', '.ResultTypeTD::text')
-                pdf_link = urljoin('http://docs.cpuc.ca.gov',
-                                   row.css('.ResultLinkTD > a::attr(href)').get())
-                document.add_value('pdf_link', pdf_link)
-                document.add_css('published_date', '.ResultDateTD::text')
+                document = DocumentLoader()
+                title = re.findall(r"<td class=\"ResultTitleTD\">(.*?)<br><br>", row.get())[0]
+                document.add_value('title', title)
+                doc_type = re.findall(r"<td class=\"ResultTypeTD\">(.*?)<\/td>", row.get())[0]
+                document.add_value('doc_type', doc_type)
+                pdf_link = re.findall(
+                    r"<td class=\"ResultLinkTD\"><a href=\"(.*?)\">PDF</a>", row.get())[0]
+                document.add_value('pdf_link', urljoin('http://docs.cpuc.ca.gov', pdf_link))
+                published_date = re.findall(r"<td class=\"ResultDateTD\">(.*?)<\/td>", row.get())[0]
+                document.add_value('published_date', published_date)
                 proceeding_document.add_value('files', document.load_item())
         proceeding.add_value('documents', proceeding_document.load_item())
 
