@@ -5,10 +5,11 @@ from scrapy.spiders import CrawlSpider
 from ..items import OrsayItem
 
 
-class OrsayExtractor:
+class OrsayParser:
 
     def parse_details(self, response):
         orsay_product = OrsayItem()
+
         orsay_product['retailer_sku'] = self.extract_sku(response)
         orsay_product['gender'] = self.extract_gender()
         orsay_product['category'] = self.extract_category(response)
@@ -19,13 +20,16 @@ class OrsayExtractor:
         orsay_product['care'] = self.extract_care(response)
         orsay_product['img_urls'] = self.extract_img_url(response)
         orsay_product['skus'] = self.extract_skus(response)
+
         orsay_product['request_queue'] = self.extract_color_requests(response)
+
         yield self.get_item_or_request_to_yield(orsay_product)
 
     def parse_colors(self, response):
         orsay_product = response.meta['item']
         orsay_product['img_urls'] += self.extract_img_url(response)
         orsay_product['skus'] += self.extract_skus(response)
+
         yield self.get_item_or_request_to_yield(orsay_product)
 
     def get_item_or_request_to_yield(self, orsay_product):
@@ -33,6 +37,7 @@ class OrsayExtractor:
             request_next = orsay_product['request_queue'].pop()
             request_next.meta['item'] = orsay_product
             return request_next
+
         del orsay_product['request_queue']
         return orsay_product
 
@@ -47,7 +52,7 @@ class OrsayExtractor:
         return 'Female'
 
     def extract_category(self, response):
-        return [category for category in response.css('.breadcrumb-element-link ::text').getall() if category.strip()]
+        return self.remove_spaces(response.css('.breadcrumb-element-link ::text').getall())
 
     def extract_brand(self):
         return 'Orsay'
@@ -68,49 +73,62 @@ class OrsayExtractor:
         return response.css('.productthumbnail::attr(src)').getall()
 
     def extract_price(self, response):
+        price = response.css('.price-sales::text').get().split(' ')[0]
         if response.css('.price-standard').get():
-            return response.css('.price-standard::text').get().split(' ')[0].strip()
-        return response.css('.price-sales::text').get().split(' ')[0].strip()
+            price = response.css('.price-standard::text').get().split(' ')[0]
+        return self.remove_spaces(price)
 
     def extract_previous_price(self, response):
         if response.css('.price-standard').get():
-            return response.css('.price-sales::text').get().split(' ')[0].strip()
+            return self.remove_spaces(response.css('.price-sales::text').get().split(' ')[0])
         return ''
 
     def extract_currency(self, response):
         return response.css('.locale-item.current .country-currency::text').get()
 
     def extract_color(self, response):
-        return response.css('.color .selected ::attr(title)').get().split('-')[1].strip()
+        return self.remove_spaces(response.css('.color .selected ::attr(title)').get().split('-')[1])
 
-    def extract_skus(self, response):
+    def extract_pricing(self, response):
         price = self.extract_price(response)
         previous_price = self.extract_previous_price(response)
         currency = self.extract_currency(response)
+        return [price, previous_price, currency]
+
+    def extract_skus(self, response):
+        pricing = self.extract_pricing(response)
         color = self.extract_color(response)
-        sizes_list = response.css('.size li')
+        sizes_sel = response.css('.size li')
         skus = []
-        if not sizes_list:
-            sku = {'Price': price,
-                   'previous_price': previous_price,
-                   'Currency': currency,
-                   'Colour': color,
-                   'out_of_stock': 'False',
-                   'size': '',
-                   'sku_id': color}
+
+        if not sizes_sel:
+            sku = {'Price': pricing[0]}
+            sku['previous_price'] = pricing[1]
+            sku['Currency'] = pricing[2]
+            sku['Colour'] = color
+            sku['out_of_stock'] = 'False'
+            sku['size'] = ''
+            sku['sku_id'] = color
             skus.append(sku)
-        for size_attr in sizes_list:
-            size = size_attr.css('a::text').get().strip()
-            out_of_stock = True if size_attr.css('.unselectable') else False
-            sku = {'Price': price,
-                   'previous_price': previous_price,
-                   'Currency': currency,
-                   'Colour': color,
-                   'out_of_stock': out_of_stock,
-                   'size': size,
-                   'sku_id': color + "_" + size}
+
+        for size_sel in sizes_sel:
+            size = self.remove_spaces(size_sel.css('a::text').get())
+            out_of_stock = True if size_sel.css('.unselectable') else False
+            sku = {'Price': pricing[0]}
+            sku['previous_price'] = pricing[1]
+            sku['Currency'] = pricing[2]
+            sku['Colour'] = color
+            sku['out_of_stock'] = out_of_stock
+            sku['size'] = size
+            sku['sku_id'] = color + "_" + size
             skus.append(sku)
+
         return skus
+
+    def remove_spaces(self, list_to_strip):
+        if isinstance(list_to_strip, basestring):
+            return list_to_strip.strip()
+        return [str_to_strip.strip() for str_to_strip in list_to_strip if str_to_strip.strip()]
 
 
 class OrsaySpider(CrawlSpider):
@@ -126,17 +144,14 @@ class OrsaySpider(CrawlSpider):
     ]
 
     def parse(self, response):
-        orsay_extraxtor = OrsayExtractor()
+        orsay_parser = OrsayParser()
         if response.css('.js-next-load'):
-            page_size = int(response.css('.load-more-progress-label span::text').get())
-            max_pages = int(response.css('.load-more-progress::attr(data-max)').get()) // page_size
-            for page in range(1, max_pages):
-                url = response.url + '?prefn1=availableMarkets&sz=' + str(page_size) + '&start=' \
-                      + str(page_size * page) + '&format=page-element&prefv1=de_DE'
-                yield response.follow(url, callback=self.parse)
-        for detail_url in response.css('.thumb-link::attr(href)'):
-            yield response.follow(detail_url.get(), callback=orsay_extraxtor.parse_details)
-
+            max_products_on_page = response.css('.load-more-progress::attr(data-max)').get()
+            url = response.url + '?sz=' + max_products_on_page
+            yield response.follow(url, callback=self.parse)
+        else:
+            for product_url in response.css('.thumb-link::attr(href)'):
+                yield response.follow(product_url.get(), callback=orsay_parser.parse_details)
 
 
 class OrsayItem(scrapy.Item):
