@@ -43,7 +43,7 @@ const useStyles = makeStyles(theme => ({
     }
 }));
 
-const AppSidebar = ({container}) => {
+const AppSidebar = {container} => {
     const classes = useStyles();
     const theme = useTheme();
     const [mobileOpen, setMobileOpen] = React.useState(false);
