@@ -1,12 +1,29 @@
 import axios from "axios";
 import {
-    createCommentUrl,
-    deleteCommentUrl,
-    deletePostUrl,
-    fetchCommentsUrl, fetchCreateUpvoteUrl,
-    fetchCreatePostsUrl, deleteUpvoteUrl, fetchCreateDownvoteUrl, deleteDownvoteUrl
+    friendListEndpoint,
+    groupJoinEndpoint,
+    prependDomain,
+    userProfileEndpoint
 } from "../Utils/constants";
 
+export const UserProfileAPI = () => {
+    return axios.get(userProfileEndpoint)
+};
+
+export const GroupDataAPI = () => {
+    return axios.get(groupJoinEndpoint)
+};
+
+export const WorkInformationAPI = link => {
+    return axios.get(prependDomain(link))
+};
+
+export const AcademicInformationAPI = link => {
+    return axios.get(prependDomain(link))
+};
+
+export const FriendListAPI = () => {
+    return axios.get(friendListEndpoint)
 
 export const fetchCommentsDB = post => {
     return axios.get(fetchCommentsUrl(post));
