@@ -18,7 +18,7 @@ import Button from "@material-ui/core/Button";
 import Avatar from "@material-ui/core/Avatar";
 import Container from "@material-ui/core/Container";
 
-import Image from 'material-ui-image'
+import Image from 'material-ui-image';
 
 const styles = theme => ({
     card: {
