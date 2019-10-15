@@ -1,11 +1,12 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import {AppBar, CssBaseline, Drawer, Hidden, IconButton, Toolbar, Typography} from '@material-ui/core';
+
 import MenuIcon from '@material-ui/icons/Menu';
 import {makeStyles, useTheme} from '@material-ui/core/styles';
-import {drawer} from "./AppSidebarDrawer";
+import {drawer} from "../../Utils/Utils";
 
-const drawerWidth = 300;
+const DRAWER_WIDTH = 300;
 
 const useStyles = makeStyles(theme => ({
     root: {
@@ -13,7 +14,7 @@ const useStyles = makeStyles(theme => ({
     },
     drawer: {
         [theme.breakpoints.up('sm')]: {
-            width: drawerWidth,
+            width: DRAWER_WIDTH,
             flexShrink: 0,
         },
     },
@@ -28,11 +29,11 @@ const useStyles = makeStyles(theme => ({
     },
     toolbar: theme.mixins.toolbar,
     drawerPaper: {
-        width: drawerWidth,
+        width: DRAWER_WIDTH,
         marginTop: theme.spacing(8),
     },
     drawerPaperMobile: {
-        width: drawerWidth,
+        width: DRAWER_WIDTH,
     },
     content: {
         flexGrow: 1,
@@ -43,7 +44,7 @@ const useStyles = makeStyles(theme => ({
     }
 }));
 
-const AppSidebar = {container} => {
+const AppSidebar = (container) => {
     const classes = useStyles();
     const theme = useTheme();
     const [mobileOpen, setMobileOpen] = React.useState(false);
@@ -51,7 +52,6 @@ const AppSidebar = {container} => {
     const handleDrawerToggle = () => {
         setMobileOpen(!mobileOpen);
     };
-
 
     return (
         <div className={classes.root}>
