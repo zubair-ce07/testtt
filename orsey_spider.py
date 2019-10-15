@@ -8,37 +8,37 @@ from ..items import OrsayItem
 class OrsayExtractor:
 
     def parse_details(self, response):
-        orsay_details = OrsayItem()
-        orsay_details['retailer_sku'] = self.extract_sku(response)
-        orsay_details['gender'] = self.extract_gender()
-        orsay_details['category'] = self.extract_category(response)
-        orsay_details['brand'] = self.extract_brand()
-        orsay_details['url'] = self.extract_url(response)
-        orsay_details['name'] = self.extract_name(response)
-        orsay_details['description'] = self.extract_description(response)
-        orsay_details['care'] = self.extract_care(response)
-        orsay_details['img_urls'] = self.extract_img_url(response)
-        orsay_details['skus'] = self.extract_skus(response)
-        orsay_details['request_queue'] = self.extract_color_requests(response)
-        yield self.next_to_yield(orsay_details)
+        orsay_product = OrsayItem()
+        orsay_product['retailer_sku'] = self.extract_sku(response)
+        orsay_product['gender'] = self.extract_gender()
+        orsay_product['category'] = self.extract_category(response)
+        orsay_product['brand'] = self.extract_brand()
+        orsay_product['url'] = self.extract_url(response)
+        orsay_product['name'] = self.extract_name(response)
+        orsay_product['description'] = self.extract_description(response)
+        orsay_product['care'] = self.extract_care(response)
+        orsay_product['img_urls'] = self.extract_img_url(response)
+        orsay_product['skus'] = self.extract_skus(response)
+        orsay_product['request_queue'] = self.extract_color_requests(response)
+        yield self.get_item_or_request_to_yield(orsay_product)
 
     def parse_colors(self, response):
-        orsay_details = response.meta['item']
-        orsay_details['img_urls'] += self.extract_img_url(response)
-        orsay_details['skus'] += self.extract_skus(response)
-        yield self.next_to_yield(orsay_details)
+        orsay_product = response.meta['item']
+        orsay_product['img_urls'] += self.extract_img_url(response)
+        orsay_product['skus'] += self.extract_skus(response)
+        yield self.get_item_or_request_to_yield(orsay_product)
 
-    def next_to_yield(self, orsay_details):
-        if orsay_details['request_queue']:
-            request_next = orsay_details['request_queue'].pop()
-            request_next.meta['item'] = orsay_details
+    def get_item_or_request_to_yield(self, orsay_product):
+        if orsay_product['request_queue']:
+            request_next = orsay_product['request_queue'].pop()
+            request_next.meta['item'] = orsay_product
             return request_next
-        return orsay_details
+        del orsay_product['request_queue']
+        return orsay_product
 
     def extract_color_requests(self, response):
-        colors = response.css('.color [class="selectable"] ::attr(href)').getall()
-        request_queue = [scrapy.Request(color, callback=self.parse_colors) for color in colors]
-        return request_queue
+        colours_urls = response.css('.color [class="selectable"] ::attr(href)').getall()
+        return [scrapy.Request(colour_url, callback=self.parse_colors) for colour_url in colours_urls]
 
     def extract_sku(self, response):
         return response.css('.product-sku::text').get().split()[-1]
@@ -117,14 +117,15 @@ class OrsaySpider(CrawlSpider):
     name = "orsay"
     allowed_domains = ['orsay.com']
     start_urls = [
-        'https://www.orsay.com/',
+        'https://www.orsay.com/de-de/neuheiten/',
+        'https://www.orsay.com/de-de/produkte/',
+        'https://www.orsay.com/de-de/sale/',
+        'https://www.orsay.com/de-de/trends/',
+        'https://www.orsay.com/de-de/inspiration',
+        'https://www.orsay.com/de-de/specials/online-catalog/',
     ]
 
     def parse(self, response):
-        for category in response.css('.header-navigation a::attr(href)'):
-            yield response.follow(category.get(), callback=self.parse_category)
-
-    def parse_category(self, response):
         orsay_extraxtor = OrsayExtractor()
         if response.css('.js-next-load'):
             page_size = int(response.css('.load-more-progress-label span::text').get())
@@ -132,9 +133,10 @@ class OrsaySpider(CrawlSpider):
             for page in range(1, max_pages):
                 url = response.url + '?prefn1=availableMarkets&sz=' + str(page_size) + '&start=' \
                       + str(page_size * page) + '&format=page-element&prefv1=de_DE'
-                yield response.follow(url, callback=self.parse_category)
+                yield response.follow(url, callback=self.parse)
         for detail_url in response.css('.thumb-link::attr(href)'):
             yield response.follow(detail_url.get(), callback=orsay_extraxtor.parse_details)
+
 
 
 class OrsayItem(scrapy.Item):
