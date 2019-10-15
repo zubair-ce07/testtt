@@ -1,13 +1,13 @@
-from scrapy import Spider, Selector, Request, Field, Item
+from scrapy import Request, Field, Item
 from scrapy.linkextractors import LinkExtractor
 from scrapy.loader import ItemLoader
 import json
 from urllib.parse import urljoin
 from scrapy.loader.processors import TakeFirst, Identity
-from scrapy.spiders import Rule
+from scrapy.spiders import Rule, CrawlSpider
 
 
-class NnnowSpider(Spider):
+class NnnowSpider(CrawlSpider):
     name = 'nnnow'
     start_urls = [
         'https://www.nnnow.com/',
@@ -21,14 +21,10 @@ class NnnowSpider(Spider):
     }
     base_url = 'https://www.nnnow.com'
 
-    def parse(self, response):
-        meta = {'dont_merge_cookies': True}
-        navigation_links = LinkExtractor(restrict_css='.nw-leftnavmobile-list a') \
-            .extract_links(response)
-        for navigation_link in navigation_links:
-                yield Request(navigation_link.url,
-                              callback=self.parse_product_listing,
-                              meta=meta)
+    rules = (
+        Rule(LinkExtractor(restrict_css='.nw-leftnavmobile-list a',
+             deny=('/offers', )), callback='parse_product_listing'),
+    )
 
     def get_total_pages(self, response):
         find_json = response.css('script').re_first('DATA=(.+)</script>')
