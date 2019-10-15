@@ -1,4 +1,4 @@
-from django.urls import include, path
+from django.urls import include, path, re_path
 from rest_framework import routers
 
 from . import views
@@ -11,7 +11,8 @@ institute_router.register('', views.InstitutionViewSet)
 program_router.register('courses', views.CourseViewSet)
 # Wire up our API using automatic URL routing.
 urlpatterns = [
-    path('institutions/<int:institution_id>/', include(institute_router.urls)),
-    path('programs/<int:program_id>/', include(program_router.urls)),
+    path('institutions/', include(institute_router.urls)),
+    re_path(r'^institutions/(?P<institution_id>[0-9])/', include(institute_router.urls)),
+    re_path(r'^programs/(?P<program_id>[0-9])/', include(program_router.urls)),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework'))
 ]

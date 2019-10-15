@@ -17,6 +17,7 @@ class CampusSerializer(serializers.ModelSerializer):
 
 class ProgramSerializer(serializers.ModelSerializer):
     campus = CampusSerializer(read_only=True)
+    category = serializers.CharField(source='get_category_display')
 
     class Meta:
         model = Program
