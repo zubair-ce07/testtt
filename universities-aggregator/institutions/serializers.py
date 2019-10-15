@@ -1,4 +1,4 @@
-from .models import Program, Campus, Institution, Course
+from .models import Program, Campus, Institution, Course, Semester
 
 from rest_framework import serializers
 
@@ -28,3 +28,11 @@ class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = '__all__'
+
+
+class SemesterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Semester
+        fields = '__all__'
+
+    semester_courses = CourseSerializer(read_only=True, many=True)

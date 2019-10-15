@@ -1,8 +1,9 @@
 # Create your views here.
-from .models import Program, Institution, Campus, Course
-from .serializers import ProgramSerializer, InstitutionSerializer, CampusSerializer, CourseSerializer
-
 from rest_framework import viewsets
+
+from .models import Program, Institution, Campus, Course, Semester
+from .serializers import ProgramSerializer, InstitutionSerializer, CampusSerializer, CourseSerializer, \
+    SemesterSerializer
 
 
 class InstitutionViewSet(viewsets.ModelViewSet):
@@ -35,3 +36,8 @@ class CourseViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         program = self.kwargs['program_id']
         return self.queryset.filter(program=program).order_by('semester__number')
+
+
+class SemesterViewSet(viewsets.ModelViewSet):
+    queryset = Semester.objects
+    serializer_class = SemesterSerializer
