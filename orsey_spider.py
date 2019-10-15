@@ -19,27 +19,26 @@ class OrsayExtractor:
         orsay_details['care'] = self.extract_care(response)
         orsay_details['img_urls'] = self.extract_img_url(response)
         orsay_details['skus'] = self.extract_skus(response)
-        orsay_details['request_queue'] = self.extract_color_requests(response, orsay_details)
-        yield self.next_to_yield(orsay_details)
+        orsay_details['request_queue'] = []
+        colors = response.css('.color .selectable ::attr(href)').getall()
+
+        for color in colors:
+            orsay_details['request_queue'].append(
+                scrapy.Request(color, callback=self.parse_colors, meta={'item': orsay_details}))
+
+        if orsay_details['request_queue']:
+            yield orsay_details['request_queue'].pop()
+        else:
+            yield orsay_details
 
     def parse_colors(self, response):
         orsay_details = response.meta['item']
         orsay_details['img_urls'] += self.extract_img_url(response)
         orsay_details['skus'] += self.extract_skus(response)
-        yield self.next_to_yield(orsay_details)
-
-    def next_to_yield(self, orsay_details):
         if orsay_details['request_queue']:
-            return orsay_details['request_queue'].pop()
-        return orsay_details
-
-    def extract_color_requests(self, response, orsay_details):
-        colors = response.css('.color [class="selectable"] ::attr(href)').getall()
-        request_queue = []
-        for color in colors:
-            request_queue.append(
-                scrapy.Request(color, callback=self.parse_colors, meta={'item': orsay_details}))
-        return request_queue
+            yield orsay_details['request_queue'].pop()
+        else:
+            yield orsay_details
 
     def extract_sku(self, response):
         return response.css('.product-sku::text').get().split()[-1]
@@ -133,6 +132,7 @@ class OrsaySpider(CrawlSpider):
                 yield response.follow(url, callback=self.parse_category)
         for detail_url in response.css('.thumb-link::attr(href)'):
             yield response.follow(detail_url.get(), callback=orsay_extraxtor.parse_details)
+
 
 
 class OrsayItem(scrapy.Item):
