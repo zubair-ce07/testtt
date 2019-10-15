@@ -58,4 +58,12 @@ class Migration(migrations.Migration):
                 ('assignee', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='assignee', to=settings.AUTH_USER_MODEL)),
             ],
         ),
+        migrations.CreateModel(
+            name='DateTime',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('datetime_str', models.DateTimeField()),
+                ('timezone_offset', models.IntegerField(default=5)),
+            ],
+        ),
     ]

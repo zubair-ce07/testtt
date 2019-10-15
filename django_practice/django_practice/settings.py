@@ -37,7 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'whitenoise.runserver_nostatic',
-    'djcelery'
+    'django_crontab',
+    'djcelery',
 ]
 
 MIDDLEWARE = [
@@ -145,3 +146,7 @@ CELERY_BROKER_URL = 'amqp://localhost'
 CELERY_RESULT_BACKEND = 'db+sqlite:///results.sqlite'
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
+
+CRONJOBS = [
+    ('*/5 * * * *', 'taskmanager.cron.update_times')
+]

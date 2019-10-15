@@ -18,3 +18,9 @@ class Task(models.Model):
     last_modified = models.DateTimeField(auto_now=True)
     status = models.CharField(default='Pending', choices=(('pending', 'Pending'), ('complete', 'Complete'),),
                               max_length=10)
+
+
+class DateTime(models.Model):
+    datetime_str = models.DateTimeField()
+    timezone_offset = models.IntegerField(default=5, choices=((0, '0'), (5, '5')),
+                                          error_messages={'invalid_choice': 'value provided is not a invalid.', }, )
