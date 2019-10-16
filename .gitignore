@@ -58,3 +58,8 @@ target/
 
 # VSCode
 .vscode
+
+weatherdata
+weatherfiles
+
+weatherfiles.zip
