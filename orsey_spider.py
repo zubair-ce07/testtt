@@ -76,11 +76,12 @@ class OrsayParser:
     def extract_color(self, response):
         return self.clean(response.css('.color .selected ::attr(title)').get().split('-')[1])
 
-    def extract_pricing(self, response):
-        price = self.clean(response.css('.price-sales::text').get().split(' ')[0])
-        previous_price = self.clean(response.css('.price-standard::text').get(default='').split(' ')[0])
+    def extract_pricing_and_color(self, response):
+        price = self.clean(response.css('.price-sales::text').get())
+        previous_price = self.clean(response.css('.price-standard::text').get(default=''))
         currency = response.css('.locale-item.current .country-currency::text').get()
-        return {'price': price, 'previous_price': previous_price, 'Currency': currency}
+        color = self.extract_color(response)
+        return {'price': price, 'previous_price': previous_price, 'Currency': currency, 'Colour': color}
 
     def make_sku(self, sku, out_of_stock, size):
         final_sku = sku.copy()
@@ -90,12 +91,12 @@ class OrsayParser:
         return final_sku
 
     def extract_skus(self, response):
-        pricing = self.extract_pricing(response)
-        color = self.extract_color(response)
-        pricing.update({'Colour': color})
+        pricing = self.extract_pricing_and_color(response)
         sizes_sel = response.css('.size li')
+        if not sizes_sel:
+            return [self.make_sku(pricing, 'False', '')]
         return [self.make_sku(pricing, True if size_sel.css('.unselectable') else False, size_sel.css('a::text').get())
-                for size_sel in sizes_sel] if sizes_sel else [self.make_sku(pricing, 'False', '')]
+                for size_sel in sizes_sel]
 
     def clean(self, list_to_strip):
         if isinstance(list_to_strip, basestring):
@@ -122,7 +123,6 @@ class OrsaySpider(CrawlSpider):
         orsay_parser = OrsayParser()
         for product_url in response.css('.thumb-link::attr(href)'):
             yield response.follow(product_url.get(), callback=orsay_parser.parse_details)
-
 
 
 class OrsayItem(scrapy.Item):
