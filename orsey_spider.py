@@ -73,50 +73,29 @@ class OrsayParser:
     def extract_img_url(self, response):
         return response.css('.productthumbnail::attr(src)').getall()
 
-    def extract_prices(self, response):
-        if response.css('.price-standard').get():
-            price = self.clean(response.css('.price-standard::text').get().split(' ')[0])
-            previous_price = self.clean(response.css('.price-sales::text').get().split(' ')[0])
-            return {'price': price, 'previous_price': previous_price}
-
-        price = self.clean(response.css('.price-sales::text').get().split(' ')[0])
-        return {'price': price}
-
-    def extract_currency(self, response):
-        return response.css('.locale-item.current .country-currency::text').get()
-
     def extract_color(self, response):
         return self.clean(response.css('.color .selected ::attr(title)').get().split('-')[1])
 
     def extract_pricing(self, response):
-        prices = self.extract_prices(response)
-        prices.update({'currency': self.extract_currency(response)})
-        return prices
+        price = self.clean(response.css('.price-sales::text').get().split(' ')[0])
+        previous_price = self.clean(response.css('.price-standard::text').get(default='').split(' ')[0])
+        currency = response.css('.locale-item.current .country-currency::text').get()
+        return {'price': price, 'previous_price': previous_price, 'Currency': currency}
 
     def make_sku(self, sku, out_of_stock, size):
-        r_sku = sku.copy()
-        r_sku.update({'out_of_stock': out_of_stock})
-        r_sku.update({'size': size})
-        r_sku.update({'sku_id': sku['Colour'] + size})
-        return r_sku
+        final_sku = sku.copy()
+        final_sku.update({'out_of_stock': out_of_stock})
+        final_sku.update({'size': self.clean(size)})
+        final_sku.update({'sku_id': sku['Colour'] + '_' + self.clean(size)})
+        return final_sku
 
     def extract_skus(self, response):
         pricing = self.extract_pricing(response)
         color = self.extract_color(response)
+        pricing.update({'Colour': color})
         sizes_sel = response.css('.size li')
-        sku = pricing.copy()
-        sku.update({'Colour': color})
-        skus = []
-
-        if not sizes_sel:
-            skus.append(self.make_sku(sku, 'False', ''))
-
-        for size_sel in sizes_sel:
-            size = self.clean(size_sel.css('a::text').get())
-            out_of_stock = True if size_sel.css('.unselectable') else False
-            skus.append(self.make_sku(sku, out_of_stock, '_'+size))
-
-        return skus
+        return [self.make_sku(pricing, True if size_sel.css('.unselectable') else False, size_sel.css('a::text').get())
+                for size_sel in sizes_sel] if sizes_sel else [self.make_sku(pricing, 'False', '')]
 
     def clean(self, list_to_strip):
         if isinstance(list_to_strip, basestring):
@@ -132,16 +111,15 @@ class OrsaySpider(CrawlSpider):
         'https://www.orsay.com/de-de/produkte/',
         'https://www.orsay.com/de-de/sale/',
         'https://www.orsay.com/de-de/trends/',
-        'https://www.orsay.com/de-de/inspiration',
-        'https://www.orsay.com/de-de/specials/online-catalog/',
     ]
 
     def parse(self, response):
+        max_products_on_page = response.css('.load-more-progress::attr(data-max)').get()
+        url = w3lib.url.add_or_replace_parameters(response.url, {'sz': max_products_on_page})
+        yield response.follow(url, callback=self.parse_category_page)
+
+    def parse_category_page(self, response):
         orsay_parser = OrsayParser()
-        if response.css('.js-next-load'):
-            max_products_on_page = response.css('.load-more-progress::attr(data-max)').get()
-            url = w3lib.url.url_query_cleaner(response.url + "?sz=" + max_products_on_page, ('sz',))
-            yield response.follow(url, callback=self.parse)
         for product_url in response.css('.thumb-link::attr(href)'):
             yield response.follow(product_url.get(), callback=orsay_parser.parse_details)
 
