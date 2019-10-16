@@ -53,8 +53,11 @@ docs/_build/
 # PyBuilder
 target/
 
-# PyCharm
+# Webstorm
 .idea
 
 # VSCode
 .vscode
+
+# node modules
+node_modules
