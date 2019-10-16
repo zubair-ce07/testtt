@@ -67,7 +67,7 @@ def year_details(year, path):
                 line, file_pointer = read_file_line(
                     file_pointer, path, start_year)
 
-        except IOError:
+        except (IOError, ValueError):
             pass
 
         start_year += delta
@@ -114,7 +114,7 @@ def month_average_detail(date, path):
         print "Lowest Average: %sC" % (average_lowest_temperature_record[2])
         print "Average Humid: %s%%" % (average_max_humidity_record[8])
 
-    except IOError:
+    except (IOError, ValueError):
         pass
 
 
@@ -152,7 +152,7 @@ def month_horizontal_chart(date, path):
             date += delta
             line = file_pointer.readline()
 
-    except IOError:
+    except (IOError, ValueError):
         pass
 
 
