@@ -6,11 +6,12 @@ from . import views
 institute_router = routers.DefaultRouter()
 institute_router.register('campuses', views.CampusViewSet)
 institute_router.register('programs', views.ProgramViewSet)
-institute_router.register('semester', views.SemesterViewSet)
 institute_router.register('', views.InstitutionViewSet)
 
 program_router = routers.DefaultRouter()
 program_router.register('courses', views.CourseViewSet)
+program_router.register('semesters', views.SemesterViewSet)
+
 
 # Wire up our API using automatic URL routing.
 urlpatterns = [

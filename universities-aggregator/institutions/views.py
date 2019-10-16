@@ -41,3 +41,7 @@ class CourseViewSet(viewsets.ModelViewSet):
 class SemesterViewSet(viewsets.ModelViewSet):
     queryset = Semester.objects
     serializer_class = SemesterSerializer
+
+    def get_queryset(self):
+        program = self.kwargs['program_id']
+        return self.queryset.filter(program=program)

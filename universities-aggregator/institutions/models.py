@@ -65,9 +65,13 @@ class Semester(models.Model):
         (7, '7th'),
         (8, '8th'))
     number = models.IntegerField(default=0, choices=SEMESTER_CHOICES)
+    program = models.ForeignKey(Program, default='', related_name='program_semesters', on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('number', 'program')
 
     def __str__(self):
-        return f'{self.number}'
+        return f'{self.number} | {self.program.name} | {self.program.campus} '
 
 
 class Course(models.Model):
