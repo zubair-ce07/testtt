@@ -1,8 +1,8 @@
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
-from urllib.parse import urljoin
 
 from softsurroundings.items import SoftsurroundingsItem 
+from softsurroundings.utils import parse_gender
 
 
 class ParseSpider():    
@@ -34,19 +34,8 @@ class ParseSpider():
     def get_retailer_sku(self, response):
         return response.css('input[name^=sku_]::attr(value)').get()
 
-    def get_gender(self, response):        
-        title_text = response.css('title::text').get()
-        size_categories = response.css('#sizecat a::text').getall()
-
-        description = self.get_description(response)
-        joined_text = f"{title_text} {' '.join(size_categories)} {' '.join(description)}"
-
-        if any(gender in joined_text.lower() for gender in ['women', 'woman', 'misses', 'female', 'feminine']):
-            return 'Women'
-        elif any(gender in joined_text.lower() for gender in [' men', 'man', 'male', 'masculine'])
-            return 'Men'
-    
-        return 'Unisex adult'            
+    def get_gender(self, response):                
+        return parse_gender(response)            
 
     def get_brand(self, response):
         css = 'meta[property="og:site_name"]::attr(content)'
@@ -74,7 +63,7 @@ class ParseSpider():
         skus = {}
         sku_attributes = {}
 
-        colours_css = '.swatchHover > span::text, .basesize'
+        colours_css = '.swatchHover > span::text, .basesize::text'
         currency_css = 'span[itemprop="priceCurrency"]::attr(content)'
         
         sizes = response.css('.box.size::text').getall()
@@ -83,11 +72,11 @@ class ParseSpider():
 
         for size in sizes:
             for colour in colours:
-                sku_attributes['previous_price'] = int(response.css('span[itemprop="price"]::text').get())
+                sku_attributes['previous_price'] = float(response.css('span[itemprop="price"]::text').get())
                 sku_attributes['currency'] = response.css(currency_css).get()
                 sku_attributes['colour'] = colour
                 sku_attributes['size'] = size
-                sku_attributes['out_of_stock'] = 'True' if availability != 'In Stock' else 'False'
+                sku_attributes['out_of_stock'] = True if availability != 'In Stock' else False
 
                 skus[f'{colour}_{size}'] = sku_attributes
                                
@@ -97,34 +86,36 @@ class ParseSpider():
         sizes = response.css('#sizecat > a::attr(id)').getall()
         size_ids = [size.split('_')[1] for size in sizes]
         
-        return [response.follow(urljoin(response.url, f'/p/{id}'), callback=self.parse_skus) for id in size_ids]
+        return [response.follow(f'/p/{id.lower()}', callback=self.parse_skus) for id in size_ids]
 
     def request_or_product(self, product):
         if product['requests']:
             request = product['requests'].pop()
             request.meta['product'] = product
-
-            return request
+            return request                        
         else:
             del product['requests']
 
-        return product
-        
+        return product   
+
 
 class CrawlSpider(CrawlSpider):
     name = 'softsurroundings_spider'    
     allowed_domains = ['softsurroundings.com']
-    start_urls = ['http://www.softsurroundings.com']
+    start_urls = ['https://www.softsurroundings.com/p/the-ultimate-leggings/']
 
     listings_css = 'ul#menubar'
     product_css = 'div.product'
 
     softsurroundings_parser = ParseSpider()
-    
+
     rules = (
         Rule(LinkExtractor(restrict_css=listings_css)),
         Rule(LinkExtractor(restrict_css=product_css), callback='parse_item')
     )
-
+    
     def parse_item(self, response):
+        return self.softsurroundings_parser.parse_product(response)
+
+    def parse_start_url(self, response):
         return self.softsurroundings_parser.parse_product(response)
