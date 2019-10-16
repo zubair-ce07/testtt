@@ -1,16 +1,14 @@
 import React, { Component } from 'react'
-import axios from 'axios';
-import { EndPoint } from '../config';
+import  API from '../api';
 
 export class Home extends Component {
   state = {
     institutions: []
   }
   componentDidMount() {
-    axios.get(EndPoint.institutions)
+    API.get(`institutions/`)
       .then(res => {
         const institutions = res.data;
-        console.log('institutions', institutions);
         this.setState({ institutions });
       })
   }

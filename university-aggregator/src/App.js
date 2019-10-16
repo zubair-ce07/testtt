@@ -14,8 +14,6 @@ function App() {
     <div className="App">
        <Router>
       <div>
-        {/* A <Switch> looks through its children <Route>s and
-            renders the first one that matches the current URL. */}
         <Switch>
           <Route name="programs" path="/institutions/:id/programs" component={Program}>
           </Route>
