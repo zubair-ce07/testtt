@@ -1,4 +1,4 @@
-"""This module give weather details
+"""This module give weather details.
 """
 import sys
 from datetime import datetime, timedelta
