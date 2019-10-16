@@ -1,60 +1,68 @@
-import React, { Component } from 'react'
-import  API  from '../api';
+import React, { Component } from "react";
+
+import Table from "react-bootstrap/Table";
+import Container from "react-bootstrap/Container";
+import Row from "react-bootstrap/Row";
+import Col from "react-bootstrap/Col";
+
+import API from "../api";
+
+const courseHeaders = ["Course Code", "Course Name", "Cred Hrs"];
 
 export class Course extends Component {
-    state={ courses : []}
-    componentDidMount() {
-      const id = this.props.match.params.id
-      API.get(`programs/${id}/courses/`).then(res => {
-        const courses = res.data;
-        this.setState({ courses });
-      });
-    }
-    renderCourses = ()  => (
-      <div className="container">
-      <div className="row">
-        <div className="col-md-6">
-          <div className="table-responsive">
-            <table className="table  table-bordered table-condensed table-hover table-striped">
-              <thead>
-                <tr>
-                  <th>Course Code</th>
-                  <th>Course Name</th>
-                  <th>Cred Hrs</th>
-                </tr>
-              </thead>
-              <tbody>
-                {this.state.courses.map(course => (
-                 <React.Fragment key={course.id}> 
+  state = { semesters: [] };
+  componentDidMount() {
+    const id = this.props.match.params.id;
+    API.get(`programs/${id}/semesters/`).then(({data}) => {
+      const semesters = data;
+      this.setState({ semesters });
+    });
+  }
+  renderCourses = () => (
+    <Container>
+      <Row>
+        <Col md={6}>
+          <Table striped bordered hover variant="dark">
+            <thead>
+              <tr>
+                {courseHeaders.map(header => (
+                  <th>{header}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {this.state.semesters.map(semester => (
+                <React.Fragment key={semester.id}>
                   <tr>
                     <td colSpan={6}>
                       <h5>
-                        <strong>Semester {course.semester}</strong>
+                        <strong>Semester {semester.number}</strong>
                       </h5>
                     </td>
                   </tr>
-                  <tr>
-                    <td>
-                      <span>{course.code}</span>
-                    </td>
-                    <td>
-                      <span>{course.name}</span>
-                    </td>
-                    <td>
-                      <span>{course.credit_hour}</span>
-                    </td>
-                  </tr>
-                  </React.Fragment>  
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-    );
+                  {semester.semester_courses.map(course => (
+                    <tr>
+                      <td>
+                        <span>{course.code}</span>
+                      </td>
+                      <td>
+                        <span>{course.name}</span>
+                      </td>
+                      <td>
+                        <span>{course.credit_hour}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </React.Fragment>
+              ))}
+            </tbody>
+          </Table>
+        </Col>
+      </Row>
+    </Container>
+  );
 
-    render() {
-    return this.renderCourses()
-    }
+  render() {
+    return this.renderCourses();
+  }
 }
