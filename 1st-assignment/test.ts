@@ -20,7 +20,7 @@ describe("kayak Automation", async function() {
   });
 
   it("Select flights from top", function() {
-    homePageObject.clickFlights().should.eventually.includes('flights')
+    homePageObject.clickFlights().should.eventually.include('flights')
   });
 
   it("Should display the origin field", function() {
@@ -48,14 +48,14 @@ describe("kayak Automation", async function() {
     homePageObject.roundTripField.getText().should.eventually.be.equal('One-way');
   });
   
-  it("Switch to ‘Multi-city’ trip type mode", function() {
-    homePageObject.changeToMulticityTrip();
-    homePageObject.roundTripField.getText().should.eventually.be.equal('Multi-city');
+  it("Switch to ‘Multi-city’ trip type mode", async function() {
+    await homePageObject.changeToMulticityTrip();
+    await homePageObject.roundTripField.getText().should.eventually.be.equal('Multi-city');
   });
 
-  it("Change number of ‘adults’ from travelers field to 9", function() {
-    homePageObject.addAdultPassengers(10);
-    homePageObject.getAdultsLimitMessage().should.eventually.be.equal("Searches cannot have more than 9 adults");
+  it("Change number of ‘adults’ from travelers field to 9",async function() {
+    await homePageObject.addAdultPassengers(10);
+    await homePageObject.getAdultsLimitMessage().should.eventually.be.equal("Searches cannot have more than 9 adults");
   });
 
   it("Switch to ‘Round-trip’ trip type mode", function() {
@@ -65,17 +65,17 @@ describe("kayak Automation", async function() {
 
   it("Should display ‘Paris (PAR)’ in origin field", async function() {
     await homePageObject.setDeparture("PAR");
-    await homePageObject.getDepartureValue().should.eventually.be.equal("Paris (PAR)");
+    homePageObject.getDepartureValue().should.eventually.be.equal("Paris (PAR)");
   });
 
   it("Should display ‘New York (NYC)’ in the destination field", async function() {
     await homePageObject.setDestination("NYC");
-    await homePageObject.getDestinationValue().should.eventually.be.equal("New York (NYC)");
+    homePageObject.getDestinationValue().should.eventually.be.equal("New York (NYC)");
   });
 
-  it("Should display accurate date in departure field", function() {
-    homePageObject.fillDatesDeparture();
-    homePageObject.getDepartureDate().should.eventually.be.equal(homePageObject.getTripDates(3));
+  it("Should display accurate date in departure field", async function() {
+    await homePageObject.fillDatesDeparture();
+    homePageObject.getDepartureDate().getText().should.eventually.be.equal(homePageObject.getTripDates(3));
   });
 
   it("Should display accurate date in return date field", function() {
@@ -98,7 +98,7 @@ describe("kayak Automation", async function() {
   });
 
   it("Should display correct filled-in search form on results page", function() {
-    homePageObject.clickSearch().should.eventually.includes('sort=bestflight_a');
+    homePageObject.clickSearch().should.eventually.include('sort=bestflight_a');
   });
 
   it("Should display the origin field", function() {

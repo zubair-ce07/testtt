@@ -15,7 +15,7 @@ export class HomePageObject {
 	addAdultButton: ElementFinder = element(by.css("div[id$='travelersAboveForm-adults'] .incrementor-js"));
 	passengerErrorText: ElementFinder = element(by.css("div[id$=travelersAboveForm-errorMessage]"));
 	originInput: ElementFinder = element.all(by.name('origin')).first();
-	originSelect: ElementFinder = element(by.css("ul[class='flight-smarty'] li"));
+	originSelect: ElementFinder = element(by.css("[class='flight-smarty'] li"));
 	departureText: ElementFinder = element.all(by.css('div[id$="origin-airport-display-inner"]')).first();
 	destinationInput: ElementFinder = element.all(by.name('destination')).first();
 	destinationSelect: ElementFinder = element.all(by.css("div[id$='destination-airport-smartbox-dropdown'] li")).first();
@@ -42,7 +42,7 @@ export class HomePageObject {
 		this.switchOneWayOption.click();
 	}
 
-	changeToMulticityTrip() {
+	changeToMulticityTrip(): void {
 		this.searchFormObject.waitUntillElementAppears(this.switchOptions);
 		this.switchOptions.click();
 		this.searchFormObject.waitUntillElementAppears(this.switchMultiCityOption);
@@ -77,10 +77,10 @@ export class HomePageObject {
 		}
 	}
 
-	getAdultsLimitMessage(): promise.Promise<string> {
-		this.searchFormObject.waitUntillElementAppears(this.passengerErrorText);
+	async getAdultsLimitMessage(): Promise<string> {
+		await this.searchFormObject.waitUntillElementAppears(this.passengerErrorText);
 		const errorMsg = this.passengerErrorText.getText();
-		this.passengerErrorText.sendKeys(Key.ESCAPE);
+		// this.passengerErrorText.sendKeys(Key.ESCAPE);
 		return errorMsg;
 	}
 
@@ -88,7 +88,8 @@ export class HomePageObject {
 		await this.searchFormObject.waitUntillElementAppears(this.searchFormObject.departureField);
 		this.searchFormObject.departureField.click();
 		this.searchFormObject.waitUntillElementAppears(this.originInput);
-		this.originInput.clear();
+		this.originInput.sendKeys(Key.BACK_SPACE);
+		this.originInput.sendKeys(Key.BACK_SPACE);
 		this.originInput.sendKeys(departure);
 		await this.searchFormObject.waitUntillElementAppears(this.originSelect);
 		this.originSelect.click();
@@ -157,16 +158,16 @@ export class HomePageObject {
 		this.searchFormObject.departureDateField.click();
 	}
 
-	fillDatesDeparture(): void {
-		this.searchFormObject.waitUntillElementAppears(this.searchFormObject.departureDateField);
+  async fillDatesDeparture(): Promise<void> {
+		await this.searchFormObject.waitUntillElementAppears(this.searchFormObject.departureDateField);
 		this.searchFormObject.departureDateField.click();
-		this.searchFormObject.waitUntillElementAppears(this.departureDateInput);
+		await this.searchFormObject.waitUntillElementAppears(this.departureDateInput);
 		this.departureDateInput.clear();
-		this.departureDateInput.sendKeys(this.setTripDates(3));
+		await this.departureDateInput.sendKeys(this.setTripDates(3));
 	}
 
-	async getDepartureDate(): Promise<string> {
-		return this.searchFormObject.departureDateField.getText();
+	getDepartureDate(): ElementFinder {
+		return this.searchFormObject.departureDateField;
 	}
 
 	getTripDates(tripDate: number): string {
