@@ -1,5 +1,5 @@
-import React from 'react'
-import { Link} from 'react-router-dom'
+import React from 'react';
+import { Link} from 'react-router-dom';
 
 
 const Navbar = () => {
@@ -8,7 +8,7 @@ const Navbar = () => {
             <div className="container">
                 <Link to="/" className="brand-logo left">ShopCity</Link>
                 <ul className="right">
-                    <li><Link to="/Home">View Cart</Link></li>
+                    <li><Link to="/home">View Cart</Link></li>
                     <li><Link to="/login">Login</Link></li>
                     <li><Link to="/register">Register</Link></li>
                 </ul>

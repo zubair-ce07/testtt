@@ -1,7 +1,11 @@
 import React, { Component } from 'react';
+import {withRouter} from 'react-router-dom';
 
 
 class ProductsList extends Component{
+    viewProductDetails = (retailer_sku) => {
+        this.props.history.push('/product/' + retailer_sku)
+    }
     render (){
         const { productsList } = this.props
         const productList = productsList.length ? (
@@ -10,13 +14,14 @@ class ProductsList extends Component{
                     <div className="col s12 l3" key={product.retailer_sku}>
                         <div className="card large" >
                             <div className="card-image">
-                                <img src={ product.image_url } height='250'></img>                                
+                                <img alt="" style={{height: '250px'}} src="https://images.pexels.com/photos/67636/rose-blue-flower-rose-blooms-67636.jpeg?auto=compress&cs=tinysrgb&h=750&w=1260"></img>
+                                {/* <img src={ product.image_url } height='250'></img>                                 */}
                             </div>
                             <div className="card-content">
                                 <h6> { product.name }-{ product.brand }</h6>
                                 <div className="left-align card-action">
                                     <p>Price: { product.price } { product.currency }</p><br></br>
-                                    <a className="btn blue" href="#">View Details</a>
+                                    <a className="btn blue" onClick={() => {this.viewProductDetails(product.retailer_sku)}}>View Details</a>      
                                 </div>
                             </div>
                         </div>
@@ -31,9 +36,9 @@ class ProductsList extends Component{
                     {productList}
                 </div>
             </div>
-        )
+        ) 
 
 }
 };
 
-export default ProductsList;
+export default withRouter(ProductsList);
