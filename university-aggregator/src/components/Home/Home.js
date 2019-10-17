@@ -2,7 +2,7 @@ import React, { Component } from "react";
 
 import Form from "react-bootstrap/Form";
 
-import API from "../api";
+import API from '../../api'
 
 export class Home extends Component {
   state = {
@@ -36,4 +36,5 @@ export class Home extends Component {
     );
   }
 }
+
 

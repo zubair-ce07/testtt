@@ -5,23 +5,35 @@ import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 
-import API from "../api";
+import { TableHeader } from "../table-header";
+import { ProgramRow } from "./program-row";
 
-const programHeaders = ["Programs", "Branches"];
+import API from "../../api";
+
+
+const programHeaders = [
+  { id: 1, name: "Programs" },
+  { id: 2, name: "Branches" }
+];
 
 export class Program extends Component {
   state = { programs: [] };
 
+  constructor(props){
+    super(props);
+    this.navigateToCourses.bind(this)
+  }
+
   componentDidMount() {
     const id = this.props.match.params.id;
-    API.get(`institutions/${id}/programs/`).then(({data}) => {
+    API.get(`institutions/${id}/programs/`).then(({ data }) => {
       const programs = data;
       this.setState({ programs });
     });
   }
-  navigateToCourses(id) {
+  navigateToCourses = id => {
     this.props.history.push(`/programs/${id}/courses/`);
-  }
+  };
   renderPrograms = () => (
     <Container>
       <Row>
@@ -30,31 +42,17 @@ export class Program extends Component {
             <thead>
               <tr>
                 {programHeaders.map(header => (
-                  <th scope="col">{header}</th>
+                  <TableHeader key={header.id} header={header} />
                 ))}
               </tr>
             </thead>
             <tbody>
               {this.state.programs.map(program => (
-                <React.Fragment key={program.id}>
-                  <tr>
-                    <td colSpan={6}>
-                      <h4>
-                        <strong>{program.category}</strong>
-                      </h4>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <span onClick={id => this.navigateToCourses(program.id)}>
-                        {program.name}
-                      </span>
-                    </td>
-                    <td>
-                      <span>{program.campus.name}</span>
-                    </td>
-                  </tr>
-                </React.Fragment>
+                <ProgramRow
+                  key={program.id}
+                  program={program}
+                  navigate={this.navigateToCourses}
+                />
               ))}
             </tbody>
           </Table>
