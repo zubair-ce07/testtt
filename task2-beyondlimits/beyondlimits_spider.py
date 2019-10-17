@@ -25,7 +25,7 @@ class BeyondLimitsExtractor:
         return response.url
 
     def extract_gender(self, response):
-        return self.clean(response.css('[itemprop=title]::text').getall()[1].strip())
+        return self.clean(response.css('[itemprop=title]::text').getall()[1])
 
     def extract_category(self, response):
         return response.css('[itemprop=title]::text').getall()[1:]
@@ -48,23 +48,24 @@ class BeyondLimitsExtractor:
     def extract_pricing_and_color(self, response):
         price = response.css('[itemprop="price"]::attr(content)').get()
         currency = response.css('[itemprop="priceCurrency"]::attr(content)').get()
-        previous_price = response.css('.oldPrice del::text').get(default='').split()[:-1]
+        previous_price = response.css('.oldPrice del::text').getall()
         color = self.clean(response.css('#description li::text')[0].get().split(':')[1])
         return {'Price': price, 'Previous_Price': previous_price, 'Currency': currency, 'Colour': color}
 
-    def make_sku(self, sku, size):
-        final_sku = sku.copy()
-        final_sku.update({'size': size, 'sku_id': sku['Colour']+'_'+size})
-        return final_sku
-
     def extract_skus(self, response):
-        pricing = self.extract_pricing_and_color(response)
+        pricing_color = self.extract_pricing_and_color(response)
         sizes_sel = response.css('#bb-variants--0 option::text').getall()
-        skus = [self.make_sku(pricing, size_sel) for size_sel in sizes_sel]
+        skus = []
+        for size in sizes_sel:
+            sku = pricing_color.copy()
+            sku.update({'size': size, 'sku_id': pricing_color['Colour'] + '_' + size})
+            skus.append(sku)
         if not sizes_sel:
-            skus = self.make_sku(pricing, '')
+            sku = pricing_color.copy()
+            sku.update({'sku_id': pricing_color['Colour']})
+            skus.append(sku)
         return skus
-    
+
     def clean(self, list_to_strip):
         if isinstance(list_to_strip, basestring):
             return list_to_strip.strip()
