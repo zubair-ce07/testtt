@@ -78,25 +78,27 @@ class OrsayParser:
 
     def extract_pricing_and_color(self, response):
         price = self.clean(response.css('.price-sales::text').get())
-        previous_price = self.clean(response.css('.price-standard::text').get(default=''))
+        previous_price = self.clean(response.css('.price-standard::text').getall())
         currency = response.css('.locale-item.current .country-currency::text').get()
         color = self.extract_color(response)
         return {'price': price, 'previous_price': previous_price, 'Currency': currency, 'Colour': color}
 
-    def make_sku(self, sku, out_of_stock, size):
-        final_sku = sku.copy()
-        final_sku.update({'out_of_stock': out_of_stock})
-        final_sku.update({'size': self.clean(size)})
-        final_sku.update({'sku_id': sku['Colour'] + '_' + self.clean(size)})
-        return final_sku
-
     def extract_skus(self, response):
-        pricing = self.extract_pricing_and_color(response)
+        pricing_color = self.extract_pricing_and_color(response)
         sizes_sel = response.css('.size li')
+        skus = []
         if not sizes_sel:
-            return [self.make_sku(pricing, 'False', '')]
-        return [self.make_sku(pricing, True if size_sel.css('.unselectable') else False, size_sel.css('a::text').get())
-                for size_sel in sizes_sel]
+            sku = pricing_color.copy()
+            sku.update({'out_of_stock': False, 'sku_id': pricing_color['Colour']})
+            skus.append(sku)
+        for size_sel in sizes_sel:
+            sku = pricing_color.copy()
+            out_of_stock = True if size_sel.css('.unselectable') else False
+            size = size_sel.css('a::text').get()
+            sku_id = pricing_color['Colour'] + '_' + size
+            sku.update({'out_of_stock': out_of_stock, 'size': size, 'sku_id': sku_id})
+            skus.append(sku)
+        return skus
 
     def clean(self, list_to_strip):
         if isinstance(list_to_strip, basestring):
