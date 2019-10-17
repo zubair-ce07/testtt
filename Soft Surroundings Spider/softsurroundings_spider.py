@@ -18,16 +18,16 @@ class ParseSpider():
         product['name'] = self.get_name(response)
         product['description'] = self.get_description(response)
         product['care'] = self.get_care(response)
-        product['skus'] = self.get_skus(response)
+        product['skus'] = []
         product['image_urls'] = self.get_image_urls(response)
         product['requests'] = self.skus_requests(response)
 
         return self.request_or_product(product)
 
-    def parse_skus(self, response):
+    def parse_skus(self, response):        
         product = response.meta['product']
         skus = self.get_skus(response)        
-        product['skus'] = skus
+        product['skus'].append(skus)
 
         return self.request_or_product(product)    
 
@@ -61,7 +61,6 @@ class ParseSpider():
 
     def get_skus(self, response):
         skus = {}
-        sku_attributes = {}
 
         colours_css = '.swatchHover > span::text, .basesize::text'
         currency_css = 'span[itemprop="priceCurrency"]::attr(content)'
@@ -72,7 +71,9 @@ class ParseSpider():
 
         for size in sizes:
             for colour in colours:
-                sku_attributes['previous_price'] = float(response.css('span[itemprop="price"]::text').get())
+                sku_attributes = {}
+
+                sku_attributes['previous_price'] = int(float(response.css('span[itemprop="price"]::text').get())*100)
                 sku_attributes['currency'] = response.css(currency_css).get()
                 sku_attributes['colour'] = colour
                 sku_attributes['size'] = size
@@ -102,10 +103,10 @@ class ParseSpider():
 class CrawlSpider(CrawlSpider):
     name = 'softsurroundings_spider'    
     allowed_domains = ['softsurroundings.com']
-    start_urls = ['https://www.softsurroundings.com/p/the-ultimate-leggings/']
+    start_urls = ['https://www.softsurroundings.com/']
 
     listings_css = 'ul#menubar'
-    product_css = 'div.product'
+    product_css = 'div.product'        
 
     softsurroundings_parser = ParseSpider()
 
