@@ -1,10 +1,10 @@
 import { FlightResultDialog } from "../dialogs/flightResultDialog";
-import { FlightLegDetails } from "./flightLegDetails";
+import { FlightLeg } from "./flightLeg";
 
 export interface FlightResult {
   getTotalLegs(): Promise<number>;
   
-  getFlightLeg(leg: Number): FlightLegDetails;
+  getFlightLeg(leg: Number): FlightLeg;
   
   getPrice(): Promise<string>;
   

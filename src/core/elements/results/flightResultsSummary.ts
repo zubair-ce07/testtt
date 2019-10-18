@@ -1,4 +1,4 @@
-export interface FlightsResultsSummary {
+export interface FlightResultsSummary {
   getTravellers(): Promise<string>;
   
   getDisplayDate(): Promise<string>;

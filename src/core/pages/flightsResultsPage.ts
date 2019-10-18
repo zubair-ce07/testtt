@@ -1,12 +1,12 @@
 import { FlightResult } from "../elements/results/flightResult";
-import { FlightsResultsSummary } from "../elements/results/flightResultsSummary";
+import { FlightResultsSummary } from "../elements/results/flightResultsSummary";
 
 export interface FlightsResultsPage {
   getFlightResult(index: number): FlightResult;
   
   getFlightResults(): Promise<FlightResult[]>;
   
-  getSearchSummary(): FlightsResultsSummary;
+  getSearchSummary(): FlightResultsSummary;
   
   loadResults(): Promise<void>;
   
