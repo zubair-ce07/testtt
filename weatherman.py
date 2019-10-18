@@ -1,168 +1,134 @@
 """This module give weather details.
 """
 import sys
-from datetime import datetime, timedelta
+import argparse
+import constants
+from file_reader import FileReader
+from weather import Weather
 
-COLOR_BLUE = '\033[94m'
-COLOR_RED = '\033[91m'
-COLOR_ENDC = '\033[0m'
+class Weatherman:
 
-CITY = "lahore"
-
-
-def read_file_line(file_pointer, path, date):
-    """The following function open the file if not opened.
-    First two lines are not used so they are skipped.
-    Return the file line and the file pointer
-    """
-    if file_pointer is None:
-        filepath = "%s/%s_weather_%s_%s.txt" % (path,
-                                                CITY,
-                                                date.strftime("%Y"),
-                                                date.strftime("%b"))
-        file_pointer = open(filepath)
-        file_pointer.readline()
-        file_pointer.readline()
-    return [file_pointer.readline(), file_pointer]
+    def __init__(self, date, path, mode):
+        self.file_reader = FileReader(date, path)
+        self.mode = mode
 
 
-def get_month_day(date):
-    """Split the date string by "-" and use it to make an instance of date.
-    return date of format Month day i.e Jun 12
-    """
-    year, month, day = date.split("-")
-    date = datetime(int(year), int(month), int(day))
-    return "%s %s" % (date.strftime("%B"), date.strftime("%d"))
-
-
-def year_details(year, path):
-    """For a given year display the highest temperature and day,
-    lowest temperature and day, most humid day and humidity
-    """
-    start_year = datetime(int(year), 1, 1)
-    end_year = datetime(int(year)+1, 1, 1)
-    delta = timedelta(days=31)
-    max_temperature_record = []
-    lowest_temperature_record = []
-    max_humidity_record = []
-
-    file_pointer = None
-    while start_year < end_year:
+    def year_details(self):
+        """For a given year display the highest temperature and day,
+            lowest temperature and day, most humid day and humidity
+        """
+        max_temp_weather = None
+        lowest_temp_weather = None
+        max_hum_weather = None
         try:
-            line, file_pointer = read_file_line(file_pointer, path, start_year)
-            while line:
-                data = line.split(",")
-                if len(data) == 23:
-                    if (not max_temperature_record or
-                            int(data[1]) > int(max_temperature_record[1])):
-                        max_temperature_record = data
+            file_record = self.file_reader.next_record()
+            weather_data = Weather(file_record)
+            while file_record:
+                max_temp_weather = Weather.get_by_max_temp(max_temp_weather, weather_data)
+                lowest_temp_weather = Weather.get_by_low_temp(lowest_temp_weather, weather_data)
+                max_hum_weather = Weather.get_by_max_humidity(max_hum_weather, weather_data)
 
-                    if (not lowest_temperature_record or
-                            int(data[3]) < int(lowest_temperature_record[3])):
-                        lowest_temperature_record = data
-
-                    if (not max_humidity_record or
-                            int(data[7]) > int(max_humidity_record[7])):
-                        max_humidity_record = data
-                line, file_pointer = read_file_line(
-                    file_pointer, path, start_year)
+                file_record = self.file_reader.next_record()
+                weather_data = Weather(file_record)
 
         except (IOError, ValueError):
             pass
 
-        start_year += delta
-        file_pointer = None
-    print ("Highest: %sC on %s" % (max_temperature_record[1],
-                                   get_month_day(max_temperature_record[0])))
-    print ("Lowest: %sC on %s" % (lowest_temperature_record[3],
-                                  get_month_day(lowest_temperature_record[0])))
-    print ("Humid: %s%% on %s" % (max_humidity_record[7],
-                                  get_month_day(max_humidity_record[0])))
+        print(f"Highest: {max_temp_weather.max_temperaturec}C on {max_temp_weather.get_month_day()}")
+        print(f"Lowest: {lowest_temp_weather.min_temperaturec}C on {lowest_temp_weather.get_month_day()}")
+        print(f"Humid: {max_hum_weather.max_humidity}% on {max_hum_weather.get_month_day()}")
 
 
-def month_average_detail(date, path):
-    """For a given month display the average highest temperature,
-    average lowest temperature, average humidity.
-    """
-    year, month = date.split("/")
-    date = datetime(int(year), int(month), 1)
-    average_max_temperature_record = []
-    average_lowest_temperature_record = []
-    average_max_humidity_record = []
-    file_pointer = None
-    try:
-        line, file_pointer = read_file_line(file_pointer, path, date)
-        while line:
-            data = line.split(",")
-            if len(data) == 23:
-                if (not average_max_temperature_record or
-                        int(data[2]) > int(average_max_temperature_record[2])):
-                    average_max_temperature_record = data
+    def month_average_detail(self):
+        """For a given month display the average highest temperature,
+        average lowest temperature, average humidity.
+        """
+        average_max_temp_weather = None
+        average_lowest_temp_weather = None
+        average_max_hum_weather = None
+        try:
+            file_record = self.file_reader.next_record()
+            weather_data = Weather(file_record)
+            while file_record:
+                average_max_temp_weather = Weather.get_by_average_max_temp(average_max_temp_weather, weather_data)
+                average_lowest_temp_weather = Weather.get_by_average_low_temp(average_lowest_temp_weather, weather_data)
+                average_max_hum_weather = Weather.get_by_average_max_humidity(average_max_hum_weather, weather_data)
 
-                if (not average_lowest_temperature_record or
-                        int(data[2]) < int(average_lowest_temperature_record[3])):
-                    average_lowest_temperature_record = data
+                file_record = self.file_reader.next_record()
+                weather_data = Weather(file_record)
 
-                if (not average_max_humidity_record or
-                        int(data[8]) > int(average_max_humidity_record[8])):
-                    average_max_humidity_record = data
-            line, file_pointer = read_file_line(file_pointer, path, date)
+            print(f"{average_max_temp_weather.get_month_year()}")
+            print(f"Highest: {average_max_temp_weather.mean_temperaturec}C")
+            print(f"Lowest: {average_lowest_temp_weather.mean_temperaturec}C")
+            print(f"Humid: {average_max_hum_weather.mean_humidity}%")
 
-        print "%s %s" % (date.strftime("%B"), date.strftime("%Y"))
+        except (IOError, ValueError):
+            pass
 
-        print "Highest Average: %sC" % (average_max_temperature_record[2])
-        print "Lowest Average: %sC" % (average_lowest_temperature_record[2])
-        print "Average Humid: %s%%" % (average_max_humidity_record[8])
+    def month_horizontal_chart(self):
+        """For a given month draw two horizontal bar charts on the console
+        for the highest and lowest temperature on each day.
+        Highest in red and lowest in blue.
+        """
+        try:
+            file_record = self.file_reader.next_record()
+            weather_data = Weather(file_record)
+            print(f"{weather_data.get_month_year()}")
+            while file_record:
+                print(f"{weather_data.get_day()} ", end="")
+                for _ in range(int(weather_data.min_temperaturec)):
+                    print(f"{constants.COLOR_BLUE}+{constants.COLOR_ENDC}", end="")
 
-    except (IOError, ValueError):
-        pass
+                if self.mode == 'c':
+                    print(f"{constants.COLOR_BLUE}+{constants.COLOR_ENDC}", end="")
+                    print(f" {weather_data.min_temperaturec}\n{weather_data.get_day()} ", end="")
 
+                for _ in range(int(weather_data.max_temperaturec)):
+                    print(f"{constants.COLOR_RED}+{constants.COLOR_ENDC}", end="")
 
-def month_horizontal_chart(date, path):
-    """For a given month draw two horizontal bar charts on the console
-    for the highest and lowest temperature on each day.
-    Highest in red and lowest in blue.
-    """
-    year, month = date.split("/")
-    date = datetime(int(year), int(month), 1)
-    delta = timedelta(days=1)
-    mode_temp = sys.argv[1]
-    file_pointer = None
-    print "%s %s" % (date.strftime("%B"), date.strftime("%Y"))
-
-    try:
-        line, file_pointer = read_file_line(file_pointer, path, date)
-        while line:
-            data = line.split(",")
-            if len(data) == 23:
-                print "%s " % (date.strftime("%d")),
-                for _ in range(int(data[3])):
-                    print "%s+%s" % (COLOR_BLUE, COLOR_ENDC),
-
-                if mode_temp == '-d':
-                    print " %s\n%s " % (data[3], date.strftime("%d")),
-
-                for _ in range(int(data[1])):
-                    print "%s+%s" % (COLOR_RED, COLOR_ENDC),
-
-                if mode_temp == '-d':
-                    print " %s" % (data[1])
+                if self.mode == 'c':
+                    print(f" {weather_data.max_temperaturec}")
                 else:
-                    print "%sC - %sC " % (data[3], data[1])
-            date += delta
-            line = file_pointer.readline()
+                    print(f" {weather_data.min_temperaturec}C - {weather_data.max_temperaturec}C")
 
-    except (IOError, ValueError):
-        pass
+                file_record = self.file_reader.next_record()
+                weather_data = Weather(file_record)
+
+        except (IOError, ValueError):
+            pass
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("path", help="Path to weather files")
+    parser.add_argument("-e", help="Display the highest,lowest temperature and day, most humid day and humidity")
+    parser.add_argument("-a", help="Display the average highest, average lowest temperature, average humidity")
+    parser.add_argument("-c", help="Draw two bar charts for highest in blue and lowest temperature in red on each day.")
+    parser.add_argument("-d", help="Draw one bar chart for highest in blue and lowest temperature in red on each day.")
+    args = parser.parse_args()
 
+    PATH = args.path
+    if args.e:
+        MODE = "e"
+        DATE = args.e
+    elif args.a:
+        MODE = "a"
+        DATE = args.a
+    elif args.c:
+        MODE = "c"
+        DATE = args.c
+    elif args.d:
+        MODE = "d"
+        DATE = args.d
+    else:
+        print("Please pass -a or -e or -c or -d arguments")
+        sys.exit()
+
+    weatherman = Weatherman(DATE, PATH, MODE)
     TASKS = {
-        "-e": year_details,
-        "-a": month_average_detail,
-        "-c": month_horizontal_chart,
-        "-d": month_horizontal_chart,
+        "e": weatherman.year_details,
+        "a": weatherman.month_average_detail,
+        "c": weatherman.month_horizontal_chart,
+        "d": weatherman.month_horizontal_chart,
     }
-    MODE, DATE, PATH = [sys.argv[1], sys.argv[2], sys.argv[3]]
-    TASKS[MODE](DATE, PATH)
+    TASKS[MODE]()
