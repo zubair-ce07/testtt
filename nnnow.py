@@ -54,14 +54,15 @@ class NnnowSpider(CrawlSpider):
         'DOWNLOAD_DELAY': 2,
     }
     headers = {
-            'Content-Type': "application/json",
-            'module': "odin",
+        'Content-Type': "application/json",
+        'module': "odin",
     }
     base_url = 'https://www.nnnow.com'
 
     rules = (
         Rule(LinkExtractor(restrict_css='.nw-leftnavmobile-list a',
-             deny='/offers'), callback='parse_product_listing'),
+                           deny='/offers'),
+             callback='parse_product_listing'),
     )
 
     def get_page_count(self, response):
@@ -90,15 +91,15 @@ class NnnowSpider(CrawlSpider):
             url = urljoin(self.base_url, raw_product_url['url'])
             yield Request(url, callback=self.parse_product)
 
-    def get_skus(self, raw_product, response):
+    def get_skus(self, raw_product):
         skus = []
         for sku in raw_product['skus']:
             loader = SkuItemLoader(item=Sku(), selector=sku)
-            loader.add_value('sku_id', sku['skuId']),
-            loader.add_value('currency', 'INR'),
-            loader.add_value('size', sku['size']),
-            loader.add_value('out_of_stock', not sku['inStock']),
-            loader.add_value('price', sku['price']),
+            loader.add_value('sku_id', sku['skuId'])
+            loader.add_value('currency', 'INR')
+            loader.add_value('size', sku['size'])
+            loader.add_value('out_of_stock', not sku['inStock'])
+            loader.add_value('price', sku['price'])
             loader.add_value('previous_price', sku['price'])
             skus.append(loader.load_item())
         return skus
@@ -116,7 +117,7 @@ class NnnowSpider(CrawlSpider):
         loader.add_css('image_urls', '.nw-maincarousel-wrapper img::attr(src)')
         loader.add_css('brand', '.nw-product-name .nw-product-brandtxt::text')
         loader.add_value('retailer_sku', raw_product['styleId'])
-        loader.add_value('url', response.url),
-        loader.add_value('skus', self.get_skus(raw_product, response)),
+        loader.add_value('url', response.url)
+        loader.add_value('skus', self.get_skus(raw_product))
         loader.add_value('gender', raw_product['gender'])
         return loader.load_item()
