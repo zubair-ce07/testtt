@@ -15,13 +15,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from django.views.generic.base import TemplateView
 from users import views
-
-from django.contrib.auth.views import LoginView
-from django.contrib.auth.views import LogoutView
-
-
 
 urlpatterns = [
     path('', views.index, name='index'),
