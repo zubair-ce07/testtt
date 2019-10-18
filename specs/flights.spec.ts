@@ -5,9 +5,11 @@ import { addDays, toDateString } from "../src/utils/date.util";
 import { FlightsPage } from "../src/core/pages/flightsPage";
 import { FormType } from "../src/core/elements/enums";
 import { FlightsResultsPage } from "../src/core/pages/flightsResultsPage";
+import { FlightsPageKayak } from "../src/brands/kayak/pages/flightsPage.kayak";
+import { FlightsResultsPageKayak } from "../src/brands/kayak/pages/flightsResultsPage.kayak";
 
-const flights: FlightsPage = null;
-const results: FlightsResultsPage = null;
+const flights: FlightsPage = new FlightsPageKayak();
+const results: FlightsResultsPage = new FlightsResultsPageKayak();
 
 describe('kayak.com/flights', () => {
   
