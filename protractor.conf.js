@@ -18,8 +18,6 @@ exports.config = {
     }
   ],
   onPrepare: function () {
-    jasmine.getEnv().addReporter(require('jasmine-fail-fast').init());
-    
     jasmine.getEnv().addReporter(
       new SpecReporter({
         displayFailuresSummary: true,
