@@ -18,14 +18,14 @@ class Weatherman:
             lowest temperature and day, most humid day and humidity
         """
         max_temp_weather = None
-        lowest_temp_weather = None
+        low_temp_weather = None
         max_hum_weather = None
         try:
             file_record = self.file_reader.next_record()
             weather_data = Weather(file_record)
             while file_record:
                 max_temp_weather = Weather.get_by_max_temp(max_temp_weather, weather_data)
-                lowest_temp_weather = Weather.get_by_low_temp(lowest_temp_weather, weather_data)
+                low_temp_weather = Weather.get_by_low_temp(low_temp_weather, weather_data)
                 max_hum_weather = Weather.get_by_max_humidity(max_hum_weather, weather_data)
 
                 file_record = self.file_reader.next_record()
@@ -35,7 +35,7 @@ class Weatherman:
             pass
 
         print(f"Highest: {max_temp_weather.max_temperaturec}C on {max_temp_weather.get_month_day()}")
-        print(f"Lowest: {lowest_temp_weather.min_temperaturec}C on {lowest_temp_weather.get_month_day()}")
+        print(f"Lowest: {low_temp_weather.min_temperaturec}C on {low_temp_weather.get_month_day()}")
         print(f"Humid: {max_hum_weather.max_humidity}% on {max_hum_weather.get_month_day()}")
 
 
@@ -43,24 +43,24 @@ class Weatherman:
         """For a given month display the average highest temperature,
         average lowest temperature, average humidity.
         """
-        average_max_temp_weather = None
-        average_lowest_temp_weather = None
-        average_max_hum_weather = None
+        avg_max_temp_weather = None
+        avg_low_temp_weather = None
+        avg_max_hum_weather = None
         try:
             file_record = self.file_reader.next_record()
             weather_data = Weather(file_record)
             while file_record:
-                average_max_temp_weather = Weather.get_by_average_max_temp(average_max_temp_weather, weather_data)
-                average_lowest_temp_weather = Weather.get_by_average_low_temp(average_lowest_temp_weather, weather_data)
-                average_max_hum_weather = Weather.get_by_average_max_humidity(average_max_hum_weather, weather_data)
+                avg_max_temp_weather = Weather.get_by_average_max_temp(avg_max_temp_weather, weather_data)
+                avg_low_temp_weather = Weather.get_by_average_low_temp(avg_low_temp_weather, weather_data)
+                avg_max_hum_weather = Weather.get_by_average_max_humidity(avg_max_hum_weather, weather_data)
 
                 file_record = self.file_reader.next_record()
                 weather_data = Weather(file_record)
 
-            print(f"{average_max_temp_weather.get_month_year()}")
-            print(f"Highest: {average_max_temp_weather.mean_temperaturec}C")
-            print(f"Lowest: {average_lowest_temp_weather.mean_temperaturec}C")
-            print(f"Humid: {average_max_hum_weather.mean_humidity}%")
+            print(f"{avg_max_temp_weather.get_month_year()}")
+            print(f"Highest: {avg_max_temp_weather.mean_temperaturec}C")
+            print(f"Lowest: {avg_low_temp_weather.mean_temperaturec}C")
+            print(f"Humid: {avg_max_hum_weather.mean_humidity}%")
 
         except (IOError, ValueError):
             pass
@@ -106,7 +106,6 @@ if __name__ == "__main__":
     parser.add_argument("-c", help="Draw two bar charts for highest in blue and lowest temperature in red on each day.")
     parser.add_argument("-d", help="Draw one bar chart for highest in blue and lowest temperature in red on each day.")
     args = parser.parse_args()
-
     PATH = args.path
     if args.e:
         MODE = "e"
@@ -120,9 +119,6 @@ if __name__ == "__main__":
     elif args.d:
         MODE = "d"
         DATE = args.d
-    else:
-        print("Please pass -a or -e or -c or -d arguments")
-        sys.exit()
 
     weatherman = Weatherman(DATE, PATH, MODE)
     TASKS = {

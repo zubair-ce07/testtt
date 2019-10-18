@@ -17,7 +17,7 @@ class Weather:
         self.pkst = None
         if entries:
             self.__dict__.update(entries)
-            year, month, day = self.pkt.split("-") if self.pkt is not None else self.pkst.split("-")
+            year, month, day = self.pkt.split("-") if self.pkt != None else self.pkst.split("-")
             self.__date = datetime(int(year), int(month), int(day))
 
     def get_month_day(self):
