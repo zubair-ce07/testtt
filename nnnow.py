@@ -64,18 +64,18 @@ class NnnowSpider(CrawlSpider):
              deny='/offers'), callback='parse_product_listing'),
     )
 
-    def get_pages_count(self, response):
+    def get_page_count(self, response):
         raw_product = json.loads(response.css
                                  ('script').re_first('DATA=(.+)</script>'))
         raw_product = raw_product['ProductStore']['ProductData']
         return raw_product['totalPages'] if raw_product else 1
 
     def parse_product_listing(self, response):
-        pages_count = self.get_pages_count(response)
+        page_count = self.get_page_count(response)
         request_url = 'https://api.nnnow.com/d/apiV2/listing/products'
         category_name = response.url.split('/')[3]
         category_id = 'tn_{}'.format(category_name.replace('-', '_'))
-        for page in range(1, pages_count+1):
+        for page in range(1, page_count+1):
             params = {
                 "deeplinkurl": f"/{category_name}?p={page}&cid={category_id}"
             }
@@ -86,10 +86,9 @@ class NnnowSpider(CrawlSpider):
 
     def product_listing(self, response):
         raw_product = json.loads(response.text)
-        for raw_product in raw_product['data']['styles']['styleList']:
-            url = urljoin(self.base_url, raw_product['url'])
-            yield Request(url,
-                          callback=self.parse_product)
+        for raw_product_url in raw_product['data']['styles']['styleList']:
+            url = urljoin(self.base_url, raw_product_url['url'])
+            yield Request(url, callback=self.parse_product)
 
     def get_skus(self, raw_product, response):
         skus = []
