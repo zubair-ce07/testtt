@@ -75,7 +75,7 @@ class NnnowSpider(CrawlSpider):
         request_url = 'https://api.nnnow.com/d/apiV2/listing/products'
         category_name = response.url.split('/')[3]
         category_id = 'tn_{}'.format(category_name.replace('-', '_'))
-        for page in range(pages_count):
+        for page in range(1, pages_count+1):
             params = {
                 "deeplinkurl": f"/{category_name}?p={page}&cid={category_id}"
             }
