@@ -2,9 +2,9 @@ import React, { Component } from 'react';
 import axios from 'axios';
 import Modal from 'react-responsive-modal';
 
-import ProductsList from './ProductList';
-import Pagination from './Pagination';
-import ProductsFilter from './ProductsFilter';
+import ProductsList from './products/productlist';
+import Pagination from './layout/pagination';
+import ProductsFilter from './products/productsfilter';
 
 
 class Home extends Component{

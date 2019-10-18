@@ -28,7 +28,7 @@ class ProductsList extends Component{
                     </div>
             )})
         ) : (
-            <div className="center">No products Found!!</div>
+            <div className="center">Loading Products....</div>
         )
         return (
             <div className="products-list container">
