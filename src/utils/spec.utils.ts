@@ -7,7 +7,7 @@ export function range(start: number, end: number): number[] {
 
 export function reduceIsSame(items: any[][]): boolean {
   return items.reduce((result, array) => (
-    result && array.reduce((result, item) => result && (item === result[0]), true)
+    result && array.reduce((result, item) => result && (item === array[0]), true)
   ), true)
 }
 
