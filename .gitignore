@@ -7,6 +7,8 @@ __pycache__/
 
 library-system/_DS_Store
 library_system/db.sqlite3
+library-system/templates/_DS_Store
+
 
 # Distribution / packaging
 .Python
