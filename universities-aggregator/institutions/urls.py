@@ -18,5 +18,5 @@ urlpatterns = [
     path('institutions/', include(institute_router.urls)),
     re_path(r'^institutions/(?P<institution_id>[0-9])/', include(institute_router.urls)),
     re_path(r'^programs/(?P<program_id>[0-9])/', include(program_router.urls)),
-    path('api-auth/', include('rest_framework.urls', namespace='rest_framework'))
+    path('login/', views.LoginView.as_view())
 ]

@@ -1,17 +1,26 @@
 # Create your views here.
 from rest_framework import viewsets
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.authtoken.models import Token
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.views import APIView
 
 from .models import Program, Institution, Campus, Course, Semester
 from .serializers import ProgramSerializer, InstitutionSerializer, CampusSerializer, CourseSerializer, \
-    SemesterSerializer
+    SemesterSerializer, LoginSerializer
 
 
 class InstitutionViewSet(viewsets.ModelViewSet):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
     queryset = Institution.objects.all()
     serializer_class = InstitutionSerializer
 
 
 class CampusViewSet(viewsets.ModelViewSet):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
     queryset = Campus.objects
     serializer_class = CampusSerializer
 
@@ -21,6 +30,8 @@ class CampusViewSet(viewsets.ModelViewSet):
 
 
 class ProgramViewSet(viewsets.ModelViewSet):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
     queryset = Program.objects
     serializer_class = ProgramSerializer
 
@@ -30,6 +41,8 @@ class ProgramViewSet(viewsets.ModelViewSet):
 
 
 class CourseViewSet(viewsets.ModelViewSet):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
     queryset = Course.objects
     serializer_class = CourseSerializer
 
@@ -39,9 +52,20 @@ class CourseViewSet(viewsets.ModelViewSet):
 
 
 class SemesterViewSet(viewsets.ModelViewSet):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
     queryset = Semester.objects
     serializer_class = SemesterSerializer
 
     def get_queryset(self):
         program = self.kwargs['program_id']
         return self.queryset.filter(program=program)
+
+
+class LoginView(APIView):
+    def post(self, request):
+        serializer = LoginSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data["user"]
+        token, created = Token.objects.get_or_create(user=user)
+        return Response({"token": token.key}, status=200)
