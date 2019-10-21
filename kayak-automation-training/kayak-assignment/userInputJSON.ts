@@ -40,7 +40,7 @@ export let userInputJSON = {
     "Destination Selection": "Berlin (BER)",
 
     "Passengers": {
-        "Adults": 4, "Seniors": 0, "Youth": 0, "Child": 1, "Seat Infant": 1, "Lap Infant": 1
+      "Adults": 4, "Seniors": 0, "Youth": 0, "Child": 1, "Seat Infant": 1, "Lap Infant": 1
     },
     "Departure": "05/20/2019",
     "Arrival": "05/30/2019"

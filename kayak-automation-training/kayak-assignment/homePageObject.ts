@@ -62,9 +62,9 @@ export class HomePageObject {
 		this.switchRoundTripOption.click();
 	}
 
-	clickSwitch(): void {
-	  this.switchOptions.click();
-	}
+  clickSwitch(): void {
+    this.switchOptions.click();
+  }
 
 	async multiCities(): Promise<boolean> {
 		return await this.multiCityOption.isDisplayed();
@@ -141,8 +141,8 @@ export class HomePageObject {
 		this.passengersDropdown.click();
 	}
 
-	decreaseAdultPassengers(adult: number): void {
-		this.searchFormObject.waitUntillElementAppears(this.passengersDropdown);
+  decreaseAdultPassengers(adult: number): void {
+	  this.searchFormObject.waitUntillElementAppears(this.passengersDropdown);
 		this.passengersDropdown.click();
 		this.searchFormObject.waitUntillElementAppears(this.passengerAdultDecrement);
 		for(let i: number = 0; i < adult - 1; i++) {
@@ -164,12 +164,12 @@ export class HomePageObject {
 	}
 
   fillDatesDeparture(): void {
-		this.searchFormObject.waitUntillElementAppears(this.searchFormObject.departureDateField);
-		this.searchFormObject.departureDateField.click();
-		this.searchFormObject.waitUntillElementAppears(this.departureDateInput);
-		this.departureDateInput.click();
-		this.departureDateInput.clear();
-		this.departureDateInput.sendKeys(this.setTripDates(3));
+    this.searchFormObject.waitUntillElementAppears(this.searchFormObject.departureDateField);
+    this.searchFormObject.departureDateField.click();
+    this.searchFormObject.waitUntillElementAppears(this.departureDateInput);
+    this.departureDateInput.click();
+    this.departureDateInput.clear();
+    this.departureDateInput.sendKeys(this.setTripDates(3));
 	}
 
 	getDepartureDate(): ElementFinder {
@@ -188,40 +188,40 @@ export class HomePageObject {
 		this.searchFormObject.waitUntillElementAppears(this.returnDateInput);
 		this.returnDateInput.click();
 		this.returnDateInput.clear();
-		this.returnDateInput.sendKeys(this.setTripDates(6));
-	}
+    this.returnDateInput.sendKeys(this.setTripDates(6));
+  }
 
-	setTripDates(daysToTrip: number): string {
+  setTripDates(daysToTrip: number): string {
     const todaysDate: Date = new Date();
     todaysDate.setDate(todaysDate.getDate() + daysToTrip); 
     let dd: string = todaysDate.getDate().toString();
     let mm: string = (todaysDate.getMonth()+1).toString();
     let yyyy: string = todaysDate.getFullYear().toString();
-    if(todaysDate.getDate() < 10) {
+    if (todaysDate.getDate() < 10) {
       dd = "0" + dd;
     }
     if(mm < '10') {
       mm = "0" + mm;
     }
     return (mm + "/" + dd + "/" + yyyy);
-	}
+  }
 	
-	async getReturnDate(): Promise<string> {
-		return this.searchFormObject.returnDateField.getText();
-	}
+  async getReturnDate(): Promise<string> {
+    return this.searchFormObject.returnDateField.getText();
+  }
 
-	switchTabs(): void {
+  switchTabs(): void {
 		browser.getAllWindowHandles().then((tabs) => {
-			if(tabs.length > 1) {
-				browser.driver.switchTo().window(tabs[0]);
-				browser.driver.close();
-				browser.driver.switchTo().window(tabs[1]);
-			}
-		});
-	}
+      if(tabs.length > 1) {
+        browser.driver.switchTo().window(tabs[0]);
+        browser.driver.close();
+        browser.driver.switchTo().window(tabs[1]);
+      }
+    });
+  }
 
-	async uncheckAllCheckBox() {
-	 	await this.searchFormObject.waitUntillElementAppears(this.checkbox);
-		await this.checkbox.click();
-	}
+  async uncheckAllCheckBox() {
+    await this.searchFormObject.waitUntillElementAppears(this.checkbox);
+    await this.checkbox.click();
+  }
 }

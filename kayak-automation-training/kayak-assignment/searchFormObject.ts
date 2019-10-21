@@ -24,20 +24,20 @@ export class SearchFormObject {
   }
 
   getDepartureDisplay(): ElementFinder {
-	  return this.departureField;
+    return this.departureField;
   }
 
   getDestinationDisplay(): ElementFinder {
-	  return this.destinationField;
-	}
+    return this.destinationField;
+  }
 
-	departureDateFieldDisplay(): ElementFinder {
-	  return this.departureDateField;
-	}
+  departureDateFieldDisplay(): ElementFinder {
+    return this.departureDateField;
+  }
 
-	returnDateFieldDisplay(): ElementFinder {
-	  return this.returnDateField;
-	}
+  returnDateFieldDisplay(): ElementFinder {
+    return this.returnDateField;
+  }
 
   async waitUntillElementAppears(element: any): Promise<void> {
     let until: ProtractorExpectedConditions = await protractor.ExpectedConditions; 
