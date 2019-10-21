@@ -76,8 +76,8 @@ class NnnowSpider(CrawlSpider):
              callback='parse_product_listing'),
     )
 
-    @classmethod
-    def get_page_count(cls, response):
+    @staticmethod
+    def get_page_count(response):
         """Return total page count."""
         raw_product = json.loads(response.css
                                  ('script').re_first('DATA=(.+)</script>'))
@@ -86,7 +86,7 @@ class NnnowSpider(CrawlSpider):
 
     def parse_product_listing(self, response):
         """Post request to get products list."""
-        page_count = self.get_page_count(response)
+        page_count = NnnowSpider.get_page_count(response)
         request_url = 'https://api.nnnow.com/d/apiV2/listing/products'
         category_name = response.url.split('/')[3]
         category_id = 'tn_{}'.format(category_name.replace('-', '_'))
@@ -104,10 +104,10 @@ class NnnowSpider(CrawlSpider):
         raw_product = json.loads(response.text)
         for raw_product_url in raw_product['data']['styles']['styleList']:
             url = urljoin(self.base_url, raw_product_url['url'])
-            yield Request(url, callback=self.parse_product)
+            yield Request(url, callback=NnnowSpider.parse_product)
 
-    @classmethod
-    def get_skus(cls, raw_product):
+    @staticmethod
+    def get_skus(raw_product):
         """Return sku list after appending the loaded values."""
         skus = []
         for sku in raw_product['skus']:
@@ -121,7 +121,8 @@ class NnnowSpider(CrawlSpider):
             skus.append(loader.load_item())
         return skus
 
-    def parse_product(self, response):
+    @staticmethod
+    def parse_product(response):
         """
         Parse for product details.
 
@@ -141,6 +142,6 @@ class NnnowSpider(CrawlSpider):
         loader.add_css('brand', '.nw-product-name .nw-product-brandtxt::text')
         loader.add_value('retailer_sku', raw_product['styleId'])
         loader.add_value('url', response.url)
-        loader.add_value('skus', self.get_skus(raw_product))
+        loader.add_value('skus', NnnowSpider.get_skus(raw_product))
         loader.add_value('gender', raw_product['gender'])
         return loader.load_item()
