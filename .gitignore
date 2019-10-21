@@ -5,8 +5,8 @@ __pycache__/
 # C extensions
 *.so
 
-.library-system/_DS_Store
-.library-system/db.sqlite3
+library-system/_DS_Store
+library_system/db.sqlite3
 
 # Distribution / packaging
 .Python
