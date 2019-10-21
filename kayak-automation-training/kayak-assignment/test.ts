@@ -21,9 +21,8 @@ describe("Search form and travelers Verification", async function() {
   });
 
   it('Changing trip types should change search inputs accordingly',async function() {
-
     homePageObject.changeToOneWayTrip();
-		await homePageObject.returnDateText.isDisplayed().should.eventually.be.false;
+    await homePageObject.returnDateText.isDisplayed().should.eventually.be.false;
 
     homePageObject.changeToMulticityTrip();
     await homePageObject.multiCitiesOptions.isDisplayed().should.eventually.be.true;
@@ -100,7 +99,7 @@ for (let senario in userInputJSON){
       const bestPrice =  flightsPageObject.getBestPrice();
       const quickPrice =  flightsPageObject.getQuickestPrice();
       expect(cheapPrice).to.be.at.most(bestPrice, "Cheapest Price is less than best price");
-		  expect(cheapPrice).to.be.at.most(quickPrice, "Cheapest Price is less than Quickest price");
+      expect(cheapPrice).to.be.at.most(quickPrice, "Cheapest Price is less than Quickest price");
     });
   
     it("Should display least time in ‘Quickest’ sort option compared to ‘Cheapest’ and ‘Best’ sort options", function() { 
@@ -108,7 +107,7 @@ for (let senario in userInputJSON){
       const bestTime = flightsPageObject.getBestTime();
       const quickTime = flightsPageObject.getQuickestTime();
       expect(quickTime).to.be.at.most(bestTime, "Quickest Time is less than best Time");
-		expect(quickTime).to.be.at.most(cheapTime, "Quickest Time is less than Quickest Time");
+      expect(quickTime).to.be.at.most(cheapTime, "Quickest Time is less than Quickest Time");
     });
   });
 }

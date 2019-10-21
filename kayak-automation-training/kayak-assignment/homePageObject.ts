@@ -3,64 +3,64 @@ import { SearchFormObject } from './searchFormObject';
 import { async } from 'q';
 
 export class HomePageObject {
-	searchFormObject : SearchFormObject = new SearchFormObject();
-	flights: ElementFinder = element(by.className("js-vertical-flights"));
-	roundTripField: ElementFinder = element.all(by.css('div .Common-Widgets-Select-StyleJamSelect')).first();
-	switchOptions: ElementFinder = element.all(by.css("div[id$=switch-display]")).first();
-	switchOneWayOption: ElementFinder = element.all(by.css("li[id$=switch-option-2]")).first();
-	switchMultiCityOption: ElementFinder = element.all(by.css("li[id$=switch-option-3]")).first();
-	multiCitiesGrid: ElementFinder = element(by.css("div[id$=mf8B-cabin_type0-display-status]"));
-	multiCityOption: ElementFinder = element(by.css('div[data-value="multicity"]'))
-	switchRoundTripOption: ElementFinder = element.all(by.css("li[id$=switch-option-1]")).first();
-	travelersGrid: ElementFinder = element.all(by.className("Flights-Search-StyleJamFlightTravelerDropdown")).first();
-	addAdultButton: ElementFinder = element(by.css("div[id$='travelersAboveForm-adults'] .incrementor-js"));
-	passengerErrorText: ElementFinder = element(by.css("div[id$=travelersAboveForm-errorMessage]"));
-	originInput: ElementFinder = element.all(by.name('origin')).first();
-	originSelect: ElementFinder = element.all(by.css("[class='flight-smarty'] li")).first();
-	departureText: ElementFinder = element.all(by.css('div[id$="origin-airport-display-multi-container"]')).first();
-	destinationInput: ElementFinder = element.all(by.name('destination')).first();
-	// destinationSelect: ElementFinder = element.all(by.css("div[id$='destination-airport-smartbox-dropdown'] li")).first();
-	destinationSelect: ElementFinder = element.all(by.css('div[id$="destination-airport-smartbox-dropdown"')).first().all(by.css('li')).first();
-	destinationText: ElementFinder = element.all(by.css('div[id$="destination-airport-display-multi-container"]')).first();
-	passengersDropdown: ElementFinder = element(by.className("Flights-Search-StyleJamFlightTravelerDropdown"));
-	passengerAdultDecrement: ElementFinder =  element(by.css("div[id$='travelersAboveForm-adults'] .decrementor-js"));
-	passengerAdultText: ElementFinder = element(by.css('div[id$="travelersAboveForm-adults"]'));
-	passengerChildInput: ElementFinder = element(by.css("div[id$='travelersAboveForm-child'] .incrementor-js"));
-	passengerChildText: ElementFinder = element(by.css('div[id$="travelersAboveForm-child"]'));
-	departureDateInput: ElementFinder = element.all(by.css("div[id$='depart-input']")).first();
-	returnDateInput: ElementFinder = element(by.css("div[id$='return-input']"));
-	searchButton: ElementFinder = element.all(by.css("button[aria-label='Search flights']")).first();
-	checkbox: ElementFinder = element(by.css("button[aria-label='Disable results comparison for this search']"));
+  searchFormObject : SearchFormObject = new SearchFormObject();
+  flights: ElementFinder = element(by.className("js-vertical-flights"));
+  roundTripField: ElementFinder = element.all(by.css('div .Common-Widgets-Select-StyleJamSelect')).first();
+  switchOptions: ElementFinder = element.all(by.css("div[id$=switch-display]")).first();
+  switchOneWayOption: ElementFinder = element.all(by.css("li[id$=switch-option-2]")).first();
+  switchMultiCityOption: ElementFinder = element.all(by.css("li[id$=switch-option-3]")).first();
+  multiCitiesGrid: ElementFinder = element(by.css("div[id$=mf8B-cabin_type0-display-status]"));
+  multiCityOption: ElementFinder = element(by.css('div[data-value="multicity"]'))
+  switchRoundTripOption: ElementFinder = element.all(by.css("li[id$=switch-option-1]")).first();
+  travelersGrid: ElementFinder = element.all(by.className("Flights-Search-StyleJamFlightTravelerDropdown")).first();
+  addAdultButton: ElementFinder = element(by.css("div[id$='travelersAboveForm-adults'] .incrementor-js"));
+  passengerErrorText: ElementFinder = element(by.css("div[id$=travelersAboveForm-errorMessage]"));
+  originInput: ElementFinder = element.all(by.name('origin')).first();
+  originSelect: ElementFinder = element.all(by.css("[class='flight-smarty'] li")).first();
+  departureText: ElementFinder = element.all(by.css('div[id$="origin-airport-display-multi-container"]')).first();
+  destinationInput: ElementFinder = element.all(by.name('destination')).first();
+  // destinationSelect: ElementFinder = element.all(by.css("div[id$='destination-airport-smartbox-dropdown'] li")).first();
+  destinationSelect: ElementFinder = element.all(by.css('div[id$="destination-airport-smartbox-dropdown"')).first().all(by.css('li')).first();
+  destinationText: ElementFinder = element.all(by.css('div[id$="destination-airport-display-multi-container"]')).first();
+  passengersDropdown: ElementFinder = element(by.className("Flights-Search-StyleJamFlightTravelerDropdown"));
+  passengerAdultDecrement: ElementFinder =  element(by.css("div[id$='travelersAboveForm-adults'] .decrementor-js"));
+  passengerAdultText: ElementFinder = element(by.css('div[id$="travelersAboveForm-adults"]'));
+  passengerChildInput: ElementFinder = element(by.css("div[id$='travelersAboveForm-child'] .incrementor-js"));
+  passengerChildText: ElementFinder = element(by.css('div[id$="travelersAboveForm-child"]'));
+  departureDateInput: ElementFinder = element.all(by.css("div[id$='depart-input']")).first();
+  returnDateInput: ElementFinder = element(by.css("div[id$='return-input']"));
+  searchButton: ElementFinder = element.all(by.css("button[aria-label='Search flights']")).first();
+  checkbox: ElementFinder = element(by.css("button[aria-label='Disable results comparison for this search']"));
 
-	returnDateText: ElementFinder = element.all(by.css("div[id$=dateRangeInput-display-end]")).first();
-	multiCitiesOptions: ElementFinder = element.all(by.css("div[id$=origin1-airport-display]")).first();
-	citiesList: ElementFinder = element.all(by.css('ul[class="flight-smarty"] li')).first();
+  returnDateText: ElementFinder = element.all(by.css("div[id$=dateRangeInput-display-end]")).first();
+  multiCitiesOptions: ElementFinder = element.all(by.css("div[id$=origin1-airport-display]")).first();
+  citiesList: ElementFinder = element.all(by.css('ul[class="flight-smarty"] li')).first();
 
-	clickFlights(): promise.Promise<string> {
-		this.flights.click();
-		return browser.getCurrentUrl();
-	}
-	
-	changeToOneWayTrip() {
-		this.searchFormObject.waitUntillElementAppears(this.switchOptions);
-		this.switchOptions.click();
-		this.searchFormObject.waitUntillElementAppears(this.switchOneWayOption);
-		this.switchOneWayOption.click();
-	}
+  clickFlights(): promise.Promise<string> {
+    this.flights.click();
+    return browser.getCurrentUrl();
+  }
 
-	changeToMulticityTrip(): void {
-		this.searchFormObject.waitUntillElementAppears(this.switchOptions);
-		this.switchOptions.click();
-		this.searchFormObject.waitUntillElementAppears(this.switchMultiCityOption);
-		this.switchMultiCityOption.click();
-	}
+  changeToOneWayTrip() {
+    this.searchFormObject.waitUntillElementAppears(this.switchOptions);
+    this.switchOptions.click();
+    this.searchFormObject.waitUntillElementAppears(this.switchOneWayOption);
+    this.switchOneWayOption.click();
+  }
 
-	changeToRoundTrip() {
-		this.searchFormObject.waitUntillElementAppears(this.switchOptions);
-		this.switchOptions.click();
-		this.searchFormObject.waitUntillElementAppears(this.switchRoundTripOption);
-		this.switchRoundTripOption.click();
-	}
+  changeToMulticityTrip(): void {
+    this.searchFormObject.waitUntillElementAppears(this.switchOptions);
+    this.switchOptions.click();
+    this.searchFormObject.waitUntillElementAppears(this.switchMultiCityOption);
+    this.switchMultiCityOption.click();
+  }
+
+  changeToRoundTrip() {
+    this.searchFormObject.waitUntillElementAppears(this.switchOptions);
+    this.switchOptions.click();
+    this.searchFormObject.waitUntillElementAppears(this.switchRoundTripOption);
+    this.switchRoundTripOption.click();
+  }
 
   clickSwitch(): void {
     this.switchOptions.click();
@@ -170,24 +170,24 @@ export class HomePageObject {
     this.departureDateInput.click();
     this.departureDateInput.clear();
     this.departureDateInput.sendKeys(this.setTripDates(3));
-	}
+  }
 
-	getDepartureDate(): ElementFinder {
-		return this.searchFormObject.departureDateField;
-	}
+  getDepartureDate(): ElementFinder {
+    return this.searchFormObject.departureDateField;
+  }
 
-	getTripDates(tripDate: number): string {
-		const todaysDate = new Date();
-		const weekdays: Array<String> = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-		todaysDate.setDate(todaysDate.getDate() + tripDate);
-		const departureDayName = weekdays[todaysDate.getDay()];
-		return (departureDayName + " " + (todaysDate.getMonth() + 1) + "/" + (todaysDate.getDate()));
-	}
+  getTripDates(tripDate: number): string {
+    const todaysDate = new Date();
+    const weekdays: Array<String> = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    todaysDate.setDate(todaysDate.getDate() + tripDate);
+    const departureDayName = weekdays[todaysDate.getDay()];
+    return (departureDayName + " " + (todaysDate.getMonth() + 1) + "/" + (todaysDate.getDate()));
+  }
 
-	fillDatesReturn(): void {
-		this.searchFormObject.waitUntillElementAppears(this.returnDateInput);
-		this.returnDateInput.click();
-		this.returnDateInput.clear();
+  fillDatesReturn(): void {
+    this.searchFormObject.waitUntillElementAppears(this.returnDateInput);
+    this.returnDateInput.click();
+    this.returnDateInput.clear();
     this.returnDateInput.sendKeys(this.setTripDates(6));
   }
 
@@ -211,7 +211,7 @@ export class HomePageObject {
   }
 
   switchTabs(): void {
-		browser.getAllWindowHandles().then((tabs) => {
+    browser.getAllWindowHandles().then((tabs) => {
       if(tabs.length > 1) {
         browser.driver.switchTo().window(tabs[0]);
         browser.driver.close();
