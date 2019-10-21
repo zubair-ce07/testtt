@@ -2,17 +2,20 @@ import React, { Component } from "react";
 
 import Form from "react-bootstrap/Form";
 
-import API from '../../api'
+import {api} from "../.././utils/api";
 
 export class Home extends Component {
   state = {
     institutions: []
   };
   componentDidMount() {
-    API.get(`institutions/`).then(({data}) => {
-      const institutions = data;
+    api.get(`institutions/`).then(({data : institutions}) => {
       this.setState({ institutions });
-    });
+    })
+    .catch((error) => {
+      console.log('error', error);
+      // todo show toast
+    })
   }
   getPrograms = event => {
     const id = event.target.value;
