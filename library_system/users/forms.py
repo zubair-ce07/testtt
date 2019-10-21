@@ -11,7 +11,7 @@ class UserProfileForm(UserCreationForm):
         """Meta class"""
         model = UserProfile
         fields = ('username', 'email', 'first_name', 'last_name',
-                  'password1', 'password2', 'contact', 'location', 'age')
+                  'password1', 'password2', 'phone_number', 'location', 'age')
 
 
 class UpdateForm(forms.ModelForm):
@@ -21,4 +21,4 @@ class UpdateForm(forms.ModelForm):
         """Meta class"""
         model = UserProfile
         fields = ('username', 'email', 'first_name', 'last_name',
-                  'contact', 'location', 'age')
+                  'phone_number', 'location', 'age')

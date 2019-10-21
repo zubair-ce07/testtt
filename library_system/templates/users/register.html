@@ -1,3 +1,5 @@
+{% load crispy_forms_tags %}
+
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -9,8 +11,8 @@
     <form method="POST" action={% url 'register' %}>
 
       {% csrf_token %}
-      {{ form.as_p }}
-      <input type="submit" value="Create new Account">
+      {{ registration_form|crispy}}
+      <button type="submit" class="btn btn-primary">Create new Account</button>
     </form>
 </body>
 </html>

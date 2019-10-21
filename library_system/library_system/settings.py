@@ -34,6 +34,8 @@ INSTALLED_APPS = [
     
     'django.contrib.admin',
     'users.apps.UsersConfig',
+    'crispy_forms',
+    'bootstrap3',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -54,7 +56,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'system.urls'
+ROOT_URLCONF = 'library_system.urls'
 
 TEMPLATES = [
     {
@@ -72,7 +74,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'system.wsgi.application'
+WSGI_APPLICATION = 'library_system.wsgi.application'
 
 
 # Database
@@ -126,3 +128,5 @@ STATIC_URL = '/static/'
 
 LOGIN_REDIRECT_URL = 'index'
 LOGOUT_REDIRECT_URL = 'index'
+
+CRISPY_TEMPLATE_PACK = 'bootstrap3'

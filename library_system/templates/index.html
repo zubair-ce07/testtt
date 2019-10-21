@@ -8,7 +8,7 @@
 <body>
     <h1>This is the home page!</h1>
     {% if user.is_authenticated %}
-    <h2>Username: {{ username }} is logged in!</h2>
+    <h2>Username: {{ user.username }} is logged in!</h2>
       <p><a href="{% url 'profile' %}">View Profile</a></p>
       <p><a href="{% url 'logout' %}">logout</a></p>
     {% else %}
