@@ -1,3 +1,9 @@
+"""
+Product details module.
+
+This module outputs a json format file
+for the website's product details.
+"""
 import json
 from urllib.parse import urljoin
 
@@ -9,6 +15,7 @@ from scrapy.spiders import Rule, CrawlSpider
 
 
 class Product(Item):
+    """Define product fields."""
     name = Field()
     category = Field()
     description = Field()
@@ -21,6 +28,7 @@ class Product(Item):
 
 
 class Sku(Item):
+    """Define sku fields."""
     sku_id = Field()
     color = Field()
     currency = Field()
@@ -31,12 +39,14 @@ class Sku(Item):
 
 
 class SkuItemLoader(ItemLoader):
+    """Process sku fields."""
     default_item_class = Sku
     default_output_processor = TakeFirst()
     previous_price_out = Identity()
 
 
 class ProductItemLoader(ItemLoader):
+    """Process product fields."""
     default_item_class = Product
     default_output_processor = TakeFirst()
     category_out = Identity()
@@ -46,6 +56,7 @@ class ProductItemLoader(ItemLoader):
 
 
 class NnnowSpider(CrawlSpider):
+    """Main class to crawl on site nnnow."""
     name = 'nnnow'
     start_urls = [
         'https://www.nnnow.com/',
@@ -65,13 +76,16 @@ class NnnowSpider(CrawlSpider):
              callback='parse_product_listing'),
     )
 
-    def get_page_count(self, response):
+    @classmethod
+    def get_page_count(cls, response):
+        """Return total page count."""
         raw_product = json.loads(response.css
                                  ('script').re_first('DATA=(.+)</script>'))
         raw_product = raw_product['ProductStore']['ProductData']
         return raw_product['totalPages'] if raw_product else 1
 
     def parse_product_listing(self, response):
+        """Post request to get products list."""
         page_count = self.get_page_count(response)
         request_url = 'https://api.nnnow.com/d/apiV2/listing/products'
         category_name = response.url.split('/')[3]
@@ -86,12 +100,15 @@ class NnnowSpider(CrawlSpider):
                           headers=self.headers)
 
     def product_listing(self, response):
+        """Get list of urls and return single url."""
         raw_product = json.loads(response.text)
         for raw_product_url in raw_product['data']['styles']['styleList']:
             url = urljoin(self.base_url, raw_product_url['url'])
             yield Request(url, callback=self.parse_product)
 
-    def get_skus(self, raw_product):
+    @classmethod
+    def get_skus(cls, raw_product):
+        """Return sku list after appending the loaded values."""
         skus = []
         for sku in raw_product['skus']:
             loader = SkuItemLoader(item=Sku(), selector=sku)
@@ -105,6 +122,12 @@ class NnnowSpider(CrawlSpider):
         return skus
 
     def parse_product(self, response):
+        """
+        Parse for product details.
+
+        This function return the product
+        details for each product url.
+        """
         raw_product = json.loads(response.css('script')
                                  .re_first('DATA=(.+)</script>'))
         raw_product = raw_product['ProductStore']['PdpData']['mainStyle']
