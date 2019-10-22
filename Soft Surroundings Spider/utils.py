@@ -1,4 +1,4 @@
-def parse_gender(response):
+def get_gender(response):
     title_text = response.css('title::text').get()
     size_categories = response.css('#sizecat a::text').getall()
 
@@ -11,3 +11,13 @@ def parse_gender(response):
         return 'Men'
 
     return 'Unisex adult'
+
+
+def get_size(response, size_id):
+    css = f'a[id$="{size_id}"]::text, #size .basesize::text'
+    return response.css(css).get()
+
+
+def get_color(response, color_id):
+    css = f'img[id="color_{color_id}"] + div > span::text, #color .basesize::text'
+    return response.css(css).get()
