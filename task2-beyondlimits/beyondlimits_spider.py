@@ -53,16 +53,17 @@ class BeyondLimitsExtractor:
         return {'Price': price, 'Previous_Price': previous_price, 'Currency': currency, 'Colour': color}
 
     def extract_skus(self, response):
-        pricing_color = self.extract_pricing_and_color(response)
+        common_sku = self.extract_pricing_and_color(response)
         sizes_sel = response.css('#bb-variants--0 option::text').getall()
         skus = []
         for size in sizes_sel:
-            sku = pricing_color.copy()
-            sku.update({'size': size, 'sku_id': pricing_color['Colour'] + '_' + size})
+            sku = common_sku.copy()
+            sku['size'] = size
+            sku['sku_id'] = common_sku['Colour'] + '_' + size
             skus.append(sku)
         if not sizes_sel:
-            sku = pricing_color.copy()
-            sku.update({'sku_id': pricing_color['Colour']})
+            sku = common_sku.copy()
+            sku['sku_id'] = common_sku['Colour']
             skus.append(sku)
         return skus
 
