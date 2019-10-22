@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 
 from .models import Program, Institution, Campus, Course, Semester
 from .serializers import ProgramSerializer, InstitutionSerializer, CampusSerializer, CourseSerializer, \
-    SemesterSerializer, LoginSerializer
+    SemesterSerializer, LoginSerializer, RegisterSerializer
 
 
 class InstitutionViewSet(viewsets.ModelViewSet):
@@ -62,6 +62,15 @@ class SemesterViewSet(viewsets.ModelViewSet):
         return self.queryset.filter(program=program)
 
 
+class RegisterView(APIView):
+    def post(self, request):
+        serializer = RegisterSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
+
+
 class LoginView(APIView):
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
@@ -69,3 +78,12 @@ class LoginView(APIView):
         user = serializer.validated_data["user"]
         token, created = Token.objects.get_or_create(user=user)
         return Response({"token": token.key}, status=200)
+
+
+class LogoutView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        #  remove session
+        return Response({'message': 'You have logged out'}, status=200)

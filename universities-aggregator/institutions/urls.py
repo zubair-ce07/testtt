@@ -18,5 +18,8 @@ urlpatterns = [
     path('institutions/', include(institute_router.urls)),
     re_path(r'^institutions/(?P<institution_id>[0-9])/', include(institute_router.urls)),
     re_path(r'^programs/(?P<program_id>[0-9])/', include(program_router.urls)),
-    path('login/', views.LoginView.as_view())
+    path('login/', views.LoginView.as_view()),
+    path('register/', views.RegisterView.as_view()),
+    path('logout/', views.LogoutView.as_view())
+
 ]
