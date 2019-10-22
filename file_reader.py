@@ -7,12 +7,9 @@ class FileReader:
     """Open the weather file/files and read the records line by line"""
     def __init__(self, date, path):
         date_pattern = get_date_pattern(date)
-        self.__path = path
         self.__files = glob.glob(f"{path}/*_weather_{date_pattern}.txt")
         self.__current_file_index = 0
         self.__file_pointer = None
-        self.keys = []
-        self.values = []
         self.initialize()
 
     def initialize(self):
