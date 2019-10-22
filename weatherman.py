@@ -13,8 +13,8 @@ class Weatherman:
 
 
     def year_details(self):
-        """For a given year display the highest temperature and day,
-            lowest temperature and day, most humid day and humidity
+        """For a given year display the highest temperature and day,lowest temperature and day, most humid day
+        and humidity.
         """
         max_temp_weather = None
         low_temp_weather = None
@@ -36,9 +36,7 @@ class Weatherman:
 
 
     def month_average_detail(self):
-        """For a given month display the average highest temperature,
-        average lowest temperature, average humidity.
-        """
+        """For a given month display the average highest temperature, average lowest temperature, average humidity."""
         avg_max_temp_weather = None
         avg_low_temp_weather = None
         avg_max_hum_weather = None
@@ -60,11 +58,9 @@ class Weatherman:
 
 
     def month_horizontal_chart(self):
-        """For a given month draw two horizontal bar charts on the console
-        for the highest and lowest temperature on each day.
-        Highest in red and lowest in blue.
+        """For a given month draw two horizontal bar charts on the console for the highest and lowest temperature on 
+        each day.Highest in red and lowest in blue.
         """
-
         file_record = self.file_reader.next_record()
         weather_data = Weather(file_record)
         print(weather_data.get_month_year())
