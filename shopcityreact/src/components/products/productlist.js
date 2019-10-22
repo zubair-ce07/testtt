@@ -4,10 +4,11 @@ import {withRouter} from 'react-router-dom';
 
 class ProductsList extends Component{
     viewProductDetails = (retailer_sku) => {
-        this.props.history.push('/product/' + retailer_sku)
-    }
+        this.props.history.push('/product/' + retailer_sku);
+    };
     render (){
-        const { productsList } = this.props
+        const { productsList } = this.props;
+        console.log("Products List", productsList)
         const productList = productsList.length ? (
             productsList.map(product => {
                 return (

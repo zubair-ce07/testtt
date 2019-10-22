@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link} from 'react-router-dom';
+import { connect } from 'react-redux';
 
 
 const SignedInLinks = () => {
@@ -17,20 +18,27 @@ const SignedOutLinks = () => {
         <ul className="right">
             <li><Link to="#">View Cart</Link></li>
             <li><Link to="#">View Profile</Link></li>
-            <li><Link to="#" className='btn btn-floating pink lighten-1'>AA</Link></li>
+            <li><Link to="/logout">Logout</Link></li>
         </ul>
     )
 };
 
-const Navbar = () => {
+const Navbar = (props) => {
+    const { user } = props;
     return (
         <nav className="nav-wrapper grey darken-3">
             <div className="container">
                 <Link to="/" className="brand-logo left">ShopCity</Link>
-                <SignedInLinks />
+                { (user.isAuthenticated) ? (<SignedOutLinks />):(<SignedInLinks />) }
             </div>
         </nav>
     )
 };
 
-export default Navbar;
+const mapStateToProps = (state) => {
+    return {
+        user: state.auth.user
+    }
+}
+
+export default connect(mapStateToProps)(Navbar);

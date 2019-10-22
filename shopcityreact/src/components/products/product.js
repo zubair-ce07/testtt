@@ -80,7 +80,7 @@ class Product extends Component {
         if (this.state.product) {
             for (var sku of skus) {
                 var key = sku.colour
-                var value = [sku.size, sku.out_of_stock]
+                var value = {size: sku.size, out_of_stock: sku.out_of_stock}
                 if (key in coloursAndSizes) {
                     coloursAndSizes[key] = [...coloursAndSizes[key], value]
                 } else {
@@ -88,7 +88,6 @@ class Product extends Component {
                 };
             };
         };
-        console.log("CCCCCCCCC", coloursAndSizes)
         var skusList = []
         if (coloursAndSizes.length !== 0) {
             console.log("Colours and sizes", coloursAndSizes)
@@ -98,12 +97,18 @@ class Product extends Component {
                 skusList.push(<p>Colour: {colourAndSizes[0]}</p>)
                 var buttonsList = []
                 for (let size of colourAndSizes[1]) {
-                    if (size[1]) {
-                        buttonsList.push(<label className="btn-floating grey darken-1 center-align"><input type="radio" id={size[0]}/>{size}</label>)
+                    console.log(size)
+                    if (size.out_of_stock) {
+                        // buttonsList.push(<label className="btn-floating grey darken-3 center-align"><input name="group1" type="radio" id={size[0]} disabled/><span>{size[0]}</span></label>)
+                        buttonsList.push(<label className="btn grey lighten-1 center-align" id={size.size}><input name="group1" type="radio" id={size.size} disabled/><span>{size.size}</span></label>)
+                        {/* <label>
+                        <input name="group1" type="radio" />
+                        <span>Red</span>
+                        </label> */}
                         // buttonsList.push(<input type="radio" name="gender" value="male"/>)
                     } else {
                         // buttonsList.push(<input type="radio" name="gender" value="male"/>)
-                        buttonsList.push(<label className="btn-floating grey darken-3 center-align"><input type="radio" id={size[0]}/>{size}</label>)
+                        buttonsList.push(<label className="btn grey darken-3 center-align"><input name="group1" type="radio" id={size.size}/><span>{size.size}</span></label>)
                     }
                 }
                 skusList.push(<div className='row'>{buttonsList}</div>)
@@ -111,6 +116,10 @@ class Product extends Component {
         }
         return skusList
     };
+
+    addToCart = () => {
+        console.log('submitted');
+    }
 
     render () {
         let breadCrumbList = this.breadCrumb()
@@ -144,14 +153,11 @@ class Product extends Component {
                                 <br/>
                                 <h5>{productTitle}</h5>
                                 <h6>Price: {productPrice}</h6>
-                                <label>
-        <input name="group1" type="radio" checked />
-        <span>Red</span>
-      </label>
                                 <form>
                                     {skusList}
                                     <label htmlFor="quantity">Quantity: </label>
                                     <input id='quantity' name='quantity' type="number" defaultValue={1} min="1" max="10000"/>
+                                    <input type="submit"/>
                                 </form>
                             </div>
                         </div>

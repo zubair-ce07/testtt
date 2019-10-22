@@ -1,81 +1,71 @@
 import React, { Component } from 'react';
 import axios from 'axios';
 import Modal from 'react-responsive-modal';
+import { connect } from 'react-redux';
 
+import { getPaginationProducts, nextPage, previousPage } from '../store/actions/productActions';
+import { changeModalState } from '../store/actions/modalActions';
 import ProductsList from './products/productlist';
 import Pagination from './layout/pagination';
 import ProductsFilter from './products/productsfilter';
 
 
-class Home extends Component{
-    state = {
-        products: [],
-        currentPage: 1,
-        modalOpen: false,
-    }
+class Home extends Component {
     componentDidMount = () => {
-        axios.get('http://127.0.0.1:8000/api/products/?page=1&Out of Stock=false')
-            .then(res => {
-                console.log(res)
-                this.setState({
-                    products: res.data.results
-                })
-            })
+        this.props.getPaginationProducts(1)
     };
     onPageChangeHandler = (buttonId) => {
         if (buttonId === 'next') {
-            let url = 'http://127.0.0.1:8000/api/products/?page='
-            let next = this.state.currentPage + 1
-            url = url + next + '&Out of Stock=false'
-            axios.get(url)
-            .then(res => {
-                console.log(res)
-                this.setState({
-                    products: res.data.results,
-                    currentPage: this.state.currentPage + 1
-                })
-            })
+            let next = this.props.currentPage + 1
+            this.props.getPaginationProducts(next)
+            this.props.nextPage()
         } else if (buttonId === 'previous') {
-            let url = 'http://127.0.0.1:8000/api/products/?page='
-            let previous = this.state.currentPage - 1
-            url = url + previous + '&Out of Stock=false'
-            axios.get(url)
-            .then(res => {
-                console.log(res)
-                this.setState({
-                    products: res.data.results,
-                    currentPage: this.state.currentPage - 1
-                })
-            })
+            let previous = this.props.currentPage - 1
+            this.props.getPaginationProducts(previous)
+            this.props.previousPage()
         };
-
     };
 
-    onOpenModal = () => {
-        this.setState({ modalOpen: true });
-      };
-     
-      onCloseModal = () => {
-        this.setState({ modalOpen: false });
-      };
+    modalHandler = () => {
+        this.props.changeModalState();
+    };
 
-    render (){
-        const { products } = this.state;
+    render() {
+        console.log("THESE ARE PROPS: ", this.props)
+        const products = (this.props.products) ? (this.props.products) : ([]);
         return (
             <div className="products">
                 <br />
                 <div className="row">
-                    <a className="col s2 offset-s2 btn blue" onClick={this.onOpenModal}>Filter Products</a>
+                    <a className="col s2 offset-s2 btn blue" onClick={this.modalHandler}>Filter Products</a>
                 </div>
-                <Modal open={this.state.modalOpen} onClose={this.onCloseModal} center>
-                    <ProductsFilter productsList={products} />
+                <Modal open={this.props.modalOpen} onClose={this.modalHandler} center>
+                    {/* <ProductsFilter productsList={products} /> */}
+                    <ProductsList productsList={products} />
                 </Modal>
-                <br/>
+                <br />
                 <ProductsList productsList={products} />
-                <Pagination currentPage={this.state.currentPage} onPageChangeHandler={this.onPageChangeHandler}/>
+                <Pagination currentPage={this.props.currentPage} onPageChangeHandler={this.onPageChangeHandler} />
             </div>
         )
     };
 };
 
-export default Home;
+const mapDispatchToProps = (dispatch) => {
+    return {
+        getPaginationProducts: (pageNumber) => dispatch(getPaginationProducts(pageNumber)),
+        nextPage: () => dispatch(nextPage()),
+        previousPage: () => dispatch(previousPage()),
+        changeModalState: () => dispatch(changeModalState())
+    }
+};
+
+const mapStateToProps = (state) => {
+    return {
+        products: state.product.products,
+        currentPage: state.product.currentPage,
+        modalOpen: state.modal.modalOpen
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(Home);
