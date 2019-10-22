@@ -1,102 +1,69 @@
-import scrapy
-import w3lib.url
-
 from scrapy.spiders import CrawlSpider
 
-from ..items import OrsayItem
+from ..items import BeyondLimitItem
 
 
-class OrsayParser:
-
+class BeyondLimitsExtractor:
     def parse_details(self, response):
-        orsay_product = OrsayItem()
+        product_details = BeyondLimitItem()
+        product_details['retailer_sku'] = self.extract_retailor_sku(response)
+        product_details['url'] = self.extract_url(response)
+        product_details['gender'] = self.extract_gender(response)
+        product_details['category'] = self.extract_category(response)
+        product_details['brand'] = self.extract_brand(response)
+        product_details['name'] = self.extract_name(response)
+        product_details['description'] = self.extract_description(response)
+        product_details['care'] = self.extract_care(response)
+        product_details['img_urls'] = self.extract_img_urls(response)
+        product_details['skus'] = self.extract_skus(response)
+        return product_details
 
-        orsay_product['retailer_sku'] = self.extract_sku(response)
-        orsay_product['gender'] = self.extract_gender()
-        orsay_product['category'] = self.extract_category(response)
-        orsay_product['brand'] = self.extract_brand()
-        orsay_product['url'] = self.extract_url(response)
-        orsay_product['name'] = self.extract_name(response)
-        orsay_product['description'] = self.extract_description(response)
-        orsay_product['care'] = self.extract_care(response)
-        orsay_product['img_urls'] = self.extract_img_url(response)
-        orsay_product['skus'] = self.extract_skus(response)
-
-        orsay_product['request_queue'] = self.extract_color_requests(response)
-
-        yield self.get_item_or_request_to_yield(orsay_product)
-
-    def parse_colors(self, response):
-        orsay_product = response.meta['item']
-        orsay_product['img_urls'] += self.extract_img_url(response)
-        orsay_product['skus'] += self.extract_skus(response)
-
-        yield self.get_item_or_request_to_yield(orsay_product)
-
-    def get_item_or_request_to_yield(self, orsay_product):
-        if orsay_product['request_queue']:
-            request_next = orsay_product['request_queue'].pop()
-            request_next.meta['item'] = orsay_product
-            return request_next
-
-        del orsay_product['request_queue']
-        return orsay_product
-
-    def extract_color_requests(self, response):
-        colours_urls = response.css('.color [class="selectable"] ::attr(href)').getall()
-        return [scrapy.Request(colour_url, callback=self.parse_colors) for colour_url in colours_urls]
-
-    def extract_sku(self, response):
-        return response.css('.product-sku::text').get().split()[-1]
-
-    def extract_gender(self):
-        return 'Female'
-
-    def extract_category(self, response):
-        return self.clean(response.css('.breadcrumb-element-link ::text').getall())
-
-    def extract_brand(self):
-        return 'Orsay'
+    def extract_retailor_sku(self, response):
+        return response.css('[itemprop="productID"]::text').get()
 
     def extract_url(self, response):
         return response.url
 
+    def extract_gender(self, response):
+        return self.clean(response.css('[itemprop=title]::text').getall()[1])
+
+    def extract_category(self, response):
+        return response.css('[itemprop=title]::text').getall()[1:]
+
+    def extract_brand(self, response):
+        return response.css('[property="og:site_name"]::attr(content)').get()
+
     def extract_name(self, response):
-        return response.css('[itemprop="name"]::text').get()
+        return response.css(".bb_art--title::text").get()
 
     def extract_description(self, response):
-        return response.css('.with-gutter::text').getall()
+        return self.clean(response.css('#description ::text').getall()[:2])
 
     def extract_care(self, response):
-        return response.css('.js-material-container p::text').getall()
+        return response.css('#description li::text')[1].getall()
 
-    def extract_img_url(self, response):
-        return response.css('.productthumbnail::attr(src)').getall()
-
-    def extract_color(self, response):
-        return self.clean(response.css('.color .selected ::attr(title)').get().split('-')[1])
+    def extract_img_urls(self, response):
+        return response.css(".bb_pic--nav ::attr(href)").getall()
 
     def extract_pricing_and_color(self, response):
-        price = self.clean(response.css('.price-sales::text').get())
-        previous_price = self.clean(response.css('.price-standard::text').getall())
-        currency = response.css('.locale-item.current .country-currency::text').get()
-        color = self.extract_color(response)
-        return {'price': price, 'previous_price': previous_price, 'Currency': currency, 'Colour': color}
+        price = response.css('[itemprop="price"]::attr(content)').get()
+        currency = response.css('[itemprop="priceCurrency"]::attr(content)').get()
+        previous_price = response.css('.oldPrice del::text').getall()
+        color = self.clean(response.css('#description li::text')[0].get().split(':')[1])
+        return {'Price': price, 'Previous_Price': previous_price, 'Currency': currency, 'Colour': color}
 
     def extract_skus(self, response):
-        pricing_color = self.extract_pricing_and_color(response)
-        sizes_sel = response.css('.size li')
+        common_sku = self.extract_pricing_and_color(response)
+        sizes_sel = response.css('#bb-variants--0 option::text').getall()
         skus = []
-        if not sizes_sel:
-            sku = pricing_color.copy()
-            sku.update({'out_of_stock': False, 'sku_id': pricing_color['Colour']})
+        for size in sizes_sel:
+            sku = common_sku.copy()
+            sku['size'] = size
+            sku['sku_id'] = common_sku['Colour'] + '_' + size
             skus.append(sku)
-        for size_sel in sizes_sel:
-            sku = pricing_color.copy()
-            out_of_stock = True if size_sel.css('.unselectable') else False
-            size = size_sel.css('a::text').get()
-            sku_id = pricing_color['Colour'] + '_' + size
-            sku.update({'out_of_stock': out_of_stock, 'size': size, 'sku_id': sku_id})
+        if not sizes_sel:
+            sku = common_sku.copy()
+            sku['sku_id'] = common_sku['Colour']
             skus.append(sku)
         return skus
 
@@ -106,25 +73,21 @@ class OrsayParser:
         return [str_to_strip.strip() for str_to_strip in list_to_strip if str_to_strip.strip()]
 
 
-class OrsaySpider(CrawlSpider):
-    name = "orsay"
-    allowed_domains = ['orsay.com']
+class BeyondLimitsSpider(CrawlSpider):
+    name = "beyondlimits"
+    allowed_domains = ['beyondlimits.com']
     start_urls = [
-        'https://www.orsay.com/de-de/neuheiten/',
-        'https://www.orsay.com/de-de/produkte/',
-        'https://www.orsay.com/de-de/sale/',
-        'https://www.orsay.com/de-de/trends/',
+        'https://www.beyondlimits.com/Women/',
+        'https://www.beyondlimits.com/Men/',
     ]
 
     def parse(self, response):
-        max_products_on_page = response.css('.load-more-progress::attr(data-max)').get()
-        url = w3lib.url.add_or_replace_parameters(response.url, {'sz': max_products_on_page})
-        yield response.follow(url, callback=self.parse_category_page)
-
-    def parse_category_page(self, response):
-        orsay_parser = OrsayParser()
-        for product_url in response.css('.thumb-link::attr(href)'):
-            yield response.follow(product_url.get(), callback=orsay_parser.parse_details)
+        next_page = response.css('.next::attr(href)').get()
+        if next_page:
+            yield response.follow(next_page, callback=self.parse)
+        details_extractor = BeyondLimitsExtractor()
+        for detail_url in response.css('.bb_product--link.bb_product--imgsizer::attr(href)'):
+            yield response.follow(detail_url.get(), callback=details_extractor.parse_details)
 
 
 class OrsayItem(scrapy.Item):
