@@ -1,46 +1,38 @@
-"""This module read the weather files
-"""
-from datetime import timedelta
-from util import strip_list, parse_date
-import constants
+"""This module read the weather files"""
+import glob
+import csv
+from util import format_header, get_date_pattern
 
 class FileReader:
-    """Open the weather file/files and read the records line by line
-    """
+    """Open the weather file/files and read the records line by line"""
     def __init__(self, date, path):
-        self.__date, self.__read_type, self.__end_date = parse_date(date)
+        date_pattern = get_date_pattern(date)
         self.__path = path
+        self.__files = glob.glob(f"{path}/*_weather_{date_pattern}.txt")
+        self.__current_file_index = 0
         self.__file_pointer = None
         self.keys = []
         self.values = []
         self.initialize()
 
     def initialize(self):
-        """Open file of the year and month
-        """
-        year = self.__date.strftime('%Y')
-        month = self.__date.strftime('%b')
-        filepath = f"{self.__path}/{constants.CITY}_weather_{year}_{month}.txt"
-        self.__file_pointer = open(filepath, 'r')
-        self.__file_pointer.readline()
-        
-        self.set_keys()
+        """Open file of the year and month"""
+        file = open(self.get_next_filename())
+        next(file)
+        header = [format_header(h) for h in next(file).split(',')]
+        self.__file_pointer = csv.DictReader(file, fieldnames=header)
 
-    def set_keys(self):
-        """Set keys 
-        """
-        self.keys = self.__file_pointer.readline().split(",")
-        strip_list(self.keys)
+    def has_next_file(self):
+        """Check is next file is available"""
+        return  self.__current_file_index < len(self.__files) -1
 
-    def set_values(self):
-        """Set values 
-        """
-        next_line = self.__file_pointer.readline()
-        if not next_line or len(next_line.split(",")) != 23:
-            self.values = []
-        else:
-            self.values = next_line.split(",")
-            strip_list(self.values)
+    def get_next_filename(self):
+        """Get next file name"""
+        return self.__files[self.__current_file_index]
+
+    def move_to_next_file(self):
+        """Move index to next file"""
+        self.__current_file_index += 1
 
     def next_record(self):
         """Read records line by line from the file.
@@ -48,14 +40,12 @@ class FileReader:
 
         return a dictionary containg keys and values of the current record
         """
+        next_record = next(self.__file_pointer)
+        if next_record['max_temperaturec'] is not None:
+            return next_record
 
-        self.set_values()
-        if self.values == []:
-            if self.__read_type == "Month":
-                return None
-            if self.__date < self.__end_date:
-                self.__date += timedelta(days=31)
-                self.initialize()
-                self.next_record()
-
-        return dict(zip(self.keys, self.values))
+        if self.has_next_file():
+            self.move_to_next_file()
+            self.initialize()
+            return self.next_record()
+        return None
