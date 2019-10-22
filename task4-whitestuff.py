@@ -65,11 +65,11 @@ class WhiteStuffParser:
 
         for product in product_info.values():
             sku = {'color': product['colour']}
-            sku.update({'size': product['size']})
-            sku.update({'previous_price': product['listPrice']})
-            sku.update({'price': product['salePrice']})
-            sku.update({'out_of_stock': not product['inStock']})
-            sku.update({'sku_id': sku['color'] + '_' + sku['size']})
+            sku['size'] = product['size']
+            sku['previous_price'] = product['listPrice']
+            sku['price'] = product['salePrice']
+            sku['out_of_stock'] = not product['inStock']
+            sku['sku_id']: sku['color'] + '_' + sku['size']
             whitestuff_product['img_urls'] += self.extract_imgs_urls(product['images'])
             whitestuff_product['skus'].append(sku)
 
@@ -122,4 +122,17 @@ class WhiteStuffSpider(CrawlSpider):
         for product_url in products_urls:
             final_url = 'https://www.whitestuff.com' + product_url
             yield response.follow(final_url, callback=whiteStuff_parser.parse_details)
+
+
+class WhiteStuffItem(scrapy.Item):
+    retailer_sku = scrapy.Field()
+    gender = scrapy.Field()
+    category = scrapy.Field()
+    brand = scrapy.Field()
+    url = scrapy.Field()
+    name = scrapy.Field()
+    description = scrapy.Field()
+    care = scrapy.Field()
+    img_urls = scrapy.Field()
+    skus = scrapy.Field()
 
