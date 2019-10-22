@@ -91,15 +91,15 @@ class NnnowParser:
     def extract_skus(self, product_detail, response):
         color = product_detail['colorDetails']['primaryColor']
         currency = response.css('[itemProp="priceCurrency"]::attr(content)').get()
+        common_sku = {'Currency': currency, 'Colour': color}
         skus = []
         for product_sku in product_detail['skus']:
-            sku = {'price': product_sku['price']}
-            sku.update({'previous_price': product_sku['mrp']})
-            sku.update({'Currency': currency})
-            sku.update({'Colour': color})
-            sku.update({'size': product_sku['size']})
-            sku.update({'outofstock': not product_sku['inStock']})
-            sku.update({'sku_id': color + '_' + product_sku['size']})
+            sku = common_sku.copy()
+            sku['price'] = product_sku['price']
+            sku['previous_price'] = product_sku['mrp']
+            sku['size'] = product_sku['size']
+            sku['outofstock'] = not product_sku['inStock']
+            sku['sku_id'] = color + '_' + product_sku['size']
             skus.append(sku)
         return skus
 
@@ -147,3 +147,4 @@ class NnnowItem(scrapy.Item):
     img_urls = scrapy.Field()
     skus = scrapy.Field()
     request_queue = scrapy.Field()
+
