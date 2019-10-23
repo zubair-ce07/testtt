@@ -1,14 +1,107 @@
 {% extends 'base.html' %}
-
 {% block title %}Home{% endblock %}
 
+<style>
+  .card-custom {
+      max-width: 128px;
+  }
+  li {
+    float: left;
+    list-style: outside none none;
+    padding-left: 5px;
+}
+</style>
+
 {% block content %}
-{% if user.is_authenticated %}
-  Hi {{ user.username }}!
-  <p><a href="{% url 'logout' %}">logout</a></p>
-{% else %}
+<div class="container">
+
+    
+
+
+<!--{% if user.is_authenticated %} !-->
+
+<center> <h1> Products </h1> </center>
+
+<form method="POST">
+    {% csrf_token %}
+    {{ form.as_p }}
+  <div class="form-group">
+    <label for="exampleInputEmail1">Search By Category</label>
+    <select name="category" type="email" class="form-control">
+      <option>Men</option>
+      <option>Women</option>
+      <option>Kids</option>
+    </select>
+    <small id="emailHelp" class="form-text text-muted"></small>
+    <button type="submit" class="btn btn-primary">Submit</button>
+  </div>
+</form>
+<br/>
+<h3> <a href="/">Home </a>/ {{text}} </h3>
+
+<div class="row">
+    {% for product in products %}
+    <div class="card" style="width: 15rem;">
+      <img class="card-img-top" src="/media/{{product.image}}" alt="Card image cap" style="height:270px;">
+      <div class="card-body">
+        <h5 class="card-title">{{product.name}}</h5>
+        <p class="card-text">{{product.description}}</p>
+        <p class="card-text">{{product.category}}</p>
+        <button class="btn btn-primary cart">Add to Cart </button>
+      </div>
+    </div>
+  {% endfor %}
+  </div>
+
+  {% if products.has_other_pages %}
+  <nav aria-label="Page navigation example">
+    <ul class="pagination pagination-lg">
+      {% if products.has_previous %}
+        <li class="page-item"><a href="?page={{ products.previous_page_number }}">&laquo;</a></li>
+      {% else %}
+        <li class="disabled page-item"><span>&laquo;</span></li>
+      {% endif %}
+      {% for i in products.paginator.page_range %}
+        {% if products.number == i %}
+          <li class="active page-item"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+        {% else %}
+          <li class="page-item"><a href="?page={{ i }}">{{ i }}</a></li>
+        {% endif %}
+      {% endfor %}
+      {% if products.has_next %}
+        <li><a href="?page={{ products.next_page_number }}">&raquo;</a></li>
+      {% else %}
+        <li class="disabled page-item"><span>&raquo;</span></li>
+      {% endif %}
+    </ul>
+    </nav>
+  {% endif %}
+
+
+<!--{% else %} !-->
   <p>You are not logged in</p>
   <a href="{% url 'login' %}">login</a> |
   <a href="{% url 'signup' %}">signup</a>
 {% endif %}
+</div>
+{% endblock %}
+
+{% block js %} 
+<script>
+console.log('Working');
+if(localStorage.getItem('cart')==null)
+{
+  var cart = {};
+}
+else {
+  var cart = JSON.parse(localStorage.getItem('cart'));
+}
+
+$('.cart').click(function() {
+  console.log('clicked')
+  var idstr = this.id.toString();
+  console.log(idstr);
+});
+  </script>
+
 {% endblock %}

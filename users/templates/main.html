@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block content %}
+    <div class="container">
+{% if user.is_authenticated %}
+
+{% for product in products %}
+    <h6> {{product.description}} </h6>
+{% endfor %}
+
+  {% else %}
+  <p>You are not logged in</p>
+  <a href="{% url 'login' %}">login</a> |
+  <a href="{% url 'signup' %}">signup</a>
+{% endif %}
+{% endblock %}

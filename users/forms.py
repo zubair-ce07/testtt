@@ -8,8 +8,13 @@ class CustomUserCreationForm(UserCreationForm):
         model = CustomUser
         fields = ('username', 'email')
 
+
 class CustomUserChangeForm(UserChangeForm):
 
     class Meta:
         model = CustomUser
         fields = ('username', 'email')
+
+
+class SearchForm(forms.Form):
+    category = forms.CharField(max_length=100)
