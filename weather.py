@@ -6,11 +6,11 @@ class Weather:
     """Store and manupulate weather data"""
 
     def __init__(self, entries):
-        self.max_temperaturec = None
-        self.min_temperaturec = None
-        self.max_humidity = None
-        self.mean_temperaturec = None
-        self.mean_humidity = None
+        self.max_temperaturec = -1
+        self.min_temperaturec = 100
+        self.max_humidity = -1
+        self.mean_temperaturec = -1
+        self.mean_humidity = -1
         self.pkt = None
         self.pkst = None
         if entries:
@@ -63,13 +63,13 @@ class Weather:
     @staticmethod
     def get_max(first, second, attr):
         """Return Weather with Max attribute given as arguments"""
-        if not first or (first and getattr(second, attr) and int(getattr(second, attr)) > int(getattr(first, attr))):
+        if getattr(second, attr).isnumeric() and int(getattr(first, attr)) < int(getattr(second, attr)):
             return second
         return first
 
     @staticmethod
     def get_low(first, second, attr):
         """Return Weather with Min attribute given as arguments"""
-        if not first or (first and getattr(second, attr) and int(getattr(second, attr)) < int(getattr(first, attr))):
+        if getattr(second, attr).isnumeric() and int(getattr(first, attr)) > int(getattr(second, attr)):
             return second
         return first
