@@ -4,7 +4,7 @@ import constants
 def display_month_bar_chart(month_records):
     if not month_records:
         print(constants.MONTH_RECORD_NOT_FOUND_ERROR)
-        return -1 
+        return
 
     for record in month_records:            
         print(f'{record.record_date.day} ', end='')
@@ -16,7 +16,7 @@ def display_month_bar_chart(month_records):
 def display_yearly_report(yearly_report):
     if not yearly_report:
         print(constants.YEAR_RECORD_NOT_FOUND_ERROR)
-        return -1
+        return
 
     max_temp_record = yearly_report['max_temp_record']  
     min_temp_record = yearly_report['min_temp_record']  
@@ -30,7 +30,7 @@ def display_yearly_report(yearly_report):
 def display_monthly_report(monthly_report):
     if not monthly_report:
         print(constants.MONTH_RECORD_NOT_FOUND_ERROR)
-        return -1
+        return
 
     print(f'Highest Average: {monthly_report["avg_max_temperature"]}C')
     print(f'Lowest Average: {monthly_report["avg_min_temperature"]}C')

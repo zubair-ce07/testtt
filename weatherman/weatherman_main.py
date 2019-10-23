@@ -1,9 +1,9 @@
 import argparse
 from datetime import datetime
 
-from weather_files_reader import *
-from reports_calculator import *
-from reports_generator import *
+from weather_files_reader import read_weather_files
+from reports_calculator import calculate_monthly_report, calculate_yearly_report, extract_month_records
+from reports_generator import display_yearly_report, display_monthly_report, display_month_bar_chart
 
 
 def parse_arguments():
