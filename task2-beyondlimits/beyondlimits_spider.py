@@ -50,7 +50,7 @@ class BeyondLimitsExtractor:
         currency = response.css('[itemprop="priceCurrency"]::attr(content)').get()
         previous_price = response.css('.oldPrice del::text').getall()
         color = self.clean(response.css('#description li::text')[0].get().split(':')[1])
-        return {'Price': price, 'Previous_Price': previous_price, 'Currency': currency, 'Colour': color}
+        return {'price': price, 'previous_Price': previous_price, 'currency': currency, 'colour': color}
 
     def extract_skus(self, response):
         common_sku = self.extract_pricing_and_color(response)
@@ -59,13 +59,10 @@ class BeyondLimitsExtractor:
         for size in sizes_sel:
             sku = common_sku.copy()
             sku['size'] = size
-            sku['sku_id'] = common_sku['Colour'] + '_' + size
+            sku['sku_id'] = common_sku['colour'] + '_' + size
             skus.append(sku)
-        if not sizes_sel:
-            sku = common_sku.copy()
-            sku['sku_id'] = common_sku['Colour']
-            skus.append(sku)
-        return skus
+
+        return skus if skus else [common_sku.update({'sku_id': common_sku['colour']})]
 
     def clean(self, list_to_strip):
         if isinstance(list_to_strip, basestring):
