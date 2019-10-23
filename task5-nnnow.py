@@ -52,7 +52,7 @@ class NnnowParser:
     def extract_color_requests(self, response):
         domain = 'https://www.nnnow.com'
         color_urls = response.css('.nw-color-item.nwc-anchortag::attr(href)').getall()
-        return [Request(domain + url['url'], callback=self.parse_color) for url in color_urls]
+        return [Request(domain + url, callback=self.parse_color) for url in color_urls]
 
     def extract_retailor_sku(self, response):
         return response.css('[itemprop="sku"]::text').get()[:9]
@@ -80,7 +80,7 @@ class NnnowParser:
 
     def extract_care(self, product_detail):
         if product_detail['finerDetails']['compositionAndCare']:
-            return product_detail['mainStyle']['finerDetails']['compositionAndCare']['list']
+            return product_detail['finerDetails']['compositionAndCare']['list']
         return []
 
     def extract_img_urls(self, product_detail):
@@ -92,7 +92,7 @@ class NnnowParser:
         common_sku = {'Currency': currency, 'Colour': color}
         skus = []
 
-        for product_sku in product_detail['mainStyle']['skus']:
+        for product_sku in product_detail['skus']:
             sku = common_sku.copy()
             sku['price'] = product_sku['price']
             sku['previous_price'] = product_sku['mrp']
