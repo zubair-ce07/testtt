@@ -1,7 +1,10 @@
+import scrapy
 import json
 import re
-import scrapy
 
+import w3lib.url
+
+from scrapy import Request
 from scrapy import Selector
 from scrapy.spiders import CrawlSpider
 
@@ -11,23 +14,39 @@ from ..items import WhiteStuffItem
 class WhiteStuffParser:
 
     def parse_details(self, response):
-        whitestuff_product = WhiteStuffItem()
-        whitestuff_product['retailer_sku'] = self.extract_retailor_sku(response)
-        whitestuff_product['gender'] = self.extract_gender(response)
-        whitestuff_product['category'] = self.extract_category(response)
-        whitestuff_product['brand'] = self.extract_brand()
-        whitestuff_product['url'] = self.extract_url(response)
-        whitestuff_product['name'] = self.extract_name(response)
-        whitestuff_product['description'] = self.extract_description(response)
-        whitestuff_product['care'] = self.extract_care(response)
+        item = WhiteStuffItem()
+        item['retailer_sku'] = self.extract_retailor_sku(response)
+        item['gender'] = self.extract_gender(response)
+        item['category'] = self.extract_category(response)
+        item['brand'] = self.extract_brand()
+        item['url'] = self.extract_url(response)
+        item['name'] = self.extract_name(response)
+        item['description'] = self.extract_description(response)
+        item['care'] = self.extract_care(response)
+        item['currency'] = self.extract_currency(response)
+        item['img_urls'] = []
+        item['skus'] = []
 
-        yield self.extract_skus_requests(response, whitestuff_product)
+        item['request_queue'] = self.extract_skus_requests(response)
 
-    def extract_skus_requests(self, response, whitestuff_product):
+        yield self.get_item_or_request_to_yield(item)
+
+    def extract_skus_requests(self, response):
         master_sku = response.css('::attr(data-variation-master-sku)').get()
-        json_url = 'https://www.whitestuff.com/action/GetProductData-FormatProduct?Format=JSON&ReturnVariable=true&'
-        json_url += 'ProductID=' + master_sku
-        return scrapy.Request(json_url, callback=self.extract_skus, meta={'item': whitestuff_product})
+        json_url = 'https://www.whitestuff.com/action/GetProductData-FormatProduct?Format=JSON&ReturnVariable=true'
+        url = w3lib.url.add_or_replace_parameters(json_url, {'ProductID': master_sku})
+
+        return [Request(url, callback=self.parse_skus)]
+
+    def get_item_or_request_to_yield(self, item):
+        if item['request_queue']:
+            request_next = item['request_queue'].pop()
+            request_next.meta['item'] = item
+            return request_next
+
+        del item['request_queue']
+        del item['currency']
+        return item
 
     def extract_retailor_sku(self, response):
         return response.css('[itemprop="sku"]::text').get()
@@ -56,24 +75,30 @@ class WhiteStuffParser:
     def extract_imgs_urls(self, images_dict):
         return [image['src'] for image in images_dict]
 
-    def extract_skus(self, response):
-        whitestuff_product = response.meta['item']
-        product_info = \
-            json.loads(response.body_as_unicode()[response.body_as_unicode().find('{'):-1])['productVariations']
-        whitestuff_product['img_urls'] = []
-        whitestuff_product['skus'] = []
+    def extract_currency(self, response):
+        return response.css('[itemprop="priceCurrency"]::attr(content)').get()
 
-        for product in product_info.values():
-            sku = {'color': product['colour']}
-            sku['size'] = product['size']
-            sku['previous_price'] = product['listPrice']
-            sku['price'] = product['salePrice']
-            sku['out_of_stock'] = not product['inStock']
-            sku['sku_id']: sku['color'] + '_' + sku['size']
-            whitestuff_product['img_urls'] += self.extract_imgs_urls(product['images'])
-            whitestuff_product['skus'].append(sku)
+    def parse_skus(self, response):
+        item = response.meta['item']
+        product_info = self.load_product_info_json(response)
 
-        yield whitestuff_product
+        for variant in product_info.values():
+            sku = {'currency': item['currency']}
+            sku['color'] = variant['colour']
+            sku['size'] = variant['size']
+            sku['previous_price'] = variant['listPrice']
+            sku['price'] = variant['salePrice']
+            sku['out_of_stock'] = not variant['inStock']
+            sku['sku_id'] = sku['color'] + '_' + sku['size']
+            item['img_urls'] += self.extract_imgs_urls(variant['images'])
+            item['skus'].append(sku)
+
+        yield self.get_item_or_request_to_yield(item)
+
+    def load_product_info_json(self, response):
+        product_info = re.search("(?<=\\'] = )(.*)(?<!;)", response.body, re.DOTALL | re.MULTILINE).group()
+        return json.loads(product_info)['productVariations']
+
 
     def clean(self, list_to_strip):
         if isinstance(list_to_strip, basestring):
@@ -87,41 +112,41 @@ class WhiteStuffSpider(CrawlSpider):
         'https://www.whitestuff.com/',
     ]
 
+    def __init__(self):
+        self.whiteStuff_parser = WhiteStuffParser()
+        self.domain = 'https://www.whitestuff.com'
+
     def parse(self, response):
         top_categories_sel = response.css('.navbar__item')[:4]
         for top_category_sel in top_categories_sel:
             top_menu_id = top_category_sel.css('::attr(data-testing-id)').get().split('-')[0]
-            category_urls = top_category_sel.css('.navbar-subcategory__item a')
+            category_urls = top_category_sel.css('.navbar-subcategory__item a::attr(href)').getall()
 
-            for category_url in category_urls:
-                url = category_url.css('a::attr(href)').get()
-                category_tree = top_menu_id + '%2F' + top_menu_id + '_' + url.split('/')[-2].replace('-', '_').replace(
-                    'and_', '').replace('womens', 'WW').replace('mens', 'MW')
-                page_url = url.replace(':', '%3A').replace('/', '%2F')
+            for url in category_urls:
                 final_url = 'https://fsm6.attraqt.com/zones-js.aspx?version=19.3.8&siteId=eddfa3c1-7e81-4cea-84a4-' \
-                            '0f5b3460218a&UID=acb428d3-f3e9-d884-d2cf-42b16c58110f&referrer=&sitereferrer=&pageurl=' + \
-                            page_url + '&zone0=banner&zone1=category&zone2=advert1&zone3=advert2&zone4=advert3&' \
-                                       'facetmode=html&mergehash=false&culture=en-GB&currency=GBP&language=en-GB&' \
-                                       'config_categorytree=' + category_tree
+                            '0f5b3460218a&pageurl=' + url + '&zone0=banner&zone1=category&config_categorytree=' \
+                            + self.get_category_tree(top_menu_id, url)
                 yield response.follow(final_url, callback=self.parse_category)
 
     def parse_category(self, response):
-        whiteStuff_parser = WhiteStuffParser()
         js_response = response.body_as_unicode()
         html_response = Selector(text=json.loads(re.findall('LM.buildZone\((.+)\);', js_response)[1])['html'])
         next_page = html_response.css('[rel="next"]::attr(href)').get()
 
         if next_page:
-            url = next_page.replace(':', '%3A').replace('/', '%2F').replace('#', '%23').replace('=', '%3d')
+            url = self.domain + next_page
             next_url = 'https://fsm6.attraqt.com/zones-js.aspx?version=19.3.8&siteId=eddfa3c1-7e81-4cea-84a4-' \
-                       '0f5b3460218a&UID=acb428d3-f3e9-d884-d2cf-42b16c58110f&referrer=&sitereferrer=&pageurl=' + url \
-                       + response.url[response.url.find('&zone0'):].replace('html', 'data').replace('true', 'false')
+                       '0f5b3460218a&pageurl=' + url + response.url[response.url.find('&zone0'):]
             yield response.follow(next_url, callback=self.parse_category)
 
         products_urls = html_response.css('.product-tile__title ::attr(href)').getall()
-        for product_url in products_urls:
-            final_url = 'https://www.whitestuff.com' + product_url
-            yield response.follow(final_url, callback=whiteStuff_parser.parse_details)
+
+        for product_url_path in products_urls:
+            yield response.follow(self.domain + product_url_path, callback=self.whiteStuff_parser.parse_details)
+
+    def get_category_tree(self, top_menu_id, url):
+        return top_menu_id + '%2F' + top_menu_id + '_' + url.split('/')[-2].replace('-', '_').replace(
+            'and_', '').replace('womens', 'WW').replace('mens', 'MW')
 
 
 class WhiteStuffItem(scrapy.Item):
@@ -135,4 +160,14 @@ class WhiteStuffItem(scrapy.Item):
     care = scrapy.Field()
     img_urls = scrapy.Field()
     skus = scrapy.Field()
+    request_queue = scrapy.Field()
+    currency = scrapy.Field()
+
+
+class WhitestuffPipeline(object):
+    def process_item(self, item, spider):
+        for sku in item['skus']:
+            sku['price'] = float(re.search('\d*\.?\d+', sku['price']).group())*100
+            sku['previous_price'] = float(re.search('\d*\.?\d+', sku['previous_price']).group())*100
+        return item
 
