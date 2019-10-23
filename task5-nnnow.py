@@ -1,6 +1,7 @@
 import json
-import scrapy
+import re
 
+from scrapy import Request
 from scrapy.spiders import CrawlSpider
 
 from ..items import NnnowItem
@@ -9,52 +10,49 @@ from ..items import NnnowItem
 class NnnowParser:
 
     def parse_details(self, response):
-        nnnow_product = NnnowItem()
-        pg_data_detail = \
-            json.loads(response.css('script').get().replace('<script>window.DATA= ', '').replace('</script>', ''))
-        product_detail = pg_data_detail['ProductStore']['PdpData']['mainStyle']
+        item = NnnowItem()
+        product_detail = self.load_json_data(response)
 
-        nnnow_product['retailer_sku'] = self.extract_retailor_sku(response)
-        nnnow_product['gender'] = self.extract_gender(product_detail)
-        nnnow_product['category'] = self.extract_category(response)
-        nnnow_product['brand'] = self.extract_brand(product_detail)
-        nnnow_product['url'] = self.extract_url(response)
-        nnnow_product['name'] = self.extract_name(product_detail)
-        nnnow_product['description'] = self.extract_description(product_detail)
-        nnnow_product['care'] = self.extract_care(product_detail)
-        nnnow_product['img_urls'] = self.extract_img_urls(product_detail)
-        nnnow_product['skus'] = self.extract_skus(product_detail, response)
-        nnnow_product['request_queue'] = self.extract_color_requests(pg_data_detail)
+        item['retailer_sku'] = self.extract_retailor_sku(response)
+        item['gender'] = self.extract_gender(product_detail)
+        item['category'] = self.extract_category(response)
+        item['brand'] = self.extract_brand(product_detail)
+        item['url'] = self.extract_url(response)
+        item['name'] = self.extract_name(product_detail)
+        item['description'] = self.extract_description(product_detail)
+        item['care'] = self.extract_care(product_detail)
+        item['img_urls'] = self.extract_img_urls(product_detail)
+        item['skus'] = self.extract_skus(product_detail, response)
+        item['request_queue'] = self.extract_color_requests(response)
 
-        yield self.get_item_or_req_to_yield(nnnow_product)
+        yield self.get_item_or_req_to_yield(item)
 
-    def parse_skus(self, response):
-        nnnow_product = response.meta['item']
-        pg_data_detail = \
-            json.loads(response.css('script').get().replace('<script>window.DATA= ', '').replace('</script>', ''))
-        product_detail = pg_data_detail['ProductStore']['PdpData']['mainStyle']
+    def load_json_data(self, response):
+        page_json_data = re.search('(?<=window.DATA= )(.*)', response.css('script::text').get()).group()
+        return json.loads(page_json_data)['ProductStore']['PdpData']['mainStyle']
 
-        nnnow_product['img_urls'] += self.extract_img_urls(product_detail)
-        nnnow_product['skus'] += self.extract_skus(product_detail, response)
+    def parse_color(self, response):
+        item = response.meta['item']
+        product_detail = self.load_json_data(response)
 
-        yield self.get_item_or_req_to_yield(nnnow_product)
+        item['img_urls'] += self.extract_img_urls(product_detail)
+        item['skus'] += self.extract_skus(product_detail, response)
 
-    def get_item_or_req_to_yield(self, nnnow_product):
-        if nnnow_product['request_queue']:
-            request_next = nnnow_product['request_queue'].pop()
-            request_next.meta['item'] = nnnow_product
+        yield self.get_item_or_req_to_yield(item)
+
+    def get_item_or_req_to_yield(self, item):
+        if item['request_queue']:
+            request_next = item['request_queue'].pop()
+            request_next.meta['item'] = item
             return request_next
 
-        del nnnow_product['request_queue']
-        return nnnow_product
+        del item['request_queue']
+        return item
 
-    def extract_color_requests(self, pg_data_detail):
-        if 'colors' in pg_data_detail['ProductStore']['PdpData'].keys():
-            colors = pg_data_detail['ProductStore']['PdpData']['colors']['colors']['']
-            current_color = pg_data_detail['ProductStore']['PdpData']['colors']['selectedColor']['url']
-            domain = 'https://www.nnnow.com'
-            return [scrapy.Request(domain + color['url'], callback=self.parse_skus)
-                    for color in colors if color['url'] not in current_color]
+    def extract_color_requests(self, response):
+        domain = 'https://www.nnnow.com'
+        color_urls = response.css('.nw-color-item.nwc-anchortag::attr(href)').getall()
+        return [Request(domain + url['url'], callback=self.parse_color) for url in color_urls]
 
     def extract_retailor_sku(self, response):
         return response.css('[itemprop="sku"]::text').get()[:9]
@@ -82,7 +80,7 @@ class NnnowParser:
 
     def extract_care(self, product_detail):
         if product_detail['finerDetails']['compositionAndCare']:
-            return product_detail['finerDetails']['compositionAndCare']['list']
+            return product_detail['mainStyle']['finerDetails']['compositionAndCare']['list']
         return []
 
     def extract_img_urls(self, product_detail):
@@ -93,7 +91,8 @@ class NnnowParser:
         currency = response.css('[itemProp="priceCurrency"]::attr(content)').get()
         common_sku = {'Currency': currency, 'Colour': color}
         skus = []
-        for product_sku in product_detail['skus']:
+
+        for product_sku in product_detail['mainStyle']['skus']:
             sku = common_sku.copy()
             sku['price'] = product_sku['price']
             sku['previous_price'] = product_sku['mrp']
@@ -101,6 +100,7 @@ class NnnowParser:
             sku['outofstock'] = not product_sku['inStock']
             sku['sku_id'] = color + '_' + product_sku['size']
             skus.append(sku)
+
         return skus
 
 
@@ -108,21 +108,27 @@ class NnnowSpider(CrawlSpider):
     name = "nnnowSpider"
     allowed_domains = ['nnnow.com']
     start_urls = [
-        'https://www.nnnow.com/men-fashion',
-        'https://www.nnnow.com/women-fashion',
-        'https://www.nnnow.com/kids-fashion',
+        'https://www.nnnow.com/',
     ]
 
     def parse(self, response):
-        json_response = \
-            json.loads(response.css('script').get().replace('<script>window.DATA= ', '').replace('</script>', ''))
-        total_products_on_page = json_response['ProductStore']['ProductData']['totalPages']
+        page_data_json = self.load_json_data(response)
+        nav_menu_items = page_data_json['NavListStore']['navListData']['data']['menu']['level1']
+
+        for menu_item in nav_menu_items:
+                yield response.follow(menu_item['url'], callback=self.parse_category)
+
+    def parse_category(self, response):
+        page_data_json = self.load_json_data(response)
+        products = page_data_json['ProductStore']['ProductData']['totalPages']
+
         request_url = 'https://api.nnnow.com/d/apiV2/listing/products'
         category = response.url.split('/')[-1]
         request_headers = {'accept': 'application/json',
                            'Content-Type': 'application/json',
                            'module': 'odin'}
-        for pg_no in range(1, total_products_on_page):
+
+        for pg_no in range(1, products):
             payload = {'deeplinkurl': '/' + category + '?p=' + str(pg_no) + '&cid=tn_' + category.replace('-', '_')}
             yield response.follow(request_url, callback=self.parse_pages, method='POST', body=json.dumps(payload),
                                   headers=request_headers)
@@ -130,9 +136,13 @@ class NnnowSpider(CrawlSpider):
     def parse_pages(self, response):
         nnnow_details = NnnowParser()
         products_url_list = json.loads(response.body)['data']['styles']['styleList']
+
         for product_url in products_url_list:
             product_complete_url = 'https://www.nnnow.com' + product_url['url']
             yield response.follow(product_complete_url, callback=nnnow_details.parse_details)
+
+    def load_json_data(self, response):
+        return json.loads(re.search('(?<=window.DATA= )(.*)', response.css('script::text').get()).group())
 
 
 class NnnowItem(scrapy.Item):
