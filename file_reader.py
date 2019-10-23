@@ -10,10 +10,10 @@ class File:
         self.open_new_file(name)
 
     def open_new_file(self, name):
-        file = open(name)
-        next(file)
-        header = [format_header(h) for h in next(file).split(',')]
-        self.__file = csv.DictReader(file, fieldnames=header)
+        _file = open(name)
+        next(_file)
+        header = [format_header(h) for h in next(_file).split(',')]
+        self.__file = csv.DictReader(_file, fieldnames=header)
 
     @property
     def file(self):
@@ -43,8 +43,8 @@ class FileReader:
     def records(self):
         """Yield data one by one for all the files"""
         while self.has_next_file():
-            file = File(self.get_next_filename()).file
-            for record in file:
+            _file = File(self.get_next_filename()).file
+            for record in _file:
                 if record['max_temperaturec'] is not None:
                     yield record
             self.move_to_next_file()
