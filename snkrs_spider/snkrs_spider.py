@@ -2,22 +2,24 @@ from scrapy.spiders import Rule, CrawlSpider
 from scrapy.linkextractors import LinkExtractor
 
 from snkrs.items import SnkrsItem
-from snkrs.utils import parse_gender
+from snkrs.utils import get_gender
 
 
 class SnkrsParseSpider():
-    ONE_SIZE = 'oneSize'
+    ONE_SIZE = 'oneSize'    
 
-    def parse_product(self, response):
+    def parse_product(self, response):        
         product = SnkrsItem()
+        category = self.get_category(response)
+        description = self.get_description(response)
 
         product['retailer_sku'] = self.get_retailer_sku(response)
-        product['gender'] = self.get_gender(response)
-        product['category'] = self.get_category(response)
+        product['gender'] = get_gender(response, category, description)
+        product['category'] = category
         product['brand'] = self.get_brand(response)
         product['url'] = self.get_url(response)
         product['name'] = self.get_name(response)
-        product['description'] = self.get_description(response)
+        product['description'] = description
         product['care'] = []
         product['skus'] = self.get_skus(response)
         product['image_urls'] = self.get_image_urls(response)
@@ -32,28 +34,26 @@ class SnkrsParseSpider():
 
     def get_category(self, response):
         return response.css('span.category::text').get().split('/')
-
-    def get_gender(self, response):        
-        return parse_gender(response)
-
+    
     def get_url(self, response):
         return response.url
 
     def get_description(self, response):        
-        return response.css('div#short_description_content p::text').getall()
+        return response.css('#short_description_content p::text').getall()
 
     def get_name(self, response):
         return response.css('h1[itemprop="name"]::text').get().split(' - ')[0]
 
     def get_image_urls(self, response):
-        return response.css('div#carrousel_frame li a::attr(href)').getall()
+        return response.css('#carrousel_frame li a::attr(href)').getall()
 
     def get_skus(self, response):
         skus = {}
 
-        colour = response.css('h1[itemprop="name"]::text').get().split(' - ')[1]
         size_css = 'span.size_EU::text, li:not(.hidden) span.units_container::text'
         price_css = 'span[itemprop="price"]::attr(content)'
+        colour = response.css('h1[itemprop="name"]::text').get().split(' - ')[1]
+        currency = response.css('meta[itemprop="priceCurrency"]::attr(content)').get()
 
         sizes = [size for size in response.css(size_css).getall() if size != ' '] or [self.ONE_SIZE]         
 
@@ -62,8 +62,8 @@ class SnkrsParseSpider():
             availability = response.css('span.availability::text').get()            
             
             sku_attributes['previous_price'] = int(float(response.css(price_css).get())*100)
-            sku_attributes['currency'] = response.css('meta[itemprop="priceCurrency"]::attr(content)').get()
-            sku_attributes['out_of_stock'] = True if availability != 'InStock' else False
+            sku_attributes['currency'] = currency
+            sku_attributes['out_of_stock'] = availability != 'InStock'
             sku_attributes['size'] = size
             sku_attributes['colour'] = colour
         
@@ -72,11 +72,7 @@ class SnkrsParseSpider():
         return skus
 
 
-class CrawlSpider(CrawlSpider):
-    name = 'snkrs_spider'
-    allowed_domains = ['snkrs.com']
-    start_urls = ['http://www.snkrs.com/en/']
-
+class SnkrsCrawlSpider(CrawlSpider):       
     listings_css = 'ul.sf-menu'
     product_css = 'div.product-container'
     
@@ -90,5 +86,14 @@ class CrawlSpider(CrawlSpider):
     def parse_item(self, response):
         return self.product_parser.parse_product(response)
 
-    def parse_start_url(self, response):
-        return self.product_parser.parse_product(response)
+
+class FrCrawlSpider(SnkrsCrawlSpider):
+    name = 'crawl_spider_fr'
+    allowed_domains = ['snkrs.com']
+    start_urls = ['http://www.snkrs.com/fr/']
+
+
+class UsCrawlSpider(SnkrsCrawlSpider):
+    name = 'crawl_spider_us'
+    allowed_domains = ['snkrs.com']
+    start_urls = ['http://www.snkrs.com/en/']  
