@@ -59,13 +59,13 @@ class BeyondLimitsExtractor:
         for size in sizes_sel:
             sku = common_sku.copy()
             sku['size'] = size
-            sku['sku_id'] = common_sku['colour'] + '_' + size
+            sku['sku_id'] = f"{common_sku['colour']}_{size}"
             skus.append(sku)
 
         return skus if skus else [common_sku.update({'sku_id': common_sku['colour']})]
 
     def clean(self, list_to_strip):
-        if isinstance(list_to_strip, basestring):
+        if isinstance(list_to_strip, str):
             return list_to_strip.strip()
         return [str_to_strip.strip() for str_to_strip in list_to_strip if str_to_strip.strip()]
 
