@@ -1,4 +1,3 @@
-import scrapy
 import json
 import re
 
@@ -96,12 +95,12 @@ class WhiteStuffParser:
         yield self.get_item_or_request_to_yield(item)
 
     def load_product_info_json(self, response):
-        product_info = re.search("(?<=\\'] = )(.*)(?<!;)", response.body, re.DOTALL | re.MULTILINE).group()
+        product_info = re.search("(?<=\\'] = )(.*)(?<!;)", response.body.decode('utf-8'),
+                                 re.DOTALL | re.MULTILINE).group()
         return json.loads(product_info)['productVariations']
 
-
     def clean(self, list_to_strip):
-        if isinstance(list_to_strip, basestring):
+        if isinstance(list_to_strip, str):
             return list_to_strip.strip()
         return [str_to_strip.strip() for str_to_strip in list_to_strip if str_to_strip.strip()]
 
@@ -123,9 +122,9 @@ class WhiteStuffSpider(CrawlSpider):
             category_urls = top_category_sel.css('.navbar-subcategory__item a::attr(href)').getall()
 
             for url in category_urls:
-                final_url = 'https://fsm6.attraqt.com/zones-js.aspx?version=19.3.8&siteId=eddfa3c1-7e81-4cea-84a4-' \
-                            '0f5b3460218a&pageurl=' + url + '&zone0=banner&zone1=category&config_categorytree=' \
-                            + self.get_category_tree(top_menu_id, url)
+                final_url = f'https://fsm6.attraqt.com/zones-js.aspx?version=19.3.8&siteId=eddfa3c1-7e81-4cea-84a4-' \
+                            f'0f5b3460218a&pageurl={url}&zone0=banner&zone1=category&config_categorytree=' \
+                            f'{self.get_category_tree(top_menu_id, url)}'
                 yield response.follow(final_url, callback=self.parse_category)
 
     def parse_category(self, response):
@@ -135,8 +134,8 @@ class WhiteStuffSpider(CrawlSpider):
 
         if next_page:
             url = self.domain + next_page
-            next_url = 'https://fsm6.attraqt.com/zones-js.aspx?version=19.3.8&siteId=eddfa3c1-7e81-4cea-84a4-' \
-                       '0f5b3460218a&pageurl=' + url + response.url[response.url.find('&zone0'):]
+            next_url = f'https://fsm6.attraqt.com/zones-js.aspx?version=19.3.8&siteId=eddfa3c1-7e81-4cea-84a4-' \
+                       f'0f5b3460218a&pageurl={url}{response.url[response.url.find("&zone0"):]}'
             yield response.follow(next_url, callback=self.parse_category)
 
         products_urls = html_response.css('.product-tile__title ::attr(href)').getall()
