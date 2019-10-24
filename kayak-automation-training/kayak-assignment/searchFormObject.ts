@@ -44,7 +44,7 @@ export class SearchFormObject {
     return this.departureDateField;
   }
 
-  getReturnDate(): promise.Promise<string> {
-    return this.returnDateField.getText();
+  getReturnDate(): ElementFinder {
+    return this.returnDateField;
   }
 }
