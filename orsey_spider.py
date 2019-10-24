@@ -92,12 +92,12 @@ class OrsayParser:
             sku = common_sku.copy()
             sku['out_of_stock'] = True if size_sel.css('.unselectable') else False
             sku['size'] = size_sel.css('a::text').get()
-            sku['sku_id'] = common_sku['Colour'] + '_' + size_sel.css('a::text').get()
+            sku['sku_id'] = f"{common_sku['Colour']}_{size_sel.css('a::text').get()}"
             skus.append(sku)
         return skus if skus else common_sku.update({'out_of_stock': False, 'sku_id': common_sku['Colour']})
 
     def clean(self, list_to_strip):
-        if isinstance(list_to_strip, basestring):
+        if isinstance(list_to_strip, str):
             return list_to_strip.strip()
         return [str_to_strip.strip() for str_to_strip in list_to_strip if str_to_strip.strip()]
 
