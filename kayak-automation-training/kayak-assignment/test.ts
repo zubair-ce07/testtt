@@ -4,12 +4,15 @@ import { FlightsPageObject } from './flightsPageObject';
 import { SearchFormObject } from './searchFormObject';
 import { userInputJSON } from './userInputJSON';
 import { async } from 'q';
+import http = require('http');
+var Intercept = require('protractor-intercept');
 
 var chai = require('chai');
 var chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
 var expect = chai.expect;
 var should = chai.should();
+var intercept = new Intercept(browser);
 let homePageObject: HomePageObject = new HomePageObject();
 let flightsPageObject: FlightsPageObject = new FlightsPageObject();
 let searchFormObject: SearchFormObject = new SearchFormObject();
@@ -33,68 +36,67 @@ describe("Search form and travelers Verification", async function() {
   
   it("Should display correct city in origin field",async function() {
     homePageObject.setDeparture("Paris (PAR)");
-    await homePageObject.getDepartureValue().should.eventually.be.equal("Paris (PAR)");
+    await searchFormObject.getDepartureValue().should.eventually.be.equal("Paris (PAR)");
   });
 
-  it("Change number of ‘adults’ from travelers field to 9",async function() {
+  it("Should display adult passengers limit after selecting more then 9 adults",async function() {
     homePageObject.addAdultPassengers(10);
     await homePageObject.getAdultsLimitMessage().should.eventually.be.equal("Searches cannot have more than 9 adults");
   });
 });
 
-for (let senario in userInputJSON){
-  describe("Verify complete flow to search flights", async function() {
+Object.keys(userInputJSON).map( senario => {
+  describe("Verify flights search process:", async function() {
     before(async function() {
       browser.waitForAngularEnabled(false);
       await browser.get('https://www.kayak.com');
       await browser.manage().deleteAllCookies();
       await browser.refresh();
     });
-  
-    it("Should display origin input which is entered", async function() {
-      homePageObject.setDeparture(userInputJSON[senario]["Origin Input"]);
-      await homePageObject.getDepartureValue().should.eventually.be.equal(userInputJSON[senario]["Origin Selection"]);
+
+    it(`Should display ${userInputJSON[senario]["Origin Input"]} in departure field`, async function() {
+      await homePageObject.setDeparture(userInputJSON[senario]["Origin Input"]);
+      await searchFormObject.getDepartureValue().should.eventually.be.equal(userInputJSON[senario]["Origin Selection"]);
     });
   
-    it("Should display destination which is entered", async function() {
-      homePageObject.setDestination(userInputJSON[senario]["Destination Input"]);
-      await homePageObject.getDestinationValue().should.eventually.be.equal(userInputJSON[senario]["Destination Selection"]);
+    it(`Should display ${userInputJSON[senario]["Destination Input"]} in destination field`, async function() {
+      await homePageObject.setDestination(userInputJSON[senario]["Destination Input"]);
+      await searchFormObject.getDestinationValue().should.eventually.be.equal(userInputJSON[senario]["Destination Selection"]);
     });
   
-    it("Change number of ‘adults’ from travelers field to user entered",async function() {
+    it(`Change number of ‘adults’ from travelers field to ${userInputJSON[senario]["Passengers"]["Adults"]}`,async function() {
       homePageObject.addAdultPassengers(userInputJSON[senario]["Passengers"]["Adults"]);
-      await homePageObject.getAdultPassengers().should.eventually.be.equal((userInputJSON[senario]["Passengers"]["Adults"]).toString());
+      await searchFormObject.getAdultPassengers().should.eventually.be.equal((userInputJSON[senario]["Passengers"]["Adults"]).toString());
     });
 
-    it("Change number of ‘children’ from travelers field to user entered",async function() {
-      homePageObject.addChildPassengers(userInputJSON[senario]["Passengers"]["Child"]);
+    it(`Change number of ‘children’ from travelers field to ${userInputJSON[senario]["Passengers"]["Child"]}`,async function() {
+       homePageObject.addChildPassengers(userInputJSON[senario]["Passengers"]["Child"]);
       await homePageObject.getChildPassenger().should.eventually.be.equal((userInputJSON[senario]["Passengers"]["Child"]).toString());
     });
   
-    it("Should display accurate date in departure field",async function() {
+    it("Should display 3rd Day after today as trip start date",async function() {
       homePageObject.fillDatesDeparture();
-      await homePageObject.getDepartureDate().getText().should.eventually.be.equal(homePageObject.getTripDates(3));
+      await searchFormObject.getDepartureDate().getText().should.eventually.be.equal(await homePageObject.getTripDates(3));
     });
   
-    it("Should display accurate date in return date field",async function() {
+    it("Should display 6th Day after today as trip start date",async function() {
       homePageObject.fillDatesReturn();
-      await homePageObject.getReturnDate().should.eventually.be.equal(homePageObject.getTripDates(6));
+      await searchFormObject.getReturnDate().should.eventually.be.equal(await homePageObject.getTripDates(6));
     });
   
-    it("Should display all unchecked checkboxes in compare-to block",async function() {
+    it("Should uncheck all checkboxes in compare-to block",async function() {
       await homePageObject.uncheckAllCheckBox();
     });
   
-    it("Should display same inputs in search form which user entered", function() {
+    it("Should display same inputs in search form after trip search",async function() {
       homePageObject.searchButton.click();
-      homePageObject.getDepartureValue().should.eventually.be.equal(userInputJSON[senario]["Origin Selection"]);
-      homePageObject.getDestinationValue().should.eventually.be.equal(userInputJSON[senario]["Destination Selection"]);
-      homePageObject.getAdultPassengers().should.eventually.be.equal((userInputJSON[senario]["Passengers"]["Adults"]).toString());
-      homePageObject.getDepartureDate().getText().should.eventually.be.equal(homePageObject.getTripDates(3));
-      homePageObject.getReturnDate().should.eventually.be.equal(homePageObject.getTripDates(6));
+      searchFormObject.getDepartureValue().should.eventually.be.equal(userInputJSON[senario]["Origin Selection"]);
+      searchFormObject.getDestinationValue().should.eventually.be.equal(userInputJSON[senario]["Destination Selection"]);
+      searchFormObject.getDepartureDate().getText().should.eventually.be.equal(await homePageObject.getTripDates(3));
+      searchFormObject.getReturnDate().should.eventually.be.equal(await homePageObject.getTripDates(6));
     });
   
-    it("Should display least price in ‘Cheapest’ sort option compared to ‘Best’ and ‘Quickest’ sort options", function() {
+    it("Should display ‘Cheapest’ sort option in least price as compared to ‘Best’ and ‘Quickest’ sort options", function() {
       const cheapPrice =  flightsPageObject.getCheapestPrice();
       const bestPrice =  flightsPageObject.getBestPrice();
       const quickPrice =  flightsPageObject.getQuickestPrice();
@@ -102,7 +104,7 @@ for (let senario in userInputJSON){
       expect(cheapPrice).to.be.at.most(quickPrice, "Cheapest Price is less than Quickest price");
     });
   
-    it("Should display least time in ‘Quickest’ sort option compared to ‘Cheapest’ and ‘Best’ sort options", function() { 
+    it("Should display ‘Quickest’ sort option in least time as compared to ‘Cheapest’ and ‘Best’ sort options", function() { 
       const cheapTime = flightsPageObject.getCheapestTime();
       const bestTime = flightsPageObject.getBestTime();
       const quickTime = flightsPageObject.getQuickestTime();
@@ -110,4 +112,4 @@ for (let senario in userInputJSON){
       expect(quickTime).to.be.at.most(cheapTime, "Quickest Time is less than Quickest Time");
     });
   });
-}
+})

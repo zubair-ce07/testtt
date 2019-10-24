@@ -8,13 +8,13 @@ export let config: Config = {
 	ignoreUncaughtExceptions: true,
 	seleniumAddress: 'http://localhost:4444/wd/hub',
 	capabilities: {
-	  'browserName': 'chrome',
+	'browserName': 'chrome',
     chromeOptions: {
       args: ['--disable-gpu', '--no-sandbox', '--disable-extensions', '--disable-dev-shm-usage']
     }
-	},
-	commonCapabilities: {
-		'browserName': 'chrome',
-	},
-	specs: [ 'test.js' ]
+  },
+	specs: [ 'testParam.js' ],
+	params: {
+		value: ''
+	}
 };
