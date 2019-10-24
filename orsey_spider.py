@@ -1,71 +1,100 @@
+import scrapy
+
+import w3lib.url
+
 from scrapy.spiders import CrawlSpider
 
-from ..items import BeyondLimitItem
+from ..items import OrsayItem
 
 
-class BeyondLimitsExtractor:
+class OrsayParser:
+
     def parse_details(self, response):
-        product_details = BeyondLimitItem()
-        product_details['retailer_sku'] = self.extract_retailor_sku(response)
-        product_details['url'] = self.extract_url(response)
-        product_details['gender'] = self.extract_gender(response)
-        product_details['category'] = self.extract_category(response)
-        product_details['brand'] = self.extract_brand(response)
-        product_details['name'] = self.extract_name(response)
-        product_details['description'] = self.extract_description(response)
-        product_details['care'] = self.extract_care(response)
-        product_details['img_urls'] = self.extract_img_urls(response)
-        product_details['skus'] = self.extract_skus(response)
-        return product_details
+        item = OrsayItem()
 
-    def extract_retailor_sku(self, response):
-        return response.css('[itemprop="productID"]::text').get()
+        item['retailer_sku'] = self.extract_sku(response)
+        item['gender'] = self.extract_gender()
+        item['category'] = self.extract_category(response)
+        item['brand'] = self.extract_brand()
+        item['url'] = self.extract_url(response)
+        item['name'] = self.extract_name(response)
+        item['description'] = self.extract_description(response)
+        item['care'] = self.extract_care(response)
+        item['img_urls'] = self.extract_img_url(response)
+        item['skus'] = self.extract_skus(response)
+
+        item['request_queue'] = self.extract_color_requests(response)
+
+        yield self.get_item_or_request_to_yield(item)
+
+    def parse_colors(self, response):
+        item = response.meta['item']
+        item['img_urls'] += self.extract_img_url(response)
+        item['skus'] += self.extract_skus(response)
+
+        yield self.get_item_or_request_to_yield(item)
+
+    def get_item_or_request_to_yield(self, item):
+        if item['request_queue']:
+            request_next = item['request_queue'].pop()
+            request_next.meta['item'] = item
+            return request_next
+
+        del item['request_queue']
+        return item
+
+    def extract_color_requests(self, response):
+        colours_urls = response.css('.color [class="selectable"] ::attr(href)').getall()
+        return [scrapy.Request(colour_url, callback=self.parse_colors) for colour_url in colours_urls]
+
+    def extract_sku(self, response):
+        return response.css('.product-sku::text').get().split()[-1]
+
+    def extract_gender(self):
+        return 'Female'
+
+    def extract_category(self, response):
+        return self.clean(response.css('.breadcrumb-element-link ::text').getall())
+
+    def extract_brand(self):
+        return 'Orsay'
 
     def extract_url(self, response):
         return response.url
 
-    def extract_gender(self, response):
-        return self.clean(response.css('[itemprop=title]::text').getall()[1])
-
-    def extract_category(self, response):
-        return response.css('[itemprop=title]::text').getall()[1:]
-
-    def extract_brand(self, response):
-        return response.css('[property="og:site_name"]::attr(content)').get()
-
     def extract_name(self, response):
-        return response.css(".bb_art--title::text").get()
+        return response.css('[itemprop="name"]::text').get()
 
     def extract_description(self, response):
-        return self.clean(response.css('#description ::text').getall()[:2])
+        return response.css('.with-gutter::text').getall()
 
     def extract_care(self, response):
-        return response.css('#description li::text')[1].getall()
+        return response.css('.js-material-container p::text').getall()
 
-    def extract_img_urls(self, response):
-        return response.css(".bb_pic--nav ::attr(href)").getall()
+    def extract_img_url(self, response):
+        return response.css('.productthumbnail::attr(src)').getall()
+
+    def extract_color(self, response):
+        return self.clean(response.css('.color .selected ::attr(title)').get().split('-')[1])
 
     def extract_pricing_and_color(self, response):
-        price = response.css('[itemprop="price"]::attr(content)').get()
-        currency = response.css('[itemprop="priceCurrency"]::attr(content)').get()
-        previous_price = response.css('.oldPrice del::text').getall()
-        color = self.clean(response.css('#description li::text')[0].get().split(':')[1])
-        return {'Price': price, 'Previous_Price': previous_price, 'Currency': currency, 'Colour': color}
+        price = self.clean(response.css('.price-sales::text').get())
+        previous_price = self.clean(response.css('.price-standard::text').getall())
+        currency = response.css('.locale-item.current .country-currency::text').get()
+        color = self.extract_color(response)
+        return {'price': price, 'previous_price': previous_price, 'Currency': currency, 'Colour': color}
 
     def extract_skus(self, response):
         common_sku = self.extract_pricing_and_color(response)
-        sizes_sel = response.css('#bb-variants--0 option::text').getall()
+        sizes_sel = response.css('.size li')
         skus = []
-        for size in sizes_sel:
+        for size_sel in sizes_sel:
             sku = common_sku.copy()
-            sku['size'] = size
-            sku['sku_id'] = common_sku['Colour'] + '_' + size
+            sku['out_of_stock'] = True if size_sel.css('.unselectable') else False
+            sku['size'] = size_sel.css('a::text').get()
+            sku['sku_id'] = common_sku['Colour'] + '_' + size_sel.css('a::text').get()
             skus.append(sku)
-        if not sizes_sel:
-            sku = common_sku.copy()
-            sku['sku_id'] = common_sku['Colour']
-            skus.append(sku)
-        return skus
+        return skus if skus else common_sku.update({'out_of_stock': False, 'sku_id': common_sku['Colour']})
 
     def clean(self, list_to_strip):
         if isinstance(list_to_strip, basestring):
@@ -73,21 +102,25 @@ class BeyondLimitsExtractor:
         return [str_to_strip.strip() for str_to_strip in list_to_strip if str_to_strip.strip()]
 
 
-class BeyondLimitsSpider(CrawlSpider):
-    name = "beyondlimits"
-    allowed_domains = ['beyondlimits.com']
+class OrsaySpider(CrawlSpider):
+    name = "orsay"
+    allowed_domains = ['orsay.com']
     start_urls = [
-        'https://www.beyondlimits.com/Women/',
-        'https://www.beyondlimits.com/Men/',
+        'https://www.orsay.com/de-de/neuheiten/',
+        'https://www.orsay.com/de-de/produkte/',
+        'https://www.orsay.com/de-de/sale/',
+        'https://www.orsay.com/de-de/trends/',
     ]
 
     def parse(self, response):
-        next_page = response.css('.next::attr(href)').get()
-        if next_page:
-            yield response.follow(next_page, callback=self.parse)
-        details_extractor = BeyondLimitsExtractor()
-        for detail_url in response.css('.bb_product--link.bb_product--imgsizer::attr(href)'):
-            yield response.follow(detail_url.get(), callback=details_extractor.parse_details)
+        max_products_on_page = response.css('.load-more-progress::attr(data-max)').get()
+        url = w3lib.url.add_or_replace_parameters(response.url, {'sz': max_products_on_page})
+        yield response.follow(url, callback=self.parse_category_page)
+
+    def parse_category_page(self, response):
+        orsay_parser = OrsayParser()
+        for product_url in response.css('.thumb-link::attr(href)'):
+            yield response.follow(product_url.get(), callback=orsay_parser.parse_details)
 
 
 class OrsayItem(scrapy.Item):
