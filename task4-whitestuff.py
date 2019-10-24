@@ -2,6 +2,7 @@ import json
 import re
 
 import w3lib.url
+import urllib.parse
 
 from scrapy import Request
 from scrapy import Selector
@@ -88,7 +89,7 @@ class WhiteStuffParser:
             sku['previous_price'] = variant['listPrice']
             sku['price'] = variant['salePrice']
             sku['out_of_stock'] = not variant['inStock']
-            sku['sku_id'] = sku['color'] + '_' + sku['size']
+            sku['sku_id'] = f"{sku['color']}'_'{sku['size']}"
             item['img_urls'] += self.extract_imgs_urls(variant['images'])
             item['skus'].append(sku)
 
@@ -141,11 +142,12 @@ class WhiteStuffSpider(CrawlSpider):
         products_urls = html_response.css('.product-tile__title ::attr(href)').getall()
 
         for product_url_path in products_urls:
-            yield response.follow(self.domain + product_url_path, callback=self.whiteStuff_parser.parse_details)
+            yield response.follow(urllib.parse.urljoin(self.domain, product_url_path), 
+                                  callback=self.whiteStuff_parser.parse_details)
 
     def get_category_tree(self, top_menu_id, url):
-        return top_menu_id + '%2F' + top_menu_id + '_' + url.split('/')[-2].replace('-', '_').replace(
-            'and_', '').replace('womens', 'WW').replace('mens', 'MW')
+        return f"{top_menu_id}%2F{top_menu_id}_" \
+               f"{url.split('/')[-2].replace('-', '_').replace('and_', '').replace('womens', 'WW').replace('mens', 'MW')}"
 
 
 class WhiteStuffItem(scrapy.Item):
