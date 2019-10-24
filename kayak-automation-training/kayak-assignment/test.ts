@@ -81,7 +81,7 @@ Object.keys(userInputJSON).map( senario => {
   
     it("Should display 6th Day after today as trip start date",async function() {
       homePageObject.fillDatesReturn();
-      await searchFormObject.getReturnDate().should.eventually.be.equal(await homePageObject.getTripDates(6));
+      await searchFormObject.getReturnDate().getText().should.eventually.be.equal(await homePageObject.getTripDates(6));
     });
   
     it("Should uncheck all checkboxes in compare-to block",async function() {
