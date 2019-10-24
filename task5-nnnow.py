@@ -1,6 +1,8 @@
 import json
 import re
 
+import urllib.parse
+
 from scrapy import Request
 from scrapy.spiders import CrawlSpider
 
@@ -13,7 +15,7 @@ class NnnowParser:
         item = NnnowItem()
         product_detail = self.load_json_data(response)
 
-        item['retailer_sku'] = self.extract_retailor_sku(response)
+        item['retailer_sku'] = self.extract_retailor_sku(product_detail)
         item['gender'] = self.extract_gender(product_detail)
         item['category'] = self.extract_category(response)
         item['brand'] = self.extract_brand(product_detail)
@@ -52,10 +54,10 @@ class NnnowParser:
     def extract_color_requests(self, response):
         domain = 'https://www.nnnow.com'
         color_urls = response.css('.nw-color-item.nwc-anchortag::attr(href)').getall()
-        return [Request(domain + url, callback=self.parse_color) for url in color_urls]
+        return [Request(urllib.parse.urljoin(domain, url), callback=self.parse_color) for url in color_urls]
 
-    def extract_retailor_sku(self, response):
-        return response.css('[itemprop="sku"]::text').get()[:9]
+    def extract_retailor_sku(self, product_detail):
+        return product_detail['styleId']
 
     def extract_gender(self, product_detail):
         return product_detail['gender']
@@ -95,10 +97,10 @@ class NnnowParser:
         for product_sku in product_detail['skus']:
             sku = common_sku.copy()
             sku['price'] = product_sku['price']
-            sku['previous_price'] = product_sku['mrp']
+            sku['previous_price'] = [product_sku['mrp']]
             sku['size'] = product_sku['size']
             sku['outofstock'] = not product_sku['inStock']
-            sku['sku_id'] = color + '_' + product_sku['size']
+            sku['sku_id'] = product_sku['skuId']
             skus.append(sku)
 
         return skus
@@ -111,6 +113,9 @@ class NnnowSpider(CrawlSpider):
         'https://www.nnnow.com/',
     ]
 
+    def __init__(self):
+        self.nnnow_details = NnnowParser()
+
     def parse(self, response):
         page_data_json = self.load_json_data(response)
         nav_menu_items = page_data_json['NavListStore']['navListData']['data']['menu']['level1']
@@ -120,7 +125,7 @@ class NnnowSpider(CrawlSpider):
 
     def parse_category(self, response):
         page_data_json = self.load_json_data(response)
-        products = page_data_json['ProductStore']['ProductData']['totalPages']
+        total_pages = page_data_json['ProductStore']['ProductData']['totalPages']
 
         request_url = 'https://api.nnnow.com/d/apiV2/listing/products'
         category = response.url.split('/')[-1]
@@ -128,18 +133,17 @@ class NnnowSpider(CrawlSpider):
                            'Content-Type': 'application/json',
                            'module': 'odin'}
 
-        for pg_no in range(1, products):
-            payload = {'deeplinkurl': '/' + category + '?p=' + str(pg_no) + '&cid=tn_' + category.replace('-', '_')}
+        for pg_no in range(1, total_pages):
+            payload = {'deeplinkurl': f'/{category}?p={str(pg_no)}&cid=tn_{category.replace("-", "_")}'}
             yield response.follow(request_url, callback=self.parse_pages, method='POST', body=json.dumps(payload),
                                   headers=request_headers)
 
     def parse_pages(self, response):
-        nnnow_details = NnnowParser()
-        products_url_list = json.loads(response.body)['data']['styles']['styleList']
+        products_urls = json.loads(response.body)['data']['styles']['styleList']
 
-        for product_url in products_url_list:
-            product_complete_url = 'https://www.nnnow.com' + product_url['url']
-            yield response.follow(product_complete_url, callback=nnnow_details.parse_details)
+        for product_url in products_urls:
+            product_complete_url = f'https://www.nnnow.com{product_url["url"]}'
+            yield response.follow(product_complete_url, callback=self.nnnow_details.parse_details)
 
     def load_json_data(self, response):
         return json.loads(re.search('(?<=window.DATA= )(.*)', response.css('script::text').get()).group())
