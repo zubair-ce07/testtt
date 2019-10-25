@@ -1,25 +1,23 @@
 from scrapy.spiders import Rule, CrawlSpider
 from scrapy.linkextractors import LinkExtractor
 
-from snkrs.items import SnkrsItem
-from snkrs.utils import get_gender
+from ..items import Product
+from ..utils import parse_gender
 
 
 class SnkrsParseSpider():
     ONE_SIZE = 'oneSize'    
 
     def parse_product(self, response):        
-        product = SnkrsItem()
-        category = self.get_category(response)
-        description = self.get_description(response)
-
+        product = Product()
+              
         product['retailer_sku'] = self.get_retailer_sku(response)
-        product['gender'] = get_gender(response, category, description)
-        product['category'] = category
+        product['gender'] = self.get_gender(response)
+        product['category'] = self.get_category(response)
         product['brand'] = self.get_brand(response)
         product['url'] = self.get_url(response)
         product['name'] = self.get_name(response)
-        product['description'] = description
+        product['description'] = self.get_description(response)
         product['care'] = []
         product['skus'] = self.get_skus(response)
         product['image_urls'] = self.get_image_urls(response)
@@ -31,6 +29,15 @@ class SnkrsParseSpider():
 
     def get_brand(self, response):
         return response.css('meta[itemprop="brand"]::attr(content)').get()
+
+    def get_gender(self, response):
+        title_text = response.css('title::text').get()
+        category = self.get_category(response)
+        description = self.get_description(response) 
+
+        gender_text = f"{title_text} {' '.join(category)} {' '.join(description)}"
+
+        return parse_gender(gender_text)    
 
     def get_category(self, response):
         return response.css('span.category::text').get().split('/')
