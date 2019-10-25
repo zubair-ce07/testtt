@@ -92,6 +92,11 @@ export class HomePageObject {
 		this.destinationInput.sendKeys(Key.BACK_SPACE);
 		this.destinationInput.sendKeys(Key.BACK_SPACE);
     await this.destinationInput.sendKeys(destination);
+    // intercept.addListener();
+    // make events to get its requests
+    // intercept.getRequests().then(function(reqs) {
+    //make some assertions about what happened here
+    // });
 		await this.searchFormObject.waitUntillElementAppears(this.destinationSelect);
     this.destinationSelect.click();
   }

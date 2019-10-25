@@ -16,5 +16,11 @@ export let config: Config = {
 	commonCapabilities: {
 		'browserName': 'chrome',
 	},
-	specs: [ 'test.js' ]
+	suites: {
+		test: 'test.js',
+		test1: 'testParam.js'
+	},
+	params: {
+		value: ''
+	}
 };
