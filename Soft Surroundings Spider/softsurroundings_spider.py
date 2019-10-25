@@ -1,28 +1,22 @@
 from scrapy.linkextractors import LinkExtractor
-from scrapy.spiders import CrawlSpider, Rule, Spider
+from scrapy.spiders import CrawlSpider, Rule
 
 from softsurroundings.items import SoftsurroundingsItem 
-from softsurroundings.utils import get_gender, get_color, get_size
+from softsurroundings.utils import parse_gender
 
 
-class ParseSpider(Spider):
-    name = 'parse_spider'
-    start_urls = ['https://www.softsurroundings.com/p/touch-of-lace-jeans/']
+class ParseSpider():
     
-    def parse(self, response):
-        return self.parse_product(response)    
-
     def parse_product(self, response):                   
         product = SoftsurroundingsItem()
-        description = self.get_description(response)
-
+        
         product['retailer_sku'] = self.get_retailer_sku(response)
-        product['gender'] = get_gender(response, description)
+        product['gender'] = self.get_gender(response)
         product['category'] = self.get_category(response)
         product['brand'] = self.get_brand(response)
         product['url'] = self.get_url(response)
         product['name'] = self.get_name(response)
-        product['description'] = description
+        product['description'] = self.get_description(response)
         product['care'] = self.get_care(response)
         product['skus'] = {}
         product['image_urls'] = self.get_image_urls(response)    
@@ -43,10 +37,11 @@ class ParseSpider(Spider):
     def parse_availability(self, response):        
         product = response.meta['product']
         requests = response.meta['requests']
+
         availability = response.css('.stockStatus .basesize::text').get()
         sku_id = response.url.split('/')[-2]
              
-        if sku_id in list(product['skus'].keys()):                        
+        if sku_id in product['skus']:                        
             product['skus'][sku_id]['out_of_stock'] = availability != 'In Stock.'
             
         return self.request_or_product(product, requests)
@@ -57,6 +52,16 @@ class ParseSpider(Spider):
     def get_brand(self, response):
         css = 'meta[property="og:site_name"]::attr(content)'
         return response.css(css).get()
+
+    def get_gender(self, response):
+        title_text = response.css('title::text').get()
+        size_categories = response.css('#sizecat a::text').getall()
+        description = self.get_description(response)
+
+        gender_text = f"{title_text} {' '.join(size_categories)} {' '.join(description)}"
+
+        return parse_gender(gender_text)
+
 
     def get_care(self, response):                
         return response.css('#careAndContentInfo::text').getall()    
@@ -75,33 +80,49 @@ class ParseSpider(Spider):
         return response.css('span[itemprop="name"]::text').get()
 
     def get_image_urls(self, response):        
-        return response.css('#detailAltImgs > li a::attr(href)').getall()
+        return response.css('#detailAltImgs > li a::attr(href)').getall()        
 
     def get_skus(self, response):
         skus = {}
 
-        currency_css = 'span[itemprop="priceCurrency"]::attr(content)'
         price_css = 'span[itemprop="price"]::text'
-        color_css = '.swatchlink .color::attr(data-value)'        
-                                
-        sizes = response.css('a.box.size::attr(id)').getall()
-        color_ids = response.css(color_css).getall()
+        currency_css = 'span[itemprop="priceCurrency"]::attr(content)'
         currency = response.css(currency_css).get()
 
+        color_css = '.swatchlink .color::attr(data-value)'        
+        color_ids = response.css(color_css).getall() or response.css('input[name^="specOne"]::attr(value)').get()
+
+        sizes = response.css('a.box.size::attr(id)').getall()                                
         size_ids = [size.split('_')[1] for size in sizes]
 
         for color_id in color_ids:
             for size_id in size_ids:
                 sku_attributes = {}
 
-                sku_attributes['previous_price'] = int(float(response.css(price_css).get())*100)
+                sku_attributes.update(self.get_previous_price(response))
+                sku_attributes['current_price'] = self.convert_price(response.css(price_css).get())
                 sku_attributes['currency'] = currency
-                sku_attributes['colour'] = get_color(response, color_id)
-                sku_attributes['size'] = get_size(response, size_id)               
+                sku_attributes['colour'] = self.get_color(response, color_id)
+                sku_attributes['size'] = self.get_size(response, size_id)               
 
                 skus[f'{color_id}{size_id}'] = sku_attributes
                                
-        return skus   
+        return skus
+
+    def get_size(self, response, size_id):
+        css = f'a[id$="{size_id}"]::text, #size .basesize::text'
+        return response.css(css).get()
+    
+    def get_color(self, response, color_id):
+        css = f'img[id="color_{color_id}"] + div > span::text, #color .basesize::text'
+        return response.css(css).get()
+
+    def get_previous_price(self, response):       
+        previous_price = response.css('.ctntPrice::text').re_first(r'Was \$(.*);')               
+        return {'previous_price': self.convert_price(previous_price)} if previous_price else {}
+
+    def convert_price(self, price):
+        return int(float(price)*100)    
 
     def skus_requests(self, response):
         size_cat = response.css('#sizecat > a::attr(id)').getall()
@@ -115,7 +136,7 @@ class ParseSpider(Spider):
         product_id = self.get_retailer_sku(response)
         color_css = '.swatchlink .color::attr(data-value)'
 
-        color_ids = response.css(color_css).getall()
+        color_ids = response.css(color_css).getall() or response.css('input[name^="specOne"]::attr(value)').get()
         sizes = response.css('a.box.size::attr(id)').getall()
 
         size_ids = [size.split('_')[1] for size in sizes]
@@ -157,3 +178,6 @@ class CrawlSpider(CrawlSpider):
     
     def parse_item(self, response):        
         return self.softsurroundings_parser.parse_product(response)
+
+    def parse_start_url(self, response):
+        return self.parse_item(response)    
