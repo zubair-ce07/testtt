@@ -24,13 +24,9 @@ class NnnowParser:
         item['care'] = self.extract_care(product_detail)
         item['img_urls'] = self.extract_img_urls(product_detail)
         item['skus'] = self.extract_skus(product_detail, response)
+
         item['request_queue'] = self.extract_color_requests(response)
-
         yield self.get_item_or_req_to_yield(item)
-
-    def load_json_data(self, response):
-        page_json_data = re.search('(?<=window.DATA= )(.*)', response.css('script::text').get()).group()
-        return json.loads(page_json_data)['ProductStore']['PdpData']['mainStyle']
 
     def parse_color(self, response):
         item = response.meta['item']
@@ -40,6 +36,10 @@ class NnnowParser:
         item['skus'] += self.extract_skus(product_detail, response)
 
         yield self.get_item_or_req_to_yield(item)
+
+    def load_json_data(self, response):
+        page_json_data = re.search('(?<=window.DATA= )(.*)', response.css('script::text').get()).group()
+        return json.loads(page_json_data)['ProductStore']['PdpData']['mainStyle']
 
     def get_item_or_req_to_yield(self, item):
         if item['request_queue']:
@@ -51,9 +51,9 @@ class NnnowParser:
         return item
 
     def extract_color_requests(self, response):
-        domain = 'https://www.nnnow.com'
+        url_domain = 'https://www.nnnow.com'
         color_urls = response.css('.nw-color-item.nwc-anchortag::attr(href)').getall()
-        return [Request(urljoin(domain, url), callback=self.parse_color) for url in color_urls]
+        return [Request(urljoin(url_domain, url), callback=self.parse_color) for url in color_urls]
 
     def extract_retailor_sku(self, product_detail):
         return product_detail['styleId']
@@ -86,13 +86,16 @@ class NnnowParser:
 
     def extract_img_urls(self, product_detail):
         return [imgs['medium'] for imgs in product_detail['images']]
-
-    def extract_skus(self, product_detail, response):
+    
+    def extract_common_skus(self, product_detail, response):
         color = product_detail['colorDetails']['primaryColor']
         currency = response.css('[itemProp="priceCurrency"]::attr(content)').get()
-        common_sku = {'Currency': currency, 'Colour': color}
-        skus = []
+        return {'currency': currency, 'colour': color}
 
+    def extract_skus(self, product_detail, response):
+        common_sku = self.extract_common_skus(product_detail, response)
+        
+        skus = []
         for product_sku in product_detail['skus']:
             sku = common_sku.copy()
             sku['price'] = product_sku['price']
@@ -101,19 +104,18 @@ class NnnowParser:
             sku['outofstock'] = not product_sku['inStock']
             sku['sku_id'] = product_sku['skuId']
             skus.append(sku)
-
         return skus
 
 
 class NnnowSpider(CrawlSpider):
-    name = "nnnowSpider"
+    name = 'nnnowSpider'
     allowed_domains = ['nnnow.com']
     start_urls = [
         'https://www.nnnow.com/',
     ]
 
-    def __init__(self):
-        self.nnnow_details = NnnowParser()
+    nnnow_details = NnnowParser()
+    url_domain = 'https://www.nnnow.com'
 
     def parse(self, response):
         page_data_json = self.load_json_data(response)
@@ -141,8 +143,8 @@ class NnnowSpider(CrawlSpider):
         products_urls = json.loads(response.body)['data']['styles']['styleList']
 
         for product_url in products_urls:
-            product_complete_url = f'https://www.nnnow.com{product_url["url"]}'
-            yield response.follow(product_complete_url, callback=self.nnnow_details.parse_details)
+            url_product = product_url["url"]
+            yield response.follow(urljoin(self.url_domain, url_product), callback=self.nnnow_details.parse_details)
 
     def load_json_data(self, response):
         return json.loads(re.search('(?<=window.DATA= )(.*)', response.css('script::text').get()).group())
