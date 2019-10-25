@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import {withRouter} from 'react-router-dom';
+import { connect } from 'react-redux';
 
 
 class ProductsList extends Component{
@@ -7,10 +8,13 @@ class ProductsList extends Component{
         this.props.history.push('/product/' + retailer_sku);
     };
     render (){
-        const { productsList } = this.props;
-        console.log("Products List", productsList)
-        const productList = productsList.length ? (
-            productsList.map(product => {
+        const { products, pending, error } = this.props;
+        console.log("Products List", products)
+        if (error !== null) {
+            return <div className="product-list-error center-align"></div>
+        }
+        const productList = products ? (
+            products.map(product => {
                 return (
                     <div className="col s12 l3" key={product.retailer_sku}>
                         <div className="card large" >
@@ -42,4 +46,14 @@ class ProductsList extends Component{
 }
 };
 
-export default withRouter(ProductsList);
+const mapStateToProps = (state) => {
+    return {
+        products: state.product.products,
+        currentPage: state.product.currentPage,
+        modalOpen: state.modal.modalOpen,
+        pending: state.product.pending,
+        error: state.product.error
+    }
+}
+
+export default connect(mapStateToProps, null)(withRouter(ProductsList));

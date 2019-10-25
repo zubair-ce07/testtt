@@ -29,10 +29,22 @@ class Register extends Component {
     handleSubmit = (e) => {
         e.preventDefault();
         this.props.registerUser(this.state);
-        this.props.history.push('/');
     };
 
+    redirect = () => {
+        this.props.history.push('/login');
+    }
+
     render() {
+        const { user, registerError, registerPending } = this.props;
+        if (!registerPending) {
+            this.redirect();
+        }
+        console.log(user)
+        var error = <div className="register-error center-align"></div>
+        if (registerError !== null) {
+             error = <div className="register-error center-align red-text">{registerError.response.request.response}<br/>Registration Failed!</div>
+        }
         return (
             <div className="container">
                 <form onSubmit={this.handleSubmit}>
@@ -94,8 +106,9 @@ class Register extends Component {
                     <div className="input-field center-align">
                         <button className="btn waves-effect waves-light" type="submit" name="action">Signup</button>
                     </div>
-                    <Link to="/login">Already have an account? Login</Link>
                 </form>
+                {error}
+                <Link to="/login">Already have an account? Login</Link>
             </div>
         )
     }
@@ -109,7 +122,9 @@ const mapDispatchToProps = (dispatch) => {
 
 const mapStateToProps = (state) => {
     return {
-        user: state.auth.user
+        user: state.auth.user,
+        registerPending: state.auth.registerPending,
+        registerError: state.auth.registerError
     }
 }
 

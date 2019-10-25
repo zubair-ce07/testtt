@@ -8,6 +8,7 @@ import Login from './components/auth/login';
 import Footer from './components/layout/footer'
 import Product from './components/products/product';
 import logout from './components/auth/logout';
+import Profile from './components/auth/profile'
 
 class App extends Component
 {
@@ -23,6 +24,7 @@ class App extends Component
             <Route path='/login' component={Login} />
             <Route path='/logout' component={logout} />
             <Route path='/register' component={Register} />
+            <Route path='/profile' component={Profile} />
             <Route path='/product/:product_id' component={Product} />
             <br/>
             <br/>

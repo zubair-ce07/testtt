@@ -1,6 +1,8 @@
 import React, {Component} from 'react';
 import axios from 'axios';
 
+import { connect } from 'react-redux';
+
 
 class Product extends Component {
     state = {
@@ -18,10 +20,10 @@ class Product extends Component {
             })
         })
     }
+
     breadCrumb = () => {
-        let breadCrumbList = []
         console.log(this.state.product != null)
-        breadCrumbList = (this.state.product) ? (
+        let breadCrumbList = (this.state.product) ? (
             this.state.product.categories.slice(0,3).map(category => {
                 return (
                     <a href="#" key={category.category}>{category.category}/</a>
@@ -38,7 +40,7 @@ class Product extends Component {
         imagesList = (this.state.product) ? (
             this.state.product.image_url.split(';').map(image => {
                 return (
-                    <div>
+                    <div key={Math.random()}>
                         <img style={{height: '250px'}} src={image}></img><br/>
                     </div>
                 )
@@ -94,31 +96,27 @@ class Product extends Component {
             coloursAndSizes = Object.entries(coloursAndSizes)
             console.log('entries', coloursAndSizes)
             for (var colourAndSizes of coloursAndSizes) {
-                skusList.push(<p>Colour: {colourAndSizes[0]}</p>)
+                skusList.push(<p key={colourAndSizes}>Colour: {colourAndSizes[0]}</p>)
                 var buttonsList = []
                 for (let size of colourAndSizes[1]) {
                     console.log(size)
                     if (size.out_of_stock) {
-                        // buttonsList.push(<label className="btn-floating grey darken-3 center-align"><input name="group1" type="radio" id={size[0]} disabled/><span>{size[0]}</span></label>)
-                        buttonsList.push(<label className="btn grey lighten-1 center-align" id={size.size}><input name="group1" type="radio" id={size.size} disabled/><span>{size.size}</span></label>)
-                        {/* <label>
-                        <input name="group1" type="radio" />
-                        <span>Red</span>
-                        </label> */}
-                        // buttonsList.push(<input type="radio" name="gender" value="male"/>)
+                        buttonsList.push(<label key={size.size} className="btn grey lighten-1 center-align" id={size.size}><input name="group1" type="radio" id={size.size} disabled/><span>{size.size}</span></label>)
                     } else {
-                        // buttonsList.push(<input type="radio" name="gender" value="male"/>)
-                        buttonsList.push(<label className="btn grey darken-3 center-align"><input name="group1" type="radio" id={size.size}/><span>{size.size}</span></label>)
+                        buttonsList.push(<label key={size.size} className="btn grey darken-3 center-align"><input value={colourAndSizes[0] + '_' + size.size} name="group1" type="radio" id='sku'/><span>{size.size}</span></label>)
                     }
                 }
-                skusList.push(<div className='row'>{buttonsList}</div>)
+                skusList.push(<div key={Math.random()} className='row'>{buttonsList}</div>)
             }
         }
         return skusList
     };
 
-    addToCart = () => {
+    addToCart = (e) => {
+        e.preventDefault()
         console.log('submitted');
+        console.log(document.getElementById('quantity').value);
+        console.log(document.getElementById('sku').value);
     }
 
     render () {
@@ -134,7 +132,10 @@ class Product extends Component {
                     <div className="col s4">
                         <div className='row'>
                             <br/>
-                            <div className="col s10 offset-s2">{breadCrumbList}</div>
+                            <div className="col s10 offset-s2">
+                                <a href="/" key="home">Home/</a>
+                                {breadCrumbList}
+                            </div>
                         </div>
                         <div className="row">
                             <div className="col s10 offset-s2">{imagesList}</div>
@@ -157,7 +158,9 @@ class Product extends Component {
                                     {skusList}
                                     <label htmlFor="quantity">Quantity: </label>
                                     <input id='quantity' name='quantity' type="number" defaultValue={1} min="1" max="10000"/>
-                                    <input type="submit"/>
+                                    <div className="input-field center-align">
+                                        <button className="btn waves-effect waves-light" type="submit" name="action" onClick={this.addToCart}>Add To Cart</button>
+                                    </div>
                                 </form>
                             </div>
                         </div>
@@ -169,4 +172,17 @@ class Product extends Component {
     };
 };
 
-export default Product;
+const mapDispatchToProps = (dispatch) => {
+    return {
+    }
+};
+
+const mapStateToProps = (state) => {
+    return {
+        user: state.auth.user,
+        registerPending: state.auth.registerPending,
+        registerError: state.auth.registerError
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(Product);

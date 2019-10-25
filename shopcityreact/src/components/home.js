@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import axios from 'axios';
 import Modal from 'react-responsive-modal';
 import { connect } from 'react-redux';
 
@@ -11,17 +10,20 @@ import ProductsFilter from './products/productsfilter';
 
 
 class Home extends Component {
-    componentDidMount = () => {
-        this.props.getPaginationProducts(1)
+    componentWillMount = () => {
+        const { filters, getPaginationProducts } = this.props;
+        getPaginationProducts(1, filters);
     };
     onPageChangeHandler = (buttonId) => {
         if (buttonId === 'next') {
             let next = this.props.currentPage + 1
-            this.props.getPaginationProducts(next)
+            const { filters } = this.props;
+            this.props.getPaginationProducts(next, filters)
             this.props.nextPage()
         } else if (buttonId === 'previous') {
             let previous = this.props.currentPage - 1
-            this.props.getPaginationProducts(previous)
+            const { filters } = this.props;
+            this.props.getPaginationProducts(previous, filters)
             this.props.previousPage()
         };
     };
@@ -31,8 +33,6 @@ class Home extends Component {
     };
 
     render() {
-        console.log("THESE ARE PROPS: ", this.props)
-        const products = (this.props.products) ? (this.props.products) : ([]);
         return (
             <div className="products">
                 <br />
@@ -40,11 +40,10 @@ class Home extends Component {
                     <a className="col s2 offset-s2 btn blue" onClick={this.modalHandler}>Filter Products</a>
                 </div>
                 <Modal open={this.props.modalOpen} onClose={this.modalHandler} center>
-                    {/* <ProductsFilter productsList={products} /> */}
-                    <ProductsList productsList={products} />
+                    <ProductsFilter/>
                 </Modal>
                 <br />
-                <ProductsList productsList={products} />
+                <ProductsList />
                 <Pagination currentPage={this.props.currentPage} onPageChangeHandler={this.onPageChangeHandler} />
             </div>
         )
@@ -53,7 +52,7 @@ class Home extends Component {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        getPaginationProducts: (pageNumber) => dispatch(getPaginationProducts(pageNumber)),
+        getPaginationProducts: (pageNumber, filters) => dispatch(getPaginationProducts(pageNumber, filters)),
         nextPage: () => dispatch(nextPage()),
         previousPage: () => dispatch(previousPage()),
         changeModalState: () => dispatch(changeModalState())
@@ -62,9 +61,11 @@ const mapDispatchToProps = (dispatch) => {
 
 const mapStateToProps = (state) => {
     return {
-        products: state.product.products,
         currentPage: state.product.currentPage,
-        modalOpen: state.modal.modalOpen
+        modalOpen: state.modal.modalOpen,
+        pending: state.product.pending,
+        error: state.product.error,
+        filters: state.product.filters
     }
 }
 

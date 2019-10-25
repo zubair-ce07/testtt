@@ -3,7 +3,7 @@ import { Link} from 'react-router-dom';
 import { connect } from 'react-redux';
 
 
-const SignedInLinks = () => {
+const SignedOutLinks = () => {
     return (
         <ul className="right">
             <li><Link to="#">View Cart</Link></li>
@@ -13,11 +13,20 @@ const SignedInLinks = () => {
     )
 };
 
-const SignedOutLinks = () => {
+const SignedInAdminLinks = () => {
+    return (
+        <ul className="right">
+            <li><Link to="/profile">Profile</Link></li>
+            <li><Link to="/logout">Logout</Link></li>
+        </ul>
+    )
+};
+
+const SignedInCustomerLinks = () => {
     return (
         <ul className="right">
             <li><Link to="#">View Cart</Link></li>
-            <li><Link to="#">View Profile</Link></li>
+            <li><Link to="/profile">View Profile</Link></li>
             <li><Link to="/logout">Logout</Link></li>
         </ul>
     )
@@ -25,11 +34,18 @@ const SignedOutLinks = () => {
 
 const Navbar = (props) => {
     const { user } = props;
+    if (user.isAuthenticated && !user.isSuperUser) {
+        var navLinks = <SignedInCustomerLinks />
+    } else if (user.isAuthenticated && user.isSuperUser) {
+        var navLinks = <SignedInAdminLinks />
+    } else {
+        var navLinks = <SignedOutLinks />
+    }
     return (
         <nav className="nav-wrapper grey darken-3">
             <div className="container">
                 <Link to="/" className="brand-logo left">ShopCity</Link>
-                { (user.isAuthenticated) ? (<SignedOutLinks />):(<SignedInLinks />) }
+                { navLinks }
             </div>
         </nav>
     )

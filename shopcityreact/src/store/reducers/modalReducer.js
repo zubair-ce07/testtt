@@ -1,14 +1,34 @@
 const initState = {
+    optionsPending: true,
+    optionsError: null,
+    options: {
+        brandChoices: null,
+        sizeChoices: null,
+        colourChoices: null,
+        categoryChoices: null
+    },
     modalOpen: false
 };
 
 const modalReducer = (state=initState, action) => {
-    if (action.type === 'CHANGE_MODAL_STATE') {
-        return {
-            ...state,
-            modalOpen: !state.modalOpen
-        }
-    }
+    switch (action.type){
+        case 'CHANGE_MODAL_STATE':
+            return {
+                ...state,
+                modalOpen: !state.modalOpen
+            }
+        case 'UPDATE_OPTIONS':
+            return {
+                ...state,
+                optionsPending: false,
+                options: {
+                    brandChoices: action.options.brand_choices,
+                    sizeChoices: action.options.size_choices,
+                    colourChoices: action.options.colour_choices,
+                    categoryChoices: action.options.category_choices
+                }
+            }
+    };
     return state;
 };
 
