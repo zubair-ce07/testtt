@@ -3,20 +3,20 @@ from scrapy.spiders import CrawlSpider
 from ..items import BeyondLimitItem
 
 
-class BeyondLimitsExtractor:
+class BeyondLimitsParser:
     def parse_details(self, response):
-        product_details = BeyondLimitItem()
-        product_details['retailer_sku'] = self.extract_retailor_sku(response)
-        product_details['url'] = self.extract_url(response)
-        product_details['gender'] = self.extract_gender(response)
-        product_details['category'] = self.extract_category(response)
-        product_details['brand'] = self.extract_brand(response)
-        product_details['name'] = self.extract_name(response)
-        product_details['description'] = self.extract_description(response)
-        product_details['care'] = self.extract_care(response)
-        product_details['img_urls'] = self.extract_img_urls(response)
-        product_details['skus'] = self.extract_skus(response)
-        return product_details
+        item = BeyondLimitItem()
+        item['retailer_sku'] = self.extract_retailor_sku(response)
+        item['url'] = self.extract_url(response)
+        item['gender'] = self.extract_gender(response)
+        item['category'] = self.extract_category(response)
+        item['brand'] = self.extract_brand(response)
+        item['name'] = self.extract_name(response)
+        item['description'] = self.extract_description(response)
+        item['care'] = self.extract_care(response)
+        item['img_urls'] = self.extract_img_urls(response)
+        item['skus'] = self.extract_skus(response)
+        return item
 
     def extract_retailor_sku(self, response):
         return response.css('[itemprop="productID"]::text').get()
@@ -34,7 +34,7 @@ class BeyondLimitsExtractor:
         return response.css('[property="og:site_name"]::attr(content)').get()
 
     def extract_name(self, response):
-        return response.css(".bb_art--title::text").get()
+        return response.css('.bb_art--title::text').get()
 
     def extract_description(self, response):
         return self.clean(response.css('#description ::text').getall()[:2])
@@ -43,9 +43,9 @@ class BeyondLimitsExtractor:
         return response.css('#description li::text')[1].getall()
 
     def extract_img_urls(self, response):
-        return response.css(".bb_pic--nav ::attr(href)").getall()
+        return response.css('.bb_pic--nav ::attr(href)').getall()
 
-    def extract_pricing_and_color(self, response):
+    def extract_common_sku(self, response):
         price = response.css('[itemprop="price"]::attr(content)').get()
         currency = response.css('[itemprop="priceCurrency"]::attr(content)').get()
         previous_price = response.css('.oldPrice del::text').getall()
@@ -53,13 +53,13 @@ class BeyondLimitsExtractor:
         return {'price': price, 'previous_Price': previous_price, 'currency': currency, 'colour': color}
 
     def extract_skus(self, response):
-        common_sku = self.extract_pricing_and_color(response)
+        common_sku = self.extract_common_sku(response)
         sizes_sel = response.css('#bb-variants--0 option::text').getall()
         skus = []
         for size in sizes_sel:
             sku = common_sku.copy()
             sku['size'] = size
-            sku['sku_id'] = f"{common_sku['colour']}_{size}"
+            sku['sku_id'] = f'{common_sku["colour"]}_{size}'
             skus.append(sku)
 
         return skus if skus else [common_sku.update({'sku_id': common_sku['colour']})]
@@ -71,7 +71,7 @@ class BeyondLimitsExtractor:
 
 
 class BeyondLimitsSpider(CrawlSpider):
-    name = "beyondlimits"
+    name = 'beyondlimits'
     allowed_domains = ['beyondlimits.com']
     start_urls = [
         'https://www.beyondlimits.com/Women/',
@@ -82,7 +82,7 @@ class BeyondLimitsSpider(CrawlSpider):
         next_page = response.css('.next::attr(href)').get()
         if next_page:
             yield response.follow(next_page, callback=self.parse)
-        details_extractor = BeyondLimitsExtractor()
+        details_extractor = BeyondLimitsParser()
         for detail_url in response.css('.bb_product--link.bb_product--imgsizer::attr(href)'):
             yield response.follow(detail_url.get(), callback=details_extractor.parse_details)
 
