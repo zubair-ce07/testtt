@@ -1,8 +1,6 @@
-import scrapy
-
-import w3lib.url
-
+from scrapy import Request
 from scrapy.spiders import CrawlSpider
+from w3lib.url import add_or_replace_parameters
 
 from ..items import OrsayItem
 
@@ -24,7 +22,6 @@ class OrsayParser:
         item['skus'] = self.extract_skus(response)
 
         item['request_queue'] = self.extract_color_requests(response)
-
         yield self.get_item_or_request_to_yield(item)
 
     def parse_colors(self, response):
@@ -45,7 +42,7 @@ class OrsayParser:
 
     def extract_color_requests(self, response):
         colours_urls = response.css('.color [class="selectable"] ::attr(href)').getall()
-        return [scrapy.Request(colour_url, callback=self.parse_colors) for colour_url in colours_urls]
+        return [Request(colour_url, callback=self.parse_colors) for colour_url in colours_urls]
 
     def extract_sku(self, response):
         return response.css('.product-sku::text').get().split()[-1]
@@ -114,7 +111,7 @@ class OrsaySpider(CrawlSpider):
 
     def parse(self, response):
         max_products_on_page = response.css('.load-more-progress::attr(data-max)').get()
-        url = w3lib.url.add_or_replace_parameters(response.url, {'sz': max_products_on_page})
+        url = add_or_replace_parameters(response.url, {'sz': max_products_on_page})
         yield response.follow(url, callback=self.parse_category_page)
 
     def parse_category_page(self, response):
