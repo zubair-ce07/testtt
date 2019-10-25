@@ -1,12 +1,11 @@
 import json
 import re
 
-import w3lib.url
-import urllib.parse
-
 from scrapy import Request
 from scrapy import Selector
 from scrapy.spiders import CrawlSpider
+from w3lib.url import add_or_replace_parameters
+from urllib.parse import urljoin
 
 from ..items import WhiteStuffItem
 
@@ -34,7 +33,7 @@ class WhiteStuffParser:
     def extract_skus_requests(self, response):
         master_sku = response.css('::attr(data-variation-master-sku)').get()
         json_url = 'https://www.whitestuff.com/action/GetProductData-FormatProduct?Format=JSON&ReturnVariable=true'
-        url = w3lib.url.add_or_replace_parameters(json_url, {'ProductID': master_sku})
+        url = add_or_replace_parameters(json_url, {'ProductID': master_sku})
 
         return [Request(url, callback=self.parse_skus)]
 
@@ -72,8 +71,8 @@ class WhiteStuffParser:
     def extract_care(self, response):
         return response.css('.ish-productAttributes ::text').getall()
 
-    def extract_imgs_urls(self, images_dict):
-        return [image['src'] for image in images_dict]
+    def extract_imgs_urls(self, images):
+        return [image['src'] for image in images]
 
     def extract_currency(self, response):
         return response.css('[itemprop="priceCurrency"]::attr(content)').get()
@@ -89,7 +88,7 @@ class WhiteStuffParser:
             sku['previous_price'] = variant['listPrice']
             sku['price'] = variant['salePrice']
             sku['out_of_stock'] = not variant['inStock']
-            sku['sku_id'] = f"{sku['color']}'_'{sku['size']}"
+            sku['sku_id'] = f"{sku['color']}_{sku['size']}"
             item['img_urls'] += self.extract_imgs_urls(variant['images'])
             item['skus'].append(sku)
 
@@ -142,7 +141,7 @@ class WhiteStuffSpider(CrawlSpider):
         products_urls = html_response.css('.product-tile__title ::attr(href)').getall()
 
         for product_url_path in products_urls:
-            yield response.follow(urllib.parse.urljoin(self.domain, product_url_path), 
+            yield response.follow(urljoin(self.domain, product_url_path),
                                   callback=self.whiteStuff_parser.parse_details)
 
     def get_category_tree(self, top_menu_id, url):
