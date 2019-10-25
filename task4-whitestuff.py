@@ -23,11 +23,13 @@ class WhiteStuffParser:
         item['currency'] = self.extract_currency(response)
 
         item['request_queue'] = self.extract_skus_requests(response)
+
         yield self.get_item_or_request_to_yield(item)
 
     def parse_skus(self, response):
         item = response.meta['item']
         product_info = self.get_raw_product(response)
+        item['image_urls'] = self.extract_imgs_urls(product_info)
         item['skus'] = self.extract_skus(product_info, item['currency'])
 
         yield self.get_item_or_request_to_yield(item)
@@ -149,7 +151,7 @@ class WhiteStuffSpider(CrawlSpider):
     def get_category_tree(self, top_menu_id, url):
         detail_category = \
             url.split('/')[-2].replace('-', '_').replace('and_', '').replace('womens', 'WW').replace('mens', 'MW')
-        return f"{top_menu_id}%2F{top_menu_id}_{detail_category}"
+        return f'{top_menu_id}%2F{top_menu_id}_{detail_category}'
 
 
 class WhiteStuffItem(scrapy.Item):
@@ -161,7 +163,7 @@ class WhiteStuffItem(scrapy.Item):
     name = scrapy.Field()
     description = scrapy.Field()
     care = scrapy.Field()
-    img_urls = scrapy.Field()
+    image_urls = scrapy.Field()
     skus = scrapy.Field()
     request_queue = scrapy.Field()
     currency = scrapy.Field()
