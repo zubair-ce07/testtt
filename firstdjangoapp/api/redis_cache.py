@@ -5,7 +5,7 @@ from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from rest_framework import status
 
-from shopcity.models import Product
+from shopcity.models import Product, Category, Skus
 
 
 def _params(request):
@@ -70,7 +70,7 @@ def cached_filtered_products(request):
     query_set = cache.get(f'products_{cache_key}')
     if not query_set:
         q = _q_query(params)
-        query_set = Product.objects.prefetch_related('skus').filter(q).distinct()
+        query_set = Product.objects.prefetch_related('skus').prefetch_related('categories').filter(q).distinct()
         cache.set(f'products_{cache_key}', query_set)
     return query_set
 
@@ -86,7 +86,7 @@ def cached_users_queryset():
 def cached_product(product_id):
     product = cache.get(f'product_{product_id}')
     if not product:
-        product = Product.objects.prefetch_related('skus').filter(retailer_sku=product_id)
+        product = Product.objects.prefetch_related('skus').prefetch_related('categories').filter(retailer_sku=product_id)
         if product:
             cache.set(f'product_{product[0].retailer_sku}', product)
     if product:
@@ -94,16 +94,33 @@ def cached_product(product_id):
     return status.HTTP_404_NOT_FOUND
 
 
-def cached_user(user_id):
-    user = cache.get(f'user_{user_id}')
+def cached_user(username):
+    user = cache.get(f'user_{username}')
     if not user:
-        user = User.objects.filter(id=user_id)
+        user = User.objects.filter(username=username)
         if user:
-            cache.set(f'user_{user[0].id}', user)
+            cache.set(f'user_{user[0].username}', user)
     if user:
         return user
     else:
         return status.HTTP_404_NOT_FOUND
+
+
+def cached_options():
+    options = cache.get('options')
+    if options:
+        return options
+    options = {
+        "brand_choices": list(Product.objects.values_list('brand', flat=True).distinct().order_by('brand')),
+        "size_choices": list(Skus.objects.values_list('size', flat=True).distinct().order_by('size')),
+        "colour_choices": list(Skus.objects.values_list('colour', flat=True).distinct().order_by('colour')),
+        "category_choices": list(Category.objects.values_list(
+            'category',
+            flat=True
+        ).distinct().order_by('category'))
+    }
+    cache.set('options', options)
+    return options
 
 
 def clear_products_cache(kwargs):

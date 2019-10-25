@@ -4,7 +4,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '_*)o%g1ykg*vex+lky5e8a$i^g2y%^lyi86)&uewx5x3j_+k&d'
 DEBUG = True
 FILE_UPLOAD_HANDLERS = ['django.core.files.uploadhandler.TemporaryFileUploadHandler', ]
-ALLOWED_HOSTS = "*"
+ALLOWED_HOSTS = ["*"]
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -21,6 +21,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_swagger',
     'debug_toolbar',
+    'webpack_loader',
 ]
 MIDDLEWARE = [
     'debug_toolbar.middleware.DebugToolbarMiddleware',
@@ -40,7 +41,8 @@ TEMPLATES = [
         'DIRS': [
             os.path.join(BASE_DIR, "shopcity/templates/shopcity/"),
             os.path.join(BASE_DIR, "users/templates/users/"),
-            os.path.join(BASE_DIR, "payment/templates/payment/")
+            os.path.join(BASE_DIR, "payment/templates/payment/"),
+            os.path.join(BASE_DIR, "frontend/templates/frontend/"),
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -77,7 +79,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10,
+    'PAGE_SIZE': 20,
     'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
 }
 
@@ -149,4 +151,10 @@ LOGGING = {
             'handlers': ['console', ],
         },
     }
+}
+WEBPACK_LOADER = {
+    'DEFAULT': {
+            'BUNDLE_DIR_NAME': 'bundles/',
+            'STATS_FILE': os.path.join(BASE_DIR, 'webpack-stats.dev.json'),
+        }
 }
