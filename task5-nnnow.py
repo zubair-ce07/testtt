@@ -158,7 +158,7 @@ class NnnowItem(scrapy.Item):
     name = scrapy.Field()
     description = scrapy.Field()
     care = scrapy.Field()
-    img_urls = scrapy.Field()
+    image_urls = scrapy.Field()
     skus = scrapy.Field()
     request_queue = scrapy.Field()
 
