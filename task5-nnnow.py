@@ -1,10 +1,9 @@
 import json
 import re
 
-import urllib.parse
-
 from scrapy import Request
 from scrapy.spiders import CrawlSpider
+from urllib.parse import urljoin
 
 from ..items import NnnowItem
 
@@ -54,7 +53,7 @@ class NnnowParser:
     def extract_color_requests(self, response):
         domain = 'https://www.nnnow.com'
         color_urls = response.css('.nw-color-item.nwc-anchortag::attr(href)').getall()
-        return [Request(urllib.parse.urljoin(domain, url), callback=self.parse_color) for url in color_urls]
+        return [Request(urljoin(domain, url), callback=self.parse_color) for url in color_urls]
 
     def extract_retailor_sku(self, product_detail):
         return product_detail['styleId']
@@ -121,7 +120,7 @@ class NnnowSpider(CrawlSpider):
         nav_menu_items = page_data_json['NavListStore']['navListData']['data']['menu']['level1']
 
         for menu_item in nav_menu_items:
-                yield response.follow(menu_item['url'], callback=self.parse_category)
+            yield response.follow(menu_item['url'], callback=self.parse_category)
 
     def parse_category(self, response):
         page_data_json = self.load_json_data(response)
