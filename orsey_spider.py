@@ -74,24 +74,26 @@ class OrsayParser:
     def extract_color(self, response):
         return self.clean(response.css('.color .selected ::attr(title)').get().split('-')[1])
 
-    def extract_pricing_and_color(self, response):
-        price = self.clean(response.css('.price-sales::text').get())
-        previous_price = self.clean(response.css('.price-standard::text').getall())
-        currency = response.css('.locale-item.current .country-currency::text').get()
-        color = self.extract_color(response)
-        return {'price': price, 'previous_price': previous_price, 'Currency': currency, 'Colour': color}
+    def extract_common_sku(self, response):
+        common_sku = {'price': self.clean(response.css('.price-sales::text').get()) }
+        common_sku['previous_price'] = self.clean(response.css('.price-standard::text').getall())
+        common_sku['currency'] = response.css('.locale-item.current .country-currency::text').get()
+        common_sku['colour'] = self.extract_color(response)
+        common_sku['out_of_stock'] = False
+        common_sku['sku_id'] = self.extract_color(response)
+        return common_sku
 
     def extract_skus(self, response):
-        common_sku = self.extract_pricing_and_color(response)
+        common_sku = self.extract_common_sku(response)
         sizes_sel = response.css('.size li')
         skus = []
         for size_sel in sizes_sel:
             sku = common_sku.copy()
             sku['out_of_stock'] = True if size_sel.css('.unselectable') else False
             sku['size'] = size_sel.css('a::text').get()
-            sku['sku_id'] = f"{common_sku['Colour']}_{size_sel.css('a::text').get()}"
+            sku['sku_id'] = f'{common_sku["colour"]}_{size_sel.css("a::text").get()}'
             skus.append(sku)
-        return skus if skus else common_sku.update({'out_of_stock': False, 'sku_id': common_sku['Colour']})
+        return skus if skus else common_sku
 
     def clean(self, list_to_strip):
         if isinstance(list_to_strip, str):
@@ -100,7 +102,7 @@ class OrsayParser:
 
 
 class OrsaySpider(CrawlSpider):
-    name = "orsay"
+    name = 'orsay'
     allowed_domains = ['orsay.com']
     start_urls = [
         'https://www.orsay.com/de-de/neuheiten/',
