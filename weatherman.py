@@ -3,15 +3,10 @@ import io
 import zipfile
 import argparse
 import datetime
+from reporttype import ReportType
 import reports
-from enum import Enum
 from weatherreading import WeatherReading
-
-
-class ReportType(Enum):
-    YEARLY = 1
-    MONTHLY = 2
-    MONTHLY_WITH_CHART = 3
+from constants import Constants
 
 
 class WeatherMan:
@@ -21,21 +16,33 @@ class WeatherMan:
         self.weather_readings = []
 
     def get_weather_data(self, file_name):
-        zip_archive = zipfile.ZipFile(self.filepath, 'r')
+        zip_archive = zipfile.ZipFile(self.filepath, Constants.FILE_READ_MODE)
         self.weather_readings = []
         for file in zip_archive.infolist():
             zip_file_name = file.filename
             file_match = zip_file_name.find(file_name)
-            if file_match != -1:
-                csv_file = zip_archive.open(zip_file_name, mode='r')
+            if file_match != Constants.INVALID_DATA:
+                csv_file = zip_archive.open(zip_file_name, mode=Constants.FILE_READ_MODE)
                 csv_file = io.TextIOWrapper(csv_file)
                 csv_reader = csv.DictReader(csv_file)
                 for row in csv_reader:
-                    reading_date_value = row['PKT']
-                    max_temperature_c_value = None if row['Max TemperatureC'] == '' else int(row['Max TemperatureC'])
-                    min_temperature_c_value = None if row['Min TemperatureC'] == '' else int(row['Min TemperatureC'])
-                    max_humidity_value = None if row['Max Humidity'] == '' else int(row['Max Humidity'])
-                    mean_humidity_value = None if row[' Mean Humidity'] == '' else int(row[' Mean Humidity'])
+                    reading_date_value = row[Constants.READING_TIME_INDEX]
+                    max_temperature_c_value = Constants.INVALID_DATA if row[Constants.READING_MAX_TEMP_C_INDEX] == \
+                                                                        Constants.EMPTY_STRING \
+                        else int(row[Constants.READING_MAX_TEMP_C_INDEX])
+
+                    min_temperature_c_value = Constants.INVALID_DATA if row[Constants.READING_MIN_TEMP_C_INDEX] == \
+                                                                        Constants.EMPTY_STRING \
+                        else int(row[Constants.READING_MIN_TEMP_C_INDEX])
+
+                    max_humidity_value = Constants.INVALID_DATA if row[Constants.READING_MAX_HUMIDITY_INDEX] == \
+                                                                   Constants.EMPTY_STRING \
+                        else int(row[Constants.READING_MAX_HUMIDITY_INDEX])
+
+                    mean_humidity_value = Constants.INVALID_DATA if row[Constants.READING_MEAN_HUMIDITY_INDEX] == \
+                                                                    Constants.EMPTY_STRING \
+                        else int(row[Constants.READING_MEAN_HUMIDITY_INDEX])
+
                     self.weather_readings.append(WeatherReading(reading_date_value, max_temperature_c_value,
                                                                 min_temperature_c_value, max_humidity_value,
                                                                 mean_humidity_value))
@@ -46,22 +53,22 @@ class WeatherMan:
         file_name = None
         report_type = ReportType.YEARLY
         try:
-            year_month_date = datetime.datetime.strptime(input_data, '%Y/%m')
+            year_month_date = datetime.datetime.strptime(input_data, Constants.DATE_YEAR_AND_MONTH_FORMAT)
             report_type = ReportType.MONTHLY
         except ValueError:
             try:
-                year_month_date = datetime.datetime.strptime(input_data, '%Y')
+                year_month_date = datetime.datetime.strptime(input_data, Constants.DATE_YEAR_FORMAT)
                 report_type = ReportType.YEARLY
             except ValueError:
-                print("Invalid data entered")
+                print(Constants.INVALID_DATA_MESSAGE)
                 return
 
         if report_type == ReportType.MONTHLY:
-            month_name = year_month_date.strftime('%b')
-            year_name = year_month_date.strftime('%Y')
-            file_name = year_name + "_" + month_name
+            month_name = year_month_date.strftime(Constants.DATE_MONTH_FORMAT)
+            year_name = year_month_date.strftime(Constants.DATE_YEAR_FORMAT)
+            file_name = year_name + Constants.DATE_YEAR_AND_MONTH_SEPARATOR + month_name
         elif report_type == ReportType.YEARLY:
-            year_name = year_month_date.strftime('%Y')
+            year_name = year_month_date.strftime(Constants.DATE_YEAR_FORMAT)
             file_name = year_name
 
         return self.get_weather_data(file_name)
@@ -69,13 +76,10 @@ class WeatherMan:
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("filepath", help="weather data file path")
-    parser.add_argument("-e", help="For a given year display the highest temperature and day,"
-                                   " lowest temperature and day, most humid day and humidity.")
-    parser.add_argument("-a", help="For a given month display the average highest temperature, "
-                                   "average lowest temperature, average mean humidity.")
-    parser.add_argument("-c", help="For a given month draw two horizontal bar charts on the console for the highest "
-                                   "and lowest temperature on each day. Highest in red and lowest in blue.")
+    parser.add_argument(Constants.FILE_PATH_ARGUMENT, help=Constants.FILE_PATH_ARGUMENT_MESSAGE)
+    parser.add_argument(Constants.YEAR_ARGUMENT, help=Constants.YEAR_ARGUMENT_MESSAGE)
+    parser.add_argument(Constants.MONTH_ARGUMENT, help=Constants.MONTH_ARGUMENT_MESSAGE)
+    parser.add_argument(Constants.MONTH_CHART_ARGUMENT, help=Constants.MONTH_CHART_ARGUMENT_MESSAGE)
     args = parser.parse_args()
     weatherMan = None
 
@@ -85,20 +89,21 @@ if __name__ == '__main__':
     if args.e:
         weatherMan.parse_input(input_data=args.e)
         if len(weatherMan.weather_readings) != 0:
-            reports.generate_report(report_type=1, weather_readings=weatherMan.weather_readings)
+            reports.generate_report(report_type=ReportType.YEARLY.value, weather_readings=weatherMan.weather_readings)
         else:
-            print('no data found')
+            print(Constants.NO_DATA_FOUND_MESSAGE)
 
     if args.a:
         weatherMan.parse_input(input_data=args.a)
         if len(weatherMan.weather_readings) != 0:
-            reports.generate_report(report_type=2, weather_readings=weatherMan.weather_readings)
+            reports.generate_report(report_type=ReportType.MONTHLY.value, weather_readings=weatherMan.weather_readings)
         else:
-            print('no data found')
+            print(Constants.NO_DATA_FOUND_MESSAGE)
 
     if args.c:
         weatherMan.parse_input(input_data=args.c)
         if len(weatherMan.weather_readings) != 0:
-            reports.generate_report(report_type=3, weather_readings=weatherMan.weather_readings)
+            reports.generate_report(report_type=ReportType.MONTHLY_WITH_CHART.value,
+                                    weather_readings=weatherMan.weather_readings)
         else:
-            print('no data found')
+            print(Constants.NO_DATA_FOUND_MESSAGE)
