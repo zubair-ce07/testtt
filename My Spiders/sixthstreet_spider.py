@@ -3,15 +3,15 @@ from scrapy.spiders import Rule, CrawlSpider
 from scrapy.linkextractors import LinkExtractor
 from scrapy import Request
 
-from sixthstreet.items import SixthstreetItem
-from sixthstreet.utils import parse_gender
+from ..items import Product
+from ..utils import parse_gender
 
 
 class ParseSpider():
     ONE_SIZE = 'oneSize'
 
     def parse_product(self, response):
-        product = SixthstreetItem()
+        product = Product()
 
         product['retailer_sku'] = self.get_retailer_sku(response)
         product['gender'] = self.get_gender(response)
@@ -38,8 +38,15 @@ class ParseSpider():
          #'//[@class="breadcrumb"]//a/text()'
         return response.css('.breadcrumb a::text').getall()
 
-    def get_gender(self, response):        
-        return parse_gender(response)
+    def get_gender(self, response):
+        xpath = '//span[contains(text(), "Gender")]/following-sibling::span/text()'
+        gender = response.xpath(xpath).get()
+        title_text = response.css('title::text').get()    
+        description = self.get_description(response)
+
+        gender_text = f"{gender} {title_text} {' '.join(description)}" 
+
+        return parse_gender(gender_text)
 
     def get_url(self, response):
         return response.request.url
@@ -62,7 +69,7 @@ class ParseSpider():
     def get_availability(self, response):
         availability = response.css('[itemprop="availability"]::attr(value)').get()
 
-        return True if availability != 'In Stock' else False
+        return availability != 'In Stock'
 
     def get_sizes(self, response):
         sizes_raw = response.css('script').re_first(r"sizeOptionArr = JSON.parse\('(.*)'\);")
