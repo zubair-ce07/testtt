@@ -14,7 +14,6 @@ BOT_NAME = 'puc_scaping'
 SPIDER_MODULES = ['puc_scaping.spiders']
 NEWSPIDER_MODULE = 'puc_scaping.spiders'
 
-
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'puc_scaping (+http://www.yourdomain.com)'
 
@@ -64,9 +63,9 @@ ROBOTSTXT_OBEY = True
 
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
-#ITEM_PIPELINES = {
-#    'puc_scaping.pipelines.PucScapingPipeline': 300,
-#}
+ITEM_PIPELINES = {
+    'puc_scaping.pipelines.docket_pipeline.DefaultValuesPipeline': 300,
+}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html
