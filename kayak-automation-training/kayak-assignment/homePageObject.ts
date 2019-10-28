@@ -1,6 +1,6 @@
 import {browser, element, by, protractor, promise, ElementFinder, ProtractorExpectedConditions, Key, ElementArrayFinder} from 'protractor';
 import { SearchFormObject } from './searchFormObject';
-import { async } from 'q';
+import { async, all } from 'q';
 import http = require('http');
 import { HttpResponse } from 'selenium-webdriver/http';
 var Intercept = require('protractor-intercept');
@@ -27,6 +27,8 @@ export class HomePageObject {
   returnDateText: ElementFinder = element.all(by.css("div[id$=dateRangeInput-display-end]")).first();
   multiCitiesOptions: ElementFinder = element.all(by.css("div[id$=origin1-airport-display]")).first();
   EC = protractor.ExpectedConditions;
+  destinationDropdown: ElementFinder = element.all(by.css("div[id$='destination-airport-smarty-window']")).first();
+  citiesList: ElementFinder = this.destinationDropdown.element(by.css('ul[class="flight-smarty"]'));
 
   changeToOneWayTrip() {
     this.searchFormObject.waitUntillElementAppears(this.switchOptions);
@@ -91,14 +93,20 @@ export class HomePageObject {
 		this.searchFormObject.waitUntillElementAppears(this.destinationInput);
 		this.destinationInput.sendKeys(Key.BACK_SPACE);
 		this.destinationInput.sendKeys(Key.BACK_SPACE);
-    await this.destinationInput.sendKeys(destination);
+    this.destinationInput.sendKeys(destination);
     // intercept.addListener();
     // make events to get its requests
     // intercept.getRequests().then(function(reqs) {
     //make some assertions about what happened here
     // });
-		await this.searchFormObject.waitUntillElementAppears(this.destinationSelect);
-    this.destinationSelect.click();
+    await this.searchFormObject.waitUntillElementAppears(this.citiesList);
+    let allCities = await this.citiesList.all(by.tagName('li'));
+    for(let city of await allCities) {
+    if(destination.includes(await city.getAttribute('data-short-name'))) {
+        city.click();
+        break;
+      }
+    }
   }
 
   async getChildPassenger(): Promise<string> {

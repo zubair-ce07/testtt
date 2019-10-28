@@ -32,7 +32,7 @@ describe("Verify flights search process:", async function() {
   });
 
   it(`Should display ${userInputJSON[senerioKey]["Destination Input"]} in destination field`, async function() {
-    await homePageObject.setDestination(userInputJSON[senerioKey]["Destination Input"]);
+    homePageObject.setDestination(userInputJSON[senerioKey]["Destination Input"]);
     await searchFormObject.getDestinationValue().should.eventually.be.equal(userInputJSON[senerioKey]["Destination Selection"]);
   });
   
@@ -46,12 +46,12 @@ describe("Verify flights search process:", async function() {
     await homePageObject.getChildPassenger().should.eventually.be.equal((userInputJSON[senerioKey]["Passengers"]["Child"]).toString());
   });
 
-  it("Should display 3rd Day after today as trip start date",async function() {
+  it("Should display 3rd Day after today as trip start date", async function() {
     homePageObject.fillDatesDeparture();
     await searchFormObject.getDepartureDate().getText().should.eventually.be.equal(await homePageObject.getTripDates(3));
   });
 
-  it("Should display 6th Day after today as trip start date",async function() {
+  it("Should display 6th Day after today as trip start date", async function() {
     homePageObject.fillDatesReturn();
     await searchFormObject.getReturnDate().getText().should.eventually.be.equal(await homePageObject.getTripDates(6));
   });
