@@ -1,17 +1,31 @@
+{% extends 'base.html' %}
+
 <html lang="en">
-    <body>
-        <h1>Profile</h1>
+  <head>
+  <style>
+  </style>
+  </head>
+  {% block content %}
+    <div class="jumbotron">
+        <b style="font-size:60px; font-family:georgia">Profile</b>
+    </div>
+    <div style="font-weight:bold;font-family:georgia;font-size:20px;color:blue;">
         {% if user.is_authenticated %}
-        <h2>Username: {{ user.username }}</h2>
-        <h3>Email: {{ user.email }}</h3>
-        <h3>First Name: {{ user.first_name}}</h3>
-        <h3>Last Name: {{ user.last_name }}</h3>
-        <h3>Contact: {{ user.phone_number }}</h3>
-        <h3> Location: {{ user.location }}</h3>
-        <h3> Age: {{ user.age }}</h3>
-          <p><a href="{% url 'edit_profile' %}">Edit Profile</a></p>
-          <p><a href="{% url 'logout' %}">Logout</a></p>
+        <p>Username: {{ user.username }}</p>
+        <p>Email: {{ user.email }}</p>
+        <p>First Name: {{ user.first_name}}</p>
+        <p>Last Name: {{ user.last_name }}</p>
+        <p>Contact: {{ user.phone_number }}</p>
+        <p> Location: {{ user.location }}</p>
+        <p> Age: {{ user.age }}</p>
+        <p> Book Count: {{ user.book_count }}</p>
+    </div>
+        
+
+        <input type="submit" value="Edit Profile" onclick=location.href="{% url 'edit_profile' %}" class="btn btn-primary" />
+       
         {% endif %}
-    </body>
+  {% endblock %}
+    
 </html>
 

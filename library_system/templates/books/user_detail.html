@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+{% for user in users %}
+  {% if user.username != 'librarian' %}
+
+    <div class="article-metadata">    
+      <p font-size:20px;>Username: {{ user.username }}</p>
+      <a class="btn btn-danger btn-sm mt-1 mb-1" href="{% url 'view_info' user.id %}">View Information</a>
+    </div>
+  {% endif %}
+{% endfor %}
+{% endblock content %}

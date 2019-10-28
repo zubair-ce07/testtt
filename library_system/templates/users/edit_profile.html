@@ -1,4 +1,4 @@
-
+{% extends 'base.html' %}
 {% load crispy_forms_tags %}
 
 
@@ -6,7 +6,7 @@
 <h1>Edit Profile</h1>
 {% endblock %}
 
-{% block body %}
+{% block content %}
 <div class="container">
     <form method="post">
         {% csrf_token %}

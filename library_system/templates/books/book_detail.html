@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+
+      <div class="article-metadata">
+         
+         
+        <h1>Book Title: {{ object.title }}</h1>
+        <p class="article-content">Author Name: {{ object.author_name }}</p>
+        <p class="article-content">Publisher: {{ object.publisher }}</p>
+        <p class="article-content">Number of Books: {{ object.number_of_books }}</p>
+
+      {% if object.number_of_books > 0 %}
+        <a class="btn btn-danger btn-sm mt-1 mb-1" href="{% url 'book_request' object.id %}">Issue Book Request</a>
+      {% endif %}
+     
+      
+        {% if object.user == user %}
+          <div>
+            <a class="btn btn-danger btn-sm mt-1 mb-1" href="{% url 'book-update' object.id %}">Update</a>
+            <a class="btn btn-danger btn-sm mt-1 mb-1" href="{% url 'book-delete' object.id %}">Delete</a>
+          </div>
+        {% endif %}
+      </div>
+      
+      {% if messages %}
+        <ul class="messages">
+        {% for message in messages %}
+        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+        </ul>
+      {% endif %}
+
+{% endblock content %}

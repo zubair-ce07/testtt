@@ -7,6 +7,8 @@ with extra fields.
 """
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from books.models import Book
+
 
 
 
@@ -21,6 +23,8 @@ class UserProfile(AbstractUser):
     location = models.CharField(max_length=50, blank=True)
     age = models.IntegerField(null=True, blank=True)
     phone_number = models.CharField(max_length=50, blank=True)
-
+    book_count = models.IntegerField(default=0)
+   
     def __str__(self):
         return self.email
+

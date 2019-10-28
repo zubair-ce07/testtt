@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+<html>
+<body>
+{% block content %}
+<h1>User Information</h1>
+<div style="font-weight:bold;font-family:georgia;font-size:20px;color:blue;">
+        
+        <p>Username: {{ user.username }}</p>
+        <p>Email: {{ user.email }}</p>
+        <p>First Name: {{ user.first_name}}</p>
+        <p>Last Name: {{ user.last_name }}</p>
+        <p>Contact: {{ user.phone_number }}</p>
+        <p> Location: {{ user.location }}</p>
+        <p> Age: {{ user.age }}</p>
+        <p> Book Count: {{ user.book_count }}</p>
+    </div>
+    <h1>User Issued Books</h1>
+
+    {% for book in issued_books %}
+
+    <div class="article-metadata" style="font-weight:bold;font-family:georgia;font-size:20px;color:blue;">
+   
+        <p>*Issued Book: {{ book.title}}</p>
+        <p>  Issue_date: {{ book.issue_date}}</p>
+        <p>  return_date: {{ book.return_date}}</p>
+        <div>
+            
+{% endfor %}
+{% endblock %}
+</body>
+</html>
+
+
+
+</html>
