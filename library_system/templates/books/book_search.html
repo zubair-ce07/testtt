@@ -6,10 +6,6 @@
   <div class="jumbotron">
     <b style="font-size:40px; font-family:georgia">Books</b>
   </div>
-
-
-
-
       <div class="article-metadata">
         <ul>
         <h2><a href="{% url 'book_detail' book.id  %}">Title: {{ book.title }}</a></h2>
@@ -17,10 +13,6 @@
         <small class="text-muted">Publisher: {{ book.publisher}}</small>
         </ul>
        </div>
-            
-
-
-
-    {% endblock %}
+  {% endblock %}
 </body>
 </html>

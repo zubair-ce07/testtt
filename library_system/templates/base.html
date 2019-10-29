@@ -80,28 +80,31 @@
             margin: 60px 250px 0 0;
             margin-top:2em;
         }
-
-
-      
-        </style>
-      </head>
+    </style>
+    </head>
       {% if user.is_authenticated %}
       <header>
-            <button  class= "btn btn-primary" type="submit" onclick=location.href="{% url 'book-home' %}" id="allbooks">All Books</button>
-            <a id="book" class="btn btn-primary" href="{% url 'direct' %}">Issued Books</a>
+            <button  name='books' class= "btn btn-primary" type="submit" onclick=location.href="{% url 'book-home' %}" id="allbooks">All Books</button>
+            <a id="book" class="btn btn-primary" href="{% url 'my_books' %}">Issued Books</a>
             <button  class= "btn btn-primary" type="submit" onclick=location.href="{% url 'index' %}" id="home">Home</button>
             <button  class= "btn btn-primary" type="submit" onclick=location.href="{% url 'profile' %}" id="profile">Profile</button>
             <button  class= "btn btn-primary" type="submit" onclick=location.href="{% url 'logout' %}" id="logout">Logout</button>
     
             <p id="username" class="text-right" id="username" >Hello {{ user.username }}!</p>
         </header>
+       
         {% endif %}
-      <body>
 
-        <main>
-            {% block content %}
-               
-            {% endblock %}
-        </main>
-       </body>
+        {% block content %}    
+        {% endblock %}
+
+        {% if messages %}
+        <ul class="messages">
+        {% for message in messages %}
+        <p{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</p>
+        {% endfor %}
+        </ul>
+        {% endif %}
+      
+       
 </html>

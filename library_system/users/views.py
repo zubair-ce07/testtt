@@ -9,7 +9,10 @@ from django.shortcuts import render, redirect
 from django.views import View
 from django.contrib.auth import authenticate, login
 from .forms import UserProfileForm, UpdateForm
-
+from books import models as book_models
+from users.models import UserProfile
+from django.views.generic import ListView
+from django.shortcuts import render_to_response
 
 class IndexView(View):
     """Class-based View for Index Page."""
@@ -56,7 +59,7 @@ class EditProfileView(View):
         update_form = UpdateForm(instance=request.user)
         context = {'update_form': update_form}
         return render(request, 'users/edit_profile.html', context)
-    
+
     def post(self, request):
         """Post method for Edit Profile View."""
         update_form = UpdateForm(request.POST, instance=request.user)
@@ -67,3 +70,22 @@ class EditProfileView(View):
             user = authenticate(username=username, password=password)
             login(request, user)
             return render(request, 'users/profile.html')
+
+
+class UserListView(ListView):
+    """Class for viewing user list."""
+
+    model = UserProfile
+    template_name = 'users/user_detail.html' 
+    context_object_name = 'users'
+    ordering = ['-username']
+
+
+def view_info(request, pk):
+    """To view user info."""
+    user = UserProfile.objects.get(id=pk)
+    issued_books = book_models.IssueBook.objects.filter(user=user)
+    context = {'user': user,
+               'issued_books': issued_books}
+    return render_to_response('users/user_profile.html', context)
+

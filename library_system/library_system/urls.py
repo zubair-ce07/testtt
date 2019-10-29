@@ -18,6 +18,7 @@ from django.urls import path, include
 from users import views
 from books import views as book_views
 
+
 urlpatterns = [
     path('', views.IndexView.as_view(), name='index'),
     path('search/', book_views.SearchResultsView.as_view(), name='search_results'),

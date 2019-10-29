@@ -16,5 +16,7 @@ disable=
     unused-argument,
     too-many-locals,
     consider-using-enumerate,
+    no-self-use,
+    no-else-return,
     inconsistent-return-statements
 ignore=migrations
