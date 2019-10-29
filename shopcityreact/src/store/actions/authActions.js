@@ -1,18 +1,21 @@
 import axios from 'axios';
+import { LOGIN_SUCCESS, LOGIN_ERROR, UPDATE_CART,
+    LOGOUT_USER, REGISTER_SUCCESS, REGISTER_ERROR,
+    UPDATE_SUCCESS, UPDATE_ERROR, ADD_TO_CART, CHECKOUT } from './actions'
+
 
 export const authorizeUser = (user) => {
     return (dispatch, getState) => {
-        let url = 'http://127.0.0.1:8000/api/token/'
-        let data = {username: user.username, password: user.password}
+        let url = 'http://172.16.14.58:8000/api/token/';
+        let data = {username: user.username, password: user.password};
+
         axios.post(url, data)
             .then((res) => {
-                console.log(res)
                 switch (res.status) {
                     case 200:
-                        let url = 'http://127.0.0.1:8000/api/users/' + user.username + '/'
+                        let url = 'http://172.16.14.58:8000/api/users/' + user.username + '/';
                         axios.get(url)
                             .then((response) => {
-                                console.log(response)
                                 switch (response.status) {
                                     case 200:
                                         user = {
@@ -30,30 +33,51 @@ export const authorizeUser = (user) => {
                                             isAuthenticated: true,
                                             authorizationToken: res.data.access,
                                             isSuperUser: response.data.is_superuser
-                                        }
-                                        let payload = { user: user }
-                                        dispatch({ type: 'LOGIN_SUCCESS', payload: payload })
-                                }
-                            })
-                    default:
-                        console.log(res)
-                }
+                                        };
+                                        let payload = { user: user };
+                                        dispatch({ type: LOGIN_SUCCESS, payload: payload });
+                                };
+                            });
+                };
             }).catch((err) => {
-                console.log(err.response)
-                dispatch({ type: 'LOGIN_ERROR', payload: {error: err} })
-            })
+                dispatch({ type: LOGIN_ERROR, payload: {error: err} })
+            });
     };
 };
 
-export const unauthorizeUser = (user) => {
+
+export const updateCart = (user) => {
+    console.log('USER:', user)
     return (dispatch, getState) => {
-        dispatch({ type: 'LOGOUT_USER'})
+        var cart = null;
+        for (let c of user.cart) {
+            if (c.state == 'Current') {
+                cart = [c];
+            };
+        };
+        if (!cart) {
+            cart = [
+                {
+                    status: "Current",
+                    cart_items: []
+                }
+            ];
+        };
+        dispatch({ type: UPDATE_CART, payload: { cart: cart } });
     };
 };
+
+
+export const unauthorizeUser = () => {
+    return (dispatch, getState) => {
+        dispatch({ type: LOGOUT_USER});
+    };
+};
+
 
 export const registerUser = (user) => {
     return (dispatch, getState) => {
-        let url = 'http://127.0.0.1:8000/api/users/'
+        let url = 'http://172.16.14.58:8000/api/users/';
         let userData = {
             first_name: user.first_name,
             last_name: user.last_name,
@@ -67,28 +91,26 @@ export const registerUser = (user) => {
                 city: user.city,
                 zip_code: user.zip_code
             }
-        }
-        console.log(userData)
+        };
+
         axios.post(url, userData)
             .then((res) => {
-                console.log(res)
                 switch (res.status) {
                     case 201:
-                        dispatch({ type: 'REGISTER_SUCCESS'})
-                    default:
-                        console.log(res)
-                }
+                        dispatch({ type: REGISTER_SUCCESS});
+                        break;
+                };
             }).catch((err) => {
-                console.log(err.response)
-                dispatch({ type: 'REGISTER_ERROR', error: err })
-            })
+                dispatch({ type: REGISTER_ERROR, error: err });
+            });
     };
 };
 
+
 export const updateUser = (user) => {
     return (dispatch, getState) => {
-        const previousState = getState()
-        let url = 'http://127.0.0.1:8000/api/users/' + previousState.auth.user.username + '/'
+        const previousState = getState();
+        let url = 'http://172.16.14.58:8000/api/users/' + previousState.auth.user.username + '/';
         let userData = {
             first_name: user.firstName,
             last_name: user.lastName,
@@ -100,20 +122,73 @@ export const updateUser = (user) => {
                 city: user.city,
                 zip_code: user.zipCode
             }
-        }
+        };
+
         axios.patch(url, userData)
             .then((res) => {
-                console.log(res)
                 switch (res.status) {
                     case 200:
-                        console.log(user)
-                        dispatch({ type: 'UPDATE_SUCCESS', payload: {user: user}})
-                    default:
-                        console.log(res)
-                }
+                        dispatch({ type: UPDATE_SUCCESS, payload: { user: user }});
+                        break;
+                };
             }).catch((err) => {
-                console.log(err.response)
-                dispatch({ type: 'UPDATE_ERROR', payload: {error: err} })
-            })
+                dispatch({ type: UPDATE_ERROR, payload: { error: err }});
+            });
+    };
+};
+
+
+export const addToCart = (cartItemRaw) => {
+    return (dispatch, getState) => {
+        const cartItem = {
+            quantity: cartItemRaw.quantity,
+            sku_id: cartItemRaw.skuId,
+            product: cartItemRaw.productId
+        };
+        const previousState = getState();
+        let url = 'http://172.16.14.58:8000/api/users/' + previousState.auth.user.username + '/';
+        let cartData = {
+            cart: [
+                {
+                    ...previousState.auth.cart[0],
+                    cart_items: [
+                        ...previousState.auth.cart[0].cart_items,
+                        cartItem
+                    ]
+                }
+            ]
+        };
+        axios.patch(url, cartData)
+            .then((res) => {
+                switch (res.status) {
+                    case 200:
+                        dispatch({ type: ADD_TO_CART, payload: {cartItem: cartItem} });
+                        break;
+                };
+            });
+    };
+};
+
+
+export const checkout = () => {
+    return (dispatch, getState) => {
+        const previousState = getState();
+        let url = 'http://172.16.14.58:8000/api/users/' + previousState.auth.user.username + '/';
+        let cartData = {
+            cart: [
+                {
+                    ...previousState.auth.cart[0],
+                    state: 'Processed'
+                }
+            ]
+        };
+        axios.patch(url, cartData)
+            .then((res) => {
+                switch (res.status) {
+                    case 200:
+                        dispatch({ type: CHECKOUT });
+                        break;
+                };
+            });
     };
 };

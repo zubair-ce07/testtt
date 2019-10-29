@@ -1,11 +1,11 @@
+import { connect } from 'react-redux';
 import React, { Component } from 'react';
 import Modal from 'react-responsive-modal';
-import { connect } from 'react-redux';
 
-import { getPaginationProducts, nextPage, previousPage } from '../store/actions/productActions';
 import { changeModalState } from '../store/actions/modalActions';
-import ProductsList from './products/productlist';
+import { getPaginationProducts, nextPage, previousPage } from '../store/actions/productActions';
 import Pagination from './layout/pagination';
+import ProductsList from './products/productlist';
 import ProductsFilter from './products/productsfilter';
 
 
@@ -14,41 +14,46 @@ class Home extends Component {
         const { filters, getPaginationProducts } = this.props;
         getPaginationProducts(1, filters);
     };
-    onPageChangeHandler = (buttonId) => {
+
+    handlePageChange = (buttonId) => {
+        const { currentPage, getPaginationProducts,
+            nextPage, previousPage, filters } = this.props;
         if (buttonId === 'next') {
-            let next = this.props.currentPage + 1
-            const { filters } = this.props;
-            this.props.getPaginationProducts(next, filters)
-            this.props.nextPage()
+            var pageNumber = currentPage + 1;
+            nextPage();
         } else if (buttonId === 'previous') {
-            let previous = this.props.currentPage - 1
-            const { filters } = this.props;
-            this.props.getPaginationProducts(previous, filters)
-            this.props.previousPage()
+            var pageNumber = this.props.currentPage - 1;
+            previousPage();
         };
+        getPaginationProducts(pageNumber, filters);
     };
 
-    modalHandler = () => {
-        this.props.changeModalState();
+    handleModalState = () => {
+        const { changeModalState } = this.props;
+        changeModalState();
     };
 
     render() {
+        const { currentPage } = this.props;
         return (
             <div className="products">
                 <br />
                 <div className="row">
-                    <a className="col s2 offset-s2 btn blue" onClick={this.modalHandler}>Filter Products</a>
+                    <a className="col s2 offset-s2 btn blue" onClick={this.handleModalState}>
+                        Filter Products
+                    </a>
                 </div>
-                <Modal open={this.props.modalOpen} onClose={this.modalHandler} center>
+                <Modal open={this.props.modalOpen} onClose={this.handleModalState} center>
                     <ProductsFilter/>
                 </Modal>
                 <br />
                 <ProductsList />
-                <Pagination currentPage={this.props.currentPage} onPageChangeHandler={this.onPageChangeHandler} />
+                <Pagination currentPage={ currentPage } handlePageChange={this.handlePageChange} />
             </div>
-        )
+        );
     };
 };
+
 
 const mapDispatchToProps = (dispatch) => {
     return {
@@ -56,8 +61,9 @@ const mapDispatchToProps = (dispatch) => {
         nextPage: () => dispatch(nextPage()),
         previousPage: () => dispatch(previousPage()),
         changeModalState: () => dispatch(changeModalState())
-    }
+    };
 };
+
 
 const mapStateToProps = (state) => {
     return {
@@ -66,7 +72,7 @@ const mapStateToProps = (state) => {
         pending: state.product.pending,
         error: state.product.error,
         filters: state.product.filters
-    }
-}
+    };
+};
 
 export default connect(mapStateToProps, mapDispatchToProps)(Home);

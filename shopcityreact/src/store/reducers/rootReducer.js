@@ -1,14 +1,14 @@
 import authReducer from './authReducer';
+import { combineReducers } from 'redux';
+
 import productReducer from './productReducer';
 import modalReducer from './modalReducer';
-import cartReducer from './cartReducer'
-import { combineReducers } from 'redux';
+
 
 const rootReducer = combineReducers({
     auth: authReducer,
     product: productReducer,
-    modal: modalReducer,
-    cart: cartReducer
+    modal: modalReducer
 })
 
 export default rootReducer;

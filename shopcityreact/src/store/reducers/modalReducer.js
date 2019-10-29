@@ -1,3 +1,6 @@
+import { CHANGE_MODAL_STATE, UPDATE_OPTIONS } from '../actions/actions';
+
+
 const initState = {
     optionsPending: true,
     optionsError: null,
@@ -10,14 +13,15 @@ const initState = {
     modalOpen: false
 };
 
+
 const modalReducer = (state=initState, action) => {
     switch (action.type){
-        case 'CHANGE_MODAL_STATE':
+        case CHANGE_MODAL_STATE:
             return {
                 ...state,
                 modalOpen: !state.modalOpen
-            }
-        case 'UPDATE_OPTIONS':
+            };
+        case UPDATE_OPTIONS:
             return {
                 ...state,
                 optionsPending: false,
@@ -27,7 +31,7 @@ const modalReducer = (state=initState, action) => {
                     colourChoices: action.options.colour_choices,
                     categoryChoices: action.options.category_choices
                 }
-            }
+            };
     };
     return state;
 };

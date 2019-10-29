@@ -1,44 +1,60 @@
-import React, {Component} from 'react';
-import axios from 'axios';
-
 import { connect } from 'react-redux';
+import React, {Component} from 'react';
+
+import { addToCart } from '../../store/actions/authActions';
+import { getProductDetail } from '../../store/actions/productActions';
+import { setOutOfStock } from '../../store/actions/productActions';
 
 
 class Product extends Component {
     state = {
-        product_id: null,
-        product: null
-    }
-    componentDidMount () {
-        let product_id = this.props.match.params.product_id;
-        axios.get('http://127.0.0.1:8000/api/products/' + product_id + '/')
-        .then(res => {
-            console.log(res)
-            this.setState({
-                product: res.data,
-                product_id: product_id
-            })
-        })
-    }
+        productId: this.props.match.params.product_id,
+        skuId: null,
+        quantity: 1
+    };
 
-    breadCrumb = () => {
-        console.log(this.state.product != null)
-        let breadCrumbList = (this.state.product) ? (
-            this.state.product.categories.slice(0,3).map(category => {
+    componentWillMount () {
+        let productId = this.props.match.params.product_id;
+        this.props.getProductDetail(productId);
+    };
+
+    handleChange = (e) => {
+        e.persist();
+        this.setState({
+            [e.target.id]: e.target.value
+        });
+    };
+
+    handleSubmit = (e) => {
+        const { user, addToCart, setOutOfStock } = this.props;
+        e.preventDefault();
+        if (user.isSuperUser) {
+            setOutOfStock(this.state);
+        } else if (user.isAuthenticated) {
+            addToCart(this.state);
+        } else {
+            this.props.history.push('/login');
+        };
+    };
+
+    renderBreadCrumb = (product) => {
+        let breadCrumbList = (product) ? (
+            product.categories.slice(0,3).map(category => {
                 return (
-                    <a href="#" key={category.category}>{category.category}/</a>
+                    <a href="#" key={category.category}>
+                        {category.category}/
+                    </a>
                 )
             })
         ) : (
             <p>Loading...</p>
         )
-        return breadCrumbList
+        return breadCrumbList;
     };
 
-    images = () => {
-        let imagesList = []
-        imagesList = (this.state.product) ? (
-            this.state.product.image_url.split(';').map(image => {
+    renderImages = (product) => {
+        let imagesList = (product) ? (
+            product.image_url.split(';').map(image => {
                 return (
                     <div key={Math.random()}>
                         <img style={{height: '250px'}} src={image}></img><br/>
@@ -51,81 +67,117 @@ class Product extends Component {
         return imagesList;
     };
 
-    productTitle = () => {
-        var productTitle = (this.state.product) ? (
-            this.state.product.name + '-' + this.state.product.brand
+    renderProductTitle = (product) => {
+        var productTitle = (product) ? (
+            product.name + '-' + product.brand
         ):("Loading...")
         return productTitle;
     };
 
-    productPrice = () => {
-        var productPrice = (this.state.product) ? (
-            this.state.product.price + '-' + this.state.product.currency
+    renderProductPrice = (product) => {
+        var productPrice = (product) ? (
+            product.price + '-' + product.currency
         ) : ('Loading...')
         return productPrice;
     };
 
-    mainImage = () => {
-        var mainImage = (this.state.product) ? (this.state.product.image_url) : ''
-        mainImage = mainImage ? (mainImage.split(';')[0]) : ''
-        mainImage = mainImage ? (mainImage.replace('medium', 'large')) : ''
-        return mainImage
-    }
-
-    skus = () => {
-        var coloursAndSizes = {}
-        var skus = (this.state.product) ? (
-            this.state.product.skus
-        ) : (
-            'Loading...'
-        )
-        if (this.state.product) {
-            for (var sku of skus) {
-                var key = sku.colour
-                var value = {size: sku.size, out_of_stock: sku.out_of_stock}
-                if (key in coloursAndSizes) {
-                    coloursAndSizes[key] = [...coloursAndSizes[key], value]
-                } else {
-                    coloursAndSizes[key] =  [value]
-                };
-            };
-        };
-        var skusList = []
-        if (coloursAndSizes.length !== 0) {
-            console.log("Colours and sizes", coloursAndSizes)
-            coloursAndSizes = Object.entries(coloursAndSizes)
-            console.log('entries', coloursAndSizes)
-            for (var colourAndSizes of coloursAndSizes) {
-                skusList.push(<p key={colourAndSizes}>Colour: {colourAndSizes[0]}</p>)
-                var buttonsList = []
-                for (let size of colourAndSizes[1]) {
-                    console.log(size)
-                    if (size.out_of_stock) {
-                        buttonsList.push(<label key={size.size} className="btn grey lighten-1 center-align" id={size.size}><input name="group1" type="radio" id={size.size} disabled/><span>{size.size}</span></label>)
-                    } else {
-                        buttonsList.push(<label key={size.size} className="btn grey darken-3 center-align"><input value={colourAndSizes[0] + '_' + size.size} name="group1" type="radio" id='sku'/><span>{size.size}</span></label>)
-                    }
-                }
-                skusList.push(<div key={Math.random()} className='row'>{buttonsList}</div>)
-            }
-        }
-        return skusList
+    renderMainImage = (product) => {
+        var mainImage = (product) ? (product.image_url) : '';
+        mainImage = mainImage ? (mainImage.split(';')[0]) : '';
+        mainImage = mainImage ? (mainImage.replace('medium', 'large')) : '';
+        return mainImage;
     };
 
-    addToCart = (e) => {
-        e.preventDefault()
-        console.log('submitted');
-        console.log(document.getElementById('quantity').value);
-        console.log(document.getElementById('sku').value);
-    }
+    getColourAndSizes = (product) => {
+        var coloursAndSizes = {};
+        var skus = (product) ? (
+            product.skus
+        ) : (
+            'Loading...'
+        );
+        if (product) {
+            for (var sku of skus) {
+                var key = sku.colour;
+                var value = {size: sku.size, out_of_stock: sku.out_of_stock};
+                (key in coloursAndSizes) ? (
+                    coloursAndSizes[key] = [...coloursAndSizes[key], value]
+                ) : (
+                    coloursAndSizes[key] =  [value]
+                )
+            };
+        };
+        return coloursAndSizes;
+    };
+
+    renderSkus = (product) => {
+        var coloursAndSizes = this.getColourAndSizes(product);
+        var skusList = []
+
+        if (coloursAndSizes.length !== 0) {
+            coloursAndSizes = Object.entries(coloursAndSizes);
+            for (var colourAndSizes of coloursAndSizes) {
+                skusList.push(<p key={colourAndSizes}>Colour: {colourAndSizes[0]}</p>);
+                var buttonsList = [];
+                for (let size of colourAndSizes[1]) {
+                    (size.out_of_stock) ? (
+                        buttonsList.push(
+                            <label key={size.size} className="btn grey lighten-1 center-align">
+                                <input onChange={ this.handleChange } id='skuId' name="group1" type="radio" disabled/>
+                                <span>{size.size}</span>
+                            </label>
+                        )
+                     ) : (
+                        buttonsList.push(
+                            <label key={size.size} className="btn grey darken-3 center-align">
+                                <input onChange={ this.handleChange } id='skuId' value={colourAndSizes[0] + '_' + size.size} name="group1" type="radio"/>
+                                <span>{size.size}</span>
+                            </label>
+                        )
+                     )
+                };
+                skusList.push(
+                    <div key={Math.random()} className='row'>
+                        {buttonsList}
+                    </div>
+                );
+            };
+        };
+        return skusList;
+    };
+
+    addToCartOrSetOutOfStock = () => {
+        const { user } = this.props;
+        let addToCartOrOutOfStockButton = (user.isSuperUser) ? (
+                <div>
+                    <div className="input-field center-align">
+                        <button type='submit' className="btn waves-effect waves-light">
+                            Set Out of Stock
+                        </button>
+                    </div>
+                </div>
+         ) : (
+                <div>
+                    <label htmlFor="quantity">Quantity: </label>
+                    <input onChange={this.handleChange} id='quantity' name='quantity' type="number" defaultValue={1} min="1" max="10000"/>
+                    <div className="input-field center-align">
+                        <button type='submit' className="btn waves-effect waves-light">
+                            Add To Cart
+                        </button>
+                    </div>
+                </div>
+        )
+        return addToCartOrOutOfStockButton;
+    };
 
     render () {
-        let breadCrumbList = this.breadCrumb()
-        let imagesList = this.images()
-        let productTitle = this.productTitle()
-        let productPrice = this.productPrice()
-        let mainImage = this.mainImage()
-        let skusList = this.skus()
+        const { product } = this.props;
+        let breadCrumbList = this.renderBreadCrumb(product);
+        let imagesList = this.renderImages(product);
+        let productTitle = this.renderProductTitle(product);
+        let productPrice = this.renderProductPrice(product);
+        let mainImage = this.renderMainImage(product);
+        let skusList = this.renderSkus(product);
+        let addToCartOrSetOutOfStock = this.addToCartOrSetOutOfStock();
         return (
             <div className="product-details">
                 <div className="row">
@@ -154,13 +206,9 @@ class Product extends Component {
                                 <br/>
                                 <h5>{productTitle}</h5>
                                 <h6>Price: {productPrice}</h6>
-                                <form>
-                                    {skusList}
-                                    <label htmlFor="quantity">Quantity: </label>
-                                    <input id='quantity' name='quantity' type="number" defaultValue={1} min="1" max="10000"/>
-                                    <div className="input-field center-align">
-                                        <button className="btn waves-effect waves-light" type="submit" name="action" onClick={this.addToCart}>Add To Cart</button>
-                                    </div>
+                                <form onSubmit={this.handleSubmit} className="white">
+                                    { skusList }
+                                    { addToCartOrSetOutOfStock }
                                 </form>
                             </div>
                         </div>
@@ -168,21 +216,25 @@ class Product extends Component {
                     </div>
                 </div>
             </div>
-        )
+        );
     };
 };
 
+
 const mapDispatchToProps = (dispatch) => {
     return {
-    }
+        getProductDetail: (productId) => dispatch(getProductDetail(productId)),
+        addToCart: (cartItem) => dispatch(addToCart(cartItem)),
+        setOutOfStock: (productDetails) => dispatch(setOutOfStock(productDetails))
+    };
 };
+
 
 const mapStateToProps = (state) => {
     return {
         user: state.auth.user,
-        registerPending: state.auth.registerPending,
-        registerError: state.auth.registerError
-    }
-}
+        product: state.product.product
+    };
+};
 
 export default connect(mapStateToProps, mapDispatchToProps)(Product);
