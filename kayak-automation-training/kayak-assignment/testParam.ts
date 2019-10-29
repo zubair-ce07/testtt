@@ -62,6 +62,10 @@ describe("Verify flights search process:", async function() {
 
   it("Should display same inputs in search form after trip search", function() {
     homePageObject.searchButton.click();
+    searchFormObject.getDepartureValue().should.eventually.be.equal(userInputJSON[senerioKey]['Origin Selection']);
+    searchFormObject.getDestinationValue().should.eventually.be.equal(userInputJSON[senerioKey]["Destination Selection"]);
+    searchFormObject.getDepartureDate().getText().should.eventually.be.equal(homePageObject.getTripDates(3));
+    searchFormObject.getReturnDate().getText().should.eventually.be.equal(homePageObject.getTripDates(6));
   });
 
   it("Should display ‘Cheapest’ sort option in least price as compared to ‘Best’ and ‘Quickest’ sort options", function() {
