@@ -2,7 +2,7 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 
 from ..items import Product 
-from ..utils import parse_gender, parse_price
+from ..utils import map_gender, format_price
 
 
 class ParseSpider():
@@ -60,7 +60,7 @@ class ParseSpider():
 
         raw_gender = f"{title_text} {' '.join(size_categories + description)}"
 
-        return parse_gender(raw_gender)
+        return map_gender(raw_gender)
 
     def get_care(self, response):                
         return response.css('#careAndContentInfo::text').getall()    
@@ -111,7 +111,7 @@ class ParseSpider():
         previous_price = response.css('.ctntPrice::text').re_first(r'Was \$(.*);')
         current_price = response.css('[itemprop="price"]::text').get()       
 
-        return parse_price(previous_price, current_price)
+        return format_price(previous_price, current_price)
         
     def skus_requests(self, response):
         size_cat = response.css('#sizecat > a::attr(id)').getall()
