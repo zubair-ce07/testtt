@@ -1,13 +1,15 @@
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
+from string import Template
 
 from ..items import Product 
 from ..utils import map_gender, format_price
 
 
 class ParseSpider():
-    
-    def parse_product(self, response):                   
+    color_css = Template('img[id="color_$id"] + div > span::text, #color .basesize::text')
+
+    def parse(self, response):                   
         product = Product()
         
         product['retailer_sku'] = self.get_retailer_sku(response)
@@ -27,7 +29,7 @@ class ParseSpider():
 
     def parse_skus(self, response):              
         product = response.meta['product']
-        requests = response.meta['requests']
+        requests = response.meta['requests']        
 
         skus = self.get_skus(response)                   
         product['skus'].update(skus)
@@ -37,7 +39,7 @@ class ParseSpider():
     def parse_availability(self, response):        
         product = response.meta['product']
         requests = response.meta['requests']
-
+        
         availability = response.css('.stockStatus .basesize::text').get()
         sku_id = response.url.split('/')[-2]
              
@@ -49,9 +51,8 @@ class ParseSpider():
     def get_retailer_sku(self, response):
         return response.css('#item::text').get()
                
-    def get_brand(self, response):
-        css = '[property="og:site_name"]::attr(content)'
-        return response.css(css).get()
+    def get_brand(self, response):        
+        return response.css('[property="og:site_name"]::attr(content)').get()
 
     def get_gender(self, response):
         title_text = response.css('title::text').get()
@@ -82,25 +83,22 @@ class ParseSpider():
         return response.css('#detailAltImgs > li a::attr(href)').getall()        
 
     def get_skus(self, response):
-        skus = {}
-       
-        currency_css = '[itemprop="priceCurrency"]::attr(content)'
-        currency = response.css(currency_css).get()
+        skus = {}               
+        currency = response.css('[itemprop="priceCurrency"]::attr(content)').get()
 
-        color_css = '.swatchlink .color::attr(data-value)'        
-        color_ids = response.css(color_css).getall() or response.css('[name^="specOne"]::attr(value)').get()
+        color_css = '.swatchlink .color::attr(data-value), #color + input::attr(value)'                
+        color_ids = [id for id in response.css(color_css).getall() if id]
 
         sizes = response.css('a.box.size::attr(id)').getall()                                
         size_ids = [size.split('_')[1] for size in sizes]
 
         for color_id in color_ids:
-            for size_id in size_ids:
-                color_css = f'img[id="color_{color_id}"] + div > span::text, #color .basesize::text'
+            for size_id in size_ids:    
                 sku_attributes = {}
 
                 sku_attributes.update(self.get_price(response))                
                 sku_attributes['currency'] = currency
-                sku_attributes['colour'] = response.css(color_css).get()
+                sku_attributes['colour'] = response.css(self.color_css.substitute(id=color_id)).get()
                 sku_attributes['size'] = response.css(f'a[id$="{size_id}"]::text, #size .basesize::text').get()               
 
                 skus[f'{color_id}{size_id}'] = sku_attributes
@@ -123,9 +121,10 @@ class ParseSpider():
         availability_requests = []
 
         product_id = self.get_retailer_sku(response)
-        color_css = '.swatchlink .color::attr(data-value)'
+        
+        color_css = '.swatchlink .color::attr(data-value), #color + input::attr(value)'                
+        color_ids = [id for id in response.css(color_css).getall() if id]
 
-        color_ids = response.css(color_css).getall() or response.css('[name^="specOne"]::attr(value)').get()        
         size_ids = [size.split('_')[1] for size in response.css('a.box.size::attr(id)').getall()]
         
         for color_id in color_ids:
@@ -138,7 +137,7 @@ class ParseSpider():
         return availability_requests        
          
     def request_or_product(self, product, requests):           
-        if requests:
+        if requests:            
             request = requests.pop()
             request.meta['product'] = product
             request.meta['requests'] = requests
