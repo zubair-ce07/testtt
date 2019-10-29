@@ -27,7 +27,7 @@ describe("Verify flights search process:", async function() {
   });
 
   it(`Should display ${userInputJSON[senerioKey]["Origin Input"]} in departure field`, async function() {
-    await homePageObject.setDeparture(userInputJSON[senerioKey]['Origin Input']);
+    homePageObject.setDeparture(userInputJSON[senerioKey]['Origin Input']);
     await searchFormObject.getDepartureValue().should.eventually.be.equal(userInputJSON[senerioKey]['Origin Selection']);
   });
 
@@ -48,16 +48,16 @@ describe("Verify flights search process:", async function() {
 
   it("Should display 3rd Day after today as trip start date", async function() {
     homePageObject.fillDatesDeparture();
-    await searchFormObject.getDepartureDate().getText().should.eventually.be.equal(await homePageObject.getTripDates(3));
+    await searchFormObject.getDepartureDate().getText().should.eventually.be.equal(homePageObject.getTripDates(3));
   });
 
   it("Should display 6th Day after today as trip start date", async function() {
     homePageObject.fillDatesReturn();
-    await searchFormObject.getReturnDate().getText().should.eventually.be.equal(await homePageObject.getTripDates(6));
+    await searchFormObject.getReturnDate().getText().should.eventually.be.equal(homePageObject.getTripDates(6));
   });
 
-  it("Should uncheck all checkboxes in compare-to block",async function() {
-    await homePageObject.uncheckAllCheckBox();
+  it("Should uncheck all checkboxes in compare-to block", function() {
+    homePageObject.uncheckAllCheckBox();
   });
 
   it("Should display same inputs in search form after trip search", function() {

@@ -39,9 +39,9 @@ describe("Search form and travelers Verification", async function() {
     await searchFormObject.getDepartureValue().should.eventually.be.equal("Paris (PAR)");
   });
 
-  it("Should display adult passengers limit after selecting more then 9 adults",async function() {
+  it("Should display adult passengers limit after selecting more then 9 adults", function() {
     homePageObject.addAdultPassengers(10);
-    await homePageObject.getAdultsLimitMessage().should.eventually.be.equal("Searches cannot have more than 9 adults");
+    homePageObject.getAdultsLimitMessage().should.eventually.be.equal("Searches cannot have more than 9 adults");
   });
 });
 
@@ -52,10 +52,11 @@ Object.keys(userInputJSON).map( senario => {
       await browser.get('https://www.kayak.com');
       await browser.manage().deleteAllCookies();
       await browser.refresh();
+      browser.waitForAngularEnabled(false);
     });
 
-    it(`Should display ${userInputJSON[senario]["Origin Input"]} in departure field`, async function() {
-      await homePageObject.setDeparture(userInputJSON[senario]["Origin Input"]);
+    it(`Should display ${userInputJSON[senario]["Origin Input"]} in departure field`,async function() {
+      homePageObject.setDeparture(userInputJSON[senario]["Origin Input"]);
       await searchFormObject.getDepartureValue().should.eventually.be.equal(userInputJSON[senario]["Origin Selection"]);
     });
   
@@ -64,31 +65,31 @@ Object.keys(userInputJSON).map( senario => {
       await searchFormObject.getDestinationValue().should.eventually.be.equal(userInputJSON[senario]["Destination Selection"]);
     });
   
-    it(`Change number of ‘adults’ from travelers field to ${userInputJSON[senario]["Passengers"]["Adults"]}`,async function() {
+    it(`Change number of ‘adults’ from travelers field to ${userInputJSON[senario]["Passengers"]["Adults"]}`, function() {
       homePageObject.addAdultPassengers(userInputJSON[senario]["Passengers"]["Adults"]);
-      await searchFormObject.getAdultPassengers().should.eventually.be.equal((userInputJSON[senario]["Passengers"]["Adults"]).toString());
+      searchFormObject.getAdultPassengers().should.eventually.be.equal((userInputJSON[senario]["Passengers"]["Adults"]).toString());
     });
 
-    it(`Change number of ‘children’ from travelers field to ${userInputJSON[senario]["Passengers"]["Child"]}`,async function() {
-       homePageObject.addChildPassengers(userInputJSON[senario]["Passengers"]["Child"]);
-      await homePageObject.getChildPassenger().should.eventually.be.equal((userInputJSON[senario]["Passengers"]["Child"]).toString());
+    it(`Change number of ‘children’ from travelers field to ${userInputJSON[senario]["Passengers"]["Child"]}`, function() {
+      homePageObject.addChildPassengers(userInputJSON[senario]["Passengers"]["Child"]);
+      homePageObject.getChildPassenger().should.eventually.be.equal((userInputJSON[senario]["Passengers"]["Child"]).toString());
     });
   
     it("Should display 3rd Day after today as trip start date",async function() {
       homePageObject.fillDatesDeparture();
-      await searchFormObject.getDepartureDate().getText().should.eventually.be.equal(await homePageObject.getTripDates(3));
+      await searchFormObject.getDepartureDate().getText().should.eventually.be.equal(homePageObject.getTripDates(3));
     });
   
     it("Should display 6th Day after today as trip start date",async function() {
       homePageObject.fillDatesReturn();
-      await searchFormObject.getReturnDate().getText().should.eventually.be.equal(await homePageObject.getTripDates(6));
+      await searchFormObject.getReturnDate().getText().should.eventually.be.equal(homePageObject.getTripDates(6));
     });
   
-    it("Should uncheck all checkboxes in compare-to block",async function() {
-      await homePageObject.uncheckAllCheckBox();
+    it("Should uncheck all checkboxes in compare-to block", function() {
+      homePageObject.uncheckAllCheckBox();
     });
   
-    it("Should display same inputs in search form after trip search",async function() {
+    it("Should display same inputs in search form after trip search", function() {
       homePageObject.searchButton.click();
     });
   

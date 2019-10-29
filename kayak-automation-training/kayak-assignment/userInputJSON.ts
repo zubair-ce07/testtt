@@ -12,7 +12,7 @@ export let userInputJSON = {
   },
 
   "Senerio2": {
-    "Origin Input": "Tokyo Ha",
+    "Origin Input": "Tokyo (HND)",
     "Origin Selection": "Tokyo (HND)",
     "Destination Input": "Paris (PAR)",
     "Destination Selection": "Paris (PAR)",
@@ -23,7 +23,7 @@ export let userInputJSON = {
     "Arrival": "05/30/2019"
   },
   "Senerio3": {
-    "Origin Input": "AMS",
+    "Origin Input": "Amsterdam (AMS)",
     "Origin Selection": "Amsterdam (AMS)",
     "Destination Input": "Guangzhou (CAN)",
     "Destination Selection": "Guangzhou (CAN)",
@@ -34,7 +34,7 @@ export let userInputJSON = {
     "Arrival": "05/30/2019"
   },
   "Senerio4": {
-    "Origin Input": "Frankfurt Airport",
+    "Origin Input": "Frankfurt am Main (FRA)",
     "Origin Selection": "Frankfurt am Main (FRA)",
     "Destination Input": "Berlin (BER)",
     "Destination Selection": "Berlin (BER)",
