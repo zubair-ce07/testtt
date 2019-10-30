@@ -2,7 +2,8 @@ import json
 import re
 
 from scrapy import Request, Selector
-from scrapy.spiders import CrawlSpider
+from scrapy.spiders import CrawlSpider, Rule
+from scrapy.linkextractors import LinkExtractor
 from w3lib.url import add_or_replace_parameters, urljoin
 
 from ..items import WhiteStuffItem
@@ -114,33 +115,28 @@ class WhiteStuffSpider(CrawlSpider):
     start_urls = [
         'https://www.whitestuff.com/',
     ]
+    rules = (
+        Rule(LinkExtractor(restrict_css=('.navbar-subcategory__item a')), callback='parse_category'),
+    )
 
     whiteStuff_parser = WhiteStuffParser()
     category_url_template = 'https://fsm6.attraqt.com/zones-js.aspx?version=19.3.8&siteId=eddfa3c1-7e81-' \
                             '4cea-84a4-0f5b3460218a&pageurl={}&zone0=banner&zone1=category&' \
                             'config_categorytree={}'
-    next_url_template = 'https://fsm6.attraqt.com/zones-js.aspx?version=19.3.8&siteId=eddfa3c1-7e81-4cea-' \
-                        '84a4-0f5b3460218a&pageurl={}{}'
-
-    def parse(self, response):
-        category_urls = response.css('.navbar-subcategory__item a::attr(href)').getall()
-        for url in category_urls:
-            yield response.follow(url, callback=self.parse_category_page)
-
-    def parse_category_page(self, response):
-        category_tree = re.search('(?<=categorytree = ")(.*)(?=";)', response.body.decode('utf-8')).group()
-        category_url = self.category_url_template.format(response.url, category_tree)
-        yield response.follow(category_url, callback=self.parse_category)
-
     def parse_category(self, response):
-        js_response = response.body_as_unicode()
-        html_response = Selector(text=json.loads(re.findall('LM.buildZone\((.+)\);', js_response)[1])['html'])
+        category_tree = re.search('(?<=categorytree = ")(.*)(?=";)', response.text).group()
+        category_url = self.category_url_template.format(response.url, category_tree)
+        yield response.follow(category_url, callback=self.parse_pagination)
+
+    def parse_pagination(self, response):
+        html_response = Selector(text=json.loads(re.findall('LM.buildZone\((.+)\);', response.text)[1])['html'])
         next_page = html_response.css('[rel="next"]::attr(href)').get()
 
         if next_page:
             url = urljoin(self.start_urls[0], next_page)
-            next_url = self.next_url_template.format(url, response.url[response.url.find("&zone0"):])
-            yield response.follow(next_url, callback=self.parse_category)
+            next_url = self.category_url_template.format(url, re.search('(?<=categorytree=)(.*)', response.url).group())
+            yield {'next': next_url}
+            yield response.follow(next_url, callback=self.parse_pagination)
 
         products_urls = html_response.css('.product-tile__title ::attr(href)').getall()
         for product_url_path in products_urls:
