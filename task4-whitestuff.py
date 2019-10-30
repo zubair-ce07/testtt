@@ -28,9 +28,9 @@ class WhiteStuffParser:
 
     def parse_skus(self, response):
         item = response.meta['item']
-        product_info = self.get_raw_product(response)
-        item['image_urls'] = self.extract_imgs_urls(product_info)
-        item['skus'] = self.extract_skus(product_info, item['currency'])
+        raw_product = self.get_raw_product(response)
+        item['image_urls'] = self.extract_imgs_urls(raw_product)
+        item['skus'] = self.extract_skus(raw_product, item['currency'])
 
         yield self.get_item_or_request_to_yield(item)
 
@@ -116,20 +116,21 @@ class WhiteStuffSpider(CrawlSpider):
     ]
 
     whiteStuff_parser = WhiteStuffParser()
-    url_domain = 'https://www.whitestuff.com'
+    category_url_template = 'https://fsm6.attraqt.com/zones-js.aspx?version=19.3.8&siteId=eddfa3c1-7e81-' \
+                            '4cea-84a4-0f5b3460218a&pageurl={}&zone0=banner&zone1=category&' \
+                            'config_categorytree={}'
+    next_url_template = 'https://fsm6.attraqt.com/zones-js.aspx?version=19.3.8&siteId=eddfa3c1-7e81-4cea-' \
+                        '84a4-0f5b3460218a&pageurl={}{}'
 
     def parse(self, response):
-        top_categories_sel = response.css('.navbar__item')
-        for top_category_sel in top_categories_sel:
-            top_menu_id = top_category_sel.css('::attr(data-testing-id)').get().split('-')[0]
-            category_urls = top_category_sel.css('.navbar-subcategory__item a::attr(href)').getall()
+        category_urls = response.css('.navbar-subcategory__item a::attr(href)').getall()
+        for url in category_urls:
+            yield response.follow(url, callback=self.parse_category_page)
 
-            for url in category_urls:
-                category_url_template = 'https://fsm6.attraqt.com/zones-js.aspx?version=19.3.8&siteId=eddfa3c1-7e81-' \
-                                        '4cea-84a4-0f5b3460218a&pageurl={}&zone0=banner&zone1=category&' \
-                                        'config_categorytree={}'
-                category_url = category_url_template.format(url, self.get_category_tree(top_menu_id, url))
-                yield response.follow(category_url, callback=self.parse_category)
+    def parse_category_page(self, response):
+        category_tree = re.search('(?<=categorytree = ")(.*)(?=";)', response.body.decode('utf-8')).group()
+        category_url = self.category_url_template.format(response.url, category_tree)
+        yield response.follow(category_url, callback=self.parse_category)
 
     def parse_category(self, response):
         js_response = response.body_as_unicode()
@@ -137,21 +138,14 @@ class WhiteStuffSpider(CrawlSpider):
         next_page = html_response.css('[rel="next"]::attr(href)').get()
 
         if next_page:
-            url = urljoin(self.url_domain, next_page)
-            next_url_template = 'https://fsm6.attraqt.com/zones-js.aspx?version=19.3.8&siteId=eddfa3c1-7e81-4cea-' \
-                                '84a4-0f5b3460218a&pageurl={}{}'
-            next_url = next_url_template.format(url, response.url[response.url.find("&zone0"):])
+            url = urljoin(self.start_urls[0], next_page)
+            next_url = self.next_url_template.format(url, response.url[response.url.find("&zone0"):])
             yield response.follow(next_url, callback=self.parse_category)
 
         products_urls = html_response.css('.product-tile__title ::attr(href)').getall()
         for product_url_path in products_urls:
-            yield response.follow(urljoin(self.url_domain, product_url_path),
+            yield response.follow(urljoin(self.start_urls[0], product_url_path),
                                   callback=self.whiteStuff_parser.parse_details)
-
-    def get_category_tree(self, top_menu_id, url):
-        detail_category = \
-            url.split('/')[-2].replace('-', '_').replace('and_', '').replace('womens', 'WW').replace('mens', 'MW')
-        return f'{top_menu_id}%2F{top_menu_id}_{detail_category}'
 
 
 class WhiteStuffItem(scrapy.Item):
