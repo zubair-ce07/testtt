@@ -55,13 +55,11 @@ class BookCreateView(LoginRequiredMixin, CreateView):
 
 
 class BookUpdateView(LoginRequiredMixin, UpdateView):
-    """Class for Book model update."""
-
+    """Class for Book update."""
     model = Book
     fields = ['title', 'author_name', 'publisher', 'number_of_books']
 
     def form_valid(self, form):
-        """Check form validity method."""
         form.instance.user = self.request.user
         return super().form_valid(form)
 

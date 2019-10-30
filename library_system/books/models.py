@@ -1,6 +1,7 @@
 """Module for books app models."""
 from django.db import models
 from django.conf import settings
+from django.urls import reverse
 
 
 class Book(models.Model):
@@ -14,6 +15,9 @@ class Book(models.Model):
 
     def __str__(self):
         return self.title
+
+    def get_absolute_url(self):
+        return reverse('book_detail', kwargs={'pk': self.pk})
 
 class IssueBook(models.Model):
     """Class model for Book Issuing by user."""
