@@ -1,7 +1,8 @@
 import re
 
-from scrapy.spiders import CrawlSpider
+from scrapy.spiders import CrawlSpider, Rule
 from scrapy import Request
+from scrapy.linkextractors import LinkExtractor
 from w3lib.url import add_or_replace_parameters
 
 from ..items import OnlyItem
@@ -132,19 +133,11 @@ class OnlySpider(CrawlSpider):
         'https://www.only.com/gb/en/home',
     ]
     detail_parser = OnlyParser()
-
-    def parse(self, response):
-        categories = response.css('.menu-top-navigation__link::attr(href)').getall()
-        for category in categories:
-            yield response.follow(category, callback=self.parse_category)
-
-    def parse_category(self, response):
-        products = response.css('.thumb-link::attr(href)').getall()
-        next_page = response.css('.paging-controls__next::attr(data-href)').get()
-        if next_page:
-            yield response.follow(next_page, callback=self.parse_category)
-        for product in products:
-            yield response.follow(product, callback=self.detail_parser.parse_details)
+    rules = (
+        Rule(LinkExtractor(restrict_css=('.menu-top-navigation__link'))),
+        Rule(LinkExtractor(restrict_css=('.paging-controls__next'), attrs=('data-href'))),
+        Rule(LinkExtractor(restrict_css=('.thumb-link')), callback=detail_parser.parse_details),
+    )
 
 
 class OnlyItem(scrapy.Item):
