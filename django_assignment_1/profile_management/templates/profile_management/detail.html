@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block title %}User Deatils{% endblock %}
+
+{% block content %}
+  <h1>
+    User Details
+    {% if user.is_authenticated and user.pk == object.pk %}
+      <span>
+        <a href="{% url 'profile_update' object.pk %}">
+          Edit
+        </a>
+      </span>
+    {% endif %}
+  </h1>
+  <p>UserName: {{ object.username }}</p>
+  <p>Email: {{ object.email }}</p>
+  <img src="{{ object.image_url|default_if_none:'#' }}" alt="{{ object.username }}">
+{% endblock %}
