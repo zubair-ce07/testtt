@@ -1,9 +1,7 @@
 import argparse
 import os
 
-import report1
-import report2
-import report3
+import ReportGenerator
 
 
 def main():
@@ -23,20 +21,20 @@ def main():
     if args.report1:
         Date = args.report1
         fpath = filepath + "/Murree_weather_" + Date
-        report1.Report(fpath)
+        yearly_report = ReportGenerator.YearlyReport(fpath)
 
     if args.report2:
         Date = args.report2
         Date = Date.split('/')
         fpath = filepath + "/Murree_weather_" + Date[0]     #Spearate year and month
-        report2.Report(fpath, int(Date[1])-1)
+        monthly_report = ReportGenerator.MonthlyReport(fpath, int(Date[1])-1)
         
     if args.report3:
         Date = args.report3
         Date = Date.split('/')
         fpath = filepath + "/Murree_weather_" + Date[0]     #Spearate year and month
-        report3.Report(fpath, int(Date[1])-1)
-       
+        horizontal_bar_report = ReportGenerator.HorizontalBarReport(fpath, int(Date[1])-1)
+        
     print("***PDF Report is Also generated***")
 
 main()
