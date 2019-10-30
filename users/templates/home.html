@@ -15,13 +15,18 @@
 {% block content %}
 <div class="container">
 
-    
+{% if user.is_authenticated %}
 
+{% if user.type == 'Manager'%}
 
-<!--{% if user.is_authenticated %} !-->
+{% if user.status == 'Not Approved' %}
+<meta http-equiv="REFRESH" content="0;url={% url 'login' %}">
+{% endif %}
+<h1> This is manager profile !! </h1>
+<a href = "../manager"><button btn btn-outline-primary btn-lg > Go to Manager Profile </button> </a>
+{% endif %}
 
 <center> <h1> Products </h1> </center>
-
 <form method="POST">
     {% csrf_token %}
     {{ form.as_p }}
@@ -41,13 +46,14 @@
 
 <div class="row">
     {% for product in products %}
-    <div class="card" style="width: 15rem;">
+    <div class="card" style="width: 17rem;">
       <img class="card-img-top" src="/media/{{product.image}}" alt="Card image cap" style="height:270px;">
       <div class="card-body">
-        <h5 class="card-title">{{product.name}}</h5>
+        <h5 class="card-title" id="namepr{{product.id}}">{{product.name}}</h5>
+        <div class="card-text" id="pricepr{{product.id}}">${{product.price}}</div>
+        <input class="card-text" type="number" id="qtypr{{product.id}}" placeholder="Quantity" required />
         <p class="card-text">{{product.description}}</p>
-        <p class="card-text">{{product.category}}</p>
-        <button class="btn btn-primary cart">Add to Cart </button>
+        <button class="btn btn-primary cart" id="pr{{product.id}}">Add to Cart </button>
       </div>
     </div>
   {% endfor %}
@@ -78,7 +84,7 @@
   {% endif %}
 
 
-<!--{% else %} !-->
+{% else %}
   <p>You are not logged in</p>
   <a href="{% url 'login' %}">login</a> |
   <a href="{% url 'signup' %}">signup</a>
@@ -86,21 +92,38 @@
 </div>
 {% endblock %}
 
-{% block js %} 
+
+{% block js %}
+
 <script>
-console.log('Working');
-if(localStorage.getItem('cart')==null)
-{
+if(localStorage.getItem('cart')==null) {
   var cart = {};
 }
 else {
-  var cart = JSON.parse(localStorage.getItem('cart'));
+  cart = JSON.parse(localStorage.getItem('cart'));
+  document.getElementById('cart').innerHTML = Object.keys(cart).length;
 }
 
 $('.cart').click(function() {
-  console.log('clicked')
   var idstr = this.id.toString();
-  console.log(idstr);
+  if(cart[idstr]!=undefined) {
+    qty = cart[idstr][0] + 1;
+  }
+  else {
+    qty = 1;
+    name = document.getElementById('name'+idstr).innerHTML;
+    price = parseInt(document.getElementById('price'+idstr).innerHTML.replace('$',''));
+    quantity = parseInt(document.getElementById('qty'+idstr).value);
+    if (!quantity) {
+      alert('Please enter quantity !');
+    }
+    else {
+    cart[idstr] = [name, price, quantity];
+    console.log(cart);
+    localStorage.setItem('cart', JSON.stringify(cart));
+    document.getElementById('cart').innerHTML = Object.keys(cart).length;
+    } 
+  }
 });
   </script>
 

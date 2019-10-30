@@ -1,0 +1,45 @@
+{% extends 'header.html' %}
+{% block title %}Home{% endblock %}
+
+
+
+{% block content %}
+
+{% if user.is_authenticated and user.type == 'Manager' %}
+
+<a href="/manager/add_product"><button class="btn btn-success"> Add Product </button> </a>
+
+<form action="" method="POST"> {% csrf_token %}
+<ul class="list-group">
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+        <div style="font-size:25px;"> Product Id </div>
+      <div style="font-size:25px;"> Product Name </div>
+        <span class="badge badge-pill"><div style="font-size:25px;"> Price($) </div></span>
+      </li>
+
+{% for product in products %}
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+        <input type="checkbox" value="{{product.id}}" name="choices">
+        {{product.id}}
+      {{product.name}}
+      <span class="badge  badge-pill">{{product.price}}</span>
+    </li>
+    {% endfor %}
+
+
+  </ul>
+  <center>
+  <button class="btn btn-danger" type="submit" name="delete"> Delete </button>
+  <br>
+  <input type="text" name="price">
+  <button class="btn btn-primary" type="submit" name="update_price"> Update Price </button>
+</center>
+</form>
+
+
+{% else %}
+  <p>You are not logged in</p>
+  <a href="{% url 'login' %}">login</a> |
+  <a href="{% url 'signup' %}">signup</a>
+  {% endif %}
+{% endblock %}

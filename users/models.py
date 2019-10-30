@@ -1,15 +1,36 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.core.validators import RegexValidator
+from django.forms import ModelForm
 
 class CustomUser(AbstractUser):
-    pass
+    """ class to add built in auth functionality. """
+    phone = models.CharField(max_length=100, default='', \
+        validators=[
+            RegexValidator(
+                regex='^[\d]{4}-[\d]{7}$',
+                message=(u"Format should be 1234-1234567"),
+                )
+            ])
+    address = models.CharField(max_length=100, default='')
+    user_types = (
+        ('Buyer', 'Buyer'),
+        ('Manager', 'Manager'),
+    )
+    status_type = (
+        ('Approved', 'Approved'),
+        ('Not Approved', 'Not Approved'),
+    )
+    type = models.CharField(max_length=50, choices=user_types, default='buyer')
+    status = models.CharField(max_length=50, choices=status_type, default='Not Approved')
+
 
     def __str__(self):
-        return self.email
+        return self.username
 
 
 class Product(models.Model):
-    """ Field to save product Info."""
+    """ Field to save product info."""
     category_types = (
         ('Men', 'Men'),
         ('Women', 'Women'),
@@ -26,3 +47,24 @@ class Product(models.Model):
     def __str__(self):
         return self.name
     objects = models.Manager()
+
+class ProductForm(ModelForm):
+    class Meta:
+        model = Product
+        fields = '__all__'
+
+
+class Order(models.Model):
+    """ Get user info for placing order. """
+    id = models.AutoField(primary_key=True)
+    products = models.CharField(max_length=5000)
+    name = models.CharField(max_length=100)
+    email = models.CharField(max_length=50)
+    address = models.CharField(max_length=100)
+    city = models.CharField(max_length=50)
+    state = models.CharField(max_length=50)
+    zip_code = models.CharField(max_length=10)
+    phone = models.CharField(max_length=16)
+
+    def __str__(self):
+        return self.name

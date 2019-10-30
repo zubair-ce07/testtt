@@ -1,0 +1,46 @@
+[
+  {
+    "model": "users.product",
+    "fields": {
+      "name": "Men Brown Jacket",
+      "category": "Men",
+      "price": "200",
+      "description": "This is a dummy data",
+      "pub_date": "2019-10-23",
+      "image":"users/images/kids.png"
+    }
+  },
+  {
+    "model": "users.product",
+    "fields": {
+      "name": "Men Black Jacket",
+      "category": "Men",
+      "price": "200",
+      "description": "This is a dummy data",
+      "pub_date": "2019-10-23",
+      "image":"users/images/kids.png"
+    }
+  },
+  {
+    "model": "users.product",
+    "fields": {
+      "name": "Kids dress",
+      "category": "Kids",
+      "price": "250",
+      "description": "This is a dummy data",
+      "pub_date": "2019-10-23",
+      "image":"users/images/kids.png"
+    }
+  },
+  {
+    "model": "users.product",
+    "fields": {
+      "name": "Kids blue",
+      "category": "Kids",
+      "price": "400",
+      "description": "This is a dummy data",
+      "pub_date": "2019-10-23",
+      "image":"users/images/kids.png"
+    }
+  }
+]

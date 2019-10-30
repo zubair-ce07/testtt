@@ -1,0 +1,9 @@
+<h1> Add Product </h1>
+
+<form method="post" action="">
+    {% csrf_token %}
+    <table>
+    {{product_form}}
+    </table>
+    <input type="submit" value="Submit Form"/>
+    </form>
