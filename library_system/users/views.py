@@ -8,24 +8,30 @@ edit_profile.
 from django.shortcuts import render, redirect
 from django.views import View
 from django.contrib.auth import authenticate, login
-from .forms import UserProfileForm, UpdateForm
-from books import models as book_models
-from users.models import UserProfile
 from django.views.generic import ListView
 from django.shortcuts import render_to_response
+from books import models as book_models
+from users.models import UserProfile
+from .forms import UserProfileForm, UpdateForm
+
 
 class IndexView(View):
     """Class-based View for Index Page."""
+
     def get(self, request):
         """Get method for Index View."""
         username = ''
-        context = {'username': username}
+        context = {'username': username,
+                   'is_librarian': UserProfile.objects.filter(
+                       username=request.user.username,
+                       groups__name='LIBRARIAN_GROUP_NAME').exists()}
         return render(request, 'index.html', context)
 
     def post(self, request):
         """Post method for Index View."""
         username = request.user.username
         context = {'username': username}
+
         return render(request, 'index.html', context)
 
 
@@ -52,6 +58,7 @@ class RegistrationView(View):
         context = {'registration_form': registration_form}
         return render(request, 'users/register.html', context)
 
+
 class EditProfileView(View):
     """Class-based View for Edit Profile Page."""
     def get(self, request):
@@ -76,16 +83,18 @@ class UserListView(ListView):
     """Class for viewing user list."""
 
     model = UserProfile
-    template_name = 'users/user_detail.html' 
+    template_name = 'users/user_detail.html'
     context_object_name = 'users'
     ordering = ['-username']
 
 
-def view_info(request, pk):
+class ViewInfo(View):
     """To view user info."""
-    user = UserProfile.objects.get(id=pk)
-    issued_books = book_models.IssueBook.objects.filter(user=user)
-    context = {'user': user,
-               'issued_books': issued_books}
-    return render_to_response('users/user_profile.html', context)
 
+    def get(self, request, pk):
+        """Get method for viewing user's info."""
+        user = UserProfile.objects.get(id=pk)
+        issued_books = book_models.IssueBook.objects.filter(user=user)
+        context = {'user': user,
+                   'issued_books': issued_books}
+        return render_to_response('users/user_profile.html', context)

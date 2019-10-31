@@ -9,12 +9,10 @@
       </div>
       <div>
       {% if object.number_of_books > 0 %}
-        <a class="btn btn-danger btn-sm mt-1 mb-1" href="{% url 'book_request' object.id %}">Issue Book Request</a>
-      {% endif %}
-
-        {% if book.user == user %}       
+        <input type="submit" value="Issue Book request" onclick=location.href="{% url 'book_request' object.id %}" class="btn btn-danger" />
         <a type="submit" class="btn btn-danger btn-sm mt-1 mb-1" href="{% url 'book-update' book.id %}">Update</a>
-        <a type="submit" class="btn btn-danger btn-sm mt-1 mb-1" href="{% url 'book-delete' book.id %}">Delete</a>
-        </div>
-        {% endif %}
+          <a type="submit" class="btn btn-danger btn-sm mt-1 mb-1" href="{% url 'book-delete' book.id %}">Delete</a>
+      {% endif %} 
+      </div>
+        
 {% endblock content %}

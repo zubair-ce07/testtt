@@ -1,11 +1,11 @@
 """Module for Books views."""
 from datetime import datetime, timedelta
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect
 from django.views import View
 from django.contrib import messages
 from django.db.models import Q
 from django.shortcuts import render_to_response
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic import (
     ListView,
     DetailView,
@@ -13,15 +13,8 @@ from django.views.generic import (
     UpdateView,
     DeleteView,
 )
+from users.models import UserProfile
 from .models import Book, IssueBook, RequestBook
-
-
-def home(request):
-    """For viewing Book list."""
-    context = {
-        'posts': Book.objects.all()
-    }
-    return render(request, 'books/home.html', context)
 
 
 class SearchResultsView(LoginRequiredMixin, ListView):
@@ -54,21 +47,41 @@ class BookCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class BookUpdateView(LoginRequiredMixin, UpdateView):
+class BookUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     """Class for Book update."""
+
     model = Book
     fields = ['title', 'author_name', 'publisher', 'number_of_books']
 
     def form_valid(self, form):
+        """Check form validity method."""
         form.instance.user = self.request.user
         return super().form_valid(form)
 
+    def test_func(self):
+        """Check user validity."""
+        is_librarian = UserProfile.objects.filter(
+            username=self.request.user.username,
+            groups__name='LIBRARIAN_GROUP_NAME').exists()
+        if is_librarian:
+            return True
+        return False
 
-class BookDeleteView(LoginRequiredMixin, DeleteView):
+
+class BookDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     """Class for Book model delete."""
 
     model = Book
     success_url = '/'
+
+    def test_func(self):
+        """Check user validity."""
+        is_librarian = UserProfile.objects.filter(
+            username=self.request.user.username,
+            groups__name='LIBRARIAN_GROUP_NAME').exists()
+        if is_librarian:
+            return True
+        return False
 
 
 class BookDetailView(LoginRequiredMixin, DetailView):
@@ -150,54 +163,66 @@ class RequestView(LoginRequiredMixin, View):
     success_url = '/'
 
 
-def BookRequest(request, pk):
+class UserProfileView(View):
+    """For viewing user information and user issued books."""
+
+    def get(self, request, pk):
+        """Get method for requested book's user's profile."""
+        user_request = RequestBook.objects.get(id=pk)
+        issued_books = IssueBook.objects.filter(user=user_request.user)
+        context = {'user': user_request.user,
+                   'issued_books': issued_books}
+        return render_to_response('users/user_profile.html', context)
+
+
+class BookRequestView(View):
     """For Requesting books."""
-    book = get_object_or_404(Book, pk=pk)
-    if IssueBook.objects.filter(user=request.user).count() == 3:
-        messages.success(request, 'You have reached the max amount of books you can issue!')
-        return redirect(request.META['HTTP_REFERER'])
-    if RequestBook.objects.filter(user=request.user, title=book.title):
-        messages.success(request, 'You have already submitted a request for this book!')
-        return redirect(request.META['HTTP_REFERER'])
-    if IssueBook.objects.filter(user=request.user, title=book.title):
-        messages.success(request, 'You already have this book issued!')
-        return redirect(request.META['HTTP_REFERER'])
-    else:
-        new_request_book = RequestBook(user=request.user, book=book, title=book.title,
-                                       issue_date=datetime.now(), return_date=datetime.now() + timedelta(days=3))
 
-        new_request_book.save()
-        messages.success(request, 'New book request has been successfully submitted!')
-        return redirect(request.META['HTTP_REFERER'])
-
-
-def BookIssue(request, pk):
-    """For Issuing books."""
-    book = get_object_or_404(Book, pk=pk)
-    requests = RequestBook.objects.filter(book=book)
-    for each_request in requests:
-        if IssueBook.objects.filter(user=each_request.user, title=book.title):
-            messages.success(request, 'User has already issued this book!')
+    def get(self, request, pk):
+        """Get method to request book."""
+        book = Book.objects.get(id=pk)
+        if IssueBook.objects.filter(user=request.user).count() == 3:
+            messages.success(request, 'You have reached the max amount of books you can issue!')
             return redirect(request.META['HTTP_REFERER'])
-        elif IssueBook.objects.filter(user=each_request.user).count() == 3:
-            messages.success(request, 'User has reached the maximum amount of books!')
+        if RequestBook.objects.filter(user=request.user, title=book.title):
+            messages.success(request, 'You have already submitted a request for this book!')
+            return redirect(request.META['HTTP_REFERER'])
+        if IssueBook.objects.filter(user=request.user, title=book.title):
+            messages.success(request, 'You already have this book issued!')
             return redirect(request.META['HTTP_REFERER'])
         else:
-            new_book_issue = IssueBook(user=each_request.user, book=book, title=book.title,
-                                       issue_date=datetime.now(), return_date=datetime.now() + timedelta(days=3))
+            new_request_book = RequestBook(user=request.user, book=book, title=book.title,
+                                           issue_date=datetime.now(),
+                                           return_date=datetime.now() + timedelta(days=3))
 
-            new_book_issue.save()
-            book.number_of_books -= 1
-            book.save()
-            request_book = RequestBook.objects.filter(title=book.title, user=each_request.user)
-            request_book.delete()
+            new_request_book.save()
+            messages.success(request, 'New book request has been successfully submitted!')
             return redirect(request.META['HTTP_REFERER'])
 
 
-def user_profile(request, pk):
-    """For viewing user information and user issued books."""
-    user_request = RequestBook.objects.get(id=pk)
-    issued_books = IssueBook.objects.filter(user=user_request.user)
-    context = {'user': user_request.user,
-               'issued_books': issued_books}
-    return render_to_response('users/user_profile.html', context)
+class BookIssueView(View):
+    """For Issuing books."""
+
+    def get(self, request, pk):
+        """Get method to issue book."""
+        book = Book.objects.get(id=pk)
+        requests = RequestBook.objects.filter(book=book)
+        for each_request in requests:
+            if IssueBook.objects.filter(user=each_request.user, title=book.title):
+                messages.success(request, 'User has already issued this book!')
+                return redirect(request.META['HTTP_REFERER'])
+            elif IssueBook.objects.filter(user=each_request.user).count() == 3:
+                messages.success(request, 'User has reached the maximum amount of books!')
+                return redirect(request.META['HTTP_REFERER'])
+            else:
+                new_book_issue = IssueBook(user=each_request.user, book=book,
+                                           title=book.title,
+                                           issue_date=datetime.now(),
+                                           return_date=datetime.now() + timedelta(days=3))
+
+                new_book_issue.save()
+                book.number_of_books -= 1
+                book.save()
+                request_book = RequestBook.objects.filter(title=book.title, user=each_request.user)
+                request_book.delete()
+                return redirect(request.META['HTTP_REFERER'])

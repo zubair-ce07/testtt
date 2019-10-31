@@ -11,7 +11,6 @@ class Book(models.Model):
     author_name = models.CharField(max_length=100)
     publisher = models.CharField(max_length=100)
     number_of_books = models.IntegerField()
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.title

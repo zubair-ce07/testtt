@@ -1,6 +1,6 @@
 """Module for Books admin."""
 from django.contrib import admin
-from .models import Book
+from .models import Book, IssueBook, RequestBook
 
 class BooksAdmin(admin.ModelAdmin):
     """Display for Books admin."""
@@ -9,3 +9,5 @@ class BooksAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Book, BooksAdmin)
+admin.site.register(IssueBook)
+admin.site.register(RequestBook)

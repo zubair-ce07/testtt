@@ -14,6 +14,6 @@ urlpatterns = [
     path('profile/', TemplateView.as_view(template_name='users/profile.html'), name='profile'),
     path('edit_profile/', views.EditProfileView.as_view(), name='edit_profile'),
     path('users_info/', views.UserListView.as_view(), name='users'),
-    path('users_info/<int:pk>/view_info', views.view_info, name='view_info')
+    path('users_info/<int:pk>/view_info', views.ViewInfo.as_view(), name='view_info')
 
 ]

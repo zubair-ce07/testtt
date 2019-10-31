@@ -9,12 +9,11 @@
         </div>
 
       {% if user.is_authenticated %}
-      {% if user.username == 'librarian' %}
+      {% if is_librarian %}
       <button name='create' type="submit" onclick=location.href="{% url 'book-create' %}" class="btn btn-primary">Add a New Book</button>
       <input type="submit" value="Users" onclick=location.href="{% url 'users' %}" class="btn btn-primary" />
-        <input type="submit" value="User Requests" onclick=location.href="{% url 'direct_requests' %}" class="btn btn-primary" />   
+      <input type="submit" value="User Requests" onclick=location.href="{% url 'direct_requests' %}" class="btn btn-primary" />   
       {% endif %}
-      
     <div align="center">
       <form action="{% url 'search_results' %}" method="get" id="search_form">
         <input name="q" type="text" placeholder="Search...">
