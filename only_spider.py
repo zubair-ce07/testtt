@@ -1,4 +1,4 @@
-import re
+import json
 
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy import Request
@@ -9,6 +9,8 @@ from ..items import OnlyItem
 
 
 class OnlyParser:
+
+    currency = ''
 
     def parse_details(self, response):
         item = OnlyItem()
@@ -22,11 +24,10 @@ class OnlyParser:
         item['description'] = self.extract_description(response)
         item['care'] = self.extract_care(response)
         item['image_urls'] = self.extract_img_urls(response)
-        item['currency'] = self.extract_currency(response)
         item['skus'] = []
+        self.currency = self.extract_currency(response)
 
-        item['request_queue'] = self.get_color_requests(response)
-        item['request_queue'] += self.get_size_requests(response)
+        item['request_queue'] = self.get_color_requests(response) + self.get_size_requests(response)
 
         yield self.get_item_or_request_to_yield(item)
 
@@ -39,7 +40,7 @@ class OnlyParser:
 
     def parse_size(self, response):
         item = response.meta['item']
-        item['skus'] += self.extract_skus(response, item['currency'])
+        item['skus'] += self.extract_skus(response)
 
         yield self.get_item_or_request_to_yield(item)
 
@@ -49,7 +50,6 @@ class OnlyParser:
             request_next.meta['item'] = item
             return request_next
 
-        del item['currency']
         del item['request_queue']
         return item
 
@@ -72,7 +72,7 @@ class OnlyParser:
         return 'female'
 
     def extract_category(self, response):
-        return re.search('(?<=on/)(.+)', response.url).group().split('/')[:-1]
+        return [json.loads(response.css('.js-structuredData::text').get())['@graph'][0]['category']]
 
     def extract_brand(self):
         return 'only'
@@ -95,9 +95,9 @@ class OnlyParser:
     def extract_currency(self, response):
         return response.css('[property="og:price:currency"]::attr(content)').get()
 
-    def extract_common_sku(self, response, currency):
+    def extract_common_sku(self, response):
         size = response.css('.size .swatch__item--selected')
-        common_sku = {'currency': currency}
+        common_sku = {'currency': self.currency}
         common_sku['price'] = response.css('.nonsticky-price__container--visible em::text').get()
         common_sku['previous_price'] = response.css('.nonsticky-price__container--visible del::text').getall()
         common_sku['colour'] = response.css('.swatch__item--selected-colorpattern span::text').get()
@@ -107,8 +107,8 @@ class OnlyParser:
 
         return common_sku
 
-    def extract_skus(self, response, currency):
-        common_sku = self.extract_common_sku(response, currency)
+    def extract_skus(self, response):
+        common_sku = self.extract_common_sku(response)
         length_sizes = response.css('.swatch.length li')
         skus = []
         for length in length_sizes:
@@ -133,10 +133,12 @@ class OnlySpider(CrawlSpider):
         'https://www.only.com/gb/en/home',
     ]
     detail_parser = OnlyParser()
+    listing_css = ['.menu-top-navigation__link', '.paging-controls__next']
+    detail_css = ['.thumb-link']
+    listing_attrs = ['data-href', 'href']
     rules = (
-        Rule(LinkExtractor(restrict_css=('.menu-top-navigation__link'))),
-        Rule(LinkExtractor(restrict_css=('.paging-controls__next'), attrs=('data-href'))),
-        Rule(LinkExtractor(restrict_css=('.thumb-link')), callback=detail_parser.parse_details),
+        Rule(LinkExtractor(restrict_css=listing_css, attrs=listing_attrs)),
+        Rule(LinkExtractor(restrict_css=detail_css), callback=detail_parser.parse_details),
     )
 
 
@@ -152,5 +154,4 @@ class OnlyItem(scrapy.Item):
     image_urls = scrapy.Field()
     skus = scrapy.Field()
     request_queue = scrapy.Field()
-    currency = scrapy.Field()
 
