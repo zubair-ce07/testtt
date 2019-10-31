@@ -3,7 +3,8 @@ from django.db import models
 
 
 class CustomUser(AbstractUser):
-    profile_photo = models.ImageField(upload_to='images')
+    profile_photo = models.ImageField(upload_to='images',
+                                      default="default.png")
 
     def __str__(self):
         return self.username

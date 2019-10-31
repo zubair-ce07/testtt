@@ -1,0 +1,30 @@
+body {
+    min-height: 100vh;
+    background: white no-repeat center center fixed;
+    background-image: linear-gradient(to right top, #d16ba5,
+                                     #c777b9, #ba83ca, #aa8fd8, #9a9ae1,
+                                     #8aa7ec, #79b3f4, #69bff8, #52cffe,
+                                     #41dfff, #46eefa, #5ffbf1);
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
+}
+
+a {
+    color: white;
+}
+
+.navbar-dark .navbar-nav .nav-link {
+    color: white;
+}
+
+.profile {
+    text-align: center;
+    width: 18rem;
+    margin: 1rem;;
+}
+
+.cards-wrapper {
+    display: flex;
+}

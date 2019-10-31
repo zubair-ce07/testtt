@@ -3,14 +3,10 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
-{% if user.is_authenticated %}
-  <h1>Hi {{ user.username }}! </h1>
-  <p><a href="{% url 'index' %}">All users</a></p>
-  <p><a href="{% url 'details' user.pk %}">Profile Details</a></p>
-  <p><a href="{% url 'logout' %}">logout</a></p>
-{% else %}
-  <p>You are not logged in</p>
-  <a href="{% url 'login' %}">login</a> |
-  <a href="{% url 'signup' %}">signup</a>
-{% endif %}
+    <div class="jumbotron jumbotron-fluid">
+        <div class="container">
+            <h1 class="display-4">Basic profile Management</h1>
+            <p class="lead">This is a basic profile management system build with Django.</p>
+        </div>
+    </div>
 {% endblock %}

@@ -19,8 +19,8 @@ from django.contrib import admin
 from django.urls import include, path
 
 media_urls = static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
+static_urls = static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 urlpatterns = [
     path('', include('profile_management.urls')),
     path('admin/', admin.site.urls),
-] + media_urls
+] + media_urls + static_urls

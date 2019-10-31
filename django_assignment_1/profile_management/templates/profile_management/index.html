@@ -1,9 +1,20 @@
-{% if users_list and user.is_authenticated %}
-    <ul>
-    {% for user in users_list %}
-        <li><a href="{% url 'details' user.pk %}">{{ user.username }}</a></li>
-    {% endfor %}
-    </ul>
-{% else %}
+{% extends 'base.html' %}
+
+{% block content %}
+  {% if users_list and user.is_authenticated %}
+    <div class="d-flex flex-row flex-wrap align-content-around">
+      {% for user in users_list %}
+        <div class="card profile">
+          <img class="img-fluid card-img-top" src="{{user.image_url|default_if_none:'#'}}">
+          <div class="card-body bg-secondary">
+            <h5 class="card-title">{{user.username}}</h5>
+            <hr>
+            <a href="{% url 'details' user.pk %}">Details</a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
     <p>No users yet in the sytems or log in as super user</p>
-{% endif %}
+  {% endif %}
+{% endblock %}

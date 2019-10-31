@@ -3,17 +3,24 @@
 {% block title %}User Deatils{% endblock %}
 
 {% block content %}
-  <h1>
-    User Details
-    {% if user.is_authenticated and user.pk == object.pk %}
-      <span>
-        <a href="{% url 'profile_update' object.pk %}">
-          Edit
-        </a>
-      </span>
-    {% endif %}
-  </h1>
-  <p>UserName: {{ object.username }}</p>
-  <p>Email: {{ object.email }}</p>
-  <img src="{{ object.image_url|default_if_none:'#' }}" alt="{{ object.username }}">
+  <div class="container-fluid well span6">
+    <div class="row">
+      <div class="col-md-2">
+        <img class="img-fluid rounded" src="{{ object.image_url|default_if_none:'#' }}">
+      </div>
+      <div class="col-md-8">
+        <h3>{{ object.username }}</h3>
+        <h6>Email: <span class="text-light font-weight-bold">{{ object.email }}</span></h6>
+        <h6>First Name: <span class="text-light font-weight-bold">{{ object.first_name }}</span></h6>
+        <h6>Last Name: <span class="text-light font-weight-bold">{{ object.last_name }}</span></h6>
+      </div>
+      <div class="col-md-2">
+        {% if user.is_authenticated and user.pk == object.pk %}
+          <a href="{% url 'profile_update' object.pk %}">
+            Edit
+            <i class="fas fa-user-edit"></i>
+          </a>
+        {% endif %}
+    </div>
+  </div>
 {% endblock %}

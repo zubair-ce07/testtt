@@ -27,9 +27,9 @@ class ProfileDetails(LoginRequiredMixin, DetailView):
     template_name = 'profile_management/detail.html'
 
 
-class ProfileUpdate(LoginRequiredMixin,UpdateView):
+class ProfileUpdate(LoginRequiredMixin, UpdateView):
     model = CustomUser
-    fields = ['username', 'email', 'profile_photo']
+    fields = ['username', 'first_name', 'last_name', 'email', 'profile_photo']
     template_name_suffix = '_update_form'
 
     def get_success_url(self):
