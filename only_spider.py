@@ -10,10 +10,9 @@ from ..items import OnlyItem
 
 class OnlyParser:
 
-    currency = ''
-
     def parse_details(self, response):
         item = OnlyItem()
+        currency = self.extract_currency(response)
 
         item['retailer_sku'] = self.extract_retailor_sku(response)
         item['gender'] = self.extract_gender()
@@ -24,37 +23,40 @@ class OnlyParser:
         item['description'] = self.extract_description(response)
         item['care'] = self.extract_care(response)
         item['image_urls'] = self.extract_img_urls(response)
-        item['skus'] = []
-        self.currency = self.extract_currency(response)
+        item['skus'] = [] if response.css('.length') else self.extract_skus(response, currency)
 
         item['request_queue'] = self.get_color_requests(response) + self.get_size_requests(response)
 
-        yield self.get_item_or_request_to_yield(item)
+        yield self.get_item_or_request_to_yield(item, currency)
 
     def parse_color(self, response):
         item = response.meta['item']
+        currency = response.meta['currency']
         item['request_queue'] += self.get_size_requests(response)
         item['image_urls'] += self.extract_img_urls(response)
+        item['skus'] += [] if response.css('.length') else self.extract_skus(response, currency)
 
-        yield self.get_item_or_request_to_yield(item)
+        yield self.get_item_or_request_to_yield(item, currency)
 
     def parse_size(self, response):
         item = response.meta['item']
-        item['skus'] += self.extract_skus(response)
+        currency = response.meta['currency']
+        item['skus'] += self.extract_skus(response, currency)
 
-        yield self.get_item_or_request_to_yield(item)
+        yield self.get_item_or_request_to_yield(item, currency)
 
-    def get_item_or_request_to_yield(self, item):
+    def get_item_or_request_to_yield(self, item, currency):
         if item['request_queue']:
             request_next = item['request_queue'].pop()
             request_next.meta['item'] = item
+            request_next.meta['currency'] = currency
             return request_next
 
         del item['request_queue']
         return item
 
     def get_size_requests(self, response):
-        size_urls = response.css('.size .swatch__item--selectable a::attr(data-href)').getall()
+        size_urls = response.css('.length .swatch__item--selectable a::attr(data-href)').getall()
 
         return [Request(add_or_replace_parameters(url, {'format': 'ajax'}), callback=self.parse_size)
                 for url in size_urls]
@@ -95,30 +97,29 @@ class OnlyParser:
     def extract_currency(self, response):
         return response.css('[property="og:price:currency"]::attr(content)').get()
 
-    def extract_common_sku(self, response):
-        size = response.css('.size .swatch__item--selected')
-        common_sku = {'currency': self.currency}
+    def extract_common_sku(self, response, currency):
+        length = response.css('.length .swatch__item--selected div::text').get(default="")
+        common_sku = {'currency': currency}
         common_sku['price'] = response.css('.nonsticky-price__container--visible em::text').get()
         common_sku['previous_price'] = response.css('.nonsticky-price__container--visible del::text').getall()
         common_sku['colour'] = response.css('.swatch__item--selected-colorpattern span::text').get()
-        common_sku['size'] = size.css('div::text').get()
-        common_sku['out_of_stock'] = 'true' if 'unavailable' in size.css('li::attr(class)').get() else 'false'
-        common_sku['sku_id'] = f'{common_sku["colour"]}_{common_sku["size"]}'
+        common_sku['size'] = f'/{length}' if length else ""
 
         return common_sku
 
-    def extract_skus(self, response):
-        common_sku = self.extract_common_sku(response)
-        length_sizes = response.css('.swatch.length li')
+    def extract_skus(self, response, currency):
+        common_sku = self.extract_common_sku(response, currency)
+        sizes = response.css('.size li')
         skus = []
-        for length in length_sizes:
+
+        for size in sizes:
             sku = common_sku.copy()
-            sku['size'] = f'{length.css("div::text").get()}/{sku["size"]}'
-            sku['out_of_stock'] = 'true' if 'unavailable' in length.css('li::attr(class)').get() else 'false'
+            sku['size'] = f'{size.css("div::text").get()}{sku["size"]}'
+            sku['out_of_stock'] = 'true' if 'unavailable' in size.css('li::attr(class)').get() else 'false'
             sku['sku_id'] = f'{sku["colour"]}_{sku["size"]}'
             skus.append(sku)
 
-        return skus if skus else [common_sku]
+        return skus
 
     def clean(self, list_to_strip):
         if isinstance(list_to_strip, str):
