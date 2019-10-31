@@ -8,9 +8,9 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("path", type=str, help="to get the path of weather file")
-    parser.add_argument("-e", "--e", help="to Show report1",type=str)
-    parser.add_argument("-a", "--a", help="to Show report2",type=str)
-    parser.add_argument("-c", "--c", help="to Show report3",type=str)
+    parser.add_argument("-e", "--e", help="to Show Yearly report",type=str)
+    parser.add_argument("-a", "--a", help="to Show Monthly report",type=str)
+    parser.add_argument("-c", "--c", help="to Show bar chart",type=str)
     
 
     argForFilepath = parser.parse_args()
