@@ -256,6 +256,9 @@ class BookIssueView(View):
             if IssueBook.objects.filter(user=user).count() == 3:
                 messages.success(request, 'User has reached the maximum amount of books!')
                 return redirect(request.META['HTTP_REFERER'])
+            if book.number_of_books == 0:
+                messages.success(request, 'This book is not in stock anymore.')
+                return redirect(request.META['HTTP_REFERER'])
             else:
                 new_book_issue = IssueBook(user=user, book=book,
                                            title=book.title,
