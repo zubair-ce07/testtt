@@ -4,7 +4,7 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy import Request
 
 from ..items import Product
-from ..utils import parse_gender
+from ..utils import map_gender, format_price
 
 
 class ParseSpider():
@@ -24,39 +24,35 @@ class ParseSpider():
         product['skus'] = self.get_skus(response)
         product['image_urls'] = self.get_image_urls(response)
 
-        yield product 
+        return product 
      
-    def get_retailer_sku(self, response):
-        #'//[@id="product-sku"]/@value'
+    def get_retailer_sku(self, response):        
         return response.css('#product-sku::attr(value)').get()
 
-    def get_brand(self, response):
-        #'//span[@class="brand_name"]/text()'
+    def get_brand(self, response):        
         return response.css('span.brand_name::text').get()
 
-    def get_category(self, response):
-         #'//[@class="breadcrumb"]//a/text()'
-        return response.css('.breadcrumb a::text').getall()
+    def get_category(self, response):         
+        return response.css('.cms_page::text').getall()
 
     def get_gender(self, response):
         xpath = '//span[contains(text(), "Gender")]/following-sibling::span/text()'
         gender = response.xpath(xpath).get()
+
         title_text = response.css('title::text').get()    
         description = self.get_description(response)
 
-        gender_text = f"{gender} {title_text} {' '.join(description)}" 
+        raw_gender = f"{gender} {title_text} {' '.join(description)}" 
 
-        return parse_gender(gender_text)
+        return map_gender(raw_gender)
 
     def get_url(self, response):
-        return response.request.url
+        return response.url
 
-    def get_description(self, response):
-        #'//div[@class="description"]//p/text()'        
+    def get_description(self, response):                
         return response.css('div.description p::text').getall()
 
-    def get_name(self, response):
-        #'//[@class="product_name"]/text()'
+    def get_name(self, response):        
         return response.css('.product_name::text').get()
 
     def get_image_urls(self, response):
@@ -73,23 +69,28 @@ class ParseSpider():
 
     def get_sizes(self, response):
         sizes_raw = response.css('script').re_first(r"sizeOptionArr = JSON.parse\('(.*)'\);")
-        sizes_parsed = json.loads(sizes_raw)
+        sizes_parsed = json.loads(sizes_raw) if sizes_raw else []
         sizes = [size['UK'] for size in sizes_parsed]
         
         return sizes if sizes else [self.ONE_SIZE]       
 
+    def get_price(self, response):
+        current_price = response.css('[itemprop="price"]::attr(content)').get()
+        previous_price = response.css('.old-price span::attr(data-price-amount)').get()
+
+        return format_price(previous_price, current_price)
+                            
     def get_skus(self, response):
         skus = {}
 
         colour_xpath = '//span[contains(text(),"Color")]/following-sibling::span/text()'
-        currency_css = 'meta[itemprop="priceCurrency"]::attr(content)'
-        price_css = 'meta[itemprop="price"]::attr(content)'                     
+        currency = response.css('[itemprop="priceCurrency"]::attr(content)').get()
         
         for colour in response.xpath(colour_xpath).getall():
             for size in self.get_sizes(response):
                 sku_attributes = {}
-                sku_attributes['previous_price'] = int(float(response.css(price_css).get())*100)
-                sku_attributes['currency'] = response.css(currency_css).get()
+                sku_attributes.update(self.get_price(response))                
+                sku_attributes['currency'] = currency 
                 sku_attributes['colour'] = colour
                 sku_attributes['size'] = size
                 sku_attributes['out_of_stock'] = self.get_availability(response)
@@ -178,7 +179,4 @@ class CrawlSpider(CrawlSpider):
         urls = [product['url'] for product in products['results'][0]['hits']]
        
         for url in urls:
-            yield Request(url, callback=self.product_parser.parse_product)
-
-    def parse_start_url(self, response):
-        return self.product_parser.parse_product(response)
+            yield response.follow(url, callback=self.product_parser.parse_product)
