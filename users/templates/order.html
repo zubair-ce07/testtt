@@ -97,8 +97,15 @@ localStorage.clear();
 location.reload();
 });
 
+items = [];
+for (a in cart){
+items.push(parseInt(a.replace('pr', '')))
+}
+
+console.log(items)
+
 $('#items_json').val(JSON.stringify(cart));
       
-      </script>
+    </script>
 
 {% endblock %}

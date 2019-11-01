@@ -1,0 +1,1 @@
+cd /home/ali/ecommerce && python3 manage.py report_generate

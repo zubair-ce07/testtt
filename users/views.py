@@ -1,6 +1,6 @@
 from django.urls import reverse_lazy
 from django.views.generic.edit import CreateView
-from .models import Product, Order, CustomUser
+from .models import Product, Order, CustomUser, OrderItems
 from django.views import View
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
@@ -69,8 +69,10 @@ class OrderProducts(View):
             state = request.POST['state']
             zip_code = request.POST['zip']
             phone = request.POST['phone']
-            order = Order(products=products, name=name, email=email, address=address,
+            order = Order.objects.create(products=products, name=name, email=email, address=address,
                           city=city, state=state, zip_code=zip_code,
                           phone=phone)
-            order.save()
+            product = Product.objects.create()
+            OrderItems.objects.create(order=order, product=15, quantity=15)
+            # a.save()
         return render(request, 'order.html')

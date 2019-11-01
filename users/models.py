@@ -2,6 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.core.validators import RegexValidator
 from django.forms import ModelForm
+from datetime import date
 
 class CustomUser(AbstractUser):
     """ class to add built in auth functionality. """
@@ -65,6 +66,14 @@ class Order(models.Model):
     state = models.CharField(max_length=50)
     zip_code = models.CharField(max_length=10)
     phone = models.CharField(max_length=16)
+    order_date = models.DateField(default=date.today())
+    # order_items = models.ManyToManyField(Product, through='OrderItems', related_name=u'order_items')
 
     def __str__(self):
         return self.name
+
+
+class OrderItems(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    quantity = models.CharField(max_length=64)
