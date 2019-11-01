@@ -14,10 +14,11 @@ from django.views.generic import (
     DeleteView,
 )
 from users.models import UserProfile
+from users.constants import LIBRARIAN_GROUP_NAME
 from .models import Book, IssueBook, RequestBook
 
 
-class SearchResultsView(LoginRequiredMixin, ListView):
+class SearchBookView(LoginRequiredMixin, ListView):
     """Class for Searching book title/author."""
 
     model = Book
@@ -35,7 +36,7 @@ class SearchResultsView(LoginRequiredMixin, ListView):
             return object_list
 
 
-class BookCreateView(LoginRequiredMixin, CreateView):
+class BookCreateView(LoginRequiredMixin, CreateView, UserPassesTestMixin,):
     """Class for Book model creation."""
 
     model = Book
@@ -45,6 +46,15 @@ class BookCreateView(LoginRequiredMixin, CreateView):
         """Check form validity method."""
         form.instance.user = self.request.user
         return super().form_valid(form)
+    
+    def test_func(self):
+        """Check user validity."""
+        is_librarian = UserProfile.objects.filter(
+            id=self.request.user.id,
+            groups__name=LIBRARIAN_GROUP_NAME).exists()
+        if is_librarian:
+            return True
+        return False
 
 
 class BookUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
@@ -60,9 +70,8 @@ class BookUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
     def test_func(self):
         """Check user validity."""
-        is_librarian = UserProfile.objects.filter(
-            username=self.request.user.username,
-            groups__name='LIBRARIAN_GROUP_NAME').exists()
+        is_librarian = self.request.user.groups.filter(
+            name=LIBRARIAN_GROUP_NAME).exists()
         if is_librarian:
             return True
         return False
@@ -76,9 +85,8 @@ class BookDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
     def test_func(self):
         """Check user validity."""
-        is_librarian = UserProfile.objects.filter(
-            username=self.request.user.username,
-            groups__name='LIBRARIAN_GROUP_NAME').exists()
+        is_librarian = self.request.user.groups.filter(
+            name='LIBRARIAN_GROUP_NAME').exists()
         if is_librarian:
             return True
         return False
@@ -104,7 +112,7 @@ class IssueBookListView(ListView):
 
     model = IssueBook
     template_name = 'books/issuebook_detail.html'
-    context_object_name = 'books'
+    context_object_name = 'issued_books'
     ordering = ['-user']
 
 
@@ -113,11 +121,11 @@ class UserRequestsListView(LoginRequiredMixin, ListView):
 
     model = RequestBook
     template_name = 'books/user_requests_detail.html'
-    context_object_name = 'books'
+    context_object_name = 'user_requests'
     ordering = ['-user']
 
 
-class IssuebookDeleteView(LoginRequiredMixin, View):
+class IssueBookDeleteView(LoginRequiredMixin, View):
     """Class for returning book to library."""
 
     success_url = 'book-home'
@@ -128,11 +136,18 @@ class IssuebookDeleteView(LoginRequiredMixin, View):
 
     def post(self, request, pk):
         """Post method book return."""
-        issue_book = IssueBook.objects.get(id=pk)
-        issue_book.book.number_of_books += 1
-        issue_book.book.save()
-        issue_book.delete()
-        return render(request, 'index.html')
+        try:
+            issue_book = IssueBook.objects.get(id=pk)
+            issue_book.book.number_of_books += 1
+            issue_book.book.save()
+            issue_book.delete()
+            return render(request, 'index.html')
+        except issue_book.DoesNotExist:
+            messages.success(request, 'Issuebook model does not exist.')
+            return redirect(request.META['HTTP_REFERER'])
+        except issue_book.MultipleObjectsReturned:
+            messages.success(request, 'More than one issuebook model was returned.')
+            return redirect(request.META['HTTP_REFERER'])
 
 
 class RequestbookDeleteView(LoginRequiredMixin, View):
@@ -146,9 +161,16 @@ class RequestbookDeleteView(LoginRequiredMixin, View):
 
     def post(self, request, pk):
         """Post method for removing book request."""
-        request_book = RequestBook.objects.get(id=pk)
-        request_book.delete()
-        return redirect('direct_requests')
+        try:
+            request_book = RequestBook.objects.get(id=pk)
+            request_book.delete()
+            return redirect('direct_requests')
+        except request_book.DoesNotExist:
+            messages.success(request, 'Book request does not exist.')
+            return redirect(request.META['HTTP_REFERER'])
+        except request_book.MultipleObjectsReturned:
+            messages.success(request, 'More than one book request was returned.')
+            return redirect(request.META['HTTP_REFERER'])
 
 
 class MyIssuedBooks(LoginRequiredMixin, View):
@@ -156,23 +178,38 @@ class MyIssuedBooks(LoginRequiredMixin, View):
 
     success_url = '/'
 
+    def test_func(self):
+        """Check user validity."""
+        is_librarian = self.request.user.groups.filter(
+            name=LIBRARIAN_GROUP_NAME).exists()
+        if is_librarian:
+            return True
+        return False
 
-class RequestView(LoginRequiredMixin, View):
+
+class UserRequestsView(LoginRequiredMixin, UserPassesTestMixin, View):
     """Class for viewing user requests."""
 
     success_url = '/'
 
 
 class UserProfileView(View):
-    """For viewing user information and user issued books."""
+    """For viewing user information and user issued books by librarian."""
 
     def get(self, request, pk):
         """Get method for requested book's user's profile."""
-        user_request = RequestBook.objects.get(id=pk)
-        issued_books = IssueBook.objects.filter(user=user_request.user)
-        context = {'user': user_request.user,
-                   'issued_books': issued_books}
-        return render_to_response('users/user_profile.html', context)
+        try:
+            user_request = RequestBook.objects.get(id=pk)
+            issued_books = IssueBook.objects.filter(user=user_request.user)
+            context = {'user': user_request.user,
+                       'issued_books': issued_books}
+            return render_to_response('users/user_profile.html', context)
+        except user_request.DoesNotExist:
+            messages.success(request, 'User request does not exist.')
+            return redirect(request.META['HTTP_REFERER'])
+        except user_request.MultipleObjectsReturned:
+            messages.success(request, 'More than one user request was returned.')
+            return redirect(request.META['HTTP_REFERER'])
 
 
 class BookRequestView(View):
@@ -180,23 +217,30 @@ class BookRequestView(View):
 
     def get(self, request, pk):
         """Get method to request book."""
-        book = Book.objects.get(id=pk)
-        if IssueBook.objects.filter(user=request.user).count() == 3:
-            messages.success(request, 'You have reached the max amount of books you can issue!')
-            return redirect(request.META['HTTP_REFERER'])
-        if RequestBook.objects.filter(user=request.user, title=book.title):
-            messages.success(request, 'You have already submitted a request for this book!')
-            return redirect(request.META['HTTP_REFERER'])
-        if IssueBook.objects.filter(user=request.user, title=book.title):
-            messages.success(request, 'You already have this book issued!')
-            return redirect(request.META['HTTP_REFERER'])
-        else:
-            new_request_book = RequestBook(user=request.user, book=book, title=book.title,
-                                           issue_date=datetime.now(),
-                                           return_date=datetime.now() + timedelta(days=3))
+        try:
+            book = Book.objects.get(id=pk)
+            if IssueBook.objects.filter(user=request.user).count() == 3:
+                messages.success(request, 'You have reached the max amount of books you can issue!')
+                return redirect(request.META['HTTP_REFERER'])
+            if RequestBook.objects.filter(user=request.user, title=book.title):
+                messages.success(request, 'You have already submitted a request for this book!')
+                return redirect(request.META['HTTP_REFERER'])
+            if IssueBook.objects.filter(user=request.user, title=book.title):
+                messages.success(request, 'You already have this book issued!')
+                return redirect(request.META['HTTP_REFERER'])
+            else:
+                new_request_book = RequestBook(user=request.user, book=book, title=book.title,
+                                               issue_date=datetime.now(),
+                                               return_date=datetime.now() + timedelta(days=3))
 
-            new_request_book.save()
-            messages.success(request, 'New book request has been successfully submitted!')
+                new_request_book.save()
+                messages.success(request, 'New book request has been successfully submitted!')
+                return redirect(request.META['HTTP_REFERER'])
+        except book.DoesNotExist:
+            messages.success(request, 'Book does not exist.')
+            return redirect(request.META['HTTP_REFERER'])
+        except book.MultipleObjectsReturned:
+            messages.success(request, 'More than one book was returned.')
             return redirect(request.META['HTTP_REFERER'])
 
 
@@ -205,17 +249,15 @@ class BookIssueView(View):
 
     def get(self, request, pk):
         """Get method to issue book."""
-        book = Book.objects.get(id=pk)
-        requests = RequestBook.objects.filter(book=book)
-        for each_request in requests:
-            if IssueBook.objects.filter(user=each_request.user, title=book.title):
-                messages.success(request, 'User has already issued this book!')
-                return redirect(request.META['HTTP_REFERER'])
-            elif IssueBook.objects.filter(user=each_request.user).count() == 3:
+        try:
+            book_request = RequestBook.objects.get(id=pk)
+            book = book_request.book
+            user = book_request.user
+            if IssueBook.objects.filter(user=user).count() == 3:
                 messages.success(request, 'User has reached the maximum amount of books!')
                 return redirect(request.META['HTTP_REFERER'])
             else:
-                new_book_issue = IssueBook(user=each_request.user, book=book,
+                new_book_issue = IssueBook(user=user, book=book,
                                            title=book.title,
                                            issue_date=datetime.now(),
                                            return_date=datetime.now() + timedelta(days=3))
@@ -223,6 +265,12 @@ class BookIssueView(View):
                 new_book_issue.save()
                 book.number_of_books -= 1
                 book.save()
-                request_book = RequestBook.objects.filter(title=book.title, user=each_request.user)
+                request_book = RequestBook.objects.filter(title=book.title, user=user)
                 request_book.delete()
                 return redirect(request.META['HTTP_REFERER'])
+        except book_request.DoesNotExist:
+            messages.success(request, 'Book does not exist.')
+            return redirect(request.META['HTTP_REFERER'])
+        except book_request.MultipleObjectsReturned:
+            messages.success(request, 'More than one book was returned.')
+            return redirect(request.META['HTTP_REFERER'])

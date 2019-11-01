@@ -4,6 +4,8 @@ from __future__ import unicode_literals
 
 from django.db import migrations
 
+from users.constants import LIBRARIAN_GROUP_NAME
+
 
 
 
@@ -16,7 +18,7 @@ def create_librarian_group(apps, _schema_editor):
     :return:
     """
     _Group = apps.get_model('auth', 'Group')
-    _Group.objects.create(name='LIBRARIAN_GROUP_NAME')
+    _Group.objects.create(name=LIBRARIAN_GROUP_NAME)
 
 
 def reverse_amount_form_read_only_group(apps, _schema_editor):
@@ -28,7 +30,7 @@ def reverse_amount_form_read_only_group(apps, _schema_editor):
     :return:
     """
     _Group = apps.get_model('auth', 'Group')
-    _Group.objects.filter(name='LIBRARIAN_GROUP_NAME').delete()
+    _Group.objects.filter(name=LIBRARIAN_GROUP_NAME).delete()
 
 class Migration(migrations.Migration):
 

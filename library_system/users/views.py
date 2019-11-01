@@ -8,11 +8,14 @@ edit_profile.
 from django.shortcuts import render, redirect
 from django.views import View
 from django.contrib.auth import authenticate, login
+from django.contrib import messages
 from django.views.generic import ListView
 from django.shortcuts import render_to_response
 from books import models as book_models
 from users.models import UserProfile
+from users.constants import LIBRARIAN_GROUP_NAME
 from .forms import UserProfileForm, UpdateForm
+
 
 
 class IndexView(View):
@@ -21,10 +24,9 @@ class IndexView(View):
     def get(self, request):
         """Get method for Index View."""
         username = ''
-        context = {'username': username,
-                   'is_librarian': UserProfile.objects.filter(
-                       username=request.user.username,
-                       groups__name='LIBRARIAN_GROUP_NAME').exists()}
+        context = { 'username': username,
+                    'is_librarian': request.user.groups.filter(
+                        name=LIBRARIAN_GROUP_NAME).exists()}
         return render(request, 'index.html', context)
 
     def post(self, request):
@@ -88,13 +90,21 @@ class UserListView(ListView):
     ordering = ['-username']
 
 
-class ViewInfo(View):
+class UserProfileInfoView(View):
     """To view user info."""
 
     def get(self, request, pk):
         """Get method for viewing user's info."""
-        user = UserProfile.objects.get(id=pk)
-        issued_books = book_models.IssueBook.objects.filter(user=user)
-        context = {'user': user,
-                   'issued_books': issued_books}
-        return render_to_response('users/user_profile.html', context)
+        try:
+            user = UserProfile.objects.get(id=pk)
+            issued_books = book_models.IssueBook.objects.filter(user=user)
+            context = {'user': user,
+                       'issued_books': issued_books}
+            return render_to_response('users/user_profile.html', context)
+        except user.DoesNotExist:
+            messages.success(request, 'User does not exist.')
+            return redirect(request.META['HTTP_REFERER'])
+        except user.MultipleObjectsReturned:
+            messages.success(request, 'More than one user was returned.')
+            return redirect(request.META['HTTP_REFERER'])
+

@@ -8,13 +8,13 @@
 <div class="jumbotron">
     <b style="font-size:60px; font-family:georgia">Issued Books</b>
 </div>
-  {% for book in books %}
+  {% for issued_book in issued_books %}
     <div class="article-metadata">
-      {% if user.username == book.user.username %}
-        <p>Issued Book: {{ book.book.title}}</p>
-        <p>Issue_date: {{ book.issue_date}}</p>
-        <p>return_date: {{ book.return_date}}</p>
-        <a class="btn btn-danger btn-sm mt-1 mb-1" href="{% url 'isuebook_delete' book.id %}">Return Book</a>        
+      {% if user.username == issued_book.user.username %}
+        <p>Issued Book: {{ issued_book.book.title}}</p>
+        <p>Issue_date: {{ issued_book.book.issue_date}}</p>
+        <p>return_date: {{ issued_book.return_date}}</p>
+        <a class="btn btn-danger btn-sm mt-1 mb-1" href="{% url 'isuebook_delete' issued_book.id %}">Return Book</a>       
       {% endif %}
   {% endfor %}
 </div>

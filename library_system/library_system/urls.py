@@ -21,7 +21,6 @@ from books import views as book_views
 
 urlpatterns = [
     path('', views.IndexView.as_view(), name='index'),
-    path('search/', book_views.SearchResultsView.as_view(), name='search_results'),
     path('admin/', admin.site.urls),
     path('users/', include('users.urls')),
     path('books/', include('books.urls')),
