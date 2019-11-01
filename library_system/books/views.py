@@ -201,8 +201,9 @@ class UserProfileView(View):
         try:
             user_request = RequestBook.objects.get(id=pk)
             issued_books = IssueBook.objects.filter(user=user_request.user)
-            context = {'user': user_request.user,
-                       'issued_books': issued_books}
+            context = { 'user': request.user,
+                        'user_profile': user_request.user,
+                        'issued_books': issued_books}
             return render_to_response('users/user_profile.html', context)
         except user_request.DoesNotExist:
             messages.success(request, 'User request does not exist.')

@@ -1,16 +1,15 @@
 {% extends 'base.html' %}
-<html>
-<body>
+
 {% block content %}
 <h1 style="font-weight:bold;font-family:georgia;color:blue;">User Information</h1>
 <div style="font-family:georgia;font-size:20px;">
-    <p>Username: {{ user.username }}</p>
-    <p>Email: {{ user.email }}</p>
-    <p>First Name: {{ user.first_name}}</p>
-    <p>Last Name: {{ user.last_name }}</p>
-    <p>Contact: {{ user.phone_number }}</p>
-    <p> Location: {{ user.location }}</p>
-    <p> Age: {{ user.age }}</p>
+    <p>Username: {{ user_profile.username }}</p>
+    <p>Email: {{ user_profile.email }}</p>
+    <p>First Name: {{ user_profile.first_name}}</p>
+    <p>Last Name: {{ user_profile.last_name }}</p>
+    <p>Contact: {{ user_profile.phone_number }}</p>
+    <p> Location: {{ user_profile.location }}</p>
+    <p> Age: {{ user_profile.age }}</p>
 </div>
 
 <h1 style="font-weight:bold;font-family:georgia;color:blue;">User Issued Books</h1>
@@ -24,5 +23,4 @@
 </ul>        
 {% endfor %}
 {% endblock %}
-</body>
-</html>
+
