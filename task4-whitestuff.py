@@ -1,7 +1,7 @@
 import json
 import re
 
-from scrapy import Request, Selector
+from scrapy import Selector
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 from w3lib.url import add_or_replace_parameters, urljoin
@@ -40,7 +40,7 @@ class WhiteStuffParser:
         skus_info_url = 'https://www.whitestuff.com/action/GetProductData-FormatProduct?Format=JSON&ReturnVariable=true'
         url = add_or_replace_parameters(skus_info_url, {'ProductID': master_sku})
 
-        return [Request(url, callback=self.parse_skus)]
+        return [response.follow(url, callback=self.parse_skus)]
 
     def get_item_or_request_to_yield(self, item):
         if item['request_queue']:
@@ -134,8 +134,8 @@ class WhiteStuffSpider(CrawlSpider):
 
         if next_page:
             url = urljoin(self.start_urls[0], next_page)
-            next_url = self.category_url_template.format(url, re.search('(?<=categorytree=)(.*)', response.url).group())
-            yield {'next': next_url}
+            next_url = self.category_url_template.format(url,
+                                                         re.search('(?<=categorytree=)(.*)', response.url).group())
             yield response.follow(next_url, callback=self.parse_pagination)
 
         products_urls = html_response.css('.product-tile__title ::attr(href)').getall()
