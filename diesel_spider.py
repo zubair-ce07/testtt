@@ -6,6 +6,7 @@ from scrapy.linkextractors import LinkExtractor
 
 from ..items import DieselItem
 
+
 class DieselParser:
 
     def parse_details(self, response):
@@ -21,7 +22,7 @@ class DieselParser:
         item['care'] = self.extract_care(response)
         item['image_urls'] = self.extract_img_urls(response)
         item['skus'] = self.extract_skus(response)
-        
+
         yield item
 
     def extract_retailor_sku(self, response):
@@ -31,7 +32,7 @@ class DieselParser:
         return re.search('men|women', response.meta['trail']).group()
 
     def extract_category(self, response):
-        return response.meta['trail'].split('/')[3:]
+        return response.meta['trail'].replace('https://www.diesel.cn/', '').split('/')
 
     def extract_brand(self):
         return 'Diesel'
@@ -55,23 +56,20 @@ class DieselParser:
         return sku
 
     def extract_img_urls(self, response):
-        colors = eval(response.css('script::text').re_first('gallery = ([^\n\r]*);'))
-        img_urls = []
-        for color in colors:
-            img_urls.append(color['images'])
-        return img_urls
+        colors = json.loads(response.css('script::text').re_first('gallery = ([^\n\r]*);'))
+        return [color['images'] for color in colors]
 
     def extract_skus(self, response):
         common_sku = self.extract_common_sku(response)
-        colors = eval(response.css('script::text').re_first('spConfig = ([^\n\r]*);'))[0]['options']
-        sizes = eval(response.css('script::text').re_first('spConfig = ([^\n\r]*);'))[1]['options']
+        colors = json.loads(response.css('script::text').re_first('spConfig = ([^\n\r]*);'))[0]['options']
+        sizes = json.loads(response.css('script::text').re_first('spConfig = ([^\n\r]*);'))[1]['options']
         skus = []
         for color in colors:
             for size in sizes:
                 sku = common_sku.copy()
                 sku['colour'] = color['label']
                 sku['size'] = size['label']
-                sku['out_of_stock'] = False if color['products'][0] in size['products'] else True
+                sku['out_of_stock'] = not any(c in size['products'] for c in color['products'])
                 sku['sku_id'] = f'{sku["colour"]}_{sku["size"]}'
                 skus.append(sku)
 
@@ -89,29 +87,29 @@ class DieselSpider(CrawlSpider):
     start_urls = [
         'https://www.diesel.cn/',
     ]
-    listing_css = ['.item .list a']
+    listing_css = ['.item .list']
     rules = (
         Rule(LinkExtractor(restrict_css=listing_css), callback='parse_pagination'),
     )
     product_parser = DieselParser()
     pagination_template = 'https://www.diesel.cn/api/rest/products?limit={}&page={}&category_id={}'
+    headers = {'Content-Type': 'application/json', 'Accept': 'application/json'}
 
     def parse_pagination(self, response):
-        paging = response.xpath('/html/body/script[5]/text()')
-        category_id = paging.re_first("category_id = '([^\n\r]*)';")
-        total_pages = int(paging.re_first("total_page = ([^\n\r]*);"))
-        limit = paging.re_first("limit = ([^\n\r]*);")
+        category_id = response.css('script::text').re_first("category_id = '([^\n\r]*)';")
+        total_pages = int(response.css('script::text').re_first("total_page = ([^\n\r]*);"))
+        limit = response.css('script::text').re_first("limit = ([^\n\r]*);")
         trail = response.url
         for page in range(1, total_pages):
             page_url = self.pagination_template.format(limit, page, category_id)
             yield response.follow(page_url, callback=self.parse_category, meta={'trail': trail},
-                                  headers={'Content-Type': 'application/json', 'Accept': 'application/json'})
+                                  headers=self.headers)
 
     def parse_category(self, response):
         products = json.loads(response.text)['data']['products']
         trail = response.meta['trail']
         for product in products:
-            yield response.follow(product['url'], self.product_parser.parse_details, meta = {'trail': trail})
+            yield response.follow(product['url'], self.product_parser.parse_details, meta={'trail': trail})
 
 
 class DieselItem(scrapy.Item):
