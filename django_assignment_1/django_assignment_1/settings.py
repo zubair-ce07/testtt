@@ -10,8 +10,9 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 
-import environ
 import os
+
+import environ
 
 env = environ.Env()
 environ.Env.read_env()
@@ -47,9 +48,19 @@ PROJECT_APPS = [
     'profile_management.apps.ProfileManagementConfig',
 ]
 
-THIRD_PARTY_APPS = []
+THIRD_PARTY_APPS = ['rest_framework', 'rest_framework.authtoken']
 
 INSTALLED_APPS = DJANGO_APPS + PROJECT_APPS + THIRD_PARTY_APPS
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAdminUser',
+        'rest_framework.permissions.IsAuthenticated',
+    ]
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

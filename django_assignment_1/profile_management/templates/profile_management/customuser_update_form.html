@@ -3,9 +3,13 @@
 {% block title %}User Deatils{% endblock %}
 
 {% block content %}
-  <form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <input class="btn btn-success btn-sm" type="submit" value="Save Changes">
-  </form>
+  {% if user.is_superuser or user.pk == object.pk %}
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <input class="btn btn-success btn-sm" type="submit" value="Save Changes">
+    </form>
+  {% else %}
+    <div class="conatainer"> Not allowed to access this page</div>
+  {% endif %}
 {% endblock %}

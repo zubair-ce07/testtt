@@ -11,4 +11,7 @@ urlpatterns = [
          name='profile_update'),
     path('profile/signup/', views.SignUp.as_view(), name='signup'),
     path('profile/', include('django.contrib.auth.urls')),
+
+    # api urls
+    path('api/profile/', include('profile_management.api.urls')),
 ]

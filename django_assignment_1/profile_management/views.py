@@ -1,4 +1,4 @@
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.http import HttpResponse
 from django.urls import reverse_lazy
 from django.views.generic import DetailView, ListView, TemplateView
@@ -15,10 +15,10 @@ class Home(TemplateView):
 class Index(LoginRequiredMixin, ListView):
     template_name = 'profile_management/index.html'
     context_object_name = 'users_list'
+    paginate_by = 10
 
     def get_queryset(self):
         """Return the last five published questions."""
-        # TODO: Pagination
         return CustomUser.objects.filter(is_superuser=False)
 
 
@@ -27,13 +27,17 @@ class ProfileDetails(LoginRequiredMixin, DetailView):
     template_name = 'profile_management/detail.html'
 
 
-class ProfileUpdate(LoginRequiredMixin, UpdateView):
+class ProfileUpdate(LoginRequiredMixin, UpdateView, UserPassesTestMixin):
     model = CustomUser
     fields = ['username', 'first_name', 'last_name', 'email', 'profile_photo']
     template_name_suffix = '_update_form'
 
     def get_success_url(self):
         return reverse_lazy('details', kwargs={'pk': self.object.pk})
+
+    def test_func(self):
+        is_self_user = self.request.user.pk == self.object.pk
+        return self.request.user.is_superuser or is_self_user
 
 
 class SignUp(CreateView):
