@@ -1,8 +1,11 @@
 """Module for Books views."""
+import io
+import csv
 from datetime import datetime, timedelta
 from django.shortcuts import render, redirect
 from django.views import View
 from django.contrib import messages
+from django.http import HttpResponseRedirect
 from django.db.models import Q
 from django.shortcuts import render_to_response
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
@@ -46,7 +49,7 @@ class BookCreateView(LoginRequiredMixin, CreateView, UserPassesTestMixin,):
         """Check form validity method."""
         form.instance.user = self.request.user
         return super().form_valid(form)
-    
+
     def test_func(self):
         """Check user validity."""
         is_librarian = UserProfile.objects.filter(
@@ -201,9 +204,9 @@ class UserProfileView(View):
         try:
             user_request = RequestBook.objects.get(id=pk)
             issued_books = IssueBook.objects.filter(user=user_request.user)
-            context = { 'user': request.user,
-                        'user_profile': user_request.user,
-                        'issued_books': issued_books}
+            context = {'user': request.user,
+                       'user_profile': user_request.user,
+                       'issued_books': issued_books}
             return render_to_response('users/user_profile.html', context)
         except user_request.DoesNotExist:
             messages.success(request, 'User request does not exist.')
@@ -278,3 +281,48 @@ class BookIssueView(View):
         except book_request.MultipleObjectsReturned:
             messages.success(request, 'More than one book was returned.')
             return redirect(request.META['HTTP_REFERER'])
+
+class BooksUpload(LoginRequiredMixin, UserPassesTestMixin, View):
+    """Class for bulk creation of books from a csv file."""
+
+    def get(self, request):
+        """Get method for template rendering."""
+        template = "books/book_upload.html"
+
+        prompt = {
+            'order': 'Order of CSV should be title, author_name, publisher, number_of_books'
+        }
+
+        if request.method == "GET":
+            return render(request, template, prompt)
+
+    def post(self, request):
+        """Post method to read csv file and create books."""
+        csv_file = request.FILES['file']
+
+        if not csv_file.name.endswith('.csv'):
+            messages.success(request, "This is not a csv file.")
+            next_url = request.POST.get('next', '/')
+            return HttpResponseRedirect(next_url)
+        else:
+            data_set = csv_file.read().decode('UTF-8')
+            io_string = io.StringIO(data_set)
+            next(io_string)
+            for column in csv.reader(io_string, delimiter=',', quotechar="|"):
+                _, created = Book.objects.update_or_create(
+                    title=column[0],
+                    author_name=column[1],
+                    publisher=column[2],
+                    number_of_books=column[3]
+                )
+            context = {'books': Book.objects.all()}
+
+            return render(request, 'books/home.html', context)
+
+    def test_func(self):
+        """Check user validity."""
+        is_librarian = self.request.user.groups.filter(
+            name=LIBRARIAN_GROUP_NAME).exists()
+        if is_librarian:
+            return True
+        return False

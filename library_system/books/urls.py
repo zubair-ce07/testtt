@@ -19,4 +19,5 @@ urlpatterns = [
     path('request_delete/<int:pk>/', views.RequestbookDeleteView.as_view(), name='requests_delete'),
     path('user_books/1/', views.MyIssuedBooks.as_view(), name='my_books'),
     path('user_requests/1/', views.UserRequestsView.as_view(), name='direct_requests'),
+    path('upload_csv', views.BooksUpload.as_view(), name="book_upload"),
 ]

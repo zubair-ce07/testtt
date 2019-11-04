@@ -18,5 +18,6 @@ disable=
     consider-using-enumerate,
     no-self-use,
     no-else-return,
-    inconsistent-return-statements
+    inconsistent-return-statements,
+    unused-variable
 ignore=migrations
