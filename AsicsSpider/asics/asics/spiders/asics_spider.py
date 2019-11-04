@@ -55,7 +55,7 @@ class AsicsSpider(CrawlSpider):
         if len(self.product_variant_links) > 0:
             page = self.product_variant_links[0]
             del self.product_variant_links[0]
-            yield response.follow(page, callback=self.parse_B)
+            yield response.follow(page, callback=self.parse_product)
         else:
             yield self.product
 
@@ -68,16 +68,10 @@ class AsicsSpider(CrawlSpider):
 
     @staticmethod
     def product_category(response):
-        # product_category = response.css(".product-classification span::text").get()
-        # if product_category:
-        #     return product_category.strip()
         return [response.css(".product-classification span::text").get()]
 
     @staticmethod
     def description(response):
-        # description = response.css(".product-info-section-inner::text").get()
-        # if description:
-        #     return description.strip()
         return response.css(".product-info-section-inner::text").get().strip()
 
     @staticmethod
