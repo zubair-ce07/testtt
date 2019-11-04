@@ -1,10 +1,14 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.dispatch import Signal, receiver
+
 from .models import NoteBook, Note
 from django.contrib import messages
 from django.views import generic
 from django.urls import reverse
 from django.shortcuts import get_object_or_404
 from .constants import NoteAppConstants
+
+note_book_created_signal = Signal(providing_args=['message'])
 
 
 class PublicHomePageListView(generic.ListView):
@@ -61,7 +65,14 @@ class CreateNoteBook(LoginRequiredMixin, generic.CreateView):
     def form_valid(self, form):
         form.instance.user = self.request.user
         messages.success(self.request, NoteAppConstants.NOTE_BOOK_CREATED)
+        # Custom signal
+        note_book_created_signal.send(NoteBook, message=NoteAppConstants.NOTE_BOOK_CREATED)
         return super().form_valid(form)
+
+
+@receiver(note_book_created_signal)
+def note_book_created_signal_receiver(sender, **kwargs):
+    print(kwargs.get('message'))
 
 
 class CreateNote(LoginRequiredMixin, generic.CreateView):

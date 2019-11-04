@@ -6,13 +6,13 @@ from django.contrib.auth.decorators import login_required
 from .constants import UserConstants
 
 
-class RegisterUser(generic.FormView):
+class RegisterUser(generic.CreateView):
     form_class = user_forms.UserRegistrationForm
     success_url = '/login'
 
     def form_valid(self, form):
         messages.success(self.request, UserConstants.ACCOUNT_CREATED_MESSAGE)
-        return super().form_valid(form)
+        return super(RegisterUser, self).form_valid(form)
 
 
 @login_required

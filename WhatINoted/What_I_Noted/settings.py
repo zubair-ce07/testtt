@@ -51,6 +51,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'What_I_Noted.middleware.LoginRequiredMiddleware',
 ]
 
 ROOT_URLCONF = 'What_I_Noted.urls'
@@ -128,6 +129,11 @@ MEDIA_URL = '/media/'
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 LOGIN_REDIRECT_URL = 'notes-home-page'
 LOGIN_URL = 'login'
+LOGIN_EXEMPT_URLS = (
+    'login/',
+    'logout/',
+    'register/',
+)
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
