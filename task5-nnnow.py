@@ -36,8 +36,8 @@ class NnnowParser:
         yield self.get_item_or_req_to_yield(item)
 
     def get_raw_product(self, response):
-        raw_page = response.css('script::text').re_first('(?<=window.DATA= )(.*)')
-        return json.loads(raw_page)['ProductStore']['PdpData']['mainStyle']
+        raw_product = response.css('script::text').re_first('(?<=window.DATA= )(.*)')
+        return json.loads(raw_product)['ProductStore']['PdpData']['mainStyle']
 
     def get_item_or_req_to_yield(self, item):
         if item['request_queue']:
@@ -49,9 +49,8 @@ class NnnowParser:
         return item
 
     def extract_color_requests(self, response):
-        url_domain = 'https://www.nnnow.com'
         color_urls = response.css('.nw-color-item.nwc-anchortag::attr(href)').getall()
-        return [response.follow(urljoin(url_domain, url), callback=self.parse_color) for url in color_urls]
+        return [response.follow(url, callback=self.parse_color) for url in color_urls]
 
     def extract_retailor_sku(self, raw_product):
         return raw_product['styleId']
