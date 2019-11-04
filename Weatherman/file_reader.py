@@ -10,6 +10,7 @@ class File:
         self.open_new_file(name)
 
     def open_new_file(self, name):
+        """Open new file"""
         _file = open(name)
         next(_file)
         header = [format_header(h) for h in next(_file).split(',')]
@@ -44,14 +45,11 @@ class FileReader:
         self.__current_file_index += 1
 
     def open_next_file(self):
+        """Open next file"""
         self._file = File(self.get_next_filename())
 
-    def records(self):
-        """Yield data one by one for all the files"""
-        while self.has_next_file():
-            self.open_next_file()
-            for record in self._file.records():
-                yield record
-            self.move_to_next_file()
-
-        self.__current_file_index = 0
+    @property
+    def file(self):
+        """Return File"""
+        self._file = File(self.get_next_filename())
+        return self._file
