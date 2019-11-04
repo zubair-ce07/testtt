@@ -7,9 +7,9 @@ from ..utils import map_gender, format_price
 
 
 class ParseSpider():
-    color_css = Template('img[id="color_$id"] + div > span::text, #color .basesize::text')
+    color_css = Template('img[id="color_$color_id"] + div > span::text, #color .basesize::text')
 
-    def parse(self, response):                   
+    def parse_product(self, response):                   
         product = Product()
         
         product['retailer_sku'] = self.get_retailer_sku(response)
@@ -87,18 +87,17 @@ class ParseSpider():
         currency = response.css('[itemprop="priceCurrency"]::attr(content)').get()
 
         color_css = '.swatchlink .color::attr(data-value), #color + input::attr(value)'                
-        color_ids = [id for id in response.css(color_css).getall() if id]
+        color_ids = [i for i in response.css(color_css).getall() if i]
 
         sizes = response.css('a.box.size::attr(id)').getall()                                
         size_ids = [size.split('_')[1] for size in sizes]
-
         for color_id in color_ids:
             for size_id in size_ids:    
                 sku_attributes = {}
 
                 sku_attributes.update(self.get_price(response))                
                 sku_attributes['currency'] = currency
-                sku_attributes['colour'] = response.css(self.color_css.substitute(id=color_id)).get()
+                sku_attributes['colour'] = response.css(self.color_css.substitute(color_id=color_id)).get()
                 sku_attributes['size'] = response.css(f'a[id$="{size_id}"]::text, #size .basesize::text').get()               
 
                 skus[f'{color_id}{size_id}'] = sku_attributes
@@ -111,11 +110,9 @@ class ParseSpider():
 
         return format_price(previous_price, current_price)
         
-    def skus_requests(self, response):
-        size_cat = response.css('#sizecat > a::attr(id)').getall()
-        sizes = [size.split('_')[1] for size in size_cat]        
-            
-        return [response.follow(f'/p/{id.lower()}', callback=self.parse_skus, dont_filter=True) for id in sizes]
+    def skus_requests(self, response):        
+        cat_ids = [i.split('_')[1] for i in response.css('#sizecat > a::attr(id)').getall()]                    
+        return [response.follow(f'/p/{i.lower()}', callback=self.parse_skus, dont_filter=True) for i in cat_ids]
 
     def availability_requests(self, response):
         availability_requests = []
@@ -123,10 +120,9 @@ class ParseSpider():
         product_id = self.get_retailer_sku(response)
         
         color_css = '.swatchlink .color::attr(data-value), #color + input::attr(value)'                
-        color_ids = [id for id in response.css(color_css).getall() if id]
+        color_ids = [i for i in response.css(color_css).getall() if i]
 
-        size_ids = [size.split('_')[1] for size in response.css('a.box.size::attr(id)').getall()]
-        
+        size_ids = [size.split('_')[1] for size in response.css('a.box.size::attr(id)').getall()]        
         for color_id in color_ids:
             for size_id in size_ids:
 
