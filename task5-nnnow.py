@@ -1,6 +1,5 @@
 import json
 
-from scrapy import Request
 from scrapy.spiders import CrawlSpider
 from urllib.parse import urljoin
 
@@ -37,8 +36,8 @@ class NnnowParser:
         yield self.get_item_or_req_to_yield(item)
 
     def get_raw_product(self, response):
-        page_json_data = response.css('script::text').re_first('(?<=window.DATA= )(.*)')
-        return json.loads(page_json_data)['ProductStore']['PdpData']['mainStyle']
+        raw_page = response.css('script::text').re_first('(?<=window.DATA= )(.*)')
+        return json.loads(raw_page)['ProductStore']['PdpData']['mainStyle']
 
     def get_item_or_req_to_yield(self, item):
         if item['request_queue']:
@@ -52,7 +51,7 @@ class NnnowParser:
     def extract_color_requests(self, response):
         url_domain = 'https://www.nnnow.com'
         color_urls = response.css('.nw-color-item.nwc-anchortag::attr(href)').getall()
-        return [Request(urljoin(url_domain, url), callback=self.parse_color) for url in color_urls]
+        return [response.follow(urljoin(url_domain, url), callback=self.parse_color) for url in color_urls]
 
     def extract_retailor_sku(self, raw_product):
         return raw_product['styleId']
@@ -121,14 +120,14 @@ class NnnowSpider(CrawlSpider):
     payload_template = '/{}?p={}&cid=tn_{}'
 
     def parse(self, response):
-        raw_page = self.get_raw_page(response)
+        raw_page = self.get_raw_product(response)
         nav_menu_items = raw_page['NavListStore']['navListData']['data']['menu']['level1']
 
         for menu_item in nav_menu_items:
             yield response.follow(menu_item['url'], callback=self.parse_pagination)
 
     def parse_pagination(self, response):
-        raw_page = self.get_raw_page(response)
+        raw_page = self.get_raw_product(response)
         total_pages = raw_page['ProductStore']['ProductData']['totalPages']
         category = response.url.split('/')[-1]
 
@@ -144,7 +143,7 @@ class NnnowSpider(CrawlSpider):
             url_product = product_url["url"]
             yield response.follow(urljoin(self.start_urls[0], url_product), callback=self.nnnow_details.parse_details)
 
-    def get_raw_page(self, response):
+    def get_raw_product(self, response):
         return json.loads(response.css('script::text').re_first('(?<=window.DATA= )(.*)'))
 
 
