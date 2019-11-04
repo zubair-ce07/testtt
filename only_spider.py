@@ -20,19 +20,22 @@ class OnlyParser:
         item['description'] = self.extract_description(response)
         item['care'] = self.extract_care(response)
         item['image_urls'] = self.extract_img_urls(response)
-        item['skus'] = [] if response.css('.length') else self.extract_skus(response, currency)
+        item['skus'] = self.extract_skus(response, currency)
 
-        item['request_queue'] = self.get_color_requests(response) + self.get_length_requests(response) \
-            if response.css('.length') else self.get_color_requests(response)
+        item['request_queue'] = self.get_color_requests(response)
+        if response.css('.length'):
+            item['skus'] = []
+            item['request_queue'] += self.get_length_requests(response)
 
         yield self.get_item_or_request_to_yield(item, currency)
 
     def parse_color(self, response):
         item = response.meta['item']
         currency = response.meta['currency']
-        item['request_queue'] += self.get_length_requests(response) if response.css('.length') else []
         item['image_urls'] += self.extract_img_urls(response)
-        item['skus'] += [] if response.css('.length') else self.extract_skus(response, currency)
+        if response.css('.length'):
+            item['request_queue'] += self.get_length_requests(response)
+            item['skus'] += self.extract_skus(response, currency)
 
         yield self.get_item_or_request_to_yield(item, currency)
 
@@ -107,13 +110,13 @@ class OnlyParser:
         common_sku = self.extract_common_sku(response, currency)
         sizes = response.css('.size li')
         length = response.css('.length .swatch__item--selected div::text').get()
-        append_length = f'/{length}' if length else ''
         skus = []
 
-        for size in sizes:
+        for size_s in sizes:
             sku = common_sku.copy()
-            sku['size'] = f'{size.css("div::text").get()}{append_length}'
-            sku['out_of_stock'] = 'true' if 'unavailable' in size.css('li::attr(class)').get() else 'false'
+            size = size_s.css('div::text').get()
+            sku['size'] = f'{length}/{size}' if length else size
+            sku['out_of_stock'] = 'true' if 'unavailable' in size_s.css('li::attr(class)').get() else 'false'
             sku['sku_id'] = f'{sku["colour"]}_{sku["size"]}'
             skus.append(sku)
 
@@ -131,15 +134,17 @@ class OnlySpider(CrawlSpider):
     start_urls = [
         'https://www.only.com/gb/en/home',
     ]
-    this = OnlyParser()
+
+    only_parser = OnlyParser()
     listing_css = [
         '.menu-top-navigation__link',
         '.paging-controls__next']
     product_css = ['.thumb-link']
     listing_attrs = ['data-href', 'href']
+
     rules = (
         Rule(LinkExtractor(restrict_css=listing_css, attrs=listing_attrs)),
-        Rule(LinkExtractor(restrict_css=product_css), callback=this.parse_details),
+        Rule(LinkExtractor(restrict_css=product_css), callback=only_parser.parse_details),
     )
 
 
