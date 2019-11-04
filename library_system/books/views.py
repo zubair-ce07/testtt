@@ -1,5 +1,5 @@
 """Module for Books views."""
-import io
+
 import csv
 from datetime import datetime, timedelta
 from django.shortcuts import render, redirect
@@ -282,19 +282,14 @@ class BookIssueView(View):
             messages.success(request, 'More than one book was returned.')
             return redirect(request.META['HTTP_REFERER'])
 
+
 class BooksUpload(LoginRequiredMixin, UserPassesTestMixin, View):
     """Class for bulk creation of books from a csv file."""
 
     def get(self, request):
         """Get method for template rendering."""
         template = "books/book_upload.html"
-
-        prompt = {
-            'order': 'Order of CSV should be title, author_name, publisher, number_of_books'
-        }
-
-        if request.method == "GET":
-            return render(request, template, prompt)
+        return render(request, template)
 
     def post(self, request):
         """Post method to read csv file and create books."""
@@ -305,18 +300,17 @@ class BooksUpload(LoginRequiredMixin, UserPassesTestMixin, View):
             next_url = request.POST.get('next', '/')
             return HttpResponseRedirect(next_url)
         else:
-            data_set = csv_file.read().decode('UTF-8')
-            io_string = io.StringIO(data_set)
-            next(io_string)
-            for column in csv.reader(io_string, delimiter=',', quotechar="|"):
-                _, created = Book.objects.update_or_create(
-                    title=column[0],
-                    author_name=column[1],
-                    publisher=column[2],
-                    number_of_books=column[3]
+            file_data = csv_file.read().decode("UTF-8")
+            csv_dicts_data = [{k: v for k, v in row.items()} for row in csv.DictReader(
+                file_data.splitlines(), skipinitialspace=True)]
+            for row in csv_dicts_data:
+                Book.objects.update_or_create(
+                    title=row["title"],
+                    author_name=row["author_name"],
+                    publisher=row["publisher"],
+                    number_of_books=row["number_of_books"],
                 )
             context = {'books': Book.objects.all()}
-
             return render(request, 'books/home.html', context)
 
     def test_func(self):
