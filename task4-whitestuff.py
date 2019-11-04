@@ -123,6 +123,7 @@ class WhiteStuffSpider(CrawlSpider):
     category_url_template = 'https://fsm6.attraqt.com/zones-js.aspx?version=19.3.8&siteId=eddfa3c1-7e81-' \
                             '4cea-84a4-0f5b3460218a&pageurl={}&zone0=banner&zone1=category&' \
                             'config_categorytree={}'
+
     def parse_category(self, response):
         category_tree = re.search('(?<=categorytree = ")(.*)(?=";)', response.text).group()
         category_url = self.category_url_template.format(response.url, category_tree)
@@ -133,9 +134,9 @@ class WhiteStuffSpider(CrawlSpider):
         next_page = html_response.css('[rel="next"]::attr(href)').get()
 
         if next_page:
+            category_tree = re.search('(?<=categorytree=)(.*)', response.url)
             url = urljoin(self.start_urls[0], next_page)
-            next_url = self.category_url_template.format(url,
-                                                         re.search('(?<=categorytree=)(.*)', response.url).group())
+            next_url = self.category_url_template.format(url, category_tree)
             yield response.follow(next_url, callback=self.parse_pagination)
 
         products_urls = html_response.css('.product-tile__title ::attr(href)').getall()
