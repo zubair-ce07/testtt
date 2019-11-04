@@ -1,7 +1,4 @@
-import json
-
 from scrapy.spiders import CrawlSpider, Rule
-from scrapy import Request
 from scrapy.linkextractors import LinkExtractor
 from w3lib.url import add_or_replace_parameters
 
@@ -25,20 +22,21 @@ class OnlyParser:
         item['image_urls'] = self.extract_img_urls(response)
         item['skus'] = [] if response.css('.length') else self.extract_skus(response, currency)
 
-        item['request_queue'] = self.get_color_requests(response) + self.get_size_requests(response)
+        item['request_queue'] = self.get_color_requests(response) + self.get_length_requests(response) \
+            if response.css('.length') else self.get_color_requests(response)
 
         yield self.get_item_or_request_to_yield(item, currency)
 
     def parse_color(self, response):
         item = response.meta['item']
         currency = response.meta['currency']
-        item['request_queue'] += self.get_size_requests(response)
+        item['request_queue'] += self.get_length_requests(response) if response.css('.length') else []
         item['image_urls'] += self.extract_img_urls(response)
         item['skus'] += [] if response.css('.length') else self.extract_skus(response, currency)
 
         yield self.get_item_or_request_to_yield(item, currency)
 
-    def parse_size(self, response):
+    def parse_length(self, response):
         item = response.meta['item']
         currency = response.meta['currency']
         item['skus'] += self.extract_skus(response, currency)
@@ -55,16 +53,16 @@ class OnlyParser:
         del item['request_queue']
         return item
 
-    def get_size_requests(self, response):
+    def get_length_requests(self, response):
         size_urls = response.css('.length .swatch__item--selectable a::attr(data-href)').getall()
 
-        return [Request(add_or_replace_parameters(url, {'format': 'ajax'}), callback=self.parse_size)
+        return [response.follow(add_or_replace_parameters(url, {'format': 'ajax'}), callback=self.parse_length)
                 for url in size_urls]
 
     def get_color_requests(self, response):
         color_urls = response.css('.swatch__item--selectable-colorpattern a::attr(data-href)').getall()
 
-        return [Request(add_or_replace_parameters(url, {'format': 'ajax'}), callback=self.parse_color)
+        return [response.follow(add_or_replace_parameters(url, {'format': 'ajax'}), callback=self.parse_color)
                 for url in color_urls]
 
     def extract_retailor_sku(self, response):
@@ -74,7 +72,7 @@ class OnlyParser:
         return 'female'
 
     def extract_category(self, response):
-        return [json.loads(response.css('.js-structuredData::text').get())['@graph'][0]['category']]
+        return eval(response.css('.js-structuredData::text').get())['@graph'][0]['category'].split('>')
 
     def extract_brand(self):
         return 'only'
@@ -98,23 +96,23 @@ class OnlyParser:
         return response.css('[property="og:price:currency"]::attr(content)').get()
 
     def extract_common_sku(self, response, currency):
-        length = response.css('.length .swatch__item--selected div::text').get(default="")
         common_sku = {'currency': currency}
         common_sku['price'] = response.css('.nonsticky-price__container--visible em::text').get()
         common_sku['previous_price'] = response.css('.nonsticky-price__container--visible del::text').getall()
         common_sku['colour'] = response.css('.swatch__item--selected-colorpattern span::text').get()
-        common_sku['size'] = f'/{length}' if length else ""
 
         return common_sku
 
     def extract_skus(self, response, currency):
         common_sku = self.extract_common_sku(response, currency)
         sizes = response.css('.size li')
+        length = response.css('.length .swatch__item--selected div::text').get()
+        append_length = f'/{length}' if length else ''
         skus = []
 
         for size in sizes:
             sku = common_sku.copy()
-            sku['size'] = f'{size.css("div::text").get()}{sku["size"]}'
+            sku['size'] = f'{size.css("div::text").get()}{append_length}'
             sku['out_of_stock'] = 'true' if 'unavailable' in size.css('li::attr(class)').get() else 'false'
             sku['sku_id'] = f'{sku["colour"]}_{sku["size"]}'
             skus.append(sku)
@@ -133,13 +131,15 @@ class OnlySpider(CrawlSpider):
     start_urls = [
         'https://www.only.com/gb/en/home',
     ]
-    detail_parser = OnlyParser()
-    listing_css = ['.menu-top-navigation__link', '.paging-controls__next']
-    detail_css = ['.thumb-link']
+    this = OnlyParser()
+    listing_css = [
+        '.menu-top-navigation__link',
+        '.paging-controls__next']
+    product_css = ['.thumb-link']
     listing_attrs = ['data-href', 'href']
     rules = (
         Rule(LinkExtractor(restrict_css=listing_css, attrs=listing_attrs)),
-        Rule(LinkExtractor(restrict_css=detail_css), callback=detail_parser.parse_details),
+        Rule(LinkExtractor(restrict_css=product_css), callback=this.parse_details),
     )
 
 
