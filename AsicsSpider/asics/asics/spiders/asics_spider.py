@@ -3,72 +3,81 @@ from scrapy.http.request import Request
 import re
 from asics.items import AsicsItem
 from datetime import datetime
+from scrapy.linkextractors import LinkExtractor
+from scrapy.spiders.crawl import CrawlSpider, Rule
 
 
-class AsicsSpider(scrapy.Spider):
+class AsicsSpider(CrawlSpider):
     name = 'asics'
     allowed_domains = ["asics.com"]
     product = AsicsItem()
     product_variant_links = []
-
-    def start_requests(self):
-        yield Request(url="http://www.asics.com/us/en-us/", callback=self.parse_categories)
-
-    def parse_categories(self, response):
-        for link in response.css(".show-menu-item::attr(href)").getall():
-            yield response.follow(link, callback=self.parse_products)  # going to one layer deep from landing page
+    start_urls = ['http://www.asics.com/us/en-us/']
+    base_url = 'http://www.asics.com/us/en-us/'
+    rules = [
+        Rule(LinkExtractor(
+            allow=r'us/en-us/\w+/\w+/[\w.]+',
+            restrict_css=(['.show-menu-item', '.product-image a', '.page-next'])
+        ),
+            callback="parse_products", follow=True)
+    ]
 
     def parse_products(self, response):
-        products = response.css(".product-image a::attr(href)").getall()
-        next_page = response.css(".page-next::attr(href)").get()
-        for link in products:
-            yield response.follow(link, callback=self.parse_single_product)
-        if next_page:
-            yield response.follow(next_page, callback=self.parse_products)
+        result = re.search(r'us/en-us/[\w_-]+/[\w_-]+/[\w._-]+.html[\w]*', response.url)
+        print(f"IN Parse Singe: {response.url}  {result}")
+        if result:
+            self.product['description'] = AsicsSpider.description(response)
+            self.product['product_name'] = AsicsSpider.product_name(response)
+            self.product['category'] = AsicsSpider.product_category(response)
+            self.product['image_urls'] = []
+            self.product['skus'] = {}
+            self.product['date'] = datetime.now().timestamp()
+            self.product['price'] = AsicsSpider.price(response)
+            self.product['url'] = response.url
+            self.product['original_url'] = response.url
 
-    def parse_single_product(self, response):
-        self.product['description'] = AsicsSpider.description(response)
-        self.product['product_name'] = AsicsSpider.product_name(response)
-        self.product['category'] = AsicsSpider.product_category(response)
-        self.product['image_urls'] = []
-        self.product['skus'] = {}
-        self.product['date'] = datetime.now().timestamp()
-        self.product['price'] = AsicsSpider.price(response)
-        self.product['url'] = response.url
-        self.product['original_url'] = response.url
+            script = response.xpath('//script[@type="text/javascript"]')
+            self.product['brand'] = AsicsSpider.brand(script)
+            self.product['currency'] = AsicsSpider.currency(script)
+            self.product['lang'] = AsicsSpider.lang(script)
+            self.product['gender'] = AsicsSpider.gender(script)
 
-        script = response.xpath('//script[@type="text/javascript"]')
-        self.product['brand'] = AsicsSpider.brand(script)
-        self.product['currency'] = AsicsSpider.currency(script)
-        self.product['lang'] = AsicsSpider.lang(script)
-        self.product['gender'] = AsicsSpider.gender(script)
+            self.product_variants_links = response.css(".js-color::attr(href)").getall()[1:]
+            for product in self.parse_product(response):
+                if not isinstance(product, Request):
+                    yield product
 
-        self.product_variants_links = response.css(".js-color::attr(href)").getall()[1:]
-        for product in self.parse(response):
-            if not isinstance(product, Request):
-                yield product
-
-    def parse(self, response):
+    def parse_product(self, response):
+        print(self.product)
         self.product['image_urls'] += AsicsSpider.image_urls(response)
         self.product['skus'].update(AsicsSpider.parse_sku(response))
 
         if len(self.product_variant_links) > 0:
             page = self.product_variant_links[0]
             del self.product_variant_links[0]
-            yield response.follow(page, callback=self.parse)
+            yield response.follow(page, callback=self.parse_B)
         else:
             yield self.product
 
     @staticmethod
     def product_name(response):
+        product_name = response.css(".pdp-top__product-name::text").get()
+        if product_name:
+            return product_name.strip()
         return response.css(".pdp-top__product-name::text").get().strip()
 
     @staticmethod
     def product_category(response):
+        # product_category = response.css(".product-classification span::text").get()
+        # if product_category:
+        #     return product_category.strip()
         return [response.css(".product-classification span::text").get()]
 
     @staticmethod
     def description(response):
+        # description = response.css(".product-info-section-inner::text").get()
+        # if description:
+        #     return description.strip()
         return response.css(".product-info-section-inner::text").get().strip()
 
     @staticmethod
