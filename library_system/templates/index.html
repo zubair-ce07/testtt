@@ -1,14 +1,61 @@
-<html lang="en">
+{% extends 'base.html' %}
+
+    
 <body>
-    <h1>Home Page!</h1>
-    {% if user.is_authenticated %}
-    <h2>Username: {{ user.username }} is logged in!</h2>
-      <p><a href="{% url 'profile' %}">View Profile</a></p>
-      <p><a href="{% url 'logout' %}">logout</a></p>
-    {% else %}
-      <p>You are not logged in</p>
-      <a href="{% url 'login' %}">login</a> |
-      <a href="{% url 'register' %}">register</a>
+  {% block content %}
+        <div class="jumbotron">
+        <h1 style="font-size:30px; font-weight:bold; font-family:georgia">Home</h1>
+        <b style="font-size:60px; font-family:georgia">Arbisoft Library</b>
+        </div>
+
+      {% if user.is_authenticated %}
+      {% if is_librarian %}
+      <button name='create' type="submit" onclick=location.href="{% url 'book-create' %}" class="btn btn-primary">Add a New Book</button>
+      <input type="submit" value="Users" onclick=location.href="{% url 'users_info' %}" class="btn btn-primary" />
+      <input type="submit" value="User Requests" onclick=location.href="{% url 'direct_requests' %}" class="btn btn-primary" />   
+      <input type="submit" value="Upload Books" onclick=location.href="{% url 'book_upload' %}" class="btn btn-primary" />
+      {% endif %}
+    <div align="center">
+      <form action="{% url 'search_results' %}" method="get" id="search_form">
+        <input name="q" type="text" placeholder="Search...">
+        <button type="submit" class="btn btn-primary">Search</button>
+      </form>
+    </div>
+
+   
+      <ul aligh="center">
+          {% for book in object_list %}
+            <li>
+              {{ book.title }}, {{ book.author_name }}
+              <p><a href="{% url 'book_detail' book.id %}">Book Details</a></p>
+            </li>
+          {% endfor %}
+          
+        </ul>
+
+        
+        {% else %}
+        <p>You are not logged in</p>
+        <input type="submit" value="Login" onclick=location.href="{% url 'login' %}" class="btn btn-primary" /> |
+        <input type="submit" value="Register" onclick=location.href="{% url 'register' %}" class="btn btn-primary" />
+      {% endif %}
+  
+
+      {% if messages %}
+      <ul class="messages">
+      {% for message in messages %}
+        <p{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</p>
+      {% endfor %}
+      </ul>
     {% endif %}
+
+
+
+  {% endblock %}      
+
+   
+   
+      
 </body>
+
 </html>

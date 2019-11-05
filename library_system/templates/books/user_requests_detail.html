@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="jumbotron">
+    <b style="font-size:60px; font-family:georgia">User Requests</b>
+</div>
+  {% if messages %}
+  <ul class="messages" style = "font-weight:bold">
+  {% for message in messages %}
+  <p{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</p>
+  {% endfor %}
+  </ul>
+  {% endif %}
+  {% for user_request in user_requests %}
+    <div class="article-metadata">  
+      <p>User: {{ user_request.user.username}}</p>
+      <p>Book: {{ user_request.book.title}}</p>
+      <p>Issue request date: {{ user_request.issue_date}}</p>
+    </div>
+    <a class="btn btn-danger btn-sm mt-1 mb-1" href="{% url 'book_issue' user_request.id %}">Approve</a>
+    <a class="btn btn-danger btn-sm mt-1 mb-1" href="{% url 'requests_delete' user_request.id %}">Decline</a>
+    <a class="btn btn-danger btn-sm mt-1 mb-1" href="{% url 'user_profile' user_request.id %}">User Information</a>  
+
+  {% endfor %}
+  
+{% endblock content %}

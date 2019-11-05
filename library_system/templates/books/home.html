@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+<html>
+<body>
+{% block content %}
+
+  <div class="jumbotron">
+    <b style="font-size:40px; font-family:georgia">Books</b>
+  </div>
+    {% for book in books %}
+      <div class="article-metadata">
+        <ul>
+          <li>
+            <h2><a href="{% url 'book_detail' book.id  %}">Title: {{ book.title }}</a></h2>
+            <small class="text-muted">Author: {{ book.author_name}}</small>
+            <small class="text-muted">Publisher: {{ book.publisher}}</small> 
+          </ul>
+        </div>
+        </li>
+       </div>
+    {% endfor %}
+{% endblock %}
+</body>
+</html>

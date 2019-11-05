@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+<html>
+<body>
+{% block content %}
+<div class="content-section">
+    <form method="POST">
+        {% csrf_token %}
+        <fieldset class="form-group">
+            <legend class="border-bottom mb-4">Return Book</legend>
+            <h2>Are you sure you want to return the book? </h2>
+        </fieldset>
+        <div class="form-group">
+            <button class="btn btn-outline-danger" href="{% url 'book-home'  %}" type="submit">Yes, Return</button>
+            <a class="btn btn-outline-secondary" href="{% url 'book-home' %}">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock content %}
+
+</script>
+</body>
+</html>

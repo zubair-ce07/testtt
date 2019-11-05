@@ -8,13 +8,9 @@ min-public-methods=0
 
 [MASTER]
 disable=
-    no-member,
-    keyword-arg-before-vararg,
     too-many-ancestors,
-    invalid-name,
     abstract-method,
-    unused-argument,
+    no-member,
     too-many-locals,
-    consider-using-enumerate,
-    inconsistent-return-statements
-ignore=migrations
+
+
