@@ -56,7 +56,6 @@ class BookCreateView(LoginRequiredMixin, CreateView, UserPassesTestMixin,):
             groups__name=LIBRARIAN_GROUP_NAME).exists()
         if is_librarian:
             return is_librarian
-        return False
 
 
 class BookUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
@@ -76,7 +75,7 @@ class BookUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
             name=LIBRARIAN_GROUP_NAME).exists()
         if is_librarian:
             return is_librarian
-        return False
+
 
 
 class BookDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
@@ -91,7 +90,6 @@ class BookDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
             name='LIBRARIAN_GROUP_NAME').exists()
         if is_librarian:
             return is_librarian
-        return False
 
 
 class BookDetailView(LoginRequiredMixin, DetailView):
@@ -193,7 +191,6 @@ class MyIssuedBooks(LoginRequiredMixin, ListView):
             name=LIBRARIAN_GROUP_NAME).exists()
         if is_librarian:
             return is_librarian
-        return False
 
 
 class UserRequestsView(LoginRequiredMixin, UserPassesTestMixin, ListView):
@@ -210,7 +207,6 @@ class UserRequestsView(LoginRequiredMixin, UserPassesTestMixin, ListView):
             name=LIBRARIAN_GROUP_NAME).exists()
         if is_librarian:
             return is_librarian
-        return False
 
 
 class UserProfileView(View):
@@ -340,4 +336,3 @@ class BooksUpload(LoginRequiredMixin, UserPassesTestMixin, View):
             name=LIBRARIAN_GROUP_NAME).exists()
         if is_librarian:
             return is_librarian
-        return False
