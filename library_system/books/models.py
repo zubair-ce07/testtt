@@ -23,18 +23,15 @@ class IssueBook(models.Model):
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
-    title = models.CharField(max_length=100, null=False, blank=False)
     issue_date = models.DateField(blank=False, null=False)
     return_date = models.DateField(blank=False, null=False)
 
-    def __unicode__(self):
-        return '%s issued by %s' % (self.title, self.user.username)
 
     class Meta:
         """Meta class for Issuing Book model."""
 
         get_latest_by = "issue_date"
-        ordering = ['title']
+        ordering = ['book']
         verbose_name = "book"
         verbose_name_plural = "books"
 
@@ -43,17 +40,14 @@ class RequestBook(models.Model):
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
-    title = models.CharField(max_length=100, null=False, blank=False)
     issue_date = models.DateField(blank=False, null=False)
     return_date = models.DateField(blank=False, null=False)
 
-    def __unicode__(self):
-        return '%s issued by %s' % (self.title, self.user.username)
 
     class Meta:
         """Meta class for Requesting Book model."""
 
         get_latest_by = "issue_date"
-        ordering = ['title']
+        ordering = ['book']
         verbose_name = "book_request"
         verbose_name_plural = "books_requests"

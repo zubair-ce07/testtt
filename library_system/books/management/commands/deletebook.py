@@ -10,16 +10,16 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         """Class for getting arguments from console."""
-        parser.add_argument('title', nargs='+', type=str)
+        parser.add_argument('title', nargs='?', type=str)
 
     def handle(self, *args, **kwargs):
         """Class for handling arguments from console."""
         try:
-            titles = kwargs['title']
-            for title in titles:
-                book_title = title
+            book_title = kwargs['title']
             book = Book.objects.get(title=book_title)
             book.delete()
-            self.stdout.write(self.style.SUCCESS('Successfully deleted book "%s"' % book_title))
-        except:
+            self.stdout.write(self.style.SUCCESS('Successfully deleted book "%s"' % book_title))     
+        except book.DoesNotExist:
             raise CommandError('"%s" book does not exist in the database.' % book_title)
+        except book.MultipleObjectsReturned:
+            raise CommandError('Multiple books returned.')

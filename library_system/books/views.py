@@ -35,8 +35,7 @@ class SearchBookView(LoginRequiredMixin, ListView):
         )
         if not object_list:
             messages.success(self.request, 'No search results found')
-        else:
-            return object_list
+        return object_list
 
 
 class BookCreateView(LoginRequiredMixin, CreateView, UserPassesTestMixin,):
@@ -56,7 +55,7 @@ class BookCreateView(LoginRequiredMixin, CreateView, UserPassesTestMixin,):
             id=self.request.user.id,
             groups__name=LIBRARIAN_GROUP_NAME).exists()
         if is_librarian:
-            return True
+            return is_librarian
         return False
 
 
@@ -76,7 +75,7 @@ class BookUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         is_librarian = self.request.user.groups.filter(
             name=LIBRARIAN_GROUP_NAME).exists()
         if is_librarian:
-            return True
+            return is_librarian
         return False
 
 
@@ -91,7 +90,7 @@ class BookDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         is_librarian = self.request.user.groups.filter(
             name='LIBRARIAN_GROUP_NAME').exists()
         if is_librarian:
-            return True
+            return is_librarian
         return False
 
 
@@ -133,14 +132,16 @@ class IssueBookDeleteView(LoginRequiredMixin, View):
 
     success_url = 'book-home'
 
-    def get(self, request, pk):
+    @staticmethod
+    def get(request, book_id):
         """Get method for book return."""
         return render(request, 'books/issuebook_confirm_delete.html')
 
-    def post(self, request, pk):
+    @staticmethod
+    def post(request, book_id):
         """Post method book return."""
         try:
-            issue_book = IssueBook.objects.get(id=pk)
+            issue_book = IssueBook.objects.get(id=book_id)
             issue_book.book.number_of_books += 1
             issue_book.book.save()
             issue_book.delete()
@@ -158,14 +159,16 @@ class RequestbookDeleteView(LoginRequiredMixin, View):
 
     success_url = 'book-home'
 
-    def get(self, request, pk):
+    @staticmethod
+    def get(request, book_id):
         """Get method for removing book request."""
         return render(request, 'books/requestbook_confirm_delete.html')
 
-    def post(self, request, pk):
+    @staticmethod
+    def post(request, book_id):
         """Post method for removing book request."""
         try:
-            request_book = RequestBook.objects.get(id=pk)
+            request_book = RequestBook.objects.get(id=book_id)
             request_book.delete()
             return redirect('direct_requests')
         except request_book.DoesNotExist:
@@ -176,33 +179,48 @@ class RequestbookDeleteView(LoginRequiredMixin, View):
             return redirect(request.META['HTTP_REFERER'])
 
 
-class MyIssuedBooks(LoginRequiredMixin, View):
+class MyIssuedBooks(LoginRequiredMixin, ListView):
     """View for viewing user's issued books."""
 
-    success_url = '/'
+    model = IssueBook
+    template_name = 'books/issuebook_detail.html'
+    context_object_name = 'issued_books'
+    ordering = ['-book']
 
     def test_func(self):
         """Check user validity."""
         is_librarian = self.request.user.groups.filter(
             name=LIBRARIAN_GROUP_NAME).exists()
         if is_librarian:
-            return True
+            return is_librarian
         return False
 
 
-class UserRequestsView(LoginRequiredMixin, UserPassesTestMixin, View):
+class UserRequestsView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     """Class for viewing user requests."""
 
-    success_url = '/'
+    model = RequestBook
+    template_name = 'books/user_requests_detail.html'
+    context_object_name = 'user_requests'
+    ordering = ['-book']
+
+    def test_func(self):
+        """Check user validity."""
+        is_librarian = self.request.user.groups.filter(
+            name=LIBRARIAN_GROUP_NAME).exists()
+        if is_librarian:
+            return is_librarian
+        return False
 
 
 class UserProfileView(View):
     """For viewing user information and user issued books by librarian."""
 
-    def get(self, request, pk):
+    @staticmethod
+    def get(request, book_id):
         """Get method for requested book's user's profile."""
         try:
-            user_request = RequestBook.objects.get(id=pk)
+            user_request = RequestBook.objects.get(id=book_id)
             issued_books = IssueBook.objects.filter(user=user_request.user)
             context = {'user': request.user,
                        'user_profile': user_request.user,
@@ -219,27 +237,28 @@ class UserProfileView(View):
 class BookRequestView(View):
     """For Requesting books."""
 
-    def get(self, request, pk):
+    @staticmethod
+    def get(request, book_id):
         """Get method to request book."""
         try:
-            book = Book.objects.get(id=pk)
+            book = Book.objects.get(id=book_id)
             if IssueBook.objects.filter(user=request.user).count() == 3:
                 messages.success(request, 'You have reached the max amount of books you can issue!')
                 return redirect(request.META['HTTP_REFERER'])
-            if RequestBook.objects.filter(user=request.user, title=book.title):
+            if RequestBook.objects.filter(user=request.user, book=book):
                 messages.success(request, 'You have already submitted a request for this book!')
                 return redirect(request.META['HTTP_REFERER'])
-            if IssueBook.objects.filter(user=request.user, title=book.title):
+            if IssueBook.objects.filter(user=request.user, book=book):
                 messages.success(request, 'You already have this book issued!')
                 return redirect(request.META['HTTP_REFERER'])
-            else:
-                new_request_book = RequestBook(user=request.user, book=book, title=book.title,
-                                               issue_date=datetime.now(),
-                                               return_date=datetime.now() + timedelta(days=3))
 
-                new_request_book.save()
-                messages.success(request, 'New book request has been successfully submitted!')
-                return redirect(request.META['HTTP_REFERER'])
+            new_request_book = RequestBook(user=request.user, book=book,
+                                           issue_date=datetime.now(),
+                                           return_date=datetime.now() + timedelta(days=3))
+
+            new_request_book.save()
+            messages.success(request, 'New book request has been successfully submitted!')
+            return redirect(request.META['HTTP_REFERER'])
         except book.DoesNotExist:
             messages.success(request, 'Book does not exist.')
             return redirect(request.META['HTTP_REFERER'])
@@ -251,10 +270,11 @@ class BookRequestView(View):
 class BookIssueView(View):
     """For Issuing books."""
 
-    def get(self, request, pk):
+    @staticmethod
+    def get(request, book_id):
         """Get method to issue book."""
         try:
-            book_request = RequestBook.objects.get(id=pk)
+            book_request = RequestBook.objects.get(id=book_id)
             book = book_request.book
             user = book_request.user
             if IssueBook.objects.filter(user=user).count() == 3:
@@ -263,18 +283,17 @@ class BookIssueView(View):
             if book.number_of_books == 0:
                 messages.success(request, 'This book is not in stock anymore.')
                 return redirect(request.META['HTTP_REFERER'])
-            else:
-                new_book_issue = IssueBook(user=user, book=book,
-                                           title=book.title,
-                                           issue_date=datetime.now(),
-                                           return_date=datetime.now() + timedelta(days=3))
 
-                new_book_issue.save()
-                book.number_of_books -= 1
-                book.save()
-                request_book = RequestBook.objects.filter(title=book.title, user=user)
-                request_book.delete()
-                return redirect(request.META['HTTP_REFERER'])
+            new_book_issue = IssueBook(user=user, book=book,
+                                       issue_date=datetime.now(),
+                                       return_date=datetime.now() + timedelta(days=3))
+
+            new_book_issue.save()
+            book.number_of_books -= 1
+            book.save()
+            request_book = RequestBook.objects.filter(book=book, user=user)
+            request_book.delete()
+            return redirect(request.META['HTTP_REFERER'])
         except book_request.DoesNotExist:
             messages.success(request, 'Book does not exist.')
             return redirect(request.META['HTTP_REFERER'])
@@ -286,12 +305,14 @@ class BookIssueView(View):
 class BooksUpload(LoginRequiredMixin, UserPassesTestMixin, View):
     """Class for bulk creation of books from a csv file."""
 
-    def get(self, request):
+    @staticmethod
+    def get(request):
         """Get method for template rendering."""
         template = "books/book_upload.html"
         return render(request, template)
 
-    def post(self, request):
+    @staticmethod
+    def post(request):
         """Post method to read csv file and create books."""
         csv_file = request.FILES['file']
 
@@ -299,24 +320,24 @@ class BooksUpload(LoginRequiredMixin, UserPassesTestMixin, View):
             messages.success(request, "This is not a csv file.")
             next_url = request.POST.get('next', '/')
             return HttpResponseRedirect(next_url)
-        else:
-            file_data = csv_file.read().decode("UTF-8")
-            csv_dicts_data = [{k: v for k, v in row.items()} for row in csv.DictReader(
-                file_data.splitlines(), skipinitialspace=True)]
-            for row in csv_dicts_data:
-                Book.objects.update_or_create(
-                    title=row["title"],
-                    author_name=row["author_name"],
-                    publisher=row["publisher"],
-                    number_of_books=row["number_of_books"],
-                )
-            context = {'books': Book.objects.all()}
-            return render(request, 'books/home.html', context)
+
+        file_data = csv_file.read().decode("UTF-8")
+        csv_dicts_data = [{k: v for k, v in row.items()} for row in csv.DictReader(
+            file_data.splitlines(), skipinitialspace=True)]
+        for row in csv_dicts_data:
+            Book.objects.update_or_create(
+                title=row["title"],
+                author_name=row["author_name"],
+                publisher=row["publisher"],
+                number_of_books=row["number_of_books"],
+            )
+        context = {'books': Book.objects.all()}
+        return render(request, 'books/home.html', context)
 
     def test_func(self):
         """Check user validity."""
         is_librarian = self.request.user.groups.filter(
             name=LIBRARIAN_GROUP_NAME).exists()
         if is_librarian:
-            return True
+            return is_librarian
         return False

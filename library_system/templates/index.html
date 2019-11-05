@@ -33,21 +33,29 @@
           
         </ul>
 
-    {% else %}
-      <p>You are not logged in</p>
-      <input type="submit" value="Login" onclick=location.href="{% url 'login' %}" class="btn btn-primary" /> |
-      <input type="submit" value="Register" onclick=location.href="{% url 'register' %}" class="btn btn-primary" />
+        
+        {% else %}
+        <p>You are not logged in</p>
+        <input type="submit" value="Login" onclick=location.href="{% url 'login' %}" class="btn btn-primary" /> |
+        <input type="submit" value="Register" onclick=location.href="{% url 'register' %}" class="btn btn-primary" />
+      {% endif %}
+  
+
+      {% if messages %}
+      <ul class="messages">
+      {% for message in messages %}
+        <p{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</p>
+      {% endfor %}
+      </ul>
     {% endif %}
 
-    {% if messages %}
-    <ul class="messages">
-    {% for message in messages %}
-    <p{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</p>
-    {% endfor %}
-    </ul>
-    {% endif %}
-  {% endblock %}
 
+
+  {% endblock %}      
+
+   
+   
       
 </body>
+
 </html>

@@ -12,23 +12,17 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         """Class for getting arguments from console."""
-        parser.add_argument('title', nargs='+', type=str)
-        parser.add_argument('author', nargs='+', type=str)
-        parser.add_argument('number_of_books', nargs='+', type=int)
+        parser.add_argument('title', nargs='?', type=str)
+        parser.add_argument('author', nargs='?', type=str)
+        parser.add_argument('number_of_books', nargs='?', type=int)
 
     def handle(self, *args, **kwargs):
         """Class for handling arguments from console."""
         try:
-            titles = kwargs['title']
-            authors = kwargs['author']
+            title = kwargs['title']
+            author = kwargs['author']
             number_of_books = kwargs['number_of_books']
-            for book_title in titles:
-                title = book_title
-            for book_author in authors:
-                author = book_author
-            for number_of_book in number_of_books:
-                book_count = number_of_book
-            book = Book(title=title, author_name=author, number_of_books=book_count)
+            book = Book(title=title, author_name=author, number_of_books=number_of_books)
             book.save()
             self.stdout.write(self.style.SUCCESS('Successfully created book "%s"' % title))
         except IntegrityError:

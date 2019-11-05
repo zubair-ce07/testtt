@@ -16,7 +16,7 @@
 {% for book in issued_books %}
 <ul> 
 <div style="font-family:georgia;font-size:20px;">  
-    <li>  <p style="font-weight:bold;">  Issued Book: {{ book.title}}</p>
+    <li>  <p style="font-weight:bold;">  Issued Book: {{ book.book.title}}</p>
     <p>  Issue_date: {{ book.issue_date}}</p>
     <p>  return_date: {{ book.return_date}}</p> </li>  
 </div>
