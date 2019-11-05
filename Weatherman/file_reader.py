@@ -7,6 +7,7 @@ from util import format_header, get_date_pattern
 class File:
     """Open new file"""
     def __init__(self, name):
+        self.next_record = None
         self.open_new_file(name)
 
     def open_new_file(self, name):
@@ -15,12 +16,22 @@ class File:
         next(_file)
         header = [format_header(h) for h in next(_file).split(',')]
         self.__file_pointer = csv.DictReader(_file, fieldnames=header)
+        self.move_to_next_record()
+
+    def move_to_next_record(self):
+        self.next_record = next(self.__file_pointer)
+
+    def peek(self):
+        return self.next_record
 
     def records(self):
         """Read file record one by one"""
-        for record in self.__file_pointer:
-            if record['max_temperaturec'] is not None:
-                yield record
+        record_to_send = self.peek()
+        self.move_to_next_record()
+        yield record_to_send
+        # for record in self.__file_pointer:
+        #     if record['max_temperaturec'] is not None:
+        #         yield record
 
 
 class FileReader:
@@ -48,8 +59,13 @@ class FileReader:
         """Open next file"""
         self._file = File(self.get_next_filename())
 
-    @property
+    @property 
     def file(self):
-        """Return File"""
-        self._file = File(self.get_next_filename())
+        if self._file is None:
+            self._file = File(self.get_next_filename())
+
+        if self._file.peek() is None:
+            self.move_to_next_file()
+            self._file = File(self.get_next_filename())
+        
         return self._file

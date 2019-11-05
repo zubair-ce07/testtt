@@ -62,29 +62,27 @@ class WeatherAnalyser:
         """
 
         index = 0
-        while self.file_reader.has_next_file():
-            for file_record in self.file_reader.file.records():
-                weather_data = Weather(file_record)
-                if index == 0:
-                    print(weather_data.get_month_year())
+        for file_record in self.file_reader.file.records():
+            weather_data = Weather(file_record)
+            if index == 0:
+                print(weather_data.get_month_year())
 
-                print(f"{weather_data.get_day()} ", end="")
+            print(f"{weather_data.get_day()} ", end="")
 
-                print(int(weather_data.min_temperaturec) * f"{constants.COLOR_BLUE}+{constants.COLOR_ENDC}", end="")
+            print(int(weather_data.min_temperaturec) * f"{constants.COLOR_BLUE}+{constants.COLOR_ENDC}", end="")
 
-                if self.mode == 'c':
-                    print(f"{constants.COLOR_BLUE}+{constants.COLOR_ENDC}", end="")
-                    print(f" {weather_data.min_temperaturec}\n{weather_data.get_day()} ", end="")
+            if self.mode == 'c':
+                print(f"{constants.COLOR_BLUE}+{constants.COLOR_ENDC}", end="")
+                print(f" {weather_data.min_temperaturec}\n{weather_data.get_day()} ", end="")
 
-                print(int(weather_data.max_temperaturec) * f"{constants.COLOR_RED}+{constants.COLOR_ENDC}", end="")
+            print(int(weather_data.max_temperaturec) * f"{constants.COLOR_RED}+{constants.COLOR_ENDC}", end="")
 
-                if self.mode == 'c':
-                    print(f" {weather_data.max_temperaturec}")
-                else:
-                    print(f" {weather_data.min_temperaturec}C - {weather_data.max_temperaturec}C")
+            if self.mode == 'c':
+                print(f" {weather_data.max_temperaturec}")
+            else:
+                print(f" {weather_data.min_temperaturec}C - {weather_data.max_temperaturec}C")
 
-                index += 1
-            self.file_reader.move_to_next_file()
+            index += 1
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
