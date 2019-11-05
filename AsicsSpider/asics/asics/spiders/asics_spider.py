@@ -1,7 +1,9 @@
 from datetime import datetime
+
 from scrapy.http.request import Request
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders.crawl import CrawlSpider, Rule
+
 from asics.items import AsicsItem
 
 
@@ -12,11 +14,10 @@ class AsicsSpider(CrawlSpider):
     start_urls = ['http://www.asics.com/us/en-us/']
     rules = [
         Rule(LinkExtractor(restrict_css=(['.show-menu-item', '.page-next']))),
-        Rule(LinkExtractor(restrict_css=(['.page-next']))),
-        Rule(LinkExtractor(restrict_css=(['.product-image a'])), callback="parse_products")
+        Rule(LinkExtractor(restrict_css=(['.product-image a'])), callback="parse_product")
     ]
 
-    def parse_products(self, response):
+    def parse_product(self, response):
         self.product['description'] = self.description(response)
         self.product['product_name'] = self.product_name(response)
         self.product['category'] = self.product_category(response)
@@ -34,18 +35,18 @@ class AsicsSpider(CrawlSpider):
         self.product['gender'] = self.gender(script)
 
         self.product_variants_links = response.css(".js-color::attr(href)").getall()[1:]
-        for product in self.parse_product(response):
+        for product in self.parse_color(response):
             if not isinstance(product, Request):
                 yield product
 
-    def parse_product(self, response):
+    def parse_color(self, response):
         self.product['image_urls'] += self.image_urls(response)
         self.product['skus'].update(self.parse_sku(response))
 
         if len(self.product_variant_links) > 0:
             page = self.product_variant_links[0]
             del self.product_variant_links[0]
-            yield response.follow(page, callback=self.parse_product)
+            yield response.follow(page, callback=self.parse_color)
         else:
             yield self.product
 
@@ -71,16 +72,16 @@ class AsicsSpider(CrawlSpider):
         return response.css(".price-sales::text").extract()[1].strip()[1:]
 
     def brand(self, script):
-        return script.re(r'"brand": "(\w+)"')
+        return script.re(r'"brand": "(\w+)"')[0]
 
     def currency(self, script):
-        return script.re(r'"currency": "(\w+)"')
+        return script.re(r'"currency": "(\w+)"')[0]
 
     def lang(self, script):
-        return script.re(r'"language": "(\w+)"')
+        return script.re(r'"language": "(\w+-\w+)"')[0]
 
     def gender(self, script):
-        return script.re(r'"product_gender": \[\n +"(\w+)"')
+        return script.re(r'"product_gender": \[\n +"(\w+)"')[0]
 
     def sku(self, response):
         return response.css(".product-number span+ span::text").get().strip()
