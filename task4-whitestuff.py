@@ -79,8 +79,9 @@ class WhiteStuffParser:
     def extract_imgs_urls(self, product_info):
         img_urls = []
         for variant in product_info.values():
-            img_urls.append([image['src'] for image in variant['images']])
-        return img_urls
+            max_img_size = max(variant['images'], key=lambda x: x['imageTypeWidth'])['imageTypeWidth']
+            img_urls.extend([image['src'] for image in variant['images'] if image['imageTypeWidth'] == max_img_size])
+        return list(set(img_urls))
 
     def extract_currency(self, response):
         return response.css('[itemprop="priceCurrency"]::attr(content)').get()
@@ -91,7 +92,7 @@ class WhiteStuffParser:
             sku = {'currency': currency}
             sku['color'] = variant['colour']
             sku['size'] = variant['size']
-            sku['previous_price'] = variant['listPrice']
+            sku['previous_price'] = [variant['listPrice']] if variant['listPrice'] not in variant['salePrice'] else []
             sku['price'] = variant['salePrice']
             sku['out_of_stock'] = not variant['inStock']
             sku['sku_id'] = f"{sku['color']}_{sku['size']}"
@@ -100,8 +101,7 @@ class WhiteStuffParser:
         return skus
 
     def get_raw_product(self, response):
-        product_info = re.search("(?<=\\'] = )(.*)(?<!;)", response.body.decode('utf-8'),
-                                 re.DOTALL | re.MULTILINE).group()
+        product_info = re.search("(?<=\\'] = )(.*)(?<!;)", response.text, re.DOTALL | re.MULTILINE).group()
         return json.loads(product_info)['productVariations']
 
     def clean(self, list_to_strip):
