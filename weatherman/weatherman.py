@@ -1,8 +1,6 @@
 import argparse
 
 from report_genarator import WeatherEvaluator
-import ReportGenerator
-
 
 def main():
 
@@ -12,7 +10,6 @@ def main():
     parser.add_argument("-a", "--a", help="to Show Monthly report",type=str)
     parser.add_argument("-c", "--c", help="to Show bar chart",type=str)
     
-
     arg_for_filepath = parser.parse_args()
     filepath = arg_for_filepath.path
     filepath = filepath[1:]     #Eliminate '/'
@@ -39,7 +36,6 @@ def main():
         horizontal_bar_report = WeatherEvaluator(fpath, int(Date[1])-1)
         horizontal_bar_report.horizontal_bar()
         
-    
 
 if(__name__ == "__main__"):
     main()

@@ -85,7 +85,6 @@ class WeatherEvaluator:
         max_temp_list = convert_int(replace_nulls(max_temp_list))
         min_temp_list = convert_int(replace_nulls(min_temp_list))
         
-        print(max_temp_list)
         if(max_temp_list): 
             for i in range(len(max_temp_list)):
                 if i < 9:
