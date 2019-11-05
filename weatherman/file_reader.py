@@ -1,6 +1,5 @@
 import os.path
 import csv
-
 from weather_calc import get_max_value
 
 
@@ -12,11 +11,10 @@ class FileReader:
         self.file_path = file_path
         self.date = date
         
-
     def get_record(self,header):
+        """returns the record of given month""" 
         file_name = self.file_path + "_" + month_lst[self.date] + ".txt"
         record = []
-
         try:
             with open(file_name, mode='r') as csv_file:
                 csv_reader = csv.DictReader(csv_file)
@@ -27,9 +25,9 @@ class FileReader:
             return False                
         
     def get_yearly_record(self,header,month):
+        """returns the record of whole year"""
         file_name = self.file_path + "_" + month + ".txt"
         temp_list = []
-
         try:
             with open(file_name, mode='r') as csv_file:
                 csv_reader = csv.DictReader(csv_file)

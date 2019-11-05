@@ -10,10 +10,15 @@ month_lst = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul',
 
 
 class WeatherEvaluator:
+    """Handle and generate Weather Reports"""
     def __init__(self, file_path, date = None):
         self.file_reader = FileReader(file_path, date)
 
     def yearly_report(self):
+        """
+        For a given year display the highest temperature and day,
+        lowest temperature and day, most humid day and humidity.
+        """
         print(f"\n    Yearly Report")
 
         max_tempratures = []
@@ -36,7 +41,6 @@ class WeatherEvaluator:
 
         maximum_temp, max_temp_date = highest_temp(max_tempratures)
 
-
         for current_month in month_lst:
             temprature_list = []
             temprature_list = self.file_reader.get_yearly_record("Min TemperatureC", current_month)  
@@ -57,10 +61,11 @@ class WeatherEvaluator:
         print(f'Lowest: {minimum_temp}C on {min_temp_date}')
         print(f'Humidity: {maximum_himid}% on {max_humid_date}')
         
-       #max_tempratures = self.file_reader.get_yearly_record("Max TemperatureC")    
-        
-    
     def monthly_average(self):
+        """ 
+        For a given month display the average highest temperature, 
+        average lowest temperature, average mean humidity.
+        """
         print(f"\n    Monthly Average Report")
         mean_temp_list = self.file_reader.get_record("Mean TemperatureC")
         mean_humid_list = self.file_reader.get_record(" Mean Humidity")
@@ -75,9 +80,13 @@ class WeatherEvaluator:
             print(f'Average Mean Humidity:{avg_mean_humid}%')
             
         else:
-            print('file does not exist')    
+            print(f'file does not exist')    
     
     def horizontal_bar(self):
+        """
+        For a given month draw one horizontal bar chart on the console for the highest 
+        and lowest temperature on each day. Highest in red and lowest in blue.
+        """
         print(f"\n    Horizontal Bar Report")
         max_temp_list = self.file_reader.get_record("Max TemperatureC")
         min_temp_list = self.file_reader.get_record("Min TemperatureC")
@@ -99,4 +108,4 @@ class WeatherEvaluator:
                     print(f'\033[31m' '+' '\033[0m', end=" ")
                 print(f'{max_temp_list[i]}C - {min_temp_list[i]}C')
         else:
-            print('file does not exist')
+            print(f'file does not exist')

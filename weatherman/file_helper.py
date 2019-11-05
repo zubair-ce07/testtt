@@ -23,5 +23,4 @@ def merge_with_dates(record):
     record = replace_nulls(record)
     record = convert_int(record)
     record_index = record.index(max(record)) + 1
-    return (max(record)), (record_index)        
-       
+    return (max(record)), (record_index)               

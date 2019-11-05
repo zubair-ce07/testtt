@@ -1,9 +1,7 @@
 import argparse
-
 from report_genarator import WeatherEvaluator
 
 def main():
-
     parser = argparse.ArgumentParser()
     parser.add_argument("path", type=str, help="to get the path of weather file")
     parser.add_argument("-e", "--e", help="to Show Yearly report",type=str)
@@ -27,8 +25,7 @@ def main():
         fpath = filepath + "/Murree_weather_" + Date[0]     #Spearate year and month
         monthly_report = WeatherEvaluator(fpath, int(Date[1])-1)
         monthly_report.monthly_average()
-
-        
+   
     if args.c:
         Date = args.c
         Date = Date.split('/')
@@ -36,7 +33,5 @@ def main():
         horizontal_bar_report = WeatherEvaluator(fpath, int(Date[1])-1)
         horizontal_bar_report.horizontal_bar()
         
-
 if(__name__ == "__main__"):
     main()
-
