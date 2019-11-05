@@ -51,11 +51,9 @@ class BookCreateView(LoginRequiredMixin, CreateView, UserPassesTestMixin,):
 
     def test_func(self):
         """Check user validity."""
-        is_librarian = UserProfile.objects.filter(
+        return UserProfile.objects.filter(
             id=self.request.user.id,
             groups__name=LIBRARIAN_GROUP_NAME).exists()
-        if is_librarian:
-            return is_librarian
 
 
 class BookUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
@@ -71,10 +69,8 @@ class BookUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
     def test_func(self):
         """Check user validity."""
-        is_librarian = self.request.user.groups.filter(
+        return self.request.user.groups.filter(
             name=LIBRARIAN_GROUP_NAME).exists()
-        if is_librarian:
-            return is_librarian
 
 
 
@@ -86,10 +82,8 @@ class BookDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
     def test_func(self):
         """Check user validity."""
-        is_librarian = self.request.user.groups.filter(
+        return self.request.user.groups.filter(
             name='LIBRARIAN_GROUP_NAME').exists()
-        if is_librarian:
-            return is_librarian
 
 
 class BookDetailView(LoginRequiredMixin, DetailView):
@@ -187,10 +181,8 @@ class MyIssuedBooks(LoginRequiredMixin, ListView):
 
     def test_func(self):
         """Check user validity."""
-        is_librarian = self.request.user.groups.filter(
+        return self.request.user.groups.filter(
             name=LIBRARIAN_GROUP_NAME).exists()
-        if is_librarian:
-            return is_librarian
 
 
 class UserRequestsView(LoginRequiredMixin, UserPassesTestMixin, ListView):
@@ -203,10 +195,8 @@ class UserRequestsView(LoginRequiredMixin, UserPassesTestMixin, ListView):
 
     def test_func(self):
         """Check user validity."""
-        is_librarian = self.request.user.groups.filter(
+        return self.request.user.groups.filter(
             name=LIBRARIAN_GROUP_NAME).exists()
-        if is_librarian:
-            return is_librarian
 
 
 class UserProfileView(View):
@@ -332,7 +322,5 @@ class BooksUpload(LoginRequiredMixin, UserPassesTestMixin, View):
 
     def test_func(self):
         """Check user validity."""
-        is_librarian = self.request.user.groups.filter(
+        return self.request.user.groups.filter(
             name=LIBRARIAN_GROUP_NAME).exists()
-        if is_librarian:
-            return is_librarian
