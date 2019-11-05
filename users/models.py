@@ -25,8 +25,8 @@ class CustomUser(AbstractUser):
         ('Approved', 'Approved'),
         ('Not Approved', 'Not Approved'),
     )
-    type = models.CharField(max_length=50, choices=user_types, default='buyer')
-    role = models.CharField(max_length=50, choices=status_type, default='Not Approved')
+    role = models.CharField(max_length=50, choices=user_types, default='buyer')
+    status = models.CharField(max_length=50, choices=status_type, default='Not Approved')
 
 
     def __str__(self):

@@ -9,16 +9,16 @@ class CustomUserAdmin(UserAdmin):
     """ To make changings in Custom User of Admin side """
     add_fieldsets = UserAdmin.add_fieldsets + (
         (None, {
-            'fields': ('email', 'phone', 'address', 'type', 'status'),
+            'fields': ('email', 'phone', 'address', 'status', 'role'),
         }),
     )
     form = CustomUserChangeForm
     fieldsets = (
-        (('User'), {'fields': ('email', 'phone', 'address', 'type', 'status')}),
+        (('User'), {'fields': ('email', 'phone', 'address', 'type', 'role')}),
         (('Permissions'), {'fields': ('is_active', 'is_staff')})
     )
     model = CustomUser
-    list_display = ['email', 'username', 'type', 'status']
+    list_display = ['email', 'username', 'status', 'role']
 admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(Product)
 admin.site.register(Order)
