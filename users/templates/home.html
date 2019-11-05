@@ -1,130 +1,115 @@
-{% extends 'base.html' %}
+{% extends 'base.html' %} 
 {% block title %}Home{% endblock %}
 
 <style>
-  .card-custom {
-      max-width: 128px;
-  }
-  li {
-    float: left;
-    list-style: outside none none;
-    padding-left: 5px;
-}
+    .card-custom {
+        max-width: 128px;
+    }
+
+    li {
+        float: left;
+        list-style: outside none none;
+        padding-left: 5px;
+    }
 </style>
 
 {% block content %}
 <div class="container">
 
-{% if user.is_authenticated %}
-
-{% if user.type == 'Manager'%}
-
-{% if user.status == 'Not Approved' %}
-<meta http-equiv="REFRESH" content="0;url={% url 'login' %}">
-{% endif %}
-<h1> This is manager profile !! </h1>
-<a href = "../manager"><button btn btn-outline-primary btn-lg > Go to Manager Profile </button> </a>
-{% endif %}
-
-<center> <h1> Products </h1> </center>
-<form method="POST">
-    {% csrf_token %}
-    {{ form.as_p }}
-  <div class="form-group">
-    <label for="exampleInputEmail1">Search By Category</label>
-    <select name="category" type="email" class="form-control">
-      <option>Men</option>
-      <option>Women</option>
-      <option>Kids</option>
-    </select>
-    <small id="emailHelp" class="form-text text-muted"></small>
-    <button type="submit" class="btn btn-primary">Submit</button>
-  </div>
-</form>
-<br/>
-<h3> <a href="/">Home </a>/ {{text}} </h3>
-
-<div class="row">
-    {% for product in products %}
-    <div class="card" style="width: 17rem;">
-      <img class="card-img-top" src="/media/{{product.image}}" alt="Card image cap" style="height:270px;">
-      <div class="card-body">
-        <h5 class="card-title" id="namepr{{product.id}}">{{product.name}}</h5>
-        <div class="card-text" id="pricepr{{product.id}}">${{product.price}}</div>
-        <input class="card-text" type="number" id="qtypr{{product.id}}" placeholder="Quantity" required />
-        <p class="card-text">{{product.description}}</p>
-        <button class="btn btn-primary cart" id="pr{{product.id}}">Add to Cart </button>
-      </div>
-    </div>
-  {% endfor %}
-  </div>
-
-  {% if products.has_other_pages %}
-  <nav aria-label="Page navigation example">
-    <ul class="pagination pagination-lg">
-      {% if products.has_previous %}
-        <li class="page-item"><a href="?page={{ products.previous_page_number }}">&laquo;</a></li>
-      {% else %}
-        <li class="disabled page-item"><span>&laquo;</span></li>
-      {% endif %}
-      {% for i in products.paginator.page_range %}
-        {% if products.number == i %}
-          <li class="active page-item"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
-        {% else %}
-          <li class="page-item"><a href="?page={{ i }}">{{ i }}</a></li>
+    {% if user.is_authenticated %}
+      {% if user.role == 'Manager'%}
+        {% if user.status == 'Not Approved' %}
+          <meta http-equiv="REFRESH" content="0;url={% url 'login' %}"> {% endif %}
+          <h1> This is manager profile !! </h1>
+          <a href="../manager">
+              <button btn btn-outline-primary btn-lg> Go to Manager Profile </button>
+          </a>
         {% endif %}
-      {% endfor %}
-      {% if products.has_next %}
-        <li><a href="?page={{ products.next_page_number }}">&raquo;</a></li>
-      {% else %}
-        <li class="disabled page-item"><span>&raquo;</span></li>
-      {% endif %}
-    </ul>
-    </nav>
-  {% endif %}
 
+        <center>
+          <h1> Products </h1> </center>
+        <form method="POST">
+          {% csrf_token %}
+          <div class="form-group">
+              <label for="exampleInputEmail1">Search By Category</label>
+              <select name="category" type="email" class="form-control">
+                  <option>Men</option>
+                  <option>Women</option>
+                  <option>Kids</option>
+              </select>
+              <small id="emailHelp" class="form-text text-muted"></small>
+              <button type="submit" class="btn btn-primary">Submit</button>
+          </div>
+      </form>
+      <br/>
+      <h3> <a href="/">Home </a>/ {{text}} </h3>
 
-{% else %}
-  <p>You are not logged in</p>
-  <a href="{% url 'login' %}">login</a> |
-  <a href="{% url 'signup' %}">signup</a>
-{% endif %}
+        <div class="row">
+          {% for product in products %}
+          <div class="card" style="width: 17rem;">
+              <img class="card-img-top" src="/media/{{product.image}}" alt="Card image cap" style="height:270px;">
+              <div class="card-body">
+                  <h5 class="card-title" id="namepr{{product.id}}">{{product.name}}</h5>
+                  <div class="card-text" id="pricepr{{product.id}}">${{product.price}}</div>
+                  <input class="card-text" type="number" id="qtypr{{product.id}}" placeholder="Quantity" required />
+                  <p class="card-text">{{product.description}}</p>
+                  <button class="btn btn-primary cart" id="pr{{product.id}}">Add to Cart </button>
+              </div>
+          </div>
+          {% endfor %}
+      </div>
+
+        {% if is_paginated %}
+        <ul class="pagination">
+            {% if page_obj.has_previous %}
+            <li><a href="?page={{ page_obj.previous_page_number }}">&laquo;</a></li>
+            {% else %}
+            <li class="disabled"><span>&laquo;</span></li>
+            {% endif %} {% for i in paginator.page_range %} {% if page_obj.number == i %}
+            <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span>
+            </li>
+            {% else %}
+            <li><a href="?page={{ i }}">{{ i }}</a></li>
+            {% endif %} {% endfor %} {% if page_obj.has_next %}
+            <li><a href="?page={{ page_obj.next_page_number }}">&raquo;</a></li>
+            {% else %}
+            <li class="disabled"><span>&raquo;</span></li>
+            {% endif %}
+        </ul>
+    {% endif %} {% else %}
+    <p>You are not logged in</p>
+    <a href="{% url 'login' %}">login</a> |
+    <a href="{% url 'signup' %}">signup</a> {% endif %}
 </div>
-{% endblock %}
-
-
-{% block js %}
+{% endblock %} {% block js %}
 
 <script>
-if(localStorage.getItem('cart')==null) {
-  var cart = {};
-}
-else {
-  cart = JSON.parse(localStorage.getItem('cart'));
-  document.getElementById('cart').innerHTML = Object.keys(cart).length;
-}
+    if (localStorage.getItem('cart') == null) {
+        var cart = {};
+    } else {
+        cart = JSON.parse(localStorage.getItem('cart'));
+        document.getElementById('cart').innerHTML = Object.keys(cart).length;
+    }
 
-$('.cart').click(function() {
-  var idstr = this.id.toString();
-  if(cart[idstr]!=undefined) {
-    qty = cart[idstr][0] + 1;
-  }
-  else {
-    qty = 1;
-    name = document.getElementById('name'+idstr).innerHTML;
-    price = parseInt(document.getElementById('price'+idstr).innerHTML.replace('$',''));
-    quantity = parseInt(document.getElementById('qty'+idstr).value);
-    if (!quantity) {
-      alert('Please enter quantity !');
-    }
-    else {
-    cart[idstr] = [name, price, quantity];
-    console.log(cart);
-    localStorage.setItem('cart', JSON.stringify(cart));
-    document.getElementById('cart').innerHTML = Object.keys(cart).length;
-    }
-  }
-});
-  </script>
+    $('.cart').click(function() {
+        var idstr = this.id.toString();
+        if (cart[idstr] != undefined) {
+            qty = cart[idstr][0] + 1;
+        } else {
+            qty = 1;
+            name = document.getElementById('name' + idstr).innerHTML;
+            price = parseInt(document.getElementById('price' + idstr).innerHTML.replace('$', ''));
+            quantity = parseInt(document.getElementById('qty' + idstr).value);
+            if (!quantity || quantity <= 0) {
+                alert('Please enter quantity/Wrong Entry !');
+            } else {
+                cart[idstr] = [name, price, quantity];
+                console.log(cart);
+                localStorage.setItem('cart', JSON.stringify(cart));
+                document.getElementById('cart').innerHTML = Object.keys(cart).length;
+            }
+        }
+    });
+</script>
 
 {% endblock %}

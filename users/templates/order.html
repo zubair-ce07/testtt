@@ -1,111 +1,108 @@
-{% extends 'base.html' %}
-
-{% block content%}
+{% extends 'base.html' %} {% block content%}
 <div class='container'>
-    <center><h1> Order Page </h1></center>
+    <center>
+        <h1> Order Page </h1></center>
 
     <div class="col my-4">
-    <h4>Step-1: View Your Cart Items </h4>
+        <h4>Step-1: View Your Cart Items </h4>
 
         <ul class="list-group items">
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <h5 style="color:purple"> NAME</h5>
-                  <span><h5 style="color:purple">PRICE($) for One</h5></span>
-                  <span><h5 style="color:purple">Quantity</h5></span>
-                </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <h5 style="color:purple"> NAME</h5>
+                <span><h5 style="color:purple">PRICE($) for One</h5></span>
+                <span><h5 style="color:purple">Quantity</h5></span>
+            </li>
 
-              </ul>
+        </ul>
     </div>
 
-<h4>    Total Price is: $ <span id="total"></span> </h4>
-<button class="btn btn-danger" id="clear"> Clear Cart </button>
-<a href="javascript:history.back()"><button class="btn btn-primary">Go to Shopping</button></a>
+    <h4>    Total Price is: $ <span id="total"></span> </h4>
+    <button class="btn btn-danger" id="clear"> Clear Cart </button>
+    <a href="javascript:history.back()">
+        <button class="btn btn-primary">Go to Shopping</button>
+    </a>
 
-<div class="col my-4">
-    <h4>Step-2: Enter Details for Order </h4>
-    
-    <form method="POST">  {% csrf_token %}
+    <div class="col my-4">
+        <h4>Step-2: Enter Details for Order </h4>
+
+        <form method="POST"> {% csrf_token %}
             <div class="form-row">
-              <input type="hidden" name="items_json" id="items_json">
-              <div class="form-group col-md-6">
-                <label for="inputname">Name</label>
-                <input type="text" class="form-control" id="inputname" placeholder="Name" name="name" required>
-              </div>
-              <div class="form-group col-md-6">
-                <label for="inputEmail4">Email</label>
-                <input type="email" class="form-control" id="inputEmail4" placeholder="Email" name="email" required>
-              </div>
+                <input type="hidden" name="items_id" id="items_id">
+                <input type="hidden" name="items_quantity" id="items_quantity">
+                <div class="form-group col-md-6">
+                    <label for="inputname">Name</label>
+                    <input type="text" class="form-control" id="inputname" placeholder="Name" name="name" required>
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="inputEmail4">Email</label>
+                    <input type="email" class="form-control" id="inputEmail4" placeholder="Email" name="email" required>
+                </div>
             </div>
             <div class="form-group">
-              <label for="inputAddress">Address</label>
-              <input type="text" class="form-control" id="inputAddress" placeholder="1234 Main St" name="address" required>
+                <label for="inputAddress">Address</label>
+                <input type="text" class="form-control" id="inputAddress" placeholder="1234 Main St" name="address" required>
             </div>
             <div class="form-row">
-              <div class="form-group col-md-5">
-                <label for="inputCity">City</label>
-                <input type="text" class="form-control" id="inputCity" name="city" required>
-              </div>
-              <div class="form-group col-md-3">
+                <div class="form-group col-md-5">
+                    <label for="inputCity">City</label>
+                    <input type="text" class="form-control" id="inputCity" name="city" required>
+                </div>
+                <div class="form-group col-md-3">
                     <label for="inputstate">State</label>
                     <input type="text" class="form-control" id="inputstate" placeholder="State" name="state" required>
-                  </div>
-              <div class="form-group col-md-2">
-                <label for="inputZip">Zip</label>
-                <input type="text" class="form-control" id="inputZip" name="zip" required>
-              </div>
-              <div class="form-group col-md-2">
+                </div>
+                <div class="form-group col-md-2">
+                    <label for="inputZip">Zip</label>
+                    <input type="text" class="form-control" id="inputZip" name="zip" required>
+                </div>
+                <div class="form-group col-md-2">
                     <label for="inputZip">Phone</label>
                     <input type="text" class="form-control" id="inputZip" name="phone" required>
-                  </div>
+                </div>
             </div>
             <button type="submit" class="btn btn-success">Place Order</button>
-          </form>
-</div>
+        </form>
     </div>
-{% endblock%}
-
-
-{% block js%}
+</div>
+{% endblock%} {% block js%}
 
 <script>
-        console.log('Working');
-        if(localStorage.getItem('cart')==null) {
-          var cart = {};
-        }
-        else {
-          cart = JSON.parse(localStorage.getItem('cart'));
-          document.getElementById('cart').innerHTML = Object.keys(cart).length;
-        }
-        let total = 0;
-    console.log(cart);
+    if (localStorage.getItem('cart') == null) {
+        var cart = {};
+    } else {
+        cart = JSON.parse(localStorage.getItem('cart'));
+        document.getElementById('cart').innerHTML = Object.keys(cart).length;
+    }
+    let total = 0;
     for (item in cart) {
         let name = cart[item][0];
         let price = cart[item][1];
         let quantity = cart[item][2];
-        debugger;
-        total = total+(price*quantity);
-        var product_list =  `<li class="list-group-item d-flex justify-content-between align-items-center">
+        total = total + (price * quantity);
+        var product_list = `<li class="list-group-item d-flex justify-content-between align-items-center">
                     ${name} <span>${price}</span>
                     <span class="badge badge-primary badge-pill">${quantity}</span>`
         $('.items').append(product_list);
     }
     document.getElementById('total').innerHTML = total;
-      
-      
-$('#clear').click (function () {
-localStorage.clear();
-location.reload();
-});
 
-items = [];
-for (a in cart){
-items.push(parseInt(a.replace('pr', '')))
-}
+    $('#clear').click(function() {
+        localStorage.clear();
+        location.reload();
+    });
 
-console.log(items)
+    id = [];
+    quantity = [];
+    for (item in cart) {
+        id.push(parseInt(item.replace('pr', '')))
+        quantity.push(cart[item][2])
+    }
 
-$('#items_json').val(JSON.stringify(cart));
-      
-    </script>
+    console.log(parseInt(id))
+    console.log(parseInt(quantity))
+
+    $('#items_id').val(id);
+    $('#items_quantity').val(quantity);
+</script>
 
 {% endblock %}

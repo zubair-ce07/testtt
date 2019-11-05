@@ -3,7 +3,7 @@
 <form method="post" action="">
     {% csrf_token %}
     <table>
-    {{product_form}}
+        {{ form.as_p }}
     </table>
-    <input type="submit" value="Submit Form"/>
-    </form>
+    <input type="submit" value="Submit Form" />
+</form>

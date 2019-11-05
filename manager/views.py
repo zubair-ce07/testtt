@@ -1,18 +1,25 @@
-from django.http import HttpResponse
-from django.shortcuts import render, redirect
-from django.views import View
+""" Controller for manager's profile. """
+
+from django.shortcuts import render
+from django.views.generic.edit import FormView
+from django.views.generic.list import ListView
 from .models import Product
 from .forms import ProductsAction
-from users.models import ProductForm
+from users.forms import ProductForm
 
 
-class Home(View):
+class Home(ListView, FormView):
+    """ Show products on manager's profile category wise. """
 
-    def get(self, request):
-        products = Product.objects.all()
-        return render(request, 'index.html', {'user': request.user, 'products':products})
+    template_name = 'index.html'
+    paginate_by = 5
+    form_class = ProductsAction
+    context_object_name = 'products'
+    queryset = Product.objects.all()
 
     def post(self, request):
+        """ Perform multiple actions on products. """
+
         form = ProductsAction(request.POST)
         if form.is_valid():
             if 'delete' in request.POST:
@@ -22,28 +29,32 @@ class Home(View):
                 for item in request.POST.getlist('choices'):
                     Product.objects.filter(id=item).update(price=request.POST.get('price'))
 
-        return render(request, 'index.html')
+        return render(request, self.template_name)
 
-class AddProduct(View):
-    def get(self, request):
-        form = ProductForm()
-        return render(request, 'add_product.html', {'product_form': form})
+
+class AddProduct(FormView):
+    """ Add product functionality. """
+
+    form_class = ProductForm
+    template_name = 'add_product.html'
+    success_url = '/'
 
     def post(self, request):
-        if request.method == "POST":
-            name = request.POST['name']
-            price = request.POST['price']
-            description = request.POST['description']
-            category = request.POST['category']
-            pub_date = request.POST['pub_date']
-            image = request.POST['image']
+        """ Save all fields to db to add a product. """
 
-            if Product.objects.filter(name=name).exists():
-                Product.objects.filter(name=name).update(price=price, \
-                    description=description, category=category, image=image, \
-                    pub_date=pub_date)
-            else:
-                product = Product(name=name, price=price, category=category, \
-                description=description, image=image, pub_date=pub_date)
-                product.save()
+        name = request.POST['name']
+        price = request.POST['price']
+        description = request.POST['description']
+        category = request.POST['category']
+        pub_date = request.POST['pub_date']
+        image = 'users/images/'+ request.POST['image']
+
+        if Product.objects.filter(name=name).exists():
+            Product.objects.filter(name=name).update(price=price, \
+                description=description, category=category, image=image, \
+                pub_date=pub_date)
+        else:
+            product = Product(name=name, price=price, category=category, \
+            description=description, image=image, pub_date=pub_date)
+            product.save()
         return render(request, 'add_product.html')

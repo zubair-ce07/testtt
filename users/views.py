@@ -1,10 +1,11 @@
+""" Controller for Signup, Product and Order Pages """
 from django.urls import reverse_lazy
-from django.views.generic.edit import CreateView
-from .models import Product, Order, CustomUser, OrderItems
+from django.views.generic.edit import CreateView, FormView
+from django.shortcuts import render
 from django.views import View
-from django.http import HttpResponse
-from django.shortcuts import render, redirect
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.views.generic import ListView
+
+from .models import Product, Order, OrderItems
 
 from .forms import CustomUserCreationForm, SearchForm
 
@@ -14,65 +15,51 @@ class SignUpView(CreateView):
     success_url = reverse_lazy('login')
     template_name = 'signup.html'
 
-class ShowProducts(View):
+class ProductsList(ListView, FormView):
     """ Display list of products."""
-    products = Product.objects.all()
-    print(products)
 
-    def get(self, request):
-        """ Show list of all products in pagination """
-        page = request.GET.get('page', 1)
-
-        paginator = Paginator(self.products, 4)
-        try:
-            products = paginator.page(page)
-        except PageNotAnInteger:
-            products = paginator.page(1)
-        except EmptyPage:
-            products = paginator.page(paginator.num_pages)
-        return render(request, 'home.html', {'user': request.user, 'products':products})
-
+    template_name = 'home.html'
+    form_class = SearchForm
+    context_object_name = 'products'
+    paginate_by = 2
+    queryset = Product.objects.all()
 
     def post(self, request):
-        """ Filter to show products category wise """
+        """ Filter to show products category wise. """
         form = SearchForm(request.POST)
         data = ''
         if form.is_valid():
             data = form.cleaned_data['category']
         products = Product.objects.filter(category=data)
-        page = request.GET.get('page', 1)
-
-        paginator = Paginator(products, 4)
-        try:
-            products = paginator.page(page)
-        except PageNotAnInteger:
-            products = paginator.page(1)
-        except EmptyPage:
-            products = paginator.page(paginator.num_pages)
         return render(request, 'home.html', {'text':data, 'products':products})
 
 
-class OrderProducts(View):
+class OrderProducts(FormView):
     """ Class to save order details """
+
+    success_url = '/'
+    template_name = 'order.html'
+
     def get(self, request):
         """ Show form """
         return render(request, 'order.html')
 
     def post(self, request):
-        """Save values of all fields to database """
-        if request.method == "POST":
-            products = request.POST['items_json']
-            name = request.POST['name']
-            email = request.POST['email']
-            address = request.POST['address']
-            city = request.POST['city']
-            state = request.POST['state']
-            zip_code = request.POST['zip']
-            phone = request.POST['phone']
-            order = Order.objects.create(products=products, name=name, email=email, address=address,
-                          city=city, state=state, zip_code=zip_code,
-                          phone=phone)
-            product = Product.objects.create()
-            OrderItems.objects.create(order=order, product=15, quantity=15)
-            # a.save()
+        """ Save values of all fields to database. """
+
+        products = request.POST['items_id'].split(',')
+        quantity = request.POST['items_quantity'].split(',')
+        name = request.POST['name']
+        email = request.POST['email']
+        address = request.POST['address']
+        city = request.POST['city']
+        state = request.POST['state']
+        zip_code = request.POST['zip']
+        phone = request.POST['phone']
+        order = Order.objects.create(name=name, email=email, address=address, \
+                    city=city, state=state, zip_code=zip_code, phone=phone)
+        for count in range(len(quantity)):
+            product = Product.objects.get(id=products[count])
+            OrderItems.objects.create(order=order, product=product, \
+                quantity=str(quantity[count]))
         return render(request, 'order.html')

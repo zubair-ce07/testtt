@@ -1,44 +1,45 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
-  <meta charset="utf-8">
-  <title>{% block title %}Base Page{% endblock %}</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <meta charset="utf-8">
+    <title>{% block title %}Base Page{% endblock %}</title>
 </head>
+
 <body>
 
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <a class="navbar-brand nav-item active" href="/">Welcome to <b>Versace Brand</b> </a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarText" aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
+            <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarText">
-          <ul class="navbar-nav mr-auto">
-            <li class="nav-item active">
-            </li>
-            <li class="nav-item">
-                <div class="nav-link" href="#">Cart(<span id='cart'>0</span>)</div>
-            </li>
-            <li class="nav-item">
-                <a href="{% url 'order' %}"><button class="btn btn-success">Checkout</button></a>
-            </li>
-          </ul>
-          <span class="navbar-text">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item active">
+                </li>
+                <li class="nav-item">
+                    <div class="nav-link" href="#">Cart(<span id='cart'>0</span>)</div>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'order' %}">
+                        <button class="btn btn-success">Checkout</button>
+                    </a>
+                </li>
+            </ul>
+            <span class="navbar-text">
               Hi, {{ user.username }}! &nbsp;
             <a href="{% url 'logout' %}"> Logout</a>
           </span>
         </div>
-      </nav>
-  
+    </nav>
 
+    {% block content %} {% endblock %}
 
-    {% block content %}
-    {% endblock %}
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-
-  {% block js %}  {% endblock %}
+    {% block js %} {% endblock %}
 </body>
 
 </html>
