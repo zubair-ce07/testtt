@@ -26,13 +26,13 @@ class DieselParser:
         yield item
 
     def extract_retailor_sku(self, response):
-        return response.css('script::text').re_first("\['product_sku'\] = '([^\n\r]*)'")
+        return response.xpath('//script[contains(text(), "product_id")]').re_first("product_id = '([^\n\r]*)'")
 
     def extract_gender(self, response):
         return re.search('men|women', response.meta['trail']).group()
 
     def extract_category(self, response):
-        return response.meta['trail'].replace('https://www.diesel.cn/', '').split('/')
+        return self.clean(response.css('.bitmap ::text').getall())
 
     def extract_brand(self):
         return 'Diesel'
@@ -56,13 +56,23 @@ class DieselParser:
         return sku
 
     def extract_img_urls(self, response):
-        colors = json.loads(response.css('script::text').re_first('gallery = ([^\n\r]*);'))
-        return [color['images'] for color in colors]
+        colors = json.loads(response.xpath('//script[contains(text(), "gallery")]').re_first('gallery = ([^\n\r]*);'))
+        img_urls = []
+        for color in colors:
+            img_urls.extend(color['images'])
+        return img_urls
+
+    def get_color_size(self, color_size_sel, code):
+        for color_size in color_size_sel:
+            if color_size['code'] == code:
+                return color_size['options']
 
     def extract_skus(self, response):
         common_sku = self.extract_common_sku(response)
-        colors = json.loads(response.css('script::text').re_first('spConfig = ([^\n\r]*);'))[0]['options']
-        sizes = json.loads(response.css('script::text').re_first('spConfig = ([^\n\r]*);'))[1]['options']
+        color_size_sel = eval(
+            response.xpath('//script[contains(text(), "spConfig")]').re_first('spConfig = ([^\n\r]*);'))
+        colors = self.get_color_size(color_size_sel, 'color')
+        sizes = self.get_color_size(color_size_sel, 'size')
         skus = []
         for color in colors:
             for size in sizes:
@@ -88,17 +98,20 @@ class DieselSpider(CrawlSpider):
         'https://www.diesel.cn/',
     ]
     listing_css = ['.item .list']
+
     rules = (
         Rule(LinkExtractor(restrict_css=listing_css), callback='parse_pagination'),
     )
+
     product_parser = DieselParser()
     pagination_template = 'https://www.diesel.cn/api/rest/products?limit={}&page={}&category_id={}'
     headers = {'Content-Type': 'application/json', 'Accept': 'application/json'}
 
     def parse_pagination(self, response):
-        category_id = response.css('script::text').re_first("category_id = '([^\n\r]*)';")
-        total_pages = int(response.css('script::text').re_first("total_page = ([^\n\r]*);"))
-        limit = response.css('script::text').re_first("limit = ([^\n\r]*);")
+        paging = response.xpath('//script[contains(text(), "total_page")]')
+        category_id = paging.re_first("category_id = '([^\n\r]*)';")
+        total_pages = int(paging.re_first("total_page = ([^\n\r]*);"))
+        limit = paging.re_first("limit = ([^\n\r]*);")
         trail = response.url
         for page in range(1, total_pages):
             page_url = self.pagination_template.format(limit, page, category_id)
