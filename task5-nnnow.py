@@ -36,7 +36,7 @@ class NnnowParser:
         yield self.get_item_or_req_to_yield(item)
 
     def get_raw_product(self, response):
-        raw_product = response.css('script::text').re_first('(?<=window.DATA= )(.*)')
+        raw_product = response.xpath('//script[contains(text(),window.DATA)]/text()').re_first('(?<=window.DATA= )(.*)')
         return json.loads(raw_product)['ProductStore']['PdpData']['mainStyle']
 
     def get_item_or_req_to_yield(self, item):
@@ -119,15 +119,15 @@ class NnnowSpider(CrawlSpider):
     payload_template = '/{}?p={}&cid=tn_{}'
 
     def parse(self, response):
-        raw_page = self.get_raw_product(response)
-        nav_menu_items = raw_page['NavListStore']['navListData']['data']['menu']['level1']
+        raw_product = self.get_raw_product(response)
+        nav_menu_items = raw_product['NavListStore']['navListData']['data']['menu']['level1']
 
         for menu_item in nav_menu_items:
             yield response.follow(menu_item['url'], callback=self.parse_pagination)
 
     def parse_pagination(self, response):
-        raw_page = self.get_raw_product(response)
-        total_pages = raw_page['ProductStore']['ProductData']['totalPages']
+        raw_product = self.get_raw_product(response)
+        total_pages = raw_product['ProductStore']['ProductData']['totalPages']
         category = response.url.split('/')[-1]
 
         for pg_no in range(1, total_pages):
@@ -143,7 +143,8 @@ class NnnowSpider(CrawlSpider):
             yield response.follow(urljoin(self.start_urls[0], url_product), callback=self.nnnow_details.parse_details)
 
     def get_raw_product(self, response):
-        return json.loads(response.css('script::text').re_first('(?<=window.DATA= )(.*)'))
+        return json.loads(response.xpath('//script[contains(text(), window.DATA)]/text()').
+                          re_first('(?<=window.DATA= )(.*)'))
 
 
 class NnnowItem(scrapy.Item):
