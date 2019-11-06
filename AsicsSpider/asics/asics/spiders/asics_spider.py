@@ -9,10 +9,6 @@ from asics.items import AsicsItem
 
 class AsicsSpider(CrawlSpider):
     name = 'asics'
-    product = AsicsItem()
-    product_variant_links = []
-    count = 1
-    innerCount = 1
     start_urls = ['https://www.asics.com/us/en-us']
     rules = [
         Rule(LinkExtractor(restrict_css=(['.show-menu-item', '.page-next']))),
