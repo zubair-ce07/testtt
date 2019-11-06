@@ -11,44 +11,36 @@ class AsicsSpider(CrawlSpider):
     name = 'asics'
     product = AsicsItem()
     product_variant_links = []
-    start_urls = ['http://www.asics.com/us/en-us/']
+    count = 1
+    innerCount = 1
+    start_urls = ['https://www.asics.com/us/en-us']
     rules = [
         Rule(LinkExtractor(restrict_css=(['.show-menu-item', '.page-next']))),
-        Rule(LinkExtractor(restrict_css=(['.product-image a'])), callback="parse_product")
+        Rule(LinkExtractor(restrict_css=(['.product-image a'])), callback="parse_product"),
     ]
 
     def parse_product(self, response):
-        self.product['description'] = self.description(response)
-        self.product['product_name'] = self.product_name(response)
-        self.product['category'] = self.product_category(response)
-        self.product['image_urls'] = []
-        self.product['skus'] = {}
-        self.product['date'] = datetime.now().timestamp()
-        self.product['price'] = self.price(response)
-        self.product['url'] = response.url
-        self.product['original_url'] = response.url
+        product = AsicsItem()
+        product['description'] = self.description(response)
+        product['product_name'] = self.product_name(response)
+        product['category'] = self.product_category(response)
+        product['image_urls'] = []
+        product['skus'] = {}
+        product['date'] = datetime.now().timestamp()
+        product['price'] = self.price(response)
+        product['url'] = response.url
+        product['original_url'] = response.url
 
         script = response.xpath('//script[@type="text/javascript"]')
-        self.product['brand'] = self.brand(script)
-        self.product['currency'] = self.currency(script)
-        self.product['lang'] = self.lang(script)
-        self.product['gender'] = self.gender(script)
+        product['brand'] = self.brand(script)
+        product['currency'] = self.currency(script)
+        product['lang'] = self.lang(script)
+        product['gender'] = self.gender(script)
 
-        self.product_variants_links = response.css(".js-color::attr(href)").getall()[1:]
-        for product in self.parse_color(response):
-            if not isinstance(product, Request):
-                yield product
+        product['image_urls'] += self.image_urls(response)
+        product['skus'].update(self.parse_sku(response))
 
-    def parse_color(self, response):
-        self.product['image_urls'] += self.image_urls(response)
-        self.product['skus'].update(self.parse_sku(response))
-
-        if len(self.product_variant_links) > 0:
-            page = self.product_variant_links[0]
-            del self.product_variant_links[0]
-            yield response.follow(page, callback=self.parse_color)
-        else:
-            yield self.product
+        yield product
 
     def product_name(self, response):
         return response.css(".pdp-top__product-name::text").get().strip()
@@ -83,28 +75,35 @@ class AsicsSpider(CrawlSpider):
     def gender(self, script):
         return script.re(r'"product_gender": \[\n +"(\w+)"')[0]
 
-    def sku(self, response):
-        return response.css(".product-number span+ span::text").get().strip()
+    def skus(self, response):
+        skus = response.css(".js-color::attr(href)").getall()
+        for index, sku in enumerate(skus):
+            split_by_slash = sku.split("/")
+            skus[index] = split_by_slash[len(split_by_slash) - 1].replace('.html', '').replace('-', '.')
+        return skus
 
-    def colour(self, response):
-        return response.css(".variants__header--light::text").get().strip()
+    def colours(self, response):
+        colors = response.css(".js-color::attr(title)").getall()
+        for index, color in enumerate(colors):
+            colors[index] = color.replace('Select Color: ', '')
+        return colors
 
     def sku_sizes(self, response):
         return response.css(".variation-group-value .js-ajax::text").getall()
 
     def parse_sku(self, response):
         skus = {}
-        product_sku = self.sku(response)
-        product_colour = self.colour(response)
+        product_skus = self.skus(response)
+        product_colour = self.colours(response)
         product_sku_sizes = self.sku_sizes(response)
-
-        for sku_size in product_sku_sizes:
-            sku_size = sku_size.strip()
-            skus[f"{product_sku.replace('.', '|')}|{product_colour}|{sku_size}"] = {
-                "colour": product_colour,
-                "size": sku_size,
-                "price": self.price(response),
-                'currency': 'USD'
-            }
+        for sku, color in zip(product_skus, product_colour):
+            for sku_size in product_sku_sizes:
+                sku_size = sku_size.strip()
+                skus[f"{sku}|{color}|{sku_size}"] = {
+                    "colour": color,
+                    "size": sku_size,
+                    "price": self.price(response),
+                    'currency': 'USD'
+                }
 
         return skus
