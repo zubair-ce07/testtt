@@ -1,3 +1,5 @@
+import json
+
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 from w3lib.url import add_or_replace_parameters
@@ -20,12 +22,9 @@ class OnlyParser:
         item['description'] = self.extract_description(response)
         item['care'] = self.extract_care(response)
         item['image_urls'] = self.extract_img_urls(response)
-        item['skus'] = self.extract_skus(response, currency)
+        item['skus'] = [] if response.css('.length') else self.extract_skus(response, currency)
 
-        item['request_queue'] = self.get_color_requests(response)
-        if response.css('.length'):
-            item['skus'] = []
-            item['request_queue'] += self.get_length_requests(response)
+        item['request_queue'] = self.get_color_requests(response) + self.get_length_requests(response)
 
         yield self.get_item_or_request_to_yield(item, currency)
 
@@ -33,9 +32,8 @@ class OnlyParser:
         item = response.meta['item']
         currency = response.meta['currency']
         item['image_urls'] += self.extract_img_urls(response)
-        if response.css('.length'):
-            item['request_queue'] += self.get_length_requests(response)
-            item['skus'] += self.extract_skus(response, currency)
+        item['request_queue'] += self.get_length_requests(response)
+        item['skus'] += [] if response.css('.length') else self.extract_skus(response, currency)
 
         yield self.get_item_or_request_to_yield(item, currency)
 
@@ -75,7 +73,7 @@ class OnlyParser:
         return 'female'
 
     def extract_category(self, response):
-        return eval(response.css('.js-structuredData::text').get())['@graph'][0]['category'].split('>')
+        return json.loads(response.css('.js-structuredData::text').get())['@graph'][0]['category'].split('>')
 
     def extract_brand(self):
         return 'only'
@@ -138,7 +136,9 @@ class OnlySpider(CrawlSpider):
     only_parser = OnlyParser()
     listing_css = [
         '.menu-top-navigation__link',
-        '.paging-controls__next']
+        '.paging-controls__next'
+    ]
+
     product_css = ['.thumb-link']
     listing_attrs = ['data-href', 'href']
 
