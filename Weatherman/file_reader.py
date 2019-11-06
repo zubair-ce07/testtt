@@ -20,15 +20,18 @@ class File:
 
     def move_to_next_record(self):
         self.next_record = next(self.__file_pointer)
+        if self.next_record['max_temperaturec'] is None:
+            self.next_record = None
 
     def peek(self):
         return self.next_record
 
     def records(self):
         """Read file record one by one"""
-        record_to_send = self.peek()
-        self.move_to_next_record()
-        yield record_to_send
+        if self.peek():
+            record_to_send = self.peek()
+            self.move_to_next_record()
+            return record_to_send
         # for record in self.__file_pointer:
         #     if record['max_temperaturec'] is not None:
         #         yield record
@@ -45,7 +48,7 @@ class FileReader:
 
     def has_next_file(self):
         """Check is next file is available"""
-        return self.__current_file_index < len(self.__files)
+        return self.__current_file_index < len(self.__files) -1
 
     def get_next_filename(self):
         """Get next file name"""
@@ -64,7 +67,7 @@ class FileReader:
         if self._file is None:
             self._file = File(self.get_next_filename())
 
-        if self._file.peek() is None:
+        if self._file.peek() is None and self.has_next_file():
             self.move_to_next_file()
             self._file = File(self.get_next_filename())
         

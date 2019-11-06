@@ -21,15 +21,15 @@ class WeatherAnalyser:
         low_temp_weather = Weather(None)
         max_hum_weather = Weather(None)
 
-        while self.file_reader.has_next_file():
-            for file_record in self.file_reader.file.records():
-                weather_data = Weather(file_record)
+        next_record = self.file_reader.file.records()
+        while next_record is not None:
+            weather_data = Weather(next_record)
 
-                max_temp_weather = Weather.get_by_max_temp(max_temp_weather, weather_data)
-                low_temp_weather = Weather.get_by_low_temp(low_temp_weather, weather_data)
-                max_hum_weather = Weather.get_by_max_humidity(max_hum_weather, weather_data)
+            max_temp_weather = Weather.get_by_max_temp(max_temp_weather, weather_data)
+            low_temp_weather = Weather.get_by_low_temp(low_temp_weather, weather_data)
+            max_hum_weather = Weather.get_by_max_humidity(max_hum_weather, weather_data)
 
-            self.file_reader.move_to_next_file()
+            next_record = self.file_reader.file.records()
 
         print(f"Highest: {max_temp_weather.max_temperaturec}C on {max_temp_weather.get_month_day()}")
         print(f"Lowest: {low_temp_weather.min_temperaturec}C on {low_temp_weather.get_month_day()}")
@@ -41,15 +41,15 @@ class WeatherAnalyser:
         avg_low_temp_weather = Weather({"mean_temperaturec":100, 'pkst':'2000-12-12'})
         avg_max_hum_weather = Weather(None)
 
-        while self.file_reader.has_next_file():
-            for file_record in self.file_reader.file.records():
-                weather_data = Weather(file_record)
+        next_record = self.file_reader.file.records()
+        while next_record is not None:
+            weather_data = Weather(next_record)
 
-                avg_max_temp_weather = Weather.get_by_average_max_temp(avg_max_temp_weather, weather_data)
-                avg_low_temp_weather = Weather.get_by_average_low_temp(avg_low_temp_weather, weather_data)
-                avg_max_hum_weather = Weather.get_by_average_max_humidity(avg_max_hum_weather, weather_data)
+            avg_max_temp_weather = Weather.get_by_average_max_temp(avg_max_temp_weather, weather_data)
+            avg_low_temp_weather = Weather.get_by_average_low_temp(avg_low_temp_weather, weather_data)
+            avg_max_hum_weather = Weather.get_by_average_max_humidity(avg_max_hum_weather, weather_data)
 
-            self.file_reader.move_to_next_file()
+            next_record = self.file_reader.file.records()
 
         print(avg_max_temp_weather.get_month_year())
         print(f"Highest: {avg_max_temp_weather.mean_temperaturec}C")
@@ -62,8 +62,9 @@ class WeatherAnalyser:
         """
 
         index = 0
-        for file_record in self.file_reader.file.records():
-            weather_data = Weather(file_record)
+        next_record = self.file_reader.file.records()
+        while next_record is not None:
+            weather_data = Weather(next_record)
             if index == 0:
                 print(weather_data.get_month_year())
 
@@ -83,6 +84,7 @@ class WeatherAnalyser:
                 print(f" {weather_data.min_temperaturec}C - {weather_data.max_temperaturec}C")
 
             index += 1
+            next_record = self.file_reader.file.records()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
