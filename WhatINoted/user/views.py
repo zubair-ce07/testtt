@@ -4,15 +4,21 @@ from . import forms as user_forms
 from django.views import generic
 from django.contrib.auth.decorators import login_required
 from .constants import UserConstants
+from django.contrib.auth import authenticate, login
 
 
 class RegisterUser(generic.CreateView):
     form_class = user_forms.UserRegistrationForm
-    success_url = '/login'
+    success_url = '/home'
 
     def form_valid(self, form):
         messages.success(self.request, UserConstants.ACCOUNT_CREATED_MESSAGE)
         return super(RegisterUser, self).form_valid(form)
+
+    def get_success_url(self):
+        user = authenticate(username=self.request.POST['username'], password=self.request.POST['password1'])
+        login(self.request, user)
+        return self.success_url
 
 
 @login_required

@@ -47,6 +47,9 @@
                 <a class="nav-link {% if request.resolver_match.url_name == "notes-home-page" %}shadow-sm  active{% endif %}" href="{% url 'notes-home-page' %}">My Note Books</a>
             </li>
             <li class="nav-item ">
+                <a class="nav-item nav-link {% if request.resolver_match.url_name == "search-notes" %}shadow-sm  active{% endif %}" href="{% url 'search-notes' %}">Search Notes/Note Books</a>
+            </li>
+            <li class="nav-item ">
                 <a class="nav-item nav-link {% if request.resolver_match.url_name == "profile" %}shadow-sm  active{% endif %}" href="{% url 'profile' %}">My Profile</a>
             </li>
         </ul>

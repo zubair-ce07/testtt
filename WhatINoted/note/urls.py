@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, re_path
 from .views import (
                     PublicHomePageListView,
                     HomePageListView,
@@ -14,6 +14,7 @@ from .views import (
                     NotePublicListView,
                     AllPublicNoteBookListView,
                     AllPublicNoteListView,
+                    search_by_keywords
 )
 from . import views
 
@@ -27,10 +28,11 @@ urlpatterns = [
     path('note/<int:note_book>/create', CreateNote.as_view(), name='note-create'),
     path('note-book/<int:pk>/notes', NoteListView.as_view(), name='note-book-notes'),
     path('note/<int:pk>/update', UpdateNote.as_view(), name='note-update'),
+    path('notes/<int:pk>/view', NotePublicListView.as_view(), name='note-book-public-notes'),
     path('note/<int:pk>/delete', DeleteNote.as_view(), name='note-delete'),
     path('note/<int:pk>/view', NotePublicView.as_view(), name='note-public-view'),
-    path('notes/<int:pk>/view', NotePublicListView.as_view(), name='note-book-public-notes'),
-    path('notes/<int:pk>/view', NotePublicListView.as_view(), name='note-book-public-notes'),
     path('public-notes/', AllPublicNoteListView.as_view(), name='all-public-notes'),
     path('public-note-books/', AllPublicNoteBookListView.as_view(), name='all-public-note-books'),
+    path('find/', search_by_keywords, name='find-notes'),
+    re_path(r'^results/$', search_by_keywords, name='search-notes'),
 ]

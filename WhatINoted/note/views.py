@@ -1,11 +1,12 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Q
 from django.dispatch import Signal, receiver
 
 from .models import NoteBook, Note
 from django.contrib import messages
 from django.views import generic
 from django.urls import reverse
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render
 from .constants import NoteAppConstants
 
 note_book_created_signal = Signal(providing_args=['message'])
@@ -26,6 +27,24 @@ class PublicHomePageListView(generic.ListView):
     def get_queryset(self):
         return NoteBook.objects.filter(is_public=True).order_by(
             NoteAppConstants.NOTE_BOOKS_ORDER_BY_PUBLIC_PAGE)[:NoteAppConstants.NUMBER_OF_NOTE_BOOKS_PUBLIC_PAGE]
+
+
+def search_by_keywords(request):
+    template_name = 'note/search_notes.html'
+    query = request.GET.get('q')
+    match_book_title = request.GET.get('match_book_title')
+    if query is None:
+        query = ''
+    notes = Note.objects.filter(Q(title__icontains=query) | Q(description__icontains=query))
+    note_books = []
+    if match_book_title == 'on':
+        note_books = NoteBook.objects.filter(Q(title__icontains=query))
+
+    context = {
+        'notes': notes,
+        'note_books': note_books
+    }
+    return render(request, template_name, context)
 
 
 class AllPublicNoteBookListView(generic.ListView):
@@ -163,7 +182,7 @@ class NotePublicView(generic.DetailView):
     template_name = 'note/note_view.html'
 
 
-class NotePublicListView(LoginRequiredMixin, generic.ListView):
+class NotePublicListView(generic.ListView):
     template_name = 'note/public/notes_public_view.html'
     model = Note
     context_object_name = 'notes'
@@ -179,3 +198,5 @@ class NotePublicListView(LoginRequiredMixin, generic.ListView):
     def get_queryset(self):
         return Note.objects.filter(note_book_id=self.kwargs.get('pk'), is_public=True).order_by(
             NoteAppConstants.NOTES_ORDER_BY_PUBLIC_PAGE)
+
+
