@@ -3,6 +3,7 @@ import re
 
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
+from itertools import product
 
 from ..items import DieselItem
 
@@ -26,7 +27,8 @@ class DieselParser:
         yield item
 
     def extract_retailor_sku(self, response):
-        return response.xpath('//script[contains(text(), "product_id")]').re_first("product_id = '([^\n\r]*)'")
+        xpath = '//script[contains(text(), "product_id")]'
+        return response.xpath(xpath).re_first("product_id = '([^\n\r]*)'")
 
     def extract_gender(self, response):
         return re.search('men|women', response.meta['trail']).group()
@@ -56,32 +58,30 @@ class DieselParser:
         return sku
 
     def extract_img_urls(self, response):
-        colors = json.loads(response.xpath('//script[contains(text(), "gallery")]').re_first('gallery = ([^\n\r]*);'))
+        xpath = '//script[contains(text(), "gallery")]'
+        colors = json.loads(response.xpath(xpath).re_first('gallery = ([^\n\r]*);'))
         img_urls = []
         for color in colors:
             img_urls.extend(color['images'])
         return img_urls
 
     def get_color_size(self, color_size_sel, code):
-        for color_size in color_size_sel:
-            if color_size['code'] == code:
-                return color_size['options']
+        return [color_size['options'] for color_size in color_size_sel if color_size['code'] == code][0]
 
     def extract_skus(self, response):
         common_sku = self.extract_common_sku(response)
-        color_size_sel = eval(
-            response.xpath('//script[contains(text(), "spConfig")]').re_first('spConfig = ([^\n\r]*);'))
-        colors = self.get_color_size(color_size_sel, 'color')
-        sizes = self.get_color_size(color_size_sel, 'size')
+        xpath = '//script[contains(text(), "spConfig")]'
+        raw_product = json.loads(response.xpath(xpath).re_first('spConfig = ([^\n\r]*);'))
+        colors = self.get_color_size(raw_product, 'color')
+        sizes = self.get_color_size(raw_product, 'size')
         skus = []
-        for color in colors:
-            for size in sizes:
-                sku = common_sku.copy()
-                sku['colour'] = color['label']
-                sku['size'] = size['label']
-                sku['out_of_stock'] = not any(c in size['products'] for c in color['products'])
-                sku['sku_id'] = f'{sku["colour"]}_{sku["size"]}'
-                skus.append(sku)
+        for color, size in product(colors, sizes):
+            sku = common_sku.copy()
+            sku['colour'] = color['label']
+            sku['size'] = size['label']
+            sku['out_of_stock'] = not any(c in size['products'] for c in color['products'])
+            sku['sku_id'] = f'{sku["colour"]}_{sku["size"]}'
+            skus.append(sku)
 
         return skus
 
@@ -113,6 +113,7 @@ class DieselSpider(CrawlSpider):
         total_pages = int(paging.re_first("total_page = ([^\n\r]*);"))
         limit = paging.re_first("limit = ([^\n\r]*);")
         trail = response.url
+
         for page in range(1, total_pages):
             page_url = self.pagination_template.format(limit, page, category_id)
             yield response.follow(page_url, callback=self.parse_category, meta={'trail': trail},
