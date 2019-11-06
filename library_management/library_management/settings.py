@@ -43,7 +43,9 @@ DJANGO_APPS = [
     'django.contrib.staticfiles',
 ]
 
-PROJECT_APPS = []
+PROJECT_APPS = [
+    'library_api.apps.LibraryApiConfig'
+]
 
 THIRD_PARTY_APPS = [
     'rest_framework',
@@ -115,6 +117,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+AUTH_USER_MODEL = 'library_api.CustomUser'
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/
