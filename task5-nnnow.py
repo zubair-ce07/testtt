@@ -36,7 +36,8 @@ class NnnowParser:
         yield self.get_item_or_req_to_yield(item)
 
     def get_raw_product(self, response):
-        raw_product = response.xpath('//script[contains(text(),window.DATA)]/text()').re_first('(?<=window.DATA= )(.*)')
+        xpath = '//script[contains(text(),window.DATA)]/text()'
+        raw_product = response.xpath(xpath).re_first('(?<=window.DATA= )(.*)')
         return json.loads(raw_product)['ProductStore']['PdpData']['mainStyle']
 
     def get_item_or_req_to_yield(self, item):
@@ -143,8 +144,8 @@ class NnnowSpider(CrawlSpider):
             yield response.follow(urljoin(self.start_urls[0], url_product), callback=self.nnnow_details.parse_details)
 
     def get_raw_product(self, response):
-        return json.loads(response.xpath('//script[contains(text(), window.DATA)]/text()').
-                          re_first('(?<=window.DATA= )(.*)'))
+        xpath = '//script[contains(text(), window.DATA)]/text()'
+        return json.loads(response.xpath(xpath).re_first('(?<=window.DATA= )(.*)'))
 
 
 class NnnowItem(scrapy.Item):
