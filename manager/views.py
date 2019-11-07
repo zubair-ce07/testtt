@@ -4,8 +4,7 @@ from django.shortcuts import render
 from django.views.generic.edit import FormView
 from django.views.generic.list import ListView
 from .models import Product
-from .forms import ProductsAction
-from users.forms import ProductForm
+from .forms import ProductsAction, ProductForm
 
 
 class Home(ListView, FormView):
@@ -49,12 +48,9 @@ class AddProduct(FormView):
         pub_date = request.POST['pub_date']
         image = 'users/images/'+ request.POST['image']
 
-        if Product.objects.filter(name=name).exists():
+        product_exist, created = Product.objects.get_or_create(name=name)
+        if product_exist:
             Product.objects.filter(name=name).update(price=price, \
                 description=description, category=category, image=image, \
                 pub_date=pub_date)
-        else:
-            product = Product(name=name, price=price, category=category, \
-            description=description, image=image, pub_date=pub_date)
-            product.save()
         return render(request, 'add_product.html')

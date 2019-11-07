@@ -2,12 +2,11 @@
 from django.urls import reverse_lazy
 from django.views.generic.edit import CreateView, FormView
 from django.shortcuts import render
-from django.views import View
 from django.views.generic import ListView
 
-from .models import Product, Order, OrderItems
+from manager.models import Product, Order, OrderItems
 
-from .forms import CustomUserCreationForm, SearchForm
+from .forms import CustomUserCreationForm
 
 class SignUpView(CreateView):
     """ This view class is to show Signup built in functionality."""
@@ -15,23 +14,19 @@ class SignUpView(CreateView):
     success_url = reverse_lazy('login')
     template_name = 'signup.html'
 
-class ProductsList(ListView, FormView):
+class ProductsList(ListView):
     """ Display list of products."""
 
     template_name = 'home.html'
-    form_class = SearchForm
     context_object_name = 'products'
-    paginate_by = 2
+    paginate_by = 4
     queryset = Product.objects.all()
 
     def post(self, request):
         """ Filter to show products category wise. """
-        form = SearchForm(request.POST)
-        data = ''
-        if form.is_valid():
-            data = form.cleaned_data['category']
-        products = Product.objects.filter(category=data)
-        return render(request, 'home.html', {'text':data, 'products':products})
+        category = request.POST['category']
+        products = Product.objects.filter(category=category)
+        return render(request, 'home.html', {'text':category, 'products':products})
 
 
 class OrderProducts(FormView):
@@ -47,6 +42,7 @@ class OrderProducts(FormView):
     def post(self, request):
         """ Save values of all fields to database. """
 
+
         products = request.POST['items_id'].split(',')
         quantity = request.POST['items_quantity'].split(',')
         name = request.POST['name']
@@ -54,10 +50,14 @@ class OrderProducts(FormView):
         address = request.POST['address']
         city = request.POST['city']
         state = request.POST['state']
-        zip_code = request.POST['zip']
+        #zip_code = request.POST['zip_code']
         phone = request.POST['phone']
-        order = Order.objects.create(name=name, email=email, address=address, \
-                    city=city, state=state, zip_code=zip_code, phone=phone)
+        c_order = request.POST.dict()
+        del c_order['csrfmiddlewaretoken']
+        del c_order['items_id']
+        del c_order['items_quantity']
+
+        order = Order.objects.create(**c_order)
         for count in range(len(quantity)):
             product = Product.objects.get(id=products[count])
             OrderItems.objects.create(order=order, product=product, \

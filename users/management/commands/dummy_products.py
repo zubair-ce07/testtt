@@ -2,7 +2,7 @@ from django.core.management.base import BaseCommand
 from users.models import Product
 
 def add_products():
-    if not Product.objects.all():
+    if not Product.objects.exists():
         Product.objects.bulk_create([
             Product(name='Product 1', category='Kids', price=200, \
                 image='users/images/download.jpeg', pub_date='2019-10-23'),

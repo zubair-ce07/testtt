@@ -46,18 +46,15 @@
           <!-- end pagination-->
 
       </ul>
-      <center>
+      <div style="text-align: center">
           <button class="btn btn-danger" type="submit" name="delete"> Delete </button>
           <br>
           <input type="text" name="price">
           <button class="btn btn-primary" type="submit" name="update_price"> Update Price </button>
-      </center>
+      </div>
   </form>
 
 {% else %}
-<p>You are not logged in</p>
-<a href="{% url 'login' %}">login</a> |
-<a href="{% url 'signup' %}">signup</a>
-
+<meta http-equiv="REFRESH" content="0;url=/">
   {% endif %} 
 {% endblock %}
