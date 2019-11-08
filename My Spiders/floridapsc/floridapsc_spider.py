@@ -59,15 +59,29 @@ class ParseSpider():
         return self.request_or_docket(docket, filings_request)    
 
     def parse_filings(self, response):
-        filings = []
-
-        docket = response.meta['docket']
-
         if 'page' not in response.url:
             requests = response.meta['requests'] + self.pagination_requests(response)
         else:
-            requests = response.meta['requests']
+            requests = response.meta['requests']   
 
+        docket = response.meta['docket']
+
+        filings = self.get_filings(response)     
+        docket['filings'] = filings
+
+        return self.request_or_docket(docket, requests)
+
+    def parse_pagination(self, response):
+        requests = response.meta['requests']
+        docket = response.meta['docket']
+
+        filings = self.get_filings(response)     
+        docket['filings'].append(filings)
+
+        return self.request_or_docket(docket, requests)
+
+    def get_filings(self, response):
+        filings = []
         filing_rows = response.css('#dvDocketFile tbody tr')
 
         for row in filing_rows:
@@ -85,9 +99,8 @@ class ParseSpider():
             filing_attributes['filed_on'] = self.get_filing_date(row)
 
             filings.append(filing_attributes)
-            docket['filings'].append(filings)
 
-        return self.request_or_docket(docket, requests)
+        return filings
 
     def get_filed_on(self, response):
         return response.meta['filed_on']
@@ -140,14 +153,14 @@ class ParseSpider():
 
     def pagination_requests(self, response):
         pagination_urls = response.css('.gridFooter a::attr(href)').getall()
-        return [response.follow(url, callback=self.parse_filings) for url in pagination_urls]
+        return [response.follow(url, callback=self.parse_pagination, dont_filter=True) for url in pagination_urls]
         
     def request_or_docket(self, docket, requests):           
         if requests:            
-            request = requests.pop(0)
+            request = requests.pop()
             request.meta['docket'] = docket
             request.meta['requests'] = requests
-
+            
             return request                                
 
         return docket
