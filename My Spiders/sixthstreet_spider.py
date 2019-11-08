@@ -1,4 +1,5 @@
 import json
+
 from scrapy.spiders import Rule, CrawlSpider
 from scrapy.linkextractors import LinkExtractor
 from scrapy import Request
@@ -36,14 +37,12 @@ class ParseSpider():
         return response.css('.cms_page::text').getall()
 
     def get_gender(self, response):
-        xpath = '//span[contains(text(), "Gender")]/following-sibling::span/text()'
-        gender = response.xpath(xpath).get()
+        xpath = '//span[contains(text(),"Gender")]/following-sibling::span/text() | //title/text()'
+        gender_text = response.xpath(xpath).getall()
 
-        title_text = response.css('title::text').get()    
         description = self.get_description(response)
-
-        raw_gender = f"{gender} {title_text} {' '.join(description)}" 
-
+        raw_gender = ' '.join(gender_text + description) 
+        
         return map_gender(raw_gender)
 
     def get_url(self, response):
@@ -56,20 +55,19 @@ class ParseSpider():
         return response.css('.product_name::text').get()
 
     def get_image_urls(self, response):
-        image_raw = response.css('script').re_first(r'"images":(.*),"index"')
-        image_parsed = json.loads(image_raw)
+        raw_image = response.css('script').re_first(r'"images":(.*),"index"')
+        image_parsed = json.loads(raw_image)
         product_id = list(image_parsed.keys())[0]
         
         return [product['img'] for product in image_parsed[product_id]]
 
     def get_availability(self, response):
         availability = response.css('[itemprop="availability"]::attr(value)').get()
-
         return availability != 'In Stock'
 
     def get_sizes(self, response):
-        sizes_raw = response.css('script').re_first(r"sizeOptionArr = JSON.parse\('(.*)'\);")
-        sizes_parsed = json.loads(sizes_raw) if sizes_raw else []
+        raw_sizes = response.css('script').re_first(r"sizeOptionArr = JSON.parse\('(.*)'\);")
+        sizes_parsed = json.loads(raw_sizes) if raw_sizes else []
         sizes = [size['UK'] for size in sizes_parsed]
         
         return sizes if sizes else [self.ONE_SIZE]       
@@ -78,7 +76,7 @@ class ParseSpider():
         current_price = response.css('[itemprop="price"]::attr(content)').get()
         previous_price = response.css('.old-price span::attr(data-price-amount)').get()
 
-        return format_price(previous_price, current_price)
+        return format_price(current_price, previous_price)
                             
     def get_skus(self, response):
         skus = {}
@@ -105,76 +103,80 @@ class CrawlSpider(CrawlSpider):
     allowed_domains = ['en-ae.6thstreet.com', 'algolianet.com']
     start_urls = ['https://en-ae.6thstreet.com']
 
-    listings_css = 'li.second-sub'
-    products_css = 'ais-hits--item'    
-
     product_parser = ParseSpider()
+
+    url =    'https://{application_id}-3.algolianet.com/1/indexes/*/' \
+            'queries?x-algolia-agent=Algolia%20for%20vanilla%20JavaScript%20(lite)%203.27.0%3Binstantsearch.js' \
+            '%202.10.2%3BMagento2%20integration%20(1.10.0)%3BJS%20Helper%202.26.0&' \
+            'x-algolia-application-id={app_id}&x-algolia-api-key={api_key}' 
+    
+    params = "query={query}&hitsPerPage=60&maxValuesPerFacet=60&page={page}"
+    formdata = {
+        "requests":[
+            {
+            "indexName": "enterprise_magento_english_products",
+            "params": ''
+            }
+        ]
+    }
+
+    listings_css = 'li.second-sub'        
 
     rules = (
         Rule(LinkExtractor(restrict_css=listings_css), callback='parse_listings'),
     )   
     
     def parse_listings(self, response):
-        formdata_raw = response.css('script').re_first('window\.algoliaConfig = (.*);</script>')
-        category_raw = response.css('body::attr(class)').re_first('categorypath-(.*) category')
+        raw_formdata = response.css('script').re_first('window\.algoliaConfig = (.*);</script>')
+        raw_category = response.css('body::attr(class)').re_first('categorypath-(.*) category')
 
-        query_raw = list(map(lambda category: category.capitalize(), category_raw))
-        query = '%20'.join(query_raw)
+        raw_query = list(map(lambda c: c.capitalize(), raw_category))
+        query = '%20'.join(raw_query)
         
-        formdata_parsed = json.loads(formdata_raw)
+        formdata_parsed = json.loads(raw_formdata)
         application_id = formdata_parsed['applicationId']    
               
-        url = f'https://{application_id.lower()}-3.algolianet.com/1/indexes/*/' \
-            'queries?x-algolia-agent=Algolia%20for%20vanilla%20JavaScript%20(lite)%203.27.0%3Binstantsearch.js' \
-            '%202.10.2%3BMagento2%20integration%20(1.10.0)%3BJS%20Helper%202.26.0&' \
-            f'x-algolia-application-id={application_id}&x-algolia-api-key={formdata_parsed["apiKey"]}'
+        url = self.url.format(
+            application_id=application_id.lower(), 
+            app_id=application_id,
+            api_key=formdata_parsed["apiKey"]
+        )
         
-        formdata = {
-            "requests":[
-                {
-                "indexName": "enterprise_magento_english_products",
-                "params": f"query={query}&hitsPerPage=60&maxValuesPerFacet=60&page=0"
-                }
-            ]
-        }
-            
+        self.formdata['requests'][0]['params'] = self.params.format(query=query, page=0)
+        formdata = self.formdata
+                    
         yield Request(url, method="POST", body=json.dumps(formdata), meta={'listings':response}, callback=self.parse_pagination)
 
     def parse_pagination(self, response):
         listings_response = response.meta['listings']
 
-        formdata_raw = listings_response.css('script').re_first('window\.algoliaConfig = (.*);</script>')
-        category_raw = listings_response.css('body::attr(class)').re_first('categorypath-(.*) category')
+        raw_formdata = listings_response.css('script').re_first('window\.algoliaConfig = (.*);</script>')
+        raw_category = listings_response.css('body::attr(class)').re_first('categorypath-(.*) category')
 
-        query_raw = list(map(lambda category: category.capitalize(), category_raw))
-        query = '%20'.join(query_raw)
+        raw_query = list(map(lambda c: c.capitalize(), raw_category))
+        query = '%20'.join(raw_query)
         
-        formdata_parsed = json.loads(formdata_raw)
+        formdata_parsed = json.loads(raw_formdata)
         application_id = formdata_parsed['applicationId']
-        products = json.loads(response.body_as_unicode()) 
+        products = json.loads(response.text) 
         page_number = 0   
               
-        url = f'https://{application_id.lower()}-3.algolianet.com/1/indexes/*/' \
-            'queries?x-algolia-agent=Algolia%20for%20vanilla%20JavaScript%20(lite)%203.27.0%3Binstantsearch.js' \
-            '%202.10.2%3BMagento2%20integration%20(1.10.0)%3BJS%20Helper%202.26.0&' \
-            f'x-algolia-application-id={application_id}&x-algolia-api-key={formdata_parsed["apiKey"]}'
+        url = self.url.format(
+            application_id=application_id.lower(), 
+            app_id=application_id,
+            api_key=formdata_parsed["apiKey"]
+        )
 
-        while page_number <= int(products['results'][0]['nbPages']):
-            formdata = {
-                "requests":[
-                    {
-                    "indexName": "enterprise_magento_english_products",
-                    "params": f"query={query}&hitsPerPage=60&maxValuesPerFacet=60&page={page_number}"
-                    }
-                ]
-            }
+        while page_number <= int(products['results'][0]['nbPages']):            
+            self.formdata['requests'][0]['params'] = self.params.format(query=query, page=page_number)
+            formdata = self.formdata
 
             page_number += 1    
 
             yield Request(url, method="POST", body=json.dumps(formdata), callback=self.parse_urls)
         
     def parse_urls(self, response):
-        products = json.loads(response.body_as_unicode())
+        products = json.loads(response.text)
 
         urls = [product['url'] for product in products['results'][0]['hits']]
        
