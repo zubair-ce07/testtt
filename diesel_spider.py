@@ -1,9 +1,9 @@
 import json
 import re
+from itertools import product
 
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
-from itertools import product
 
 from ..items import DieselItem
 
@@ -61,6 +61,7 @@ class DieselParser:
         xpath = '//script[contains(text(), "gallery")]'
         colors = json.loads(response.xpath(xpath).re_first('gallery = ([^\n\r]*);'))
         img_urls = []
+
         for color in colors:
             img_urls.extend(color['images'])
         return img_urls
@@ -75,6 +76,7 @@ class DieselParser:
         colors = self.get_color_size(raw_product, 'color')
         sizes = self.get_color_size(raw_product, 'size')
         skus = []
+
         for color, size in product(colors, sizes):
             sku = common_sku.copy()
             sku['colour'] = color['label']
