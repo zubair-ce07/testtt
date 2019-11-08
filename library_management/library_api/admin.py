@@ -31,6 +31,7 @@ class BookAdmin(admin.ModelAdmin):
         ('Authors', {'fields': ['authors']}),
         ('Publisher', {'fields': ['publisher']}),
     ]
+    list_display = ['id', 'title', 'isbn']
 
     # TODO: make inlines work
     # inlines = [AuthorInline, CategoryInline]
@@ -41,6 +42,7 @@ class AuthorAdmin(admin.ModelAdmin):
         ('Bio', {'fields': ['username', 'first_name', 'last_name']}),
         ('Contact', {'fields': ['phone', 'email']}),
     ]
+    list_display = ['id', 'username', 'first_name']
 
 
 class PublisherAdmin(admin.ModelAdmin):
@@ -49,6 +51,7 @@ class PublisherAdmin(admin.ModelAdmin):
         ('Info', {'fields': ['company_name',]}),
         ('Contact', {'fields': ['phone', 'email', 'website', 'address']}),
     ]
+    list_display = ['id', 'username', 'company_name']
 
 
 admin.site.register(Author, AuthorAdmin)

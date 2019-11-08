@@ -1,0 +1,2 @@
+PUBLISHER = "Publisher"
+AUTHOR = 'Author'
