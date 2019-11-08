@@ -32,9 +32,6 @@ class File:
             record_to_send = self.peek()
             self.move_to_next_record()
             return record_to_send
-        # for record in self.__file_pointer:
-        #     if record['max_temperaturec'] is not None:
-        #         yield record
 
 
 class FileReader:
