@@ -9,7 +9,7 @@ from ..items import AckermansItem
 
 
 class AckermansParser:
-    img_url_template = 'https://cdn.ackermans.co.za/product-images/prod/600_600_{}.webp'
+    img_url_t = 'https://cdn.ackermans.co.za/product-images/prod/600_600_{}.webp'
 
     def parse_details(self, response):
         item = AckermansItem()
@@ -64,7 +64,7 @@ class AckermansParser:
         return raw_product['custom_attributes']['short_description']
 
     def extract_img_urls(self, raw_product):
-        return self.img_url_template.format(raw_product['custom_attributes']['image_name'])
+        return self.img_url_t.format(raw_product['custom_attributes']['image_name'])
 
     def extract_common_sku(self, raw_product):
         sku = {'currency': 'ZAR'}
@@ -104,40 +104,40 @@ class AckermansParser:
 class AckermansSpider(CrawlSpider):
     name = 'ackermans'
     allowed_domains = ['www.ackermans.co.za', 'magento.ackermans.co.za']
-    
+
+    start_urls = [
+        'https://magento.ackermans.co.za/rest/default/V1/pepkor/categoryapi/categories',
+    ]
+
     headers = {'Accept': 'application/json', 'Authorization': 'Bearer x3leg25sl1vvruoa6vr861vgus503cfq'}
     ackerman_parser = AckermansParser()
-    category_template = 'https://magento.ackermans.co.za/rest/default/V1/pepkor/searchV2?' \
-                        'search_criteria%5Bcurrent_page%5D={}&' \
-                        'search_criteria%5Bfilter_groups%5D%5B2%5D%5Bfilters%5D%5B0%5D%5Bfield%5D=category_ids' \
-                        '&search_criteria%5Bfilter_groups%5D%5B2%5D%5Bfilters%5D%5B0%5D%5Bvalue%5D={}&' \
-                        'search_criteria%5Bpage_size%5D=20&search_criteria%5Bsort_orders%5D%5B0%5D%5Bfield%5D=price'
-    product_url_tempelate = 'https://www.ackermans.co.za{}/{}'
-    product_detail_tempelate = 'https://magento.ackermans.co.za/rest/default/V1/pepkor/searchV2?' \
-                               'search_criteria%5Bfilter_groups%5D%5B0%5D%5Bfilters%5D%5B0%5D%5Bfield%5D=sku&' \
-                               'search_criteria%5Bfilter_groups%5D%5B0%5D%5Bfilters%5D%5B0%5D%5Bvalue%5D={}&' \
-                               'search_criteria%5Bpage_size%5D=1'
-    color_size_req_tempelate = 'https://magento.ackermans.co.za/rest/default/V1/products/attributes?' \
-                               'search_criteria%5Bfilter_groups%5D%5B0%5D%5Bfilters%5D%5B0%5D%5Bfield%5D=attribute_code&' \
-                               'search_criteria%5Bfilter_groups%5D%5B0%5D%5Bfilters%5D%5B0%5D%5Bvalue%5D={}'
+    category_t = 'https://magento.ackermans.co.za/rest/default/V1/pepkor/searchV2?' \
+                 'search_criteria%5Bcurrent_page%5D={}&' \
+                 'search_criteria%5Bfilter_groups%5D%5B2%5D%5Bfilters%5D%5B0%5D%5Bfield%5D=category_ids' \
+                 '&search_criteria%5Bfilter_groups%5D%5B2%5D%5Bfilters%5D%5B0%5D%5Bvalue%5D={}&' \
+                 'search_criteria%5Bpage_size%5D=20&search_criteria%5Bsort_orders%5D%5B0%5D%5Bfield%5D=price'
+    product_url_t = 'https://www.ackermans.co.za{}/{}'
+    product_detail_t = 'https://magento.ackermans.co.za/rest/default/V1/pepkor/searchV2?' \
+                       'search_criteria%5Bfilter_groups%5D%5B0%5D%5Bfilters%5D%5B0%5D%5Bfield%5D=sku&' \
+                       'search_criteria%5Bfilter_groups%5D%5B0%5D%5Bfilters%5D%5B0%5D%5Bvalue%5D={}&' \
+                       'search_criteria%5Bpage_size%5D=1'
+    color_size_req_t = 'https://magento.ackermans.co.za/rest/default/V1/products/attributes?' \
+                       'search_criteria%5Bfilter_groups%5D%5B0%5D%5Bfilters%5D%5B0%5D%5Bfield%5D=attribute_code&' \
+                       'search_criteria%5Bfilter_groups%5D%5B0%5D%5Bfilters%5D%5B0%5D%5Bvalue%5D={}'
     categories_url = 'https://magento.ackermans.co.za/rest/default/V1/pepkor/categoryapi/categories'
 
     def start_requests(self):
-        urls = [
-            'https://magento.ackermans.co.za/rest/default/V1/pepkor/categoryapi/categories',
-        ]
-        for url in urls:
-            yield Request(url=url, callback=self.parse, headers=self.headers)
+        yield Request(url=self.start_urls[0], callback=self.parse, headers=self.headers)
 
     def parse(self, response):
         category_tree = json.loads(response.text)
-        yield response.follow(self.color_size_req_tempelate.format('size'), callback=self.parse_sizes,
+        yield response.follow(self.color_size_req_t.format('size'), callback=self.parse_sizes,
                               headers=self.headers, meta={'category_tree': category_tree})
 
     def parse_sizes(self, response):
         sizes = json.loads(response.text)['items'][0]['options']
         category_tree = response.meta['category_tree']
-        yield response.follow(self.color_size_req_tempelate.format('color'), callback=self.parse_colors,
+        yield response.follow(self.color_size_req_t.format('color'), callback=self.parse_colors,
                               headers=self.headers, meta={'sizes': sizes, 'category_tree': category_tree})
 
     def parse_colors(self, response):
@@ -145,9 +145,9 @@ class AckermansSpider(CrawlSpider):
         category_tree = response.meta['category_tree']
         colors = json.loads(response.text)['items'][0]['options']
 
-        categories = self.make_urls(category_tree)
+        categories = self.get_category_urls(category_tree)
         for category in categories:
-            url = self.category_template.format('1', category['id'])
+            url = self.category_t.format('1', category['id'])
             yield response.follow(url, callback=self.parse_category, headers=self.headers,
                                   meta={'tail': category['url_key'], 'id': category['id'],
                                         'category_tree': category_tree, 'sizes': sizes, 'colors': colors})
@@ -155,27 +155,29 @@ class AckermansSpider(CrawlSpider):
     def parse_category(self, response):
         raw_products = json.loads(response.text)
         products = raw_products['product']['docs']
-        tail = response.meta['tail']
-        id = response.meta['id']
-        category_tree = response.meta['category_tree']
-        sizes = response.meta['sizes']
-        colors = response.meta['colors']
 
         if raw_products['product']['data']['next_page'] & raw_products['product']['data']['total_count'] > 0:
-            next_page_num = raw_products['product']['data']['current_page'] + 1
-            url = self.category_template.format(next_page_num, id)
-            yield response.follow(url, callback=self.parse_category, headers=self.headers,
-                                  meta={'tail': tail, 'id': id, 'category_tree': category_tree,
-                                        'sizes': sizes, 'colors': colors})
+            yield self.get_pagination_request(response, raw_products)
 
         for product in products:
-            product_url = self.product_url_tempelate.format(tail, product['url_key'])
-            url = self.product_detail_tempelate.format(product['sku'])
-            yield response.follow(url, callback=self.ackerman_parser.parse_details, headers=self.headers,
-                                  meta={'tail': product_url, 'category_tree': category_tree,
-                                        'sizes': sizes, 'colors': colors})
+            yield self.get_product_request(response, product)
 
-    def make_urls(self, url_tree):
+    def get_pagination_request(self, response, raw_products):
+        meta = response.meta
+        next_page_num = raw_products['product']['data']['current_page'] + 1
+        url = self.category_t.format(next_page_num, id)
+        return response.follow(url, callback=self.parse_category, headers=self.headers,
+                               meta=meta)
+
+    def get_product_request(self, response, product):
+        meta = response.meta
+        tail = meta['tail']
+        url = self.product_detail_t.format(product['sku'])
+        meta['product_url'] = self.product_url_t.format(tail, product['url_key'])
+        return response.follow(url, callback=self.ackerman_parser.parse_details, headers=self.headers,
+                               meta=meta)
+
+    def get_category_urls(self, url_tree):
         node_key = url_tree['url_key']
         node_id = url_tree['id']
         urls = [{'id': node_id, 'url_key': f'/{node_key}'}] if url_tree['level'] > 2 else []
@@ -187,7 +189,7 @@ class AckermansSpider(CrawlSpider):
 
         for children in url_tree['children_data']:
             if children['is_active']:
-                childs = self.make_urls(children)
+                childs = self.get_category_urls(children)
                 urls += [{'id': child['id'], 'url_key': f'/{node_key}{child["url_key"]}'} for child in childs]
         return urls
 
