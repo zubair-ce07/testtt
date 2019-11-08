@@ -41,6 +41,7 @@ class AuthorAdmin(admin.ModelAdmin):
         ('Bio', {'fields': ['username', 'first_name', 'last_name']}),
         ('Contact', {'fields': ['phone', 'email']}),
     ]
+    list_display = ['username', 'first_name']
 
 
 class PublisherAdmin(admin.ModelAdmin):
