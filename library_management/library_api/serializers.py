@@ -5,42 +5,39 @@ from rest_framework.response import Response
 from .models import Author, Book, Category, Publisher
 from .utils import regisiter_user
 
-class BaseSignupSerializer(serializers.ModelSerializer):
+class AuthorSignupSerializer(serializers.ModelSerializer):
     password2 = serializers.CharField(
                                 style={'input_type': 'password'},
                                 write_only=True
                             )
 
     class Meta:
-        fields = ['username', 'password', 'password2']
-        extra_kwargs = {
-            'password': {'write_only': True}
-        }
-
-
-class AuthorSignupSerializer(BaseSignupSerializer):
-    class Meta(BaseSignupSerializer.Meta):
-        _meta = BaseSignupSerializer.Meta
         model = Author
-        fields = _meta.fields + ['first_name']
+        fields = ['id', 'first_name', 'username', 'password', 'password2']
+        read_only_fields = ['id']
         extra_kwargs = {
-            **_meta.extra_kwargs,
-            **{'first_name': {'required': True}}
+            'first_name': {'required': True},
+            'password': {'write_only': True}
         }
 
     def save(self):
         return regisiter_user(self.validated_data, Author)
 
 
-class PublisherSignupSerializer(BaseSignupSerializer):
+class PublisherSignupSerializer(serializers.ModelSerializer):
+    password2 = serializers.CharField(
+                                style={'input_type': 'password'},
+                                write_only=True
+                            )
     class Meta:
-        _meta = BaseSignupSerializer.Meta
         model = Publisher
-        fields = _meta.fields + ['company_name']
+        fields = ['id', 'company_name', 'username', 'password', 'password2']
+        read_only_fields = ['id']
         extra_kwargs = {
-            **_meta.extra_kwargs,
-            **{'company_name': {'required': True}}
+            'company_name': {'required': True},
+            'password': {'write_only': True}
         }
+
 
     def save(self):
         return regisiter_user(self.validated_data, Publisher)
@@ -81,39 +78,39 @@ class PublisherSerializer(serializers.ModelSerializer):
 
 
 class BookSerializer(serializers.ModelSerializer):
-    authors = AuthorSerializer(many=True)
-    categories = CategorySerializer(many=True)
-    publisher = PublisherSerializer()
+    authors = serializers.StringRelatedField(many=True)
+    categories = serializers.StringRelatedField(many=True)
+    publisher = serializers.StringRelatedField()
 
-    # authors_ids = serializers.PrimaryKeyRelatedField(
-    #                             many=True, write_only=True, source='authors',
-    #                             queryset=Author.objects.all(),
-    #                         )
-    # categories_ids = serializers.PrimaryKeyRelatedField(
-    #                                 many=True, write_only=True,
-    #                                 source='categories',
-    #                                 queryset=Category.objects.all(),
-    #                             )
-    # publisher_id = serializers.PrimaryKeyRelatedField(
-    #                                 write_only=True, source='publisher',
-    #                                 queryset=Author.objects.all(),
-    #                             )
+    authors_ids = serializers.PrimaryKeyRelatedField(
+                                many=True, write_only=True, source='authors',
+                                queryset=Author.objects.all(),
+                            )
+    categories_ids = serializers.PrimaryKeyRelatedField(
+                                    many=True, write_only=True,
+                                    source='categories',
+                                    queryset=Category.objects.all(),
+                                )
+    publisher_id = serializers.PrimaryKeyRelatedField(
+                                    write_only=True, source='publisher',
+                                    queryset=Author.objects.all(),
+                                )
 
-    # serializers.StringRelatedField(many=True)
     class Meta:
         model = Book
         fields = [
             'id', 'title', 'pages', 'date_published', 'isbn', 'authors',
-            'categories', 'publisher'
+            'categories', 'publisher', 'authors_ids', 'categories_ids',
+            'publisher_id'
         ]
+        read_only_fields = ['id', 'authors', 'categories', 'publisher']
 
 
-        # extra_kwargs = {
-        #     'id': {'read_only': True},
-        #     'authors': {'read_only': True},
-        #     'categories': {'read_only': True},
-        #     'categories': {'read_only': True}
-        # }
+        extra_kwargs = {
+            'authors_ids': {'write_only': True},
+            'categories_ids': {'write_only': True},
+            'publisher_id': {'write_only': True}
+        }
 
 
     @transaction.atomic

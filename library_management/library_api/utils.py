@@ -14,10 +14,10 @@ def regisiter_user(data, model_klass):
 
     if model_klass.__name__ == AUTHOR:
         user = model_klass(username=data['username'],
-                         company_name=data['company_name'])
+                          first_name=data['first_name'])
     elif model_klass.__name__ == PUBLISHER:
         user = model_klass(username=data['username'],
-                          first_name=data['first_name'])
+                          company_name=data['company_name'])
     else:
         return None
 

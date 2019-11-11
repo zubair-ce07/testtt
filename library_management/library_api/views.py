@@ -16,7 +16,7 @@ class BaseSignUpView(generics.GenericAPIView):
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
 
-        if serializer.is_valid():
+        if serializer.is_valid(raise_exception=True):
             user = serializer.save()
             if user:
                 data = serializer.data
@@ -58,6 +58,8 @@ class BookDetail(APIView):
     def put(self, request, pk, format=None):
         book = self.get_object(pk)
         serializer = BookSerializer(book, data=request.data, partial=True)
+        # import pdb; pdb.set_trace()
+
         if serializer.is_valid(raise_exception=True):
             serializer.save()
             return Response(serializer.data)
