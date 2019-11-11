@@ -1,7 +1,7 @@
 import scrapy
 
 
-class SnkrSpiderItem(scrapy.Item):
+class SnkrsItem(scrapy.Item):
     retailer_sku = scrapy.Field()
     brand = scrapy.Field()
     category = scrapy.Field()

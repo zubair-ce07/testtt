@@ -1,91 +1,90 @@
 # -*- coding: utf-8 -*-
 import scrapy
-from ..items import SnkrSpiderItem
+from ..items import SnkrsItem
 
 
 class SnkrsSpider(scrapy.Spider):
     name = 'snkrs'
     allowed_domains = ['snkrs.com']
-    start_urls = ['https://www.snkrs.com/en/']
+    start_urls = ['http://snkrs.com/en/']
 
     def parse(self, response):
-        men = response.css('a.a-niveau1::attr(href)').re_first(r'https://www.snkrs.com/en/263-men')
-        yield response.follow(men, callback=self.men_snkr_link)
+        men_link = response.css('li.li-niveau1.advtm_menu_2.sub > a.a-niveau1::attr(href)').extract_first()
+        women_link = response.css('li.li-niveau1.advtm_menu_3.sub > a.a-niveau1::attr(href)').extract_first()
+        skate = response.css('li.li-niveau1.advtm_menu_4.menuHaveNoMobileSubMenu' +
+        ' > a.a-niveau1::attr(href)').extract_first()
+        life_style = response.css('li.li-niveau1.advtm_menu_5.menuHaveNoMobileSubMenu' +
+        ' > a.a-niveau1::attr(href)').extract_first() 
+        if men_link:
+        	print(men_link)
+        	yield response.follow(men_link, callback=self.men_list_page)
+        if women_link:
+            print(women_link)
+            yield response.follow(women_link, callback=self.women_list_page)
+        if skate:
+            print(skate)
+            yield response.follow(skate, callback=self.skate_list_page)
+        if life_style:
+            print(life_style)
+            yield response.follow(life_style, callback=self.life_style_list_page)
 
-    def men_snkr_link(self,response):
-    	men_snkr = response.css('a::attr(href)').re_first(r'https://www.snkrs.com/en/2-sneakers')
-    	yield response.follow(men_snkr, callback=self.adidas_men)
+    def men_list_page(self,response):
+    	urls = response.css('ul.product_list.grid.row' +
+        ' >.ajax_block_product.block_home.col-xs-6.col-sm-4.col-md-3' +
+        ' > .product-container > .left-block > .product-image-container' +
+        ' > .product_img_link::attr(href)').extract()
+    	for url in urls:
+    		print(url)
+    		yield response.follow(url, callback=self.product_page)
 
-    def adidas_men(self,response):
-    	adidas = response.css('a::attr(href)').re_first(r'https://www.snkrs.com/en/adidas/adidas-hu-nmd-hu-made-whitescarlet-10195.html')
-    	yield response.follow(adidas, callback=self.adidas_white_scarlet)
+    def women_list_page(self,response):
+        urls = response.css('ul.product_list.grid.row' +
+        ' > .ajax_block_product.block_home.col-xs-6.col-sm-4.col-md-3' +
+        ' > .product-container > .left-block > .product-image-container' +
+        ' > .product_img_link::attr(href)').extract()
+        for url in urls:
+            print(url)
+            yield response.follow(url, callback=self.product_page)
 
-    def adidas_white_scarlet(self,response):
-        items =  SnkrSpiderItem()
+    def skate_list_page(self,response):
+        urls = response.css('ul.product_list.grid.row' +
+        ' > .ajax_block_product.block_home.col-xs-6.col-sm-4.col-md-3' +
+        ' > .product-container > .left-block > .product-image-container' +
+        ' > .product_img_link::attr(href)').extract()
+        for url in urls:
+            print(url)
+            yield response.follow(url, callback=self.product_page)
 
-        items['retailer_sku'] = response.css('div.nosto_product > span.product_id::text').get()
+    def life_style_list_page(self,response):
+        urls = response.css('ul.product_list.grid.row' +
+        ' > .ajax_block_product.block_home.col-xs-6.col-sm-4.col-md-3' +
+        ' > .product-container > .left-block > .product-image-container' +
+        ' > .product_img_link::attr(href)').extract()
+        for url in urls:
+            print(url)
+            yield response.follow(url, callback=self.product_page)
+
+    def product_page(self,response):
+    	items = SnkrsItem()
+
+    	items['retailer_sku'] = response.css('div.nosto_product > span.product_id::text').get()
         items['brand'] = response.css('div.nosto_product > span.brand::text').get()
         items['category'] = response.css('div.nosto_product > span.category::text').re(r'Men .*')
-        items['description'] = response.css('p::text').re(r'- .*')
-        items['gender'] = response.css('li > a::text').re_first(r'Men')
+        items['description'] = response.css('div.rte > p::text').extract()
+        items['gender'] = response.css('div.nosto_product > span.category').re_first(r'Men')
         items['url'] = response.css('div.nosto_product > span.url::text').get()
         items['name'] = response.css('div.nosto_product > span.name::text').get()
-        items['image_urls'] = response.css('a::attr(href)').re(r'https://media.*')
-        items['skus'] = {
-                'White/Scarlet_37 1/3' : {
-                    'colour' : response.css('div.nosto_product > span.name::text').re_first(r'White/Scarlet'),
-                    "currency" : response.css('div.nosto_product > span.price_currency_code::text').get(),
-                    "price" : response.css('div.nosto_product > span.price::text').get(),
-                    "size" : response.css('span.units_container > span.size_EU::text').re_first(r'37 .*')
-                },
-                'White/Scarlet_38' : {
-                    'colour' : response.css('div.nosto_product > span.name::text').re_first(r'White/Scarlet'),
-                    "currency" : response.css('div.nosto_product > span.price_currency_code::text').get(),
-                    "price" : response.css('div.nosto_product > span.price::text').get(),
-                    "size" : response.css('span.units_container > span.size_EU::text').re_first(r'38')
-                },
-                "White/Scarlet_38 2/3" : {
-                   "colour" : response.css('div.nosto_product > span.name::text').re_first(r'White/Scarlet'),
-                   "currency" : response.css('div.nosto_product > span.price_currency_code::text').get(),
-                   "price" : response.css('div.nosto_product > span.price::text').get(),
-                   "size" : response.css('span.units_container > span.size_EU::text').re_first(r'38 .2*')
-               },
-               "White/Scarlet_39 1/3" : {
-                   "colour" : response.css('div.nosto_product > span.name::text').re_first(r'White/Scarlet'),
-                   "currency" : response.css('div.nosto_product > span.price_currency_code::text').get(),
-                   "price" : response.css('div.nosto_product > span.price::text').get(),
-                   "size" : response.css('span.units_container > span.size_EU::text').re_first(r'39 .*')
-               },
-               "White/Scarlet_40" : {
-                   "colour" : response.css('div.nosto_product > span.name::text').re_first(r'White/Scarlet'),
-                   "currency" : response.css('div.nosto_product > span.price_currency_code::text').get(),
-                   "price" : response.css('div.nosto_product > span.price::text').get(),
-                   "size" : response.css('span.units_container > span.size_EU::text').re_first(r'40')
-               },
-               "White/Scarlet_40 2/3" : {
-                   "colour" : response.css('div.nosto_product > span.name::text').re_first(r'White/Scarlet'),
-                   "currency" : response.css('div.nosto_product > span.price_currency_code::text').get(),
-                   "price" : response.css('div.nosto_product > span.price::text').get(),
-                   "size" : response.css('span.units_container > span.size_EU::text').re_first(r'40 .2*')
-               },
-               "White/Scarlet_41 1/3" : {
-                   "colour" : response.css('div.nosto_product > span.name::text').re_first(r'White/Scarlet'),
-                   "currency" : response.css('div.nosto_product > span.price_currency_code::text').get(),
-                   "price" : response.css('div.nosto_product > span.price::text').get(),
-                   "size" : response.css('span.units_container > span.size_EU::text').re_first(r'41 .*')
-               },
-               "White/Scarlet_42 " : {
-                    "colour" : response.css('div.nosto_product > span.name::text').re_first(r'White/Scarlet'),
-                    "currency" : response.css('div.nosto_product > span.price_currency_code::text').get(),
-                    "price" : response.css('div.nosto_product > span.price::text').get(),
-                    "size" : response.css('span.units_container > span.size_EU::text').re_first(r'42')
-                },
-               "White/Scarlet_42 2/3" : {
-                   "colour" : response.css('div.nosto_product > span.name::text').re_first(r'White/Scarlet'),
-                   "currency" : response.css('div.nosto_product > span.price_currency_code::text').get(),
-                   "price" : response.css('div.nosto_product > span.price::text').get(),
-                   "size" : response.css('span.units_container > span.size_EU::text').re_first(r'42 .2*')
-               }
+        items['image_urls'] = response.css('div.nosto_product > .image_url::text').extract()
+        items['image_urls'].extend(response.css('div.nosto_product > .alternate_image_url::text').extract())
+        shoes_name = response.css('div.nosto_product > span.name::text').re_first(r'- .*')
+        for sizes in response.css('span.units_container > .size_EU::text').extract():
+            items['skus'] = {shoes_name + "_".join(sizes):
+            {
+                "colour" : shoes_name,
+                "currency" : response.css('div.nosto_product > span.price_currency_code::text').get(),
+                "price" : response.css('div.nosto_product > span.price::text').get(),
+                "size" : sizes
+            },
             }
-        yield items
-     	
+
+    	yield items
