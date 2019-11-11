@@ -19,8 +19,7 @@ class MixinUS():
 
 class SnkrsParseSpider():
     ONE_SIZE = 'oneSize'
-    ONE_COLOUR = 'oneColour'    
-
+        
     def parse(self, response):       
         product = Product()
               
@@ -77,15 +76,16 @@ class SnkrsParseSpider():
 
     def get_colour(self, response):
         colour = self.get_name(response)
-        return colour.split(' - ')[1] if ' - ' in colour else self.ONE_COLOUR 
+        return colour.split(' - ')[1] if ' - ' in colour else ''
 
     def get_skus(self, response):
         skus = {}
+        common_sku = {}
         
-        common_sku = {
-            'colour': self.get_colour(response),            
-            'out_of_stock': False
-        }
+        if self.get_colour(response):
+            common_sku['colour'] = self.get_colour(response)
+
+        common_sku['out_of_stock'] = False
         common_sku.update(self.get_price(response))
 
         size_css = 'span.size_EU::text, li:not(.hidden) span.units_container::text'                
@@ -93,8 +93,11 @@ class SnkrsParseSpider():
 
         for size in sizes:
             sku_attributes = {**common_sku}                       
-            sku_attributes['size'] = size                    
-            skus[f"{common_sku['colour']}_{size}"] = sku_attributes
+            sku_attributes['size'] = size
+            if 'colour' in common_sku:                    
+                skus[f"{common_sku['colour']}_{size}"] = sku_attributes
+            else:
+                skus[size] = sku_attributes
        
         return skus
 
