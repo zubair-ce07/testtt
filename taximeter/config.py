@@ -1,5 +1,4 @@
 
-
 class Configurations:
 
     TIME_INTERVAL = 1
@@ -10,5 +9,3 @@ class Configurations:
     RIDE_MOVING_STATE = 'MOVING'
     RIDE_PAUSE_STATE = 'PAUSE'
     RIDE_END_STATE = 'END'
-
-

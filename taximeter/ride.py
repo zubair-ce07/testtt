@@ -48,13 +48,14 @@ class Ride(SpeedMeter, DistanceMeter):
         self.waiting_time_in_sec += seconds
 
     def decrease_speed(self):
-        super(Ride, self).decrease_speed()
+        super().decrease_speed()
 
         if self.current_speed == 0:
             self.pause_ride()
 
     def increase_speed(self):
-        super(Ride, self).increase_speed()
+        super().increase_speed()
+
         if self.ride_state == Config.RIDE_PAUSE_STATE:
             self.resume_ride()
 
@@ -66,8 +67,8 @@ class Ride(SpeedMeter, DistanceMeter):
         return math.ceil(self.waiting_time_in_sec / 60)
 
     def display_ride_stats(self):
-        print('\r\nRide Time : {time} seconds'.format(time=self.riding_time_in_sec))
-        print('\rDistance : {distance}'.format(distance=self.distance_in_kilometer()))
-        print('\rSpeed : {speed}m/sec'.format(speed=self.total_distance_in_meters // self.riding_time_in_sec))
-        print('\rFare : {fare} Rs'.format(fare=self.calculate_fare()))
-        print('\rWait Time : {time} Minutes'.format(time=self.waiting_time_in_minutes()))
+        print(f'\r\nRide Time : {self.riding_time_in_sec} seconds')
+        print(f'\rDistance : {self.distance_in_kilometer()}')
+        print(f'\rSpeed : {self.total_distance_in_meters // self.riding_time_in_sec}m/sec')
+        print(f'\rFare : {self.calculate_fare()} Rs')
+        print(f'\rWait Time : {self.waiting_time_in_minutes()} Minutes')

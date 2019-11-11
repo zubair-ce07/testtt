@@ -8,7 +8,7 @@ class SpeedMeter(object):
 
     def increase_speed(self):
         self.current_speed += Config.CHANGE_IN_SPEED
-        print('\rSpeed increased to {speed}m/sec'.format(speed=self.current_speed))
+        print(f'\rSpeed increased to {self.current_speed}m/sec')
 
     def decrease_speed(self):
         if self.current_speed <= 0:
@@ -16,4 +16,4 @@ class SpeedMeter(object):
             return
 
         self.current_speed -= Config.CHANGE_IN_SPEED
-        print('\rSpeed decreased to {speed}m/sec'.format(speed=self.current_speed))
+        print(f'\rSpeed decreased to {self.current_speed}m/sec')
