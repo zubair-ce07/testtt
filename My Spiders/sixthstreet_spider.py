@@ -37,19 +37,17 @@ class ParseSpider():
         return response.css('.cms_page::text').getall()
 
     def get_gender(self, response):
-        xpath = '//span[contains(text(),"Gender")]/following-sibling::span/text() | //title/text()'
-        gender_text = response.xpath(xpath).getall()
-
+        gender_text = response.css(':contains("Gender :") + span::text, title::text').getall()         
         description = self.get_description(response)
-        raw_gender = ' '.join(gender_text + description) 
+        gender_soup = ' '.join(gender_text + description) 
         
-        return map_gender(raw_gender)
+        return map_gender(gender_soup)
 
     def get_url(self, response):
         return response.url
 
     def get_description(self, response):                
-        return response.css('div.description p::text').getall()
+        return response.css('div.description p::text, div.description div::text').getall()
 
     def get_name(self, response):        
         return response.css('.product_name::text').get()
@@ -66,34 +64,40 @@ class ParseSpider():
         return availability != 'In Stock'
 
     def get_sizes(self, response):
-        raw_sizes = response.css('script').re_first(r"sizeOptionArr = JSON.parse\('(.*)'\);")
-        sizes_parsed = json.loads(raw_sizes) if raw_sizes else []
-        sizes = [size['UK'] for size in sizes_parsed]
-        
-        return sizes if sizes else [self.ONE_SIZE]       
+        raw_sizes = response.css('script').re(r"sizeOptionArr = JSON.parse\('(.*)'\);")
+        sizes = json.loads(raw_sizes[0]) if raw_sizes else []                
+        return [s['UK'] for s in sizes] if sizes else [self.ONE_SIZE]       
 
     def get_price(self, response):
         current_price = response.css('[itemprop="price"]::attr(content)').get()
         previous_price = response.css('.old-price span::attr(data-price-amount)').get()
 
-        return format_price(current_price, previous_price)
+        price = format_price(current_price, previous_price)
+        price['currency'] = response.css('[itemprop="priceCurrency"]::attr(content)').get()
+
+        return price
+
+    def get_colour(self, response):        
+        return response.css(':contains("Color :") + span::text').get()
                             
     def get_skus(self, response):
         skus = {}
+        common_sku = {}
+        common_sku['out_of_stock'] = self.get_availability(response)
+                
+        if self.get_colour(response):
+            common_sku['colour'] = self.get_colour(response)
 
-        colour_xpath = '//span[contains(text(),"Color")]/following-sibling::span/text()'
-        currency = response.css('[itemprop="priceCurrency"]::attr(content)').get()
-        
-        for colour in response.xpath(colour_xpath).getall():
-            for size in self.get_sizes(response):
-                sku_attributes = {}
-                sku_attributes.update(self.get_price(response))                
-                sku_attributes['currency'] = currency 
-                sku_attributes['colour'] = colour
-                sku_attributes['size'] = size
-                sku_attributes['out_of_stock'] = self.get_availability(response)
+        common_sku.update(self.get_price(response))  
+                        
+        for size in self.get_sizes(response):                
+            sku_attributes = {**common_sku}                                                        
+            sku_attributes['size'] = size
 
-                skus[f'{colour}_{size}'] = sku_attributes
+            if 'colour' in common_sku:                 
+                skus[f"{common_sku['colour']}_{size}"] = sku_attributes
+            else:
+                skus[size] = sku_attributes
                             
         return skus
 
@@ -102,6 +106,10 @@ class CrawlSpider(CrawlSpider):
     name = 'sixthstreet_spider'
     allowed_domains = ['en-ae.6thstreet.com', 'algolianet.com']
     start_urls = ['https://en-ae.6thstreet.com']
+
+    custom_settings ={
+        'DOWNLOAD_DELAY': 2
+    }
 
     product_parser = ParseSpider()
 
@@ -128,10 +136,8 @@ class CrawlSpider(CrawlSpider):
     
     def parse_listings(self, response):
         raw_formdata = response.css('script').re_first('window\.algoliaConfig = (.*);</script>')
-        raw_category = response.css('body::attr(class)').re_first('categorypath-(.*) category')
-
-        raw_query = list(map(lambda c: c.capitalize(), raw_category))
-        query = '%20'.join(raw_query)
+        raw_category = response.css('body::attr(class)').re_first('categorypath-(.*) category').split('-')
+        query = '%20'.join([c.capitalize() for c in raw_category])
         
         formdata_parsed = json.loads(raw_formdata)
         application_id = formdata_parsed['applicationId']    
@@ -143,20 +149,16 @@ class CrawlSpider(CrawlSpider):
         )
         
         self.formdata['requests'][0]['params'] = self.params.format(query=query, page=0)
-        formdata = self.formdata
+        listings_formdata = {
+            'formdata': formdata_parsed,
+            'query': query
+        }
                     
-        yield Request(url, method="POST", body=json.dumps(formdata), meta={'listings':response}, callback=self.parse_pagination)
+        yield Request(url, method="POST", body=json.dumps(self.formdata),
+         meta=listings_formdata, callback=self.parse_pagination)
 
-    def parse_pagination(self, response):
-        listings_response = response.meta['listings']
-
-        raw_formdata = listings_response.css('script').re_first('window\.algoliaConfig = (.*);</script>')
-        raw_category = listings_response.css('body::attr(class)').re_first('categorypath-(.*) category')
-
-        raw_query = list(map(lambda c: c.capitalize(), raw_category))
-        query = '%20'.join(raw_query)
-        
-        formdata_parsed = json.loads(raw_formdata)
+    def parse_pagination(self, response):        
+        formdata_parsed = response.meta['formdata']
         application_id = formdata_parsed['applicationId']
         products = json.loads(response.text) 
         page_number = 0   
@@ -167,13 +169,10 @@ class CrawlSpider(CrawlSpider):
             api_key=formdata_parsed["apiKey"]
         )
 
-        while page_number <= int(products['results'][0]['nbPages']):            
-            self.formdata['requests'][0]['params'] = self.params.format(query=query, page=page_number)
-            formdata = self.formdata
-
-            page_number += 1    
-
-            yield Request(url, method="POST", body=json.dumps(formdata), callback=self.parse_urls)
+        for page_number in range(1, int(products['results'][0]['nbPages'])+1):            
+            self.formdata['requests'][0]['params'] = self.params.format(query=response.meta['query'], 
+             page=page_number)            
+            yield Request(url, method="POST", body=json.dumps(self.formdata), callback=self.parse_urls)
         
     def parse_urls(self, response):
         products = json.loads(response.text)
