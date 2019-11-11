@@ -18,7 +18,8 @@ class MixinUS():
 
 
 class SnkrsParseSpider():
-    ONE_SIZE = 'oneSize'    
+    ONE_SIZE = 'oneSize'
+    ONE_COLOUR = 'oneColour'    
 
     def parse(self, response):       
         product = Product()
@@ -47,8 +48,7 @@ class SnkrsParseSpider():
         category = self.get_category(response)
         description = self.get_description(response) 
 
-        gender_soup = f"{title_text} {' '.join(category + description)}"
-
+        gender_soup = ' '.join(category + description) + title_text
         return map_gender(gender_soup)    
 
     def get_category(self, response):
@@ -61,7 +61,7 @@ class SnkrsParseSpider():
         return response.css('#short_description_content p::text').getall()
 
     def get_name(self, response):
-        return response.css('[itemprop="name"]::text').get().split(' - ')[0]
+        return response.css('[itemprop="name"]::text').get()
 
     def get_image_urls(self, response):
         return response.css('#carrousel_frame li a::attr(href)').getall()
@@ -75,11 +75,15 @@ class SnkrsParseSpider():
 
         return price
 
+    def get_colour(self, response):
+        colour = self.get_name(response)
+        return colour.split(' - ')[1] if ' - ' in colour else self.ONE_COLOUR 
+
     def get_skus(self, response):
         skus = {}
         
         common_sku = {
-            'colour': response.css('[itemprop="name"]::text').get().split(' - ')[1],            
+            'colour': self.get_colour(response),            
             'out_of_stock': False
         }
         common_sku.update(self.get_price(response))
