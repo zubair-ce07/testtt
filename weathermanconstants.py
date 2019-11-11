@@ -1,6 +1,4 @@
-
-class Constants:
-
+class WeatherManConstants:
     READING_TIME_INDEX = 'PKT'
     READING_MAX_TEMP_C_INDEX = 'Max TemperatureC'
     READING_MIN_TEMP_C_INDEX = 'Min TemperatureC'
