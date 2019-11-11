@@ -1,13 +1,23 @@
-from scrapy.spiders import Rule, CrawlSpider, Spider
+from scrapy.spiders import Rule, CrawlSpider
 from scrapy.linkextractors import LinkExtractor
 
 from ..items import Product
 from ..utils import map_gender, format_price
 
 
-class SnkrsParseSpider(Spider):
-    name = 'parse_spider'
+class MixinFR():
+    name = 'snkrs_fr'
+    allowed_domains = ['snkrs.com']
+    start_urls = ['https://www.snkrs.com/fr/']
 
+
+class MixinUS():
+    name = 'snkrs_us'
+    allowed_domains = ['snkrs.com']
+    start_urls = ['https://www.snkrs.com/en/']
+
+
+class SnkrsParseSpider():
     ONE_SIZE = 'oneSize'    
 
     def parse(self, response):       
@@ -24,7 +34,7 @@ class SnkrsParseSpider(Spider):
         product['skus'] = self.get_skus(response)
         product['image_urls'] = self.get_image_urls(response)
 
-        yield product 
+        return product 
      
     def get_retailer_sku(self, response):
         return response.css('[itemprop="sku"]::text').get()
@@ -37,9 +47,9 @@ class SnkrsParseSpider(Spider):
         category = self.get_category(response)
         description = self.get_description(response) 
 
-        gender_text = f"{title_text} {' '.join(category)} {' '.join(description)}"
+        gender_soup = f"{title_text} {' '.join(category + description)}"
 
-        return map_gender(gender_text)    
+        return map_gender(gender_soup)    
 
     def get_category(self, response):
         return response.css('span.category::text').get().split('/')
@@ -58,40 +68,35 @@ class SnkrsParseSpider(Spider):
 
     def get_price(self, response):
         current_price = response.css('[itemprop="price"]::attr(content)').get()
-        previous_price = response.css('.list_price::text').get()
+        previous_price = response.css('#old_price_display .price::text').re_first(r"\d+")
+        
+        price = format_price(current_price, previous_price)
+        price['currency'] = response.css('[itemprop="priceCurrency"]::attr(content)').get()
 
-        return format_price(previous_price, current_price)
+        return price
 
     def get_skus(self, response):
         skus = {}
-
-        size_css = 'span.size_EU::text, li:not(.hidden) span.units_container::text'        
-        colour = response.css('[itemprop="name"]::text').get().split(' - ')[1]
-        currency = response.css('[itemprop="priceCurrency"]::attr(content)').get()
         
-        color_currency = {
-            'colour': colour,
-            'currency': currency
+        common_sku = {
+            'colour': response.css('[itemprop="name"]::text').get().split(' - ')[1],            
+            'out_of_stock': False
         }
-        
+        common_sku.update(self.get_price(response))
+
+        size_css = 'span.size_EU::text, li:not(.hidden) span.units_container::text'                
         sizes = [size for size in response.css(size_css).getall() if size != ' '] or [self.ONE_SIZE]         
 
         for size in sizes:
-            sku_attributes = {}
-            availability = response.css('span.availability::text').get()            
-            
-            sku_attributes.update(self.get_price(response))
-            sku_attributes.update(color_currency)
-            sku_attributes['out_of_stock'] = availability != 'InStock'
-            sku_attributes['size'] = size
-                    
-            skus[f'{colour}_{size}'] = sku_attributes
+            sku_attributes = {**common_sku}                       
+            sku_attributes['size'] = size                    
+            skus[f"{common_sku['colour']}_{size}"] = sku_attributes
        
         return skus
 
 
 class SnkrsCrawlSpider(CrawlSpider):       
-    listings_css = 'ul.sf-menu'
+    listings_css = '#menu li'
     product_css = 'div.product-container'
     
     product_parser = SnkrsParseSpider()
@@ -105,29 +110,17 @@ class SnkrsCrawlSpider(CrawlSpider):
         return self.product_parser.parse(response)
 
 
-class FrRegion():
-    name = 'snkrs_fr'
-    allowed_domains = ['snkrs.com']
-    start_urls = ['https://www.snkrs.com/fr/']
+class FrCrawlSpider(SnkrsCrawlSpider, MixinFR):
+    name = f'{MixinFR.name}_crawler'
 
 
-class UsRegion():
-    name = 'snkrs_us'
-    allowed_domains = ['snkrs.com']
-    start_urls = ['https://www.snkrs.com/en/']
+class UsCrawlSpider(SnkrsCrawlSpider, MixinUS):
+    name = f'{MixinUS.name}_crawler'    
 
 
-class FrCrawlSpider(SnkrsCrawlSpider, FrRegion):
-    name = f'{FrRegion.name}_crawler'
+class FrParseSpider(SnkrsParseSpider, MixinFR):
+    name = f'{MixinFR.name}_parser'    
 
 
-class UsCrawlSpider(SnkrsCrawlSpider, UsRegion):
-    name = f'{UsRegion.name}_crawler'    
-
-
-class FrParseSpider(SnkrsParseSpider, FrRegion):
-    name = f'{FrRegion.name}_parser'    
-
-
-class UsParseSpider(SnkrsParseSpider, UsRegion):
-    name = f'{UsRegion.name}_parser'    
+class UsParseSpider(SnkrsParseSpider, MixinUS):
+    name = f'{MixinUS.name}_parser'    
