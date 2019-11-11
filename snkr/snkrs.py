@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import scrapy
 from ..items import SnkrsItem
 
@@ -30,7 +29,7 @@ class SnkrsSpider(scrapy.Spider):
 
     def men_list_page(self,response):
     	urls = response.css('ul.product_list.grid.row' +
-        ' >.ajax_block_product.block_home.col-xs-6.col-sm-4.col-md-3' +
+        ' > .ajax_block_product.block_home.col-xs-6.col-sm-4.col-md-3' +
         ' > .product-container > .left-block > .product-image-container' +
         ' > .product_img_link::attr(href)').extract()
     	for url in urls:
@@ -63,22 +62,52 @@ class SnkrsSpider(scrapy.Spider):
         for url in urls:
             print(url)
             yield response.follow(url, callback=self.product_page)
+    def get_retailer_sku(self,response):
+        retailer_sku = response.css('div.nosto_product > span.product_id::text').get()
+        return retailer_sku
+
+    def get_brand(self,response):
+        brand = response.css('div.nosto_product > span.brand::text').get()
+        return brand
+
+    def get_category(self,response):
+        category = response.css('div.nosto_product > span.category::text').re(r'Men .*')
+        return category
+
+    def get_desciption(self,response):
+        description = response.css('div.rte > p::text').extract()
+        return description
+
+    def get_gender(self,response):
+        gender = response.css('div.nosto_product > span.category').re_first(r'Men')
+        return gender
+
+    def get_url(self,response):
+        url = response.css('div.nosto_product > span.url::text').get()
+        return url
+
+    def get_name(self,response):
+        name = response.css('div.nosto_product > span.name::text').get()
+        return name
+        
+    def get_image_urls(self,response):
+        image_urls = response.css('div.nosto_product > .image_url::text').extract()
+        image_urls.extend(response.css('div.nosto_product > .alternate_image_url::text').extract())
 
     def product_page(self,response):
     	items = SnkrsItem()
 
-    	items['retailer_sku'] = response.css('div.nosto_product > span.product_id::text').get()
-        items['brand'] = response.css('div.nosto_product > span.brand::text').get()
-        items['category'] = response.css('div.nosto_product > span.category::text').re(r'Men .*')
-        items['description'] = response.css('div.rte > p::text').extract()
-        items['gender'] = response.css('div.nosto_product > span.category').re_first(r'Men')
-        items['url'] = response.css('div.nosto_product > span.url::text').get()
-        items['name'] = response.css('div.nosto_product > span.name::text').get()
-        items['image_urls'] = response.css('div.nosto_product > .image_url::text').extract()
-        items['image_urls'].extend(response.css('div.nosto_product > .alternate_image_url::text').extract())
-        shoes_name = response.css('div.nosto_product > span.name::text').re_first(r'- .*')
+        items['retailer_sku'] = self.get_retailer_sku(response)
+        items['brand'] = self.get_brand(response)
+        items['category'] = self.get_category(response)
+        items['description'] = self.get_desciption(response)
+        items['gender'] =  self.get_gender(response)
+        items['url'] = self.get_url(response)
+        items['name'] = self.get_name(response)
+        items['image_urls'] = self.get_image_urls(response)
+        shoes_name = items['name']
         for sizes in response.css('span.units_container > .size_EU::text').extract():
-            items['skus'] = {shoes_name + "_".join(sizes):
+            items['skus'] = {shoes_name + "_" + sizes:
             {
                 "colour" : shoes_name,
                 "currency" : response.css('div.nosto_product > span.price_currency_code::text').get(),
@@ -86,5 +115,4 @@ class SnkrsSpider(scrapy.Spider):
                 "size" : sizes
             },
             }
-
     	yield items
