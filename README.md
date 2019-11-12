@@ -1,18 +1,21 @@
-the-lab
-=======
+# Steps to Run:
 
-The purpose of this repo is to help the team lead and his team member in training and evaluating newly hired developers especially fresh grads. Code written by newbies for training/practice will be checked in here and reviewed by their respective team leads. All feedback must be in written on github.
+1 - Make sure to have python 3.5 verison installed.
 
-## Getting Started
+2 - Make sure the existence of weatherman folder containing all weather files in the root of weatherman.py.
 
-1. Clone this repo on your local machine.
-1. Create a new branch with your name like *alisufian-master* (lower case).
-1. Push this empty branch.
-1. For every assigned task create a new branch e.g. alisufian-borjanspider.
-1. When the task is complete make sure the code confirms to [pep8](https://www.python.org/dev/peps/pep-0008/).
-1. Push the code and create a pull request against your *name-master* branch.
-1. Specify the title of the PR as *name-task* e.g. *Ali Sufian - Weatherman* so its easy to find in the list.
-1. In case you [mess](http://ohshitgit.com/) up the repo.
+3 - Clone the repository.
 
-Do not add log files, temp files, data files etc.
-**Do not merge/push anything into master branch**.
+4 - Run the following commands to enjoy the app:
+
+	Task #1: python3.5 weatherman.py -e 1996 weatherdata
+
+	Task #2:  python3.5 weatherman.py -a 1996/12 weatherdata
+
+	Task #3:  python3.5 weatherman.py -c 1996/12 weatherdata
+
+	Task #4 BONUS TASK: python3.5 weatherman.py -d 1996/12 weatherdata
+
+NOTE: Step #2 is must when you want to execute the given commands.
+
+Further you can ask at zubair.shakoor@arbisoft.com
