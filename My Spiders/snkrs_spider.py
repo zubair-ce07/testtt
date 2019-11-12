@@ -19,10 +19,10 @@ class MixinUS():
 
 class SnkrsParseSpider():
     ONE_SIZE = 'oneSize'
-        
-    def parse(self, response):       
+
+    def parse(self, response):
         product = Product()
-              
+
         product['retailer_sku'] = self.get_retailer_sku(response)
         product['gender'] = self.get_gender(response)
         product['category'] = self.get_category(response)
@@ -34,8 +34,8 @@ class SnkrsParseSpider():
         product['skus'] = self.get_skus(response)
         product['image_urls'] = self.get_image_urls(response)
 
-        return product 
-     
+        return product
+
     def get_retailer_sku(self, response):
         return response.css('[itemprop="sku"]::text').get()
 
@@ -45,18 +45,18 @@ class SnkrsParseSpider():
     def get_gender(self, response):
         title_text = response.css('title::text').get()
         category = self.get_category(response)
-        description = self.get_description(response) 
+        description = self.get_description(response)
 
         gender_soup = ' '.join(category + description) + title_text
-        return map_gender(gender_soup)    
+        return map_gender(gender_soup)
 
     def get_category(self, response):
         return response.css('span.category::text').get().split('/')
-    
+
     def get_url(self, response):
         return response.url
 
-    def get_description(self, response):        
+    def get_description(self, response):
         return response.css('#short_description_content p::text').getall()
 
     def get_name(self, response):
@@ -68,11 +68,9 @@ class SnkrsParseSpider():
     def get_price(self, response):
         current_price = response.css('[itemprop="price"]::attr(content)').get()
         previous_price = response.css('#old_price_display .price::text').re_first(r"\d+")
-        
-        price = format_price(current_price, previous_price)
-        price['currency'] = response.css('[itemprop="priceCurrency"]::attr(content)').get()
+        currency = response.css('[itemprop="priceCurrency"]::attr(content)').get()
 
-        return price
+        return format_price(currency, current_price, previous_price)
 
     def get_colour(self, response):
         colour = self.get_name(response)
@@ -80,32 +78,30 @@ class SnkrsParseSpider():
 
     def get_skus(self, response):
         skus = {}
-        common_sku = {}
-        
-        if self.get_colour(response):
-            common_sku['colour'] = self.get_colour(response)
+        common_sku = self.get_price(response)
+        colour = self.get_colour(response)
+
+        if colour:
+            common_sku['colour'] = colour
 
         common_sku['out_of_stock'] = False
-        common_sku.update(self.get_price(response))
-
-        size_css = 'span.size_EU::text, li:not(.hidden) span.units_container::text'                
-        sizes = [size for size in response.css(size_css).getall() if size != ' '] or [self.ONE_SIZE]         
+        size_css = 'span.size_EU::text, li:not(.hidden) span.units_container::text'
+        sizes = [size for size in response.css(size_css).getall() if size != ' '] or [self.ONE_SIZE]
 
         for size in sizes:
-            sku_attributes = {**common_sku}                       
-            sku_attributes['size'] = size
-            if 'colour' in common_sku:                    
-                skus[f"{common_sku['colour']}_{size}"] = sku_attributes
-            else:
-                skus[size] = sku_attributes
-       
+            sku = {**common_sku}
+            sku['size'] = size
+
+            skus.update({f"{common_sku['colour']}_{size}": sku}) if 'colour' in common_sku \
+                else skus.update({size: sku})
+
         return skus
 
 
-class SnkrsCrawlSpider(CrawlSpider):       
+class SnkrsCrawlSpider(CrawlSpider):
     listings_css = '#menu li'
     product_css = 'div.product-container'
-    
+
     product_parser = SnkrsParseSpider()
 
     rules = (
@@ -122,12 +118,12 @@ class FrCrawlSpider(SnkrsCrawlSpider, MixinFR):
 
 
 class UsCrawlSpider(SnkrsCrawlSpider, MixinUS):
-    name = f'{MixinUS.name}_crawler'    
+    name = f'{MixinUS.name}_crawler'
 
 
 class FrParseSpider(SnkrsParseSpider, MixinFR):
-    name = f'{MixinFR.name}_parser'    
+    name = f'{MixinFR.name}_parser'
 
 
 class UsParseSpider(SnkrsParseSpider, MixinUS):
-    name = f'{MixinUS.name}_parser'    
+    name = f'{MixinUS.name}_parser'
