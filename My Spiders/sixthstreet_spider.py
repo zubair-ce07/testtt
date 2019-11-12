@@ -1,8 +1,9 @@
 import json
 
+from scrapy import Request
 from scrapy.spiders import Rule, CrawlSpider
 from scrapy.linkextractors import LinkExtractor
-from scrapy import Request
+from w3lib.url import add_or_replace_parameter
 
 from ..items import Product
 from ..utils import map_gender, format_price
@@ -64,9 +65,9 @@ class ParseSpider():
         return availability != 'In Stock'
 
     def get_sizes(self, response):
-        raw_sizes = response.css('script').re(r"sizeOptionArr = JSON.parse\('(.*)'\);")
-        sizes = json.loads(raw_sizes[0]) if raw_sizes else []                
-        return [s['UK'] for s in sizes] if sizes else [self.ONE_SIZE]       
+        raw_sizes = response.css('script').re_first(r"sizeOptionArr = JSON.parse\('(.*)'\);")
+        sizes = json.loads(raw_sizes) if raw_sizes else [{'UK': self.ONE_SIZE}]                
+        return [s['UK'] for s in sizes]   
 
     def get_price(self, response):
         current_price = response.css('[itemprop="price"]::attr(content)').get()
@@ -113,12 +114,12 @@ class CrawlSpider(CrawlSpider):
 
     product_parser = ParseSpider()
 
-    url =    'https://{application_id}-3.algolianet.com/1/indexes/*/' \
+    url_t =    'https://{application_id}-3.algolianet.com/1/indexes/*/' \
             'queries?x-algolia-agent=Algolia%20for%20vanilla%20JavaScript%20(lite)%203.27.0%3Binstantsearch.js' \
             '%202.10.2%3BMagento2%20integration%20(1.10.0)%3BJS%20Helper%202.26.0&' \
             'x-algolia-application-id={app_id}&x-algolia-api-key={api_key}' 
     
-    params = "query={query}&hitsPerPage=60&maxValuesPerFacet=60&page={page}"
+    params_t = "query={query}&hitsPerPage=60&maxValuesPerFacet=60&page={page}"
     formdata = {
         "requests":[
             {
@@ -142,36 +143,36 @@ class CrawlSpider(CrawlSpider):
         formdata_parsed = json.loads(raw_formdata)
         application_id = formdata_parsed['applicationId']    
               
-        url = self.url.format(
+        url = self.url_t.format(
             application_id=application_id.lower(), 
             app_id=application_id,
             api_key=formdata_parsed["apiKey"]
         )
         
-        self.formdata['requests'][0]['params'] = self.params.format(query=query, page=0)
+        self.formdata['requests'][0]['params'] = self.params_t.format(query=query, page=0)
         listings_formdata = {
             'formdata': formdata_parsed,
             'query': query
         }
                     
         yield Request(url, method="POST", body=json.dumps(self.formdata),
-         meta=listings_formdata, callback=self.parse_pagination)
+                      meta=listings_formdata, callback=self.parse_pagination)
 
     def parse_pagination(self, response):        
         formdata_parsed = response.meta['formdata']
         application_id = formdata_parsed['applicationId']
-        products = json.loads(response.text) 
-        page_number = 0   
+        products = json.loads(response.text)            
               
-        url = self.url.format(
+        url = self.url_t.format(
             application_id=application_id.lower(), 
             app_id=application_id,
             api_key=formdata_parsed["apiKey"]
         )
 
         for page_number in range(1, int(products['results'][0]['nbPages'])+1):            
-            self.formdata['requests'][0]['params'] = self.params.format(query=response.meta['query'], 
-             page=page_number)            
+            self.formdata['requests'][0]['params'] = add_or_replace_parameter(
+                self.params_t.format(query=response.meta['query']), 'page', page_number) 
+
             yield Request(url, method="POST", body=json.dumps(self.formdata), callback=self.parse_urls)
         
     def parse_urls(self, response):
