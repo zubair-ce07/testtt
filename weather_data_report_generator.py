@@ -8,39 +8,38 @@ from termcolor import colored
 
 
 def generate_report(parsed_list, info_type):
+
     """
     Method takes list of file names and report type as info_type
     and generate report accordingly
     """
 
     system('clear')
-    if info_type in '-e':
-        max_temp = max([max_temp.max_temprature
-                        for max_temp in parsed_list])
+    if info_type == '-e':
+        max_temp = max([mt.max_temprature
+                        for mt in parsed_list])
         lowest_temp = max(lt.lowest_temprature
                           for lt in parsed_list)
         most_humid = max(mh.most_humid for mh in parsed_list)
         print("\t\t\t\t*** RESULTS OF THE YEAR ***")
-        max_temp_date = [max_temp.date for max_temp in parsed_list
-                         if max_temp.max_temprature is max_temp][0].split('-')
+        max_temp_date = [mt.date for mt in parsed_list
+                         if mt.max_temprature is max_temp][0].split('-')
         print("""\t\t\t\tHighest: {}C on {} {}""".format(max_temp,\
+            calendar.month_name[int(max_temp_date[1])],\
+                max_temp_date[2]))
+        lowest_temp_date = [ltd.date for ltd in parsed_list \
+            if ltd.lowest_temprature \
+                is lowest_temp][0].split('-')
+        print("\t\t\t\tLowest: {}C on {} {}".format(lowest_temp,\
             calendar.month_name[\
-                int(max_temp_date[1])\
-                    ],\
-                        max_temp_date[2]))
-        lowest_temp_date = [ltd.date for ltd in parsed_list
-                            if ltd.lowest_temprature is lowest_temp][0].split('-')
-        print("\t\t\t\tLowest: {}C on {} {}".format(\
-            lowest_temp, calendar.month_name[\
-                int(lowest_temp_date[1])\
-                    ], lowest_temp_date[2]))
-        most_humid_date = [mh.date \
-            for mh in parsed_list \
-                if mh.most_humid is most_humid][0].split('-')
+                int(lowest_temp_date[1])],\
+                    lowest_temp_date[2]))
+        most_humid_date = [mh.date for mh in parsed_list \
+            if mh.most_humid is most_humid][0].split('-')
         print("\t\t\t\tHumid: {}% on {} {}".format(\
             most_humid, calendar.month_name[\
-                int(most_humid_date[1])\
-                    ], most_humid_date[2]))
+                int(most_humid_date[1])],\
+                    most_humid_date[2]))
     elif info_type in '-a':
         print("\t\t\t\t*** RESULTS OF THE MONTH ***")
         print("\t\t\t\tHighest Average: {}C".format(\

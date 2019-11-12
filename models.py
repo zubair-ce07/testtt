@@ -1,7 +1,7 @@
 """
 This file contains models of weather app
 """
-class Weather: # pylint: disable=too-few-public-methods
+class Weather:
     """
     Model for weather records
     """
