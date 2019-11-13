@@ -1,25 +1,21 @@
-from .utils import VALUE_EXTRACTOR_FROM_KEY, product_currency, product_price
+from .utils import VALUE_EXTRACTOR_FROM_KEY
 
 
 class ProductSku:
 
-    def __init__(self):
-        self.product_skus = []
-
     def collect_product_skus(self, response, raw_skus, sku_id):
+        product_skus = []
 
         for sku in raw_skus:
-            self.product_skus.append(
+            product_skus.append(
                 {
-                    "price": product_price(response, sku_id),
-                    "currency": product_currency(response),
                     "previous_prices": [self.sku_previous_price(response, sku_id)],
                     "colour": self.sku_color(sku.get('Attributes')),
                     "size": self.sku_size(sku.get('Attributes')),
                     "sku_id": sku.get('catentry_id')
                 }
             )
-        return self.product_skus
+        return product_skus
 
     def clean_key_value(self, raw_key_value):
         return VALUE_EXTRACTOR_FROM_KEY.findall(raw_key_value)[0]

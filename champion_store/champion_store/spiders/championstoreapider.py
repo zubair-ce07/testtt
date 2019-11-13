@@ -7,7 +7,7 @@ from .productparser import ProductParser
 
 
 class ChampionStoreSpider(CrawlSpider):
-    name = 'championStore'
+    name = 'championStoreCrawler'
     product_parser = ProductParser()
     allowed_domains = ['championstore.com']
     start_urls = ['http://championstore.com/']

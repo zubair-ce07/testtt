@@ -8,20 +8,17 @@ from .utils import (
     GENDERS,
     remove_empty_strings_or_unwanted_characters,
     remove_unwanted_spaces,
-    remove_unicode_characters,
-    product_currency,
-    product_price)
+    remove_unicode_characters
+)
 
 
 class ProductParser(Spider):
     ids_seen = set()
     product_sku = ProductSku()
-    start_urls = ['https://www.championstore.com/en/champion/collaborations/men--1/champion-x-mlb/new-york-mlb-cooperstown-collection-reverse-weave-hoodie']
     name = 'championStoreSpider'
 
     def parse(self, response):
-        # trail_urls = response.meta['trail']
-        trail_urls = []
+        trail_urls = response.meta['trail']
         retailer_sku_id = self.retailer_sku_id(response)
         if retailer_sku_id in self.ids_seen:
             return
@@ -45,8 +42,8 @@ class ProductParser(Spider):
             'description': self.product_description(response, retailer_sku_id),
             'image_urls': self.product_image_urls(response.url, available_products),
             'skus': self.product_sku.collect_product_skus(response, available_products, retailer_sku_id),
-            'price': product_price(response, retailer_sku_id),
-            'currency': product_currency(response)
+            'price': self.product_price(response, retailer_sku_id),
+            'currency': self.product_currency(response)
         }
 
         return self.product_care(response, item)
@@ -97,6 +94,13 @@ class ProductParser(Spider):
                     image_urls.append(complete_image_url)
 
         return image_urls
+
+    def product_price(self, response, sku_id):
+        raw_price = response.css(f'#ProductInfoPrice_{sku_id} ::attr(value)').re_first(r'[\d.]+')
+        return raw_price.replace('.', '')
+
+    def product_currency(self, response):
+        return response.xpath("//meta[@property='og:price:currency']").css('::attr(content)').get()
 
     def filter_available_products(self, raw_products):
         available_items = []

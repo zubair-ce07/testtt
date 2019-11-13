@@ -6,15 +6,6 @@ UNWANTED_CHARS = ['', '/']
 VALUE_EXTRACTOR_FROM_KEY = re.compile(r'(?:.*_|_)(.*)')
 
 
-def product_price(response, sku_id):
-    raw_price = response.css(f'#ProductInfoPrice_{sku_id} ::attr(value)').re_first(r'[\d.]+')
-    return raw_price.replace('.', '')
-
-
-def product_currency(response):
-    return response.xpath("//meta[@property='og:price:currency']").css('::attr(content)').get()
-
-
 def clean_string_and_make_json(raw_text):
     raw_text = raw_text.replace('\'', '"')
     return json.loads(raw_text)
