@@ -1,11 +1,11 @@
 import json
-
 from copy import deepcopy
+
 from scrapy import Request
 
 from scrapyproduct.items import ProductItem, SizeItem
 from scrapyproduct.spiderlib import SSBaseSpider
-from scrapyproduct.toolbox import (category_mini_item, extract_text_nodes, register_deliveryregion)
+from scrapyproduct.toolbox import (category_mini_item, extract_text_nodes)
 
 
 class AdiddaaCraaler(SSBaseSpider):
@@ -24,41 +24,23 @@ class AdiddaaCraaler(SSBaseSpider):
                'method': 'GET',
                'path': '/',
                'scheme': 'https',
-               'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3',
+               'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,'
+                         'application/signed-exchange;v=b3',
                'accept-encoding': 'gzip, deflate, br',
                'accept-language': 'en-US,en;q=0.9',
                'cache-control': 'max-age=0',
-               'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.131 Safari/537.36'}
+               'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/'
+                             '74.0.3729.131 Safari/537.36'}
 
     countries_info = [
         ('uk', 'GBP', 'en', 'https://www.adidas.co.uk/', ['uk']),
     ]
 
-    """custom_settings = {
-        'DOWNLOAD_TIMEOUT': 240,
-    }"""
-
-    def test_single_item(self):
-        item = ProductItem(
-            identifier='ED8667',
-            country_code='us',
-            language_code='en',
-            currency='USD',
-            category_names=['Test cat'],
-            url='https://www.adidas.co.uk/api/products/ED8667',
-            referer_url=None,
-            brand=self.long_name
-        )
-        return Request(item['url'], self.parse_detail, meta={'item': item, 'dont_merge_cookies': True})
-
     def start_requests(self):
-        #yield self.test_single_item()
-        #return
-
         for country_code, currency, language, country_url, same_region_dlrs in self.countries_info:
+
             if self.country and country_code not in self.country:
                 continue
-            register_deliveryregion(self, country_code, currency, same_region_dlrs, country_url)
             meta = {
                 'currency': currency,
                 'cookiejar': country_code,
@@ -71,8 +53,10 @@ class AdiddaaCraaler(SSBaseSpider):
 
     def parse_homepage(self, response):
         for level1 in response.css('.main-items'):
+
             for level2 in level1.css('.sub-items > li'):
                 yield self.make_request(response, [level1, level2])
+
                 for level3 in level2.css('.sub-sub-items li')[1:]:
                     yield self.make_request(response, [level1, level2, level3])
 
@@ -125,13 +109,13 @@ class AdiddaaCraaler(SSBaseSpider):
         item['base_sku'] = prod_detail['model_number']
         item['color_name'] = prod_detail['attribute_list']['color']
         item['description_text'] = prod_detail['product_description'].get('text', 'N/A')
-        item['image_urls'] = self.get_image_urls(prod_detail['view_list'])
+        item['image_urls'] = [image['image_url'] for image in prod_detail['view_list']]
         item['old_price_text'] = prod_detail['pricing_information']['standard_price']
         item['new_price_text'] = prod_detail['pricing_information']['currentPrice']
 
         meta = deepcopy(response.meta)
         meta['item'] = item
-        yield Request(self.availability_t.format(response.url), callback=self.parse_size, meta=meta, dont_filter=True,
+        yield Request(self.availability_t.format(response.url), self.parse_size, meta=meta, dont_filter=True,
                       headers=self.headers)
 
     def parse_size(self, response):
@@ -144,18 +128,12 @@ class AdiddaaCraaler(SSBaseSpider):
 
         return item
 
-    def get_image_urls(self, images):
-        image_urls = []
-        for image in images:
-            image_urls.append(image['image_url'])
-        return image_urls
-
     def get_size_infos(self, sizes):
         size_infos = []
         for size in sizes:
             size_info = SizeItem(
                 size_name=size['size'],
-                stock=1 if size['availability'] > 0 else 0,
+                stock=1 if size['availability'] else 0,
                 size_identifier=size['sku'],
             )
             size_infos.append(size_info)
