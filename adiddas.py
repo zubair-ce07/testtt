@@ -20,17 +20,19 @@ class AdiddaaCraaler(SSBaseSpider):
     detail_page_t = 'https://www.adidas.co.uk/api/products/{}'
     availability_t = '{}/availability'
 
-    headers = {'authority': 'www.adidas.co.uk',
-               'method': 'GET',
-               'path': '/',
-               'scheme': 'https',
-               'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,'
-                         'application/signed-exchange;v=b3',
-               'accept-encoding': 'gzip, deflate, br',
-               'accept-language': 'en-US,en;q=0.9',
-               'cache-control': 'max-age=0',
-               'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/'
-                             '74.0.3729.131 Safari/537.36'}
+    headers = {
+        'authority': 'www.adidas.co.uk',
+        'method': 'GET',
+        'path': '/',
+        'scheme': 'https',
+        'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,'
+                  '*/*;q=0.8,application/signed-exchange;v=b3',
+        'accept-encoding': 'gzip, deflate, br',
+        'accept-language': 'en-US,en;q=0.9',
+        'cache-control': 'max-age=0',
+        'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) '
+                      'Chrome74.0.3729.131 Safari/537.36'
+    }
 
     countries_info = [
         ('uk', 'GBP', 'en', 'https://www.adidas.co.uk/', ['uk']),
@@ -65,7 +67,8 @@ class AdiddaaCraaler(SSBaseSpider):
         url = selectors[-1].css('a::attr(href)').extract_first()
         meta = deepcopy(response.meta)
         meta['categories'] = categories
-        return Request(response.urljoin(url), self.parse_category, meta=meta, dont_filter=True, headers=self.headers)
+        return Request(response.urljoin(url), self.parse_category, meta=meta, dont_filter=True,
+                       headers=self.headers)
 
     def parse_category(self, response):
         for category in response.css('.gl-product-card__media a'):
@@ -91,7 +94,8 @@ class AdiddaaCraaler(SSBaseSpider):
             self.seen_identifiers.add(country_id)
             meta = deepcopy(response.meta)
             meta['item'] = item
-            yield Request(self.detail_page_t.format(identifier), self.parse_detail, meta=meta, dont_filter=True,
+            yield Request(self.detail_page_t.format(identifier), self.parse_detail, meta=meta,
+                          dont_filter=True,
                           headers=self.headers)
 
         yield self.parse_pagination(response)
@@ -100,7 +104,8 @@ class AdiddaaCraaler(SSBaseSpider):
         next_page = response.css('.pagination__control--next___329Qo a::attr(href)').extract_first()
         if next_page:
             url = response.urljoin(next_page)
-            return Request(url, self.parse_category, meta=response.meta, dont_filter=True, headers=self.headers)
+            return Request(url, self.parse_category, meta=response.meta, dont_filter=True,
+                           headers=self.headers)
 
     def parse_detail(self, response):
         item = response.meta['item']
@@ -115,7 +120,8 @@ class AdiddaaCraaler(SSBaseSpider):
 
         meta = deepcopy(response.meta)
         meta['item'] = item
-        yield Request(self.availability_t.format(response.url), self.parse_size, meta=meta, dont_filter=True,
+        yield Request(self.availability_t.format(response.url), self.parse_size, meta=meta,
+                      dont_filter=True,
                       headers=self.headers)
 
     def parse_size(self, response):
