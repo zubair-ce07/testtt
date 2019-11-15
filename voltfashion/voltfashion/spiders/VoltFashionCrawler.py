@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import json
 from urllib.parse import urljoin
 
@@ -7,26 +6,26 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule, Spider
 from w3lib.url import add_or_replace_parameters
 
-EXTRACT_JSON_REGEX = r'({.*})'
-CLEANER_ITEMS = ['\xa0']
+REGEX_EXTRACT_JSON = r'({.*})'
+UNDESIRED_TEXTS = ['\xa0']
 
 
 class ProductParser(Spider):
     ids_seen = set()
     name = 'VoltFashionSpider'
-    CONTENT_SELECTORS = "div[id*='react_']:not([class]) + script"
+    CONTENT_SELECTOR = "div[id*='react_']:not([class]) + script"
 
     def parse_product(self, response):
         trail = response.meta.get('trail', [])
-        raw_product_details = fetch_clean_and_load_json(response, self.CONTENT_SELECTORS)
+        raw_product_details = fetch_clean_and_load_json(response, self.CONTENT_SELECTOR)
         product_details = raw_product_details.get('product')
         retailer_sku_id = product_details.get('Code')
 
         if retailer_sku_id in self.ids_seen:
             return
-
         self.ids_seen.add(retailer_sku_id)
         trail.append(response.url)
+
         item = {}
         item['retailer_sku'] = retailer_sku_id
         item['trail'] = trail
@@ -47,35 +46,37 @@ class ProductParser(Spider):
 
         return self.next_item_or_request(item)
 
-    def product_category(self, category_json_obj):
+    def product_category(self, raw_category):
         category = []
-        for _, cat_name in enumerate(category_json_obj):
+        for _, cat_name in enumerate(raw_category):
             category.append(cat_name)
         return category
 
-    def product_care(self, care_json_obj):
+    def product_care(self, raw_care):
         care = []
-        if care_json_obj:
-            for care_obj in care_json_obj:
+        if raw_care:
+            for care_obj in raw_care:
                 care.append(care_obj.get('Name'))
         return care
 
-    def product_images(self, image_json_obj):
+    def product_images(self, raw_images):
         images = []
-        for image_obj in image_json_obj:
+        for image_obj in raw_images:
             images.append(image_obj.get('Url'))
         return images
 
-    def product_currency(self, currency_json_obj):
-        if currency_json_obj:
-            return currency_json_obj.get('Currency')
+    def product_currency(self, raw_currency):
+        if raw_currency:
+            return raw_currency.get('Currency')
         return None
 
     def product_skus(self, product_details):
         product_skus = []
         raw_skus = product_details.get('Skus')
         sku_color = product_details.get('ColorFilter')
-        previous_price = self.clean_price(product_details.get('FormattedOfferedPrice'))
+        raw_previous_price = product_details.get('FormattedOfferedPrice')
+        previous_price = self.clean_price(raw_previous_price)
+
         for sku_obj in raw_skus:
             sku = {"colour": sku_color,
                    "previous_prices": [previous_price],
@@ -86,12 +87,14 @@ class ProductParser(Spider):
 
         return product_skus
 
-    def product_skus_requests(self, response, product_variant, item):
+    def product_skus_requests(self, response, product_sku_variant, item):
         requests = []
-        for variant in product_variant:
+
+        for variant in product_sku_variant:
             url = urljoin(response.url, variant.get('Url'))
-            requests.append(Request(url=url, callback=self.update_product_skus, dont_filter=True,
-                                    meta={'item': item}))
+            requests.append(
+                Request(url=url, callback=self.update_product_skus, dont_filter=True, meta={'item': item})
+            )
 
         if response.url in requests:
             requests.remove(response.url)
@@ -99,7 +102,8 @@ class ProductParser(Spider):
 
     def update_product_skus(self, response):
         item = response.meta['item']
-        raw_product_details = fetch_clean_and_load_json(response, self.CONTENT_SELECTORS)
+
+        raw_product_details = fetch_clean_and_load_json(response, self.CONTENT_SELECTOR)
         product_details = raw_product_details.get('product')
 
         item['skus'] += (self.product_skus(product_details))
@@ -107,8 +111,8 @@ class ProductParser(Spider):
         return self.next_item_or_request(item)
 
     def next_item_or_request(self, item):
-        sku_requests = item['meta']['requests']
-        if sku_requests:
+
+        if item['meta']['requests']:
             request = item['meta']['requests'].pop()
             yield request
         else:
@@ -116,12 +120,15 @@ class ProductParser(Spider):
             yield item
 
     def clean_price(self, raw_price):
-        return raw_price.replace(':-', '')
+        if raw_price:
+            return raw_price.replace(':-', '')
+        return None
 
 
 class VoltFashionCrawler(CrawlSpider):
     name = 'VoltFashionCrawler'
     product_parser = ProductParser()
+
     allowed_domains = ['voltfashion.com']
     start_urls = ['https://voltfashion.com/sv/']
 
@@ -148,7 +155,6 @@ class VoltFashionCrawler(CrawlSpider):
                        dont_filter=True)
 
     def fetch_product_urls_and_make_request(self, response):
-
         raw_json_data = fetch_clean_and_load_json(response, self.CONTENT_SELECTORS)
         products_content = raw_json_data.get('products', [])
 
@@ -158,9 +164,10 @@ class VoltFashionCrawler(CrawlSpider):
 
 
 def fetch_clean_and_load_json(response, content_selector):
-    raw_json_data = response.css(content_selector).re_first(EXTRACT_JSON_REGEX)
-    raw_json_data = clean_data(raw_json_data)
-    return json.loads(raw_json_data) if raw_json_data else {}
+    raw_data = response.css(content_selector).re_first(REGEX_EXTRACT_JSON)
+    raw_data = clean_data(raw_data)
+    data_in_json_form = json.loads(raw_data)
+    return data_in_json_form if data_in_json_form else {}
 
 
 def clean_data(data):
@@ -170,13 +177,13 @@ def clean_data(data):
     if type(data) is list:
         clean_data = []
         for d in data:
-            for to_place in CLEANER_ITEMS:
-                d = d.replace(to_place, '')
+            for undesired_text in UNDESIRED_TEXTS:
+                d = d.replace(undesired_text, '')
             clean_data.append(d)
         return clean_data
 
     clean_data = data
-    for to_replace in CLEANER_ITEMS:
-        clean_data = clean_data.replace(to_replace, '')
+    for undesired_text in UNDESIRED_TEXTS:
+        clean_data = clean_data.replace(undesired_text, '')
 
     return clean_data
