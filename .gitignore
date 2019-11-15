@@ -58,3 +58,7 @@ target/
 
 # VSCode
 .vscode
+
+
+# npm packages
+/node_modules
