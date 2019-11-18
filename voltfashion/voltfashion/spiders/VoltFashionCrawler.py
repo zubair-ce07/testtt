@@ -8,7 +8,7 @@ from w3lib.url import add_or_replace_parameters
 
 from ..items import Product, Sku
 
-REGEX_EXTRACT_JSON = r'({.*})'
+REGEX_EXTRACT = r'({.*})'
 UNDESIRED_TEXTS = ['\xa0']
 
 
@@ -35,7 +35,7 @@ class ProductParser(Spider):
         item['retailer_sku'] = retailer_sku_id
         item['trail'] = trail
         item['gender'] = product_details.get('SeoGender', 'unisex')
-        item['category'] = self.product_category(product_details.get('CategoryStructure'))
+        item['category'] = product_details.get('CategoryStructure')
         item['brand'] = product_details.get('ProductBrand')
         item['url'] = response.url
         item['market'] = 'SV'
@@ -50,12 +50,6 @@ class ProductParser(Spider):
         item['meta'] = {'requests': self.product_skus_requests(response, product_details.get('Siblings'), item)}
 
         return self.next_item_or_request(item)
-
-    def product_category(self, raw_category):
-        category = []
-        for _, cat_name in enumerate(raw_category):
-            category.append(cat_name)
-        return category
 
     def product_care(self, raw_care):
         care = []
@@ -148,8 +142,8 @@ class VoltFashionCrawler(CrawlSpider):
 
     def all_products_url(self, response):
 
-        raw_json_data = fetch_clean_and_load(response, self.CONTENT_SELECTORS)
-        total_items_count = raw_json_data.get('totalCount')
+        raw_data = fetch_clean_and_load(response, self.CONTENT_SELECTORS)
+        total_items_count = raw_data.get('totalCount')
 
         if total_items_count:
             query_params = {'itemsPerPage': total_items_count, 'page': '0', 'view': 'small-img'}
@@ -160,8 +154,8 @@ class VoltFashionCrawler(CrawlSpider):
             return self.make_products_requests(response)
 
     def make_products_requests(self, response):
-        raw_json_data = fetch_clean_and_load(response, self.CONTENT_SELECTORS)
-        products_content = raw_json_data.get('products', [])
+        raw_data = fetch_clean_and_load(response, self.CONTENT_SELECTORS)
+        products_content = raw_data.get('products', [])
 
         for product in products_content:
             url = urljoin(response.url, product.get('Url'))
@@ -169,10 +163,10 @@ class VoltFashionCrawler(CrawlSpider):
 
 
 def fetch_clean_and_load(response, content_selector):
-    raw_data = response.css(content_selector).re_first(REGEX_EXTRACT_JSON)
+    raw_data = response.css(content_selector).re_first(REGEX_EXTRACT)
     raw_data = clean_data(raw_data)
-    data_in_json_form = json.loads(raw_data)
-    return data_in_json_form if data_in_json_form else {}
+    loaded_content = json.loads(raw_data)
+    return loaded_content if loaded_content else {}
 
 
 def clean_data(data):
