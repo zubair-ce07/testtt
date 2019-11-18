@@ -5,7 +5,7 @@ from scrapy.selector import Selector
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders.crawl import CrawlSpider, Rule
 
-from json import loads, dumps
+import json
 
 from khelf.items import KhelfItem
 
@@ -52,7 +52,7 @@ class KhelfSpider(CrawlSpider):
     def parse_skus(self, response):
         product = response.meta['product']
         product['skus'] = {}
-        response = Selector(text=loads(response.body)['value'][0])
+        response = Selector(text=json.loads(response.body)['value'][0])
         product_colour = self.get_colours(response)
         product_sku_sizes = self.get_sizes(response, product_colour)
         for color in product_colour:
@@ -69,7 +69,7 @@ class KhelfSpider(CrawlSpider):
     def parse_images(self, response):
         product = response.meta['product']
         product['image_urls'] = []
-        for img in loads(response.body)['value'][1]:
+        for img in json.loads(response.body)['value'][1]:
             if (".jpg" in img or ".gif" in img) and (img not in product['image_urls']):
                 product['image_urls'].append(img)
         return self.resolve_requests(product)
@@ -85,7 +85,7 @@ class KhelfSpider(CrawlSpider):
             "ProdutoCodigo": self.product_code,
             "isRequiredCustomization": False,
         }
-        request = Request(url=self.API, method="POST", headers=headers, body=dumps(data), callback=self.parse_skus)
+        request = Request(url=self.API, method="POST", headers=headers, body=json.dumps(data), callback=self.parse_skus)
         request.meta["product"] = product
         return request
 
@@ -101,7 +101,7 @@ class KhelfSpider(CrawlSpider):
             "isRequiredCustomization": False,
             "recurrencyId": "0"
         }
-        request = Request(url=self.API, method="POST", headers=headers, body=dumps(data), callback=self.parse_images)
+        request = Request(url=self.API, method="POST", headers=headers, body=json.dumps(data), callback=self.parse_images)
         request.meta["product"] = product
         return request
 
@@ -109,9 +109,9 @@ class KhelfSpider(CrawlSpider):
         if product["pending_requests"]:
             request = product["pending_requests"].pop()
             return request
-        else:
-            del product["pending_requests"]
-            return product
+
+        del product["pending_requests"]
+        return product
 
     def get_product_code(self, response):
         return response.css("#ProdutoCodigo::attr(value)").get().strip()
@@ -126,8 +126,7 @@ class KhelfSpider(CrawlSpider):
         return response.css("#descriptionContent::text").get().strip()
 
     def product_category(self, response):
-        links = response.css("#breadcrumbs .link::text").getall()
-        del links[len(links)-1]
+        links = response.css("#breadcrumbs .link::text").getall()[:-1]
         return links
 
     def price(self, response):
@@ -137,14 +136,14 @@ class KhelfSpider(CrawlSpider):
         return response.xpath("//html/@lang").get()
 
     def brand(self, response):
-        return response.xpath("//meta[@name='author']/@content")[0].extract()
+        return response.xpath("//meta[@name='author']/@content").get()
 
     def currency(self, response):
         return response.css('.priceCurrency::text').get()
 
     def get_token(self, response):
-        script = response.xpath('//script[@type="text/javascript"]')[6]
-        return script.re(r'AjaxPro.token = "(\w+)";')[0]
+        script = response.xpath('//script[@type="text/javascript"][contains(.,"AjaxPro")]')
+        return script.re(r'AjaxPro.token = "(\w+)";').pop()
 
     def gender(self, response):
         if "masculinas" in response.url or "masculino" in response.url:
