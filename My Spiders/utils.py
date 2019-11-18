@@ -13,24 +13,29 @@ def map_gender(raw_gender):
     return 'Unisex adult'
 
 
-def format_price(current_price, previous_price=None):
+def format_price(currency, current_price, previous_price=None):
     if previous_price:
         previous_price = convert_price(previous_price)
         current_price = convert_price(current_price)
 
-        if previous_price > current_price:            
+        if previous_price > current_price:
 
             return {
-                'previous_price' : previous_price,
-                'current_price': current_price
+                'previous_price': previous_price,
+                'current_price': current_price,
+                'currency': currency
             }
 
         return{
-            'previous_price' : current_price,
-            'current_price': previous_price
+            'previous_price': current_price,
+            'current_price': previous_price,
+            'currency': currency
         }
 
-    return {'current_price': convert_price(current_price)}    
+    return {
+        'current_price': convert_price(current_price),
+        'currency': currency
+    }
 
 
 def convert_price(price):
