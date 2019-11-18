@@ -52,17 +52,14 @@ class ProductParser(Spider):
         return self.next_item_or_request(item)
 
     def product_care(self, raw_care):
-        care = []
         if raw_care:
-            for care_obj in raw_care:
-                care.append(care_obj.get('Name'))
-        return care
+            return [care.get('Name') for care in raw_care]
+        return []
 
     def product_images(self, raw_images):
-        images = []
-        for image_obj in raw_images:
-            images.append(image_obj.get('Url'))
-        return images
+        if raw_images:
+            return [img.get('Url') for img in raw_images]
+        return []
 
     def product_currency(self, raw_currency):
         if raw_currency:
