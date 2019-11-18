@@ -3,12 +3,31 @@
 # Define here the models for your scraped items
 #
 # See documentation in:
-# https://docs.scrapy.org/en/latest/topics/items.html
+# https://docs.org/en/latest/topics/items.html
 
-import scrapy
+from scrapy import Item, Field
 
 
-class ChampionStoreItem(scrapy.Item):
-    # define the fields for your item here like:
-    # name = scrapy.Field()
-    pass
+class Product(Item):
+    retailer_sku = Field()
+    trail = Field()
+    gender = Field()
+    category = Field()
+    brand = Field()
+    url = Field()
+    market = Field()
+    retailer = Field()
+    name = Field()
+    description = Field()
+    image_urls = Field()
+    care = Field()
+    skus = Field()
+    price = Field()
+    currency = Field()
+
+
+class Sku(Item):
+    previous_prices = Field()
+    colour = Field()
+    size = Field()
+    sku_id = Field()

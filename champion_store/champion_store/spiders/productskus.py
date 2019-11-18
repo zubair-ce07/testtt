@@ -1,4 +1,5 @@
 from .utils import VALUE_EXTRACTOR_FROM_KEY
+from ..items import Sku
 
 
 class ProductSku:
@@ -7,14 +8,13 @@ class ProductSku:
         product_skus = []
 
         for sku in raw_skus:
-            product_skus.append(
-                {
-                    "previous_prices": [self.sku_previous_price(response, sku_id)],
-                    "colour": self.sku_color(sku.get('Attributes')),
-                    "size": self.sku_size(sku.get('Attributes')),
-                    "sku_id": sku.get('catentry_id')
-                }
-            )
+            sku_item = Sku()
+            sku_item['previous_prices'] = [self.sku_previous_price(response, sku_id)]
+            sku_item['colour'] = self.sku_color(sku.get('Attributes'))
+            sku_item['size'] = self.sku_size(sku.get('Attributes'))
+            sku_item['sku_id'] = sku.get('catentry_id')
+            product_skus.append(sku_item)
+
         return product_skus
 
     def clean_key_value(self, raw_key_value):

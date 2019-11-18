@@ -6,7 +6,7 @@ UNWANTED_CHARS = ['', '/']
 VALUE_EXTRACTOR_FROM_KEY = re.compile(r'(?:.*_|_)(.*)')
 
 
-def clean_string_and_make_json(raw_text):
+def clean_string(raw_text):
     raw_text = raw_text.replace('\'', '"')
     return json.loads(raw_text)
 
@@ -17,7 +17,7 @@ def remove_unwanted_spaces(raw_data):
     return raw_data.strip()
 
 
-def remove_empty_strings_or_unwanted_characters(raw_data):
+def remove_unwanted_characters(raw_data):
     clean_data = []
     for data in raw_data:
         if data not in UNWANTED_CHARS:
