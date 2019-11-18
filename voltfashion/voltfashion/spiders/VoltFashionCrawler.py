@@ -34,7 +34,7 @@ class ProductParser(Spider):
         item = Product()
         item['retailer_sku'] = retailer_sku_id
         item['trail'] = trail
-        item['gender'] = product_details.get('SeoGender', 'both')
+        item['gender'] = product_details.get('SeoGender', 'unisex')
         item['category'] = self.product_category(product_details.get('CategoryStructure'))
         item['brand'] = product_details.get('ProductBrand')
         item['url'] = response.url
@@ -155,8 +155,7 @@ class VoltFashionCrawler(CrawlSpider):
             query_params = {'itemsPerPage': total_items_count, 'page': '0', 'view': 'small-img'}
             url = add_or_replace_parameters(response.url, query_params)
             url = url.replace('/?', '/#')
-
-            return Request(url=url, callback=self.make_products_requests)
+            return Request(url=url, callback=self.make_products_requests, dont_filter=True)
         else:
             return self.make_products_requests(response)
 
