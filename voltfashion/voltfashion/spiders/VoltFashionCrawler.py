@@ -6,6 +6,8 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule, Spider
 from w3lib.url import add_or_replace_parameters
 
+from ..items import Product, Sku
+
 REGEX_EXTRACT_JSON = r'({.*})'
 UNDESIRED_TEXTS = ['\xa0']
 
@@ -16,17 +18,20 @@ class ProductParser(Spider):
     CONTENT_SELECTOR = "div[id*='react_']:not([class]) + script"
 
     def parse_product(self, response):
-        trail = response.meta.get('trail', [])
-        raw_product_details = fetch_clean_and_load_json(response, self.CONTENT_SELECTOR)
+
+        raw_product_details = fetch_clean_and_load(response, self.CONTENT_SELECTOR)
         product_details = raw_product_details.get('product')
         retailer_sku_id = product_details.get('Code')
 
         if retailer_sku_id in self.ids_seen:
             return
+
         self.ids_seen.add(retailer_sku_id)
+
+        trail = response.meta.get('trail', [])
         trail.append(response.url)
 
-        item = {}
+        item = Product()
         item['retailer_sku'] = retailer_sku_id
         item['trail'] = trail
         item['gender'] = product_details.get('SeoGender', 'both')
@@ -78,11 +83,11 @@ class ProductParser(Spider):
         previous_price = self.clean_price(raw_previous_price)
 
         for sku_obj in raw_skus:
-            sku = {"colour": sku_color,
-                   "previous_prices": [previous_price],
-                   "size": sku_obj.get('Size'),
-                   "sku_id": sku_obj.get('Id')
-                   }
+            sku = Sku()
+            sku['colour'] = sku_color
+            sku['previous_prices'] = [previous_price]
+            sku['size'] = sku_obj.get('Size')
+            sku['sku_id'] = sku_obj.get('Id')
             product_skus.append(sku)
 
         return product_skus
@@ -103,7 +108,7 @@ class ProductParser(Spider):
     def update_product_skus(self, response):
         item = response.meta['item']
 
-        raw_product_details = fetch_clean_and_load_json(response, self.CONTENT_SELECTOR)
+        raw_product_details = fetch_clean_and_load(response, self.CONTENT_SELECTOR)
         product_details = raw_product_details.get('product')
 
         item['skus'] += (self.product_skus(product_details))
@@ -138,12 +143,12 @@ class VoltFashionCrawler(CrawlSpider):
 
     rules = (
         Rule(LinkExtractor(allow=r'/sv/', deny=deny_paths, restrict_css=('ul .-level-2', )),
-             callback='alter_url_and_make_request', follow=False),
+             callback='all_products_url'),
     )
 
-    def alter_url_and_make_request(self, response):
-        url = ''
-        raw_json_data = fetch_clean_and_load_json(response, self.CONTENT_SELECTORS)
+    def all_products_url(self, response):
+
+        raw_json_data = fetch_clean_and_load(response, self.CONTENT_SELECTORS)
         total_items_count = raw_json_data.get('totalCount')
 
         if total_items_count:
@@ -151,11 +156,12 @@ class VoltFashionCrawler(CrawlSpider):
             url = add_or_replace_parameters(response.url, query_params)
             url = url.replace('/?', '/#')
 
-        return Request(url=url if url != '' else response.url, callback=self.fetch_product_urls_and_make_request,
-                       dont_filter=True)
+            return Request(url=url, callback=self.make_products_requests)
+        else:
+            return self.make_products_requests(response)
 
-    def fetch_product_urls_and_make_request(self, response):
-        raw_json_data = fetch_clean_and_load_json(response, self.CONTENT_SELECTORS)
+    def make_products_requests(self, response):
+        raw_json_data = fetch_clean_and_load(response, self.CONTENT_SELECTORS)
         products_content = raw_json_data.get('products', [])
 
         for product in products_content:
@@ -163,7 +169,7 @@ class VoltFashionCrawler(CrawlSpider):
             yield Request(url=url, callback=self.product_parser.parse_product, meta={'trail': [response.url]})
 
 
-def fetch_clean_and_load_json(response, content_selector):
+def fetch_clean_and_load(response, content_selector):
     raw_data = response.css(content_selector).re_first(REGEX_EXTRACT_JSON)
     raw_data = clean_data(raw_data)
     data_in_json_form = json.loads(raw_data)
