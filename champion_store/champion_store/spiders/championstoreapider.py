@@ -25,7 +25,7 @@ class ChampionStoreSpider(CrawlSpider):
             url = add_or_replace_parameters(response.url, query_params)
             return Request(url=url, callback=self.parse_product, dont_filter=True)
         else:
-            self.parse_product(response)
+            return self.parse_product(response)
 
     def parse_product(self, response):
         product_urls = response.css('.product_name a::attr(href)').getall()

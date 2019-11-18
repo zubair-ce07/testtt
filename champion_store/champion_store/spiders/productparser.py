@@ -13,23 +13,19 @@ class ProductParser(Spider):
     name = 'championStoreSpider'
 
     def parse(self, response):
+
         retailer_sku_id = self.retailer_sku_id(response)
         if retailer_sku_id in self.ids_seen:
             return
 
         self.ids_seen.add(retailer_sku_id)
+        trail = response.meta['trail']
 
-        trail_urls = response.meta['trail']
-        trail_urls.append(response.url)
+        available_products = self.available_products(response, retailer_sku_id)
 
-        raw_product_details = self.product_sku_details(response, retailer_sku_id)
-        products_skus = clean_string(raw_product_details)
-
-        available_products = self.filter_available_products(products_skus)
         item = Product()
-
         item['retailer_sku'] = retailer_sku_id
-        item['trail'] = trail_urls
+        item['trail'] = trail.append(response.url)
         item['gender'] = self.product_gender(response)
         item['category'] = self.product_category(response)
         item['brand'] = 'champion store'
@@ -42,9 +38,9 @@ class ProductParser(Spider):
         item['skus'] = self.product_sku.collect_product_skus(response, available_products, retailer_sku_id)
         item['price'] = self.product_price(response, retailer_sku_id)
         item['currency'] = self.product_currency(response)
+        item['care'] = self.product_care(response, item)
 
-        item = self.product_care(response, item)
-        yield item
+        return item
 
     def retailer_sku_id(self, response):
         return response.css('meta[name="pageId"]::attr(content)').get()
@@ -78,8 +74,7 @@ class ProductParser(Spider):
         raw_care = remove_unwanted_spaces(raw_care)
         raw_care = remove_unwanted_characters(raw_care)
         raw_care = remove_unicode_characters(raw_care)
-        item['care'] = [care for care in raw_care if care not in item.get('description', [])]
-        return item
+        return [care for care in raw_care if care not in item.get('description', [])]
 
     def product_image_urls(self, response_url, product_skus):
         image_urls = []
@@ -100,10 +95,13 @@ class ProductParser(Spider):
     def product_currency(self, response):
         return response.xpath("//meta[@property='og:price:currency']").css('::attr(content)').get()
 
-    def filter_available_products(self, raw_products):
+    def available_products(self, response, retailer_sku_id):
         available_items = []
 
-        for product in raw_products:
+        raw_product_details = self.product_sku_details(response, retailer_sku_id)
+        products_skus = clean_string(raw_product_details)
+
+        for product in products_skus:
             if product.get('available') == 'true':
                 available_items.append(product)
         return available_items
