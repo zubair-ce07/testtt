@@ -22,12 +22,11 @@ class MixinFR(Mixin):
 
 
 class SnkrsParseSpider(BaseParseSpider):
-    description_css = '#short_description_content p::text'
+    description_css = '#short_description_content p::text, #short_description_content p span::text'
     brand_css = '[itemprop="brand"]::attr(content)'
 
     def parse(self, response):
-        product_id = self.product_id(response)
-        garment = self.new_unique_garment(product_id)
+        garment = self.new_unique_garment(self.product_id(response))
 
         if not garment:
             return
@@ -42,55 +41,53 @@ class SnkrsParseSpider(BaseParseSpider):
         return garment
 
     def product_id(self, response):
-        return response.css('[itemprop="sku"]::text').get()
+        id = clean(response.css('[itemprop="sku"]::text'))
+        return id[0] if id else id
 
     def product_gender(self, response, garment):
-        title_text = response.css('title::text').get()
-        soup = ' '.join(garment['category'] + garment['description']) + title_text
-        return self.gender_lookup(soupify(soup))
+        title_text = clean(response.css('title::text'))
+        soup = soupify(garment['category'] + garment['description'] + title_text)
+        return self.gender_lookup(soup)
+
+    def raw_name(self, response):
+        return clean(response.css('[itemprop="name"]::text'))[0]
 
     def product_name(self, response):
-        return response.css('[itemprop="name"]::text').get()
+        return self.raw_name(response).split(' - ')[0]
 
     def image_urls(self, response):
         return clean(response.css('#carrousel_frame li a::attr(href)'))
 
     def product_category(self, response):
-        category = response.css('span.category::text').get()
-        return clean(category.split('/'))
+        category = clean(response.css('span.category::text'))[0]
+        return clean(category.split('/'))[1:]
 
     def merch_info(self, garment):
-        soup = ' '.join(garment['description'])
+        soup = soupify(garment['description'])
         return ['Limited Edition'] if 'limited edition' in soup else []
 
-    def product_colour(self, response):
-        colour = self.product_name(response)
-        return colour.split(' - ')[1] if ' - ' in colour else ''
-
     def money_strs(self, response):
-        current_price = response.css('[itemprop="price"]::attr(content)').get()
+        current_price = clean(response.css('[itemprop="price"]::attr(content)'))[0]
         previous_price = response.css('#old_price_display .price::text').re_first(r"\d+")
-        currency = response.css('[itemprop="priceCurrency"]::attr(content)').get()
+        currency = clean(response.css('[itemprop="priceCurrency"]::attr(content)'))[0]
 
         return [previous_price, current_price, currency]
 
     def skus(self, response):
         skus = {}
 
-        common_sku = self.product_pricing_common(None, money_strs=self.money_strs(response))
-        colour = self.product_colour(response)
-
-        if colour:
-            common_sku['colour'] = colour
-
+        colour = self.detect_colour(self.raw_name(response), multiple=True)
+        common_sku = {'colour': colour} if colour else {}
         common_sku['out_of_stock'] = False
+        common_sku.update(self.product_pricing_common(None, money_strs=self.money_strs(response)))
+
         size_css = 'span.size_EU::text, li:not(.hidden) span.units_container::text'
-        sizes = [size for size in clean(response.css(size_css).getall())] or [self.one_size]
+        sizes = [size for size in clean(response.css(size_css))] or [self.one_size]
 
         for size in sizes:
             sku = common_sku.copy()
             sku['size'] = size
-            skus[(f"{colour}_" if colour else '') + size] = sku
+            skus[(f"{sku['colour']}_" if colour else '') + size] = sku
 
         return skus
 
