@@ -24,10 +24,3 @@ class Product(Item):
     price = Field()
     currency = Field()
     meta = Field()
-
-
-class Sku(Item):
-    colour = Field()
-    previous_prices = Field()
-    size = Field()
-    sku_id = Field()

@@ -6,23 +6,19 @@ from scrapy import Request
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule, Spider
 
-from ..items import Product, Sku
-
-GENDERS = ['Men', 'Women']
+from ..items import Product
 
 
 class ProductParser(Spider):
-    ids_seen = set()
+    seen_ids = set()
     name = 'uggSpider'
 
     def parse(self, response):
-
         retailer_sku_id = self.product_retailer_sku(response)
-        if retailer_sku_id in self.ids_seen:
+        if retailer_sku_id in self.seen_ids:
             return
 
-        self.ids_seen.add(retailer_sku_id)
-
+        self.seen_ids.add(retailer_sku_id)
         trail = response.meta.get('trail', [])
         trail.append(response.url)
 
@@ -53,11 +49,8 @@ class ProductParser(Spider):
         return response.css('.product-name::text').get()
 
     def product_gender(self, response):
-        raw_genders = response.css('.product-detail-section-text::text').get()
-        for raw_gender in raw_genders:
-            if raw_gender in GENDERS:
-                return raw_gender
-        return 'unisex'
+        gender = response.css('.product-spec-list dd::text').get()
+        return gender if gender else 'unisex'
 
     def product_category(self, response):
         selector = '.breadcrumb-item:nth-child(n+2) a::attr(data-id)'
@@ -65,7 +58,8 @@ class ProductParser(Spider):
 
     def product_description(self, response):
         selector = '.product-detail-card .card-text::text'
-        return response.css(selector).get()
+        raw_description = response.css(selector).get()
+        return [desc.strip() for desc in raw_description]
 
     def product_currency(self, response):
         selector = '.prices [itemprop="priceCurrency"]::attr(content)'
@@ -85,7 +79,7 @@ class ProductParser(Spider):
         product_sku_variants = response.css(selector).getall()
 
         for color_variant in product_sku_variants:
-            url = re.sub(r'[A-Z]{3,}', color_variant, response.url, )
+            url = re.sub(r'[A-Z]{3,}', color_variant, response.url)
             requests.append(
                 Request(url=url, callback=self.add_product_skus, meta={'item': item})
             )
@@ -98,15 +92,10 @@ class ProductParser(Spider):
         return self.next_item_or_request(item)
 
     def product_images(self, response):
-        image_urls = []
         raw_images = response.css('.product-detail-img::attr(data-json)').get()
         raw_images_content = json.loads(raw_images)
         large_sized_images = raw_images_content.get('large')
-
-        for image_item in large_sized_images:
-            image_urls.append(image_item.get('url'))
-
-        return image_urls
+        return [img_item.get('url') for img_item in large_sized_images]
 
     def product_sku(self, response):
         skus = []
@@ -114,7 +103,7 @@ class ProductParser(Spider):
         product_sizes = self.product_sizes(response)
 
         for product_size in product_sizes:
-            sku = Sku()
+            sku = {}
             sku['colour'] = sku_data.get('displayValue'),
             sku['previous_prices'] = [self.product_previous_price(response)],
             sku['size'] = product_size,
@@ -133,8 +122,7 @@ class ProductParser(Spider):
 
     def load_sku_data(self, response):
         raw_data = response.css('.render-product-selected::attr(data-json)').get()
-        sku_data = json.loads(raw_data)
-        return sku_data
+        return json.loads(raw_data)
 
     def product_sizes(self, response):
         selector = '.select-size option:not([disabled]):nth-child(n+2)::text'
@@ -156,30 +144,29 @@ class UggCrawler(CrawlSpider):
 
     allowed_domains = ['au.ugg.com']
     start_urls = ['https://au.ugg.com']
-
-    cookies = {'ak_bmcs': '3baee62a-fa9e-310e-bf5b-91dc2e1c2046;'}
-
+    ALLOW = r'/catalog/'
+    RESTRICT_CSS = ('.btn-show-all',)
+    cookies = {'NM()sdf': '90cea3e7-12af-00a0-a883-df14bd77b6b2;'}
     custom_settings = {
-        'USER_AGENT': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:70.0) Gecko/20100101 Firefox/70.0',
+        'USER_AGENT': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.131 Safari/537.36',
         'DOWNLOAD_DELAY': '5'
     }
 
     rules = (
-        Rule(LinkExtractor(allow=r'/catalog/', restrict_css=('.btn-show-all',)), callback='parse_page', follow=False),
+        Rule(LinkExtractor(allow=ALLOW, restrict_css=RESTRICT_CSS), callback='parse_page'),
     )
 
     def start_requests(self):
-        for url in self.start_urls:
-            yield Request(url, cookies=self.cookies, dont_filter=True)
+        yield from [Request(url, cookies=self.cookies) for url in self.start_urls]
 
     def parse_page(self, response):
         product_requests = response.css('.card-img a::attr(href)').getall()
-
         for url in product_requests:
-            yield Request(url=urljoin(response.url, url), cookies=self.cookies, callback=self.product_parser.parse,
+            url = urljoin(response.url, url)
+            yield Request(url=url, cookies=self.cookies, callback=self.product_parser.parse,
                           meta={'trail': [response.url]})
 
         next_page_url = response.css('.show-more button::attr(data-url)').get()
-        if next_page_url:
-            yield Request(url=urljoin(response.url, next_page_url), cookies=self.cookies,
-                          callback=self.parse_page)
+        if not next_page_url:
+            return
+        yield Request(url=urljoin(response.url, next_page_url), cookies=self.cookies, callback=self.parse_page)
