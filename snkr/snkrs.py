@@ -43,9 +43,13 @@ class SnkrsSpider(scrapy.Spider):
                 "_" +
                 sizes: {
                     "colour": get_colour,
-                    "currency": response.css('div.nosto_product span.price_currency_code::text').get(),
-                    "price": response.css('div.nosto_product span.price::text').get(),
-                    "old_price": response.xpath('//span[@id="old_price_display"]/span/text()').get(),
+                    "currency": response.css(
+                        'div.nosto_product' +
+                        'span.price_currency_code::text').get(),
+                    "price": response.css(
+                        'div.nosto_product span.price::text').get(),
+                    "old_price": response.xpath(
+                        '//span[@id="old_price_display"]/span/text()').get(),
                     "size": sizes},
             }
             yield items['skus']
@@ -62,27 +66,20 @@ class SnkrsSpider(scrapy.Spider):
         return response.css('div.nosto_category::text').get()
 
     def get_desciption(self, response):
-        return response.css('div.rte p::text').getall()
+        return response.xpath(
+            '//p[@id="product_reference"]/label/text()').getall(), response.css(
+            'div.rte p::text').getall()
 
     def get_gender(self, response):
         gender = response.css('div.nosto_category::text').re_first(
             r'(Men|Women|Skate|Lifestyle)')
 
-        if gender == 'Men':
-            gender = 'men'
-            return gender
-
-        elif gender == 'Women':
-            gender = 'women'
-            return gender
-
-        else:
-            gender = 'unisex-adults'
-            return gender
+        return "men" if gender == "Men" else "women" if gender == "Women" else "unisex-adults"
 
     def get_name(self, response):
         return response.css('div.nosto_product span.name::text').get()
 
     def get_image_urls(self, response):
-        return response.css('div.nosto_product .image_url::text').getall(), response.css(
+        return response.css(
+            'div.nosto_product .image_url::text').getall(), response.css(
             'div.nosto_product' + ' .alternate_image_url::text').getall()
