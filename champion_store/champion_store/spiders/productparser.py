@@ -89,7 +89,7 @@ class ProductParser(Spider):
         return raw_price.replace('.', '')
 
     def product_currency(self, response):
-        return response.xpath("//meta[@property='og:price:currency']").css('::attr(content)').get()
+        return response.css('meta[property="og:price:currency"]::attr(content)').get()
 
     def available_products(self, response, retailer_sku_id):
         available_items = []

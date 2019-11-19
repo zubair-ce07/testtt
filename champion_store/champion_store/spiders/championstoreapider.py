@@ -31,8 +31,5 @@ class ChampionStoreSpider(CrawlSpider):
 
     def parse_product(self, response):
         product_urls = response.css('.product_name a::attr(href)').getall()
-        requests = [Request(url=url, callback=self.product_parser.parse, meta={'trail': [response.url]})
+        yield from [Request(url=url, callback=self.product_parser.parse, meta={'trail': [response.url]})
                     for url in product_urls]
-
-        for request in requests:
-            yield request
