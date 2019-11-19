@@ -1,5 +1,4 @@
 from .utils import VALUE_EXTRACTOR_FROM_KEY
-from ..items import Sku
 
 
 class ProductSku:
@@ -8,7 +7,7 @@ class ProductSku:
         product_skus = []
 
         for sku in raw_skus:
-            sku_item = Sku()
+            sku_item = {}
             sku_item['previous_prices'] = [self.sku_previous_price(response, sku_id)]
             sku_item['colour'] = self.sku_color(sku.get('Attributes'))
             sku_item['size'] = self.sku_size(sku.get('Attributes'))

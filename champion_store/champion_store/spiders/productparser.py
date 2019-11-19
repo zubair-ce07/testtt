@@ -8,17 +8,16 @@ from ..items import Product
 
 
 class ProductParser(Spider):
-    ids_seen = set()
+    seen_ids = set()
     product_sku = ProductSku()
     name = 'championStoreSpider'
 
     def parse(self, response):
-
         retailer_sku_id = self.retailer_sku_id(response)
-        if retailer_sku_id in self.ids_seen:
+        if retailer_sku_id in self.seen_ids:
             return
 
-        self.ids_seen.add(retailer_sku_id)
+        self.seen_ids.add(retailer_sku_id)
         trail = response.meta['trail']
 
         available_products = self.available_products(response, retailer_sku_id)
@@ -57,22 +56,19 @@ class ProductParser(Spider):
 
     def product_category(self, response):
         raw_category = response.css('#widget_breadcrumb *::text').getall()
-        raw_category = remove_unwanted_spaces(raw_category)
-        return remove_unwanted_characters(raw_category)[1:]
+        return clean_data(raw_category)[1:]
 
     def product_name(self, response):
         return response.css('.main_header::text').get()
 
     def product_description(self, response, sku_id):
         raw_description = response.css(f'#product_longdescription_{sku_id} li::text').getall()
-        raw_description = remove_unwanted_spaces(raw_description)
         raw_description = remove_unicode_characters(raw_description)
-        return remove_unwanted_characters(raw_description)
+        return clean_data(raw_description)
 
     def product_care(self, response, item):
         raw_care = response.css('.description ul').css('::text').getall()
-        raw_care = remove_unwanted_spaces(raw_care)
-        raw_care = remove_unwanted_characters(raw_care)
+        raw_care = clean_data(raw_care)
         raw_care = remove_unicode_characters(raw_care)
         return [care for care in raw_care if care not in item.get('description', [])]
 
