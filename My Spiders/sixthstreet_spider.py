@@ -24,9 +24,16 @@ class ParseSpider():
         product['description'] = self.get_description(response)
         product['care'] = []
         product['skus'] = self.get_skus(response)
+        product['out_of_stock'] = self.get_availability(response)
         product['image_urls'] = self.get_image_urls(response)
+        product['requests'] = self.color_requests(response)
 
-        return product
+        return self.request_or_product(product)
+
+    def parse_skus(self, response):
+        product = response.meta['product']
+        product['skus'].update(self.get_skus(response))
+        return self.request_or_product(product)
 
     def get_retailer_sku(self, response):
         return response.css('#product-sku::attr(value)').get()
@@ -64,35 +71,51 @@ class ParseSpider():
         availability = response.css('[itemprop="availability"]::attr(value)').get()
         return availability != 'In Stock'
 
-    def get_sizes(self, response):
-        raw_sizes = response.css('script').re_first(r"sizeOptionArr = JSON.parse\('(.*)'\);")
-        sizes = json.loads(raw_sizes) if raw_sizes else [{'UK': self.ONE_SIZE}]                
-        return [s['UK'] for s in sizes]   
+    def get_size(self, response, size_parsed, sku_id, attribute_id):
+        raw_sizes = response.css('script').re_first(r"sizeOptionArr = JSON.parse\('(.*)'\);")                                
+        sizes = size_parsed['attributes'][attribute_id]['options']
 
-    def get_price(self, response):
-        current_price = response.css('[itemprop="price"]::attr(content)').get()
-        previous_price = response.css('.old-price span::attr(data-price-amount)').get()
-        currency = response.css('[itemprop="priceCurrency"]::attr(content)').get()
-
-        return format_price(currency, current_price, previous_price)
+        return [s['label'] for s in sizes if s['products'][0] == sku_id][0] if raw_sizes else self.ONE_SIZE
 
     def get_colour(self, response):
         return response.css(':contains("Color :") + span::text').get()
 
     def get_skus(self, response):
-        skus = {}
-        common_sku = self.get_price(response)
-        common_sku['out_of_stock'] = self.get_availability(response)
+        skus = {}                
+        colour = self.get_colour(response)        
+        common_sku = {'colour': colour} if colour else {} 
 
-        if self.get_colour(response):
-            common_sku['colour'] = self.get_colour(response)
+        currency = response.css('[itemprop="priceCurrency"]::attr(content)').get()
+        raw_price = response.css('script').re_first(r'var spConfig = {(.*);')
+        price_parsed = json.loads('{' + raw_price)
 
-        for size in self.get_sizes(response):
+        attribute_id = list(price_parsed['attributes'].keys())[0]
+        sku_ids = list(price_parsed['optionPrices'].keys())
+
+        for id in sku_ids:
             sku = common_sku.copy()
-            sku['size'] = size
-            skus[f"{sku['colour']}_{size}" if sku.get('colour') else size] = sku
+            sku.update(format_price(
+                currency,
+                price_parsed['optionPrices'][id]['finalPrice']['amount'],
+                price_parsed['optionPrices'][id]['oldPrice']['amount']))
+            sku['size'] = self.get_size(response, price_parsed, id, attribute_id)
+            skus[f"{sku['colour']}_{sku['size']}" if sku.get('colour') else sku['size']] = sku
 
         return skus
+
+    def color_requests(self, response):
+        color_urls = response.css('.plus_color_box a::attr(href)').getall()
+        return [response.follow(url, callback=self.parse_skus) for url in color_urls]
+
+    def request_or_product(self, product):
+        if product['requests']:
+            request = product['requests'].pop()
+            request.meta['product'] = product
+            return request
+        else:
+            del product['requests']
+
+        return product
 
 
 class CrawlSpider(CrawlSpider):
@@ -134,7 +157,7 @@ class CrawlSpider(CrawlSpider):
 
         formdata_parsed = json.loads(raw_formdata)
         application_id = formdata_parsed['applicationId']
-        formdata = self.formdata
+        formdata = self.formdata.copy()
         params = self.params_t
 
         url = self.url_t.format(
@@ -145,7 +168,7 @@ class CrawlSpider(CrawlSpider):
 
         formdata['requests'][0]['params'] = add_or_replace_parameter(
             params.format(query=query), 'page', 0)
-        
+
         listings_formdata = {
             'formdata': formdata_parsed,
             'query': query
@@ -158,7 +181,7 @@ class CrawlSpider(CrawlSpider):
         formdata_parsed = response.meta['formdata']
         application_id = formdata_parsed['applicationId']
         products = json.loads(response.text)
-        formdata = self.formdata
+        formdata = self.formdata.copy()
         params = self.params_t
 
         for page_number in range(1, int(products['results'][0]['nbPages'])+1):
