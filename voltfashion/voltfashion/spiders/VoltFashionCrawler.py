@@ -50,19 +50,13 @@ class ProductParser(Spider):
         return self.next_item_or_request(item)
 
     def product_care(self, raw_care):
-        if not raw_care:
-            return []
-        return [care.get('Name') for care in raw_care]
+        return [care.get('Name') for care in raw_care] if raw_care else []
 
     def product_images(self, raw_images):
-        if not raw_images:
-            return []
-        return [img.get('Url') for img in raw_images]
+        return [img.get('Url') for img in raw_images] if raw_images else []
 
     def product_currency(self, raw_currency):
-        if not raw_currency:
-            return None
-        return raw_currency.get('Currency')
+        return raw_currency.get('Currency') if raw_currency else None
 
     def product_skus(self, product_details):
         product_skus = []
@@ -110,9 +104,7 @@ class ProductParser(Spider):
             yield item
 
     def clean_price(self, raw_price):
-        if not raw_price:
-            return None
-        return raw_price.replace(':-', '')
+        return raw_price.replace(':-', '') if raw_price else None
 
 
 class VoltFashionCrawler(CrawlSpider):
