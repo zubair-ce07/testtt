@@ -63,8 +63,7 @@ class SnkrsParseSpider():
         return response.css('[itemprop="name"]::text').get()    
 
     def get_name(self, response):
-        raw_name = self.raw_name(response)
-        return raw_name.split(' - ')[0] if ' - ' in raw_name else raw_name
+        return self.raw_name(response).split(' - ')[0]
 
     def get_colour(self, response):
         raw_colour = self.raw_name(response)
