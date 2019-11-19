@@ -13,7 +13,7 @@ UNDESIRED_TEXTS = ['\xa0']
 
 
 class ProductParser(Spider):
-    ids_seen = set()
+    seen_ids = set()
     name = 'VoltFashionSpider'
     CONTENT_SELECTOR = "div[id*='react_']:not([class]) + script"
 
@@ -22,10 +22,10 @@ class ProductParser(Spider):
         product_details = raw_product_details.get('product')
         retailer_sku_id = product_details.get('Code')
 
-        if retailer_sku_id in self.ids_seen:
+        if retailer_sku_id in self.seen_ids:
             return
 
-        self.ids_seen.add(retailer_sku_id)
+        self.seen_ids.add(retailer_sku_id)
         trail = response.meta.get('trail', [])
         trail.append(response.url)
 
