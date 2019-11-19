@@ -59,8 +59,16 @@ class SnkrsParseSpider():
     def get_description(self, response):
         return response.css('#short_description_content p::text').getall()
 
+    def raw_name(self, response):
+        return response.css('[itemprop="name"]::text').get()    
+
     def get_name(self, response):
-        return response.css('[itemprop="name"]::text').get()
+        raw_name = self.raw_name(response)
+        return raw_name.split(' - ')[0] if ' - ' in raw_name else raw_name
+
+    def get_colour(self, response):
+        raw_colour = self.raw_name(response)
+        return raw_colour.split(' - ')[1] if ' - ' in raw_colour else ''
 
     def get_image_urls(self, response):
         return response.css('#carrousel_frame li a::attr(href)').getall()
@@ -70,30 +78,24 @@ class SnkrsParseSpider():
         previous_price = response.css('#old_price_display .price::text').re_first(r"\d+")
         currency = response.css('[itemprop="priceCurrency"]::attr(content)').get()
 
-        return format_price(currency, current_price, previous_price)
-
-    def get_colour(self, response):
-        colour = self.get_name(response)
-        return colour.split(' - ')[1] if ' - ' in colour else ''
+        return format_price(currency, current_price, previous_price)      
 
     def get_skus(self, response):
         skus = {}
-        common_sku = self.get_price(response)
+
         colour = self.get_colour(response)
-
-        if colour:
-            common_sku['colour'] = colour
-
+        common_sku = {'colour': colour} if colour else {}
+        common_sku.update(self.get_price(response))
         common_sku['out_of_stock'] = False
+
         size_css = 'span.size_EU::text, li:not(.hidden) span.units_container::text'
         sizes = [size for size in response.css(size_css).getall() if size != ' '] or [self.ONE_SIZE]
 
         for size in sizes:
-            sku = {**common_sku}
+            sku = common_sku.copy()
             sku['size'] = size
 
-            skus.update({f"{common_sku['colour']}_{size}": sku}) if 'colour' in common_sku \
-                else skus.update({size: sku})
+            skus[f"{common_sku['colour']}_{size}" if colour else size] = sku
 
         return skus
 
