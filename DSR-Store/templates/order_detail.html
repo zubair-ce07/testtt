@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+        <link href="{{url_for('static', filename = 'css/bootstrap.min.css')}}" rel="stylesheet">
+<style>
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 70%;
+}
+
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+
+tr:nth-child(even) {
+  background-color: #dddddd;
+}
+
+/* Red */
+.danger {
+          border-color: #f44336;
+          color: red;
+        }
+        
+.danger:hover {
+        background: #f44336;
+        color: white;
+        }
+
+button {
+
+margin-right :500px }        
+</style>
+
+</head>
+<body>
+
+<h2>Order Detail</h2>
+
+<table>
+  <tr>
+    <th>Item Name</th>
+    <th>Item Price</th>
+    <th>quantity</th>
+  </tr>
+  
+        {% for row in items %}
+        
+        <tr>
+                <td>{{row.2}}</td>
+                <td>{{row.3}}</td>
+                <td>{{row.1}}</td>
+                
+        </tr>
+       
+        {% endfor  %}
+
+        <tr>
+            <th>Total Bill :-</th>
+            <th>{{total}}.Rs</th>
+        </tr>
+        
+</table>
+
+<a href="/cur_orders" class="btn btn-primary">Go Back</a>
+
+</body>
+</html>

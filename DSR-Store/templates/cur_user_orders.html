@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+{% include "user_header.html" %}
+<html>
+<head>
+        <link href="{{url_for('static', filename = 'css/bootstrap.min.css')}}" rel="stylesheet">
+<style>
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 70%;
+}
+
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+
+tr:nth-child(even) {
+  background-color: #dddddd;
+}
+
+/* Red */
+.danger {
+          border-color: #f44336;
+          color: red;
+        }
+        
+.danger:hover {
+        background: #f44336;
+        color: white;
+        }
+
+button {
+
+margin-right :500px }        
+</style>
+
+</head>
+<body>
+
+<h2>Current Orders</h2>
+
+<table>
+  <tr>
+    <th>Order No</th>
+    <th>Customer Name</th>
+    <th>House No</th>
+    <th>Status</th>
+    <th>Action</th>
+  </tr>
+  
+        {% for row in customers_data %}
+        
+        <tr>
+                <td>{{row.0}}</td>
+                <td>{{row.2}}</td>
+                <td>{{row.3}}</td>
+                <td>{{row.1}}</td>
+                <td><a href="/order_detail/{{row.0}}" class="btn btn-primary">Detail</a>
+                <a href="/order_recieved/{{row.0}}" class="btn btn-success">Recieved</a></td>
+                
+        </tr>
+       
+        {% endfor  %}
+
+</table>
+
+</body>
+</html>

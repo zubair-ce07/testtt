@@ -1,0 +1,161 @@
+/**
+ * Custom Form Select Styles.
+ * Used to create custom form select menus from regular input fields.
+ * @author Rainner Lins @raintek_
+ */
+ $color_bg: #f0f0f0; 
+ $color_font: #303030; 
+ $font-size: 14px; 
+ 
+ *, *:before, *:after {
+    border: none; 
+    outline: none; 
+    box-sizing: border-box;
+ }
+ 
+ html, body {
+    margin: 0; 
+    padding: 0; 
+    height: 100%; 
+ }
+ body {
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    background-color: $color_bg; 
+    background: radial-gradient( circle, #fff 0%, #ffc 30%, #efe 100% ) fixed;
+    color: $color_font; 
+    font-family: Arial, sans-serif;
+    font-size: $font-size; 
+    line-height: ceil( $font-size * 2 ); 
+ }
+ 
+ .container {
+    width: 100%; 
+    max-width: 600px;
+ }
+ 
+ form {
+    display: block; 
+    margin: 0; 
+    padding: 0; 
+    
+    .form-row {
+       display: block; 
+       margin: 20px 0; 
+    }
+    
+    .select {
+       display: block; 
+       position: relative; 
+       vertical-align: middle;
+       text-align: left; 
+       
+       & > span {
+          display: block; 
+          color: lighten( $color_font, 20% ); 
+       }
+       
+       & > input {
+          display: block; 
+          cursor: pointer; 
+          margin: 0; 
+          padding: 10px 20px;
+          width: 100%; 
+          border: 1px solid darken( $color_bg, 20% ); 
+          border-radius: 3px; 
+          line-height: ceil( $font-size * 1.1 ); 
+          box-shadow: 0 1px 8px rgba( 0, 0, 0, 0.2 );
+          user-select: none; 
+          background-color: #fff; 
+          background-repeat: no-repeat;
+          background-image:
+             linear-gradient( 45deg, transparent 50%, gray 50% ),
+             linear-gradient( 135deg, gray 50%, transparent 50% );
+          background-position:
+             calc( 100% - 20px ) center,
+             calc( 100% - 15px ) center;
+          background-size:
+             5px 5px,
+             5px 5px,
+             1px 1.5em;
+          transition: 
+             border-color 300ms ease-in-out, 
+             background-color 300ms ease-in-out, 
+             color 300ms ease-in-out;
+          
+          &:hover, &:focus, &:active, &.active {
+             border-color: #069; 
+          }
+          &:focus, &:active, &.active {
+             box-shadow: 0 1px 12px rgba( 0, 0, 0, 0.3 );
+          }
+          &:focus ~ ul, &:active ~ ul {
+              max-height: 200px;
+              z-index: 999;
+          }
+       }
+       
+       & > ul {
+          display: block;
+          position: absolute;
+          list-style: none;
+          overflow: hidden;
+          overflow-y: auto;
+          margin: 0;
+          padding: 0;
+          border: 0; 
+          border-top: none;
+          border-bottom-left-radius: 3px;
+          border-bottom-right-radius: 3px;
+          left: 20px;
+          right: 20px;
+          top: 100%;
+          background-color: #fff; 
+          box-shadow: 0 5px 10px rgba( 0, 0, 0, 0.2 );
+          max-height: 0;
+          z-index: 998;
+          transition: max-height 300ms ease-in-out;
+          
+          li {
+             display: block;
+             cursor: pointer; 
+             margin: 0; 
+             padding: 5px 10px; 
+             background-color: #fff; 
+             
+             &:hover {
+                background-color: #f2f2f2; 
+             }
+             &:focus, &:active, &.active {
+                background-color: #f0f0f0; 
+             }
+          }
+          
+          li + li {
+             border-top: 1px solid darken( $color_bg, 10% );
+          }
+       }
+       
+       & > select {
+          display: inline-block; 
+          position: absolute; 
+          overflow: hidden; 
+          border: none; 
+          margin: 0; 
+          padding: 0; 
+          width: 0; 
+          height: 0; 
+          opacity: 0.000000001; 
+       }
+    }
+ }
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 

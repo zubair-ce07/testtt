@@ -1,0 +1,21 @@
+img {
+  display: block;
+}
+.button{
+  background-color: green;
+  padding: 0.5em 1em;
+  color: white;  
+  margin-right: 0.2em;
+}
+.text div {
+  margin-bottom: 0.2em;
+}
+button.btn {
+  padding-top: 1.5em;
+  padding-bottom: 1.5em;
+}
+@media (min-width: 1200px) {
+    .container {
+        max-width: 960px;
+    }
+}

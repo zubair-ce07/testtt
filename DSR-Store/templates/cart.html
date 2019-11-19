@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+        <link href="{{url_for('static', filename = 'css/bootstrap.min.css')}}" rel="stylesheet">
+<style>
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 70%;
+}
+
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+
+tr:nth-child(even) {
+  background-color: #dddddd;
+}
+
+/* Red */
+.danger {
+          border-color: #f44336;
+          color: red;
+        }
+        
+.danger:hover {
+        background: #f44336;
+        color: white;
+        }
+
+button {
+
+margin-right :500px }        
+</style>
+
+</head>
+<body>
+
+<h2>Cart</h2>
+
+<table>
+  <tr>
+    <th>Item Name</th>
+    <th>Item Price</th>
+    <th>quantity</th>
+    <th>Remove</th>
+  </tr>
+  
+        {% for row in items %}
+        
+        <tr>
+                <td>{{row.2}}</td>
+                <td>{{row.3}}</td>
+                <td>{{row.1}}</td>
+                <td><a href="/remove_item/{{ row.0 }}" class="btn danger" onclick="return confirm('Are You Sure For Delete?')">Remove</a></td>
+                
+        </tr>
+       
+        {% endfor  %}
+
+        <tr>
+            <th>Total Bill :-</th>
+            <th>{{total}}</th>
+        </tr>
+        
+</table>
+
+<a href="/checkout" class="btn btn-success" onclick="return confirm('Are you sure? ')">Place Order</a>
+<a href="/user_main" class="btn btn-primary"> Add more to Cart</a> <br><br>
+<a href="/clear_cart" class="btn btn-danger" onclick="return confirm('Warning! Cart will be empty?')">Clear Cart</a>
+
+</body>
+</html>
