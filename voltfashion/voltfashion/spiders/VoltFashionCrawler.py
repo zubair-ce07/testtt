@@ -6,7 +6,7 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule, Spider
 from w3lib.url import add_or_replace_parameters
 
-from ..items import Product, Sku
+from ..items import Product
 
 REGEX_EXTRACT = r'({.*})'
 UNDESIRED_TEXTS = ['\xa0']
@@ -18,7 +18,6 @@ class ProductParser(Spider):
     CONTENT_SELECTOR = "div[id*='react_']:not([class]) + script"
 
     def parse_product(self, response):
-
         raw_product_details = fetch_clean_and_load(response, self.CONTENT_SELECTOR)
         product_details = raw_product_details.get('product')
         retailer_sku_id = product_details.get('Code')
@@ -27,7 +26,6 @@ class ProductParser(Spider):
             return
 
         self.ids_seen.add(retailer_sku_id)
-
         trail = response.meta.get('trail', [])
         trail.append(response.url)
 
@@ -52,19 +50,19 @@ class ProductParser(Spider):
         return self.next_item_or_request(item)
 
     def product_care(self, raw_care):
-        if raw_care:
-            return [care.get('Name') for care in raw_care]
-        return []
+        if not raw_care:
+            return []
+        return [care.get('Name') for care in raw_care]
 
     def product_images(self, raw_images):
-        if raw_images:
-            return [img.get('Url') for img in raw_images]
-        return []
+        if not raw_images:
+            return []
+        return [img.get('Url') for img in raw_images]
 
     def product_currency(self, raw_currency):
-        if raw_currency:
-            return raw_currency.get('Currency')
-        return None
+        if not raw_currency:
+            return None
+        return raw_currency.get('Currency')
 
     def product_skus(self, product_details):
         product_skus = []
@@ -74,7 +72,7 @@ class ProductParser(Spider):
         previous_price = self.clean_price(raw_previous_price)
 
         for sku_obj in raw_skus:
-            sku = Sku()
+            sku = {}
             sku['colour'] = sku_color
             sku['previous_prices'] = [previous_price]
             sku['size'] = sku_obj.get('Size')
@@ -85,7 +83,6 @@ class ProductParser(Spider):
 
     def product_skus_requests(self, response, product_sku_variant, item):
         requests = []
-
         for variant in product_sku_variant:
             url = urljoin(response.url, variant.get('Url'))
             requests.append(
@@ -98,16 +95,13 @@ class ProductParser(Spider):
 
     def update_product_skus(self, response):
         item = response.meta['item']
-
         raw_product_details = fetch_clean_and_load(response, self.CONTENT_SELECTOR)
         product_details = raw_product_details.get('product')
-
-        item['skus'] += (self.product_skus(product_details))
+        item['skus'] += self.product_skus(product_details)
         item['image_urls'] += self.product_images(product_details.get('ProductImages'))
         return self.next_item_or_request(item)
 
     def next_item_or_request(self, item):
-
         if item['meta']['requests']:
             request = item['meta']['requests'].pop()
             yield request
@@ -116,9 +110,9 @@ class ProductParser(Spider):
             yield item
 
     def clean_price(self, raw_price):
-        if raw_price:
-            return raw_price.replace(':-', '')
-        return None
+        if not raw_price:
+            return None
+        return raw_price.replace(':-', '')
 
 
 class VoltFashionCrawler(CrawlSpider):
@@ -128,27 +122,26 @@ class VoltFashionCrawler(CrawlSpider):
     allowed_domains = ['voltfashion.com']
     start_urls = ['https://voltfashion.com/sv/']
 
-    deny_paths = (r'/Butiker/', r'/corporate/', r'/functional/')
-
+    ALLOW = r'/sv/'
+    DENY = (r'/Butiker/', r'/corporate/', r'/functional/')
+    RESTRICT_CSS = ('ul .-level-2',)
     CONTENT_SELECTORS = '#productlistpage__container + script'
 
     rules = (
-        Rule(LinkExtractor(allow=r'/sv/', deny=deny_paths, restrict_css=('ul .-level-2', )),
-             callback='all_products_url'),
+        Rule(LinkExtractor(allow=ALLOW, deny=DENY, restrict_css=RESTRICT_CSS), callback='parse_products_urls'),
     )
 
-    def all_products_url(self, response):
-
+    def parse_products_urls(self, response):
         raw_data = fetch_clean_and_load(response, self.CONTENT_SELECTORS)
         total_items_count = raw_data.get('totalCount')
 
-        if total_items_count:
-            query_params = {'itemsPerPage': total_items_count, 'page': '0', 'view': 'small-img'}
-            url = add_or_replace_parameters(response.url, query_params)
-            url = url.replace('/?', '/#')
-            return Request(url=url, callback=self.make_products_requests, dont_filter=True)
-        else:
+        if not total_items_count:
             return self.make_products_requests(response)
+
+        query_params = {'itemsPerPage': total_items_count, 'page': '0', 'view': 'small-img'}
+        url = add_or_replace_parameters(response.url, query_params)
+        url = url.replace('/?', '/#')
+        return Request(url=url, callback=self.make_products_requests, dont_filter=True)
 
     def make_products_requests(self, response):
         raw_data = fetch_clean_and_load(response, self.CONTENT_SELECTORS)
@@ -170,7 +163,7 @@ def clean_data(data):
     if not data:
         return
 
-    if type(data) is list:
+    if isinstance(data, list):
         clean_data = []
         for d in data:
             for undesired_text in UNDESIRED_TEXTS:
