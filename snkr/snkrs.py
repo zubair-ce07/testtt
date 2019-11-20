@@ -11,16 +11,12 @@ class SnkrsSpider(scrapy.Spider):
     start_urls = ['http://snkrs.com/en/']
 
     def parse(self, response):
-        urls = response.css('a.a-niveau1::attr(href)').getall()
-
-        for url in urls:
-            yield response.follow(url, callback=self.parse_listing_page)
+        [(yield response.follow(url, callback=self.parse_listing_page))
+        for url in response.css('.a-niveau1::attr(href)').getall()]
 
     def parse_listing_page(self, response):
-        urls = response.css('.product_img_link::attr(href)').getall()
-
-        for url in urls:
-            yield response.follow(url, callback=self.parse_product_page)
+        [(yield response.follow(url, callback=self.parse_product_page))
+        for url in response.css('.product_img_link::attr(href)').getall()]
 
     def parse_product_page(self, response):
         items = SnkrsItem()
@@ -33,53 +29,49 @@ class SnkrsSpider(scrapy.Spider):
         items['url'] = response.url
         items['name'] = self.get_name(response)
         items['image_urls'] = self.get_image_urls(response)
-        shoes_name = items['name']
-        get_colour = re.sub(r'.*- ', '', shoes_name)
-
-        for sizes in response.css(
-                'span.units_container .size_EU::text').getall():
-            items['skus'] = {
-                get_colour +
-                "_" +
-                sizes: {
-                    "colour": get_colour,
-                    "currency": response.css(
-                        'div.nosto_product' +
-                        'span.price_currency_code::text').get(),
-                    "price": response.css(
-                        'div.nosto_product span.price::text').get(),
-                    "old_price": response.xpath(
-                        '//span[@id="old_price_display"]/span/text()').get(),
-                    "size": sizes},
-            }
-            yield items['skus']
+        items['skus'] = self.get_skus(items, response)
 
         yield items
 
+    def get_skus(self, items, response):
+        get_colour = re.sub(r'.*- ', '', items['name'])
+        price = response.css('div.nosto_product .price::text').get()
+        float_price = float(price)
+        skus = {}
+
+        for sizes in response.css('span.units_container .size_EU::text').getall():
+            skus[get_colour + "_" + sizes] = {
+                "colour": get_colour,
+                "currency": response.css('.nosto_product .price_currency_code::text').get(),
+                "price": float_price,
+                "old_price": response.xpath('//span[@id="old_price_display"]/span/text()').get(),
+                "size": sizes
+            }
+            skus.update(skus)
+
+        return skus
+
     def get_retailer_sku(self, response):
-        return response.css('div.nosto_product span.product_id::text').get()
+        return response.css('.nosto_product .product_id::text').getall()[0]
 
     def get_brand(self, response):
-        return response.css('div.nosto_product span.brand::text').get()
+        return response.css('.nosto_product .brand::text').get()
 
     def get_category(self, response):
         return response.css('div.nosto_category::text').get()
 
     def get_desciption(self, response):
-        return response.xpath(
-            '//p[@id="product_reference"]/label/text()').getall(), response.css(
-            'div.rte p::text').getall()
+        reference = '//p[@id="product_reference"]/label/text()'
+        description = ' //div[@id="short_description_content"]/p/text()'
+        return response.xpath(reference + ' | ' + description).getall()
 
     def get_gender(self, response):
-        gender = response.css('div.nosto_category::text').re_first(
-            r'(Men|Women|Skate|Lifestyle)')
+        gender = response.css('.nosto_category::text').re_first(r'(Men|Women)')
 
         return "men" if gender == "Men" else "women" if gender == "Women" else "unisex-adults"
 
     def get_name(self, response):
-        return response.css('div.nosto_product span.name::text').get()
+        return response.css('.nosto_product .name::text').get()
 
     def get_image_urls(self, response):
-        return response.css(
-            'div.nosto_product .image_url::text').getall(), response.css(
-            'div.nosto_product' + ' .alternate_image_url::text').getall()
+        return response.css('.image_url::text, .alternate_image_url::text').getall()
