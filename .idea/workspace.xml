@@ -1,114 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="0b3e6b14-548e-487e-9abe-57d321cdf426" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/README.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/What_I_Noted/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/What_I_Noted/middleware.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/What_I_Noted/settings.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/What_I_Noted/urls.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/What_I_Noted/wsgi.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/db.sqlite3" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/manage.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/media/default.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/media/default_note_image.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/media/default_note_thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/media/global.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/media/note_book_thumbnails/70767901_389045215353903_2299057364612939776_n.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/media/note_book_thumbnails/images.jpeg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/media/note_book_thumbnails/unnamed.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/media/note_book_thumbnails/whatis-object_oriented_programming.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/media/profile_pics/70767901_389045215353903_2299057364612939776_n.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/media/profile_pics/70767901_389045215353903_2299057364612939776_n_TRg3PGP.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/media/profile_pics/70767901_389045215353903_2299057364612939776_n_aWhRw6V.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/media/profile_pics/images.jpeg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/media/profile_pics/profile_pic_1566240599.jpeg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/media/star.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/media/star_fill.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/note/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/note/admin.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/note/apps.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/note/constants.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/note/forms.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/note/management/commands/markallnotespublic.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/note/migrations/0001_initial.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/note/migrations/0002_auto_20191024_1000.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/note/migrations/0003_auto_20191024_1003.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/note/migrations/0004_auto_20191024_1004.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/note/migrations/0005_auto_20191024_1016.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/note/migrations/0006_note.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/note/migrations/0007_auto_20191028_0755.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/note/migrations/0008_auto_20191028_1143.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/note/migrations/0009_auto_20191028_1221.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/note/migrations/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/note/models.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/note/static/note/main.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/note/templates/note/about.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/note/templates/note/base.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/note/templates/note/home.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/note/templates/note/note_confirm_delete.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/note/templates/note/note_create.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/note/templates/note/note_update.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/note/templates/note/note_view.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/note/templates/note/notebook_confirm_delete.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/note/templates/note/notebook_create.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/note/templates/note/notebook_update.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/note/templates/note/notes.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/note/templates/note/pagination_template.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/note/templates/note/public/notes_public_view.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/note/templates/note/public/public_home.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/note/templates/note/public/public_note_books.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/note/templates/note/public/public_notes.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/note/templates/note/search_notes.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/note/templates/note/templates/note-book.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/note/templates/note/templates/note.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/note/templates/note/templates/public-note-book.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/note/templates/note/templates/public-note.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/note/tests.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/note/urls.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/note/views.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/requirements.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/user/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/user/admin.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/user/apps.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/user/constants.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/user/forms.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/user/migrations/0001_initial.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/user/migrations/0002_auto_20191023_1251.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/user/migrations/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/user/models.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/user/signals.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/user/templates/user/login.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/user/templates/user/logout.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/user/templates/user/password_change.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/user/templates/user/password_change_done.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/user/templates/user/password_reset.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/user/templates/user/password_reset_complete.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/user/templates/user/password_reset_confirm.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/user/templates/user/password_reset_done.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/user/templates/user/profile.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/user/templates/user/register.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/user/tests.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/user/views.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/venv/bin/activate" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/venv/bin/activate.csh" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/venv/bin/activate.fish" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/venv/bin/django-admin" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/venv/bin/django-admin.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/venv/bin/easy_install" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/venv/bin/easy_install-3.7" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/venv/bin/pip" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/venv/bin/pip3" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/venv/bin/pip3.7" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/venv/bin/python" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/venv/bin/python3" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/venv/bin/python3.7" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/venv/bin/sqlformat" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/venv/lib64" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhatINoted/venv/pyvenv.cfg" beforeDir="false" />
-    </list>
+    <list default="true" id="0b3e6b14-548e-487e-9abe-57d321cdf426" name="Default Changelist" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -128,6 +21,7 @@
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/what_i_noted" />
       <recent name="$PROJECT_DIR$/WhatINoted" />
     </key>
   </component>
@@ -163,7 +57,7 @@
       <workItem from="1573032199081" duration="120000" />
       <workItem from="1573468197746" duration="5036000" />
       <workItem from="1573810681660" duration="1229000" />
-      <workItem from="1574246985465" duration="329000" />
+      <workItem from="1574246985465" duration="633000" />
     </task>
     <servers />
   </component>
