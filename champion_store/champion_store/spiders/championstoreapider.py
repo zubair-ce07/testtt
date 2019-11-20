@@ -1,13 +1,12 @@
 from scrapy.linkextractors import LinkExtractor
-from scrapy.spiders import CrawlSpider, Rule
-from scrapy.spiders import Request
+from scrapy.spiders import CrawlSpider, Rule, Request
 from w3lib.url import add_or_replace_parameters
 
 from .productparser import ProductParser
 
 
 class ChampionStoreSpider(CrawlSpider):
-    name = 'championStoreCrawler'
+    name = 'champion_store_crawler'
     product_parser = ProductParser()
     allowed_domains = ['championstore.com']
     start_urls = ['http://championstore.com/']

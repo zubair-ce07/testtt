@@ -10,21 +10,23 @@ from ..items import Product
 class ProductParser(Spider):
     seen_ids = set()
     product_sku = ProductSku()
-    name = 'championStoreSpider'
+    name = 'champion_store_spider'
 
     def parse(self, response):
         retailer_sku_id = self.retailer_sku_id(response)
-        if retailer_sku_id in self.seen_ids:
+        product_price = self.product_price(response, retailer_sku_id)
+
+        if retailer_sku_id in self.seen_ids or not product_price:
             return
 
         self.seen_ids.add(retailer_sku_id)
         trail = response.meta['trail']
-
+        trail.append(response.url)
         available_products = self.available_products(response, retailer_sku_id)
 
         item = Product()
         item['retailer_sku'] = retailer_sku_id
-        item['trail'] = trail.append(response.url)
+        item['trail'] = trail
         item['gender'] = self.product_gender(response)
         item['category'] = self.product_category(response)
         item['brand'] = 'champion store'
@@ -35,7 +37,7 @@ class ProductParser(Spider):
         item['description'] = self.product_description(response, retailer_sku_id)
         item['image_urls'] = self.product_image_urls(response.url, available_products)
         item['skus'] = self.product_sku.collect_product_skus(response, available_products, retailer_sku_id)
-        item['price'] = self.product_price(response, retailer_sku_id)
+        item['price'] = product_price
         item['currency'] = self.product_currency(response)
         item['care'] = self.product_care(response, item)
 
@@ -45,7 +47,8 @@ class ProductParser(Spider):
         return response.css('meta[name="pageId"]::attr(content)').get()
 
     def product_sku_details(self, response, retailer_sku_number):
-        return response.css(f'#entitledItem_{retailer_sku_number}::text').get()
+        selector = f'#entitledItem_{retailer_sku_number}::text'
+        return response.css(selector).get()
 
     def product_gender(self, response):
         raw_genders = response.css('#widget_breadcrumb *::text').getall()
@@ -62,7 +65,8 @@ class ProductParser(Spider):
         return response.css('.main_header::text').get()
 
     def product_description(self, response, sku_id):
-        raw_description = response.css(f'#product_longdescription_{sku_id} li::text').getall()
+        selector = f'#product_longdescription_{sku_id} li::text'
+        raw_description = response.css(selector).getall()
         raw_description = remove_unicode_characters(raw_description)
         return clean_data(raw_description)
 
@@ -76,15 +80,16 @@ class ProductParser(Spider):
         image_urls = []
 
         for sku in product_skus:
-            for raw_image_url in sku.get('ItemAngleFullImage', {}).values():
-                complete_image_url = urljoin(response_url, raw_image_url)
-                if complete_image_url not in image_urls:
-                    image_urls.append(complete_image_url)
+            for relative_url in sku.get('ItemAngleFullImage', {}).values():
+                absolute_url = urljoin(response_url, relative_url)
+                if absolute_url not in image_urls:
+                    image_urls.append(absolute_url)
 
         return image_urls
 
     def product_price(self, response, sku_id):
-        raw_price = response.css(f'#ProductInfoPrice_{sku_id} ::attr(value)').re_first(r'[\d.]+')
+        selector = f'#ProductInfoPrice_{sku_id} ::attr(value)'
+        raw_price = response.css(selector).re_first(r'[\d.]+')
         return raw_price.replace('.', '') if raw_price else None
 
     def product_currency(self, response):

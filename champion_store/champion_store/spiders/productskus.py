@@ -34,5 +34,6 @@ class ProductSku:
         return self.clean_key_value(size_key)
 
     def sku_previous_price(self, response, sku_id):
-        raw_previous_price = response.css(f'#ProductInfoListPrice_{sku_id}::attr(value)').re_first(r'[\d.]+')
+        selector = f'#ProductInfoListPrice_{sku_id}::attr(value)'
+        raw_previous_price = response.css(selector).re_first(r'[\d.]+')
         return raw_previous_price.replace('.', '') if raw_previous_price else None
