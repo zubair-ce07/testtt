@@ -12,24 +12,24 @@ class ChampionStoreSpider(CrawlSpider):
     allowed_domains = ['championstore.com']
     start_urls = ['http://championstore.com/']
 
-    ALLOW = r'en/champion/'
-    RESTRICT_CSS = ('.departmentMenu',)
+    allow = r'en/champion/'
+    listings_css = ('.departmentMenu',)
 
     rules = (
-        Rule(LinkExtractor(allow=ALLOW, restrict_css=RESTRICT_CSS), callback='parse_product_requests'),
+        Rule(LinkExtractor(allow=allow, restrict_css=listings_css), callback='parse_listing'),
     )
 
-    def parse_product_requests(self, response):
+    def parse_listing(self, response):
         total_items = response.css('.pagination_present .title::text').get()
 
         if not total_items:
-            return self.parse_product(response)
+            return self.parse_products(response)
 
         query_params = {'beginIndex': '0', 'pageSize': total_items.strip()}
         url = add_or_replace_parameters(response.url, query_params)
-        return Request(url=url, callback=self.parse_product, dont_filter=True)
+        return Request(url=url, callback=self.parse_products, dont_filter=True)
 
-    def parse_product(self, response):
+    def parse_products(self, response):
         product_urls = response.css('.product_name a::attr(href)').getall()
         yield from [Request(url=url, callback=self.product_parser.parse, meta={'trail': [response.url]})
                     for url in product_urls]

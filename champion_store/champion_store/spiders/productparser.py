@@ -76,9 +76,8 @@ class ProductParser(Spider):
         image_urls = []
 
         for sku in product_skus:
-            for image_url in sku.get('ItemAngleFullImage', {}).values():
-                complete_image_url = urljoin(response_url, image_url)
-
+            for raw_image_url in sku.get('ItemAngleFullImage', {}).values():
+                complete_image_url = urljoin(response_url, raw_image_url)
                 if complete_image_url not in image_urls:
                     image_urls.append(complete_image_url)
 
@@ -86,17 +85,15 @@ class ProductParser(Spider):
 
     def product_price(self, response, sku_id):
         raw_price = response.css(f'#ProductInfoPrice_{sku_id} ::attr(value)').re_first(r'[\d.]+')
-        return raw_price.replace('.', '')
+        return raw_price.replace('.', '') if raw_price else None
 
     def product_currency(self, response):
         return response.css('meta[property="og:price:currency"]::attr(content)').get()
 
     def available_products(self, response, retailer_sku_id):
         available_items = []
-
         raw_product_details = self.product_sku_details(response, retailer_sku_id)
         products_skus = clean_string(raw_product_details)
-
         for product in products_skus:
             if product.get('available') == 'true':
                 available_items.append(product)
