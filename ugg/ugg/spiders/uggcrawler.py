@@ -2,20 +2,20 @@ import json
 import re
 from urllib.parse import urljoin
 
-from scrapy import Request
 from scrapy.linkextractors import LinkExtractor
-from scrapy.spiders import CrawlSpider, Rule, Spider
+from scrapy.spiders import CrawlSpider, Rule, Spider, Request
 
 from ..items import Product
 
 
 class ProductParser(Spider):
     seen_ids = set()
-    name = 'uggSpider'
+    name = 'ugg_spider'
 
     def parse(self, response):
         retailer_sku_id = self.product_retailer_sku(response)
-        if retailer_sku_id in self.seen_ids:
+        product_price = self.product_price(response)
+        if retailer_sku_id in self.seen_ids or not product_price:
             return
 
         self.seen_ids.add(retailer_sku_id)
@@ -35,7 +35,7 @@ class ProductParser(Spider):
         item['description'] = self.product_description(response)
         item['images_url'] = self.product_images(response)
         item['skus'] = self.product_sku(response)
-        item['price'] = self.product_price(response)
+        item['price'] = product_price
         item['currency'] = self.product_currency(response)
         item['meta'] = {'requests': self.product_sku_requests(response, item)}
 
