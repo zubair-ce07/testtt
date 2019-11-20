@@ -1,9 +1,8 @@
 import json
 from urllib.parse import urljoin
 
-from scrapy.http import Request
 from scrapy.linkextractors import LinkExtractor
-from scrapy.spiders import CrawlSpider, Rule, Spider
+from scrapy.spiders import CrawlSpider, Rule, Spider, Request
 from w3lib.url import add_or_replace_parameters
 
 from ..items import Product
@@ -14,15 +13,16 @@ UNDESIRED_TEXTS = ['\xa0']
 
 class ProductParser(Spider):
     seen_ids = set()
-    name = 'VoltFashionSpider'
+    name = 'volt_fashion_spider'
     CONTENT_SELECTOR = "div[id*='react_']:not([class]) + script"
 
     def parse_product(self, response):
         raw_product_details = fetch_clean_and_load(response, self.CONTENT_SELECTOR)
         product_details = raw_product_details.get('product')
         retailer_sku_id = product_details.get('Code')
+        product_price = self.clean_price(product_details.get('FormattedListPrice'))
 
-        if retailer_sku_id in self.seen_ids:
+        if retailer_sku_id in self.seen_ids or not product_price:
             return
 
         self.seen_ids.add(retailer_sku_id)
@@ -43,20 +43,20 @@ class ProductParser(Spider):
         item['care'] = self.product_care(product_details.get('ProductCare'))
         item['image_urls'] = self.product_images(product_details.get('ProductImages'))
         item['skus'] = self.product_skus(product_details)
-        item['price'] = self.clean_price(product_details.get('FormattedListPrice'))
+        item['price'] = product_price
         item['currency'] = self.product_currency(product_details.get('ListPrice'))
         item['meta'] = {'requests': self.product_skus_requests(response, product_details.get('Siblings'), item)}
 
         return self.next_item_or_request(item)
 
     def product_care(self, raw_care):
-        return [care.get('Name') for care in raw_care] if raw_care else []
+        return [care.get('Name') for care in raw_care]
 
     def product_images(self, raw_images):
-        return [img.get('Url') for img in raw_images] if raw_images else []
+        return [img.get('Url') for img in raw_images]
 
     def product_currency(self, raw_currency):
-        return raw_currency.get('Currency') if raw_currency else None
+        return raw_currency.get('Currency')
 
     def product_skus(self, product_details):
         product_skus = []
@@ -108,7 +108,7 @@ class ProductParser(Spider):
 
 
 class VoltFashionCrawler(CrawlSpider):
-    name = 'VoltFashionCrawler'
+    name = 'volt_fashion_crawler'
     product_parser = ProductParser()
 
     allowed_domains = ['voltfashion.com']
@@ -131,9 +131,9 @@ class VoltFashionCrawler(CrawlSpider):
             return self.make_products_requests(response)
 
         query_params = {'itemsPerPage': total_items_count, 'page': '0', 'view': 'small-img'}
-        url = add_or_replace_parameters(response.url, query_params)
-        url = url.replace('/?', '/#')
-        return Request(url=url, callback=self.make_products_requests, dont_filter=True)
+        raw_url = add_or_replace_parameters(response.url, query_params)
+        absolute_url = raw_url.replace('/?', '/#')
+        return Request(url=absolute_url, callback=self.make_products_requests, dont_filter=True)
 
     def make_products_requests(self, response):
         raw_data = fetch_clean_and_load(response, self.CONTENT_SELECTORS)
@@ -147,8 +147,7 @@ class VoltFashionCrawler(CrawlSpider):
 def fetch_clean_and_load(response, content_selector):
     raw_data = response.css(content_selector).re_first(REGEX_EXTRACT)
     raw_data = clean_data(raw_data)
-    loaded_content = json.loads(raw_data)
-    return loaded_content if loaded_content else {}
+    return json.loads(raw_data) if raw_data else {}
 
 
 def clean_data(data):
