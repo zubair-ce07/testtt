@@ -59,7 +59,7 @@ class ProductParser(Spider):
     def product_description(self, response):
         selector = '.product-detail-card .card-text::text'
         raw_description = response.css(selector).get()
-        return [desc.strip() for desc in raw_description]
+        return raw_description.strip()
 
     def product_currency(self, response):
         selector = '.prices [itemprop="priceCurrency"]::attr(content)'
@@ -139,34 +139,33 @@ class ProductParser(Spider):
 
 
 class UggCrawler(CrawlSpider):
-    name = 'uggCrawler'
+    name = 'ugg_crawler'
     product_parser = ProductParser()
 
     allowed_domains = ['au.ugg.com']
     start_urls = ['https://au.ugg.com']
-    ALLOW = r'/catalog/'
-    RESTRICT_CSS = ('.btn-show-all',)
-    cookies = {'NM()sdf': '90cea3e7-12af-00a0-a883-df14bd77b6b2;'}
+    allow = r'/catalog/'
+    listing_css = ('.btn-show-all',)
+    cookies = {'NM()sdf': '905077ed-6e1f-27a1-1c38-95b01189b480;'}
     custom_settings = {
         'USER_AGENT': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.131 Safari/537.36',
         'DOWNLOAD_DELAY': '5'
     }
 
     rules = (
-        Rule(LinkExtractor(allow=ALLOW, restrict_css=RESTRICT_CSS), callback='parse_page'),
+        Rule(LinkExtractor(allow=allow, restrict_css=listing_css), callback='parse_listing'),
     )
 
     def start_requests(self):
         yield from [Request(url, cookies=self.cookies) for url in self.start_urls]
 
-    def parse_page(self, response):
+    def parse_listing(self, response):
         product_requests = response.css('.card-img a::attr(href)').getall()
-        for url in product_requests:
-            url = urljoin(response.url, url)
-            yield Request(url=url, cookies=self.cookies, callback=self.product_parser.parse,
-                          meta={'trail': [response.url]})
+        meta = {'trail': [response.url]}
+        yield from [Request(url=urljoin(response.url, url), cookies=self.cookies, callback=self.product_parser.parse,
+                            meta=meta) for url in product_requests]
 
         next_page_url = response.css('.show-more button::attr(data-url)').get()
         if not next_page_url:
             return
-        yield Request(url=urljoin(response.url, next_page_url), cookies=self.cookies, callback=self.parse_page)
+        yield Request(url=urljoin(response.url, next_page_url), cookies=self.cookies, callback=self.parse_listing)
