@@ -114,16 +114,16 @@ class VoltFashionCrawler(CrawlSpider):
     allowed_domains = ['voltfashion.com']
     start_urls = ['https://voltfashion.com/sv/']
 
-    ALLOW = r'/sv/'
-    DENY = (r'/Butiker/', r'/corporate/', r'/functional/')
-    RESTRICT_CSS = ('ul .-level-2',)
+    allow = r'/sv/'
+    deny = (r'/Butiker/', r'/corporate/', r'/functional/')
+    listing_css = ('ul .-level-2',)
     CONTENT_SELECTORS = '#productlistpage__container + script'
 
     rules = (
-        Rule(LinkExtractor(allow=ALLOW, deny=DENY, restrict_css=RESTRICT_CSS), callback='parse_products_urls'),
+        Rule(LinkExtractor(allow=allow, deny=deny, restrict_css=listing_css), callback='parse_listing'),
     )
 
-    def parse_products_urls(self, response):
+    def parse_listing(self, response):
         raw_data = fetch_clean_and_load(response, self.CONTENT_SELECTORS)
         total_items_count = raw_data.get('totalCount')
 
@@ -137,9 +137,9 @@ class VoltFashionCrawler(CrawlSpider):
 
     def make_products_requests(self, response):
         raw_data = fetch_clean_and_load(response, self.CONTENT_SELECTORS)
-        products_content = raw_data.get('products', [])
+        products = raw_data.get('products', [])
 
-        for product in products_content:
+        for product in products:
             url = urljoin(response.url, product.get('Url'))
             yield Request(url=url, callback=self.product_parser.parse_product, meta={'trail': [response.url]})
 
