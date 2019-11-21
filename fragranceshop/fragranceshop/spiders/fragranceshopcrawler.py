@@ -97,11 +97,11 @@ class ProductParser(Spider):
 class FragranceShopCrawler(CrawlSpider):
     name = 'fragrance_shop_crawler'
     allowed_domains = ['thefragranceshop.co.uk']
-    start_urls = ['http://thefragranceshop.co.uk//']
+    start_urls = ['http://thefragranceshop.co.uk/']
     product_parser = ProductParser()
 
-    allow = r'/'
-    listing_css = ('.megaNav__header',)
+    allow = r'/l'
+    listing_css = ('.megaNav__list__item',)
     rules = (
         Rule(LinkExtractor(allow=allow, restrict_css=listing_css), callback='parse_listing'),
     )
