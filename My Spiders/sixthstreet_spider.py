@@ -45,11 +45,9 @@ class ParseSpider():
         return response.css('.cms_page::text').getall()
 
     def get_gender(self, response):
-        gender_text = response.css(':contains("Gender :") + span::text, title::text').getall()         
-        description = self.get_description(response)
-        gender_soup = ' '.join(gender_text + description) 
-
-        return map_gender(gender_soup)
+        raw_gender = response.css(':contains("Gender :") + span::text, title::text').getall()
+        soup = ' '.join(raw_gender + self.get_description(response))
+        return map_gender(soup)
 
     def get_url(self, response):
         return response.url
@@ -62,43 +60,44 @@ class ParseSpider():
 
     def get_image_urls(self, response):
         raw_image = response.css('script').re_first(r'"images":(.*),"index"')
-        image_parsed = json.loads(raw_image)
-        product_id = list(image_parsed.keys())[0]
+        parsed_image = json.loads(raw_image)
+        product_id = list(parsed_image.keys())[0]
 
-        return [product['img'] for product in image_parsed[product_id]]
+        return [product['img'] for product in parsed_image[product_id]]
 
     def get_availability(self, response):
         availability = response.css('[itemprop="availability"]::attr(value)').get()
         return availability != 'In Stock'
 
-    def get_size(self, response, size_parsed, sku_id, attribute_id):
-        raw_sizes = response.css('script').re_first(r"sizeOptionArr = JSON.parse\('(.*)'\);")                                
-        sizes = size_parsed['attributes'][attribute_id]['options']
+    def pricing_common(self, response, parsed_price, sku_id):
+        raw_sizes = response.css('script').re_first(r"sizeOptionArr = JSON.parse\('(.*)'\);")
+        attribute_id = list(parsed_price['attributes'].keys())[0]
+        sizes = parsed_price['attributes'][attribute_id]['options']
 
-        return [s['label'] for s in sizes if s['products'][0] == sku_id][0] if raw_sizes else self.ONE_SIZE
+        pricing_common = format_price(
+            response.css('[itemprop="priceCurrency"]::attr(content)').get(),
+            parsed_price['optionPrices'][sku_id]['finalPrice']['amount'],
+            parsed_price['optionPrices'][sku_id]['oldPrice']['amount'])
 
-    def get_colour(self, response):
-        return response.css(':contains("Color :") + span::text').get()
+        pricing_common['size'] = [s['label'] for s in sizes if s['products']
+                                   [0] == sku_id][0] if raw_sizes else self.ONE_SIZE
+
+        return pricing_common
 
     def get_skus(self, response):
-        skus = {}                
-        colour = self.get_colour(response)        
-        common_sku = {'colour': colour} if colour else {} 
+        skus = {}
+        colour = response.css(':contains("Color :") + span::text').get()
+        common_sku = {'colour': colour} if colour else {}
 
-        currency = response.css('[itemprop="priceCurrency"]::attr(content)').get()
-        raw_price = response.css('script').re_first(r'var spConfig = {(.*);')
-        price_parsed = json.loads('{' + raw_price)
+        raw_price = response.css('script').re_first(r'var spConfig = ({.*);')
+        parsed_price = json.loads(raw_price)
 
-        attribute_id = list(price_parsed['attributes'].keys())[0]
-        sku_ids = list(price_parsed['optionPrices'].keys())
+        sku_ids = list(parsed_price['optionPrices'].keys())
 
-        for id in sku_ids:
+        for sku_id in sku_ids:
             sku = common_sku.copy()
-            sku.update(format_price(
-                currency,
-                price_parsed['optionPrices'][id]['finalPrice']['amount'],
-                price_parsed['optionPrices'][id]['oldPrice']['amount']))
-            sku['size'] = self.get_size(response, price_parsed, id, attribute_id)
+            sku.update(self.pricing_common(response, parsed_price, sku_id))
+
             skus[f"{sku['colour']}_{sku['size']}" if sku.get('colour') else sku['size']] = sku
 
         return skus
@@ -123,7 +122,7 @@ class CrawlSpider(CrawlSpider):
     allowed_domains = ['en-ae.6thstreet.com', 'algolianet.com']
     start_urls = ['https://en-ae.6thstreet.com']
 
-    custom_settings ={
+    custom_settings = {
         'DOWNLOAD_DELAY': 2
     }
 
@@ -155,22 +154,22 @@ class CrawlSpider(CrawlSpider):
         raw_category = response.css('body::attr(class)').re_first('categorypath-(.*) category').split('-')
         query = '%20'.join([c.capitalize() for c in raw_category])
 
-        formdata_parsed = json.loads(raw_formdata)
-        application_id = formdata_parsed['applicationId']
+        parsed_formdata = json.loads(raw_formdata)
+        application_id = parsed_formdata['applicationId']
         formdata = self.formdata.copy()
         params = self.params_t
 
         url = self.url_t.format(
             application_id=application_id.lower(),
             app_id=application_id,
-            api_key=formdata_parsed["apiKey"]
+            api_key=parsed_formdata["apiKey"]
         )
 
         formdata['requests'][0]['params'] = add_or_replace_parameter(
             params.format(query=query), 'page', 0)
 
         listings_formdata = {
-            'formdata': formdata_parsed,
+            'formdata': parsed_formdata,
             'query': query
         }
 
@@ -178,8 +177,8 @@ class CrawlSpider(CrawlSpider):
                       meta=listings_formdata, callback=self.parse_pagination)
 
     def parse_pagination(self, response):
-        formdata_parsed = response.meta['formdata']
-        application_id = formdata_parsed['applicationId']
+        parsed_formdata = response.meta['formdata']
+        application_id = parsed_formdata['applicationId']
         products = json.loads(response.text)
         formdata = self.formdata.copy()
         params = self.params_t
