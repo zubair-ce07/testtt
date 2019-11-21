@@ -1,7 +1,7 @@
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
 
-from .base import BaseParseSpider, BaseCrawlSpider, clean, soupify
+from .base import BaseParseSpider, BaseCrawlSpider, clean, soupify, Gender
 
 
 class Mixin:
@@ -25,6 +25,16 @@ class SnkrsParseSpider(BaseParseSpider):
     description_css = '#short_description_content p::text, #short_description_content p span::text'
     brand_css = '[itemprop="brand"]::attr(content)'
 
+    merch_map = [
+        ('special edition', 'Special Edition'),
+        ('limited edition', 'Limited Edition'),
+        ('edition limitée', 'Edition limitée'),
+        ('édition spéciale', 'Édition spéciale'),
+        ('edición limitada', 'Edición Limitada'),
+        ('edición especial', 'Edición especial'),
+        ('edizione speciale', 'Edizione speciale')
+    ]
+
     def parse(self, response):
         garment = self.new_unique_garment(self.product_id(response))
 
@@ -41,13 +51,12 @@ class SnkrsParseSpider(BaseParseSpider):
         return garment
 
     def product_id(self, response):
-        id = clean(response.css('[itemprop="sku"]::text'))
-        return id[0] if id else id
+        return clean(response.css('.product_id::text'))[0]
 
     def product_gender(self, response, garment):
         title_text = clean(response.css('title::text'))
         soup = soupify(garment['category'] + garment['description'] + title_text)
-        return self.gender_lookup(soup)
+        return self.gender_lookup(soup) or Gender.ADULTS.value
 
     def raw_name(self, response):
         return clean(response.css('[itemprop="name"]::text'))[0]
@@ -59,30 +68,26 @@ class SnkrsParseSpider(BaseParseSpider):
         return clean(response.css('#carrousel_frame li a::attr(href)'))
 
     def product_category(self, response):
-        category = clean(response.css('span.category::text'))[0]
-        return clean(category.split('/'))[1:]
+        return clean(response.css('.breadcrumb a ::text'))[1:]
 
     def merch_info(self, garment):
         soup = soupify(garment['description'])
-        return ['Limited Edition'] if 'limited edition' in soup else []
-
-    def money_strs(self, response):
-        current_price = clean(response.css('[itemprop="price"]::attr(content)'))[0]
-        previous_price = response.css('#old_price_display .price::text').re_first(r"\d+")
-        currency = clean(response.css('[itemprop="priceCurrency"]::attr(content)'))[0]
-
-        return [previous_price, current_price, currency]
+        return [merch for merch_str, merch in self.merch_map if merch_str.lower() in soup]
 
     def skus(self, response):
         skus = {}
 
+        current_price = clean(response.css('[itemprop="price"]::attr(content)'))[0]
+        previous_price = response.css('#old_price_display .price::text').re_first(r"\d+")
+        currency = clean(response.css('[itemprop="priceCurrency"]::attr(content)'))[0]
+
         colour = self.detect_colour(self.raw_name(response), multiple=True)
         common_sku = {'colour': colour} if colour else {}
-        common_sku['out_of_stock'] = False
-        common_sku.update(self.product_pricing_common(None, money_strs=self.money_strs(response)))
+        common_sku.update(self.product_pricing_common(
+            None, money_strs=[previous_price, current_price, currency]))
 
         size_css = 'span.size_EU::text, li:not(.hidden) span.units_container::text'
-        sizes = [size for size in clean(response.css(size_css))] or [self.one_size]
+        sizes = clean(response.css(size_css)) or [self.one_size]
 
         for size in sizes:
             sku = common_sku.copy()
@@ -116,5 +121,5 @@ class SnkrsFRParseSpider(MixinFR, SnkrsParseSpider):
 
 
 class SnkrsFRCrawlSpider(MixinFR, SnkrsCrawlSpider):
-    name = MixinFR.retailer + 'crawl'
+    name = MixinFR.retailer + '-crawl'
     parse_spider = SnkrsFRParseSpider()
