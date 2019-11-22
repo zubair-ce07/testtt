@@ -77,10 +77,11 @@ class ParseSpider():
         pricing_common = format_price(
             response.css('[itemprop="priceCurrency"]::attr(content)').get(),
             parsed_price['optionPrices'][sku_id]['finalPrice']['amount'],
-            parsed_price['optionPrices'][sku_id]['oldPrice']['amount'])
+            parsed_price['optionPrices'][sku_id]['oldPrice']['amount']
+        )
 
-        pricing_common['size'] = [s['label'] for s in sizes if s['products']
-                                   [0] == sku_id][0] if raw_sizes else self.ONE_SIZE
+        pricing_common['size'] = [s['label'] for s in sizes if s['products'][0] == sku_id][0] \
+            if raw_sizes else self.ONE_SIZE
 
         return pricing_common
 
@@ -154,46 +155,36 @@ class CrawlSpider(CrawlSpider):
         raw_category = response.css('body::attr(class)').re_first('categorypath-(.*) category').split('-')
         query = '%20'.join([c.capitalize() for c in raw_category])
 
-        parsed_formdata = json.loads(raw_formdata)
-        application_id = parsed_formdata['applicationId']
+        payload = json.loads(raw_formdata)
+        application_id = payload['applicationId']
         formdata = self.formdata.copy()
         params = self.params_t
 
         url = self.url_t.format(
             application_id=application_id.lower(),
             app_id=application_id,
-            api_key=parsed_formdata["apiKey"]
+            api_key=payload["apiKey"]
         )
 
         formdata['requests'][0]['params'] = add_or_replace_parameter(
             params.format(query=query), 'page', 0)
 
-        listings_formdata = {
-            'formdata': parsed_formdata,
-            'query': query
-        }
-
         yield Request(url, method="POST", body=json.dumps(formdata),
-                      meta=listings_formdata, callback=self.parse_pagination)
+                      meta={'query': query}, callback=self.parse_pagination)
 
     def parse_pagination(self, response):
-        parsed_formdata = response.meta['formdata']
-        application_id = parsed_formdata['applicationId']
-        products = json.loads(response.text)
         formdata = self.formdata.copy()
         params = self.params_t
 
-        for page_number in range(1, int(products['results'][0]['nbPages'])+1):
+        for page_number in range(1, int(json.loads(response.text)['results'][0]['nbPages'])+1):
             formdata['requests'][0]['params'] = add_or_replace_parameter(
                 params.format(query=response.meta['query']), 'page', page_number)
 
             yield Request(response.url, method="POST", body=json.dumps(formdata), callback=self.parse_products)
 
     def parse_products(self, response):
-        products = json.loads(response.text)
-
-        for product in products['results'][0]['hits']:
-            yield response.follow(product['url'], callback=self.parse_item)
+        return [response.follow(p['url'], callback=self.parse_item)
+                for p in json.loads(response.text)['results'][0]['hits']]
 
     def parse_item(self, response):
         return self.product_parser.parse_product(response)
