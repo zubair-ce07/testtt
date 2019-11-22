@@ -7,8 +7,9 @@ from scrapy.spiders import CrawlSpider, Rule, Spider, Request
 
 from ..items import Product
 
-CLEANER_REGEX = r'[\n\r\t]'
-PRICE_CLEANER_REGEX = r'\W'
+REGEX_SPACE_CLEANER = r'[\n\r\t]'
+REGEX_TAG_CLEANER = r'<.*?>'
+REGEX_PRICE_CLEANER = r'\W'
 
 
 class ProductParser(Spider):
@@ -18,8 +19,9 @@ class ProductParser(Spider):
     def parse(self, response):
         product_raw_information = self.product_raw_information(response)
         retailer_sku_id = product_raw_information.get('id')
+        product_price = self.product_price(product_raw_information.get('price'))
 
-        if retailer_sku_id in self.seen_ids:
+        if retailer_sku_id in self.seen_ids or not product_price:
             return
 
         self.seen_ids.add(retailer_sku_id)
@@ -35,10 +37,10 @@ class ProductParser(Spider):
         item['market'] = 'UK'
         item['retailer'] = 'The Fragrance Shop-UK'
         item['name'] = product_raw_information.get('name')
-        item['description'] = product_raw_information.get('description')
+        item['description'] = self.clean(product_raw_information.get('description'))
         item['image_urls'] = self.product_image_urls(product_raw_information.get('images'))
         item['skus'] = self.product_skus(product_raw_information)
-        item['price'] = self.product_price(product_raw_information.get('price'))
+        item['price'] = product_price
         item['currency'] = self.product_currency(response)
 
         return item
@@ -51,7 +53,8 @@ class ProductParser(Spider):
     def product_gender(self, raw_data):
         for raw_attr in raw_data:
             if raw_attr.get('display') == 'Gender':
-                return raw_attr.get('value', 'unisex')
+                return raw_attr.get('value')
+        return 'unisex'
 
     def product_category(self, raw_data):
         return raw_data.get('mainCategoryName', [])
@@ -61,10 +64,13 @@ class ProductParser(Spider):
 
     def product_skus(self, raw_data):
         product_variants = raw_data.get('variantProducts')
+
         if not product_variants:
+            size_value = re.findall(r'(\d+).', raw_data.get("uomValue"))[0]
+            size_unit = raw_data.get("uom")
             return [{
                 'previous_prices': self.product_price(raw_data.get('listPrice')),
-                'size': raw_data.get('uomValue'),
+                'size': f'{size_value}{size_unit}' if int(size_value) else 'one',
                 'sku_id': raw_data.get('sku')
             }]
 
@@ -84,14 +90,20 @@ class ProductParser(Spider):
 
     def product_price(self, raw_price):
         formatted_price = raw_price.get('formatted').get('withTax')
-        clean_price = re.sub(PRICE_CLEANER_REGEX, '', str(formatted_price))
+        clean_price = re.sub(REGEX_PRICE_CLEANER, '', str(formatted_price))
         return clean_price
 
     def product_currency(self, response):
         raw_data = response.css('script[type="application/ld+json"]::text').get()
-        raw_data = re.sub(CLEANER_REGEX, '', raw_data)
-        raw_data = json.loads(raw_data)
+        raw_data = json.loads(self.clean(raw_data))
         return raw_data['offers']['priceCurrency']
+
+    def clean(self, raw_data):
+        raw_data = re.sub(REGEX_TAG_CLEANER, '', raw_data)
+        return re.sub(REGEX_SPACE_CLEANER, '', raw_data)
+
+    def clean_size(self, raw_data):
+        return re.findall(r'\d+', raw_data)
 
 
 class FragranceShopCrawler(CrawlSpider):
