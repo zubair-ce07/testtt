@@ -9,29 +9,33 @@ class SnkrsSpider(scrapy.Spider):
     name = 'snkrs'
     allowed_domains = ['snkrs.com']
     start_urls = ['http://snkrs.com/en/']
+    product_id = []
 
     def parse(self, response):
         for url in response.css('.a-niveau1::attr(href)').getall():
-            yield from [response.follow(url, callback=self.parse_listing_page)]
+            yield from [response.follow(url, callback=self.parse_listing_page, dont_filter=False)]
 
     def parse_listing_page(self, response):
         for url in response.css('.product_img_link::attr(href)').getall():
-            yield from [response.follow(url, callback=self.parse_product_page)]
+            yield from [response.follow(url, callback=self.parse_product_page, dont_filter=False)]
 
     def parse_product_page(self, response):
         items = SnkrsItem()
 
-        items['retailer_sku'] = self.get_retailer_sku(response)
-        items['brand'] = self.get_brand(response)
-        items['category'] = self.get_category(response)
-        items['description'] = self.get_desciption(response)
-        items['gender'] = self.get_gender(response)
-        items['url'] = response.url
-        items['name'] = self.get_name(response)
-        items['image_urls'] = self.get_image_urls(response)
-        items['skus'] = self.get_skus(items, response)
+        if response.css('.nosto_product .product_id::text').getall()[0] not in self.product_id:
 
-        yield items
+            self.product_id.extend(response.css('.nosto_product .product_id::text').getall()[0])
+            items['retailer_sku'] = self.get_retailer_sku(response)
+            items['brand'] = self.get_brand(response)
+            items['category'] = self.get_category(response)
+            items['description'] = self.get_desciption(response)
+            items['gender'] = self.get_gender(response)
+            items['url'] = response.url
+            items['name'] = self.get_name(response)
+            items['image_urls'] = self.get_image_urls(response)
+            items['skus'] = self.get_skus(items, response)
+
+            yield items
 
     def get_skus(self, items, response):
         colour = re.sub(r'.*- ', '', items['name'])
@@ -39,7 +43,8 @@ class SnkrsSpider(scrapy.Spider):
 
         if response.xpath('//span[@id="reduction_percent_display"]/text()').getall():
 
-            for sizes in response.css('span.units_container .size_EU::text').getall():
+            for sizes in response.css(
+                    'span.units_container .size_EU::text').getall():
 
                 skus[colour + "_" + sizes] = {
                     "colour": colour,
