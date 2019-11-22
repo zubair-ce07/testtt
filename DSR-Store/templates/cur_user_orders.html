@@ -3,52 +3,28 @@
 <html>
 <head>
         <link href="{{url_for('static', filename = 'css/bootstrap.min.css')}}" rel="stylesheet">
-<style>
-table {
-  font-family: arial, sans-serif;
-  border-collapse: collapse;
-  width: 70%;
-}
+        <link href="{{url_for('static', filename = 'css/table.css')}}" rel="stylesheet">
 
-td, th {
-  border: 1px solid #dddddd;
-  text-align: left;
-  padding: 8px;
-}
-
-tr:nth-child(even) {
-  background-color: #dddddd;
-}
-
-/* Red */
-.danger {
-          border-color: #f44336;
-          color: red;
-        }
-        
-.danger:hover {
-        background: #f44336;
-        color: white;
-        }
-
-button {
-
-margin-right :500px }        
-</style>
 
 </head>
 <body>
 
-<h2>Current Orders</h2>
+    <h1>Current Orders</h1>
+    <div class="tbl-header">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <thead>
+            <tr>
+                <th>Order No</th>
+                <th>Customer Name</th>
+                <th>House No</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+        </thead>
+      </table>
+    </div>
 
 <table>
-  <tr>
-    <th>Order No</th>
-    <th>Customer Name</th>
-    <th>House No</th>
-    <th>Status</th>
-    <th>Action</th>
-  </tr>
   
         {% for row in customers_data %}
         
@@ -67,4 +43,14 @@ margin-right :500px }
 </table>
 
 </body>
+
+<script>
+  $(window).on("load resize ", function() {
+  var scrollWidth = $('.tbl-content').width() - $('.tbl-content table').width();
+  $('.tbl-header').css({'padding-right':scrollWidth});
+}).resize();
+</script>
+
+<script type="text/javascript" src="{{url_for('static', filename='js/jquery-3.2.1.min.js') }}"></script>
+<script type="text/javascript" src="{{url_for('static', filename = 'js/bootstrap.min.js')}}"></script> 
 </html>

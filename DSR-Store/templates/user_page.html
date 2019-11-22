@@ -2,6 +2,7 @@
 
 <link href="{{url_for('static', filename = 'css/bootstrap.min.css')}}" rel="stylesheet">
 <link href="{{url_for('static', filename = 'css/storefront.css')}}" rel="stylesheet">
+<link href="{{url_for('static', filename = 'css/table.css')}}" rel="stylesheet">
 
 {% with messages = get_flashed_messages() %}
   {% if messages %}
@@ -17,14 +18,15 @@
           
             {% for row in items %}
                 <article>
-                <img src={{row.5}} alt="tshirt photo" width="460" height="290">
+                <img src="{{url_for('static', filename=row['image_path'])}}" alt="tshirt photo" width="460" height="290">
+                
                 <div class="text">
-                <h3>{{row.1}}</h3>
-                <p1>Price: {{row.2}}Rs per {{row.3}}</p1>
+                <h3>{{row["name"]}}</h3>
+                <p1>Price: {{row["price"]}}Rs per {{row["unit"]}}</p1>
               
-                        <label>Inventory: {{row.4}}</label>
+                        <label>Inventory: {{row["inventory"]}}</label>
                        
-                        <form action="{{ url_for('add_to_cart') }}" method="POST">
+                        <form action="{{ url_for('user.add_to_cart') }}" method="POST">
                             <div class="form-group">
                                     <div class="value-button" id="decrease" onclick="decreaseValue()" value="Decrease Value"></div>
                                     <input type="number" name="quantity" id="number"  value="1"/>
@@ -33,7 +35,7 @@
                             
                         
                             <div class="form-group">
-                                <input type="hidden" name="itemid" value="{{ row.0 }}">
+                                <input type="hidden" name="itemid" value="{{ row['id'] }}">
                             </div>
                        
                             <div class="form-group">
@@ -44,7 +46,7 @@
                 </article>
             {% endfor  %}   
          
-          
+         
         </main>
 </div>
 

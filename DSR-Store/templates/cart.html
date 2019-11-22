@@ -2,51 +2,26 @@
 <html>
 <head>
         <link href="{{url_for('static', filename = 'css/bootstrap.min.css')}}" rel="stylesheet">
-<style>
-table {
-  font-family: arial, sans-serif;
-  border-collapse: collapse;
-  width: 70%;
-}
-
-td, th {
-  border: 1px solid #dddddd;
-  text-align: left;
-  padding: 8px;
-}
-
-tr:nth-child(even) {
-  background-color: #dddddd;
-}
-
-/* Red */
-.danger {
-          border-color: #f44336;
-          color: red;
-        }
-        
-.danger:hover {
-        background: #f44336;
-        color: white;
-        }
-
-button {
-
-margin-right :500px }        
-</style>
+        <link href="{{url_for('static', filename = 'css/table.css')}}" rel="stylesheet">
 
 </head>
 <body>
 
-<h2>Cart</h2>
+    <h1>Cart</h1>
+    <div class="tbl-header">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <thead>
+            <tr>
+                <th>Item Name</th>
+                <th>Item Price</th>
+                <th>quantity</th>
+                <th>Remove</th>
+              </tr>
+        </thead>
+      </table>
+    </div>
 
 <table>
-  <tr>
-    <th>Item Name</th>
-    <th>Item Price</th>
-    <th>quantity</th>
-    <th>Remove</th>
-  </tr>
   
         {% for row in items %}
         
@@ -60,7 +35,7 @@ margin-right :500px }
        
         {% endfor  %}
 
-        <tr>
+        <tr>  
             <th>Total Bill :-</th>
             <th>{{total}}</th>
         </tr>
@@ -68,7 +43,7 @@ margin-right :500px }
 </table>
 
 <a href="/checkout" class="btn btn-success" onclick="return confirm('Are you sure? ')">Place Order</a>
-<a href="/user_main" class="btn btn-primary"> Add more to Cart</a> <br><br>
+<a href="/user_page" class="btn btn-primary"> Add more to Cart</a> <br><br>
 <a href="/clear_cart" class="btn btn-danger" onclick="return confirm('Warning! Cart will be empty?')">Clear Cart</a>
 
 </body>

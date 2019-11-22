@@ -1,52 +1,26 @@
 <!DOCTYPE html>
+
 <html>
 <head>
         <link href="{{url_for('static', filename = 'css/bootstrap.min.css')}}" rel="stylesheet">
-<style>
-table {
-  font-family: arial, sans-serif;
-  border-collapse: collapse;
-  width: 70%;
-}
-
-td, th {
-  border: 1px solid #dddddd;
-  text-align: left;
-  padding: 8px;
-}
-
-tr:nth-child(even) {
-  background-color: #dddddd;
-}
-
-/* Red */
-.danger {
-          border-color: #f44336;
-          color: red;
-        }
-        
-.danger:hover {
-        background: #f44336;
-        color: white;
-        }
-
-button {
-
-margin-right :500px }        
-</style>
-
+        <link href="{{url_for('static', filename = 'css/table.css')}}" rel="stylesheet">
 </head>
 <body>
 
-<h2>Order Detail</h2>
+    <h1>ORDER DETAIL</h1>
+    <div class="tbl-header">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <thead>
+            <tr>
+                <th>Item Name</th>
+                <th>Item Price</th>
+                <th>quantity</th>
+              </tr>
+        </thead>
+      </table>
+    </div>
 
-<table>
-  <tr>
-    <th>Item Name</th>
-    <th>Item Price</th>
-    <th>quantity</th>
-  </tr>
-  
+<table>  
         {% for row in items %}
         
         <tr>
@@ -68,4 +42,7 @@ margin-right :500px }
 <a href="/cur_orders" class="btn btn-primary">Go Back</a>
 
 </body>
+
+<script type="text/javascript" src="{{url_for('static', filename='js/jquery-3.2.1.min.js') }}"></script>
+<script type="text/javascript" src="{{url_for('static', filename = 'js/bootstrap.min.js')}}"></script>
 </html>

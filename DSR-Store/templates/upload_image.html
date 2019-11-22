@@ -1,7 +1,7 @@
 <!doctype html>
     <title>Item Photo</title>
     <h1>Upload new Item Photo</h1>
-    <img src="{{ user_image }}" alt="User Image" width="460" height="345">
+    <img src="{{url_for('static', filename=user_image)}}"  alt="User Image" width="460" height="345">
     <form method=post enctype=multipart/form-data>
       <input type=file name=file>
       <input type=submit value=Upload>
