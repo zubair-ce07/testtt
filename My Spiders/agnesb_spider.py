@@ -5,7 +5,7 @@ from scrapy.spiders import Rule
 from scrapy.selector import Selector
 from scrapy.linkextractors import LinkExtractor
 
-from .base import BaseParseSpider, BaseCrawlSpider, clean, soupify, Gender
+from .base import BaseParseSpider, BaseCrawlSpider, clean, soupify, Gender, titlecase
 
 
 class Mixin:
@@ -22,7 +22,7 @@ class Mixin:
     ]
 
     one_sizes = ['UNIQUE', 'TU']
-    default_brand = 'agnès b'
+    default_brand = titlecase('agnès b')
 
 
 class MixinUK(Mixin):
@@ -30,6 +30,7 @@ class MixinUK(Mixin):
     market = 'UK'
     allowed_domains = ['agnesb.co.uk']
     start_urls = ['https://www.agnesb.co.uk']
+    api_url = 'https://www.agnesb.co.uk/ajax.V1.php/en_GB/Rbs/Catalog/Product/'
 
 
 class MixinFR(Mixin):
@@ -37,6 +38,7 @@ class MixinFR(Mixin):
     market = 'FR'
     allowed_domains = ['agnesb.eu']
     start_urls = ['https://www.agnesb.eu']
+    api_url = 'https://www.agnesb.eu/ajax.V1.php/fr_FR/Rbs/Catalog/Product/'
 
 
 class AgnesbParseSpider(BaseParseSpider):
@@ -62,8 +64,8 @@ class AgnesbParseSpider(BaseParseSpider):
         return garment
 
     def raw_product(self, response):
-        raw_product = clean(response.css('script:contains("change[\'4\']")::text'))[0].split(' = ')[1][:-1]
-        return json.loads(raw_product)
+        css = '[data-name="Rbs_Catalog_Product"] > script::text'
+        return json.loads(clean(response.css(css).re_first(r'\'] = ({.*);')))
 
     def product_id(self, raw_product):
         return raw_product['typology']['attributes']['reference_code']['value'].split('_')[0]
@@ -72,12 +74,10 @@ class AgnesbParseSpider(BaseParseSpider):
         return raw_product['common']['title']
 
     def product_care(self, raw_product):
-        raw_care = raw_product['typology']['attributes'].get('product_care_instruction')
-        care = [raw_care['value']] if raw_care else []
-        raw_composition = raw_product['typology']['attributes'].get('reference_composition')
-        composition = raw_composition['value'].split(',') if raw_composition else []
-
-        return care + composition
+        raw_care = raw_product['typology']['attributes']
+        care = [raw_care.get('product_care_instruction', {}).get('value', '')]
+        composition = raw_care.get('reference_composition', {}).get('value', '').split(',')
+        return clean(care + composition)
 
     def product_description(self, raw_product):
         raw_description = raw_product['typology']['attributes']['product_description']['value']
@@ -89,9 +89,6 @@ class AgnesbParseSpider(BaseParseSpider):
 
     def product_category(self, raw_product):
         return [raw_product['typology']['attributes']['pim_category']['value']]
-
-    def product_brand(self, garment):
-        return self.default_brand
 
     def image_urls(self, raw_product):
         return [v['original'] for v in raw_product['rootProduct']['common']['visuals']]
@@ -111,9 +108,9 @@ class AgnesbParseSpider(BaseParseSpider):
             sku = common_sku.copy()
 
             if len(variant['axesValues']) > 1:
-                sku['colour'] = variant['axesValues'][0].split('-')[1]
-                sku['size'] = self.one_size if variant['axesValues'][1] \
-                    in self.one_sizes else variant['axesValues'][1]
+                raw_colour, size = variant['axesValues']
+                sku['colour'] = raw_colour.split('-')[1]
+                sku['size'] = self.one_size if size in self.one_sizes else size
                 sku['out_of_stock'] = not variant['hasStock']
 
                 skus[variant['id']] = sku
@@ -126,11 +123,9 @@ class AgnesbParseSpider(BaseParseSpider):
 
 
 class AgnesbCrawlSpider(BaseCrawlSpider):
-    category_css = 'nav .bullet'
-    subcategory_css = '.menu-level-3 li'
-    allow_re = ['/men', '/women', '/children']
-
-    api_url = 'https://www.agnesb.co.uk/ajax.V1.php/en_GB/Rbs/Catalog/Product/'
+    category_css = ['nav .bullet']
+    subcategory_css = ['.menu-level-3 li']
+    allow_re = ['/men', '/women', '/children', '/femme', '/homme', '/enfant']
 
     headers = {
         "content-type": 'application/json',
@@ -159,27 +154,24 @@ class AgnesbCrawlSpider(BaseCrawlSpider):
     )
 
     def parse_pagination(self, response):
-        raw_config = clean(response.css('[data-name="Rbs_Catalog_ProductList"] > script::text')) \
-            [0].split('] = ')[1][:-1]
-        config = json.loads(raw_config)
-        items_count = config['pagination']['count']
-        raw_section_id = clean(response.css('script:contains("__resources")::text'))[0].split(' = ')[1][:-1]
+        css = '[data-name="Rbs_Catalog_ProductList"] > script::text'
+        config = json.loads(clean(response.css(css).re_first(r'\'] = ({.*);')))
+        total_items = config['pagination']['count']
+        page_size = config['pagination']['limit']
 
-        payload_body = self.payload.copy()
-        payload_body['sectionId'] = json.loads(raw_section_id)['navigationContext']['sectionId']
-        payload_body['data']['webStoreId'] = config['context']['data']['webStoreId']
-        payload_body['data']['listId'] = config['context']['data']['listId']
-        payload_body['pagination']['limit'] = config['pagination']['limit']
+        sectionid_css = 'script:contains("sectionId")::text'
+        raw_sectionid = json.loads(clean(response.css(sectionid_css).re_first(r'__change = ({.*);')))
+        payload = self.payload.copy()
+        payload['sectionId'] = raw_sectionid['navigationContext']['sectionId']
+        payload['data']['webStoreId'] = config['context']['data']['webStoreId']
+        payload['data']['listId'] = config['context']['data']['listId']
+        payload['pagination']['limit'] = page_size
 
-        if items_count > payload_body['pagination']['limit']:
-            for offset in range(0, items_count, payload_body['pagination']['limit']):
-                payload_body['pagination']['offset'] += offset
+        for offset in range(0, total_items, page_size):
+            payload['pagination']['offset'] += offset
 
-                yield Request(self.api_url, method='POST', body=json.dumps(payload_body),
-                              headers=self.headers, callback=self.parse_listings)
-
-        return Request(self.api_url, method='POST', body=json.dumps(payload_body),
-                       headers=self.headers, callback=self.parse_listings)
+            yield Request(self.api_url, method='POST', body=json.dumps(payload),
+                          headers=self.headers, callback=self.parse_listings)
 
     def parse_listings(self, response):
         return [response.follow(item['common']['URL']['contextual'], self.parse_item)
