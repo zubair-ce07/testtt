@@ -1,14 +1,12 @@
 import urllib.parse
 
 from scrapy import Spider
-from string import Template
-
 from ..items import Docket
 
 
 class ParseSpider():
     BASE_URL = 'http://www.floridapsc.com'
-    
+
     OPEN = 'Open'
     CLOSED = 'Closed'
     STATE = 'FL'
@@ -17,7 +15,7 @@ class ParseSpider():
     status_closed = ['CLOSED', 'Closed', 'CLOSE']
 
     industries = {
-        'EI': 'Electric Utility - Investor Owned', 
+        'EI': 'Electric Utility - Investor Owned',
         'EM': 'Electric Utility - Municipally Operated',
         'EC': 'Electric Utility - Rural Cooperative',
         'EU': 'Electric Utility - Generally',
@@ -37,16 +35,16 @@ class ParseSpider():
         'WU': 'Water Utility',
         'WS': 'Water & Wastewater (Sewer) Utility',
         'PU': 'Public Utility',
-        'OT': 'Other'   
+        'OT': 'Other'
     }
 
     def parse_docket(self, response):
         docket = Docket()
-        
+
         docket['filed_on'] = self.get_filed_on(response)
         docket['industries'] = self.get_industries(response)
         docket['title'] = self.get_title(response)
-        docket['state'] = self.STATE        
+        docket['state'] = self.STATE
         docket['status'] = self.get_status(response)
         docket['filings'] = []
         docket['source_url'] = self.get_source_url(response)
@@ -56,35 +54,24 @@ class ParseSpider():
 
         filings_request = self.filings_request(response)
 
-        return self.request_or_docket(docket, filings_request)    
+        return self.request_or_docket(docket, filings_request)
 
     def parse_filings(self, response):
-        if 'page' not in response.url:
-            requests = response.meta['requests'] + self.pagination_requests(response)
-        else:
-            requests = response.meta['requests']   
-
-        docket = response.meta['docket']
-
-        filings = self.get_filings(response)     
-        docket['filings'] = filings
-
-        return self.request_or_docket(docket, requests)
-
-    def parse_pagination(self, response):
         requests = response.meta['requests']
-        docket = response.meta['docket']
+        if 'page' not in response.url:
+            requests += self.pagination_requests(response)
 
-        filings = self.get_filings(response)     
+        filings = self.get_filings(response)
+        docket = response.meta['docket']
         docket['filings'].append(filings)
 
         return self.request_or_docket(docket, requests)
 
     def get_filings(self, response):
         filings = []
-        filing_rows = response.css('#dvDocketFile tbody tr')
+        filing_rows_s = response.css('#dvDocketFile tbody tr')
 
-        for row in filing_rows:
+        for row in filing_rows_s:
             filing_attributes = {}
             filing_attributes['documents'] = []
 
@@ -112,7 +99,7 @@ class ParseSpider():
         return response.css('table td strong::text').getall()[1]
 
     def get_source_url(self, response):
-        return response.url  
+        return response.url
 
     def get_status(self, response):
         status = response.css('table td span::text').re_first(r'\((.*)\)')
@@ -145,23 +132,23 @@ class ParseSpider():
         if status in self.status_open:
             return self.OPEN
         elif status in self.status_closed:
-            return self.CLOSED 
+            return self.CLOSED
 
     def filings_request(self, response):
-        filings_url = response.css('table tr td a[href*="DocketFiling"]::attr(href)').get()        
+        filings_url = response.css('table tr td a[href*="DocketFiling"]::attr(href)').get()
         return [response.follow(filings_url, callback=self.parse_filings)]
 
     def pagination_requests(self, response):
         pagination_urls = response.css('.gridFooter a::attr(href)').getall()
-        return [response.follow(url, callback=self.parse_pagination, dont_filter=True) for url in pagination_urls]
-        
-    def request_or_docket(self, docket, requests):           
-        if requests:            
+        return [response.follow(url, callback=self.parse_filings, dont_filter=True) for url in pagination_urls]
+
+    def request_or_docket(self, docket, requests):
+        if requests:
             request = requests.pop()
             request.meta['docket'] = docket
             request.meta['requests'] = requests
-            
-            return request                                
+
+            return request
 
         return docket
 
@@ -171,35 +158,32 @@ class FloridapscSpider(Spider):
     allowed_domains = ['floridapsc.com']
     start_urls = ['http://floridapsc.com/ClerkOffice/Docket/']
 
-    listings_url = Template(
-            'http://www.floridapsc.com/ClerkOffice/DocketList?casestatus=0&' 
-            'preHearingDate=01%2F01%2F0001%2000%3A00%3A00&document_id=0&radioValue=Date&' 
-            'isCompleted=False&fromDate=$fromDate%2000%3A00%3A00&' 
-            'toDate=$toDate%2000%3A00%3A00&docutype=0&EventType=All' 
-    )
+    listings_url_t = 'http://www.floridapsc.com/ClerkOffice/DocketList?casestatus=0&' \
+                     'preHearingDate=01%2F01%2F0001%2000%3A00%3A00&document_id=0&radioValue=Date&' \
+                     'isCompleted=False&fromDate={fromDate}%2000%3A00%3A00&' \
+                     'toDate={toDate}%2000%3A00%3A00&docutype=0&EventType=All'
 
     docket_parser = ParseSpider()
 
     def parse(self, response):
-        if self.fromDate:
-            from_date = urllib.parse.quote(self.fromDate, safe='')    
-        if self.toDate:
-            to_date = urllib.parse.quote(self.toDate, safe='')
+        if not hasattr(self, 'fromDate') or not hasattr(self, 'toDate'):
+            raise AttributeError("Missing spider arguments, fromDate and toDate are required")
 
-        url = self.listings_url.substitute(fromDate=from_date, toDate=to_date)
+        from_date = urllib.parse.quote(self.fromDate, safe='')
+        to_date = urllib.parse.quote(self.toDate, safe='')
+        url = self.listings_url_t.format(fromDate=from_date, toDate=to_date)
 
         return response.follow(url, callback=self.parse_pagination)
 
-    def parse_pagination(self, response):        
+    def parse_pagination(self, response):
         pagination_urls = response.css('.gridFooter a::attr(href)').getall()
 
-        if pagination_urls:
-            for url in pagination_urls:
-                yield response.follow(url, callback=self.parse_listings)
-        
-        yield response.follow(response.url, callback=self.parse_listings, dont_filter=True)        
+        for url in pagination_urls:
+            yield response.follow(url, callback=self.parse_listings)
 
-    def parse_listings(self, response):            
+        yield response.follow(response.url, callback=self.parse_listings, dont_filter=True)
+
+    def parse_listings(self, response):
         for row in response.css('.webGrid tbody tr'):
             docket_record = {}
 
@@ -209,7 +193,7 @@ class FloridapscSpider(Spider):
 
             docket_record['filed_on'] = filed_date
             docket_record['docket_type'] = docket_type
-            
+
             yield response.follow(docket_url, callback=self.parse_item, meta=docket_record)
 
     def parse_item(self, response):
