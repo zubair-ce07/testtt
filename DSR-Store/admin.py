@@ -1,15 +1,16 @@
+import os
+from os.path import join, dirname, realpath
+
 from flask import Flask, Blueprint, render_template, request, flash, redirect, url_for
 from flask_login import login_required, current_user
-
 from werkzeug.utils import secure_filename
-import os
 from sqlalchemy import and_
 
 from .models import Item, User, Order, Cart, session
 from . import db
 
 app = Flask(__name__)
-UPLOAD_FOLDER = f'/home/ashfaq/Desktop/weatherman/DSR-Store/static/image_holder'
+UPLOAD_FOLDER = join(dirname(realpath(__file__)), 'static/image_holder/')
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
@@ -26,8 +27,9 @@ def page():
     
     return render_template('admin_page.html', item = data)
 
-@admin.route('/insert', methods = ['POST'])
-def insert():
+@admin.route('/insert_item', methods = ['POST'])
+@login_required
+def insert_item():
     """Insers new Item"""
     if request.method == "POST":
         flash(f"Data Inserted Successfully")
@@ -37,14 +39,20 @@ def insert():
         inventory = request.form['inventory']
         image_path = f"image_holder/image.png"
         
-        # create new user and add to database
-        new_item = Item(name=name, price=price, unit=unit, inventory=inventory, image_path=image_path)
-        db.session.add(new_item)
-        db.session.commit()
+        # Insert new Item
+        try:
+            new_item = Item(name=name, price=price, unit=unit, inventory=inventory, image_path=image_path)
+            db.session.add(new_item)
+            db.session.commit()
+            flash(f"{name} inserted Successfully")
+        except:
+            flash(f"Something is wrong! data could not insert")
+        
         return redirect(url_for('admin.page'))
 
-@admin.route('/update',methods=['POST','GET'])
-def update():
+@admin.route('/update_item',methods=['POST','GET'])
+@login_required
+def update_item():
     """Update detail of Item"""
     if request.method == 'POST':
         item_id = request.form['id']
@@ -52,24 +60,36 @@ def update():
         price = request.form['price']
         unit = request.form['unit']
         inventory = request.form['inventory']
-        
-        item = Item.query.filter_by(id=item_id).first()
-        item.name, item.price, item.unit, item.inventory = name, price, unit, inventory
-        db.session.flush()
-        db.session.commit()
-        return redirect(url_for('admin.page'))
+        try:
+            item = Item.query.filter_by(id=item_id).first()
+            item.name, item.price, item.unit, item.inventory = name, price, unit, inventory
+            db.session.flush()
+            db.session.commit()
+            flash(f"{name} Updated Successfully")
+        except:
+            flash(f"Something is wrong! data could not update")
 
-@admin.route('/delete/<string:id_data>', methods = ['GET'])
-def delete(id_data):
-    item = Item.query.filter_by(id=id_data).first()
-    db.session.delete(item)
-    db.session.commit()
+        return redirect(url_for('admin.page'))
+        
+@admin.route('/delete_item/<string:id_data>', methods = ['GET'])
+@login_required
+def delete_item(id_data):
+    try:
+        item = Item.query.filter_by(id=id_data).first()
+        db.session.delete(item)
+        db.session.commit()
+        flash(f"Item deleted Successfully")
+    except:
+        flash(f"Something is wrong! data could not deleted")
+    
     return redirect(url_for('admin.page'))
 
-@admin.route('/upload_image/<string:id_data>', methods = ['POST','GET'])
-def upload_image(id_data):
+@admin.route('/upload_image', methods = ['POST','GET'])
+@login_required
+def upload_image():
     """Uploads image of Item"""
     if request.method == 'POST':
+        id_data = request.form['id']
         # check if the post request has the file part
         if 'file' not in request.files:
             flash('No file part')
@@ -94,12 +114,7 @@ def upload_image(id_data):
 
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             return redirect(url_for('admin.page'))
-    
-    #get image from database to display
-    item = Item.query.filter_by(id=id_data).first()
-    image_path = item.image_path
-    
-    return render_template('upload_image.html', user_image=image_path)
+               
 
 def allowed_file(filename):
     """check if extension is allowed for image upload"""
@@ -107,6 +122,7 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @admin.route('/cur_orders', methods=['GET'])
+@login_required
 def cur_orders():
     """Show Orders that are in process"""
     customers_data = db.session.query(Order.id, Order.status, User.name, User.address).filter\
@@ -115,6 +131,7 @@ def cur_orders():
     return render_template('cur_orders.html', customers_data=customers_data)
 
 @admin.route('/orders_history', methods=['GET'])
+@login_required
 def orders_history():
     """Show previous Orders that has been delivered"""
     customers_data = db.session.query(Order.id, Order.status, User.name, User.address).filter\
@@ -123,6 +140,7 @@ def orders_history():
     return render_template('cur_orders.html', customers_data=customers_data)         
 
 @admin.route('/order_detail/<string:id_data>', methods=['GET'])
+@login_required
 def order_detail(id_data):
     data = db.session.query(Cart.id, Cart.quantity, Item.name, Item.price).filter\
                      (and_(Item.id == Cart.item_id, Cart.order_id == id_data)).all()                  
@@ -130,4 +148,4 @@ def order_detail(id_data):
     for item in data:
         total = total + item[3] * item[1]
     
-    return render_template("order_detail.html", items = data, total = total)        
+    return render_template("order_detail.html", items = data, total = total)

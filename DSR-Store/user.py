@@ -1,6 +1,5 @@
 from flask import Flask, Blueprint, render_template, request, flash, redirect, url_for, session
 from flask_login import login_required, current_user
-
 from sqlalchemy import and_
 from werkzeug.utils import secure_filename
 
@@ -22,6 +21,7 @@ def user_page():
     return render_template('user_page.html', items = data)
 
 @user.route('/addcart', methods = ['GET', 'POST'])
+@login_required
 def add_to_cart():
     """Add selected Item  to the cart"""
     item_id = request.form['itemid']
@@ -52,6 +52,7 @@ def add_to_cart():
     return redirect(url_for('user.show_cart'))
 
 @user.route('/show_cart', methods = ['GET'])
+@login_required
 def show_cart():
     """Show Items that has been added to cart"""
     order_id = session['order_id']
@@ -65,6 +66,7 @@ def show_cart():
     return render_template("cart.html", items = data, total = total)
 
 @user.route('/remove_item/<string:id_data>', methods = ['GET'])
+@login_required
 def remove_item(id_data):
     """Remove item from cart"""
     cart = Cart.query.filter_by(id=id_data).first()
@@ -73,6 +75,7 @@ def remove_item(id_data):
     return redirect(url_for('user.show_cart'))
 
 @user.route('/clear_cart', methods = ['GET'])
+@login_required
 def clear_cart():
     """Discard all items from cart order is cancelled"""
     order_id = session['order_id']
@@ -88,6 +91,7 @@ def clear_cart():
     return redirect(url_for('user.user_page'))
 
 @user.route('/checkout', methods = ['GET'])
+@login_required
 def checkout():
     order_id = session['order_id']
     
@@ -105,6 +109,7 @@ def checkout():
     return redirect(url_for('user.user_page'))  
 
 @user.route('/cur_user_orders', methods=['GET'])
+@login_required
 def cur_user_orders():
     """Shows orders of user that are pending"""
     user_id = session['userid']
@@ -114,6 +119,7 @@ def cur_user_orders():
     return render_template('cur_user_orders.html', customers_data=customers_data) 
 
 @user.route('/my_orders', methods=['GET'])
+@login_required
 def my_orders():
     """Shows previous orders"""
     user_id = session['userid']
@@ -123,6 +129,7 @@ def my_orders():
     return render_template('cur_user_orders.html', customers_data=customers_data)     
 
 @user.route('/order_recieved/<string:id_data>', methods=['GET'])
+@login_required
 def order_recieved(id_data):
     """Updates status of order if recieved by user"""
     order = Order.query.filter_by(id=id_data).first()

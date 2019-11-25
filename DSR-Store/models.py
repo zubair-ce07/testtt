@@ -1,17 +1,15 @@
-from flask_login import UserMixin
+import json
 
 from sqlalchemy.ext.declarative import DeclarativeMeta
 from sqlalchemy import create_engine, ForeignKey, Column, Integer, String
-from sqlalchemy.orm import Session
-from sqlalchemy.orm import relationship
-import json
+from sqlalchemy.orm import Session , relationship
 
+from flask_login import UserMixin
 from . import db
 
 engine = create_engine('mysql://root:passroot@localhost/crudapplication')
 db.metadata.bind = engine
 session = Session(engine)
- 
 
 class User(UserMixin, db.Model):
     __tablename__ = 'accounts'
@@ -58,5 +56,4 @@ class Cart(db.Model):
     item_id = db.Column(Integer, ForeignKey('items.id'))
     quantity = db.Column(Integer)
     order_id = db.Column(Integer, ForeignKey('orders.id'))     
-
    

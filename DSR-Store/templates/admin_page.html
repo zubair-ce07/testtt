@@ -1,7 +1,7 @@
 {% include "admin_header.html" %}
 
 
-<link href="{{url_for('static', filename = 'css/bootstrap.min.css')}}" rel="stylesheet">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
 <link href="{{url_for('static', filename = 'css/counter.css')}}" rel="stylesheet">
 <link href="{{url_for('static', filename = 'css/table.css')}}" rel="stylesheet">
 
@@ -58,13 +58,39 @@
                      <td>{{row["unit"]}}</td>
                      <td>{{row["inventory"]}}</td>
                      <td>
-                        <a href="/update" class="btn btn-warning btn-xs" data-toggle="modal" data-target="#modaledit{{row.0}}">Edit</a>
-                        <a href="/delete/{{ row['id'] }}" class="btn btn-danger btn-xs" onclick="return confirm('Are You Sure For Delete?')">Delete</a>
-                        <a href="/upload_image/{{ row['id'] }}" class="btn btn-primary btn-xs" >Add image</a>
+                        <a href="/update_item" class="btn btn-warning btn-xs" data-toggle="modal" data-target="#modaledit{{row['id']}}">Edit</a>
+                        <a href="/delete_item/{{ row['id'] }}" class="btn btn-danger btn-xs" onclick="return confirm('Are You Sure For Delete?')">Delete</a>
+                        <a href="/upload_image" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#modalimage{{row['id']}}">Add image</a>
                      </td>
                    </tr>
 
-                  <div id="modaledit{{row.0}}" class="modal fade" role="dialog">
+                  <div id="modalimage{{ row['id'] }}" class="modal fade" role="dialog">
+                     <div class="modal-dialog">
+                        <div class="modal-content">
+                              <div class="modal-header">
+                                 <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                 <h4 class="modal-title">Update Photo</h4>
+                              </div>
+                              
+                              <div class="modal-body">
+                                <h1>Upload new Item Photo</h1>
+                                    <img id="slect_image" src="{{url_for('static', filename=row['image_path'])}}"  alt="User Image" width="460" height="345">
+                                    <form action="{{ url_for('admin.upload_image') }}" method="POST" enctype=multipart/form-data>
+                                       <input type="hidden"  name="id" value="{{row['id']}}">
+                                       <input type=file name=file  onchange="readURL(this);" >
+                                       <input type=submit value=Upload>
+                                    </form>
+                               </div>
+            
+                              <div class="modal-footer">
+                                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+
+
+                  <div id="modaledit{{ row['id'] }}" class="modal fade" role="dialog">
                      <div class="modal-dialog">
                         <div class="modal-content">
                            <div class="modal-header">
@@ -73,7 +99,7 @@
                            </div>
                            
                            <div class="modal-body">
-                              <form action="{{ url_for('admin.update') }}" method="POST">
+                              <form action="{{ url_for('admin.update_item') }}" method="POST">
                                  <div class="form-group">
                                     <label>Name:</label>
                                     <input type="hidden"  name="id" value="{{row['id']}}">
@@ -86,9 +112,17 @@
                                  </div>
 
                                  <div class="form-group">
-                                    <label>Unit:</label>
-                                    <input type="text" class="form-control" name="unit" value="{{row['unit']}}">
+                                    <label for="unit" >Select Unit</label>
+                                    <select id="unit" name="unit">
+                                          <option value="Kg">Kg</option>
+                                          <option value="Packet">Packet</option>
+                                          <option value="Dozen">Dozen</option>
+                                          <option value="litre">litre</option>
+                                          <option value="gm">gm</option>
+                                          <option value="ml">ml</option>
+                                    </select>
                                  </div>
+                  
 
                                  <div class="form-group">
                                        <label>Inventory:</label>
@@ -130,7 +164,7 @@
          </div>
 
          <div class="modal-body">
-            <form action="{{ url_for('admin.insert') }}" method="POST">
+            <form action="{{ url_for('admin.insert_item') }}" method="POST">
                <div class="form-group">
                   <label>Name:</label>
                   <input type="text" class="form-control" name="name" required="1">
@@ -142,22 +176,21 @@
                </div>
 
                <div class="form-group">
-                     <label for="unit">Select Unit</label>
+                  <label for="unit">Select Unit</label>
                   <select id="unit" name="unit">
                         <option value="Kg">Kg</option>
+                        <option value="Packet">Packet</option>
                         <option value="Dozen">Dozen</option>
                         <option value="litre">litre</option>
                         <option value="gm">gm</option>
                         <option value="ml">ml</option>
-                      </select>
-                  
+                  </select>
                </div>
 
                <div class="form-group">
                      <label>Inventory:</label>
                      <input type="number" name="inventory" class="form-control" value="1" />
-                     
-                  </div>
+               </div>
 
                <div class="form-group">
                   <button class="btn btn-primary" type="submit">Insert new entry</button>
@@ -183,6 +216,20 @@
 
 {% endblock %}
 
-<script type="text/javascript" src="{{url_for('static', filename='js/jquery-3.2.1.min.js') }}"></script>
+<script>
+     function readURL(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+
+                reader.onload = function (e) {
+                    $('#slect_image')
+                        .attr('src', e.target.result);
+                };
+
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+</script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>         
 <script type="text/javascript" src="{{url_for('static', filename='js/counter.js') }}"></script>
-<script type="text/javascript" src="{{url_for('static', filename = 'js/bootstrap.min.js')}}"></script>
