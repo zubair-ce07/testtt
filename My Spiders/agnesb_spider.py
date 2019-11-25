@@ -10,22 +10,7 @@ from .base import BaseParseSpider, BaseCrawlSpider, clean, soupify, Gender
 
 class Mixin:
     retailer = 'agnesb'
-    allowed_domains = ['agnesb.co.uk', 'agnesb.eu']
 
-
-class MixinUK(Mixin):
-    retailer = Mixin.retailer + '-uk'
-    market = 'UK'
-    start_urls = ['https://www.agnesb.co.uk']
-
-
-class MixinFR(Mixin):
-    retailer = Mixin.retailer + '-fr'
-    market = 'FR'
-    start_urls = ['https://www.agnesb.eu']
-
-
-class AgnesbParseSpider(BaseParseSpider):
     merch_map = [
         ('special edition', 'Special Edition'),
         ('limited edition', 'Limited Edition'),
@@ -39,6 +24,23 @@ class AgnesbParseSpider(BaseParseSpider):
     one_sizes = ['UNIQUE', 'TU']
     default_brand = 'agnès b'
 
+
+class MixinUK(Mixin):
+    retailer = Mixin.retailer + '-uk'
+    market = 'UK'
+    allowed_domains = ['agnesb.co.uk']
+    start_urls = ['https://www.agnesb.co.uk']
+
+
+class MixinFR(Mixin):
+    retailer = Mixin.retailer + '-fr'
+    market = 'FR'
+    allowed_domains = ['agnesb.eu']
+    start_urls = ['https://www.agnesb.eu']
+
+
+class AgnesbParseSpider(BaseParseSpider):
+
     def parse(self, response):
         raw_product = self.raw_product(response)
         garment = self.new_unique_garment(self.product_id(raw_product))
@@ -46,7 +48,7 @@ class AgnesbParseSpider(BaseParseSpider):
         if not garment:
             return
 
-        self.boilerplate_minimal(garment, response)
+        self.boilerplate(garment, response)
         garment['name'] = self.remove_color_from_name(raw_product)
         garment['care'] = self.product_care(raw_product)
         garment['description'] = self.product_description(raw_product)
@@ -60,7 +62,7 @@ class AgnesbParseSpider(BaseParseSpider):
         return garment
 
     def raw_product(self, response):
-        raw_product = clean(response.css('script').re_first(r"window.__change\['4'\] = ({.*);"))
+        raw_product = clean(response.css('script:contains("change[\'4\']")::text'))[0].split(' = ')[1][:-1]
         return json.loads(raw_product)
 
     def product_id(self, raw_product):
@@ -97,19 +99,22 @@ class AgnesbParseSpider(BaseParseSpider):
     def skus(self, raw_product):
         skus = {}
 
-        currency = raw_product['price']['currencyCode']
-        previous_price = raw_product['price'].get('baseValueWithTax')
-        current_price = raw_product['price'].get('valueWithTax')
-        common_sku = self.product_pricing_common(None, money_strs=[previous_price, current_price, currency])
+        money_strs = [
+            raw_product['price'].get('baseValueWithTax'),
+            raw_product['price'].get('valueWithTax'),
+            raw_product['price']['currencyCode'],
+        ]
+
+        common_sku = self.product_pricing_common(None, money_strs=money_strs)
 
         for variant in raw_product['rootProduct']['variants']['products']:
             sku = common_sku.copy()
 
             if len(variant['axesValues']) > 1:
                 sku['colour'] = variant['axesValues'][0].split('-')[1]
-                sku['size'] = self.one_size if variant['axesValues'][1] in self.one_sizes else variant[
-                    'axesValues'][1]
-                sku['out_of_stock'] = variant['hasStock'] == False
+                sku['size'] = self.one_size if variant['axesValues'][1] \
+                    in self.one_sizes else variant['axesValues'][1]
+                sku['out_of_stock'] = not variant['hasStock']
 
                 skus[variant['id']] = sku
 
@@ -117,11 +122,12 @@ class AgnesbParseSpider(BaseParseSpider):
 
     def merch_info(self, garment):
         soup = soupify(garment['description'])
-        return [merch for merch_str, merch in self.merch_map if merch_str.lower() in soup]
+        return [m for s, m in self.merch_map if s.lower() in soup]
 
 
 class AgnesbCrawlSpider(BaseCrawlSpider):
     category_css = 'nav .bullet'
+    subcategory_css = '.menu-level-3 li'
     allow_re = ['/men', '/women', '/children']
 
     api_url = 'https://www.agnesb.co.uk/ajax.V1.php/en_GB/Rbs/Catalog/Product/'
@@ -131,7 +137,7 @@ class AgnesbCrawlSpider(BaseCrawlSpider):
         "x-http-method-override": 'GET'
     }
 
-    req_payload = {
+    payload = {
         "sectionId": None,
         "data": {
             "webStoreId": None,
@@ -148,46 +154,36 @@ class AgnesbCrawlSpider(BaseCrawlSpider):
     }
 
     rules = (
-        Rule(LinkExtractor(restrict_css=category_css, allow=allow_re), callback='parse_category'),
+        Rule(LinkExtractor(restrict_css=category_css, allow=allow_re)),
+        Rule(LinkExtractor(restrict_css=subcategory_css), callback='parse_pagination'),
     )
 
-    def parse_category(self, response):
-        subcategory_url = response.css('.menu-level-3 li a::attr(href)').getall()
-        return [response.follow(url, callback=self.parse_pagination) for url in subcategory_url]
-
     def parse_pagination(self, response):
-        data_id = response.css('[data-name = "Rbs_Catalog_ProductList"]::attr(data-id)').get()
-        raw_config = response.css('script').re_first(
-            r"window.__change\["+f"'{data_id}'"+r"\] = (.*);")
-        parsed_config = json.loads(raw_config)
-        items_count = parsed_config['pagination']['count']
+        raw_config = clean(response.css('[data-name="Rbs_Catalog_ProductList"] > script::text')) \
+            [0].split('] = ')[1][:-1]
+        config = json.loads(raw_config)
+        items_count = config['pagination']['count']
+        raw_section_id = clean(response.css('script:contains("__resources")::text'))[0].split(' = ')[1][:-1]
 
-        raw_section_id = response.css('script').re_first(r"window.__change = (.*);")
-        section_id = json.loads(raw_section_id)
+        payload_body = self.payload.copy()
+        payload_body['sectionId'] = json.loads(raw_section_id)['navigationContext']['sectionId']
+        payload_body['data']['webStoreId'] = config['context']['data']['webStoreId']
+        payload_body['data']['listId'] = config['context']['data']['listId']
+        payload_body['pagination']['limit'] = config['pagination']['limit']
 
-        req_data = self.req_payload.copy()
-        req_data['sectionId'] = section_id['navigationContext']['sectionId']
-        req_data['data']['webStoreId'] = parsed_config['context']['data']['webStoreId']
-        req_data['data']['listId'] = parsed_config['context']['data']['listId']
-        req_data['pagination']['limit'] = parsed_config['pagination']['limit']
+        if items_count > payload_body['pagination']['limit']:
+            for offset in range(0, items_count, payload_body['pagination']['limit']):
+                payload_body['pagination']['offset'] += offset
 
-        if items_count > req_data['pagination']['limit']:
-            for offset in range(0, items_count, req_data['pagination']['limit']):
-                req_data['pagination']['offset'] += offset
-
-                yield Request(self.api_url, method='POST', body=json.dumps(req_data),
+                yield Request(self.api_url, method='POST', body=json.dumps(payload_body),
                               headers=self.headers, callback=self.parse_listings)
 
-        return Request(self.api_url, method='POST', body=json.dumps(req_data),
+        return Request(self.api_url, method='POST', body=json.dumps(payload_body),
                        headers=self.headers, callback=self.parse_listings)
 
     def parse_listings(self, response):
-        listings = json.loads(response.text)
-        return [response.follow(item['common']['URL']['contextual'],
-                                callback=self.parse_item) for item in listings['items']]
-
-    def parse_item(self, response):
-        return self.parse_spider.parse(response)
+        return [response.follow(item['common']['URL']['contextual'], self.parse_item)
+                for item in json.loads(response.text)['items']]
 
 
 class AgnesbUKParseSpider(MixinUK, AgnesbParseSpider):
