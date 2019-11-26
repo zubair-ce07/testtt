@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session , relationship
 from flask_login import UserMixin
 from . import db
 
+
 class User(UserMixin, db.Model):
     __tablename__ = 'accounts'
     id = db.Column('id', db.Integer, primary_key=True)
@@ -53,3 +54,4 @@ class Cart(db.Model):
     item_id = db.Column(Integer, ForeignKey('items.id'))
     quantity = db.Column(Integer)
     order_id = db.Column(Integer, ForeignKey('orders.id'))
+

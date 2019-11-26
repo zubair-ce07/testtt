@@ -149,3 +149,4 @@ def order_detail(id_data):
         total = total + items[3] * items[1]
     
     return render_template("order_detail.html", items = data, total = total)
+

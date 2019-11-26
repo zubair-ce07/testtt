@@ -28,7 +28,11 @@ var/
 *.manifest
 *.spec
 
-# venv folder will be ignored now
+# venv folder will be ignored
+static/*
+static
+
+# Static folder will be ignored
 venv/*
 venv
 
