@@ -11,7 +11,7 @@
     <div class="row">
 
         <div class="col md-12">
-            <h1>Grocery <button type="button" class="btn btn-success  pull-right" data-toggle="modal" data-target="#myModal">Add item Data</button></h1>
+            <h1>Grocery <button type="button" class="button button1  pull-right" data-toggle="modal" data-target="#myModal">Add new</button></h1>
          <h2>All Items</h2>
 
          {%with messages = get_flashed_messages()%}
@@ -58,9 +58,10 @@
                      <td>{{row["unit"]}}</td>
                      <td>{{row["inventory"]}}</td>
                      <td>
-                        <a href="/update_item" class="btn btn-warning btn-xs" data-toggle="modal" data-target="#modaledit{{row['id']}}">Edit</a>
-                        <a href="/delete_item/{{ row['id'] }}" class="btn btn-danger btn-xs" onclick="return confirm('Are You Sure For Delete?')">Delete</a>
-                        <a href="/upload_image" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#modalimage{{row['id']}}">Add image</a>
+                           <a href="/update_item" class="button button2" data-toggle="modal" data-target="#modaledit{{row['id']}}">Edit</a>
+                           <a href="/delete_item/{{ row['id'] }}" class="button button2" onclick="return confirm('Are You Sure For Delete?')">Delete</a>
+                           <a style="margin-top: 100px;" href="/upload_image" class="button button2" data-toggle="modal" data-target="#modalimage{{row['id']}}">Add image</a>
+                     
                      </td>
                    </tr>
 
@@ -230,6 +231,27 @@
             }
         }
 </script>
+
+<script>
+      // script for drop down
+      function myFunction() {
+        document.getElementById("myDropdown").classList.toggle("show");
+      }
+      
+      // Close the dropdown if the user clicks outside of it
+      window.onclick = function(event) {
+        if (!event.target.matches('.dropbtn')) {
+          var dropdowns = document.getElementsByClassName("dropdown-content");
+          var i;
+          for (i = 0; i < dropdowns.length; i++) {
+            var openDropdown = dropdowns[i];
+            if (openDropdown.classList.contains('show')) {
+              openDropdown.classList.remove('show');
+            }
+          }
+        }
+      }
+      </script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>         
 <script type="text/javascript" src="{{url_for('static', filename='js/counter.js') }}"></script>

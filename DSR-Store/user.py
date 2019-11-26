@@ -26,20 +26,26 @@ def add_to_cart():
     """Add selected Item  to the cart"""
     item_id = request.form['itemid']
     quantity = request.form['quantity']
+    
     try:
         if check_inventory(quantity, item_id):
             if session.get('order_generated'):
                 order_id = session['order_id']
+               
                 new_cart = Cart(item_id=item_id, quantity=quantity, order_id=order_id)
                 db.session.add(new_cart)
                 db.session.commit()
+                flash(f"New item added to Cart")
+               
             else:
                 generate_order_id()
                 order_id = session['order_id']
-                #Insert into cart
+                # Insert into cart
                 new_cart = Cart(item_id=item_id, quantity=quantity, order_id=order_id)
                 db.session.add(new_cart)
                 db.session.commit()
+                flash(f"New item added to Cart")
+                
         else:
             session.pop('_flashes', None)
             flash(f'The item you selected is Out of inventory')     
@@ -69,25 +75,37 @@ def show_cart():
 @login_required
 def remove_item(id_data):
     """Remove item from cart"""
-    cart = Cart.query.filter_by(id=id_data).first()
-    db.session.delete(cart)
-    db.session.commit()
+    try:
+        cart = Cart.query.filter_by(id=id_data).first()
+        db.session.delete(cart)
+        db.session.commit()
+        flash(f"Item removed from cart")
+    except:
+        flash(f"Something is wrong! item could not be removed")
+
     return redirect(url_for('user.show_cart'))
 
 @user.route('/clear_cart', methods = ['GET'])
 @login_required
 def clear_cart():
     """Discard all items from cart order is cancelled"""
-    order_id = session['order_id']
-    db.session.query(Cart).filter(Cart.order_id==order_id).delete()
-    db.session.commit()
     
-    order = Order.query.filter_by(id=order_id).first()
-    db.session.delete(order)
-    db.session.commit()
-
-    session.pop('order_generated', None)
-    session.pop('order_id', None)
+    try:
+        order_id = session['order_id']
+        db.session.query(Cart).filter(Cart.order_id==order_id).delete()
+        db.session.commit()
+        
+        order = Order.query.filter_by(id=order_id).first()
+        db.session.delete(order)
+        db.session.commit()
+        
+        session.pop('order_generated', None)
+        session.pop('order_id', None)
+        flash(f"Your cart is empty now")
+    except:
+        flash(f"Something is wrong! Cart is not empty")
+    
+    
     return redirect(url_for('user.user_page'))
 
 @user.route('/checkout', methods = ['GET'])
@@ -98,11 +116,15 @@ def checkout():
     data = []
     carts = db.session.query(Cart.item_id, Cart.quantity).filter(Cart.order_id==order_id).all()
     
-    for cart in carts:
-        item = Item.query.filter_by(id=cart.item_id).first()
-        item.inventory = item.inventory - cart.quantity
-        db.session.flush()
-        db.session.commit()
+    try:
+        for cart in carts:
+            item = Item.query.filter_by(id=cart.item_id).first()
+            item.inventory = item.inventory - cart.quantity
+            db.session.flush()
+            db.session.commit()
+        flash(f"Order is placed Successfuly!")
+    except:
+        flash(f"Something is wrong! Order could not be placed try again!")
 
     session.pop('order_generated', None)
     session.pop('order_id', None)
@@ -132,20 +154,29 @@ def my_orders():
 @login_required
 def order_recieved(id_data):
     """Updates status of order if recieved by user"""
-    order = Order.query.filter_by(id=id_data).first()
-    order.status = "Recieved"
-    db.session.flush()
-    db.session.commit()
+
+    try:
+        order = Order.query.filter_by(id=id_data).first()
+        order.status = "Recieved"
+        db.session.flush()
+        db.session.commit()
+        flash(f"Order is Recieved")
+    except:
+        flash(f"Something is wrong! Order status could not changed")
+    
     return redirect(url_for('user.user_page'))           
 
 def generate_order_id():
     user_id = session['userid']
     
-    #Initialize order table
-    new_order = Order(user_id=user_id)
-    db.session.add(new_order)
-    db.session.commit()
-
+    # Initialize order table
+    try:
+        new_order = Order(user_id=user_id)
+        db.session.add(new_order)
+        db.session.commit()
+        flash(f"Order id generated")
+    except:
+        flash(f"Something is wrong! Order could not be generated")
     
     order = Order.query.filter_by(user_id=user_id).order_by(Order.id.desc()).first()
     order_id = order.id
@@ -157,4 +188,4 @@ def check_inventory(quantity, item_id):
     """checks if quantity of an item is available or not"""
     item = Item.query.filter_by(id=item_id).first()
     inventory = item.inventory
-    return True if int(quantity) <= inventory else False
+    return int(quantity) <= inventory

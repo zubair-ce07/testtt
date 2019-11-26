@@ -9,8 +9,8 @@
 <body>
 
 <h2 style="margin-left: 550px;">Current Orders</h2>
-<div class="tbl-header">
-    <table cellpadding="0" cellspacing="0" border="0">
+<div class="tbl-header" >
+    <table cellpadding="0" cellspacing="0" >
       <thead>
           <tr>
               <th>Order No</th>
@@ -32,14 +32,14 @@
                 <td>{{row.2}}</td>
                 <td>{{row.3}}</td>
                 <td>{{row.1}}</td>
-                <td><a href="/order_detail/{{row.0}}" class="btn btn-primary">Detail</a></td>
+                <td><a href="/order_detail/{{row.0}}" class="button button2">Detail</a></td>
                 
         </tr>
        
         {% endfor  %}
 
 </table>
-<a href="/page" class="btn btn-primary">Go Back</a>
+<a href="/page" class="button button1">Go Back</a>
 </body>
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>

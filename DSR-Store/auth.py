@@ -50,9 +50,13 @@ def signup_post():
     new_user = User(name=name, password=generate_password_hash(password, method='sha256'), address=address)
 
     # add the new user to the database
-    db.session.add(new_user)
-    db.session.commit()
-
+    try:
+        db.session.add(new_user)
+        db.session.commit()
+        flash(f"{name} can log in now")
+    except:
+        flash(f"New User registration failed!")
+    
     return redirect(url_for('auth.login'))
 
 @auth.route('/logout')

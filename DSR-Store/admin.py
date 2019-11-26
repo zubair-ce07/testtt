@@ -104,22 +104,26 @@ def upload_image():
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             
-            #Store file path in Mysql
+            # Store file path in Mysql
             image_path = f'image_holder/{filename}' 
             
-            item = Item.query.filter_by(id=id_data).first()
-            item.image_path = image_path
-            db.session.flush()
-            db.session.commit()
+            try:
+                item = Item.query.filter_by(id=id_data).first()
+                item.image_path = image_path
+                db.session.flush()
+                db.session.commit()
 
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                flash(f"{name} Updated Successfully")
+            except:
+                flash(f"Something is wrong! data could not update")
+            
             return redirect(url_for('admin.page'))
                
-
 def allowed_file(filename):
     """check if extension is allowed for image upload"""
     return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+           filename.split('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @admin.route('/cur_orders', methods=['GET'])
 @login_required

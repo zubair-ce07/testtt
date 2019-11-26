@@ -28,6 +28,10 @@ var/
 *.manifest
 *.spec
 
+# venv folder will be ignored now
+venv/*
+venv
+
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
@@ -37,6 +41,7 @@ htmlcov/
 .tox/
 .coverage
 .cache
+.bash_profile
 nosetests.xml
 coverage.xml
 
