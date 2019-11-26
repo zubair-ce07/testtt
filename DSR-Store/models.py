@@ -1,3 +1,4 @@
+import os
 import json
 
 from sqlalchemy.ext.declarative import DeclarativeMeta
@@ -7,7 +8,7 @@ from sqlalchemy.orm import Session , relationship
 from flask_login import UserMixin
 from . import db
 
-engine = create_engine('mysql://root:passroot@localhost/crudapplication')
+engine = create_engine(os.environ.get("database_uri"))
 db.metadata.bind = engine
 session = Session(engine)
 

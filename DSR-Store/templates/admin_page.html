@@ -49,8 +49,10 @@
                </table>
              </div>
             <table cellpadding="0" cellspacing="0" border="0">
-               
+               {% set count = namespace(value=0) %}
                {% for row in item %}
+               {% set count.value = count.value + 1 %}
+               
                   <tr>
                      <td>0{{row["id"]}}</td>
                      <td>{{row["name"]}}</td>
@@ -58,10 +60,18 @@
                      <td>{{row["unit"]}}</td>
                      <td>{{row["inventory"]}}</td>
                      <td>
-                           <a href="/update_item" class="button button2" data-toggle="modal" data-target="#modaledit{{row['id']}}">Edit</a>
-                           <a href="/delete_item/{{ row['id'] }}" class="button button2" onclick="return confirm('Are You Sure For Delete?')">Delete</a>
-                           <a style="margin-top: 100px;" href="/upload_image" class="button button2" data-toggle="modal" data-target="#modalimage{{row['id']}}">Add image</a>
-                     
+                          
+                           <div class="dropdown">
+                                 <button onclick="myFunction('{{count.value}}')" class="dropbtn">Action</button>
+                                 
+                                 
+                                 <div id="{{ count.value }}" class="dropdown-content">
+                                       
+                                       <a href="/update_item" class="button button2" data-toggle="modal" data-target="#modaledit{{row['id']}}">Edit</a>
+                                       <a href="/delete_item/{{ row['id'] }}" class="button button2" onclick="return confirm('Are You Sure For Delete?')">Delete</a>
+                                       <a href="/upload_image" class="button button2" data-toggle="modal" data-target="#modalimage{{row['id']}}">Add image</a>
+                                 </div>
+                           </div>
                      </td>
                    </tr>
 
@@ -208,9 +218,7 @@
    </div>
 </div>
 
-
-    </div>
-
+</div>
 
 </div>
 
@@ -234,8 +242,9 @@
 
 <script>
       // script for drop down
-      function myFunction() {
-        document.getElementById("myDropdown").classList.toggle("show");
+      function myFunction(value) {
+        document.getElementById(value).classList.toggle("show");
+        
       }
       
       // Close the dropdown if the user clicks outside of it
