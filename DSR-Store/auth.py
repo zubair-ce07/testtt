@@ -27,7 +27,7 @@ def login_post():
     login_user(user, remember=remember)
     session['userid'] = user.id
     if name == "Admin":
-        return redirect(url_for('admin.page'))
+        return redirect(url_for('admin.admin_page'))
     return redirect(url_for('user.user_page'))
 
 @auth.route('/signup')

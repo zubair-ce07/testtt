@@ -11,19 +11,19 @@ user = Blueprint('user', __name__)
 @user.route('/user_page')
 @login_required
 def user_page():
-    """User will come to this page after log in and he will see all Items of Store"""
+    """User will come to this page after log in and he will see all Item of Store"""
     data = []
-    item = Item.query.all()
+    items = Item.query.all()
     
-    for item in item:
+    for item in items:
         data.append(Item.row2json(Item, item))
 
     return render_template('user_page.html', items = data)
 
-@user.route('/addcart', methods = ['GET', 'POST'])
+@user.route('/add_to_cart', methods = ['GET', 'POST'])
 @login_required
 def add_to_cart():
-    """Add selected Item  to the cart"""
+    """Add selected item  to the cart"""
     item_id = request.form['itemid']
     quantity = request.form['quantity']
     
@@ -48,7 +48,7 @@ def add_to_cart():
                 
         else:
             session.pop('_flashes', None)
-            flash(f'The item you selected is Out of inventory')     
+            flash(f'The items you selected is Out of inventory')     
             return redirect(url_for('user.user_page'))
     except:
         session.pop('order_generated', None)
@@ -61,27 +61,28 @@ def add_to_cart():
 @login_required
 def show_cart():
     """Show Items that has been added to cart"""
+    
     order_id = session['order_id']
     
     data = db.session.query(Cart.id, Cart.quantity, Item.name, Item.price).filter\
                      (and_(Item.id == Cart.item_id, Cart.order_id == order_id)).all()                  
     total = 0
-    for item in data:
-        total = total + item[3] * item[1]
+    for items in data:
+        total = total + items[3] * items[1]
     
     return render_template("cart.html", items = data, total = total)
 
 @user.route('/remove_item/<string:id_data>', methods = ['GET'])
 @login_required
 def remove_item(id_data):
-    """Remove item from cart"""
+    """Remove items from cart"""
     try:
         cart = Cart.query.filter_by(id=id_data).first()
         db.session.delete(cart)
         db.session.commit()
-        flash(f"Item removed from cart")
+        flash(f"items removed from cart")
     except:
-        flash(f"Something is wrong! item could not be removed")
+        flash(f"Something is wrong! items could not be removed")
 
     return redirect(url_for('user.show_cart'))
 
@@ -118,9 +119,8 @@ def checkout():
     
     try:
         for cart in carts:
-            item = Item.query.filter_by(id=cart.item_id).first()
+            items = Item.query.filter_by(id=cart.item_id).first()
             item.inventory = item.inventory - cart.quantity
-            db.session.flush()
             db.session.commit()
         flash(f"Order is placed Successfuly!")
     except:
@@ -158,7 +158,6 @@ def order_recieved(id_data):
     try:
         order = Order.query.filter_by(id=id_data).first()
         order.status = "Recieved"
-        db.session.flush()
         db.session.commit()
         flash(f"Order is Recieved")
     except:
@@ -186,6 +185,6 @@ def generate_order_id():
 
 def check_inventory(quantity, item_id):
     """checks if quantity of an item is available or not"""
-    item = Item.query.filter_by(id=item_id).first()
-    inventory = item.inventory
+    items = Item.query.filter_by(id=item_id).first()
+    inventory = items.inventory
     return int(quantity) <= inventory
