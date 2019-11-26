@@ -56,5 +56,5 @@ class Cart(db.Model):
     id = db.Column(Integer, primary_key=True)
     item_id = db.Column(Integer, ForeignKey('items.id'))
     quantity = db.Column(Integer)
-    order_id = db.Column(Integer, ForeignKey('orders.id'))     
-   
+    order_id = db.Column(Integer, ForeignKey('orders.id'))
+    
