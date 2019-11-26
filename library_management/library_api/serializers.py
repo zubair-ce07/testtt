@@ -10,9 +10,11 @@ from .utils import regisiter_user
 
 logger = logging.getLogger(__name__)
 
+
 class AuthorSignupSerializer(serializers.ModelSerializer):
     password2 = serializers.CharField(style={'input_type': 'password'},
                                       write_only=True)
+
     class Meta:
         model = Author
         fields = ['first_name', 'username', 'password', 'password2']
@@ -28,6 +30,7 @@ class AuthorSignupSerializer(serializers.ModelSerializer):
 class PublisherSignupSerializer(serializers.ModelSerializer):
     password2 = serializers.CharField(style={'input_type': 'password'},
                                       write_only=True)
+
     class Meta:
         model = Publisher
         fields = ['company_name', 'username', 'password', 'password2']
@@ -50,6 +53,19 @@ class AuthorSerializer(serializers.ModelSerializer):
         ]
 
 
+class AuthorDataSerializer(serializers.ModelSerializer):
+    full_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Author
+        fields = [
+            'id', 'full_name'
+        ]
+
+    def get_full_name(self, obj):
+        return obj.get_full_name()
+
+
 class CategorySerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(required=False)
 
@@ -67,6 +83,15 @@ class PublisherSerializer(serializers.ModelSerializer):
         model = Publisher
         fields = [
             'id', 'company_name', 'address', 'website', 'phone',
+        ]
+
+
+class PublisherDataSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Publisher
+        fields = [
+            'id', 'company_name'
         ]
 
 

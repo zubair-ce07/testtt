@@ -6,8 +6,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import Author, Book, Category, Publisher
-from .serializers import (AuthorSerializer, AuthorSignupSerializer,
-                          BookSerializer, CategorySerializer,
+from .serializers import (AuthorDataSerializer, AuthorSerializer,
+                          AuthorSignupSerializer, BookSerializer,
+                          CategorySerializer, PublisherDataSerializer,
                           PublisherSerializer, PublisherSignupSerializer)
 
 
@@ -48,36 +49,43 @@ class Logout(APIView):
 
 # Author Views
 class AuthorList(generics.ListAPIView):
-    """List all categories."""
+    """List all authors."""
     queryset = Author.objects.all()
     serializer_class = AuthorSerializer
     filter_backends = [filters.SearchFilter]
     search_fields = ['first_name',]
 
 
+class AuthorDataList(generics.ListAPIView):
+    """List all authors full name and id with out pagination."""
+    pagination_class = None
+    queryset = Author.objects.all()
+    serializer_class = AuthorDataSerializer
+
+
 class AuthorDetail(generics.RetrieveAPIView):
-    """Get a specific category"""
+    """Get a specific author"""
     permission_classes = [IsAdminUser, IsAuthenticated]
     queryset = Author.objects.all()
     serializer_class = AuthorSerializer
 
 
 class AuthorDestroy(generics.DestroyAPIView):
-    """Delete a specific category"""
+    """Delete a specific author"""
     permission_classes = [IsAdminUser, IsAuthenticated]
     queryset = Author.objects.all()
     serializer_class = AuthorSerializer
 
 
 class AuthorUpdate(generics.UpdateAPIView):
-    """Updates a specific category"""
+    """Updates a specific author"""
     permission_classes = [IsAdminUser, IsAuthenticated]
     queryset = Author.objects.all()
     serializer_class = AuthorSerializer
 
 
 class AuthorBooksList(generics.ListAPIView):
-    """List all categories."""
+    """List all author books."""
     serializer_class = BookSerializer
 
     def get_queryset(self):
@@ -141,6 +149,13 @@ class CategoryList(generics.ListAPIView):
     serializer_class = CategorySerializer
 
 
+class CategoryDataList(generics.ListAPIView):
+    """List all categories name and id with out pagination."""
+    pagination_class = None
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+
+
 class CategoryDetail(generics.RetrieveAPIView):
     """Get a specific category"""
     permission_classes = [IsAdminUser, IsAuthenticated]
@@ -172,7 +187,7 @@ class CategoryUpdate(generics.UpdateAPIView):
 
 # Publisher Views
 class PublisherList(generics.ListAPIView):
-    """List all categories."""
+    """List all publishers."""
     queryset = Publisher.objects.all()
     serializer_class = PublisherSerializer
     filter_backends = [filters.SearchFilter]
@@ -180,29 +195,36 @@ class PublisherList(generics.ListAPIView):
 
 
 class PublisherDetail(generics.RetrieveAPIView):
-    """Get a specific category"""
+    """Get a specific publisher"""
     permission_classes = [IsAdminUser, IsAuthenticated]
     queryset = Publisher.objects.all()
     serializer_class = PublisherSerializer
 
 
 class PublisherDestroy(generics.DestroyAPIView):
-    """Delete a specific category"""
+    """Delete a specific publisher"""
     permission_classes = [IsAdminUser, IsAuthenticated]
     queryset = Publisher.objects.all()
     serializer_class = PublisherSerializer
 
 
 class PublisherUpdate(generics.UpdateAPIView):
-    """Updates a specific category"""
+    """Updates a specific publisher"""
     permission_classes = [IsAdminUser, IsAuthenticated]
     queryset = Publisher.objects.all()
     serializer_class = PublisherSerializer
 
 
 class PublisherBooksList(generics.ListAPIView):
-    """List all categories."""
+    """List all publisher's books."""
     serializer_class = BookSerializer
 
     def get_queryset(self):
         return Publisher.objects.get(id=self.kwargs['pk']).books.all()
+
+
+class PublisherDataList(generics.ListAPIView):
+    """List all publisher's company name and id with out pagination."""
+    pagination_class = None
+    queryset = Publisher.objects.all()
+    serializer_class = PublisherDataSerializer

@@ -18,6 +18,8 @@ urlpatterns = [
 
     # Author routes
     path('authors/', views.AuthorList.as_view(), name='authors-index'),
+    path('authors_data_list/', views.AuthorDataList.as_view(),
+         name='authors-data-index'),
     path('author/<int:pk>/',
          views.AuthorDetail.as_view(),
          name='author-detail'),
@@ -32,7 +34,9 @@ urlpatterns = [
          name='author-books'),
 
     # Publisher routes
-    path('publishers/', views.PublisherList.as_view(), name='authors-index'),
+    path('publishers/', views.PublisherList.as_view(), name='publishers-index'),
+    path('publishers_data_list/', views.PublisherDataList.as_view(),
+         name='publishers-data-index'),
     path('publisher/<int:pk>/',
          views.PublisherDetail.as_view(),
          name='publisher-detail'),
@@ -48,6 +52,8 @@ urlpatterns = [
 
     # Category routes
     path('categories/', views.CategoryList.as_view(), name='categories-index'),
+    path('categories_data_list/', views.CategoryDataList.as_view(),
+         name='categories-data-index'),
     path('category/', views.CategoryCreate.as_view(), name='category-create'),
     path('category/<int:pk>/',
          views.CategoryDetail.as_view(),
