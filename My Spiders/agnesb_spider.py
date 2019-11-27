@@ -12,7 +12,7 @@ class Mixin:
     retailer = 'agnesb'
     default_brand = 'Agnès B'
 
-    merch_map = [
+    merchinfo_map = [
         ('special edition', 'Special Edition'),
         ('limited edition', 'Limited Edition'),
         ('edition limitée', 'Edition limitée'),
@@ -75,6 +75,7 @@ class AgnesbParseSpider(BaseParseSpider):
         raw_care = raw_product['typology']['attributes']
         care = [raw_care.get('product_care_instruction', {}).get('value', '')]
         composition = raw_care.get('reference_composition', {}).get('value', '').split(',')
+
         return clean(care + composition)
 
     def product_description(self, raw_product):
@@ -117,14 +118,19 @@ class AgnesbParseSpider(BaseParseSpider):
 
     def merch_info(self, garment):
         soup = soupify(garment['description'])
-        return [m for s, m in self.merch_map if s.lower() in soup]
+        return [m for s, m in self.merchinfo_map if s.lower() in soup]
+
+def make_rules(allow_re):
+    category_css = ['nav .bullet']
+    subcategory_css = ['.menu-level-3 li']
+
+    return (
+        Rule(LinkExtractor(restrict_css=category_css, allow=allow_re)),
+        Rule(LinkExtractor(restrict_css=subcategory_css), callback='parse_pagination'),
+    )
 
 
 class AgnesbCrawlSpider(BaseCrawlSpider):
-    category_css = ['nav .bullet']
-    subcategory_css = ['.menu-level-3 li']
-    allow_re = ['/men', '/women', '/children', '/femme', '/homme', '/enfant']
-
     headers = {
         "content-type": 'application/json',
         "x-http-method-override": 'GET'
@@ -145,11 +151,6 @@ class AgnesbCrawlSpider(BaseCrawlSpider):
             "limit": None
         }
     }
-
-    rules = (
-        Rule(LinkExtractor(restrict_css=category_css, allow=allow_re)),
-        Rule(LinkExtractor(restrict_css=subcategory_css), callback='parse_pagination'),
-    )
 
     def parse_pagination(self, response):
         css = '[data-name="Rbs_Catalog_ProductList"] > script::text'
@@ -182,6 +183,8 @@ class AgnesbUKParseSpider(MixinUK, AgnesbParseSpider):
 
 class AgnesbUKCrawlSpider(MixinUK, AgnesbCrawlSpider):
     name = MixinUK.retailer + '-crawl'
+    allow_re = ['/men', '/women', '/children']
+    rules = make_rules(allow_re)
     parse_spider = AgnesbUKParseSpider()
 
 
@@ -191,4 +194,6 @@ class AgnesbFRParseSpider(MixinFR, AgnesbParseSpider):
 
 class AgnesbFRCrawlSpider(MixinFR, AgnesbCrawlSpider):
     name = MixinFR.retailer + '-crawl'
+    allow_re = ['/femme', '/homme', '/enfant']
+    rules = make_rules(allow_re)
     parse_spider = AgnesbFRParseSpider()
