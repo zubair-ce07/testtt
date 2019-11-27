@@ -23,7 +23,7 @@ class Book(models.Model):
                                   related_name='books',
                                   on_delete=models.SET_NULL)
 
-    date_published = models.DateTimeField(default=timezone.now)
+    date_published = models.DateField(default=timezone.now)
     isbn = models.CharField(db_index=True,
                             max_length=13,
                             unique=True,
@@ -32,7 +32,7 @@ class Book(models.Model):
     title = models.CharField(db_index=True, max_length=200, default=None)
 
     class Meta:
-        ordering = ['title',]
+        ordering = ['title', ]
 
     def display_categories(self):
         """Creates a string for the Category."""
