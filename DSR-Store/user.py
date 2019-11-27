@@ -4,7 +4,7 @@ from sqlalchemy import and_
 from werkzeug.utils import secure_filename
 
 from .models import Item, User, Order, Cart
-from . import db
+from .models import db
 
 user = Blueprint('user', __name__)
 

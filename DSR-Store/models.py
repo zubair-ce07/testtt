@@ -1,13 +1,13 @@
 import os
 import json
 
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import UserMixin
 from sqlalchemy.ext.declarative import DeclarativeMeta
 from sqlalchemy import create_engine, ForeignKey, Column, Integer, String
 from sqlalchemy.orm import Session , relationship
 
-from flask_login import UserMixin
-from . import db
-
+db = SQLAlchemy()
 
 class User(UserMixin, db.Model):
     __tablename__ = 'accounts'
@@ -54,4 +54,3 @@ class Cart(db.Model):
     item_id = db.Column(Integer, ForeignKey('items.id'))
     quantity = db.Column(Integer)
     order_id = db.Column(Integer, ForeignKey('orders.id'))
-

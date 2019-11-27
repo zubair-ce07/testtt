@@ -5,7 +5,7 @@ from flask_login import login_required
 from werkzeug.utils import secure_filename
 from sqlalchemy import and_
 
-from . import db
+from .models import db
 from .models import Item, User, Order, Cart
 
 app = Flask(__name__)
@@ -149,4 +149,3 @@ def order_detail(id_data):
         total = total + items[3] * items[1]
     
     return render_template("order_detail.html", items = data, total = total)
-

@@ -1,11 +1,14 @@
 import os
 
 from flask import Flask 
-from flask_sqlalchemy import SQLAlchemy 
-from flask_login import LoginManager 
+from flask_login import LoginManager
 
-# init SQLAlchemy so we can use it later in our models
-db = SQLAlchemy()
+from .models import db
+from .models import User
+from .auth import auth as auth_blueprint
+from .main import main as main_blueprint
+from .admin import admin as admin_blueprint
+from .user import user as user_blueprint
 
 def create_app():
     app = Flask(__name__)
@@ -19,22 +22,14 @@ def create_app():
     login_manager.login_view = 'auth.login'
     login_manager.init_app(app)
 
-    from .models import User
-
     @login_manager.user_loader
     def load_user(id):
         return User.query.get(int(id))
   
-    from .auth import auth as auth_blueprint
     app.register_blueprint(auth_blueprint)
-
-    from .main import main as main_blueprint
     app.register_blueprint(main_blueprint)
-
-    from .admin import admin as admin_blueprint
     app.register_blueprint(admin_blueprint)
-
-    from .user import user as user_blueprint
     app.register_blueprint(user_blueprint)
 
     return app
+    
