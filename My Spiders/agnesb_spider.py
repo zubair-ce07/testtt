@@ -5,7 +5,7 @@ from scrapy.spiders import Rule
 from scrapy.selector import Selector
 from scrapy.linkextractors import LinkExtractor
 
-from .base import BaseParseSpider, BaseCrawlSpider, clean, soupify, Gender, titlecase
+from .base import BaseParseSpider, BaseCrawlSpider, clean, soupify, Gender
 
 
 class Mixin:
@@ -22,7 +22,7 @@ class Mixin:
     ]
 
     one_sizes = ['UNIQUE', 'TU']
-    default_brand = titlecase('agnès b')
+    default_brand = 'Agnès B'
 
 
 class MixinUK(Mixin):
