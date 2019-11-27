@@ -11,23 +11,17 @@ class Mixin:
     retailer = 'agnesb'
     default_brand = 'Agnès B'
 
-    merchinfo_map = [
-        ('special edition', 'Special Edition'),
-        ('limited edition', 'Limited Edition'),
-        ('edition limitée', 'Edition limitée'),
-        ('édition spéciale', 'Édition spéciale'),
-        ('edición limitada', 'Edición Limitada'),
-        ('edición especial', 'Edición especial'),
-        ('edizione speciale', 'Edizione speciale')
-    ]
-
-
 class MixinUK(Mixin):
     retailer = Mixin.retailer + '-uk'
     market = 'UK'
     allowed_domains = ['agnesb.co.uk']
     start_urls = ['https://www.agnesb.co.uk']
     api_url = 'https://www.agnesb.co.uk/ajax.V1.php/en_GB/Rbs/Catalog/Product/'
+
+    merch_info_map = [
+        ('special edition', 'Special Edition'),
+        ('limited edition', 'Limited Edition'),
+    ]
 
 
 class MixinFR(Mixin):
@@ -36,6 +30,14 @@ class MixinFR(Mixin):
     allowed_domains = ['agnesb.eu']
     start_urls = ['https://www.agnesb.eu']
     api_url = 'https://www.agnesb.eu/ajax.V1.php/fr_FR/Rbs/Catalog/Product/'
+
+    merch_info_map = [
+        ('edition limitée', 'Edition limitée'),
+        ('édition spéciale', 'Édition spéciale'),
+        ('edición limitada', 'Edición Limitada'),
+        ('edición especial', 'Edición especial'),
+        ('edizione speciale', 'Edizione speciale')
+    ]
 
 
 class AgnesbParseSpider(BaseParseSpider):
@@ -117,7 +119,7 @@ class AgnesbParseSpider(BaseParseSpider):
 
     def merch_info(self, garment):
         soup = soupify(garment['description'])
-        return [m for s, m in self.merchinfo_map if s.lower() in soup]
+        return [m for s, m in self.merch_info_map if s.lower() in soup]
 
 def make_rules(allow_re):
     category_css = ['nav .bullet']
