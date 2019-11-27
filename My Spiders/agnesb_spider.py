@@ -1,7 +1,6 @@
 import json
 
-from scrapy import Request
-from scrapy.spiders import Rule
+from scrapy.spiders import Rule, Request
 from scrapy.selector import Selector
 from scrapy.linkextractors import LinkExtractor
 
