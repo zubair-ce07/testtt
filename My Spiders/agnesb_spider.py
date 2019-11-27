@@ -10,6 +10,7 @@ from .base import BaseParseSpider, BaseCrawlSpider, clean, soupify, Gender
 
 class Mixin:
     retailer = 'agnesb'
+    default_brand = 'Agnès B'
 
     merch_map = [
         ('special edition', 'Special Edition'),
@@ -20,9 +21,6 @@ class Mixin:
         ('edición especial', 'Edición especial'),
         ('edizione speciale', 'Edizione speciale')
     ]
-
-    one_sizes = ['UNIQUE', 'TU']
-    default_brand = 'Agnès B'
 
 
 class MixinUK(Mixin):
@@ -110,7 +108,7 @@ class AgnesbParseSpider(BaseParseSpider):
             if len(variant['axesValues']) > 1:
                 raw_colour, size = variant['axesValues']
                 sku['colour'] = raw_colour.split('-')[1]
-                sku['size'] = self.one_size if size in self.one_sizes else size
+                sku['size'] = size
                 sku['out_of_stock'] = not variant['hasStock']
 
                 skus[variant['id']] = sku
