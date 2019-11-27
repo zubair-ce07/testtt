@@ -20,8 +20,8 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('note.urls')),
-    path('win_account/', include('win_account.urls')),
+    path('', include('mynotes.urls')),
+    path('account/', include('accounts.urls')),
     re_path(r'^tinymce/', include('tinymce.urls')),
 
 ]

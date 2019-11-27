@@ -31,8 +31,8 @@ ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '157.245.130.251']
 # Application definition
 
 INSTALLED_APPS = [
-    'win_account.apps.UserConfig',
-    'note.apps.NoteConfig',
+    'accounts.apps.AccountsConfig',
+    'mynotes.apps.MyNotesConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

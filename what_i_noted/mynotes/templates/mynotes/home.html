@@ -1,0 +1,26 @@
+{% extends 'mynotes/base.html' %}
+
+{% block content %}
+    {% if note_books.count != 0 %}
+        <div class="row">
+            {% for note_book in note_books %}
+                {% include 'mynotes/templates/note-book.html' %}
+            {% endfor %}
+        </div>
+        {% include 'mynotes/pagination_template.html' %}
+    {% else %}
+        <div class="col-12">
+            <p>No Note Book Added Yet! <a href="{% url 'note-book-create' %}" class="btn btn-success">Add Note
+                Book</a>
+            </p>
+        </div>
+    {% endif %}
+    <div class="pmd-floating-action" role="navigation">
+        <a href="{% url 'note-book-create' %}"
+           class="pmd-floating-action-btn btn pmd-btn-fab pmd-btn-raised pmd-ripple-effect btn-success"
+           data-title="Add New Book">
+            <span class="pmd-floating-hidden">Primary</span>
+            <i class="material-icons pmd-sm">add</i>
+        </a>
+    </div>
+{% endblock content %}
