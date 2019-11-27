@@ -11,6 +11,7 @@ class Mixin:
     retailer = 'agnesb'
     default_brand = 'Agnès B'
 
+
 class MixinUK(Mixin):
     retailer = Mixin.retailer + '-uk'
     market = 'UK'
@@ -121,6 +122,7 @@ class AgnesbParseSpider(BaseParseSpider):
         soup = soupify(garment['description'])
         return [m for s, m in self.merch_info_map if s.lower() in soup]
 
+
 def make_rules(allow_re):
     category_css = ['nav .bullet']
     subcategory_css = ['.menu-level-3 li']
@@ -166,15 +168,17 @@ class AgnesbCrawlSpider(BaseCrawlSpider):
         payload['data']['webStoreId'] = config['context']['data']['webStoreId']
         payload['data']['listId'] = config['context']['data']['listId']
         payload['pagination']['limit'] = page_size
+        trail = self.add_trail(response)
 
         for offset in range(0, total_items, page_size):
             payload['pagination']['offset'] += offset
 
-            yield Request(self.api_url, method='POST', body=json.dumps(payload),
+            yield Request(self.api_url, method='POST', body=json.dumps(payload), meta={'trail': trail},
                           headers=self.headers, callback=self.parse_listings)
 
     def parse_listings(self, response):
-        return [response.follow(item['common']['URL']['contextual'], self.parse_item)
+        return [response.follow(item['common']['URL']['contextual'], self.parse_item,
+                                meta={'trail': self.add_trail(response)})
                 for item in json.loads(response.text)['items']]
 
 
