@@ -3,10 +3,10 @@ import io
 import zipfile
 import argparse
 from datetime import datetime
-from reporttype import ReportType
-import reports
-from weatherreading import WeatherReading
-from weathermanconstants import WeatherManConstants
+from weather_man.reporttype import ReportType
+from weather_man import reports
+from weather_man.weatherreading import WeatherReading
+from weather_man.weathermanconstants import WeatherManConstants
 
 
 class WeatherMan:

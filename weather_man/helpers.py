@@ -1,5 +1,5 @@
 from datetime import datetime
-from weathermanconstants import WeatherManConstants
+from weather_man.weathermanconstants import WeatherManConstants
 
 
 def convert_str_to_date(date_time_string, date_format):

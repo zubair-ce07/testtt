@@ -1,4 +1,4 @@
-from weathermanconstants import WeatherManConstants
+from weather_man.weathermanconstants import WeatherManConstants
 
 
 def get_highest_temperature_reading(weather_readings):

@@ -1,7 +1,6 @@
-from reporttype import ReportType
-import weathercalculations
-import helpers
-from weathermanconstants import WeatherManConstants
+from weather_man.reporttype import ReportType
+from weather_man import weathercalculations, helpers
+from weather_man.weathermanconstants import WeatherManConstants
 
 
 def generate_report(report_type, weather_readings):
