@@ -9,6 +9,11 @@ import scrapy
 
 
 class BoutiqueItem(scrapy.Item):
-    # define the fields for your item here like:
-    # name = scrapy.Field()
-    pass
+    retailer_sku = scrapy.Field()
+    name = scrapy.Field()
+    price = scrapy.Field()
+    market = scrapy.Field()
+    url = scrapy.Field()
+    description = scrapy.Field()
+    image_urls = scrapy.Field()
+    sku_list = scrapy.Field()
