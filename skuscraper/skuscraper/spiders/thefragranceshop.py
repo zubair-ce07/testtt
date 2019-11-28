@@ -5,6 +5,7 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
 
 from .base import BaseCrawlSpider, BaseParseSpider, clean
+from ..parsers.currencyparser import CurrencyParser
 
 
 class Mixin:
@@ -23,28 +24,25 @@ class MixinUK(Mixin):
 class TheFragranceShopSpider(BaseParseSpider):
 
     def parse(self, response):
-        product_raw_information = self.product_raw_information(response)
-        pid = product_raw_information.get('id')
+        raw_product = self.raw_product(response)
+        pid = raw_product.get('id')
 
         garment = self.new_unique_garment(pid)
         if not garment:
             return
 
-        currency = self.product_currency(response)
         self.boilerplate_minimal(garment, response)
-        garment['gender'] = self.product_gender(product_raw_information.get('attributes'))
-        garment['category'] = self.product_category(product_raw_information.get('classification'))
-        garment['brand'] = product_raw_information.get('brand')
-        garment['name'] = product_raw_information.get('name')
-        garment['description'] = [self.clean(product_raw_information.get('description'))]
+        garment['gender'] = self.product_gender(raw_product.get('attributes'))
+        garment['category'] = self.product_category(raw_product.get('classification'))
+        garment['brand'] = raw_product.get('brand')
+        garment['name'] = raw_product.get('name')
+        garment['description'] = clean(self.text_from_html(raw_product.get('description')))
         garment['care'] = ''
-        garment['image_urls'] = self.product_image_urls(product_raw_information.get('images'))
-        garment['skus'] = self.product_skus(product_raw_information, currency)
-        garment['price'] = self.product_price(product_raw_information.get('price'))
-        garment['currency'] = currency
+        garment['image_urls'] = self.product_image_urls(raw_product.get('images'))
+        garment['skus'] = self.product_skus(response, raw_product)
         return garment
 
-    def product_raw_information(self, response):
+    def raw_product(self, response):
         selector = 'script[defer]:not([src])'
         raw_data = response.css(selector).re_first(r'({.*})')
         return json.loads(raw_data)
@@ -60,7 +58,7 @@ class TheFragranceShopSpider(BaseParseSpider):
     def product_image_urls(self, raw_data):
         return [img.get('url') for img in raw_data]
 
-    def product_skus(self, raw_data, currency):
+    def product_skus(self, response, raw_data):
         product_variants = raw_data.get('variantProducts')
         size_value = re.findall(r'(\d+).', raw_data.get("uomValue"))[0]
         size_unit = raw_data.get("uom")
@@ -69,8 +67,9 @@ class TheFragranceShopSpider(BaseParseSpider):
         common_sku = {
             'price': self.product_price(raw_data.get('price')),
             'previous_prices': [self.product_price(raw_data.get('listPrice'))],
-            'size': size,
-            'currency': currency
+            'currency': self.product_currency(response),
+            'size': size
+
         }
 
         if isinstance(product_variants, list) and product_variants:
@@ -92,14 +91,12 @@ class TheFragranceShopSpider(BaseParseSpider):
         return {size: common_sku}
 
     def product_price(self, raw_price):
-        REGEX_PRICE_CLEANER = r'\W'
         formatted_price = raw_price.get('formatted').get('withTax')
-        clean_price = re.sub(REGEX_PRICE_CLEANER, '', str(formatted_price))
-        return int(clean_price)
+        return CurrencyParser.prices(formatted_price)[0]
 
     def product_currency(self, response):
         raw_data = response.css('script[type="application/ld+json"]::text').get()
-        raw_data = json.loads(self.clean(raw_data))
+        raw_data = json.loads(clean(raw_data))
         return raw_data['offers']['priceCurrency']
 
     def product_color(self, raw_data):
@@ -112,10 +109,6 @@ class TheFragranceShopSpider(BaseParseSpider):
         for raw_attr in raw_data:
             if raw_attr.get('fieldCode') == 'global.size.volume':
                 return raw_attr.get('fieldValue')
-
-    def clean(self, raw_data):
-        REGEX_TAG_CLEANER = r'<.*?>'
-        return re.sub(REGEX_TAG_CLEANER, '', clean(raw_data))
 
 
 class TheFragranceShopCrawler(BaseCrawlSpider):
