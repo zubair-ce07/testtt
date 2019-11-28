@@ -14,7 +14,7 @@ def map_gender(raw_gender):
 
 
 def format_price(currency, current_price, previous_price=None):
-    if previous_price:
+    if previous_price and previous_price != current_price:
         previous_price = convert_price(previous_price)
         current_price = convert_price(current_price)
 
