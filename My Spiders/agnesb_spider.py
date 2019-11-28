@@ -164,6 +164,7 @@ class AgnesbCrawlSpider(BaseCrawlSpider):
         sectionid_css = 'script:contains("sectionId")::text'
         raw_sectionid = json.loads(clean(response.css(sectionid_css).re_first(r'__change = ({.*);')))
         payload = self.payload.copy()
+
         payload['sectionId'] = raw_sectionid['navigationContext']['sectionId']
         payload['data']['webStoreId'] = config['context']['data']['webStoreId']
         payload['data']['listId'] = config['context']['data']['listId']
@@ -177,9 +178,10 @@ class AgnesbCrawlSpider(BaseCrawlSpider):
                           headers=self.headers, callback=self.parse_listings)
 
     def parse_listings(self, response):
-        return [response.follow(item['common']['URL']['contextual'], self.parse_item,
-                                meta={'trail': self.add_trail(response)})
-                for item in json.loads(response.text)['items']]
+        raw_products = json.loads(response.text)['items']
+        trail = self.add_trail(response)
+        return [response.follow(p['common']['URL']['contextual'], self.parse_item, meta={'trail': trail})
+                for p in raw_products]
 
 
 class AgnesbUKParseSpider(MixinUK, AgnesbParseSpider):
