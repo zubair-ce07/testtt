@@ -1,6 +1,4 @@
 import json
-import re
-from urllib.parse import urljoin
 
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule, Spider, Request
@@ -35,14 +33,12 @@ class ProductParser(Spider):
         item['description'] = self.product_description(response)
         item['images_url'] = self.product_images(response)
         item['skus'] = self.product_sku(response)
-        item['price'] = product_price
-        item['currency'] = self.product_currency(response)
         item['meta'] = {'requests': self.product_sku_requests(response, item)}
 
         return self.next_item_or_request(item)
 
     def product_retailer_sku(self, response):
-        sku_data = self.load_sku_data(response)
+        sku_data = self.raw_product(response)
         return sku_data.get('displayCode')
 
     def product_name(self, response):
@@ -53,37 +49,43 @@ class ProductParser(Spider):
         return gender if gender else 'unisex'
 
     def product_category(self, response):
-        selector = '.breadcrumb-item:nth-child(n+2) a::attr(data-id)'
-        return response.css(selector).getall()
+        css = '.breadcrumb-item a::attr(data-id)'
+        return response.css(css).getall()[1:]
 
     def product_description(self, response):
-        selector = '.product-detail-card .card-text::text'
-        raw_description = response.css(selector).get()
+        css = '.product-detail-card .card-text::text'
+        raw_description = response.css(css).get()
         return raw_description.strip()
 
     def product_currency(self, response):
-        selector = '.prices [itemprop="priceCurrency"]::attr(content)'
-        return response.css(selector).get()
+        css = '.prices [itemprop="priceCurrency"]::attr(content)'
+        return response.css(css).get()
 
     def product_price(self, response):
-        selector = '.prices .value::attr(content)'
-        return response.css(selector).get()
+        css = '.prices .value::attr(content)'
+        return response.css(css).get()
 
     def product_previous_price(self, response):
-        selector = '.prices .strike-through span::attr(content)'
-        return response.css(selector).get()
+        css = '.prices .strike-through span::attr(content)'
+        return response.css(css).get()
 
     def product_sku_requests(self, response, item):
         requests = []
-        selector = '.color-value:not(.selected)::attr(data-attr-value)'
-        product_sku_variants = response.css(selector).getall()
+        css = '.color-value:not(.selected)::attr(data-attr-value)'
+        product_sku_variants = response.css(css).getall()
+        product_id = self.product_id(response)
 
         for color_variant in product_sku_variants:
-            url = re.sub(r'[A-Z]{3,}', color_variant, response.url)
+            url = response.urljoin(f'{product_id}{color_variant}.html')
             requests.append(
                 Request(url=url, callback=self.add_product_skus, meta={'item': item})
             )
         return requests
+
+    def product_id(self, response):
+        raw_data = response.css('[type="application/ld+json"]::text').get()
+        raw_data = json.loads(raw_data)
+        return raw_data.get('itemReviewed').get('@id')
 
     def add_product_skus(self, response):
         item = response.meta['item']
@@ -99,12 +101,13 @@ class ProductParser(Spider):
 
     def product_sku(self, response):
         skus = []
-        sku_data = self.load_sku_data(response)
+        sku_data = self.raw_product(response)
         product_sizes = self.product_sizes(response)
 
         for product_size in product_sizes:
             sku = {}
             sku['colour'] = sku_data.get('displayValue'),
+            sku['price'] = self.product_price(response)
             sku['previous_prices'] = [self.product_previous_price(response)],
             sku['size'] = product_size,
             sku['sku_id'] = self.product_retailer_sku(response)
@@ -120,16 +123,16 @@ class ProductParser(Spider):
             item.pop('meta')
             yield item
 
-    def load_sku_data(self, response):
+    def raw_product(self, response):
         raw_data = response.css('.render-product-selected::attr(data-json)').get()
         return json.loads(raw_data)
 
     def product_sizes(self, response):
-        selector = '.select-size option:not([disabled]):nth-child(n+2)::text'
-        raw_sizes = response.css(selector).getall()
-        return self.remove_extra_spaces(raw_sizes)
+        css = '.select-size option:not([disabled])::text'
+        raw_sizes = response.css(css).getall()[1:]
+        return self.clean(raw_sizes)
 
-    def remove_extra_spaces(self, raw_text):
+    def clean(self, raw_text):
         clean_text = []
         for text_item in raw_text:
             clean_item = text_item.strip()
@@ -157,15 +160,15 @@ class UggCrawler(CrawlSpider):
     )
 
     def start_requests(self):
-        yield from [Request(url, cookies=self.cookies) for url in self.start_urls]
+        yield Request(self.start_urls[0], cookies=self.cookies)
 
     def parse_listing(self, response):
         product_requests = response.css('.card-img a::attr(href)').getall()
         meta = {'trail': [response.url]}
-        yield from [Request(url=urljoin(response.url, url), cookies=self.cookies, callback=self.product_parser.parse,
+        yield from [Request(url=response.urljoin(url), cookies=self.cookies, callback=self.product_parser.parse,
                             meta=meta) for url in product_requests]
 
         next_page_url = response.css('.show-more button::attr(data-url)').get()
         if not next_page_url:
             return
-        yield Request(url=urljoin(response.url, next_page_url), cookies=self.cookies, callback=self.parse_listing)
+        yield Request(url=response.urljoin(next_page_url), cookies=self.cookies, callback=self.parse_listing)
