@@ -69,14 +69,13 @@ class TheFragranceShopSpider(BaseParseSpider):
             'previous_prices': [self.product_price(raw_data.get('listPrice'))],
             'currency': self.product_currency(response),
             'size': size
-
         }
 
         if isinstance(product_variants, list) and product_variants:
             skus = {}
             for varient in product_variants:
                 sku = common_sku.copy()
-                color = self.product_color(varient.get('variantAttributes'))
+                color = self.product_color(varient)
                 if color:
                     sku['color'] = color
 
@@ -100,10 +99,14 @@ class TheFragranceShopSpider(BaseParseSpider):
         return raw_data['offers']['priceCurrency']
 
     def product_color(self, raw_data):
-        for raw_attr in raw_data:
+        raw_attributes = raw_data.get('variantAttributes')
+        for raw_attr in raw_attributes:
             if raw_attr.get('fieldName') == 'Colour':
                 raw_color = raw_attr.get('fieldLabel')
-                return raw_color.split(' - ')[1]
+                color = self.detect_colour(raw_color, multiple=True) or raw_color
+                if not color:
+                    color = self.detect_colour(raw_data.get('slug'), True)
+                return color
 
     def sku_size(self, raw_data):
         for raw_attr in raw_data:
