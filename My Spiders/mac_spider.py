@@ -6,10 +6,24 @@ from ..items import Product
 from ..utils import map_gender, format_price
 
 
-class MacParseSpider():
+class Mixin:
+    retailer = 'mac'
+    csrf_token = ''
+
+
+class MixinAT(Mixin):
+    retailer = Mixin.retailer + '-at'
+
+    allowed_domains = ['mac-jeans.com']
+    start_urls = ['https://mac-jeans.com/at-de/csrftoken']
+    retailer_url = 'https://mac-jeans.com/at-de'
+
     default_brand = 'Mac'
     one_size = 'One Size'
     one_sizes = ['OS']
+
+
+class MacParseSpider(MixinAT):
     
     def parse_product(self, response):
         product = Product()
@@ -25,10 +39,7 @@ class MacParseSpider():
         product['skus'] = {}
         product['image_urls'] = self.get_image_urls(response)
         product['trail'] = add_trail(response)
-        product['meta'] = {
-            'requests': self.color_requests(response),
-            'csrf_token': response.meta['csrf_token']
-        }
+        product['meta'] = {'requests': self.color_requests(response)}
 
         return self.request_or_product(product)
 
@@ -36,7 +47,7 @@ class MacParseSpider():
         product = response.meta['product']
 
         if not response.meta.get('size_request'):
-            product['meta']['requests'] += self.size_requests(response, product['meta']['csrf_token'])
+            product['meta']['requests'] += self.size_requests(response)
 
         product['skus'].update(self.get_skus(response))
         return self.request_or_product(product)
@@ -85,6 +96,7 @@ class MacParseSpider():
         sku = {'colour': colour} if colour else {}
         sku.update(self.get_price(response))
         sku['size'] = self.one_size if size.strip() in self.one_sizes else size.strip()
+        sku['length'] = len
         sku['out_of_stock'] = bool(response.css('#notifyHideBasket'))
 
         skus[f"{sku['colour']}_{sku['size']}_{len}" if colour else f"{sku['size']}_{len}"] = sku
@@ -103,7 +115,7 @@ class MacParseSpider():
         color_urls = response.css('.color-images--article-switcher a::attr(href)').getall()
         return [response.follow(url, callback=self.parse_skus, dont_filter=True) for url in color_urls]
 
-    def size_requests(self, response, csrf_token):
+    def size_requests(self, response):
         size_requests = []
         size_ids = response.css('div:not(.is--disabled)>[name="group[1]"]::attr(value)').getall()
         length_ids = response.css('div:not(.is--disabled)>[name="group[2]"]::attr(value)').getall()
@@ -113,7 +125,7 @@ class MacParseSpider():
                 formdata = {
                     "group[1]": size_id,
                     "group[2]": length_id,
-                    "__csrf_token": csrf_token
+                    "__csrf_token": self.csrf_token
                 }
 
                 size_requests.append(FormRequest(url=response.url, formdata=formdata, callback=self.parse_skus,
@@ -125,7 +137,7 @@ class MacParseSpider():
         if product['meta']['requests']:
             request = product['meta']['requests'].pop()
             request.meta['product'] = product
-            request.cookies = {'__csrf_token-3': product['meta']['csrf_token']}
+            request.cookies = {'__csrf_token-3': self.csrf_token}
             return request
         else:
             del product['meta']
@@ -139,43 +151,48 @@ def add_trail(response):
 
 
 class MacCrawlSpider(Spider):
-    name = 'mac_spider'
-    allowed_domains = ['mac-jeans.com']
-    start_urls = ['https://mac-jeans.com/at-de/csrftoken']
-    retailer_url = 'https://mac-jeans.com/at-de'
-
-    def parse(self, response):
-        csrf_token = response.headers['X-Csrf-Token'].decode('utf-8')
-        return response.follow(self.retailer_url, meta=self.add_meta(response, csrf_token),
-                               callback=self.parse_category)
 
     product_parser = MacParseSpider()
-  
+
+    def parse(self, response):
+        Mixin.csrf_token = response.headers['X-Csrf-Token'].decode('utf-8')
+        return response.follow(self.retailer_url, callback=self.parse_category,
+                               meta=add_trail(response))
+
     def parse_category(self, response):
         urls = response.css('.navigation--link:contains("men")::attr(href)').getall()
-        return [response.follow(url, callback=self.parse_subcategory, meta=self.add_meta(response))
+        trail = add_trail(response)
+        return [response.follow(url, callback=self.parse_subcategory, meta={'trail': trail})
                 for url in urls]
 
     def parse_subcategory(self, response):
         category_urls = response.css('div.sidebar--categories-navigation a::attr(href)').getall()[:-2]
-        return [response.follow(url, callback=self.parse_pagination, meta=self.add_meta(response))
+        trail = add_trail(response)
+        return [response.follow(url, callback=self.parse_pagination, meta={'trail': trail})
                 for url in category_urls]
 
     def parse_pagination(self, response):
         total_pages = response.css('.paging--display strong::text').get()
+        trail = add_trail(response)
         if total_pages:
             return [response.follow(f'{response.url}?p={p}', callback=self.parse_listings,
-                    meta=self.add_meta(response)) for p in range(1, int(total_pages)+1)]
+                                    meta={'trail': trail}) for p in range(1, int(total_pages)+1)]
 
         return response.follow(response.url, callback=self.parse_listings)
 
     def parse_listings(self, response):
         product_urls = response.css('.product--info a::attr(href)').getall()
-        return [response.follow(url, callback=self.product_parser.parse_product,
-                meta=self.add_meta(response))for url in product_urls]
+        trail = add_trail(response)
+        return [response.follow(url, callback=self.parse_item,
+                                meta={'trail': trail}) for url in product_urls]
 
-    def add_meta(self, response, csrf_token=None):
-        return {
-            'csrf_token': csrf_token or response.meta.get('csrf_token'),
-            'trail': add_trail(response)
-        }
+    def parse_item(self, response):
+        return self.product_parser.parse_product(response)
+
+
+class MacATcrawlSpider(MacCrawlSpider, MixinAT):
+    name = MixinAT.retailer + '-crawl'
+
+
+class MacATparseSpider(MacParseSpider, MixinAT):
+    name = MixinAT.retailer + '-parse'
