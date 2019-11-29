@@ -1,7 +1,6 @@
 import json
 
 from scrapy.spiders import Rule, Request
-from scrapy.selector import Selector
 from scrapy.linkextractors import LinkExtractor
 
 from .base import BaseParseSpider, BaseCrawlSpider, clean, soupify, Gender
@@ -33,11 +32,11 @@ class MixinFR(Mixin):
     api_url = 'https://www.agnesb.eu/ajax.V1.php/fr_FR/Rbs/Catalog/Product/'
 
     merch_info_map = [
-        ('edition limitée', 'Edition limitée'),
-        ('édition spéciale', 'Édition spéciale'),
-        ('edición limitada', 'Edición Limitada'),
-        ('edición especial', 'Edición especial'),
-        ('edizione speciale', 'Edizione speciale')
+        ('edition limitée', 'Limited Edition'),
+        ('édition spéciale', 'Special Edition'),
+        ('edición limitada', 'Limited Edition'),
+        ('edición especial', 'Special Edition'),
+        ('edizione speciale', 'Special Edition')
     ]
 
 
@@ -82,7 +81,7 @@ class AgnesbParseSpider(BaseParseSpider):
 
     def product_description(self, raw_product):
         raw_description = raw_product['typology']['attributes']['product_description']['value']
-        return clean(Selector(text=raw_description).css('p::text'))
+        return self.text_from_html(raw_description)
 
     def product_gender(self, garment):
         soup = soupify([garment['url']] + garment['description'] + garment['category'])
@@ -119,7 +118,7 @@ class AgnesbParseSpider(BaseParseSpider):
         return skus
 
     def merch_info(self, garment):
-        soup = soupify(garment['description'])
+        soup = soupify(garment['description']).lower()
         return [m for s, m in self.merch_info_map if s.lower() in soup]
 
 
@@ -158,20 +157,17 @@ class AgnesbCrawlSpider(BaseCrawlSpider):
     def parse_pagination(self, response):
         css = '[data-name="Rbs_Catalog_ProductList"] > script::text'
         config = json.loads(clean(response.css(css).re_first(r'\'] = ({.*);')))
-        total_items = config['pagination']['count']
         page_size = config['pagination']['limit']
 
-        sectionid_css = 'script:contains("sectionId")::text'
-        raw_sectionid = json.loads(clean(response.css(sectionid_css).re_first(r'__change = ({.*);')))
         payload = self.payload.copy()
-
-        payload['sectionId'] = raw_sectionid['navigationContext']['sectionId']
+        sectionid_css = 'script:contains("sectionId")::text'
+        payload['sectionId'] = response.css(sectionid_css).re_first(r'"sectionId":(\w*),"')
         payload['data']['webStoreId'] = config['context']['data']['webStoreId']
         payload['data']['listId'] = config['context']['data']['listId']
         payload['pagination']['limit'] = page_size
         trail = self.add_trail(response)
 
-        for offset in range(0, total_items, page_size):
+        for offset in range(0, config['pagination']['count'], page_size):
             payload['pagination']['offset'] += offset
 
             yield Request(self.api_url, method='POST', body=json.dumps(payload), meta={'trail': trail},
