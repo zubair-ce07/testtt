@@ -72,6 +72,6 @@ urlpatterns = [
     path('accounts/signup/publisher/',
          views.PubliserSignup.as_view(),
          name='publisher_signup'),
-    path('login', obtain_auth_token, name='get_user_auth_token'),
+    path('login', views.LogIn.as_view(), name='get_user_auth_token'),
     path('logout/', views.Logout.as_view(), name="log_out"),
 ]

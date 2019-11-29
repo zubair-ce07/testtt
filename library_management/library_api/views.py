@@ -1,6 +1,8 @@
 from django.shortcuts import get_object_or_404
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import filters, generics, status
 from rest_framework.authtoken.models import Token
+from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -47,13 +49,44 @@ class Logout(APIView):
         request.user.auth_token.delete()
         return Response(status=status.HTTP_200_OK)
 
+
+class LogIn(ObtainAuthToken):
+    """Custom login view with extra userinfo"""
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data,
+                                           context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        token, _created = Token.objects.get_or_create(user=user)
+
+        user_data = {
+            'token': token.key,
+            "user_id": user.id,
+            "username": user.username,
+            "role": 'admin'
+        }
+
+        author = Author.objects.filter(pk=user.id).first()
+        if author:
+            user_data['name'] = author.get_full_name()
+            user_data['role'] = 'author'
+        else:
+            publisher = Publisher.objects.filter(pk=user.id).first()
+            if publisher:
+                user_data['role'] = 'publisher'
+                user_data['name'] = publisher.company_name
+
+        return Response(user_data)
+
+
 # Author Views
 class AuthorList(generics.ListAPIView):
     """List all authors."""
     queryset = Author.objects.all()
     serializer_class = AuthorSerializer
     filter_backends = [filters.SearchFilter]
-    search_fields = ['first_name',]
+    search_fields = ['first_name', ]
 
 
 class AuthorDataList(generics.ListAPIView):
@@ -92,7 +125,6 @@ class AuthorBooksList(generics.ListAPIView):
         return Author.objects.get(id=self.kwargs['pk']).books.all()
 
 
-
 # Book Views
 class BookList(generics.ListAPIView):
     """List all boooks."""
@@ -119,9 +151,9 @@ class BookDestroy(generics.DestroyAPIView):
 
 
 class BookUpdate(APIView):
-    # import pdb; pdb.set_trace()
-    permission_classes = [IsAdminUser, IsAuthenticated]
     """Updates a Book instance."""
+    permission_classes = [IsAdminUser, IsAuthenticated]
+
     def put(self, request, pk, format=None):
         book = get_object_or_404(Book, pk=pk)
         serializer = BookSerializer(book, data=request.data, partial=True)
@@ -132,8 +164,9 @@ class BookUpdate(APIView):
 
 
 class BookCreate(APIView):
-    permission_classes = [IsAdminUser, IsAuthenticated]
     """ Create a new book."""
+    permission_classes = [IsAdminUser, IsAuthenticated]
+
     def post(self, request, format=None):
         serializer = BookSerializer(data=request.data, partial=True)
         if serializer.is_valid(raise_exception=True):
@@ -158,7 +191,7 @@ class CategoryDataList(generics.ListAPIView):
 
 class CategoryDetail(generics.RetrieveAPIView):
     """Get a specific category"""
-    permission_classes = [IsAdminUser, IsAuthenticated]
+    permission_classes = [IsAuthenticated, ]
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
@@ -182,7 +215,7 @@ class CategoryUpdate(generics.UpdateAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     filter_backends = [filters.SearchFilter]
-    search_fields = ['name',]
+    search_fields = ['name', ]
 
 
 # Publisher Views
@@ -191,7 +224,7 @@ class PublisherList(generics.ListAPIView):
     queryset = Publisher.objects.all()
     serializer_class = PublisherSerializer
     filter_backends = [filters.SearchFilter]
-    search_fields = ['company_name',]
+    search_fields = ['company_name', ]
 
 
 class PublisherDetail(generics.RetrieveAPIView):
