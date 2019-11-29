@@ -17,8 +17,9 @@ class SignInForm extends Component {
     }
   }
   handleSubmit = (values, { setSubmitting }) => {
-    console.log("props: ", this.props)
-    this.props.onSignup(values)
+    this.props.onSignup(values).then(() => {
+      setSubmitting(false)
+    })
   }
 
   validate = values => {

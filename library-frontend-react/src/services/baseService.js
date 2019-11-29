@@ -1,14 +1,10 @@
+import { AUTHORIZATION } from "../contants/global"
 import axios from "axios"
-import history from "../history"
-import urls from "../urls.js"
 import { baseApiUrl } from "../settings"
-
-import { getCookieAuthToken, removeCookieAuthToken } from "../util/utils"
-
-// import Notification from ".";
+import { getAuthTokenCookie } from "../util/utils"
+import history from "../history"
 import responseCodes from "../contants/responseCodes"
-
-let headers = { "Content-Type": "application/json" }
+import urls from "../urls.js"
 
 const requestConfig = {
   baseURL: baseApiUrl,
@@ -20,20 +16,18 @@ const requestConfig = {
 const baseService = axios.create(requestConfig)
 
 baseService.addAuthTokenToHeader = () => {
-  const token = getCookieAuthToken()
-  if (token) baseService.defaults.headers["Authorization"] = token
+  const token = getAuthTokenCookie()
+  if (token) baseService.defaults.headers[AUTHORIZATION] = `Token ${token}`
 }
 
 baseService.removeAuthToken = () => {
-  removeCookieAuthToken()
-  baseService.defaults.headers["Authorization"] = ""
+  baseService.defaults.headers[AUTHORIZATION] = ""
   history.push(urls.signIn)
 }
 
 baseService.interceptors.response.use(config => {
   if (config.data.response_code === responseCodes.UNAUTHORIZED) {
     baseService.removeAuthToken()
-    // Notification.error(config.data.error);
     return Promise.reject(config)
   } else {
     return config
@@ -42,8 +36,8 @@ baseService.interceptors.response.use(config => {
 
 baseService.interceptors.request.use(
   config => {
-    const token = getCookieAuthToken()
-    if (token) config.headers["Authorization"] = token
+    const token = getAuthTokenCookie()
+    if (token) config.headers[AUTHORIZATION] = `Token ${token}`
     baseService.addAuthTokenToHeader()
     return config
   },

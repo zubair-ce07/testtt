@@ -1,27 +1,27 @@
-import {
-  SIGNUP_AUTHOR_STARTED,
-  SIGNUP_AUTHOR_SUCCESS,
-  SIGNUP_AUTHOR_FAILURE
-} from "../contants/action_types/auth_constants"
+import constants from "../contants/action_types/auth_constants"
+import { getUserCookie } from "../util/utils"
 
 const initialState = {
-  userData: {},
   loading: false,
+  currentUser: getUserCookie(),
   error: null
 }
 
 const authReducer = (state = initialState, action) => {
   switch (action.type) {
-    case SIGNUP_AUTHOR_STARTED:
-      return { ...state, isFetching: true }
-    case SIGNUP_AUTHOR_SUCCESS:
+    case constants.SIGNUP_AUTHOR_STARTED:
+      return { ...state, loading: true }
+    case constants.LOGIN_SUCCESS:
+      return { ...state, loading: false, currentUser: getUserCookie() }
+    case constants.LOGOUT_SUCCESS:
+      return { ...state, loading: false, currentUser: {} }
+    case constants.SIGNUP_AUTHOR_SUCCESS:
       return {
         ...state,
-        userData: action.payload,
         loading: false,
         error: false
       }
-    case SIGNUP_AUTHOR_FAILURE:
+    case constants.SIGNUP_AUTHOR_FAILURE:
       return { ...state, error: action.payload, loading: false }
     default:
       return state

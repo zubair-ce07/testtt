@@ -1,0 +1,130 @@
+#book-detail > li {
+  border-color: black;
+  border-bottom: none;
+  font-weight: 700;
+}
+
+#book-detail > li > span {
+  font-weight: 400;
+}
+
+#book-form,
+#signup-form,
+#signin-form {
+  width: 500px;
+}
+
+#book-detail-wrapper {
+  max-width: 350px;
+}
+
+#lib-nav li.username {
+  font-weight: 800;
+  font-size: 18px;
+  color: white;
+}
+
+#lib-nav li.nav-item {
+  margin-left: 10px;
+}
+
+#lib-nav li.nav-item a {
+  color: #00ff66;
+}
+
+#lib-nav li.nav-item a.logout {
+  color: brown;
+}
+
+#lib-nav li.nav-item a.logout:hover {
+  color: #c32525;
+  cursor: pointer;
+}
+#lib-nav li.nav-item a:hover {
+  color: #21bf52;
+  text-decoration: none;
+}
+
+#page-not-found {
+  background: url(../static/images/background.jpg) no-repeat;
+  background-size: cover;
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+  -ms-background-size: cover;
+  text-align: center;
+  background-position: center;
+  background-attachment: fixed;
+  overflow: hidden;
+}
+
+#page-not-found > .error-main {
+  background: #fff;
+  width: 53%;
+  margin: 3em auto;
+  -webkit-box-shadow: -2px 11px 32px -13px rgba(0, 0, 0, 0.45);
+  -moz-box-shadow: -2px 11px 32px -13px rgba(0, 0, 0, 0.45);
+  box-shadow: 20px 25px 41px -9px rgba(0, 0, 0, 0.45);
+}
+
+#page-not-found > .header h1 {
+  font-size: 3em;
+  text-transform: uppercase;
+  letter-spacing: 8px;
+  color: #fff;
+  font-weight: 400;
+  margin-top: 1.1em;
+}
+
+#page-not-found > .error-main {
+  padding: 30px;
+}
+#page-not-found > .error-info h2 {
+  font-size: 12em;
+  color: black;
+  line-height: 1;
+  font-weight: 300;
+  letter-spacing: 20px;
+}
+#page-not-found > img {
+  padding-right: 0.1em;
+}
+#page-not-found > .error-info h3 {
+  font-size: 2.5em;
+  text-transform: uppercase;
+  color: #000;
+  font-weight: 500;
+  letter-spacing: 12px;
+}
+#page-not-found > .error-info p {
+  font-size: 1em;
+  color: rgba(0, 0, 0, 0.71);
+  text-transform: capitalize;
+  letter-spacing: 1px;
+  margin-bottom: 3em;
+  margin-top: 2em;
+}
+#page-not-found > .error-info a {
+  font-size: 1em;
+  text-transform: uppercase;
+  color: white;
+  width: 18%;
+  padding: 12px 0px;
+  letter-spacing: 2px;
+  display: inline-block;
+  background: #962258;
+  font-family: "Ropa Sans", sans-serif;
+  transition: 0.5s all;
+  -webkit-transition: 0.5s all;
+  -o-transition: 0.5s all;
+  -moz-transition: 0.5s all;
+  -ms-transition: 0.5s all;
+}
+#page-not-found > .error-info a:hover {
+  background: #3859a0;
+  transition: 0.5s all;
+  -webkit-transition: 0.5s all;
+  -o-transition: 0.5s all;
+  -moz-transition: 0.5s all;
+  -ms-transition: 0.5s all;
+}
