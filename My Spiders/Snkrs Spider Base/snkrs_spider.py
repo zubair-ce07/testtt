@@ -14,26 +14,29 @@ class MixinUS(Mixin):
     market = 'US'
     start_urls = ['https://www.snkrs.com/en/']
 
+    merch_info_map = [
+        ('special edition', 'Special Edition'),
+        ('limited edition', 'Limited Edition'),
+    ]
+
 
 class MixinFR(Mixin):
     retailer = Mixin.retailer + '-fr'
     market = 'FR'
     start_urls = ['https://www.snkrs.com/fr/']
 
+    merch_info_map = [
+        ('edition limitée', 'Limited Edition'),
+        ('édition spéciale', 'Special Edition'),
+        ('edición limitada', 'Limited Edition'),
+        ('edición especial', 'Special Edition'),
+        ('edizione speciale', 'Special Edition')
+    ]
+
 
 class SnkrsParseSpider(BaseParseSpider):
     description_css = '#short_description_content p::text, #short_description_content p span::text'
     brand_css = '[itemprop="brand"]::attr(content)'
-
-    merch_map = [
-        ('special edition', 'Special Edition'),
-        ('limited edition', 'Limited Edition'),
-        ('edition limitée', 'Edition limitée'),
-        ('édition spéciale', 'Édition spéciale'),
-        ('edición limitada', 'Edición Limitada'),
-        ('edición especial', 'Edición especial'),
-        ('edizione speciale', 'Edizione speciale')
-    ]
 
     def parse(self, response):
         garment = self.new_unique_garment(self.product_id(response))
@@ -71,20 +74,21 @@ class SnkrsParseSpider(BaseParseSpider):
         return clean(response.css('.breadcrumb a ::text'))[1:]
 
     def merch_info(self, garment):
-        soup = soupify(garment['description'])
-        return [merch for merch_str, merch in self.merch_map if merch_str.lower() in soup]
+        soup = soupify(garment['description']).lower()
+        return [merch for merch_str, merch in self.merch_info_map if merch_str.lower() in soup]
 
     def skus(self, response):
         skus = {}
 
-        current_price = clean(response.css('[itemprop="price"]::attr(content)'))[0]
-        previous_price = response.css('#old_price_display .price::text').re_first(r"\d+")
-        currency = clean(response.css('[itemprop="priceCurrency"]::attr(content)'))[0]
+        money_strs = [
+            response.css('#old_price_display .price::text').re_first(r"\d+"),
+            clean(response.css('[itemprop="price"]::attr(content)'))[0],
+            clean(response.css('[itemprop="priceCurrency"]::attr(content)'))[0]
+        ]
 
         colour = self.detect_colour(self.raw_name(response), multiple=True)
         common_sku = {'colour': colour} if colour else {}
-        common_sku.update(self.product_pricing_common(
-            None, money_strs=[previous_price, current_price, currency]))
+        common_sku.update(self.product_pricing_common(None, money_strs=money_strs))
 
         size_css = 'span.size_EU::text, li:not(.hidden) span.units_container::text'
         sizes = clean(response.css(size_css)) or [self.one_size]
