@@ -75,7 +75,7 @@ class SnkrsParseSpider(BaseParseSpider):
 
     def merch_info(self, garment):
         soup = soupify(garment['description']).lower()
-        return [merch for merch_str, merch in self.merch_info_map if merch_str.lower() in soup]
+        return [m for s, m in self.merch_info_map if s in soup]
 
     def skus(self, response):
         skus = {}
