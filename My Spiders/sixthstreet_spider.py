@@ -10,7 +10,7 @@ from ..utils import map_gender, format_price
 
 
 class ParseSpider():
-    ONE_SIZE = 'oneSize'
+    one_size = 'One Size'
 
     def parse_product(self, response):
         product = Product()
@@ -59,47 +59,48 @@ class ParseSpider():
         return response.css('.product_name::text').get()
 
     def get_image_urls(self, response):
-        raw_image = response.css('script').re_first(r'"images":(.*),"index"')
-        parsed_image = json.loads(raw_image)
-        product_id = list(parsed_image.keys())[0]
-
-        return [product['img'] for product in parsed_image[product_id]]
+        css = 'script:contains("Magento_Catalog/js/product")'
+        raw_images = response.css(css).re_first(r'"images":(.*\]),"url"')
+        return [i['url'] for i in json.loads(raw_images)]
 
     def get_availability(self, response):
         availability = response.css('[itemprop="availability"]::attr(value)').get()
         return availability != 'In Stock'
 
-    def pricing_common(self, response, parsed_price, sku_id):
-        raw_sizes = response.css('script').re_first(r"sizeOptionArr = JSON.parse\('(.*)'\);")
-        attribute_id = list(parsed_price['attributes'].keys())[0]
-        sizes = parsed_price['attributes'][attribute_id]['options']
-
-        pricing_common = format_price(
-            response.css('[itemprop="priceCurrency"]::attr(content)').get(),
-            parsed_price['optionPrices'][sku_id]['finalPrice']['amount'],
-            parsed_price['optionPrices'][sku_id]['oldPrice']['amount']
+    def get_price(self, raw_sku, sku_id):
+        return format_price(
+            raw_sku['currencyFormat'].split()[0],
+            raw_sku['optionPrices'][sku_id]['finalPrice']['amount'],
+            raw_sku['optionPrices'][sku_id]['oldPrice']['amount']
         )
 
-        pricing_common['size'] = [s['label'] for s in sizes if s['products'][0] == sku_id][0] \
-            if raw_sizes else self.ONE_SIZE
+    def get_sizes(self, raw_sku):
+        sizes_map = {}
+        attribute_id = list(raw_sku['attributes'].keys())[0]
+        sizes = raw_sku['attributes'][attribute_id]['options']
 
-        return pricing_common
+        for size in sizes:
+            sizes_map[size['products'][0]] = size['label']
+
+        return sizes_map
 
     def get_skus(self, response):
         skus = {}
         colour = response.css(':contains("Color :") + span::text').get()
         common_sku = {'colour': colour} if colour else {}
 
-        raw_price = response.css('script').re_first(r'var spConfig = ({.*);')
-        parsed_price = json.loads(raw_price)
+        sku_css = 'script:contains("optionPrices")'
+        raw_sku = json.loads(response.css(sku_css).re_first(r'var spConfig = ({.*);'))
 
-        sku_ids = list(parsed_price['optionPrices'].keys())
+        css = 'script:contains("sizeOptionArr")'
+        raw_sizes = response.css(css).re_first(r"sizeOptionArr = JSON.parse\('(.*)'\);")
+        sizes = self.get_sizes(raw_sku) if raw_sizes else {}
 
-        for sku_id in sku_ids:
+        for sku_id in list(raw_sku['optionPrices'].keys()):
             sku = common_sku.copy()
-            sku.update(self.pricing_common(response, parsed_price, sku_id))
-
-            skus[f"{sku['colour']}_{sku['size']}" if sku.get('colour') else sku['size']] = sku
+            sku.update(self.get_price(raw_sku, sku_id))
+            sku['size'] = sizes.get(sku_id) or self.one_size
+            skus[f"{sku['colour']}_{sku['size']}" if colour else sku['size']] = sku
 
         return skus
 
@@ -129,10 +130,10 @@ class CrawlSpider(CrawlSpider):
 
     product_parser = ParseSpider()
 
-    url_t = 'https://{application_id}-3.algolianet.com/1/indexes/*/' \
-            'queries?x-algolia-agent=Algolia%20for%20vanilla%20JavaScript%20(lite)%203.27.0%3Binstantsearch.js' \
-            '%202.10.2%3BMagento2%20integration%20(1.10.0)%3BJS%20Helper%202.26.0&' \
-            'x-algolia-application-id={app_id}&x-algolia-api-key={api_key}'
+    api_url_t = 'https://{application_id}-3.algolianet.com/1/indexes/*/' \
+                'queries?x-algolia-agent=Algolia%20for%20vanilla%20JavaScript%20(lite)%203.27.0%3Binstantsearch.js' \
+                '%202.10.2%3BMagento2%20integration%20(1.10.0)%3BJS%20Helper%202.26.0&' \
+                'x-algolia-application-id={app_id}&x-algolia-api-key={api_key}'
 
     params_t = "query={query}&hitsPerPage=60&maxValuesPerFacet=60"
     formdata = {
@@ -151,34 +152,31 @@ class CrawlSpider(CrawlSpider):
     )
 
     def parse_listings(self, response):
-        raw_formdata = response.css('script').re_first('window\.algoliaConfig = (.*);</script>')
+        raw_formdata = response.css('script:contains("apiKey")').re_first('window\.algoliaConfig = (.*);</script>')
         raw_category = response.css('body::attr(class)').re_first('categorypath-(.*) category').split('-')
         query = '%20'.join([c.capitalize() for c in raw_category])
 
         payload = json.loads(raw_formdata)
         application_id = payload['applicationId']
         formdata = self.formdata.copy()
-        params = self.params_t
 
-        url = self.url_t.format(
+        category_url = self.api_url_t.format(
             application_id=application_id.lower(),
             app_id=application_id,
             api_key=payload["apiKey"]
         )
 
-        formdata['requests'][0]['params'] = add_or_replace_parameter(
-            params.format(query=query), 'page', 0)
+        formdata['requests'][0]['params'] = add_or_replace_parameter(self.params_t.format(query=query), 'page', 0)
 
-        yield Request(url, method="POST", body=json.dumps(formdata),
+        yield Request(category_url, method="POST", body=json.dumps(formdata),
                       meta={'query': query}, callback=self.parse_pagination)
 
     def parse_pagination(self, response):
         formdata = self.formdata.copy()
-        params = self.params_t
 
-        for page_number in range(1, int(json.loads(response.text)['results'][0]['nbPages'])+1):
+        for page_number in range(1, int(json.loads(response.text)['results'][0]['nbPages']) + 1):
             formdata['requests'][0]['params'] = add_or_replace_parameter(
-                params.format(query=response.meta['query']), 'page', page_number)
+                self.params_t.format(query=response.meta['query']), 'page', page_number)
 
             yield Request(response.url, method="POST", body=json.dumps(formdata), callback=self.parse_products)
 
