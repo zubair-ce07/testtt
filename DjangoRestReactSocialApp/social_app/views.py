@@ -68,8 +68,10 @@ class CommentView(APIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def get(self, request):
-        posts = Comment.objects.all()
-        serializer = CommentSerializer(posts, many=True)
+        comments = Post.objects.filter(
+            author=request.user,
+        )
+        serializer = CommentSerializer(comments, many=True)
         return Response(serializer.data)
 
     def post(self, request):
