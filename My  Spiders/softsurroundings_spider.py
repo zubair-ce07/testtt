@@ -1,17 +1,16 @@
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
-from string import Template
 
-from ..items import Product 
+from ..items import Product
 from ..utils import map_gender, format_price
 
 
 class ParseSpider():
-    color_css = Template('img[id="color_$color_id"] + div > span::text, #color .basesize::text')
+    one_size = "One Size"
 
-    def parse_product(self, response):                   
+    def parse_product(self, response):
         product = Product()
-        
+
         product['retailer_sku'] = self.get_retailer_sku(response)
         product['gender'] = self.get_gender(response)
         product['category'] = self.get_category(response)
@@ -21,142 +20,128 @@ class ParseSpider():
         product['description'] = self.get_description(response)
         product['care'] = self.get_care(response)
         product['skus'] = {}
-        product['image_urls'] = self.get_image_urls(response)    
+        product['image_urls'] = self.get_image_urls(response)
+        product['requests'] = self.skus_requests(response) or self.availability_requests(response)
 
-        requests = self.availability_requests(response) + self.skus_requests(response) 
-        
-        return self.request_or_product(product, requests)
+        return self.request_or_product(product)
 
-    def parse_skus(self, response):              
+    def parse_skus(self, response):
         product = response.meta['product']
-        requests = response.meta['requests']        
-
-        skus = self.get_skus(response)                   
+        skus = self.get_skus(response)
+        if not response.meta.get('stock_req'):
+            product['requests'] += self.availability_requests(response)
         product['skus'].update(skus)
 
-        return self.request_or_product(product, requests)
-
-    def parse_availability(self, response):        
-        product = response.meta['product']
-        requests = response.meta['requests']
-        
-        availability = response.css('.stockStatus .basesize::text').get()
-        sku_id = response.url.split('/')[-2]
-             
-        if sku_id in product['skus']:                        
-            product['skus'][sku_id]['out_of_stock'] = availability != 'In Stock.'
-            
-        return self.request_or_product(product, requests)
+        return self.request_or_product(product)
 
     def get_retailer_sku(self, response):
         return response.css('#item::text').get()
-               
-    def get_brand(self, response):        
+
+    def get_brand(self, response):
         return response.css('[property="og:site_name"]::attr(content)').get()
 
     def get_gender(self, response):
-        title_text = response.css('title::text').get()
-        size_categories = response.css('#sizecat a::text').getall()
-        description = self.get_description(response)
+        soup = response.css('#sizecat a::text, title::text').getall()
+        gender_soup = ' '.join(soup + self.get_description(response))
+        return map_gender(gender_soup)
 
-        raw_gender = f"{title_text} {' '.join(size_categories + description)}"
+    def get_care(self, response):
+        return response.css('#careAndContentInfo::text').getall()
 
-        return map_gender(raw_gender)
-
-    def get_care(self, response):                
-        return response.css('#careAndContentInfo::text').getall()    
-
-    def get_category(self, response):                
+    def get_category(self, response):
         return response.css('.pagingBreadCrumb a::text').getall()
 
     def get_description(self, response):
-        css = '[itemprop="description"] p::text, [itemprop="description"]::text'        
+        css = '[itemprop="description"] p::text, [itemprop="description"]::text'
         return response.css(css).getall()
 
     def get_url(self, response):
         return response.url
 
-    def get_name(self, response):        
+    def get_name(self, response):
         return response.css('[itemprop="name"]::text').get()
 
-    def get_image_urls(self, response):        
-        return response.css('#detailAltImgs > li a::attr(href)').getall()        
+    def get_image_urls(self, response):
+        return response.css('#detailAltImgs > li a::attr(href)').getall()
 
     def get_skus(self, response):
-        skus = {}               
-        currency = response.css('[itemprop="priceCurrency"]::attr(content)').get()
+        skus = {}
 
-        color_css = '.swatchlink .color::attr(data-value), #color + input::attr(value)'                
-        color_ids = [i for i in response.css(color_css).getall() if i]
+        colour = response.css(".dtlFormBulk #color b::text").get()
+        size = response.css(".dtlFormBulk #size b::text").get() or self.one_size
 
-        sizes = response.css('a.box.size::attr(id)').getall()                                
-        size_ids = [size.split('_')[1] for size in sizes]
-        for color_id in color_ids:
-            for size_id in size_ids:    
-                sku_attributes = {}
+        sku = {'colour': colour} if colour else {}
+        sku.update(self.get_price(response))
+        sku['size'] = size
+        sku['out_of_stock'] = response.css('.stockStatus b::text').get() != 'In Stock'
 
-                sku_attributes.update(self.get_price(response))                
-                sku_attributes['currency'] = currency
-                sku_attributes['colour'] = response.css(self.color_css.substitute(color_id=color_id)).get()
-                sku_attributes['size'] = response.css(f'a[id$="{size_id}"]::text, #size .basesize::text').get()               
+        skus[f'{colour}_{size}' if colour else size] = sku
 
-                skus[f'{color_id}{size_id}'] = sku_attributes
-                               
         return skus
-   
+
     def get_price(self, response):
         previous_price = response.css('.ctntPrice::text').re_first(r'Was \$(.*);')
-        current_price = response.css('[itemprop="price"]::text').get()       
+        current_price = response.css('[itemprop="price"]::text').get()
+        currency = response.css('[itemprop="priceCurrency"]::attr(content)').get()
 
-        return format_price(previous_price, current_price)
-        
-    def skus_requests(self, response):        
-        cat_ids = [i.split('_')[1] for i in response.css('#sizecat > a::attr(id)').getall()]                    
+        return format_price(currency, current_price, previous_price)
+
+    def skus_requests(self, response):
+        cat_ids = [i.split('_')[1] for i in response.css('#sizecat > a::attr(id)').getall()]
         return [response.follow(f'/p/{i.lower()}', callback=self.parse_skus, dont_filter=True) for i in cat_ids]
 
     def availability_requests(self, response):
         availability_requests = []
-
         product_id = self.get_retailer_sku(response)
-        
-        color_css = '.swatchlink .color::attr(data-value), #color + input::attr(value)'                
-        color_ids = [i for i in response.css(color_css).getall() if i]
 
-        size_ids = [size.split('_')[1] for size in response.css('a.box.size::attr(id)').getall()]        
+        color_css = '.swatchlink .color::attr(data-value), #color + input::attr(value)'
+        color_ids = [i for i in response.css(color_css).getall() if i] \
+            or response.css('[name^="specOne"]::attr(value)').getall()
+
+        size_ids = [size.split('_')[1] for size in response.css('a.box.size::attr(id)').getall()] \
+            or response.css('[name^="specTwo"]::attr(value)').getall()
         for color_id in color_ids:
             for size_id in size_ids:
+                availability_requests.append(response.follow(f'/p/{product_id.lower()}/{color_id}{size_id}',
+                                                             callback=self.parse_skus, meta={'stock_req': True}))
 
-                availability_requests.append(
-                    response.follow(f'/p/{product_id.lower()}/{color_id}{size_id}',
-                    callback=self.parse_availability))
+        return availability_requests
 
-        return availability_requests        
-         
-    def request_or_product(self, product, requests):           
-        if requests:            
-            request = requests.pop()
+    def request_or_product(self, product):
+        if product['requests']:
+            request = product['requests'].pop()
             request.meta['product'] = product
-            request.meta['requests'] = requests
+            return request
+        else:
+            del product['requests']
 
-            return request                                
-
-        return product   
+        return product
 
 
 class CrawlSpider(CrawlSpider):
-    name = 'softsurroundings_spider'    
-    allowed_domains = ['softsurroundings.com']    
+    name = 'softsurroundings_spider'
+    allowed_domains = ['softsurroundings.com']
     start_urls = ['https://www.softsurroundings.com/']
 
-    listings_css = 'ul#menubar'
-    product_css = 'div.product'        
+    custom_settings = {
+        'DOWNLOAD_DELAY': 2
+    }
+
+    listings_css = ['ul#menubar']
+    product_css = ['div.product']
+    deny_re = ['gift-card']
 
     softsurroundings_parser = ParseSpider()
 
     rules = (
-        Rule(LinkExtractor(restrict_css=listings_css)),
-        Rule(LinkExtractor(restrict_css=product_css), callback='parse_item')
+        Rule(LinkExtractor(restrict_css=listings_css), callback='parse_pagination'),
+        Rule(LinkExtractor(restrict_css=product_css, deny=deny_re), callback='parse_item')
     )
-    
-    def parse_item(self, response):        
-        return self.softsurroundings_parser.parse_product(response) 
+
+    def parse_pagination(self, response):
+        total_pages = response.css('.thumbscroll [name="page"]::attr(value)').getall()
+        category_url = f"{response.url}/page-{int(total_pages[-1])}" if total_pages else response.url
+        return response.follow(category_url, callback=self.parse)
+
+    def parse_item(self, response):
+        return self.softsurroundings_parser.parse_product(response)
