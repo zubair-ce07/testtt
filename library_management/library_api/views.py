@@ -98,7 +98,7 @@ class AuthorDataList(generics.ListAPIView):
 
 class AuthorDetail(generics.RetrieveAPIView):
     """Get a specific author"""
-    permission_classes = [IsAdminUser, IsAuthenticated]
+    permission_classes = [IsAuthenticated]
     queryset = Author.objects.all()
     serializer_class = AuthorSerializer
 
@@ -191,7 +191,6 @@ class CategoryDataList(generics.ListAPIView):
 
 class CategoryDetail(generics.RetrieveAPIView):
     """Get a specific category"""
-    permission_classes = [IsAuthenticated, ]
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
@@ -229,7 +228,6 @@ class PublisherList(generics.ListAPIView):
 
 class PublisherDetail(generics.RetrieveAPIView):
     """Get a specific publisher"""
-    permission_classes = [IsAdminUser, IsAuthenticated]
     queryset = Publisher.objects.all()
     serializer_class = PublisherSerializer
 

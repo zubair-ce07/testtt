@@ -82,7 +82,7 @@ class PublisherSerializer(serializers.ModelSerializer):
     class Meta:
         model = Publisher
         fields = [
-            'id', 'company_name', 'address', 'website', 'phone',
+            'id', 'company_name', 'email', 'address', 'website', 'phone',
         ]
 
 
