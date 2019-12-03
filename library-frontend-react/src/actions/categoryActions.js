@@ -1,5 +1,6 @@
 import categoryService from "../services/categoryService"
 import constants from "../contants/action_types/category_constants"
+import { onErrorAction } from "../util/utils"
 import responseCodes from "../contants/responseCodes"
 
 export const setCurrentPage = pageNo => {
@@ -23,10 +24,7 @@ export const getCategoriesList = searchQuery => {
         }
       })
       .catch(error => {
-        dispatch({
-          type: constants.FETCH_CATEGORIES_FAILURE,
-          payload: error.response.data
-        })
+        dispatch(onErrorAction(error, constants.FETCH_CATEGORIES_FAILURE))
       })
   }
 }
@@ -45,10 +43,7 @@ export const getCategoriesDataList = () => {
         }
       })
       .catch(error => {
-        dispatch({
-          type: constants.FETCH_CATEGORIES_DATA_FAILURE,
-          payload: error.response.data
-        })
+        dispatch(onErrorAction(error, constants.FETCH_CATEGORIES_DATA_FAILURE))
       })
   }
 }
@@ -67,10 +62,7 @@ export const getCategoryDetail = categoryId => {
         }
       })
       .catch(error => {
-        dispatch({
-          type: constants.FETCH_CATEGORY_FAILURE,
-          payload: error.response.data
-        })
+        dispatch(onErrorAction(error, constants.FETCH_CATEGORY_FAILURE))
       })
   }
 }

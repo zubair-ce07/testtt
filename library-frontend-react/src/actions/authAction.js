@@ -1,4 +1,4 @@
-import { removeUserCookie, setUserCookie } from "../util/utils"
+import { onErrorAction, removeUserCookie, setUserCookie } from "../util/utils"
 
 import { ROLE } from "../contants/global"
 import authActions from "../services/authService"
@@ -8,24 +8,12 @@ import history from "../history"
 import responseCodes from "../contants/responseCodes"
 import urls from "../urls"
 
-const onSignupSuccess = (dispatch, userData) => {
+const onSignupSuccess = (dispatch, userData, type) => {
   setUserCookie(userData)
   baseService.addAuthTokenToHeader()
-  dispatch({
-    type: constants.SIGNUP_AUTHOR_SUCCESS
-  })
+  dispatch({ type: type })
   history.push(urls.home)
 }
-
-const authorSignupFailure = error => ({
-  type: constants.SIGNUP_AUTHOR_FAILURE,
-  payload: error
-})
-
-const publisherSignupFailure = error => ({
-  type: constants.SIGNUP_PUBLISHER_FAILURE,
-  payload: error
-})
 
 // Sign in actions
 export const signIn = formData => {
@@ -37,9 +25,7 @@ export const signIn = formData => {
         if (response.status === responseCodes.OK) {
           setUserCookie(response.data)
           baseService.addAuthTokenToHeader()
-          dispatch({
-            type: constants.LOGIN_SUCCESS
-          })
+          dispatch({ type: constants.LOGIN_SUCCESS })
           history.push(urls.home)
         } else {
           dispatch({
@@ -49,11 +35,7 @@ export const signIn = formData => {
         }
       })
       .catch(error => {
-        console.error(error)
-        dispatch({
-          type: constants.LOGIN_FAILURE,
-          payload: error.response.data
-        })
+        dispatch(onErrorAction(error, constants.LOGIN_FAILURE))
       })
   }
 }
@@ -74,49 +56,53 @@ export const signOut = () => {
         }
       })
       .catch(error => {
-        console.error(error)
-        dispatch({
-          type: constants.LOGIN_FAILURE,
-          payload: error.response.data
-        })
+        dispatch(onErrorAction(error, constants.LOGOUT_FAILURE))
       })
   }
 }
 
 export const authorSignup = formData => {
   return dispatch => {
-    dispatch({ type: constants.SIGNUP_AUTHOR_STARTED })
+    dispatch({ type: constants.SIGNUP_STARTED })
     return authActions
       .signUpAuthor(formData)
       .then(response => {
         if (response.status === responseCodes.CREATED) {
-          onSignupSuccess(dispatch, { ...response.data, role: ROLE.AUTHOR })
+          onSignupSuccess(
+            dispatch,
+            { ...response.data, role: ROLE.AUTHOR },
+            constants.SIGNUP_SUCCESS
+          )
           history.push(urls.books)
         } else {
-          dispatch(authorSignupFailure(response.data))
+          dispatch(onErrorAction(response.data, constants.SIGNUP_FAILURE))
         }
       })
       .catch(error => {
-        dispatch(authorSignupFailure(error.response.data))
+        dispatch(onErrorAction(error, constants.SIGNUP_FAILURE))
       })
   }
 }
 
 export const publisherSignup = formData => {
   return dispatch => {
-    dispatch({ type: constants.SIGNUP_PUBLISHER_STARTED })
+    dispatch({ type: constants.SIGNUP_STARTED })
     return authActions
       .signUpPublisher(formData)
       .then(response => {
         if (response.status === responseCodes.CREATED) {
-          onSignupSuccess(dispatch, { ...response.data, role: ROLE.PUBLISHER })
+          onSignupSuccess(
+            dispatch,
+            { ...response.data, role: ROLE.PUBLISHER },
+            constants.SIGNUP_SUCCESS
+          )
           history.push(urls.books)
         } else {
-          dispatch(publisherSignupFailure(response.data))
+          dispatch(onErrorAction(response.data, constants.SIGNUP_FAILURE))
         }
       })
       .catch(error => {
-        dispatch(publisherSignupFailure(error))
+        dispatch(onErrorAction(error, constants.SIGNUP_FAILURE))
       })
   }
 }

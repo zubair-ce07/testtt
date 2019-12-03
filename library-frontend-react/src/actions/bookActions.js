@@ -1,6 +1,7 @@
 import bookService from "../services/bookService"
 import constants from "../contants/action_types/book_constants"
 import history from "../history"
+import { onErrorAction } from "../util/utils"
 import responseCodes from "../contants/responseCodes"
 import urls from "../urls"
 
@@ -31,10 +32,7 @@ export const getBooksList = pageNo => {
         }
       })
       .catch(error => {
-        dispatch({
-          type: constants.FETCH_BOOK_FAILURE,
-          payload: error
-        })
+        dispatch(onErrorAction(error, constants.FETCH_BOOKS_FAILURE))
       })
   }
 }
@@ -53,11 +51,10 @@ export const getBookDetail = bookId => {
         }
       })
       .catch(error => {
-        dispatch({
-          type: constants.FETCH_BOOK_FAILURE,
-          payload: error
-        })
-        if (error.response.status === responseCodes.NOT_FOUND)
+        const response = error.response
+        dispatch(onErrorAction(error, constants.FETCH_BOOK_FAILURE))
+
+        if (response && response.status === responseCodes.NOT_FOUND)
           history.replace(urls.notFound)
       })
   }
@@ -78,10 +75,7 @@ export const createBook = bookData => {
         }
       })
       .catch(error => {
-        dispatch({
-          type: constants.CREATE_BOOK_FAILURE,
-          payload: error
-        })
+        dispatch(onErrorAction(error, constants.CREATE_BOOK_FAILURE))
       })
   }
 }
@@ -101,10 +95,7 @@ export const updateBookDetails = (bookId, bookData) => {
         }
       })
       .catch(error => {
-        dispatch({
-          type: constants.UPDATE_BOOK_FAILURE,
-          payload: error
-        })
+        dispatch(onErrorAction(error, constants.UPDATE_BOOK_FAILURE))
       })
   }
 }
@@ -124,11 +115,10 @@ export const deleteBook = bookId => {
         }
       })
       .catch(error => {
-        dispatch({
-          type: constants.DELETE_BOOK_FAILURE,
-          payload: error
-        })
-        if (error.response.status === responseCodes.NOT_FOUND)
+        const response = error.response
+        dispatch(onErrorAction(error, constants.DELETE_BOOK_FAILURE))
+
+        if (response && response.status === responseCodes.NOT_FOUND)
           history.replace(urls.notFound)
       })
   }

@@ -64,7 +64,6 @@ export const formatDate = (dateString, format = "DD MMM YYYY") => {
 }
 
 export const mapBooktoFormValues = book => {
-  if (!book.categories || !book.authors || !book.publisher) return {}
   const {
     authors,
     categories,
@@ -81,18 +80,28 @@ export const mapBooktoFormValues = book => {
   bookInitialvalues["pages"] = pages
   bookInitialvalues["title"] = title
 
-  bookInitialvalues["authors"] = authors.map(author =>
-    createOption(author.id, `${author.first_name} ${author.last_name} `.trim())
-  )
+  if (authors) {
+    bookInitialvalues["authors"] = authors.map(author =>
+      createOption(
+        author.id,
+        `${author.first_name} ${author.last_name} `.trim()
+      )
+    )
+  }
 
-  bookInitialvalues["categories"] = categories.map(category =>
-    createOption(category.id, category.name)
-  )
+  if (categories) {
+    bookInitialvalues["categories"] = categories.map(category =>
+      createOption(category.id, category.name)
+    )
+  }
 
-  bookInitialvalues["publisher"] = createOption(
-    publisher.id,
-    publisher.company_name
-  )
+  if (publisher) {
+    bookInitialvalues["publisher"] = createOption(
+      publisher.id,
+      publisher.company_name
+    )
+  }
+
   return bookInitialvalues
 }
 
@@ -129,4 +138,13 @@ export const publisherString = publisher => {
 
 export const getPageNumberFromUrl = url => {
   return url ? new URL(url).searchParams.get("page") || 1 : null
+}
+
+export const onErrorAction = (err, type) => {
+  const response = err.response
+
+  return {
+    type: type,
+    payload: response ? response.data : err
+  }
 }

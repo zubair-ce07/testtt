@@ -88,7 +88,8 @@ const booksReducer = (state = initialState, action) => {
         ...state,
         loading: false,
         error: null,
-        book: [...state.books, action.payload]
+        books: [...state.books, action.payload],
+        book: action.payload
       }
 
     case constants.FETCH_BOOKS_FAILURE:

@@ -8,6 +8,7 @@ import {
   updateBookDetails
 } from "../actions/bookActions"
 
+import ErrorDetails from "./ErrorDetails"
 import Loader from "./Loader"
 import { connect } from "react-redux"
 import { getAuthorsDataList } from "../actions/authorActions"
@@ -68,6 +69,11 @@ class BookForm extends PureComponent {
     if (!values.isbn) {
       errors.isbn = "ISBN is required"
     }
+
+    if (values.isbn && values.isbn.length !== 13) {
+      errors.isbn = "ISBN must be 13 digits"
+    }
+
     if (!values.authors || (values.authors && values.authors.length < 1)) {
       errors.authors = "Atleast 1 author is required"
     }
@@ -90,19 +96,20 @@ class BookForm extends PureComponent {
       authors,
       bookInitialValues,
       categories,
-      loading,
-      publishers
+      publishers,
+      errors,
+      loading
     } = this.props
 
     if (loading) return <Loader />
 
-    // const initialFormValues = edit ? bookInitialValues : initialValues
     const formLabel = edit ? "Edit Book" : "New Book"
 
     return (
       <div className="container mt-5">
         <div id="book-form" className="card mx-auto bg-light border-dark p-5">
           <h1>{formLabel}</h1>
+          <ErrorDetails errors={errors} />
           <Formik
             initialValues={bookInitialValues}
             validate={this.validate}
@@ -185,6 +192,7 @@ class BookForm extends PureComponent {
 
 const mapStateToProps = (state, _ownProps) => {
   return {
+    errors: state.books.error,
     authors: state.authors.authorsData.map(data => ({
       value: data.id,
       label: data.full_name

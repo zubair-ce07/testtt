@@ -1,6 +1,7 @@
 import authorService from "../services/authorService"
 import constants from "../contants/action_types/author_constants"
 import history from "../history"
+import { onErrorAction } from "../util/utils"
 import responseCodes from "../contants/responseCodes"
 import urls from "../urls"
 
@@ -25,10 +26,7 @@ export const getAuthorsDataList = () => {
         }
       })
       .catch(error => {
-        dispatch({
-          type: constants.FETCH_AUTHORS_DATA_FAILURE,
-          payload: error.response.data
-        })
+        dispatch(onErrorAction(error, constants.FETCH_AUTHORS_DATA_FAILURE))
       })
   }
 }
@@ -47,10 +45,7 @@ export const getAuthorsList = pageNo => {
         }
       })
       .catch(error => {
-        dispatch({
-          type: constants.FETCH_AUTHORS_FAILURE,
-          payload: error
-        })
+        dispatch(onErrorAction(error, constants.FETCH_AUTHORS_FAILURE))
       })
   }
 }
@@ -69,11 +64,10 @@ export const getAuthorDetail = authorId => {
         }
       })
       .catch(error => {
-        dispatch({
-          type: constants.FETCH_AUTHOR_FAILURE,
-          payload: error
-        })
-        if (error.response.status === responseCodes.NOT_FOUND) {
+        const response = error.response
+        dispatch(onErrorAction(error, constants.FETCH_AUTHOR_FAILURE))
+
+        if (response && response.status === responseCodes.NOT_FOUND) {
           history.replace(urls.notFound)
         }
       })

@@ -3,7 +3,6 @@ import React, { Component } from "react"
 import Loader from "./Loader"
 import { connect } from "react-redux"
 import { getPublisherDetail } from "../actions/publisherActions"
-import { isAdmin } from "../util/utils"
 import { withRouter } from "react-router-dom"
 
 class PublisherDetail extends Component {
@@ -23,11 +22,9 @@ class PublisherDetail extends Component {
   }
 
   render() {
-    const { publisher, loading, user } = this.props
+    const { publisher, loading } = this.props
 
     if (loading) return <Loader />
-
-    const admin = isAdmin(user)
 
     return (
       <div id="publisher-detail-wrapper" className="container mt-5">
@@ -61,7 +58,6 @@ class PublisherDetail extends Component {
 
 const mapStateToProps = (state, _ownProps) => {
   return {
-    user: state.auth.currentUser,
     publisher: state.publishers.publisher,
     loading: state.publishers.loading
   }

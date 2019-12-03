@@ -2,6 +2,8 @@ import { Form, Formik } from "formik"
 import React, { Component } from "react"
 
 import { CustomField } from "./CustomFormikFields"
+import ErrorDetails from "./ErrorDetails"
+import Loader from "./Loader"
 import { authorSignup } from "../actions/authAction"
 import { connect } from "react-redux"
 
@@ -52,10 +54,15 @@ class AuthorSignupForm extends Component {
 
   render() {
     const { initialValues } = this.state
+    const { errors, loading } = this.props
+
+    if (loading) return <Loader />
+
     return (
       <div className="container mt-5">
         <div id="signup-form" className="card mx-auto bg-light border-dark p-5">
           <h1>Author Signup</h1>
+          <ErrorDetails errors={errors} />
           <Formik
             initialValues={initialValues}
             validate={this.validate}
@@ -107,6 +114,13 @@ class AuthorSignupForm extends Component {
   }
 }
 
+const mapStateToProps = (state, _ownProps) => {
+  return {
+    errors: state.auth.error,
+    loading: state.auth.loading
+  }
+}
+
 const mapDispatchToProps = dispatch => {
   return {
     onSignup: formData => {
@@ -115,4 +129,4 @@ const mapDispatchToProps = dispatch => {
   }
 }
 
-export default connect(null, mapDispatchToProps)(AuthorSignupForm)
+export default connect(mapStateToProps, mapDispatchToProps)(AuthorSignupForm)

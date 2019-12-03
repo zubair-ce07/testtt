@@ -1,7 +1,7 @@
 import React, { Component } from "react"
-import { concatStrings, isAdmin } from "../util/utils"
 
 import Loader from "./Loader"
+import { concatStrings } from "../util/utils"
 import { connect } from "react-redux"
 import { getAuthorDetail } from "../actions/authorActions"
 import { withRouter } from "react-router-dom"
@@ -23,11 +23,9 @@ class AuthorDetail extends Component {
   }
 
   render() {
-    const { author, loading, user } = this.props
+    const { author, loading } = this.props
 
     if (loading) return <Loader />
-
-    const admin = isAdmin(user)
 
     return (
       <div id="author-detail-wrapper" className="container mt-5">
@@ -61,7 +59,6 @@ class AuthorDetail extends Component {
 
 const mapStateToProps = (state, _ownProps) => {
   return {
-    user: state.auth.currentUser,
     author: state.authors.author,
     loading: state.authors.loading
   }

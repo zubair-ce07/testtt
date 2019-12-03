@@ -2,6 +2,8 @@ import { Form, Formik } from "formik"
 import React, { Component } from "react"
 
 import { CustomField } from "./CustomFormikFields"
+import ErrorDetails from "./ErrorDetails"
+import Loader from "./Loader"
 import { connect } from "react-redux"
 import { signIn } from "../actions/authAction"
 
@@ -34,10 +36,14 @@ class LoginForm extends Component {
   }
   render() {
     const { initialValues } = this.state
+    const { errors, loading } = this.props
+
+    if (loading) return <Loader />
     return (
       <div className="container mt-5">
         <div id="signin-form" className="card mx-auto bg-light border-dark p-5">
           <h1>Log In</h1>
+          <ErrorDetails errors={errors} />
           <Formik
             initialValues={initialValues}
             validate={this.validate}
@@ -74,10 +80,17 @@ class LoginForm extends Component {
   }
 }
 
+const mapStateToProps = (state, _ownProps) => {
+  return {
+    errors: state.auth.error,
+    loading: state.auth.loading
+  }
+}
+
 const mapDispatchToProps = dispatch => {
   return {
     onLogin: formData => dispatch(signIn(formData))
   }
 }
 
-export default connect(null, mapDispatchToProps)(LoginForm)
+export default connect(mapStateToProps, mapDispatchToProps)(LoginForm)
