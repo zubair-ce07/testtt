@@ -156,6 +156,7 @@ class BookSerializer(serializers.ModelSerializer):
 
             publisher = get_object_or_404(Publisher, pk=publisher_data['id'])
             book.publisher = publisher
+            book.save()
 
             Book.update_m2m(authors_data, book.authors)
             Book.update_m2m(categories_data, book.categories)
