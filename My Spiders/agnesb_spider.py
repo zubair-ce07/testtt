@@ -10,9 +10,6 @@ class Mixin:
     retailer = 'agnesb'
     default_brand = 'Agnès B'
 
-    genders = [Gender.MEN.value, Gender.WOMEN.value, Gender.GIRLS.value,
-               Gender.BOYS.value, Gender.KIDS.value, Gender.ADULTS.value]
-
 
 class MixinUK(Mixin):
     retailer = Mixin.retailer + '-uk'
