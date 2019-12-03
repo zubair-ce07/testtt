@@ -10,6 +10,9 @@ class Mixin:
     retailer = 'agnesb'
     default_brand = 'Agnès B'
 
+    genders = [Gender.MEN.value, Gender.WOMEN.value, Gender.GIRLS.value,
+               Gender.BOYS.value, Gender.KIDS.value, Gender.ADULTS.value]
+
 
 class MixinUK(Mixin):
     retailer = Mixin.retailer + '-uk'
@@ -53,7 +56,7 @@ class AgnesbParseSpider(BaseParseSpider):
         garment['name'] = self.remove_color_from_name(raw_product)
         garment['care'] = self.product_care(raw_product)
         garment['description'] = self.product_description(raw_product)
-        garment['category'] = self.product_category(raw_product)
+        garment['category'] = self.product_category(response)
         garment['gender'] = self.product_gender(garment)
         garment['brand'] = self.product_brand(garment)
         garment['image_urls'] = self.image_urls(raw_product)
@@ -74,7 +77,10 @@ class AgnesbParseSpider(BaseParseSpider):
 
     def product_care(self, raw_product):
         raw_care = raw_product['typology']['attributes']
-        care = [raw_care.get('product_care_instruction', {}).get('value', '')]
+        care_keys = [c['items'] for c in raw_product['typology']['visibilities']['list'] if c['key'] == 'care']
+        care_keys = [c['key'] for c in care_keys[0] if 'code' not in c['key']] if care_keys else []
+
+        care = [raw_care[c]['value'] for c in care_keys if c in raw_care]
         composition = raw_care.get('reference_composition', {}).get('value', '').split(',')
 
         return clean(care + composition)
@@ -84,11 +90,12 @@ class AgnesbParseSpider(BaseParseSpider):
         return self.text_from_html(raw_description)
 
     def product_gender(self, garment):
-        soup = soupify([garment['url']] + garment['description'] + garment['category'])
-        return self.gender_lookup(soup) or Gender.ADULTS.value
+        soup = soupify([garment['url']] + garment['description'])
+        return self.gender_lookup(soupify(garment['category'])) or self.gender_lookup(soup) or Gender.ADULTS.value
 
-    def product_category(self, raw_product):
-        return [raw_product['typology']['attributes']['pim_category']['value']]
+    def product_category(self, response):
+        category = [c.strip() for c in response.css('.breadcrumb li a::text').getall()][1:]
+        return category + [self.raw_product(response)['typology']['attributes']['pim_category']['value']]
 
     def image_urls(self, raw_product):
         return [v['original'] for v in raw_product['rootProduct']['common']['visuals']]
