@@ -2,7 +2,7 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 
 from ..items import Product
-from ..utils import map_gender, format_price
+from ..utils import map_gender, format_price, Gender
 
 
 class ParseSpider():
@@ -21,15 +21,18 @@ class ParseSpider():
         product['care'] = self.get_care(response)
         product['skus'] = {}
         product['image_urls'] = self.get_image_urls(response)
-        product['requests'] = self.skus_requests(response) or self.availability_requests(response)
+        product['requests'] = self.size_category_requests(response) or self.sku_requests(response)
 
         return self.request_or_product(product)
 
-    def parse_skus(self, response):
+    def parse_size_category(self, response):
+        product = response.meta['product']
+        product['requests'] += self.sku_requests(response)
+        return self.request_or_product(product)
+
+    def parse_sku(self, response):
         product = response.meta['product']
         skus = self.get_skus(response)
-        if not response.meta.get('stock_req'):
-            product['requests'] += self.availability_requests(response)
         product['skus'].update(skus)
 
         return self.request_or_product(product)
@@ -42,8 +45,8 @@ class ParseSpider():
 
     def get_gender(self, response):
         soup = response.css('#sizecat a::text, title::text').getall()
-        gender_soup = ' '.join(soup + self.get_description(response))
-        return map_gender(gender_soup)
+        gender_soup = ' '.join(self.get_description(response))
+        return map_gender(' '.join(soup)) or map_gender(gender_soup) or Gender.ADULTS.value
 
     def get_care(self, response):
         return response.css('#careAndContentInfo::text').getall()
@@ -65,19 +68,15 @@ class ParseSpider():
         return response.css('#detailAltImgs > li a::attr(href)').getall()
 
     def get_skus(self, response):
-        skus = {}
-
-        colour = response.css(".dtlFormBulk #color b::text").get()
-        size = response.css(".dtlFormBulk #size b::text").get() or self.one_size
+        colour = response.css('.dtlFormBulk #color b::text').get()
+        size = response.css('.dtlFormBulk #size b::text').get() or self.one_size
 
         sku = {'colour': colour} if colour else {}
         sku.update(self.get_price(response))
         sku['size'] = size
         sku['out_of_stock'] = response.css('.stockStatus b::text').get() != 'In Stock'
 
-        skus[f'{colour}_{size}' if colour else size] = sku
-
-        return skus
+        return {f'{colour}_{size}' if colour else size: sku}
 
     def get_price(self, response):
         previous_price = response.css('.ctntPrice::text').re_first(r'Was \$(.*);')
@@ -86,12 +85,13 @@ class ParseSpider():
 
         return format_price(currency, current_price, previous_price)
 
-    def skus_requests(self, response):
+    def size_category_requests(self, response):
         cat_ids = [i.split('_')[1] for i in response.css('#sizecat > a::attr(id)').getall()]
-        return [response.follow(f'/p/{i.lower()}', callback=self.parse_skus, dont_filter=True) for i in cat_ids]
+        return [response.follow(f'/p/{i.lower()}', callback=self.parse_size_category, dont_filter=True)
+                for i in cat_ids]
 
-    def availability_requests(self, response):
-        availability_requests = []
+    def sku_requests(self, response):
+        sku_requests = []
         product_id = self.get_retailer_sku(response)
 
         color_css = '.swatchlink .color::attr(data-value), #color + input::attr(value)'
@@ -102,10 +102,10 @@ class ParseSpider():
             or response.css('[name^="specTwo"]::attr(value)').getall()
         for color_id in color_ids:
             for size_id in size_ids:
-                availability_requests.append(response.follow(f'/p/{product_id.lower()}/{color_id}{size_id}',
-                                                             callback=self.parse_skus, meta={'stock_req': True}))
+                sku_requests.append(response.follow(f'/p/{product_id.lower()}/{color_id}{size_id}',
+                                                    callback=self.parse_sku))
 
-        return availability_requests
+        return sku_requests
 
     def request_or_product(self, product):
         if product['requests']:
