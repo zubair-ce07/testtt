@@ -107,8 +107,9 @@ class ProductParser(Spider):
         sku_data = self.raw_product(response)
         product_sizes = self.product_sizes(response)
 
+        common_sku = self.product_price(response)
         for product_size in product_sizes:
-            sku = self.product_price(response)
+            sku = common_sku.copy()
             sku['colour'] = sku_data.get('displayValue'),
             sku['size'] = product_size,
             sku['sku_id'] = self.product_retailer_sku(response)
