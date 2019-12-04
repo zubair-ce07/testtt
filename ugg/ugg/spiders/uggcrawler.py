@@ -37,6 +37,14 @@ class ProductParser(Spider):
 
         return self.next_item_or_request(item)
 
+    def next_item_or_request(self, item):
+        if item['meta']['requests']:
+            request = item['meta']['requests'].pop()
+            yield request
+        else:
+            item.pop('meta')
+            yield item
+
     def product_retailer_sku(self, response):
         sku_data = self.raw_product(response)
         return sku_data.get('displayCode')
@@ -57,17 +65,12 @@ class ProductParser(Spider):
         raw_description = response.css(css).get()
         return raw_description.strip()
 
-    def product_currency(self, response):
-        css = '.prices [itemprop="priceCurrency"]::attr(content)'
-        return response.css(css).get()
-
     def product_price(self, response):
-        css = '.prices .value::attr(content)'
-        return response.css(css).get()
-
-    def product_previous_price(self, response):
-        css = '.prices .strike-through span::attr(content)'
-        return response.css(css).get()
+        prices = {}
+        prices['price'] = response.css('.prices .value::attr(content)').get()
+        prices['currency'] = response.css('.prices [itemprop="priceCurrency"]::attr(content)').get()
+        prices['previous_prices'] = response.css('.prices .strike-through span::attr(content)').getall()
+        return prices
 
     def product_sku_requests(self, response, item):
         requests = []
@@ -105,23 +108,13 @@ class ProductParser(Spider):
         product_sizes = self.product_sizes(response)
 
         for product_size in product_sizes:
-            sku = {}
+            sku = self.product_price(response)
             sku['colour'] = sku_data.get('displayValue'),
-            sku['price'] = self.product_price(response)
-            sku['previous_prices'] = [self.product_previous_price(response)],
             sku['size'] = product_size,
             sku['sku_id'] = self.product_retailer_sku(response)
             skus.append(sku)
 
         return skus
-
-    def next_item_or_request(self, item):
-        if item['meta']['requests']:
-            request = item['meta']['requests'].pop()
-            yield request
-        else:
-            item.pop('meta')
-            yield item
 
     def raw_product(self, response):
         raw_data = response.css('.render-product-selected::attr(data-json)').get()
