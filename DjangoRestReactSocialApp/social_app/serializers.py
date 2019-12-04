@@ -40,33 +40,32 @@ class UserSerializerWithToken(serializers.ModelSerializer):
                   'last_name')
 
 
-class DictSerializer(serializers.ListSerializer, ABC):
-    dict_key = 'id'
-
-    @property
-    def data(self):
-        ret = super(serializers.ListSerializer, self).data
-        return ReturnDict(ret, serializer=self)
-
-    def to_representation(self, data):
-        items = super(DictSerializer, self).to_representation(data)
-        return {item[self.dict_key]: item for item in items}
-
-
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
-        fields = ('id', 'author', 'comment', 'post')
-        list_serializer_class = DictSerializer
+        fields = ('id', 'author', 'comment', 'post', 'created_at', 'updated_at')
+
+
+class CommentListSerializer(CommentSerializer):
+    author = serializers.SerializerMethodField()
+
+    def get_author(self, comment):
+        return UserSerializer(comment.author).data
 
 
 class PostSerializer(serializers.ModelSerializer):
-
-    def get_comments(self, post):
-        comments = Comment.objects.filter(post=post)
-        return CommentSerializer(comments, many=True, context={'request': post}).data
-
     class Meta:
         model = Post
-        fields = ('id', 'author', 'body', 'comments', 'title', 'image')
-        list_serializer_class = DictSerializer
+        fields = ('id', 'author', 'body', 'comments', 'title', 'image', 'created_at', 'updated_at')
+
+
+class PostListSerializer(PostSerializer):
+    comments = serializers.SerializerMethodField()
+    author = serializers.SerializerMethodField()
+
+    def get_comments(self, post):
+        comments = Comment.objects.filter(post=post).order_by('-updated_at')
+        return CommentListSerializer(comments, many=True, context={'request': post}).data
+
+    def get_author(self, post):
+        return UserSerializer(post.author).data

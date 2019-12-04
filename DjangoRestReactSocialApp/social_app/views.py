@@ -1,4 +1,5 @@
 from .serializers import *
+from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -31,10 +32,8 @@ class PostView(APIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def get(self, request):
-        posts = Post.objects.filter(
-            author=request.user,
-        )
-        serializer = PostSerializer(posts, many=True)
+        posts = Post.objects.filter().order_by('-updated_at')
+        serializer = PostListSerializer(posts, many=True)
         return Response(serializer.data)
 
     def post(self, request):
@@ -46,7 +45,8 @@ class PostView(APIView):
         else:
             return Response({'status': False, "message": serializer.errors})
 
-        return Response({'status': True, "message": "Post Created Successfully"})
+        return Response({'status': True, "data": PostListSerializer(Post.objects.get(pk=serializer.data['id'])).data,
+                         "message": "Post Created Successfully"})
 
     def put(self, request, pk):
         post = request.data
@@ -57,11 +57,14 @@ class PostView(APIView):
         else:
             return Response({'status': False, "message": serializer.errors})
 
-        return Response({'status': True, "message": "Post Updated Successfully"})
+        return Response({'status': True, "data": PostListSerializer(Post.objects.get(pk=serializer.data['id'])).data,
+                         "message": "Post Updated Successfully"})
 
     def delete(self, request, pk):
-        Post.objects.get(pk=pk).delete()
-        return Response({'status': True, "message": "Post Deleted Successfully"})
+        post = get_object_or_404(Post, pk=pk)
+        post.delete()
+        return Response({'status': True, "data": {"id": pk},
+                         "message": "Post Deleted Successfully"})
 
 
 class CommentView(APIView):
@@ -69,9 +72,9 @@ class CommentView(APIView):
 
     def get(self, request):
         comments = Post.objects.filter(
-            author=request.user,
+            post=request.query_params.get('post'),
         )
-        serializer = CommentSerializer(comments, many=True)
+        serializer = CommentListSerializer(comments, many=True)
         return Response(serializer.data)
 
     def post(self, request):
@@ -83,10 +86,13 @@ class CommentView(APIView):
         else:
             return Response({'status': False, "message": serializer.errors})
 
-        return Response({'status': True, "message": "Post Created Successfully"})
+        return Response({'status': True,
+                         "data": CommentListSerializer(Comment.objects.get(pk=serializer.data['id'])).data,
+                         "message": "Comment Created Successfully"})
 
     def put(self, request, pk):
         comment = request.data
+        comment['author'] = request.user.id
         instance = Comment.objects.get(pk=pk)
         serializer = CommentSerializer(instance, data=comment, context={"request": request})
         if serializer.is_valid():
@@ -94,8 +100,12 @@ class CommentView(APIView):
         else:
             return Response({'status': False, "message": serializer.errors})
 
-        return Response({'status': True, "message": "Post Updated Successfully"})
+        return Response({'status': True,
+                         "data": CommentListSerializer(Comment.objects.get(pk=serializer.data['id'])).data,
+                         "message": "Comment Updated Successfully"})
 
     def delete(self, request, pk):
-        Comment.objects.get(pk=pk).delete()
-        return Response({'status': True, "message": "Comment Deleted Successfully"})
+        comment = get_object_or_404(Comment, pk=pk)
+        comment.delete()
+        return Response({'status': True, "data": {"id": pk , "post":CommentSerializer(comment).data['post']},
+                         "message": "Comment Deleted Successfully"})
