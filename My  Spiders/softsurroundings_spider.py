@@ -102,8 +102,8 @@ class ParseSpider():
             or response.css('[name^="specTwo"]::attr(value)').getall()
         for color_id in color_ids:
             for size_id in size_ids:
-                sku_requests.append(response.follow(f'/p/{product_id.lower()}/{color_id}{size_id}',
-                                                    callback=self.parse_sku))
+                url = f'/p/{product_id.lower()}/{color_id}{size_id}'
+                sku_requests.append(response.follow(url, callback=self.parse_sku))
 
         return sku_requests
 
