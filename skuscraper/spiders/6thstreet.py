@@ -22,6 +22,7 @@ class MixinAE(Mixin):
 
 
 class SixthStreetSpider(BaseParseSpider):
+    price_css = '.pdp-price-box span::text'
 
     def parse(self, response):
         raw_product = response.meta['product']
@@ -80,7 +81,7 @@ class SixthStreetSpider(BaseParseSpider):
         sizes_uk = raw_product['size_uk']
         sizes_eu = raw_product['size_eu']
 
-        common_sku = self.product_pricing_common(response, price_css='.pdp-price-box span::text')
+        common_sku = self.product_pricing_common(response)
         common_sku['colour'] = raw_product['color']
 
         if not sizes_us:
@@ -112,7 +113,8 @@ class SixthStreetCrawler(BaseCrawlSpider):
         raw_data = response.css('[crossorigin="anonymous"] + script::text').re_first('=\s*({.*})')
         raw_data = json.loads(raw_data)
         query = raw_data.get('request')['path'].replace('///', '')
-        url = self.add_parameters(self.ajax_request_url, raw_data)
+        url = add_or_replace_parameter(self.ajax_request_url, 'x-algolia-application-id', raw_data['applicationId'])
+        url = add_or_replace_parameter(url, 'x-algolia-api-key', raw_data['apiKey'])
 
         yield FormRequest(url=url, body=self.make_request_body(query), method='POST',
                           callback=self.parse_products, meta={'trail': self.add_trail(response)})
@@ -134,15 +136,13 @@ class SixthStreetCrawler(BaseCrawlSpider):
         yield FormRequest(url=response.url, body=body, method='POST', callback=self.parse_products)
 
     def make_request_body(self, query, page_num=0):
-        body = {"requests": [{"indexName": "enterprise_magento_english_products",
-                              "params": f"query={query}&hitsPerPage=60&maxValuesPerFacet=60&page={page_num}"}
-                             ]}
+        body = {
+            "requests": [{
+                "indexName": "enterprise_magento_english_products",
+                "params": f"query={query}&hitsPerPage=60&maxValuesPerFacet=60&page={page_num}"
+            }]
+        }
         return json.dumps(body)
-
-    def add_parameters(self, url, raw_data):
-        url = add_or_replace_parameter(url, 'x-algolia-application-id', raw_data['applicationId'])
-        url = add_or_replace_parameter(url, 'x-algolia-api-key', raw_data['apiKey'])
-        return url
 
 
 class SixthStreetAESpider(MixinAE, SixthStreetSpider):
