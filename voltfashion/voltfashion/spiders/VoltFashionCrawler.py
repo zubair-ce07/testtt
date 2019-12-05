@@ -43,6 +43,16 @@ class ProductParser(Spider):
 
         return self.next_item_or_request(item)
 
+    def parse_skus(self, response):
+        item = response.meta['item']
+        raw_product = self.fetch_raw_product(response)
+        item['skus'] += self.product_skus(raw_product)
+        item['image_urls'] += self.product_images(raw_product['ProductImages'])
+        return self.next_item_or_request(item)
+
+    def product_skus_requests(self, response, product_sku_variant):
+        return [response.Follow(url=variant.get('Url'), callback=self.parse_skus) for variant in product_sku_variant]
+
     def fetch_raw_product(self, response):
         css = "div[id*='react_']:not([class]) + script"
         raw_product_details = fetch_clean_and_load(response, css)
@@ -58,10 +68,10 @@ class ProductParser(Spider):
             yield item
 
     def product_care(self, raw_care):
-        return [care.get('Name') for care in raw_care]
+        return [care['Name'] for care in raw_care if care.get('Name')]
 
     def product_images(self, raw_images):
-        return [img.get('Url') for img in raw_images]
+        return [img['Url'] for img in raw_images if img.get('Url')]
 
     def product_currency(self, raw_currency):
         return raw_currency.get('Currency')
@@ -81,16 +91,6 @@ class ProductParser(Spider):
             product_skus.append(sku)
 
         return product_skus
-
-    def product_skus_requests(self, response, product_sku_variant):
-        return [response.Follow(url=variant.get('Url'), callback=self.parse_skus) for variant in product_sku_variant]
-
-    def parse_skus(self, response):
-        item = response.meta['item']
-        raw_product = self.fetch_raw_product(response)
-        item['skus'] += self.product_skus(raw_product)
-        item['image_urls'] += self.product_images(raw_product['ProductImages'])
-        return self.next_item_or_request(item)
 
     def clean_price(self, raw_price):
         return raw_price.replace(':-', '') if raw_price else None
