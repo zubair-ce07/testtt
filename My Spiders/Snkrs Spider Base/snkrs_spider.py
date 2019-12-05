@@ -6,7 +6,7 @@ from .base import BaseParseSpider, BaseCrawlSpider, clean, soupify, Gender
 
 class Mixin:
     retailer = 'snkrs'
-    allowed_domains = ['snkrs.com']
+    allowed_domains = ['snkrs.com', 'fenom.com']
 
 
 class MixinUS(Mixin):
@@ -37,6 +37,8 @@ class MixinFR(Mixin):
 class SnkrsParseSpider(BaseParseSpider):
     description_css = '#short_description_content p::text, #short_description_content p span::text'
     brand_css = '[itemprop="brand"]::attr(content)'
+    price_css = '#old_price_display .price::text, [itemprop="price"]::attr(content),' \
+                '[itemprop="priceCurrency"]::attr(content)'
 
     def parse(self, response):
         garment = self.new_unique_garment(self.product_id(response))
@@ -80,15 +82,9 @@ class SnkrsParseSpider(BaseParseSpider):
     def skus(self, response):
         skus = {}
 
-        money_strs = [
-            response.css('#old_price_display .price::text').re_first(r"\d+"),
-            clean(response.css('[itemprop="price"]::attr(content)'))[0],
-            clean(response.css('[itemprop="priceCurrency"]::attr(content)'))[0]
-        ]
-
         colour = self.detect_colour(self.raw_name(response), multiple=True)
         common_sku = {'colour': colour} if colour else {}
-        common_sku.update(self.product_pricing_common(None, money_strs=money_strs))
+        common_sku.update(self.product_pricing_common(response, price_css=self.price_css))
 
         size_css = 'span.size_EU::text, li:not(.hidden) span.units_container::text'
         sizes = clean(response.css(size_css)) or [self.one_size]
