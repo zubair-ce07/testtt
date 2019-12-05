@@ -23,6 +23,8 @@ class MixinUK(Mixin):
         ('limited edition', 'Limited Edition'),
     ]
 
+    description_deny = ['dimension', 'length', ' x ', 'cm', 'inch']
+
 
 class MixinFR(Mixin):
     retailer = Mixin.retailer + '-fr'
@@ -38,6 +40,8 @@ class MixinFR(Mixin):
         ('edición especial', 'Special Edition'),
         ('edizione speciale', 'Special Edition')
     ]
+
+    description_deny = ['dimension', 'length', ' x ', 'cm', 'inch', 'diamètre', 'largeur']
 
 
 class AgnesbParseSpider(BaseParseSpider):
@@ -80,11 +84,12 @@ class AgnesbParseSpider(BaseParseSpider):
         care = [raw_care[c]['value'] for c in care_keys if c in raw_care]
         composition = raw_care.get('reference_composition', {}).get('value', '').split(',')
 
-        return clean(care + composition)
+        return super().product_care(raw_product) + clean(care + composition)
 
-    def product_description(self, raw_product):
+    def raw_description(self, raw_product):
         raw_description = raw_product['typology']['attributes']['product_description']['value']
-        return self.text_from_html(raw_description)
+        return [d for d in self.text_from_html(raw_description)
+                if all(x not in d.lower() for x in self.description_deny)]
 
     def product_gender(self, garment):
         soup = soupify([garment['url']] + garment['description'])
