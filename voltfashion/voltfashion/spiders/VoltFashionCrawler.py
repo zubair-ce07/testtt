@@ -83,12 +83,7 @@ class ProductParser(Spider):
         return product_skus
 
     def product_skus_requests(self, response, product_sku_variant):
-        requests = []
-        for variant in product_sku_variant:
-            requests.append(
-                response.Follow(url=variant.get('Url'), callback=self.parse_skus)
-            )
-        return requests
+        return [response.Follow(url=variant.get('Url'), callback=self.parse_skus) for variant in product_sku_variant]
 
     def parse_skus(self, response):
         item = response.meta['item']
