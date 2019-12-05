@@ -2,7 +2,7 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 
 from ..items import Product
-from ..utils import map_gender, format_price, Gender
+from ..utils import map_gender, format_price
 
 
 class ParseSpider():
@@ -46,7 +46,7 @@ class ParseSpider():
     def get_gender(self, response):
         soup = response.css('#sizecat a::text, title::text').getall()
         gender_soup = ' '.join(self.get_description(response))
-        return map_gender(' '.join(soup)) or map_gender(gender_soup) or Gender.ADULTS.value
+        return map_gender(' '.join(soup)) or map_gender(gender_soup)
 
     def get_care(self, response):
         return response.css('#careAndContentInfo::text').getall()
