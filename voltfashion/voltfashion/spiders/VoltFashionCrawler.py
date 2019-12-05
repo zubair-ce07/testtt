@@ -1,5 +1,4 @@
 import json
-from urllib.parse import urljoin
 
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule, Spider, Request
@@ -86,11 +85,8 @@ class ProductParser(Spider):
     def product_skus_requests(self, response, product_sku_variant):
         requests = []
         for variant in product_sku_variant:
-            url = urljoin(response.url, variant.get('Url'))
-            if url == response.url:
-                continue
             requests.append(
-                Request(url=url, callback=self.parse_skus)
+                response.Follow(url=variant.get('Url'), callback=self.parse_skus)
             )
         return requests
 
