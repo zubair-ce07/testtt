@@ -34,10 +34,10 @@ class SixthStreetSpider(BaseParseSpider):
         self.boilerplate(garment, response)
         garment['trail'] = response.meta['trail']
         garment['name'] = self.product_name(response)
-        garment['description'] = self.product_description(raw_product)
+        garment['description'] = self.product_description(response)
         garment['care'] = self.product_care(response)
         garment['category'] = self.product_category(raw_product['categories'])
-        garment['brand'] = self.product_brand(raw_product)
+        garment['brand'] = self.product_brand(response)
         garment['image_urls'] = self.product_images(raw_product)
         garment['gender'] = self.product_gender(raw_product)
         garment['skus'] = self.product_skus(response, raw_product)
@@ -51,8 +51,8 @@ class SixthStreetSpider(BaseParseSpider):
         raw_name = response.css('.product_name::text').get()
         return clean(raw_name)
 
-    def product_description(self, raw_data):
-        return [raw_data['description']]
+    def product_description(self, response):
+        return [response.css('[property="og:description"]::attr(content)').get()]
 
     def product_category(self, raw_data):
         raw_category = raw_data.get('level2')
@@ -60,8 +60,8 @@ class SixthStreetSpider(BaseParseSpider):
             raw_category = raw_data['level1']
         return raw_category[0].split(' /// ')
 
-    def product_brand(self, raw_data):
-        return clean(raw_data['brand_name'])
+    def product_brand(self, response):
+        return clean(response.css('.brand_name::text').get())
 
     def product_images(self, raw_data):
         return raw_data['gallery_images']
