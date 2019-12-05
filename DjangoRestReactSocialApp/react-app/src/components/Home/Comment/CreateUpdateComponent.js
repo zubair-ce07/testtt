@@ -14,7 +14,7 @@ const Schema = Yup.object().shape({
   comment: Yup.string().min(10, 'Too Short!').required('Required')
 })
 
-export const CreateComment = ({ post, mode, comment, modeChange }) => {
+export const CreateUpdateComment = ({ post, mode, comment, modeChange }) => {
   const dispatch = useDispatch()
   return (
     <Formik
@@ -57,11 +57,11 @@ export const CreateComment = ({ post, mode, comment, modeChange }) => {
   )
 }
 
-CreateComment.propTypes = {
+CreateUpdateComment.propTypes = {
   comment: PropTypes.any,
   mode: PropTypes.any,
   modeChange: PropTypes.any,
   post: PropTypes.any
 }
 
-export default CreateComment
+export default CreateUpdateComment

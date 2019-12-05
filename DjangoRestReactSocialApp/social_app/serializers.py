@@ -6,7 +6,17 @@ from rest_framework.utils.serializer_helpers import ReturnDict
 
 from rest_framework_jwt.settings import api_settings
 
-from social_app.models import Comment, Post
+from social_app.models import Comment, Post, Profile
+
+
+class ProfileSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='user.username', read_only=True)
+    bio = serializers.CharField(allow_blank=True, required=False)
+
+    class Meta:
+        model = Profile
+        fields = ('username', 'bio', 'image',)
+        read_only_fields = ('username',)
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -18,6 +28,10 @@ class UserSerializer(serializers.ModelSerializer):
 class UserSerializerWithToken(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
     token = serializers.SerializerMethodField()
+
+    profile = ProfileSerializer(write_only=True)
+    bio = serializers.CharField(source='profile.bio', read_only=True)
+    image = serializers.CharField(source='profile.image', read_only=True)
 
     def get_token(self, request):
         jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
@@ -34,10 +48,23 @@ class UserSerializerWithToken(serializers.ModelSerializer):
         user.save()
         return user
 
+    def update(self, instance, validated_data):
+        password = validated_data.pop('password', None)
+        profile_data = validated_data.pop('profile', {})
+
+        for (key, value) in validated_data.items():
+            setattr(instance, key, value)
+            if password is not None:
+                instance.set_password(password)
+            instance.save()
+            for (key, value) in profile_data.items():
+                setattr(instance.profile, key, value)
+            instance.profile.save()
+            return instance
+
     class Meta:
         model = User
-        fields = ('token', 'username', 'password', 'first_name',
-                  'last_name')
+        fields = ('id', 'token', 'username', 'password', 'first_name', 'profile', 'last_name', 'bio', 'image',)
 
 
 class CommentSerializer(serializers.ModelSerializer):

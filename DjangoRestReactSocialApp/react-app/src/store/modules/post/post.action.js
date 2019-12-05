@@ -25,10 +25,11 @@ export function createPost (data) {
   }
 }
 
-export function updatePost (data) {
+export function updatePost (data, id) {
+  delete data.comments
   const requestObject = {
     method: 'PUT',
-    url: '/social/posts',
+    url: `/social/posts/${id}`,
     data: toFormData(data)
   }
   return {

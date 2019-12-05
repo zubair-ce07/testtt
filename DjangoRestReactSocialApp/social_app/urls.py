@@ -4,6 +4,7 @@ from .views import *
 urlpatterns = [
     path('current_user', get_current_user),
     path('users', CreateUserView.as_view()),
+    path('users/change', UpdateUserView.as_view()),
 
     path('posts', PostView.as_view()),
     path('posts/<pk>', PostView.as_view()),

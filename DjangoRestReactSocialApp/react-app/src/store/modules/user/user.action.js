@@ -1,5 +1,6 @@
-import { LOGIN_USER, REGISTER_USER, CURRENT_USER } from './user.types'
+import { LOGIN_USER, REGISTER_USER, CURRENT_USER, UPDATE_USER } from './user.types'
 import { newRequest } from 'helpers/api'
+import { toFormData } from 'helpers/common'
 
 export function login (data) {
   const requestObject = {
@@ -16,13 +17,25 @@ export function login (data) {
 export function register (data) {
   const requestObject = {
     method: 'POST',
-    url: '/register',
+    url: '/social/users',
     data: {
       user: data
     }
   }
   return {
     type: REGISTER_USER,
+    payload: newRequest(requestObject)
+  }
+}
+
+export function updateUser (data) {
+  const requestObject = {
+    method: 'PUT',
+    url: '/social/users/change',
+    data: toFormData(data)
+  }
+  return {
+    type: UPDATE_USER,
     payload: newRequest(requestObject)
   }
 }

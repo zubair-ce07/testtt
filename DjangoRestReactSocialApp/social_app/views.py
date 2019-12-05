@@ -8,7 +8,8 @@ from rest_framework import permissions, generics
 
 @api_view(['GET'])
 def get_current_user(request):
-    serializer = UserSerializer(request.user)
+    serializer = UserSerializerWithToken(request.user)
+    # profile_serializer = ProfileSerializer(user)
     return Response(serializer.data)
 
 
@@ -17,6 +18,7 @@ class CreateUserView(APIView):
 
     def post(self, request):
         user = request.data.get('user')
+        user['profile'] = {}
         if not user:
             return Response({'status': False, 'message': 'No data found'})
         serializer = UserSerializerWithToken(data=user)
@@ -26,6 +28,29 @@ class CreateUserView(APIView):
             return Response({'status': False, "message": serializer.errors})
 
         return Response({'status': True, "message": "user created Successfully"})
+
+
+class UpdateUserView(APIView):
+    # permission_classes = (permissions.IsAuthenticated,)
+
+    def put(self, request):
+        user_data = request.data
+
+        serializer_data = {
+            'username': user_data.get('username', request.user.username),
+
+            'profile': {
+                'bio': user_data.get('bio', request.user.profile.bio),
+                'image': user_data.get('image')
+            }
+        }
+
+        serializer = UserSerializerWithToken(request.user, data=serializer_data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response({'status': True, "data": serializer.data,
+                         "message": "Profile Updated Successfully"})
 
 
 class PostView(APIView):
@@ -51,6 +76,7 @@ class PostView(APIView):
     def put(self, request, pk):
         post = request.data
         instance = Post.objects.get(pk=pk)
+        post['author'] = request.user.id
         serializer = PostSerializer(instance, data=post, context={"request": request})
         if serializer.is_valid():
             saved_user = serializer.save()
@@ -107,5 +133,5 @@ class CommentView(APIView):
     def delete(self, request, pk):
         comment = get_object_or_404(Comment, pk=pk)
         comment.delete()
-        return Response({'status': True, "data": {"id": pk , "post":CommentSerializer(comment).data['post']},
+        return Response({'status': True, "data": {"id": pk, "post": CommentSerializer(comment).data['post']},
                          "message": "Comment Deleted Successfully"})

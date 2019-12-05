@@ -1,4 +1,4 @@
-import { LOGIN_USER, CURRENT_USER } from './user.types'
+import { LOGIN_USER, CURRENT_USER, UPDATE_USER } from './user.types'
 import { fulfilled } from 'helpers/api'
 
 const initial = {
@@ -11,6 +11,8 @@ export default function (state = initial, action) {
       return { ...state, user: action.payload.data.user }
     case fulfilled(CURRENT_USER):
       return { ...state, user: action.payload.data }
+    case fulfilled(UPDATE_USER):
+      return { ...state, user: action.payload.data.data }
     default:
       return state
   }

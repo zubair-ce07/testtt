@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
 import PropTypes from 'prop-types'
 
-import Comment from 'components/Home/CommentComponent'
-import CreateComment from './CreateCommentComponent'
+import Comment from 'components/Home/Comment/CommentComponent'
+import CreateUpdateComment from 'components/Home/Comment/CreateUpdateComponent'
 export const CommentsPanel = ({ post, comments }) => {
   const [enableComment, changeEnableComment] = useState(false)
 
@@ -16,12 +16,12 @@ export const CommentsPanel = ({ post, comments }) => {
         <div className="col-md-12 col-md-offset-2 col-sm-12">
           <div className="comment-wrapper">
             <div className="panel panel-info">
-              <div className="panel-heading">
+              {/* <div className="panel-heading">
                     Comment panel
-              </div>
+              </div> */}
               <div className="panel-body">
                 { enableComment && <>
-                  <CreateComment post={post}></CreateComment>
+                  <CreateUpdateComment post={post}/>
                 </>
                 }
 

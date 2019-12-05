@@ -50,7 +50,7 @@ export function resolveImageUrl (url) {
   if (url.includes('http')) {
     return url
   } else {
-    return `${API_URL}${url}`
+    if (url[0] === '/') { return `${API_URL}${url}` } else { return `${API_URL}/media/${url}` }
   }
 }
 

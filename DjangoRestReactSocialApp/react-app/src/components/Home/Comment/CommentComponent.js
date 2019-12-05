@@ -1,17 +1,15 @@
 import React, { useState } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
+import { useDispatch } from 'react-redux'
 import PropTypes from 'prop-types'
-import ReactTimeAgo from 'react-time-ago'
 
 import { deleteComment } from 'store/modules/comment/comment.action'
 
 import { confirmBox, toast } from 'helpers/common'
-import ActionComponent from 'components/Common/ActionComponent'
-import CreateComment from './CreateCommentComponent'
+import CreateComment from './CreateUpdateComponent'
+import CommentView from './ViewComponent'
 
 export const Comment = ({ comment, post }) => {
   const dispatch = useDispatch()
-  const user = useSelector(state => state.user.user)
 
   const [mode, modeChange] = useState('view')
 
@@ -34,20 +32,7 @@ export const Comment = ({ comment, post }) => {
 
     <li className="media">
       { mode === 'view' ? <>
-        <span className="pull-left">
-          <img src="https://bootdey.com/img/Content/user_1.jpg" alt="" className="img-circle"/>
-        </span>
-        <div className="media-body">
-          <span className="text-muted pull-right">
-            <small className="text-muted"><ReactTimeAgo date={new Date(comment.updated_at).getTime()}/></small>
-            {user.id === comment.author.id && <ActionComponent actionHandler={actionHandler}></ActionComponent>}
-
-          </span>
-          <strong className="text-success">@{comment.author.username}</strong>
-          <p>
-            {comment.comment}
-          </p>
-        </div>
+        <CommentView actionHandler={actionHandler} comment={comment}></CommentView>
       </>
         : <CreateComment post={post} modeChange={modeChange} comment={comment} mode="edit"></CreateComment>}
     </li>

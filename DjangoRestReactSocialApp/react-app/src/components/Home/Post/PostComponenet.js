@@ -1,17 +1,20 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import PropTypes from 'prop-types'
-import ReactTimeAgo from 'react-time-ago'
-import CommentsPanel from './CommentsPanelComponent'
+import CommentsPanel from 'components/Home/Comment/ListComponent'
 
 import { deletePost } from 'store/modules/post/post.action'
 
-import { resolveImageUrl, confirmBox, toast } from 'helpers/common'
+import { confirmBox, toast } from 'helpers/common'
 import ActionComponent from 'components/Common/ActionComponent'
+import CreatePost from './CreateUpdateComponent'
+import PostView from './ViewComponent'
 
 export const Post = ({ post }) => {
   const dispatch = useDispatch()
   const user = useSelector(state => state.user.user)
+
+  const [mode, modeChange] = useState('view')
 
   const actionHandler = (type) => {
     if (type === 'delete') {
@@ -24,6 +27,8 @@ export const Post = ({ post }) => {
           }
         })
       })
+    } else {
+      modeChange('edit')
     }
   }
   return (
@@ -48,16 +53,10 @@ export const Post = ({ post }) => {
         </div>
 
       </div>
-      <div className="card-body">
-        <div className="text-muted h7 mb-2"> <i className="fa fa-clock-o"></i>
-          <ReactTimeAgo date={new Date(post.updated_at).getTime()} />
-        </div>
-        <span className="card-link">
-          <h5 className="card-title">{post.title}</h5>
-        </span>
-        <img src={resolveImageUrl(post.image)} alt="Italian Trulli" />
-        {post.body}
-      </div>
+      {
+        mode === 'view' ? <PostView post={post}></PostView>
+          : <CreatePost post={post} mode={'edit'} modeChange={modeChange}></CreatePost>
+      }
 
       <CommentsPanel post={post} comments={post.comments}></CommentsPanel>
     </div>
