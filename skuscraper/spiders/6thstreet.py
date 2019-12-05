@@ -40,7 +40,7 @@ class SixthStreetSpider(BaseParseSpider):
         garment['brand'] = self.product_brand(raw_product)
         garment['image_urls'] = self.product_images(raw_product)
         garment['gender'] = self.product_gender(raw_product)
-        garment['skus'] = self.product_skus(raw_product)
+        garment['skus'] = self.product_skus(response, raw_product)
         return garment
 
     def product_retailer_sku(self, response):
@@ -75,12 +75,12 @@ class SixthStreetSpider(BaseParseSpider):
         gender = self.gender_lookup(soup, merge_genders=True)
         return gender
 
-    def product_skus(self, raw_product):
+    def product_skus(self, response, raw_product):
         sizes_us = raw_product['size_us']
         sizes_uk = raw_product['size_uk']
         sizes_eu = raw_product['size_eu']
 
-        common_sku = self.product_price(raw_product['price'][0])
+        common_sku = self.product_pricing_common(response, price_css='.pdp-price-box span::text')
         common_sku['colour'] = raw_product['color']
 
         if not sizes_us:
@@ -96,17 +96,9 @@ class SixthStreetSpider(BaseParseSpider):
 
         return skus
 
-    def product_price(self, raw_data):
-        currency = list(raw_data.keys())[0]
-        return {
-            'price': int(raw_data[currency]['default']),
-            'currency': currency,
-            'previous_prices': [raw_data[currency]['6s_base_price']],
-        }
-
 
 class SixthStreetCrawler(BaseCrawlSpider):
-    url = 'https://02x7u6o3si-dsn.algolia.net/1/indexes/*/queries?'
+    ajax_request_url = 'https://02x7u6o3si-dsn.algolia.net/1/indexes/*/queries?'
     allow = r'.html'
     listings_css = [
         '.third-level-sub'
@@ -120,7 +112,7 @@ class SixthStreetCrawler(BaseCrawlSpider):
         raw_data = response.css('[crossorigin="anonymous"] + script::text').re_first('=\s*({.*})')
         raw_data = json.loads(raw_data)
         query = raw_data.get('request')['path'].replace('///', '')
-        url = self.add_parameters(self.url, raw_data)
+        url = self.add_parameters(self.ajax_request_url, raw_data)
 
         yield FormRequest(url=url, body=self.make_request_body(query), method='POST',
                           callback=self.parse_products, meta={'trail': self.add_trail(response)})
@@ -128,17 +120,18 @@ class SixthStreetCrawler(BaseCrawlSpider):
     def parse_products(self, response):
         raw_data = json.loads(response.text)
         products = raw_data['results'][0]['hits']
-
-        for product in products:
-            yield Request(url=product['url'], callback=self.parse_item, meta={'product': product,
-                                                                              'trail': self.add_trail(response)})
-
-        current_page = raw_data['results'][0]['page']
+        curr_page_num = raw_data['results'][0]['page']
         total_pages = raw_data['results'][0]['nbPages']
-        if current_page < total_pages:
-            query = raw_data['results'][0]['query']
-            body = self.make_request_body(query, current_page+1)
-            yield FormRequest(url=response.url, body=json.dumps(body), method='POST', callback=self.parse_products)
+
+        yield from [Request(url=product['url'], callback=self.parse_item,
+                            meta={'product': product, 'trail': self.add_trail(response)}) for product in products]
+
+        if curr_page_num >= total_pages:
+            return
+
+        query = raw_data['results'][0]['query']
+        body = self.make_request_body(query, curr_page_num + 1)
+        yield FormRequest(url=response.url, body=body, method='POST', callback=self.parse_products)
 
     def make_request_body(self, query, page_num=0):
         body = {"requests": [{"indexName": "enterprise_magento_english_products",
