@@ -30,7 +30,7 @@ class ParseSpider():
         product['requests'] += self.sku_requests(response)
         return self.request_or_product(product)
 
-    def parse_sku(self, response):
+    def parse_skus(self, response):
         product = response.meta['product']
         skus = self.get_skus(response)
         product['skus'].update(skus)
@@ -91,7 +91,6 @@ class ParseSpider():
                 for i in cat_ids]
 
     def sku_requests(self, response):
-        sku_requests = []
         product_id = self.get_retailer_sku(response)
 
         color_css = '.swatchlink .color::attr(data-value), #color + input::attr(value)'
@@ -100,12 +99,9 @@ class ParseSpider():
 
         size_ids = [size.split('_')[1] for size in response.css('a.box.size::attr(id)').getall()] \
             or response.css('[name^="specTwo"]::attr(value)').getall()
-        for color_id in color_ids:
-            for size_id in size_ids:
-                url = f'/p/{product_id.lower()}/{color_id}{size_id}'
-                sku_requests.append(response.follow(url, callback=self.parse_sku))
 
-        return sku_requests
+        return [response.follow(f'/p/{product_id.lower()}/{cid}{sid}', self.parse_skus)
+                for cid in color_ids for sid in size_ids]
 
     def request_or_product(self, product):
         if product['requests']:
