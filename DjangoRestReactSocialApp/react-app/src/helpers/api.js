@@ -14,19 +14,20 @@ export async function newRequest ({ method, url, params, data, headers, hideErro
   console.log(headers)
 
   const response = await axios({ method, url, headers, data, auth }).catch(({ response }) => {
-    if (_exists(response, 'data.detail') && response.data.detail.includes('expired')) {
+    if (_exists(response, 'data.detail') && response.data.detail.includes('signature')) {
       logout()
       window.location.href = '/login'
       msgAlert('failure', 'Token is Expired. Please log in')
-      return
+      return response
     }
     if (_exists(response, 'data.non_field_errors')) {
       msgAlert('failure', response.data.non_field_errors[0])
-      // window.location.href = "/login";
-      return
+      return response
     }
 
-    return { data: [] }
+    throw response
+
+    // return { data: [] }
   })
   return response
 }

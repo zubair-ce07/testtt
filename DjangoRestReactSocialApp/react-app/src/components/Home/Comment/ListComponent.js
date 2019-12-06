@@ -9,16 +9,13 @@ export const CommentsPanel = ({ post, comments }) => {
   return (
     <>
       <div className="card-footer">
-        <span className="card-link" onClick={() => { changeEnableComment(true) }}><i className="fa fa-comment"></i> Comment</span>
+        <span className="card-link" onClick={() => { changeEnableComment(!enableComment) }}><i className="fa fa-comment"></i> Comment</span>
       </div>
 
       <div className="row bootstrap snippets">
         <div className="col-md-12 col-md-offset-2 col-sm-12">
           <div className="comment-wrapper">
             <div className="panel panel-info">
-              {/* <div className="panel-heading">
-                    Comment panel
-              </div> */}
               <div className="panel-body">
                 { enableComment && <>
                   <CreateUpdateComment post={post}/>

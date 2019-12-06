@@ -1,5 +1,6 @@
 import { LOGIN_USER, CURRENT_USER, UPDATE_USER } from './user.types'
 import { fulfilled } from 'helpers/api'
+import { _exists } from 'helpers/common'
 
 const initial = {
   user: {}
@@ -8,11 +9,11 @@ const initial = {
 export default function (state = initial, action) {
   switch (action.type) {
     case fulfilled(LOGIN_USER):
-      return { ...state, user: action.payload.data.user }
+      return { ...state, user: _exists(action, 'payload.data.user', {}) }
     case fulfilled(CURRENT_USER):
-      return { ...state, user: action.payload.data }
+      return { ...state, user: _exists(action, 'payload.data', {}) }
     case fulfilled(UPDATE_USER):
-      return { ...state, user: action.payload.data.data }
+      return { ...state, user: _exists(action, 'payload.data.data', state.user) }
     default:
       return state
   }

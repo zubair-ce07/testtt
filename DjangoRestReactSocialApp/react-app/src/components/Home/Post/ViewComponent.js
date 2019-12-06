@@ -6,7 +6,7 @@ import { resolveImageUrl } from 'helpers/common'
 
 export const PostView = ({ post }) => {
   return (
-    <div className="card-body">
+    <div className="card-body post-card">
       <div className="text-muted h7 mb-2"> <i className="fa fa-clock-o"></i>
         <ReactTimeAgo date={new Date(post.updated_at).getTime()} />
       </div>
@@ -14,6 +14,7 @@ export const PostView = ({ post }) => {
         <h5 className="card-title">{post.title}</h5>
       </span>
       <img src={resolveImageUrl(post.image)} alt="" />
+      <hr></hr>
       {post.body}
     </div>
   )

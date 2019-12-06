@@ -35,9 +35,7 @@ export const ProfileComponent = props => {
       <div className="row">
         <div className="col-md-12">
           <div className="circle">
-            {user.image ? <img className="profile-pic" src={resolveImageUrl(user.image)} alt="Profile"/>
-
-              : <i className="fa fa-user fa-5x"></i> }
+            <img className="profile-pic" src={resolveImageUrl(user.image)} alt="Profile"/>
           </div>
           <div className="p-image">
             <i className="fa fa-camera upload-button"></i>

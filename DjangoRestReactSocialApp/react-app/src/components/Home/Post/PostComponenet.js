@@ -5,7 +5,7 @@ import CommentsPanel from 'components/Home/Comment/ListComponent'
 
 import { deletePost } from 'store/modules/post/post.action'
 
-import { confirmBox, toast } from 'helpers/common'
+import { confirmBox, toast, resolveImageUrl } from 'helpers/common'
 import ActionComponent from 'components/Common/ActionComponent'
 import CreatePost from './CreateUpdateComponent'
 import PostView from './ViewComponent'
@@ -31,6 +31,7 @@ export const Post = ({ post }) => {
       modeChange('edit')
     }
   }
+
   return (
 
     <div className="card gedf-card">
@@ -38,7 +39,7 @@ export const Post = ({ post }) => {
         <div className="d-flex justify-content-between align-items-center">
           <div className="d-flex justify-content-between align-items-center">
             <div className="mr-2">
-              <img className="rounded-circle" width="45" src="https://picsum.photos/50/50" alt="" />
+              <img className="rounded-circle" width="45" src={resolveImageUrl(post.author.image)} alt="" />
             </div>
             <div className="ml-2">
               <div className="h5 m-0">@{post.author.username}</div>
@@ -46,8 +47,7 @@ export const Post = ({ post }) => {
             </div>
           </div>
           <div>
-            {user.id === post.author.id && <ActionComponent actionHandler={actionHandler}></ActionComponent>
-            }
+            {user.id === post.author.id && <ActionComponent actionHandler={actionHandler}></ActionComponent>}
           </div>
 
         </div>

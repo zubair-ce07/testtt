@@ -11,7 +11,8 @@ export const AppHeader = props => {
 
   return (
     <nav className="navbar navbar-light bg-white">
-      <Link className="navbar-brand" to="/home">Social App</Link>
+
+      <Link className="navbar-brand" to="/home"> <img src="/ms-icon-150x150.png" alt="" width="60"/> Home</Link>
 
       <Link onClick={ () => logout()} to="/">Logout</Link>
     </nav>

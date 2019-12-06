@@ -34,8 +34,8 @@ export function deepCopy (data) {
   return JSON.parse(JSON.stringify(data))
 }
 
-export function _exists (obj, keyPath) {
-  return lodash.get(obj, keyPath)
+export function _exists (obj, keyPath, defaultValue) {
+  return lodash.get(obj, keyPath, defaultValue)
 }
 
 export function toFormData (obj) {
@@ -47,6 +47,9 @@ export function toFormData (obj) {
 }
 
 export function resolveImageUrl (url) {
+  if (!url) {
+    return 'https://picsum.photos/50/50'
+  }
   if (url.includes('http')) {
     return url
   } else {
@@ -65,12 +68,5 @@ export function confirmBox (callback) {
     confirmButtonText: 'Yes, delete it!'
   }).then((result) => {
     callback(result)
-    // if (result.value) {
-    //   Swal.fire(
-    //     'Deleted!',
-    //     'Your file has been deleted.',
-    //     'success'
-    //   )
-    // }
   })
 }

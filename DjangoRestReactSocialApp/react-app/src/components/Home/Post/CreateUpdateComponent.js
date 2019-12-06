@@ -10,6 +10,7 @@ import ImageUploadField from 'components/UI/ImageUploadFiled'
 import { createPost, updatePost } from 'store/modules/post/post.action'
 
 import { toast } from 'helpers/common'
+import TextField from 'components/UI/TextField'
 
 const SUPPORTED_FORMATS = ['image/jpg', 'image/jpeg', 'image/gif', 'image/png']
 const Schema = Yup.object().shape({
@@ -55,7 +56,7 @@ export const CreateUpdatePost = ({ mode, post, modeChange }) => {
         }
       }}
     >
-      {({ errors, touched, setFieldValue }) => (
+      {() => (
         <Form>
           <div className="card gedf-card">
             <div className="card-header">
@@ -74,20 +75,18 @@ export const CreateUpdatePost = ({ mode, post, modeChange }) => {
               <div className="tab-content" id="myTabContent">
                 <div className="tab-pane fade show active" id={resolveId('posts')} role="tabpanel" aria-labelledby="posts-tab">
                   <div className="form-group">
-                    <label className="sr-only" htmlFor="message">Title</label>
-                    <Field type="text" name="title" className="form-control" placeholder="Post title"/>
+                    <Field name="title" className="form-control" component={TextField} label="Post title"></Field>
                   </div>
                   <div className="form-group">
-                    <label className="sr-only" htmlFor="message">Post</label>
-                    <Field name="body" className="form-control" component={TextareaField} placeholder="What are you thinking?"></Field>
+                    <Field name="body" className="form-control" component={TextareaField} label="What are you thinking?"></Field>
                   </div>
                 </div>
                 <div className="tab-pane fade" id={resolveId('images')} role="tabpanel" aria-labelledby="images-tab">
-                  <div className="form-group">
-                    <div className="custom-file">
-                      <Field name="image" component={ImageUploadField}/>
-                    </div>
+
+                  <div className="custom-file">
+                    <Field name="image" component={ImageUploadField}/>
                   </div>
+
                   <div className="py-4"></div>
                 </div>
               </div>

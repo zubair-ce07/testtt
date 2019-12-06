@@ -43,7 +43,7 @@ export const CreateUpdateComment = ({ post, mode, comment, modeChange }) => {
         }
       }}
     >
-      {({ errors, touched, setFieldValue }) => (
+      {() => (
         <div className="col-md-12 clearfix">
           <Form>
             <Field name="comment" component={TextareaField} className="form-control" placeholder="write a comment..." rows="3"></Field>

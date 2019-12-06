@@ -8,8 +8,9 @@ import * as Yup from 'yup'
 import * as auth from '../helpers/auth'
 import { login } from 'store/modules/user/user.action'
 import { image } from '../helpers/assetHelper'
-import { msgAlert } from '../helpers/common'
+import { msgAlert, _exists } from '../helpers/common'
 import AuthLayout from 'layouts/AuthLayout'
+import TextField from 'components/UI/TextField'
 
 const LoginSchema = Yup.object().shape({
   username: Yup.string()
@@ -37,34 +38,27 @@ export const LoginPage = props => {
         <Formik
           initialValues={{ username: '', password: '' }}
           validationSchema={LoginSchema}
-          onSubmit={values => {
+          onSubmit={(values, { setErrors }) => {
             dispatch(login(values)).then((res) => {
-              if (res.value.data.token) {
+              if (_exists(res, 'value.data.token')) {
                 auth.login(res.value.data)
                 msgAlert('success', 'Logged In Successfully')
                 props.history.push('/home')
-              } else {
-                msgAlert('failure', res.value.data.message)
               }
+            }).catch((res) => {
+              console.log(setErrors(res.data.message))
             })
           }}
         >
-          {({ errors, touched }) => (
+          {() => (
             <Form>
+
               <div className="form-group">
-                <label htmlFor="your_name"><i className="zmdi zmdi-account material-icons-name"></i></label>
-                <Field type="text" name="username" placeholder="Username"/>
-                {errors.username && touched.username ? (<div>{errors.username}</div>) : null}
+                <Field component={TextField} name="username" placeholder="Username" label="Username"/>
               </div>
               <div className="form-group">
-                <label htmlFor="your_pass"><i className="zmdi zmdi-lock"></i></label>
-                <Field type="password" name="password" placeholder="Password"/>
-                {errors.password && touched.password ? (<div>{errors.password}</div>) : null}
+                <Field type='password' component={TextField} name="password" placeholder="password" label="Password"/>
               </div>
-              {/* <div className="form-group">
-            <input type="checkbox" name="remember-me" id="remember-me" className="agree-term" />
-            <label htmlFor="remember-me" className="label-agree-term"><span><span></span></span>Remember me</label>
-          </div> */}
               <div className="form-group form-button">
                 <input type="submit" name="signin" id="signin" className="form-submit" value="Log in"/>
               </div>

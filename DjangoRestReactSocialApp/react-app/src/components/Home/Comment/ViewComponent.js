@@ -2,6 +2,7 @@ import React from 'react'
 import { useSelector } from 'react-redux'
 import PropTypes from 'prop-types'
 import ReactTimeAgo from 'react-time-ago'
+import { resolveImageUrl } from 'helpers/common'
 
 import ActionComponent from 'components/Common/ActionComponent'
 
@@ -10,7 +11,7 @@ export const CommentView = ({ comment, actionHandler }) => {
   return (
     <>
       <span className="pull-left">
-        <img src="https://bootdey.com/img/Content/user_1.jpg" alt="" className="img-circle"/>
+        <img src={resolveImageUrl(comment.author.image)} alt="" className="img-circle"/>
       </span>
       <div className="media-body">
         <span className="text-muted pull-right">

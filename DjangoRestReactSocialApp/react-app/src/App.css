@@ -27,10 +27,16 @@ body {
 }
 
 .profile-pic {
-  max-width: 123px;
+  /* max-width: 123px;
   max-height: 185px;
   margin-top: -1px;
-  margin-left: 0px;
+  margin-left: 0px; */
+
+  border-radius: 1000px !important;
+  overflow: hidden;
+  width: 128px;
+  height: 128px;
+
 }
 
 .file-upload {
@@ -45,7 +51,7 @@ body {
   overflow: hidden;
   width: 128px;
   height: 128px;
-  border: 8px solid rgba(167, 156, 156, 0.7);
+  border: 5px solid rgba(167, 156, 156, 0.7);
   position: absolute;
   top: 21px;
     left: 110px;
@@ -61,7 +67,7 @@ img {
 .p-image {
   position: absolute;
   top: 118px;
-  left: 202px;
+  left: 216px;
   color: #666666;
   transition: all .3s cubic-bezier(.175, .885, .32, 1.275);
 }
@@ -109,6 +115,7 @@ img {
   width:64px;
   height:64px;
   border:2px solid #e5e7e8;
+  border-radius: 1000px !important;
 }
 
 .comment-wrapper .media-list .media {
@@ -136,4 +143,17 @@ img {
 
 .card {
   margin-top: 25px;
+}
+
+.easy-edit-button-wrapper{
+  display: inline-block;
+}
+
+.previewImage{
+  max-height: 249px;
+  margin-left: 170px;
+}
+
+.post-card{
+  text-align: center;
 }

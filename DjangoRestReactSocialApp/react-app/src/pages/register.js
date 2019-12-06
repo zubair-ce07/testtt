@@ -9,6 +9,7 @@ import AuthLayout from 'layouts/AuthLayout'
 import { register } from 'store/modules/user/user.action'
 import { msgAlert } from '../helpers/common'
 import { image } from '../helpers/assetHelper'
+import TextField from 'components/UI/TextField'
 
 const RegisterSchema = Yup.object().shape({
   first_name: Yup.string().min(2, 'Too Short!').max(50, 'Too Long!').required('Required'),
@@ -27,7 +28,7 @@ export const Register = props => {
         <Formik
           initialValues={{ username: '', first_name: '', last_name: '', password: '', re_password: '' }}
           validationSchema={RegisterSchema}
-          onSubmit={values => {
+          onSubmit={(values, { setErrors }) => {
             dispatch(register(values)).then((res) => {
               if (res.value.data.status) {
                 msgAlert('success', 'Registered Successfully')
@@ -35,37 +36,29 @@ export const Register = props => {
               } else {
                 msgAlert('failure', res.value.data.message)
               }
+            }).catch((res) => {
+              setErrors(res.data.message)
             })
           }}
         >
-          {({ errors, touched }) => (
+          {() => (
             <Form>
               <div className="form-group">
-                <label htmlFor="your_name"><i className="zmdi zmdi-account material-icons-name"></i></label>
-                <Field type="text" name="first_name" placeholder="First Name"/>
-                {errors.first_name && touched.first_name ? (<div>{errors.first_name}</div>) : null}
+                <Field component={TextField} name="first_name" placeholder="First Name" label="First Name"/>
               </div>
               <div className="form-group">
-                <label htmlFor="your_name"><i className="zmdi zmdi-account material-icons-name"></i></label>
-                <Field type="text" name="last_name" placeholder="Last Name"/>
-                {errors.first_name && touched.last_name ? (<div>{errors.last_name}</div>) : null}
+                <Field component={TextField} name="last_name" placeholder="Last Name" label="Last Name"/>
               </div>
               <div className="form-group">
-                <label htmlFor="your_name"><i className="zmdi zmdi-account material-icons-name"></i></label>
-                <Field type="text" name="username" placeholder="Username"/>
-                {errors.username && touched.username ? (<div>{errors.username}</div>) : null}
+                <Field component={TextField} name="username" placeholder="Username" label="Username"/>
               </div>
 
               <div className="form-group">
-                <label htmlFor="your_pass"><i className="zmdi zmdi-lock"></i></label>
-                <Field type="password" name="password" placeholder="Password"/>
-                {errors.password && touched.password ? (<div>{errors.password}</div>) : null}
+                <Field type="password" component={TextField} name="password" placeholder="Password" label="Password"/>
               </div>
 
               <div className="form-group">
-                <label htmlFor="your_pass"><i className="zmdi zmdi-lock"></i></label>
-                <Field type="password" name="re_password" placeholder="Re-Password"/>
-                {errors.re_password && touched.re_password ? (<div>{errors.re_password}</div>) : null}
+                <Field type="password" component={TextField} name="re_password" placeholder="Re-Password" label="Re-Password"/>
               </div>
               <div className="form-group form-button">
                 <input type="submit" name="signin" id="signin" className="form-submit" value="Register"/>

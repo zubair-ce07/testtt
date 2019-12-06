@@ -1,6 +1,5 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
-// import Button from '@material-ui/core/Button';
 import { Modal, Button } from 'react-bootstrap'
 import _ from 'underscore'
 
