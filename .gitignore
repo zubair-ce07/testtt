@@ -58,3 +58,14 @@ target/
 
 # VSCode
 .vscode
+media
+media/
+media/*
+
+venv
+venv/
+venv/*
+
+node_modules
+node_modules/
+node_modules/*
