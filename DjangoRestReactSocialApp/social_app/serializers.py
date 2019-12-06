@@ -20,9 +20,13 @@ class ProfileSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    profile = ProfileSerializer(write_only=True)
+    bio = serializers.CharField(source='profile.bio', read_only=True)
+    image = serializers.CharField(source='profile.image', read_only=True)
+
     class Meta:
         model = User
-        fields = ('id', 'username', 'is_superuser', 'first_name', 'last_name')
+        fields = ('id', 'username', 'is_superuser', 'first_name', 'last_name', 'profile', 'last_name', 'bio', 'image',)
 
 
 class UserSerializerWithToken(serializers.ModelSerializer):
