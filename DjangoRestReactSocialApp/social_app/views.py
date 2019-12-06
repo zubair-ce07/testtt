@@ -1,3 +1,5 @@
+from rest_framework.status import HTTP_400_BAD_REQUEST
+
 from .serializers import *
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
@@ -25,13 +27,13 @@ class CreateUserView(APIView):
         if serializer.is_valid():
             serializer.save()
         else:
-            return Response({'status': False, "message": serializer.errors})
+            return Response({'status': False, "message": serializer.errors, }, status=HTTP_400_BAD_REQUEST)
 
         return Response({'status': True, "message": "user created Successfully"})
 
 
 class UpdateUserView(APIView):
-    # permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated,)
 
     def put(self, request):
         user_data = request.data
@@ -41,7 +43,7 @@ class UpdateUserView(APIView):
 
             'profile': {
                 'bio': user_data.get('bio', request.user.profile.bio),
-                'image': user_data.get('image')
+                'image': user_data.get('image', request.user.profile.image)
             }
         }
 

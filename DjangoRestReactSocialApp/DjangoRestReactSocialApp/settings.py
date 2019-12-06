@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 import datetime
 import os
 
+import django_heroku
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -42,6 +44,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+
+    # 'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -77,8 +81,12 @@ WSGI_APPLICATION = 'DjangoRestReactSocialApp.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('DJANGO_DB_NAME', "dc6c7dd6pv27q8"),
+        'USER': os.environ.get('DJANGO_DB_USER', "kayprrvvmfixzs"),
+        'PASSWORD': os.environ.get('DJANGO_DB_PASSWORD', "ee2c835158af2a275053c356d85b57cf44a9004522bb0f18718f3e0fd866d362"),
+        'HOST': os.environ.get('DJANGO_DB_HOST', "ec2-54-225-72-238.compute-1.amazonaws.com"),
+        'PORT': os.environ.get('DJANGO_DB_PORT', "5432")
     }
 }
 
@@ -138,6 +146,7 @@ REST_FRAMEWORK = {
 CORS_ORIGIN_WHITELIST = (
     'http://localhost:3000',
     'http://localhost:3001',
+    'https://social-app-web.herokuapp.com'
 )
 
 JWT_AUTH = {
@@ -146,3 +155,5 @@ JWT_AUTH = {
     'JWT_AUTH_HEADER_PREFIX': 'Bearer',
     'JWT_AUTH_COOKIE': None,
 }
+
+django_heroku.settings(locals())

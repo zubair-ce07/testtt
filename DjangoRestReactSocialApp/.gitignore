@@ -1,0 +1,13 @@
+react-app
+react-app/
+react-app/*
+
+db.sqlite3
+
+venv
+venv/
+venv/*
+
+.idea/
+
+media/
