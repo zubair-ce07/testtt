@@ -1,11 +1,12 @@
 """Docket and related Loader"""
 import re
-from scrapy.loader.processors import Identity
-from scrapy.loader.processors import MapCompose
+
+from scrapy.loader.processors import Identity, MapCompose
 from w3lib.html import remove_tags
 
-from .base_loader import BaseLoader
 from puc_scaping.util.date_time_util import DateTimeUtil
+
+from .base_loader import BaseLoader
 
 
 def format_date(date_string):

@@ -1,6 +1,5 @@
 """ Items related to docket """
-from scrapy import Item
-from scrapy import Field
+from scrapy import Field, Item
 
 
 class DocketItem(Item):

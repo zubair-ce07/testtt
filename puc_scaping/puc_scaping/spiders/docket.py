@@ -2,25 +2,19 @@
 import json
 import logging
 import re
-from urllib.parse import urlencode
-from urllib.parse import urljoin
-from w3lib.html import remove_tags
+from urllib.parse import urlencode, urljoin
 
 import scrapy
 from scrapy.exceptions import CloseSpider
 from scrapy.selector import Selector
 from scrapy.spidermiddlewares.httperror import HttpError
-
 # Errors
-from twisted.internet.error import DNSLookupError
-from twisted.internet.error import TimeoutError
-from twisted.internet.error import TCPTimedOutError
+from twisted.internet.error import (DNSLookupError, TCPTimedOutError,
+                                    TimeoutError)
+from w3lib.html import remove_tags
 
-from puc_scaping.items.docket_item import DocketItem
-from puc_scaping.items.docket_item import FilingItem
-from puc_scaping.items.docket_item import DocumentItem
-from puc_scaping.item_loaders.docket_loader import DocketLoader
-from puc_scaping.item_loaders.docket_loader import FilingLoader
+from puc_scaping.item_loaders.docket_loader import DocketLoader, FilingLoader
+from puc_scaping.items.docket_item import DocketItem, DocumentItem, FilingItem
 from puc_scaping.util.date_time_util import DateTimeUtil
 from puc_scaping.util.util import remove_relativness
 
@@ -92,7 +86,8 @@ class DocketSpider(scrapy.Spider):
         try:
             dockets_response = json.loads(response.body)
         except json.decoder.JSONDecodeError as exp:
-            logging.error(f"Failed to parse json response from: {response.url}")
+            logging.error(
+                f"Failed to parse json response from: {response.url}")
             logging.error(f"Error Deatils: {str(exp)}")
             raise CloseSpider("Invalid dockets data in response")
 
@@ -174,7 +169,8 @@ class DocketSpider(scrapy.Spider):
                                      dont_filter=True)
 
         except json.decoder.JSONDecodeError as exp:
-            logging.error(f"Failed to parse json response from: {response.url}")
+            logging.error(
+                f"Failed to parse json response from: {response.url}")
             logging.error(f"Error Deatils: {str(exp)}")
             yield docket
 
