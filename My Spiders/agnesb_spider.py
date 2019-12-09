@@ -10,6 +10,8 @@ class Mixin:
     retailer = 'agnesb'
     default_brand = 'Agnès B'
 
+    deny_care = ['dimension', 'length', ' x ', 'cm', 'inch', 'diamètre', 'largeur']
+
 
 class MixinUK(Mixin):
     retailer = Mixin.retailer + '-uk'
@@ -22,8 +24,6 @@ class MixinUK(Mixin):
         ('special edition', 'Special Edition'),
         ('limited edition', 'Limited Edition'),
     ]
-
-    deny_care = ['dimension', 'length', ' x ', 'cm', 'inch']
 
 
 class MixinFR(Mixin):
@@ -40,8 +40,6 @@ class MixinFR(Mixin):
         ('edición especial', 'Special Edition'),
         ('edizione speciale', 'Special Edition')
     ]
-
-    deny_care = ['dimension', 'length', ' x ', 'cm', 'inch', 'diamètre', 'largeur']
 
 
 class AgnesbParseSpider(BaseParseSpider):
@@ -95,7 +93,7 @@ class AgnesbParseSpider(BaseParseSpider):
         return self.gender_lookup(soupify(garment['category'])) or self.gender_lookup(soup) or Gender.ADULTS.value
 
     def product_category(self, response):
-        category = [c.strip() for c in response.css('.breadcrumb li a::text').getall()][1:]
+        category = clean(response.css('.breadcrumb li a::text'))[1:]
         return category + [self.raw_product(response)['typology']['attributes']['pim_category']['value']]
 
     def image_urls(self, raw_product):
