@@ -23,6 +23,7 @@ class MixinAE(Mixin):
 
 class SixthStreetSpider(BaseParseSpider):
     price_css = '.pdp-price-box span::text'
+    raw_description_css = '[property="og:description"]::attr(content)'
 
     def parse(self, response):
         raw_product = response.meta['product']
@@ -45,15 +46,10 @@ class SixthStreetSpider(BaseParseSpider):
         return garment
 
     def product_retailer_sku(self, response):
-        raw_retailer_sku = response.css('.pdp_middle_right li::text').get()
-        return clean(raw_retailer_sku)
+        return clean(response.css('.pdp_middle_right li::text'))
 
     def product_name(self, response):
-        raw_name = response.css('.product_name::text').get()
-        return clean(raw_name)
-
-    def product_description(self, response):
-        return [response.css('[property="og:description"]::attr(content)').get()]
+        return clean(response.css('.product_name::text'))
 
     def product_category(self, raw_data):
         raw_category = raw_data.get('level2')
@@ -62,7 +58,7 @@ class SixthStreetSpider(BaseParseSpider):
         return raw_category[0].split(' /// ')
 
     def product_brand(self, response):
-        return clean(response.css('.brand_name::text').get())
+        return clean(response.css('.brand_name::text'))
 
     def product_images(self, raw_data):
         return raw_data['gallery_images']
