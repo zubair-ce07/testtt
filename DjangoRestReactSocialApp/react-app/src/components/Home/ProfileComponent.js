@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 
 import EasyEdit from 'react-easy-edit'
-
 import { updateUser } from 'store/modules/user/user.action'
-
+import { Loader } from 'components/Common/ContentLoader'
 import { resolveImageUrl, toast } from 'helpers/common'
 
 export const ProfileComponent = props => {
@@ -31,34 +30,36 @@ export const ProfileComponent = props => {
 
   const cancel = () => { }
   return (
-    <div className="card">
-      <div className="row">
-        <div className="col-md-12">
-          <div className="circle">
-            <img className="profile-pic" src={resolveImageUrl(user.image)} alt="Profile"/>
-          </div>
-          <div className="p-image">
-            <i className="fa fa-camera upload-button"></i>
-            <input id='uploadImage' className="file-upload" onChange={(event) => {
-              uploadImage(event.currentTarget.files[0])
-            }} type="file" accept="image/*"/>
+    <Loader type="BlockUi" loadingRef="user.userLoading">
+      <div className="card">
+        <div className="row">
+          <div className="col-md-12">
+            <div className="circle">
+              <img className="profile-pic" src={resolveImageUrl(user.image)} alt="Profile"/>
+            </div>
+            <div className="p-image">
+              <i className="fa fa-camera upload-button"></i>
+              <input id='uploadImage' className="file-upload" onChange={(event) => {
+                uploadImage(event.currentTarget.files[0])
+              }} type="file" accept="image/*"/>
+            </div>
           </div>
         </div>
-      </div>
-      <div className="card-body profile-card">
-        <div className="h5">@{user.username}</div>
-        <div className="h7 text-muted">Fullname : {user.first_name} {user.last_name}</div>
+        <div className="card-body profile-card">
+          <div className="h5">@{user.username}</div>
+          <div className="h7 text-muted">Fullname : {user.first_name} {user.last_name}</div>
 
+        </div>
+        <ul className="list-group list-group-flush">
+          <div className="h5">Bio</div>
+          <li className="list-group-item">
+            <EasyEdit type="text" value={bio} onSave={saveBio} onCancel={cancel} saveButtonLabel="Save"
+              cancelButtonLabel="Cancel" attributes={{ name: 'bio', id: 1, value: { bio } }}
+            />
+          </li>
+        </ul>
       </div>
-      <ul className="list-group list-group-flush">
-        <div className="h5">Bio</div>
-        <li className="list-group-item">
-          <EasyEdit type="text" value={bio} onSave={saveBio} onCancel={cancel} saveButtonLabel="Save"
-            cancelButtonLabel="Cancel" attributes={{ name: 'bio', id: 1, value: { bio } }}
-          />
-        </li>
-      </ul>
-    </div>
+    </Loader>
 
   )
 }

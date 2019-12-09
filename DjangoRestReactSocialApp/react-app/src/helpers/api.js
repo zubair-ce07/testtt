@@ -14,7 +14,7 @@ export async function newRequest ({ method, url, params, data, headers, hideErro
   console.log(headers)
 
   const response = await axios({ method, url, headers, data, auth }).catch(({ response }) => {
-    if (_exists(response, 'data.detail') && response.data.detail.includes('signature')) {
+    if (_exists(response, 'data.detail') && response.data.detail.includes('Signature')) {
       logout()
       window.location.href = '/login'
       msgAlert('failure', 'Token is Expired. Please log in')

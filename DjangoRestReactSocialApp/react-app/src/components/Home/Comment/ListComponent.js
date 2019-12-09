@@ -3,6 +3,7 @@ import PropTypes from 'prop-types'
 
 import Comment from 'components/Home/Comment/CommentComponent'
 import CreateUpdateComment from 'components/Home/Comment/CreateUpdateComponent'
+
 export const CommentsPanel = ({ post, comments }) => {
   const [enableComment, changeEnableComment] = useState(false)
 
@@ -18,12 +19,13 @@ export const CommentsPanel = ({ post, comments }) => {
             <div className="panel panel-info">
               <div className="panel-body">
                 { enableComment && <>
-                  <CreateUpdateComment post={post}/>
+                  <CreateUpdateComment changeEnableComment={changeEnableComment} post={post}/>
                 </>
                 }
 
                 <div className="clearfix"></div>
                 <hr/>
+
                 <ul className="media-list">
                   {comments.length ? comments.map((comment) => <Comment key={comment.id} post={post} comment={comment}></Comment>) : <></>}
                 </ul>

@@ -90,7 +90,7 @@ class PostSerializer(serializers.ModelSerializer):
         fields = ('id', 'author', 'body', 'comments', 'title', 'image', 'created_at', 'updated_at')
 
 
-class PostListSerializer(PostSerializer):
+class PostListSerializer(serializers.ModelSerializer):
     comments = serializers.SerializerMethodField()
     author = serializers.SerializerMethodField()
 
@@ -100,3 +100,7 @@ class PostListSerializer(PostSerializer):
 
     def get_author(self, post):
         return UserSerializer(post.author).data
+
+    class Meta:
+        model = Post
+        fields = ('id', 'author', 'body', 'comments', 'title', 'image', 'created_at', 'updated_at')

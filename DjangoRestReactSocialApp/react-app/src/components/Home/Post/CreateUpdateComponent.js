@@ -16,7 +16,7 @@ const SUPPORTED_FORMATS = ['image/jpg', 'image/jpeg', 'image/gif', 'image/png']
 const Schema = Yup.object().shape({
   title: Yup.string().min(2, 'Too Short!').max(50, 'Too Long!').required('Required'),
   body: Yup.string().min(10, 'Too Short!').required('Required'),
-  image: Yup.mixed().test('fileType', 'Unsupported File Format', value => value && SUPPORTED_FORMATS.includes(value.type))
+  image: Yup.mixed().test('fileType', 'Unsupported File Format', value => value && (typeof value === 'string' || SUPPORTED_FORMATS.includes(value.type)))
 })
 
 export const CreateUpdatePost = ({ mode, post, modeChange }) => {
@@ -84,7 +84,7 @@ export const CreateUpdatePost = ({ mode, post, modeChange }) => {
                 <div className="tab-pane fade" id={resolveId('images')} role="tabpanel" aria-labelledby="images-tab">
 
                   <div className="custom-file">
-                    <Field name="image" component={ImageUploadField}/>
+                    <Field post={post} name="image" component={ImageUploadField}/>
                   </div>
 
                   <div className="py-4"></div>

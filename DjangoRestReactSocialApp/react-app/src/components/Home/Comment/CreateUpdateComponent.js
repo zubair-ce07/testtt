@@ -14,13 +14,13 @@ const Schema = Yup.object().shape({
   comment: Yup.string().min(10, 'Too Short!').required('Required')
 })
 
-export const CreateUpdateComment = ({ post, mode, comment, modeChange }) => {
+export const CreateUpdateComment = ({ post, mode, comment, modeChange, changeEnableComment }) => {
   const dispatch = useDispatch()
   return (
     <Formik
       initialValues={{ comment: mode === 'edit' ? comment.comment : '' }}
       validationSchema={Schema}
-      onSubmit={values => {
+      onSubmit={(values) => {
         console.log(values)
         values.post = post.id
         if (mode === 'edit') {
@@ -36,6 +36,7 @@ export const CreateUpdateComment = ({ post, mode, comment, modeChange }) => {
           dispatch(createComment(values)).then((res) => {
             if (res.value.data.status) {
               toast('success', 'Comment Added Successfully')
+              changeEnableComment(false)
             } else {
               toast('success', 'Error while adding comment')
             }
@@ -58,6 +59,7 @@ export const CreateUpdateComment = ({ post, mode, comment, modeChange }) => {
 }
 
 CreateUpdateComment.propTypes = {
+  changeEnableComment: PropTypes.any,
   comment: PropTypes.any,
   mode: PropTypes.any,
   modeChange: PropTypes.any,

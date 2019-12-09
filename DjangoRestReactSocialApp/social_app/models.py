@@ -34,7 +34,7 @@ class Profile(TimestampedModel):
 
 class Post(TimestampedModel):
     title = models.CharField(max_length=100)
-    body = models.CharField(max_length=200)
+    body = models.TextField()
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     image = models.ImageField(upload_to="images/%Y/%m/%d/", null=True, blank=True)
 
@@ -44,7 +44,7 @@ class Post(TimestampedModel):
 
 class Comment(TimestampedModel):
     author = models.ForeignKey(User, on_delete=models.CASCADE)
-    comment = models.CharField(max_length=200)
+    comment = models.TextField()
     post = models.ForeignKey(
         'Post', on_delete=models.CASCADE, related_name='comments')
 
