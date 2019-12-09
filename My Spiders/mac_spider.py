@@ -8,7 +8,6 @@ from ..utils import map_gender, format_price
 
 class Mixin:
     retailer = 'mac'
-    csrf_token = ''
 
 
 class MixinAT(Mixin):
@@ -24,6 +23,7 @@ class MixinAT(Mixin):
 
 
 class MacParseSpider(MixinAT):
+    csrf_token = None
     
     def parse_product(self, response):
         product = Product()
@@ -43,12 +43,13 @@ class MacParseSpider(MixinAT):
 
         return self.request_or_product(product)
 
+    def parse_colours(self, response):
+        product = response.meta['product']
+        product['meta']['requests'] += self.sku_requests(response)
+        return self.request_or_product(product)
+
     def parse_skus(self, response):
         product = response.meta['product']
-
-        if not response.meta.get('size_request'):
-            product['meta']['requests'] += self.size_requests(response)
-
         product['skus'].update(self.get_skus(response))
         return self.request_or_product(product)
 
@@ -87,21 +88,16 @@ class MacParseSpider(MixinAT):
         return response.css('.image-slider--container [itemprop="image"]::attr(srcset)').getall()
 
     def get_skus(self, response):
-        skus = {}
-
         colour = response.css('.color-images--article-switcher .selected--option a::attr(title)').get()
         size = response.css('[checked="checked"] + [for="group[1]"]::text').get().strip()
         len = response.css('[checked="checked"] + [for="group[2]"]::text').get().strip()
 
         sku = {'colour': colour} if colour else {}
         sku.update(self.get_price(response))
-        sku['size'] = self.one_size if size.strip() in self.one_sizes else size.strip()
-        sku['length'] = len
+        sku['size'] = self.one_size if size in self.one_sizes else f"{size}_{len}"
         sku['out_of_stock'] = bool(response.css('#notifyHideBasket'))
 
-        skus[f"{sku['colour']}_{sku['size']}_{len}" if colour else f"{sku['size']}_{len}"] = sku
-
-        return skus
+        return {f"{sku['colour']}_{sku['size']}" if colour else sku['size']: sku}
 
     def get_price(self, response):
         currency = response.css('[itemprop="priceCurrency"]::attr(content)').get()
@@ -113,10 +109,10 @@ class MacParseSpider(MixinAT):
 
     def color_requests(self, response):
         color_urls = response.css('.color-images--article-switcher a::attr(href)').getall()
-        return [response.follow(url, callback=self.parse_skus, dont_filter=True) for url in color_urls]
+        return [response.follow(url, callback=self.parse_colours, dont_filter=True) for url in color_urls]
 
-    def size_requests(self, response):
-        size_requests = []
+    def sku_requests(self, response):
+        sku_requests = []
         size_ids = response.css('div:not(.is--disabled)>[name="group[1]"]::attr(value)').getall()
         length_ids = response.css('div:not(.is--disabled)>[name="group[2]"]::attr(value)').getall()
 
@@ -128,10 +124,10 @@ class MacParseSpider(MixinAT):
                     "__csrf_token": self.csrf_token
                 }
 
-                size_requests.append(FormRequest(url=response.url, formdata=formdata, callback=self.parse_skus,
-                                                 meta={'size_request': True}, dont_filter=True))
+                sku_requests.append(FormRequest(url=response.url, formdata=formdata,
+                                                callback=self.parse_skus, dont_filter=True))
 
-        return size_requests
+        return sku_requests
 
     def request_or_product(self, product):
         if product['meta']['requests']:
@@ -155,7 +151,7 @@ class MacCrawlSpider(Spider):
     product_parser = MacParseSpider()
 
     def parse(self, response):
-        Mixin.csrf_token = response.headers['X-Csrf-Token'].decode('utf-8')
+        self.product_parser.csrf_token = response.headers['X-Csrf-Token'].decode('utf-8')
         return response.follow(self.retailer_url, callback=self.parse_category,
                                meta=add_trail(response))
 
