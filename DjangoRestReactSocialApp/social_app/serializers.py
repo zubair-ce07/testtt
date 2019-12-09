@@ -1,9 +1,5 @@
-from abc import ABC
-
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from rest_framework.utils.serializer_helpers import ReturnDict
-
 from rest_framework_jwt.settings import api_settings
 
 from social_app.models import Comment, Post, Profile
@@ -90,7 +86,7 @@ class PostSerializer(serializers.ModelSerializer):
         fields = ('id', 'author', 'body', 'comments', 'title', 'image', 'created_at', 'updated_at')
 
 
-class PostListSerializer(PostSerializer):
+class PostListSerializer(serializers.ModelSerializer):
     comments = serializers.SerializerMethodField()
     author = serializers.SerializerMethodField()
 
@@ -100,3 +96,7 @@ class PostListSerializer(PostSerializer):
 
     def get_author(self, post):
         return UserSerializer(post.author).data
+
+    class Meta:
+        model = Post
+        fields = ('id', 'author', 'body', 'comments', 'title', 'image', 'created_at', 'updated_at')
