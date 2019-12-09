@@ -14,7 +14,5 @@ class Product(Item):
     requests = Field()
     image_urls = Field()
     out_of_stock = Field()
-    image_urls = Field()
     trail = Field()
-    requests = Field()
     meta = Field()
