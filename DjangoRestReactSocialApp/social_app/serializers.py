@@ -41,6 +41,7 @@ class UserSerializerWithToken(serializers.ModelSerializer):
         return token
 
     def create(self, validated_data):
+        validated_data.pop('profile', {})
         user = User.objects.create(**validated_data)
 
         user.set_password(validated_data['password'])
