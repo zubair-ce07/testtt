@@ -1,9 +1,5 @@
-from abc import ABC
-
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from rest_framework.utils.serializer_helpers import ReturnDict
-
 from rest_framework_jwt.settings import api_settings
 
 from social_app.models import Comment, Post, Profile
@@ -45,8 +41,8 @@ class UserSerializerWithToken(serializers.ModelSerializer):
         return token
 
     def create(self, validated_data):
-        user = User.objects.create(username=validated_data['username'], first_name=validated_data['first_name'],
-                                   last_name=validated_data['last_name'])
+        validated_data.pop('profile', {})
+        user = User.objects.create(**validated_data)
 
         user.set_password(validated_data['password'])
         user.save()
@@ -58,13 +54,16 @@ class UserSerializerWithToken(serializers.ModelSerializer):
 
         for (key, value) in validated_data.items():
             setattr(instance, key, value)
-            if password is not None:
-                instance.set_password(password)
-            instance.save()
-            for (key, value) in profile_data.items():
-                setattr(instance.profile, key, value)
-            instance.profile.save()
-            return instance
+
+        if password is not None:
+            instance.set_password(password)
+
+        for (key, value) in profile_data.items():
+            setattr(instance.profile, key, value)
+        instance.profile.save()
+
+        instance.save()
+        return instance
 
     class Meta:
         model = User

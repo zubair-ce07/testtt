@@ -10,7 +10,6 @@ from rest_framework import viewsets
 @api_view(['GET'])
 def get_current_user(request):
     serializer = UserSerializerWithToken(request.user)
-    # profile_serializer = ProfileSerializer(user)
     return Response(serializer.data)
 
 
@@ -22,12 +21,12 @@ class CreateUserView(APIView):
         user['profile'] = {}
         if not user:
             return Response({'status': False, 'message': 'No data found'})
+
         serializer = UserSerializerWithToken(data=user)
-        if serializer.is_valid():
-            serializer.save()
-        else:
+        if not serializer.is_valid():
             return Response({'status': False, "message": serializer.errors, }, status=HTTP_400_BAD_REQUEST)
 
+        serializer.save()
         return Response({'status': True, "message": "user created Successfully"})
 
 
@@ -47,11 +46,11 @@ class UpdateUserView(APIView):
         }
 
         serializer = UserSerializerWithToken(request.user, data=serializer_data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
+        if not serializer.is_valid():
+            return Response({'status': False, "message": serializer.errors, }, status=HTTP_400_BAD_REQUEST)
 
-        return Response({'status': True, "data": serializer.data,
-                         "message": "Profile Updated Successfully"})
+        serializer.save()
+        return Response({'status': True, "data": serializer.data,"message": "Profile Updated Successfully"})
 
 
 class PostViewSet(viewsets.ModelViewSet):
