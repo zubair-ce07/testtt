@@ -1,10 +1,12 @@
 from rest_framework.status import HTTP_400_BAD_REQUEST
-from .serializers import *
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import permissions
 from rest_framework import viewsets
+
+from .serializers import *
+from .utils import notify_on_socket
 
 
 @api_view(['GET'])
@@ -50,7 +52,7 @@ class UpdateUserView(APIView):
             return Response({'status': False, "message": serializer.errors, }, status=HTTP_400_BAD_REQUEST)
 
         serializer.save()
-        return Response({'status': True, "data": serializer.data,"message": "Profile Updated Successfully"})
+        return Response({'status': True, "data": serializer.data, "message": "Profile Updated Successfully"})
 
 
 class PostViewSet(viewsets.ModelViewSet):
@@ -60,19 +62,28 @@ class PostViewSet(viewsets.ModelViewSet):
     def create(self, request):
         request.data['author'] = request.user.id
         create_res = super().create(request)
-        return Response({'status': True, "data": self.get_serialized_post(create_res.data['id']),
-                         "message": "Post Created Successfully"})
+        response = {'status': True, "data": self.get_serialized_post(create_res.data['id']),
+                    "message": "Post Created Successfully"}
+
+        notify_on_socket("CREATE_POST_FULFILLED", response)
+        return Response(response)
 
     def update(self, request, pk=None):
         if 'author' not in request.data:
             request.data['author'] = request.user.id
         update_res = super().update(request, pk)
-        return Response({'status': True, "data": self.get_serialized_post(update_res.data['id']),
-                         "message": "Post Updated Successfully"})
+        response = {'status': True, "data": self.get_serialized_post(update_res.data['id']),
+                    "message": "Post Updated Successfully"}
+
+        notify_on_socket("UPDATE_POST_FULFILLED", response)
+        return Response(response)
 
     def destroy(self, request, pk=None):
         super().destroy(request, pk)
-        return Response({'status': True, "data": {"id": pk}, "message": "Post Deleted Successfully"})
+
+        response = {'status': True, "data": {"id": pk}, "message": "Post Deleted Successfully"}
+        notify_on_socket("DELETE_POST_FULFILLED", response)
+        return Response(response)
 
     def get_serializer_class(self):
         if self.action == 'create' or self.action == 'update':
@@ -91,20 +102,31 @@ class CommentViewSet(viewsets.ModelViewSet):
     def create(self, request):
         request.data['author'] = request.user.id
         create_res = super().create(request)
-        return Response({'status': True, "data": self.get_serialized_comment(create_res.data['id']),
-                         "message": "Comment Created Successfully"})
+
+        response = {'status': True, "data": self.get_serialized_comment(create_res.data['id']),
+                    "message": "Comment Created Successfully"}
+        notify_on_socket("CREATE_COMMENT_FULFILLED", response)
+        return Response(response)
 
     def update(self, request, pk=None):
         request.data['author'] = request.user.id
         update_res = super().update(request, pk)
-        return Response({'status': True, "data": self.get_serialized_comment(update_res.data['id']),
-                         "message": "Comment Updated Successfully"})
+
+        response = {'status': True, "data": self.get_serialized_comment(update_res.data['id']),
+                    "message": "Comment Updated Successfully"}
+
+        notify_on_socket("UPDATE_COMMENT_FULFILLED", response)
+        return Response(response)
 
     def destroy(self, request, pk=None):
         comment = self.get_serialized_comment(pk)
         super().destroy(request, pk)
-        return Response({'status': True, "data": {"id": pk, "post": comment['post']},
-                         "message": "Post Deleted Successfully"})
+
+        response = {'status': True, "data": {"id": pk, "post": comment['post']},
+                    "message": "Post Deleted Successfully"}
+
+        notify_on_socket("DELETE_COMMENT_FULFILLED", response)
+        return Response(response)
 
     def get_serializer_class(self):
         if self.action == 'create' or self.action == 'update':

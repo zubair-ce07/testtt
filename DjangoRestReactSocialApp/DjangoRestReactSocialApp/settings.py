@@ -26,7 +26,7 @@ SECRET_KEY = '8u8z0x^jn373e##7w$3g531ahq^)=apa#_lmf09qw@vro)27do'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost','127.0.0.1']
 
 # Application definition
 
@@ -38,8 +38,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'channels',
+    'channels_redis',
     'corsheaders',
-    'social_app'
+    'social_app',
 ]
 
 MIDDLEWARE = [
@@ -75,6 +77,8 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'DjangoRestReactSocialApp.wsgi.application'
+
+ASGI_APPLICATION = "DjangoRestReactSocialApp.routing.application"
 
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
@@ -141,6 +145,15 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
     ),
+}
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": ["redis://h:pbfb70b2c8a65a239fa6728927e11f638253343c691407e3c2b16d56b0a0f4df2@ec2-50-19-191-111.compute-1.amazonaws.com:32009"],
+        },
+    },
 }
 
 CORS_ORIGIN_WHITELIST = (
