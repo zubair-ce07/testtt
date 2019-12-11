@@ -6,7 +6,6 @@ const API_URL = process.env.REACT_APP_API_URL
 
 export async function newRequest ({ method, url, params, data, headers, hideError, auth }, server) {
   // debugger;
-  console.log(process.env)
   url = API_URL + url
   const token = getToken()
   headers = { ...headers }

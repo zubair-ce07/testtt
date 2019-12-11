@@ -4,6 +4,8 @@ import PropTypes from 'prop-types'
 import Comment from 'components/Home/Comment/CommentComponent'
 import CreateUpdateComment from 'components/Home/Comment/CreateUpdateComponent'
 
+import { Loader } from 'components/Common/ContentLoader'
+
 export const CommentsPanel = ({ post, comments }) => {
   const [enableComment, changeEnableComment] = useState(false)
 
@@ -25,10 +27,11 @@ export const CommentsPanel = ({ post, comments }) => {
 
                 <div className="clearfix"></div>
                 <hr/>
-
-                <ul className="media-list">
-                  {comments.length ? comments.map((comment) => <Comment key={comment.id} post={post} comment={comment}></Comment>) : <></>}
-                </ul>
+                <Loader type="BlockUi" loadingRef="post.commentLoading">
+                  <ul className="media-list">
+                    {comments.length ? comments.map((comment) => <Comment key={comment.id} post={post} comment={comment}></Comment>) : <></>}
+                  </ul>
+                </Loader>
               </div>
             </div>
           </div>
