@@ -1,7 +1,7 @@
 import json
 
-from scrapy import FormRequest, Request
 from scrapy.linkextractors import LinkExtractor
+from scrapy.spider import Request
 from scrapy.spiders import Rule
 from w3lib.url import add_or_replace_parameter
 
@@ -112,7 +112,7 @@ class SixthStreetCrawler(BaseCrawlSpider):
         url = add_or_replace_parameter(self.ajax_request_url, 'x-algolia-application-id', raw_data['applicationId'])
         url = add_or_replace_parameter(url, 'x-algolia-api-key', raw_data['apiKey'])
 
-        yield FormRequest(url=url, body=self.make_request_body(query), method='POST',
+        yield Request(url=url, body=self.make_request_body(query), method='POST',
                           callback=self.parse_products, meta={'trail': self.add_trail(response)})
 
     def parse_products(self, response):
@@ -129,7 +129,7 @@ class SixthStreetCrawler(BaseCrawlSpider):
 
         query = raw_data['results'][0]['query']
         body = self.make_request_body(query, curr_page_num + 1)
-        yield FormRequest(url=response.url, body=body, method='POST', callback=self.parse_products)
+        yield Request(url=response.url, body=body, method='POST', callback=self.parse_products)
 
     def make_request_body(self, query, page_num=0):
         body = {
