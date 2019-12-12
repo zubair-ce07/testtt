@@ -4,12 +4,13 @@ import re
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
 
-from .base import BaseCrawlSpider, BaseParseSpider, clean
+from .base import BaseCrawlSpider, BaseParseSpider, clean, Gender
 from ..parsers.currencyparser import CurrencyParser
 
 
 class Mixin:
     retailer = 'thefragranceshop'
+    default_brand = 'TheFragranceShop'
 
 
 class MixinUK(Mixin):
@@ -22,10 +23,11 @@ class MixinUK(Mixin):
 
 
 class TheFragranceShopSpider(BaseParseSpider):
+    raw_description_css = '#description p::text'
 
     def parse(self, response):
         raw_product = self.raw_product(response)
-        pid = raw_product.get('id')
+        pid = self.product_id(raw_product)
 
         garment = self.new_unique_garment(pid)
         if not garment:
@@ -34,29 +36,33 @@ class TheFragranceShopSpider(BaseParseSpider):
         self.boilerplate_minimal(garment, response)
         garment['gender'] = self.product_gender(raw_product.get('attributes'))
         garment['category'] = self.product_category(raw_product.get('classification'))
-        garment['brand'] = raw_product.get('brand')
+        garment['brand'] = raw_product.get('brand', self.default_brand)
         garment['name'] = raw_product.get('name')
-        garment['description'] = clean(self.text_from_html(raw_product.get('description')))
-        garment['care'] = ''
-        garment['image_urls'] = self.product_image_urls(raw_product.get('images'))
+        garment['care'] = []
+        garment['description'] = self.product_description(response)
+        garment['image_urls'] = self.image_urls(raw_product.get('images', []))
         garment['skus'] = self.product_skus(response, raw_product)
         return garment
 
     def raw_product(self, response):
-        selector = 'script[defer]:not([src])'
-        raw_data = response.css(selector).re_first(r'({.*})')
+        css = 'script[defer]:not([src])'
+        raw_data = response.css(css).re_first(r'({.*})')
         return json.loads(raw_data)
+
+    def product_id(self, raw_data):
+        return raw_data.get('id')
 
     def product_gender(self, raw_data):
         for raw_attr in raw_data:
             if raw_attr.get('display') == 'Gender':
                 return self.gender_lookup(raw_attr.get('value'))
+        return Gender.ADULTS.value
 
     def product_category(self, raw_data):
         return [raw_data.get('mainCategoryName', '')]
 
-    def product_image_urls(self, raw_data):
-        return [img.get('url') for img in raw_data]
+    def image_urls(self, raw_data):
+        return [img['url'] for img in raw_data if img]
 
     def product_skus(self, response, raw_data):
         product_variants = raw_data.get('variantProducts')
