@@ -1,24 +1,36 @@
 """Docket and related Loader"""
-import re
+import logging
+from datetime import datetime
 
 from scrapy.loader.processors import Identity, MapCompose
 from w3lib.html import remove_tags
 
-from puc_scaping.util.date_time_util import DateTimeUtil
-
 from .base_loader import BaseLoader
+
+
+def parse_date(date_str, date_format, log_error=True):
+    date_obj = None
+    try:
+        date_obj = datetime.strptime(date_str, date_format)
+    except ValueError as exp:
+        if (log_error):
+            logging.error(f"Error in pasring date: {str(exp)}")
+
+    return date_obj
 
 
 def format_date(date_string):
     if date_string:
-        # check if already formatted in July 25, 2017 format:
-        matches = re.match(r"^[A-Za-z]+\s[0-9]{2}\,\s[0-9]+", date_string)
-        if (matches):
-            return date_string
         input_format = "%m/%d/%Y"
         output_format = "%B %d, %Y"
-        return DateTimeUtil.format_date(date_string, input_format,
-                                        output_format)
+
+        # check if already formatted in July 25, 2017 format:
+        date_obj = parse_date(date_string, output_format, False)
+        if (date_obj):
+            return date_string
+
+        date_obj = parse_date(date_string, input_format)
+        return datetime.strftime(date_obj, output_format)
 
 
 class DocketLoader(BaseLoader):
