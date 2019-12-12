@@ -1,17 +1,16 @@
 from statistics import mean
-
-from result_set import ResultSet
+from types import SimpleNamespace
 
 
 class WeatherDataAnalyzer:
-    def __init__(self, data):
-        self.__data = data
+    def __init__(self, weather_readings):
+        self.__weather_readings = weather_readings
 
     def calculate_extremes(self):
-        result = ResultSet()
+        result = SimpleNamespace()
 
-        if len(self.__data) == 0:
-            print("No data found for calculating extremes")
+        if len(self.__weather_readings) == 0:
+            print('No data found for calculating extremes')
             return False
 
         sorted_by_highest_temp = self.sort_by_property('max_temperature')
@@ -24,25 +23,11 @@ class WeatherDataAnalyzer:
 
         return result
 
-    def find_date_with_max_field_value(self, field):
-        result = ResultSet()
-
-        setattr(result, field, getattr(self.sort_by_property(field)[-1], field))
-
-        return result
-
-    def find_date_with_min_field_value(self, field):
-        result = ResultSet()
-
-        setattr(result, field, getattr(self.sort_by_property(field)[0], field))
-
-        return result
-
     def calculate_averages(self):
-        result = ResultSet()
+        result = SimpleNamespace()
 
-        if len(self.__data) == 0:
-            print("No data found for calculating averages")
+        if len(self.__weather_readings) == 0:
+            print('No data found for calculating averages')
             return False
 
         result.average_max_temperature = self.get_average_of_field('max_temperature')
@@ -52,7 +37,7 @@ class WeatherDataAnalyzer:
         return result
 
     def get_average_of_field(self, field):
-        return mean([getattr(item, field) for item in self.__data])
+        return mean([getattr(item, field) for item in self.__weather_readings])
 
     def sort_by_property(self, field):
-        return sorted(self.__data, key=lambda k: getattr(k, field))
+        return sorted(self.__weather_readings, key=lambda k: getattr(k, field))

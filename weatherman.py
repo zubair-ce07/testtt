@@ -1,7 +1,8 @@
 import argparse
-import datetime
-from constants import Reports
+
+from constants import ReportTypes
 from report_generator import ReportGenerator
+from validators import validate_arg_as_date, validate_arg_as_dir
 from weather_data_parser import WeatherDataParser
 from weather_data_analyzer import WeatherDataAnalyzer
 
@@ -13,15 +14,13 @@ def main():
     parser = WeatherDataParser(args.dir_path)
 
     if args.e:
-        show_extreme_stats(parser, int(args.e))
+        show_extreme_stats(parser, args.e)
 
     if args.a:
-        year_month = datetime.datetime.strptime(args.a, '%Y/%m')
-        show_mean_stats(parser, year_month.month, year_month.year)
+        show_mean_stats(parser, args.a.month, args.a.year)
 
     if args.c:
-        year_month = datetime.datetime.strptime(args.c, '%Y/%m')
-        show_graphs(parser, year_month.month, year_month.year)
+        show_graphs(parser, args.c.month, args.c.year)
 
 
 def show_extreme_stats(parser, year):
@@ -31,7 +30,7 @@ def show_extreme_stats(parser, year):
     results = analyzer.calculate_extremes()
     if results:
         report_generator = ReportGenerator(results)
-        report_generator.generate(Reports.SHOW_EXTREMES)
+        report_generator.generate(ReportTypes.SHOW_EXTREMES)
 
 
 def show_mean_stats(parser, month, year):
@@ -40,13 +39,13 @@ def show_mean_stats(parser, month, year):
 
     if results:
         report_generator = ReportGenerator(results)
-        report_generator.generate(Reports.SHOW_MEANS)
+        report_generator.generate(ReportTypes.SHOW_MEANS)
 
 
 def show_graphs(parser, month, year):
     data = parser.fetch_records_of_month(month, year)
     report_generator = ReportGenerator(data)
-    report_generator.generate(Reports.SHOW_GRAPHS)
+    report_generator.generate(ReportTypes.SHOW_GRAPHS)
 
 
 def initialize_arguments():
@@ -54,15 +53,23 @@ def initialize_arguments():
                   'upon arguments.'
 
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument('dir_path', help="Path to the directory of data files")
+    parser.add_argument('dir_path',
+                        type=validate_arg_as_dir,
+                        help='Path to the directory of data files')
 
-    parser.add_argument('-e', help="For a given month, it displays the average highest temperature, average lowest "
-                                   "temperature, average mean humidity")
-    parser.add_argument('-a', help="For a given month, it displays the average highest temperature, average lowest"
-                                   "temperature, average mean humidity.")
+    parser.add_argument('-e',
+                        type=int,
+                        help='For a given year display the highest temperature and day, lowest temperature and day, '
+                             'most humid day and humidity.')
+    parser.add_argument('-a',
+                        type=validate_arg_as_date,
+                        help='For a given month, it displays the average highest temperature, average lowest '
+                             'temperature, average mean humidity.')
 
-    parser.add_argument('-c', help="For a given month, it draws two horizontal bar charts on the console for the"
-                                   "highest and lowest temperature on each day. Highest in red and lowest in blue.")
+    parser.add_argument('-c',
+                        type=validate_arg_as_date,
+                        help='For a given month, it draws two horizontal bar charts on the console for the highest and '
+                             'lowest temperature on each day. Highest in red and lowest in blue.')
 
     return parser.parse_args()
 

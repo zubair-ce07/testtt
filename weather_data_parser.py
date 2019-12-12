@@ -1,10 +1,8 @@
 import csv
-import fnmatch
-import os
-from pathlib import Path
+import glob
 
-from constants import CITY_NAME
-from utilities import parse_date
+from constants import CITY_NAME, COLUMN_NAMES
+from utilities import parse_date, str_to_float
 from weather_reading import WeatherReading
 
 
@@ -16,22 +14,17 @@ class WeatherDataParser:
         self.__load_data_from_files()
 
     def __load_data_from_files(self):
-        files_to_read = self.__fetch_files_matching_pattern(f'{CITY_NAME}_weather_*.txt')
+        files_to_read = self.__fetch_files_matching_pattern(f'{self.__path}/{CITY_NAME}_weather_*.txt')
 
         for file in files_to_read:
-            with open(Path(self.__path, file), 'r') as data_file:
-                reader = csv.DictReader(data_file, skipinitialspace=True)
+            with open(file, 'r') as data_file:
+                reader = csv.DictReader(data_file, fieldnames=COLUMN_NAMES)
+                next(reader)
 
                 for row in reader:
                     row = self.__preprocess_row(row)
 
-                    self.__records.append(WeatherReading(reading_date=parse_date(row['PKT']),
-                                                         max_temperature=row['Max TemperatureC'],
-                                                         min_temperature=row['Min TemperatureC'],
-                                                         mean_temperature=row['Mean TemperatureC'],
-                                                         max_humidity=row['Max Humidity'],
-                                                         min_humidity=row['Min Humidity'],
-                                                         mean_humidity=row['Mean Humidity']))
+                    self.__records.append(WeatherReading(row))
 
     def fetch_records_of_month(self, month, year):
         records = []
@@ -52,9 +45,12 @@ class WeatherDataParser:
         return records
 
     def __preprocess_row(self, row):
-        if 'PKT' not in row:
-            row['PKT'] = row['PKST']
+        for column in COLUMN_NAMES:
+            if column == 'PKT':
+                row[column] = parse_date(row[column], '%Y-%m-%d')
+            else:
+                row[column] = str_to_float(row[column])
         return row
 
     def __fetch_files_matching_pattern(self, pattern):
-        return fnmatch.filter(os.listdir(self.__path), pattern)
+        return glob.glob(pattern)

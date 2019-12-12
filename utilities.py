@@ -6,9 +6,9 @@ def round_float(float_number):
     return format(float_number, '.2f')
 
 
-def parse_date(date):
-    """Returns date in format of Year-Month-Day e.g. 2016-11-21"""
-    return datetime.datetime.strptime(date, "%Y-%m-%d")
+def parse_date(date, date_format):
+    """Returns date in format given by user"""
+    return datetime.datetime.strptime(date, date_format)
 
 
 def change_color(color):
@@ -29,17 +29,17 @@ def draw_bar_graph(day, upper_limit, lower_limit, upper_limit_color, lower_limit
 
 def generate_graph(points, color):
     """Returns bar graphs according to the color and value"""
-    return f'{change_color(color)}{points * "+"}'
+    return f"{change_color(color)}{points * '+'}"
 
 
 def format_date(date):
     """Returns date in format of Month, Year e.g. November, 2016"""
-    return f'{datetime.datetime.strftime(date, "%B, %Y")}'
+    return f"{datetime.datetime.strftime(date, '%B, %Y')}"
 
 
-def value_exists(v):
-    """Returns False if value is None or empty string"""
-    if not v or v == '':
-        return False
-    else:
-        return True
+def str_to_float(str_value):
+    """takes string number, convert it to float and return it, if string is empty then it returns 0.0"""
+    try:
+        return float(str_value)
+    except ValueError:
+        return 0.0
