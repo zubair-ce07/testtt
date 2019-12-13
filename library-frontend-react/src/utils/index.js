@@ -1,4 +1,4 @@
-import { ROLE, USER } from "../contants/global"
+import { ROLE, USER } from "constants/global"
 
 import Cookies from "js-cookie"
 import moment from "moment"

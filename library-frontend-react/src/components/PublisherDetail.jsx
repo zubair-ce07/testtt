@@ -1,8 +1,8 @@
 import React, { Component } from "react"
 
-import Loader from "./Loader"
+import Loader from "components/Loader"
 import { connect } from "react-redux"
-import { getPublisherDetail } from "../actions/publisherActions"
+import { getPublisherDetail } from "actions/publisherActions"
 import { withRouter } from "react-router-dom"
 
 class PublisherDetail extends Component {

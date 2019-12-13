@@ -1,11 +1,11 @@
 import { Link, withRouter } from "react-router-dom"
 import React, { Component } from "react"
-import { getPublishersList, setCurrentPage } from "../actions/publisherActions"
+import { getPublishersList, setCurrentPage } from "actions/publisherActions"
 
-import Loader from "./Loader"
-import Pagination from "./Pagination"
+import Loader from "components/Loader"
+import Pagination from "components/Pagination"
 import { connect } from "react-redux"
-import urls from "../urls"
+import urls from "urls"
 
 class PublishersList extends Component {
   componentDidMount() {

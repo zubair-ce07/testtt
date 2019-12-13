@@ -4,14 +4,14 @@ import {
   authorsString,
   categoriesString,
   formatDate,
+  isAdmin,
   publisherString
-} from "../util/utils"
-import { deleteBook, getBookDetail } from "../actions/bookActions"
+} from "utils"
+import { deleteBook, getBookDetail } from "actions/bookActions"
 
-import Loader from "./Loader"
+import Loader from "components/Loader"
 import { connect } from "react-redux"
-import { isAdmin } from "../util/utils"
-import urls from "../urls"
+import urls from "urls"
 
 class BookDetail extends Component {
   componentDidMount = () => {

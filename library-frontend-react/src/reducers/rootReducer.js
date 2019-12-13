@@ -1,9 +1,9 @@
-import auth from "./authReducer"
-import authors from "./authorsReducer"
-import books from "./booksReducer"
-import categories from "./categoriesReducer"
+import auth from "reducers/authReducer"
+import authors from "reducers/authorsReducer"
+import books from "reducers/booksReducer"
+import categories from "reducers/categoriesReducer"
 import { combineReducers } from "redux"
-import publishers from "./publishersReducer"
+import publishers from "reducers/publishersReducer"
 
 const rootReducer = combineReducers({
   auth,

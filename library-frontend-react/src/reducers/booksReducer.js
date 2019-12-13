@@ -1,7 +1,7 @@
-import { formatDate, getPageNumberFromUrl } from "../util/utils"
+import { formatDate, getPageNumberFromUrl } from "utils"
 
-import { PAGE_SIZE } from "../contants/global"
-import constants from "../contants/action_types/book_constants"
+import { PAGE_SIZE } from "constants/global"
+import constants from "constants/actionTypes/bookConstants"
 
 const initialState = {
   loading: false,

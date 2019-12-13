@@ -1,7 +1,6 @@
-import categoryService from "../services/categoryService"
-import constants from "../contants/action_types/category_constants"
-import { onErrorAction } from "../util/utils"
-import responseCodes from "../contants/responseCodes"
+import categoryService from "services/categoryService"
+import constants from "constants/actionTypes/categoryConstants"
+import { onErrorAction } from "utils"
 
 export const setCurrentPage = pageNo => {
   return {
@@ -16,12 +15,10 @@ export const getCategoriesList = searchQuery => {
     categoryService
       .getCategories(searchQuery)
       .then(response => {
-        if (response.status === responseCodes.OK) {
-          dispatch({
-            type: constants.FETCH_CATEGORIES_SUCCESS,
-            payload: response.data
-          })
-        }
+        dispatch({
+          type: constants.FETCH_CATEGORIES_SUCCESS,
+          payload: response.data
+        })
       })
       .catch(error => {
         dispatch(onErrorAction(error, constants.FETCH_CATEGORIES_FAILURE))
@@ -35,12 +32,10 @@ export const getCategoriesDataList = () => {
     categoryService
       .getCategoriesData()
       .then(response => {
-        if (response.status === responseCodes.OK) {
-          dispatch({
-            type: constants.FETCH_CATEGORIES_DATA_SUCCESS,
-            payload: response.data
-          })
-        }
+        dispatch({
+          type: constants.FETCH_CATEGORIES_DATA_SUCCESS,
+          payload: response.data
+        })
       })
       .catch(error => {
         dispatch(onErrorAction(error, constants.FETCH_CATEGORIES_DATA_FAILURE))
@@ -54,12 +49,10 @@ export const getCategoryDetail = categoryId => {
     categoryService
       .getCategory(categoryId)
       .then(response => {
-        if (response.status === responseCodes.OK) {
-          dispatch({
-            type: constants.FETCH_CATEGORY_SUCCESS,
-            payload: response.data
-          })
-        }
+        dispatch({
+          type: constants.FETCH_CATEGORY_SUCCESS,
+          payload: response.data
+        })
       })
       .catch(error => {
         dispatch(onErrorAction(error, constants.FETCH_CATEGORY_FAILURE))

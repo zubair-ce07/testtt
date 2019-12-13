@@ -1,6 +1,6 @@
-import { PAGE_SIZE } from "../contants/global"
-import constants from "../contants/action_types/publisher_constants"
-import { getPageNumberFromUrl } from "../util/utils"
+import { PAGE_SIZE } from "constants/global"
+import constants from "constants/actionTypes/publisherConstants"
+import { getPageNumberFromUrl } from "utils"
 
 const initialState = {
   loading: false,

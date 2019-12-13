@@ -5,14 +5,14 @@ import {
   categoriesString,
   formatDate,
   publisherString
-} from "../util/utils"
-import { getBooksList, setCurrentPage } from "../actions/bookActions"
+} from "utils"
+import { getBooksList, setCurrentPage } from "actions/bookActions"
 
-import Loader from "./Loader"
-import Pagination from "./Pagination"
+import Loader from "components/Loader"
+import Pagination from "components/Pagination"
 import { connect } from "react-redux"
-import { isAdmin } from "../util/utils"
-import urls from "../urls"
+import { isAdmin } from "utils"
+import urls from "urls"
 
 class BooksList extends Component {
   componentDidMount() {

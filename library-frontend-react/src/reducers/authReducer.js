@@ -1,5 +1,5 @@
-import constants from "../contants/action_types/auth_constants"
-import { getUserCookie } from "../util/utils"
+import constants from "constants/actionTypes/authConstants"
+import { getUserCookie } from "utils"
 
 const initialState = {
   loading: false,

@@ -1,11 +1,11 @@
 import { Form, Formik } from "formik"
 import React, { Component } from "react"
 
-import { CustomField } from "./CustomFormikFields"
-import ErrorDetails from "./ErrorDetails"
-import Loader from "./Loader"
+import { CustomField } from "components/CustomFormikFields"
+import ErrorDetails from "components/ErrorDetails"
+import Loader from "components/Loader"
 import { connect } from "react-redux"
-import { signIn } from "../actions/authAction"
+import { signIn } from "actions/authAction"
 
 class LoginForm extends Component {
   constructor(props) {

@@ -1,4 +1,4 @@
-import { CustomField, CustomSelect } from "./CustomFormikFields"
+import { CustomField, CustomSelect } from "components/CustomFormikFields"
 import { Form, Formik } from "formik"
 import React, { PureComponent } from "react"
 import {
@@ -6,15 +6,15 @@ import {
   createBook,
   getBookDetail,
   updateBookDetails
-} from "../actions/bookActions"
+} from "actions/bookActions"
 
-import ErrorDetails from "./ErrorDetails"
-import Loader from "./Loader"
+import ErrorDetails from "components/ErrorDetails"
+import Loader from "components/Loader"
 import { connect } from "react-redux"
-import { getAuthorsDataList } from "../actions/authorActions"
-import { getCategoriesDataList } from "../actions/categoryActions"
-import { getPublishersDataList } from "../actions/publisherActions"
-import { mapBooktoFormValues } from "../util/utils"
+import { getAuthorsDataList } from "actions/authorActions"
+import { getCategoriesDataList } from "actions/categoryActions"
+import { getPublishersDataList } from "actions/publisherActions"
+import { mapBooktoFormValues } from "utils"
 import { withRouter } from "react-router-dom"
 
 class BookForm extends PureComponent {

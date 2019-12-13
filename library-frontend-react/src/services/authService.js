@@ -1,21 +1,23 @@
-import baseService from "./baseService"
-import urls from "../urls"
+import { doGet, doPost } from "services/baseService"
+
+import responseCodes from "constants/responseCodes"
+import urls from "urls"
 
 const authService = {
   login: data => {
-    return baseService.post(urls.login, data)
+    return doPost(urls.login, data)
   },
 
   logout: () => {
-    return baseService.get(urls.logout)
+    return doGet(urls.logout)
   },
 
   signUpAuthor: data => {
-    return baseService.post(urls.authorSignUp, data)
+    return doPost(urls.authorSignUp, data, responseCodes.CREATED)
   },
 
   signUpPublisher: data => {
-    return baseService.post(urls.publisherSignUp, data)
+    return doPost(urls.publisherSignUp, data, responseCodes.CREATED)
   }
 }
 

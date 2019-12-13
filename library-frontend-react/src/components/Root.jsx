@@ -1,10 +1,10 @@
-import NavBar from "./Navbar"
+import NavBar from "components/Navbar"
 import PropTypes from "prop-types"
 import { Provider } from "react-redux"
 import React from "react"
 import { Router } from "react-router-dom"
-import Routes from "../routes"
-import history from "../history"
+import Routes from "routes"
+import history from "@history"
 
 const Root = ({ store }) => {
   return (

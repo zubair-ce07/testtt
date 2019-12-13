@@ -1,9 +1,9 @@
 import React, { Component } from "react"
 
-import Loader from "./Loader"
-import { concatStrings } from "../util/utils"
+import Loader from "components/Loader"
+import { concatStrings } from "utils"
 import { connect } from "react-redux"
-import { getAuthorDetail } from "../actions/authorActions"
+import { getAuthorDetail } from "actions/authorActions"
 import { withRouter } from "react-router-dom"
 
 class AuthorDetail extends Component {

@@ -2,8 +2,8 @@ import React, { Component } from "react"
 
 import { Link } from "react-router-dom"
 import { connect } from "react-redux"
-import { signOut } from "../actions/authAction"
-import url from "../urls"
+import { signOut } from "actions/authAction"
+import url from "urls"
 
 class NavBar extends Component {
   handlelogout = () => {

@@ -1,11 +1,11 @@
+import "styles/index.css"
+
+import * as serviceWorker from "serviceWorker"
+
 import React from "react"
 import ReactDOM from "react-dom"
-import "./styles/index.css"
-
-import configureStore from "./store/configureStore"
-import Root from "./components/Root"
-
-import * as serviceWorker from "./serviceWorker"
+import Root from "components/Root"
+import configureStore from "store/configureStore"
 
 const store = configureStore()
 

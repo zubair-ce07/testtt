@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom"
 import React from "react"
-import confused from "../static/images/confused.gif"
-import urls from "../urls"
+import confused from "static/images/confused.gif"
+import urls from "urls"
 
 const NOtFound = () => {
   return (

@@ -1,13 +1,16 @@
-import baseService from "./baseService.js"
-import urls from "../urls"
+import { doGet, onError } from "services/baseService.js"
+
+import urls from "urls"
 
 const categoryService = {
   getCategory: categoryId => {
-    return baseService.get(`/category/${categoryId}`)
+    return doGet(`/category/${categoryId}`).catch(error => {
+      onError(error)
+    })
   },
 
   getCategories: (pageNo, searchQuery = null) => {
-    return baseService.get(urls.categories, {
+    return doGet(urls.categories, {
       params: {
         page: pageNo,
         search: searchQuery
@@ -16,7 +19,7 @@ const categoryService = {
   },
 
   getCategoriesData: () => {
-    return baseService.get(urls.categoriesData)
+    return doGet(urls.categoriesData)
   }
 }
 

@@ -1,15 +1,13 @@
-import baseService from "./baseService.js"
+import { doDelete, doGet, doPost, doPut } from "services/baseService.js"
 
-export const getBook = bookId => {
-  return baseService.get(`/book/${bookId}`)
-}
+import responseCodes from "constants/responseCodes"
 
 const bookService = {
   getBook: bookId => {
-    return baseService.get(`/book/${bookId}`)
+    return doGet(`/book/${bookId}`)
   },
   getBooks: (pageNo, searchQuery = null) => {
-    return baseService.get(`/books/`, {
+    return doGet(`/books/`, {
       params: {
         page: pageNo,
         search: searchQuery
@@ -17,13 +15,13 @@ const bookService = {
     })
   },
   newBook: data => {
-    return baseService.post("/book/", data)
+    return doPost("/book/", data, responseCodes.CREATED)
   },
   updateBook: (bookId, data) => {
-    return baseService.put(`/book/${bookId}/update`, data)
+    return doPut(`/book/${bookId}/update`, data)
   },
   removeBook: bookId => {
-    return baseService.delete(`/book/${bookId}/delete`)
+    return doDelete(`/book/${bookId}/delete`)
   }
 }
 

@@ -1,8 +1,8 @@
 import React, { Component } from "react"
-import { getCategoriesList, setCurrentPage } from "../actions/categoryActions"
+import { getCategoriesList, setCurrentPage } from "actions/categoryActions"
 
-import Loader from "./Loader"
-import Pagination from "./Pagination"
+import Loader from "components/Loader"
+import Pagination from "components/Pagination"
 import { connect } from "react-redux"
 import { withRouter } from "react-router-dom"
 

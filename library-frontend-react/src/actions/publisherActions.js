@@ -1,9 +1,6 @@
-import constants from "../contants/action_types/publisher_constants"
-import history from "../history"
-import { onErrorAction } from "../util/utils"
-import publisherService from "../services/publisherService"
-import responseCodes from "../contants/responseCodes"
-import urls from "../urls"
+import constants from "constants/actionTypes/publisherConstants"
+import { onErrorAction } from "utils"
+import publisherService from "services/publisherService"
 
 export const setCurrentPage = pageNo => {
   return {
@@ -18,20 +15,13 @@ export const getPublishersDataList = () => {
     publisherService
       .getPublishersData()
       .then(response => {
-        if (response.status === responseCodes.OK) {
-          dispatch({
-            type: constants.FETCH_PUBLISHERS_DATA_SUCCESS,
-            payload: response.data
-          })
-        }
+        dispatch({
+          type: constants.FETCH_PUBLISHERS_DATA_SUCCESS,
+          payload: response.data
+        })
       })
       .catch(error => {
-        const response = error.response
-
-        dispatch({
-          type: constants.FETCH_PUBLISHERS_DATA_FAILURE,
-          payload: response ? response.data : error
-        })
+        dispatch(onErrorAction(error, constants.FETCH_PUBLISHERS_DATA_FAILURE))
       })
   }
 }
@@ -42,12 +32,10 @@ export const getPublishersList = pageNo => {
     publisherService
       .getPublishers(pageNo)
       .then(response => {
-        if (response.status === responseCodes.OK) {
-          dispatch({
-            type: constants.FETCH_PUBLISHERS_SUCCESS,
-            payload: response.data
-          })
-        }
+        dispatch({
+          type: constants.FETCH_PUBLISHERS_SUCCESS,
+          payload: response.data
+        })
       })
       .catch(error => {
         dispatch(onErrorAction(error, constants.FETCH_PUBLISHERS_FAILURE))
@@ -61,20 +49,13 @@ export const getPublisherDetail = authorId => {
     publisherService
       .getPublisher(authorId)
       .then(response => {
-        if (response.status === responseCodes.OK) {
-          dispatch({
-            type: constants.FETCH_PUBLISHER_SUCCESS,
-            payload: response.data
-          })
-        }
+        dispatch({
+          type: constants.FETCH_PUBLISHER_SUCCESS,
+          payload: response.data
+        })
       })
       .catch(error => {
-        const response = error.response
         dispatch(onErrorAction(error, constants.FETCH_PUBLISHER_FAILURE))
-
-        if (response && response.status === responseCodes.NOT_FOUND) {
-          history.replace(urls.notFound)
-        }
       })
   }
 }

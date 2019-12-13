@@ -1,13 +1,13 @@
-import baseService from "./baseService.js"
-import urls from "../urls"
+import { doGet } from "services/baseService.js"
+import urls from "urls"
 
 const publisherService = {
   getPublisher: publisherId => {
-    return baseService.get(`/publisher/${publisherId}`)
+    return doGet(`/publisher/${publisherId}`)
   },
 
   getPublishers: (pageNo, searchQuery = null) => {
-    return baseService.get(`/publishers/`, {
+    return doGet(`/publishers/`, {
       params: {
         page: pageNo,
         search: searchQuery
@@ -16,7 +16,7 @@ const publisherService = {
   },
 
   getPublishersData: () => {
-    return baseService.get(urls.publishersData)
+    return doGet(urls.publishersData)
   }
 }
 

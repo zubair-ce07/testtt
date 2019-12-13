@@ -1,17 +1,16 @@
-import { onErrorAction, removeUserCookie, setUserCookie } from "../util/utils"
+import { onErrorAction, removeUserCookie, setUserCookie } from "utils"
 
-import { ROLE } from "../contants/global"
-import authActions from "../services/authService"
-import baseService from "../services/baseService"
-import constants from "../contants/action_types/auth_constants"
-import history from "../history"
-import responseCodes from "../contants/responseCodes"
-import urls from "../urls"
+import { ROLE } from "constants/global"
+import authActions from "services/authService"
+import baseService from "services/baseService"
+import constants from "constants/actionTypes/authConstants"
+import history from "@history"
+import urls from "urls"
 
-const onSignupSuccess = (dispatch, userData, type) => {
+const onSignupSuccess = (dispatch, userData) => {
   setUserCookie(userData)
   baseService.addAuthTokenToHeader()
-  dispatch({ type: type })
+  dispatch({ type: constants.SIGNUP_SUCCESS })
   history.push(urls.home)
 }
 
@@ -22,17 +21,10 @@ export const signIn = formData => {
     authActions
       .login(formData)
       .then(response => {
-        if (response.status === responseCodes.OK) {
-          setUserCookie(response.data)
-          baseService.addAuthTokenToHeader()
-          dispatch({ type: constants.LOGIN_SUCCESS })
-          history.push(urls.home)
-        } else {
-          dispatch({
-            type: constants.LOGIN_FAILURE,
-            payload: response.data
-          })
-        }
+        setUserCookie(response.data)
+        baseService.addAuthTokenToHeader()
+        dispatch({ type: constants.LOGIN_SUCCESS })
+        history.push(urls.home)
       })
       .catch(error => {
         dispatch(onErrorAction(error, constants.LOGIN_FAILURE))
@@ -45,15 +37,10 @@ export const signOut = () => {
     dispatch({ type: constants.LOGOUT_STARTED })
     authActions
       .logout()
-      .then(response => {
-        if (response.status === responseCodes.OK) {
-          removeUserCookie()
-          baseService.removeAuthToken()
-          dispatch({
-            type: constants.LOGOUT_SUCCESS
-          })
-        } else {
-        }
+      .then(_response => {
+        removeUserCookie()
+        baseService.removeAuthToken()
+        dispatch({ type: constants.LOGOUT_SUCCESS })
       })
       .catch(error => {
         dispatch(onErrorAction(error, constants.LOGOUT_FAILURE))
@@ -67,16 +54,8 @@ export const authorSignup = formData => {
     return authActions
       .signUpAuthor(formData)
       .then(response => {
-        if (response.status === responseCodes.CREATED) {
-          onSignupSuccess(
-            dispatch,
-            { ...response.data, role: ROLE.AUTHOR },
-            constants.SIGNUP_SUCCESS
-          )
-          history.push(urls.books)
-        } else {
-          dispatch(onErrorAction(response.data, constants.SIGNUP_FAILURE))
-        }
+        onSignupSuccess(dispatch, { ...response.data, role: ROLE.AUTHOR })
+        history.push(urls.books)
       })
       .catch(error => {
         dispatch(onErrorAction(error, constants.SIGNUP_FAILURE))
@@ -90,16 +69,8 @@ export const publisherSignup = formData => {
     return authActions
       .signUpPublisher(formData)
       .then(response => {
-        if (response.status === responseCodes.CREATED) {
-          onSignupSuccess(
-            dispatch,
-            { ...response.data, role: ROLE.PUBLISHER },
-            constants.SIGNUP_SUCCESS
-          )
-          history.push(urls.books)
-        } else {
-          dispatch(onErrorAction(response.data, constants.SIGNUP_FAILURE))
-        }
+        onSignupSuccess(dispatch, { ...response.data, role: ROLE.PUBLISHER })
+        history.push(urls.books)
       })
       .catch(error => {
         dispatch(onErrorAction(error, constants.SIGNUP_FAILURE))
