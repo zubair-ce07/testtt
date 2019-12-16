@@ -1,11 +1,50 @@
-import calendar
+import csv
+from termcolor import colored, cprint
+from argparse import ArgumentParser
 import sys
 import os
-from termcolor import colored, cprint
+import datetime
+
+
+class My_ArgParser(ArgumentParser):
+
+    def __init__(self):
+        super().__init__(description='Task 1 the Weather Man')
+        self.my_add_args()
+
+        self.args = self.parse_args(
+            ['weatherman.py',
+             '/home/waleed/Desktop/final/the-lab/weatherfiles',
+             '-c', '2011/03',
+             '-a', '2011/3',
+             '-e', '2011'])
+
+    def my_add_args(self):
+        self.add_argument(
+            'file_name',
+            help='name of file')
+        self.add_argument(
+            'path',
+            help='Path to Dir')
+        self.add_argument(
+            '-a',
+            action='store',
+            type=lambda s: datetime.datetime.strptime(s, '%Y/%m').date(),
+        )
+        self.add_argument(
+            '-c',
+            action='store',
+            type=lambda s: datetime.datetime.strptime(s, '%Y/%m').date(),
+        )
+        self.add_argument(
+            '-e',
+            action='store',
+            type=lambda s: datetime.datetime.strptime(s, '%Y').date(),
+        )
 
 
 class Table:
-   
+
     def __init__(self, headings=None):
         self.rows = []
         self.headings = []
@@ -35,7 +74,7 @@ class Parser:
 
     def type_converstion(self, data):
         data_type = ['string', 'int', 'int', 'int', 'int', 'int', 'int',
-                     'int', 'int', 'int', 'int', 'int', 'int', 'float',
+                     'int', 'int', 'int', 'float', 'float', 'int', 'float',
                      'float', 'float', 'int', 'int', 'int', 'float',
                      'int', 'string', 'int']
 
@@ -44,18 +83,18 @@ class Parser:
         return results
 
     def set_weather_reading(self):
-        f = open(self.file_name, "r")
-        heading = f.readline().split(',')
-        heading = [i.strip() for i in heading]
-        self.weather_reading.set_headings(heading)
 
-        while True:
-            day_readings = f.readline().split(',')
-            if len(day_readings) == 1:
-                break
-            day_readings = [i.strip() for i in day_readings]
-            day_readings = self.type_converstion(day_readings)
-            self.weather_reading.add_row(day_readings)
+        with open(self.file_name, "r") as csv_file:
+            csv_reader = csv.reader(csv_file, delimiter=',')
+            line_count = 0
+            for row in csv_reader:
+                row = [elem.strip() for elem in row]
+                if line_count == 0:
+                    self.weather_reading.set_headings(row)
+                    line_count += 1
+                else:
+                    self.weather_reading.add_row(self.type_converstion(row))
+                    line_count += 1
 
 
 class Results:
@@ -69,6 +108,25 @@ class Results:
         self.average_highest_temperature = 0
         self.average_lowest_temperature = 0
         self.average_humidity = 0
+
+    def display_report_A(self):
+        print(f"Highest Average: {self.average_highest_temperature:.1f}C")
+        print(f"Lowest Average: {self.average_lowest_temperature:.1f}C")
+        print(f"Average Mean Humidity: {self.average_humidity:.1f}%")
+
+    def display_report_C(self):
+        for index in range(len(self.highest_temperature_monthly)):
+            print(index+1, end='')
+
+            for value in range(0, self.lowest_temperature_monthly[index]):
+                cprint('+', 'blue', end='')
+
+            for value in range(0, self.highest_temperature_monthly[index]):
+                cprint('+', 'red', end='')
+
+            print(
+                self.lowest_temperature_monthly[index], "C-", end='', sep='')
+            print(self.highest_temperature_monthly[index], "C", sep='')
 
 
 class CalculateReadings:
@@ -104,140 +162,103 @@ class CalculateReadings:
 
         return self.results.average_humidity
 
+    def cal_report_A(self):
+        self.cal_highest_average_monthly()
+        self.cal_lowest_average_monthly()
+        self.cal_average_mean_humidity_monthly()
+
     def set_highest_lowest_temperature_monthly(self):
         for index in range(len(self.parser.weather_reading.rows)):
             self.results.highest_temperature_monthly.\
                 append(self.parser.weather_reading.rows[index][1])
             self.results.lowest_temperature_monthly.\
                 append(self.parser.weather_reading.rows[index][3])
-    
-    def print_highest_lowest_temperature_monthly(self):
-        for index in range(len(self.results.highest_temperature_monthly)):
-            print(index+1, end='')
-            for value in range(0, self.results.highest_temperature_monthly[index]):
-                cprint('+', 'red', end='')
-            print('\n')
 
-            print(index+1, end='')
-            for value in range(0, self.results.lowest_temperature_monthly[index]):
-                cprint('+', 'blue', end='')
-            print('\n')
-
-    def bonus_print_highest_lowest_temperature_monthly(self):
-        for index in range(len(self.results.highest_temperature_monthly)):
-            print(index+1, end='')
-            
-            for value in range(0, self.results.lowest_temperature_monthly[index]):
-                cprint('+', 'blue', end='')
-            
-            for value in range(0, self.results.highest_temperature_monthly[index]):
-                cprint('+', 'red', end='')
-
-            print(self.results.lowest_temperature_monthly[index], "C-", end='', sep='')
-            print(self.results.highest_temperature_monthly[index], "C", sep='')
+    def cal_report_C(self):
+        self.set_highest_lowest_temperature_monthly()
 
     def set_highest_temperature(self):
-        self.results.highest_temperature = max(l[1] for l in self.parser.weather_reading.rows)
+        self.results.highest_temperature = max(
+            elem[1] for elem in self.parser.weather_reading.rows)
         return self.results.highest_temperature
-    
+
     def set_lowest_temperature(self):
-        self.results.lowest_temperature = min(l[3] for l in self.parser.weather_reading.rows)
+        self.results.lowest_temperature = min(
+            elem[3] for elem in self.parser.weather_reading.rows)
         return self.results.lowest_temperature
-    
+
     def set_highest_humidity(self):
-        self.results.highest_humidity = max(l[7] for l in self.parser.weather_reading.rows)
+        self.results.highest_humidity = max(
+            elem[7] for elem in self.parser.weather_reading.rows)
         return self.results.highest_humidity
 
-    def print_highest_lowest_humidity_month(self):
-
-        self.set_highest_temperature()
-        self.set_lowest_temperature()
-        self.set_highest_humidity()
-
-        print("Highest: ", self.results.highest_temperature, "C", sep='')
-        print("Lowest: ", self.results.lowest_temperature, "C", sep='')
-        print("Humidity: ", self.results.highest_humidity, "%", sep='')
-        print('\n')
-
-
-# --------------------------------Main-----------------------------------
-
-
-argument_list_original = sys.argv
-argument_list = []
-
-i = 2
-
-while(True):
-    argument_list.append(argument_list_original[0])
-    argument_list.append(argument_list_original[1])
-    argument_list.append(argument_list_original[i])
-    i = i + 1
-    argument_list.append(argument_list_original[i])
-    i = i + 1
-
-    if(argument_list[2] == '-a'):
-        your_directory = argument_list[1]
-
-        month_num = int(argument_list[3].split("/")[-1])
-        month = calendar.month_abbr[month_num]
-
-        year = argument_list[3][:4]
-
-        file_name = your_directory+"Murree_weather_" + year+"_"+month
-
-        calculate_readings_obj = CalculateReadings(file_name)
-
-        print("Highest Average:", '%.2f' % calculate_readings_obj.cal_highest_average_monthly(), "C", sep='')
-        print("Lowest Average:", '%.2f' % calculate_readings_obj.cal_lowest_average_monthly(), "C", sep='')
-        print("Average Mean Humidity:", '%.2f' % calculate_readings_obj.cal_average_mean_humidity_monthly(), "%", sep='')
-
-    if(argument_list[2] == '-c'):
-        your_directory = argument_list[1]
-
-        month_num = int(argument_list[3].split("/")[-1])
-        month = calendar.month_abbr[month_num]
-
-        year = argument_list[3][:4]
-
-        file_name = your_directory+"Murree_weather_" + year+"_"+month
-
-        calculate_readings_obj = CalculateReadings(file_name)
-
-        calculate_readings_obj.set_highest_lowest_temperature_monthly()
-        calculate_readings_obj.bonus_print_highest_lowest_temperature_monthly()
-
-    if(argument_list[2] == '-e'):
-        your_directory = argument_list[1]
-        to_find = argument_list[3]
+    @staticmethod
+    def cal_report_E():
         monthly_data = []
         index = 0
-        yearly_highest_temperature = 0
-        yearly_lowest_temperature = 999
-        yearly_highest_humidity = 0
+        for file_name in os.listdir(arguments.args.path):
 
-        for file_name in os.listdir(your_directory):
-
-            if (file_name.find(to_find) != -1):
-                monthly_data.append(CalculateReadings(your_directory+'/'+file_name))
+            if (file_name.find(str(arguments.args.e.year)) != -1):
+                monthly_data.append(CalculateReadings(
+                    arguments.args.path+'/'+file_name))
 
                 monthly_data[index].set_highest_temperature()
                 monthly_data[index].set_lowest_temperature()
                 monthly_data[index].set_highest_humidity()
 
-                if(monthly_data[index].results.highest_temperature > yearly_highest_temperature):
-                    yearly_highest_temperature = monthly_data[index].results.highest_temperature
-                if(monthly_data[index].results.lowest_temperature < yearly_lowest_temperature):
-                    yearly_lowest_temperature = monthly_data[index].results.lowest_temperature
-                if(monthly_data[index].results.highest_humidity > yearly_highest_humidity):
-                    yearly_highest_humidity = monthly_data[index].results.highest_humidity
-
                 index = index+1
 
-        print("Highest: ", yearly_highest_temperature, "C", sep='')
-        print("Lowest: ", yearly_lowest_temperature, "C", sep='')
-        print("Humidity: ", yearly_highest_humidity, "%", sep='')
+        x = max(monthly_data,
+                key=lambda item: item.results.highest_temperature)
+        y = min(monthly_data,
+                key=lambda item: item.results.lowest_temperature)
+        z = max(monthly_data,
+                key=lambda item: item.results.highest_humidity)
 
-    argument_list.clear()
-    if(i == 8 or len(argument_list_original) < 7):
-        break
+        print(f"Highest: {x.results.highest_temperature}C")
+        print(f"Lowest: {y.results.lowest_temperature}C")
+        print(f"Humidity: {z.results.highest_humidity}%")
+
+
+class DisplayReport:
+
+    def __init__(self, file_name):
+        self.file_name = file_name
+
+    def report_A(self):
+        obj = CalculateReadings(self.file_name)
+        obj.cal_report_A()
+        obj.results.display_report_A()
+
+    def report_C(self):
+        obj = CalculateReadings(self.file_name)
+        obj.cal_report_C()
+        obj.results.display_report_C()
+
+    def report_E(self):
+        CalculateReadings.cal_report_E()
+
+
+# --------------------------------Main-----------------------------------
+
+
+arguments = My_ArgParser()
+
+
+if(arguments.args.a):
+    file_name = arguments.args.path+"/Murree_weather_" + \
+        str(arguments.args.a.year)+"_"+arguments.args.a.strftime("%b")
+    obj = DisplayReport(file_name)
+    obj.report_A()
+
+
+if(arguments.args.c):
+    file_name = arguments.args.path+"/Murree_weather_" + \
+        str(arguments.args.c.year)+"_"+arguments.args.c.strftime("%b")
+    obj = DisplayReport(file_name)
+    obj.report_C()
+
+
+if(arguments.args.e):
+    obj = DisplayReport("")
+    obj.report_E()
