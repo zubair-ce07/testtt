@@ -9,7 +9,6 @@ from urllib.parse import urlencode
 import scrapy
 from scrapy.exceptions import CloseSpider
 from scrapy.selector import Selector
-from w3lib.html import remove_tags
 
 from puc_scaping.item_loaders.docket_loader import DocketLoader, FilingLoader
 from puc_scaping.items.docket_item import DocketItem, DocumentItem, FilingItem
@@ -40,10 +39,10 @@ class DocketSpider(scrapy.Spider):
 
         search_url = f"{self.base_url}Common/SearchResults.aspx?{urlencode(params)}"
         yield scrapy.Request(url=search_url,
-                             callback=self.get_dockets,
+                             callback=self.parse_search,
                              errback=self.errback_docket)
 
-    def get_dockets(self, response):
+    def parse_search(self, response):
         """functioon to generate final link to get dockets"""
         matter_sq_re = r"\bvar\s+MatterSeq\s*=\s*'(.*?)\?'\s*\+\s*\$\('(#.*?)'\)\[0\]\.value;\s*\n"
 
@@ -53,17 +52,18 @@ class DocketSpider(scrapy.Spider):
         url = f"{self.base_url}CaseMaster/MatterExternal/{matter_seq}?{querry_params}"
 
         yield scrapy.Request(url=url,
-                             callback=self.parse_docket,
+                             callback=self.parse_dockets_list,
                              errback=self.errback_docket)
 
-    def parse_docket(self, response):
+    def parse_dockets_list(self, response):
         """function for parsing docket data"""
 
         try:
             dockets_response = json.loads(response.body)
         except json.decoder.JSONDecodeError as exp:
             logging.error(
-                f"Failed to parse json response from: {response.url}")
+                f"Failed to parse dockets list(json response) from: {response.url}"
+            )
             logging.error(f"Error Deatils: {str(exp)}")
             raise CloseSpider("Invalid dockets data in response")
 
@@ -111,11 +111,11 @@ class DocketSpider(scrapy.Spider):
 
         yield scrapy.Request(url=docs_url,
                              meta={"docket": docket},
-                             callback=self.parse_filings,
+                             callback=self.parse_filings_list,
                              errback=self.errback_docket,
                              dont_filter=True)
 
-    def parse_filings(self, response):
+    def parse_filings_list(self, response):
         """This function parses docket filings"""
         docket = response.meta["docket"]
 
@@ -128,10 +128,9 @@ class DocketSpider(scrapy.Spider):
             yield docket
 
         docket["filings"] = []
-        is_last = False
-        filings_count = len(filings)
+        filings_list = []
 
-        for index, filing in enumerate(filings):
+        for filing in filings:
             filing_item = FilingItem()
             filing_item['types'] = [filing['Doctype']]
 
@@ -142,15 +141,13 @@ class DocketSpider(scrapy.Spider):
             endpoint = remove_relativeness(endpoint)
 
             filing_url = f"{self.base_url}{endpoint}?{params}"
+            filings_list.append((filing_item, filing_url))
 
-            if (index == filings_count - 1):
-                is_last = True
-
-            yield scrapy.Request(url=filing_url,
+        if filings_list:
+            yield scrapy.Request(url=filings_list[0][1],
                                  meta={
                                      "docket": docket,
-                                     "filing": filing_item,
-                                     "is_last": is_last
+                                     "filings_list": filings_list
                                  },
                                  callback=self.parse_filing_documents,
                                  errback=self.errback_docket,
@@ -160,25 +157,26 @@ class DocketSpider(scrapy.Spider):
         """This function parses docket filings each file and its related docs"""
         docket = response.meta["docket"]
         # get the last filing item
-        filing = response.meta["filing"]
-        is_last = response.meta["is_last"]
+        filings_list = response.meta["filings_list"]
+        filing_data = filings_list.pop(0)
+        filing = filing_data[0]
 
-        STATE_ID = "#MatterDetail1_lblMatterNumberVal"
-        DATE_FILED = "#lblDateFiledval"
-        DESCRIPTION = "#lblDescriptionofFilingval"
-        PARTIES = "#lblFiledByval"
-        SRC_PARTIES = "lblFilingonbehalfofval"
-        DOCS = "#grdMatterFilingDocuments_DgdCustomGrid tr:not(:first-child)"
+        STATE_ID_CSS = "#MatterDetail1_lblMatterNumberVal"
+        DATE_FILED_CSS = "#lblDateFiledval"
+        DESCRIPTION_CSS = "#lblDescriptionofFilingval"
+        PARTIES_CSS = "#lblFiledByval"
+        SRC_PARTIES_CSS = "lblFilingonbehalfofval"
+        DOCS_CSS = "#grdMatterFilingDocuments_DgdCustomGrid tr:not(:first-child)"
 
         # Regexp for selecting doc download link and doc type
-        PATTERN = r"^javascript.*\('.*'\,'(\w+={[-\w]+})\&DocExt=(\w+)&.*"
+        DOC_INFO_REGEX = r"^javascript.*\('.*'\,'(\w+={[-\w]+})\&DocExt=(\w+)&.*"
 
         filing_loader = FilingLoader(item=filing, response=response)
-        filing_loader.add_css("state_id", STATE_ID)
-        filing_loader.add_css("filed_on", DATE_FILED)
-        filing_loader.add_css("description", DESCRIPTION)
-        filing_loader.add_css("filing_parties", PARTIES)
-        filing_loader.add_css("source_filing_parties", SRC_PARTIES)
+        filing_loader.add_css("state_id", STATE_ID_CSS)
+        filing_loader.add_css("filed_on", DATE_FILED_CSS)
+        filing_loader.add_css("description", DESCRIPTION_CSS)
+        filing_loader.add_css("filing_parties", PARTIES_CSS)
+        filing_loader.add_css("source_filing_parties", SRC_PARTIES_CSS)
         filing = filing_loader.load_item()
 
         # set for filing types as filing can have multiple docs with same types
@@ -187,14 +185,14 @@ class DocketSpider(scrapy.Spider):
             for file_type in filing['types']:
                 filing_types.add(file_type)
 
-        docs = response.css(DOCS)
+        docs = response.css(DOCS_CSS)
         documents = []
         for doc in docs:
             document = DocumentItem()
             # 1st colum: download source url an doc type
             row_data = doc.css('td')
             doc_ref, extension = row_data[0].css('a::attr(onclick)').re(
-                PATTERN)
+                DOC_INFO_REGEX)
             doc_source = f"{self.base_url}Common/ViewDoc.aspx?{doc_ref}"
             name_exp = re.findall(r'DocRefNo=(\{[-\w]+\})', doc_ref)
             doc_name = None
@@ -219,10 +217,18 @@ class DocketSpider(scrapy.Spider):
 
         filing['types'] = list(filing_types)
         filing["documents"] = documents
-
         docket["filings"].append(filing)
 
-        if (is_last):
+        if filings_list:
+            yield scrapy.Request(url=filings_list[0][1],
+                                 meta={
+                                     "docket": docket,
+                                     "filings_list": filings_list
+                                 },
+                                 callback=self.parse_filing_documents,
+                                 errback=self.errback_docket,
+                                 dont_filter=True)
+        else:
             yield docket
 
     def generate_blob_name(self, filiing_id, doc_name):
