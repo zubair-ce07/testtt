@@ -1,6 +1,5 @@
 from enum import Enum
 
-
 CITY_NAME = 'Murree'
 
 COLUMN_NAMES = ['PKT',
@@ -13,6 +12,15 @@ COLUMN_NAMES = ['PKT',
                 'MAX_HUMIDITY',
                 'MEAN_HUMIDITY',
                 'MIN_HUMIDITY']
+
+COLUMNS_TO_VALIDATE = ['PKT',
+                       'MAX_TEMP',
+                       'MEAN_TEMP',
+                       'MIN_TEMP',
+                       'MAX_HUMIDITY',
+                       'MEAN_HUMIDITY',
+                       'MIN_HUMIDITY'
+                       ]
 
 
 class Colors(Enum):

@@ -1,8 +1,8 @@
 import csv
 import glob
+from datetime import datetime
 
-from constants import CITY_NAME, COLUMN_NAMES
-from utilities import parse_date, str_to_float
+from constants import CITY_NAME, COLUMN_NAMES, COLUMNS_TO_VALIDATE
 from weather_reading import WeatherReading
 
 
@@ -24,33 +24,25 @@ class WeatherDataParser:
                 for row in reader:
                     row = self.__preprocess_row(row)
 
-                    self.__records.append(WeatherReading(row))
+                    if row is not None:
+                        self.__records.append(WeatherReading(row))
 
-    def fetch_records_of_month(self, month, year):
-        records = []
-
-        for record in self.__records:
-            if record.reading_date.month == month and record.reading_date.year == year:
-                records.append(record)
-
-        return records
-
-    def fetch_records_of_year(self, year):
-        records = []
-
-        for record in self.__records:
-            if record.reading_date.year == year:
-                records.append(record)
-
-        return records
+    def fetch_records(self):
+        return self.__records
 
     def __preprocess_row(self, row):
-        for column in COLUMN_NAMES:
-            if column == 'PKT':
-                row[column] = parse_date(row[column], '%Y-%m-%d')
-            else:
-                row[column] = str_to_float(row[column])
-        return row
+        try:
+            for column in COLUMNS_TO_VALIDATE:
+                if column == 'PKT':
+                    row[column] = datetime.strptime(row[column], '%Y-%m-%d')
+                elif row[column] != '':
+                    row[column] = float(row[column])
+                else:
+                    return None
+
+            return row
+        except ValueError:
+            return None
 
     def __fetch_files_matching_pattern(self, pattern):
         return glob.glob(pattern)

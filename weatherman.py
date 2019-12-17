@@ -2,50 +2,50 @@ import argparse
 
 from constants import ReportTypes
 from report_generator import ReportGenerator
-from validators import validate_arg_as_date, validate_arg_as_dir
-from weather_data_parser import WeatherDataParser
+from validators import validate_arg_as_date, validate_arg_as_dir, validate_arg_as_year
 from weather_data_analyzer import WeatherDataAnalyzer
+from weather_data_parser import WeatherDataParser
 
 
 def main():
 
     args = initialize_arguments()
 
-    parser = WeatherDataParser(args.dir_path)
+    weather_readings = WeatherDataParser(args.dir_path).fetch_records()
 
     if args.e:
-        show_extreme_stats(parser, args.e)
+        show_extreme_stats(weather_readings, args.e)
 
     if args.a:
-        show_mean_stats(parser, args.a.month, args.a.year)
+        show_mean_stats(weather_readings, args.a.month, args.a.year)
 
     if args.c:
-        show_graphs(parser, args.c.month, args.c.year)
+        show_graphs(weather_readings, args.c.month, args.c.year)
 
 
-def show_extreme_stats(parser, year):
-    data = parser.fetch_records_of_year(year)
+def show_extreme_stats(weather_readings, year):
 
-    analyzer = WeatherDataAnalyzer(data)
-    results = analyzer.calculate_extremes()
+    results = WeatherDataAnalyzer(weather_readings, year=year).calculate_extremes()
+
     if results:
         report_generator = ReportGenerator(results)
         report_generator.generate(ReportTypes.SHOW_EXTREMES)
 
 
-def show_mean_stats(parser, month, year):
-    data = parser.fetch_records_of_month(month, year)
-    results = WeatherDataAnalyzer(data).calculate_averages()
+def show_mean_stats(weather_readings, month, year):
+    results = WeatherDataAnalyzer(weather_readings, month=month, year=year).calculate_averages()
 
     if results:
         report_generator = ReportGenerator(results)
         report_generator.generate(ReportTypes.SHOW_MEANS)
 
 
-def show_graphs(parser, month, year):
-    data = parser.fetch_records_of_month(month, year)
-    report_generator = ReportGenerator(data)
-    report_generator.generate(ReportTypes.SHOW_GRAPHS)
+def show_graphs(weather_readings, month, year):
+    results = WeatherDataAnalyzer(weather_readings).fetch_records_of_month(month, year)
+
+    if results:
+        report_generator = ReportGenerator(results)
+        report_generator.generate(ReportTypes.SHOW_GRAPHS)
 
 
 def initialize_arguments():
@@ -58,7 +58,7 @@ def initialize_arguments():
                         help='Path to the directory of data files')
 
     parser.add_argument('-e',
-                        type=int,
+                        type=validate_arg_as_year,
                         help='For a given year display the highest temperature and day, lowest temperature and day, '
                              'most humid day and humidity.')
     parser.add_argument('-a',
