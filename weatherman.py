@@ -1,75 +1,80 @@
 import argparse
+import os
+import re
+from datetime import datetime
 
 from constants import ReportTypes
 from report_generator import ReportGenerator
-from validators import validate_arg_as_date, validate_arg_as_dir, validate_arg_as_year
 from weather_data_analyzer import WeatherDataAnalyzer
 from weather_data_parser import WeatherDataParser
 
 
 def main():
+    user_args = initialize_arguments()
 
-    args = initialize_arguments()
+    parser = WeatherDataParser(user_args.dir_path)
+    parser.load_data_from_files()
+    weather_records = parser.fetch_records()
 
-    weather_readings = WeatherDataParser(args.dir_path).fetch_records()
+    if user_args.e:
+        show_extreme_stats(weather_records, user_args.e)
 
-    if args.e:
-        show_extreme_stats(weather_readings, args.e)
+    if user_args.a:
+        show_mean_stats(weather_records, user_args.a.month, user_args.a.year)
 
-    if args.a:
-        show_mean_stats(weather_readings, args.a.month, args.a.year)
-
-    if args.c:
-        show_graphs(weather_readings, args.c.month, args.c.year)
-
-
-def show_extreme_stats(weather_readings, year):
-
-    results = WeatherDataAnalyzer(weather_readings, year=year).calculate_extremes()
-
-    if results:
-        report_generator = ReportGenerator(results)
-        report_generator.generate(ReportTypes.SHOW_EXTREMES)
+    if user_args.c:
+        show_graphs(weather_records, user_args.c.month, user_args.c.year)
 
 
-def show_mean_stats(weather_readings, month, year):
-    results = WeatherDataAnalyzer(weather_readings, month=month, year=year).calculate_averages()
+def show_extreme_stats(weather_records, year):
+    results = WeatherDataAnalyzer(weather_records, year=year).calculate_extremes()
 
-    if results:
-        report_generator = ReportGenerator(results)
-        report_generator.generate(ReportTypes.SHOW_MEANS)
+    generate_report(results, ReportTypes.SHOW_EXTREMES)
 
 
-def show_graphs(weather_readings, month, year):
-    results = WeatherDataAnalyzer(weather_readings).fetch_records_of_month(month, year)
+def show_mean_stats(weather_records, month, year):
+    results = WeatherDataAnalyzer(weather_records, month=month, year=year).calculate_averages()
 
-    if results:
-        report_generator = ReportGenerator(results)
-        report_generator.generate(ReportTypes.SHOW_GRAPHS)
+    generate_report(results, ReportTypes.SHOW_MEANS)
+
+
+def show_graphs(weather_records, month, year):
+    results = WeatherDataAnalyzer(weather_records).fetch_records_of_month(month, year)
+
+    generate_report(results, ReportTypes.SHOW_GRAPHS)
+
+
+def generate_report(calculations_result, report_type):
+    report_generator = ReportGenerator(calculations_result)
+    report_generator.generate(report_type)
 
 
 def initialize_arguments():
-    description = 'This is weather reports generation tool, which generates different types of reports depending ' \
-                  'upon arguments.'
+    description = 'A weather report generator which shows different reports based upon user arguments'
 
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('dir_path',
-                        type=validate_arg_as_dir,
+                        type=lambda path: path
+                        if os.path.isdir(path)
+                        else parser.error(f'{path} is not a valid path'),
                         help='Path to the directory of data files')
 
     parser.add_argument('-e',
-                        type=validate_arg_as_year,
-                        help='For a given year display the highest temperature and day, lowest temperature and day, '
-                             'most humid day and humidity.')
+                        type=lambda year_string: int(year_string)
+                        if re.match(r'^\d{1,4}$', year_string)
+                        else parser.error(f'Not a valid year: {year_string}. Acceptable format is YYYY'),
+                        help='Displays extreme stats in a year')
     parser.add_argument('-a',
-                        type=validate_arg_as_date,
-                        help='For a given month, it displays the average highest temperature, average lowest '
-                             'temperature, average mean humidity.')
+                        type=lambda date_string: datetime.strptime(date_string, '%Y/%m')
+                        if re.match(r'^\d{1,4}/\d{1,2}$', date_string)
+                        else parser.error(f'Not a valid date: {date_string}. Acceptable format is YYYY/MM'),
+                        help="Displays average stats in a year's month")
 
     parser.add_argument('-c',
-                        type=validate_arg_as_date,
-                        help='For a given month, it draws two horizontal bar charts on the console for the highest and '
-                             'lowest temperature on each day. Highest in red and lowest in blue.')
+                        type=lambda date_string: datetime.strptime(date_string, '%Y/%m')
+                        if re.match(r'^\d{1,4}/\d{1,2}$', date_string)
+                        else parser.error(f'Not a valid date: {date_string}. Acceptable format is YYYY/MM'),
+                        help="Displays graphs of every day temperature in a year's month")
 
     return parser.parse_args()
 

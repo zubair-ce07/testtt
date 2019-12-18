@@ -37,15 +37,10 @@ class ReportGenerator:
         print(f'Average Mean Humidity: {round(self.__calculation_results.average_mean_humidity)}%')
 
     def __show_graphs(self):
-        if len(self.__calculation_results) == 0:
-            print('No data found for generating graphs')
-            return
-
         print(f"{self.__calculation_results[0].reading_date.strftime('%B, %Y')}")
 
+        bar_colors = (Colors.RED.value, Colors.BLUE.value)
+
         for data in self.__calculation_results:
-            print(draw_bar_graph(data.reading_date.strftime('%d'),
-                                 abs(data.max_temperature),
-                                 abs(data.min_temperature),
-                                 Colors.RED.value,
-                                 Colors.BLUE.value, self.__temp_unit))
+            bar_limits = (abs(data.max_temperature), abs(data.min_temperature))
+            print(draw_bar_graph(data.reading_date.strftime('%d'), bar_limits, bar_colors))

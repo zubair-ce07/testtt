@@ -2,24 +2,22 @@ from enum import Enum
 
 CITY_NAME = 'Murree'
 
-COLUMN_NAMES = ['PKT',
-                'MAX_TEMP',
-                'MEAN_TEMP',
-                'MIN_TEMP',
-                'MAX_DEW',
-                'MEAN_DEW',
-                'MIN_DEW',
-                'MAX_HUMIDITY',
-                'MEAN_HUMIDITY',
-                'MIN_HUMIDITY']
+COLUMN_MAPPING = {
+    'PKT': ['PKT', 'PKST'],
+    'Max TemperatureC': ['Max TemperatureC'],
+    'Mean TemperatureC': ['Mean TemperatureC'],
+    'Min TemperatureC': ['Min TemperatureC'],
+    'Max Humidity': ['Max Humidity'],
+    'Mean Humidity': ['Mean Humidity'],
+    'Min Humidity': ['Min Humidity']}
 
 COLUMNS_TO_VALIDATE = ['PKT',
-                       'MAX_TEMP',
-                       'MEAN_TEMP',
-                       'MIN_TEMP',
-                       'MAX_HUMIDITY',
-                       'MEAN_HUMIDITY',
-                       'MIN_HUMIDITY'
+                       'Max TemperatureC',
+                       'Mean TemperatureC',
+                       'Min TemperatureC',
+                       'Max Humidity',
+                       'Mean Humidity',
+                       'Min Humidity'
                        ]
 
 

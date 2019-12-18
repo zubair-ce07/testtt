@@ -13,10 +13,6 @@ class WeatherDataAnalyzer:
 
         year_readings = self.fetch_records_of_year(self.__year)
 
-        if len(year_readings) == 0:
-            print('No data found for calculating extremes')
-            return False
-
         sorted_by_highest_temp = self.sort_by_property('max_temperature', year_readings)
         sorted_by_lowest_temp = self.sort_by_property('min_temperature', year_readings)
         sorted_by_highest_humid = self.sort_by_property('max_humidity', year_readings)
@@ -31,10 +27,6 @@ class WeatherDataAnalyzer:
         result = SimpleNamespace()
 
         month_readings = self.fetch_records_of_month(self.__month, self.__year)
-
-        if len(month_readings) == 0:
-            print('No data found for calculating averages')
-            return False
 
         result.average_max_temperature = self.get_average_of_field('max_temperature', month_readings)
         result.average_min_temperature = self.get_average_of_field('min_temperature', month_readings)
