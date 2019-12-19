@@ -2,7 +2,7 @@ from enum import Enum
 
 CITY_NAME = 'Murree'
 
-COLUMN_MAPPING = {
+CSV_HEADERS_MAPPING = {
     'PKT': ['PKT', 'PKST'],
     'Max TemperatureC': ['Max TemperatureC'],
     'Mean TemperatureC': ['Mean TemperatureC'],
@@ -10,15 +10,6 @@ COLUMN_MAPPING = {
     'Max Humidity': ['Max Humidity'],
     'Mean Humidity': ['Mean Humidity'],
     'Min Humidity': ['Min Humidity']}
-
-COLUMNS_TO_VALIDATE = ['PKT',
-                       'Max TemperatureC',
-                       'Mean TemperatureC',
-                       'Min TemperatureC',
-                       'Max Humidity',
-                       'Mean Humidity',
-                       'Min Humidity'
-                       ]
 
 
 class Colors(Enum):
