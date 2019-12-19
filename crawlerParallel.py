@@ -5,7 +5,7 @@ from domain import *
 import time
 
 
-class Crawler:
+class CrawlerParallel:
 
     project_name = ''
     base_url = ''
@@ -25,7 +25,7 @@ class Crawler:
     def __init__(self, project_name,
                  base_url, domain_name,
                  max_page_crawl, download_delay):
-        
+
         self.project_name = project_name
         self.base_url = base_url
         self.domain_name = domain_name
@@ -77,6 +77,7 @@ class Crawler:
 
     def __del__(self):
         print(f"Total request made by crawler : {self.total_request_made}")
-        print(f"Total bytes Downloaded by crawler : {self.total_bytes_downloaded}")
-        print(f"Average size of page : {self.total_bytes_downloaded/self.total_request_made:.1f}")
-
+        print(
+            f"Total bytes Downloaded by crawler : {self.total_bytes_downloaded}")
+        print(
+            f"Average size of page : {self.total_bytes_downloaded/self.total_request_made:.1f}")
