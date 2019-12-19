@@ -19,13 +19,13 @@ class ReportGenerator:
 
     def __show_extreme_stats(self):
 
-        max_temperature = self.__calculation_results.max_temperature_reading.max_temperature
-        min_temperature = self.__calculation_results.min_temperature_reading.min_temperature
-        max_humidity = self.__calculation_results.max_humidity_reading.max_humidity
+        max_temperature = self.__calculation_results.max_temperature_record.max_temperature
+        min_temperature = self.__calculation_results.min_temperature_record.min_temperature
+        max_humidity = self.__calculation_results.max_humidity_record.max_humidity
 
-        max_temperature_date = self.__calculation_results.max_temperature_reading.reading_date
-        min_temperature_date = self.__calculation_results.min_temperature_reading.reading_date
-        max_humidity_date = self.__calculation_results.max_humidity_reading.reading_date
+        max_temperature_date = self.__calculation_results.max_temperature_record.record_date
+        min_temperature_date = self.__calculation_results.min_temperature_record.record_date
+        max_humidity_date = self.__calculation_results.max_humidity_record.record_date
 
         print(f"Highest: {max_temperature}{self.__temp_unit} on {datetime.strftime(max_temperature_date, '%B, %Y')}")
         print(f"Lowest: {min_temperature}{self.__temp_unit} on {datetime.strftime(min_temperature_date, '%B, %Y')}")
@@ -37,10 +37,10 @@ class ReportGenerator:
         print(f'Average Mean Humidity: {round(self.__calculation_results.average_mean_humidity)}%')
 
     def __show_graphs(self):
-        print(f"{self.__calculation_results[0].reading_date.strftime('%B, %Y')}")
+        print(f"{self.__calculation_results[0].record_date.strftime('%B, %Y')}")
 
         bar_colors = (Colors.RED.value, Colors.BLUE.value)
 
         for data in self.__calculation_results:
             bar_limits = (abs(data.max_temperature), abs(data.min_temperature))
-            print(draw_bar_graph(data.reading_date.strftime('%d'), bar_limits, bar_colors))
+            print(draw_bar_graph(data.record_date.strftime('%d'), bar_limits, bar_colors))

@@ -16,9 +16,9 @@ class WeatherDataAnalyzer:
         sorted_by_lowest_temp = self.sort_by_property('min_temperature', year_records)
         sorted_by_highest_humid = self.sort_by_property('max_humidity', year_records)
 
-        result.max_temperature_reading = sorted_by_highest_temp[-1]
-        result.min_temperature_reading = sorted_by_lowest_temp[0]
-        result.max_humidity_reading = sorted_by_highest_humid[-1]
+        result.max_temperature_record = sorted_by_highest_temp[-1]
+        result.min_temperature_record = sorted_by_lowest_temp[0]
+        result.max_humidity_record = sorted_by_highest_humid[-1]
 
         return result
 
@@ -34,22 +34,11 @@ class WeatherDataAnalyzer:
         return result
 
     def fetch_records_of_month(self, date_to_search):
-        records = []
-
-        for record in self.__weather_records:
-            if record.reading_date.month == date_to_search.month and record.reading_date.year == date_to_search.year:
-                records.append(record)
-
-        return records
+        return [record for record in self.__weather_records if
+                record.record_date.month == date_to_search.month and record.record_date.year == date_to_search.year]
 
     def fetch_records_of_year(self, date_to_search):
-        records = []
-
-        for record in self.__weather_records:
-            if record.reading_date.year == date_to_search.year:
-                records.append(record)
-
-        return records
+        return [record for record in self.__weather_records if record.record_date.year == date_to_search.year]
 
     def get_average_of_field(self, field, weather_records):
         return mean([getattr(item, field) for item in weather_records])

@@ -1,7 +1,6 @@
 import csv
 import glob
-import re
-from datetime import datetime
+
 
 from constants import CITY_NAME, CSV_HEADERS_MAPPING
 from weather_record import WeatherRecord
@@ -29,24 +28,14 @@ class WeatherDataParser:
 
                 reader.fieldnames = csv_headers
                 for row in reader:
-                    row = self.__preprocess_row(row)
-
-                    if row is not None:
+                    if self.__row_is_valid(row):
                         self.__weather_records.append(WeatherRecord(row))
 
     def fetch_records(self):
         return self.__weather_records
 
-    def __preprocess_row(self, row):
-        for column in CSV_HEADERS_MAPPING.keys():
-            if column == 'PKT' and re.match(r'^\d{1,4}-\d{1,2}-\d{1,2}$', row[column].strip()):
-                row[column] = datetime.strptime(row[column], '%Y-%m-%d')
-            elif row[column] != '' and re.match(r'^-?(\d+(\.\d+)?)$', row[column].strip()):
-                row[column] = float(row[column])
-            else:
-                return None
-
-        return row
+    def __row_is_valid(self, row):
+        return all(value != '' for key, value in row.items() if key in CSV_HEADERS_MAPPING.keys())
 
     def __fetch_files_matching_pattern(self, pattern):
         return glob.glob(pattern)

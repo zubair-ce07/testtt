@@ -1,10 +1,13 @@
+from datetime import datetime
+
+
 class WeatherRecord:
 
-    def __init__(self, weather_reading_row):
-        self.reading_date = weather_reading_row['PKT']
-        self.max_temperature = weather_reading_row['Max TemperatureC']
-        self.mean_temperature = weather_reading_row['Mean TemperatureC']
-        self.min_temperature = weather_reading_row['Min TemperatureC']
-        self.max_humidity = weather_reading_row['Max Humidity']
-        self.mean_humidity = weather_reading_row['Mean Humidity']
-        self.min_humidity = weather_reading_row['Min Humidity']
+    def __init__(self, weather_record):
+        self.record_date = datetime.strptime(weather_record['PKT'], '%Y-%m-%d')
+        self.max_temperature = float(weather_record['Max TemperatureC'])
+        self.mean_temperature = float(weather_record['Mean TemperatureC'])
+        self.min_temperature = float(weather_record['Min TemperatureC'])
+        self.max_humidity = float(weather_record['Max Humidity'])
+        self.mean_humidity = float(weather_record['Mean Humidity'])
+        self.min_humidity = float(weather_record['Min Humidity'])

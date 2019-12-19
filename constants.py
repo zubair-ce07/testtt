@@ -13,8 +13,9 @@ CSV_HEADERS_MAPPING = {
 
 
 class Colors(Enum):
-    RED = 31
-    BLUE = 34
+    RED = '\033[0;31;40m'
+    BLUE = '\033[0;34;40m'
+    RESET = '\033[0;0m'
 
 
 class ReportTypes(Enum):
