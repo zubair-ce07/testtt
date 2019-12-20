@@ -27,15 +27,14 @@ class WeatherDataParser:
                     csv_headers[index] = matching_header
 
                 reader.fieldnames = csv_headers
-                for row in reader:
-                    if self.__row_is_valid(row):
-                        self.__weather_records.append(WeatherRecord(row))
+
+                self.__weather_records.extend([WeatherRecord(record) for record in reader if self.__record_is_valid(record)])
 
     def fetch_records(self):
         return self.__weather_records
 
-    def __row_is_valid(self, row):
-        return all(value != '' for key, value in row.items() if key in CSV_HEADERS_MAPPING.keys())
+    def __record_is_valid(self, record):
+        return all(value for key, value in record.items() if key in CSV_HEADERS_MAPPING)
 
     def __fetch_files_matching_pattern(self, pattern):
         return glob.glob(pattern)
