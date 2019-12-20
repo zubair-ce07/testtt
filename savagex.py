@@ -71,8 +71,8 @@ class SavagexSpider(BaseParseSpider):
     def product_gender(self):
         return self.gender
 
-    def product_category(self, raw_product):
-        return []
+    def product_category(self, response):
+        return response.meta['category']
 
     def image_urls(self, raw_product):
         return raw_product['image_view_list']
@@ -135,11 +135,15 @@ class SavagexCrawler(BaseCrawlSpider):
         meta = {'headers': headers,
                 'trail': self.add_trail(response)}
 
-        yield from[Request(url=self.ajex_req_url+'/categorized', headers=headers, body=body, method='POST',
-                           callback=self.parse_products, meta=meta) for body in self.requests_body(raw_info)]
+        for category, body in self.requests_body(raw_info):
+            meta_with_category = meta.copy()
+            meta_with_category['category'] = category
+            yield Request(url=self.ajex_req_url+'/categorized', headers=headers, body=body, method='POST',
+                               callback=self.parse_products, meta=meta_with_category)
 
     def parse_products(self, response):
         headers = response.meta['headers']
+        category = response.meta['category']
         raw_products = json.loads(response.text)
         products = raw_products['products']
 
@@ -148,7 +152,8 @@ class SavagexCrawler(BaseCrawlSpider):
         new_header['x-tfg-storedomain'] = 'www.savagex.co.uk'
         meta = {
             'trail': self.add_trail(response),
-            'headers': new_header
+            'headers': new_header,
+            'category': category
         }
 
         yield from [Request(url=f'{self.ajex_req_url}/{product["master_product_id"]}', headers=new_header,
@@ -165,9 +170,10 @@ class SavagexCrawler(BaseCrawlSpider):
 
     def requests_body(self, raw_info):
         raw_categories = raw_info['runtimeConfig']['productBrowser']['sections'] or {}
-        for category_info in raw_categories.values():
+        for cat_nam, category_info in raw_categories.items():
             sub_categories = category_info['subsections']
-            return [self.make_req_body(sub_cat['categoryTagIds']) for sub_cat in sub_categories.values()]
+            return [([cat_nam, sub_cat_nam], self.make_req_body(sub_cat['categoryTagIds']))
+                    for sub_cat_nam, sub_cat in sub_categories.items()]
 
     def make_req_body(self, cat_id, page_no=1):
         return f'{{"includeOutOfStock": "true", "page": {page_no}, "size": 28, "categoryTagIds": {cat_id}}}'
