@@ -1,0 +1,41 @@
+{% extends 'basic_auth_layout.html' %}
+
+{% block content %}
+    {% load static from staticfiles %}
+
+    <section class="sign-in">
+        <div class="container">
+            {{ form.non_field_errors }}
+            <div class="signin-content">
+                <div class="signin-image">
+                    <figure><img src="{% static 'images/signin-image.jpg' %}" alt="sing up image"></figure>
+                    <a href="/signup" class="signup-image-link">Create an account</a>
+                </div>
+
+                <div class="signin-form">
+                    <h2 class="form-title">Sign In</h2>
+                    <form method="post">
+                        {% csrf_token %}
+
+                        {% for field in form %}
+                            <div class="form-group">
+                                <label for="your_name"><i
+                                        class="zmdi {{ field.field.widget.attrs.labelClass }}"></i></label>
+                                {{ field }}
+                                <div class="alert alert-danger">
+                                    <strong>{{ field.errors }}</strong>
+                                </div>
+                            </div>
+
+                        {% endfor %}
+                        <div class="form-group form-button">
+                            <input type="submit" name="signin" id="signin" class="form-submit" value="Log in"/>
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}

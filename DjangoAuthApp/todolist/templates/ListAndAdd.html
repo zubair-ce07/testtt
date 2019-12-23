@@ -1,0 +1,11 @@
+{% extends 'todo_layout.html' %}
+
+{% block content %}
+
+                {% include "add.html" %}
+
+                <ul class="taskList">
+                    {% include "list.html" %}
+                </ul>
+
+{% endblock %}

@@ -1,0 +1,18 @@
+<form action="" method="post">
+    {% csrf_token %} <!-- csrf token for basic security -->
+
+    <div class="inputContainer">
+        {{ form.title }}
+        {#                    <input type="text" id="description" class="taskName" placeholder="What do you need to do?" name="description" required>#}
+        <label for="description">Description</label>
+    </div>
+    <div class="inputContainer half last right">
+        {{ form.due_date }}
+        {#                    <input type="date" id="dueDate" class="taskDate" name="date">#}
+        <label for="dueDate">Due Date</label>
+    </div>
+    <div class="row">
+        <button class="taskAdd" name="taskAdd" type="submit"><i class="fa fa-plus icon"></i>Add task
+        </button>
+    </div>
+</form>
