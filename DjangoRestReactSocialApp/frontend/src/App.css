@@ -1,0 +1,159 @@
+.App {
+  /* text-align: center; */
+}
+
+.App-logo {
+  height: 40vmin;
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #09d3ac;
+}
+
+
+body {
+  background-color: #efefef;
+}
+
+.profile-pic {
+  /* max-width: 123px;
+  max-height: 185px;
+  margin-top: -1px;
+  margin-left: 0px; */
+
+  border-radius: 1000px !important;
+  overflow: hidden;
+  width: 128px;
+  height: 128px;
+
+}
+
+.file-upload {
+  position: absolute;
+  right: -1px;
+  top: -8px;
+  opacity: 0;
+}
+
+.circle {
+  border-radius: 1000px !important;
+  overflow: hidden;
+  width: 128px;
+  height: 128px;
+  border: 5px solid rgba(167, 156, 156, 0.7);
+  position: absolute;
+  top: 21px;
+    left: 110px;
+}
+
+.circle i{
+  margin-left: 25px;
+}
+img {
+    max-width: 100%;
+    height: auto;
+}
+.p-image {
+  position: absolute;
+  top: 118px;
+  left: 216px;
+  color: #666666;
+  transition: all .3s cubic-bezier(.175, .885, .32, 1.275);
+}
+
+.p-image:hover {
+  transition: all .3s cubic-bezier(.175, .885, .32, 1.275);
+}
+.upload-button {
+  font-size: 1.2em;
+}
+
+.upload-button:hover {
+  transition: all .3s cubic-bezier(.175, .885, .32, 1.275);
+  color: #999;
+}
+
+.profile-card{
+  margin-top: 160px;
+}
+
+.custom-file{
+  margin-top: 20px;
+}
+
+.image-post{
+  display:none
+}
+
+.btn-toolbar{
+  margin-top: 10px;
+}
+
+.card-link{
+  color:rgb(36, 143, 231);
+  cursor: pointer;
+}
+
+
+.comment-wrapper .panel-body {
+  max-height:650px;
+  overflow:auto;
+}
+
+.comment-wrapper .media-list .media img {
+  width:64px;
+  height:64px;
+  border:2px solid #e5e7e8;
+  border-radius: 1000px !important;
+}
+
+.comment-wrapper .media-list .media {
+  border-bottom: 1px dashed #efefef;
+  margin-bottom: 25px;
+  margin-left: -10p;
+  margin-right: 39px;
+}
+
+.media-body{
+  padding-left: 20px;
+}
+
+.media-body p{
+  margin-top: 10px;
+}
+
+.card-title{
+  text-align: center;
+}
+
+.list-group .h5{
+  padding-left: 17px;
+}
+
+.card {
+  margin-top: 25px;
+}
+
+.easy-edit-button-wrapper{
+  display: inline-block;
+}
+
+.previewImage{
+  max-height: 249px;
+  margin-left: 170px;
+}
+
+.post-card{
+  text-align: center;
+}
